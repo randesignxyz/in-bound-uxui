@@ -126,4 +126,14 @@ export default defineConfig({
   },
   esbuildMinifyIIFE: true,
   requestRecord: {},
+  qiankun: {
+    master: {
+      apps: [
+        {
+          name: 'delivery',
+          entry: '//localhost:8001'
+        }
+      ]
+    }
+  }
 });

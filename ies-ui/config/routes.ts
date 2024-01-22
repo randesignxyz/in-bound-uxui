@@ -27,12 +27,12 @@ export default [
       },
     ],
   },
-  // {
-  //   name: 'App1',
-  //   path: '/app1/*',
-  //   microApp: 'app1',
+  {
+    name: 'delivery',
+    path: '/delivery/*',
+    microApp: 'delivery',
 
-  // },
+  },
   {
     path: '/task-list',
     name: 'task-list',
@@ -466,133 +466,134 @@ export default [
   },
 
   /************************ Delivery Tracking  ******************/
-
-  {
-    path: '/delivery',
-    name: 'delivery',
-    icon: 'DeliveredProcedureOutlined',
-    access: 'canAccesDeliveyMenu',
-    component: './delivery',
-  },
-
-  {
-    path: '/delivery/board',
-    name: 'deliveryBoard',
-    icon: 'SnippetsOutlined',
-    hideInMenu: 'true',
-    access: 'canAccessDeliveryMenuItem',
-    component: './delivery/board',
-  },
-
-  {
-    path: '/delivery/history',
-    name: 'deliveryHistory',
-    icon: 'SnippetsOutlined',
-    hideInMenu: 'true',
-    access: 'canAccessDeliveryMenuItem',
-    component: './delivery/history',
-  },
-
-  {
-    path: '/delivery/default/:view/*',
-    name: 'delivery',
-    icon: 'UnorderedListOutlined',
-    hideInMenu: 'true',
-    access: 'canAccessDeliveryMenuItem',
-    component: './delivery/default',
-  },
-  {
-    path: '/delivery/loading',
-    name: 'loading',
-    hideInMenu: 'true',
-    // icon: 'SnippetsOutlined',
-    access: 'canAccessLoadingMenuItem',
-    component: './delivery/loading',
-  },
-  {
-    path: '/delivery/tracking',
-    name: 'delivery-tracking',
-    icon: 'UnorderedListOutlined',
-    hideInMenu: 'true',
-    access: 'canAccessDeliveryMenuItem',
-    component: './delivery/tracking',
-  },
-
-  {
-    path: '/delivery/cash-collection',
-    name: 'cash-collection',
-    icon: 'UnorderedListOutlined',
-    hideInMenu: 'true',
-    access: 'canAccessDeliveryCashSettlementMenuItem',
-    component: './delivery/cash-collection',
-  },
-
-  {
-    path: '/delivery/review',
-    name: 'review',
-    icon: 'UnorderedListOutlined',
-    hideInMenu: 'true',
-    access: 'canAccesDeliveryReviewMenuItem',
-    component: './delivery/review',
-  },
-
-  {
-    path: '/delivery/reviewer',
-    name: 'reviewer',
-    icon: 'UnorderedListOutlined',
-    hideInMenu: 'true',
-    access: 'canAccesDeliveryReviewMenuItem',
-    component: './delivery/reviewer',
-  },
-
-  {
-    path: '/delivery/price-list/:view/*',
-    name: 'priceList',
-    icon: 'UnorderedListOutlined',
-    hideInMenu: 'true',
-    access: 'canAccesDeliveyMenu',
-    component: './delivery/price-list',
-  },
-  {
-    path: '/delivery/company/:view/*',
-    name: 'company',
-    icon: 'UnorderedListOutlined',
-    hideInMenu: 'true',
-    access: 'canAccessDeliverySettingMenuItem',
-    component: './delivery/company',
-  },
-  {
-    path: '/delivery/transport-source/:view/*',
-    name: 'transport-source',
-    icon: 'UnorderedListOutlined',
-    hideInMenu: 'true',
-    access: 'canAccessDeliverySettingMenuItem',
-    component: './delivery/transport-source',
-  },
-  {
-    path: '/delivery/driver/:view/*',
-    name: 'driver',
-    icon: 'UnorderedListOutlined',
-    hideInMenu: 'true',
-    access: 'canAccessDeliveryTruck',
-    component: './delivery/driver',
-  },
-  {
-    path: '/delivery/officer/:view/*',
-    name: 'officer',
-    icon: 'UnorderedListOutlined',
-    hideInMenu: 'true',
-    access: 'canAccessDeliverySettingMenuItem',
-    component: './delivery/officer',
-  },
-  {
-    path: '/delivery/truck/:view/*',
-    name: 'truck',
-    icon: 'UnorderedListOutlined',
-    hideInMenu: 'true',
-    access: 'canAccessDeliveryTruck',
-    component: './delivery/truck',
-  },
+  /*
+    {
+      path: '/delivery',
+      name: 'delivery',
+      icon: 'DeliveredProcedureOutlined',
+      access: 'canAccesDeliveyMenu',
+      component: './delivery',
+    },
+  
+    {
+      path: '/delivery/board',
+      name: 'deliveryBoard',
+      icon: 'SnippetsOutlined',
+      hideInMenu: 'true',
+      access: 'canAccessDeliveryMenuItem',
+      component: './delivery/board',
+    },
+  
+    {
+      path: '/delivery/history',
+      name: 'deliveryHistory',
+      icon: 'SnippetsOutlined',
+      hideInMenu: 'true',
+      access: 'canAccessDeliveryMenuItem',
+      component: './delivery/history',
+    },
+  
+    {
+      path: '/delivery/default/:view/*',
+      name: 'delivery',
+      icon: 'UnorderedListOutlined',
+      hideInMenu: 'true',
+      access: 'canAccessDeliveryMenuItem',
+      component: './delivery/default',
+    },
+    {
+      path: '/delivery/loading',
+      name: 'loading',
+      hideInMenu: 'true',
+      // icon: 'SnippetsOutlined',
+      access: 'canAccessLoadingMenuItem',
+      component: './delivery/loading',
+    },
+    {
+      path: '/delivery/tracking',
+      name: 'delivery-tracking',
+      icon: 'UnorderedListOutlined',
+      hideInMenu: 'true',
+      access: 'canAccessDeliveryMenuItem',
+      component: './delivery/tracking',
+    },
+  
+    {
+      path: '/delivery/cash-collection',
+      name: 'cash-collection',
+      icon: 'UnorderedListOutlined',
+      hideInMenu: 'true',
+      access: 'canAccessDeliveryCashSettlementMenuItem',
+      component: './delivery/cash-collection',
+    },
+  
+    {
+      path: '/delivery/review',
+      name: 'review',
+      icon: 'UnorderedListOutlined',
+      hideInMenu: 'true',
+      access: 'canAccesDeliveryReviewMenuItem',
+      component: './delivery/review',
+    },
+  
+    {
+      path: '/delivery/reviewer',
+      name: 'reviewer',
+      icon: 'UnorderedListOutlined',
+      hideInMenu: 'true',
+      access: 'canAccesDeliveryReviewMenuItem',
+      component: './delivery/reviewer',
+    },
+  
+    {
+      path: '/delivery/price-list/:view/*',
+      name: 'priceList',
+      icon: 'UnorderedListOutlined',
+      hideInMenu: 'true',
+      access: 'canAccesDeliveyMenu',
+      component: './delivery/price-list',
+    },
+    {
+      path: '/delivery/company/:view/*',
+      name: 'company',
+      icon: 'UnorderedListOutlined',
+      hideInMenu: 'true',
+      access: 'canAccessDeliverySettingMenuItem',
+      component: './delivery/company',
+    },
+    {
+      path: '/delivery/transport-source/:view/*',
+      name: 'transport-source',
+      icon: 'UnorderedListOutlined',
+      hideInMenu: 'true',
+      access: 'canAccessDeliverySettingMenuItem',
+      component: './delivery/transport-source',
+    },
+    {
+      path: '/delivery/driver/:view/*',
+      name: 'driver',
+      icon: 'UnorderedListOutlined',
+      hideInMenu: 'true',
+      access: 'canAccessDeliveryTruck',
+      component: './delivery/driver',
+    },
+    {
+      path: '/delivery/officer/:view/*',
+      name: 'officer',
+      icon: 'UnorderedListOutlined',
+      hideInMenu: 'true',
+      access: 'canAccessDeliverySettingMenuItem',
+      component: './delivery/officer',
+    },
+    {
+      path: '/delivery/truck/:view/*',
+      name: 'truck',
+      icon: 'UnorderedListOutlined',
+      hideInMenu: 'true',
+      access: 'canAccessDeliveryTruck',
+      component: './delivery/truck',
+    },
+    */
 
   /************************ Queque  ******************/
 

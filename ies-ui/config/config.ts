@@ -64,7 +64,7 @@ export default defineConfig({
   /**
    * @doc https://umijs.org/docs/max/layout-menu
    */
-  title: 'Ant Design Pro',
+  title: 'Centralized workspace',
   layout: {
     locale: true,
     ...defaultSettings,

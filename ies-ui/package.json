@@ -2,7 +2,7 @@
   "name": "ies-ui",
   "version": "0.4.0",
   "private": true,
-  "description": "An out-of-box UI solution for enterprise applications",
+  "description": "Centralized workplace",
   "scripts": {
     "analyze": "cross-env ANALYZE=1 max build",
     "build": "max build",

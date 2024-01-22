@@ -1,0 +1,8 @@
+{errorCode=0, errorDesc=, purchaseOrders=[
+        {docEntry=5946, documentNo=23001419, postingDate=2023-12-13T00: 00: 00, deliveryDate=2023-12-13T00: 00: 00, taxDate=2023-12-13T00: 00: 00, vendorCode=V000006, vendorName=V-Tech Computer, procurementOfficer=admin, apiReferenceNo=8-PO-000002, comments=, docType=0, orderDetails=[
+                {docEntry=5946, itemCode=IT000088, itemName=Microsoft Surface Wireless Mouse, quantity=10, unitPrice=19, freeText=, discount=0, vatGroup=VATEXI, budgetCode=, baseEntry=1554, baseType=540000006, baseLine=0
+                }
+            ]
+        }
+    ]
+}

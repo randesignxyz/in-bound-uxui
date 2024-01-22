@@ -1,0 +1,142 @@
+import FormModalComp, { FormModalProps } from "@/components/FormModal"
+import { ProForm, ProFormSelect, ProFormText, ProFormTextArea } from "@ant-design/pro-components"
+import { useForm } from "antd/lib/form/Form"
+import { simpleRequestActions } from "@/services/model"
+import { useEffect } from "react"
+import { FolderCreate, DataNode } from "./data"
+
+interface Props extends FormModalProps {
+    onSave: (data: FolderCreate) => void;
+    data?: DataNode;
+    type?: string,
+    code?: string,
+    libraryId?:number;
+}
+
+const FolderEntryForm: React.FC<Props> = ({ code,libraryId, data, onSave, type, ...props }: Props) => {
+    const [form] = useForm<FolderCreate>();
+    const requestAction = simpleRequestActions();
+
+    
+    
+    useEffect(() => {
+        type === "EDIT" && data && form.setFieldsValue({
+            name: data?.title,
+            id: parseInt(data?.key || "")
+        });
+      
+      
+        !data && form.resetFields();
+    }, [props.open]);
+    return (
+        <FormModalComp
+            {...props}
+            title={`Form Register ${code =="LIBRARY" ?"Own Library":"Folder"}`}
+            width="500px"
+            onSubmit={async () => {
+                const dataForm = await form.validateFields();
+                const id = type=="ADD"?undefined:parseInt(data?.key || "")
+                if (libraryId){
+                    const entry = {
+                                ...dataForm,
+                                parentId: 0,
+                                code:code,
+                                libraryId:libraryId,
+                                id:id
+                            }
+                            onSave(entry)
+                }
+                else{
+                    const entry = {
+                                ...dataForm,
+                                parentId: parseInt(data?.key ||""),
+                                code:code,
+                                libraryId:undefined,
+                                id:id
+                            }
+                            onSave(entry)
+                }
+            }}
+        >
+            <ProForm
+                submitter={false}
+                form={form}
+            >
+
+                {code === "LIBRARY" && (
+
+                    <>
+                        <ProFormText
+                            name={"name"}
+                            label={"Library Name"}
+                        />
+                        <ProFormText
+                            name={"location"}
+                            label={"Library Location"}
+                        />
+                        <ProFormSelect
+                            name={"type"}
+                            label={"Type"}
+                            initialValue={"personal"}
+                            disabled
+                            options={[
+                                {
+                                    label: "Personal",
+                                    value: "personal",
+                                },
+                                {
+                                    label: "Department",
+                                    value: "department",
+                                },
+                                {
+                                    label: "Defualt",
+                                    value: "default",
+                                },
+                            ]}
+                        />
+                        <ProFormSelect
+                            initialValue={"active"}
+                            options={[
+                                {
+                                    label: "Active",
+                                    value: "active",
+                                },
+                                {
+                                    label: "Inactive",
+                                    value: "inactive",
+                                }
+                            ]}
+                            name={"status"}
+                            label={"Status"}
+                        />
+                        <ProFormTextArea
+                            name={"description"}
+                            label="Description"
+                        />
+                    </>
+                ) ||
+                    (
+                        <>
+                            <p>Create a new folder. Folder names must be unique</p>
+                            <ProFormText
+                                name="name"
+                                label="Folder Name"
+                                rules={[{ required: true }]}
+                            />
+
+                            <ProFormTextArea
+                                name={"description"}
+                                label={"Description"}
+                            />
+                        </>
+                    )
+
+
+                }
+
+            </ProForm>
+        </FormModalComp>
+    )
+}
+
+export default FolderEntryForm

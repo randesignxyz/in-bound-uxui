@@ -1,0 +1,72 @@
+import { HistoryDTO } from "./data"
+import { FieldTimeOutlined } from "@ant-design/icons";
+import { ActionType, ProList } from "@ant-design/pro-components";
+import { HistoryServiceAPI } from "./service";
+import { simpleRequestActions } from "@/services/model";
+import { formatDateTime, toReadable } from "@/pages/utils";
+import moment from "moment";
+import { useRef } from "react";
+
+interface Props {
+    intantId?: number
+}
+
+export default ({ intantId }: Props) => {
+
+    const requestAction = simpleRequestActions();
+    const services = HistoryServiceAPI(requestAction)
+    const actionRef = useRef<ActionType>();
+
+    const onRequestHandler =async (params?:{
+        current?:number,
+        pageSizee?:number,  
+    }) =>{
+        const data = await services.page({
+            criteria: {
+                advanceSearch: {
+                    actionType: "",
+                    instantId: intantId
+                }
+            },
+            pagination:{
+                pageSize: params?.pageSizee,
+                current: params?.current,
+            }
+        });
+        return Promise.resolve({
+            data: data.items,
+            success: true,
+            total:data.total
+        })
+    }
+
+    return (
+        <ProList<HistoryDTO>
+            pagination={{
+                pageSize: 10,
+                pageSizeOptions:[10]
+            
+            }}
+
+            metas={{
+                avatar: {render: () => <FieldTimeOutlined />},
+                title: {render: (_,r )=> `${toReadable(r.action)} by ${r.actionBy}`},
+                subTitle: {render: (_,r )=> `${moment(moment(r.actionDate)).fromNow()}`},
+                description: {dataIndex: 'remark'},
+                actions:{
+                    render:(_,r)=>[
+                        <a key="invite">{formatDateTime(r.actionDate)}</a>,
+                    ]
+                }
+            }}
+            actionRef={actionRef}
+            request={(e)=>{
+                return onRequestHandler({
+                    pageSizee:e.pageSize,
+                    current:e.current
+                })
+            }}
+        />
+
+    )
+}

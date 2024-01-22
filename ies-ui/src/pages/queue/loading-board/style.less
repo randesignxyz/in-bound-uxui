@@ -1,0 +1,40 @@
+// @import '~antd/lib/style/themes/default.less';
+@import '~@/pages/utils.less';
+
+
+.color1 {
+  background-color: #d3d3d369;
+  border-radius: 5px;
+  margin-bottom: 1px;
+}
+
+.color2 {
+  background-color: #d8f9ff59;
+  border-radius: 5px;
+  margin-bottom: 1px;
+}
+
+.color3 {
+  background-color: #a6c2ff6b;
+  border-radius: 5px;
+  margin-bottom: 1px;
+}
+
+.blinking {
+  animation: blinking-animation var(--rate, 1s) linear infinite;
+}
+
+@keyframes blinking-animation {
+  0% {
+      opacity: 1;
+  }
+  49% {
+      opacity: 1;
+  }
+  50% {
+      opacity: var(--opacity, 0);
+  }
+  100% {
+      opacity: var(--opacity, 0);
+  }
+}

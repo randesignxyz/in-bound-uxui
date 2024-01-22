@@ -1,0 +1,76 @@
+// @import '~antd/lib/style/themes/default.less';
+
+@import '~@/pages/utils.less';
+
+@font-face {
+  font-family: "Moul";
+  src: local("Moul"),
+  url("~@/fonts/Moul/Moul-Regular.ttf") format("truetype");
+  }
+
+@media print {
+  html, body {
+    height: 100vh; /* Use 100% here to support printing more than a single page*/
+    margin: 0 !important;
+    padding: 0 !important;
+   
+  }
+}
+
+@media print {
+  @page
+   {
+    size: A4;
+    size: portrait;
+    background-color: #ed885c;
+    margin: 5mm;
+  }
+  table { 
+    page-break-inside: avoid;
+  
+  }
+  h1 {
+    break-after: always;
+  }
+
+}
+
+
+.headerTitle {
+  border: 2px solid;
+  // background-color: darkgray;
+}
+.seperate {
+  border-bottom: 1px solid;
+}
+
+table.dataTable {
+	width: 100%;
+	border-collapse: collapse;
+  margin-top: 5px;
+	border: 1px solid gray; /*for older IE*/
+	border-style: hidden;
+}
+
+table.dataTable th, table.dataTable td {
+	padding: 3px;
+	border-width: 1px;
+	border-style: solid;
+	border-color: gray;
+}
+
+.rubber {
+  box-shadow: 0 0 0 3px blue, 0 0 0 2px blue inset;  
+  border: 2px solid transparent;
+  border-radius: 4px;
+  display: inline-block;
+  padding: 10px 2px;
+  line-height: 22px;
+  color: blue;
+  font-size: 24px;
+  text-transform: uppercase;
+  text-align: center;
+  opacity: 0.4;
+  width: 155px;
+  transform: rotate(-5deg);
+}

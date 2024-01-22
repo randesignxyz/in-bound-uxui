@@ -1,0 +1,36 @@
+// @import '~antd/es/style/themes/default.less';
+
+.diagram {
+  height: 80vh;
+  background-color: '#fafafa';
+  :global {
+    .djs-visual  {
+      cursor: pointer;
+    }
+    .highlight:not(.djs-connection) .djs-visual > :nth-child(1) {
+      fill: #5f71ea77 !important; /* color elements as green */
+      
+      
+    }
+
+    .highlight-done:not(.djs-connection) .djs-visual > :nth-child(1) {
+      fill: #7a757590 !important; /* color elements as green */
+    }
+    
+
+    .highlight-rejected:not(.djs-connection) .djs-visual > :nth-child(1) {
+      fill: rgba(236, 142, 133, 0.604) !important; 
+    }
+  
+    .done-highlight:not(.djs-connection) .djs-visual > :nth-child(1) {
+      fill: rgba(147, 147, 140, 0.412) !important; /* color elements as green */
+    }
+  
+    .highlight-overlay {
+      background-color: green; /* color elements as green */
+      opacity: 0.4;
+      pointer-events: none; /* no pointer events, allows clicking through onto the element */
+      border-radius: 10px;
+    }
+  }
+}

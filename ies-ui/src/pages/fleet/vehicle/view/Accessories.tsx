@@ -1,0 +1,114 @@
+import { simpleRequestActions } from '@/services/model';
+import { ReloadOutlined } from '@ant-design/icons';
+import type { ActionType } from '@ant-design/pro-components';
+import { ProList } from '@ant-design/pro-components';
+import { Button, message, Modal, Spin, Tag } from 'antd';
+import { useRef, useState } from 'react';
+import { AccessoriesDTO, AddVehicleAccessory } from '../../accessory/data';
+import { AccessoryServiceAPI } from '../../accessory/service';
+import AccessoriesModalForm from './AccessorieModal';
+
+interface Props {
+  id: string;
+}
+
+export default ({ id }: Props) => {
+  const requestAction = simpleRequestActions();
+  const services = AccessoryServiceAPI(requestAction);
+  const [accessories, setAccessories] = useState<AccessoriesDTO[]>([]);
+  const actionRef = useRef<ActionType>();
+  const [accessorieState, setAccessorieSate] = useState<{
+    visible?: {
+      name: 'modal';
+      type: 'ADD' | 'Edit';
+      payload?: { enity: AccessoriesDTO[] | undefined };
+    };
+  }>({});
+
+  const onSave = (data: AddVehicleAccessory) => {
+    Modal.confirm({
+      title: 'Save Accessories Selected',
+      content: 'are you sure?',
+      onOk: async () => {
+        services.addAccessoriesToVehicle(data);
+        setAccessorieSate((v) => ({
+          ...v,
+          visible: undefined,
+        }));
+        message.success('success');
+        actionRef.current?.reloadAndRest?.();
+      },
+    });
+  };
+
+  const onRequest = async () => {
+    const response = await services.list(id);
+    setAccessories(response);
+    return Promise.resolve({
+      data: response,
+      success: true,
+    });
+  };
+
+  return (
+    <>
+      <Spin spinning={requestAction.request?.loading}>
+        <ProList<AccessoriesDTO>
+          toolBarRender={() => {
+            return [
+              <Button
+                key="3"
+                type="link"
+                onClick={() => {
+                  setAccessorieSate((v) => ({
+                    ...v,
+                    visible: { name: 'modal', type: 'ADD', payload: { enity: accessories } },
+                  }));
+                }}
+              >
+                edit
+              </Button>,
+              <Button icon={<ReloadOutlined />} type="link" onClick={() => onRequest()} />,
+            ];
+          }}
+          itemLayout="vertical"
+          rowKey="id"
+          actionRef={actionRef}
+          request={() => onRequest()}
+
+          metas={{
+            title: {
+              render: (_, r) => {
+                return `${r.name}`;
+              },
+            },
+            subTitle: {
+              render: (_, r) => { },
+            },
+            description: {
+              dataIndex: 'description',
+              render: (_, r) => {
+                return (
+                  <>
+                    Quantity: <Tag color="geekblue">{r.quantity}</Tag>
+                  </>
+                );
+              },
+            },
+            actions: {
+              render: (_, r) => { },
+            },
+          }}
+        />
+      </Spin>
+
+      <AccessoriesModalForm
+        id={id}
+        onSave={onSave}
+        open={accessorieState.visible?.name == 'modal'}
+        onCancel={() => setAccessorieSate((v) => ({ ...v, visible: undefined }))}
+        data={accessorieState.visible?.payload?.enity}
+      />
+    </>
+  );
+};

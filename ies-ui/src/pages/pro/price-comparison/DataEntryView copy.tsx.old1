@@ -1,0 +1,1381 @@
+import FileUploader from '@/components/Attachment/FileUploader';
+import { ProcessFlowModalWrapper } from '@/pages/process-flow/components/ProcessFlowModalWrapper';
+import { formatDate, formatter } from '@/pages/utils';
+import { LookupDataItem } from '@/services/data';
+import {
+  CloseOutlined,
+  CopyOutlined,
+  DeleteOutlined,
+  EditOutlined,
+  MoreOutlined,
+  PlusOutlined,
+  SwapOutlined,
+} from '@ant-design/icons';
+import {
+  FooterToolbar,
+  PageContainer,
+  ProCard,
+  ProDescriptions,
+  ProForm,
+  ProFormDigit,
+  ProFormTextArea,
+  ProTable,
+} from '@ant-design/pro-components';
+import { history } from '@umijs/max';
+import {
+  App,
+  Button,
+  Checkbox,
+  Dropdown,
+  Popconfirm,
+  Space,
+  Switch,
+  Table,
+  Typography,
+} from 'antd';
+import { useForm } from 'antd/lib/form/Form';
+import _, { toNumber, uniqueId } from 'lodash';
+import { useEffect, useState } from 'react';
+import { QuotationDetail, QuotationListItem } from '../quotation/data';
+import { createQuotationService } from '../quotation/services';
+import AddComparisonItem, { AddPriceComparisonItem } from './AddComparisonItem';
+import { PriceComparisonOtherCost, PriceComparisonSavePayload } from './data';
+import ItemFinder from './ItemFinder';
+import { PriceComparisonFormNames } from './process-flow/data';
+import { createPriceComparisonService } from './service';
+
+const otherCostTypes: CostTypes[] = ['f1', 'f2', 'l1', 'l2', 'l3'];
+
+export type PriceOfferType = 'first' | 'last';
+
+type FormType = {
+  justifications?: string;
+  isService?: boolean;
+  numOfVendor: number;
+};
+
+type EditableState = {
+  discount?: boolean;
+  freight?: number;
+  clearance?: number;
+};
+
+type selectedItems = {
+  itemId: number;
+  priceOffer: PriceOfferType;
+  quotationId: number;
+  vendorId: number;
+  qty: number;
+  price: number;
+  amount: number;
+};
+
+type CostTypes = 'f1' | 'f2' | 'l1' | 'l2' | 'l3';
+
+type OtherCostType = {
+  type: CostTypes;
+  providerName?: string;
+  values?: {
+    vendorId: number;
+    priceOffer: PriceOfferType;
+    price: number;
+  }[];
+};
+
+type SummaryType = {
+  vendorId: number;
+  priceOffer: PriceOfferType;
+  subTotal: number;
+  discount: number;
+  total: number;
+  totalAwardedAmount?: number;
+};
+
+const priceOfferList: PriceOfferType[] = ['first', 'last'];
+
+export default ({
+  id,
+  onBack,
+  onEdit,
+  onAdd,
+}: {
+  id?: number;
+  type: 'CREATE' | 'EDIT';
+  onBack: () => void;
+  onAdd?: (id?: number) => void;
+  onEdit?: (id: number) => void;
+}) => {
+  const { message } = App.useApp();
+  const priceComparisonSrv = createPriceComparisonService();
+  const quotationService = createQuotationService();
+  const [vendors, setVendors] = useState<(LookupDataItem & { key?: string })[]>([]);
+  const [form] = useForm<FormType>();
+  const [isService, setIsService] = useState(false);
+  const [startFormVisible, setStartFormVisible] = useState(false);
+  const [items, setItems] = useState<AddPriceComparisonItem[]>([]);
+  const [itemsSelected, setItemsSelected] = useState<selectedItems[]>([]);
+  const [editableState, setEditableState] = useState<EditableState>({});
+  const [quotationDetails, setquoationDetails] = useState<QuotationDetail[]>([]);
+  const [summaryAmount, setSummaryAmount] = useState<SummaryType[]>();
+  const [uploadFiles, setUploadFiles] = useState<string[]>([]);
+  const [otherCost, setOtherCost] = useState<OtherCostType[]>(
+    otherCostTypes.map((it) => ({
+      type: it,
+    })),
+  );
+
+  type AlignType = 'start' | 'end' | 'left' | 'right' | 'center' | 'justify' | 'match-parent';
+
+  const onAddItemHandler = async (item: AddPriceComparisonItem) => {
+    const newItems = [...items, { ...item, key: uniqueId() }].map((it, index) => ({
+      ...it,
+      seq: index + 1,
+    }));
+    const vendorList = newItems.flatMap((it) =>
+      it.item.quotationItems.filter((it1) => it1.offerType).flatMap((it1) => it1.vendor),
+    );
+
+    const vendorList1 = _.unionBy<LookupDataItem>(vendorList, (it) => it.id);
+    setVendors(vendorList1);
+    setItems(newItems);
+
+    const quotationIds = _.union(
+      newItems.flatMap((it) => it.item.quotationItems.map((it) => it.quotationId)),
+    );
+
+    if (newItems.length == 0 && quotationDetails.map((it) => it.id).length == quotationIds.length) {
+      return;
+    }
+    const quoations = await fetchDetail(
+      _.union(newItems.flatMap((it) => it.item.quotationItems.map((it) => it.quotationId))),
+    );
+
+    calculateSummary(vendorList1, newItems, quoations);
+  };
+
+  const onAddQuotatinHandler = (item: QuotationListItem, vendorKey: String) => {};
+
+  const calculateSummary = (
+    vendorList: LookupDataItem[],
+    newItems: AddPriceComparisonItem[],
+    quoations?: QuotationDetail[],
+  ) => {
+    const summary = priceOfferList.flatMap((offerType) =>
+      vendorList.flatMap((vendor) => {
+        const subTotal0 = _.sumBy(
+          newItems.flatMap((it) =>
+            it.item.quotationItems
+              .filter((it1) => it1.offerType == offerType && it1.vendor.id == vendor.id)
+              .flatMap((it1) => it1.price * (it.qty || 0)),
+          ),
+        );
+
+        const subTotal =
+          offerType == 'last' && subTotal0 == 0
+            ? _.sumBy(
+                newItems.flatMap((it) =>
+                  it.item.quotationItems
+                    .filter((it1) => it1.offerType == 'first' && it1.vendor.id == vendor.id)
+                    .flatMap((it1) => it1.price * (it.qty || 0)),
+                ),
+              )
+            : subTotal0;
+
+        const quotationId = newItems
+          .flatMap((it) =>
+            it.item.quotationItems
+              .filter((it1) => it1.offerType == offerType && it1.vendor.id == vendor.id)
+              .flatMap((it1) => it1.quotationId),
+          )
+          .find((it) => it);
+
+        const quotation = quoations?.find((it) => it.id == quotationId);
+
+        const discount = quotation?.discountAmount || 0;
+        return {
+          vendorId: vendor.id,
+          priceOffer: offerType,
+          subTotal: subTotal,
+          discount: discount,
+          total: subTotal - discount,
+        } as SummaryType;
+      }),
+    );
+
+    setSummaryAmount(summary);
+  };
+
+  const onSelectedQuotation = (
+    offerType: 'first' | 'last',
+    vendor: LookupDataItem,
+    quotationId: number,
+    item: AddPriceComparisonItem,
+    checked: boolean,
+    qty: number,
+    price: number,
+  ) => {
+    const newList = itemsSelected.filter((i) => i.itemId != item.item.id);
+    if (checked) {
+      setItemsSelected([
+        ...newList,
+        {
+          itemId: item.item.id,
+          priceOffer: offerType,
+          quotationId: quotationId,
+          vendorId: vendor.id,
+          amount: price * (item.qty || 0),
+          price: price,
+          qty: item.qty || 0,
+        },
+      ]);
+    } else {
+      setItemsSelected(newList);
+    }
+
+    if (newList.length == 0) {
+      setEditableState({});
+    }
+  };
+
+  const isSelected = (priceOffer: 'first' | 'last', vendorId: number) =>
+    itemsSelected.some((it) => it.priceOffer == priceOffer && it.vendorId == vendorId);
+
+  const isEditable = () => itemsSelected.length > 0;
+
+  const summaryRow = (
+    label: React.ReactNode,
+    key: string,
+    colSpan: number,
+    cellRender: (priceOffer: 'first' | 'last', vendorId: number) => React.ReactNode | undefined,
+    align?: AlignType,
+  ) => {
+    return (
+      <Table.Summary.Row>
+        <Table.Summary.Cell align={align || 'right'} colSpan={colSpan} index={0}>
+          {label}
+        </Table.Summary.Cell>
+        {vendors?.map((it, index) => (
+          <Table.Summary.Cell key={`${key}-1-${index}`} align="right" index={index + 1}>
+            {cellRender('first', it.id)}
+          </Table.Summary.Cell>
+        ))}
+
+        {vendors?.map((it, index) => (
+          <Table.Summary.Cell
+            key={`${key}-2-${index}`}
+            align="right"
+            index={vendors.length + index + 1}
+          >
+            {cellRender('last', it.id)}
+          </Table.Summary.Cell>
+        ))}
+      </Table.Summary.Row>
+    );
+  };
+
+  const fetchDetail = async (ids: number[]) => {
+    try {
+      const rs = await quotationService.fetchItems(ids);
+      setquoationDetails(rs);
+      return rs;
+    } catch (error: any) {
+      message.error(error.message || 'Failed to fetch data.');
+    }
+  };
+
+  const calculateFinalPrice = (
+    type: 'est' | 'total',
+    priceOffer: PriceOfferType,
+    vendorId: number,
+  ) => {
+    if (isSelected(priceOffer, vendorId)) {
+      const cost = _.sumBy(
+        otherCost.flatMap(
+          (it) =>
+            it.values
+              ?.filter((it1) => it1.priceOffer == priceOffer && vendorId == it1.vendorId)
+              .flatMap((it1) => it1.price) || 0,
+        ),
+      );
+      if (type == 'est' && cost) {
+        return cost;
+      }
+
+      if (type == 'total') {
+        const total =
+          summaryAmount?.find((it) => it.priceOffer == priceOffer && it.vendorId == vendorId)
+            ?.totalAwardedAmount || 0;
+        return total + cost;
+      }
+    }
+    return null;
+  };
+
+  const getQuotation = (priceOffer: PriceOfferType, vendorId: number) => {
+    const quotationList0 = items
+      .flatMap((it) => it.item.quotationItems)
+      .filter((it) => it.vendor.id == vendorId)
+      .map((it) => ({
+        quotationId: it.quotationId,
+        offerType: it.offerType,
+      }));
+
+    const quotationList = _.unionBy(quotationList0, (it) => `${it.quotationId}-${it.offerType}`);
+    const quotationId =
+      quotationList.length == 1
+        ? quotationList.find((it) => it)?.quotationId
+        : quotationList.find((it) => it.offerType == priceOffer)?.quotationId;
+
+    return quotationDetails.find((it) => it.id == quotationId);
+  };
+
+  const renderVendorTitle = (priceOffer: PriceOfferType, vendor: LookupDataItem) => {
+    const quotation = getQuotation(priceOffer, vendor.id);
+    return (
+      <Space>
+        {vendor.id != 0 && (
+          <Popconfirm
+            trigger={'hover'}
+            destroyTooltipOnHide={true}
+            autoAdjustOverflow={true}
+            showCancel={false}
+            okText="Close"
+            title={
+              <ProDescriptions<QuotationDetail>
+                dataSource={quotation}
+                style={{ width: 300 }}
+                column={1}
+                columns={[
+                  {
+                    title: 'Quotation No',
+                    dataIndex: 'code',
+                  },
+                  {
+                    title: 'Vendor',
+                    render: (_, r) => [r.vendor?.code, r.vendor?.name].filter((it) => it).join('-'),
+                  },
+                  { title: 'Issued On', render: (_, r) => formatDate(r.issuedDate) },
+                ]}
+              />
+            }
+          >
+            <a
+              onClick={() => {
+                window.open(`./../quotation/detail/${quotation?.id}`, '_blank')?.focus();
+              }}
+            >
+              <Space>
+                {vendor.name} {quotation?.code}
+              </Space>
+            </a>
+          </Popconfirm>
+        )}
+        {vendor.id == 0 && vendor.name}
+
+        <Dropdown
+          menu={{
+            items: [
+              {
+                label: (
+                  <ItemFinder
+                    selectedItems={items.map((it) => it.item.id)}
+                    onAddQuotation={(item) => onAddQuotatinHandler(item, vendor.key!!)}
+                    // onSave={onAddItemHandler}
+                    isService={isService}
+                    trigger={<div>Add Quotation</div>}
+                  />
+                ),
+
+                key: 'add',
+                disabled: vendor.id != 0,
+                icon: <PlusOutlined />,
+              },
+              {
+                label: 'Copy',
+                key: 'copy',
+                disabled: vendor.id == 0,
+                icon: <CopyOutlined />,
+              },
+              {
+                label: 'Change Quotation ',
+                key: 'edit',
+                disabled: vendor.id == 0,
+                danger: true,
+                icon: <EditOutlined />,
+              },
+              {
+                label: 'Switch Price Offer',
+                key: 'switch',
+                disabled: vendor.id == 0,
+                danger: true,
+                icon: <SwapOutlined />,
+              },
+              {
+                label: 'Remove Quotation',
+                key: 'remove',
+                disabled: vendors.length != 0,
+                danger: true,
+                // onClick: () => setVendors((v) => v.filter((it) => it.key != vendor.key)),
+                icon: <CloseOutlined />,
+              },
+              {
+                label: 'Remove Vendor',
+                key: 'remove',
+                disabled: vendors.length < 3,
+                danger: true,
+                onClick: () => setVendors((v) => v.filter((it) => it.key != vendor.key)),
+                icon: <DeleteOutlined />,
+              },
+            ],
+          }}
+        >
+          <Typography.Link>
+            <MoreOutlined />
+          </Typography.Link>
+        </Dropdown>
+      </Space>
+    );
+  };
+
+  useEffect(() => {
+    form.setFieldsValue({ isService: false });
+    setVendors([
+      { id: 0, name: 'N/A', key: uniqueId('vendor') },
+      { id: 0, name: 'N/A', key: uniqueId('vendor') },
+    ]);
+  }, []);
+  useEffect(() => {
+    priceOfferList.map((offer) => {
+      vendors?.map((vendor) => {
+        const amount = _.sumBy(
+          itemsSelected
+            .filter((it) => it.priceOffer == offer && it.vendorId == vendor.id)
+            .map((it) => it.amount),
+        );
+        setSummaryAmount((v) =>
+          v?.map((s) => ({
+            ...s,
+            totalAwardedAmount:
+              s.priceOffer == offer && s.vendorId == vendor.id
+                ? amount - s.discount
+                : s.totalAwardedAmount,
+          })),
+        );
+      });
+    });
+  }, [itemsSelected]);
+
+  return (
+    <PageContainer title="Price Comparison Requisition Form" onBack={() => history.back()}>
+      <ProForm
+        form={form}
+        submitter={{
+          render: () => (
+            <FooterToolbar>
+              <Button style={{ marginRight: 10 }} onClick={onBack}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  form.resetFields(['justifications']);
+                  setItemsSelected([]);
+                  setItems([]);
+                  setVendors([]);
+                  calculateSummary([], [], []);
+                }}
+              >
+                Clear
+              </Button>
+              <Button
+                disabled={(() =>
+                  items.length == 0 ||
+                  itemsSelected.length == 0 ||
+                  itemsSelected.length != items.length)()}
+                type="primary"
+                onClick={async () => {
+                  await form.validateFields();
+                  if (itemsSelected.length != items.length) {
+                    message.error('Please select quotation.');
+                    return;
+                  }
+
+                  setStartFormVisible(true);
+                }}
+              >
+                Submit
+              </Button>
+            </FooterToolbar>
+          ),
+        }}
+        onValuesChange={(changedVaues) => {
+          const { isService, numOfVendor } = changedVaues;
+
+          if (isService) {
+            setIsService(isService);
+          }
+
+          // if (numOfVendor) {
+          //   setNumOfVendor(numOfVendor);
+          // }
+
+          const data = _.flatMap(changedVaues, (value, key) => {
+            return _.flatMap(value, (value1, key1) => {
+              if (key1 == 'name') {
+                return [
+                  {
+                    layer1: key,
+                    layer2: key1,
+                    layer3: key1,
+                    value: value1,
+                  },
+                ];
+              } else {
+                return _.flatMap(value1, (value2, key2) => {
+                  return {
+                    layer1: key,
+                    layer2: key1,
+                    layer3: key2,
+                    value: value2,
+                  };
+                });
+              }
+            });
+          });
+
+          const data1 = _.uniq(data);
+
+          data1.map((it) => {
+            const newCost = otherCost.map((it1) => {
+              if (it1.type == it.layer1) {
+                if (it.layer2 == 'name') {
+                  return { ...it1, providerName: it.value as string } as OtherCostType;
+                } else {
+                  return {
+                    ...it1,
+                    values: [
+                      ...(it1.values || []).filter(
+                        (it2) =>
+                          it2.priceOffer != it.layer2 && it2.vendorId.toString() != it.layer3,
+                      ),
+                      {
+                        vendorId: toNumber(it.layer3),
+                        priceOffer: it.layer2,
+                        price: it.value as number,
+                      },
+                    ],
+                  } as OtherCostType;
+                }
+              }
+
+              return it1;
+            });
+            setOtherCost(newCost);
+          });
+        }}
+      >
+        <ProCard
+          direction="column"
+          extra={
+            <Space align="baseline">
+              {(vendors?.length || 0) < 3 && (
+                <Button
+                  type="link"
+                  icon={<PlusOutlined />}
+                  onClick={() => {
+                    setVendors((v) => [...v, { id: 0, name: 'N/A', key: uniqueId('vendor') }]);
+                  }}
+                >
+                  Add More Vendor
+                </Button>
+              )}
+              <Switch
+                // name={'isService'}
+                onChange={setIsService}
+                // isService
+                disabled={items.length > 0}
+                unCheckedChildren={'Item'}
+                checkedChildren={'Service'}
+              />
+
+              {/* <ItemFinder
+            selectedItems={items.map((it) => it.item.id)}
+            onSave={onAddItemHandler}
+            isService={isService}
+            trigger={
+              <Button type="link" icon={<PlusOutlined />}>
+                {isService ? 'Add Services' : 'Add Items'}
+              </Button>
+            }
+          /> */}
+            </Space>
+          }
+        >
+          <ProCard size="small" bordered style={{ marginBlockStart: 8 }}>
+            <ProTable<AddPriceComparisonItem>
+              search={false}
+              pagination={false}
+              dataSource={items}
+              size="small"
+              options={false}
+              rowKey={'key'}
+              defaultSize="small"
+              bordered
+              columns={[
+                { title: '#', dataIndex: 'seq' },
+                {
+                  title: 'Item Code',
+                  width: 50,
+                  render: (_, r) => r.item.itemCode,
+                  fieldProps: { style: { color: 'red' } },
+                  formItemProps: { style: { color: 'red' } },
+                },
+                {
+                  title: 'Item Name',
+                  width: 200,
+                  render: (_, r) => [r.item.itemName, r.description].filter((it) => it).join(', '),
+                },
+                //{ title: 'Description', dataIndex: 'description' },
+                { title: 'Qty', align: 'right', render: (_, r) => r.qty },
+                {
+                  title: 'UoM',
+                  width: 70,
+                  render: (_, r) => r.item.uomList.find((it) => it.id == r.uomId)?.name,
+                },
+                {
+                  title: 'Target Price',
+                  align: 'center',
+                  width: 70,
+                  render: (_, r) => r.targetPrice && formatter.format(r.targetPrice),
+                },
+                {
+                  title: '1st Offer Unit Price',
+                  proFieldProps: {},
+                  children: vendors?.map((it) => ({
+                    title: renderVendorTitle('first', it),
+                    align: 'right',
+                    render: (_, r) => {
+                      const quotation = r.item.quotationItems.find(
+                        (i) => i.vendor.id == it.id && i.offerType == 'first',
+                      );
+                      const selected = itemsSelected.find((i) => i.itemId == r.item.id);
+                      return (
+                        quotation && (
+                          <Space>
+                            {formatter.format(quotation.price)}
+                            <Checkbox
+                              disabled={
+                                selected &&
+                                ((selected?.vendorId != it.id && selected.priceOffer == 'first') ||
+                                  selected.priceOffer != 'first')
+                              }
+                              onChange={(e) => {
+                                onSelectedQuotation(
+                                  'first',
+                                  it,
+                                  quotation.quotationId,
+                                  r,
+                                  e.target.checked,
+                                  r.qty || 0,
+                                  quotation.price,
+                                );
+                              }}
+                            />
+                          </Space>
+                        )
+                      );
+                    },
+                  })),
+                },
+
+                {
+                  title: 'Last Offer Unit Price',
+                  children: vendors?.map((it) => ({
+                    title: renderVendorTitle('last', it),
+                    align: 'right',
+                    render: (_, r) => {
+                      const itemList = r.item.quotationItems.flatMap((it) => it);
+                      const selected = itemsSelected.find((i) => i.itemId == r.item.id);
+                      const quotation = itemList.find(
+                        (i) =>
+                          i.vendor.id == it.id &&
+                          (i.offerType == 'last' || (i.singleQuote && i.offerType == 'first')),
+                      );
+
+                      return (
+                        quotation && (
+                          <Space>
+                            {formatter.format(quotation.price)}
+                            {
+                              <Checkbox
+                                disabled={
+                                  selected &&
+                                  ((selected?.vendorId != it.id && selected.priceOffer == 'last') ||
+                                    selected.priceOffer != 'last')
+                                }
+                                onChange={(e) => {
+                                  onSelectedQuotation(
+                                    'last',
+                                    it,
+                                    quotation.quotationId,
+                                    r,
+                                    e.target.checked,
+                                    r.qty || 0,
+                                    quotation.price,
+                                  );
+                                }}
+                              />
+                            }
+                          </Space>
+                        )
+                      );
+                    },
+                  })),
+                },
+                {
+                  width: 70,
+                  render: (a, r) => (
+                    <>
+                      <AddComparisonItem
+                        trigger={
+                          <Button size="small" type="link" icon={<EditOutlined size={10} />} />
+                        }
+                        item={r}
+                        isService={isService}
+                        onSave={(item: AddPriceComparisonItem) => {
+                          const newItems = items.map((it) => (it.key == item.key ? item : it));
+                          setItems(newItems);
+
+                          const vendorList = newItems.flatMap((it) =>
+                            it.item.quotationItems
+                              .filter((it1) => it1.offerType)
+                              .flatMap((it1) => it1.vendor),
+                          );
+
+                          const vendorList1 = _.unionBy<LookupDataItem>(vendorList, (it) => it.id);
+
+                          setVendors(vendorList1);
+                        }}
+                      />
+
+                      <Popconfirm
+                        onConfirm={() => {
+                          setItemsSelected((v) => v.filter((it) => it.itemId != r.item.id));
+                          setItems(items.filter((it) => it.item.id != r.item.id));
+                        }}
+                        title={'Are sure to remove?'}
+                      >
+                        <Button
+                          size="small"
+                          type="link"
+                          danger
+                          icon={<DeleteOutlined size={10} />}
+                        />
+                      </Popconfirm>
+                    </>
+                  ),
+                },
+              ]}
+              summary={(allData) => (
+                <Table.Summary fixed>
+                  {summaryRow('Sub Total', 'total', 6, (priceOffer, vendorId) => {
+                    const subTotal = summaryAmount?.find(
+                      (it) => it.priceOffer == priceOffer && it.vendorId == vendorId,
+                    )?.subTotal;
+                    return subTotal && formatter.format(subTotal);
+                  })}
+                  {summaryRow(
+                    <>Discount</>,
+
+                    'discount',
+                    6,
+                    (priceOffer, vendorId) => {
+                      const amount = summaryAmount?.find(
+                        (it) => it.priceOffer == priceOffer && it.vendorId == vendorId,
+                      )?.discount;
+                      return !!amount && formatter.format(amount);
+                    },
+                  )}
+                  {summaryRow('Total', 'total', 6, (priceOffer, vendorId) => {
+                    const amount = summaryAmount?.find(
+                      (it) => it.priceOffer == priceOffer && it.vendorId == vendorId,
+                    )?.total;
+                    return amount && formatter.format(amount);
+                  })}
+                  {summaryRow(
+                    'Total Awarded Amount',
+                    'total-awarded-amount',
+                    6,
+                    (priceOffer, vendorId) => {
+                      if (isSelected(priceOffer, vendorId)) {
+                        return formatter.format(
+                          summaryAmount?.find(
+                            (it) => it.priceOffer == priceOffer && it.vendorId == vendorId,
+                          )?.totalAwardedAmount || 0,
+                        );
+                      }
+                      return null;
+                    },
+                  )}
+
+                  <Table.Summary.Row>
+                    <Table.Summary.Cell colSpan={3} rowSpan={7} index={0}>
+                      Estimated Logistics Fee
+                    </Table.Summary.Cell>
+                    <Table.Summary.Cell colSpan={5} index={0}>
+                      1. Freight
+                    </Table.Summary.Cell>
+                  </Table.Summary.Row>
+                  {summaryRow(
+                    (editableState.freight || 0) == 0 ? (
+                      <Typography.Text style={{ marginLeft: 10 }}>
+                        {'F1'}
+                        {isEditable() && (
+                          <Button
+                            type="link"
+                            size="small"
+                            icon={
+                              <PlusOutlined
+                                size={5}
+                                onClick={() =>
+                                  setEditableState((v) => ({
+                                    ...v,
+                                    freight: (v.freight || 0) + 1,
+                                  }))
+                                }
+                              />
+                            }
+                          />
+                        )}
+                      </Typography.Text>
+                    ) : (
+                      <Space.Compact>
+                        <ProFormTextArea
+                          rules={[{ required: true }]}
+                          name={['f1', 'name']}
+                          fieldProps={{ rows: 1 }}
+                        />
+                        {(editableState.freight || 0) == 1 && (
+                          <Button
+                            onClick={() => setEditableState((v) => ({ ...v, freight: 0 }))}
+                            danger
+                            icon={<DeleteOutlined />}
+                            type="link"
+                          />
+                        )}
+                      </Space.Compact>
+                    ),
+                    'f1',
+                    3,
+                    (priceOffer, vendorId) =>
+                      (editableState.freight || 0) > 0 &&
+                      isSelected(priceOffer, vendorId) && (
+                        <ProFormDigit
+                          rules={[{ required: true }]}
+                          name={['f1', priceOffer, vendorId]}
+                        />
+                      ),
+                    'left',
+                  )}
+                  {summaryRow(
+                    (editableState.freight || 0) != 2 ? (
+                      <Typography.Text style={{ marginLeft: 10 }}>
+                        {'F2'}
+                        {isEditable() && (
+                          <Button
+                            type="link"
+                            size="small"
+                            icon={
+                              <PlusOutlined
+                                size={5}
+                                onClick={() =>
+                                  setEditableState((v) => ({
+                                    ...v,
+                                    freight: (v.freight || 0) + 1,
+                                  }))
+                                }
+                              />
+                            }
+                          />
+                        )}
+                      </Typography.Text>
+                    ) : (
+                      <Space.Compact>
+                        <ProFormTextArea
+                          rules={[{ required: true }]}
+                          name={['f2', 'name']}
+                          fieldProps={{ rows: 1 }}
+                        />
+                        {(editableState.freight || 0) == 2 && isEditable() && (
+                          <Button
+                            onClick={() => setEditableState((v) => ({ ...v, freight: 1 }))}
+                            danger
+                            icon={<DeleteOutlined />}
+                            type="link"
+                          />
+                        )}
+                      </Space.Compact>
+                    ),
+                    'f2',
+                    3,
+                    (priceOffer, vendorId) =>
+                      (editableState.freight || 0) > 1 &&
+                      isSelected(priceOffer, vendorId) && (
+                        <ProFormDigit
+                          rules={[{ required: true }]}
+                          name={['f2', priceOffer, vendorId]}
+                        />
+                      ),
+                    'left',
+                  )}
+                  <Table.Summary.Row>
+                    <Table.Summary.Cell colSpan={5} index={0}>
+                      2. Clearance Agent
+                    </Table.Summary.Cell>
+                  </Table.Summary.Row>
+                  {summaryRow(
+                    (editableState.clearance || 0) == 0 ? (
+                      <Typography.Text style={{ marginLeft: 10 }}>
+                        {'L1'}
+                        {isEditable() && (
+                          <Button
+                            type="link"
+                            size="small"
+                            icon={
+                              <PlusOutlined
+                                size={10}
+                                onClick={() =>
+                                  setEditableState((v) => ({
+                                    ...v,
+                                    clearance: (v.clearance || 0) + 1,
+                                  }))
+                                }
+                              />
+                            }
+                          />
+                        )}
+                      </Typography.Text>
+                    ) : (
+                      <Space.Compact>
+                        <ProFormTextArea
+                          rules={[{ required: true }]}
+                          name={['l1', 'name']}
+                          fieldProps={{ rows: 1 }}
+                        />
+                        {(editableState.clearance || 0) == 1 && (
+                          <Button
+                            onClick={() => setEditableState((v) => ({ ...v, clearance: 0 }))}
+                            danger
+                            icon={<DeleteOutlined />}
+                            type="link"
+                          />
+                        )}
+                      </Space.Compact>
+                    ),
+                    'l1',
+                    3,
+                    (priceOffer, vendorId) =>
+                      (editableState.clearance || 0) > 0 &&
+                      isSelected(priceOffer, vendorId) &&
+                      itemsSelected.some((it) => it.priceOffer == priceOffer) && (
+                        <ProFormDigit
+                          rules={[{ required: true }]}
+                          name={['l1', priceOffer, vendorId]}
+                        />
+                      ),
+                    'left',
+                  )}
+                  {summaryRow(
+                    (editableState.clearance || 0) < 2 ? (
+                      <Typography.Text style={{ marginLeft: 10 }}>
+                        {'L2'}
+                        {isEditable() && (
+                          <Button
+                            type="link"
+                            size="small"
+                            icon={
+                              <PlusOutlined
+                                size={10}
+                                onClick={() =>
+                                  setEditableState((v) => ({
+                                    ...v,
+                                    clearance: (v.clearance || 0) + 1,
+                                  }))
+                                }
+                              />
+                            }
+                          />
+                        )}
+                      </Typography.Text>
+                    ) : (
+                      <Space.Compact>
+                        <ProFormTextArea
+                          name={['l2', 'name']}
+                          rules={[{ required: true }]}
+                          fieldProps={{ rows: 1 }}
+                        />
+                        {(editableState.clearance || 0) <= 2 && (
+                          <Button
+                            onClick={() => setEditableState((v) => ({ ...v, clearance: 1 }))}
+                            danger
+                            icon={<DeleteOutlined />}
+                            type="link"
+                          />
+                        )}
+                      </Space.Compact>
+                    ),
+                    'l2',
+                    3,
+                    (priceOffer, vendorId) =>
+                      (editableState.clearance || 0) > 1 &&
+                      isSelected(priceOffer, vendorId) && (
+                        <ProFormDigit name={['l2', priceOffer, vendorId]} />
+                      ),
+                    'left',
+                  )}
+                  {summaryRow(
+                    (editableState.clearance || 0) < 3 ? (
+                      <Typography.Text style={{ marginLeft: 10 }}>
+                        {'L3'}
+                        {isEditable() && (
+                          <Button
+                            type="link"
+                            size="small"
+                            icon={
+                              <PlusOutlined
+                                size={10}
+                                onClick={() =>
+                                  setEditableState((v) => ({
+                                    ...v,
+                                    clearance: (v.clearance || 0) + 1,
+                                  }))
+                                }
+                              />
+                            }
+                          />
+                        )}
+                      </Typography.Text>
+                    ) : (
+                      <Space.Compact>
+                        <ProFormTextArea
+                          rules={[{ required: true }]}
+                          name={['l3', 'name']}
+                          fieldProps={{ rows: 1 }}
+                        />
+                        {(editableState.clearance || 0) > 2 && (
+                          <Button
+                            onClick={() => setEditableState((v) => ({ ...v, clearance: 2 }))}
+                            danger
+                            icon={<DeleteOutlined />}
+                            type="link"
+                          />
+                        )}
+                      </Space.Compact>
+                    ),
+                    'l3',
+                    3,
+                    (priceOffer, vendorId) =>
+                      (editableState.clearance || 0) > 2 &&
+                      isSelected(priceOffer, vendorId) && (
+                        <ProFormDigit name={['l3', priceOffer, vendorId]} />
+                      ),
+                    'left',
+                  )}
+
+                  {summaryRow(
+                    'Estimated Awarded Logistics Fee',
+                    'estimated-awarded-logistice-fee',
+                    6,
+                    (priceOffer, vendorId) => {
+                      const amount = calculateFinalPrice('est', priceOffer, vendorId);
+                      return amount && formatter.format(amount);
+                    },
+                  )}
+
+                  {summaryRow('Total Amount', 'total-amount', 6, (priceOffer, vendorId) => {
+                    const amount = calculateFinalPrice('total', priceOffer, vendorId);
+                    return amount && formatter.format(amount);
+                  })}
+
+                  <Table.Summary.Row>
+                    <Table.Summary.Cell colSpan={3} rowSpan={6} index={0}>
+                      Non-Price Criteria
+                    </Table.Summary.Cell>
+                  </Table.Summary.Row>
+                  {summaryRow(
+                    'Trade Term',
+                    'trade-term',
+                    3,
+                    (priceOffer, vendorId) => getQuotation(priceOffer, vendorId)?.tradeTerms,
+                  )}
+                  {summaryRow(
+                    'Delivery Lead Time',
+                    'delivery-lead-time',
+                    3,
+                    (priceOffer, vendorId) => getQuotation(priceOffer, vendorId)?.leadTime,
+                  )}
+                  {summaryRow(
+                    'Payment Term',
+                    'payment-term',
+                    3,
+                    (priceOffer, vendorId) => getQuotation(priceOffer, vendorId)?.paymentGroup,
+                  )}
+                  {summaryRow(
+                    'Specifications',
+                    'specifications',
+                    3,
+                    (priceOffer, vendorId) => getQuotation(priceOffer, vendorId)?.specifications,
+                  )}
+                  {summaryRow(
+                    'Warranty',
+                    'warranty',
+                    3,
+                    (priceOffer, vendorId) => getQuotation(priceOffer, vendorId)?.warranty,
+                  )}
+                </Table.Summary>
+              )}
+            />
+          </ProCard>
+
+          <ProCard bordered style={{ marginBlockStart: 8 }}>
+            <ProFormTextArea
+              label="Recommendations and justifications"
+              name={'justifications'}
+              rules={[{ required: true }]}
+            />
+          </ProCard>
+
+          <ProCard title="Attachment Files" bordered style={{ marginBlockStart: 8 }}>
+            <FileUploader
+              multiple
+              showTitle={false}
+              addFileInfo
+              service="FILE"
+              onSetFiles={(files) => {
+                setUploadFiles(files.map((it) => it.response));
+              }}
+            />
+          </ProCard>
+        </ProCard>
+      </ProForm>
+      <ProcessFlowModalWrapper
+        type="action"
+        action="Start"
+        loading={false}
+        noAttachment
+        formKey={PriceComparisonFormNames.start}
+        // payload={{ from: 'Requisition', id: id }}
+        visible={startFormVisible}
+        actionHandlers={{
+          onStartWorkflow: async (processDef, formKey, buId, requestor, comment) => {
+            const dataForm = await form.validateFields();
+            const otherCostItems = otherCost
+              .filter((it) => it.providerName)
+              .map((it, index) => ({
+                type: it.type,
+                providerName: it.providerName,
+                seq: index,
+                items: it.values?.map((it1) => ({
+                  vendorId: it1.vendorId,
+                  priceOffer: it1.priceOffer == 'first' ? 1 : 0,
+                  amount: it1.price,
+                })),
+              }));
+
+            const otherSummary: PriceComparisonOtherCost[] = [
+              {
+                type: 'subTotal',
+                seq: 1,
+                providerName: 'Sub Total',
+                items: (summaryAmount || []).map((it) => ({
+                  amount: it.subTotal,
+                  priceOffer: it.priceOffer == 'first' ? 1 : 0,
+                  vendorId: it.vendorId,
+                })),
+              },
+              {
+                type: 'discount',
+                seq: 1,
+                providerName: 'Discount',
+                items: (summaryAmount || []).map((it) => ({
+                  amount: it.discount,
+                  priceOffer: it.priceOffer == 'first' ? 1 : 0,
+                  vendorId: it.vendorId,
+                })),
+              },
+              {
+                type: 'total',
+                seq: 1,
+                providerName: 'Total',
+                items: (summaryAmount || []).map((it) => ({
+                  amount: it.total,
+                  priceOffer: it.priceOffer == 'first' ? 1 : 0,
+                  vendorId: it.vendorId,
+                })),
+              },
+              {
+                type: 'totalAwardedAmount',
+                seq: 1,
+                providerName: 'Total Awarded Amount',
+                items: (summaryAmount || [])
+                  .filter((it) => isSelected(it.priceOffer, it.vendorId))
+                  .map((it) => ({
+                    amount: it.total,
+                    priceOffer: it.priceOffer == 'first' ? 1 : 0,
+                    vendorId: it.vendorId,
+                  })),
+              },
+            ];
+
+            const finalPrice = itemsSelected.map((it) => ({
+              priceOffer: it.priceOffer,
+              vendorId: it.vendorId,
+            }));
+
+            const finalPriceUniq = _.uniq(finalPrice);
+
+            const awardedLogisticsFee: PriceComparisonOtherCost = {
+              type: 'awardedLogisticsFee',
+              providerName: 'Estimated Awarded Logistics Fee',
+              seq: 0,
+              items: finalPriceUniq
+                .map(({ priceOffer, vendorId }) => ({
+                  amount: calculateFinalPrice('est', priceOffer, vendorId) || 0,
+                  priceOffer: priceOffer == 'first' ? 1 : 0,
+                  vendorId: vendorId,
+                }))
+                .filter((it1) => it1.amount > 0),
+            };
+
+            const totalAmount: PriceComparisonOtherCost = {
+              type: 'totalPrice',
+              providerName: 'Total Price',
+              seq: 0,
+              items: finalPriceUniq.map(({ priceOffer, vendorId }) => ({
+                amount: calculateFinalPrice('total', priceOffer, vendorId) || 0,
+                priceOffer: priceOffer == 'first' ? 1 : 0,
+                vendorId: vendorId,
+              })),
+            };
+
+            const noneCosts: PriceComparisonOtherCost[] = [
+              { label: 'Trade Term', key: 'tradeTerm' },
+              { label: 'Delivery Lead Time', key: 'deliveryLeadTime' },
+              { label: 'Payment Term', key: 'paymentTerm' },
+              { label: 'Specifications', key: 'specifications' },
+              { label: 'Warranty', key: 'warranty' },
+            ].map((it, index) => ({
+              providerName: it.label,
+              type: it.key,
+              seq: 1000 + index,
+              items: priceOfferList.flatMap((p) =>
+                (vendors || []).flatMap((v) => {
+                  const qotation = getQuotation(p, v.id);
+                  return {
+                    vendorId: v.id,
+                    priceOffer: p == 'first' ? 1 : 0,
+                    text: (() => {
+                      if (it.key == 'tradeTerm') {
+                        return qotation?.tradeTerms;
+                      }
+                      if (it.key == 'deliveryLeadTime') {
+                        return qotation?.leadTime;
+                      }
+                      if (it.key == 'paymentTerm') {
+                        return qotation?.paymentGroup;
+                      }
+                      if (it.key == 'specifications') {
+                        return qotation?.specifications;
+                      }
+                      if (it.key == 'warranty') {
+                        return qotation?.warranty;
+                      }
+                      return '';
+                    })(),
+                  };
+                }),
+              ),
+            }));
+
+            const saveData = {
+              processDef: processDef,
+              formKey: formKey,
+              buId: buId,
+              requestor: requestor.id,
+              remarks: comment,
+              justifications: dataForm.justifications,
+              items: items.map((it) => {
+                const noLastPriceVendors = vendors?.filter(
+                  (v) =>
+                    !it.item.quotationItems.some(
+                      (q) => v.id == q.vendor.id && q.offerType == 'last',
+                    ),
+                );
+
+                const qitems = [
+                  ...it.item.quotationItems,
+                  ...it.item.quotationItems
+                    .filter((q) =>
+                      noLastPriceVendors?.some(
+                        (v) => v.id == q.vendor.id && q.offerType == 'first',
+                      ),
+                    )
+                    .map((q) => ({ ...q, offerType: 'last' })),
+                ];
+
+                return {
+                  itemId: it.item.id,
+                  seq: it.seq || 0,
+                  itemCode: it.item.itemCode,
+                  itemName: it.item.itemName,
+                  description: it.description,
+                  qty: it.qty || 0,
+                  targetPrice: it.targetPrice || 0,
+                  uomId: it.uomId,
+                  uomName: '',
+                  quotationList: qitems.map((q) => ({
+                    quotationId: q.quotationId,
+                    quotationNo: q.quotationNo,
+                    vendorId: q.vendor.id,
+                    vendorCode: q.vendor.code,
+                    vendorName: q.vendor.name,
+                    priceOffer: q.offerType == 'first' ? 1 : 0,
+                    selected: itemsSelected.some(
+                      (it1) =>
+                        it1.itemId == it.item.id &&
+                        it1.vendorId == q.vendor.id &&
+                        it1.quotationId == q.quotationId &&
+                        it1.priceOffer == q.offerType,
+                    ),
+                    price: q.price,
+                  })),
+                };
+              }),
+              otherCostItems: [
+                ...otherSummary,
+                ...otherCostItems,
+                awardedLogisticsFee,
+                totalAmount,
+                ...noneCosts,
+              ].filter((it) => (it.items || []).length > 0),
+              files: uploadFiles,
+            } as PriceComparisonSavePayload;
+
+            try {
+              const rs = await priceComparisonSrv.saveItem(saveData);
+              const { processInstId, formNo } = rs;
+              message.success(
+                `Your request is submitted. Please track the request with form no ${formNo}`,
+              );
+              history.push(`/data-form/${PriceComparisonFormNames.processDefKey}/${processInstId}`);
+            } catch (error: any) {
+              message.error(error.message || 'Failed to make request.');
+            }
+          },
+          onCancel: (_) => {
+            setStartFormVisible(false);
+          },
+        }}
+      />
+    </PageContainer>
+  );
+};

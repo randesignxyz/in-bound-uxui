@@ -1,0 +1,91 @@
+import FormModalComp, { FormModalProps } from '@/components/FormModal';
+import { ContractData, SubContractType } from '@/services/crm/contract';
+import { ContractDetail, CustomerItemLess, IncentiveScheme } from '@/services/crm/data';
+import { LookupData, LookupDataItem } from '@/services/data';
+import { Form, message, Modal } from 'antd';
+import { UploadFile } from 'antd/lib/upload/interface';
+import { useEffect, useState } from 'react';
+import { ContactType, LayoutConfig } from '../model';
+import ContractEntryWrapper from './ContractEntryWrapper';
+
+interface Props extends FormModalProps {
+  data?: ContractDetail;
+  initData?: {
+    customer?: CustomerItemLess;
+    lookupDataList?: LookupData[];
+    productList?: LookupDataItem[];
+    itemList?: LookupDataItem[];
+    shippingChannelList?: LookupDataItem[];
+    subContractTypeList?: SubContractType[];
+    incentiveSchemeList?: IncentiveScheme[];
+  };
+  layoutConfig?: LayoutConfig;
+  actionHandlers?: {
+    applyLayoutConfig?: (contactType: ContactType, incentive?: boolean) => void;
+    listSubContract?: (contractId: number) => void;
+    enableIncentiveEntry?: (enabled: boolean) => void;
+    onSave?: (data: ContractData) => void;
+  };
+}
+
+const ContractEntryModal: React.FC<Props> = ({
+  data,
+  initData,
+  layoutConfig,
+  actionHandlers,
+  ...props
+}) => {
+  const [files, setFiles] = useState<UploadFile[]>([]);
+  const [form] = Form.useForm<ContractData>();
+  const [forceUpdate, setForceUpdate] = useState<number>(1);
+  useEffect(() => {
+    if (!props.open) return;
+    return () => {
+      form.resetFields();
+    };
+  }, [props.open]);
+
+  return (
+    <FormModalComp
+      {...props}
+      onResetForm={() => {
+        form.resetFields();
+        setForceUpdate((v) => v + 1);
+      }}
+      onSubmit={async () => {
+        try {
+          const dataForm = await form.validateFields();
+          const { ...values } = dataForm;
+          const contact = {
+            id: data?.id || 0,
+            ...values,
+            expiryDate: values.expiryDate.endOf('M'),
+            customerId: data?.customer.id || 0,
+            attachmentFileIds: files.map((it) => it.response),
+          };
+          actionHandlers?.onSave?.(contact);
+        } catch (error: any) {
+          message.error(error.message || 'Invalid data.');
+        }
+      }}
+    >
+      <ContractEntryWrapper
+        forceUpdate={forceUpdate}
+        form={form}
+        data={data}
+        uploadFiles={files}
+        initData={initData}
+        layoutConfig={layoutConfig}
+        listSubContract={actionHandlers?.listSubContract}
+        applyLayoutConfig={actionHandlers?.applyLayoutConfig}
+        enableIncentiveEntry={actionHandlers?.enableIncentiveEntry}
+        actionHandlers={{
+          //onAddFile: (file) => setFiles((v) => [...v, file]),
+          //onRemoveFile: (file) => setFiles((v) => v.filter((it) => it.uid !== file.uid)),
+        }}
+      />
+    </FormModalComp>
+  );
+};
+
+export default ContractEntryModal;

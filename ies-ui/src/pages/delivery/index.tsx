@@ -1,6 +1,4 @@
 import ListMenuComp, { ListMenuItem } from '@/components/ListMenu';
-// import deliveryIcon from '@/assets/shipping.png';
-// import trackingIcon from '@/assets/tracking.png';
 import buildingIcon from '@/assets/building.png';
 import driverIcon from '@/assets/driver.png';
 import truckIcon from '@/assets/truck.png';
@@ -24,7 +22,7 @@ export const DeliveryPaths = {
   company: '/delivery/company',
   driver: '/delivery/driver',
   officer: '/delivery/officer',
-  
+
   truck: '/delivery/truck',
 
   tranportSource: '/delivery/transport-source',
@@ -53,7 +51,7 @@ export const QueuePaths = {
 };
 
 export default () => {
-  
+
   const access = useAccess()
   const deliveryMenu = (
     <Menu
@@ -145,7 +143,7 @@ export default () => {
     },
   ];
 
-  
+
   const setupItems = [
     {
       id: 'company',
@@ -225,14 +223,14 @@ export default () => {
   ];
 
   return (
-    <PageContainer title = {false}>
+    <PageContainer title={false}>
       {queueItems.some(it => it.visible) && <ListMenuComp items={queueItems} />}
       {queueItems.some(it => it.visible) && <Divider />}
-      {items.some(it => it.visible) &&  <ListMenuComp items={items} />}
-      {items.some(it => it.visible) &&  <Divider />}
-      {setupItems.some(it =>it.visible) && <ListMenuComp items={setupItems} />}
-      {setupItems.some(it =>it.visible) && <Divider />}
-      {queueSetupItems.some(it =>it.visible) && <ListMenuComp items={queueSetupItems} />}
+      {items.some(it => it.visible) && <ListMenuComp items={items} />}
+      {items.some(it => it.visible) && <Divider />}
+      {setupItems.some(it => it.visible) && <ListMenuComp items={setupItems} />}
+      {setupItems.some(it => it.visible) && <Divider />}
+      {queueSetupItems.some(it => it.visible) && <ListMenuComp items={queueSetupItems} />}
     </PageContainer>
   );
 };

@@ -18,12 +18,12 @@ export default defineConfig({
     {
       path: '/',
       layout: layout,
-      redirect: '/home',
+      component: './delivery',
     },
     {
-      name: 'home',
-      path: '/home',
-      component: './Home',
+      name: 'index',
+      path: '/index',
+      component: './delivery',
       layout: layout,
     },
     {

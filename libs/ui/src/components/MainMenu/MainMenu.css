@@ -1,0 +1,11 @@
+.cardMenu:hover {   
+    background-color: #b4990026;
+}
+
+.cardAvatar {
+    color: antiquewhite;
+  }
+
+.itemTitle:hover {
+    color: #cf7303;
+}

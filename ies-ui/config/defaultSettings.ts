@@ -22,6 +22,7 @@ const Settings: ProLayoutProps & {
   splitMenus: false,
   logo: '/icons/logo-ofl.png',
   iconfontUrl: '',
+  colorPrimary: '#b49900',
   token: {
     colorPrimary: '#b49900',
     header: {

@@ -15,6 +15,7 @@ const Footer: React.FC = () => {
 
       style={{
         background: 'none',
+        fontWeight: 'lighter'
       }}
       copyright={`${currentYear} ${defaultMessage}`}
       links={undefined}

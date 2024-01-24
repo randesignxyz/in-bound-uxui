@@ -3,7 +3,7 @@
   "name": "delivery",
   "author": "phannyngoun1 <phanny.ngoun@gmail.com>",
   "scripts": {
-    "dev": "max dev",
+    "dev": "cross-env PORT=9000 max dev",
     "build": "max build",
     "format": "prettier --cache --write .",
     "prepare": "husky install",
@@ -21,6 +21,7 @@
   "devDependencies": {
     "@types/react": "^18.0.33",
     "@types/react-dom": "^18.0.11",
+    "cross-env": "^7.0.3",
     "husky": "^8.0.3",
     "lint-staged": "^13.2.0",
     "prettier": "^2.8.7",

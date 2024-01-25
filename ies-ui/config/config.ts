@@ -125,6 +125,7 @@ export default defineConfig({
   },
   esbuildMinifyIIFE: true,
   requestRecord: {},
+  /*
   qiankun: {
     master: {
       apps: [
@@ -134,5 +135,5 @@ export default defineConfig({
         }
       ]
     }
-  }
+  }*/
 });

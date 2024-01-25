@@ -4,7 +4,7 @@ import { Paging } from '@/services/API';
 import { simpleRequestActions } from '@/services/model';
 import { DashOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
 import type { ActionType } from '@ant-design/pro-table';
-import { useModel } from '@umijs/max';
+import { history, useModel } from '@umijs/max';
 import { Badge, Dropdown, MenuProps, message, Modal, Radio, Space } from 'antd';
 import Omit from 'omit.js';
 import { useRef, useState } from 'react';
@@ -12,6 +12,7 @@ import { FleetPaths } from '..';
 import { ServiceTasksCreate, ServiceTasksDTO, ServiceTasksSearch } from './data';
 import ServiceTasksModalForm from './EntryFormModel';
 import { ServiceTasksServiceAPI } from './service';
+import { PageContainer } from '@ant-design/pro-components';
 
 interface Props {
   onDetail?: (id: string) => void;
@@ -123,8 +124,12 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
 
   return (
     <>
-      <BreadCrumbCom separator=">" routes={routes} />
-      <TableView<ServiceTasksDTO, { searchValue?: string }>
+      {/* <BreadCrumbCom separator=">" routes={routes} /> */}
+     <PageContainer
+      onBack={()=>history.push(FleetPaths.fleet)}
+      title="Service Tasks "
+     >
+     <TableView<ServiceTasksDTO, { searchValue?: string }>
         hasCriteria={Object.values(Omit(advanceSearchParams, ['status'])).some((v) => v)}
         cache
         columns={[
@@ -225,6 +230,7 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
         }
       />
 
+     </PageContainer>
       <ServiceTasksModalForm
         open={state.visible?.name == 'modal'}
         onCancel={() => setSate((v) => ({ ...v, visible: undefined }))}

@@ -6,6 +6,8 @@ import AccessoriesListView from '../accessory/AccessoriesListView';
 import DriverModalForm from '../driver/DriverFormModal';
 import ListView from '../driver/ListView';
 import VendorListView from '../vendor/VendorListView';
+import { PageContainer } from '@ant-design/pro-components';
+import { history } from '@umijs/max';
 
 export default () => {
   const [driverState, setDriverState] = useState<{
@@ -25,7 +27,11 @@ export default () => {
 
   return (
     <>
-      <BreadCrumbCom separator=">" routes={routes} />
+      {/* <BreadCrumbCom separator=">" routes={routes} /> */}
+      <PageContainer
+        onBack={()=>history.push(FleetPaths.fleet)}
+        title="Set-up"
+      >
       <Tabs
         items={[
           {
@@ -45,6 +51,7 @@ export default () => {
           },
         ]}
       />
+      </PageContainer>
 
       <DriverModalForm
         open={driverState.visible?.name == 'modal'}

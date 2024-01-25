@@ -4,6 +4,7 @@ import {
   EditableFormInstance,
   EditableProTable,
   FooterToolbar,
+  PageContainer,
   ProForm,
   ProFormDatePicker,
   ProFormDependency,
@@ -111,8 +112,12 @@ export default () => {
 
 
   return (
+    <PageContainer
+      onBack={()=>history.push(`${FleetPaths.inspection}/list`)}
+      title={"New Inspection"}
+    >
     <Spin spinning={requestActions.request?.loading || false}>
-      <BreadCrumbCom separator=">" routes={routes} />
+      {/* <BreadCrumbCom separator=">" routes={routes} /> */}
       <Card>
         <ProForm
           form={form}
@@ -386,5 +391,6 @@ export default () => {
         outReminder={reminderModalState?.visible?.payload}
       /> */}
     </Spin>
+    </PageContainer>
   );
 };

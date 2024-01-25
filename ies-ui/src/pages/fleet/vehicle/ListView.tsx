@@ -13,7 +13,7 @@ import {
   WarningOutlined,
 } from '@ant-design/icons';
 import type { ActionType } from '@ant-design/pro-table';
-import { useModel } from '@umijs/max';
+import { history, useModel } from '@umijs/max';
 import { Badge, Button, Dropdown, MenuProps, message, Modal, Popover, Radio, Space, Tag, Tooltip } from 'antd';
 import Omit from 'omit.js';
 import { useRef, useState } from 'react';
@@ -25,6 +25,7 @@ import { VehicleAdvanSearch as VehicleAdvanceSearch, VehicleListItem } from './d
 import { VehicleServiceAPI } from './service';
 import { formatDate } from '@/pages/utils';
 import moment from 'moment';
+import { PageContainer } from '@ant-design/pro-components';
 
 interface Props {
   onDetail?: (id: string) => void;
@@ -152,7 +153,11 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
 
   return (
     <>
-      <BreadCrumbCom separator=">" routes={routes} />
+      {/* <BreadCrumbCom separator=">" routes={routes} /> */}
+      <PageContainer
+        onBack={()=>history.push(FleetPaths.fleet)}
+        title="Vehicles"
+      >
       <TableView<VehicleListItem, { searchValue?: string; advanceSearch: VehicleAdvanceSearch }>
         hasCriteria={Object.values(Omit(advanceSearchParams, ['status'])).some((v) => v)}
         cache
@@ -344,6 +349,7 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
         }
       />
 
+      </PageContainer>
       <AdvanceVehicleSearch
         title="Advance Search"
         closable

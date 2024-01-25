@@ -55,6 +55,7 @@
   "dependencies": {
     "@ant-design/icons": "^5.2.6",
     "@ant-design/pro-components": "^2.6.48",
-    "antd": "^5.13.2"
+    "antd": "^5.13.2",
+    "string-width": "^7.1.0"
   }
 }

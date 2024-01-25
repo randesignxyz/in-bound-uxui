@@ -13,7 +13,7 @@ import {
   PlusOutlined,
 } from '@ant-design/icons';
 import type { ActionType } from '@ant-design/pro-table';
-import { useModel } from '@umijs/max';
+import { history, useModel } from '@umijs/max';
 import {
   Badge,
   Button,
@@ -38,6 +38,7 @@ import FuelModalForm from './FuelFormModal';
 import { FuelServiceAPI } from './service';
 import FuelExportModal from '../report/component/FuelExportModal';
 import AdvanceFuelSearch from '../components/AdvanceFuelSearch';
+import { PageContainer } from '@ant-design/pro-components';
 
 interface Props {
   onDetail?: (id: number) => void;
@@ -200,8 +201,12 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
 
   return (
     <>
+      <PageContainer
+        onBack={()=>history.push(`${FleetPaths.fleet}`)}
+        title="Fuel Lists"
+      >
       <Spin spinning={requestActions.request?.loading || false}>
-        <BreadCrumbCom separator=">" routes={routes} />
+        {/* <BreadCrumbCom separator=">" routes={routes} /> */}
 
         <TableView
           hasCriteria={Object.values(Omit(advanceSearchParams, ['status'])).some((v) => v)}
@@ -417,6 +422,7 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
           }}
         />
       </Spin>
+      </PageContainer>
 
       <FuelModalForm
         open={state.visible?.name == 'modal'}

@@ -1,65 +1,60 @@
-import { endpoint, keycloak } from "@/auth";
-import { isOffline } from "@/pages/utils";
-import { queryCurrent } from "@/services/user";
-import { history, useAccess, useModel, useSearchParams } from '@umijs/max';
+import { history, useAccess, useModel } from '@umijs/max';
 import { Spin } from "antd";
 import { useEffect } from "react";
 
 export default () => {
 
-  const { initialState, setInitialState } = useModel('@@initialState');
-  const [searchParams] = useSearchParams()
+  const { initialState } = useModel('@@initialState');
   const access = useAccess()
 
-  const auth = async () => {
-    const ck = await keycloak()
-    try {
-      if (isOffline()) {
-        return undefined;
-      }
-      const currentUser = await queryCurrent();
-      if (currentUser)
-        setInitialState({
-          ...initialState, currentUser: currentUser, logout: () => {
-            ck?.clearToken()
-            ck?.logout({
-              redirectUri: endpoint().redirectUri
-            })
-          }
-        })
+  // const auth = async () => {
+  //   await keycloak()
+  //   try {
+  //     if (isOffline()) {
+  //       return undefined;
+  //     }
+  //     const currentUser = await queryCurrent();
+  //     if (currentUser)
+  //       setInitialState({
+  //         ...initialState, currentUser: currentUser, logout: async () => {
+  //           try {
+  //             const logout = await kc.logout({
+  //               redirectUri: endpoint().redirectUri
+  //             })
+  //           } catch (error) {
+  //             message.error("Failed to logout.")
+  //           }
+  //         }
+  //       })
 
-    } catch (error) {
-      return undefined;
-    }
-  }
-  useEffect(() => {
-    auth()
-  }, [])
+  //   } catch (error) {
+  //     return undefined;
+  //   }
+  // }
+  // useEffect(() => {
+  //   auth()
+  // }, [])
 
   useEffect(() => {
     if (initialState?.currentUser) {
-      const redirect = searchParams.get('path')
-      if (redirect == '/') {
-        if (access.canAccessTaskListMenu) {
-          history.push("/task-list")
-        } else if (access.canAccessCrmMenuItem) {
-          history.push("/crm")
-        }
-        else if (access.canAccessProMenuItem) {
-          history.push("/pro")
-        }
-        else if (access.canAccesDeliveyMenu) {
-          history.push("/delivery")
-        }
-        else if (access.canAccessDeliveryExpenseMenu) {
-          history.push("/expense/delivery")
-        }
-        else if (access.canAccessFleetMenu) {
-          history.push("/fleet")
-        }
-        return
+      if (access.canAccessTaskListMenu) {
+        history.push("task-list")
+      } else if (access.canAccessCrmMenuItem) {
+        history.push("crm")
       }
-      history.push(`${redirect}`)
+      else if (access.canAccessProMenuItem) {
+        history.push("pro")
+      }
+      else if (access.canAccesDeliveyMenu) {
+        history.push("delivery")
+      }
+      else if (access.canAccessDeliveryExpenseMenu) {
+        history.push("expense/delivery")
+      }
+      else if (access.canAccessFleetMenu) {
+        history.push("fleet")
+      }
+
     }
   }, [initialState?.currentUser])
 

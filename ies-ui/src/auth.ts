@@ -9,8 +9,8 @@ const port = window.location.port
 
 const kc_production = 'http://10.0.8.215:8989/auth/'
 const kc_qa = 'http://10.0.12.247:8989/auth/'
-// const kc_local = 'http://keycloak:8989/'
-const kc_local = 'http://localhost:8989/auth/'
+const kc_local = 'http://keycloak:8989/'
+// const kc_local = 'http://localhost:8989/auth/'
 const pro_host_name = 'ies.vital.com.kh'
 const pro_host_name1 = '10.0.8.215'
 const qa_host_name = '10.0.12.247'
@@ -44,33 +44,40 @@ export const Auth = {
     ...endpoint(),
 };
 
+export const kc = new Keycloak({
+    realm: Auth.realm,
+    clientId: Auth.clientId,
+    url: Auth.url,
 
+
+})
 
 export const keycloak = async (sso?: boolean) => {
     if (isOffline()) return undefined
 
-    const kc = new Keycloak({
-        realm: Auth.realm,
-        clientId: Auth.clientId,
-        url: Auth.url,
-
-    })
-
-
-
     kc.onTokenExpired = () => {
         message.error("Session expired")
     }
-
 
     await kc.init({
         checkLoginIframe: true,
         onLoad: 'login-required',
     });
 
-    kc.token && localStorage.setItem('accessToken', kc.token);
-
-
     return kc
 }
 
+
+
+export const auth = async () => {
+    await keycloak()
+    try {
+        if (isOffline()) {
+            return undefined;
+        }
+        const currentUser = await queryCurrent();
+        return currentUser
+    } catch (error) {
+        return undefined;
+    }
+}

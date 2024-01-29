@@ -975,8 +975,8 @@ export default [
   },
   {
     path: '/',
-    // component: 'initial-page',
-    redirect: '/task-list',
+    component: 'initial-page',
+    // redirect: '/user/auth',
     // redirect: '/expense/delivery',
   },
   {

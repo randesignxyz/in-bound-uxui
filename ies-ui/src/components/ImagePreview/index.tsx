@@ -1,3 +1,4 @@
+import { kc } from '@/auth';
 import { getUploadFileObjectUrl, getUploadFileObjectUrlV2 } from '@/services/apiGateway';
 import { getServiceUrl } from '@/services/ApiUrl';
 import { PlusOutlined } from '@ant-design/icons';
@@ -28,17 +29,17 @@ const ImagePreview: React.FC<Props> = ({ version, fileId, fileName, ...rest }) =
     loadingImage();
   }, []);
 
-  
+
   return (
     <>
       {fileName && <Typography.Title level={5}>{fileName}</Typography.Title>}
       {image === 'error' && (
         <Upload
           headers={
-            localStorage.getItem('accessToken')
+            kc.token
               ? {
-                  Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-                }
+                Authorization: `Bearer ${kc.token}`,
+              }
               : {}
           }
           data={{ fileId: fileId }}

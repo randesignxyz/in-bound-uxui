@@ -1,3 +1,4 @@
+import { kc } from '@/auth';
 import { useCallback, useState } from 'react';
 
 const useHttpLookup = <T>(url: string, initData: T[] = [], limit: number = 10) => {
@@ -6,31 +7,31 @@ const useHttpLookup = <T>(url: string, initData: T[] = [], limit: number = 10) =
 
   var lastUserFetchId = 0;
   const loadData = useCallback((value: string) => {
-    
-      lastUserFetchId += 1;
-      const fetchId = lastUserFetchId;
-      setLoading(true);
-    
-      const token = localStorage.getItem("accessToken")
-      fetch(encodeURI(`${url}/value/${value || ' '}/limit/${limit}`), {
-        headers: token?{
-          'Authorization': `Bearer ${token}`
-        }: {}
+
+    lastUserFetchId += 1;
+    const fetchId = lastUserFetchId;
+    setLoading(true);
+
+    const token = kc.token // localStorage.getItem("accessToken")
+    fetch(encodeURI(`${url}/value/${value || ' '}/limit/${limit}`), {
+      headers: token ? {
+        'Authorization': `Bearer ${token}`
+      } : {}
+    })
+
+      .then(response => response.json())
+      .then(data => {
+        if (fetchId !== lastUserFetchId) {
+          return;
+        }
+        setData(data || []);
+        setLoading(false);
       })
-    
-        .then(response => response.json())
-        .then(data => {
-          if (fetchId !== lastUserFetchId) {
-            return;
-          }
-          setData(data || []);
-          setLoading(false);
-        })
-        .catch (_ => {
-          setData([]);
-          setLoading(false);
-        });
-    },
+      .catch(_ => {
+        setData([]);
+        setLoading(false);
+      });
+  },
     [data],
   )
 

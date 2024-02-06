@@ -80,10 +80,18 @@ interface Props<T extends { id: number }, C> {
 }
 
 export const colLink =
-  <T extends { id?: any }>(onDetail?: (data: T) => void, displayData?: (data: T) => any) =>
-  (dom: React.ReactNode, data: T) => {
-    return <a onClick={() => onDetail?.(data)}>{displayData?.(data) || dom} </a>;
-  };
+  <T extends { id?: any }>(onDetail?: (data: T) => void, displayData?: (data: T) => any, onOpenInTab?: (data: T) => void) =>
+    (dom: React.ReactNode, data: T) => {
+      return <Space>
+
+        {onOpenInTab && <Button
+          type="link"
+          icon={<SelectOutlined />}
+          onClick={() => onOpenInTab(data)}
+        />}
+        <a onClick={() => onDetail?.(data)}>{displayData?.(data) || dom} </a>
+      </Space>
+    };
 
 const TableView = <T extends { id: any }, C extends { searchValue?: string }>(
   props: Props<T, C>,
@@ -150,7 +158,7 @@ const TableView = <T extends { id: any }, C extends { searchValue?: string }>(
       tableExtraRender={() =>
         disableSearch ?? (
           <ProCard bordered>
-            <div style={{float:'left'}}>
+            <div style={{ float: 'left' }}>
               <Space>
                 <Input.Search allowClear onSearch={onSearchHandler} />
 
@@ -169,7 +177,7 @@ const TableView = <T extends { id: any }, C extends { searchValue?: string }>(
                 {extraFilter}
               </Space>
             </div>
-            <div style={{float:'right'}}> {extraRightFilter}</div>
+            <div style={{ float: 'right' }}> {extraRightFilter}</div>
           </ProCard>
         )
       }
@@ -186,17 +194,17 @@ const TableView = <T extends { id: any }, C extends { searchValue?: string }>(
         (displayOnly
           ? undefined
           : {
-              actions: [
-                <Button
-                  key={'bt'}
-                  type="link"
-                  onClick={() => actionHandlers?.onAdd?.()}
-                  icon={<PlusOutlined />}
-                >
-                  {addButtonLabel}
-                </Button>,
-              ],
-            })
+            actions: [
+              <Button
+                key={'bt'}
+                type="link"
+                onClick={() => actionHandlers?.onAdd?.()}
+                icon={<PlusOutlined />}
+              >
+                {addButtonLabel}
+              </Button>,
+            ],
+          })
       }
       search={false}
       request={onRequestHandler}

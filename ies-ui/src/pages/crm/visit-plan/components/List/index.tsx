@@ -10,6 +10,7 @@ import {
   CloudDownloadOutlined,
   DeleteOutlined,
   EditOutlined,
+  SelectOutlined,
 } from '@ant-design/icons';
 import { ActionType } from '@ant-design/pro-table';
 import { Button, message, Modal, Space, Spin, Tooltip, Upload } from 'antd';
@@ -202,9 +203,18 @@ const VisitPlanListView: React.FC<ListProps> = ({ }) => {
             title: 'Cust. Code',
             width: 110,
             render: (_, r) => (
-              <a onClick={() => history.push(CrmPaths.customer + `/detail/${r.customer.id}`)}>
-                {r.customer.code}
-              </a>
+              <Space>
+                <Button
+                  type="link"
+                  icon={<SelectOutlined />}
+                  onClick={async () => {
+                    window.open(`/external/crm/customer/detail/${r.customer.id}`, '_blank')?.focus();
+                  }}
+                />
+                <a onClick={() => history.push(CrmPaths.customer + `/detail/${r.customer.id}`)}>
+                  {r.customer.code}
+                </a>
+              </Space>
             ),
             sorter: 'customerCode',
           },
@@ -285,7 +295,7 @@ const VisitPlanListView: React.FC<ListProps> = ({ }) => {
         //   state.loading ||
         //   (state.data?.uploadedVisitPlan && state.data?.uploadedVisitPlan?.length <= 0)
         // }
-       
+
         datasources={importedData}
         onCancel={() => {
           setConfirmImportModal(false);

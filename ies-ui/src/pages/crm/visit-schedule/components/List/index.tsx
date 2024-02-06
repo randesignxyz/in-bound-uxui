@@ -140,7 +140,7 @@ const VisitScheduleListView: React.FC<ListProps> = ({ onDetail }) => {
         extraFilter={
           <Space>
             <Radio.Group
-              style={{width: 280}}
+              style={{ width: 280 }}
               value={advanceSearchParams.status || 'COMPLETED'}
               onChange={(e) => {
                 setAdvanceSearchParams((v) => ({
@@ -166,8 +166,8 @@ const VisitScheduleListView: React.FC<ListProps> = ({ onDetail }) => {
                         ? values['hasAttachment'] === 'yes'
                           ? true
                           : values['hasAttachment'] === 'null'
-                          ? undefined
-                          : false
+                            ? undefined
+                            : false
                         : undefined;
 
                     setAdvanceSearchParams((v) => ({
@@ -269,7 +269,7 @@ const VisitScheduleListView: React.FC<ListProps> = ({ onDetail }) => {
                     size="small"
                     icon={<SelectOutlined />}
                     onClick={async () => {
-                      window.open(`./detail/${r.id}`, '_blank')?.focus();
+                      window.open(`/external/crm/visit-schedule/detail/${r.id}`, '_blank')?.focus();
                     }}
                   />
                 </Tooltip>

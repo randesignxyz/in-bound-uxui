@@ -1,13 +1,13 @@
 import { Space, Spin, Tag, message, Button, Tooltip, Descriptions, Modal, Dropdown, Input, Radio } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { history } from 'umi';
-import { CaretDownOutlined, EyeOutlined, FieldTimeOutlined, FileAddOutlined, FileDoneOutlined, FileExcelOutlined, FilePdfOutlined, MessageOutlined, PartitionOutlined, StopOutlined } from '@ant-design/icons';
+import { CaretDownOutlined, EditOutlined, EyeOutlined, FieldTimeOutlined, FileAddOutlined, FileDoneOutlined, FileExcelOutlined, FilePdfOutlined, MessageOutlined, PartitionOutlined, QuestionCircleOutlined, StopOutlined } from '@ant-design/icons';
 import { CrmPaths } from '@/pages/crm';
-import { ActionType, PageContainer, ProCard, ProList, ProTable } from '@ant-design/pro-components';
+import { ActionType, CheckCard, PageContainer, ProCard, ProList, ProTable } from '@ant-design/pro-components';
 import { simpleRequestActions } from '@/services/model';
 import { useSafeState } from 'ahooks';
 import { GratisServices } from '../../services';
-import { CriteriaExportReport, GratisContract, IncentiveSettlement, SearchCriteria, SettlementCycleActivity } from '../../types';
+import { CriteriaExportReport, GratisContract, GratisSuggestedCustomer, IncentiveSettlement, SearchCriteria, SettlementCycleActivity } from '../../types';
 import { formatDate, formatDateTime, toReadable } from '@/pages/utils';
 import VerifyContractList from './VerifyContractList';
 import { Model } from '../../model';
@@ -15,15 +15,19 @@ import VerifyContractQuickView from './VerifyContractQuickView';
 import moment from 'moment';
 import ConfirmModalForm from './ConfirmModalForm';
 import { DownloadData, downloadReport } from '@/services/apiGateway';
-import { replace } from 'lodash';
+import { merge, replace } from 'lodash';
 import ApprovalRequestModalForm from './ApprovalRequestModalForm';
 import Status from '@/components/Status';
 import ProcessFlowModel from '@/models/ProcessFlowModel';
 import { ProcessFlowModalMngt } from '@/pages/process-flow/components/ProcessFlowModalWrapper';
+import processIcon from '@/assets/gear-white.png';
+import suggestionIcon from '@/assets/suggestions.png'
+import '../../../gratis/style.less'
 
 const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: (id: number, cb?: () => void) => void }> = ({ id, onEdit }) => {
   const requestActions = simpleRequestActions()
   const actionRef = useRef<ActionType>();
+  const actionSuggestedRef = useRef<ActionType>();
   const [data, setData] = useSafeState<IncentiveSettlement>()
   const [gContract, setGContract] = useSafeState<{ id: number, orderNo: number }>()
   const { modals } = Model();
@@ -31,6 +35,8 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
   const [spinTip, setspinTip] = useSafeState<string>('');
   const [criteria, setCriteria] = useState<SearchCriteria>()
   const [forceRefresh, setForceRefresh] = useState<number>(1)
+  const [isSuggested,setIsSuggested] = useState<boolean>(false)
+  const [criteriaSuggested, setCriteriaSuggested] = useState<SearchCriteria>()
 
   const model = ProcessFlowModel()
   const { actions } = model
@@ -62,14 +68,14 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
   }
   const quickViewHandler = (id: number, orderNo: number) => {
     modals.showModal('verifyContractQuickView');
-
     setGContract({ id, orderNo })
   }
   const reloadQuickView = async (id: number, orderNo: number) => {
-    modals.hideModal('verifyContractQuickView')
+    // modals.hideModal('verifyContractQuickView')
     setGContract({ id, orderNo })
     modals.showModal('verifyContractQuickView', loadData);
     actionRef.current?.reloadAndRest?.();
+    actionSuggestedRef.current?.reloadAndRest?.();
   }
 
   const onIssueHandler = () => {
@@ -143,6 +149,10 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
     setCriteria(v => ({ ...v, searchValue: value }));
     actionRef.current?.reloadAndRest?.();
   };
+  const onSearchSuggestedCustomerHandler = (value: string) => {
+    setCriteriaSuggested(v => ({ ...v, searchValue: value }));
+    actionSuggestedRef.current?.reloadAndRest?.();
+  };
   const onSearchStatusHandler = (value: string) => {
     setCriteria(v => ({ ...v, status: value }));
     actionRef.current?.reloadAndRest?.();
@@ -180,6 +190,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
   const isCreated = data?.processStatus === 'CREATED' ? true : false
   const isProcessCalculate = data?.processStatus === 'PROCESSED_CYCLE' ? true : false
   const isDirect = data?.contractType?.code === 'DIRECT' ? true : false
+  const isInDirect = data?.contractType?.code === 'IN_DIRECT' ? true : false
 
   const isRequestCompleted = data?.requestStatus == 'COMPLETED' ? true : false
   const isRequestRejected = data?.requestStatus == 'REJECTED' ? true : false
@@ -187,7 +198,15 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
   const isRequestPending = data?.requestStatus == 'PENDING' ? true : false
 
   const stausText = (data?.requestStatus == 'NONE' || data?.status != 'PENDING') ? data?.status : (data?.requestStatus == 'COMPLETED' ? 'APPROVED' : data?.requestStatus)
-
+  const contractTypeDirect = data?.contractType?.code=='DIRECT'?true:false
+  const  optionsStatus=[
+    { label: "All", value: "ALL",sort:1 },
+    { label: "Achieved", value: "ACHIEVED",sort:2 },   
+    { label: "Failed", value: "FAILED",sort:4 }
+  ]
+  if(!contractTypeDirect){
+    optionsStatus.push({ label: "Achieved*", value: "N-ACHIEVED",sort:3 })
+  }
   return (
     <Spin spinning={requestActions.request?.loading || false} tip={spinTip}>
       <PageContainer
@@ -208,7 +227,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
             }
             {isProcessCalculate && isPending && isRequestCompleted && <Button onClick={onIssueHandler} type='primary' key="1" icon={<FileDoneOutlined />}>Issue</Button>}
             {(isCreated || isProcessCalculate) && isPending && (isRequestNA || isRequestRejected) && <ConfirmModalForm title={''} submitText='Cancel' required onSave={(remarks, cb) => onCancleHandler(remarks, cb)} trigger={<Button key="0" danger icon={<StopOutlined />}>Cancel</Button>} />}
-            {isCreated && isPending && <Button type='primary' key="1" icon={<FieldTimeOutlined />} onClick={processSettlementCycle}>Process Cycle</Button>}
+            {isCreated && isPending && <Button type='primary' key="1" style={{padding:'0px 8px 0px 8px'}} icon={<img src={processIcon} width={25} height={25}/>} onClick={processSettlementCycle}>Process Cycle</Button>}
             {isProcessCalculate && (isPending || isIssued) && <Dropdown key="3" trigger={['click']} menu={{
               items: [{
                 label: 'Settlement Cycle', key: 'gratis-settlement-cycle-report', icon: <FileExcelOutlined />, onClick: () => {
@@ -236,8 +255,89 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
               <Descriptions.Item label="Form No">{data?.formNo}</Descriptions.Item>
             </Descriptions>
           </ProCard>
-          <ProCard title='Contracts' headerBordered size='small'>
-            <ProTable<GratisContract>
+          <ProCard title='Contracts' headerBordered size='small'
+            extra={
+              <Space>
+                <CheckCard.Group value={isSuggested?'suggestion':undefined}
+                  onChange={(e)=>{
+                    setIsSuggested(e?.toString()=='suggestion'?true:false)
+                  }}
+                >
+                  <CheckCard avatar={<img src={suggestionIcon} style={{height:18, width:21}}/>} title='Suggestion' size='small'  value="suggestion"  style={{width:'130px',borderStyle:'dashed'}}/>
+                </CheckCard.Group>
+              </Space>
+            }
+          >
+            {isSuggested&&<ProTable<GratisSuggestedCustomer>
+               actionRef={actionSuggestedRef}
+               search={false}
+               size='small'
+               options={{
+                 fullScreen: false,
+                 density: false,
+                 reload: true,
+                 setting: false,
+               }}     
+                headerTitle={               
+                  <Space>
+                    <Input.Search allowClear onSearch={onSearchSuggestedCustomerHandler} />                    
+                  </Space>    
+                } 
+                request={async (paging) => {
+                  return GratisServices.fetchSuggestedCustomer({ id: id, criteria: {...criteriaSuggested,filter:'suggestion'}, pagination: { current: paging?.current || 0, pageSize: paging?.pageSize || 20 } }).query(requestActions).then(it => {
+                    return {
+                      success: true,
+                      total: it.total,
+                      data: it.items
+                    }
+                  })
+                }}
+                rowKey={'id'}
+                columns={[{
+                  title:'Verified Date',
+                  dataIndex: 'gcontractId',
+                  render: (_, r) => (
+                    <Space size={1}>
+                      <Tooltip title="Quick data review">
+                        <Button
+                          type="link"
+                          size="small"
+                          icon={<EyeOutlined />}
+                          onClick={() => quickViewHandler(r?.gcontractId, r?.orderNo-1)}
+                        >{r.durationText}</Button>
+                      </Tooltip>                      
+                    </Space>
+                  ),
+                }, {
+                  title: 'Agreement Name',
+                  dataIndex: 'contractNo',
+                  render: (_, r) => <Tooltip title={!r?.terms ? 'No Term' : r?.terms}><MessageOutlined /> {r?.contractNo}</Tooltip>
+                },{
+                  title:'Total Qty',
+                  dataIndex:'percentage',
+                  render: (_, r) => r?.percentage? <div><span>{`${r?.percentage}%`}</span><div style={{padding:2,fontSize:13,color:'#b49900',borderRadius:5}}>{`(${r?.qty}/${r?.targets})`}</div></div>:'-'
+                },{
+                  title:'+Qty',
+                  dataIndex: 'percentLess',
+                  render: (_, r) => r?.percentLess? <div><span>{`${r?.percentLess}%`}</span><div style={{padding:2,fontSize:13,color:'#b49900',borderRadius:5}}>{`(${r?.qtyLess}/${r?.targets})`}</div></div>:'-'
+                }, {
+                  title: 'Customer Code',
+                  dataIndex: 'gcontractId',
+                  render: (_, r) => r?.customer?.code
+                }, {
+                  title: 'Customer Name',  
+                  render: (_, r) => r?.customer?.name
+                }, {
+                  title: 'Brand',  
+                  render: (_, r) => r.brand
+                }, {
+                  title: 'Status',
+                  dataIndex: 'Status',
+                  render: (_, r) => <Status text={r?.status||'FAILED'} value={r?.status} />
+                }
+              ]} 
+            />}
+            {!isSuggested&&<ProTable<GratisContract>
               actionRef={actionRef}
               search={false}
               size='small'
@@ -248,19 +348,33 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
                 setting: false,
               }}
               headerTitle={
-                <Space>
-                  <Input.Search allowClear onSearch={onSearchHandler} />
-                  <Radio.Group optionType="button"
-                    defaultValue={"ALL"}
-                    options={[
-                      { label: "All", value: "ALL" },
-                      { label: "Achieved", value: "ACHIEVED" },
-                      { label: "Achieved*", value: "N-ACHIEVED" },
-                      { label: "Failed", value: "FAILED" }
-                    ]}
-                    onChange={(e) => onSearchStatusHandler(e.target.value)}
-                  />
-                </Space>
+                <div style={{position:'absolute',flex:1,width:'95%'}}>
+                  <div style={{float:'left'}}> 
+                    <Space>
+                      <Input.Search allowClear onSearch={onSearchHandler} />
+                      <Radio.Group optionType="button"
+                        defaultValue={"ALL"}
+                        options={optionsStatus.sort((a,b)=> a.sort-b.sort )}
+                        onChange={(e) => {
+                          onSearchStatusHandler(e.target.value)
+                        }}
+                      />
+                    </Space>
+                  </div>
+                  <div style={{float:'left', paddingLeft:15, marginTop:0}}> 
+                    <Space>
+                      <CheckCard.Group value={criteria?.filter} style={{border:0}}
+                        onChange={(e)=>{
+                          setCriteria(v => ({ ...v, filter: e?.toString() }));
+                          actionRef.current?.reloadAndRest?.();
+                        }}
+                      >
+                        <CheckCard bordered={false} avatar={<EditOutlined/>} title='Adjusted' size='small'  value="adjusted" style={{width:'110px',borderStyle:'dashed'}}/>
+                        {/* {criteria?.status=='FAILED' &&<CheckCard avatar={<img src={suggestionIcon} style={{height:18, width:21}}/>} title='Suggestion' size='small'  value="suggestion"  style={{width:'130px'}}/>}                   */}
+                      </CheckCard.Group>
+                    </Space>
+                  </div>
+                </div>
               }
               request={async (paging) => {
                 return GratisServices.fetchSettlementContract({ id: id, criteria: criteria, pagination: { current: paging?.current || 0, pageSize: paging?.pageSize || 20 } }).query(requestActions).then(it => {
@@ -293,7 +407,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
               }, {
                 title: 'Customer Code',
 
-                render: (_, r) => r?.customer?.code
+                render: (_, r) =>  r?.customer?.code
               }, {
                 title: 'Customer Name',
 
@@ -316,16 +430,19 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
                   var status = r.achieved == 0 ? 'Failed' : 'Achieved'
                   var statusText = (r.months || 0) > 1 ? r.achieved + '/' + r.months + ' | Achieved' : toReadable(status)
                   return <Space>
-                    <Tag color={r.achieved == 0 ? 'red' : 'green'}>{statusText}{((r?.achieved || 0) > 0 && (r?.achieved || 0) != (r.months || 0)) && <span style={{ color: 'red' }}>*</span>}</Tag>
+                    {(r.months || 0) > 1 ?<span style={{border:0, color: (r.achieved == 0 ? '#ff4d4f' : '#52c41a')}}>
+                      {statusText}{((r?.achieved || 0) > 0 && (r?.achieved || 0) != (r.months || 0)) && <span style={{ color: 'red' }}>*</span>}
+                    </span>:<Status text={status} value={status} />
+                    }
                   </Space>
                 }
               }
               ]}
-              expandable={{
+              expandable={!contractTypeDirect?{
                 expandedRowRender: (record => <VerifyContractList quickViewHandler={quickViewHandler} item={record} />),
                 rowExpandable: record => true,
-              }}
-            />
+              }:{}}
+            />}
           </ProCard>
           <ProCard title='Activities' defaultCollapsed collapsible headerBordered size='small'>
             <ProList<SettlementCycleActivity>
@@ -350,7 +467,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
           status={data?.status || ''}
           groupTypeCode={data?.contractType?.code}
           currentNum={gContract.orderNo}
-          isVerify={(isCreated || isProcessCalculate) && isPending && isDirect && (isRequestNA || isRequestRejected)}
+          isVerify={(isCreated || isProcessCalculate) && isPending && (isDirect||isInDirect) && (isRequestNA || isRequestRejected)}
           open={modals.isVisible('verifyContractQuickView')}
           onOpenModalChange={(v: any) => !v && modals.hideModal('verifyContractQuickView')}
           reloadQuickView={reloadQuickView}

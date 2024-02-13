@@ -1,15 +1,13 @@
-import { EditableFormInstance, EditableProTable, ModalForm, ModalFormProps, ProCard, ProForm, ProFormCheckbox, ProFormDigit, ProList, ProTable } from "@ant-design/pro-components";
+import { EditableFormInstance,  ModalForm, ModalFormProps, ProCard, ProTable } from "@ant-design/pro-components";
 import { useEffect, useRef, useState } from "react";
 import { GratisServices } from "../../../services";
 import { simpleRequestActions } from "@/services/model";
-import { AdjustItem, AdjustInfoOn, AdjustInfoItemDetail } from "../../../types";
-import { formatDate, toReadable } from "@/pages/utils";
-import { Button, Input, Popconfirm, Space, Table, message } from "antd";
-import { uniqueId } from "lodash";
-import { DeleteOutlined, EditOutlined, PlusOutlined, SearchOutlined } from "@ant-design/icons";
-import { itRequestSessions } from "@/pages/ict/it-request/RequestForm";
-import { useForm } from "antd/es/form/Form";
+import { AdjustItem, AdjustInfoOn, AdjustInfoItemDetail, ItemSAP } from "../../../types";
+import { toReadable } from "@/pages/utils";
+import { Button,Space, Table, message } from "antd";
+import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import AdjustItemModal from "./AdjustItemModal";
+import ListItemSearchModal from "./ListItemSearchModal";
 
 interface Props extends ModalFormProps<{status:string, remarks: string}>{
     verifyId: number;
@@ -21,12 +19,14 @@ interface Props extends ModalFormProps<{status:string, remarks: string}>{
 
  const AdjustTranModal= ( {verifyId,customerCode,trigger,required, onSave, ...rest} : Props) => {
     const requestActions = simpleRequestActions()
-    // const [form] = useForm<AdjustItem>()
     const [open,setOpen] = useState<boolean>(false)
     const [data, setData] = useState<AdjustInfoOn[]>()
     const editableFormRef = useRef<EditableFormInstance>();
     const [selected, setSelected] = useState<AdjustItem[]>([])
-    // const [dataSource, setDataSource] = useState<(AdjustItem)[]>()
+    const [modalSearch, setModalSearch] = useState<{
+        type: 'itemSearch';
+        cb: (item:ItemSAP) => void;
+    }>()
    
     useEffect(()=>{
         if(verifyId>0) loadData()
@@ -45,7 +45,6 @@ interface Props extends ModalFormProps<{status:string, remarks: string}>{
         }}
         open={open}
         onFinish = {async dataForm => {   
-            // var data = await form.validateFields()    
             await editableFormRef.current?.validateFields()  
             if (selected && selected.length == 0) {
                 message.error("No adjust item avaible.")
@@ -56,12 +55,10 @@ interface Props extends ModalFormProps<{status:string, remarks: string}>{
                     setOpen(!v);
                 });
             }
-            // console.log('Adjust Item',selected)   
            
             return false;
         }} 
         onOpenChange={(v)=>{          
-            // if(v && verifyId>0) loadData()
             setOpen(v);
         }}  
     >
@@ -78,11 +75,12 @@ interface Props extends ModalFormProps<{status:string, remarks: string}>{
                     reload: false,
                     setting: false,
                 }} 
+                pagination={false}
                 dataSource={selected}
                 columns={[
                     {
-                        title:'From', 
-                        dataIndex:'dataSource',
+                        title:'Description', 
+                        dataIndex:'dscription',
                         render:(_,r)=> toReadable(r.dscription)
                     },
                     {title:'Invoice/SO', dataIndex:'docNum'},
@@ -95,36 +93,34 @@ interface Props extends ModalFormProps<{status:string, remarks: string}>{
                         render:(_,r) => {
                             var initData = data?.find(it=> it.uuId==r.uuId)
                             return [<Space>
-                            <AdjustItemModal dataLookup={data} edit={true} initData={r}  addHandler={(item:AdjustItem)=> { setSelected(i=> i.map(it=> it.uuId==r.uuId?item:it)) }}  trigger={
-                            <Button size="small" icon={<EditOutlined/>} type="default" ></Button>}
-                            />                                    
-                            <Button size="small" icon={<DeleteOutlined/>} danger 
-                                onClick={(value)=>{
-                                    setSelected(i=> i.filter(it => it.uuId!= r.uuId))
-                                }}
-                            />
+                                <AdjustItemModal initData={r}  addHandler={(item:AdjustItem)=> { setSelected(i=> i.map(it=> it.uuId==r.uuId?{...it,qty: item.qty}:it)) }}  
+                                    trigger={<Button size="small" type='link' icon={<EditOutlined/>} />}
+                                />                                    
+                                <Button size="small" type='link' icon={<DeleteOutlined/>} danger 
+                                    onClick={(value)=>{
+                                        setSelected(i=> i.filter(it => it.uuId!= r.uuId))
+                                    }}
+                                />
                             </Space>
                         ]}
                     }
                 ]}
             />
-            <AdjustItemModal dataLookup={data} cusomterCode={customerCode} 
-                initData={{
-                    uuId:'',
-                    docNum:'' ,
-                    dscription: data?.find(it=> it.contractVerifyId===verifyId)?.dscription
-                }} 
-                addHandler={(item:AdjustItem)=> { setSelected(i=> ([...i.map(it=>it),item]) )}} 
+            <ListItemSearchModal    
+                verifyId = {verifyId}
+                dataLookup={data} 
+                cusomterCode={customerCode}           
+                selectedItems={selected} 
+                addHandler={(items:AdjustItem[])=> { setSelected(v=> [...v,...items])}} 
                 trigger={<Button
                     size="small"
-                    style={{ width: '100%', marginBottom: 8 }}
+                    style={{ width: '100%', marginBottom: 0, marginTop:15 }}
                     type="dashed"
                     icon={<PlusOutlined />}
                     
-                > Adjust Item</Button>} 
-            />
+                > Add Item</Button>}          
+            />    
         </ProCard>
-
     </ModalForm>
 }
 
@@ -135,14 +131,7 @@ export default AdjustTranModal
 const ItemDetial = (data?: AdjustInfoItemDetail[]) => {
     return (
     <Table<AdjustInfoItemDetail> 
-        // search={false}
         footer={(data)=> false}
-        // options={{
-        //     fullScreen: false,
-        //     density: false,
-        //     reload: false,
-        //     setting: false,        
-        // }} 
         columns={[
             {
                 title:'Name',
@@ -157,10 +146,6 @@ const ItemDetial = (data?: AdjustInfoItemDetail[]) => {
             }
         ]} 
         dataSource={data}
-        // rowKey="id"
-        // rowSelection={{
-        //     selections: ["SELECT_ALL", "SELECT_INVERT", "SELECT_NONE"],
-        // }}
     />
     )
 }

@@ -81,6 +81,8 @@ export interface GratisVerifyItem {
  itemCode: string;
  itemName: string;
  qty: number;
+ qty1: number;
+ qty2: number;
  uomCode: string;
  customerId: number;
  customerCode: string;
@@ -111,6 +113,8 @@ export interface GratisInvoice {
   editable: boolean;
   dataSource: string;
   items?: GratisInvoiceItem[];
+  tranType?:string;
+  actionCode?:string;
 }
 export interface GratisInvoiceItem {
   invId: number;
@@ -258,8 +262,12 @@ export interface SettlementCycle {
   status: string;
 }
 export interface SearchCriteria{
+  id?:number;
   searchValue?:string;
   status?:string;
+  filter?: string;
+  dateFrom?: moment.Moment;
+  dateTo?: moment.Moment;
 }
 
 export interface AdjustInfoOn {
@@ -322,6 +330,7 @@ interface HistorySubItem {
   modifiedBY: string;
   modifiedDate: moment.Moment;
   actionCode: string;
+  tranType?: string;
 }
 
 interface ItemSAP {
@@ -343,4 +352,24 @@ export type ApprovalRequestPayload= {
   settlementCycleId: number;
   requester: string;
   requesterBuId: number;
+}
+
+export type GratisSuggestedCustomer= {
+  id: number;
+  incentiveSettlementId: number;
+  gcontractId: number;
+  contractType: string;
+  customer: LookupDataItem;
+  brand: string;
+  terms?: string;
+  contractNo?: string;
+  title: string;
+  orderNo: number;
+  durationText?:string;
+  targets: number;
+  qtyLess: number;
+  qty: number;
+  percentage: number;
+  percentLess:number;
+  status: string;
 }

@@ -2,7 +2,7 @@ import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { execDataService, execDataService0, fetchDataItemService, fetchDataListService, fetchDataPagingService } from "@/services/apiGateway";
 import { ContractLess } from "@/services/crm/contract";
 // import { LookupDataItem, LookupDataItem3 } from "@/services/data";
-import { AdjustItem, AdjustInfoOn, CreateSettlemenDate, GratisContract, GratisContractViewData, GratisVerifyItem, HistoryItem, IncentiveSettlement, LookupDataItem,  SaveChangeStatusData,  SaveGratisContractCheckListData, SearchCriteria, SettlementCycle, SettlementCycleActivity, SettlementCycleAdvanceSearchParams, SettlementSearchDate, VerifyGratisContact, ItemSAP, GratisVerifySchedule, ApprovalRequestPayload } from "./types";
+import { AdjustItem, AdjustInfoOn, CreateSettlemenDate, GratisContract, GratisContractViewData, GratisVerifyItem, HistoryItem, IncentiveSettlement, LookupDataItem,  SaveChangeStatusData,  SaveGratisContractCheckListData, SearchCriteria, SettlementCycle, SettlementCycleActivity, SettlementCycleAdvanceSearchParams, SettlementSearchDate, VerifyGratisContact, ItemSAP, GratisVerifySchedule, ApprovalRequestPayload, GratisSuggestedCustomer } from "./types";
 import moment from "moment";
 
 export const GratisServices = {
@@ -60,6 +60,18 @@ export const GratisServices = {
     }),
     fetchSettlementContract: (params: {id: number,criteria?:SearchCriteria, pagination?: {current: number,pageSize?: number}},) => fetchDataPagingService<GratisContract, {id: number,criteria?:SearchCriteria, pagination?: {current: number,pageSize?: number}}>({
         actionName: 'list-gratis-contract',
+        endpoint: 'CRM',
+        payload: {
+            id: params.id,
+            ...params.criteria
+        },
+        pagination: {
+            page: params.pagination?.current,
+            pageSize: params.pagination?.pageSize
+        }
+    }),
+    fetchSuggestedCustomer: (params: {id: number,criteria?:SearchCriteria, pagination?: {current: number,pageSize?: number}},) => fetchDataPagingService<GratisSuggestedCustomer, {id: number,criteria?:SearchCriteria, pagination?: {current: number,pageSize?: number}}>({
+        actionName: 'gratis-suggested-customer',
         endpoint: 'CRM',
         payload: {
             id: params.id,
@@ -142,10 +154,10 @@ export const GratisServices = {
             pageSize:pageSize
         }
     }),
-    fetchGratisVerifyItemList: (id: number) => fetchDataListService<GratisVerifyItem, any>({
+    fetchGratisVerifyItemList: (criteria:SearchCriteria) => fetchDataListService<GratisVerifyItem, any>({
         actionName: 'list-gratis-verify-item',
         endpoint: 'CRM',
-        payload: {id}
+        payload: criteria
     }),
     fetchGratisVerifyScheduleList: (id: number) => fetchDataListService<GratisVerifySchedule, any>({
         actionName: 'list-gratis-verify-schedule',
@@ -157,10 +169,15 @@ export const GratisServices = {
         endpoint: 'CRM',
         payload: {id}
     }),
-    getListItemSAP: (customerCode?: string,docNum?: string,dataSource?:string,startedDate?:moment.Moment,endedDate?:moment.Moment) => fetchDataListService<ItemSAP, any>({
-        actionName: 'list-item-sap',
+    // getListItemSAP: (customerCode?: string,docNum?: string,dataSource?:string,startedDate?:moment.Moment,endedDate?:moment.Moment) => fetchDataListService<ItemSAP, any>({
+    //     actionName: 'list-item-sap',
+    //     endpoint: 'CRM',
+    //     payload: {customerCode,docNum,dataSource,startedDate,endedDate}
+    // }),
+        getListItemAdjustment: (currentVerifyId: number,customerCode?: string,docNum?: string,dataSource?:string,startedDate?:moment.Moment,endedDate?:moment.Moment) => fetchDataListService<ItemSAP, any>({
+        actionName: 'list-item-adjustment',
         endpoint: 'CRM',
-        payload: {customerCode,docNum,dataSource,startedDate,endedDate}
+        payload: {currentVerifyId,customerCode,docNum,dataSource,startedDate,endedDate}
     }),
     adjustContractVerifyTrans: (id:number,adjItems: AdjustItem[]) => execDataService0<{contractVerifyId:number,items: AdjustItem[]}>({
         actionName: 'adjust-contract-verify-trans',
@@ -175,10 +192,10 @@ export const GratisServices = {
         endpoint: 'CRM',
         payload: {id:id},
     }),
-    fetchHistoryGratisTransList: (id: number) => fetchDataListService<HistoryItem, any>({
+    fetchHistoryGratisTransList: (criteria:SearchCriteria) => fetchDataListService<HistoryItem, any>({
         actionName: 'list-gratis-history-trans',
         endpoint: 'CRM',
-        payload: {id}
+        payload: criteria
     }),
     // importData: (id: number) => execDataService0<{id:number}>({
     //     actionName: 'import-data-gratis',

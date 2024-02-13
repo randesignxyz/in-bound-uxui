@@ -14,7 +14,6 @@ import { useSafeState } from "ahooks"
 import { IncentiveSettlement } from "../../types"
 import {ExportOutlined, PlusCircleFilled, SelectOutlined } from "@ant-design/icons"
 import AdvanceSearch from "../AdvanceSearch"
-import SettlementContractList from "../SettlementContractList"
 import { ContractAdvanceSearchParams } from "@/pages/crm/contract/types"
 import Status from "@/components/Status"
 
@@ -147,10 +146,12 @@ const GratisContractCheckListView = (actionHandler: { onDetail?: (record: Incent
                 }) as Promise<Paging<IncentiveSettlement>>,
                 onRequest: onRequestHandler,
             }}
+            /**
+             * SKH-20240110: remove this feature
             expandable={{
                 expandedRowRender: ((record: any) => <SettlementContractList item={record} />),
                 rowExpandable: (record:any) => true,
-            }}
+            }}*/
         />
     </div>
 }

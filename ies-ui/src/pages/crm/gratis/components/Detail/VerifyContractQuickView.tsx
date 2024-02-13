@@ -24,6 +24,7 @@ export default ({open,onOpenModalChange, reloadQuickView, id, groupTypeCode, sta
     const requestActions = simpleRequestActions()
     const [data, setData] = useSafeState<GratisContract>()
     const [current, setCurrent] = useState(0);
+    const [forceReload,setForceReload] = useState(0)
     useEffect(() => {
         try {
           loadData()
@@ -42,6 +43,7 @@ export default ({open,onOpenModalChange, reloadQuickView, id, groupTypeCode, sta
     const refreshQuickView=()=>{
         // loadData()
         reloadQuickView(data?.id||0,current)
+        setForceReload(v=> v+1)
     }
     
     /**
@@ -49,27 +51,26 @@ export default ({open,onOpenModalChange, reloadQuickView, id, groupTypeCode, sta
      * ---------------------------------------------------------------
      * Verify               : Created || Processed_cycle    && Pending
      */
-    const steps = () => {
-        const requestActions = simpleRequestActions()        
-        return data?.contracts?.map(r =>{
-            return (<StepFormView
-                    data={r}
-                    onClick={(data)=>{setCurrent(r.orderNo-1)}}
-            > 
-                <VerifyContractByMonthView isVerify={isVerify} gContract={data} verifyContract={r} onFinish={refreshQuickView}/>                
-            </StepFormView>)
-        })
-    }  
+    // const steps = () => {
+    //     const requestActions = simpleRequestActions()        
+    //     return data?.contracts?.map(r =>{
+    //         return (<StepFormView
+    //                 data={r}
+    //                 onClick={(data)=>{setCurrent(r.orderNo-1)}}
+    //         > 
+    //             <VerifyContractByMonthView isVerify={isVerify} gContract={data} verifyContract={r} onFinish={refreshQuickView}/>                
+    //         </StepFormView>)
+    //     })
+    // }  
     const statusSetled = data?.achieved == 0 ? 'Failed':'Achieved'
     var statusText = (data?.months||0) >1? data?.achieved+'/'+data?.months+' | Achieved':toReadable(statusSetled)
     return ( <DrawerForm 
         open={open}
         onOpenChange={onOpenModalChange}
         submitter={false}
-        // (${formatDate(data?.effectiveDate)} ~ ${formatDate(data?.expiryDate)})
         title= {<Space>
             <div>{`Agreement Name: ${data?.contractNo} | ${data?.customer.code} ${data?.customer.name} `}</div>
-            <Tag color={data?.achieved==0?'red':'green'}>{statusText} {((data?.achieved||0)>0 && (data?.achieved||0)!= (data?.months||0)) && <span style={{color:'red'}}>*</span>}</Tag>
+            <span style={{border:0, color: (data?.achieved == 0 ? '#ff4d4f' : '#52c41a')}}>{statusText} {((data?.achieved||0)>0 && (data?.achieved||0)!= (data?.months||0)) && <span style={{color:'red'}}>*</span>}</span>
             </Space>}
             {...rest} 
             width={'80%'}
@@ -78,21 +79,18 @@ export default ({open,onOpenModalChange, reloadQuickView, id, groupTypeCode, sta
             onFinish={async(values) => {
             }}            
             current={current}  
-            // onCurrentChange = {onChange}
             stepsProps={{
                 direction: 'horizontal',
-                type: 'navigation',
-                // current: current,
+                type: 'navigation'
             }}           
             submitter={false}            
-        >
-            {/* {steps()} */}
+        >           
             { data?.contracts?.map(r =>{
-                return(<StepFormView title={r.title} 
+                return(<StepFormView title={r.title}
                 data={r}
                     onClick={(data)=>{setCurrent(r.orderNo-1)}}
                 >
-                    <VerifyContractByMonthView isVerify={isVerify} gContract={data} groupTypeCode={groupTypeCode} verifyContract={r} onFinish={refreshQuickView}/>
+                    <VerifyContractByMonthView forceReload={forceReload} isVerify={isVerify} id={id} groupTypeCode={groupTypeCode} verifyContract={r} onFinish={refreshQuickView}/>
                 </StepFormView>)
             })}
         </StepsForm>

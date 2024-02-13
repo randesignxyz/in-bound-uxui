@@ -33,7 +33,7 @@ export const endpoint = (): {
 } => {
     return {
         url: keycloakUri(),
-        redirectUri: `${protocal}//${host}:${port}/`,
+        redirectUri: `${protocal}//${host}:${port}`,
     };
 
 };

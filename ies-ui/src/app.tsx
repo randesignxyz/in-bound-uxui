@@ -41,7 +41,7 @@ export async function getInitialState(): Promise<{
     logout: async () => {
       try {
         await kc.logout({
-          redirectUri: endpoint().redirectUri
+          // redirectUri: endpoint().redirectUri
         })
       } catch (error) {
         message.error("Failed to logout.")

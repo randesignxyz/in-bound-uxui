@@ -283,6 +283,8 @@ const readableWords = [
     { REQUESTED: 'Requested' },
     { CREATED: 'Created' },
     { ADD_ADJUSTMENT: 'Add Adjustment' },
+    { ADDED: 'Added' },
+    { REMOVED: 'Removed' },
     { NEW_REQUEST: 'New Request' }
 
 ];

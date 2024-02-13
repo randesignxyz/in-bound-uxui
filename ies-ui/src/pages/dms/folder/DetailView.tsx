@@ -1,5 +1,4 @@
 import { ProDescriptions } from "@ant-design/pro-components"
-import BreadCrumbCom from "../components/BreadCrumbCom"
 import { DMSPaths } from "..";
 import { FolderServiceAPI } from "./service";
 import { simpleRequestActions } from "@/services/model";
@@ -31,7 +30,7 @@ export default ({ id }: Props) => {
                 justifyContent: "space-between"
             }}
         >
-            <BreadCrumbCom
+            {/* <BreadCrumbCom
                 routes={[
                     {
                         label: "DMS",
@@ -43,7 +42,7 @@ export default ({ id }: Props) => {
                     }
                 ]}
                 separator='/'
-            />
+            /> */}
             <Button
                 type="link"
                 icon={<FolderAddOutlined />}
@@ -68,7 +67,6 @@ export default ({ id }: Props) => {
                 }
             ]}
         />
-
 
         <EntryForm
             open={state?.visible?.name === "modal"}

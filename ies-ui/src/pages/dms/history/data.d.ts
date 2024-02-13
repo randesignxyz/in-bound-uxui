@@ -14,6 +14,7 @@ interface HistoryDTO {
 interface HistorySearchParam {
     actionType?: string;
     instantId?: number;
+    source:string;
 }
 
 interface HistoryCreate{
@@ -22,4 +23,5 @@ interface HistoryCreate{
     actionType:string,
     action:string,
     remark ?:string,
+    source:string,
 }

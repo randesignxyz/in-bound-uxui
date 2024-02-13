@@ -16,7 +16,7 @@ export default ({ docId, ...props }: Props) => {
                 {...props}
                 width={600}
             >
-                <HistoryTableView intantId={docId} />
+                <HistoryTableView intantId={docId} source="DOCUMENTATION" />
 
             </Drawer>
         </>

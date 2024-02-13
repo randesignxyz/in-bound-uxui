@@ -6,6 +6,9 @@ import { LibraryServiceAPI } from "./service"
 import { ActionType, ProTable } from "@ant-design/pro-components"
 import { Button, Dropdown, MenuProps, message } from "antd"
 import { ArrowRightOutlined, EditOutlined, EllipsisOutlined, PlusOutlined } from "@ant-design/icons"
+import FolderEntryForm from "@/pages/dms/folder/EntryForm"
+import { FolderCreate } from "@/pages/dms/folder/data"
+import { FolderServiceAPI } from "@/pages/dms/folder/service"
 
 interface Props{
     actionKey?:string
@@ -15,7 +18,7 @@ export default ({actionKey, ...props}:Props) =>{
 
     const requestAction = simpleRequestActions();
     const actionRef = useRef<ActionType>();
-    const services = LibraryServiceAPI(requestAction);
+    const services = FolderServiceAPI(requestAction);
 
     const [state, setState] = useState<{
         visible?:{
@@ -105,19 +108,29 @@ export default ({actionKey, ...props}:Props) =>{
                 ]}
                 actionRef={actionRef}
                 request={async()=>{
-                    const dataList = await services.list({
-                        isAdmin:true
+                    const dataList = await services.page({
+                        criteria:{
+                            searchValue:"",
+                            advanceSearch:{
+                                code:"LIBRARY"
+                            }
+                        }
                     });
-                    return Promise.resolve({
-                        data:dataList,
-                        success:true
-                    })
+                    return dataList.items
                 }}
                
             />
 
+            <FolderEntryForm
+                open={state?.visible?.name==="MODAL"}
+                onCancel={()=>setState(v=>({...v, visible:undefined}))}
+                code="LIBRARY"            
+                onSave={async(data:FolderCreate)=>{
+                    FolderServiceAPI(requestAction).save(data);
+                }}
+            />
 
-            <LibraryModalEntry
+            {/* <LibraryModalEntry
                 open={state?.visible?.name==="MODAL"}
                 onCancel={()=>setState(v=>({...v, visible:undefined}))}
                 isAdmin
@@ -131,7 +144,7 @@ export default ({actionKey, ...props}:Props) =>{
                 
                 }}
 
-            />
+            /> */}
         </>
     )
 }

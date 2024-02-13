@@ -69,41 +69,49 @@ export default ({ actionKey }: Props) => {
         <>
             <ProList
                 actionRef={actionRef}
-                headerTitle={
-                    <>
-                        <Input />
-                    </>
-                }
-                toolBarRender={() => [
-                    <Button
-                        type="link"
-                        icon={<PlusOutlined />}
-                        onClick={() => {
-                            setState({ visible: { name: "modal", type: "ADD", } })
-                        }}
-                    />,
-                    <Button
-                        type="link"
-                        icon={<ReloadOutlined />}
-                        onClick={() => actionRef.current?.reload?.()}
-                    ></Button>,
-                ]}
-                request={async () => {
+                search={{
+                    optionRender: (e) => {
+                        return [
+                            <Button
+                            type="link"
+                            icon={<PlusOutlined />}
+                            onClick={() => {
+                                setState({ visible: { name: "modal", type: "ADD", } })
+                            }}
+                        />,
+                        <Button
+                            type="link"
+                            icon={<ReloadOutlined />}
+                            onClick={() => actionRef.current?.reload?.()}
+                        ></Button>,
+                        ]
+                    }
+                }}
+                pagination={{
+                    pageSize: 20
+                }}
+                request={async (param) => {
                     const data = await DepartmentServiceAPI(requestAction).page({
                         criteria: {
-                            searchValue: ""
+                            searchValue: param.name
+                        },
+                        pagination: {
+                            current: param.current,
+                            pageSize: param.pageSize
                         }
                     });
                     return Promise.resolve({
                         data: data.items,
-                        success: true
-                    })
+                        success: true,
+                        total: data.total
+                    });
                 }}
                 metas={{
                     title: {
                         dataIndex: "name"
                     },
                     subTitle: {
+                        search:false,
                         render: (_, r) => {
                             return (<Space>
                                 <Tag color="gold">{r?.buId?.name}</Tag>
@@ -111,11 +119,12 @@ export default ({ actionKey }: Props) => {
                             </Space>)
                         }
                     },
-                    type: {},
                     avatar: {
+                        search:false,
                         render: (_, r) => (<BankOutlined />)
                     },
                     description: {
+                        search:false,
                         render: (_, r) => {
                             return (<>
                                 <p>{r.description}</p>
@@ -127,6 +136,7 @@ export default ({ actionKey }: Props) => {
                         }
                     },
                     actions: {
+                        search:false,
                         render: (_, r) => [
                             <Button
                                 type="link"

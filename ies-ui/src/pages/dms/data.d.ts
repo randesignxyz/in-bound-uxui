@@ -38,3 +38,16 @@ interface UserDataDTO{
 interface UserDataAdvanceSearchParam{
         
 }
+
+interface LookupDataDTO{
+        id:number;
+        name:string;
+        code?:string;
+        type?:string;
+        seq?:number;
+        active?:boolean;
+}
+interface LookupDataParam{
+        code?:"TERMTYPE"|"CURRENCY";
+        type?:string;
+}

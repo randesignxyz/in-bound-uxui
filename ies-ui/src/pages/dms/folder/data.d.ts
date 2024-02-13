@@ -21,6 +21,7 @@ interface FolderCreate{
     type?:string;
     location?:string
     libraryId?:number;
+    departmentId?:number;
 }
 
 interface FolderSearchParam{
@@ -41,6 +42,7 @@ interface ListItemsView {
 interface FolderAdvanceSearch {
     parentId?:number;
     libraryId?:number;
+    code?:string;
 }
 
 

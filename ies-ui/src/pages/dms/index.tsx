@@ -9,7 +9,9 @@ export const DMSPaths = {
   folder: '/dms/folder',
   setting: '/dms/setting',
   document: '/dms/document',
-  workspace: '/dms/workspace'
+  workspace: '/dms/workspace',
+  contracts: "/dms/contracts",
+  company: "/dms/company"
 
 };
 

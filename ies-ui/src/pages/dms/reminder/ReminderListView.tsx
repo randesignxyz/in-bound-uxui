@@ -71,7 +71,7 @@ export default ({ documentId}:Props) =>{
                
                             <Flex vertical  >
                                 <span>Expire :{formatDate(r.reminderDate)}</span>
-                                <Tag color={moment(r.reminderDate)?.diff(moment.now())>0?"processing":"error"} bordered={false} style={{display:"contents"}} >{convertDuration(r.reminderDate)}</Tag>
+                                <Tag color={moment(r.reminderDate)?.diff(moment())>0?"processing":"error"} bordered={false} style={{display:"contents"}} >{convertDuration(r.reminderDate)}</Tag>
                             </Flex>
                         </>)}
                     },
@@ -86,7 +86,7 @@ export default ({ documentId}:Props) =>{
                                 onClick={()=>{
                                     Modal.confirm({
                                         title:"Delete Reminder",
-                                        content:"are you sure?",
+                                        content:"are you sure? Delete this reminder can not be restore.",
                                         onOk:()=>{
                                             services.delete(r.id);
                                             actionRef.current?.reload?.();
@@ -96,8 +96,8 @@ export default ({ documentId}:Props) =>{
 
                                     
                                 }}
-                            />,
-                            <Button type="link" icon={<EditOutlined/>} onClick={()=>setState({visible:{name:"MODAL",type:"EDIT", payloads:r}})} />
+                            >Delete</Button>,
+                            <Button type="link" icon={<EditOutlined/>} onClick={()=>setState({visible:{name:"MODAL",type:"EDIT", payloads:r}})} >Edit</Button>
                         ]
                     }
                 }}

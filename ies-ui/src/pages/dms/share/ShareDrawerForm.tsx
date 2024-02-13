@@ -1,4 +1,4 @@
-import { DrawerForm, DrawerFormProps, ProFormDatePicker, ProFormDependency, ProFormSelect, ProFormText, ProFormTextArea } from "@ant-design/pro-components";
+import { DrawerForm, DrawerFormProps, ProFormDatePicker, ProFormDependency, ProFormSelect, ProFormTextArea } from "@ant-design/pro-components";
 import { Alert, Col, Divider, Row } from "antd";
 import { ShareCreate } from "./data";
 import { simpleRequestActions } from "@/services/model";
@@ -7,6 +7,7 @@ import { GroupServiceAPI } from "../setting/usergroup/service";
 import { useEffect, useState } from "react";
 import { AccountServiceAPI } from "@/services/account/services";
 import { useForm } from "antd/lib/form/Form";
+import { CoreServiceAPI } from "../service";
 
 interface Props extends DrawerFormProps {
     onSave: (data: ShareCreate) => void,
@@ -16,7 +17,6 @@ interface Props extends DrawerFormProps {
 }
 
 const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...props }: Props) => {
-
 
     const requestAction = simpleRequestActions();
     const [form] = useForm<ShareCreate>();
@@ -30,8 +30,6 @@ const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...pr
         const data = AccountServiceAPI(requestAction).fetchUser("reach.pheun").query(requestAction);
         setRecipeintState({ group: false, recipeint: false })
     }, [props.open]);
-
-
     return (
         <DrawerForm
             width={500}
@@ -60,7 +58,23 @@ const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...pr
             }}
         >
                     <>
-                        <ProFormText
+                    <ProFormSelect
+                        label="Recipient"
+                        name="recipient"
+                        placeholder={"username or user id"}
+                        showSearch
+                        debounceTime={500}
+                        request={async(k:{keyWords:string})=>{
+                            const data = await CoreServiceAPI(requestAction).page({
+                                criteria:{
+                                    searchValue:k.keyWords
+                                }
+                            });
+
+                            return data.items.map(o=>({label:o.fullName, value:o.userName}))
+                        }}
+                    />
+                        {/* <ProFormText
                             name={"recipient"}
                             label="Recipient"
                             placeholder={"username or user id"}
@@ -76,7 +90,7 @@ const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...pr
                                     }
                                 }
                             }}
-                        />
+                        /> */}
                         <p>OR</p>
                         <ProFormSelect
                             name={"groupId"}
@@ -95,7 +109,11 @@ const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...pr
                                 }
                             }}
                             request={async () => {
-                                const data = await GroupServiceAPI(requestAction).page({ searchValue: "" });
+                                const data = await GroupServiceAPI(requestAction).page({
+                                    criteria:{
+                                        searchValue:""
+                                    }
+                                });
                                 return data.items.map(v => ({
                                     value: v.id,
                                     label: v.name
@@ -144,10 +162,9 @@ const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...pr
                                     value: "editor",
                                     label: "Editor"
                                 },
-                               
                             ]}
                         />
-                        <ProFormDependency dependencies={["accessible"]} name={["accessible"]}>
+                        <ProFormDependency dependencies={["accessible"]} name={["accessible"]}> 
                             {({accessible})=>{
                                 const message = ()=>{
                                     if(accessible =="previewer"){
@@ -168,11 +185,7 @@ const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...pr
                             name={"description"}
                             label="Remark"
                         />
-
-
                     </>
-
-
         </DrawerForm>
     )
 }

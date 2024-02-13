@@ -1,5 +1,6 @@
 import moment from "moment"
 import { Moment } from "moment"
+import { Attachment } from "./documentation/data"
 
 export const formateBytes = (bytes:number, decimals:number )=>{
     if (!+bytes) return '0 Bytes'
@@ -13,22 +14,26 @@ export const formateBytes = (bytes:number, decimals:number )=>{
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
 }
 
-export const formateFileType =(fileType?:string) =>{
-    if (fileType ==="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"){
-        return "EXCEL"
-    }
-    else if(fileType ==="application/vnd.openxmlformats-officedocument.wordprocessingml.document"){
-        return "WORD"
-    }
-    else if (fileType ==='image/png'){
-        return "PNG"
-    }
-    else if (fileType ==='application/pdf'){
-        return "PDF"
-    }
-    else if (fileType ==='image/jpg'){
-        return "JPG"
-    }
+let fileType:string;
+export const formateFileType =(fileAttach?:Attachment[]) =>{
+  
+    fileAttach?.filter(o=>{
+            if(o.fileExtension=="pdf"){
+                fileType="PDF"
+            }
+            else if(o.fileExtension =="docx"){
+                fileType="WORD"
+            }
+            else if(o.fileExtension =="xlsx" ||"xlx"){
+                fileType ="EXCEL"
+            }
+            else {
+                fileType ="IMAGE"
+            }
+        
+    });
+
+   return fileType
 }
 
 
@@ -76,4 +81,13 @@ export const expriationStatus = (reminderDate:Moment)=>{
     const currentDay = moment().diff(reminderDate,"hours");
     
     return currentDay
+}
+
+
+export const getFileTypeviaExtension = (fileName?:string) =>{
+    const extension = getFileExtension(fileName);
+    return extension
+}
+function getFileExtension(filename?: string): string {
+    return filename?.split('.').pop() || ''; // Get the last part after the last dot
 }

@@ -35,7 +35,7 @@ const AdjDirectListItemSearchModal = ({verifyId,trigger,selectedItems, addHandle
         try{
             form.validateFields()            
             // setDocNum(value)
-            if(value=='' || value.length<4) return
+            // if(value=='' || value.length<4) return
             const rs = await GratisServices.getListItemAdjustment(verifyId,customerCode,value,selectedFrom?.dataSource,selectedFrom?.startedDate,selectedFrom?.endedDate).query(requestActions)             
             if(rs && rs.length>0){  
                 setSearchData(rs)

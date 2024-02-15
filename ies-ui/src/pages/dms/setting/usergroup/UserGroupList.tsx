@@ -1,9 +1,9 @@
 import { ActionType, ProList } from "@ant-design/pro-components"
-import { Button, Flex, Space, Tag } from "antd"
+import { Button, Flex, Tag } from "antd"
 import { GroupServiceAPI } from "./service"
 import { simpleRequestActions } from "@/services/model"
 import { GroupCreate, GroupDTO } from "./data"
-import { EditOutlined, InfoCircleOutlined, UserAddOutlined, DeleteOutlined, TeamOutlined, PlusOutlined } from "@ant-design/icons"
+import { EditOutlined, InfoCircleOutlined, UserAddOutlined, DeleteOutlined, TeamOutlined, PlusOutlined, ReloadOutlined } from "@ant-design/icons"
 import { useEffect, useRef, useState } from "react"
 import UserGroupEntryModal from "./UserGroupEntryModal"
 import GroupDetail from "./Detail"
@@ -37,18 +37,38 @@ export default ({ actionKey }: Props) => {
     return (
         <>
             <ProList<GroupDTO>
-                toolBarRender={() => [
-                    <Button
-                        icon={<PlusOutlined />}
-                        type="link"
-                        onClick={() => setState({ visible: { name: "MODAL", type: "ADD", } })}
-                    />
-                ]}
-                request={async () => {
-                    const data = services.page({ searchValue: "" });
+                 search={{
+                    optionRender: (e) => {
+                        return [
+                            <Button
+                                type="link"
+                                onClick={() => setState({ visible: { name: "MODAL", type: "ADD" } })}
+                                icon={<PlusOutlined />} />,
+                            <Button
+                                type="link"
+                                onClick={() => actionRef.current?.reload?.()}
+                                icon={<ReloadOutlined />}
+                            />
+                        ]
+                    }
+                }}
+                pagination={{
+                    pageSize: 20
+                }}
+                request={async (param) => {
+                    const data =await services.page({ 
+                            criteria:{
+                                searchValue:param.name
+                            },
+                            pagination:{
+                                pageSize:param.pageSize,
+                                current:param.current
+                            }
+                    });
                     return Promise.resolve({
-                        data: (await data).items,
-                        success: true
+                        data: data.items,
+                        success: true,
+                        total:data.total
                     });
                 }}
                 actionRef={actionRef}
@@ -57,13 +77,15 @@ export default ({ actionKey }: Props) => {
                         dataIndex: "name"
                     },
                     subTitle: {
+                        search:false,
                         dataIndex: "isDeleted"
                     },
-                    type: {},
                     avatar: {
+                        search:false,
                         render: (_, r) => (<TeamOutlined />)
                     },
                     description: {
+                        search:false,
                         render: (_, r) => {
                             return (
                                 <Flex vertical>
@@ -80,17 +102,18 @@ export default ({ actionKey }: Props) => {
                     },
 
                     actions: {
+                        search:false,
                         render: (_, r) => [
                             <Button
                                 type="link"
                                 icon={<EditOutlined />}
                                 onClick={() => setState({ visible: { name: "MODAL", type: "EDIT", payload: r } })}
                             />,
-                            <Button
-                                type="link"
-                                icon={<InfoCircleOutlined />}
-                                onClick={()=>setDetailState({visible:{name:"MODAL", type:"EDIT", payload:r}})}
-                            />,
+                            // <Button
+                            //     type="link"
+                            //     icon={<InfoCircleOutlined />}
+                            //     onClick={()=>setDetailState({visible:{name:"MODAL", type:"EDIT", payload:r}})}
+                            // />,
                             <Button
                                 type="link"
                                 icon={<UserAddOutlined />}
@@ -120,6 +143,7 @@ export default ({ actionKey }: Props) => {
             <GroupDetail
                 open={detailState?.visible?.name==="MODAL"}
                 onClose={()=>setDetailState((v)=>({...v, visible:undefined}))}
+                data={detailState?.visible?.payload}
             />
         </>
     )

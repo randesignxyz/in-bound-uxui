@@ -1,15 +1,14 @@
-import { ProForm, ProFormCheckbox, ProFormDatePicker, ProFormDependency, ProFormDigit, ProFormSelect, ProFormText, ProFormTextArea } from "@ant-design/pro-components"
-import { Button, Col, Row, UploadFile } from "antd"
+import { ProForm } from "@ant-design/pro-components"
+import { Button, UploadFile } from "antd"
 import React, { useEffect, useState } from "react";
-import FileUploader from "@/components/Attachment/FileUploader";
 import { simpleRequestActions } from "@/services/model";
 import { DocumentationCreate, DocumentationDTO } from "./data";
-import { CategoryServiceAPI } from "../setting/components/category/service";
 import FormModalComp, { FormModalProps } from "@/components/FormModal";
-import { DocumentTypeServiceAPI } from "../setting/components/documentType/service";
-import { CoreServiceAPI } from "../service";
-import { DepartmentServiceAPI } from "../setting/components/department/service";
 import { useForm } from "antd/lib/form/Form";
+import DocFileUploader from "../attachment/DocFileUploader";
+import { getFileTypeviaExtension } from "../core";
+import DocumentationEntry from "./DocumentationEntry";
+import ContractEntry from "../contract/ContractEntry";
 
 
 interface Props extends FormModalProps {
@@ -18,226 +17,88 @@ interface Props extends FormModalProps {
   onSave: (data: DocumentationCreate) => void;
   data?: DocumentationDTO;
   libraryId?: number;
+  division?: string;
+  
 }
 
-const DocumentModalForm: React.FC<Props> = ({ type, onSave, folderId, data, libraryId, ...props }: Props) => {
+const DocumentModalForm: React.FC<Props> = ({ type, onSave, division, folderId, data, libraryId, ...props }: Props) => {
 
   const requestAction = simpleRequestActions();
-  const [url, setUrl] = useState<UploadFile>();
+  const [fileUpload, setFileUpload] = useState<{file?:UploadFile[],required?:boolean}>();
   const [form] = useForm<DocumentationCreate>();
-  const [documentTypeHasExpire, setDocumentTypeHasExpire] = useState<DocumentTypeDTO[]>([]);
+
 
   useEffect(() => {
     props.open && data && form.setFieldsValue({
-      ...data,
-      documentTypeId: data.documentType?.id,
-      orgUnitId: data.orgUnit?.id,
-      departmentId: data.department?.id,
-
+      ...data.documentation,
+      ...data.term
+      
     });
     props.open && !data && form.resetFields();
+
   }, [props.open]);
 
   return (<>
     <FormModalComp
       {...props}
-      title="Create Document"
+      title={` ${type=="ADD"?"New":"Edit"} ${division=="DOC"?"Document Form":"Contract Form"}`}
       footer={
         <>
           <Button onClick={() => props.onCancel?.()}>Cancel</Button>
-          <Button onClick={async () => {
-            const dataForm = await form.validateFields();
-            const entry = {
-              ...dataForm,
-              fileId: url?.response,
-              fileType: url?.type,
-              fileSize: url?.size,
-              fileName: url?.name,
-              folderId: folderId,
-              libraryId: libraryId,
-              status: "Draft"
-            }
-            onSave(entry);
-          }} >Save Draft</Button>
           <Button type="primary" onClick={async () => {
+            // console.log(fileUpload?.file?.length);
+            !fileUpload?.file?.length && setFileUpload({required:true});
             const dataForm = await form.validateFields();
-            const entry = {
-              ...dataForm,
-              fileId: url?.response,
-              fileType: url?.type,
-              fileSize: url?.size,
-              fileName: url?.name,
+            const entry: DocumentationCreate = {
+              id:data?.id,
+              libraryId: libraryId,
               folderId: folderId,
-              libraryId: libraryId
+              division: division,
+              buId:dataForm.buId,
+              content: {
+                ...dataForm
+              },
+              term: {
+                ...dataForm
+              },
+              attachment: fileUpload?.file?.map(o => ({
+                fileId: o?.response,
+                fileSize: o?.originFileObj?.size,
+                fileName: o?.originFileObj?.name,
+                fileType: o?.originFileObj?.type,
+                fileExtension: getFileTypeviaExtension(o?.originFileObj?.name)
+              })),
             }
-            onSave(entry);
+            
+            
+             onSave(entry);
+            // // fileUpload?.file && onSave(entry)
+            // console.log(fileUpload?.file?.length);
+            
           }}>Submit</Button>
         </>
       }
     >
       <ProForm
         form={form}
-
         submitter={false}
       >
-        <Row
-          gutter={16}
-        >
+        {
+          (division == "DOC") && <DocumentationEntry /> ||
+          <ContractEntry />
+        }
 
-          <Col span={10}>
-            <ProFormText
-              label={"Document Title"}
-              name={"title"}
-              rules={[{ required: true }]}
-            />
-          </Col>
-
-          <Col span={6}>
-            <ProFormText
-              label={"Document Number"}
-              name={"documentCode"}
-            />
-
-          </Col>
-          <Col span={8}>
-            <ProFormSelect
-              label={"Category"}
-              name={"category"}
-              showSearch
-              debounceTime={500}
-              request={async (k: { keyWords: string }) => {
-                const data = await CategoryServiceAPI(requestAction).page({
-                  criteria: { searchValue: k.keyWords || "" }
-                });
-
-                return data.items.map(it => ({
-                  label: it.name,
-                  value: it.id
-                }));
-
-              }}
-            />
-          </Col>
-
-          <Col span={8}>
-            <ProFormDatePicker
-              label="Effective Date"
-              name={"effectiveDate"}
-              width={"md"}
-            />
-          </Col>
-          <Col span={8}>
-            <ProFormSelect
-              rules={[{ required: true }]}
-              label={"Organization Unit"}
-              name={"orgUnitId"}
-              showSearch
-              request={async (k: { keyWords: string }) => {
-                const data = await CoreServiceAPI(requestAction).orgUnitList();
-                return data.map(v => ({ label: v.name, value: v.id }))
-              }}
-            />
-          </Col>
-          <Col span={8}>
-            <ProFormSelect
-              name={"departmentId"}
-              rules={[{ required: true }]}
-              label="Department"
-              request={async (k: { keyWords: string }) => {
-                const data = await DepartmentServiceAPI(requestAction).page({
-                  criteria: {
-                    searchValue: k.keyWords || ""
-                  }
-                });
-
-                return data.items?.map(v => ({ label: v.name, value: v.id }))
-              }}
-            />
-          </Col>
-          <Col span={8}>
-            <ProFormSelect
-              rules={[{ required: true }]}
-              label="Document Type"
-              name={"documentTypeId"}
-              showSearch
-              request={async (k: { keyWords: string }) => {
-                const data = await DocumentTypeServiceAPI(requestAction).page({
-                  criteria: {
-                    searchValue: k.keyWords || ""
-                  }
-                });
-                setDocumentTypeHasExpire(data.items);
-
-                return data.items.map((v) => ({ value: v.id, label: v.name }))
-              }}
-            />
-          </Col>
-          <ProFormDependency dependencies={["documentTypeId"]} name={["documentTypeId"]}>
-            {({ documentTypeId }) => {
-              const documentType = documentTypeHasExpire.filter(it => it.id == documentTypeId)[0];
-              documentType?.requiredExpire == false && form.resetFields(["isAlert", "expirationDate", "periodDays"])
-
-              return (<>
-                {(<>
-
-                  <Col span={7}>
-                    <ProFormDatePicker
-                      label="Expiration Date"
-                      name={"expirationDate"}
-                      width={"md"}
-                      disabled={!documentType?.requiredExpire}
-                      rules={[{ required: documentType?.requiredExpire }]}
-
-                    />
-
-                  </Col>
-                  <ProFormCheckbox
-                    label="Alert"
-                    disabled={!documentType?.requiredExpire}
-                    name={"isAlert"}
-                  />
-                  <ProFormDependency dependencies={["isAlert"]} name={["isAlert"]}>
-                    {({ isAlert }) => {
-                      return (<>
-                        {(
-                          <Col span={7}>
-                            <ProFormDigit
-                              name={"periodDays"}
-                              label="Notification Period"
-                              rules={[{ required: isAlert }]}
-                              disabled={!isAlert || !documentType?.requiredExpire}
-                              addonAfter="/days"
-                            />
-                          </Col>
-                        )}
-                      </>)
-                    }}
-                  </ProFormDependency>
-
-                </>)}
-              </>)
+        {!data && (
+          <DocFileUploader
+            service="FILE"
+            required={fileUpload?.required}
+            multi={true}
+            onGetFile={(e) => {
+              setFileUpload({file:e})
+              
             }}
-          </ProFormDependency>
-          <Col span={24}>
-            <FileUploader
-              required={true}
-              onSetFiles={(e) => {
-                setUrl(e[0]);
-
-              }}
-
-              initFiles={[data?.attachment?.fileId || ""] ||[]}
-            />
-          </Col>
-        </Row>
-        <ProFormTextArea
-          name={"description"}
-          label="Description"
-        />
-
-
-
-
+          />
+        )}
       </ProForm>
 
     </FormModalComp>

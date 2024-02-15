@@ -15,11 +15,12 @@ interface Props{
 const StepFormView =({title,data,onClick, children}:Props) => {
     
     return (<StepsForm.StepForm       
-        name={`${data.orderNo}-${data.status}`} 
+        name={`${data.orderNo}-${data.status}`}        
         title={title}  
         onFinish={async () => {            
             return true;
         }}      
+        key={`${data.uuid}`} 
         stepProps={{            
             onClick:()=>{ onClick(data)},
             status: data.status==='ACHIEVED'?'finish':'error',

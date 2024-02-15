@@ -40,6 +40,7 @@ const AdjDirectListItemSearchModal = ({verifyId,trigger,selectedItems, addHandle
             if(rs && rs.length>0){  
                 setSearchData(rs)
             }else{
+                setSearchData([])
                 message.warning('Not found')
             } 
         }catch(ex){

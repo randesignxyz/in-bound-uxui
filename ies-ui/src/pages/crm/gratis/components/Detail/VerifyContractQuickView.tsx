@@ -8,6 +8,8 @@ import useSafeState from "ahooks/lib/useSafeState";
 import { simpleRequestActions } from "@/services/model";
 import VerifyContractByMonthView from "./VerifyContractByMonthView";
 import StepFormView from "./StepFormView";
+import { UIBuilder } from "@/components/UIBuilder";
+import { uniqueId } from "lodash";
 
 interface Props{
     open?: boolean;
@@ -35,13 +37,16 @@ export default ({open,onOpenModalChange, reloadQuickView, id, groupTypeCode, sta
     }, [])    
     const loadData = async () => {
         const rs = await GratisServices.fectchGratisContract({id: id}).query(requestActions)
-        setData(rs)
+        
+        setData({...rs,contracts: rs.contracts?.map(r=>{
+            return {...r,uuid: uniqueId()}
+        })})
     }
     const onChange = (value: number) => {        
         setCurrent(value);
     }
     const refreshQuickView=()=>{
-        // loadData()
+        loadData()
         reloadQuickView(data?.id||0,current)
         setForceReload(v=> v+1)
     }

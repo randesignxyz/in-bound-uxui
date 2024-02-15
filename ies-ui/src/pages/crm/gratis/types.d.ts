@@ -72,6 +72,7 @@ export type VerifyGratisContact = {
   invoices?: GratisInvoice[];
   title?:string;
   durationText?:string;
+  uuid?:string;
 
 }
 export interface GratisVerifyItem {

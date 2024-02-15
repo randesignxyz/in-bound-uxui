@@ -5,6 +5,7 @@ import { simpleRequestActions } from "@/services/model"
 import { useEffect } from "react"
 import { FolderCreate, DataNode } from "./data"
 import { DepartmentServiceAPI } from "../setting/components/department/service"
+import { useParams } from "@umijs/max"
 
 interface Props extends FormModalProps {
     onSave: (data: FolderCreate) => void;
@@ -17,7 +18,8 @@ interface Props extends FormModalProps {
 const FolderEntryForm: React.FC<Props> = ({ code, libraryId, data, onSave, type, ...props }: Props) => {
     const [form] = useForm<FolderCreate>();
     const requestAction = simpleRequestActions();
-
+    const param= useParams();
+    
     // console.log(libraryId, code);
 
 
@@ -38,7 +40,7 @@ const FolderEntryForm: React.FC<Props> = ({ code, libraryId, data, onSave, type,
             onSubmit={async () => {
                 const dataForm = await form.validateFields();
                 const id = type == "ADD" ? undefined : parseInt(data?.key || "");
-
+                    
                 const entry = {
                     ...dataForm,
                     parentId: parseInt(data?.key || ""),

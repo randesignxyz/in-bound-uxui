@@ -1,11 +1,11 @@
-import { Button, Collapse, Dropdown, Flex, Menu, Segmented, Space, Tree, TreeDataNode } from "antd"
+import { Button, Segmented } from "antd"
 import FolderViewList from "./components/FolderViewList";
 import { useEffect, useState } from "react";
 import DocumentListView from "./documentation/DocumentListView";
 import { DMSPaths } from ".";
 import RecievedShare from "./share/RecievedShare";
 import FavoriteView from "./favorite/FavoriteView";
-import { ClusterOutlined, ShareAltOutlined, NodeCollapseOutlined, ClockCircleOutlined, MenuFoldOutlined, AuditOutlined, FolderOutlined, SettingOutlined, BellOutlined, CarryOutOutlined, FormOutlined } from "@ant-design/icons";
+import { ShareAltOutlined, MenuFoldOutlined, FolderOutlined, SettingOutlined, BellOutlined } from "@ant-design/icons";
 import ReminderListView from "./reminder/ReminderListView";
 import DraftListView from "./quickaccess/DraftListView";
 import { DocumentationSearchByFolder } from "./documentation/data";
@@ -20,6 +20,7 @@ const APPDMS: React.FC = () => {
     const [paramByFolder, setParamByFolder] = useState<DocumentationSearchByFolder>();
     const [sidbarState, setSidbarState] = useState<boolean>(false);
     const [divisionState, setDivisionState] = useState<string>("DOC");
+    const [libraryId, setLibraryId] = useState<number>();
     const [menuStyleState, setMenuStyleState] = useState<React.CSSProperties>(
         {
             height: "90%",
@@ -36,20 +37,16 @@ const APPDMS: React.FC = () => {
 
         }
     );
-
     useEffect(() => {
     }, []);
-
-
     const items: MenuProps["items"] = [
         {
             key: "1",
             label: "ASasa"
         }
-    ]
+    ];
+    console.log(libraryId);
 
-  console.log(access.canAccessDMSAdminMenu);
-  
     return (
         <>
             {/* <Flex align="baseline" >
@@ -118,6 +115,7 @@ const APPDMS: React.FC = () => {
                 style={menuStyleState}
             >
                 <FolderViewList activeKey={view == "library" ? true : false}
+                    setLibrary={setLibraryId}
                     onSearch={(param: DocumentationSearchByFolder) => setParamByFolder(param)} />
                 {/* <Collapse
                     ghost
@@ -246,10 +244,7 @@ const APPDMS: React.FC = () => {
 
                     ]}
                 /> */}
-
-                
             </div>
-
             <div
                 style={
                     sidbarState ? { marginLeft: 0, transition: "all 0.5s" } :
@@ -271,15 +266,16 @@ const APPDMS: React.FC = () => {
                             setMenuStyleState((v) => ({ ...v, marginLeft: -350, transition: "all 0.5s" }));
                         }
                     }} icon={<MenuFoldOutlined />} />
-
                     <Segmented
                         style={{ width: "100%" }}
-                        defaultValue={"DOC"}
+                        defaultValue={view}
+
                         options={[
                             {
                                 value: "library",
                                 label: "Document",
-                                icon: <FolderOutlined />
+                                icon: <FolderOutlined />,
+
                             },
                             // {
                             //     value: "REQUEST",
@@ -297,12 +293,17 @@ const APPDMS: React.FC = () => {
                                 icon: <BellOutlined />
                             },
                         ]}
-
                         onChange={(e) => {
-                            history.push(`${DMSPaths.workspace}/${e}`)
-                            setDivisionState(e.toString())
-                        }
-                        }
+                            if (e == "library") {
+                                history.push(`${DMSPaths.workspace}/${e}/${libraryId}`)
+                                setDivisionState(e.toString());
+                            }
+                            else {
+                                history.push(`${DMSPaths.workspace}/${e}`)
+                                setDivisionState(e.toString());
+                            }
+
+                        }}
                     />
                     <Access accessible={access.canAccessDMSAdminMenu}>
                         <Button icon={<SettingOutlined />} type="link" onClick={() => history.push(`${DMSPaths.setting}/department`)} />

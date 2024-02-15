@@ -1,16 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Button, Dropdown, Flex, Menu, MenuProps, Space, Tree, TreeDataNode, message } from 'antd';
+import { Dropdown, Flex, MenuProps, Space, TreeDataNode, message } from 'antd';
 import { FolderServiceAPI } from '../folder/service';
 import { simpleRequestActions } from '@/services/model';
-import { AuditOutlined, BankOutlined, CarryOutOutlined, DeleteOutlined, EditOutlined, EllipsisOutlined, FileAddOutlined, FolderAddOutlined, FolderOutlined, FormOutlined, PlusOutlined } from '@ant-design/icons';
+import { AuditOutlined, BankOutlined, DeleteOutlined, EditOutlined, EllipsisOutlined, FileAddOutlined, FolderAddOutlined, FolderOutlined } from '@ant-design/icons';
 import { ActionType } from '@ant-design/pro-components';
 import { history, useAccess, useParams } from '@umijs/max';
 import { Modal, Spin } from 'antd/lib';
 import FolderEntryForm from '../folder/EntryForm';
 import { DataNode, FolderCreate } from '../folder/data';
 import { LibraryServiceAPI } from '../setting/components/library/service';
-import LibraryModalEntry from '../setting/components/library/LibraryModalEntry';
-import { LibraryCreate, LibraryDTO } from '../setting/components/library/data';
+import { LibraryDTO } from '../setting/components/library/data';
 import DocumentModalForm from '../documentation/EntryForm';
 import { DocumentServiceAPI } from '../documentation/service';
 import { DMSPaths } from '..';
@@ -25,6 +24,7 @@ interface Props {
     activeKey?: boolean;
     moveDoc?: boolean;
     onMove?: () => void;
+    setLibrary?:(libraryId?:number) => void;
 }
 const updateTreeData = (list: DataNode[], key: React.Key, children: DataNode[]): DataNode[] => list.map((node) => {
     if (node.key === key) {
@@ -53,7 +53,7 @@ const makeTree = (items: any[], key = 0, link = 'parentId'): any => {
 
 
 
-export default ({ onSearch, activeKey, moveDoc, onMove, ...props }: Props) => {
+export default ({ onSearch, activeKey, moveDoc, onMove,setLibrary , ...props }: Props) => {
 
     const requestAction = simpleRequestActions();
     const [folder, setFolder] = useState<LibraryDTO>();
@@ -94,7 +94,8 @@ export default ({ onSearch, activeKey, moveDoc, onMove, ...props }: Props) => {
 
         const dd = makeTree(folder.map(o => ({ key: o.id.toString(), id: o.id, title: o.name, parentId: o.parentId, code: o.code })));
         setTreeFolderList(dd);
-
+        setLibrary(folder[0]?.id);
+        history.push(`${DMSPaths.workspace}/library/${folder[0]?.id}`)
     }
 
 
@@ -127,7 +128,7 @@ export default ({ onSearch, activeKey, moveDoc, onMove, ...props }: Props) => {
             // isAdmin: access.canAccessDMSAdminMenu,
 
         });
-        setFolder(data?.filter(it => it.type == "own")[0])
+        setFolder(data?.filter(it => it.type == "own")[0]);
         setTreeData(
             data.map(it => ({
                 key: it.id?.toString(),
@@ -182,10 +183,10 @@ export default ({ onSearch, activeKey, moveDoc, onMove, ...props }: Props) => {
 
 
     useEffect(() => {
-        loadData();
-        testGetFolder()
+        // loadData();
+        testGetFolder();
+       
     }, [actionRef]);
-
 
 
     const itemsAction = (recrd?: DataNode): MenuProps["items"] => {
@@ -227,26 +228,26 @@ export default ({ onSearch, activeKey, moveDoc, onMove, ...props }: Props) => {
         // }
         // else {
         return [
-            {
-                key: "1",
-                label: "Documents",
-                icon: <FileAddOutlined />,
-                disabled: recrd?.code == "LIBRARY" ? true : false,
-                children: [
-                    {
-                        key: "1-2",
-                        icon: <FileAddOutlined />,
-                        label: "Create Document",
-                        onClick: () => setDocumentState({ visible: { name: "MODAL", type: "ADD", folderId: parseInt(recrd?.key || ""), division: "DOC", libraryId: recrd?.libraryId } })
-                    },
-                    {
-                        key: "1-1",
-                        label: "Create Contract",
-                        icon: <AuditOutlined />,
-                        onClick: () => setDocumentState({ visible: { name: "MODAL", type: "ADD", folderId: parseInt(recrd?.key || ""), division: "CONTRACT", libraryId: recrd?.libraryId } })
-                    }
-                ]
-            },
+            // {
+            //     key: "1",
+            //     label: "Documents",
+            //     icon: <FileAddOutlined />,
+            //     disabled: recrd?.code == "LIBRARY" ? true : false,
+            //     children: [
+            //         {
+            //             key: "1-2",
+            //             icon: <FileAddOutlined />,
+            //             label: "Create Document",
+            //             onClick: () => setDocumentState({ visible: { name: "MODAL", type: "ADD", folderId: parseInt(recrd?.key || ""), division: "DOC", libraryId: recrd?.libraryId } })
+            //         },
+            //         {
+            //             key: "1-1",
+            //             label: "Create Contract",
+            //             icon: <AuditOutlined />,
+            //             onClick: () => setDocumentState({ visible: { name: "MODAL", type: "ADD", folderId: parseInt(recrd?.key || ""), division: "CONTRACT", libraryId: recrd?.libraryId } })
+            //         }
+            //     ]
+            // },
             {
                 key: "2",
                 label: "New Folder",
@@ -347,8 +348,7 @@ export default ({ onSearch, activeKey, moveDoc, onMove, ...props }: Props) => {
                         // autoExpandParent
                         // defaultExpandParent
                         onSelect={(e, { selectedNodes }) => {
-                            console.log(e[0]);
-
+                  
                             history.push(`${DMSPaths.workspace}/library/${e[0]}`)
                             // history.push(`${DMSPaths.workspace}/library/${e[0]}`)
 

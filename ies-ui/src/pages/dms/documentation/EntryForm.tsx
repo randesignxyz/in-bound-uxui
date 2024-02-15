@@ -72,8 +72,8 @@ const DocumentModalForm: React.FC<Props> = ({ type, onSave, division, folderId, 
             
             
              onSave(entry);
-            // fileUpload && onSave(entry)
-            // console.log(entry);
+            // // fileUpload?.file && onSave(entry)
+            // console.log(fileUpload?.file?.length);
             
           }}>Submit</Button>
         </>

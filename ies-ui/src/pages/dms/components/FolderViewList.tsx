@@ -94,7 +94,7 @@ export default ({ onSearch, activeKey, moveDoc, onMove,setLibrary , ...props }: 
 
         const dd = makeTree(folder.map(o => ({ key: o.id.toString(), id: o.id, title: o.name, parentId: o.parentId, code: o.code })));
         setTreeFolderList(dd);
-        setLibrary(folder[0]?.id);
+        // setLibrary(folder[0]?.id);
         history.push(`${DMSPaths.workspace}/library/${folder[0]?.id}`)
     }
 

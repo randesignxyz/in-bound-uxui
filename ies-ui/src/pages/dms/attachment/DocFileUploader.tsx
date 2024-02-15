@@ -7,7 +7,7 @@ import { FileServiceAPI } from "@/services/files/service";
 import { getServiceUrl } from "@/services/ApiUrl";
 import Dragger from "antd/lib/upload/Dragger";
 import { UploadFile } from "antd/es/upload/interface";
-// import { kc } from '@/auth';
+import { kc } from '@/auth';
 
 export type UploadType = UploadFile<string> & { title?: string; description?: string };
 type FileInfoType = {
@@ -31,7 +31,7 @@ const DocFileUploader: React.FC<Props> = ({ required= false, onGetFile, multi, m
     const [fileExtension, setFileExtension] = useState<string[]>();
     const services = FileServiceAPI(requestActions);
     // const token = localStorage.getItem('accessToken');
-    // const token =kc.token;
+    const token =kc.token;
     
     const [fileList, setFileList] = useState<UploadType[]>([]);
     const [forceReload, setForceReload] = useState(1);
@@ -59,7 +59,7 @@ const DocFileUploader: React.FC<Props> = ({ required= false, onGetFile, multi, m
         
         <Dragger
             
-            // headers={token ? { Authorization: `Bearer ${token}`, } : {}}
+            headers={token ? { Authorization: `Bearer ${token}`, } : {}}
             accept={fileExtension?.toString()|| accept}
             action={uploadUrl}
             multiple={multi ? true : false}

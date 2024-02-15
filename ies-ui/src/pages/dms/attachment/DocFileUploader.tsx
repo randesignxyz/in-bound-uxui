@@ -32,6 +32,7 @@ const DocFileUploader: React.FC<Props> = ({ required= false, onGetFile, multi, m
     const services = FileServiceAPI(requestActions);
     // const token = localStorage.getItem('accessToken');
     // const token =kc.token;
+    
     const [fileList, setFileList] = useState<UploadType[]>([]);
     const [forceReload, setForceReload] = useState(1);
 
@@ -58,7 +59,7 @@ const DocFileUploader: React.FC<Props> = ({ required= false, onGetFile, multi, m
         
         <Dragger
             
-            headers={token ? { Authorization: `Bearer ${token}`, } : {}}
+            // headers={token ? { Authorization: `Bearer ${token}`, } : {}}
             accept={fileExtension?.toString()|| accept}
             action={uploadUrl}
             multiple={multi ? true : false}

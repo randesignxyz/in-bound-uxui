@@ -32,7 +32,7 @@ export const CustomerListView: React.FC<TableViewProps<CustomerItemLess> & { act
   const [loading, setLoading] = useState(false);
   const access = useAccess();
 
-  const [importData, setImportData ] = useState<ImportDataResponse>()
+  const [importData, setImportData] = useState<ImportDataResponse>()
 
   const onRequestHandler = (
     criteria?: { searchValue?: string; advanceSearch?: CustomerAdvanceSearchParams },
@@ -154,7 +154,7 @@ export const CustomerListView: React.FC<TableViewProps<CustomerItemLess> & { act
                   type="link"
                   icon={<SelectOutlined />}
                   onClick={async () => {
-                    window.open(`./detail/${r.id}`, '_blank')?.focus();
+                    window.open(`/external/crm/customer/detail/${r.id}`, '_blank')?.focus();
                   }}
                 />
                 <a onClick={() => history.push(CrmPaths.customer + `/detail/${r.id}`)}>
@@ -197,7 +197,7 @@ export const CustomerListView: React.FC<TableViewProps<CustomerItemLess> & { act
           },
           {
             title: 'Status',
-            render: (_, r) => <Status text={r.status}/>
+            render: (_, r) => <Status text={r.status} />
             // dataIndex: 'status'
           },
           {
@@ -207,7 +207,7 @@ export const CustomerListView: React.FC<TableViewProps<CustomerItemLess> & { act
           {
             render: (_, r) => <Dropdown menu={{
 
-              items: actl.getMenuItems(r, 'List', ()=> actionRef.current?.reloadAndRest?.() ).filter(it => it.display)
+              items: actl.getMenuItems(r, 'List', () => actionRef.current?.reloadAndRest?.()).filter(it => it.display)
 
             }}>
 
@@ -288,7 +288,7 @@ export const CustomerListView: React.FC<TableViewProps<CustomerItemLess> & { act
         open={true}
         onOpenChange={(visible) => !visible && modals.hideModal('transfer-customers')} />}
 
-       <UploadData title = "Import indirect customer" onCancel={()=> setImportData(undefined)} open={!!importData} data={importData}/> 
+      <UploadData title="Import indirect customer" onCancel={() => setImportData(undefined)} open={!!importData} data={importData} />
     </Spin>
   );
 };

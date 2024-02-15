@@ -23,7 +23,19 @@ const cols = (onDetail?: (record: ContractLess) => void): ProColumns<ContractLes
     {
         title: 'Customer Id',
         sorter: 'customerNo',
-        render: (_, rd) => <a onClick={() => { history.push(`${CrmPaths.customer}/detail/${rd.customer.id}`) }} >{rd.customer.code || 'Not Assigned'}</a>
+        width: 120,
+        render: (_, rd) => <Space>
+            <Button
+                type="link"
+                icon={<SelectOutlined />}
+                onClick={async () => {
+                    window.open(`/external/crm/customer/detail/${rd.customer.id}`, '_blank')?.focus();
+                }}
+            />
+            <a onClick={() => { history.push(`${CrmPaths.customer}/detail/${rd.customer.id}`) }} >{rd.customer.code || 'Not Assigned'}</a>
+        </Space>
+
+
     },
     {
         title: 'Business Name',
@@ -32,7 +44,7 @@ const cols = (onDetail?: (record: ContractLess) => void): ProColumns<ContractLes
     },
     {
         title: 'Agreement No',
-        render: colLink(onDetail, r => r.contractNo || 'Not Assigned'),
+        render: colLink(onDetail, r => r.contractNo || 'Not Assigned', r => window.open(`/external/crm/contract/detail/${r.id}`, '_blank')?.focus()),
         sorter: 'contractNo'
     },
 
@@ -48,14 +60,14 @@ const cols = (onDetail?: (record: ContractLess) => void): ProColumns<ContractLes
     }, {
         title: 'Budget Code',
         sorter: 'budgetCode',
-        width:120,
+        width: 120,
         render: (_, r) => r.budgetCode
     }, {
         align: 'right',
         dataIndex: 'effectiveDate',
         sorter: 'effectiveDate',
         title: 'Start Date',
-        width:100,
+        width: 100,
         render: (_, item) => formatDate(item.effectiveDate)
     },
     {
@@ -63,13 +75,13 @@ const cols = (onDetail?: (record: ContractLess) => void): ProColumns<ContractLes
         dataIndex: 'expiryDate',
         sorter: 'expiryDate',
         title: 'End Date',
-        width:100,
+        width: 100,
         render: (_, item) => formatDate(item.expiryDate)
     },
     {
         title: 'Status',
-        width:110,
-        render: (_, item) => item.status && <Status text={item.status}/>
+        width: 110,
+        render: (_, item) => item.status && <Status text={item.status} />
     },
     {
         title: 'Terms',
@@ -141,8 +153,8 @@ const ContractListView = (actionHandler: { onDetail?: (record: ContractLess) => 
 
             extraFilter={
                 <Space >
-                    <AdvanceSearch onSearch={async (brandId, contractTypeId, termId,startedDateFrom,startedDateTo,endedDateFrom,endedDateTo) => {
-                        setAdanceSearch(v => ({ ...v, brandId: brandId, contractTypeId: contractTypeId, termId: termId,startedDateFrom:startedDateFrom,startedDateTo:startedDateTo,endedDateFrom,endedDateTo:endedDateTo }))
+                    <AdvanceSearch onSearch={async (brandId, contractTypeId, termId, startedDateFrom, startedDateTo, endedDateFrom, endedDateTo) => {
+                        setAdanceSearch(v => ({ ...v, brandId: brandId, contractTypeId: contractTypeId, termId: termId, startedDateFrom: startedDateFrom, startedDateTo: startedDateTo, endedDateFrom, endedDateTo: endedDateTo }))
                         actionRef.current?.reloadAndRest?.()
                     }} trigger={<Button icon={<SelectOutlined style={{ accentColor: 'red' }} />} />} />
                     <Radio.Group optionType="button"
@@ -167,7 +179,7 @@ const ContractListView = (actionHandler: { onDetail?: (record: ContractLess) => 
             }}
         />
 
-         {importContractData &&  <ImportContract  open data={importContractData} onCancel={()=> setImportContractData(undefined)}/>}
+        {importContractData && <ImportContract open data={importContractData} onCancel={() => setImportContractData(undefined)} />}
     </Spin>
 }
 

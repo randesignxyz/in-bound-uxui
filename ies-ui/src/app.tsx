@@ -3,11 +3,14 @@ import { LinkOutlined } from '@ant-design/icons';
 import type { Settings as LayoutSettings } from '@ant-design/pro-components';
 import { PageLoading, SettingDrawer } from '@ant-design/pro-components';
 import type { RequestConfig, RunTimeLayoutConfig } from '@umijs/max';
-import { history, Link } from '@umijs/max';
+import { getLocale, history, Link, setLocale } from '@umijs/max';
 import defaultSettings from '../config/defaultSettings';
 import { errorConfig } from './requestErrorConfig';
 import React from 'react';
-import { App } from 'antd';
+import { App, message } from 'antd';
+import moment from 'moment';
+import numeral from 'numeral';
+import { auth, endpoint, kc } from './auth';
 const isDev = process.env.NODE_ENV === 'development';
 const loginPath = '/user/auth';
 
@@ -20,9 +23,30 @@ export async function getInitialState(): Promise<{
   logout?: () => void;
   loading?: boolean;
 }> {
+  moment.locale('en');
+  numeral.locale('en');
+  if (getLocale() !== 'en-US') {
+    setLocale('en-US');
+  }
 
+  // const { location } = history;
+  // if (location.pathname.includes("external")) {
+  //   history.push(`${loginPath}/?path=${location.pathname}`);
+  //   history.push(loginPath);
+  // }
+
+  const currentUser = await auth()
   return {
-    currentUser: undefined,
+    currentUser: currentUser,
+    logout: async () => {
+      try {
+        await kc.logout({
+          // redirectUri: endpoint().redirectUri
+        })
+      } catch (error) {
+        message.error("Failed to logout.")
+      }
+    },
     settings: defaultSettings as Partial<LayoutSettings>,
   };
 }
@@ -45,9 +69,8 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
     footerRender: () => <Footer />,
     onPageChange: async () => {
       const { location } = history;
-
       if (!initialState?.currentUser && location.pathname !== loginPath) {
-        history.push(`${loginPath}/?path=${location.pathname}`);
+        history.push(`${loginPath}`);
       }
     },
     bgLayoutImgList: [

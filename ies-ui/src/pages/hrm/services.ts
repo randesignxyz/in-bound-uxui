@@ -16,7 +16,6 @@ import {
   StaffRequisitionRequest,
   SubDepartment,
 } from './data';
-import { Employee } from '@/services/process-workflow/data';
 
 export const EmployeeServices = {
   listBu: fetchDataListService<BU>({

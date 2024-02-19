@@ -1,13 +1,10 @@
-import LibraryModalEntry from "./LibraryModalEntry"
 import { simpleRequestActions } from "@/services/model"
 import { useRef, useState } from "react"
-import { LibraryCreate, LibraryDTO } from "./data"
-import { LibraryServiceAPI } from "./service"
 import { ActionType, ProTable } from "@ant-design/pro-components"
 import { Button, Dropdown, MenuProps, message } from "antd"
 import { ArrowRightOutlined, EditOutlined, EllipsisOutlined, PlusOutlined } from "@ant-design/icons"
 import FolderEntryForm from "@/pages/dms/folder/EntryForm"
-import { FolderCreate } from "@/pages/dms/folder/data"
+import { FolderCreate, FolderDTO } from "@/pages/dms/folder/data"
 import { FolderServiceAPI } from "@/pages/dms/folder/service"
 
 interface Props{
@@ -25,12 +22,12 @@ export default ({actionKey, ...props}:Props) =>{
             name:"MODAL";
             type?:"ADD"|"EDIT";
             payload?:{
-                data:LibraryDTO;
+                data:FolderDTO;
             }
         }
     }>();
 
-    const items = ():MenuProps["items"] =>[
+    const items = (record:FolderDTO):MenuProps["items"] =>[
         {
             key:"view",
             label:"View",
@@ -39,7 +36,8 @@ export default ({actionKey, ...props}:Props) =>{
         {
             key:"rename",
             label:"Rename",
-            itemIcon:<EditOutlined/>
+            itemIcon:<EditOutlined/>,
+            onClick:()=>setState({visible:{name:"MODAL",type:"EDIT",payload:{data:record}}})
         },
       
     ]
@@ -47,9 +45,9 @@ export default ({actionKey, ...props}:Props) =>{
 
     return (
         <>
-            <ProTable<LibraryDTO>
+            <ProTable<FolderDTO>
                 search={false}
-
+                
                 toolBarRender={()=>[
                     <Button 
                         icon={<PlusOutlined/>} 
@@ -95,7 +93,7 @@ export default ({actionKey, ...props}:Props) =>{
                         render:(_,r)=>(<>
                             <Dropdown
                                 menu={{
-                                    items:items(),
+                                    items:items(r),
                                     style:{
                                         width:200
                                     }
@@ -107,16 +105,22 @@ export default ({actionKey, ...props}:Props) =>{
                     }
                 ]}
                 actionRef={actionRef}
-                request={async()=>{
-                    const dataList = await services.page({
+                request={async(criteria)=>{
+                    const dataList =await  services.page({
                         criteria:{
-                            searchValue:"",
+                            searchValue:criteria.keyword,
                             advanceSearch:{
                                 code:"LIBRARY"
-                            }
+                            },
+                            
                         }
                     });
-                    return dataList.items
+                    // return dataList.items
+                    return Promise.resolve({
+                        data:dataList.items,
+                        success:true,
+                        total:dataList.total
+                    })
                 }}
                
             />
@@ -124,27 +128,15 @@ export default ({actionKey, ...props}:Props) =>{
             <FolderEntryForm
                 open={state?.visible?.name==="MODAL"}
                 onCancel={()=>setState(v=>({...v, visible:undefined}))}
-                code="LIBRARY"            
+                code="LIBRARY"        
+                libraryData={state?.visible?.payload?.data}    
                 onSave={async(data:FolderCreate)=>{
                     FolderServiceAPI(requestAction).save(data);
+                    message.success("Success!");
+                    actionRef.current?.reload?.();
+                    setState({visible:undefined});
                 }}
             />
-
-            {/* <LibraryModalEntry
-                open={state?.visible?.name==="MODAL"}
-                onCancel={()=>setState(v=>({...v, visible:undefined}))}
-                isAdmin
-                onSave={async(data:LibraryCreate)=>{
-                    const response = await LibraryServiceAPI(requestAction).save(data) as ({
-                        data:string;
-                        message:string;
-                    });
-                    message.success("Success")
-                    actionRef.current?.reloadAndRest?.();
-                
-                }}
-
-            /> */}
         </>
     )
 }

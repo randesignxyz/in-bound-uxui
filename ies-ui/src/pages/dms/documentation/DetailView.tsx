@@ -171,9 +171,8 @@ const DocumentationDetail: React.FC<Props> = ({ id }) => {
                     title:"Update Document",
                     content:"do you want update information this document?",
                     onOk:()=>{
-                        // service.save(data);
+                        service.save(data);
                         setState((v) => ({ visible: undefined }));
-                        // loadData();
                         message.success("Success!");
                     }
                 })

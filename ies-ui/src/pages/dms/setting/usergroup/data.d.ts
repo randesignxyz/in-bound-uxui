@@ -17,7 +17,7 @@ interface GroupDTO{
 
 
 interface GroupCreate{
-    id:number;
+    id?:number;
     name:string;
     description?:string;
     isDeleted?:boolean;

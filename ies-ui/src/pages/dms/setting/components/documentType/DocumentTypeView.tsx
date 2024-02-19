@@ -30,6 +30,7 @@ export default ({ actionKey }: Props) => {
             <ProList<DocumentTypeDTO>
                 actionRef={actionRef}
                 search={{
+                    
                     optionRender: (e) => {
                         return [
                             <Button

@@ -138,26 +138,26 @@ export default ({ actionKey }: Props) => {
                     actions: {
                         search:false,
                         render: (_, r) => [
-                            <Button
-                                type="link"
-                                icon={<EditOutlined />}
-                                onClick={() => setState({ visible: { name: "modal", type: "ADD", payLoad: r } })}
-                            />,
-                            <Button
-                                type="link"
-                                icon={<InfoCircleOutlined />}
-                            />,
-                            <Button
-                                type="link"
-                                icon={<UserAddOutlined />}
-                                onClick={() => {
-                                    setAssignDepartmentState({ visible: { name: "MODAL", deparment: r } })
-                                }}
-                            />,
-                            <Button
-                                type="link"
-                                icon={<DeleteOutlined style={{ color: "red" }} />}
-                            />,
+                            // <Button
+                            //     type="link"
+                            //     icon={<EditOutlined />}
+                            //     onClick={() => setState({ visible: { name: "modal", type: "ADD", payLoad: r } })}
+                            // />,
+                            // <Button
+                            //     type="link"
+                            //     icon={<InfoCircleOutlined />}
+                            // />,
+                            // <Button
+                            //     type="link"
+                            //     icon={<UserAddOutlined />}
+                            //     onClick={() => {
+                            //         setAssignDepartmentState({ visible: { name: "MODAL", deparment: r } })
+                            //     }}
+                            // />,
+                            // <Button
+                            //     type="link"
+                            //     icon={<DeleteOutlined style={{ color: "red" }} />}
+                            // />,
                         ]
                     },
                 }}

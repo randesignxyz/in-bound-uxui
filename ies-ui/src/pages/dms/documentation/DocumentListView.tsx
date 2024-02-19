@@ -1,11 +1,11 @@
 import { ArrowRightOutlined, AuditOutlined, BellOutlined, DeleteOutlined, DownloadOutlined, EllipsisOutlined, ExportOutlined, FileAddOutlined, FolderAddOutlined, HeartOutlined, HistoryOutlined, PlusOutlined, ShareAltOutlined, SwapOutlined } from "@ant-design/icons"
 import { ActionType } from "@ant-design/pro-components"
-import { history, useModel } from "@umijs/max"
-import { Badge, Button, Dropdown, Flex, MenuProps, Modal, Radio, Segmented, Space, Tooltip, message } from "antd"
+import { history, useModel, useParams } from "@umijs/max"
+import { Badge, Button, Dropdown, Flex, MenuProps, Modal, Segmented, Space, Tooltip, message } from "antd"
 import { DMSPaths } from ".."
 import { simpleRequestActions } from "@/services/model"
 import { DocumentServiceAPI } from "./service"
-import { DocumentationAdvanceSearch, DocumentationDTO, DocumentationSearchByFolder } from "./data"
+import { DocumentationAdvanceSearch, DocumentationCreate, DocumentationDTO, DocumentationSearchByFolder } from "./data"
 import { formatDate } from "@/pages/utils"
 import TableView, { TableViewSearchParams } from "@/components/DataCrud/TableView"
 import { Paging } from "@/services/API"
@@ -25,18 +25,37 @@ import HistoryDoc from "./HistoryDoc"
 import MoveDocumentModal from "./MoveDocument"
 import { expriationStatus } from "../core"
 import { FavoriteServiceAPI } from "../favorite/service"
+import DocumentModalForm from "./EntryForm"
+import FolderEntryForm from "../folder/EntryForm"
+import { FolderCreate } from "../folder/data"
+import { FolderServiceAPI } from "../folder/service"
 
 interface Props {
     items?: DocumentationDTO[];
     folderSlect?: number;
     paramSearch?: DocumentationSearchByFolder;
     division?: string;
+    folderId?: number;
+    libraryId:number;
 }
 
-export default ({ items, paramSearch, division, folderSlect }: Props) => {
+export default ({ items, paramSearch,libraryId, folderId, division, folderSlect }: Props) => {
     const requestAction = simpleRequestActions();
     const services = DocumentServiceAPI(requestAction);
     const actionRef = useRef<ActionType>();
+    const param = useParams(); 
+
+    const [documentModalState, setDocumentState] = useState<{
+        visible?: {
+            name: "MODAL";
+            type: "ADD" | "EDIT";
+            folderId?: number;
+            payload?: DocumentationCreate;
+            libraryId?: number;
+            division: "DOC" | "CONTRACT"
+        }
+    }>();
+
     const [shareDrawerState, setShareDrawerState] = useState<{
         visible?: {
             name: "DRAWER";
@@ -69,8 +88,20 @@ export default ({ items, paramSearch, division, folderSlect }: Props) => {
             documentId: number;
         }
     }>();
+
+    const [folderState, setFolderState] = useState<{
+        visible?: {
+            name: "MODAL";
+            type?: "ADD" | "EDIT";
+            // data?: DataNode,
+            libraryId?: number;
+            code: "LIBRARY" | "FOLDER",
+
+        }
+    }>();
+
     const [advanceSearchParams, setAdvanceSearchParams] = useState<DocumentationAdvanceSearch>({
-        status: "ALL"
+        status: "ALL",
     });
     const [advanceSearch, setAdvanceSearch] = useState<{ visible: boolean }>();
     const actionItem = (record: DocumentationDTO): MenuProps["items"] => [
@@ -102,21 +133,21 @@ export default ({ items, paramSearch, division, folderSlect }: Props) => {
             key: "3",
             label: "Share",
             itemIcon: <ShareAltOutlined />,
-            disabled:record.status=="Inactive"?true:false,
+            disabled: record.status == "Inactive" ? true : false,
             onClick: () => setShareDrawerState({ visible: { name: "DRAWER", docId: record.id, type: "ADD" } })
         },
         {
             key: "5",
             label: "Move",
             itemIcon: <SwapOutlined />,
-            disabled:record.status=="Inactive"?true:false,
+            disabled: record.status == "Inactive" ? true : false,
             onClick: () => setMoveState({ visible: { name: "MODAL", docId: record.id } })
         },
         {
             key: "6",
             label: "Reminder",
             itemIcon: <BellOutlined />,
-            disabled:record.status=="Inactive"?true:false,
+            disabled: record.status == "Inactive" ? true : false,
             onClick: () => setReminderState({ visible: { name: "MODAL", documentId: record.id } })
         },
         {
@@ -137,7 +168,7 @@ export default ({ items, paramSearch, division, folderSlect }: Props) => {
         {
             key: "trash",
             label: "Move To Trash",
-            disabled:record.status=="Active"?false:true,
+            disabled: record.status == "Active" ? false : true,
             itemIcon: <DeleteOutlined />,
             onClick: () => {
                 Modal.confirm({
@@ -157,8 +188,8 @@ export default ({ items, paramSearch, division, folderSlect }: Props) => {
         {
             key: "restore",
             label: "Restore",
-            disabled:record.status=="Active"?true:false,
-            itemIcon:<HistoryOutlined />,
+            disabled: record.status == "Active" ? true : false,
+            itemIcon: <HistoryOutlined />,
             onClick: () => {
                 Modal.confirm({
                     title: "Restore Documentation ",
@@ -202,6 +233,8 @@ export default ({ items, paramSearch, division, folderSlect }: Props) => {
             onClick: () => setHistoryState({ visible: { name: "DRAWER", docId: record.id } })
         },
     ];
+
+
     useEffect(() => {
         setAdvanceSearchParams({ ...paramSearch });
         actionRef.current?.reload?.()
@@ -221,6 +254,39 @@ export default ({ items, paramSearch, division, folderSlect }: Props) => {
             return Promise.reject();
         }
     };
+
+    const itemCreateNew = (record?: DocumentationDTO): MenuProps["items"] => [
+        {
+            key: "1",
+            label: "New Document",
+            icon: <FileAddOutlined />,
+            onClick: () => setDocumentState({
+                visible: {
+                    name: "MODAL",
+                    type: "ADD",
+                    folderId: parseInt(param["*"] || ""),
+                    // folderId: parseInt(record?.key || ""),
+                    division: "DOC",
+                    // libraryId: record?.libraryId
+                }
+            })
+        },
+        {
+            key: "2",
+            label: "New Contract",
+            icon: <AuditOutlined />,
+            onClick: () => setDocumentState({
+                visible: {
+                    name: "MODAL",
+                    type: "ADD",
+                    folderId: parseInt(param["*"] || ""),
+                    // folderId: parseInt(record?.key || ""),
+                    division: "CONTRACT",
+                    // libraryId: record?.libraryId
+                }
+            })
+        },
+    ]
 
     return (
         <>
@@ -300,25 +366,39 @@ export default ({ items, paramSearch, division, folderSlect }: Props) => {
                 }
                 tableProps={{
                     actionRef: actionRef,
-                    toolbar:{
-                        actions:[
-                            
-                            // <Tooltip title="New Folder"><Button  icon={<FolderAddOutlined/>} type="link" /></Tooltip>,
-                            // <Tooltip title="New Document"><Button  icon={<FileAddOutlined/>} type="link" /></Tooltip>,
-                            // <Tooltip title="New Contract"><Button title="Contract" icon={<AuditOutlined/>} type="link" /></Tooltip>,
-                            // <Button icon={<PlusOutlined/>} type="link"/>
+                    toolbar: {
+                        actions: [
+                            // <Tooltip title="New Folder"><Button
+                            //     icon={<FolderAddOutlined />}
+                            //     type="link"
+                            //     onClick={() => setFolderState({ visible: { code: "FOLDER", name: "MODAL", libraryId: 0, type: "ADD" } })}
+                            // /></Tooltip>,
+                            <Dropdown
+                                menu={{
+                                    items: itemCreateNew()
+                                }}
+                            >
+                                <Button
+                                    icon={<PlusOutlined />}
+                                    type="link"
+
+                                />
+                            </Dropdown>
                         ]
                     }
                 }}
                 advanceSearch
                 actionHandlers={{
-                    // onAdd:()=>{},
                     onAdvanceSearchClicked: () => setAdvanceSearch({ visible: true }),
                     onRequest: (criteria, pagination, sort) =>
                         onRequestHandler({
                             criteria: {
-                                searchValue: criteria.searchValue || "",
-                                advanceSearch: advanceSearchParams,
+                               ...criteria,
+                                advanceSearch: {
+                                    ...advanceSearchParams,
+                                    library:parseInt(param["*"] ||"")
+                                },
+                                
                                 sort,
                             },
                             pagination,
@@ -327,15 +407,17 @@ export default ({ items, paramSearch, division, folderSlect }: Props) => {
                         cacheList.fetchDataList('dms-document').then((v) => {
                             if (v) {
                                 setAdvanceSearchParams({
-                                    ...v.creteria,
+                                    ...v.creteria?.criteria,
                                     status: v.creteria?.criteria?.advanceSearch?.status ?? "ALL",
                                 });
                                 return v.dataList;
                             } else {
                                 return onRequestHandler({
                                     criteria: {
-                                        searchValue: "",
-                                        advanceSearch: advanceSearchParams,
+                                        advanceSearch: {
+                                            ...advanceSearchParams,
+                                            library:parseInt(param["*"] ||"")
+                                        }
                                     },
                                 });
                             }
@@ -345,7 +427,7 @@ export default ({ items, paramSearch, division, folderSlect }: Props) => {
                     {
                         title: "#",
                         sorter: "code",
-                        width:180,
+                        width: 180,
                         render: (_, r) => (<Space align="center" ><Button size="small" type="link" icon={<ExportOutlined />} onClick={() => {
                             window.open(`/external/dms/document/detail/${r.id}`)?.focus();
                         }} /><span>{r.documentation.docNumber}</span></Space>),
@@ -365,7 +447,7 @@ export default ({ items, paramSearch, division, folderSlect }: Props) => {
                     {
                         title: "Expiry Date",
                         sorter: "expiryDate",
-                        render: (_, r) => <span style={{color:expriationStatus(r.term?.expiryDate)>0?"red":""}}>{formatDate(r.term.expiryDate)}</span>
+                        render: (_, r) => <span style={{ color: expriationStatus(r.term?.expiryDate) > 0 ? "red" : "" }}>{formatDate(r.term.expiryDate)}</span>
                     },
                     {
                         title: "Created",
@@ -466,6 +548,51 @@ export default ({ items, paramSearch, division, folderSlect }: Props) => {
 
                 }}
             />
+
+
+            < DocumentModalForm
+                open={documentModalState?.visible?.name === "MODAL"}
+                type={documentModalState?.visible?.type}
+                libraryId={documentModalState?.visible?.libraryId}
+                onCancel={() => setDocumentState(v => ({ ...v, visible: undefined }))}
+                folderId={documentModalState?.visible?.folderId}
+                division={documentModalState?.visible?.division}
+                onSave={async (data: DocumentationCreate) => {
+                    const entry ={
+                        ...data,
+                        libraryId:libraryId
+                    }
+                    const response = await DocumentServiceAPI(requestAction).save(entry) as unknown as ({
+                        data: DocumentationCreate;
+                        message: string
+                    });
+                    setDocumentState({ visible: undefined });
+                    actionRef.current?.reloadAndRest?.()
+                }}
+            />
+
+
+            {/* < FolderEntryForm
+                open={folderState?.visible?.name == "MODAL"}
+                onCancel={() => setFolderState((v) => ({ visible: undefined }))}
+                code={folderState?.visible?.code}
+                // data={folderState?.visible?.data}
+                libraryId={folderState?.visible?.libraryId}
+                type={folderState?.visible?.type}
+                onSave={async (data: FolderCreate) => {
+                    // console.log(data);
+
+                    const response = await FolderServiceAPI(requestAction).save(data) as ({
+                        data: string;
+                        message: string
+                    });
+                    message.success("Success");
+                    // setFolderState((v) => ({ visible: undefined }));
+                    // testGetFolder()
+                    actionRef.current?.reloadAndRest?.();
+                }}
+            /> */}
+
         </>
     )
 }

@@ -1,5 +1,5 @@
 import { ActionType, ProList } from "@ant-design/pro-components"
-import { Button, Flex, Tag } from "antd"
+import { Button, Flex, Modal, Tag, message } from "antd"
 import { GroupServiceAPI } from "./service"
 import { simpleRequestActions } from "@/services/model"
 import { GroupCreate, GroupDTO } from "./data"
@@ -114,14 +114,25 @@ export default ({ actionKey }: Props) => {
                             //     icon={<InfoCircleOutlined />}
                             //     onClick={()=>setDetailState({visible:{name:"MODAL", type:"EDIT", payload:r}})}
                             // />,
-                            <Button
-                                type="link"
-                                icon={<UserAddOutlined />}
-                            />,
+                            // <Button
+                            //     type="link"
+                            //     icon={<UserAddOutlined />}
+                            // />,
                             <Button
                                 type="link"
                                 danger
                                 icon={<DeleteOutlined  />}
+                                onClick={()=>{
+                                    Modal.confirm({
+                                        title:"Delete Group",
+                                        content:"Are you sure delete group? You can not restore.",
+                                        onOk:()=>{
+                                            services.delete(r.id);
+                                            message.success("Success!");
+                                            actionRef.current?.reload?.();
+                                        }
+                                    })
+                                }}
                             />,
                         ]
                     },
@@ -134,9 +145,9 @@ export default ({ actionKey }: Props) => {
                 data={state?.visible?.payload}
                 onSave={async (data: GroupCreate) => {
                     services.save(data);
-                    actionRef.current?.reload?.();
                     setState((v) => ({ ...v, visible: undefined }))
-
+                    actionRef.current?.reload?.();
+                    message.success("Success!")
                 }}
             />
 

@@ -23,7 +23,7 @@ const GratisVerifytemList: React.FC<{item: GratisVerifyItem,isVerify: boolean; o
     }
   }
 
-  return <ProTable<GratisInvoice>
+  return <ProTable<GratisInvoice> loading={requestActions.request?.loading}
     search={false}     
     // actionRef={actionRef}
     cardProps={false}

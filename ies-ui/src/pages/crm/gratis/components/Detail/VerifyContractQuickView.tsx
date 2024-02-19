@@ -26,7 +26,7 @@ export default ({open,onOpenModalChange, reloadQuickView, id, groupTypeCode, sta
     const requestActions = simpleRequestActions()
     const [data, setData] = useSafeState<GratisContract>()
     const [current, setCurrent] = useState(0);
-    const [forceReload,setForceReload] = useState(0)
+    // const [forceReload,setForceReload] = useState(0)
     useEffect(() => {
         try {
           loadData()
@@ -48,7 +48,7 @@ export default ({open,onOpenModalChange, reloadQuickView, id, groupTypeCode, sta
     const refreshQuickView=()=>{
         loadData()
         reloadQuickView(data?.id||0,current)
-        setForceReload(v=> v+1)
+        // setForceReload(v=> v+1)
     }
     
     /**
@@ -90,12 +90,12 @@ export default ({open,onOpenModalChange, reloadQuickView, id, groupTypeCode, sta
             }}           
             submitter={false}            
         >           
-            { data?.contracts?.map(r =>{
+            {data?.contracts?.map(r =>{
                 return(<StepFormView title={r.title}
-                data={r}
+                    data={r}
                     onClick={(data)=>{setCurrent(r.orderNo-1)}}
                 >
-                    <VerifyContractByMonthView forceReload={forceReload} isVerify={isVerify} id={id} groupTypeCode={groupTypeCode} verifyContract={r} onFinish={refreshQuickView}/>
+                    <VerifyContractByMonthView isVerify={isVerify} id={id} groupTypeCode={groupTypeCode} verifyContract={r} onFinish={refreshQuickView}/>
                 </StepFormView>)
             })}
         </StepsForm>

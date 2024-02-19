@@ -1,5 +1,5 @@
 import { ActionType, CheckCard, ProCard, ProFormDateRangePicker, ProTable } from "@ant-design/pro-components"
-import { Button, Descriptions, Input, Modal, Radio, Space, Table, Tag, Tooltip, message } from "antd"
+import { Button, Descriptions, Input, Modal, Radio, Space, Spin, Table, Tag, Tooltip, message } from "antd"
 import { AdjustItem, GratisContract, GratisVerifyItem, GratisVerifySchedule, SearchCriteria, VerifyGratisContact } from "../../types"
 import { GratisServices } from "../../services"
 import { simpleRequestActions } from "@/services/model"
@@ -22,10 +22,9 @@ interface Props{
     groupTypeCode?:string;
     verifyContract: VerifyGratisContact;
     onFinish: ()=> void;
-    forceReload: number;
 }
 
-const VerifyContractByMonthView= ({isVerify,id, groupTypeCode, verifyContract,onFinish,forceReload}: Props) => {
+const VerifyContractByMonthView= ({isVerify,id, groupTypeCode, verifyContract,onFinish}: Props) => {
     const requestActions = simpleRequestActions()
     const actionRef = useRef<ActionType>();
     const actionRefTableVerifySchedule = useRef<ActionType>();
@@ -41,7 +40,7 @@ const VerifyContractByMonthView= ({isVerify,id, groupTypeCode, verifyContract,on
         } catch (error: any) {
           message.error(error.message || 'Failed to load data.');
         }
-    }, [forceReload])    
+    }, [])    
     const loadData = async () => {
         const rs = await GratisServices.fectchGratisContract({id: id}).query(requestActions)
         setGContract(rs)
@@ -86,7 +85,8 @@ const VerifyContractByMonthView= ({isVerify,id, groupTypeCode, verifyContract,on
         actionRef.current?.reloadAndRest?.();
     };
     
-    return (<Space direction='vertical' style={{width: '100%'}}>
+    return (<Spin spinning={requestActions.request?.loading}>
+        <Space direction='vertical' style={{width: '100%'}} >
         <ProCard bordered>
             <Descriptions size="small" column={4}>
                 <Descriptions.Item label={'Verified Date'} >{verifyContract?.durationText}</Descriptions.Item>
@@ -266,7 +266,7 @@ const VerifyContractByMonthView= ({isVerify,id, groupTypeCode, verifyContract,on
          {groupTypeCode!='OTHER' &&<ProCard title='Data History' defaultCollapsed collapsible headerBordered size='small'>
           <HistoryAdjustmentTransactionList verifyContractId={verifyContract.id}/>
         </ProCard>}
-    </Space>)
+    </Space></Spin>)
 }
 
 export default VerifyContractByMonthView

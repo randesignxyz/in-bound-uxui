@@ -7,7 +7,6 @@ import RecievedShare from "./share/RecievedShare";
 import FavoriteView from "./favorite/FavoriteView";
 import { ShareAltOutlined, MenuFoldOutlined, FolderOutlined, SettingOutlined, BellOutlined } from "@ant-design/icons";
 import ReminderListView from "./reminder/ReminderListView";
-import DraftListView from "./quickaccess/DraftListView";
 import { DocumentationSearchByFolder } from "./documentation/data";
 import { Access, history, useAccess, useParams } from "@umijs/max";
 import ContractListView from "./contract/ContractListView";
@@ -39,13 +38,7 @@ const APPDMS: React.FC = () => {
     );
     useEffect(() => {
     }, []);
-    const items: MenuProps["items"] = [
-        {
-            key: "1",
-            label: "ASasa"
-        }
-    ];
-    console.log(libraryId);
+
 
     return (
         <>
@@ -277,11 +270,6 @@ const APPDMS: React.FC = () => {
                                 icon: <FolderOutlined />,
 
                             },
-                            // {
-                            //     value: "REQUEST",
-                            //     label: "Contract",
-                            //     icon: <AuditOutlined />
-                            // },
                             {
                                 value: "received-share",
                                 label: "Shareds",
@@ -310,10 +298,9 @@ const APPDMS: React.FC = () => {
                     </Access>
                 </div>
                 {
-                    view === "library" && (<DocumentListView paramSearch={paramByFolder} />) ||
+                    view === "library" && (<DocumentListView paramSearch={paramByFolder} libraryId={libraryId||0} />) ||
                     view === "received-share" && (<RecievedShare />) ||
                     view === "favorite" && (<FavoriteView />) ||
-                    view === "draft" && (<DraftListView />) ||
                     view === "contract" && (<ContractListView />) ||
                     view === "reminder" && (<ReminderListView />)
                     // view === "trash" && (<DocumentListView paramSearch={paramByFolder} division="DOC" />)

@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Dropdown, Flex, MenuProps, Space, TreeDataNode, message } from 'antd';
 import { FolderServiceAPI } from '../folder/service';
 import { simpleRequestActions } from '@/services/model';
-import { AuditOutlined, BankOutlined, DeleteOutlined, EditOutlined, EllipsisOutlined, FileAddOutlined, FolderAddOutlined, FolderOutlined } from '@ant-design/icons';
+import { BankOutlined, DeleteOutlined, EditOutlined, EllipsisOutlined, FolderAddOutlined, FolderOutlined } from '@ant-design/icons';
 import { ActionType } from '@ant-design/pro-components';
 import { history, useAccess, useParams } from '@umijs/max';
 import { Modal, Spin } from 'antd/lib';
@@ -24,7 +24,7 @@ interface Props {
     activeKey?: boolean;
     moveDoc?: boolean;
     onMove?: () => void;
-    setLibrary?:(libraryId?:number) => void;
+    setLibrary:(libraryId?:number) => void;
 }
 const updateTreeData = (list: DataNode[], key: React.Key, children: DataNode[]): DataNode[] => list.map((node) => {
     if (node.key === key) {
@@ -58,11 +58,7 @@ export default ({ onSearch, activeKey, moveDoc, onMove,setLibrary , ...props }: 
     const requestAction = simpleRequestActions();
     const [folder, setFolder] = useState<LibraryDTO>();
     const actionRef = useRef<ActionType>();
-    const access = useAccess();
     const params = useParams();
-    const folderId = params["*"];
-
-
 
     const [documentModalState, setDocumentState] = useState<{
         visible?: {
@@ -92,9 +88,9 @@ export default ({ onSearch, activeKey, moveDoc, onMove,setLibrary , ...props }: 
             }
         })
 
-        const dd = makeTree(folder.map(o => ({ key: o.id.toString(), id: o.id, title: o.name, parentId: o.parentId, code: o.code })));
+        const dd = makeTree(folder.map(o => ({ key: o.id.toString(), id: o.id, title: o.name, parentId: o.parentId, code: o.code, libraryId:o.code=="LIBRARY"?o.id:o.libraryId })));
         setTreeFolderList(dd);
-        // setLibrary(folder[0]?.id);
+        setLibrary(folder[0]?.id);
         history.push(`${DMSPaths.workspace}/library/${folder[0]?.id}`)
     }
 
@@ -146,7 +142,7 @@ export default ({ onSearch, activeKey, moveDoc, onMove,setLibrary , ...props }: 
             name: "MODAL";
             type?: "ADD" | "EDIT";
             data?: DataNode,
-            libraryId?: number;
+            libraryId?: string;
             code: "LIBRARY" | "FOLDER",
 
         }
@@ -183,7 +179,6 @@ export default ({ onSearch, activeKey, moveDoc, onMove,setLibrary , ...props }: 
 
 
     useEffect(() => {
-        // loadData();
         testGetFolder();
        
     }, [actionRef]);
@@ -259,7 +254,7 @@ export default ({ onSearch, activeKey, moveDoc, onMove,setLibrary , ...props }: 
                             type: 'ADD',
                             code: "FOLDER",
                             data: recrd,
-                            libraryId: recrd?.code == "LIBRARY" ? parseInt(recrd.key) : 0
+                            libraryId:recrd?.code=="LIBRARY"?recrd?.key:recrd?.libraryId?.toString() 
                         }
                     })
                 }
@@ -269,13 +264,14 @@ export default ({ onSearch, activeKey, moveDoc, onMove,setLibrary , ...props }: 
                 label: "Rename Folder",
                 icon: <EditOutlined />,
                 onClick: () => {
+                    
                     setFolderState({
                         visible: {
                             name: 'MODAL',
                             type: 'EDIT',
                             code: "FOLDER",
                             data: recrd,
-                            libraryId: parseInt(recrd?.key || "")
+                            libraryId: recrd?.key
                         }
                     })
                 }
@@ -348,7 +344,9 @@ export default ({ onSearch, activeKey, moveDoc, onMove,setLibrary , ...props }: 
                         // autoExpandParent
                         // defaultExpandParent
                         onSelect={(e, { selectedNodes }) => {
-                  
+                            setLibrary(selectedNodes[0].libraryId);
+                            // console.log(selectedNodes);
+                            
                             history.push(`${DMSPaths.workspace}/library/${e[0]}`)
                             // history.push(`${DMSPaths.workspace}/library/${e[0]}`)
 
@@ -432,8 +430,6 @@ export default ({ onSearch, activeKey, moveDoc, onMove,setLibrary , ...props }: 
                         }}
                     />
                 }
-
-
             </Spin>
 
             {/* < LibraryModalEntry
@@ -475,8 +471,6 @@ export default ({ onSearch, activeKey, moveDoc, onMove,setLibrary , ...props }: 
                 libraryId={folderState?.visible?.libraryId}
                 type={folderState?.visible?.type}
                 onSave={async (data: FolderCreate) => {
-                    // console.log(data);
-
                     const response = await FolderServiceAPI(requestAction).save(data) as ({
                         data: string;
                         message: string
@@ -494,7 +488,6 @@ export default ({ onSearch, activeKey, moveDoc, onMove,setLibrary , ...props }: 
             <ContractFormEntry
                 open={contractState?.visible?.name == "MODAL"}
                 onSave={() => {
-
                 }}
                 onCancel={() => setContractState({ visible: undefined })}
             />

@@ -32,7 +32,6 @@ const ShareDetailDrawer: React.FC<Props> = ({ onCancel, data, ...props }: Props)
 
 
             {...props}
-            // width={600}
             resize={{
                 maxWidth: window.innerWidth * 0.8,
                 minWidth: 600,
@@ -42,15 +41,6 @@ const ShareDetailDrawer: React.FC<Props> = ({ onCancel, data, ...props }: Props)
                 onClose: onCancel
             }}
             submitter={false}
-            // extra={
-            //     [
-            //         <Button
-            //             icon={<DownloadOutlined />}
-            //             type="link"
-            //             onClick={onDownload}
-            //         />
-            //     ]
-            // }
         >
           
                 <Flex
@@ -74,8 +64,7 @@ const ShareDetailDrawer: React.FC<Props> = ({ onCancel, data, ...props }: Props)
                                     <span><span style={{ color: "gray" }}>Updated:</span> {formatDateTime(data?.lastModifiedDate)}</span>
                                 </Flex>
                             </Space>
-                            {/* <span>{formateBytes(data?.attachment?.fileSize || 0, 2)}</span> */}
-
+                        ​
                         </Flex>
                         <Divider orientation="left" >Meta Data</Divider>
                         <Flex

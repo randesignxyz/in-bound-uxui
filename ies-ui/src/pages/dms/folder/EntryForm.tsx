@@ -3,7 +3,7 @@ import { ProForm, ProFormDependency, ProFormSelect, ProFormText, ProFormTextArea
 import { useForm } from "antd/lib/form/Form"
 import { simpleRequestActions } from "@/services/model"
 import { useEffect } from "react"
-import { FolderCreate, DataNode } from "./data"
+import { FolderCreate, DataNode, FolderDTO } from "./data"
 import { DepartmentServiceAPI } from "../setting/components/department/service"
 import { useParams } from "@umijs/max"
 
@@ -12,17 +12,15 @@ interface Props extends FormModalProps {
     data?: DataNode;
     type?: string,
     code?: string,
-    libraryId?: number;
+    libraryId?: string;
+    libraryData?:FolderDTO
 }
 
-const FolderEntryForm: React.FC<Props> = ({ code, libraryId, data, onSave, type, ...props }: Props) => {
+const FolderEntryForm: React.FC<Props> = ({ code, libraryId,libraryData, data, onSave, type, ...props }: Props) => {
     const [form] = useForm<FolderCreate>();
     const requestAction = simpleRequestActions();
-    const param= useParams();
     
-    // console.log(libraryId, code);
-
-
+    
     useEffect(() => {
         type === "EDIT" && data && form.setFieldsValue({
             name: data?.title,
@@ -45,7 +43,7 @@ const FolderEntryForm: React.FC<Props> = ({ code, libraryId, data, onSave, type,
                     ...dataForm,
                     parentId: parseInt(data?.key || ""),
                     code: code,
-                    libraryId: undefined,
+                    libraryId:parseInt( libraryId||""),
                     id: id
                 }
                 onSave(entry);
@@ -53,7 +51,7 @@ const FolderEntryForm: React.FC<Props> = ({ code, libraryId, data, onSave, type,
                 // if (libraryId){
                 //     const entry = {
                 //                 ...dataForm,
-                //                 parentId: 0,
+                //                 parentId: 0,      
                 //                 code:code,
                 //                 libraryId:libraryId,
                 //                 id:id
@@ -91,7 +89,7 @@ const FolderEntryForm: React.FC<Props> = ({ code, libraryId, data, onSave, type,
                         <ProFormSelect
                             name={"type"}
                             label={"Type"}
-                            initialValue={"personal"}
+                            initialValue={"department"}
                             disabled
                             options={[
                                 {
@@ -111,6 +109,8 @@ const FolderEntryForm: React.FC<Props> = ({ code, libraryId, data, onSave, type,
                         <ProFormSelect
                             name={"departmentId"}
                             label="Department"
+                            showSearch
+                            debounceTime={500}
                             request={async () => {
                                 const data = await DepartmentServiceAPI(requestAction).page({
                                     criteria: {

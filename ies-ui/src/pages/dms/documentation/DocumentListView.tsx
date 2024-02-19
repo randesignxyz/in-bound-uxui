@@ -28,6 +28,7 @@ import { FavoriteServiceAPI } from "../favorite/service"
 import DocumentModalForm from "./EntryForm"
 import FolderEntryForm from "../folder/EntryForm"
 import { FolderCreate } from "../folder/data"
+import { FolderServiceAPI } from "../folder/service"
 
 interface Props {
     items?: DocumentationDTO[];
@@ -35,9 +36,10 @@ interface Props {
     paramSearch?: DocumentationSearchByFolder;
     division?: string;
     folderId?: number;
+    libraryId:number;
 }
 
-export default ({ items, paramSearch, folderId, division, folderSlect }: Props) => {
+export default ({ items, paramSearch,libraryId, folderId, division, folderSlect }: Props) => {
     const requestAction = simpleRequestActions();
     const services = DocumentServiceAPI(requestAction);
     const actionRef = useRef<ActionType>();
@@ -99,7 +101,7 @@ export default ({ items, paramSearch, folderId, division, folderSlect }: Props) 
     }>();
 
     const [advanceSearchParams, setAdvanceSearchParams] = useState<DocumentationAdvanceSearch>({
-        status: "ALL"
+        status: "ALL",
     });
     const [advanceSearch, setAdvanceSearch] = useState<{ visible: boolean }>();
     const actionItem = (record: DocumentationDTO): MenuProps["items"] => [
@@ -391,8 +393,12 @@ export default ({ items, paramSearch, folderId, division, folderSlect }: Props) 
                     onRequest: (criteria, pagination, sort) =>
                         onRequestHandler({
                             criteria: {
-                                searchValue: criteria.searchValue || "",
-                                advanceSearch: advanceSearchParams,
+                               ...criteria,
+                                advanceSearch: {
+                                    ...advanceSearchParams,
+                                    library:parseInt(param["*"] ||"")
+                                },
+                                
                                 sort,
                             },
                             pagination,
@@ -401,15 +407,17 @@ export default ({ items, paramSearch, folderId, division, folderSlect }: Props) 
                         cacheList.fetchDataList('dms-document').then((v) => {
                             if (v) {
                                 setAdvanceSearchParams({
-                                    ...v.creteria,
+                                    ...v.creteria?.criteria,
                                     status: v.creteria?.criteria?.advanceSearch?.status ?? "ALL",
                                 });
                                 return v.dataList;
                             } else {
                                 return onRequestHandler({
                                     criteria: {
-                                        searchValue: "",
-                                        advanceSearch: advanceSearchParams,
+                                        advanceSearch: {
+                                            ...advanceSearchParams,
+                                            library:parseInt(param["*"] ||"")
+                                        }
                                     },
                                 });
                             }
@@ -550,18 +558,21 @@ export default ({ items, paramSearch, folderId, division, folderSlect }: Props) 
                 folderId={documentModalState?.visible?.folderId}
                 division={documentModalState?.visible?.division}
                 onSave={async (data: DocumentationCreate) => {
-
-                    const response = await DocumentServiceAPI(requestAction).save(data) as unknown as ({
+                    const entry ={
+                        ...data,
+                        libraryId:libraryId
+                    }
+                    const response = await DocumentServiceAPI(requestAction).save(entry) as unknown as ({
                         data: DocumentationCreate;
                         message: string
                     });
                     setDocumentState({ visible: undefined });
-                    actionRef.current?.reload?.()
+                    actionRef.current?.reloadAndRest?.()
                 }}
             />
 
 
-            < FolderEntryForm
+            {/* < FolderEntryForm
                 open={folderState?.visible?.name == "MODAL"}
                 onCancel={() => setFolderState((v) => ({ visible: undefined }))}
                 code={folderState?.visible?.code}
@@ -569,18 +580,18 @@ export default ({ items, paramSearch, folderId, division, folderSlect }: Props) 
                 libraryId={folderState?.visible?.libraryId}
                 type={folderState?.visible?.type}
                 onSave={async (data: FolderCreate) => {
-                    console.log(data);
+                    // console.log(data);
 
-                    // const response = await FolderServiceAPI(requestAction).save(data) as ({
-                    //     data: string;
-                    //     message: string
-                    // });
+                    const response = await FolderServiceAPI(requestAction).save(data) as ({
+                        data: string;
+                        message: string
+                    });
                     message.success("Success");
                     // setFolderState((v) => ({ visible: undefined }));
                     // testGetFolder()
                     actionRef.current?.reloadAndRest?.();
                 }}
-            />
+            /> */}
 
         </>
     )

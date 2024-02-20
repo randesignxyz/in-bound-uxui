@@ -396,7 +396,7 @@ export default ({ items, paramSearch,libraryId, folderId, division, folderSlect 
                                ...criteria,
                                 advanceSearch: {
                                     ...advanceSearchParams,
-                                    library:parseInt(param["*"] ||"")
+                                    // library:parseInt(param["*"] ||"")
                                 },
                                 
                                 sort,

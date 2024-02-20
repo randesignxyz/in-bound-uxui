@@ -1,8 +1,8 @@
 import detail from "@/pages/fma/new-staff/detail";
 import { formatDate } from "@/pages/utils";
-import { ReloadOutlined, TeamOutlined, UserOutlined } from "@ant-design/icons";
+import { DeleteOutlined, ReloadOutlined, TeamOutlined, UserOutlined } from "@ant-design/icons";
 import { ActionType, ProList } from "@ant-design/pro-components";
-import { Avatar, Tag, Flex, Space, Button, Spin, Badge } from "antd";
+import { Avatar, Tag, Flex, Space, Button, Spin, Badge, message, Modal } from "antd";
 import { ShareDTO } from "./data";
 import { ShareServiceAPI } from "./service";
 import { simpleRequestActions } from "@/services/model";
@@ -18,7 +18,7 @@ export default ({ docId }: Props) => {
     const requestAction = simpleRequestActions();
     const actionRef = useRef<ActionType>();
     const [shareState, setShareState] = useState<ShareDTO[]>();
-    const onRequest =async()=>{
+    const onRequest = async () => {
         const data = await ShareServiceAPI(requestAction).list(docId);
         setShareState(data);
     }
@@ -62,11 +62,11 @@ export default ({ docId }: Props) => {
                             render: (_, r) => (
                                 <>
                                     <Space align="baseline">
-                                        <p style={{color:"gray"}}>Expiration Date: </p>
-                                        <Badge  status={expriationStatus(r.expirationDate)>0?"error":"processing"} text={formatDate(r.expirationDate)} />
+                                        <p style={{ color: "gray" }}>Expiration Date: </p>
+                                        <Badge status={expriationStatus(r.expirationDate) > 0 ? "error" : "processing"} text={formatDate(r.expirationDate)} />
                                     </Space>
                                     <Space >
-                                        <p style={{color:"gray"}}>Shared Date: </p>
+                                        <p style={{ color: "gray" }}>Shared Date: </p>
                                         <p>{formatDate(r.createdDate)}</p>
                                     </Space>
 
@@ -80,7 +80,19 @@ export default ({ docId }: Props) => {
                             </Flex>)
                         },
                         actions: {
-                            render: (_, r) => <Flex vertical><span>Accessible</span><Tag color="cyan" bordered={false}>{r.accessible}</Tag></Flex>
+                            render: (_, r) => <Flex vertical>
+                                <span>Accessible</span><Tag color="cyan" bordered={false}>{r.accessible}</Tag>
+                                <Button disabled={!r.isOwner} type="link" danger style={{ position: "absolute", top: -30, right: 0 }} icon={<DeleteOutlined />}
+                                    onClick={() => Modal.confirm({
+                                        title: "Delete Shared",
+                                        content: "are you sure?",
+                                        onOk: () => {
+                                            ShareServiceAPI(requestAction).delete(r.id);
+                                            actionRef.current?.reload?.();
+                                            message.success("success")
+                                        }
+                                    })} />
+                            </Flex>
                         }
                     }}
 

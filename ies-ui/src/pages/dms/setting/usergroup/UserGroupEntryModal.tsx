@@ -20,7 +20,8 @@ const UserGroupEntryModal: React.FC<Props> = ({ onSave, data, ...props }: Props)
 
 
     useEffect(() => {
-        props.open && data && form.setFieldsValue({ ...data, userList: data?.userList.map(it => it.userName) })
+        props.open && data && form.setFieldsValue({ ...data, userList: data?.userList.map(it => it.userName) });
+        props.open && !data && form.resetFields();
     }, [props.open])
 
    
@@ -31,7 +32,11 @@ const UserGroupEntryModal: React.FC<Props> = ({ onSave, data, ...props }: Props)
             width="800px"
             onSubmit={async () => {
                 const dataForm = await form.validateFields();
-                onSave(dataForm)
+                const entry={
+                    ...dataForm,
+                    id:data?.id
+                }
+                onSave(entry);
 
             }}
         >
@@ -47,6 +52,8 @@ const UserGroupEntryModal: React.FC<Props> = ({ onSave, data, ...props }: Props)
                <ProFormSelect
                 name={"department"}
                 label="Department"
+                showSearch
+                debounceTime={500}
                 request={async(k:{keyWords?:string})=>{
                     const data = await DepartmentServiceAPI(requestActions).page({
                         criteria:{

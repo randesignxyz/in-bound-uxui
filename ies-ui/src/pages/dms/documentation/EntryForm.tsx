@@ -31,6 +31,7 @@ const DocumentModalForm: React.FC<Props> = ({ type, onSave, division, folderId, 
   useEffect(() => {
     props.open && data && form.setFieldsValue({
       ...data.documentation,
+      buId:data.buId?.id,
       ...data.term
       
     });

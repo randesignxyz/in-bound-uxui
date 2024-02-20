@@ -14,11 +14,10 @@ import { formatDate } from "@/pages/utils"
 
 interface Props {
     docId?: number;
-    exActionRef?:any ;
     key?:string;
 }
 
-export default ({ docId, exActionRef, key }: Props) => {
+export default ({ docId, key }: Props) => {
     const requestAction = simpleRequestActions();
     const actionRef = useRef<ActionType>();
     console.log(key);
@@ -69,14 +68,12 @@ export default ({ docId, exActionRef, key }: Props) => {
                 },
                 actions: {
                     render: (_, r) => [
-
                         <Button
                             type="link"
                             onClick={() => setState({ visible: { name: "DRAWER", payloads: r } })}
                             icon={<EyeOutlined />}
-                        // disabled={r.fileExtension =="pdf"?false:true}
-                        >View</Button>
-                        ,
+                     
+                        >View</Button>,
                         <Button
                             icon={<DownloadOutlined />}
                             type="link"

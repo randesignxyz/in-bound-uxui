@@ -1,10 +1,9 @@
 import { Avatar, Card, Space, Flex, Divider } from "antd";
 import { ShareDTO } from "./data";
 import { UserOutlined } from "@ant-design/icons";
-import { convertDuration, formateBytes } from "../core";
+import { convertDuration } from "../core";
 import { useEffect, useState } from "react";
 import { formatDate, formatDateTime } from "@/pages/utils";
-import { downloadUploadFileV2, getUploadFileObjectUrlV2 } from "@/services/apiGateway";
 import { DrawerForm, DrawerFormProps } from "@ant-design/pro-components";
 
 
@@ -12,8 +11,6 @@ interface Props extends DrawerFormProps {
     onCancel: () => void;
     data?: ShareDTO
 }
-
-
 
 
 const ShareDetailDrawer: React.FC<Props> = ({ onCancel, data, ...props }: Props) => {
@@ -29,10 +26,7 @@ const ShareDetailDrawer: React.FC<Props> = ({ onCancel, data, ...props }: Props)
 
     return (
         <DrawerForm
-
-
             {...props}
-            // width={600}
             resize={{
                 maxWidth: window.innerWidth * 0.8,
                 minWidth: 600,
@@ -42,17 +36,7 @@ const ShareDetailDrawer: React.FC<Props> = ({ onCancel, data, ...props }: Props)
                 onClose: onCancel
             }}
             submitter={false}
-            // extra={
-            //     [
-            //         <Button
-            //             icon={<DownloadOutlined />}
-            //             type="link"
-            //             onClick={onDownload}
-            //         />
-            //     ]
-            // }
         >
-          
                 <Flex
                     gap={"middle"}
                     vertical
@@ -64,7 +48,6 @@ const ShareDetailDrawer: React.FC<Props> = ({ onCancel, data, ...props }: Props)
                             gap={"middle"}
                             justify="space-between"
                         >
-
                             <Space>
                                 <Avatar icon={<UserOutlined />} />
                                 <Flex
@@ -74,8 +57,7 @@ const ShareDetailDrawer: React.FC<Props> = ({ onCancel, data, ...props }: Props)
                                     <span><span style={{ color: "gray" }}>Updated:</span> {formatDateTime(data?.lastModifiedDate)}</span>
                                 </Flex>
                             </Space>
-                            {/* <span>{formateBytes(data?.attachment?.fileSize || 0, 2)}</span> */}
-
+                        ​
                         </Flex>
                         <Divider orientation="left" >Meta Data</Divider>
                         <Flex
@@ -110,10 +92,6 @@ const ShareDetailDrawer: React.FC<Props> = ({ onCancel, data, ...props }: Props)
                         }}
                     />
                 </Card>
-        
-
-
-
         </DrawerForm>
     )
 }

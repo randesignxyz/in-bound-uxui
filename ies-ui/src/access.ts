@@ -588,7 +588,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       ) || false,
       canAccessDMSAdminMenu:
       currentUser?.authorities.some((item) =>
-        ['ROLE_ADMIN', "'ROLE_DMS_ADMIN'"].some((it) => it === item),
+        ['ROLE_ADMIN', 'ROLE_DMS_ADMIN'].some((it) => it === item),
       ) || false,
     /**SKH-20231128: Appraisal Form **/
     isAccessHRApprasilSupport:

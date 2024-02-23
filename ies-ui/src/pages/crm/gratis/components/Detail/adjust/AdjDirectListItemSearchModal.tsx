@@ -100,12 +100,12 @@ const AdjDirectListItemSearchModal = ({verifyId,trigger,selectedItems, addHandle
                     reload: false,
                     setting: false
                 }}       
-                pagination={false}      
+                pagination={false}
                 headerTitle={               
                     <Space>
                         <ProFormSelect  width={220} allowClear={false}  rules={[{required:true, message:''  }]}  label='From'  name={'dscription'}
                             options={dataLookup?.map(it=> ({label: toReadable(it.dscription), value:it.dscription}))} />
-                        <Input.Search  loading={requestActions.request?.loading}   placeholder='Invoice/SO'allowClear={true}  style={{marginTop:15}} onSearch={(value,_)=>onSearch(value)}/>
+                        <Input.Search  loading={requestActions.request?.loading}   placeholder='SO'allowClear={true}  style={{marginTop:15}} onSearch={(value,_)=>onSearch(value)}/>
                     </Space>  
                 }             
                 columns={[

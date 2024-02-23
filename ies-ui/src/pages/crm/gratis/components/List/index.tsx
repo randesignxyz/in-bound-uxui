@@ -49,6 +49,25 @@ const cols = (): ProColumns<IncentiveSettlement>[] => ([
     {
         title: 'Agreetment Type',
         render: (_, item) => item.contractType?.name
+    }, 
+    {            
+        dataIndex: 'settledPeriod',
+        sorter: 'settledPeriod',
+        title: 'Settlement Period',
+    },
+    {
+        align: 'right',
+        dataIndex: 'startedDate',
+        sorter: 'startedDate',
+        title: 'From',
+        render: (_, item) => formatDate(item.startedDate)
+    },
+    {
+        align: 'right',
+        dataIndex: 'endedDate',
+        sorter: 'endedDate',
+        title: 'To',
+        render: (_, item) => formatDate(item.endedDate)
     },
     {
         title: 'Created By',       

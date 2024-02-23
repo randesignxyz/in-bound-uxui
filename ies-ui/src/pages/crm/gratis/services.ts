@@ -32,12 +32,7 @@ export const GratisServices = {
         actionName: 'save-gratis-contract',
         endpoint: 'CRM',
         payload: data,
-    }), 
-    // saveVerifyGratisContract: (data: SaveGratisContractCheckListData) => execDataService0<SaveGratisContractCheckListData>({
-    //     actionName: 'save-verify-gratis-contract',
-    //     endpoint: 'CRM',
-    //     payload: data,
-    // }),
+    }),
     gratisVerifyContractCheckList: (criteria:{gContractId: number}) => fetchDataListService<VerifyGratisContact, any>({
         actionName: 'list-verify-gratis-contract',
         endpoint: 'CRM',
@@ -197,9 +192,9 @@ export const GratisServices = {
         endpoint: 'CRM',
         payload: criteria
     }),
-    // importData: (id: number) => execDataService0<{id:number}>({
-    //     actionName: 'import-data-gratis',
-    //     endpoint: 'CRM',
-    //     payload: {id}
-    // }), 
+    fetchExistingGratisIncentive: (params:  SettlementSearchDate) => fetchDataListService<IncentiveSettlement, SettlementSearchDate>({
+        actionName: 'fetch-existing-gratis-incentive',
+        endpoint: 'CRM',
+        payload: params
+    })
 }

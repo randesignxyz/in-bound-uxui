@@ -5,7 +5,7 @@ export default ({ text, value }: { text: string; value?: string }) => {
   const getColor = () => {
     const status = (value || text).toUpperCase();
 
-    if (['ACTIVE', 'APPROVED', 'POSTED', 'COMPLETED', 'SELECTED', 'DONE', 'ISSUED'].some((it) => it == status))
+    if (['ACTIVE', 'APPROVED', 'POSTED', 'COMPLETED', 'SELECTED', 'DONE', 'ISSUED','ACHIEVED'].some((it) => it == status))
       return 'success';
 
     if (
@@ -20,6 +20,7 @@ export default ({ text, value }: { text: string; value?: string }) => {
         'IN_PROGRESS',
         'CONFIRMED',
         'LOADING',
+        'PENDING'
       ].some((it) => it == status)
     )
       return 'processing';
@@ -36,13 +37,13 @@ export default ({ text, value }: { text: string; value?: string }) => {
         'NEW',
         'IN_ACTIVE',
         'EXPIRED',
-        'ON_HOLD',
+        'ON_HOLD'       
       ].some((it) => it == status)
     )
       return 'warning';
 
     if (
-      ['TERMINATED', 'FAILED', 'CANCELED', 'REJECTED', 'DELETED', 'VOID'].some((it) => it == status)
+      ['TERMINATED', 'FAILED', 'CANCELED', 'REJECTED', 'DELETED', 'VOID', 'CANCELED'].some((it) => it == status)
     )
       return 'error';
 

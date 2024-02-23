@@ -24,7 +24,6 @@ export default (props: ActionDataFormProps) => {
                 if (props.activityData?.procInstId) {
                     try {
                         const rs = await services.findByInstId(props.activityData.procInstId)
-                        console.log('dataaaaa',rs)
                         setData(rs)
                     } catch (error: any) {
                         message.error(error.message || 'Failed to load data.')

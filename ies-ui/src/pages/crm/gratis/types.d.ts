@@ -199,6 +199,7 @@ export interface IncentiveSettlement {
   label: string;
   description: string;
   contractType?: LookupDataItem;
+  settledPeriod?: string;
   processDate: moment.Moment;
   createdBy: string;
   createdDate: moment.Moment;

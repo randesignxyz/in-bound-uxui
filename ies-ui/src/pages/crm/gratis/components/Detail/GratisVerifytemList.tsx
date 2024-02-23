@@ -36,7 +36,8 @@ const GratisVerifytemList: React.FC<{item: GratisVerifyItem,isVerify: boolean; o
     columns={[
       {
         title: 'Doc No',  
-        render:  (_, r) => <Tooltip title={toReadable(r.dataSource)}>{r.editable?<FileTextOutlined/> :<AuditOutlined/>} {r.invNum}</Tooltip> 
+        // render:  (_, r) => <Tooltip title={toReadable(r.dataSource)}>{r.editable?<FileTextOutlined/> :<AuditOutlined/>} {r.invNum}</Tooltip> 
+        render:  (_, r) => <div>{r.editable?<FileTextOutlined/> :<AuditOutlined/>} {r.invNum}</div>
       },{
         title: 'Doc Date',     
         render:  (_, r) => formatDate(r.invDate)

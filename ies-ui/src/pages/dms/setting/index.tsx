@@ -4,7 +4,7 @@ import { history, useParams } from "@umijs/max";
 import CategoryListView from "./components/category/CategoryListView";
 import DepartmentListView from "./components/department/DepartmentListView";
 import LibraryViewList from "./components/library/LibraryViewList";
-import UserGroupList from "./usergroup/UserGroupList";
+import UserGroupList from "./teams/TeamsViewList";
 import DocumentTypeView from "./components/documentType/DocumentTypeView";
 import { PageContainer } from "@ant-design/pro-components";
 

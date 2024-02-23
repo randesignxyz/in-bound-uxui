@@ -7,11 +7,10 @@ import PathDocument from "../components/PathDocument";
 
 interface Props {
     document?: DocumentationDTO;
-    docType?: string;
     actionRef?:any;
 }
 
-export default ({ document, docType, actionRef }: Props) => {
+export default ({ document,  actionRef }: Props) => {
 
 
     const [pathmodalState, setPathModalState] = useState<{

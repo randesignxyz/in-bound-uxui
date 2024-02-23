@@ -3,7 +3,7 @@ import { Alert, Col, Divider, Row } from "antd";
 import { ShareCreate } from "./data";
 import { simpleRequestActions } from "@/services/model";
 import dayjs from 'dayjs';
-import { GroupServiceAPI } from "../setting/usergroup/service";
+import { TeamsServiceAPI } from "../setting/teams/service";
 import { useEffect, useState } from "react";
 import { AccountServiceAPI } from "@/services/account/services";
 import { useForm } from "antd/lib/form/Form";
@@ -88,11 +88,11 @@ const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...pr
                         return data.items.map(o => ({ label: o.fullName, value: o.userName }))
                     }}
                 />
-              
+
                 <p>OR</p>
                 <ProFormSelect
-                    name={"groupId"}
-                    label="User Group"
+                    name={"teamId"}
+                    label="Teams "
                     disabled={recipeintState?.group}
                     rules={[{ required: !recipeintState?.group }]}
                     showSearch
@@ -106,10 +106,11 @@ const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...pr
                             }
                         }
                     }}
-                    request={async () => {
-                        const data = await GroupServiceAPI(requestAction).page({
+                    request={async (k: { keyWords: string }) => {
+                        const data = await TeamsServiceAPI(requestAction).page({
                             criteria: {
-                                searchValue: ""
+                                searchValue: k.keyWords || "",
+                                advanceSearch: {}
                             }
                         });
                         return data.items.map(v => ({
@@ -122,8 +123,15 @@ const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...pr
                 <Row gutter={16}>
                     <Col span={12}>
                         <ProFormDatePicker
+                            name={"effectiveDate"}
+                            label="Effective date"
+                            width={"md"}
+                        />
+                    </Col>
+                    <Col span={12}>
+                        <ProFormDatePicker
                             name={"expirationDate"}
-                            label="Expiration date"
+                            label="Expiry date"
                             width={"md"}
                             fieldProps={{
                                 disabledDate: (current: any) => {
@@ -132,13 +140,7 @@ const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...pr
                             }}
                         />
                     </Col>
-                    <Col span={12}>
-                        <ProFormDatePicker
-                            name={"effectiveDate"}
-                            label="Effective date"
-                            width={"md"}
-                        />
-                    </Col>
+
                 </Row>
                 <ProFormSelect
                     label="Accessible"

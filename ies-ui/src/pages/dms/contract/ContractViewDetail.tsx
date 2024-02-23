@@ -36,10 +36,8 @@ export default ({ document, title, actionRef }: Props) => {
             >
                 <ProCard
                     collapsible
-
                     size="small"
                     title="Contract Infomation"
-                    // subTitle={`#${document?.contractType?.name}`}
                 >
                     <Row gutter={16}>
                         <Col span={12}>
@@ -156,14 +154,6 @@ export default ({ document, title, actionRef }: Props) => {
                                     </Button><>{document?.company?.name}</>
                                 </>)
                             },
-                            // {
-                            //     label: "Legal Entity",
-                            //     dataIndex: "Legal"
-                            // },
-                            // {
-                            //     label: "Status",
-                            //     // render: (_, r) => (<Tag color="success">{contractsDTO?.status}</Tag>)
-                            // },
                             {
                                 label: "Customer/Vendor Name",
                                 dataIndex: "vendorName"
@@ -203,29 +193,6 @@ export default ({ document, title, actionRef }: Props) => {
                 </ProCard>
             </Space>
 
-
-            {/* <ContractFormEntry
-                open={contractForm?.visible?.name === "MODAL"}
-                onCancel={() => setContractForm({ visible: undefined })}
-                onSave={(data: ContractCreate) => {
-                    services.saveContract(data).then(o => {
-                        setContractForm({ visible: undefined });
-                        loadData();
-                    });
-                }}
-                data={contractForm?.visible?.payload}
-            />
-            <ContractWorkFlow
-                open={workFlowState?.visible?.name === "OPEN"}
-                onCancel={() => setWorkFlowState({ visible: undefined })}
-            />
-            <ContractModalForm
-                open={contractFormModal?.visible?.name == "MODAL"}
-                onCancel={() => setContractFormModal({ visible: undefined })}
-                onSave={() => {
-
-                }}
-            /> */}
 
             <CompanyDetail
                 open={companyState?.visible?.name == "MODAL"}

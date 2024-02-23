@@ -1,5 +1,4 @@
 import { queryCurrent } from "@/services/user"
-import { CurrentUser } from "../account/center/data";
 import { RequestActions, ServiceApiType, singleRequest } from "@/services/apiGateway";
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { Paging } from "@/services/API";
@@ -50,15 +49,21 @@ const CoreServiceAction ={
           pageSize: params.pagination?.pageSize,
           page: params.pagination?.current,
         },
+    }),
+    tabNotification :():ServiceApiType<{}>=>({
+        actionName:"tab-notification",
+        endpoint:"DMS",
+        type:"FETCH_QUERY",
+        payload:{}
     })
 }
 
 export const CoreServiceAPI = (requestActions: RequestActions)=>{
     return {
-        orgUnitList:()=>singleRequest(CoreServiceAction.orgUnitList())(requestActions) as Promise<OrgUnitDTO[]>,
+        orgUnitList:()=>singleRequest(CoreServiceAction.orgUnitList())(requestActions) as Promise<OrgUnitDTO[]>,   
         saveFavorite:(data:Favorite)=>singleRequest(CoreServiceAction.saveFavorite(data))(requestActions),
         listLookupData:(params:LookupDataParam)=>singleRequest(CoreServiceAction.litLookupData(params))(requestActions) as Promise<LookupDataDTO[]>,
-        page : (params: TableViewSearchParams<UserDataDTO>)=>
-        singleRequest<UserDataDTO>(CoreServiceAction.pageUserData(params))(requestActions) as Promise<Paging<UserDataDTO>> ,
+        page : (params: TableViewSearchParams<UserDataDTO>)=>singleRequest<UserDataDTO>(CoreServiceAction.pageUserData(params))(requestActions) as Promise<Paging<UserDataDTO>> ,
+        tabNotification:() =>singleRequest<TableNotification>(CoreServiceAction.tabNotification()) (requestActions) as Promise<TableNotification>
     }
 }

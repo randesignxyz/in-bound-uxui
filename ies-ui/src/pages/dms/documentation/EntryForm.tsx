@@ -1,7 +1,6 @@
 import { ProForm } from "@ant-design/pro-components"
 import { Button, UploadFile } from "antd"
 import React, { useEffect, useState } from "react";
-import { simpleRequestActions } from "@/services/model";
 import { DocumentationCreate, DocumentationDTO } from "./data";
 import FormModalComp, { FormModalProps } from "@/components/FormModal";
 import { useForm } from "antd/lib/form/Form";
@@ -23,17 +22,14 @@ interface Props extends FormModalProps {
 
 const DocumentModalForm: React.FC<Props> = ({ type, onSave, division, folderId, data, libraryId, ...props }: Props) => {
 
-  const requestAction = simpleRequestActions();
   const [fileUpload, setFileUpload] = useState<{file?:UploadFile[],required?:boolean}>();
   const [form] = useForm<DocumentationCreate>();
-
 
   useEffect(() => {
     props.open && data && form.setFieldsValue({
       ...data.documentation,
       buId:data.buId?.id,
       ...data.term
-      
     });
     props.open && !data && form.resetFields();
 
@@ -47,7 +43,6 @@ const DocumentModalForm: React.FC<Props> = ({ type, onSave, division, folderId, 
         <>
           <Button onClick={() => props.onCancel?.()}>Cancel</Button>
           <Button type="primary" onClick={async () => {
-            // console.log(fileUpload?.file?.length);
             !fileUpload?.file?.length && setFileUpload({required:true});
             const dataForm = await form.validateFields();
             const entry: DocumentationCreate = {
@@ -70,12 +65,7 @@ const DocumentModalForm: React.FC<Props> = ({ type, onSave, division, folderId, 
                 fileExtension: getFileTypeviaExtension(o?.originFileObj?.name)
               })),
             }
-            
-            
              onSave(entry);
-            // // fileUpload?.file && onSave(entry)
-            // console.log(fileUpload?.file?.length);
-            
           }}>Submit</Button>
         </>
       }

@@ -5,22 +5,18 @@ import { CoreServiceAPI } from "../service";
 import { CategoryServiceAPI } from "../setting/components/category/service";
 import { DepartmentServiceAPI } from "../setting/components/department/service";
 import { DocumentTypeServiceAPI } from "../setting/components/documentType/service";
-import { useForm } from "antd/es/form/Form";
 import { useState } from "react";
-import { DocumentationCreate } from "./data";
 
 
 
 export default () => {
     const requestAction = simpleRequestActions();
-    const [form] = useForm<DocumentationCreate>();
     const [documentTypeHasExpire, setDocumentTypeHasExpire] = useState<DocumentTypeDTO[]>([]);
 
     return (<>
         <Row
             gutter={16}
         >
-
             <Col span={10}>
                 <ProFormText
                     label={"Document Title"}
@@ -60,14 +56,6 @@ export default () => {
                     }}
                 />
             </Col>
-
-            {/* <Col span={8}>
-                <ProFormDatePicker
-                    label="Effective Date"
-                    name={"effectiveDate"}
-                    width={"md"}
-                />
-            </Col> */}
             <Col span={8}>
                 <ProFormSelect
                     rules={[{ required: true }]}
@@ -112,52 +100,6 @@ export default () => {
                     }}
                 />
             </Col>
-            {/* <ProFormDependency dependencies={["docType"]} name={["docType"]}>
-                {({ documentTypeId }) => {
-                    const documentType = documentTypeHasExpire.filter(it => it.id == documentTypeId)[0];
-                    documentType?.requiredExpire == false && form.resetFields(["isAlert", "expirationDate", "periodDays"])
-
-                    return (<>
-                        {(<>
-
-                            <Col span={7}>
-                                <ProFormDatePicker
-                                    label="Expiration Date"
-                                    name={"expiryDate"}
-                                    width={"md"}
-                                    disabled={!documentType?.requiredExpire}
-                                    rules={[{ required: documentType?.requiredExpire }]}
-
-                                />
-
-                            </Col>
-                            <ProFormCheckbox
-                                label="Alert"
-                                disabled={!documentType?.requiredExpire}
-                                name={"isAlert"}
-                            />
-                            <ProFormDependency dependencies={["isAlert"]} name={["isAlert"]}>
-                                {({ isAlert }) => {
-                                    return (<>
-                                        {(
-                                            <Col span={7}>
-                                                <ProFormDigit
-                                                    name={"periodDays"}
-                                                    label="Notification Period"
-                                                    rules={[{ required: isAlert }]}
-                                                    disabled={!isAlert || !documentType?.requiredExpire}
-                                                    addonAfter="/days"
-                                                />
-                                            </Col>
-                                        )}
-                                    </>)
-                                }}
-                            </ProFormDependency>
-
-                        </>)}
-                    </>)
-                }}
-            </ProFormDependency> */}
             <Col span={24}>
                 <ProFormTextArea
                     name={"description"}

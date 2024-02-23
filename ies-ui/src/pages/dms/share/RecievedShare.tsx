@@ -1,8 +1,8 @@
 import { formatDate } from "@/pages/utils";
-import { EllipsisOutlined, ArrowRightOutlined, DownloadOutlined, HistoryOutlined, ShareAltOutlined, EditOutlined, InfoCircleOutlined, FileExcelTwoTone, FileImageTwoTone, FilePdfTwoTone, FileUnknownTwoTone, FileWordTwoTone } from "@ant-design/icons";
-import { ActionType, ProTable } from "@ant-design/pro-components"
-import { Dropdown, Button, MenuProps, message } from "antd";
-import { formateFileType, formateBytes } from "../core";
+import { EllipsisOutlined, ArrowRightOutlined, DownloadOutlined, HistoryOutlined, ShareAltOutlined, EditOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import { ActionType } from "@ant-design/pro-components"
+import { Dropdown, Button, MenuProps, message, Badge } from "antd";
+import { shareStatus } from "../core";
 import { simpleRequestActions } from "@/services/model";
 import { ShareServiceAPI } from "./service";
 import { ReceiveShareAdvanceSearchParam, ShareDTO } from "./data";
@@ -10,10 +10,8 @@ import { useRef, useState } from "react";
 import Detail from "./Detail";
 import { history, useModel } from "@umijs/max";
 import { DMSPaths } from "..";
-import { HistoryServiceAPI } from "../history/service";
 import TableView, { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { Paging } from "@/services/API";
-import { DocumentationDTO } from "../documentation/data";
 
 
 export default () => {
@@ -44,7 +42,7 @@ export default () => {
                 label: "Detail",
                 itemIcon: < InfoCircleOutlined />,
                 disabled: preview,
-                onClick: () => history.push(`${DMSPaths.document}/detail/${record.document?.id}`)
+                onClick: () => history.push(`${DMSPaths.dms}/share/detail/${record.id}`)
             },
             {
                 key: "2",
@@ -122,6 +120,7 @@ export default () => {
     return (
         <>
             <TableView<ShareDTO, {searchValue:string}>
+
                 // hasCriteria={Object.values(Omit(advanceSearchParams, ['status'])).some((v) => v)}
                 cache
                 displayOnly
@@ -165,7 +164,12 @@ export default () => {
                     {
                         title:"Status",
                         sorter:"status",
-                        dataIndex:"status"
+                        render:(_,r)=>{
+                           
+                            return (<>
+                            <Badge status={shareStatus(r.expirationDate).status} text={shareStatus(r.expirationDate).title} />
+                            </>)
+                        }
                     },
                     // {
                     //     title:"Remark",

@@ -17,6 +17,12 @@ const ShareAction ={
         type:"EXEC",
         payload:{id}
     }),
+    fetch:(id?:number):ServiceApiType<{id?:number}> =>({
+        actionName:"fetch-share",
+        endpoint:"DMS",
+        type:"FETCH_QUERY",
+        payload:{id}
+    }),
 
     list:(id?:number):ServiceApiType<{id?:number}> =>({
         actionName:"list-share",
@@ -40,6 +46,7 @@ export const ShareServiceAPI =(requestAction:RequestActions) =>{
     return {
         save:(data:ShareCreate)=>singleRequest<{data:string; messeage:string}>(ShareAction.save(data))(requestAction),
         delete:(id?:number)=>singleRequest<{data:string; messeage:string}>(ShareAction.delete(id))(requestAction),
+        fetch:(id?:number)=>singleRequest<ShareDTO>(ShareAction.fetch(id))(requestAction) as Promise<ShareDTO>,
         list:(id?:number) =>singleRequest<{id?:number}>(ShareAction.list(id))(requestAction) as Promise<ShareDTO[]>,
         page : (params: TableViewSearchParams<ReceiveShareAdvanceSearchParam>)=>
         singleRequest<ShareDTO>(ShareAction.page(params))(requestAction) as Promise<Paging<ShareDTO>> ,

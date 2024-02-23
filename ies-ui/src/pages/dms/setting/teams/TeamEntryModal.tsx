@@ -2,25 +2,25 @@ import FormModalComp, { FormModalProps } from "@/components/FormModal";
 import { ProForm, ProFormDependency, ProFormSelect, ProFormText, ProFormTextArea } from "@ant-design/pro-components";
 import { useForm } from "antd/es/form/Form";
 import { useEffect } from "react";
-import { GroupCreate, GroupDTO } from "./data";
 import { CoreServiceAPI } from "../../service";
 import { simpleRequestActions } from "@/services/model";
 import { DepartmentServiceAPI } from "../components/department/service";
+import { TeamsCreate, TeamsDTO } from "./data";
 
 interface Props extends FormModalProps {
-    onSave: (data: GroupCreate) => void;
-    data?: GroupDTO
+    onSave: (data: TeamsCreate) => void;
+    data?: TeamsDTO
 }
 
 
 const UserGroupEntryModal: React.FC<Props> = ({ onSave, data, ...props }: Props) => {
 
-    const [form] = useForm<GroupCreate>();
+    const [form] = useForm<TeamsCreate>();
     const requestActions = simpleRequestActions();
 
 
     useEffect(() => {
-        props.open && data && form.setFieldsValue({ ...data, userList: data?.userList.map(it => it.userName) });
+        props.open && data && form.setFieldsValue({ ...data, memberList: data?.memberList.map(it => it.userName) });
         props.open && !data && form.resetFields();
     }, [props.open])
 
@@ -28,7 +28,7 @@ const UserGroupEntryModal: React.FC<Props> = ({ onSave, data, ...props }: Props)
     return (
         <FormModalComp
             {...props}
-            title="Group User"
+            title="Teams"
             width="800px"
             onSubmit={async () => {
                 const dataForm = await form.validateFields();
@@ -67,8 +67,8 @@ const UserGroupEntryModal: React.FC<Props> = ({ onSave, data, ...props }: Props)
                 <ProFormDependency dependencies={['department']} name={["department"]}>
                     {({department})=>{
                         return (<ProFormSelect
-                            name={"userList"}
-                            label="Users"
+                            name={"memberList"}
+                            label="Members"
                             fieldProps={{
                                 mode: "multiple"
                             }}

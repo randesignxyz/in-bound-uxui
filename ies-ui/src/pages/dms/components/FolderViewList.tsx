@@ -13,7 +13,6 @@ import { LibraryDTO } from '../setting/components/library/data';
 import DocumentModalForm from '../documentation/EntryForm';
 import { DocumentServiceAPI } from '../documentation/service';
 import { DMSPaths } from '..';
-import TeamModalForm from '../team/TeamModalForm';
 import { DocumentationAdvanceSearch, DocumentationCreate } from '../documentation/data';
 import DirectoryTree from 'antd/es/tree/DirectoryTree';
 import ContractFormEntry from '../contract/ContractFormEntry';
@@ -481,10 +480,10 @@ export default ({ onSearch, activeKey, moveDoc, onMove,setLibrary , ...props }: 
                     actionRef.current?.reloadAndRest?.();
                 }}
             />
-            < TeamModalForm
+            {/* < TeamModalForm
                 open={teamShareState?.visible?.name == "MODAL"}
                 onCancel={() => setTeamShareState(v => ({ ...v, visible: undefined }))}
-            />
+            /> */}
             <ContractFormEntry
                 open={contractState?.visible?.name == "MODAL"}
                 onSave={() => {

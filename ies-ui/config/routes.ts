@@ -986,6 +986,13 @@ export default [
   hideInMenu: 'true',
 },
 {
+  path:"/dms/share/:view/:id",
+  name:"dms",
+  component:"./dms/share",
+  access:"canAccessDMSMenu",
+  hideInMenu: 'true',
+},
+{
   path:"/dms/company/:view/*",
   name:"dms",
   component:"./dms/contract/company",

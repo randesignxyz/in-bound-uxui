@@ -1,4 +1,3 @@
-import detail from "@/pages/fma/new-staff/detail";
 import { formatDate } from "@/pages/utils";
 import { DeleteOutlined, ReloadOutlined, TeamOutlined, UserOutlined } from "@ant-design/icons";
 import { ActionType, ProList } from "@ant-design/pro-components";
@@ -8,7 +7,6 @@ import { ShareServiceAPI } from "./service";
 import { simpleRequestActions } from "@/services/model";
 import { useEffect, useRef, useState } from "react";
 import { expriationStatus } from "../core";
-import TableView from "@/components/DataCrud/TableView";
 
 interface Props {
     docId?: number

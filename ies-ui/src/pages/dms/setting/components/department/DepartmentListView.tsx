@@ -5,10 +5,10 @@ import { useEffect, useRef, useState } from "react";
 import { ActionType, ProList } from "@ant-design/pro-components";
 import { DepartmentServiceAPI } from "./service";
 import DepartmentEntryFormModal from "./DepartmentEntryForm";
-import UserGroupEntryModal from "../../usergroup/UserGroupEntryModal";
-import { GroupServiceAPI } from "../../usergroup/service";
-import { GroupCreate } from "../../usergroup/data";
+import UserGroupEntryModal from "../../teams/TeamEntryModal";
+import { TeamsServiceAPI } from "../../teams/service";
 import AsseignUserModalForm from "./AssignUser";
+import { TeamsCreate } from "../../teams/data";
 
 interface Props {
     actionKey?: string
@@ -166,8 +166,8 @@ export default ({ actionKey }: Props) => {
             <UserGroupEntryModal
                 open={userGroupState?.visible?.name === "modal"}
                 onCancel={() => setUserGroupState(v => ({ ...v, visible: undefined }))}
-                onSave={async (data: GroupCreate) => {
-                    GroupServiceAPI(requestAction).save(data)
+                onSave={async (data: TeamsCreate) => {
+                    TeamsServiceAPI(requestAction).save(data)
                     setUserGroupState((v) => ({ ...v, visible: undefined }));
                 }}
             />

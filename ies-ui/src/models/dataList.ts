@@ -45,6 +45,7 @@ import { TankTransactionDTO } from '@/pages/fleet/fuelStock/data';
 import { AppraisalEmp } from '@/pages/hrm/appraisal-submit/data.types';
 import { CategoryDTO } from '@/pages/dms/setting/components/category/data';
 import { DocumentationDTO } from '@/pages/dms/documentation/data';
+import { ShareDTO } from '@/pages/dms/share/data';
 
 type DataList =
   | {
@@ -263,6 +264,11 @@ type DataList =
     data?: Paging<DepartmentDTO>;
   }
   | {
+    type: 'dms-share';
+    criteria?: any;
+    data?: Paging<ShareDTO>;
+  }
+  | {
     type: 'incentive-settlement';
     criteria?: any;
     data: Paging<IncentiveSettlement>;
@@ -316,6 +322,7 @@ type MomainType =
   | 'appraisal-submit'
   | 'dms-category'
   | 'dms-department'
+  | 'dms-share'
   | 'dms-document';
 
 export default () => {

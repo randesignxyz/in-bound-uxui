@@ -1,5 +1,5 @@
 import { PageContainer, ProCard, ProDescriptions } from "@ant-design/pro-components"
-import { Button, Card, Col, Collapse, Divider, Flex, Row, Spin, Tag } from "antd"
+import { Button, Card, Col, Divider, Flex, Row, Spin, Tag } from "antd"
 import React, { useEffect, useState } from "react";
 import { ContractCreate, ContractDTO } from "./data";
 import { ContractServiceAPI } from "./service";
@@ -71,7 +71,7 @@ const ContractsDetail: React.FC<Props> = ({ id }) => {
                     <Button icon={<PartitionOutlined />} onClick={() => setWorkFlowState({ visible: { name: "OPEN" } })} >Diagram</Button>,
                     <Button icon={<EditOutlined />} onClick={() => setContractForm({ visible: { name: "MODAL", type: "EDIT", payload: contractsDTO } })} >Edit</Button>,
                     <Button icon={<DeleteOutlined />} danger>Delete</Button>,
-                    // <Button icon={<DeleteOutlined />} onClick={() => setContractFormModal({ visible: { name: "MODAL", type: "EDIT", } })}>Test</Button>
+                 
                 ]}
             >
 
@@ -87,7 +87,6 @@ const ContractsDetail: React.FC<Props> = ({ id }) => {
                         >
                             <Row gutter={16}>
                                 <Col span={12}>
-                                    {/* <Divider orientation="left" plain>Contract Infomation</Divider> */}
                                     <ProDescriptions
                                         labelStyle={{
                                             width: 150

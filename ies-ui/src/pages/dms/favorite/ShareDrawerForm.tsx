@@ -7,7 +7,7 @@ import { simpleRequestActions } from "@/services/model";
 import { TeamOutlined, UserOutlined } from "@ant-design/icons";
 import { formatDate } from "@/pages/utils";
 import dayjs from 'dayjs';
-import { GroupServiceAPI } from "../setting/usergroup/service";
+import { TeamsServiceAPI } from "../setting/teams/service";
 import { useEffect, useState } from "react";
 import { Flex, Space } from "antd/lib";
 
@@ -149,7 +149,7 @@ const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...pr
                                 }
                             }}
                             request={async () => {
-                                const data = await GroupServiceAPI(requestAction).page({ searchValue: "" });
+                                const data = await TeamsServiceAPI(requestAction).page({ searchValue: "" });
                                 return data.items.map(v => ({
                                     value: v.id,
                                     label: v.name

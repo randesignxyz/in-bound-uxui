@@ -2,12 +2,12 @@ import { List } from "lodash";
 import { Moment } from "moment";
 
 
-interface GroupDTO{
+interface TeamsDTO{
     id:number;
     name:string;
     description:string,
     isDeleted:boolean;
-    userList:GroupUser[];
+    memberList:GroupUser[];
     createdBy:string;
     createdDate:Moment.moment;
     lastModifiedBy:string;
@@ -16,18 +16,19 @@ interface GroupDTO{
 
 
 
-interface GroupCreate{
+interface TeamsCreate{
     id?:number;
     name:string;
     description?:string;
     isDeleted?:boolean;
-    userList?:List<string>
+    memberList?:List<string>
 }
 
 
-interface GroupSearchParam{
-    searchValue?:string;
+interface TeamsSearchParam{
+    isCurrentUser?:boolean;
 }
+
 
 interface UserDTO {
     userName: string;

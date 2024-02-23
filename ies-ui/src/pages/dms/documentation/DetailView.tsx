@@ -16,7 +16,7 @@ import ReminderModalForm from "../reminder/ModalFormEntry";
 import { ReminderCreate, ReminderDTO } from "../reminder/data";
 import { ReminderServiceAPI } from "../reminder/service";
 import ReminderListView from "../reminder/ReminderListView";
-import {  DocumentationCreate, DocumentationDTO, UploadAttachmentFile } from "./data";
+import { DocumentationCreate, DocumentationDTO, UploadAttachmentFile } from "./data";
 import { Moment } from "moment";
 import DocFileUploadModal from "../attachment/DocFileUploadModal";
 import { history } from "@umijs/max";
@@ -26,6 +26,7 @@ import ShareListView from "../share/ShareListView";
 
 interface Props {
     id: number;
+    share?: ShareDTO;
 }
 
 const alertMessage = (date: Moment, period?: number) => {
@@ -48,12 +49,13 @@ const alertMessage = (date: Moment, period?: number) => {
     }
 }
 
-const DocumentationDetail: React.FC<Props> = ({ id }) => {
+const DocumentationDetail: React.FC<Props> = ({ id, share }) => {
 
     const requestAction = simpleRequestActions();
     const service = DocumentServiceAPI(requestAction);
     const [detail, setDetail] = useState<DocumentationDTO>();
     const actionRef = useRef<ActionType>();
+    const [tabState, setTabState] = useState<string>("2");
     const [uploadFileState, setUploadFileState] = useState<{
         visible?: {
             name: "MODAL";
@@ -90,6 +92,7 @@ const DocumentationDetail: React.FC<Props> = ({ id }) => {
     }, [id]);
 
 
+
     return (<>
         <Spin spinning={requestAction.request?.loading}>
             <PageContainer
@@ -98,17 +101,16 @@ const DocumentationDetail: React.FC<Props> = ({ id }) => {
                 breadcrumb={undefined}
                 subTitle={`# ${detail?.documentation?.docName}`}
                 extra={[
-                    <Button type="default" onClick={() => setState({ visible: { name: "MODAL", type: "EDIT", payload: detail } })} icon={<EditOutlined />} >Edit</Button>,
+                    <Button type="default" onClick={() => setState({ visible: { name: "MODAL", type: "EDIT", payload: detail } })} icon={<EditOutlined />} disabled={share?.accessible == "viewer"} >Edit</Button>,
                     <Button type="default" onClick={() => setShareState({ visible: { name: "MODAL", type: "ADD" } })} icon={<ShareAltOutlined />} >Shared</Button>,
                     <Button type="default" onClick={() => setReminderState({ visible: { name: "MODAL", type: "ADD" } })} icon={<BellOutlined />} >Reminder</Button>,
-                    <Button type="default" onClick={() => setUploadFileState({ visible: { name: "MODAL", type: "ADD" } })} icon={<UploadOutlined />} >Upload</Button>,
+                    <Button type="default" onClick={() => setUploadFileState({ visible: { name: "MODAL", type: "ADD" } })} icon={<UploadOutlined />} disabled={share?.accessible == "viewer"} >Upload</Button>,
                 ]}
             >
                 {alertMessage(detail?.term.expiryDate)}
                 {
                     detail?.division == "DOC" && (
                         <DocumentDetail
-                            docType="Documentation Info"
                             document={detail}
                             actionRef={actionRef}
                         />
@@ -121,7 +123,9 @@ const DocumentationDetail: React.FC<Props> = ({ id }) => {
                         />
                     )
                 }
+
                 <Tabs
+                    defaultActiveKey={tabState}
                     items={[
                         {
                             key: "2",
@@ -138,7 +142,8 @@ const DocumentationDetail: React.FC<Props> = ({ id }) => {
                             label: "Attachments",
                             children: <AttachmentView
                                 docId={detail?.id}
-                                key={requestAction.request?.message}
+                                tabState={tabState ||Math.random().toString()}
+                                accessKey={share?.accessible}
                             />
                         },
                         {
@@ -148,6 +153,7 @@ const DocumentationDetail: React.FC<Props> = ({ id }) => {
                         },
                     ]}
                 />
+
             </PageContainer>
         </Spin>
         <ShareDrawerForm
@@ -168,14 +174,16 @@ const DocumentationDetail: React.FC<Props> = ({ id }) => {
             data={state?.visible?.payload}
             onSave={(data: DocumentationCreate) => {
                 Modal.confirm({
-                    title:"Update Document",
-                    content:"do you want update information this document?",
-                    onOk:()=>{
+                    title: "Update Document",
+                    content: "do you want update information this document?",
+                    onOk: () => {
                         service.save(data);
                         setState((v) => ({ visible: undefined }));
                         message.success("Success!");
+
                     }
-                })
+                });
+
             }}
             division={state?.visible?.payload?.division}
             onCancel={() => setState((v) => ({ visible: undefined }))}
@@ -197,6 +205,7 @@ const DocumentationDetail: React.FC<Props> = ({ id }) => {
                 service.uploadAttachment(data);
                 setUploadFileState(o => ({ ...o, visible: undefined }));
                 actionRef.current?.reload?.();
+                setTabState(Math.random().toString())
             }}
             documentTypeId={detail?.docType?.id}
             documentId={detail?.id}

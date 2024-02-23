@@ -1,7 +1,5 @@
-import { simpleRequestActions } from "@/services/model"
 import { ProDescriptions } from "@ant-design/pro-components"
-import { CompanySerivceAPI } from "./service";
-import { Avatar, Button, Card, Space } from "antd";
+import { Button, Card, Space } from "antd";
 import { useEffect, useState } from "react";
 import { Drawer, DrawerProps } from "antd/lib";
 import { EditOutlined } from "@ant-design/icons";
@@ -12,8 +10,6 @@ interface Props extends DrawerProps {
 }
 
 export default ({ comId, data, ...props }: Props) => {
-    const requestAction = simpleRequestActions();
-    const services = CompanySerivceAPI(requestAction);
     const [editState, setEditState] = useState<string[]>([]);
 
     useEffect(() => {

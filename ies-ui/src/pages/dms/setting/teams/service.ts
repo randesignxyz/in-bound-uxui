@@ -1,11 +1,11 @@
 import { RequestActions, ServiceApiType, singleRequest } from "@/services/apiGateway";
-import { GroupCreate, GroupDTO, GroupSearchParam } from "./data";
 import { Page } from "@/services/shared/data";
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
+import { TeamsCreate, TeamsDTO, TeamsSearchParam } from "./data";
 
 
-const GroupService ={
-    save: (data:GroupCreate):ServiceApiType<GroupCreate>=>({
+const TeamsService ={
+    save: (data:TeamsCreate):ServiceApiType<TeamsCreate>=>({
         actionName:"save-group",
         endpoint:"DMS",
         type:"EXEC",
@@ -17,7 +17,7 @@ const GroupService ={
         type:"EXEC",
         payload:{id},
     }),
-    page:(params:TableViewSearchParams<GroupSearchParam>):ServiceApiType<{searchValue?:string}>=>({
+    page:(params:TableViewSearchParams<TeamsSearchParam>):ServiceApiType<{searchValue?:string}>=>({
         actionName:"page-group",
         endpoint:"DMS",
         type:"PAGING_QUERY",
@@ -30,10 +30,10 @@ const GroupService ={
 }
 
 
-export const GroupServiceAPI = (requestActions :RequestActions)=>{
+export const TeamsServiceAPI = (requestActions :RequestActions)=>{
     return {
-        save:(data:GroupCreate)=>singleRequest<{data:string; message:string}>(GroupService.save(data))(requestActions),
-        delete:(id?:number)=>singleRequest<{data:string; message:string}>(GroupService.delete(id))(requestActions),
-        page:(param:TableViewSearchParams<GroupSearchParam>) => singleRequest<GroupDTO>(GroupService.page(param))(requestActions) as Promise<Page<GroupDTO>>
+        save:(data:TeamsCreate)=>singleRequest<{data:string; message:string}>(TeamsService.save(data))(requestActions),
+        delete:(id?:number)=>singleRequest<{data:string; message:string}>(TeamsService.delete(id))(requestActions),
+        page:(param:TableViewSearchParams<TeamsSearchParam>) => singleRequest<TeamsDTO>(TeamsService.page(param))(requestActions) as Promise<Page<TeamsDTO>>
     }
 }

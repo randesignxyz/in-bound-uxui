@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { DocumentTypeServiceAPI } from "../setting/components/documentType/service";
 import { simpleRequestActions } from "@/services/model";
 import { InboxOutlined } from "@ant-design/icons";
-import { FileServiceAPI } from "@/services/files/service";
 import { getServiceUrl } from "@/services/ApiUrl";
 import Dragger from "antd/lib/upload/Dragger";
 import { UploadFile } from "antd/es/upload/interface";
@@ -29,8 +28,6 @@ interface Props {
 const DocFileUploader: React.FC<Props> = ({ required= false, onGetFile, multi, maxCount, accept, docTypeId, service = "FILE" }) => {
     const requestActions = simpleRequestActions();
     const [fileExtension, setFileExtension] = useState<string[]>();
-    const services = FileServiceAPI(requestActions);
-    // const token = localStorage.getItem('accessToken');
     const token =kc.token;
     
     const [fileList, setFileList] = useState<UploadType[]>([]);
@@ -38,7 +35,7 @@ const DocFileUploader: React.FC<Props> = ({ required= false, onGetFile, multi, m
 
     
     useEffect(() => {
-        DocumentTypeServiceAPI(requestActions).fetch(docTypeId).then(it => setFileExtension(it.fileExtension));
+        // DocumentTypeServiceAPI(requestActions).fetch(docTypeId).then(it => setFileExtension(it.fileExtension));
 
     }, [docTypeId]);
 
@@ -69,7 +66,6 @@ const DocFileUploader: React.FC<Props> = ({ required= false, onGetFile, multi, m
                     if (!file.response) {
                         setFileList((v) => v.filter((it) => it.uid != file.uid));
                     } else {
-                        // addFileInfo && setFile(file);
                     }
                 }
                 setForceReload((v) => v + 1);

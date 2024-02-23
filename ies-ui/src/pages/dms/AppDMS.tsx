@@ -5,12 +5,13 @@ import DocumentListView from "./documentation/DocumentListView";
 import { DMSPaths } from ".";
 import RecievedShare from "./share/RecievedShare";
 import FavoriteView from "./favorite/FavoriteView";
-import { ShareAltOutlined, MenuFoldOutlined, FolderOutlined, SettingOutlined, BellOutlined } from "@ant-design/icons";
+import { ShareAltOutlined, MenuFoldOutlined, FolderOutlined, SettingOutlined, BellOutlined, TeamOutlined } from "@ant-design/icons";
 import ReminderListView from "./reminder/ReminderListView";
 import { DocumentationSearchByFolder } from "./documentation/data";
 import { Access, history, useAccess, useParams } from "@umijs/max";
 import ContractListView from "./contract/ContractListView";
-import { MenuProps } from "antd/lib";
+import TeamsViewList from "./setting/teams/TeamsViewList";
+
 
 const APPDMS: React.FC = () => {
     const param = useParams();
@@ -39,6 +40,9 @@ const APPDMS: React.FC = () => {
     useEffect(() => {
     }, []);
 
+
+
+    
 
     return (
         <>
@@ -259,10 +263,10 @@ const APPDMS: React.FC = () => {
                             setMenuStyleState((v) => ({ ...v, marginLeft: -350, transition: "all 0.5s" }));
                         }
                     }} icon={<MenuFoldOutlined />} />
+
                     <Segmented
                         style={{ width: "100%" }}
-                        defaultValue={view}
-
+                        accessKey={view}
                         options={[
                             {
                                 value: "library",
@@ -271,14 +275,23 @@ const APPDMS: React.FC = () => {
 
                             },
                             {
-                                value: "received-share",
-                                label: "Shareds",
-                                icon: <ShareAltOutlined />
+                                value: "share",
+                                // label: <Badge showZero dot overflowCount={9}>Shareds</Badge>,
+                                label:"Shared",
+                                icon: <ShareAltOutlined />,
+
                             },
                             {
                                 value: "reminder",
-                                label: "Reminders",
-                                icon: <BellOutlined />
+                                label:"Reminders",
+                                // label:<Badge count={0} showZero offset={[-10,-5]}  style={{zIndex:90, position:"fixed"}} title="ASDASD" >Reminder</Badge> ,
+                                icon: <BellOutlined />,
+                                
+                            },
+                            {
+                                value: "team",
+                                label: "Teams",
+                                icon: <TeamOutlined />
                             },
                         ]}
                         onChange={(e) => {
@@ -298,12 +311,12 @@ const APPDMS: React.FC = () => {
                     </Access>
                 </div>
                 {
-                    view === "library" && (<DocumentListView paramSearch={paramByFolder} libraryId={libraryId||0} />) ||
-                    view === "received-share" && (<RecievedShare />) ||
+                    view === "library" && (<DocumentListView paramSearch={paramByFolder} libraryId={libraryId || 0} />) ||
+                    view === "share" && (<RecievedShare  />) ||
                     view === "favorite" && (<FavoriteView />) ||
                     view === "contract" && (<ContractListView />) ||
-                    view === "reminder" && (<ReminderListView />)
-                    // view === "trash" && (<DocumentListView paramSearch={paramByFolder} division="DOC" />)
+                    view === "reminder" && (<ReminderListView />) ||
+                    view === "team" && (<TeamsViewList isCurrentUser={true} actionKey={view} />)
 
                 }
             </div>

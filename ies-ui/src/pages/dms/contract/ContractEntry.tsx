@@ -1,7 +1,5 @@
-import { ProFormSelect, ProFormText, ProFormDigit, ProFormTextArea, ProFormDatePicker } from "@ant-design/pro-components";
+import { ProFormSelect, ProFormText, ProFormDigit, ProFormTextArea, ProFormDatePicker, ProFormCheckbox } from "@ant-design/pro-components";
 import { Row, Col, Divider, Flex, Button, Input, Space, InputRef } from "antd";
-import moment from "moment";
-import DocFileUploader from "../attachment/DocFileUploader";
 import { CoreServiceAPI } from "../service";
 import { DepartmentServiceAPI } from "../setting/components/department/service";
 import { CompanySerivceAPI } from "./company/service";
@@ -219,17 +217,25 @@ export default () => {
                     width={"md"}
                 />
             </Col>
-            <Col span={12}>
+            <Col span={10}>
                 <ProFormText
                     name={"noticePeriod"}
                     label="Notice Peroid"
                 />
             </Col>
-            <Col span={12}>
+            <Col span={10}>
                 <ProFormDatePicker
                     name={"noticeDate"}
                     label="Notice Date"
                     width={"md"}
+                />
+            </Col>
+            <Col span={4}>
+                <ProFormCheckbox
+                initialValue={true}
+                    labelAlign="left"
+                    label="Sen Email"
+                    name={"sendEmail"}
                 />
             </Col>
         </Row>

@@ -28,12 +28,7 @@ export default ({activeKey }:Props) => {
                     icon:<HeartOutlined/>,
                     onClick: () => history.push(`${DMSPaths.workspace}/favorite`)
                 },
-                // {
-                //     key: "expire",
-                //     label: "Expiring Soon",
-                //     icon:<ClockCircleOutlined/>,
-                //     onClick: () => history.push(`${DMSPaths.workspace}/expire`)
-                // },
+          
             ]}
         >
 

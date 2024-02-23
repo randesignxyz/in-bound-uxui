@@ -27,6 +27,7 @@ interface DocumentationDTO{
     favorite?:FavoriteCreate;
     contractType:LookupDataDTO;
     library?:LibraryDTO;
+
 }
 
 
@@ -127,6 +128,11 @@ interface DocTermCreate{
     renewalInterval?:number
     noticePeriod?:string
     noticeDate?:Moment.moment,
-    noticePeriod:string
+    noticePeriod?:string;
+    sendEmail?:boolean;
 }
 
+interface MoveDocParams{
+    docId?:number;
+    folderId?:number;
+}

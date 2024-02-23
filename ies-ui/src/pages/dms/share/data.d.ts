@@ -29,7 +29,7 @@ interface ShareCreate{
      expirationDate?: Moment.moment;
      effectiveDate?: Moment.moment;
      description?:string;
-     groupId?:number;
+     teamId?:number;
      accessible:string;
 }
 

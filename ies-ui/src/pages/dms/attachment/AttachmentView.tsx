@@ -15,13 +15,14 @@ import { formatDate } from "@/pages/utils"
 interface Props {
     docId?: number;
     key?:string;
+    tabState?:string;
+    accessKey?:string;
 }
 
-export default ({ docId, key }: Props) => {
+export default ({ docId, accessKey, tabState }: Props) => {
     const requestAction = simpleRequestActions();
     const actionRef = useRef<ActionType>();
-    console.log(key);
-    
+    const [forceUpdate, setForceUpdate ]=useState<string>();
     const [state, setState] = useState<{
         visible?: {
             name: "DRAWER",
@@ -36,8 +37,12 @@ export default ({ docId, key }: Props) => {
         })
     }
     useEffect(() => {
-        docId  !=null  && onLoadAttachment();
-    }, [docId]);
+         actionRef.current?.reload?.();
+    }, [ tabState, forceUpdate]);
+
+    useEffect(()=>{
+        actionRef.current?.reload?.();
+    },[forceUpdate])
 
     return (<>
         <ProList<Attachment>
@@ -92,6 +97,7 @@ export default ({ docId, key }: Props) => {
                         <Button
                             danger
                             type="link"
+                            disabled={accessKey== "viewer"}
                             icon={<DeleteOutlined />}
                             onClick={async () => {
                                 Modal.confirm({
@@ -99,7 +105,8 @@ export default ({ docId, key }: Props) => {
                                     content: "Do you want to continue",
                                     onOk: () => {
                                         AttachmentServiceAPI(requestAction).delete(r.id);
-                                        actionRef.current?.reloadAndRest?.()
+                                        // actionRef.current?.reload?.()
+                                        setForceUpdate(Math.random().toString())
                                     }
                                 })
                             }}

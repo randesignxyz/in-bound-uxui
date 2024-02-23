@@ -14,7 +14,7 @@ export default ({ docId, ...props }: Props) => {
             <Drawer
                 title={"History"}
                 {...props}
-                width={600}
+                width={700}
             >
                 <HistoryTableView intantId={docId} source="DOCUMENTATION" />
 

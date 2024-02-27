@@ -69,6 +69,9 @@ export default ( { key,required, onSave,loading, params, dataFilter, gratisTarge
     const loadDate =()=>{
 
     }
+    // const directHidden = params.contractTypeGroupCode=='DIRECT'?true:false
+    const inDirectHidden = params.contractTypeGroupCode=='IN_DIRECT'?true:false
+    const otherHidden = params.contractTypeGroupCode=='OTHER'?true:false
 
     return <ModalForm {...rest} width={'90%'}           
         form={form}
@@ -96,9 +99,9 @@ export default ( { key,required, onSave,loading, params, dataFilter, gratisTarge
          <ProCard boxShadow size="small" direction="row">
             <ProFormGroup size={'small'}>
             <ProFormText label='Customer' name={'searchValue'}/>
-            <ProFormSelect label="Target"  name={'target'} mode="multiple" rules={[{ required: false }]} showSearch allowClear width={'sm'} options={gratisTarget?.map(it => ({ label: it.name, value: it.code }))}/>  
-            <ProFormSelect label="Incentive Rate" hidden={params.contractTypeGroupCode!=='DIRECT'?true:false}  name={'incentiveRate'}  mode="multiple" rules={[{ required: false }]} showSearch allowClear width={'sm'} options={gratisIncentive?.map(it => ({ label: it.name, value: it.code }))}/>
-            <ProFormSelect label="SKU to be settled"  name={'skuSettled'}  mode="multiple" rules={[{ required: false }]} showSearch allowClear width={'sm'} options={skuSettled?.map(it => ({ label: it.name, value: it.code }))}/>   
+            <ProFormSelect label="Target" hidden={otherHidden}  name={'target'} mode="multiple" rules={[{ required: false }]} showSearch allowClear width={'sm'} options={gratisTarget?.map(it => ({ label: it.name, value: it.code }))}/>  
+            <ProFormSelect label="Incentive Rate" hidden={otherHidden || inDirectHidden}  name={'incentiveRate'}  mode="multiple" rules={[{ required: false }]} showSearch allowClear width={'sm'} options={gratisIncentive?.map(it => ({ label: it.name, value: it.code }))}/>
+            <ProFormSelect label="SKU to be settled" hidden={otherHidden} name={'skuSettled'}  mode="multiple" rules={[{ required: false }]} showSearch allowClear width={'sm'} options={skuSettled?.map(it => ({ label: it.name, value: it.code }))}/>   
             </ProFormGroup>
          </ProCard>
         <ProTable size="small"

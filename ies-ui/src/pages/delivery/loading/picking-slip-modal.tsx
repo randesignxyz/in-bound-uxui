@@ -77,7 +77,6 @@ const PickingSlip: React.FC<Props> = ({ cb, requestActions, itemDetail, ...props
   }>();
 
   const init = async () => {
-
     const rs = await fetchDataItemService<{ assignedDate: Moment, shift?: string }, { id: number }>({
       actionName: 'fetch-loading-by-id',
       endpoint: 'DELIVERY',
@@ -134,7 +133,6 @@ const PickingSlip: React.FC<Props> = ({ cb, requestActions, itemDetail, ...props
       setTrucks(driver?.trucks)
       form.setFieldValue('driverId', itemDetail?.loading?.driver.id || driver?.id)
     }
-
     setAutoSearch(v => v + 1)
   }
 

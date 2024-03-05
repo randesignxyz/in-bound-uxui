@@ -76,6 +76,12 @@ export const errorConfig: RequestConfig = {
           }
         }
       } else if (error.response) {
+        const { response: { status, data } } = error;
+        if (status === 500 || data?.status === 550 || status === 505) {
+          const { response: { data: { message } } } = error;
+          const errorMessage = message || error.response.message
+          throw { error, message: errorMessage }
+        }
         message.error(`Response status:${error.response.status}`);
       } else if (error.request) {
         message.error('None response! Please retry.');

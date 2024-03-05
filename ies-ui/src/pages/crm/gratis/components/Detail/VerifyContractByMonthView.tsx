@@ -100,6 +100,7 @@ const VerifyContractByMonthView= ({isVerify,id, groupTypeCode, verifyContract,on
         </ProCard>
         {groupTypeCode=='OTHER' && <ProTable<GratisVerifySchedule> search={false} 
             actionRef={actionRefTableVerifySchedule}
+            cardProps={false}
             options={{
                 fullScreen: false,
                 density: false,
@@ -137,18 +138,30 @@ const VerifyContractByMonthView= ({isVerify,id, groupTypeCode, verifyContract,on
                     render: (_, r) =>formatDate(r.scheduledDate)
                 },
                 {
-                    title: 'Salesperson',
-                    render: (_, r) => r.salesperson
+                    title: 'Completed Date',
+                    dataIndex: 'completedDate',  
+                    render: (_, r) =>formatDate(r.completedDate)
                 },
                 { 
-                    title: 'Type',
-                    render:(_,r) => toReadable(r.planned)
+                    title: 'Schedule Type',
+                    render:(_,r) => toReadable(r.scheduleType)
 
                 },
                 {
-                    title: 'Status',
-                    align: 'right',
-                    render:(_,r) =>  r.complianceCheck
+                    title: 'Schedule Status',
+                    render:(_,r) =>  toReadable(r.status)
+                },
+                {
+                    title: 'Salesperson',
+                    render: (_, r) => r.salesperson
+                },
+                {
+                    title: 'Contract No',
+                    render:(_,r) =>  toReadable(r.contractNo)
+                },
+                {
+                    title: 'Compliance Check',
+                    render:(_,r) =>  toReadable(r.complianceStatus)
                 }
             ]}
         />}

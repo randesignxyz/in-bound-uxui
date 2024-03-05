@@ -93,13 +93,14 @@ export interface GratisVerifyItem {
 export interface GratisVerifySchedule {
   id: number,  
   scheduledDate:moment.Moment;
+  completedDate?:moment.Moment;
   salespersonId: number;
   salesperson:string;
   customerId:number;
   contractId:number;
-  planned:string;
+  contractNo?:string;
+  scheduleType:string;
   status:string;
-  complianceCheck:string;
   complianceStatus:string;
  }
 export interface GratisInvoice {

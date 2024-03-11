@@ -1,6 +1,4 @@
 import { Moment } from "moment";
-
-
 interface HistoryDTO {
     id?: number;
     actionBy: string;
@@ -10,13 +8,11 @@ interface HistoryDTO {
     instantId?: number;
     remark: string;
 }
-
 interface HistorySearchParam {
     actionType?: string;
     instantId?: number;
     source:string;
 }
-
 interface HistoryCreate{
     id?:number,
     instantId?:number ,

@@ -1,9 +1,5 @@
-
-
 import React from 'react';
-
 import APPDMS from './AppDMS';
-
 export const DMSPaths = {
   dms: '/dms',
   folder: '/dms/folder',
@@ -12,7 +8,6 @@ export const DMSPaths = {
   workspace: '/dms/workspace',
   contracts: "/dms/contracts",
   company: "/dms/company"
-
 };
 
 export default () => {
@@ -20,6 +15,5 @@ export default () => {
     <>
       <APPDMS />
     </>
-
   );
 };

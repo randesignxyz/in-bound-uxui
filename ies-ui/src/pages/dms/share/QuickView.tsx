@@ -7,7 +7,6 @@ import { useEffect, useRef } from "react"
 import { simpleRequestActions } from "@/services/model"
 import { ShareServiceAPI } from "./service"
 
-
 interface Props extends DrawerProps{
     docId?:number
 }
@@ -19,7 +18,6 @@ export default  ({ docId ,...props}:Props) =>{
     useEffect(()=>{
         actionRef.current?.reload?.();
     }, [props.open]);
-
     return (
         <>
             <Drawer
@@ -27,7 +25,6 @@ export default  ({ docId ,...props}:Props) =>{
                 title="Quick View"
                 width={600}
             >
-               
                 <ProList<ShareDTO>
                         actionRef={actionRef}
                         style={{

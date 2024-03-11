@@ -3,7 +3,6 @@ import { HistoryCreate, HistoryDTO, HistorySearchParam } from "./data";
 import { RequestActions, ServiceApiType, singleRequest } from "@/services/apiGateway";
 import { Page } from "@/services/shared/data";
 
-
 const HistoryAction = {
     save:(data:HistoryCreate):ServiceApiType<HistoryCreate>=>({
         actionName:"save-history",
@@ -22,7 +21,6 @@ const HistoryAction = {
         },
     })
 }
-
 export const HistoryServiceAPI =(requestAction:RequestActions) =>{
     return {
         save:(data:HistoryCreate)=>singleRequest<{data:string; message:string}>(HistoryAction.save(data))(requestAction),

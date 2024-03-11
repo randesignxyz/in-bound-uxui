@@ -59,7 +59,6 @@ const AdvanceDocumentSearch: React.FC<Props> = ({
         onReset={() => onReset()}
         submitter={false}
       >
-
         <ProFormSelect
           name={"buId"}
           allowClear

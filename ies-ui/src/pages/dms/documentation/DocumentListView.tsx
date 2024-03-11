@@ -23,7 +23,7 @@ import QuickView from "../share/QuickView"
 import { HistoryServiceAPI } from "../history/service"
 import HistoryDoc from "./HistoryDoc"
 import MoveDocumentModal from "./MoveDocument"
-import { expriationStatus, shareStatus, status } from "../core"
+import { expriationStatus, status } from "../core"
 import { FavoriteServiceAPI } from "../favorite/service"
 import DocumentModalForm from "./EntryForm"
 
@@ -41,7 +41,6 @@ export default ({ paramSearch, libraryId }: Props) => {
     const services = DocumentServiceAPI(requestAction);
     const actionRef = useRef<ActionType>();
     const param = useParams();
-
     const [documentModalState, setDocumentState] = useState<{
         visible?: {
             name: "MODAL";
@@ -85,7 +84,6 @@ export default ({ paramSearch, libraryId }: Props) => {
             documentId: number;
         }
     }>();
-
   
     const [advanceSearchParams, setAdvanceSearchParams] = useState<DocumentationAdvanceSearch>({
         status: "ALL",
@@ -169,9 +167,7 @@ export default ({ paramSearch, libraryId }: Props) => {
                         services.moveToTrash(record.id).then(() => {
                             actionRef.current?.reloadAndRest?.();
                             message.success("document moved to trash")
-                        })
-
-
+                        });
                     }
                 })
             }
@@ -189,9 +185,7 @@ export default ({ paramSearch, libraryId }: Props) => {
                         services.moveToTrash(record.id).then(() => {
                             actionRef.current?.reloadAndRest?.();
                             message.success("document moved to trash")
-                        })
-
-
+                        });
                     }
                 })
             }
@@ -259,7 +253,18 @@ export default ({ paramSearch, libraryId }: Props) => {
                     folderId: parseInt(param["*"] || ""),
                     division: "DOC",
                 }
-            })
+            }),
+            // children:[
+            //     {
+            //         key:"1-1",
+            //         label:"General",
+            //     },
+            //     {
+            //         key:"1-2",
+            //         label:"Legal",
+            //     },
+              
+            // ]
         },
         {
             key: "2",
@@ -272,7 +277,34 @@ export default ({ paramSearch, libraryId }: Props) => {
                     folderId: parseInt(param["*"] || ""),
                     division: "CONTRACT",
                 }
-            })
+            }),
+            // children:[
+            //     {
+            //         key:"2-1",
+            //         label:"General",
+            //     },
+            //     {
+            //         key:"2-2",
+            //         label:"Purchase",
+            //     },
+            //     {
+            //         key:"2-3",
+            //         label:"Sales",
+            //     },
+            // ]
+        },
+    ];
+
+    const itemQiuck =():MenuProps["items"]=>[
+        {
+            key:"1",
+            label:"Favorit",
+            itemIcon:<HeartOutlined/>
+        },
+        {
+            key:"2",
+            label:"shared",
+            itemIcon:<HeartOutlined/>
         },
     ]
 
@@ -282,27 +314,9 @@ export default ({ paramSearch, libraryId }: Props) => {
                 hasCriteria={Object.values(Omit(advanceSearchParams, ['status'])).some((v) => v)}
                 cache
                 displayOnly
-                
                 extraFilter={
                     <>
-                        <Flex justify="space-between" gap={20}>
-                            {/* <Radio.Group
-                                    value={advanceSearchParams.status}
-                                    onChange={(e) => {
-                                        setAdvanceSearchParams((v) => ({
-                                            ...v,
-                                            status: e.target.value,
-                                        }));
-
-                                        actionRef.current?.reloadAndRest?.();
-                                    }}
-                                >
-                                    <Radio.Button value="ALL">All</Radio.Button>
-                                    <Radio.Button value="void">Void</Radio.Button>
-                                    <Radio.Button value="draft">Drafted</Radio.Button>
-                                    <Radio.Button value="favorite">Favorite</Radio.Button>
-                                    <Radio.Button value="Trash">Trash</Radio.Button>
-                                </Radio.Group> */}
+                        <Flex justify="space-between" align="baseline" gap={20}>
                             <Segmented
                                 defaultValue={advanceSearchParams.status}
                                 onChange={(e) => {
@@ -343,7 +357,6 @@ export default ({ paramSearch, libraryId }: Props) => {
                                         ...v,
                                         division: e.toString(),
                                     }));
-
                                     actionRef.current?.reloadAndRest?.();
                                 }}
                                 options={[
@@ -358,6 +371,14 @@ export default ({ paramSearch, libraryId }: Props) => {
                                     },
                                 ]}
                             />
+                            {/* <Dropdown
+
+                                menu={{
+                                    items:itemQiuck()
+                                }}
+                            >
+                                <a>Quic Access <DownOutlined/></a>
+                            </Dropdown> */}
                         </Flex>
                     </>
                 }
@@ -365,14 +386,12 @@ export default ({ paramSearch, libraryId }: Props) => {
                     actionRef: actionRef,
                     toolbar: {
                         actions: [
-                            // <Tooltip title="New Folder"><Button
-                            //     icon={<FolderAddOutlined />}
-                            //     type="link"
-                            //     onClick={() => setFolderState({ visible: { code: "FOLDER", name: "MODAL", libraryId: 0, type: "ADD" } })}
-                            // /></Tooltip>,
                             <Dropdown
                                 menu={{
-                                    items: itemCreateNew()
+                                    items: itemCreateNew(),
+                                    style:{
+                                        width:200
+                                    }
                                 }}
                             >
                                 <Button
@@ -465,7 +484,6 @@ export default ({ paramSearch, libraryId }: Props) => {
                         title: "Status",
                         sorter: "status",
                         render:(_,r)=><Badge text={r.status} status={status(r.term.expiryDate).status} />
-                        // render: (_, r) => 
                     },
                     {
                         title: "Shared",
@@ -549,8 +567,6 @@ export default ({ paramSearch, libraryId }: Props) => {
                     setMoveState({visible:undefined});
                 }}
             />
-
-
             < DocumentModalForm
                 open={documentModalState?.visible?.name === "MODAL"}
                 type={documentModalState?.visible?.type}
@@ -564,9 +580,8 @@ export default ({ paramSearch, libraryId }: Props) => {
                         libraryId: libraryId
                     }
                     services.save(entry);
-                    
                     setDocumentState({ visible: undefined });
-                    actionRef.current?.reload?.()
+                    actionRef.current?.reload?.();
                 }}
             />
         </>

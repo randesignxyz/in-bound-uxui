@@ -14,11 +14,8 @@ const QuickViewFile: React.FC<Props> = ({ onClose, attachment, ...props }) => {
 
         if (attachment) {
             const blob = await getUploadFileObjectUrlV2()(attachment?.fileId || "");
-            setPdfUrl(blob)
-
+            setPdfUrl(blob);
         }
-
-
     }
     useEffect(() => {
         props.open && fetchBlob();
@@ -44,21 +41,15 @@ const QuickViewFile: React.FC<Props> = ({ onClose, attachment, ...props }) => {
                 submitter={false}
                 title={attachment?.fileName}
             >
-
-
-                {/* <div id="pspdfkit" style={{width: "100%", height: "100vh"}}></div> */}
                 <iframe src={`${pdfUrl}`} id="viewer"
                     style={{
                         width: "100%",
                         height: "90vh"
                     }}
-
                 />
-
             </DrawerForm>
         </>
     )
 }
-
 
 export default QuickViewFile

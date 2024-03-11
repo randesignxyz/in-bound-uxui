@@ -36,8 +36,6 @@ export const formateFileType = (fileAttach?: Attachment[]) => {
     return fileType
 }
 
-
-
 export const convertDuration = (momentDate?: Moment) => {
 
 

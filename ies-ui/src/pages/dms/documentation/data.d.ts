@@ -14,11 +14,12 @@ interface DocumentationDTO{
     createdDate:Moment.moment;
     documentation:ContentDTO;
     term:DocTermCreate;
+    accountant?:DocAccountant;
     department?:DepartmentDTO;
     division:"DOC"|"CONTRACT";
     company?:CompanyDTO;
     status?:string,
-    category?:CategoryDTO;
+    category?:string;
     docType?:DocumentTypeDTO;
     buId?:OrgUnitDTO;
     path?:FolderDTO[];
@@ -27,9 +28,11 @@ interface DocumentationDTO{
     favorite?:FavoriteCreate;
     contractType:LookupDataDTO;
     library?:LibraryDTO;
-
+    termType?:LookupDataDTO,
+    vendor?:VendorsDTO,
+    currency?:LookupDataDTO,
+    
 }
-
 
 interface DocumentationCreate {
     id?:number;
@@ -37,11 +40,12 @@ interface DocumentationCreate {
     folderId?:number;
     division?:string;
     buId?:number;
+    category?:string;
     term?:ContractTermCreate;
     content:ContentCreate;
     attachment?:Attachment[];
+    accountant?:DocAccountant;
 }
-
 
 interface DocumentationAdvanceSearch{
     status?:string;
@@ -50,6 +54,7 @@ interface DocumentationAdvanceSearch{
     folderType?:string;
     division?:string;
 }
+
 interface DocumentationSearchByFolder{
     folderId?:number;
     folderType?:string;
@@ -89,14 +94,13 @@ interface ContentCreate{
     company?:number;
     department?:number;
     docType?:number;
-    category?:number;
-    vendorName?:string;
+    vendorName?:number;
     vendorCode?:string;
     location?:string;
     description?:string;
     gratis?:string;
-    
-  
+    opCo?:string;
+    contractCategory?:number;
 }
 
 interface ContentDTO{
@@ -115,21 +119,34 @@ interface ContentDTO{
     status:string;
     contractValue?:string;
     purposeValue?:string;
-
+    contractCategory?:string;
+    institute?:string;
 }
-
 
 interface DocTermCreate{
     id?:numner,
-    termType?:string,
+    type?:number,
     effectiveDate?:Moment.moment,
     expiryDate?:Moment.moment;
-    // currentExpDate?:Moment.moment;
     renewalInterval?:number
-    noticePeriod?:string
+    noticePeriod?:string;
+    noticePeriodDay?:number;
     noticeDate?:Moment.moment,
     noticePeriod?:string;
     sendEmail?:boolean;
+    warranty?:string;
+    penaltyClause?:string;
+    termPayment?:string;
+}
+
+interface DocAccountant{
+    id?:number;
+    totalAmount?:number;
+    finalAmount?:number;
+    po?:string;
+    paid?:number;
+    balance?:number;
+    updateComment?:string;
 }
 
 interface MoveDocParams{

@@ -1,6 +1,5 @@
 import { RequestActions, ServiceApiType, singleRequest } from "@/services/apiGateway";
 
-
 const AttachmentAction ={
     delete:(id?:number):ServiceApiType<{id?:number}>=>({
         actionName:"delete-doc-upload-file",
@@ -8,7 +7,6 @@ const AttachmentAction ={
         type:"EXEC",
         payload:{id}
     }),
-
     list:(id?:number):ServiceApiType<{id?:number}> => ({
         actionName:"list-doc-upload-file",
         endpoint:"DMS",
@@ -16,7 +14,6 @@ const AttachmentAction ={
         payload:{id}
     })
 }
-
 
 export const AttachmentServiceAPI = (requestAction:RequestActions) =>{
     return {

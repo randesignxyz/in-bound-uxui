@@ -19,9 +19,6 @@ interface ShareDTO{
      accessible?:string;
      isOwner?:boolean;
 }
-
-
-
 interface ShareCreate{
      id?:number;
      recipient?:string;
@@ -32,8 +29,6 @@ interface ShareCreate{
      teamId?:number;
      accessible:string;
 }
-
-
 interface ReceiveShareAdvanceSearchParam {
 
 }

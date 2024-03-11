@@ -37,7 +37,7 @@ export default () => {
                 itemIcon: <ArrowRightOutlined />,
                 onClick: () => setDetailState({ visible: { name: "MODAL", payload: record } })
             },
-            {
+            {  
                 key: "detail",
                 label: "Detail",
                 itemIcon: < InfoCircleOutlined />,
@@ -46,13 +46,13 @@ export default () => {
             },
             {
                 key: "2",
-                label: "Download",
+                label: "Download",   
                 itemIcon: <DownloadOutlined />,
                 disabled: (preview || record.attachment==null?true:false),
                 onClick: async () => {
                     // HistoryServiceAPI(requestAction).save({
                     //     instantId:record.document.id,
-                    //     action:"DOWNLOAD",
+                    //     action:"DOWNLOAD",   
                     //     actionType:"DOCUMENT",
                     //     remark:"download from share recipient"
                     // }).then(it=>{
@@ -120,26 +120,13 @@ export default () => {
     return (
         <>
             <TableView<ShareDTO, {searchValue:string}>
-
                 // hasCriteria={Object.values(Omit(advanceSearchParams, ['status'])).some((v) => v)}
                 cache
                 displayOnly
                 columns={[
-                    // {
-                    //     title:"Icon",
-                    //     width:50,
-                    //     render: (_, r) => (<>
-                    //         {
-                    //             formateFileType(r.attachment) =="EXCEL" && <FileExcelTwoTone /> ||
-                    //             formateFileType(r?.attachment) == "PDF" && <FilePdfTwoTone /> ||
-                    //             formateFileType(r?.attachment) == "IMAGE" && <FileImageTwoTone /> ||
-                    //             formateFileType(r?.attachment) == "WORD" && <FileWordTwoTone /> ||
-                    //             <FileUnknownTwoTone />
-                    //         }
-                    //     </>)
-                    // },
+                   
                     {
-                        title:"Name",
+                        title:"Document Name",
                         dataIndex:"docName",
                         sorter:"docName",
                         render:(_,r)=><Button type="link" onClick={()=>setDetailState({visible:{name:"MODAL", payload:r}})}>{r.document?.documentation?.docName}</Button>
@@ -171,11 +158,11 @@ export default () => {
                             </>)
                         }
                     },
-                    // {
-                    //     title:"Remark",
-                    //     sorter:"remark",
-                    //     dataIndex:"description"
-                    // },
+                    {
+                        title:"Remark",
+                        sorter:"remark",
+                        dataIndex:"description"
+                    },
 
                     {
                         render: (_, r) => (<Dropdown

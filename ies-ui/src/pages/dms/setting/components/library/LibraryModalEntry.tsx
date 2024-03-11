@@ -1,12 +1,11 @@
 import FormModalComp, { FormModalProps } from "@/components/FormModal";
 import { ProForm, ProFormDependency, ProFormSelect, ProFormText, ProFormTextArea } from "@ant-design/pro-components";
-import { LibraryCreate, LibraryDTO } from "./data";
+import { LibraryCreate } from "./data";
 import { useForm } from "antd/es/form/Form";
 import { useEffect } from "react";
 import { DepartmentServiceAPI } from "../department/service";
 import { simpleRequestActions } from "@/services/model";
 import { LibraryServiceAPI } from "./service";
-import { DataNode } from "@/pages/dms/folder/data";
 
 
 interface Props extends FormModalProps {
@@ -133,6 +132,5 @@ const LibraryModalEntry: React.FC<Props> = ({ onSave,isAdmin, code, libraryId, .
         </>
     )
 }
-
 
 export default LibraryModalEntry

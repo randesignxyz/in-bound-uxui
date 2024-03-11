@@ -9,9 +9,6 @@ export const userLogin = () =>{
     return data.then(it=>it)
 }
 
-
-
-
 const CoreServiceAction ={
     orgUnitList:():ServiceApiType<{}> =>({
         actionName:"list-org-unit",
@@ -39,6 +36,16 @@ const CoreServiceAction ={
         type:"LIST_QUERY",
         payload:param
     }),
+    pageVendor:(params:TableViewSearchParams<UserDataAdvanceSearchParam>):ServiceApiType<{searchValue?:string}>=>({
+        actionName:"page-vendor",
+        endpoint:"DMS",
+        type:"PAGING_QUERY",
+        payload: { ...params.criteria },
+        pagination: {
+          pageSize: params.pagination?.pageSize,
+          page: params.pagination?.current,
+        },
+    }),
     
     pageUserData:(params:TableViewSearchParams<UserDataAdvanceSearchParam>):ServiceApiType<{searchValue?:string}>=>({
         actionName:"page-user",
@@ -64,6 +71,7 @@ export const CoreServiceAPI = (requestActions: RequestActions)=>{
         saveFavorite:(data:Favorite)=>singleRequest(CoreServiceAction.saveFavorite(data))(requestActions),
         listLookupData:(params:LookupDataParam)=>singleRequest(CoreServiceAction.litLookupData(params))(requestActions) as Promise<LookupDataDTO[]>,
         page : (params: TableViewSearchParams<UserDataDTO>)=>singleRequest<UserDataDTO>(CoreServiceAction.pageUserData(params))(requestActions) as Promise<Paging<UserDataDTO>> ,
+        pageVendor : (params: TableViewSearchParams<UserDataAdvanceSearchParam>)=>singleRequest<VendorsDTO>(CoreServiceAction.pageVendor(params))(requestActions) as Promise<Paging<VendorsDTO>> ,
         tabNotification:() =>singleRequest<TableNotification>(CoreServiceAction.tabNotification()) (requestActions) as Promise<TableNotification>
     }
 }

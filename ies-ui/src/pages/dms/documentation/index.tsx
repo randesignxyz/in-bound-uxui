@@ -10,7 +10,6 @@ export default () => {
         return (
           view == 'detail' && (
             <DocumentationDetail id={parseInt(`${id}`)} />
-
           ) 
         );
       }}

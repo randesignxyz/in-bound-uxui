@@ -1,21 +1,15 @@
 import FormModalComp, { FormModalProps } from "@/components/FormModal"
-import { ProForm, ProFormDatePicker, ProFormDigit, ProFormSelect, ProFormText, ProFormTextArea } from "@ant-design/pro-components"
+import { ProForm } from "@ant-design/pro-components"
 import { useForm } from "antd/lib/form/Form"
-import { ContractDTO } from "./data"
-import { Button, Col, Divider, Input, InputRef, Row, Space } from "antd"
-import { CompanySerivceAPI } from "./company/service"
+import { ContractCreate, ContractDTO } from "./data"
+import { InputRef } from "antd"
 import { simpleRequestActions } from "@/services/model"
-import { CoreServiceAPI } from "../service"
 import { useEffect, useRef, useState } from "react"
 import DocFileUploader from "../attachment/DocFileUploader"
-import moment from "moment"
-import { DepartmentServiceAPI } from "../setting/components/department/service"
-import { Flex } from "antd/lib"
-import { DocCreate } from "../documentation/data"
-import { PlusOutlined } from "@ant-design/icons"
+import { DocumentationCreate } from "../documentation/data"
 
 interface Props extends FormModalProps {
-    onSave: (data: DocCreate) => void;
+    onSave: (data: ContractCreate) => void;
     data?: ContractDTO
 }
 
@@ -23,7 +17,7 @@ const ContractFormEntry: React.FC<Props> = ({ onSave, data, ...props }) => {
     const requestAction = simpleRequestActions();
     const inputRef = useRef<InputRef>(null);
     const [name, setName] = useState('');
-    const [form] = useForm<DocCreate>();
+    const [form] = useForm<DocumentationCreate>();
     const onNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setName(event.target.value);
     };
@@ -42,7 +36,7 @@ const ContractFormEntry: React.FC<Props> = ({ onSave, data, ...props }) => {
             title="Contract Infomation"
             onSubmit={async () => {
                 const dataForm = await form.validateFields();
-                const entry:DocCreate = {
+                const entry:DocumentationCreate = {
                     // ...dataForm,
                     id: data?.id,   
                     libraryId:1,
@@ -60,7 +54,7 @@ const ContractFormEntry: React.FC<Props> = ({ onSave, data, ...props }) => {
                 form={form}
                 submitter={false}
             >
-                <Row gutter={12}>
+                {/* <Row gutter={12}>
                     <Col span={8}>
                         <ProFormSelect
                             name={"company"}
@@ -269,6 +263,26 @@ const ContractFormEntry: React.FC<Props> = ({ onSave, data, ...props }) => {
                         />
                     </Col>
                 </Row>
+                <Row gutter={16}>
+                    <Col span={6}>
+                        <ProFormText
+                            label="Warranty"
+                            name={"warranty"}
+                        />
+                    </Col>
+                    <Col span={6}>
+                        <ProFormText
+                            label="Penalty Clause"
+                            name={"Penalty Clause"}
+                        />
+                    </Col>
+                    <Col span={6}>
+                        <ProFormText
+                            label="Term of Payment"
+                            name={"term_payment"}
+                        />
+                    </Col>
+                </Row> */}
 
 
                 <DocFileUploader

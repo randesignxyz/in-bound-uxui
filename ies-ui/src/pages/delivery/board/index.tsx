@@ -289,7 +289,7 @@ export default () => {
       }
     },
     {
-      key: 'released', label: "Release", main: true, icon: <StopOutlined />, onClick: (id) => {
+      key: 'released', label: "Release", main: true, icon: <StopOutlined />, onClick: () => {
         onReleaseHandler(item?.id, async () => {
           if (from == 'DETAIL') {
             await loadDetail(selected.id)
@@ -384,7 +384,7 @@ export default () => {
 
   return <PageContainer breadcrumb={undefined}
     title={'Delivery Board'}
-    
+
     onBack={() => history.back()}>
 
     {/* List view */}

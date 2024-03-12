@@ -726,9 +726,9 @@ export default () => {
           </DropdownButton>
         }
 
-        if (itemToClaim) return <Button 
-          icon={<PlayCircleOutlined />} loading={requestActions.request?.loading || false} 
-          onClick={()=> {
+        if (itemToClaim) return <Button
+          icon={<PlayCircleOutlined />} loading={requestActions.request?.loading || false}
+          onClick={() => {
             onClaimHandler(itemToClaim?.instanceId, async () => {
               await loadData()
             })
@@ -836,10 +836,10 @@ export default () => {
           } size='small' defaultValue={statusFilter}>
             <CheckCard size='small' style={{ width: 150 }} value={HOLD} avatar={<PauseCircleOutlined />} title="Hold" subTitle={<Badge count={statusCount?.find(it => it.status == HOLD)?.count} />} />
             <CheckCard size='small' style={{ width: 200 }} value={CHANGE_REQUEST} avatar={<SwapOutlined />} title="Change Request" subTitle={<Badge count={statusCount?.find(it => it.status == CHANGE_REQUEST)?.count} />} />
-            <CheckCard size='small' style={{ width: 150 }} value={PENDING} avatar={<ClockCircleOutlined spin />} title="Pending" subTitle={<Badge count={statusCount?.find(it => it.status == PENDING)?.count} />} />
+            <CheckCard size='small' style={{ width: 150 }} value={PENDING} avatar={<ClockCircleOutlined spin />} title="Pending" subTitle={<Badge style={{ backgroundColor: '#52c41a' }} count={statusCount?.find(it => it.status == PENDING)?.count} />} />
             <CheckCard size='small' style={{ width: 150 }} value={PICKING} avatar={<ClockCircleOutlined spin />} title="Picking" subTitle={<Badge count={statusCount?.find(it => it.status == PICKING)?.count} />} />
             <CheckCard size='small' style={{ width: 150 }} value={LOADING} avatar={<SyncOutlined spin />} title="Loading" subTitle={<Badge count={statusCount?.find(it => it.status == LOADING)?.count} />} />
-            <CheckCard size='small' style={{ width: 150 }} value={LOADED} avatar={<CheckCircleOutlined />} title="Loaded" subTitle={<Badge count={statusCount?.find(it => it.status == LOADED)?.count} />} />
+            <CheckCard size='small' style={{ width: 150 }} value={LOADED} avatar={<CheckCircleOutlined />} title="Loaded" subTitle={<Badge style={{ backgroundColor: '#52c41a' }} count={statusCount?.find(it => it.status == LOADED)?.count} />} />
           </CheckCard.Group>}
         >
           <ProList<AllocatedLoadingDock>

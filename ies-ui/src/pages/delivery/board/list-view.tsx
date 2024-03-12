@@ -395,11 +395,11 @@ export default ({
                     extra={<CheckCard.Group onChange={values => setStatusFilter(values as string)} size='small' defaultValue={statusFilter}>
                         <CheckCard style={{ width: 110 }} size='small' value={HOLD} avatar={<PauseCircleOutlined />} title="Hold" subTitle={<Badge count={statusCount.find(it => it.status == HOLD)?.count} />} />
                         <CheckCard style={{ width: 140 }} size='small' value={NONE_DN} avatar={<StopOutlined />} title="None DN" subTitle={<Badge count={statusCount.find(it => it.status == NONE_DN)?.count} />} />
-                        <CheckCard style={{ width: 170 }} size='small' value={DN_ASSIGNED} avatar={<CheckCircleOutlined />} title="DN Assigned" subTitle={<Badge count={statusCount.find(it => it.status == DN_ASSIGNED)?.count} />} />
-                        <CheckCard style={{ width: 180 }} size='small' value={TRUCK_LOADING} avatar={<HourglassOutlined />} title="Truck Loading" subTitle={<Badge count={statusCount.find(it => it.status == TRUCK_LOADING)?.count} />} />
+                        <CheckCard style={{ width: 170 }} size='small' value={DN_ASSIGNED} avatar={<CheckCircleOutlined />} title="DN Assigned" subTitle={<Badge style={{ backgroundColor: '#52c41a' }} count={statusCount.find(it => it.status == DN_ASSIGNED)?.count} />} />
+                        <CheckCard style={{ width: 180 }} size='small' value={TRUCK_LOADING} avatar={<HourglassOutlined />} title="Truck Loading" subTitle={<Badge style={{ backgroundColor: '#52c41a' }} count={statusCount.find(it => it.status == TRUCK_LOADING)?.count} />} />
                         <CheckCard style={{ width: 210 }} size='small' value={NONE_DOC} avatar={<StopOutlined />} title="Docs not Assigned" subTitle={<Badge count={statusCount.find(it => it.status == NONE_DOC)?.count} />} />
-                        <CheckCard style={{ width: 180 }} size='small' value={DOC_ASSIGNED} avatar={<CheckCircleOutlined />} title="Docs Assigned" subTitle={<Badge count={statusCount.find(it => it.status == DOC_ASSIGNED)?.count} />} />
-                        <CheckCard style={{ width: 180 }} size='small' value={TRIP_STARTED} avatar={<CheckCircleOutlined />} title="Trip Started" subTitle={<Badge count={statusCount.find(it => it.status == TRIP_STARTED)?.count} />} />
+                        <CheckCard style={{ width: 180 }} size='small' value={DOC_ASSIGNED} avatar={<CheckCircleOutlined />} title="Docs Assigned" subTitle={<Badge style={{ backgroundColor: '#52c41a' }} count={statusCount.find(it => it.status == DOC_ASSIGNED)?.count} />} />
+                        <CheckCard style={{ width: 180 }} size='small' value={TRIP_STARTED} avatar={<CheckCircleOutlined />} title="Trip Started" subTitle={<Badge style={{ backgroundColor: '#52c41a' }} count={statusCount.find(it => it.status == TRIP_STARTED)?.count} />} />
                         <CheckCard style={{ width: 180 }} size='small' value={SHIPPING_CHANGED} avatar={<ExclamationCircleOutlined />} title="Ship. Changed" subTitle={<Badge count={statusCount.find(it => it.status == SHIPPING_CHANGED)?.count} />} />
                     </CheckCard.Group>}
                 >

@@ -45,7 +45,6 @@ const IssueDNModal: React.FC<Props> = ({ cb, requestActions, itemDetail, ...prop
     const [truckChanging, setTruckChanging] = useState(false)
     const [driverList, setDriverList] = useState<Driver[]>()
     const [trucks, setTrucks] = useState<Truck[]>()
-    const [showTotalPickedAmount, setShowTotalPickedAmount] = useState(true)
     const [autoSearch, setAutoSearch] = useState(0)
 
     const [form] = useForm<{

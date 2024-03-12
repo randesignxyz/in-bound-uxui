@@ -3,11 +3,11 @@ import { QueuePaths } from ".."
 import ListView from "./ListView"
 
 export default () => {
-    return <CrudWrapper baseURL={QueuePaths.setting} >
+    return <CrudWrapper baseURL={QueuePaths.setting} title="Queque" >
         {(view) => {
             switch (view) {
                 case 'list':
-                    return <ListView/>
+                    return <ListView />
                 default:
                     throw Error('Not supported')
             }

@@ -104,28 +104,30 @@ export const LoadingParams = {
     docDate: Moment,
     shift: string,
     deliveryIds: number[],
-    items: {itemCode: string, qty: number}[],
+    items: { itemCode: string, qty: number }[],
     whsCode?: string,
     remarks?: string,
     driverId?: number,
     licensePlate?: string,
     modified?: boolean,
+    ownedTruckLoading?: boolean
   ): ServiceApiType<{
     id: number;
     docDate: Moment;
     shift: string;
     deliveryIds: number[];
-    items: {itemCode: string, qty: number}[],
+    items: { itemCode: string, qty: number }[],
     whsCode?: string;
     remarks?: string;
     driverId?: number;
     licensePlate?: string;
     modified?: boolean;
+    ownedTruckLoading?: boolean;
   }> => ({
     type: 'EXEC',
     endpoint: 'DELIVERY',
     actionName: 'assigned-picking-slip',
-    payload: { id, docDate, shift, deliveryIds, items, whsCode, remarks, driverId, licensePlate, modified },
+    payload: { id, docDate, shift, deliveryIds, items, whsCode, remarks, driverId, licensePlate, modified, ownedTruckLoading },
   }),
 
   fetchLoadingItem: (id: number): ServiceApiType<{ id: number }> => ({
@@ -151,9 +153,9 @@ export const LoadingParams = {
 
   fetchLoadedDetail: (
     id: number,
-    driverId?: number, 
-    licensePlate?: string, 
-    deliveryDate?: Moment, 
+    driverId?: number,
+    licensePlate?: string,
+    deliveryDate?: Moment,
     shift?: string,
     remarks?: string,
   ): ServiceApiType<{

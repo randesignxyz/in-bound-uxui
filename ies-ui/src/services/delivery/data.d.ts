@@ -23,7 +23,7 @@ export interface LoadingBayListItem {
   code: string;
   name: string;
   status: string;
-  warehouse?: {code: string};
+  warehouse?: { code: string };
   description?: string;
   priority?: number;
   createdBy: string;
@@ -74,7 +74,7 @@ export interface LoadingDock {
   description?: string;
   combinedLoadingDocks?: LookupDataItem[];
   createdBy: string;
-  truckLoadingCapacities?: {id: number}[];
+  truckLoadingCapacities?: { id: number }[];
 }
 
 export interface LoadingCapacityListItem {
@@ -90,6 +90,7 @@ export interface QueueListItem {
   resetNum?: number;
   dailyReset: boolean;
   overwriteAssigned: boolean;
+  ownedTruckLoading?: boolean;
   qrCode: QRCode;
   transportSources: TransportSource[];
   loadingDocks: LoadingDock[];
@@ -99,7 +100,7 @@ export interface QueueListItem {
   priority?: number;
   lastModifiedBy?: string;
   lastModifiedDate?: Moment;
-  warehouse?: {code: string};
+  warehouse?: { code: string };
 }
 
 export interface SaveQueue {
@@ -111,6 +112,7 @@ export interface SaveQueue {
   transportSourceIds: number[];
   loadingDockIds: number[];
   dailyReset: boolean;
+  ownedTruckLoading?: boolean;
   priority?: number;
   overwriteAssigned: boolean;
   description?: string;
@@ -126,7 +128,9 @@ export interface Queue {
   transportSources: TransportSource[];
   loadingDocks: LoadingDock[];
   dailyReset: boolean;
+  warehouseId?: number;
   overwriteAssigned: boolean;
+  ownedTruckLoading: boolean;
   description?: string;
   priority?: number;
 }
@@ -244,7 +248,7 @@ export interface TruckListItem {
   code: string;
   name: string;
   isSideDoor?: boolean;
-  loadingCapacity?: {name: string};
+  loadingCapacity?: { name: string };
   licensePlate: string;
   company: Company;
   createdBy: string;
@@ -270,7 +274,7 @@ export interface Truck {
   code: string;
   name: string;
   company: Company;
-  loadingCapacity?: {id: number, name: string};
+  loadingCapacity?: { id: number, name: string };
   isSideDoor?: boolean;
   licensePlate: string;
   description?: string;
@@ -503,7 +507,7 @@ export interface Loaded {
   remarks?: string;
   items: LoadedItem[];
   newItems?: LoadedItem[];
-  
+
 }
 
 export interface LoadedItem {
@@ -519,6 +523,7 @@ export interface LoadedItem {
 export interface LoadingItem {
   pickingItems: PickingSlipItem[];
   deliveryNoteListItems: DeliveryNoteListItem[];
+  ownedTruckLoading?: boolean;
 }
 
 export interface DeliveryInfo {
@@ -579,11 +584,11 @@ export interface cashCollectionRs {
   paidAmount: number;
   paymentMethod: string;
   bank?: string;
-  remarks?: string; 
+  remarks?: string;
   ref?: string;
   validDate?: Moment;
   images?: string[];
-  
+
 }
 
 
@@ -615,10 +620,10 @@ export interface FreightDetail {
   resolved: boolean?,
   deliveryNotes: DeliveryNote[];
   invoices: CheckoutInvoice[];
-  itemReturns:  DeliveryNoteItem[];
+  itemReturns: DeliveryNoteItem[];
   checkIn?: CheckInRs;
   checkout?: CheckoutRs;
-  
+
 }
 
 export interface DeliveryNote {
@@ -779,7 +784,7 @@ export interface AddedInvoice {
 export interface AssignDocParam {
   deliveryId: number;
   deliveryDocEntry: number[];
-  reassigned?:boolean;
+  reassigned?: boolean;
   collectedInvoices: {
     docEntry: number;
     collected: boolean;

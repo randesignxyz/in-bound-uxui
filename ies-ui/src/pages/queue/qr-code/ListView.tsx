@@ -11,7 +11,7 @@ import { message, Modal, Spin } from 'antd';
 import { useState } from 'react';
 import QRCodeEntryModal from './EntryForm';
 
-export const QRCodeListView: React.FC<TableViewProps<QRCodeListItem>> = ({}) => {
+export const QRCodeListView: React.FC<TableViewProps<QRCodeListItem>> = ({ }) => {
   const [state, setSate] = useState<{
     visible?: { name: 'modal'; type: 'ADD' | 'Edit'; payload?: QRCode };
   }>({});
@@ -75,9 +75,9 @@ export const QRCodeListView: React.FC<TableViewProps<QRCodeListItem>> = ({}) => 
           },
           onRequest: (criteria, pagination, sort) =>
             onRequestHandler({
-              criteria,
+              criteria: { ...criteria, sort: sort },
               pagination,
-              sort,
+
             }),
         }}
       />

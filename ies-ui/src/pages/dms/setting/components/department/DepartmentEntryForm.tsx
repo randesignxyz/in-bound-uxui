@@ -13,16 +13,8 @@ interface Props extends FormModalProps {
 const DepartmentEntryFormModal :React.FC<Props> =({ onSave, data ,...props}:Props)=>{
     const requestAction = simpleRequestActions();
     const [form]  =useForm<DeparmentCreate>();
-   
-    const loadData = async()=>{
-    //   const sas =await AccountServiceAPI(requestAction).findUsers();
-    //   console.log(sas);
-      
-    }
-    
 
     useEffect(()=>{
-        loadData();
         form.resetFields();
         props.open && form.setFieldsValue({...data,buId:data?.buId?.id });
         

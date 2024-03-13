@@ -120,7 +120,6 @@ export default ({ onSearch, activeKey, moveDoc, onMove,setLibrary , ...props }: 
     };
     const loadData = async () => {
         const data = await LibraryServiceAPI(requestAction).list({
-            // isAdmin: access.canAccessDMSAdminMenu,
 
         });
         setFolder(data?.filter(it => it.type == "own")[0]);
@@ -146,24 +145,6 @@ export default ({ onSearch, activeKey, moveDoc, onMove,setLibrary , ...props }: 
 
         }
     }>();
-
-    const [libraryState, setLibraryState] = useState<{
-        visible?: {
-            name: "MODAL";
-            type?: "ADD" | "EDIT";
-            code: string;
-            libraryId?: number;
-            data?: DataNode
-        }
-    }>();
-
-    const [teamShareState, setTeamShareState] = useState<{
-        visible?: {
-            name: "MODAL";
-            type?: "ADD" | "EDIT";
-        }
-    }>();
-
     const [contractState, setContractState] = useState<{
         visible?: {
             name: "MODAL";
@@ -174,9 +155,6 @@ export default ({ onSearch, activeKey, moveDoc, onMove,setLibrary , ...props }: 
         }
     }>();
 
-
-
-
     useEffect(() => {
         testGetFolder();
        
@@ -184,64 +162,7 @@ export default ({ onSearch, activeKey, moveDoc, onMove,setLibrary , ...props }: 
 
 
     const itemsAction = (recrd?: DataNode): MenuProps["items"] => {
-        // if (recrd?.code == "LIBRARY") {
-        //     return [
-        //         {
-        //             key: "2",
-        //             label: "New Folder",
-        //             icon: <FolderAddOutlined />,
-        //             onClick: () => {
-        //                 setFolderState({
-        //                     visible: {
-        //                         name: 'MODAL',
-        //                         type: 'ADD',
-        //                         code: "FOLDER",
-        //                         data: recrd,
-        //                         libraryId: recrd?.code == "LIBRARY" ? parseInt(recrd.key) : 0
-        //                     }
-        //                 })
-        //             }
-        //         },
-        //         {
-        //             key: "3",
-        //             label: "Rename Folder",
-        //             icon: <EditOutlined />,
-        //             onClick: () => {
-        //                 setLibraryState({
-        //                     visible: {
-        //                         code: "LIBRARY",
-        //                         name: "MODAL",
-        //                         type: "EDIT",
-        //                         data: recrd,
-        //                         libraryId: recrd?.code == "LIBRARY" ? parseInt(recrd.key) : 0
-        //                     }
-        //                 })
-        //             }
-        //         },
-        //     ]
-        // }
-        // else {
         return [
-            // {
-            //     key: "1",
-            //     label: "Documents",
-            //     icon: <FileAddOutlined />,
-            //     disabled: recrd?.code == "LIBRARY" ? true : false,
-            //     children: [
-            //         {
-            //             key: "1-2",
-            //             icon: <FileAddOutlined />,
-            //             label: "Create Document",
-            //             onClick: () => setDocumentState({ visible: { name: "MODAL", type: "ADD", folderId: parseInt(recrd?.key || ""), division: "DOC", libraryId: recrd?.libraryId } })
-            //         },
-            //         {
-            //             key: "1-1",
-            //             label: "Create Contract",
-            //             icon: <AuditOutlined />,
-            //             onClick: () => setDocumentState({ visible: { name: "MODAL", type: "ADD", folderId: parseInt(recrd?.key || ""), division: "CONTRACT", libraryId: recrd?.libraryId } })
-            //         }
-            //     ]
-            // },
             {
                 key: "2",
                 label: "New Folder",
@@ -295,91 +216,31 @@ export default ({ onSearch, activeKey, moveDoc, onMove,setLibrary , ...props }: 
                 }
             },
         ];
-        // }
     }
 
-
-    
     return (
         <>
             <Spin spinning={requestAction.request?.loading}>
-                {/* {!moveDoc && (<>
-                    {!folder && (
-                        <Button
-                            
-                            style={{ width: "100%", margin: "10px 0" }}
-                            icon={<PlusOutlined />}
-                            // onClick={() => setLibraryState({ visible: { name: 'MODAL', type: 'ADD', code: "own" } })}
-                            onClick={()=>{
-                                setFolderState({
-                                    visible: {
-                                        name: 'MODAL',
-                                        type: 'ADD',
-                                        code: "LIBRARY",
-                                        // data: recrd,
-                                        // libraryId: recrd?.code == "LIBRARY" ? parseInt(recrd.key) : 0
-                                    }
-                                })
-                            }}
-                        >Your Own Library</Button>
-                    )}
-                </>)} */}
-
-
+             
                 {treeFolderList.length &&
                     <DirectoryTree
                         blockNode
                         key={"doprdown-1"}
-                        // onExpand={(_, info) => {
-                        //     console.log(_);
-
-                        //     return onExpand(info.node)
-
-                        // }}
                         defaultExpandAll
                         selectedKeys={[parseInt(params["*"] || "").toString()]}
                         expandAction={"doubleClick"}
-                        // defaultExpandAll={true || !moveDoc}
-                        // autoExpandParent
-                        // defaultExpandParent
                         onSelect={(e, { selectedNodes }) => {
                             setLibrary(selectedNodes[0].libraryId);
-                            // console.log(selectedNodes);
-                            
                             history.push(`${DMSPaths.workspace}/library/${e[0]}`)
-                            // history.push(`${DMSPaths.workspace}/library/${e[0]}`)
 
-                            // if (selectedNodes[0]?.code == "LIBRARY") {
-                            //     history.push(`${DMSPaths.workspace}/library/${selectedNodes[0]?.title}`)
-                            // }
-                            // if (selectedNodes[0]?.code == "LIBRARY") {
-                            //     onSearch({ library: parseInt(selectedNodes[0]?.key), folderType: selectedNodes[0]?.code })
-                            // }
-                            // else {
-                            // }
                             onSearch({
                                 library: selectedNodes[0]?.libraryId,
                                 folderId: parseInt(selectedNodes[0]?.key),
                                 folderType: selectedNodes[0]?.code
                             });
-                            // console.log(selectedNodes[0]);
-
-
                         }}
-                        // treeData={treeData}
                         treeData={treeFolderList}
-                        // expandedKeys={treeFolderList.filter(o=>o.children).map(o=>o.key) || []}
                         defaultExpandedKeys={treeFolderList.map(o => o.key) || []}
-
-                        onExpand={(e) => {
-                            // console.log(e);
-                            // setExpandedKeysState((o)=>[ e.toString()])
-                        }}
-                        // onClick={(e) => {
-                        //         console.log(e);
-
-                        //     // history.push(`${DMSPaths.workspace}/library`)
-                        // }}
                         onDrop={(info) => {
                             const drag = info.dragNode.key;
                             const node = info.node.key;
@@ -430,23 +291,6 @@ export default ({ onSearch, activeKey, moveDoc, onMove,setLibrary , ...props }: 
                     />
                 }
             </Spin>
-
-            {/* < LibraryModalEntry
-                open={libraryState?.visible?.name === "MODAL"}
-                onCancel={() => setLibraryState(v => ({ ...v, visible: undefined }))}
-                code={libraryState?.visible?.code}
-                isAdmin={false}
-                libraryId={libraryState?.visible?.libraryId}
-                onSave={async (data: LibraryCreate) => {
-                    const response = await LibraryServiceAPI(requestAction).save(data) as ({
-                        data: string;
-                        message: string;
-                    });
-                    message.success("Success")
-                    actionRef.current?.reloadAndRest?.();
-                    setLibraryState((v) => ({ ...v, visible: undefined }));
-                }}
-            /> */}
             < DocumentModalForm
                 open={documentModalState?.visible?.name === "MODAL"}
                 type={documentModalState?.visible?.type}
@@ -480,10 +324,7 @@ export default ({ onSearch, activeKey, moveDoc, onMove,setLibrary , ...props }: 
                     actionRef.current?.reloadAndRest?.();
                 }}
             />
-            {/* < TeamModalForm
-                open={teamShareState?.visible?.name == "MODAL"}
-                onCancel={() => setTeamShareState(v => ({ ...v, visible: undefined }))}
-            /> */}
+
             <ContractFormEntry
                 open={contractState?.visible?.name == "MODAL"}
                 onSave={() => {

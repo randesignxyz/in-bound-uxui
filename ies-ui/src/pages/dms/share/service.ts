@@ -23,7 +23,6 @@ const ShareAction ={
         type:"FETCH_QUERY",
         payload:{id}
     }),
-
     list:(id?:number):ServiceApiType<{id?:number}> =>({
         actionName:"list-share",
         endpoint:"DMS",

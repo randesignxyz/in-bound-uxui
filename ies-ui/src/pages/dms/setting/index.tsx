@@ -7,10 +7,9 @@ import LibraryViewList from "./components/library/LibraryViewList";
 import UserGroupList from "./teams/TeamsViewList";
 import DocumentTypeView from "./components/documentType/DocumentTypeView";
 import { PageContainer } from "@ant-design/pro-components";
-
+import OtherView from "./other/OtherView";
 
 interface Props {
-
 }
 
 export default ({ }: Props) => {
@@ -23,8 +22,8 @@ export default ({ }: Props) => {
       children: <DepartmentListView actionKey={view} />
     },
     {
-      key: "usergroup",
-      label: "User Group",
+      key: "teams",
+      label: "Teams",
       children: <UserGroupList actionKey={view} />
     },
     {
@@ -41,7 +40,12 @@ export default ({ }: Props) => {
       key: "library",
       label: "Libraries",
       children: <LibraryViewList actionKey={view} />
-    }
+    },
+    // {
+    //   key: "other",
+    //   label: "Others",
+    //   children: <OtherView actionKey={view} />
+    // }
   ];
 
   return (
@@ -54,16 +58,13 @@ export default ({ }: Props) => {
         <Tabs
           onChange={(e) => {
             history.push(`${DMSPaths.setting}/${e}`)
-
           }}
           items={items}
           key={"tab"}
           itemRef="tab"
-
           activeKey={view}
         />
       </PageContainer>
-
     </>
   )
 }

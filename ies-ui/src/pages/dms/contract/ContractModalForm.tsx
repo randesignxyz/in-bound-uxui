@@ -9,7 +9,6 @@ interface Props extends FormModalProps{
 interface ContractEntry{
 
 }
-
 const ContractModalForm:React.FC<Props> = ({onSave, ...props}) =>{
 
 

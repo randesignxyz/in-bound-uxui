@@ -1,11 +1,5 @@
 import { Moment } from "moment";
 
-
-
-interface ContractEntry{
-
-}
-
 interface ContractRequestEntry{
     companyName:number;
     description:string;
@@ -16,14 +10,12 @@ interface ContractRequestEntry{
     postalCode?:string;
     state?:string;
 }
-
 interface ContractRequestDTO{
     companyName:Compa
 }
 interface ContractRequestAdvanceSearch{
     
 }
-
 interface ContractDTO {
      id:number,
      contractName:string,
@@ -46,7 +38,6 @@ interface ContractDTO {
      vendorName?:string;
      vendorCode?:string;
 }
-
 interface ContractCreate{
     id?:number,
     contactName?:string,
@@ -70,7 +61,6 @@ interface ContractCreate{
     vendorName?:string;
     vendorCode?:string;
 }
-
 interface ContractTermCreate{
      id?:numner,
      termType?:string,
@@ -81,15 +71,12 @@ interface ContractTermCreate{
      noticePeriod?:string
      noticeDate?:Moment.moment,
 }
-
 interface ContractVendorCreate{
      id?:number,
      vendorName?:string,
      vendorCode?:string,
      phone?:string,
 }
-
-
 interface ContractRequestCreate{
      id?: number,
      companyName:number,
@@ -99,7 +86,6 @@ interface ContractRequestCreate{
      requestType :string,
      contract:ContractCreate
 }
-
 interface ContractRequestDTO{
     id?: number,
     companyName:number,

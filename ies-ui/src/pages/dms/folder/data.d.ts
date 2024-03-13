@@ -46,8 +46,6 @@ interface FolderAdvanceSearch {
     code?:string;
 }
 
-
-// display as folder 
 interface DataNode {
     title?: string;
     key: string;

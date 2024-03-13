@@ -1,5 +1,5 @@
 import FormModalComp, { FormModalProps } from "@/components/FormModal";
-import { ProForm, ProFormCascader, ProFormTreeSelect } from "@ant-design/pro-components";
+import { ProForm, ProFormTreeSelect } from "@ant-design/pro-components";
 import React, { useEffect, useState } from "react";
 import { FolderServiceAPI } from "../folder/service";
 import { simpleRequestActions } from "@/services/model";
@@ -11,8 +11,6 @@ interface Props extends FormModalProps {
     data?:MoveDocParams
 }
 
-
-  
 const MoveDocumentModal: React.FC<Props> = ({ onSave,data, ...props }) => {
     const requestAction = simpleRequestActions();
     const [form] = useForm<MoveDocParams>()
@@ -25,18 +23,14 @@ const MoveDocumentModal: React.FC<Props> = ({ onSave,data, ...props }) => {
             children:nest(items, item.id)
         }))
       }
-
       const [value, setValue] = useState<string>();
       const onChange = (newValue: string) => {
         setValue(newValue);
         
       };
-
       useEffect(()=>{
         form.resetFields();
       } ,[props.open]);
-    
-
       
     return (
         <>
@@ -51,7 +45,6 @@ const MoveDocumentModal: React.FC<Props> = ({ onSave,data, ...props }) => {
                         docId:data?.docId
                     }
                     onSave(entry);
-                        
                 }}
             >
                 <ProForm
@@ -68,7 +61,6 @@ const MoveDocumentModal: React.FC<Props> = ({ onSave,data, ...props }) => {
                             const flatData = data.map(o => ({ id: o.id, parentId: o.parentId, label: o.name, value:o.id }));
                             return nest(flatData)
                         }}
-                        
                         fieldProps={{
                             onSearch:onChange,
                             filterTreeNode:true,
@@ -80,10 +72,8 @@ const MoveDocumentModal: React.FC<Props> = ({ onSave,data, ...props }) => {
                             onChange:(e)=>{
                                 setValue(e.value)
                             }
-                            
                         }}
                     />
-                  
                 </ProForm>
             </FormModalComp>
         </>

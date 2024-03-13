@@ -1,12 +1,11 @@
 import { DeleteOutlined, EditOutlined, PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import { ActionType, ProList } from "@ant-design/pro-components"
-import { Button, Input, Tag } from "antd";
+import { Button, Tag } from "antd";
 import { useEffect, useRef, useState } from "react";
 import DocumentTypeModalForm from "./DocumentTypeModalForm";
 import { DocumentTypeServiceAPI } from "./service";
 import { simpleRequestActions } from "@/services/model";
 import { Modal, message } from "antd/lib";
-import Search from "antd/es/input/Search";
 
 interface Props {
     actionKey?: string
@@ -66,8 +65,6 @@ export default ({ actionKey }: Props) => {
                         total: data.total
                     });
                 }}
-                // dataSource={dataSource}
-                
                 metas={{
                     title: {
                         dataIndex: "name"

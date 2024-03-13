@@ -48,7 +48,6 @@ const alertMessage = (date: Moment, period?: number) => {
         />
     }
 }
-
 const DocumentationDetail: React.FC<Props> = ({ id, share }) => {
 
     const requestAction = simpleRequestActions();
@@ -91,8 +90,6 @@ const DocumentationDetail: React.FC<Props> = ({ id, share }) => {
         loadData();
     }, [id]);
 
-
-
     return (<>
         <Spin spinning={requestAction.request?.loading}>
             <PageContainer
@@ -108,21 +105,22 @@ const DocumentationDetail: React.FC<Props> = ({ id, share }) => {
                 ]}
             >
                 {alertMessage(detail?.term.expiryDate)}
-                {
-                    detail?.division == "DOC" && (
-                        <DocumentDetail
-                            document={detail}
-                            actionRef={actionRef}
-                        />
-                    ) ||
-                    (
-                        <ContractViewDetail
-                            document={detail}
-                            title=""
-                            actionRef={actionRef}
-                        />
-                    )
-                }
+                {detail && (<>
+                    {
+                        detail?.division == "DOC" && (
+                            <DocumentDetail
+                                document={detail}
+                                actionRef={actionRef}
+                            />
+                        ) ||
+                        (
+                            <ContractViewDetail
+                                document={detail}
+                                actionRef={actionRef}
+                            />
+                        )
+                    }
+                </>)}
 
                 <Tabs
                     defaultActiveKey={tabState}
@@ -142,7 +140,7 @@ const DocumentationDetail: React.FC<Props> = ({ id, share }) => {
                             label: "Attachments",
                             children: <AttachmentView
                                 docId={detail?.id}
-                                tabState={tabState ||Math.random().toString()}
+                                tabState={tabState || Math.random().toString()}
                                 accessKey={share?.accessible}
                             />
                         },
@@ -180,7 +178,7 @@ const DocumentationDetail: React.FC<Props> = ({ id, share }) => {
                         service.save(data);
                         setState((v) => ({ visible: undefined }));
                         message.success("Success!");
-
+                        actionRef.current?.reload?.();
                     }
                 });
 

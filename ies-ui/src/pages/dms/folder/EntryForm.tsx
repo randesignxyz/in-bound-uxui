@@ -1,11 +1,10 @@
 import FormModalComp, { FormModalProps } from "@/components/FormModal"
-import { ProForm, ProFormDependency, ProFormSelect, ProFormText, ProFormTextArea } from "@ant-design/pro-components"
+import { ProForm, ProFormSelect, ProFormText, ProFormTextArea } from "@ant-design/pro-components"
 import { useForm } from "antd/lib/form/Form"
 import { simpleRequestActions } from "@/services/model"
 import { useEffect } from "react"
 import { FolderCreate, DataNode, FolderDTO } from "./data"
 import { DepartmentServiceAPI } from "../setting/components/department/service"
-import { useParams } from "@umijs/max"
 
 interface Props extends FormModalProps {
     onSave: (data: FolderCreate) => void;
@@ -13,21 +12,17 @@ interface Props extends FormModalProps {
     type?: string,
     code?: string,
     libraryId?: string;
-    libraryData?:FolderDTO
+    libraryData?: FolderDTO
 }
 
-const FolderEntryForm: React.FC<Props> = ({ code, libraryId,libraryData, data, onSave, type, ...props }: Props) => {
+const FolderEntryForm: React.FC<Props> = ({ code, libraryId, libraryData, data, onSave, type, ...props }: Props) => {
     const [form] = useForm<FolderCreate>();
     const requestAction = simpleRequestActions();
-    
-    
     useEffect(() => {
         type === "EDIT" && data && form.setFieldsValue({
             name: data?.title,
             id: parseInt(data?.key || "")
         });
-
-
         !data && form.resetFields();
     }, [props.open]);
     return (
@@ -38,45 +33,21 @@ const FolderEntryForm: React.FC<Props> = ({ code, libraryId,libraryData, data, o
             onSubmit={async () => {
                 const dataForm = await form.validateFields();
                 const id = type == "ADD" ? undefined : parseInt(data?.key || "");
-                    
                 const entry = {
                     ...dataForm,
                     parentId: parseInt(data?.key || ""),
                     code: code,
-                    libraryId:parseInt( libraryId||""),
+                    libraryId: parseInt(libraryId || ""),
                     id: id
                 }
                 onSave(entry);
-
-                // if (libraryId){
-                //     const entry = {
-                //                 ...dataForm,
-                //                 parentId: 0,      
-                //                 code:code,
-                //                 libraryId:libraryId,
-                //                 id:id
-                //             }
-                //             onSave(entry)
-                // }
-                // else{
-                //     const entry = {
-                //                 ...dataForm,
-                //                 parentId: parseInt(data?.key ||""),
-                //                 code:code,
-                //                 libraryId:undefined,
-                //                 id:id
-                //             }
-                //             onSave(entry)
-                // }
             }}
         >
             <ProForm
                 submitter={false}
                 form={form}
             >
-
                 {code === "LIBRARY" && (
-
                     <>
                         <ProFormText
                             name={"name"}
@@ -154,7 +125,6 @@ const FolderEntryForm: React.FC<Props> = ({ code, libraryId,libraryData, data, o
                                 label="Folder Name"
                                 rules={[{ required: true }]}
                             />
-
                             <ProFormText
                                 name={"location"}
                                 label="Location"
@@ -165,8 +135,6 @@ const FolderEntryForm: React.FC<Props> = ({ code, libraryId,libraryData, data, o
                             />
                         </>
                     )
-
-
                 }
 
             </ProForm>

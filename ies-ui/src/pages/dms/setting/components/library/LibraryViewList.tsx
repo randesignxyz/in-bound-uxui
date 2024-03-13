@@ -115,7 +115,6 @@ export default ({actionKey, ...props}:Props) =>{
                             
                         }
                     });
-                    // return dataList.items
                     return Promise.resolve({
                         data:dataList.items,
                         success:true,

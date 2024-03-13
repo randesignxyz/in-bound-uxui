@@ -1,8 +1,8 @@
 import { ActionType, ProList } from "@ant-design/pro-components"
-import { Avatar, Button, Flex, Modal, Tag, Tooltip, message } from "antd"
+import { Button, Flex, Modal, Tag, message } from "antd"
 import { TeamsServiceAPI } from "./service"
 import { simpleRequestActions } from "@/services/model"
-import { EditOutlined, InfoCircleOutlined, UserAddOutlined, DeleteOutlined, TeamOutlined, PlusOutlined, ReloadOutlined, SwapOutlined, UserOutlined } from "@ant-design/icons"
+import { EditOutlined, DeleteOutlined, TeamOutlined, PlusOutlined, ReloadOutlined } from "@ant-design/icons"
 import { useEffect, useRef, useState } from "react"
 import UserGroupEntryModal from "./TeamEntryModal"
 import TeamsDetail from "./Detail"
@@ -36,10 +36,6 @@ export default ({ actionKey, isCurrentUser }: Props) => {
         }
     }>();
 
-    const [memberViewState, setMemberViewState] = useState<{
-        state: Boolean;
-        id?: number;
-    }>({ state: false });
 
     return (
         <>
@@ -56,27 +52,11 @@ export default ({ actionKey, isCurrentUser }: Props) => {
                         icon={<ReloadOutlined />}
                     />
                 ]}
-                // search={{
-                //     optionRender: (e) => {
-                //         return [
-                //             <Button
-                //                 type="link"
-                //                 onClick={() => setState({ visible: { name: "MODAL", type: "ADD" } })}
-                //                 icon={<PlusOutlined />} />,
-                //             <Button
-                //                 type="link"
-                //                 onClick={() => actionRef.current?.reload?.()}
-                //                 icon={<ReloadOutlined />}
-                //             />
-                //         ]
-                //     }
-                // }}
+            
                 pagination={{
                     pageSize: 20
                 }}
                 options={false}
-                // ghost={true}
-                // grid={{ gutter: 16, column: 2 }}
                 request={async (param) => {
                     const data = await services.page({
                         criteria: {
@@ -97,81 +77,7 @@ export default ({ actionKey, isCurrentUser }: Props) => {
                     });
                 }}
                 actionRef={actionRef}
-                // metas={{
-                //     avatar: {
-                //         render: () => <Avatar
-                //             style={{ marginRight: "10px" }}
-                //             // size={{ xs: 24, sm: 32, md: 40, lg: 64, xl: 80, xxl: 100 }}
-                //             icon={<TeamOutlined />}
-                //         />
-                //     },
-                //     title: {
-                //         dataIndex: "name",
-                //     },
-                //     subTitle:{
-                //         dataIndex:"createdDate",
-                //         valueType:"date"
-                //     },
-                //     content: {
-                //         render: (_, r) => {
 
-                //             return memberViewState?.id == r.id && !memberViewState.state ?
-                //                 <Flex
-                //                     wrap="wrap"
-                //                     gap={2}
-                //                 >
-                //                     {r.userList.map(o => <Tooltip title={o.userName}><Tag color="gold">{o.userName}</Tag></Tooltip>)}
-                //                 </Flex>
-
-                //                 : <Avatar.Group
-                //                     maxCount={10}
-                //                 > {r.userList.map(o =>
-                //                     <Tooltip title={o.userName}><Avatar style={{ backgroundColor: '#87d068' }} icon={<UserOutlined />} /></Tooltip>
-                //                 )}
-                //                 </Avatar.Group>
-                //         }
-
-                //     },
-                //     actions: {
-                //         render: (_, r) => [
-                //             <Button
-                //                 type="link"
-                //                 onClick={() => setMemberViewState((b) => ({ ...b, id: r.id, state: !memberViewState?.state }))}
-                //                 icon={<SwapOutlined />}
-                //             />,
-                //             <Button
-                //                 type="link"
-                //                 icon={<EditOutlined />}
-                //                 onClick={() => setState({ visible: { name: "MODAL", type: "EDIT", payload: r } })}
-                //             />,
-                //             // <Button
-                //             //     type="link"
-                //             //     icon={<InfoCircleOutlined />}
-                //             //     onClick={()=>setDetailState({visible:{name:"MODAL", type:"EDIT", payload:r}})}
-                //             // />,
-                //             // <Button
-                //             //     type="link"
-                //             //     icon={<UserAddOutlined />}
-                //             // />,
-                //             <Button
-                //                 type="link"
-                //                 danger
-                //                 icon={<DeleteOutlined />}
-                //                 onClick={() => {
-                //                     Modal.confirm({
-                //                         title: "Delete Group",
-                //                         content: "Are you sure delete group? You can not restore.",
-                //                         onOk: () => {
-                //                             services.delete(r.id);
-                //                             message.success("Success!");
-                //                             actionRef.current?.reload?.();
-                //                         }
-                //                     })
-                //                 }}
-                //             />,
-                //         ]
-                //     }
-                // }}
             metas={{
                 title: {
                     dataIndex: "name"
@@ -209,15 +115,7 @@ export default ({ actionKey, isCurrentUser }: Props) => {
                             icon={<EditOutlined />}
                             onClick={() => setState({ visible: { name: "MODAL", type: "EDIT", payload: r } })}
                         />,
-                        // <Button
-                        //     type="link"
-                        //     icon={<InfoCircleOutlined />}
-                        //     onClick={()=>setDetailState({visible:{name:"MODAL", type:"EDIT", payload:r}})}
-                        // />,
-                        // <Button
-                        //     type="link"
-                        //     icon={<UserAddOutlined />}
-                        // />,
+
                         <Button
                             type="link"
                             danger

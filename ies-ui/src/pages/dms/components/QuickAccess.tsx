@@ -1,4 +1,4 @@
-import { ClockCircleOutlined, FormOutlined, HeartOutlined } from "@ant-design/icons"
+import { FormOutlined, HeartOutlined } from "@ant-design/icons"
 import { history } from "@umijs/max"
 import { Menu } from "antd"
 import { DMSPaths } from "..";

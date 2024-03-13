@@ -1,6 +1,5 @@
 
 import { useEffect, useState } from "react";
-import { DocumentTypeServiceAPI } from "../setting/components/documentType/service";
 import { simpleRequestActions } from "@/services/model";
 import { InboxOutlined } from "@ant-design/icons";
 import { getServiceUrl } from "@/services/ApiUrl";
@@ -9,11 +8,6 @@ import { UploadFile } from "antd/es/upload/interface";
 import { kc } from '@/auth';
 
 export type UploadType = UploadFile<string> & { title?: string; description?: string };
-type FileInfoType = {
-    id: string;
-    title: string;
-    description?: string;
-};
 
 interface Props {
     required?: boolean ;
@@ -29,13 +23,11 @@ const DocFileUploader: React.FC<Props> = ({ required= false, onGetFile, multi, m
     const requestActions = simpleRequestActions();
     const [fileExtension, setFileExtension] = useState<string[]>();
     const token =kc.token;
-    
     const [fileList, setFileList] = useState<UploadType[]>([]);
     const [forceReload, setForceReload] = useState(1);
 
     
     useEffect(() => {
-        // DocumentTypeServiceAPI(requestActions).fetch(docTypeId).then(it => setFileExtension(it.fileExtension));
 
     }, [docTypeId]);
 
@@ -53,9 +45,7 @@ const DocFileUploader: React.FC<Props> = ({ required= false, onGetFile, multi, m
     };
 
     return (<>
-        
         <Dragger
-            
             headers={token ? { Authorization: `Bearer ${token}`, } : {}}
             accept={fileExtension?.toString()|| accept}
             action={uploadUrl}
@@ -71,22 +61,16 @@ const DocFileUploader: React.FC<Props> = ({ required= false, onGetFile, multi, m
                 setForceReload((v) => v + 1);
             }}
             maxCount={maxCount}
-        
         >
             <p className="ant-upload-drag-icon">
                 <InboxOutlined />
             </p>
             <p className="ant-upload-text">Click or drag file to this area to upload</p>
-
-
         </Dragger>
         {
             required ?<div className="ant-form-item-explain-error" style={{color:"#ff4d4f"}}>Please click or drag this field is required</div>:""
         }
-            
-          
     </>)
 }
-
 
 export default DocFileUploader

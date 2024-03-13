@@ -1,6 +1,6 @@
 import TableView, { TableViewSearchParams } from "@/components/DataCrud/TableView"
-import { ArrowRightOutlined, DeleteOutlined, EditOutlined, EllipsisOutlined } from "@ant-design/icons"
-import { Dropdown, MenuProps, Modal, message } from "antd"
+import { DeleteOutlined, EditOutlined, EllipsisOutlined } from "@ant-design/icons"
+import { Badge, Dropdown, MenuProps, Modal, message } from "antd"
 import { CategoryCreate, CategoryDTO, CategorySearchParam } from "./data";
 import { simpleRequestActions } from "@/services/model";
 import { Paging } from "@/services/API";
@@ -70,8 +70,6 @@ export default ({actionKey}:Props)=>{
 
       
     const onSave =async (data:CategoryCreate)=>{
-        console.log(data);
-        
         Modal.confirm({
             title: "Save Accessory record",
             content: " are you sure?",
@@ -87,10 +85,7 @@ export default ({actionKey}:Props)=>{
         })
 
     }
-
-
     useEffect(()=>{
-
     }, [actionKey]);
     
 
@@ -112,6 +107,7 @@ export default ({actionKey}:Props)=>{
                     {
                         title:"Status",
                         dataIndex:"status",
+                        render:(_,r)=> <Badge text={r.status} status={r.status==="active"?"processing":"error"}/>
                     },
                     {
                         title:"Created By",

@@ -15,6 +15,7 @@ const CategoryEntryFormModal :React.FC<Props> =({ onSave, data ,...props}:Props)
 
     useEffect(()=>{
         props.open && form.setFieldsValue({...data});
+        !data && form.resetFields();
     }, [props.open])
 
     return (

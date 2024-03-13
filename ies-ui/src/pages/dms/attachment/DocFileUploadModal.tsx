@@ -16,7 +16,6 @@ interface Props extends FormModalProps{
 const DocFileUploadModal:React.FC <Props> = ({ onSave, documentId, documentTypeId,...props }) =>{
     const [fileUpload, setFileUpload] = useState<UploadFile[]>();
     const [form] = useForm<UploadAttachmentFile>();
-
     return (
         <FormModalComp
             {...props}
@@ -34,7 +33,6 @@ const DocFileUploadModal:React.FC <Props> = ({ onSave, documentId, documentTypeI
                       }))
                 }
                 fileUpload?.length?onSave(entry):undefined;
-                
             }}
         >
             <ProForm
@@ -42,7 +40,6 @@ const DocFileUploadModal:React.FC <Props> = ({ onSave, documentId, documentTypeI
                 form={form}
             >
                 <DocFileUploader
-                
                     onGetFile={(e)=>{
                         setFileUpload(e);
                     }}
@@ -50,7 +47,6 @@ const DocFileUploadModal:React.FC <Props> = ({ onSave, documentId, documentTypeI
                     required={fileUpload?.length?false:true}
                     docTypeId={documentTypeId}
                 />
-
             </ProForm>
         </FormModalComp>
     )

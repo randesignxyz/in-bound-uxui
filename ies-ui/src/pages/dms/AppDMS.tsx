@@ -9,9 +9,7 @@ import { ShareAltOutlined, MenuFoldOutlined, FolderOutlined, SettingOutlined, Be
 import ReminderListView from "./reminder/ReminderListView";
 import { DocumentationSearchByFolder } from "./documentation/data";
 import { Access, history, useAccess, useParams } from "@umijs/max";
-import ContractListView from "./contract/ContractListView";
 import TeamsViewList from "./setting/teams/TeamsViewList";
-
 
 const APPDMS: React.FC = () => {
     const param = useParams();
@@ -34,213 +32,18 @@ const APPDMS: React.FC = () => {
             borderRadius: 5,
             boxShadow: "-1px 1px 25px -1px lightgray",
             padding: 10
-
         }
     );
     useEffect(() => {
     }, []);
-
-
-
-    
-
     return (
         <>
-            {/* <Flex align="baseline" >
-                <Button type="link" onClick={(e) => {
-
-                    if (sidbarState) {
-                        setSidbarState(false)
-                        setMenuStyleState((v) => ({ ...v, marginLeft: 0 }));
-                    } else {
-
-                        setSidbarState(true)
-                        setMenuStyleState((v) => ({ ...v, marginLeft: -350, transition: "all 0.5s" }));
-                    }
-                }} icon={<MenuFoldOutlined />} />
-                <Segmented
-                    style={{ width: "100%", marginTop: "-100px" }}
-                    defaultValue={view}
-                    block
-                    options={[
-                        {
-                            value: "library",
-                            label: "Documents",
-                            icon: <FolderOutlined />
-                        
-                        },
-                        {
-                            value: "contract",
-                            label: "Contract",
-                            icon: <AuditOutlined />
-                        },
-                        {
-                            value: "received-share",
-                            label: "Shareds",
-                            icon: <ShareAltOutlined />
-                        },
-                        {
-                            value: "reminder",
-                            label: "Reminders",
-                            icon: <ClockCircleOutlined />
-                        },
-                        {
-                            value: "team",
-                            label: <Dropdown
-                                arrow
-                                menu={{
-                                    items,
-                                    style:{
-                                        width:200
-                                    }
-                                }}
-                            ><a>Helo</a></Dropdown>,
-                            icon: <ClockCircleOutlined />
-                        },
-                    ]}
-
-                    onChange={(e) =>{
-                        history.push(`${DMSPaths.workspace}/${e}`)
-                        setDivisionState(e.toString())
-                    }}
-                />
-
-                <Button icon={<SettingOutlined />} type="link"   onClick={() => history.push(`${DMSPaths.setting}/department`)} />
-            </Flex> */}
-
             <div
                 style={menuStyleState}
             >
                 <FolderViewList activeKey={view == "library" ? true : false}
                     setLibrary={setLibraryId}
                     onSearch={(param: DocumentationSearchByFolder) => setParamByFolder(param)} />
-                {/* <Collapse
-                    ghost
-                    bordered={false}
-                    defaultActiveKey={["1", "other", "3", "4"]}
-                    items={[
-                        // {
-                        //     key: "1",
-                        //     label: <Space><ClusterOutlined />Your Workspace </Space>,
-                        //     children: 
-                        //     />
-                        // },
-                        // {
-                        //     key: "3",
-                        //     label: <Space><HistoryOutlined /> Quick Access</Space>,
-                        //     // children: <QuickAccess activeKey={view} />
-                        //     children: (
-                        //         <Menu
-                        //             selectedKeys={[view || ""]}
-                        //             style={{
-                        //                 marginTop: -15,
-                        //                 width: "100%",
-                        //             }}
-                        //             mode="inline"
-                        //             items={[
-                        //                 {
-                        //                     key: "draft",
-                        //                     label: "Drafted",
-                        //                     icon: <FormOutlined />,
-                        //                     onClick: () => history.push(`${DMSPaths.workspace}/draft`)
-                        //                 },
-                        //                 {
-                        //                     key: "favorite",
-                        //                     label: "Favorites",
-                        //                     icon: <HeartOutlined />,
-                        //                     onClick: () => history.push(`${DMSPaths.workspace}/favorite`)
-                        //                 },
-                        //                 // {
-                        //                 //     key: "expire",
-                        //                 //     label: "Expiring Soon",
-                        //                 //     icon:<ClockCircleOutlined/>,
-                        //                 //     onClick: () => history.push(`${DMSPaths.workspace}/expire`)
-                        //                 // },
-                        //             ]}
-                        //         ></Menu>
-                        //     )
-                        // },
-                        {
-                            key: "other",
-                            label: <Space><ShareAltOutlined />Others</Space>,
-                            children: (
-                                <Menu
-                                    selectedKeys={[view || ""]}
-                                    theme='light'
-                                    style={{
-                                        width: "100%",
-                                        marginTop: -15
-                                    }}
-                                    mode='inline'
-                                    items={[
-                                        {
-                                            key: "received-share",
-                                            label: "Shareds",
-                                            icon: <NodeCollapseOutlined />,
-                                            onClick: () => history.push(`${DMSPaths.workspace}/received-share`)
-                                        },
-                                        {
-                                            key: "reminder",
-                                            label: "Reminder",
-                                            icon: <ClockCircleOutlined />,
-                                            onClick: () => history.push(`${DMSPaths.workspace}/reminder`),
-                                            theme: "light"
-                                        },
-                                        // {
-                                        //     key: "trash",
-                                        //     label: "Trash",
-                                        //     icon: <DeleteOutlined />,
-                                        //     onClick: () => history.push(`${DMSPaths.workspace}/trash`),
-                                        //     theme: "light"
-                                        // },
-                                    ]}
-                                />
-                            )
-                        },
-                        // {
-                        //     key: "4",
-                        //     label: "Contracts",
-                        //     children: (
-                        //         <Menu
-                        //             selectedKeys={[view || ""]}
-                        //             theme='light'
-                        //             style={{
-                        //                 width: "100%",
-                        //                 marginTop: -15
-                        //             }}
-                        //             mode='inline'
-                        //             items={[
-                        //                 {
-                        //                     key: "contract",
-                        //                     label: "My Request",
-                        //                     icon: <AuditOutlined />,
-                        //                     onClick: () => history.push(`${DMSPaths.workspace}/contract`)
-                        //                 },
-                        //                 // {
-                        //                 //     key: "my",
-                        //                 //     label: "Contracts",
-                        //                 //     icon: <FileDoneOutlined />,
-                        //                 //     onClick: () => history.push(`${DMSPaths.workspace}/reminder`),
-                        //                 //     theme: "light"
-                        //                 // },
-                        //             ]}
-                        //         />
-                        //     )
-                        // },
-                        {
-                            key: "setting",
-                            showArrow: false,
-                            label: <Button
-                                style={{
-                                    width: "100%",
-
-                                }}
-                                onClick={() => history.push(`${DMSPaths.setting}/department`)}
-                            >Setting</Button>
-                        },
-
-                    ]}
-                /> */}
             </div>
             <div
                 style={
@@ -263,7 +66,6 @@ const APPDMS: React.FC = () => {
                             setMenuStyleState((v) => ({ ...v, marginLeft: -350, transition: "all 0.5s" }));
                         }
                     }} icon={<MenuFoldOutlined />} />
-
                     <Segmented
                         style={{ width: "100%" }}
                         accessKey={view}
@@ -272,21 +74,18 @@ const APPDMS: React.FC = () => {
                                 value: "library",
                                 label: "Document",
                                 icon: <FolderOutlined />,
-
                             },
                             {
                                 value: "share",
                                 // label: <Badge showZero dot overflowCount={9}>Shareds</Badge>,
                                 label:"Shared",
                                 icon: <ShareAltOutlined />,
-
                             },
                             {
                                 value: "reminder",
                                 label:"Reminders",
                                 // label:<Badge count={0} showZero offset={[-10,-5]}  style={{zIndex:90, position:"fixed"}} title="ASDASD" >Reminder</Badge> ,
                                 icon: <BellOutlined />,
-                                
                             },
                             {
                                 value: "team",
@@ -303,7 +102,6 @@ const APPDMS: React.FC = () => {
                                 history.push(`${DMSPaths.workspace}/${e}`)
                                 setDivisionState(e.toString());
                             }
-
                         }}
                     />
                     <Access accessible={access.canAccessDMSAdminMenu}>
@@ -314,10 +112,9 @@ const APPDMS: React.FC = () => {
                     view === "library" && (<DocumentListView paramSearch={paramByFolder} libraryId={libraryId || 0} />) ||
                     view === "share" && (<RecievedShare  />) ||
                     view === "favorite" && (<FavoriteView />) ||
-                    view === "contract" && (<ContractListView />) ||
+                    // view === "contract" && (<ContractListView />) ||
                     view === "reminder" && (<ReminderListView />) ||
                     view === "team" && (<TeamsViewList isCurrentUser={true} actionKey={view} />)
-
                 }
             </div>
         </>

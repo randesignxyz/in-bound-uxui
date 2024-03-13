@@ -105,7 +105,6 @@ export default ({ docId, accessKey, tabState }: Props) => {
                                     content: "Do you want to continue",
                                     onOk: () => {
                                         AttachmentServiceAPI(requestAction).delete(r.id);
-                                        // actionRef.current?.reload?.()
                                         setForceUpdate(Math.random().toString())
                                     }
                                 })

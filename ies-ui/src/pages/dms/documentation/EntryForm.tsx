@@ -1,5 +1,5 @@
-import { ProForm } from "@ant-design/pro-components"
-import { Button, UploadFile } from "antd"
+import { ProForm, ProFormSelect } from "@ant-design/pro-components"
+import { Button, UploadFile, message } from "antd"
 import React, { useEffect, useState } from "react";
 import { DocumentationCreate, DocumentationDTO } from "./data";
 import FormModalComp, { FormModalProps } from "@/components/FormModal";
@@ -8,6 +8,7 @@ import DocFileUploader from "../attachment/DocFileUploader";
 import { getFileTypeviaExtension } from "../core";
 import DocumentationEntry from "./DocumentationEntry";
 import ContractEntry from "../contract/ContractEntry";
+import ContractPurchase from "../contract/ContractPurchase";
 
 
 interface Props extends FormModalProps {
@@ -17,20 +18,22 @@ interface Props extends FormModalProps {
   data?: DocumentationDTO;
   libraryId?: number;
   division?: string;
-  
 }
 
 const DocumentModalForm: React.FC<Props> = ({ type, onSave, division, folderId, data, libraryId, ...props }: Props) => {
-
-  const [fileUpload, setFileUpload] = useState<{file?:UploadFile[],required?:boolean}>();
+  const [fileUpload, setFileUpload] = useState<{ file?: UploadFile[], required?: boolean }>();
   const [form] = useForm<DocumentationCreate>();
+
 
   useEffect(() => {
     props.open && data && form.setFieldsValue({
       ...data.documentation,
-      buId:data.buId?.id,
+      buId: data.buId?.id,
+      category:data.category,
+      ...data.accountant,
       ...data.term
     });
+
     props.open && !data && form.resetFields();
 
   }, [props.open]);
@@ -38,20 +41,24 @@ const DocumentModalForm: React.FC<Props> = ({ type, onSave, division, folderId, 
   return (<>
     <FormModalComp
       {...props}
-      title={` ${type=="ADD"?"New":"Edit"} ${division=="DOC"?"Document Form":"Contract Form"}`}
+      title={` ${type == "ADD" ? "New" : "Edit"} ${division == "DOC" ? "Document Form" : "Contract Form"}`}
       footer={
         <>
           <Button onClick={() => props.onCancel?.()}>Cancel</Button>
           <Button type="primary" onClick={async () => {
-            !fileUpload?.file?.length && setFileUpload({required:true});
+            !fileUpload?.file?.length && setFileUpload({ required: true });
             const dataForm = await form.validateFields();
             const entry: DocumentationCreate = {
-              id:data?.id,
+              id: data?.id,
               libraryId: libraryId,
               folderId: folderId,
               division: division,
-              buId:dataForm.buId,
+              category:dataForm.category,
+              buId: dataForm.buId,
               content: {
+                ...dataForm
+              },
+              accountant:{
                 ...dataForm
               },
               term: {
@@ -65,7 +72,20 @@ const DocumentModalForm: React.FC<Props> = ({ type, onSave, division, folderId, 
                 fileExtension: getFileTypeviaExtension(o?.originFileObj?.name)
               })),
             }
-             onSave(entry);
+            if(type==="ADD"){
+              if(fileUpload?.file?.length){
+                onSave(entry);
+              }
+              else{
+                console.log("no submit");
+                message.warning("Please upload file to attach contract!")
+              }
+            }
+            else{
+              onSave(entry);
+            }
+           
+            
           }}>Submit</Button>
         </>
       }
@@ -74,9 +94,13 @@ const DocumentModalForm: React.FC<Props> = ({ type, onSave, division, folderId, 
         form={form}
         submitter={false}
       >
+        
+
         {
-          (division == "DOC") && <DocumentationEntry /> ||
-          <ContractEntry />
+          (division == "DOC") && 
+          <DocumentationEntry data={data}/> ||
+          <ContractEntry data={data} />
+          // <ContractPurchase/>
         }
 
         {!data && (
@@ -85,8 +109,7 @@ const DocumentModalForm: React.FC<Props> = ({ type, onSave, division, folderId, 
             required={fileUpload?.required}
             multi={true}
             onGetFile={(e) => {
-              setFileUpload({file:e})
-              
+              setFileUpload({ file: e });
             }}
           />
         )}

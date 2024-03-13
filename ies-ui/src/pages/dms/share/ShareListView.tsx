@@ -11,7 +11,6 @@ import { expriationStatus } from "../core";
 interface Props {
     docId?: number
 }
-
 export default ({ docId }: Props) => {
     const requestAction = simpleRequestActions();
     const actionRef = useRef<ActionType>();
@@ -26,7 +25,6 @@ export default ({ docId }: Props) => {
     return (
         <>
             <Spin spinning={requestAction.request?.loading}>
-
                 <ProList<ShareDTO>
                     dataSource={shareState}
                     style={{
@@ -67,14 +65,12 @@ export default ({ docId }: Props) => {
                                         <p style={{ color: "gray" }}>Shared Date: </p>
                                         <p>{formatDate(r.createdDate)}</p>
                                     </Space>
-
                                 </>
                             )
                         },
                         description: {
                             render: (_, r) => (<Flex vertical>
                                 <p>{r.description}</p>
-
                             </Flex>)
                         },
                         actions: {
@@ -93,7 +89,6 @@ export default ({ docId }: Props) => {
                             </Flex>
                         }
                     }}
-
                 />
             </Spin>
         </>

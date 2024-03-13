@@ -147,7 +147,7 @@ export default ({ id, type }: Props) => {
       discountPrice: dataForm.discountPrice,
       productId: dataForm.productId,
       referenceId:
-        dataForm.priceType === 'custoemr' ? dataForm.customerId : dataForm.customerGroupId,
+        dataForm.priceType === 'customer' ? dataForm.customerId : dataForm.customerGroupId,
       effectiveDate: effectiveDate,
       expiredDate: expiredDate,
     };

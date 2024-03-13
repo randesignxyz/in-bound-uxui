@@ -90,7 +90,7 @@ export default ({ lookupData }: Props) => {
                 <Col span={8}>
                     <ProFormDatePicker
                         rules={[{ required: true }]}
-                        name={"expryDate"}
+                        name={"expiryDate"}
                         label="Valid Date"
                         width={"md"}
                     />

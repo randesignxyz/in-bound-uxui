@@ -27,9 +27,9 @@ export default ({ document, actionRef }: Props) => {
     return (
         <>
             { 
-                document?.documentation.contractCategory =="GENERAL" && (<ContractGeneralDetail document={document} actionRef={actionRef} />)||
-                document?.documentation.contractCategory =="PURCHASE" && (<ContractPurchaseDetail document={document} actionRef={actionRef} />)||
-                document?.documentation.contractCategory =="SALSE" && (<ContractSalseDetail document={document} actionRef={actionRef} />)
+                document?.category =="GENERAL" && (<ContractGeneralDetail document={document} actionRef={actionRef} />)||
+                document?.category =="PURCHASE" && (<ContractPurchaseDetail document={document} actionRef={actionRef} />)||
+                document?.category =="SALSE" && (<ContractSalseDetail document={document} actionRef={actionRef} />)
             }
             
 

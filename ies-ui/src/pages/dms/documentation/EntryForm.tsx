@@ -30,6 +30,7 @@ const DocumentModalForm: React.FC<Props> = ({ type, onSave, division, folderId, 
       ...data.documentation,
       buId: data.buId?.id,
       category:data.category,
+      ...data.accountant,
       ...data.term
     });
 
@@ -97,8 +98,8 @@ const DocumentModalForm: React.FC<Props> = ({ type, onSave, division, folderId, 
 
         {
           (division == "DOC") && 
-          <DocumentationEntry /> ||
-          <ContractEntry />
+          <DocumentationEntry data={data}/> ||
+          <ContractEntry data={data} />
           // <ContractPurchase/>
         }
 

@@ -9,11 +9,13 @@ import { useEffect, useRef, useState } from "react";
 import ContractGeneral from "./ContractGeneral";
 import ContractPurchase from "./ContractPurchase";
 import ContractSales from "./ContractSales";
+import { DocumentationDTO } from "../documentation/data";
+interface Props{
+  data?:DocumentationDTO
+}
 
-export default () => {
+export default ({data}:Props) => {
     const requestAction = simpleRequestActions();
-    const inputRef = useRef<InputRef>(null);
-    const [name, setName] = useState('');
     const [lookupData, setLookupData] = useState<LookupDataDTO[]>();
     const onLookupData = async()=>{
         const data =await CoreServiceAPI(requestAction).listLookupData({
@@ -33,21 +35,22 @@ export default () => {
             label="Please Select Contract Type"
             initialValue={"GENERAL"}
             name={"category"}
-            options={lookupData?.filter(i=>i.type="DOC").map(o=>({label:o.name, value:o.id}))}
-            // options={[
-            //   {
-            //     value: "GENERAL",
-            //     label: "General"
-            //   },
-            //   {
-            //     value: "PURCHASE",
-            //     label: "Purchase"
-            //   },
-            //   {
-            //     value: "SALES",
-            //     label: "Sales"
-            //   },
-            // ]}
+            disabled={data?true:false}
+            // options={lookupData?.filter(i=>i.type="DOC").map(o=>({label:o.name, value:o.id}))}
+            options={[
+              {
+                value: "GENERAL",
+                label: "General"
+              },
+              {
+                value: "PURCHASE",
+                label: "Purchase"
+              },
+              {
+                value: "SALES",
+                label: "Sales"
+              },
+            ]}
           />
 
           <ProFormDependency dependencies={["category"]} name={["category"]}>

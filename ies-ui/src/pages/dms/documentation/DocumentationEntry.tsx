@@ -8,11 +8,13 @@ import { DocumentTypeServiceAPI } from "../setting/components/documentType/servi
 import { useEffect, useState } from "react";
 import DocLegalForm from "./DocLegalForm";
 import DocGeneralForm from "./DocGeneralForm";
+import { DocumentationDTO } from "./data";
 
 interface Props{
     // lookupData:LookupDataDTO[];
+    data?:DocumentationDTO
 }
-export default ({ }:Props) => {
+export default ({ data }:Props) => {
     const requestAction = simpleRequestActions();
     const [documentTypeHasExpire, setDocumentTypeHasExpire] = useState<DocumentTypeDTO[]>([]);
     const [lookupData, setLookupData] = useState<LookupDataDTO[]>();
@@ -33,6 +35,7 @@ export default ({ }:Props) => {
                 label="Please Select Document Type"
                 name={"category"}
                 initialValue={"GENERAL"}
+                disabled={data?true:false}
                 // options={lookupData?.filter(i=>i.code=="CATEGORY").filter(ob=>ob.type=="DOC").map(o=>({label:o.name, value:o.id}))}
                 options={[
                     {

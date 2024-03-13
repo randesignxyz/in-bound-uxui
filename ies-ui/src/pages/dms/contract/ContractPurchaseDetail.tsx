@@ -37,7 +37,7 @@ export default ({ document, actionRef }: Props) => {
                                 labelStyle={{
                                     width: 150
                                 }}
-                                // style={{ fontWeight: 600 }}
+                                style={{ fontWeight: 500 }}
                                 column={1}
                                 dataSource={document?.documentation}
                                 columns={[
@@ -51,7 +51,8 @@ export default ({ document, actionRef }: Props) => {
                                     },
                                     {
                                         label: "Category",
-                                        dataIndex: "contractCategory"
+                                        dataIndex: "category",
+                                        render:(_,r)=>document?.category
                                     },
                                     {
                                         label: "Vendor Name",
@@ -59,7 +60,8 @@ export default ({ document, actionRef }: Props) => {
                                     },
                                     {
                                         label:"OpCo",
-                                        dataIndex:"opCo"
+                                        dataIndex:"opCo",
+                                        render:(_,r)=>document?.opCo?.name
                                     },
                                     {
                                         label:"Function",
@@ -78,63 +80,7 @@ export default ({ document, actionRef }: Props) => {
                                     
                                 ]}
                             />
-                            {/* <ProDescriptions
-                                labelStyle={{
-                                    width: 150
-                                }}
-                                contentStyle={{
-                                    fontWeight:"bolder"
-                                }}
-                                column={1}
-                                dataSource={document?.documentation}
-                                actionRef={actionRef}
-                                columns={[
-                                    {
-                                        label: "Contract Name",
-                                        dataIndex: "docName"
-                                    },
-                                    {
-                                        label: "Contract Number",
-                                        dataIndex: "docNumber"
-                                    },
-                                    {
-                                        label: "Contract Type",
-                                        render:(_,r)=>document?.contractType?.name
-                                    },
-                                    {
-                                        label:"Category",
-                                        render:(_,r)=>r.contractCategory
-                                    },
-                                    {
-                                        label: "Currency",
-                                        render: (_, r) => r.
-                                    },
-                                    {
-                                        label: "Contract Value",
-                                        dataIndex: "contractValue"
-                                    },
-                                    {
-                                        label: "Purpose Value",
-                                        dataIndex: "purposeValue"
-                                    },
-                                    {
-                                        label: "Gratis",
-                                        dataIndex: "gratis"
-                                    },
-                                    {
-                                        label: "Department",
-                                        render: (_, r) => document?.department?.name
-                                    },
-                                    {
-                                        label: "Location",
-                                        dataIndex: "location"
-                                    },
-                                    {
-                                        label: "Description",
-                                        dataIndex: "description"
-                                    },
-                                ]}
-                            /> */}
+                        
                         </Col>
                         <Col md={24} sm={24} lg={12}>
                             {/* <Divider orientation="left" plain>Term and Renewal</Divider> */}
@@ -144,7 +90,7 @@ export default ({ document, actionRef }: Props) => {
                                 labelStyle={{
                                     width: 200
                                 }}
-                                // style={{ fontWeight: 400 }}
+                                style={{ fontWeight: 500 }}
                                 columns={[
                                     {
                                         label: "Term Type",
@@ -201,7 +147,7 @@ export default ({ document, actionRef }: Props) => {
                 >
                     <ProDescriptions
                         dataSource={document?.accountant}
-                        style={{ fontWeight: 600 }}
+                        style={{ fontWeight: 500 }}
                         columns={[
                             {
                                 label:"Total Amount",

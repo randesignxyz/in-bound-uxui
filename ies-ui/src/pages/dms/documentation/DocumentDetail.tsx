@@ -4,6 +4,8 @@ import { DocumentationDTO } from "./data";
 import { InfoCircleOutlined } from "@ant-design/icons";
 import { useState } from "react";
 import PathDocument from "../components/PathDocument";
+import { formatDate } from "@/pages/utils";
+import { expriationStatus } from "../core";
 
 interface Props {
     document?: DocumentationDTO;
@@ -33,6 +35,7 @@ export default ({ document, actionRef }: Props) => {
                                 dataSource={document}
                                 column={{ md: 1, sm: 1, lg: 2, xl: 2 }}
                                 actionRef={actionRef}
+                                style={{ fontWeight: 500 }}
                                 columns={[
                                     {
                                         title: "Document Number",
@@ -80,6 +83,7 @@ export default ({ document, actionRef }: Props) => {
                                         labelStyle={{
                                             width: 200
                                         }}
+                                        style={{ fontWeight: 500 }}
                                         columns={[
                                             {
                                                 title: "Document Number",
@@ -101,7 +105,7 @@ export default ({ document, actionRef }: Props) => {
 
                                             {
                                                 title: "OpCos",
-                                                render: (_, r) => document?.buId?.name
+                                                render: (_, r) => document?.opCo?.name
                                             },
 
                                             {
@@ -122,6 +126,7 @@ export default ({ document, actionRef }: Props) => {
                                         labelStyle={{
                                             width: 100
                                         }}
+                                        style={{ fontWeight: 500 }}
                                         columns={[
                                             {
                                                 title: "Category",
@@ -129,11 +134,17 @@ export default ({ document, actionRef }: Props) => {
                                             },
                                             {
                                                 title: "Institute / Organization",
-                                                dataIndex: "institute"
+                                                dataIndex: "institute",
+                                                render:(_,r)=>document?.documentation.institute
+                                            },
+                                            {
+                                                title: "Issued Date",
+                                                render: (_, r) => formatDate(document?.term?.issuedDate),
+                                                valueType: "date"
                                             },
                                             {
                                                 title: "Valid Date",
-                                                render: (_, r) => document?.term.expiryDate,
+                                                render: (_, r) => (<Badge status={expriationStatus(r.term.expiryDate) > 0 ? "error" : "processing"} text={formatDate(r.term.expiryDate)} />),
                                                 valueType: "date"
                                             },
                                             {
@@ -170,6 +181,7 @@ export default ({ document, actionRef }: Props) => {
                 >
                     <ProDescriptions
                         dataSource={document}
+                        style={{ fontWeight: 500 }}
                         columns={[
                             {
                                 title: "Owner",

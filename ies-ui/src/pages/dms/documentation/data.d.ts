@@ -31,6 +31,7 @@ interface DocumentationDTO{
     termType?:LookupDataDTO,
     vendor?:VendorsDTO,
     currency?:LookupDataDTO,
+    opCo?:OrgUnitDTO
     
 }
 
@@ -137,6 +138,7 @@ interface DocTermCreate{
     warranty?:string;
     penaltyClause?:string;
     termPayment?:string;
+    issuedDate?:Moment.moment
 }
 
 interface DocAccountant{

@@ -349,16 +349,27 @@ export default ({ onAdd, onDetail, onEdit, ...props }: Props) => {
                   </Col>
                   <Col span={12}>
                     <Liquid
-                      percent={it.currentInventory / it.tankCapacity}
+                      percent={(it.currentInventory / it.tankCapacity)}
+                      
                       autoFit={true}
-                      color={it.currentInventory / it.tankCapacity < 0.5 ? 'red' : ''}
-                      outline={{
-                        border: 4,
-                        distance: 8,
+                      
+                      style= {{
+                        textFill: '#fff',
+                        // colorField:(it.currentInventory / it.tankCapacity) < 0.5 ? 'red' : "red",
+                        outlineBorder: 4,
+                        outlineDistance: 8,
+                        waveLength: 128,
+                        
                       }}
-                      wave={{
-                        length: 128,
-                      }}
+                      
+                      // color={it.currentInventory / it.tankCapacity < 0.5 ? 'red' : ''}
+                      // outline={{
+                      //   border: 4,
+                      //   distance: 8,
+                      // }}
+                      // wave={{
+                      //   length: 128,
+                      // }}
                     />
                   </Col>
                 </Row>

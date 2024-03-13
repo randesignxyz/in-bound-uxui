@@ -27,12 +27,11 @@ export default ({ document, actionRef }: Props) => {
                         <Col md={24} sm={24} lg={12}>
 
                             <ProDescriptions
+                            style={{ fontWeight: 500 }}
                                 labelStyle={{
                                     width: 150
                                 }}
-                                contentStyle={{
-                                    fontWeight: "bolder"
-                                }}
+                              
                                 column={1}
                                 dataSource={document?.documentation}
                                 actionRef={actionRef}
@@ -84,7 +83,7 @@ export default ({ document, actionRef }: Props) => {
                                 labelStyle={{
                                     width: 200
                                 }}
-                                // style={{ fontWeight: 400 }}
+                                style={{ fontWeight: 500 }}
                                 columns={[
                                     {
                                         label: "Term Type",
@@ -131,7 +130,7 @@ export default ({ document, actionRef }: Props) => {
                 >
                     <ProDescriptions
                         dataSource={document?.accountant}
-                        style={{ fontWeight: 600 }}
+                        style={{ fontWeight: 500 }}
                         columns={[
 
                             {
@@ -158,6 +157,7 @@ export default ({ document, actionRef }: Props) => {
                     <ProDescriptions
                         dataSource={document}
                         column={4}
+
                         columns={[
                             {
                                 title: "Created Date",

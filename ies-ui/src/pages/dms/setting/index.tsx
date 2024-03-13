@@ -22,8 +22,8 @@ export default ({ }: Props) => {
       children: <DepartmentListView actionKey={view} />
     },
     {
-      key: "usergroup",
-      label: "User Group",
+      key: "teams",
+      label: "Teams",
       children: <UserGroupList actionKey={view} />
     },
     {
@@ -41,11 +41,11 @@ export default ({ }: Props) => {
       label: "Libraries",
       children: <LibraryViewList actionKey={view} />
     },
-    {
-      key: "other",
-      label: "Others",
-      children: <OtherView actionKey={view} />
-    }
+    // {
+    //   key: "other",
+    //   label: "Others",
+    //   children: <OtherView actionKey={view} />
+    // }
   ];
 
   return (

@@ -74,7 +74,7 @@ const PickingSlip: React.FC<Props> = ({ cb, requestActions, itemDetail, ...props
     whsCode?: string;
     shift: string;
     remarks?: string;
-    owedTruckLoading?: boolean;
+    ownedTruckLoading?: boolean;
   }>();
 
   const init = async () => {
@@ -171,7 +171,7 @@ const PickingSlip: React.FC<Props> = ({ cb, requestActions, itemDetail, ...props
               dataForm.driverId,
               dataForm.licensePlate,
               itemDetail !== null,
-              dataForm.owedTruckLoading
+              dataForm.ownedTruckLoading
 
             ),
           )(requestActions);

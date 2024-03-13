@@ -127,7 +127,18 @@ export const LoadingParams = {
     type: 'EXEC',
     endpoint: 'DELIVERY',
     actionName: 'assigned-picking-slip',
-    payload: { id, docDate, shift, deliveryIds, items, whsCode, remarks, driverId, licensePlate, modified, ownedTruckLoading },
+    payload: {
+      id: id,
+      docDate: docDate,
+      shift: shift,
+      deliveryIds: deliveryIds,
+      items: items,
+      whsCode: whsCode,
+      remarks: remarks,
+      driverId: driverId,
+      licensePlate: licensePlate, modified: modified,
+      ownedTruckLoading: ownedTruckLoading
+    },
   }),
 
   fetchLoadingItem: (id: number): ServiceApiType<{ id: number }> => ({

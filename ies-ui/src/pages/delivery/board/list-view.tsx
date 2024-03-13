@@ -8,7 +8,7 @@ import ProList from '@ant-design/pro-list';
 import {
     Affix,
     Badge,
-    Button, Col, Descriptions, Input,
+    Button, Checkbox, Col, Descriptions, Input,
     message, Popconfirm, Row, Space, Spin, Tag,
 } from 'antd';
 import forkLift from '@/assets/fork-lift.png';
@@ -472,7 +472,8 @@ export default ({
                                                 }</ProDescriptions.Item>
                                             }
 
-                                            <ProDescriptions.Item label="Claimed By"> {r.claimedBy || 'N/A'} </ProDescriptions.Item>
+                                            {r.claimedBy && <ProDescriptions.Item label="Claimed By"> {r.claimedBy || 'N/A'} </ProDescriptions.Item>}
+                                            {r.loading.ownedTruckLoading && <ProDescriptions.Item label="Owned Truck Loading"> <Checkbox checked /> </ProDescriptions.Item>}
                                         </ProDescriptions>
                                     </div>
                                 }

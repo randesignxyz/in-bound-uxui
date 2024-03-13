@@ -431,6 +431,7 @@ export interface LoadingListItem {
   driver: Driver;
   truck: Truck;
   assignedDate: Moment;
+  ownedTruckLoading?: boolean;
   canPick?: boolean;
   loadingStarted?: Moment;
   loadingEnded?: Moment;

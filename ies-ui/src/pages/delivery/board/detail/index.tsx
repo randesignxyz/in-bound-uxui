@@ -19,6 +19,7 @@ import ProTable from '@ant-design/pro-table';
 import {
   Button,
   Card,
+  Checkbox,
   Drawer,
   DrawerProps,
   message,
@@ -201,6 +202,7 @@ export default ({ forceRefresh, requestActions, data: { itemDetail }, actions: {
             </ProDescriptions.Item>
             <ProDescriptions.Item label="Loading Dock">{itemDetail?.loading?.loadingDock}</ProDescriptions.Item>
             <ProDescriptions.Item label="Claimed By">{itemDetail?.claimedBy}</ProDescriptions.Item>
+            <ProDescriptions.Item label="Owned Truck Loading"><Checkbox checked={!!itemDetail?.loading.ownedTruckLoading} /></ProDescriptions.Item>
           </ProDescriptions>
         </Card>
 

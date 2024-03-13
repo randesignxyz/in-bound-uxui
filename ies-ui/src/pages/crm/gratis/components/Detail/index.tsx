@@ -191,6 +191,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
   const isProcessCalculate = data?.processStatus === 'PROCESSED_CYCLE' ? true : false
   const isDirect = data?.contractType?.code === 'DIRECT' ? true : false
   const isInDirect = data?.contractType?.code === 'IN_DIRECT' ? true : false
+  const isOther = data?.contractType?.code === 'OTHER' ? true : false
 
   const isRequestCompleted = data?.requestStatus == 'COMPLETED' ? true : false
   const isRequestRejected = data?.requestStatus == 'REJECTED' ? true : false
@@ -467,7 +468,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
           status={data?.status || ''}
           groupTypeCode={data?.contractType?.code}
           currentNum={gContract.orderNo}
-          isVerify={(isCreated || isProcessCalculate) && isPending && (isDirect||isInDirect) && (isRequestNA || isRequestRejected)}
+          isVerify={(isCreated || isProcessCalculate) && isPending && (isDirect||isInDirect||isOther) && (isRequestNA || isRequestRejected)}
           open={modals.isVisible('verifyContractQuickView')}
           onOpenModalChange={(v: any) => !v && modals.hideModal('verifyContractQuickView')}
           reloadQuickView={reloadQuickView}

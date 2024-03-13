@@ -154,10 +154,10 @@ export const GratisServices = {
         endpoint: 'CRM',
         payload: criteria
     }),
-    fetchGratisVerifyScheduleList: (id: number) => fetchDataListService<GratisVerifySchedule, any>({
+    fetchGratisVerifyScheduleList: (criteria:SearchCriteria) => fetchDataListService<GratisVerifySchedule, any>({
         actionName: 'list-gratis-verify-schedule',
         endpoint: 'CRM',
-        payload: {id}
+        payload: criteria
     }),
     gratisSaleOrderList: (id: number) => fetchDataListService<AdjustInfoOn, any>({
         actionName: 'list-sale-order',

@@ -2,7 +2,7 @@ import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { Moment } from 'moment';
 import { fetchDataListService, ServiceApiType } from '../apiGateway';
 import { LookupData } from '../data';
-import { LoadingAdvanceSearchParams, SaveLoadedParam } from './req-params';
+import { LoadingAdvanceSearchParams, SaveLoadedParam, startLoadingParam } from './req-params';
 
 export const LoadingParams = {
   listLoading: (
@@ -153,6 +153,13 @@ export const LoadingParams = {
     endpoint: 'DELIVERY',
     actionName: 'fetch-current-picking-slip',
     payload: { id },
+  }),
+
+  startLoading: (data: startLoadingParam): ServiceApiType<startLoadingParam> => ({
+    type: 'EXEC',
+    endpoint: 'DELIVERY',
+    actionName: 'start-loading',
+    payload: data,
   }),
 
   saveLoaded: (data: SaveLoadedParam): ServiceApiType<SaveLoadedParam> => ({

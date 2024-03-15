@@ -25,19 +25,18 @@ import {
   InfoCircleOutlined,
   LoginOutlined,
   LogoutOutlined,
-  OneToOneOutlined,
   PauseCircleOutlined,
   PauseOutlined,
   PlayCircleOutlined,
   PrinterOutlined,
-  ReloadOutlined, RetweetOutlined, StopOutlined, SwapOutlined, SyncOutlined, UserOutlined
+  ReloadOutlined, RetweetOutlined, StarFilled, StopOutlined, SwapOutlined, SyncOutlined, UserOutlined
 } from '@ant-design/icons';
 import { history } from 'umi';
 import {
   Affix,
   Badge,
   Button, Checkbox, Col, Input,
-  message, Modal, Popconfirm, Row, Segmented, Space, Spin, Tag
+  message, Modal, Row, Segmented, Space, Spin, Tag
 } from 'antd';
 import moment from 'moment';
 import { useEffect, useRef, useState } from 'react';
@@ -51,8 +50,8 @@ import styles from './style.less';
 import Remarks from '@/components/remarks';
 import LoadingCapacitySelect from './LoadingCapacitySelect';
 import Transfer from './Transfer';
-import FinishLoadingModal from '../ticket/finish-loading-modal';
-import { SaveLoadedParam } from '@/services/delivery/req-params';
+import FinishLoadingModal from './finish-loading-modal';
+import { SaveLoadedParam, startLoadingParam } from '@/services/delivery/req-params';
 import ChangeRequest from './ChangeRequest';
 import { InstanceSrvParams } from '@/services/delivery/instance-service-params';
 import { useReactToPrint } from 'react-to-print';
@@ -65,12 +64,13 @@ import { OperatorCheckIn } from '@/pages/delivery/board/data';
 import RemarkModalV2 from '@/components/remark-modal-v2';
 import CheckinInfo from '@/pages/delivery/checkin/CheckinInfo';
 import { QueuePaths } from '..';
-
+import StartLoadingModal from './start-loading-modal';
 
 const PENDING = "PENDING"
 const PICKING = "PICKING"
 const CHANGE_REQUEST = "CHANGE_REQUEST"
 const LOADING = "LOADING"
+const LOADING_STARTED = "LOADING_STARTED"
 const HOLD = "HOLD"
 const LOADED = "LOADED"
 
@@ -101,11 +101,12 @@ export default () => {
   const [modal, setModal] = useState<
     { from?: UiType; } & (
       { type: undefined } |
+      { type: 'START', payload: Loaded, ownedTruckLoading?: boolean, callback?: () => void } |
       { type: 'DONE', payload: Loaded, callback: () => void } |
       { type: 'TRANSFER' } |
       { type: 'LOADING_CAPACITY' } |
       { type: 'REMARKS', required?: boolean, cb: (remarks: string) => void; } |
-      { type: 'CONFIRM_REQUEST', cb?: () => void; } |
+      { type: 'CONFIRM_REQUEST', cb?: () => Promise<void>; } |
       { type: 'PICKING-SLIP', cb?: () => void; }
     )
   >({ type: undefined })
@@ -174,6 +175,36 @@ export default () => {
       message.error(error.message || `Failed to load data`);
     }
   };
+
+  const onStartLoaingHandler = async (loadingId: number, ownedTruckLoadin?: boolean, cb?: () => void) => {
+
+    try {
+      const rs = (await singleRequest<Loaded>(LoadingParams.fetchLoadedItem(loadingId))(
+        requestActions,
+      )) as Loaded;
+      rs && setModal({ type: 'START', payload: rs, ownedTruckLoading: ownedTruckLoadin, callback: cb });
+    } catch (error: any) {
+      message.error(error.message || `Failed to load data`);
+    }
+  };
+
+  const onLoadingStartedhandler = (params: startLoadingParam, cb?: () => void) => {
+    Modal.confirm({
+      title: 'Start Loading',
+      content: 'Are you sure?',
+      onOk: async () => {
+        try {
+          await singleRequest(LoadingParams.startLoading(params))(requestActions);
+          message.success('Loading is started.');
+          cb?.()
+          onCloseModalHandler()
+        } catch (error: any) {
+          message.error(error.message || `Failed to start loading`);
+        }
+      },
+    });
+  };
+
 
   const onCompletedhandler = (params: SaveLoadedParam, cb: () => void) => {
     Modal.confirm({
@@ -256,6 +287,7 @@ export default () => {
     if (!selected) return []
     const isPending = selected?.status === 'PENDING'
     const isLoading = selected?.status === 'LOADING'
+    const isLoadingStarted = selected?.status == LOADING_STARTED
     const isLoaded = selected?.status === 'LOADED'
     const claimed = !!selected?.claimedBy
     const isRequested = !!selected.loadedChangeRequest
@@ -301,11 +333,11 @@ export default () => {
         onClick: async () => {
           const rs = await loadInstance(instanceId || 0)
           setModal({
-            type: 'CONFIRM_REQUEST', cb: () => {
+            type: 'CONFIRM_REQUEST', cb: async () => {
               if (from === 'DETAIL') {
-                onFetchAllocatedDockDetail(selected?.id)
+                await onFetchAllocatedDockDetail(selected?.id)
               }
-              loadData()
+              await loadData()
             }
           })
         }
@@ -316,8 +348,6 @@ export default () => {
           setPrinting(rs.id)
         }
       },
-
-
       {
         key: 'hold', label: 'Hold', visible: claimed && isPending, main: false, icon: <PauseOutlined />, onClick: () => {
           setModal({
@@ -334,7 +364,7 @@ export default () => {
       },
 
       {
-        key: 'release', label: 'Release Claim', visible: claimed && instanceId && (!isLoaded || isRequested), main: !isRequested && !isLoading, icon: <StopOutlined />,
+        key: 'release', label: 'Release Claim', visible: claimed && instanceId && (!isLoaded || isRequested || !isLoadingStarted), main: !isRequested && !isLoadingStarted && !isLoading, icon: <StopOutlined />,
         onClick: () => {
           onReleaseHandler(instanceId, async () => {
             if (from == 'DETAIL') {
@@ -374,7 +404,18 @@ export default () => {
 
       { seperator: true, visible: (isLoading || claimed) && instanceId && !isLoaded },
       {
-        key: 'done', label: "Complete", visible: isLoading && !isRequested && claimed, main: true, type: 'Primary', icon: <FileDoneOutlined />, onClick: () => {
+        key: 'start', label: "Start Loading", visible: isLoading && !isRequested && claimed, main: true, type: 'Primary', icon: <PlayCircleOutlined />, onClick: () => {
+
+          selected?.loadingId && onStartLoaingHandler(selected.loadingId, selected.ownedTruckLoading, () => {
+            if (from == 'DETAIL') {
+              onFetchAllocatedDockDetail(selected?.id)
+            }
+            loadData()
+          })
+        }
+      },
+      {
+        key: 'done', label: "Complete", visible: isLoadingStarted && !isRequested && claimed, main: true, type: 'Primary', icon: <FileDoneOutlined />, onClick: () => {
           selected?.loadingId && onCompleteHandler(selected.loadingId, () => {
             if (from == 'DETAIL') {
               onFetchAllocatedDockDetail(selected?.id)
@@ -485,13 +526,10 @@ export default () => {
         { status: CHANGE_REQUEST, count: list1.filter(it => it.loadedChangeRequest).length },
         { status: PENDING, count: list1.filter(it => it.status == PENDING && !it.holdBy && !it.canPick && !it.loadedChangeRequest).length },
         { status: PICKING, count: list1.filter(it => it.status == PENDING && !it.holdBy && it.canPick && !it.loadedChangeRequest).length },
-        { status: LOADING, count: list1.filter(it => it.status == LOADING && !it.holdBy && !it.loadedChangeRequest).length },
+        { status: LOADING, count: list1.filter(it => (it.status == LOADING || it.status == LOADING_STARTED) && !it.holdBy && !it.loadedChangeRequest).length },
         { status: LOADED, count: list1.filter(it => it.status == LOADED && !it.holdBy).length }
       ])
       setLoadingDockList(list)
-
-      console.log(statusFilter);
-
 
       setLoadingDockListDisplay(
         list1
@@ -500,7 +538,7 @@ export default () => {
             (statusFilter == CHANGE_REQUEST && it.loadedChangeRequest && !it.holdBy) ||
             (statusFilter == PICKING && it.status == PENDING && it.canPick && !it.holdBy && !it.loadedChangeRequest) ||
             (statusFilter == PENDING && it.status == PENDING && !it.canPick && !it.holdBy && !it.loadedChangeRequest) ||
-            (statusFilter == LOADING && it.status == LOADING && !it.holdBy && !it.loadedChangeRequest) ||
+            (statusFilter == LOADING && (it.status == LOADING || it.status == LOADING_STARTED) && !it.holdBy && !it.loadedChangeRequest) ||
             (statusFilter == LOADED && it.status == LOADED && !it.holdBy) ||
             !statusFilter
           )
@@ -659,7 +697,6 @@ export default () => {
         } catch (error: any) {
           message.error(error.message || 'Failed to close.')
         }
-
       }
     })
 
@@ -687,7 +724,7 @@ export default () => {
           await singleRequest(LoadingServiceParams.onChangRequest({
             loadingId, approved, remarks
           }))(requestActions);
-          modal.type === 'CONFIRM_REQUEST' && modal.cb?.()
+          modal.type === 'CONFIRM_REQUEST' && await modal.cb?.()
           onCloseModalHandler()
         } catch (error: any) {
           message.error(error.message || `Failed to ${approved ? 'approve' : 'reject'}.`)
@@ -845,7 +882,6 @@ export default () => {
           <ProList<AllocatedLoadingDock>
             showActions='hover'
             size='small'
-
             rowKey='id'
             dataSource={loadingDockListDisplay}
             rowClassName={(item: AllocatedLoadingDock) => !item.isActive ? styles.color1 : item.allocated ? styles.color2 : styles.color3}
@@ -908,7 +944,9 @@ export default () => {
                     <ProDescriptions.Item label="Driver Name"> {r.driver || 'N/A'}</ProDescriptions.Item>
                     {r.loadingStartedDate && !r?.loadingEndedDate && <ProDescriptions.Item label="Waiting Time"> {moment(r.loadingStartedDate).toNow()}</ProDescriptions.Item>}
                     {r.loadingEndedDate && r.status == 'LOADED' && <ProDescriptions.Item label="Loading Time"> {durationFormat(moment(r.loadingStartedDate), moment(r.loadingEndedDate))}</ProDescriptions.Item>}
+                    {r.ownedTruckLoading && <ProDescriptions.Item label="Owned Truck Loading"> <Checkbox checked={r.ownedTruckLoading} /> </ProDescriptions.Item>}
                     {r.claimedBy && <ProDescriptions.Item label="Claimed By"> {r.claimedBy}</ProDescriptions.Item>}
+
                   </ProDescriptions>
                 )
               }
@@ -935,6 +973,16 @@ export default () => {
           required={modal.required}
           onSave={modal.cb} />
       }
+
+      {modal.type === 'START' && (
+        <StartLoadingModal
+          onOpenChange={onCloseModalHandler}
+          open={modal.type === 'START'}
+          ownedTruckLoading={modal.ownedTruckLoading}
+          loaded={modal.payload}
+          onSave={data => onLoadingStartedhandler(data, modal?.callback)}
+        />
+      )}
 
       {modal.type === 'DONE' && (
         <FinishLoadingModal

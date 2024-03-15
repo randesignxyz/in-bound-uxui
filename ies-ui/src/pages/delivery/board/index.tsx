@@ -88,7 +88,7 @@ export default () => {
   }
 
   const onRefreshDatahHandler = async (id?: number) => {
-    actionRef.current?.reloadAndRest?.()
+    await actionRef.current?.reloadAndRest?.()
     await loadDetail(id || selectedItem?.id || 0)
     setForceupdate(v => v + 1)
   }

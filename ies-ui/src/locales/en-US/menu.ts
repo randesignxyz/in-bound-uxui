@@ -155,4 +155,5 @@ export default {
   'menu.appraisal-request': 'Appraisal Request',
   'menu.gratis': 'Gratis',
   'menu.appraisal-submit': 'Appraisal Submission'
+
 };

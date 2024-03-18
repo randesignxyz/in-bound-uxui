@@ -248,7 +248,7 @@ const AssignedDocModal: React.FC<Props> = ({
     const deliveryItems = assigningData?.deliveryNotes.flatMap(it => it.items).map(it => ({ itemCode: it.itemCode, qty: it.qty })) || []
 
     const allItemCodes = _.uniq([...loadedItems.map(it => it.itemCode), ...deliveryItems.map(it => it.itemCode)])
-    
+
     const checkItems = allItemCodes.map(it => ({ itemCode: it, qty: _.sum(loadedItems.filter(i => i.itemCode === it).map(i => i.qty)) - _.sum(deliveryItems.filter(i => i.itemCode === it).map(i => i.qty)) }))
 
     return !checkItems.some(it => it.qty !== 0)
@@ -373,7 +373,7 @@ const AssignedDocModal: React.FC<Props> = ({
                 </Button>
               </ProFormText>
             </ProFormGroup>
-          
+
           </ProCard>
         }
         <Space direction='vertical' style={{ width: '100%' }} >
@@ -384,7 +384,7 @@ const AssignedDocModal: React.FC<Props> = ({
           {!sameAmountCheck() && (assigningData?.deliveryNotes.length || 0) > 0 && <Alert showIcon type='error' message={<Space>
             <div>{errorMessage}</div>
           </Space>} action={<Tooltip title="Change Request (WH)"><Button onClick={() => setChangeLoadingModal(true)}>
-            Request Chnage
+            Request Change
           </Button></Tooltip>} />}
         </Space>
         <ProCard

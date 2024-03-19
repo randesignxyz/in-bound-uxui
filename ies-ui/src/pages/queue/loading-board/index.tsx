@@ -856,104 +856,103 @@ export default () => {
           </Space>
         </Col>
       </Row>
+      <Spin spinning={requestActions.request?.loading || false}>
+        <ProCard split='horizontal'>
+          <Affix offsetTop={60}>
+            {renderServing()}
+          </Affix>
+          <ProCard
+            style={{ marginBlock: 5 }}
 
-      <ProCard split='horizontal'>
-        <Affix offsetTop={60}>
-          {renderServing()}
-        </Affix>
-        <ProCard
-          style={{ marginBlock: 5 }}
-          title="Waiting List"
-          subTitle={<Spin spinning={requestActions.request?.loading || false} />}
-          extra={<CheckCard.Group onChange={values => {
-            console.log("on change ", values);
+          >
+            <CheckCard.Group onChange={values => {
 
-            setStatusFilter(values as string)
-          }
-          } size='small' defaultValue={statusFilter}>
-            <CheckCard size='small' style={{ width: 150 }} value={HOLD} avatar={<PauseCircleOutlined />} title="Hold" subTitle={<Badge count={statusCount?.find(it => it.status == HOLD)?.count} />} />
-            <CheckCard size='small' style={{ width: 200 }} value={CHANGE_REQUEST} avatar={<SwapOutlined />} title="Change Request" subTitle={<Badge count={statusCount?.find(it => it.status == CHANGE_REQUEST)?.count} />} />
-            <CheckCard size='small' style={{ width: 150 }} value={PENDING} avatar={<ClockCircleOutlined spin />} title="Pending" subTitle={<Badge style={{ backgroundColor: '#52c41a' }} count={statusCount?.find(it => it.status == PENDING)?.count} />} />
-            <CheckCard size='small' style={{ width: 150 }} value={PICKING} avatar={<ClockCircleOutlined spin />} title="Picking" subTitle={<Badge count={statusCount?.find(it => it.status == PICKING)?.count} />} />
-            <CheckCard size='small' style={{ width: 150 }} value={LOADING} avatar={<SyncOutlined spin />} title="Loading" subTitle={<Badge count={statusCount?.find(it => it.status == LOADING)?.count} />} />
-            <CheckCard size='small' style={{ width: 150 }} value={LOADED} avatar={<CheckCircleOutlined />} title="Loaded" subTitle={<Badge style={{ backgroundColor: '#52c41a' }} count={statusCount?.find(it => it.status == LOADED)?.count} />} />
-          </CheckCard.Group>}
-        >
-          <ProList<AllocatedLoadingDock>
-            showActions='hover'
-            size='small'
-            rowKey='id'
-            dataSource={loadingDockListDisplay}
-            rowClassName={(item: AllocatedLoadingDock) => !item.isActive ? styles.color1 : item.allocated ? styles.color2 : styles.color3}
-            metas={{
-              avatar: { render: (_, r) => <img width={"50px"} src={!r.isActive ? stopping : r.allocated ? forkLift : timeLeft} /> },
-              title: {
-                render: (_, r) => <a onClick={() => onFetchAllocatedDockDetail(r.id, () => setViewDetail(true))}>{[r.code, ...(r.combinedLoadingDocks || []).map(it => it.code)].join()}</a>
-              },
-              subTitle: {
-                render: (_, r) => {
-                  const statusList = [
-                    { key: 'issueDn', label: 'Issue DN', icon: <ClockCircleOutlined spin />, visible: !r.canPick && r.status == 'PENDING', color: 'processing' },
-                    { key: 'issueDn', label: 'DN Issued', icon: <CheckCircleOutlined />, visible: r.canPick && r.status == 'PENDING', color: 'success' },
-                    { key: 'hold', label: 'Hold', icon: <PauseCircleOutlined />, color: 'warning', visible: !!r.holdBy },
-                    { key: 'pickingSlip', label: 'Picking Slip', icon: <ClockCircleOutlined spin />, visible: r.status == 'PENDING', color: 'processing' },
-                    { key: 'pickingSlip', label: 'Picking Slip', icon: <CheckCircleOutlined />, visible: r.status != 'PENDING' && r.allocated, color: 'success' },
-                    { key: 'loading', label: 'Loading', icon: <ClockCircleOutlined spin />, visible: r.status == 'LOADING', color: 'processing' },
-                    { key: 'loaded', label: 'Loaded', icon: <CheckCircleOutlined />, visible: r.status == 'LOADED', color: 'success' },
-                    { key: 'changeRequest', alert: true, label: 'Change Request', icon: <ClockCircleOutlined spin />, visible: r.loadedChangeRequest, color: 'processing' },
-                  ]
-                  return (<Space>
-                    {r.ticketNum && `#${r.ticketNum}`}
-                    {!r.autoAssigned && <Tag icon={<UserOutlined />}>Manual Assign</Tag>}
-                    {statusList.filter(it => it.visible).map(it => (<Tag key={it.key} className={it.alert && styles.blinking} color={it.color} icon={it.icon}>
-                      {it.label}
-                    </Tag>))}
-                  </Space>)
-                }
-              },
-              actions: {
-                render: (_, r) => {
-                  if (r.holdBy && r.status == "PENDING" && r.canPick && !loadingDockList?.some(it => it.isOwner && it.status === 'PENDING')) {
-                    return <Button onClick={() => {
-                      getActions?.('LIST', r).find(it => it.key == 'claim')?.onClick?.(r?.id)
-                    }}>Unhold</Button>
+              setStatusFilter(values as string)
+            }
+            } size='small' defaultValue={statusFilter}>
+              <CheckCard size='small' style={{ width: 150 }} value={HOLD} avatar={<PauseCircleOutlined />} title="Hold" extra={<Badge count={statusCount?.find(it => it.status == HOLD)?.count} />} />
+              <CheckCard size='small' style={{ width: 200 }} value={CHANGE_REQUEST} avatar={<SwapOutlined />} title="Change Request" extra={<Badge count={statusCount?.find(it => it.status == CHANGE_REQUEST)?.count} />} />
+              <CheckCard size='small' style={{ width: 150 }} value={PENDING} avatar={<ClockCircleOutlined spin />} title="Pending" extra={<Badge style={{ backgroundColor: '#52c41a' }} count={statusCount?.find(it => it.status == PENDING)?.count} />} />
+              <CheckCard size='small' style={{ width: 150 }} value={PICKING} avatar={<ClockCircleOutlined spin />} title="Picking" extra={<Badge count={statusCount?.find(it => it.status == PICKING)?.count} />} />
+              <CheckCard size='small' style={{ width: 150 }} value={LOADING} avatar={<SyncOutlined spin />} title="Loading" extra={<Badge count={statusCount?.find(it => it.status == LOADING)?.count} />} />
+              <CheckCard size='small' style={{ width: 150 }} value={LOADED} avatar={<CheckCircleOutlined />} title="Loaded" extra={<Badge style={{ backgroundColor: '#52c41a' }} count={statusCount?.find(it => it.status == LOADED)?.count} />} />
+            </CheckCard.Group>
+            <ProList<AllocatedLoadingDock>
+              showActions='hover'
+              size='small'
+              rowKey='id'
+              dataSource={loadingDockListDisplay}
+              rowClassName={(item: AllocatedLoadingDock) => !item.isActive ? styles.color1 : item.allocated ? styles.color2 : styles.color3}
+              metas={{
+                avatar: { render: (_, r) => <img width={"50px"} src={!r.isActive ? stopping : r.allocated ? forkLift : timeLeft} /> },
+                title: {
+                  render: (_, r) => <a onClick={() => onFetchAllocatedDockDetail(r.id, () => setViewDetail(true))}>{[r.code, ...(r.combinedLoadingDocks || []).map(it => it.code)].join()}</a>
+                },
+                subTitle: {
+                  render: (_, r) => {
+                    const statusList = [
+                      { key: 'issueDn', label: 'Issue DN', icon: <ClockCircleOutlined spin />, visible: !r.canPick && r.status == 'PENDING', color: 'processing' },
+                      { key: 'issueDn', label: 'DN Issued', icon: <CheckCircleOutlined />, visible: r.canPick && r.status == 'PENDING', color: 'success' },
+                      { key: 'hold', label: 'Hold', icon: <PauseCircleOutlined />, color: 'warning', visible: !!r.holdBy },
+                      { key: 'pickingSlip', label: 'Picking Slip', icon: <ClockCircleOutlined spin />, visible: r.status == 'PENDING', color: 'processing' },
+                      { key: 'pickingSlip', label: 'Picking Slip', icon: <CheckCircleOutlined />, visible: r.status != 'PENDING' && r.allocated, color: 'success' },
+                      { key: 'loading', label: 'Loading', icon: <ClockCircleOutlined spin />, visible: r.status == 'LOADING', color: 'processing' },
+                      { key: 'loaded', label: 'Loaded', icon: <CheckCircleOutlined />, visible: r.status == 'LOADED', color: 'success' },
+                      { key: 'changeRequest', alert: true, label: 'Change Request', icon: <ClockCircleOutlined spin />, visible: r.loadedChangeRequest, color: 'processing' },
+                    ]
+                    return (<Space>
+                      {r.ticketNum && `#${r.ticketNum}`}
+                      {!r.autoAssigned && <Tag icon={<UserOutlined />}>Manual Assign</Tag>}
+                      {statusList.filter(it => it.visible).map(it => (<Tag key={it.key} className={it.alert && styles.blinking} color={it.color} icon={it.icon}>
+                        {it.label}
+                      </Tag>))}
+                    </Space>)
                   }
-
-                  if (r.status == 'PENDING') return
-                  const mainAction = (vc.view.getActions?.('LIST', r) || []).filter(it => it.visible && it.main).find(it => it)
-                  return <DropdownButton onClick={() => {
-                    if (!mainAction) {
-                      message.warning(`Blocked by ${r.claimedBy}`)
+                },
+                actions: {
+                  render: (_, r) => {
+                    if (r.holdBy && r.status == "PENDING" && r.canPick && !loadingDockList?.some(it => it.isOwner && it.status === 'PENDING')) {
+                      return <Button onClick={() => {
+                        getActions?.('LIST', r).find(it => it.key == 'claim')?.onClick?.(r?.id)
+                      }}>Unhold</Button>
                     }
-                    mainAction?.onClick?.(r.id)
-                  }} key={r.id}
-                    menu={{
-                      items: (vc.view.getActions?.('LIST', r) || []).filter(it => it.visible && it.key != mainAction?.key).map((it, index) => (it.seperator ? { type: 'divider', key: `dv-${index}` } : {
-                        icon: it.icon, key: it.key, label: it.label, onClick: () => it.onClick?.(r.id),
-                        danger: it.type == 'Danger'
-                      }))
-                    }} >
-                    {(vc.view.getActions?.('LIST', r) || []).filter(it => it.visible && it.main)?.map(it => it.label).find(it => it) || <ClockCircleOutlined spin />}
-                  </DropdownButton>
-                }
-              },
-              description: {
-                render: (_, r) => (
-                  <ProDescriptions size='small' column={4} style={{ width: 'calc(100vh - 5px)' }}>
-                    <ProDescriptions.Item label="License Plate #"> {r.truckNo || 'N/A'}</ProDescriptions.Item>
-                    <ProDescriptions.Item label="Driver Name"> {r.driver || 'N/A'}</ProDescriptions.Item>
-                    {r.loadingStartedDate && !r?.loadingEndedDate && <ProDescriptions.Item label="Waiting Time"> {moment(r.loadingStartedDate).toNow()}</ProDescriptions.Item>}
-                    {r.loadingEndedDate && r.status == 'LOADED' && <ProDescriptions.Item label="Loading Time"> {durationFormat(moment(r.loadingStartedDate), moment(r.loadingEndedDate))}</ProDescriptions.Item>}
-                    {r.ownedTruckLoading && <ProDescriptions.Item label="Owned Truck Loading"> <Checkbox checked={r.ownedTruckLoading} /> </ProDescriptions.Item>}
-                    {r.claimedBy && <ProDescriptions.Item label="Claimed By"> {r.claimedBy}</ProDescriptions.Item>}
 
-                  </ProDescriptions>
-                )
-              }
-            }}
-          />
+                    if (r.status == 'PENDING') return
+                    const mainAction = (vc.view.getActions?.('LIST', r) || []).filter(it => it.visible && it.main).find(it => it)
+                    return <DropdownButton onClick={() => {
+                      if (!mainAction) {
+                        message.warning(`Blocked by ${r.claimedBy}`)
+                      }
+                      mainAction?.onClick?.(r.id)
+                    }} key={r.id}
+                      menu={{
+                        items: (vc.view.getActions?.('LIST', r) || []).filter(it => it.visible && it.key != mainAction?.key).map((it, index) => (it.seperator ? { type: 'divider', key: `dv-${index}` } : {
+                          icon: it.icon, key: it.key, label: it.label, onClick: () => it.onClick?.(r.id),
+                          danger: it.type == 'Danger'
+                        }))
+                      }} >
+                      {(vc.view.getActions?.('LIST', r) || []).filter(it => it.visible && it.main)?.map(it => it.label).find(it => it) || <ClockCircleOutlined spin />}
+                    </DropdownButton>
+                  }
+                },
+                description: {
+                  render: (_, r) => (
+                    <ProDescriptions size='small' column={4} style={{ width: 'calc(100vh - 5px)' }}>
+                      <ProDescriptions.Item label="License Plate #"> {r.truckNo || 'N/A'}</ProDescriptions.Item>
+                      <ProDescriptions.Item label="Driver Name"> {r.driver || 'N/A'}</ProDescriptions.Item>
+                      {r.loadingStartedDate && !r?.loadingEndedDate && <ProDescriptions.Item label="Waiting Time"> {moment(r.loadingStartedDate).toNow()}</ProDescriptions.Item>}
+                      {r.loadingEndedDate && r.status == 'LOADED' && <ProDescriptions.Item label="Loading Time"> {durationFormat(moment(r.loadingStartedDate), moment(r.loadingEndedDate))}</ProDescriptions.Item>}
+                      {r.ownedTruckLoading && <ProDescriptions.Item label="Owned Truck Loading"> <Checkbox checked={r.ownedTruckLoading} /> </ProDescriptions.Item>}
+                      {r.claimedBy && <ProDescriptions.Item label="Claimed By"> {r.claimedBy}</ProDescriptions.Item>}
+
+                    </ProDescriptions>
+                  )
+                }
+              }}
+            />
+          </ProCard>
         </ProCard>
-      </ProCard>
+      </Spin>
       <Detail
         title={
           <Space>

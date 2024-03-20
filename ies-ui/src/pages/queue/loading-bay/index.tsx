@@ -9,6 +9,7 @@ import { ActionType } from '@ant-design/pro-table';
 import { message, Modal, Rate, Spin } from 'antd';
 import { useRef, useState } from 'react';
 import LoadingBayEntryModal from './entry-form';
+import { PageContainer } from '@ant-design/pro-components';
 
 export default () => {
   const requestActions = simpleRequestActions();
@@ -57,49 +58,51 @@ export default () => {
   };
 
   return (
-    <Spin spinning={!!requestActions.request?.loading}>
-      <TableView<LoadingBayListItem, { searchValue?: string }>
-        columns={[
-          {
-            title: 'Code',
-            render: colLink(
-              (r) => onOpenEntryHandler(r),
-              (r) => r.code,
-            ),
-          },
-          { title: 'Name', dataIndex: 'name' },
-          { title: 'Status', render: (_, r) => toReadable(r.status) },
-          { title: 'Warehouse', render: (_, r) => r.warehouse?.code },
-          { title: 'Priority', render: (_, r) => <Rate value={r.priority} disabled/> },
-          { title: 'Description', dataIndex: 'description' },
-          { title: 'Created By', dataIndex: 'createdBy' },
-          { title: 'Created Date', render: (_, r) => formatDateTime(r.createdDate) },
-        ]}
-        tableProps={{
-          actionRef: actionRef,
-        }}
-        actionHandlers={{
-          onAdd: () => {
-            setSate((v) => ({ ...v, visible: { name: 'modal', type: 'ADD' } }));
-          },
-          onRequest: (criteria, pagination, sort) =>
-            onRequestHandler({
-              criteria: {
-                ...criteria,
-                sort,
-              },
-              pagination,
-            }),
-        }}
-      />
+    <PageContainer onBack={() => history.back()} title="Loading Bays">
+      <Spin spinning={!!requestActions.request?.loading}>
+        <TableView<LoadingBayListItem, { searchValue?: string }>
+          columns={[
+            {
+              title: 'Code',
+              render: colLink(
+                (r) => onOpenEntryHandler(r),
+                (r) => r.code,
+              ),
+            },
+            { title: 'Name', dataIndex: 'name' },
+            { title: 'Status', render: (_, r) => toReadable(r.status) },
+            { title: 'Warehouse', render: (_, r) => r.warehouse?.code },
+            { title: 'Priority', render: (_, r) => <Rate value={r.priority} disabled /> },
+            { title: 'Description', dataIndex: 'description' },
+            { title: 'Created By', dataIndex: 'createdBy' },
+            { title: 'Created Date', render: (_, r) => formatDateTime(r.createdDate) },
+          ]}
+          tableProps={{
+            actionRef: actionRef,
+          }}
+          actionHandlers={{
+            onAdd: () => {
+              setSate((v) => ({ ...v, visible: { name: 'modal', type: 'ADD' } }));
+            },
+            onRequest: (criteria, pagination, sort) =>
+              onRequestHandler({
+                criteria: {
+                  ...criteria,
+                  sort,
+                },
+                pagination,
+              }),
+          }}
+        />
 
-      <LoadingBayEntryModal
-        title="Loading Bay"
-        onCancel={onCloseHandler}
-        open={state.visible?.name == 'modal'}
-        data={state.visible?.payload}
-        onSave={onSaveHandler}
-      />
-    </Spin>
+        <LoadingBayEntryModal
+          title="Loading Bay"
+          onCancel={onCloseHandler}
+          open={state.visible?.name == 'modal'}
+          data={state.visible?.payload}
+          onSave={onSaveHandler}
+        />
+      </Spin>
+    </PageContainer>
   );
 };

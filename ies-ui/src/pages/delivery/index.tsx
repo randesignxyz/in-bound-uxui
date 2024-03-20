@@ -13,9 +13,11 @@ import settingIcon from '@/assets/settings.png';
 import qrCodeIcon from '@/assets/qr-code.png';
 import forkLift from '@/assets/fork-lift.png';
 import { Divider, Menu } from 'antd';
-import { HistoryOutlined } from '@ant-design/icons';
+import { AreaChartOutlined, HistoryOutlined } from '@ant-design/icons';
 import { useAccess, history } from 'umi';
 import { PageContainer } from '@ant-design/pro-components';
+import Reports, { ReportType } from './reports';
+import { useState } from 'react';
 
 export const DeliveryPaths = {
   default: '/delivery/default',
@@ -35,7 +37,9 @@ export const DeliveryPaths = {
   review: '/delivery/review',
   reviewer: '/delivery/reviewer',
   history: '/delivery/history',
+  loadingHistory: '/delivery/loading-history'
 };
+
 
 export const QueuePaths = {
   ticket: '/delivery/ticket',
@@ -53,6 +57,9 @@ export const QueuePaths = {
 export default () => {
 
   const access = useAccess()
+  const [report, setReport] = useState<ReportType>()
+
+
   const deliveryMenu = (
     <Menu
       items={[
@@ -75,18 +82,14 @@ export default () => {
       icon: ticketIcon,
       // isMenu: true,
       visible: access.canAccessDeliveryMenuItem,
-      overlay: (
-        <Menu
-          items={[
-            {
-              label: 'View History',
-              icon: <HistoryOutlined />,
-              key: 'ticket-history',
-              onClick: () => history.push(QueuePaths.history),
-            },
-          ]}
-        />
-      ),
+      menu: {
+        items: [{
+          label: 'View History',
+          icon: <HistoryOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+          key: 'ticket-history',
+          onClick: () => history.push(QueuePaths.history),
+        }]
+      }
     },
     {
       id: 'dashboard',
@@ -94,7 +97,27 @@ export default () => {
       description: 'Manage Loading',
       link: `${QueuePaths.loadingBoard}`,
       icon: forkLift,
-      visible: access.canAccessDeliveryLoading
+      visible: access.canAccessDeliveryLoading,
+      menu: {
+        items: [{
+          label: 'Loading History',
+          icon: <HistoryOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+          key: 'loading-list',
+          onClick: () => history.push(DeliveryPaths.loadingHistory),
+        },
+        {
+          type: 'divider'
+        },
+        {
+          label: 'Loading Time Report',
+          icon: <AreaChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+          key: 'loading-time-report',
+          onClick: () => setReport({
+            type: 'LOADING_TIME'
+          }),
+        }]
+      }
+
     },
     {
       id: 'dashboard',
@@ -231,6 +254,7 @@ export default () => {
       {setupItems.some(it => it.visible) && <ListMenuComp items={setupItems} />}
       {setupItems.some(it => it.visible) && <Divider />}
       {queueSetupItems.some(it => it.visible) && <ListMenuComp items={queueSetupItems} />}
+      <Reports report={report} onClose={() => setReport(undefined)} />
     </PageContainer>
   );
 };

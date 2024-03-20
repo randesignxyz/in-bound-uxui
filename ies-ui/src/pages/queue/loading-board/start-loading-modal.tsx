@@ -21,7 +21,6 @@ interface Props extends ModalFormProps {
 const StartLoadingModal: React.FC<Props> = ({ loaded, ownedTruckLoading, onSave, ...props }) => {
 
   const requestActions = simpleRequestActions()
-  const [secondaryLoading, setSecondaryLoading] = useState(false)
   const [loadingTeam, setLoadingTeam] = useState<LoadingTeam[]>()
   const [form] = useForm<{
     id: number;
@@ -65,8 +64,7 @@ const StartLoadingModal: React.FC<Props> = ({ loaded, ownedTruckLoading, onSave,
       form={form}
       onValuesChange={(_, values) => {
         const items = (values.items || []) as { loadedQty: number }[]
-        const hasZeroLoadedQty = items?.some(it => it.loadedQty == 0)
-        setSecondaryLoading(!!hasZeroLoadedQty)
+        // const hasZeroLoadedQty = items?.some(it => it.loadedQty == 0)
 
       }}
       title="Start Loading"

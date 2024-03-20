@@ -9,6 +9,7 @@ import { ActionType } from '@ant-design/pro-table';
 import { message, Modal, Spin } from 'antd';
 import { useRef, useState } from 'react';
 import OfficerEntryModal from './EntryForm';
+import { PageContainer } from '@ant-design/pro-components';
 
 export default () => {
   const requestActions = simpleRequestActions();
@@ -72,7 +73,7 @@ export default () => {
     });
   };
 
-  return (
+  return (<PageContainer onBack={() => history.back()} title="Officers">
     <Spin spinning={!!requestActions.request?.loading}>
       <TableView<OfficerItem, { searchValue?: string }>
         columns={[
@@ -110,5 +111,6 @@ export default () => {
         onSave={onSaveHandler}
       />
     </Spin>
+  </PageContainer>
   );
 };

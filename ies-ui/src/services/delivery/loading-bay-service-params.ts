@@ -159,6 +159,14 @@ export const LoadingServiceParams = {
     },
   }),
 
+  listLoadingTeam: (): ServiceApiType<{}> => ({
+    type: 'LIST_QUERY',
+    actionName: 'fetch-all-loading-team',
+    responseKey: 'loadingTeamList',
+    endpoint: 'DELIVERY',
+    payload: {}
+  }),
+
   listAllLoadingBay: (): ServiceApiType<{}> => ({
     type: 'LIST_QUERY',
     endpoint: 'DELIVERY',

@@ -1,9 +1,10 @@
 import CrudWrapper from "@/components/DataCrud/CrudWrapper"
 import { QueuePaths } from ".."
 import ListView from "./ListView"
+import { history } from "@umijs/max"
 
 export default () => {
-    return <CrudWrapper baseURL={QueuePaths.setting} title="Queque" >
+    return <CrudWrapper onBack={() => history.back()} baseURL={QueuePaths.setting} title="Queque" >
         {(view) => {
             switch (view) {
                 case 'list':
@@ -12,5 +13,5 @@ export default () => {
                     throw Error('Not supported')
             }
         }}
-    </CrudWrapper>
+    </CrudWrapper >
 }

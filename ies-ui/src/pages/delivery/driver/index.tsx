@@ -4,7 +4,7 @@ import ListView from "./ListView"
 
 export default () => {
 
-    return <CrudWrapper baseURL={DeliveryPaths.driver} >
+    return <CrudWrapper onBack={() => history.back()} title="Drivers" baseURL={DeliveryPaths.driver} >
         {(view) => {
             switch (view) {
                 case 'list':

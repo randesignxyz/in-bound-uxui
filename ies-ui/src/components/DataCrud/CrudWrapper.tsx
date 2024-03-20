@@ -7,10 +7,12 @@ type ViewType = 'list' | 'create' | 'detail' | 'edit' | 'view' | undefined;
 interface Props {
     baseURL?: string;
     title?: string;
+    onBack?: () => void;
     children?: (
         viewType: ViewType,
         id?: number | string,
         navigate?: {
+
             goToDetail?: (data: { id: number | string }) => void;
             gotToListHandler?: () => void;
             goToCreate?: (data?: { id?: number | string }) => void;
@@ -20,7 +22,7 @@ interface Props {
 }
 
 
-const CrudWrapper: React.FC<Props> = ({ baseURL, children, title }) => {
+const CrudWrapper: React.FC<Props> = ({ baseURL, onBack, children, title }) => {
     const params = useParams()
 
     const view: ViewType = (params['view'] as ViewType) || undefined
@@ -47,7 +49,7 @@ const CrudWrapper: React.FC<Props> = ({ baseURL, children, title }) => {
         baseURL && history.push(`${baseURL}/edit/${data.id}`)
     }
 
-    return <PageContainer title={title ? title : false}>
+    return <PageContainer onBack={onBack} title={title ? title : false}>
         {view == undefined ? <div>Not implemented</div> : children?.(
             view,
             id,

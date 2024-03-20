@@ -1,13 +1,13 @@
 import { Space, Spin, Tag, message, Button, Tooltip, Descriptions, Modal, Dropdown, Input, Radio } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { history } from 'umi';
-import { CaretDownOutlined, EditOutlined, EyeOutlined, FieldTimeOutlined, FileAddOutlined, FileDoneOutlined, FileExcelOutlined, FilePdfOutlined, MessageOutlined, PartitionOutlined, QuestionCircleOutlined, StopOutlined } from '@ant-design/icons';
+import { CaretDownOutlined, EditOutlined, EyeOutlined, FieldTimeOutlined, FileAddOutlined, FileDoneOutlined, FileExcelOutlined, FilePdfOutlined, MessageOutlined, PartitionOutlined, QuestionCircleOutlined, SelectOutlined, StopOutlined, SyncOutlined } from '@ant-design/icons';
 import { CrmPaths } from '@/pages/crm';
 import { ActionType, CheckCard, PageContainer, ProCard, ProList, ProTable } from '@ant-design/pro-components';
 import { simpleRequestActions } from '@/services/model';
 import { useSafeState } from 'ahooks';
 import { GratisServices } from '../../services';
-import { CriteriaExportReport, GratisContract, GratisSuggestedCustomer, IncentiveSettlement, SearchCriteria, SettlementCycleActivity } from '../../types';
+import { CriteriaExportReport, GratisContract, GratisSuggestedCustomer, GratisSuggestedCustomerVisit, IncentiveSettlement, SearchCriteria, SettlementCycleActivity } from '../../types';
 import { formatDate, formatDateTime, toReadable } from '@/pages/utils';
 import VerifyContractList from './VerifyContractList';
 import { Model } from '../../model';
@@ -23,11 +23,13 @@ import { ProcessFlowModalMngt } from '@/pages/process-flow/components/ProcessFlo
 import processIcon from '@/assets/gear-white.png';
 import suggestionIcon from '@/assets/suggestions.png'
 import '../../../gratis/style.less'
+import Popconfirm from '@/components/Popconfirm';
 
 const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: (id: number, cb?: () => void) => void }> = ({ id, onEdit }) => {
   const requestActions = simpleRequestActions()
   const actionRef = useRef<ActionType>();
   const actionSuggestedRef = useRef<ActionType>();
+  const actionSuggestedCustVisitRef = useRef<ActionType>();
   const [data, setData] = useSafeState<IncentiveSettlement>()
   const [gContract, setGContract] = useSafeState<{ id: number, orderNo: number }>()
   const { modals } = Model();
@@ -37,6 +39,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
   const [forceRefresh, setForceRefresh] = useState<number>(1)
   const [isSuggested,setIsSuggested] = useState<boolean>(false)
   const [criteriaSuggested, setCriteriaSuggested] = useState<SearchCriteria>()
+  const [isSynchAll,setIsSynchAll] = useState<boolean>(false)
 
   const model = ProcessFlowModel()
   const { actions } = model
@@ -159,7 +162,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
   };
   const dataReport = (data: { id?: number, label?: string, status?: string, contractTypeCode?: string }, exportType: 'PDF' | 'EXCEL'): DownloadData<CriteriaExportReport> => {
 
-    var direct = data?.contractTypeCode == 'IN_DIRECT' ? 'Indirect' : 'Direct'
+    var direct = data?.contractTypeCode == 'OTHER' ? 'Display':data?.contractTypeCode == 'IN_DIRECT' ?'Indirect' : 'Direct'
     var issued = data?.status == 'ISSUED' ? 'Issued' : ''
     var reportName = replace('SettlementIncentive@@##Report', '@@', direct)
     reportName = replace(reportName, '##', issued)
@@ -200,6 +203,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
 
   const stausText = (data?.requestStatus == 'NONE' || data?.status != 'PENDING') ? data?.status : (data?.requestStatus == 'COMPLETED' ? 'APPROVED' : data?.requestStatus)
   const contractTypeDirect = data?.contractType?.code=='DIRECT'?true:false
+  const groupTypeOther=data?.contractType?.code=='OTHER'?true:false
   const  optionsStatus=[
     { label: "All", value: "ALL",sort:1 },
     { label: "Achieved", value: "ACHIEVED",sort:2 },   
@@ -207,6 +211,25 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
   ]
   if(!contractTypeDirect){
     optionsStatus.push({ label: "Achieved*", value: "N-ACHIEVED",sort:3 })
+  }
+  const synchroGratisCustomerVisit= async (tranType: string,gSettledId:number,gVerifyId?: number,scheduleIds?:number[])=>{
+    try {
+      await GratisServices.synchroGratisCustomerVisitSchedule(tranType,gSettledId,gVerifyId,scheduleIds)(requestActions)                       
+      // cb(true)
+      actionSuggestedCustVisitRef.current?.reload()
+      // onFinish()
+      loadData()
+    }catch (error: any) {
+        message.error(error.message || 'Failed to change status.')
+    }
+  }
+  const synchroGratisCustVisitAll=async (gSettledId:number)=>{
+    Modal.confirm({
+      title: 'Synch All', content: 'Are you sure to update all customer visit schedule?',
+      onOk: async () => {
+        synchroGratisCustomerVisit('all',gSettledId,-1)
+      }
+    })
   }
   return (
     <Spin spinning={requestActions.request?.loading || false} tip={spinTip}>
@@ -256,7 +279,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
               <Descriptions.Item label="Form No">{data?.formNo}</Descriptions.Item>
             </Descriptions>
           </ProCard>
-          <ProCard title='Contracts' headerBordered size='small'
+          <ProCard title='' headerBordered size='small'
             extra={
               <Space>
                 <CheckCard.Group value={isSuggested?'suggestion':undefined}
@@ -269,7 +292,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
               </Space>
             }
           >
-            {isSuggested&&<ProTable<GratisSuggestedCustomer>
+            {!groupTypeOther&&isSuggested&&<ProTable<GratisSuggestedCustomer>
                actionRef={actionSuggestedRef}
                search={false}
                size='small'
@@ -296,7 +319,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
                 rowKey={'id'}
                 columns={[{
                   title:'Verified Date',
-                  dataIndex: 'gcontractId',
+                  dataIndex: 'contractId',
                   render: (_, r) => (
                     <Space size={1}>
                       <Tooltip title="Quick data review">
@@ -304,14 +327,14 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
                           type="link"
                           size="small"
                           icon={<EyeOutlined />}
-                          onClick={() => quickViewHandler(r?.gcontractId, r?.orderNo-1)}
+                          onClick={() => quickViewHandler(r?.contractId, r?.orderNo-1)}
                         >{r.durationText}</Button>
                       </Tooltip>                      
                     </Space>
                   ),
                 }, {
                   title: 'Agreement Name',
-                  dataIndex: 'contractNo',
+                  dataIndex: 'gContractNo',
                   render: (_, r) => <Tooltip title={!r?.terms ? 'No Term' : r?.terms}><MessageOutlined /> {r?.contractNo}</Tooltip>
                 },{
                   title:'Total Qty',
@@ -337,6 +360,119 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
                   render: (_, r) => <Status text={r?.status||'FAILED'} value={r?.status} />
                 }
               ]} 
+            />}
+            {groupTypeOther&&isSuggested&&<ProTable<GratisSuggestedCustomerVisit>
+               actionRef={actionSuggestedCustVisitRef}
+               search={false}
+               size='small'
+               options={{
+                 fullScreen: false,
+                 density: false,
+                 reload: true,
+                 setting: false,
+               }}     
+                headerTitle={               
+                  <Space>
+                    <Input.Search allowClear onSearch={onSearchSuggestedCustomerHandler} />       
+                    {isSynchAll&&<Button type='primary' icon={<SyncOutlined/>} onClick={()=>synchroGratisCustVisitAll(data?.id||0)}>Synch All</Button>}         
+                  </Space>    
+                } 
+                request={async (paging) => {
+                  return GratisServices.fetchSuggestedCustomerVisit({ gSettledId: id, pagination: { current: paging?.current || 0, pageSize: paging?.pageSize || 20 } }).query(requestActions).then(it => {
+                    setIsSynchAll(it.total||0>0?true:false)
+                    return {
+                      success: true,
+                      total: it.total,
+                      data: it.items
+                    }
+                  })
+                }}
+                rowKey={'id'}
+                columns={[{
+                  title:'Verified Date',
+                  dataIndex: 'gcontractId',
+                  render: (_, r) => (
+                    <Space size={1}>
+                      <Tooltip title="Quick data review">
+                        <Button
+                          type="link"
+                          size="small"
+                          icon={<EyeOutlined />}
+                          onClick={() => quickViewHandler(r?.gcontractId, r?.orderNo-1)}
+                        >{r.durationText}</Button>
+                      </Tooltip>                      
+                    </Space>
+                  ),
+                }, {
+                  title: 'Agreement Name',
+                  dataIndex: 'contractNo',
+                  render: (_, r) => <Tooltip title={!r?.terms ? 'No Term' : r?.terms}><MessageOutlined /> {r?.gcontractNo}</Tooltip>
+                }, {
+                  title: 'Customer',
+                  dataIndex: 'gcontractId',
+                  render: (_, r) => `${r?.customer?.code} - ${r?.customer?.name}`
+                }, {
+                  title: 'Brand',  
+                  render: (_, r) => r.brand
+                },{
+                  title: 'Schedule Date',
+                  width: 130,
+                  render: (_, r) => (
+                  <Space size={1}>
+                      <Tooltip title="View data in new browser tab.">
+                      <Button
+                          type="link"
+                          size="small"
+                          icon={<SelectOutlined />}
+                          onClick={async () => {
+                          window.open(`./../../visit-schedule/detail/${r.id}`, '_blank')?.focus();
+                          }}
+                      />
+                      </Tooltip>    
+                      {formatDate(r.scheduledDate)}               
+                  </Space>
+                  ),
+              },
+              { 
+                  title: 'Schedule Type',
+                  render:(_,r) => toReadable(r.scheduleType)
+
+              },
+              {
+                  title: 'Salesperson',
+                  render: (_, r) => r.salesperson
+              },
+              {
+                  title: 'Contract No',
+                  render:(_,r) =>  toReadable(r.contractNo)
+              },
+              {
+                  title: 'Compliance Check',
+                  render:(_,r) =>  toReadable(r.complianceStatus)
+              },
+              {
+                title: 'Contract No (Verified)',
+                render:(_,r) =>  toReadable(r.contractNo1)
+              },
+              {
+                title: 'Compliance Check (Updated)',
+                render:(_,r) =>  toReadable(r.complianceStatus1)
+              }, 
+              {
+                title: 'Status',
+                dataIndex: 'tranStatus',
+                render: (_, r) => r?.tranStatus||'Updated'
+              }, 
+              {
+                title: 'Action',
+                dataIndex: 'Status',
+                render: (_, r) => <Popconfirm title='Confirm' placement='left' description='Are you sure to update customer visit schedule?'  
+                    onConfirm={()=>{ synchroGratisCustomerVisit('single', r.incentiveSettlementId,  r.gcontractVerifyId,[r.id])}}
+                  > 
+                    <Button type="primary" size="small" icon={<SyncOutlined/>}>Synch</Button>
+                  </Popconfirm>
+              }
+          ]}
             />}
             {!isSuggested&&<ProTable<GratisContract>
               actionRef={actionRef}
@@ -464,7 +600,8 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
           </ProCard>
         </Space>
         {gContract && modals.isVisible('verifyContractQuickView') && <VerifyContractQuickView
-          id={gContract.id}
+          gSettledId={id}
+          gContractId={gContract.id}
           status={data?.status || ''}
           groupTypeCode={data?.contractType?.code}
           currentNum={gContract.orderNo}

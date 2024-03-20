@@ -1,6 +1,6 @@
 import { ActionType, CheckCard, ProCard, ProFormDateRangePicker, ProTable } from "@ant-design/pro-components"
 import { Button, Descriptions, Input, Modal, Radio, Space, Spin, Table, Tag, Tooltip, message } from "antd"
-import { AdjustItem, GratisContract, GratisVerifyItem, GratisVerifySchedule, SearchCriteria, VerifyGratisContact } from "../../types"
+import { AdjustCustomerVisitSchedule, AdjustItem, GratisContract, GratisVerifyItem, GratisVerifySchedule, SearchCriteria, VerifyGratisContact } from "../../types"
 import { GratisServices } from "../../services"
 import { simpleRequestActions } from "@/services/model"
 import AdjustTranModal from "./adjust/AdjustTranModal"
@@ -18,14 +18,14 @@ import AdjOtherCustomerVisitSearchModal from "./adjust/AdjOtherCustomerVisitSear
 
 interface Props{
     isVerify: boolean;
-    // gContract: GratisContract;
-    id: number;
+    gSettledId: number;
+    gContractId: number;
     groupTypeCode?:string;
     verifyContract: VerifyGratisContact;
     onFinish: ()=> void;
 }
 
-const VerifyContractByMonthView= ({isVerify,id, groupTypeCode, verifyContract,onFinish}: Props) => {
+const VerifyContractByMonthView= ({isVerify,gSettledId,gContractId, groupTypeCode, verifyContract,onFinish}: Props) => {
     const requestActions = simpleRequestActions()
     const actionRef = useRef<ActionType>();
     const actionRefTableVerifySchedule = useRef<ActionType>();
@@ -44,7 +44,7 @@ const VerifyContractByMonthView= ({isVerify,id, groupTypeCode, verifyContract,on
         }
     }, [])    
     const loadData = async () => {
-        const rs = await GratisServices.fectchGratisContract({id: id}).query(requestActions)
+        const rs = await GratisServices.fectchGratisContract({id: gContractId}).query(requestActions)
         setGContract(rs)
     }
     const supTitle = (total: number) => {
@@ -71,7 +71,7 @@ const VerifyContractByMonthView= ({isVerify,id, groupTypeCode, verifyContract,on
         (isVerify) ? [            
             isDirect&&<AdjustTranModal verifyId={id} customerCode={gContract?.customer.code} title={'Adjustment'} onSave={(status, remarks, adjItems, cb) => adjustHandler(id, adjItems, cb)} trigger={<Button type='link' icon={<EditOutlined/>}>Adjust</Button>} />,
             isInDirect&&<AdjDirectListItemSearchModal verifyId={id} customerCode={gContract?.customer.code} addHandler={(adjItems, cb) => adjustHandler(id, adjItems, cb)}   trigger={<Button type='link' icon={<EditOutlined/>}>Adjust</Button>}/>,
-            isOther&&<AdjOtherCustomerVisitSearchModal verifyId={id} customerCode={gContract?.customer.code} addHandler={(adjItems, cb) => adjustHandler(id, adjItems, cb)}   trigger={<Button type='link' icon={<EditOutlined/>}>Adjust {supTitle(10)}</Button>}/>
+            isOther&&<AdjOtherCustomerVisitSearchModal gSettledId={gSettledId} verifyId={id} customerCode={gContract?.customer.code} addHandler={(adjItems, cb) => adjustCustomerVisitScheduleHandler(id, adjItems, cb)}   trigger={<Button type='link' icon={<EditOutlined/>}>Adjust {gContract?.contracts?.find(i=> i.id==id)?.totalCustomerVisitUpdated||0>0?supTitle(gContract?.contracts?.find(i=> i.id==id)?.totalCustomerVisitUpdated||0):''}</Button>}/>
         ] : []
     const  optionsStatus=[
         { label: "All", value: "ALL",sort:1 },
@@ -112,6 +112,27 @@ const VerifyContractByMonthView= ({isVerify,id, groupTypeCode, verifyContract,on
         setCriteria(v => ({ ...v, searchValue: value }));
         actionRef.current?.reloadAndRest?.();
     };
+
+    const adjustCustomerVisitScheduleHandler = (verifyId: number,adjItems: AdjustCustomerVisitSchedule[]  , cb:(v: boolean)=>void)=>{       
+        if(adjItems && adjItems.length==0) {
+            message.warning('No data selected')
+        }else{
+            Modal.confirm({
+                title: "", content: 'Are you sure?', 
+                onOk: async () => {
+                    try {
+                        await GratisServices.synchroGratisCustomerVisitSchedule('multi',gSettledId,verifyId,adjItems.map(it=>it.id))(requestActions)  
+                        cb(true)
+                        actionRef.current?.reload()
+                        onFinish()
+                        loadData()
+                    }catch (error: any) {
+                        message.error(error.message || 'Failed to change status.')
+                    }
+                }
+            })  
+        }      
+    }  
     
     return (<Spin spinning={requestActions.request?.loading}>
         <Space direction='vertical' style={{width: '100%'}} >

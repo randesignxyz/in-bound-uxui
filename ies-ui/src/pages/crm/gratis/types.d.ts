@@ -73,6 +73,7 @@ export type VerifyGratisContact = {
   title?:string;
   durationText?:string;
   uuid?:string;
+  totalCustomerVisitUpdated?: number
 
 }
 export interface GratisVerifyItem {
@@ -272,6 +273,11 @@ export interface SearchCriteria{
   dateFrom?: moment.Moment;
   dateTo?: moment.Moment;
 }
+export interface GratisVisitScheduleParams{ 
+  gVerifyId?: number;
+  scheduleId?: number;
+  searchValue?:string;
+}
 
 export interface AdjustInfoOn {
   uuId: string;
@@ -313,6 +319,9 @@ interface AdjustItem {
   startedDate?: moment.Moment;
   endedDate?: moment.Moment;
   dscription?: string;
+}
+interface AdjustCustomerVisitSchedule {   
+  id: number;   
 }
 interface HistoryItem {
  item: string;
@@ -360,7 +369,7 @@ export type ApprovalRequestPayload= {
 export type GratisSuggestedCustomer= {
   id: number;
   incentiveSettlementId: number;
-  gcontractId: number;
+  contractId: number;
   contractType: string;
   customer: LookupDataItem;
   brand: string;
@@ -376,3 +385,31 @@ export type GratisSuggestedCustomer= {
   percentLess:number;
   status: string;
 }
+export interface  GratisSuggestedCustomerVisit {
+  id: number,  
+  incentiveSettlementId: number;
+  gcontractId: number;
+  gcontractVerifyId: number;
+  contractType: string;
+  customer: LookupDataItem;
+  brand: string;
+  terms?: string;
+  gcontractNo?: string;
+  title: string;
+  orderNo: number;
+  durationText?:string;
+  scheduledDate:moment.Moment;
+  completedDate?:moment.Moment;
+  salespersonId: number;
+  salesperson:string;
+  customerId:number;
+  contractId:number;
+  contractNo?:string;
+  scheduleType:string;
+  status:string;
+  complianceStatus:string;
+  contractId1:number;
+  contractNo1?:string;
+  complianceStatus1?:string;
+  tranStatus?:string;
+ }

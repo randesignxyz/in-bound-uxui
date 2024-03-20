@@ -2,7 +2,7 @@ import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { execDataService, execDataService0, fetchDataItemService, fetchDataListService, fetchDataPagingService } from "@/services/apiGateway";
 import { ContractLess } from "@/services/crm/contract";
 // import { LookupDataItem, LookupDataItem3 } from "@/services/data";
-import { AdjustItem, AdjustInfoOn, CreateSettlemenDate, GratisContract, GratisContractViewData, GratisVerifyItem, HistoryItem, IncentiveSettlement, LookupDataItem,  SaveChangeStatusData,  SaveGratisContractCheckListData, SearchCriteria, SettlementCycle, SettlementCycleActivity, SettlementCycleAdvanceSearchParams, SettlementSearchDate, VerifyGratisContact, ItemSAP, GratisVerifySchedule, ApprovalRequestPayload, GratisSuggestedCustomer } from "./types";
+import { AdjustItem, AdjustInfoOn, CreateSettlemenDate, GratisContract, GratisContractViewData, GratisVerifyItem, HistoryItem, IncentiveSettlement, LookupDataItem,  SaveChangeStatusData,  SaveGratisContractCheckListData, SearchCriteria, SettlementCycle, SettlementCycleActivity, SettlementCycleAdvanceSearchParams, SettlementSearchDate, VerifyGratisContact, ItemSAP, GratisVerifySchedule, ApprovalRequestPayload, GratisSuggestedCustomer, GratisSuggestedCustomerVisit, GratisVisitScheduleParams } from "./types";
 import moment from "moment";
 
 export const GratisServices = {
@@ -70,6 +70,18 @@ export const GratisServices = {
         endpoint: 'CRM',
         payload: {
             id: params.id,
+            ...params.criteria
+        },
+        pagination: {
+            page: params.pagination?.current,
+            pageSize: params.pagination?.pageSize
+        }
+    }),
+    fetchSuggestedCustomerVisit: (params: {gSettledId: number,criteria?:GratisVisitScheduleParams, pagination?: {current: number,pageSize?: number}},) => fetchDataPagingService<GratisSuggestedCustomerVisit, {gSettledId: number,criteria?:GratisVisitScheduleParams, pagination?: {current: number,pageSize?: number}}>({
+        actionName: 'gratis-suggested-customer-visit',
+        endpoint: 'CRM',
+        payload: {
+            gSettledId: params.gSettledId,
             ...params.criteria
         },
         pagination: {
@@ -180,6 +192,16 @@ export const GratisServices = {
         payload: {
             contractVerifyId:id,
             items: adjItems
+        },
+    }),
+    synchroGratisCustomerVisitSchedule: (tranType: string, gSettledId:number,gVerifyId?: number,scheduleIds?:number[]) => execDataService0<{tranType:string,gSettledId:number,gVerifyId?: number,scheduleIds?:number[]}>({
+        actionName: 'synchro-gratis-customer-visit-schedule',
+        endpoint: 'CRM',
+        payload: {
+            gSettledId,
+            gVerifyId,
+            scheduleIds,
+            tranType
         },
     }),
     removeGContractVerifyTrans: (id:number) => execDataService0<{id:number}>({

@@ -13,7 +13,8 @@ import { uniqueId } from "lodash";
 
 interface Props{
     open?: boolean;
-    id: number;
+    gSettledId: number;
+    gContractId: number;
     groupTypeCode?: string;
     status?: string;
     currentNum: number;
@@ -21,7 +22,7 @@ interface Props{
     onOpenModalChange:(v:boolean)=>void;
     reloadQuickView: (id: number,orderNo: number)=>void;
 }
-export default ({open,onOpenModalChange, reloadQuickView, id, groupTypeCode, status, currentNum, isVerify, ...rest }: Props) => {
+export default ({open,onOpenModalChange, reloadQuickView,gSettledId, gContractId, groupTypeCode, status, currentNum, isVerify, ...rest }: Props) => {
 
     const requestActions = simpleRequestActions()
     const [data, setData] = useSafeState<GratisContract>()
@@ -36,7 +37,7 @@ export default ({open,onOpenModalChange, reloadQuickView, id, groupTypeCode, sta
         }
     }, [])    
     const loadData = async () => {
-        const rs = await GratisServices.fectchGratisContract({id: id}).query(requestActions)
+        const rs = await GratisServices.fectchGratisContract({id: gContractId}).query(requestActions)
         
         setData({...rs,contracts: rs.contracts?.map(r=>{
             return {...r,uuid: uniqueId()}
@@ -95,7 +96,7 @@ export default ({open,onOpenModalChange, reloadQuickView, id, groupTypeCode, sta
                     data={r}
                     onClick={(data)=>{setCurrent(r.orderNo-1)}}
                 >
-                    <VerifyContractByMonthView isVerify={isVerify} id={id} groupTypeCode={groupTypeCode} verifyContract={r} onFinish={refreshQuickView}/>
+                    <VerifyContractByMonthView isVerify={isVerify} gSettledId={gSettledId} gContractId={gContractId} groupTypeCode={groupTypeCode} verifyContract={r} onFinish={refreshQuickView}/>
                 </StepFormView>)
             })}
         </StepsForm>

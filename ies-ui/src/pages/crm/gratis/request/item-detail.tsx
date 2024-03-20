@@ -22,8 +22,8 @@ const ItemDetail: React.FC<{ id: number,forceRefresh:number}>=({id,forceRefresh}
         setFileUrl(r)
         setLoading(false)
     }
-    const dataReport=(data: {id?:number,label?: string,status?: string,contractTypeCode?: string},exportType: 'PDF' | 'EXCEL'): DownloadData<CriteriaExportReport>=> {   
-        var direct = data?.contractTypeCode=='IN_DIRECT'? 'Indirect':'Direct'
+    const dataReport=(data: {id?:number,label?: string,status?: string,contractTypeCode?: string},exportType: 'PDF' | 'EXCEL'): DownloadData<CriteriaExportReport>=> {         
+        var direct = data?.contractTypeCode == 'OTHER' ? 'Display':data?.contractTypeCode == 'IN_DIRECT' ?'Indirect' : 'Direct'
         var issued=  data?.status=='ISSUED'? 'Issued':''
         var reportName = replace('SettlementIncentive@@##Report','@@',direct)
         reportName = replace(reportName,'##',issued) 

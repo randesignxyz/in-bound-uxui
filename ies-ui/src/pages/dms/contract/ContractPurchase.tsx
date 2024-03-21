@@ -62,6 +62,10 @@ const ContractPurchase: React.FC<Props> = ({ lookupData }) => {
                         label="OpCo"
                         name={"opCo"}
                         rules={[{ required: true }]}
+                        fieldProps={{
+                            filterOption:false
+                        }}
+                        showSearch
                         request={async () => {
                             const data = await CoreServiceAPI(requestAction).orgUnitList();
                             return data.map(v => ({ label: v.name, value: v.id }))
@@ -74,6 +78,9 @@ const ContractPurchase: React.FC<Props> = ({ lookupData }) => {
                         name={"department"}
                         showSearch
                         rules={[{ required: true }]}
+                        fieldProps={{
+                            filterOption:false
+                        }}
                         request={async (k: { keyWords: string }) => {
                             const data = await DepartmentServiceAPI(requestAction).page({
                                 criteria: {

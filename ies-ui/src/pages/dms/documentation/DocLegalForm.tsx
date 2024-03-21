@@ -1,5 +1,5 @@
 import { ProFormDatePicker, ProFormSelect, ProFormText, ProFormTextArea } from "@ant-design/pro-components"
-import { Col, Row } from "antd"
+import { Col, Row, Space } from "antd"
 import { CoreServiceAPI } from "../service";
 import { simpleRequestActions } from "@/services/model";
 import { DepartmentServiceAPI } from "../setting/components/department/service";
@@ -49,11 +49,11 @@ export default ({ lookupData }: Props) => {
                                 }
                             });
 
-                            return data.items?.map(v => ({ label: v.name, value: v.id }))
+                            return data.items?.map(v => ({ label: <Space  size={"small"}><span>{v.name}</span><span style={{color:"gray"}}>{v.description}</span></Space>, value: v.id }))
                         }}
                     />
                 </Col>
-                <Col span={8}>
+                {/* <Col span={8}>
                     <ProFormSelect
                         rules={[{ required: true }]}
                         label="Document Type"
@@ -66,15 +66,19 @@ export default ({ lookupData }: Props) => {
                             return data.items.map((v) => ({ value: v.id, label: v.name }))
                         }}
                     />
-                </Col>
+                </Col> */}
                 <Col span={8}>
                     <ProFormSelect
                         rules={[{ required: true }]}
                         label="Opcos"
                         name={"opCo"}
-                        request={async () => {
+                        fieldProps={{
+                            filterOption:false
+                        }}
+                        showSearch
+                        request={async (k:{keyWords:string}) => {
                             const data = await CoreServiceAPI(requestAction).orgUnitList();
-                            return data.map(v => ({ label: v.name, value: v.id }))
+                            return data.map(v => ({ label: <Space  size={"small"}><span>{v.name}</span><span style={{color:"gray"}}>{v.description}</span></Space>, value: v.id }))
                         }}
                     />
                 </Col>

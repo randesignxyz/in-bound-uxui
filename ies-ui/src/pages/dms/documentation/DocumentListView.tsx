@@ -255,17 +255,6 @@ export default ({ paramSearch, libraryId }: Props) => {
                     division: "DOC",
                 }
             }),
-            // children:[
-            //     {
-            //         key:"1-1",
-            //         label:"General",
-            //     },
-            //     {
-            //         key:"1-2",
-            //         label:"Legal",
-            //     },
-              
-            // ]
         },
         {
             key: "2",
@@ -279,35 +268,8 @@ export default ({ paramSearch, libraryId }: Props) => {
                     division: "CONTRACT",
                 }
             }),
-            // children:[
-            //     {
-            //         key:"2-1",
-            //         label:"General",
-            //     },
-            //     {
-            //         key:"2-2",
-            //         label:"Purchase",
-            //     },
-            //     {
-            //         key:"2-3",
-            //         label:"Sales",
-            //     },
-            // ]
         },
     ];
-
-    const itemQiuck =():MenuProps["items"]=>[
-        {
-            key:"1",
-            label:"Favorit",
-            itemIcon:<HeartOutlined/>
-        },
-        {
-            key:"2",
-            label:"shared",
-            itemIcon:<HeartOutlined/>
-        },
-    ]
 
     return (
         <>
@@ -361,7 +323,6 @@ export default ({ paramSearch, libraryId }: Props) => {
                                     actionRef.current?.reloadAndRest?.();
                                 }}
                                 options={[
-
                                     {
                                         label: "Document",
                                         value: "doc"
@@ -372,14 +333,6 @@ export default ({ paramSearch, libraryId }: Props) => {
                                     },
                                 ]}
                             />
-                            {/* <Dropdown
-
-                                menu={{
-                                    items:itemQiuck()
-                                }}
-                            >
-                                <a>Quic Access <DownOutlined/></a>
-                            </Dropdown> */}
                         </Flex>
                     </>
                 }
@@ -582,7 +535,9 @@ export default ({ paramSearch, libraryId }: Props) => {
                     }
                     services.save(entry);
                     setDocumentState({ visible: undefined });
-                    actionRef.current?.reload?.();
+                    actionRef.current?.reloadAndRest?.();
+                    message.success("Success!")
+                   
                 }}
             />
         </>

@@ -13,10 +13,10 @@ export const PickingSlipToPrint = React.forwardRef((props: { data: InstanceDetai
 
         const assignDate = moment(props.data.loading.assignedDate)
         const expectedEndDate = assignDate.clone().add(3, 'hour')
-       if(expectedEndDate.get('date') ==  assignDate.get('date')) {
-        return props.data.loading.assignedDate
-       }
-       return undefined
+        if (expectedEndDate.get('date') == assignDate.get('date')) {
+            return props.data.loading.assignedDate
+        }
+        return undefined
     }
 
     const report = (warehouse: string, index: number) => {
@@ -27,7 +27,7 @@ export const PickingSlipToPrint = React.forwardRef((props: { data: InstanceDetai
         const driverName = props.data.loadingInfo?.truckTransfer?.driverName || [props.data.driver.firstName, props.data.driver.lastName].join(" ")
         const truck = props.data.loadingInfo?.truckTransfer?.licensePlate || props.data.loading.truck.licensePlate
         return (
-            <div style = {{fontSize: 13}}>
+            <div style={{ fontSize: 13 }}>
                 {index > 0 && <h1 />}
                 <table width={'100%'} className={styles.headerTitle}  >
                     <tr>
@@ -51,15 +51,15 @@ export const PickingSlipToPrint = React.forwardRef((props: { data: InstanceDetai
                                     <td align="right" width={90}>Truck Plate# :</td>
                                     <td width={140}> <input type={'text'} value={truck} /> </td>
                                     <td width={110} align="right">Depo :</td>
-                                    <td  width={140} style={{borderBottomStyle: 'dotted', borderBottomWidth:1}}></td>
+                                    <td width={140} style={{ borderBottomStyle: 'dotted', borderBottomWidth: 1 }}></td>
                                 </tr>
                                 <tr>
                                     <td align="right" >From Date :</td>
                                     <td><input type={'text'} value={formatDate(moment(props.data.loading.assignedDate))} /> </td>
                                     <td align="right">To Date :</td>
-                                    <td><input type={'text'} value={  formatDate(getEndLoadingDate())} /> </td>
+                                    <td><input type={'text'} value={formatDate(getEndLoadingDate())} /> </td>
                                     <td align="right">Loading Started :</td>
-                                    <td  style={{borderBottomStyle: 'dotted', borderBottomWidth:1}}></td>
+                                    <td style={{ borderBottomStyle: 'dotted', borderBottomWidth: 1 }}></td>
                                 </tr>
                                 <tr>
                                     <td width={70}></td>
@@ -67,7 +67,7 @@ export const PickingSlipToPrint = React.forwardRef((props: { data: InstanceDetai
                                     <td align="right">Shift :</td>
                                     <td><input type={'text'} value={props.data.loadingInfo?.shift} /></td>
                                     <td align="right">Loading Ended :</td>
-                                    <td   style={{borderBottomStyle: 'dotted', borderBottomWidth:1}}></td>
+                                    <td style={{ borderBottomStyle: 'dotted', borderBottomWidth: 1 }}></td>
                                 </tr>
                             </table>
                         </td>

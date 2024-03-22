@@ -982,6 +982,7 @@ export default ({ id, sumDetail = true }: Props) => {
           actionRef.current?.reloadAndRest?.();
         }}
       />
+
       <RemarkFormModal
         title={commentModal.flag === 'delivery' ? 'Remove Delivery' : 'Remove Item'}
         open={commentModal.visible}

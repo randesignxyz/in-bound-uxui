@@ -2,6 +2,7 @@ import TableView, { TableViewSearchParams } from '@/components/DataCrud/TableVie
 import Detail from '@/pages/delivery/board/detail';
 import { ViewController } from '@/pages/delivery/board/view-controller';
 import AdvanceSearch from '@/pages/delivery/history/advance-search';
+import Reports, { ReportType } from '@/pages/delivery/reports';
 import { formatDateTime, toReadable } from '@/pages/utils';
 import { Paging } from '@/services/API';
 import { singleRequest } from '@/services/apiGateway';
@@ -12,7 +13,7 @@ import {
   InstanceListItem,
 } from '@/services/delivery/instance.types';
 import { simpleRequestActions } from '@/services/model';
-import { EyeFilled } from '@ant-design/icons';
+import { DownloadOutlined, EyeFilled } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
 import { ActionType } from '@ant-design/pro-table';
 import { Button, FloatButton, message, Segmented, Space, Spin, Tooltip } from 'antd';
@@ -22,7 +23,7 @@ import { history } from 'umi';
 
 export default () => {
   const requestActions = simpleRequestActions();
-
+  const [report, setReport] = useState<ReportType>()
   const options = [
     { label: 'All', value: 'ALL' },
     { label: 'Pending', value: 'PENDING' },
@@ -61,7 +62,7 @@ export default () => {
 
   const onDetailHandler = async (id: number) => {
     try {
-        const rs = (await singleRequest(InstanceSrvParams.fetch(id))(
+      const rs = (await singleRequest(InstanceSrvParams.fetch(id))(
         requestActions,
       )) as InstanceDetail;
       setSelectedItem(rs);
@@ -137,8 +138,14 @@ export default () => {
             // { title: 'Activity',  render: (_, r) => toReadable(r.activity)  },
             { title: 'Status', render: (_, r) => toReadable(r.status) },
           ]}
+
           tableProps={{
             actionRef: actionRef,
+            toolbar: {
+              actions: [
+                <Button onClick={() => setReport({ type: 'DELIVERY_TIME', props: {} })} type='link' icon={<DownloadOutlined />}>Export</Button>
+              ]
+            }
           }}
           advanceSearch
           actionHandlers={{
@@ -159,7 +166,7 @@ export default () => {
                 value={searchParams.status}
                 onChange={(value: any) => {
                   setSearchParams((v) => ({ ...v, activity: 'LOADING', status: value }));
-                //   setStatus(options.find((it) => it.value === value)?.data || []);
+                  //   setStatus(options.find((it) => it.value === value)?.data || []);
                 }}
                 options={options} onResize={undefined} onResizeCapture={undefined} />
 
@@ -177,8 +184,8 @@ export default () => {
         <Detail
           width={1200}
           title={'Delivery Detail'}
-          open = {!!selectedItem}
-          onClose = {() => onCloseHandler()}
+          open={!!selectedItem}
+          onClose={() => onCloseHandler()}
           {...vc}
         />
 
@@ -187,6 +194,9 @@ export default () => {
           onOpenChange={(visible) => !visible && setShowAdvanceSearch(false)}
         />
       </Spin>
+
+      <Reports report={report} onClose={() => setReport(undefined)} />
+
       <FloatButton.BackTop />
     </PageContainer>
   );

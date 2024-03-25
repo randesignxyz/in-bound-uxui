@@ -81,15 +81,14 @@ interface Props<T extends { id: number }, C> {
 
 export const colLink =
   <T extends { id?: any }>(onDetail?: (data: T) => void, displayData?: (data: T) => any) =>
-  (dom: React.ReactNode, data: T) => {
-    return <a onClick={() => onDetail?.(data)}>{displayData?.(data) || dom} </a>;
-  };
+    (dom: React.ReactNode, data: T) => {
+      return <a onClick={() => onDetail?.(data)}>{displayData?.(data) || dom} </a>;
+    };
 
 const TableView = <T extends { id: any }, C extends { searchValue?: string }>(
   props: Props<T, C>,
 ) => {
   const {
-    bordered,
     columns,
     // title,
     addButtonLabel,
@@ -150,7 +149,7 @@ const TableView = <T extends { id: any }, C extends { searchValue?: string }>(
       tableExtraRender={() =>
         disableSearch ?? (
           <ProCard bordered>
-            <div style={{float:'left'}}>
+            <div style={{ float: 'left' }}>
               <Space>
                 <Input.Search allowClear onSearch={onSearchHandler} />
 
@@ -169,7 +168,7 @@ const TableView = <T extends { id: any }, C extends { searchValue?: string }>(
                 {extraFilter}
               </Space>
             </div>
-            <div style={{float:'right'}}> {extraRightFilter}</div>
+            <div style={{ float: 'right' }}> {extraRightFilter}</div>
           </ProCard>
         )
       }
@@ -186,17 +185,17 @@ const TableView = <T extends { id: any }, C extends { searchValue?: string }>(
         (displayOnly
           ? undefined
           : {
-              actions: [
-                <Button
-                  key={'bt'}
-                  type="link"
-                  onClick={() => actionHandlers?.onAdd?.()}
-                  icon={<PlusOutlined />}
-                >
-                  {addButtonLabel}
-                </Button>,
-              ],
-            })
+            actions: [
+              <Button
+                key={'bt'}
+                type="link"
+                onClick={() => actionHandlers?.onAdd?.()}
+                icon={<PlusOutlined />}
+              >
+                {addButtonLabel}
+              </Button>,
+            ],
+          })
       }
       search={false}
       request={onRequestHandler}

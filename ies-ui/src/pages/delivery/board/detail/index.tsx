@@ -37,7 +37,6 @@ import { CollectedInvoice } from '../assigned-docs';
 import ResolveShipping from '../resolve-shipping';
 import { ViewController } from '../view-controller';
 import FreighDetail from './FreighDetail';
-import RemarkModalV2 from '@/components/remark-modal-v2';
 
 interface Props extends DrawerProps, ViewController {
   forceRefresh?: number;

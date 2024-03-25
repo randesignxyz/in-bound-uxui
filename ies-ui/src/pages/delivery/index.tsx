@@ -37,7 +37,8 @@ export const DeliveryPaths = {
   review: '/delivery/review',
   reviewer: '/delivery/reviewer',
   history: '/delivery/history',
-  loadingHistory: '/delivery/loading-history'
+  loadingHistory: '/delivery/loading-history',
+  deliveryHistory: '/delivery/list-instances-delivery'
 };
 
 
@@ -138,7 +139,26 @@ export default () => {
       icon: boardIcon,
       // isMenu: true,
       overlay: deliveryMenu,
-      visible: access.canAccessDeliveryMenuItem
+      visible: access.canAccessDeliveryMenuItem,
+      menu: {
+        items: [{
+          label: 'Delivery History',
+          icon: <HistoryOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+          key: 'delivery-list',
+          onClick: () => history.push(DeliveryPaths.history),
+        },
+        {
+          type: 'divider'
+        },
+        {
+          label: 'Delivery Time Report',
+          icon: <AreaChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+          key: 'delivery-time-report',
+          onClick: () => setReport({
+            type: 'DELIVERY_TIME'
+          }),
+        }]
+      }
     },
     {
       id: 'cashCollection',

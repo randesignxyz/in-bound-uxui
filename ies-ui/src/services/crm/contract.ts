@@ -69,6 +69,7 @@ export interface SubContractType {
 
 
 export interface ContractLess {
+    uuId: string;
     id: number;
     contractNo?: string;
     contractDate: moment.Moment;
@@ -84,6 +85,8 @@ export interface ContractLess {
     budgetCode: string;
     refNo?: string;
     status?: string;
+    addressId?: number;
+    address?: string;
 }
 
 

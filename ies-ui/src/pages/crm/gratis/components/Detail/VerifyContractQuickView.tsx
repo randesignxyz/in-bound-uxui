@@ -10,6 +10,7 @@ import VerifyContractByMonthView from "./VerifyContractByMonthView";
 import StepFormView from "./StepFormView";
 import { UIBuilder } from "@/components/UIBuilder";
 import { uniqueId } from "lodash";
+import { ContainerOutlined, FileOutlined } from "@ant-design/icons";
 
 interface Props{
     open?: boolean;
@@ -69,14 +70,18 @@ export default ({open,onOpenModalChange, reloadQuickView,gSettledId, gContractId
     //     })
     // }  
     const statusSetled = data?.achieved == 0 ? 'Failed':'Achieved'
-    var statusText = (data?.months||0) >1? data?.achieved+'/'+data?.months+' | Achieved':toReadable(statusSetled)
+    const statusText = (data?.months||0) >1? data?.achieved+'/'+data?.months+' | Achieved':toReadable(statusSetled)
+    const tittle = `${data?.contractNo} | ${data?.customer.code} - ${data?.customer.name}  ${data?.address && data?.address != data?.customer.name? ' - '+data?.address:''} `
     return ( <DrawerForm 
         open={open}
         onOpenChange={onOpenModalChange}
         submitter={false}
         title= {<Space>
-            <div>{`Agreement Name: ${data?.contractNo} | ${data?.customer.code} ${data?.customer.name} `}</div>
-            <span style={{border:0, color: (data?.achieved == 0 ? '#ff4d4f' : '#52c41a')}}>{statusText} {((data?.achieved||0)>0 && (data?.achieved||0)!= (data?.months||0)) && <span style={{color:'red'}}>*</span>}</span>
+            <div><ContainerOutlined/> {tittle}</div>
+            <span style={{border:0, color: (data?.achieved == 0 ? '#ff4d4f' : '#52c41a')}}>
+                {statusText} 
+                {((data?.achieved||0)>0 && (data?.achieved||0)!= (data?.months||0)) && <span style={{color:'red'}}>*</span>}
+            </span>
             </Space>}
             {...rest} 
             width={'80%'}

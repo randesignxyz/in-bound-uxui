@@ -154,7 +154,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
   };
   const onSearchSuggestedCustomerHandler = (value: string) => {
     setCriteriaSuggested(v => ({ ...v, searchValue: value }));
-    actionSuggestedRef.current?.reloadAndRest?.();
+    actionSuggestedCustVisitRef.current?.reloadAndRest?.();
   };
   const onSearchStatusHandler = (value: string) => {
     setCriteria(v => ({ ...v, status: value }));
@@ -374,11 +374,11 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
                 headerTitle={               
                   <Space>
                     <Input.Search allowClear onSearch={onSearchSuggestedCustomerHandler} />       
-                    {isSynchAll&&<Button type='primary' icon={<SyncOutlined/>} onClick={()=>synchroGratisCustVisitAll(data?.id||0)}>Synch All</Button>}         
+                    {isPending&&isSynchAll&&<Button type='primary' icon={<SyncOutlined/>} onClick={()=>synchroGratisCustVisitAll(data?.id||0)}>Synch All</Button>}         
                   </Space>    
                 } 
                 request={async (paging) => {
-                  return GratisServices.fetchSuggestedCustomerVisit({ gSettledId: id, pagination: { current: paging?.current || 0, pageSize: paging?.pageSize || 20 } }).query(requestActions).then(it => {
+                  return GratisServices.fetchSuggestedCustomerVisit({ gSettledId: id,criteria:{...criteriaSuggested}, pagination: { current: paging?.current || 0, pageSize: paging?.pageSize || 20 } }).query(requestActions).then(it => {
                     setIsSynchAll(it.total||0>0?true:false)
                     return {
                       success: true,
@@ -410,7 +410,11 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
                 }, {
                   title: 'Customer',
                   dataIndex: 'gcontractId',
-                  render: (_, r) => `${r?.customer?.code} - ${r?.customer?.name}`
+                  // render: (_, r) => `${r?.customer?.code} - ${r?.customer?.name}`
+                  render: (_, r) => <div>
+                    <span>{r.customer?.code} {r.customer?.name}</span>
+                    <div style={{padding:2,fontSize:13,color:'#b49900',borderRadius:5}}>{r?.address}</div>
+                  </div>
                 }, {
                   title: 'Brand',  
                   render: (_, r) => r.brand
@@ -466,7 +470,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
               {
                 title: 'Action',
                 dataIndex: 'Status',
-                render: (_, r) => <Popconfirm title='Confirm' placement='left' description='Are you sure to update customer visit schedule?'  
+                render: (_, r) => isPending&&<Popconfirm title='Confirm' placement='left' description='Are you sure to update customer visit schedule?'  
                     onConfirm={()=>{ synchroGratisCustomerVisit('single', r.incentiveSettlementId,  r.gcontractVerifyId,[r.id])}}
                   > 
                     <Button type="primary" size="small" icon={<SyncOutlined/>}>Synch</Button>
@@ -541,6 +545,10 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
                 title: 'Agreement Name',
                 dataIndex: 'contractNo',
                 render: (_, r) => <Tooltip title={!r?.terms ? 'No Term' : r?.terms}><MessageOutlined /> {r?.contractNo}</Tooltip>
+              },
+              {
+                  title: 'Agreetment Type',
+                  render: (_, item) => item.contractType
               }, {
                 title: 'Customer Code',
 
@@ -548,7 +556,11 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
               }, {
                 title: 'Customer Name',
 
-                render: (_, r) => r?.customer?.name
+                // render: (_, r) => r?.customer?.name
+                render: (_, r) => <div>
+                <span>{r.customer?.code} {r.customer?.name}</span>
+                {(r?.address && r?.address!= r.customer?.name) &&<div style={{padding:2,fontSize:13,color:'#b49900',borderRadius:5}}>{r?.address}</div>}
+            </div>
               }, {
                 title: 'Brand',
 

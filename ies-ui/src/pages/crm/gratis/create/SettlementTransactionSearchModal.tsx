@@ -7,6 +7,7 @@ import { simpleRequestActions } from "@/services/model";
 import { ContractLess } from "@/services/crm/contract";
 import { LookupData } from "@/services/data";
 import { useForm } from "antd/es/form/Form";
+import { MessageOutlined } from "@ant-design/icons";
 
 interface Props extends ModalFormProps<{label:string, remarks: string}>{
     key?: string;
@@ -29,16 +30,23 @@ interface SearchCriteria {
 
 }
 
-const cols: ProColumns<ContractLess>[] = [/*{
+const cols: ProColumns<ContractLess>[] = [{
     title:'Agreement Name',
+    width: 150,
     dataIndex:'contractNo',
-    render: (_, r) => <Tooltip title={!r?.terms?'No Term':r?.terms}><MessageOutlined/> {r?.contractNo}</Tooltip>
-},*/{
+    render: (_, r) => r?.contractNo
+},{
+    title:'Contract Type',
+    render: (_, r) => `${r.contractType}`
+},{
     title:'Customer Code',
     render: (_, r) => `${r.customer?.code}`
 },{
     title:'Customer Namne',
-    render: (_, r) => `${r.customer?.name}`
+    render: (_, r) => <div>
+        <span>{r.customer?.name}</span>
+        <div style={{padding:2,fontSize:13,color:'#b49900',borderRadius:5}}>{r?.address}</div>
+    </div>
 },{
     title:'Budget Code',
     dataIndex:'budgetCode'
@@ -120,11 +128,11 @@ export default ( { key,required, onSave,loading, params, dataFilter, gratisTarge
                     return {               
                         success: true, 
                         total: (it?.length - (dataFilter?.length||0)),
-                        data: it.filter((it:any)=> !!!dataFilter?.find(i=> i.id ===it.id))
+                        data: it.filter((it:any)=> !!!dataFilter?.find(i=> i.uuId ===it.uuId))
                     }
                 }) //as Promise<Paging<ContractLess>>
             }} 
-            rowKey='id' 
+            rowKey='uuId' 
             rowSelection={{
                 selections: ["SELECT_ALL", "SELECT_INVERT", "SELECT_NONE"],
                 checkStrictly: true,
@@ -133,7 +141,7 @@ export default ( { key,required, onSave,loading, params, dataFilter, gratisTarge
                     if (selected1) {
                         setSelected(v => ([...(v || []), item]))
                     } else {
-                        setSelected(v => v?.filter(it => it.id != item.id))
+                        setSelected(v => v?.filter(it => it.uuId != item.uuId))
                     }
                 },
                 onChange(_, selectedRows, info) {

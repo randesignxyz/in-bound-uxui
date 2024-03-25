@@ -44,6 +44,8 @@ export interface GratisContract {
   brand: string;
   subContract: SubContract;
   customer: LookupDataItem;
+  addressId?: number;
+  address?: string;
   effectiveDate: moment.Moment;
   expiryDate: moment.Moment;
   terms?: string;
@@ -187,12 +189,16 @@ export interface SettlementSearchDate {
 export interface CreateSettlemenDate { 
   label: string;
   remarks?: string;
-  contractId: number[];
+  contracts: ContractAddressPayload[];
   // contractTypeId?: number;
   dateFrom?: moment.Moment;
   dateTo?: moment.Moment;
   frequency?:string;
   contractTypeGroupCode?: string;
+}
+export interface ContractAddressPayload{
+  contractId: number;
+  addressId?: number;
 }
 
 export interface IncentiveSettlement {
@@ -403,6 +409,7 @@ export interface  GratisSuggestedCustomerVisit {
   salespersonId: number;
   salesperson:string;
   customerId:number;
+  address?: string;
   contractId:number;
   contractNo?:string;
   scheduleType:string;

@@ -8,7 +8,7 @@ import { simpleRequestActions } from "@/services/model";
 import { MultiRequest } from "@/services/apiGateway";
 import { GratisServices } from "../services";
 import { Button, Modal, Space, message } from "antd";
-import { CreateSettlemenDate, IncentiveSettlement, SettlementSearchDate} from "../types";
+import { ContractAddressPayload, CreateSettlemenDate, IncentiveSettlement, SettlementSearchDate} from "../types";
 import { ContractLess } from "@/services/crm/contract";
 import moment from "moment";
 import ConfirmSaveSettlement from "./ConfirmSaveSettlement";
@@ -103,7 +103,7 @@ const SettlementView: React.FC<{}> = ({}) =>{
                     var data = {
                         label:label,
                         remarks:remakrs,
-                        contractId: dataSettled?.map(it=> it.id),
+                        contracts: dataSettled?.map(it=> {return {contractId:it.id, addressId: it.addressId} as ContractAddressPayload}),
                         dateFrom: params?.dateFrom,
                         dateTo: params?.dateTo,
                         frequency: frequency,
@@ -123,8 +123,15 @@ const SettlementView: React.FC<{}> = ({}) =>{
         title:'Agreement Name',
         dataIndex:'contractNo'
     },{
+        title:'Budget Code',
+        dataIndex:'budgetCode'
+    },{
         title:'Customer',
-        render: (_, r) => `${r.customer?.code} ${r.customer?.name}`
+        // render: (_, r) => `${r.customer?.code} ${r.customer?.name}`
+        render: (_, r) => <div>
+        <span>{r.customer?.code} {r.customer?.name}</span>
+        <div style={{padding:2,fontSize:13,color:'#b49900',borderRadius:5}}>{r?.address}</div>
+    </div>
     },{
         title:'Budget Code',
         dataIndex:'budgetCode'
@@ -140,7 +147,7 @@ const SettlementView: React.FC<{}> = ({}) =>{
         dataIndex:'terms'
     },{
         title:'Action',
-        render:(_,r)=> <Button onClick={(v)=> setDataSettled(v=> v.filter(it => it.id!=r.id))} icon ={<DeleteOutlined style={{color:"red"}}/>}></Button>
+        render:(_,r)=> <Button onClick={(v)=> setDataSettled(v=> v.filter(it => it.uuId!=r.uuId))} icon ={<DeleteOutlined style={{color:"red"}}/>}></Button>
     }]
 
     const cols1 = (): ProColumns<IncentiveSettlement>[] => ([

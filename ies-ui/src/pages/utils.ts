@@ -285,7 +285,8 @@ const readableWords = [
     { ADD_ADJUSTMENT: 'Add Adjustment' },
     { ADDED: 'Added' },
     { REMOVED: 'Removed' },
-    { NEW_REQUEST: 'New Request' }
+    { NEW_REQUEST: 'New Request' },
+    { UPDATED: 'Updated' }
 
 ];
 export const toReadable = (word?: string) => {

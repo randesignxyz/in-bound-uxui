@@ -13,10 +13,10 @@ import settingIcon from '@/assets/settings.png';
 import qrCodeIcon from '@/assets/qr-code.png';
 import forkLift from '@/assets/fork-lift.png';
 import { Divider, Menu } from 'antd';
-import { AreaChartOutlined, HistoryOutlined } from '@ant-design/icons';
+import { AreaChartOutlined, HistoryOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import { useAccess, history } from 'umi';
 import { PageContainer } from '@ant-design/pro-components';
-import Reports, { ReportType } from './reports';
+import ModalMngt, { modalType } from './modal-mngt';
 import { useState } from 'react';
 
 export const DeliveryPaths = {
@@ -58,7 +58,7 @@ export const QueuePaths = {
 export default () => {
 
   const access = useAccess()
-  const [report, setReport] = useState<ReportType>()
+  const [modal, setModal] = useState<modalType>()
 
 
   const deliveryMenu = (
@@ -85,6 +85,13 @@ export default () => {
       visible: access.canAccessDeliveryMenuItem,
       menu: {
         items: [{
+          label: 'Issue Ticket',
+          icon: <PlusCircleOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+          key: 'issue-ticket',
+          onClick: () => setModal({ type: 'ISSUE_TICKET' }),
+        }, {
+          type: 'divider'
+        }, {
           label: 'View History',
           icon: <HistoryOutlined style={{ fontSize: '16px', color: '#08c' }} />,
           key: 'ticket-history',
@@ -113,7 +120,7 @@ export default () => {
           label: 'Loading Time Report',
           icon: <AreaChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
           key: 'loading-time-report',
-          onClick: () => setReport({
+          onClick: () => setModal({
             type: 'LOADING_TIME'
           }),
         }]
@@ -154,7 +161,7 @@ export default () => {
           label: 'Delivery Time Report',
           icon: <AreaChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
           key: 'delivery-time-report',
-          onClick: () => setReport({
+          onClick: () => setModal({
             type: 'DELIVERY_TIME'
           }),
         }]
@@ -274,7 +281,7 @@ export default () => {
       {setupItems.some(it => it.visible) && <ListMenuComp items={setupItems} />}
       {setupItems.some(it => it.visible) && <Divider />}
       {queueSetupItems.some(it => it.visible) && <ListMenuComp items={queueSetupItems} />}
-      <Reports report={report} onClose={() => setReport(undefined)} />
+      <ModalMngt modal={modal} onClose={() => setModal(undefined)} />
     </PageContainer>
   );
 };

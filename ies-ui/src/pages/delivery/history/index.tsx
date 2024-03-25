@@ -19,7 +19,7 @@ import { history } from 'umi';
 import Detail from '../board/detail';
 import { ViewController } from '../board/view-controller';
 import AdvanceSearch from './advance-search';
-import Reports, { ReportType } from '../reports';
+import Reports, { ReportType } from '../modal-mngt';
 export default () => {
   const requestActions = simpleRequestActions();
 

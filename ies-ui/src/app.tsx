@@ -5,7 +5,7 @@ import { PageLoading, SettingDrawer } from '@ant-design/pro-components';
 import type { RequestConfig, RunTimeLayoutConfig } from '@umijs/max';
 import { history, Link } from '@umijs/max';
 import defaultSettings from '../config/defaultSettings';
-import { errorConfig } from './requestErrorConfig';
+import { errorConfig } from '../config/requestErrorConfig';
 import React from 'react';
 import { App } from 'antd';
 const isDev = process.env.NODE_ENV === 'development';

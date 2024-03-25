@@ -122,7 +122,7 @@ const AssignedDocModal: React.FC<Props> = ({
           if (from === 'DETAIL') {
             onRefreshDetailData()
           }
-          onRefreshLisViewData()
+          // onRefreshLisViewData() // refresh by we socket
           onHide()
           rest.onOpenChange?.(false)
 
@@ -296,12 +296,7 @@ const AssignedDocModal: React.FC<Props> = ({
           return Promise.reject()
         }
         const sameAmount = sameAmountCheck()
-        // if (reasigning && sameAmount && checkTruck()) {
-        //   message.error(
-        //     errorMessageSameQty,
-        //   );
-        //   return Promise.reject();
-        // }
+
         if (!sameAmount) {
           message.error(
             errorMessage,
@@ -551,7 +546,7 @@ const AssignedDocModal: React.FC<Props> = ({
           onCancel={onHide}
           onSave={async (_, remarks) => {
             const data = await getData()
-            onChangedRequestHandler(
+            await onChangedRequestHandler(
               data?.driverId || itemDetail?.delivery?.driver?.id!!,
               data?.licensePlate || itemDetail?.delivery?.truck?.licensePlate!!,
               assigningData?.deliveryNotes?.map(it => it.docEntry) || [],

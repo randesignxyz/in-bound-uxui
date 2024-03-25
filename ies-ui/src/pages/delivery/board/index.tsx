@@ -268,7 +268,7 @@ export default () => {
               if (from === 'DETAIL') {
                 onRefreshDatahHandler(selected.id)
               }
-              actionRef.current?.reloadAndRest?.()
+              // actionRef.current?.reloadAndRest?.()
             })
           }
         })

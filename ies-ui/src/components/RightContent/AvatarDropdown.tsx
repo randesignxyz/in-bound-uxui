@@ -1,9 +1,7 @@
-import { outLogin } from '@/services/ant-design-pro/api';
-import { LogoutOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons';
+import { LogoutOutlined, UserOutlined } from '@ant-design/icons';
 import { history, useAccess, useModel } from '@umijs/max';
 import { Avatar, Modal, Spin } from 'antd';
 import { createStyles } from 'antd-style';
-import { stringify } from 'querystring';
 import type { MenuInfo } from 'rc-menu/lib/interface';
 import React, { useCallback, useEffect, useState } from 'react';
 import { flushSync } from 'react-dom';
@@ -36,7 +34,7 @@ export const AvatarName = () => {
             title: 'User Profile',
             content: 'No phone contact available, Do you want to update profile?',
             onOk: () => {
-              history.push('./profile');
+              history.push('/profile');
             },
           });
         }

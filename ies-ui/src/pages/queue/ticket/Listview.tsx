@@ -194,7 +194,7 @@ export const QueueTicketListView: React.FC<TableViewProps<QueueTicketListItem>> 
             sorter: 'truckNo',
             render: (_, r) => [r.truck.code].join('-'),
           },
-          { title: 'Load Capacity', align: 'right', render: (_, r) => r.truck.loadingCapacity },
+          { title: 'Load Capacity', align: 'right', render: (_, r) => r.truck.loadingCapacity?.name },
           {
             title: 'Status',
             hideInTable: searchParams.status !== 'ALL',

@@ -2,7 +2,7 @@ import TableView, { TableViewSearchParams } from '@/components/DataCrud/TableVie
 import Detail from '@/pages/delivery/board/detail';
 import { ViewController } from '@/pages/delivery/board/view-controller';
 import AdvanceSearch from '@/pages/delivery/history/advance-search';
-import Reports, { ReportType } from '@/pages/delivery/modal-mngt';
+import Reports, { modalType } from '@/pages/delivery/modal-mngt';
 import { formatDateTime, toReadable } from '@/pages/utils';
 import { Paging } from '@/services/API';
 import { singleRequest } from '@/services/apiGateway';
@@ -23,7 +23,7 @@ import { history } from 'umi';
 
 export default () => {
   const requestActions = simpleRequestActions();
-  const [report, setReport] = useState<ReportType>()
+  const [modal, setModal] = useState<modalType>()
   const options = [
     { label: 'All', value: 'ALL' },
     { label: 'Pending', value: 'PENDING' },
@@ -143,7 +143,7 @@ export default () => {
             actionRef: actionRef,
             toolbar: {
               actions: [
-                <Button onClick={() => setReport({ type: 'DELIVERY_TIME', props: {} })} type='link' icon={<DownloadOutlined />}>Export</Button>
+                <Button onClick={() => setModal({ type: 'DELIVERY_TIME', props: {} })} type='link' icon={<DownloadOutlined />}>Export</Button>
               ]
             }
           }}
@@ -195,7 +195,7 @@ export default () => {
         />
       </Spin>
 
-      <Reports report={report} onClose={() => setReport(undefined)} />
+      <Reports modal={modal} onClose={() => setModal(undefined)} />
 
       <FloatButton.BackTop />
     </PageContainer>

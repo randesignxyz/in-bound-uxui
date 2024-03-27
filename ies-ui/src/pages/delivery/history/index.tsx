@@ -19,7 +19,7 @@ import { history } from 'umi';
 import Detail from '../board/detail';
 import { ViewController } from '../board/view-controller';
 import AdvanceSearch from './advance-search';
-import Reports, { ReportType } from '../modal-mngt';
+import Reports, { modalType } from '../modal-mngt';
 export default () => {
   const requestActions = simpleRequestActions();
 
@@ -70,7 +70,7 @@ export default () => {
 
   const [selectedItem, setSelectedItem] = useState<InstanceDetail>();
   const [showAdvanceSearch, setShowAdvanceSearch] = useState(false);
-  const [report, setReport] = useState<ReportType>()
+  const [modal, setModal] = useState<modalType>()
 
   const onRequestHandler = async (params: TableViewSearchParams<InstanceAdvanceSearchParams>) => {
     try {
@@ -169,7 +169,7 @@ export default () => {
             actionRef: actionRef,
             toolbar: {
               actions: [
-                <Button onClick={() => setReport({ type: 'DELIVERY_TIME', props: {} })} type='link' icon={<DownloadOutlined />}>Export</Button>
+                <Button onClick={() => setModal({ type: 'DELIVERY_TIME', props: {} })} type='link' icon={<DownloadOutlined />}>Export</Button>
               ]
             }
           }}
@@ -217,10 +217,10 @@ export default () => {
 
         <AdvanceSearch
           open={showAdvanceSearch}
-          onVisibleChange={(visible) => !visible && setShowAdvanceSearch(false)}
+          onOpenChange={(visible) => !visible && setShowAdvanceSearch(false)}
         />
       </Spin>
-      <Reports report={report} onClose={() => setReport(undefined)} />
+      <Reports modal={modal} onClose={() => setModal(undefined)} />
       <FloatButton.BackTop />
     </PageContainer>
   );

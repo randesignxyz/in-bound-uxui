@@ -255,11 +255,7 @@ export default () => {
 
     { key: 'assignDoc', label: 'Assign Doc', type: 'Primary', visible: pendingDelivery, main: claimed, icon: <FileDoneOutlined />, onClick: () => onOpenModalHandler(from, 'assign-doc', item?.id, true) },
     { key: 'reassignDoc', label: 'Reassign Doc', visible: delivering, icon: <SwapOutlined />, onClick: async () => await onOpenModalHandler(from, 'assign-doc', item?.id, true) },
-    {
-      key: 'cancelDelivery', label: 'Cancel Delivery', visible: delivering, type: 'Danger', main: claimed, icon: <StopOutlined />, onClick: () => {
-        setModal({ type: 'CANCEL_DELIVERY', from: 'LIST', deliveryId: item?.delivery.id || 0 })
-      }
-    },
+
     {
       key: 'cancelChangeRequest', label: 'Cancel Change Request', type: 'Danger', icon: <StopOutlined />, visible: item?.claimedBy !== null && item?.changeRequest, onClick: () => {
         setModal({
@@ -306,10 +302,15 @@ export default () => {
               if (from === 'DETAIL') {
                 await loadDetail(selected.id)
               }
-              actionRef.current?.reloadAndRest?.()
+              // actionRef.current?.reloadAndRest?.()
             })
           }
         })
+      }
+    },
+    {
+      key: 'cancelDelivery', label: 'Cancel Delivery', visible: delivering || pendingDelivery, type: 'Danger', main: claimed, icon: <StopOutlined />, onClick: () => {
+        setModal({ type: 'CANCEL_DELIVERY', from: 'LIST', deliveryId: item?.delivery.id || 0 })
       }
     },
     ]

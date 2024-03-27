@@ -118,7 +118,7 @@ export default ({ data }: { data: FreightDetail }) => {
             {formatDateTime(moment(checkIn.checkInDate)) || ''}
           </Descriptions.Item>
           <Descriptions.Item label="Location">
-            <a
+            {checkIn.location?.coords && <a
               href={[
                 'https://www.google.com/maps/search/?api=1&query=',
                 (checkIn.location?.coords?.latitude || '').toString(),
@@ -128,7 +128,8 @@ export default ({ data }: { data: FreightDetail }) => {
               target="_blank"
             >
               {`${checkIn.location?.coords?.latitude}, ${checkIn.location?.coords?.longitude}`}
-            </a>
+            </a>}
+            {!checkIn.location?.coords && "N/A"}
           </Descriptions.Item>
           <Descriptions.Item label="Remarks">{checkIn?.remarks || ''}</Descriptions.Item>
           <Descriptions.Item label="Image">
@@ -153,7 +154,7 @@ export default ({ data }: { data: FreightDetail }) => {
             {formatDateTime(moment(checkout.checkoutDate)) || ''}
           </Descriptions.Item>
           <Descriptions.Item label="Location">
-            <a
+            {checkout.location?.coords && <a
               href={[
                 'https://www.google.com/maps/search/?api=1&query=',
                 (checkout.location?.coords?.latitude || '').toString(),
@@ -161,7 +162,8 @@ export default ({ data }: { data: FreightDetail }) => {
                 (checkout.location?.coords?.longitude || '').toString(),
               ].join('')}
               target="_blank"
-            >{`${checkout.location?.coords?.latitude}, ${checkout.location?.coords?.longitude}`}</a>
+            >{`${checkout.location?.coords?.latitude}, ${checkout.location?.coords?.longitude}`}</a>}
+            {!checkout.location?.coords && "N/A"}
           </Descriptions.Item>
           <Descriptions.Item label="Remarks">{checkout?.remarks || ''}</Descriptions.Item>
         </Descriptions>

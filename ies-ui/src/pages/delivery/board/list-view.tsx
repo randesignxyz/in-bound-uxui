@@ -125,7 +125,7 @@ export default ({
                 { status: HOLD, count: list.filter(it => it.holdBy).length },
                 { status: NONE_DN, count: list.filter(it => !it.loading.canPick && it.activity == "LOADING" && it.loading.status == 'PENDING' && !it.holdBy).length },
                 { status: DN_ASSIGNED, count: list.filter(it => it.loading.canPick && it.activity == "LOADING" && it.loading.status == 'PENDING' && !it.holdBy).length },
-                { status: TRUCK_LOADING, count: list.filter(it => it.loading.canPick && it.activity == "LOADING" && it.loading.status == 'LOADING' && !it.holdBy).length },
+                { status: TRUCK_LOADING, count: list.filter(it => it.loading.canPick && it.activity == "LOADING" && (it.loading.status == 'LOADING' || it.loading.status == 'LOADING_STARTED') && !it.holdBy).length },
                 { status: NONE_DOC, count: list.filter(it => it.activity == "DELIVERY" && it.delivery.status == 'PENDING' && !it.delivery.assignedDocDate && !it.holdBy).length },
                 { status: DOC_ASSIGNED, count: list.filter(it => it.activity == "DELIVERY" && it.delivery.status == 'PENDING' && !!it.delivery.assignedDocDate && !it.holdBy).length },
                 { status: TRIP_STARTED, count: list.filter(it => it.activity == "DELIVERY" && !!it.delivery.startedDate && !it.endedDate).length },
@@ -135,7 +135,7 @@ export default ({
                 data: list.filter(it => !statusFilter || (statusFilter == HOLD && it.holdBy) ||
                     (statusFilter == NONE_DN && !it.loading.canPick && it.activity == "LOADING" && it.loading.status == 'PENDING' && !it.holdBy) ||
                     (statusFilter == DN_ASSIGNED && it.loading.canPick && it.activity == "LOADING" && it.loading.status == 'PENDING' && !it.holdBy) ||
-                    (statusFilter == TRUCK_LOADING && it.loading.canPick && it.activity == "LOADING" && it.loading.status == 'LOADING' && !it.holdBy) ||
+                    (statusFilter == TRUCK_LOADING && it.loading.canPick && it.activity == "LOADING" && (it.loading.status == 'LOADING' || it.loading.status == 'LOADING_STARTED') && !it.holdBy) ||
                     (statusFilter == NONE_DOC && it.activity == "DELIVERY" && it.delivery.status == 'PENDING' && !it.delivery.assignedDocDate && !it.holdBy) ||
                     (statusFilter == DOC_ASSIGNED && it.activity == "DELIVERY" && it.delivery.status == 'PENDING' && !!it.delivery.assignedDocDate && !it.holdBy) ||
                     (statusFilter == TRIP_STARTED && it.activity == "DELIVERY" && !!it.delivery.startedDate && !it.endedDate) ||
@@ -189,7 +189,7 @@ export default ({
         const itemToClaim = list?.find(it => !it.claimedBy && !it.holdBy && !it.loading.canPick && it.loading.status == 'PENDING')
         const claimedItem = list?.find(it => it.isOwner && !it.holdBy && !it.loading.canPick && it.loading.status == 'PENDING')
 
-        return <ProCard bordered boxShadow colSpan={'50%'} title="Issue DN from SAP" extra={
+        return <ProCard style={claimedItem && { backgroundColor: 'Highlight' }} bordered boxShadow colSpan={'50%'} title="Issue DN from SAP" extra={
 
             (() => {
                 if (claimedItem) {
@@ -242,7 +242,7 @@ export default ({
         const itemToClaim = list?.find(it => !it.claimedBy && !it.holdBy && it.loading.status == 'LOADED' && !it.changeRequest)
         const claimedItem = list?.find(it => it.isOwner && !it.holdBy && it.loading.status == 'LOADED' && !it.changeRequest)
 
-        return <ProCard bordered boxShadow colSpan={'50%'} title="Assign Docs" extra={
+        return <ProCard style={claimedItem && { backgroundColor: 'Highlight' }} bordered boxShadow colSpan={'50%'} title="Assign Docs" extra={
             (() => {
                 if (claimedItem) {
                     const actions = getActions?.('LIST', claimedItem).filter(it => it.visible)

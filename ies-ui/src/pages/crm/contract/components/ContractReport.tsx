@@ -79,7 +79,7 @@ export default ({ trigger }: { trigger?: JSX.Element}) => {
             {label: "Terminated", value: "TERMINATED"},
         ]}/>
         <ProFormSelect showSearch allowClear mode="multiple" name={"brandId"} label = "Brand" options={lookupData?.brandList?.map(it => ({label: it.name, value: it.id}))}/>
-        <ProFormSelect showSearch allowClear mode="multiple" name={"contractTypeId"} label = "Contract Tyoe" options={lookupData?.contractTypes?.map(it =>({label: it.name, value: it.id}))}/>
+        <ProFormSelect showSearch allowClear mode="multiple" name={"contractTypeId"} label = "Contract Type" options={lookupData?.contractTypes?.map(it =>({label: it.name, value: it.id}))}/>
         <ProFormSelect showSearch allowClear mode="multiple" name = "termId" label ="Terms" options={lookupData?.terms?.map(it => ({label: it.name, value: it.id}))}/>
 
     </ModalForm>

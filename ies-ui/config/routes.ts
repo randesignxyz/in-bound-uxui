@@ -138,6 +138,23 @@ export default [
     access: 'canAccessCrmMenuItem',
     component: './crm/notification',
   },
+  {
+    path: '/crm/term/:view/*',
+    name: 'term',
+    icon: 'TeamOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessCrmMenuItem',
+    component: './crm/term',
+  },
+  {
+    path: '/external/crm/term/:view/*',
+    name: 'term',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    layout: false,
+    access: 'canAccessCrmMenuItem',
+    component: './crm/term',
+  },
 
   /**********<<Pro**************/
   {

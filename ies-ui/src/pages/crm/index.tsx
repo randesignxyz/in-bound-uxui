@@ -3,6 +3,7 @@ import CustomerIcon from '@/assets/customer.png';
 import notificationIcon from '@/assets/megaphone.png';
 import planIcon from '@/assets/plan.png';
 import scheduleIcon from '@/assets/schedule.png';
+import agreementIcon from '@/assets/agreement.png'
 import type { ListMenuItem } from '@/components/ListMenu';
 import ListMenuComp from '@/components/ListMenu';
 import '@/pages/index.less';
@@ -27,6 +28,7 @@ export const CrmPaths = {
   setup: '/crm/setup',
   notification: '/crm/notification',
   gratisSettlement: '/crm/gratis',
+  terms: '/crm/term',
 };
 const Crm: React.FC = () => {
   const access = useAccess();
@@ -337,6 +339,16 @@ const Crm: React.FC = () => {
       icon: scheduleIcon,
       overlay: GratistMenu
     },
+    ,
+    {
+      id: 'terms',
+      name: 'Terms',
+      description: 'Terms List',
+      //link: `${CrmPaths.settlement}/list`,
+      link: `${CrmPaths.terms}/list`,
+      icon: agreementIcon,
+      // overlay: GratistMenu
+    }
   ];
 
   return (

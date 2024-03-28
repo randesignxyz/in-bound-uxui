@@ -507,8 +507,6 @@ export default () => {
         requestActions,
       );
 
-      console.log(statusFilter);
-
       setLoadingBayList(rs.loadingBayList);
 
       const list = rs.allocatedLoadingDockList
@@ -601,7 +599,6 @@ export default () => {
       },
     });
   }
-
 
   const onSaveLoadingCapacityHandler = (loadingCapacityIds: number[]) => {
     Modal.confirm({
@@ -742,7 +739,7 @@ export default () => {
 
     const itemToClaim = loadingDockList.find(it => !it.isOwner && it.canPick && !it.claimedBy && !it.holdBy && it.status == "PENDING")
     const claimedItem = loadingDockList.find(it => it.isOwner && !it.holdBy && it.canPick && it.status == "PENDING")
-    return <ProCard boxShadow bordered title="Serving Picking" extra={
+    return <ProCard style={claimedItem && { backgroundColor: 'Highlight' }} boxShadow bordered title="Serving Picking" extra={
       (() => {
 
         if (claimedItem) {
@@ -780,10 +777,10 @@ export default () => {
 
     } >
       <ProDescriptions>
-        <ProDescriptions.Item contentStyle={{ fontWeight: 'bolder' }} label="Ticket #">{claimedItem?.ticketNum}</ProDescriptions.Item>
-        <ProDescriptions.Item label="Driver">{claimedItem?.driver}</ProDescriptions.Item>
-        <ProDescriptions.Item label="Truck">{claimedItem?.truckNo}</ProDescriptions.Item>
-        {(claimedItem?.combinedLoadingDocks?.length || 0) > 0 && <ProDescriptions.Item label="Combined with">{claimedItem?.combinedLoadingDocks?.map(it => it.name).join(", ")}</ProDescriptions.Item>}
+        <ProDescriptions.Item labelStyle={claimedItem && { color: 'whitesmoke' }} contentStyle={{ fontWeight: 'bolder', color: claimedItem ? 'whitesmoke' : undefined }} label="Ticket #">{claimedItem?.ticketNum}</ProDescriptions.Item>
+        <ProDescriptions.Item labelStyle={claimedItem && { color: 'whitesmoke' }} contentStyle={claimedItem && { color: 'whitesmoke' }} label="Driver">{claimedItem?.driver}</ProDescriptions.Item>
+        <ProDescriptions.Item labelStyle={claimedItem && { color: 'whitesmoke' }} contentStyle={claimedItem && { color: 'whitesmoke' }} label="Truck">{claimedItem?.truckNo}</ProDescriptions.Item>
+        {(claimedItem?.combinedLoadingDocks?.length || 0) > 0 && <ProDescriptions.Item labelStyle={claimedItem && { color: 'whitesmoke' }} contentStyle={claimedItem && { color: 'whitesmoke' }} label="Combined with">{claimedItem?.combinedLoadingDocks?.map(it => it.name).join(", ")}</ProDescriptions.Item>}
       </ProDescriptions>
 
     </ProCard>

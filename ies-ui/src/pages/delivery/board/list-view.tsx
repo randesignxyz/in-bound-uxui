@@ -224,13 +224,13 @@ export default ({
             {/* {renderServingCreateDN()} */}
 
             <Descriptions>
-                <Descriptions.Item contentStyle={{ fontWeight: 'bolder' }} label="Ticket #">
+                <Descriptions.Item labelStyle={claimedItem && { color: 'whitesmoke' }} contentStyle={{ fontWeight: 'bolder', color: claimedItem ? "whitesmoke" : undefined }} label="Ticket #">
                     {claimedItem?.ticketNo}
                 </Descriptions.Item>
-                <Descriptions.Item label="Driver">{[claimedItem?.driver?.firstName, claimedItem?.driver?.lastName].filter(it => it).join(" ")}</Descriptions.Item>
-                <Descriptions.Item label="Truck">{claimedItem?.truck?.licensePlate}</Descriptions.Item>
-                <Descriptions.Item label="Capacity">{claimedItem?.truck?.loadingCapacity?.name}</Descriptions.Item>
-                <Descriptions.Item label="Status">{[claimedItem?.activity, claimedItem?.loading.status].filter(it => it)?.map(it => toReadable(it)).join(" / ")}</Descriptions.Item>
+                <Descriptions.Item labelStyle={claimedItem && { color: 'whitesmoke' }} contentStyle={claimedItem && { color: 'whitesmoke' }} label="Driver">{[claimedItem?.driver?.firstName, claimedItem?.driver?.lastName].filter(it => it).join(" ")}</Descriptions.Item>
+                <Descriptions.Item labelStyle={claimedItem && { color: 'whitesmoke' }} contentStyle={claimedItem && { color: 'whitesmoke' }} label="Truck">{claimedItem?.truck?.licensePlate}</Descriptions.Item>
+                <Descriptions.Item labelStyle={claimedItem && { color: 'whitesmoke' }} contentStyle={claimedItem && { color: 'whitesmoke' }} label="Capacity">{claimedItem?.truck?.loadingCapacity?.name}</Descriptions.Item>
+                <Descriptions.Item labelStyle={claimedItem && { color: 'whitesmoke' }} contentStyle={claimedItem && { color: 'whitesmoke' }} label="Status">{[claimedItem?.activity, claimedItem?.loading.status].filter(it => it)?.map(it => toReadable(it)).join(" / ")}</Descriptions.Item>
             </Descriptions>
 
         </ProCard>
@@ -276,13 +276,13 @@ export default ({
             })()
         }>
             <Descriptions>
-                <Descriptions.Item contentStyle={{ fontWeight: 'bolder' }} label="Ticket #">
+                <Descriptions.Item labelStyle={claimedItem && { color: 'whitesmoke' }} contentStyle={{ fontWeight: 'bolder', color: claimedItem ? 'whitesmoke' : undefined }} label="Ticket #">
                     {claimedItem?.ticketNo}
                 </Descriptions.Item>
-                <Descriptions.Item label="Driver">{[claimedItem?.driver?.firstName, claimedItem?.driver?.lastName].filter(it => it).join(" ")}</Descriptions.Item>
-                <Descriptions.Item label="Truck">{claimedItem?.truck?.licensePlate}</Descriptions.Item>
-                <Descriptions.Item label="Capacity">{claimedItem?.truck?.loadingCapacity?.name}</Descriptions.Item>
-                <Descriptions.Item label="Status">{[claimedItem?.activity, claimedItem?.loading.status].filter(it => it)?.map(it => toReadable(it)).join(" / ")}</Descriptions.Item>
+                <Descriptions.Item labelStyle={claimedItem && { color: 'whitesmoke' }} contentStyle={claimedItem && { color: 'whitesmoke' }} label="Driver">{[claimedItem?.driver?.firstName, claimedItem?.driver?.lastName].filter(it => it).join(" ")}</Descriptions.Item>
+                <Descriptions.Item labelStyle={claimedItem && { color: 'whitesmoke' }} contentStyle={claimedItem && { color: 'whitesmoke' }} label="Truck">{claimedItem?.truck?.licensePlate}</Descriptions.Item>
+                <Descriptions.Item labelStyle={claimedItem && { color: 'whitesmoke' }} contentStyle={claimedItem && { color: 'whitesmoke' }} label="Capacity">{claimedItem?.truck?.loadingCapacity?.name}</Descriptions.Item>
+                <Descriptions.Item labelStyle={claimedItem && { color: 'whitesmoke' }} contentStyle={claimedItem && { color: 'whitesmoke' }} label="Status">{[claimedItem?.activity, claimedItem?.loading.status].filter(it => it)?.map(it => toReadable(it)).join(" / ")}</Descriptions.Item>
             </Descriptions>
         </ProCard>
 

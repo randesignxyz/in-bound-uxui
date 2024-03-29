@@ -2,13 +2,16 @@ export type SaveTermData = {
     id?: number;
     code?: string;
     description?: string;
+    tag?: string[];
   }
   export interface Term{
     id: number,
     description: string,
     code?: string,
     termId?:number,
-    isConfigured?:boolean
+    isConfigured?:boolean,
+    tag?: string[],
+    gratisAdmin?: boolean
   }
 
   export type SaveGratisSettledConfigData = {
@@ -45,3 +48,8 @@ export type SaveTermData = {
     id?: number;   
     termId: number;
   }
+
+  export type TermReportParams = {
+    tag?: string[]
+  }
+  

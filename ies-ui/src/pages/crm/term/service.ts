@@ -46,6 +46,11 @@ export const TermServices = {
         endpoint: 'CRM',
         payload: data,
     }),
+    saveTermTag: (data: {tag: string[],termId: number}) => execDataService<{message: string,id?: number}, {tag: string[],termId: number}> ({
+        actionName: 'save-term-tag',
+        endpoint: 'CRM',
+        payload: data,
+    }),
 
 
 }

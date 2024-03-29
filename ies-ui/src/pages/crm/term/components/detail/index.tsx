@@ -1,21 +1,23 @@
 import { simpleRequestActions } from "@/services/model"
-import { PageContainer, ProCard, ProDescriptions, ProTable } from '@ant-design/pro-components';
+import { PageContainer, ProCard, ProDescriptions, ProForm, ProFormSelect, ProTable } from '@ant-design/pro-components';
 import { history } from 'umi';
-import { Button, Form, Space, Spin } from "antd"
+import { Button, Form, Space, Spin, Tag } from "antd"
 import { CrmPaths } from "@/pages/crm";
 import { useEffect, useState } from "react";
 import { TermServices } from "../../service";
-import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
+import { CheckCircleOutlined, CheckOutlined, DeleteOutlined, EditOutlined, PlusOutlined, TagsOutlined } from "@ant-design/icons";
 import GratisTermConfigModalForm from "../GratisTermConfigModalForm";
 import { GratisSettledConfigData, RemoveGratisSettledConfigData, Term } from "../../types";
 import PopconfirmMe from "@/pages/expense/delivery/components/PopconfirmMe";
 import { message } from "antd/lib";
+import { values } from "lodash";
+import TagModalForm from "../TagModalForm";
 
 const TermDetail: React.FC<{termId: number}> = ({termId}) => {
     const requestActions = simpleRequestActions()
     const [term,setTerm] = useState<Term>()
     const [config,setConfig] = useState<GratisSettledConfigData[]>()
-    const [modalVisible, setModalVisible] = useState<{ type: 'ADD', termId: number , cb?: () => void} | {type: 'EDIT', termId: number, data?: GratisSettledConfigData, cb?:() => void  }>()
+    const [modalVisible, setModalVisible] = useState<{ type: 'ADD', termId: number , cb?: () => void} | {type: 'EDIT', termId: number, data?: GratisSettledConfigData, cb?:() => void  } | { type: 'TAG',termId: number, cb?: () => void}>()
 
     useEffect(()=>{
         dataLoad()
@@ -28,20 +30,25 @@ const TermDetail: React.FC<{termId: number}> = ({termId}) => {
     }
     const handleBackHandler = () => {
         history.push(`${CrmPaths.terms}/list`);
-      };
+    };
+
     return (<Spin spinning={requestActions.request?.loading || false}>
         <PageContainer 
             breadcrumb={undefined}
             onBack={handleBackHandler}
             title={'Term Code:' + term?.code}
+            extra = {<Space>
+                <Button type="link" icon={<TagsOutlined/>} onClick={()=> {setModalVisible({type: 'TAG',termId:termId,cb:()=>{ dataLoad(); setModalVisible(undefined)}})} }>Tag</Button>
+            </Space>}
             content={<ProCard>
-                <ProDescriptions  dataSource={term} columns={[
-                    { label: "Description", render: (_, r) => r.description },
-                ]}/>
+                    <ProDescriptions column={1}  dataSource={term} columns={[
+                        { label: "", render: (_, r) => r.description }
+                    ]}/>
+                    {term?.tag?.map(it=> <Tag icon={<CheckCircleOutlined/>} color="success"> {it}</Tag>)}                
                 </ProCard>
             }
         >
-            <Space direction="vertical" style={{width:'100%'}}>                
+          { term?.gratisAdmin && <Space direction="vertical" style={{width:'100%'}}>                
                 <ProTable<GratisSettledConfigData> 
                     search={false}
                     options={{
@@ -129,9 +136,10 @@ const TermDetail: React.FC<{termId: number}> = ({termId}) => {
                     ]}
                 />
                 
-            </Space>
+            </Space> }
         </PageContainer>
-        {modalVisible?.type  && <GratisTermConfigModalForm termId={modalVisible.termId} initData={modalVisible?.type=='EDIT'? modalVisible.data: undefined} onRefresh={modalVisible.cb}  open = {true} onOpenChange = {visible => !visible && setModalVisible(undefined)}/>}
+        { term?.gratisAdmin && (modalVisible?.type=='EDIT' || modalVisible?.type=='ADD') && <GratisTermConfigModalForm termId={modalVisible.termId} initData={modalVisible?.type=='EDIT'? modalVisible.data: undefined} onRefresh={modalVisible.cb}  open = {true} onOpenChange = {visible => !visible && setModalVisible(undefined)}/>}
+        {modalVisible?.type=='TAG'  && <TagModalForm termId={modalVisible.termId} onRefresh={modalVisible.cb}  open = {true} onOpenChange = {visible => !visible && setModalVisible(undefined)}/>}
     </Spin>)
 }
 export default TermDetail;

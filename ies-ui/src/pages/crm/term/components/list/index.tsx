@@ -1,32 +1,41 @@
 import { Paging } from "@/services/API";
-import { Button, Radio, Space, Spin, Tag } from "antd";
+import { Radio, Space, Spin, Tag, message } from "antd";
 import TableView from "@/components/DataCrud/TableView";
 import { simpleRequestActions } from "@/services/model";
 import { TermServices } from "../../service";
-import { ActionType, ProColumns } from "@ant-design/pro-components";
-import { CheckCircleOutlined, SelectOutlined } from "@ant-design/icons";
+import { ActionType, LightFilter, ProColumns, ProForm, ProFormSelect } from "@ant-design/pro-components";
+import { CheckCircleOutlined, CheckOutlined, ExclamationCircleOutlined, SelectOutlined, TagsOutlined } from "@ant-design/icons";
 import { CrmPaths } from "@/pages/crm";
 import { history, useModel } from 'umi'
 import { Term } from "../../types";
 import { TermAdvanceSearchParams } from "../../model";
 import { useEffect, useRef, useState } from "react";
+import { useForm } from "antd/es/form/Form";
+import { LookupData } from "@/services/data";
+import { MultiRequest } from "@/services/apiGateway";
+import { ContractServices } from "@/pages/crm/contract/services";
+import PopconfirmMe from "@/pages/expense/delivery/components/PopconfirmMe";
+import { Button } from "antd";
 
 export interface Props{
-    loading?: boolean;
-    data: {
-        itemList?: Paging<Term>;
-    }
    onDetail?: (record: Term) => void
    onAdd?: () => void
    forceRefresh?: number
+   contractTypes?: LookupData[]
 }
-
-export const TermListView: React.FC<Props> = ({ loading,  data,onDetail,onAdd,forceRefresh}) => {
+type LightFilterProp = {
+    tag?: string[]
+}
+export const TermListView: React.FC<Props> = ({onDetail,onAdd,forceRefresh,contractTypes}) => {
 
     const cacheList = useModel('dataList')
     const actionRef = useRef<ActionType>();
+    const [form] = useForm<{tag:string[]}>()
     const requestActions = simpleRequestActions()
     const [advanceSearch, setAdanceSearch] = useState<TermAdvanceSearchParams>({ status: "ALL" })   
+    const [lookupData, setLookupData] = useState<{
+        contractTypes?: LookupData[];
+      }>();
     const onRequestHandler = async (criteria?: { searchValue?: string },
         pagination?: {
             pageSize?: number;
@@ -48,8 +57,18 @@ export const TermListView: React.FC<Props> = ({ loading,  data,onDetail,onAdd,fo
         }) as Promise<Paging<Term>>
     }
     useEffect(() => {
-        actionRef.current?.reloadAndRest?.()
+        onLoad()
     }, [advanceSearch,forceRefresh])
+
+    const onLoad = async () => {
+        const rs = await MultiRequest<{
+            contractTypes: LookupData[];
+          }>([
+            ContractServices.listContractType().queryParams,
+          ])(requestActions);    
+          setLookupData(rs);
+        actionRef.current?.reloadAndRest?.()
+    }
     const cols = (onDetail?: (record: Term) => void): ProColumns<Term>[] => ([
         {
             title: 'Code',
@@ -68,12 +87,50 @@ export const TermListView: React.FC<Props> = ({ loading,  data,onDetail,onAdd,fo
         },{
             title: 'Description',
             dataIndex: 'description',
-            sorter: 'description'
+            sorter: 'description',
+            render: (_,r )=><Space direction="vertical">
+                <div>{r.description}</div>
+                <div style={{right:10}}>{r.tag?.map(it=> <Tag icon={<CheckCircleOutlined/>} color="success">{it}</Tag>)}</div>
+            </Space>
         },
         {
             title: 'Configed',
             width: 40,
             render: (_,r)=>  r.isConfigured &&<Tag icon={<CheckCircleOutlined />} color="#2db7f5">{'Mapping'}</Tag>
+        },
+        {
+            title: 'Action',
+            width: 30,
+            render: (_,r) => {
+
+                return <PopconfirmMe title={`Tag - ${r.code}`}  
+                    icon= {<TagsOutlined/>}
+                    placement="left"               
+                    description={
+                        <ProForm form={form} submitter={false} style={{width:550}}>
+                            <ProFormSelect mode="tags" colSize={1} readonly={false} options={contractTypes?.map(it =>{ return {label: it.name,value: it.name}})} name={'tag'}/>
+                        </ProForm>
+                    }
+                    onConfirm={ async()=>{ 
+                        try {
+                            const formData = await form.validateFields();    
+                            const data = {...formData,termId:r.id}
+                            await TermServices.saveTermTag(data)(requestActions).then(it=>{
+                                actionRef.current?.reloadAndRest?.()
+                                message.success('Saved successfully.');
+                            }) 
+                        }catch(error: any){
+                            message.error(error.message || 'Failed to save')
+                        }
+                    }}
+                >
+                    <Button type="link" icon={<TagsOutlined/>} 
+                        onClick={()=> {
+                            form.setFieldsValue({tag: r.tag})
+                        }}
+                    />
+                </PopconfirmMe>
+            }
         }
     ])
 
@@ -95,6 +152,20 @@ export const TermListView: React.FC<Props> = ({ loading,  data,onDetail,onAdd,fo
                         ]}
                         onChange={(e) => setAdanceSearch(v => ({ ...v, status: e.target.value }))}
                     />
+                    <LightFilter<LightFilterProp> 
+                        onValuesChange={(_, values) => {
+                            const tags = values.tag;
+                            console.log('tag',tags)
+                            setAdanceSearch(v => { return {...v,tag: tags}})
+                        }}
+                    >
+                        <ProFormSelect 
+                            name="tag"
+                            label="Tag"
+                            mode="multiple"
+                            options={lookupData?.contractTypes?.map(it =>{ return {label: it.name,value: it.name}})}
+                        />
+                     </LightFilter>
                 </Space>
             }
             actionHandlers={{

@@ -16,6 +16,7 @@ import { PageContainer } from '@ant-design/pro-components';
 import PosmMonitoring from './reports/PosmMonitoring';
 import AgreementCompliant from './reports/AgreementCompliant';
 import ContractReport from './contract/components/ContractReport';
+import TermReport from './term/components/TermReport';
 
 export const CrmPaths = {
   contact: '/crm/contact',
@@ -347,7 +348,9 @@ const Crm: React.FC = () => {
       //link: `${CrmPaths.settlement}/list`,
       link: `${CrmPaths.terms}/list`,
       icon: agreementIcon,
-      // overlay: GratistMenu
+      menu: {
+        items: [{label: <TermReport trigger={<a >Export</a>}/> , key: 'exportTerm', icon: <ExportOutlined style={{ fontSize: '16px', color: '#08c' }}/>}]
+      }
     }
   ];
 

@@ -7,6 +7,7 @@ export type TermType = 'DIRECT' | 'IN DIRECT' | 'OTHERS'
 
 export type TermAdvanceSearchParams = {  
   status: 'ALL' | 'ACTIVE' | 'INACTIVE' | 'EXPIRED';
+  tag?: string[];
 };
 
 

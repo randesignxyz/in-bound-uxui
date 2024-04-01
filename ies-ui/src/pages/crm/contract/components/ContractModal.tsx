@@ -155,7 +155,7 @@ export default ({
           showSearch
           label="Terms"
           name={'termId'}
-          options={lookupData?.terms?.map((it) => ({ label: it.name, value: it.id }))}
+          options={lookupData?.terms?.map((it) => ({ label: it.code +' - '+it.name, value: it.id }))}
         />
         <ProFormTextArea label="Remarks" name={'remarks'} />
       </Spin>

@@ -39,7 +39,7 @@ export default ({
       })
     }
     const onSaveHandler = async () =>{
-        try {
+      try {
         const formData = await form.validateFields();    
         const data = {...formData,termId:termId}
         await TermServices.saveTermTag(data)(requestActions).then(it=>{

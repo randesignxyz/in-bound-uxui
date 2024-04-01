@@ -71,7 +71,7 @@ const VerifyContractByMonthView= ({isVerify,gSettledId,gContractId, groupTypeCod
         (isVerify) ? [            
             isDirect&&<AdjustTranModal verifyId={id} customerCode={gContract?.customer.code} title={'Adjustment'} onSave={(status, remarks, adjItems, cb) => adjustHandler(id, adjItems, cb)} trigger={<Button type='link' icon={<EditOutlined/>}>Adjust</Button>} />,
             isInDirect&&<AdjDirectListItemSearchModal verifyId={id} customerCode={gContract?.customer.code} addHandler={(adjItems, cb) => adjustHandler(id, adjItems, cb)}   trigger={<Button type='link' icon={<EditOutlined/>}>Adjust</Button>}/>,
-            isOther&&<AdjOtherCustomerVisitSearchModal gSettledId={gSettledId} verifyId={id} customerCode={gContract?.customer.code} addHandler={(adjItems, cb) => adjustCustomerVisitScheduleHandler(id, adjItems, cb)}   trigger={<Button type='link' icon={<EditOutlined/>}>Adjust {gContract?.contracts?.find(i=> i.id==id)?.totalCustomerVisitUpdated||0>0?supTitle(gContract?.contracts?.find(i=> i.id==id)?.totalCustomerVisitUpdated||0):''}</Button>}/>
+            isOther&&<AdjOtherCustomerVisitSearchModal gSettledId={gSettledId} verifyId={id} customerCode={`${gContract?.customer.code} - ${gContract?.customer.name}`} addHandler={(adjItems, cb) => adjustCustomerVisitScheduleHandler(id, adjItems, cb)}   trigger={<Button type='link' icon={<EditOutlined/>}>Adjust {gContract?.contracts?.find(i=> i.id==id)?.totalCustomerVisitUpdated||0>0?supTitle(gContract?.contracts?.find(i=> i.id==id)?.totalCustomerVisitUpdated||0):''}</Button>}/>
         ] : []
     const  optionsStatus=[
         { label: "All", value: "ALL",sort:1 },

@@ -22,45 +22,33 @@ const AdjOtherCustomerVisitSearchModal = ({gSettledId,verifyId,selectedItems,tri
     const actionRef = useRef<ActionType>();
     const actionCustVisitRef = useRef<ActionType>();
     const requestActions = simpleRequestActions() 
-    const [dataLookup, setDataLookup] = useState<AdjustInfoOn[]>()
+    // const [dataLookup, setDataLookup] = useState<AdjustInfoOn[]>()
     const [selectedFrom, setSelectedFrom] = useState<AdjustInfoOn>()
-    // const [searchData, setSearchData] = useState<ItemSAP[]>()
     const [selected, setSelected] = useState<AdjustCustomerVisitSchedule[]>()
-    // const [docNum,setDocNum] = useState<string>()
     const [criteria, setCriteria] = useState<GratisVisitScheduleParams>()
-    useEffect(()=>{
-        if(verifyId>0) loadData()
-    },[])
-    const loadData = async ()=>{
-        // const rs = await GratisServices.gratisSaleOrderList(verifyId).query(requestActions)    
-        // setDataLookup(rs)
-    }
+    // useEffect(()=>{
+    //     if(verifyId>0) loadData()
+    // },[])
+    // const loadData = async ()=>{
+    //     // const rs = await GratisServices.gratisSaleOrderList(verifyId).query(requestActions)    
+    //     // setDataLookup(rs)
+    // }
     const onSearch=async (value:string)=>{
         try{
             form.validateFields()   
             setCriteria(v=> {
                 return {...v,searchValue:value}
             })        
-            actionCustVisitRef.current?.reload() 
-            // setDocNum(value)
-            // if(value=='' || value.length<4) return
-            // const rs = await GratisServices.getListItemAdjustment(verifyId,customerCode,value,selectedFrom?.dataSource,selectedFrom?.startedDate,selectedFrom?.endedDate).query(requestActions)             
-            // if(rs && rs.length>0){  
-            //     setSearchData(rs)
-            // }else{
-            //     setSearchData([])
-            //     message.warning('Not found')
-            // } 
+            actionCustVisitRef.current?.reload()
         }catch(ex){
             message.error('Not found')
         }
     }
     return(
-        <ModalForm<AdjustCustomerVisitSchedule> width={'80%'}  layout="vertical" 
-         
+        <ModalForm<AdjustCustomerVisitSchedule> width={'80%'}  layout="vertical"          
             form={form}                        
             trigger={trigger}    
-            title='Find: Customer Visit Schedule'
+            title= {`Find: Customer Visit Schedule | ${customerCode}`}
             modalProps={{
                 maskClosable:false
             }}
@@ -90,10 +78,10 @@ const AdjOtherCustomerVisitSearchModal = ({gSettledId,verifyId,selectedItems,tri
                 return false
             }}           
             onValuesChange={(record:any, data:AdjustCustomerVisitSchedule)=> {
-                var dscription = record.dscription
-                if(dscription){
-                    setSelectedFrom(it=> dataLookup?.find(it=> it.dscription==dscription))
-                }           
+                // var dscription = record.dscription
+                // if(dscription){
+                //     setSelectedFrom(it=> dataLookup?.find(it=> it.dscription==dscription))
+                // }           
             }}
         ><Space direction='vertical' style={{width: '100%'}} >
             
@@ -118,37 +106,7 @@ const AdjOtherCustomerVisitSearchModal = ({gSettledId,verifyId,selectedItems,tri
                     </Space>  
                 }             
                 columns={[
-                    /*{
-                        title:'Verified Date',
-                        dataIndex: 'gcontractId',
-                        render: (_, r) => (
-                          <Space size={1}>
-                            <Tooltip title="Quick data review">
-                              <Button
-                                type="link"
-                                size="small"
-                                icon={<EyeOutlined />}
-                                // onClick={() => quickViewHandler(r?.gcontractId, r?.orderNo-1)}
-                              >{r.durationText}</Button>
-                            </Tooltip>                      
-                          </Space>
-                        ),
-                      }, {
-                        title: 'Agreement Name',
-                        dataIndex: 'contractNo',
-                        render: (_, r) => <Tooltip title={!r?.terms ? 'No Term' : r?.terms}><MessageOutlined /> {r?.gcontractNo}</Tooltip>
-                      }, {
-                        title: 'Customer',
-                        dataIndex: 'gcontractId',
-                        render: (_, r) => `${r?.customer?.code} - ${r?.customer?.name}`
-                      }, {
-                        title: 'Brand',  
-                        render: (_, r) => r.brand
-                      }, {
-                        title: 'Status',
-                        dataIndex: 'Status',
-                        render: (_, r) => <Status text={r?.status||'FAILED'} value={r?.status} />
-                      }*/{
+                    {
                         title: 'Schedule Date',
                         width: 130,
                         render: (_, r) => (
@@ -167,20 +125,11 @@ const AdjOtherCustomerVisitSearchModal = ({gSettledId,verifyId,selectedItems,tri
                         </Space>
                         ),
                     },
-                    /*{
-                        title: 'Completed Date',
-                        dataIndex: 'completedDate',  
-                        render: (_, r) =>formatDate(r.completedDate)
-                    },*/
                     { 
                         title: 'Schedule Type',
                         render:(_,r) => toReadable(r.scheduleType)
       
                     },
-                    /*{
-                        title: 'Schedule Status',
-                        render:(_,r) =>  toReadable(r.status)
-                    },*/
                     {
                         title: 'Salesperson',
                         render: (_, r) => r.salesperson
@@ -216,12 +165,7 @@ const AdjOtherCustomerVisitSearchModal = ({gSettledId,verifyId,selectedItems,tri
                         if (selected) {
                             setSelected(v => (
                                     [...(v || []), 
-                                        {id: item.id, 
-                                            // dataSource: selectedFrom?.dataSource,
-                                            // qty: item.quantity, 
-                                            // contractVerifyId: selectedFrom?.contractVerifyId||0,               
-                                            // startedDate: selectedFrom?.startedDate,
-                                            // endedDate:selectedFrom?.endedDate
+                                        {id: item.id,
                                         } as AdjustCustomerVisitSchedule 
                                     ]
                                 )
@@ -235,11 +179,6 @@ const AdjOtherCustomerVisitSearchModal = ({gSettledId,verifyId,selectedItems,tri
                             setSelected(
                                 selectedRows.map(it=> ({
                                    id: it.id
-                                    // dataSource: selectedFrom?.dataSource,
-                                    // qty: it.quantity, 
-                                    // contractVerifyId: selectedFrom?.contractVerifyId||0,               
-                                    // startedDate: selectedFrom?.startedDate,
-                                    // endedDate:selectedFrom?.endedDate
                                 }  as AdjustCustomerVisitSchedule)) 
                             )
                         }
@@ -247,8 +186,7 @@ const AdjOtherCustomerVisitSearchModal = ({gSettledId,verifyId,selectedItems,tri
                 }}
                 // dataSource={searchData}
                 request={async (paging) => {
-                    return GratisServices.fetchSuggestedCustomerVisit({ gSettledId: gSettledId, criteria: {gVerifyId:verifyId||-1,...criteria}, pagination: { current: paging?.current || 0, pageSize: paging?.pageSize || 20 } }).query(requestActions).then(it => {
-                    //   setIsSynchAll(it.total||0>0?true:false)
+                    return GratisServices.fetchSuggestedCustomerVisit({ gSettledId: gSettledId, criteria: {gVerifyId:verifyId||-1,...criteria}, pagination: { current: paging?.current || 0, pageSize: paging?.pageSize || 20 } }).query(requestActions).then(it => {                    
                       return {
                         success: true,
                         total: it.total,

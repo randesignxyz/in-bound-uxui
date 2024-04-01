@@ -344,13 +344,13 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
                   title:'+Qty',
                   dataIndex: 'percentLess',
                   render: (_, r) => r?.percentLess? <div><span>{`${r?.percentLess}%`}</span><div style={{padding:2,fontSize:13,color:'#b49900',borderRadius:5}}>{`(${r?.qtyLess}/${r?.targets})`}</div></div>:'-'
-                }, {
+                },/* {
                   title: 'Customer Code',
                   dataIndex: 'gcontractId',
                   render: (_, r) => r?.customer?.code
-                }, {
-                  title: 'Customer Name',  
-                  render: (_, r) => r?.customer?.name
+                },*/ {
+                  title: 'Customer',  
+                  render: (_, r) =>    <span>{r.customer?.code} - {r.customer?.name}</span>
                 }, {
                   title: 'Brand',  
                   render: (_, r) => r.brand
@@ -412,7 +412,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
                   dataIndex: 'gcontractId',
                   // render: (_, r) => `${r?.customer?.code} - ${r?.customer?.name}`
                   render: (_, r) => <div>
-                    <span>{r.customer?.code} {r.customer?.name}</span>
+                    <span>{r.customer?.code} - {r.customer?.name}</span>
                     <div style={{padding:2,fontSize:13,color:'#b49900',borderRadius:5}}>{r?.address}</div>
                   </div>
                 }, {
@@ -549,16 +549,16 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
               {
                   title: 'Agreetment Type',
                   render: (_, item) => item.contractType
-              }, {
+              },/* {
                 title: 'Customer Code',
 
                 render: (_, r) =>  r?.customer?.code
-              }, {
-                title: 'Customer Name',
+              },*/ {
+                title: 'Customer',
 
                 // render: (_, r) => r?.customer?.name
                 render: (_, r) => <div>
-                <span>{r.customer?.code} {r.customer?.name}</span>
+                <span>{r.customer?.code} - {r.customer?.name}</span>
                 {(r?.address && r?.address!= r.customer?.name) &&<div style={{padding:2,fontSize:13,color:'#b49900',borderRadius:5}}>{r?.address}</div>}
             </div>
               }, {

@@ -98,7 +98,6 @@ export default () => {
                 disabled: preview || viewer,
                 itemIcon: <HistoryOutlined />,
             },
-
         ]
     }
     const cacheList = useModel('dataList');
@@ -120,11 +119,9 @@ export default () => {
     return (
         <>
             <TableView<ShareDTO, {searchValue:string}>
-                // hasCriteria={Object.values(Omit(advanceSearchParams, ['status'])).some((v) => v)}
                 cache
                 displayOnly
                 columns={[
-                   
                     {
                         title:"Document Name",
                         dataIndex:"docName",
@@ -135,7 +132,6 @@ export default () => {
                         title: "Shared by",
                         sorter: "createdBy",
                         dataIndex:"createdBy"
-                       
                     },
                     {   
                         title: "Expiry Date",
@@ -161,7 +157,8 @@ export default () => {
                     {
                         title:"Remark",
                         sorter:"remark",
-                        dataIndex:"description"
+                        dataIndex:"description",
+                        width:300
                     },
 
                     {

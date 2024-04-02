@@ -3,7 +3,6 @@ import { Col, Row, Space } from "antd"
 import { CoreServiceAPI } from "../service";
 import { simpleRequestActions } from "@/services/model";
 import { DepartmentServiceAPI } from "../setting/components/department/service";
-import { DocumentTypeServiceAPI } from "../setting/components/documentType/service";
 
 interface Props {
     lookupData?: LookupDataDTO[];
@@ -53,20 +52,7 @@ export default ({ lookupData }: Props) => {
                         }}
                     />
                 </Col>
-                {/* <Col span={8}>
-                    <ProFormSelect
-                        rules={[{ required: true }]}
-                        label="Document Type"
-                        name={"docType"}
-                        showSearch
-                        request={async (k: { keyWords: string }) => {
-                            const data = await DocumentTypeServiceAPI(requestAction).page({
-                                criteria: { searchValue: k.keyWords || "" }
-                            });
-                            return data.items.map((v) => ({ value: v.id, label: v.name }))
-                        }}
-                    />
-                </Col> */}
+
                 <Col span={8}>
                     <ProFormSelect
                         rules={[{ required: true }]}

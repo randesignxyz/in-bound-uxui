@@ -1,4 +1,4 @@
-import { ProForm, ProFormSelect } from "@ant-design/pro-components"
+import { ProForm } from "@ant-design/pro-components"
 import { Button, UploadFile, message } from "antd"
 import React, { useEffect, useState } from "react";
 import { DocumentationCreate, DocumentationDTO } from "./data";
@@ -8,7 +8,6 @@ import DocFileUploader from "../attachment/DocFileUploader";
 import { getFileTypeviaExtension } from "../core";
 import DocumentationEntry from "./DocumentationEntry";
 import ContractEntry from "../contract/ContractEntry";
-import ContractPurchase from "../contract/ContractPurchase";
 
 
 interface Props extends FormModalProps {
@@ -100,7 +99,6 @@ const DocumentModalForm: React.FC<Props> = ({ type, onSave, division, folderId, 
           (division == "DOC") && 
           <DocumentationEntry data={data}/> ||
           <ContractEntry data={data} />
-          // <ContractPurchase/>
         }
 
         {!data && (

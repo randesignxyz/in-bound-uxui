@@ -20,7 +20,6 @@ interface Props extends DrawerFormProps {
 
 const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...props }: Props) => {
 
-
     const requestAction = simpleRequestActions();
     const [form] = useForm<ShareCreate>();
     const [recipeintState, setRecipeintState] = useState<{
@@ -31,9 +30,7 @@ const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...pr
     useEffect(()=>{
         form.resetFields();
         setRecipeintState({group:false, recipeint:false})
-    }, [props.open]);
-
-
+    }, [props.open]);      
     return (
         <DrawerForm
             width={500}
@@ -45,8 +42,7 @@ const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...pr
                 
             }}
             submitter={{
-                onSubmit:(as)=>{
-                    console.log(as);
+                onSubmit:()=>{
                 }
             }}
             onFinish={async () => {
@@ -57,7 +53,6 @@ const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...pr
                 }
                 onSave(entry)
             }}
-
         >
             {
                 type === "DETAIL" && (
@@ -108,12 +103,10 @@ const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...pr
                                 render:(_,r)=><Flex vertical><span>Accessible</span><Tag color="cyan" bordered={false}>{r.accessible}</Tag></Flex>
                             }
                         }}
-
                     />
                 ) ||
                 (
                     <>
-
                     <ProFormText
                         name={"recipient"}
                         label="Recipient"

@@ -23,7 +23,7 @@ import QuickView from "../share/QuickView"
 import { HistoryServiceAPI } from "../history/service"
 import HistoryDoc from "./HistoryDoc"
 import MoveDocumentModal from "./MoveDocument"
-import { expriationStatus, status } from "../core"
+import { StatusColor, expriationStatus } from "../core"
 import { FavoriteServiceAPI } from "../favorite/service"
 import DocumentModalForm from "./EntryForm"
 
@@ -84,12 +84,12 @@ export default ({ paramSearch, libraryId }: Props) => {
             documentId: number;
         }
     }>();
-  
+
     const [advanceSearchParams, setAdvanceSearchParams] = useState<DocumentationAdvanceSearch>({
         status: "ALL",
     });
     const [advanceSearch, setAdvanceSearch] = useState<{ visible: boolean }>();
-    
+
     const actionItem = (record: DocumentationDTO): MenuProps["items"] => [
 
         {
@@ -128,9 +128,13 @@ export default ({ paramSearch, libraryId }: Props) => {
             itemIcon: <SwapOutlined />,
             disabled: record.status == "Inactive" ? true : false,
             onClick: () => {
-                setMoveState({ visible: { name: "MODAL", moveDoc:{
-                    docId:record.id,
-                } } })
+                setMoveState({
+                    visible: {
+                        name: "MODAL", moveDoc: {
+                            docId: record.id,
+                        }
+                    }
+                })
             }
         },
         {
@@ -219,15 +223,12 @@ export default ({ paramSearch, libraryId }: Props) => {
             onClick: () => setHistoryState({ visible: { name: "DRAWER", docId: record.id } })
         },
     ];
-
-
     useEffect(() => {
         setAdvanceSearchParams({ ...paramSearch });
         actionRef.current?.reload?.()
-    }, [paramSearch]);
+    }, [paramSearch, libraryId]);
     const cacheList = useModel('dataList');
     const onRequestHandler = async (params: TableViewSearchParams<DocumentationAdvanceSearch>) => {
-
         try {
             return services.page(params).then((it) => {
                 return cacheList.cacheDataList({
@@ -283,19 +284,18 @@ export default ({ paramSearch, libraryId }: Props) => {
                             <Segmented
                                 defaultValue={advanceSearchParams.status}
                                 onChange={(e) => {
-                                    if(e=="ALL"){
+                                    if (e == "ALL") {
+                                        setAdvanceSearchParams((v) => ({
+                                            // ...v,
+                                            status: e.toString(),
+                                        }));
+                                    }
+                                    else {
                                         setAdvanceSearchParams((v) => ({
                                             ...v,
                                             status: e.toString(),
                                         }));
                                     }
-                                    else{
-                                        setAdvanceSearchParams((v) => ({
-                                            ...v,
-                                            status: e.toString(),
-                                        }));
-                                    }
-
                                     actionRef.current?.reloadAndRest?.();
                                 }}
                                 options={[
@@ -343,8 +343,8 @@ export default ({ paramSearch, libraryId }: Props) => {
                             <Dropdown
                                 menu={{
                                     items: itemCreateNew(),
-                                    style:{
-                                        width:200
+                                    style: {
+                                        width: 200
                                     }
                                 }}
                             >
@@ -365,7 +365,7 @@ export default ({ paramSearch, libraryId }: Props) => {
                                 ...criteria,
                                 advanceSearch: {
                                     ...advanceSearchParams,
-                                    library:libraryId
+                                    library: libraryId
                                 },
                                 sort,
                             },
@@ -373,7 +373,6 @@ export default ({ paramSearch, libraryId }: Props) => {
                         }),
                     onFirstLoad: () =>
                         cacheList.fetchDataList('dms-document').then((v) => {
-                       
                             if (v) {
                                 setAdvanceSearchParams({
                                     ...v.creteria?.criteria,
@@ -386,7 +385,7 @@ export default ({ paramSearch, libraryId }: Props) => {
                                         advanceSearch: {
                                             ...advanceSearchParams,
                                             library: parseInt(param["*"] || ""),
-                                            folderType:"LIBRARY"
+                                            folderType: "LIBRARY"
                                         }
                                     },
                                 });
@@ -398,6 +397,7 @@ export default ({ paramSearch, libraryId }: Props) => {
                         title: "#",
                         sorter: "code",
                         width: 180,
+                        fixed:true,
                         render: (_, r) => (<Space align="center" ><Button size="small" type="link" icon={<ExportOutlined />} onClick={() => {
                             window.open(`/external/dms/document/detail/${r.id}`)?.focus();
                         }} /><span>{r.documentation.docNumber}</span></Space>),
@@ -416,6 +416,7 @@ export default ({ paramSearch, libraryId }: Props) => {
                     {
                         title: "Expiry Date",
                         sorter: "expiryDate",
+                        fixed:true,
                         render: (_, r) => <span style={{ color: expriationStatus(r.term?.expiryDate) > 0 ? "red" : "" }}>{formatDate(r.term.expiryDate)}</span>
                     },
                     {
@@ -423,12 +424,14 @@ export default ({ paramSearch, libraryId }: Props) => {
                         sorter: "createdDate",
                         dataIndex: "createdDate",
                         valueType: "date",
+                        fixed:true,
                     },
                     {
                         title: "Updated",
                         sorter: "lastModifiedDate",
                         dataIndex: "lastModifiedDate",
-                        valueType: "date"
+                        valueType: "date",
+                        fixed:true,
                     },
                     {
                         title: "Type",
@@ -437,13 +440,16 @@ export default ({ paramSearch, libraryId }: Props) => {
                     {
                         title: "Status",
                         sorter: "status",
-                        render:(_,r)=><Badge text={r.status} status={status(r.term.expiryDate).status} />
+                        fixed:true,
+                        render: (_, r) => <Badge text={r.status} status={StatusColor.getColorStatus(r.status)} />
                     },
                     {
                         title: "Shared",
+                        align:"center",
                         render: (_, r) => {
                             if (r.share > 0) {
-                                return <Button icon={<ShareAltOutlined />} type="link" onClick={() => setQuickViewDrawerState({ visible: { name: "DRAWER", docId: r.id } })} />
+                                return <Button size="small" icon={<ShareAltOutlined />} type="link" onClick={() => setQuickViewDrawerState({ visible: { name: "DRAWER", docId: r.id } })} />
+                                // return <Badge size="small" count={r.share}> <Button size="small" icon={<ShareAltOutlined />} type="link" onClick={() => setQuickViewDrawerState({ visible: { name: "DRAWER", docId: r.id } })} /> </Badge>
                             }
                             else {
                                 return ""
@@ -484,8 +490,8 @@ export default ({ paramSearch, libraryId }: Props) => {
                 onSave={(data: ShareCreate) => {
                     ShareServiceAPI(requestAction).save(data);
                     message.success("Success"),
-                        actionRef.current?.reloadAndRest?.();
-                    setShareDrawerState(() => ({ visible: undefined }));
+                        setShareDrawerState(() => ({ visible: undefined }));
+                    actionRef.current?.reloadAndRest?.();
                 }}
             />
             <ReminderModalForm
@@ -514,11 +520,11 @@ export default ({ paramSearch, libraryId }: Props) => {
                 open={moveState?.visible?.name == "MODAL"}
                 onCancel={() => setMoveState({ visible: undefined })}
                 data={moveState?.visible?.moveDoc}
-                onSave={(data:MoveDocParams) => {
+                onSave={(data: MoveDocParams) => {
                     services.moveDoc(data);
                     actionRef.current?.reload?.();
                     message.success("Success!");
-                    setMoveState({visible:undefined});
+                    setMoveState({ visible: undefined });
                 }}
             />
             < DocumentModalForm
@@ -529,15 +535,20 @@ export default ({ paramSearch, libraryId }: Props) => {
                 folderId={documentModalState?.visible?.folderId}
                 division={documentModalState?.visible?.division}
                 onSave={async (data: DocumentationCreate) => {
-                    const entry = {
-                        ...data,
-                        libraryId: libraryId
-                    }
-                    services.save(entry);
-                    setDocumentState({ visible: undefined });
-                    actionRef.current?.reloadAndRest?.();
-                    message.success("Success!")
-                   
+                    Modal.confirm({
+                        title: "Save document",
+                         content:"are you sure?",
+                        onOk: () => {
+                            const entry = {
+                                ...data,
+                                libraryId: libraryId
+                            }
+                            services.save(entry);
+                            setDocumentState({ visible: undefined });
+                            message.success("Success!");
+                            actionRef.current?.reloadAndRest?.();
+                        }
+                    });
                 }}
             />
         </>

@@ -1,9 +1,7 @@
 import { ProFormText, ProFormSelect, ProFormTextArea } from "@ant-design/pro-components";
 import { Row, Col, Space } from "antd";
 import { CoreServiceAPI } from "../service";
-import { CategoryServiceAPI } from "../setting/components/category/service";
 import { DepartmentServiceAPI } from "../setting/components/department/service";
-import { DocumentTypeServiceAPI } from "../setting/components/documentType/service";
 import { simpleRequestActions } from "@/services/model";
 
 interface Props {
@@ -36,25 +34,6 @@ export default ({ lookupData }: Props) => {
                         rules={[{ required: true }]}
                     />
                 </Col>
-
-                {/* <Col span={8}>
-                    <ProFormSelect
-                        label={"Category"}
-                        name={"category"}
-                        showSearch
-                        debounceTime={500}
-                        request={async (k: { keyWords: string }) => {
-                            const data = await CategoryServiceAPI(requestAction).page({
-                                criteria: { searchValue: k.keyWords || "" }
-                            });
-                            return data.items.map(it => ({
-                                label: it.name,
-                                value: it.id
-                            }));
-
-                        }}
-                    />
-                </Col> */}
 
                 <Col span={12}>
                     <ProFormSelect
@@ -91,22 +70,7 @@ export default ({ lookupData }: Props) => {
                         }}
                     />
                 </Col>
-                {/* <Col span={8}>
-                    <ProFormSelect
-                        rules={[{ required: true }]}
-                        label="Document Type"
-                        name={"docType"}
-                        showSearch
-                        request={async (k: { keyWords: string }) => {
-                            const data = await DocumentTypeServiceAPI(requestAction).page({
-                                criteria: { searchValue: k.keyWords || "" }
-                            });
-                            // setDocumentTypeHasExpire(data.items);
-
-                            return data.items.map((v) => ({ value: v.id, label: v.name }))
-                        }}
-                    />
-                </Col> */}
+              
                 <Col span={24}>
                     <ProFormTextArea
                         name={"description"}

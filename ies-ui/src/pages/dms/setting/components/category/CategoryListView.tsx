@@ -26,11 +26,7 @@ export default ({actionKey}:Props)=>{
         }
     }>();
     const items =(r?:CategoryDTO):MenuProps["items"] =>[
-        // {
-        //     key:"1",
-        //     label:"View",
-        //     itemIcon:<ArrowRightOutlined/>
-        // },
+
         {
             key:"2",
             label:"Edit",
@@ -40,11 +36,7 @@ export default ({actionKey}:Props)=>{
         {
             type:"divider"
         },
-        // {
-        //     key:"3",
-        //     label:"Trash",
-        //     itemIcon:<DeleteOutlined/>
-        // },
+
         {
             key:"4",
             label:"Delete",

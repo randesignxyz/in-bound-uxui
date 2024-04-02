@@ -4,7 +4,7 @@ import { FolderServiceAPI } from '../folder/service';
 import { simpleRequestActions } from '@/services/model';
 import { BankOutlined, DeleteOutlined, EditOutlined, EllipsisOutlined, FolderAddOutlined, FolderOutlined } from '@ant-design/icons';
 import { ActionType } from '@ant-design/pro-components';
-import { history, useAccess, useParams } from '@umijs/max';
+import { history, useParams } from '@umijs/max';
 import { Modal, Spin } from 'antd/lib';
 import FolderEntryForm from '../folder/EntryForm';
 import { DataNode, FolderCreate } from '../folder/data';

@@ -271,7 +271,6 @@ export default ({
                         Serve Next
                     </Button>
 
-
                 return <Tag>No waiting</Tag>
             })()
         }>
@@ -313,6 +312,7 @@ export default ({
 
         fetchOperatorCheckIn()
     }, []);
+
     useEffect(() => {
         actionRef.current?.reloadAndRest?.();
     }, [

@@ -30,13 +30,13 @@ export const AvatarName = () => {
       .query(requestActions)
       .then((data) => {
         if (access.isRequesterRole && !data.hasPhone) {
-          Modal.confirm({
-            title: 'User Profile',
-            content: 'No phone contact available, Do you want to update profile?',
-            onOk: () => {
-              history.push('/profile');
-            },
-          });
+          // Modal.confirm({
+          //   title: 'User Profile',
+          //   content: 'No phone contact available, Do you want to update profile?',
+          //   onOk: () => {
+          //     history.push('/profile');
+          //   },
+          // });
         }
 
         if (data.imageId) getUploadFileObjectUrlV2()(data.imageId).then((url) => setImage(url));

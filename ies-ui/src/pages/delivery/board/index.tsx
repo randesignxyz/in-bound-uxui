@@ -7,7 +7,7 @@ import { InstanceSrvParams } from "@/services/delivery/instance-service-params";
 import { InstanceBasic, InstanceDetail } from "@/services/delivery/instance.types";
 import { LoadingParams } from "@/services/delivery/loading-params";
 import { simpleRequestActions } from "@/services/model";
-import { CheckCircleOutlined, CloseCircleOutlined, EyeFilled, FileDoneOutlined, PauseOutlined, StopOutlined, SwapOutlined } from "@ant-design/icons";
+import { CheckCircleOutlined, CloseCircleOutlined, EyeFilled, FileDoneOutlined, PauseOutlined, StopOutlined, SwapOutlined, UnlockOutlined } from "@ant-design/icons";
 import { ActionType, PageContainer } from "@ant-design/pro-components";
 import { FloatButton, message, Modal, Spin } from "antd";
 import { useEffect, useRef, useState } from "react";
@@ -285,7 +285,7 @@ export default () => {
       }
     },
     {
-      key: 'released', label: "Release", main: true, icon: <StopOutlined />, onClick: () => {
+      key: 'released', label: "Release", main: true, icon: <UnlockOutlined />, onClick: () => {
         onReleaseHandler(item?.id, async () => {
           if (from == 'DETAIL') {
             await loadDetail(selected.id)

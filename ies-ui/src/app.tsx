@@ -81,6 +81,8 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
     menuHeaderRender: undefined,
     childrenRender: (children) => {
       if (initialState?.loading) return <PageLoading />;
+      console.log(children);
+
       return (
         <>
           <App>{children}</App>

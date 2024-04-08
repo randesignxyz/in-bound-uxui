@@ -203,7 +203,9 @@ export default ({
                                 icon: it.icon, key: it.key, label: it.label, onClick: () => it.onClick?.(claimedItem.id),
                                 danger: it.type == 'Danger'
                             }))
-                        }} > {
+                        }} >
+                        {mainAction?.icon}
+                        {
                             mainAction?.label
                         }</DropdownButton>
                 }
@@ -256,7 +258,7 @@ export default ({
                                 icon: it.icon, key: it.key, label: it.label, onClick: () => it.onClick?.(claimedItem.id),
                                 danger: it.type == 'Danger'
                             }))
-                        }} > {
+                        }} > {mainAction?.icon} {
                             mainAction?.label
                         }</DropdownButton>
                 }
@@ -506,7 +508,7 @@ export default ({
                                                     icon: it.icon, key: it.key, label: it.label, onClick: () => it.onClick?.(r.id),
                                                     danger: it.type == 'Danger'
                                                 }))
-                                            }} > {
+                                            }} > {mainAction?.icon} {
                                                 mainAction?.label
                                             }</DropdownButton>
                                     }

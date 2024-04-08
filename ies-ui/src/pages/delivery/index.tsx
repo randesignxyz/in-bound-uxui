@@ -128,7 +128,7 @@ export default () => {
 
     },
     {
-      id: 'dashboard',
+      id: 'queueBoard',
       name: 'Queue Board',
       description: 'Display Board',
       link: `${QueuePaths.display}`,

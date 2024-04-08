@@ -285,7 +285,7 @@ export default () => {
       }
     },
     {
-      key: 'released', label: "Release", main: true, icon: <UnlockOutlined />, onClick: () => {
+      key: 'released', label: "Release Claim", main: true, icon: <UnlockOutlined />, onClick: () => {
         onReleaseHandler(item?.id, async () => {
           if (from == 'DETAIL') {
             await loadDetail(selected.id)

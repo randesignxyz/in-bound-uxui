@@ -105,30 +105,30 @@ export default ({ forceRefresh, requestActions, data: { itemDetail }, actions: {
   }
 
 
-  const onClearCancel = async (item: FreightDetail, remarks?: string) => {
-    Modal.confirm({
-      title: "Clear Canceled DN", content: 'Are you sure?', onOk: async () => {
-        try {
-          await DeliveryParams.clearCancelDn(item.id, remarks!!)(requestActions)
+  // const onClearCancel = async (item: FreightDetail, remarks?: string) => {
+  //   Modal.confirm({
+  //     title: "Clear Canceled DN", content: 'Are you sure?', onOk: async () => {
+  //       try {
+  //         await DeliveryParams.clearCancelDn(item.id, remarks!!)(requestActions)
 
-        } catch (error: any) {
-          message.error(error.message || 'Failed to clear.')
-        }
-      }
-    })
-  }
+  //       } catch (error: any) {
+  //         message.error(error.message || 'Failed to clear.')
+  //       }
+  //     }
+  //   })
+  // }
 
-  const onClearChangeLocation = async (item: FreightDetail, remarks?: string) => {
-    Modal.confirm({
-      title: "Clear Changed Location DN", content: 'Are you sure?', onOk: async () => {
-        try {
-          await DeliveryParams.clearChangedLocationDn(item.id, remarks!!)(requestActions)
-        } catch (error: any) {
-          message.error(error.message || 'Failed to clear.')
-        }
-      }
-    })
-  }
+  // const onClearChangeLocation = async (item: FreightDetail, remarks?: string) => {
+  //   Modal.confirm({
+  //     title: "Clear Changed Location DN", content: 'Are you sure?', onOk: async () => {
+  //       try {
+  //         await DeliveryParams.clearChangedLocationDn(item.id, remarks!!)(requestActions)
+  //       } catch (error: any) {
+  //         message.error(error.message || 'Failed to clear.')
+  //       }
+  //     }
+  //   })
+  // }
 
   const fetchResolveDn = async (dnDate: Moment, shipToCode: string) => {
     return DeliveryParams.fetchResolvingDn(itemDetail?.delivery.id || 0, dnDate, shipToCode).query(requestActions)

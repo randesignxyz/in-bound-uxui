@@ -29,7 +29,7 @@ import {
   PauseOutlined,
   PlayCircleOutlined,
   PrinterOutlined,
-  ReloadOutlined, RetweetOutlined, StarFilled, StopOutlined, SwapOutlined, SyncOutlined, UserOutlined
+  ReloadOutlined, RetweetOutlined, StarFilled, StopOutlined, SwapOutlined, SyncOutlined, UnlockOutlined, UserOutlined
 } from '@ant-design/icons';
 import { history } from 'umi';
 import {
@@ -364,7 +364,7 @@ export default () => {
       },
 
       {
-        key: 'release', label: 'Release Claim', visible: claimed && instanceId && (!isLoaded || isRequested || !isLoadingStarted), main: !isRequested && !isLoadingStarted && !isLoading, icon: <StopOutlined />,
+        key: 'release', label: 'Release Claim', visible: claimed && instanceId && (!isLoaded || isRequested || !isLoadingStarted), main: !isRequested && !isLoadingStarted && !isLoading, icon: <UnlockOutlined />,
         onClick: () => {
           onReleaseHandler(instanceId, async () => {
             if (from == 'DETAIL') {
@@ -744,18 +744,20 @@ export default () => {
 
         if (claimedItem) {
           const mainAction = (vc.view.getActions?.('LIST', claimedItem) || []).filter(it => it.visible && it.main).find(it => it)
-          return <DropdownButton onClick={() => {
-            if (!mainAction) {
-              message.warning(`Blocked by ${claimedItem.claimedBy}`)
-            }
-            mainAction?.onClick?.(claimedItem.id)
-          }} key={claimedItem.id}
+          return <DropdownButton
+            onClick={() => {
+              if (!mainAction) {
+                message.warning(`Blocked by ${claimedItem.claimedBy}`)
+              }
+              mainAction?.onClick?.(claimedItem.id)
+            }} key={claimedItem.id}
             menu={{
               items: (vc.view.getActions?.('LIST', claimedItem) || []).filter(it => it.visible && it.key != mainAction?.key).map((it, index) => (it.seperator ? { type: 'divider', key: `dv-${index}` } : {
                 icon: it.icon, key: it.key, label: it.label, onClick: () => it.onClick?.(claimedItem.id),
                 danger: it.type == 'Danger'
               }))
-            }} >
+            }}  >
+            {mainAction?.icon}
             {(vc.view.getActions?.('LIST', claimedItem) || []).filter(it => it.visible && it.main)?.map(it => it.label).find(it => it) || <ClockCircleOutlined spin />}
           </DropdownButton>
         }
@@ -928,6 +930,7 @@ export default () => {
                           danger: it.type == 'Danger'
                         }))
                       }} >
+                      {mainAction?.icon}
                       {(vc.view.getActions?.('LIST', r) || []).filter(it => it.visible && it.main)?.map(it => it.label).find(it => it) || <ClockCircleOutlined spin />}
                     </DropdownButton>
                   }

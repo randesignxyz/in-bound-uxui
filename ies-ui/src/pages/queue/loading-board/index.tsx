@@ -354,12 +354,15 @@ export default () => {
             await printPdf<{ id: number }>(requestActions)({
               reportName: 'export-picking-slip',
               data: { id: instanceId || 0 }
+            }, async () => {
+              await printPdf<{ id: number }>(requestActions)({
+                reportName: 'export-gate-pass',
+                data: { id: instanceId || 0 }
+              })
             });
           } catch (error: any) {
             message.error(error.message || "Failed to generate report.")
           }
-
-
         }
       },
       {

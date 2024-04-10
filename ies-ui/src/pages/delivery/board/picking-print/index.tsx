@@ -5,7 +5,6 @@ import styles from './../style.less';
 import { formatDate } from "@/pages/utils";
 import moment from "moment";
 import { sumBy, uniq } from "lodash";
-import { Data } from "@react-google-maps/api";
 
 export const PickingSlipToPrint = React.forwardRef((props: { data: InstanceDetail }, ref: any) => {
 

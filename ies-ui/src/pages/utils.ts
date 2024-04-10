@@ -314,3 +314,14 @@ export const getColorStatus = (status?: string) => {
         return 'processing';
     }
 };
+
+
+export const blobToBase64 = function (blob: Blob, callback: (base64: string) => void) {
+    const reader = new FileReader();
+    reader.onload = function () {
+        const dataUrl = reader.result as any
+        const base64 = dataUrl.split(',')[1];
+        callback(base64);
+    };
+    reader.readAsDataURL(blob);
+};

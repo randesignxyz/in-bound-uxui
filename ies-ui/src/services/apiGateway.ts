@@ -5,6 +5,8 @@ import { Endpoint, ExportType, Pagination, Paging, ServiceType } from './API';
 import { groupBy, map } from 'lodash';
 import { SortOrder } from 'antd/lib/table/interface';
 import { DataResponse } from './shared/data';
+import printJS from 'print-js';
+import { blobToBase64 } from '@/pages/utils';
 
 /** Services methods */
 
@@ -120,6 +122,13 @@ export interface DownloadData<T> {
   target?: string;
 }
 
+
+export interface PrintPDFData<T> {
+  reportName: string;
+  data?: T;
+}
+
+
 export const downloadReport =
   <T>(actions?: RequestActions) =>
     async (param: DownloadData<T>) => {
@@ -145,6 +154,31 @@ export const downloadReport1 =
         throw error;
       }
     };
+
+export const printPdf = <T>(actions?: RequestActions) =>
+  async (params: PrintPDFData<T>, onPrintDialogClose?: () => void) => {
+    try {
+      actions?.start?.()
+      const blob = request<Blob>(
+        `${REPORT_API}/export/report/${params.reportName}/type/PDF`,
+        {
+          method: 'POST',
+          responseType: 'blob',
+          data: params.data,
+        },
+      );
+
+      const v = await blob;
+      blobToBase64(v, base64 => {
+        printJS({ base64: true, printable: base64, type: 'pdf', onPrintDialogClose: onPrintDialogClose })
+      })
+    } catch (e: any) {
+      actions?.end?.('FAILED')
+    } finally {
+      actions?.end?.('SUCCESS')
+    }
+
+  }
 
 export const downloadUploadFile =
   (actions?: RequestActions) => async (fileId: string, fileName: string) => {
@@ -296,6 +330,8 @@ const doDownloadReport = async <T>(params: DownloadData<T>): Promise<void> => {
   document.body.appendChild(element);
   element.click();
 };
+
+
 const doDownloadReport1 = async <T>(params: DownloadData<T>): Promise<string> => {
   const blob = request<Blob>(
     `${REPORT_API}/export/report/${params.reportName}/type/${params.type}`,
@@ -310,15 +346,6 @@ const doDownloadReport1 = async <T>(params: DownloadData<T>): Promise<string> =>
   const element = document.createElement('a');
   element.target = '_blank';
   const file = new Blob([v], { type: 'application/pdf' });
-  console.log('new Blob([v]', URL.createObjectURL(file))
-  // element.href = URL.createObjectURL(file);
-
-  // if (params.target) element.target = '_blank';
-  // if (!params.target)
-  //   element.download = `${params.fileName}-${moment().format()}.${params.type === 'EXCEL' ? 'xls' : 'pdf'
-  //     }`;
-  // document.body.appendChild(element);
-  // element.click();
   return URL.createObjectURL(file);
 };
 

@@ -3,7 +3,7 @@ import stopping from '@/assets/no-stopping.png';
 import timeLeft from '@/assets/time-left.png';
 import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { Paging } from '@/services/API';
-import { MultiRequest, execDataService0, fetchDataItemService, singleRequest } from '@/services/apiGateway';
+import { MultiRequest, downloadReport, execDataService0, fetchDataItemService, printPdf, singleRequest } from '@/services/apiGateway';
 import { Loaded, LoadingBayListItem, LoadingCapacityListItem, LoadingListItem } from '@/services/delivery/data';
 import {
   AllocatedLoadingDock,
@@ -343,9 +343,23 @@ export default () => {
         }
       },
       {
-        key: 'printPickingSlip', label: "Print Picking slip", main: isLoaded, visible: !isPending && instanceId, icon: <PrinterOutlined />, onClick: async () => {
-          const rs = await loadInstance(instanceId || 0)
-          setPrinting(rs.id)
+        key: 'printPickingSlip',
+        label: "Print Picking slip",
+        main: isLoaded,
+        visible: !isPending && instanceId,
+        icon: <PrinterOutlined />, onClick: async () => {
+          // const rs = await loadInstance(instanceId || 0)
+          // setPrinting(rs.id)
+          try {
+            await printPdf<{ id: number }>(requestActions)({
+              reportName: 'export-picking-slip',
+              data: { id: instanceId || 0 }
+            });
+          } catch (error: any) {
+            message.error(error.message || "Failed to generate report.")
+          }
+
+
         }
       },
       {
@@ -1026,6 +1040,7 @@ export default () => {
         open={true}
         onCancel={onCloseModalHandler}
       />}
+
       {instance?.id == printing && <PickingSlipToPrint data={instance} ref={componentRef} />}
 
     </PageContainer>

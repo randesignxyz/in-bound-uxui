@@ -1,22 +1,243 @@
-export type TransferRequestListItem = {
-    id: number;
-    code: String,
+// export type TransferRequestListItem = {
+//     id: number;
+//     code: String,
+// }
+
+import { SortOrder } from 'antd/es/table/interface';
+import moment from 'moment';
+
+// export type TransferRequestSearchParams = {
+//     keyword?: string,
+//     status?: string,
+// }
+
+// export type TransferRequestItem = {
+//     id?: number;
+// }
+
+// export type TransferRequestSavePayload = {
+//     id?: number;
+// }
+
+// export type TransferRequestDetail = {
+//     id: number;
+// }
+
+export interface TransferRequestSearch {
+  searchValue?: string;
+  date?: moment.Moment;
+  sort?: Record<string, SortOrder>;
+  items?: TransferRequestItem[];
 }
 
-
-export type TransferRequestSearchParams = {
-    keyword?: string,
-    status?: string,
+export interface TransferRequest {
+  transfer_id: string;
+  id: string;
+  key: string;
+  item: TransferRequestItem[];
+  from_warehouse: Warehouse[];
+  to_warehouse: Warehouse[];
+  transfer_type: string;
+  status: string;
+  createdBy?: string;
+  createdDate?: moment.Moment;
+  lastModifiedBy?: string;
+  lastModifiedDate?: moment.Moment;
+  remark: string;
+  posting_date: moment.Moment;
+  taxDate: moment.Moment;
+  due_date: moment.Moment;
+  business_unit: string;
+  line: string;
+  shift: string;
+  activities: ActivitiesItem[];
+  state: string;
 }
 
-export type TransferRequestItem = {
-    id?: number;
+export interface TransferRequestItem {
+  childItem: any;
+  item: string;
+  quantity: string;
+  remark: string;
+  id: number;
+  itemId: number;
+  item_code: string;
+  item_name: string;
+  key: string;
+  uom: string;
+  received: string;
+  itemReceive: number;
+  is_receive: string;
+  transfer_request: string;
+  supplier: string;
+}
+export type TransferRequestAdvanceParams = {
+  searchValue?: string;
+  business_unit: string;
+  state: string;
+  count?: number;
+};
+
+export interface TransferRequestCreate {
+  items: TransferRequestItem[];
+  taxDate: moment.Moment;
+  transfer_type: string;
+  business_unit: string;
+  fromWarehouse: string;
+  toWarehouse: string;
+  vendorCode: string;
+  vendorName: string;
+  productionOfficer: string;
+  apiReferenceNo: string;
+  key: string;
+  item_count: number;
+  activities: ActivitiesItem[];
 }
 
-export type TransferRequestSavePayload = {
-    id?: number;
+export interface SAPTransferRequest {
+  postingDate?: moment.Moment;
+  docDueDate?: moment.Moment;
+  taxDate?: moment.Moment;
+  vendorCode: string;
+  vendorName: string;
+  productionOfficer: string;
+  fromWarehouse: string;
+  toWarehouse: string;
+  apiReferenceNo: string;
+  comments: string;
+  transferRequestDetails: SAPTransferRequestDetail[];
 }
 
-export type TransferRequestDetail = {
-    id: number;
+export interface SAPTransferRequestDetail {
+  itemCode: string;
+  itemName: string;
+  quantity: string;
+  remark: string;
+  fromWarehouse: string;
+  toWarehouse: string;
+}
+
+export interface TransferRequestStatusChange {
+  id?: string;
+  statusChange: string;
+  remark: string | null;
+  state: string;
+}
+
+export interface Provided {
+  provided_item: ProvidedItem[];
+}
+
+export interface ProvidedItem {
+  item_name: string;
+  item_code: string;
+  uom: string;
+  quantity: string;
+  remark: string;
+  received: string;
+  transfer_request: string;
+}
+export interface ActivitiesItem {
+  transfer_request?: string;
+  activities_name: string;
+  action: string;
+  remark?: string;
+  actionBy?: string;
+  actionDate?: string;
+  id?: number;
+}
+
+export interface ItemSearch {
+  searchValue?: string;
+  groupIds?: number[];
+}
+
+export interface Item {
+  id: number;
+  key: string;
+  itemCode: string;
+  itemName: string;
+  inventoryUoM: string;
+  tendency: string;
+  item_group_id: number;
+  item_group: ItemGroup[];
+  childItem: ChildItem[];
+  active: string;
+}
+
+export interface ChildItem {
+  id: number;
+  father: number;
+  child_num: number;
+  code: string;
+  quantity: string;
+  active: string;
+}
+
+export interface Supplier {
+  card_code: string;
+  card_name: string;
+  tendency: string;
+  active: string;
+}
+
+export interface ItemGroup {
+  id: number;
+  itemGroupName: string;
+}
+
+export interface Warehouse {
+  id: number;
+  whsCode: string;
+  whsName: string;
+  building?: string;
+  tendency: string;
+  active: string;
+}
+
+export interface WarehouseSearch {
+  searchValue?: string;
+}
+
+export type WarehouseAdvanceParams = {
+  searchValue?: string;
+  tendency: string;
+};
+
+export interface GetCount {
+  status?: string;
+}
+
+export interface GetToExcelParams {
+  shift: string;
+  line: string;
+  startDate: string;
+  endDate: string;
+}
+
+export interface BomItem {
+  product_code: number;
+  product_name: string;
+  tendency: string;
+  active: string;
+}
+
+export interface BomItemSearch {
+  tendency?: string;
+}
+
+export interface ChildFather {
+  father: string;
+}
+
+export interface SupplierSearch {
+  searchValue?: string;
+  tendency?: string;
+}
+
+export interface AddSupplierParams {
+  remark?: string;
+  supplier: string;
+  item_code: string;
+  transfer_request: string;
 }

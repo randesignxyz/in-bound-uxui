@@ -941,26 +941,24 @@ export default [
   {
     path: '/prod',
     name: 'prod',
-    icon: 'SettingOutlined',
+    icon: 'ReconciliationOutlined',
     access: 'canAccessProdMenu',
-    component: './prod'
+    component: './prod',
   },
   {
     path: '/prod/inventory-transfer-request/:view/*',
     name: 'inventoryTransferRequest',
-    icon: 'SettingOutlined',
     hideInMenu: 'true',
     access: 'canAccessInventoryTranferRequestMenuItem',
-    component: './prod/inventory-transfer-request'
+    component: './prod/inventory-transfer-request',
   },
 
   {
-    path: '/prod/inventory-transfer/list',
+    path: '/prod/inventory-transfer/:view/*',
     name: 'inventoryTransfer',
-    icon: 'SettingOutlined',
     hideInMenu: 'true',
     access: 'canAccessInventoryTranferMenuItem',
-    component: './prod/inventory-transfer'
+    component: './prod/inventory-transfer/',
   },
 
   //  ================= END Prod =================

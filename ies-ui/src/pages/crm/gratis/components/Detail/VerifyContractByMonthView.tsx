@@ -88,6 +88,7 @@ const VerifyContractByMonthView= ({isVerify,gSettledId,gContractId, groupTypeCod
         if(adjItems && adjItems.length==0) {
             message.warning('No data selected')
         }else{
+            console.log('save adjs',adjItems)
             Modal.confirm({
                 title: "", content: 'Are you sure?', 
                 onOk: async () => {

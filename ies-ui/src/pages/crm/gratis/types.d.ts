@@ -363,7 +363,10 @@ interface ItemSAP {
   itemCode: string;
   itemName: string;
   dscription: string?;
-
+  ds?: string;
+  startedDate: moment.Moment;
+  endedDate:  moment.Moment;
+  dataSource?:string;
 }
 
 export type ApprovalRequestPayload= {
@@ -375,7 +378,8 @@ export type ApprovalRequestPayload= {
 export type GratisSuggestedCustomer= {
   id: number;
   incentiveSettlementId: number;
-  contractId: number;
+  gcontractId: number;
+  gcontractVerifyId: number;
   contractType: string;
   customer: LookupDataItem;
   brand: string;
@@ -390,6 +394,9 @@ export type GratisSuggestedCustomer= {
   percentage: number;
   percentLess:number;
   status: string;
+  soQty: number;
+  soInvQty: number;
+  totalQty: number;
 }
 export interface  GratisSuggestedCustomerVisit {
   id: number,  

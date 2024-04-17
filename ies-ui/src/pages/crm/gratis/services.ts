@@ -186,6 +186,11 @@ export const GratisServices = {
         endpoint: 'CRM',
         payload: {currentVerifyId,customerCode,docNum,dataSource,startedDate,endedDate}
     }),
+    getListSuggestionItemAdjustment: (incentiveSettlementId: number,gVerifyId?: number,searchValue?: string) => fetchDataListService<ItemSAP, any>({
+        actionName: 'list-gratis-suggested-item-adjustment',
+        endpoint: 'CRM',
+        payload: {incentiveSettlementId,gVerifyId,searchValue}
+    }),
     adjustContractVerifyTrans: (id:number,adjItems: AdjustItem[]) => execDataService0<{contractVerifyId:number,items: AdjustItem[]}>({
         actionName: 'adjust-contract-verify-trans',
         endpoint: 'CRM',

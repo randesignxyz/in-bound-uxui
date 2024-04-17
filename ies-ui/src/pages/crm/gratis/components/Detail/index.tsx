@@ -7,7 +7,7 @@ import { ActionType, CheckCard, PageContainer, ProCard, ProList, ProTable } from
 import { simpleRequestActions } from '@/services/model';
 import { useSafeState } from 'ahooks';
 import { GratisServices } from '../../services';
-import { CriteriaExportReport, GratisContract, GratisSuggestedCustomer, GratisSuggestedCustomerVisit, IncentiveSettlement, SearchCriteria, SettlementCycleActivity } from '../../types';
+import { AdjustItem, CriteriaExportReport, GratisContract, GratisSuggestedCustomer, GratisSuggestedCustomerVisit, IncentiveSettlement, ItemSAP, SearchCriteria, SettlementCycleActivity } from '../../types';
 import { formatDate, formatDateTime, toReadable } from '@/pages/utils';
 import VerifyContractList from './VerifyContractList';
 import { Model } from '../../model';
@@ -24,6 +24,8 @@ import processIcon from '@/assets/gear-white.png';
 import suggestionIcon from '@/assets/suggestions.png'
 import '../../../gratis/style.less'
 import Popconfirm from '@/components/Popconfirm';
+import AdjustTranModal from './adjust/AdjustTranModal';
+import SuggestionItemAdjustTranModal from './adjust/SuggestionItemAdjustTranModal';
 
 const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: (id: number, cb?: () => void) => void }> = ({ id, onEdit }) => {
   const requestActions = simpleRequestActions()
@@ -40,6 +42,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
   const [isSuggested,setIsSuggested] = useState<boolean>(false)
   const [criteriaSuggested, setCriteriaSuggested] = useState<SearchCriteria>()
   const [isSynchAll,setIsSynchAll] = useState<boolean>(false)
+  const [suggestionData, setSuggestionData] = useState<ItemSAP[]>()
 
   const model = ProcessFlowModel()
   const { actions } = model
@@ -231,6 +234,35 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
       }
     })
   }
+  const adjustHandler = (verifyId: number,adjItems: AdjustItem[]  , cb:(v: boolean)=>void)=>{       
+    if(adjItems && adjItems.length==0) {
+        message.warning('No data selected')
+    }else{
+        Modal.confirm({
+            title: "", content: 'Are you sure?', 
+            onOk: async () => {
+                try {
+                
+                    await GratisServices.adjustContractVerifyTrans(verifyId,adjItems)(requestActions)                       
+                    cb(true)
+                    actionSuggestedRef.current?.reload()
+                    // onFinish()
+                    // loadData()
+                }catch (error: any) {
+                    message.error(error.message || 'Failed to change status.')
+                }
+            }
+        })  
+    }      
+  }
+  const initailSuggestionData =async (incentiveSettlementId:number,verifyId: number)=>{
+    setSuggestionData(undefined)
+    await GratisServices.getListSuggestionItemAdjustment(incentiveSettlementId,verifyId).query(requestActions).then(it=>{
+      setSuggestionData(it)
+    })
+   
+  }  
+
   return (
     <Spin spinning={requestActions.request?.loading || false} tip={spinTip}>
       <PageContainer
@@ -287,7 +319,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
                     setIsSuggested(e?.toString()=='suggestion'?true:false)
                   }}
                 >
-                  <CheckCard avatar={<img src={suggestionIcon} style={{height:18, width:21}}/>} title='Suggestion' size='small'  value="suggestion"  style={{width:'130px',borderStyle:'dashed'}}/>
+                  <CheckCard avatar={<img src={suggestionIcon} style={{height:18, width:21}}/>} title='Adjustable Customer' size='small'  value="suggestion"  style={{width:'190px',borderStyle:'dashed'}}/>
                 </CheckCard.Group>
               </Space>
             }
@@ -327,7 +359,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
                           type="link"
                           size="small"
                           icon={<EyeOutlined />}
-                          onClick={() => quickViewHandler(r?.contractId, r?.orderNo-1)}
+                          onClick={() => quickViewHandler(r?.gcontractId, r?.orderNo-1)}
                         >{r.durationText}</Button>
                       </Tooltip>                      
                     </Space>
@@ -343,7 +375,16 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
                 },{
                   title:'+Qty',
                   dataIndex: 'percentLess',
-                  render: (_, r) => r?.percentLess? <div><span>{`${r?.percentLess}%`}</span><div style={{padding:2,fontSize:13,color:'#b49900',borderRadius:5}}>{`(${r?.qtyLess}/${r?.targets})`}</div></div>:'-'
+                  render: (_, r) => {
+                    const so = r?.soQty>0? `SO: ${r?.soQty}`:''
+                    const inv = r.soInvQty>0 ? `INV: ${r?.soInvQty}`:''
+                    return r?.percentLess? <div>
+                      <span>{`${r?.percentLess}%`}</span>
+                      <div style={{padding:2,fontSize:13,color:'#b49900',borderRadius:5}}>
+                        {`(${r?.qtyLess}/${r?.targets}) ${so} ${inv}`}
+                      </div>
+                    </div>:'-'
+                  }
                 },/* {
                   title: 'Customer Code',
                   dataIndex: 'gcontractId',
@@ -358,6 +399,15 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
                   title: 'Status',
                   dataIndex: 'Status',
                   render: (_, r) => <Status text={r?.status||'FAILED'} value={r?.status} />
+                },{
+                  title: 'Action',
+                  align: 'center',
+                  width: 15,
+                  render: (_,r) => //<Button type='link' icon={<EditOutlined/>}>Adjust</Button>
+                  <SuggestionItemAdjustTranModal loading={requestActions.request?.loading} data={suggestionData ||[]} incentiveSettlementId = {r.incentiveSettlementId} verifyId={r.gcontractVerifyId} customerCode={r.customer?.code} title={'Adjustment'} 
+                    onSave={(status, remarks, adjItems, cb) => adjustHandler(r.gcontractVerifyId, adjItems, cb)} 
+                    trigger={<Button type='link' icon={<EditOutlined/>} onClick={()=>initailSuggestionData(r.incentiveSettlementId,r.gcontractVerifyId)}>Adjust</Button>} 
+                  />
                 }
               ]} 
             />}

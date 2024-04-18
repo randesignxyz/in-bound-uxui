@@ -1,7 +1,10 @@
 ﻿import type { RequestConfig, RequestOptions } from '@umijs/max';
 import { message, notification } from 'antd';
 import { offlineToken } from '../src/pages/utils';
+<<<<<<< HEAD
 import { kc } from '@/auth';
+=======
+>>>>>>> origin/skh-01
 
 enum ErrorShowType {
   SILENT = 0,
@@ -19,7 +22,11 @@ interface ResponseStructure {
 }
 
 const header = (headers?: any): any => {
+<<<<<<< HEAD
   const token = kc.token || offlineToken();
+=======
+  const token = localStorage.getItem('accessToken') || offlineToken();
+>>>>>>> origin/skh-01
   return {
     ...headers, ...token && {
       Authorization: `Bearer ${token}`,
@@ -96,10 +103,12 @@ export const errorConfig: RequestConfig = {
   },
   requestInterceptors: [
     async (config: RequestOptions) => {
+      const url = config?.url?.concat('?token = 123');
       const matchs = ['/api/', '/services/']
       const requiredToken = matchs.some(it => config.url?.startsWith(it))
+
       const hd = requiredToken ? await header(config.headers) : config.headers
-      return { ...config, headers: hd };
+      return { ...config, headers: hd, url };
     },
   ],
 

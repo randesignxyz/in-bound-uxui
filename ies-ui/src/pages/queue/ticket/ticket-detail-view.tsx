@@ -1,4 +1,4 @@
-import { formatDateTime } from '@/pages/utils';
+import { durationFormat, formatDateTime } from '@/pages/utils';
 import { LoadingItemDetail, QueueTicketDetail } from '@/services/delivery/data';
 import { DeleteOutlined } from '@ant-design/icons';
 import ProTable from '@ant-design/pro-table';
@@ -64,18 +64,12 @@ const TicketDetailView: React.FC<Props> = ({
     { label: 'Status', display: queueTicket.status },
   ];
 
-  const loadingDuration = duration(
-    moment(queueTicket.loading?.loadingEnded || new Date()).diff(
-      moment(queueTicket.loading?.loadingStarted),
-    ),
-  );
-
   const loadingDisplay: DisplayItem[] | undefined = queueTicket.loading && [
     { label: 'Loading Started', display: formatDateTime(queueTicket.loading.loadingStarted) || '' },
     { label: 'Loading Ended', display: formatDateTime(queueTicket.loading.loadingEnded) || '' },
     {
       label: 'Loading Duration',
-      display: `${loadingDuration.hours()}:${loadingDuration.minutes()}`,
+      display: durationFormat(moment(queueTicket.loading?.loadingStarted || new Date()), moment(queueTicket.loading?.loadingEnded || new Date())),
     },
     { label: 'Loading Dock', display: queueTicket.loading.loadingDock },
     { label: 'Shift', display: queueTicket.loading.shift },

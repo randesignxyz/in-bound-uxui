@@ -63,7 +63,7 @@ export default () => {
 
   const [state, setSate] = useState<{
     visible?:
-    | { type: 'ISSUE_QUEUE'; payload: QRCodeListItem[] }
+    | { type: 'ISSUE_QUEUE' }
     | { type: 'DETAIL'; payload: QueueTicketDetail };
   }>({});
 
@@ -183,8 +183,7 @@ export default () => {
             <Button
               type="link"
               onClick={async () => {
-                const rs = await services.listAllQRCode();
-                setSate((v) => ({ ...v, visible: { type: 'ISSUE_QUEUE', payload: rs } }));
+                setSate((v) => ({ ...v, visible: { type: 'ISSUE_QUEUE' } }));
               }}
               icon={<PlusOutlined />}
             />
@@ -264,7 +263,8 @@ export default () => {
             open={state.visible.type == 'ISSUE_QUEUE'}
             onOpenChange={closeModal}
             onRefresh={() => actionRef.current?.reloadAndRest?.()}
-            qrCodes={state.visible.payload}
+
+
           />
         )}
 

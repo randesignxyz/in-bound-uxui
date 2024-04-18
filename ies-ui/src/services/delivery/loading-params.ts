@@ -2,7 +2,7 @@ import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { Moment } from 'moment';
 import { fetchDataListService, ServiceApiType } from '../apiGateway';
 import { LookupData } from '../data';
-import { LoadingAdvanceSearchParams, SaveLoadedParam } from './req-params';
+import { LoadingAdvanceSearchParams, SaveLoadedParam, startLoadingParam } from './req-params';
 
 export const LoadingParams = {
   listLoading: (
@@ -104,28 +104,41 @@ export const LoadingParams = {
     docDate: Moment,
     shift: string,
     deliveryIds: number[],
-    items: {itemCode: string, qty: number}[],
+    items: { itemCode: string, qty: number }[],
     whsCode?: string,
     remarks?: string,
     driverId?: number,
     licensePlate?: string,
     modified?: boolean,
+    ownedTruckLoading?: boolean
   ): ServiceApiType<{
     id: number;
     docDate: Moment;
     shift: string;
     deliveryIds: number[];
-    items: {itemCode: string, qty: number}[],
+    items: { itemCode: string, qty: number }[],
     whsCode?: string;
     remarks?: string;
     driverId?: number;
     licensePlate?: string;
     modified?: boolean;
+    ownedTruckLoading?: boolean;
   }> => ({
     type: 'EXEC',
     endpoint: 'DELIVERY',
     actionName: 'assigned-picking-slip',
-    payload: { id, docDate, shift, deliveryIds, items, whsCode, remarks, driverId, licensePlate, modified },
+    payload: {
+      id: id,
+      docDate: docDate,
+      shift: shift,
+      deliveryIds: deliveryIds,
+      items: items,
+      whsCode: whsCode,
+      remarks: remarks,
+      driverId: driverId,
+      licensePlate: licensePlate, modified: modified,
+      ownedTruckLoading: ownedTruckLoading
+    },
   }),
 
   fetchLoadingItem: (id: number): ServiceApiType<{ id: number }> => ({
@@ -142,6 +155,13 @@ export const LoadingParams = {
     payload: { id },
   }),
 
+  startLoading: (data: startLoadingParam): ServiceApiType<startLoadingParam> => ({
+    type: 'EXEC',
+    endpoint: 'DELIVERY',
+    actionName: 'start-loading',
+    payload: data,
+  }),
+
   saveLoaded: (data: SaveLoadedParam): ServiceApiType<SaveLoadedParam> => ({
     type: 'EXEC',
     endpoint: 'DELIVERY',
@@ -151,9 +171,9 @@ export const LoadingParams = {
 
   fetchLoadedDetail: (
     id: number,
-    driverId?: number, 
-    licensePlate?: string, 
-    deliveryDate?: Moment, 
+    driverId?: number,
+    licensePlate?: string,
+    deliveryDate?: Moment,
     shift?: string,
     remarks?: string,
   ): ServiceApiType<{

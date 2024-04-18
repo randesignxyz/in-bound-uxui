@@ -5,7 +5,7 @@ import {
     ModalForm,
     ModalFormProps,
 } from '@ant-design/pro-form';
-import { Button, Descriptions } from 'antd';
+import { Button, Col, Descriptions, Row } from 'antd';
 
 interface Props extends ModalFormProps {
 
@@ -20,10 +20,9 @@ export default ({ instance, onChangeRequest, ...props }: Props) => {
 
     return (
         <ModalForm
-         
             title="Loading Changed Request"
             {...props}
-           
+
             submitter={{
                 searchConfig: {
                     submitText: 'Approve',
@@ -58,14 +57,26 @@ export default ({ instance, onChangeRequest, ...props }: Props) => {
                         { title: 'UoM', dataIndex: 'uom' },
                         { title: 'Batch Num', dataIndex: 'batchNum' },
                         { title: 'WSH Code', dataIndex: 'whsCode' },
-                        { title: 'Qty', dataIndex: 'qty' },
+                        { title: 'Qty', dataIndex: 'qty', align: 'right' },
 
                     ]}
                     options={{
                         density: false,
                         reload: false,
                         setting: false
-                    }} />
+                    }}
+                    footer={(data) => (
+                        <Row>
+                            <Col flex={'Auto'} style={{ fontWeight: 'bold' }}>
+                                Total
+                            </Col>
+                            <Col flex={'100px'} style={{ textAlign: 'end', fontWeight: 'bold' }}>
+                                {' '}
+                                {data.map((it) => it.qty || 0).reduce((p, c) => p + c, 0)}{' '}
+                            </Col>
+                        </Row>
+                    )}
+                />
 
             </ProCard>
             <ProCard size="small" title="New Picking" bordered>
@@ -85,9 +96,19 @@ export default ({ instance, onChangeRequest, ...props }: Props) => {
                         { title: 'UoM', dataIndex: 'uom' },
                         { title: 'Batch Num', dataIndex: 'batchNum' },
                         { title: 'WSH Code', dataIndex: 'whsCode' },
-                        { title: 'Qty', dataIndex: 'qty' },
+                        { title: 'Qty', dataIndex: 'qty', align: 'right' },
 
-                    ]} />
+                    ]} footer={(data) => (
+                        <Row>
+                            <Col flex={'Auto'} style={{ fontWeight: 'bold' }}>
+                                Total
+                            </Col>
+                            <Col flex={'100px'} style={{ textAlign: 'end', fontWeight: 'bold' }}>
+                                {' '}
+                                {data.map((it) => it.qty || 0).reduce((p, c) => p + c, 0)}{' '}
+                            </Col>
+                        </Row>
+                    )} />
 
             </ProCard>
         </ModalForm>

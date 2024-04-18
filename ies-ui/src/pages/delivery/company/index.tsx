@@ -1,10 +1,11 @@
 import CrudWrapper from "@/components/DataCrud/CrudWrapper"
 import { DeliveryPaths } from ".."
 import ListView from "./ListView"
+import { history } from "@umijs/max"
 
 export default () => {
 
-    return <CrudWrapper baseURL={DeliveryPaths.company} >
+    return <CrudWrapper onBack={() => history.back()} title="Company" baseURL={DeliveryPaths.company} >
         {(view) => {
             switch (view) {
                 case 'list':

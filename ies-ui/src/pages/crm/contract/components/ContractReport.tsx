@@ -17,7 +17,7 @@ type DataFormType = {
     termId?: number[]
 }
 
-export default ({ trigger }: { trigger?: JSX.Element}) => {
+export default ({ trigger }: { trigger?: JSX.Element }) => {
 
 
     const requestActions = simpleRequestActions()
@@ -36,7 +36,7 @@ export default ({ trigger }: { trigger?: JSX.Element}) => {
                 brandList: LookupDataItem[]
             }>(
                 [
-                    ContractServices.listContractType().queryParams, 
+                    ContractServices.listContractType().queryParams,
                     ContractServices.listTerms().queryParams,
                     CustomerServices.listBrand.queryParams
                 ]
@@ -47,16 +47,16 @@ export default ({ trigger }: { trigger?: JSX.Element}) => {
     }, [])
 
 
-    return <ModalForm<DataFormType>  
+    return <ModalForm<DataFormType>
         form={form}
         trigger={trigger}
-        title = "Contract List Export"
-        submitter = {{
+        title="Contract List Export"
+        submitter={{
             render(_, dom) {
-                return [dom[0], <Button onClick={()=>{form.resetFields()}}>Reset</Button> , dom[1]]
+                return [dom[0], <Button onClick={() => { form.resetFields() }}>Reset</Button>, dom[1]]
             }
-        }}       
-        onFinish={async(dataForm: DataFormType)=>{
+        }}
+        onFinish={async (dataForm: DataFormType) => {
             console.log(dataForm);
             await downloadReport<ContractReportParams>(requestActions)({
                 reportName: 'export-crm-contract-list-report',
@@ -69,7 +69,7 @@ export default ({ trigger }: { trigger?: JSX.Element}) => {
                     termId: dataForm.termId
                 }
             });
-        
+
             return true
         }}
     >

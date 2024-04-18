@@ -142,7 +142,15 @@ export default () => {
             align: 'center',
             render: (_, r) => <Checkbox checked={r.overwriteAssigned || false} />,
           },
-          { title: 'Warehouse', width: 100,render: (_, r) => r.warehouse?.code},
+          {
+            title: 'Owned Truck Loading',
+            width: 100,
+            align: 'center',
+            render: (_, r) => <Checkbox checked={r.ownedTruckLoading || false} />,
+          },
+
+
+          { title: 'Warehouse', width: 100, render: (_, r) => r.warehouse?.code },
           { title: 'Created By', width: 200, dataIndex: 'createdBy' },
           { title: 'Description', width: 200, dataIndex: 'description' },
           {
@@ -182,7 +190,9 @@ export default () => {
             loadingDockIds: state.visible?.payload.loadingDocks.map((it) => it.id),
             dailyReset: state.visible?.payload.dailyReset,
             overwriteAssigned: state.visible?.payload.overwriteAssigned,
+            warehouseId: state.visible.payload.warehouseId,
             description: state.visible?.payload.description,
+            ownedTruckLoading: state.visible.payload.ownedTruckLoading,
             priority: state.visible?.payload?.priority,
           } as SaveQueue)
         }

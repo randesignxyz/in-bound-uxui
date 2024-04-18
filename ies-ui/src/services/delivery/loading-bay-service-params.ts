@@ -25,6 +25,7 @@ export type AllocatedLoadingDockBase = {
   isOwner: boolean;
   canPick: boolean;
   claimedBy?: string;
+  ownedTruckLoading?: boolean;
   holdBy?: string;
   loadingId?: number;
   ticketId?: number;
@@ -40,12 +41,12 @@ export type AllocatedLoadingDockBase = {
 }
 
 
-export type AllocatedLoadingDock =  AllocatedLoadingDockBase & {
+export type AllocatedLoadingDock = AllocatedLoadingDockBase & {
 
   loadingBayId: number;
   isActive: boolean;
   combinedLoadingDocks?: LoadingDockLookup[];
- 
+
 };
 
 export interface LoadingDockLookup {
@@ -91,13 +92,13 @@ export const LoadingServiceParams = {
     payload: {},
   }),
 
-  saveLoadingCapacity: (id: number, loadingCapacityIds: number[]) => execDataService0<{id: number, loadingCapacityIds: number[]}>({
+  saveLoadingCapacity: (id: number, loadingCapacityIds: number[]) => execDataService0<{ id: number, loadingCapacityIds: number[] }>({
     actionName: 'assign-truck-loading-capacity',
     endpoint: 'DELIVERY',
-    payload: {id, loadingCapacityIds}
+    payload: { id, loadingCapacityIds }
   }),
 
-  transferLoadingDock: (ticketId: number, loadingDockIds: number[], releaseCurrentLoadingDock: boolean, remarks?: string ) => execDataService0<{
+  transferLoadingDock: (ticketId: number, loadingDockIds: number[], releaseCurrentLoadingDock: boolean, remarks?: string) => execDataService0<{
     ticketId: number; loadingDockIds: number[]; releaseCurrentLoadingDock: boolean; remarks?: string;
   }>({
     actionName: 'transfer-loading-dock',
@@ -124,10 +125,10 @@ export const LoadingServiceParams = {
     },
   }),
 
-  listAvailableLoadingDocks: (ticketId: number) => fetchDataListService<AllocatedLoadingDock, {id: number}>({
+  listAvailableLoadingDocks: (ticketId: number) => fetchDataListService<AllocatedLoadingDock, { id: number }>({
     actionName: 'list-available-loading-docks',
-    endpoint:'DELIVERY',
-    payload : {id:ticketId}
+    endpoint: 'DELIVERY',
+    payload: { id: ticketId }
   }),
 
   fetchLoadingDock: (id: number): ServiceApiType<{ id: number }> => ({
@@ -158,6 +159,14 @@ export const LoadingServiceParams = {
     },
   }),
 
+  listLoadingTeam: (): ServiceApiType<{}> => ({
+    type: 'LIST_QUERY',
+    actionName: 'fetch-all-loading-team',
+    responseKey: 'loadingTeamList',
+    endpoint: 'DELIVERY',
+    payload: {}
+  }),
+
   listAllLoadingBay: (): ServiceApiType<{}> => ({
     type: 'LIST_QUERY',
     endpoint: 'DELIVERY',
@@ -180,7 +189,7 @@ export const LoadingServiceParams = {
     payload: data,
   }),
 
-  allocatedLoadingDock: (checkedIn?: boolean): ServiceApiType<{checkedIn?: boolean}> => ({
+  allocatedLoadingDock: (checkedIn?: boolean): ServiceApiType<{ checkedIn?: boolean }> => ({
     type: 'LIST_QUERY',
     endpoint: 'DELIVERY',
     responseKey: 'allocatedLoadingDockList',

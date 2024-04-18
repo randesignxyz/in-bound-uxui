@@ -12,7 +12,7 @@ const useHttpLookup = <T>(url: string, initData: T[] = [], limit: number = 10) =
     const fetchId = lastUserFetchId;
     setLoading(true);
 
-    const token = kc.token // localStorage.getItem("accessToken")
+    const token = localStorage.getItem("accessToken")
     fetch(encodeURI(`${url}/value/${value || ' '}/limit/${limit}`), {
       headers: token ? {
         'Authorization': `Bearer ${token}`

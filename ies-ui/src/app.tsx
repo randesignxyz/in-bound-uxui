@@ -3,14 +3,14 @@ import { LinkOutlined } from '@ant-design/icons';
 import type { Settings as LayoutSettings } from '@ant-design/pro-components';
 import { PageLoading, SettingDrawer } from '@ant-design/pro-components';
 import type { RequestConfig, RunTimeLayoutConfig } from '@umijs/max';
-import { history, Link } from '@umijs/max';
+import { getLocale, history, Link, setLocale } from '@umijs/max';
 import defaultSettings from '../config/defaultSettings';
 import { errorConfig } from '../config/requestErrorConfig';
 import React from 'react';
 import { App } from 'antd';
+import moment from 'moment';
 const isDev = process.env.NODE_ENV === 'development';
 const loginPath = '/user/auth';
-
 /**
  * @see  https://umijs.org/zh-CN/plugins/plugin-initial-state
  * */
@@ -20,6 +20,11 @@ export async function getInitialState(): Promise<{
   logout?: () => void;
   loading?: boolean;
 }> {
+
+  moment.locale('en');
+  if (getLocale() !== 'en-US') {
+    setLocale('en-US');
+  }
 
   return {
     currentUser: undefined,

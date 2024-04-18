@@ -5,6 +5,7 @@ import ListMenuComp from '@/components/ListMenu';
 import { PageContainer } from '@ant-design/pro-components';
 import { useAccess } from '@umijs/max';
 export const ProdPaths = {
+  prod: '/prod',
   transferRequest: '/prod/inventory-transfer-request',
   inventoryTransfer: '/prod/inventory-transfer',
 };

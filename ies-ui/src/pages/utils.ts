@@ -16,13 +16,16 @@ export const removeOfflineToken = () => localStorage.removeItem('offlineToken');
 const reg =
     /(((^https?:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+(?::\d+)?|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)$/;
 
-export const server = window.location.hostname.includes('10.0.12.247')
-    ? '10.0.12.247:85'
-    : window.location.hostname.includes('10.0.8.215')
-        ? '10.0.8.215:83'
-        : window.location.hostname.includes('ies.vital.com.kh')
-            ? 'ies.vital.com.kh'
-            : 'localhost:8080';
+
+export const server = `${window.location.hostname}:${window.location.port}`
+
+// xport const servere = window.location.hostname.includes('10.0.12.247')
+//     ? '10.0.12.247:85'
+//     : window.location.hostname.includes('10.0.8.215')
+//         ? '10.0.8.215:83'
+//         : window.location.hostname.includes('ies.vital.com.kh')
+//             ? 'ies.vital.com.kh'
+//             : 'localhost:8080';
 export const retailerEndPoint =
     window.location.hostname.includes('ies.vital.com.kh') ||
         window.location.hostname.includes('10.0.8.215') ||

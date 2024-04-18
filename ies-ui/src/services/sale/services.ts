@@ -21,7 +21,6 @@ import type {
   CountStockDto,
   CustomerSaleInfo,
   ExchangeRate,
-  initProductParamsType,
   InitSaleInvoiceParam,
   InitSoParamsType,
   InitSuggestionParam,
@@ -59,6 +58,7 @@ import type {
   TransactionDetail,
   UpdateStockControlDto,
   VehicleLess,
+  initProductParamsType,
 } from './data';
 
 export const SaleService = (serviceName?: SaleServiceName): ServiceType => {
@@ -141,6 +141,11 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
 
   donwloadDSDLeadReport: downloadReport<{
     salespersonCode?: string[];
+  }>(actions),
+
+  donwloadDSDVisitReport: downloadReport<{
+    visitedDates?: moment.Moment[];
+    salespersonCodes?: string[];
   }>(actions),
 
   fetchSoSummary: () => find<SoSummary>(ReqParams.fetchSoSummary())(actions),
@@ -239,11 +244,6 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
     SaleService('list-transportation-offer'),
     actions,
   ),
-
-  listStock: findPagingService<
-    { searchValue?: string; advanceSearch?: { status: string }; sort?: Record<string, SortOrder> },
-    StockControlLess
-  >(SaleService('list-stock'), actions),
 
   listSuggestionStock: findPagingService<
     {
@@ -378,10 +378,10 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
     actions,
   ),
 
-  listStockDetailItems: findAllService<{ id: number }, StockDetailLess>(
-    SaleService('list-detail-stock-item'),
-    actions,
-  ),
+  // listStockDetailItems: findAllService<{ id: number }, StockDetailLess>(
+  //   SaleService('list-detail-stock-item'),
+  //   actions,
+  // ),
 
   fetchLastStockControl: findAllService<{ id: string }, StockDetailLess>(
     SaleService('fetch-last-stock-control'),

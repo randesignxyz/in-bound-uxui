@@ -13,7 +13,7 @@ import { SaleServiceAPI } from '@/services/sale/services';
 import { message } from 'antd';
 import { SortOrder } from 'antd/lib/table/interface';
 import { useReducer } from 'react';
-import { reducer, State } from './reducer';
+import { State, reducer } from './reducer';
 
 export const Model = (id?: number) => {
   const initState: State = {
@@ -85,8 +85,8 @@ export const Model = (id?: number) => {
     try {
       const result = await saleServices.findStock({ id: id });
       dispatch({ type: 'detail', payload: result });
-      const rs = await saleServices.listStockDetailItems({ id: id });
-      dispatch({ type: 'listStockDetailItem', payload: rs });
+      // const rs = await saleServices.listStockDetailItems({ id: id });
+      // dispatch({ type: 'listStockDetailItem', payload: rs });
     } catch (err) {
       return;
     }
@@ -131,20 +131,6 @@ export const Model = (id?: number) => {
     sort?: Record<string, SortOrder>,
   ) => {
     return await saleServices.listTransactions(
-      { ...criteria, sort: sort },
-      { pageSize: pagination?.pageSize || 20, page: (pagination?.current || 1) - 1 },
-    );
-  };
-
-  const loadListItem = async (
-    criteria?: { searchValue?: string },
-    pagination?: {
-      pageSize?: number;
-      current?: number;
-    },
-    sort?: Record<string, SortOrder>,
-  ) => {
-    return await saleServices.listStock(
       { ...criteria, sort: sort },
       { pageSize: pagination?.pageSize || 20, page: (pagination?.current || 1) - 1 },
     );
@@ -319,7 +305,6 @@ export const Model = (id?: number) => {
     actions: {
       updateStockControl,
       initilizeData,
-      loadListItem,
       loadTransaction,
       initializeStockControl,
       detail,

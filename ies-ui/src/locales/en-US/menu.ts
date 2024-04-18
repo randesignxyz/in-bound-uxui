@@ -154,6 +154,8 @@ export default {
   'menu.inventoryTransfer': 'Inventory Transfer',
   'menu.appraisal-request': 'Appraisal Request',
   'menu.gratis': 'Gratis',
-  'menu.appraisal-submit': 'Appraisal Submission'
-
+  'menu.appraisal-submit': 'Appraisal Submission',
+  'menu.sales-visit': 'Visit',
+  'menu.item-sales-line-price': 'Item Sales Line Price',
+  'menu.retailer_customer_pricing': 'Retailer Customer Pricing',
 };

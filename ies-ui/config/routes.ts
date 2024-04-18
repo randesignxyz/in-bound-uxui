@@ -397,12 +397,28 @@ export default [
     access: 'canAccessARMenuItem',
     component: './sale/daily_report',
   },
+  {
+    path: '/sale/visit/:view/*',
+    name: 'sales-visit',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessAllMenuDSD',
+    component: './sale/visit',
+  },
+  {
+    path: '/sale/pricing/:view/*',
+    name: 'item-sales-line-price',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessAllMenuDSD',
+    component: './sale/pricing',
+  },
   /******************* Retailer *******************/
   {
     path: '/retailer',
     name: 'retailer',
     icon: 'UnorderedListOutlined',
-    access: 'canViewRetailer',
+    access: 'canViewRetailerSalesperons',
     component: './sale/retailer',
   },
 
@@ -420,7 +436,7 @@ export default [
     name: 'retailer_cutomer_group',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canCreateRetailer',
+    access: 'canViewRetailerSalesperons',
     component: './sale/retailer/groupCustomer',
   },
 
@@ -437,7 +453,7 @@ export default [
     name: 'retailer_customer',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canViewRetailer',
+    access: 'canViewRetailerSalesperons',
     component: './sale/retailer/customer',
   },
   {
@@ -457,12 +473,22 @@ export default [
     access: 'canAccessRetailer',
     component: './sale/retailer/ingredient',
   },
+
+  {
+    path: '/retailer/customer_pricing/:view/*',
+    name: 'retailer_customer_pricing',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canViewRetailerSalesperons',
+    component: './sale/retailer/customer_pricing',
+  },
+
   {
     path: '/retailer/pricings/:view/*',
     name: 'retailer_pricing',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canCreateRetailer',
+    access: 'canViewRetailerSalesperons',
     component: './sale/retailer/pricing',
   },
   {
@@ -481,7 +507,6 @@ export default [
     access: 'canCreateRetailer',
     component: './sale/retailer/settings',
   },
-
   /******************* Retailer *******************/
 
   /******************* Developer *******************/

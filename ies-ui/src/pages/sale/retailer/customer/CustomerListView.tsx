@@ -4,16 +4,18 @@ import type { Paging } from '@/services/API';
 import { simpleRequestActions } from '@/services/model';
 import { ActionType } from '@ant-design/pro-components';
 import { history, useAccess, useModel } from '@umijs/max';
-import { Badge, Button, message, Modal, Radio, Row, Tag, Tooltip, Typography } from 'antd';
+import { Badge, Button, Modal, Radio, Row, Tag, Tooltip, Typography, message } from 'antd';
 import Omit from 'omit.js';
 import { useRef, useState } from 'react';
 import { SalePaths } from '../..';
 import AdvanceSearch from '../components/AdvanceSearch';
 import BreadCrumbCom from '../components/BreadCrumbCom';
 
-import { UndoOutlined, UserSwitchOutlined } from '@ant-design/icons';
+import { DollarOutlined, UndoOutlined, UserSwitchOutlined } from '@ant-design/icons';
 import { startCase } from 'lodash';
 import { RetailerPath } from '..';
+import { CustomerPricingServiceAPI } from '../customer_pricing/services';
+import PricingCustomerViewModal from './PricingCustomerViewModal';
 import type { CustomerAdvanceSearchParams, CustomerDto } from './data';
 import { CustomerServiceAPI } from './services';
 
@@ -27,13 +29,16 @@ interface Props {
 export default ({ onAdd, onDetail }: Props) => {
   const requestActions = simpleRequestActions();
   const services = CustomerServiceAPI(requestActions);
+  const customerPricingServices = CustomerPricingServiceAPI(requestActions);
   //const access = useAccess();
   const access = useAccess();
   const { Text } = Typography;
   // const [suggestionForm] = useForm<CustomerUpdateGroupIdParam>();
   // const [cancelRequest] = useForm<CancelRequest>();
 
-  // const [requestCount, setRequestCount] = useState(0);
+  const [pricingModal, setPricingModal] = useState<{ isVisisble: boolean; customer?: CustomerDto }>(
+    { isVisisble: false },
+  );
   const [advanceSearch, setAdvanceSearch] = useState<{ visible: boolean }>();
   const [advanceSearchParams, setAdvanceSearchParams] = useState<CustomerAdvanceSearchParams>({
     status: 'ALL',
@@ -236,58 +241,86 @@ export default ({ onAdd, onDetail }: Props) => {
           },
           {
             title: '',
-            hideInTable: !access.canCreateRetailer,
+            //hideInTable: !access.canCreateRetailer,
             render: (_, r) => {
               return (
                 <>
-                  <Tooltip title={r.status === 'active' ? 'Inactive User' : 'Active User'}>
+                  {access.canCreateRetailer && (
+                    <Tooltip title={r.status === 'active' ? 'Inactive User' : 'Active User'}>
+                      <Button
+                        type="link"
+                        style={{ color: r.status === 'active' ? 'red' : 'green' }}
+                        icon={<UserSwitchOutlined />}
+                        onClick={() => {
+                          Modal.confirm({
+                            title: r.status === 'active' ? 'Inactive User' : 'Active User',
+                            content: 'Are you sure?',
+
+                            onOk: async () => {
+                              try {
+                                const response = await services.updateStatusCustomer({
+                                  id: r.id,
+                                  status: r.status === 'active' ? 'inactive' : 'active',
+                                });
+                                await actionRef.current?.reload();
+                                message.info(response.message);
+                              } catch (error: any) {
+                                message.error('Failed to save.');
+                              }
+                            },
+                          });
+                        }}
+                      />
+                    </Tooltip>
+                  )}
+                  {access.canCreateRetailer && (
+                    <Tooltip title="Reset request SMS">
+                      <Button
+                        type="link"
+                        icon={<UndoOutlined />}
+                        onClick={() => {
+                          Modal.confirm({
+                            title: 'Reset request SMS count to default.',
+                            content: 'Are you sure?',
+
+                            onOk: async () => {
+                              try {
+                                const response = await services.resetVerificationCustomer({
+                                  id: r.id,
+                                });
+                                await actionRef.current?.reload();
+                                message.info(response.message);
+                              } catch (error: any) {
+                                message.error('Failed to save.');
+                              }
+                            },
+                          });
+                        }}
+                      />
+                    </Tooltip>
+                  )}
+
+                  <Tooltip title="Set Pricing Rule">
                     <Button
                       type="link"
-                      style={{ color: r.status === 'active' ? 'red' : 'green' }}
-                      icon={<UserSwitchOutlined />}
+                      icon={<DollarOutlined />}
                       onClick={() => {
-                        Modal.confirm({
-                          title: r.status === 'active' ? 'Inactive User' : 'Active User',
-                          content: 'Are you sure?',
-
-                          onOk: async () => {
-                            try {
-                              const response = await services.updateStatusCustomer({
-                                id: r.id,
-                                status: r.status === 'active' ? 'inactive' : 'active',
-                              });
-                              await actionRef.current?.reload();
-                              message.info(response.message);
-                            } catch (error: any) {
-                              message.error('Failed to save.');
-                            }
-                          },
-                        });
-                      }}
-                    />
-                  </Tooltip>
-
-                  <Tooltip title="Reset request SMS">
-                    <Button
-                      type="link"
-                      icon={<UndoOutlined />}
-                      onClick={() => {
-                        Modal.confirm({
-                          title: 'Reset request SMS count to default.',
-                          content: 'Are you sure?',
-
-                          onOk: async () => {
-                            try {
-                              const response = await services.resetVerificationCustomer({
-                                id: r.id,
-                              });
-                              await actionRef.current?.reload();
-                              message.info(response.message);
-                            } catch (error: any) {
-                              message.error('Failed to save.');
-                            }
-                          },
-                        });
+                        setPricingModal({ isVisisble: true, customer: r });
+                        // Modal.confirm({
+                        //   title: 'Reset request SMS count to default.',
+                        //   content: 'Are you sure?',
+                        //   onOk: async () => {
+                        //     try {
+                        //       const response = await services.resetVerificationCustomer({
+                        //         id: r.id,
+                        //       });
+                        //       await actionRef.current?.reload();
+                        //       message.info(response.message);
+                        //     } catch (error: any) {
+                        //       message.error('Failed to save.');
+                        //     }
+                        //   },
+                        // });
                       }}
                     />
                   </Tooltip>
@@ -348,6 +381,38 @@ export default ({ onAdd, onDetail }: Props) => {
         onSearch={(data) => {
           setAdvanceSearchParams({ ...advanceSearchParams, groupId: data.groupId });
           actionRef.current?.reloadAndRest?.();
+        }}
+      />
+      <PricingCustomerViewModal
+        isVisible={pricingModal.isVisisble}
+        selectedCustomer={pricingModal.customer}
+        actionHandler={{
+          onCancel: () => setPricingModal({ isVisisble: false, customer: undefined }),
+          onOk: async (items) => {
+            if (pricingModal.customer === undefined || items === undefined) {
+              message.error('Customer is required.');
+            } else {
+              Modal.confirm({
+                title: 'Set custom pricing.',
+                content: 'Are you sure?',
+                onOk: async () => {
+                  try {
+                    const result = await customerPricingServices.savePricing({
+                      customerId: pricingModal.customer?.id ?? '',
+                      listPricing: items.map((it) => ({
+                        pricing: it.pricing,
+                        productCode: it.productCode,
+                      })),
+                    });
+                    message.info(result.message);
+                    setPricingModal({ isVisisble: false, customer: undefined });
+                  } catch (e: any) {
+                    message.error(e);
+                  }
+                },
+              });
+            }
+          },
         }}
       />
 

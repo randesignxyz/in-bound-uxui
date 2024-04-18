@@ -5,8 +5,8 @@ import { simpleRequestActions } from '@/services/model';
 import { EditOutlined } from '@ant-design/icons';
 // import { EllipsisOutlined } from "@ant-design/icons";
 import { ActionType } from '@ant-design/pro-components';
-import { useModel } from '@umijs/max';
-import { Button, message, Switch, Tag, Tooltip } from 'antd';
+import { useAccess, useModel } from '@umijs/max';
+import { Button, Switch, Tag, Tooltip, message } from 'antd';
 // import { useForm } from "antd/es/form/Form";
 import { startCase } from 'lodash';
 import { useRef } from 'react';
@@ -31,6 +31,7 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
   const services = CustomerServiceAPI(requestActions);
   const actionRef = useRef<ActionType>();
 
+  const access = useAccess();
   const cacheList = useModel('dataList');
   const onRequestHandler = async (
     params: TableViewSearchParams<GroupCustomerAdvanceSearchParams>,
@@ -87,6 +88,7 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
         CustomerGroupDetail,
         { searchValue?: string; advanceSearch: GroupCustomerAdvanceSearchParams }
       >
+        displayOnly={access.canAccessRetailerSalesperons}
         rowKey="id"
         columns={[
           {

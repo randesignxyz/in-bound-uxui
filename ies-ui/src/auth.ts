@@ -44,24 +44,17 @@ export const Auth = {
     clientId: 'web_app',
     ...endpoint(),
 };
+export const kc = new Keycloak({
+    realm: Auth.realm,
+    clientId: Auth.clientId,
+    url: Auth.url,
 
+})
 export const keycloak = async (sso?: boolean) => {
     if (isOffline()) return undefined
-
-    const kc = new Keycloak({
-        realm: Auth.realm,
-        clientId: Auth.clientId,
-        url: Auth.url,
-
-    })
-
-
-
     kc.onTokenExpired = () => {
         message.error("Session expired")
     }
-
-
     await kc.init({
         checkLoginIframe: true,
         onLoad: 'login-required',

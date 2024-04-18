@@ -1,3 +1,4 @@
+import { kc } from '@/auth';
 import { getServiceUrl } from '@/services/ApiUrl';
 import { UploadOutlined } from '@ant-design/icons';
 import { Button, Card, Form, message, Modal, Upload } from 'antd';
@@ -12,7 +13,7 @@ const Deployment: React.FC<{
   onHide: () => void;
 }> = ({ visible, loading, onDeploy, onHide }) => {
   const [selectedFile, setSelectedFile] = useState<UploadFile>();
-  const token = localStorage.getItem('accessToken');
+  const token = kc.token //localStorage.getItem('accessToken');
   const [form] = Form.useForm();
 
   const clearForm = () => {
@@ -51,8 +52,8 @@ const Deployment: React.FC<{
               headers={
                 token
                   ? {
-                      Authorization: `Bearer ${token}`,
-                    }
+                    Authorization: `Bearer ${token}`,
+                  }
                   : {}
               }
               multiple={false}

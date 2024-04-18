@@ -21,6 +21,7 @@ import EditStockControlFormModal from '../EditStockControlFormModal';
 import { Model } from '../model';
 import StockControlFormModal from '../StockControlFormModal';
 import AdvanceSearch from './AdvanceSearch';
+import { kc } from '@/auth';
 
 const StockListView: React.FC<TableViewProps<StockControlLess>> = ({ actionHandlers }) => {
   const excelType = [
@@ -110,7 +111,7 @@ const StockListView: React.FC<TableViewProps<StockControlLess>> = ({ actionHandl
     name: 'file',
     action: `${getServiceUrl('WORK_FLOW')}/uploader/upload`,
     headers: {
-      Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+      Authorization: `Bearer ${kc.token}`,
     },
     beforeUpload: (file: { type: string; name: any }) => {
       const isExslFile = excelType.includes(file.type);
@@ -189,35 +190,35 @@ const StockListView: React.FC<TableViewProps<StockControlLess>> = ({ actionHandl
           toolbar: !access.canAccessWarehouse
             ? undefined
             : {
-                actions: [
-                  // <Upload {...importProps}>
-                  //   <Tooltip placement="top" title="Import">
-                  //     <Button type="link" icon={<UploadOutlined />}>
-                  //       Import
-                  //     </Button>
-                  //   </Tooltip>
-                  // </Upload>,
-                  // <Button
-                  //   key={'bt'}
-                  //   type="link"
-                  //   onClick={() => setTransferModal({ visible: true })}
-                  //   icon={<RetweetOutlined />}
-                  // />,
-                  <Button
-                    key={'bt'}
-                    type="link"
-                    onClick={() => setAddNewModal({ visible: true })}
-                    icon={<PlusOutlined />}
-                  />,
-                ],
-                // settings: [
-                //   {
-                //     icon: <SwapOutlined color="blue" />,
-                //     tooltip: 'Transfer Money',
-                //     onClick: () => setAddModal({ visible: true }),
-                //   },
-                // ],
-              },
+              actions: [
+                // <Upload {...importProps}>
+                //   <Tooltip placement="top" title="Import">
+                //     <Button type="link" icon={<UploadOutlined />}>
+                //       Import
+                //     </Button>
+                //   </Tooltip>
+                // </Upload>,
+                // <Button
+                //   key={'bt'}
+                //   type="link"
+                //   onClick={() => setTransferModal({ visible: true })}
+                //   icon={<RetweetOutlined />}
+                // />,
+                <Button
+                  key={'bt'}
+                  type="link"
+                  onClick={() => setAddNewModal({ visible: true })}
+                  icon={<PlusOutlined />}
+                />,
+              ],
+              // settings: [
+              //   {
+              //     icon: <SwapOutlined color="blue" />,
+              //     tooltip: 'Transfer Money',
+              //     onClick: () => setAddModal({ visible: true }),
+              //   },
+              // ],
+            },
         }}
         actionHandlers={{
           onSearchCriteria: (data) => {
@@ -281,10 +282,10 @@ const StockListView: React.FC<TableViewProps<StockControlLess>> = ({ actionHandl
                   ? 'default'
                   : //: r.status === 'approved'
                   r.status === 'open'
-                  ? 'success'
-                  : r.status === 'canceled' || r.status === 'closed'
-                  ? 'magenta'
-                  : 'warning';
+                    ? 'success'
+                    : r.status === 'canceled' || r.status === 'closed'
+                      ? 'magenta'
+                      : 'warning';
               return (
                 <span>
                   <Tag color={color}>{r.status}</Tag>
@@ -308,22 +309,22 @@ const StockListView: React.FC<TableViewProps<StockControlLess>> = ({ actionHandl
           },
           access.canAcessStockControlMenuItem
             ? {
-                title: '',
-                align: 'center',
-                render: (_, r) => {
-                  return (
-                    <Tooltip title="Edit" key="edit">
-                      <EditOutlined
-                        style={{ color: '#448DF7' }}
-                        onClick={() => {
-                          setEditModal({ visible: true, record: r });
-                        }}
-                      />
-                    </Tooltip>
-                  );
-                  // return <Checkbox defaultChecked={r.isActive ? true : false} disabled />;
-                },
-              }
+              title: '',
+              align: 'center',
+              render: (_, r) => {
+                return (
+                  <Tooltip title="Edit" key="edit">
+                    <EditOutlined
+                      style={{ color: '#448DF7' }}
+                      onClick={() => {
+                        setEditModal({ visible: true, record: r });
+                      }}
+                    />
+                  </Tooltip>
+                );
+                // return <Checkbox defaultChecked={r.isActive ? true : false} disabled />;
+              },
+            }
             : {},
         ]}
       />
@@ -395,7 +396,7 @@ const StockListView: React.FC<TableViewProps<StockControlLess>> = ({ actionHandl
         }}
         onCancel={() => setAddNewModal({ visible: false })}
         actionHandlers={{
-          onLoadInitData: () => {},
+          onLoadInitData: () => { },
           onSave: onSaveAddNewStoreActionHandler,
           onFetchLastStockControl: (empNo: string) => {
             actions.fetchLastStockControl(empNo);

@@ -59,10 +59,7 @@ export const keycloak = async (sso?: boolean) => {
         checkLoginIframe: true,
         onLoad: 'login-required',
     });
-
-    kc.token && localStorage.setItem('accessToken', kc.token);
-
-
+    // kc.token && localStorage.setItem('accessToken', kc.token);
     return kc
 }
 

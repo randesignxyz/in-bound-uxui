@@ -1,3 +1,4 @@
+import { kc } from '@/auth';
 import { getUploadFileObjectUrl } from '@/services/apiGateway';
 import { getServiceUrl } from '@/services/ApiUrl';
 import { UploadOutlined } from '@ant-design/icons';
@@ -35,7 +36,8 @@ const AttachmentsEntity: React.FC<Props> = ({
   //   const [photos, setPhotos] = useState<{ id: number; imageId: string }[]>([]);
 
   useEffect(() => {
-    setToken(localStorage.getItem('accessToken'));
+    // setToken(localStorage.getItem('accessToken'));
+    kc.token && setToken(kc.token);
     // setPhotos(attachments || []);
   }, [token]);
 
@@ -91,8 +93,8 @@ const AttachmentsEntity: React.FC<Props> = ({
             headers={
               token
                 ? {
-                    Authorization: `Bearer ${token}`,
-                  }
+                  Authorization: `Bearer ${token}`,
+                }
                 : {}
             }
             accept="image/*,.pdf"

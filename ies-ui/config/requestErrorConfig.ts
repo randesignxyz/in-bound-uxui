@@ -1,6 +1,7 @@
 ﻿import type { RequestConfig, RequestOptions } from '@umijs/max';
 import { message, notification } from 'antd';
 import { offlineToken } from '../src/pages/utils';
+import { kc } from '@/auth';
 
 enum ErrorShowType {
   SILENT = 0,
@@ -18,7 +19,7 @@ interface ResponseStructure {
 }
 
 const header = (headers?: any): any => {
-  const token = localStorage.getItem('accessToken') || offlineToken();
+  const token = kc.token || offlineToken();
   return {
     ...headers, ...token && {
       Authorization: `Bearer ${token}`,

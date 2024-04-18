@@ -1,3 +1,4 @@
+import { kc } from '@/auth';
 import { downloadUploadFile, downloadUploadFileV2 } from '@/services/apiGateway';
 import { getServiceUrl } from '@/services/ApiUrl';
 import { UploadOutlined } from '@ant-design/icons';
@@ -13,7 +14,7 @@ const ImageUploader: React.FC<{
   required?: boolean;
 }> = ({ title, service = 'FILE', multiple, onSetFiles, required }) => {
   const [files, setFiles] = useState<UploadFile[]>([]);
-  const token = localStorage.getItem('accessToken');
+  const token = kc.token //localStorage.getItem('accessToken');
   const uploadUrl = () => {
     if ((service = 'FILE')) {
       return `${getServiceUrl('FILE')}/upload`;
@@ -33,8 +34,8 @@ const ImageUploader: React.FC<{
       headers={
         token
           ? {
-              Authorization: `Bearer ${token}`,
-            }
+            Authorization: `Bearer ${token}`,
+          }
           : {}
       }
       action={uploadUrl()}
@@ -59,9 +60,9 @@ const ImageUploader: React.FC<{
           });
         }
       }}
-      // showUploadList={{
-      //   showDownloadIcon: true,
-      // }}
+    // showUploadList={{
+    //   showDownloadIcon: true,
+    // }}
     >
       <Button type="link" icon={<UploadOutlined />}>
         Upload

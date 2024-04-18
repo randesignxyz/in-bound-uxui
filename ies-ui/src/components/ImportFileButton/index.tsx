@@ -1,3 +1,4 @@
+import { kc } from "@/auth"
 import { getServiceUrl } from "@/services/ApiUrl"
 import { DataResponse } from "@/services/shared/data"
 import { ImportOutlined } from "@ant-design/icons"
@@ -19,7 +20,7 @@ interface Props<T extends { id: number }> {
 
 export default <T extends { id: number }>({ onHandleChange, onDataResponse, importedKey, label }: Props<T>) => {
 
-  const token = localStorage.getItem("accessToken")
+  const token = kc.token //localStorage.getItem("accessToken")
   const uploadUrl = () => `${getServiceUrl('FILE')}/import?key=${importedKey}`
   //uploading/done
   const handleChange: UploadProps['onChange'] = async (info: UploadChangeParam<UploadFile>) => {

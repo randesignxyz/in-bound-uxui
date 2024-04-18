@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "name": "ies-frontend-v4",
   "version": "1.0.0",
   "description": "",
@@ -18,9 +17,3 @@
   },
   "homepage": "https://github.com/phanny-ngoun-vital-com-kh/ies-frontend-v4#readme"
 }
-=======
-  "dependencies": {
-    "yarn": "^1.22.21"
-  }
-}
->>>>>>> parent of e1cb1e6 (merg from main)

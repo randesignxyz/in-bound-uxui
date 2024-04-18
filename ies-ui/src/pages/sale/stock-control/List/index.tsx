@@ -111,7 +111,7 @@ const StockListView: React.FC<TableViewProps<StockControlLess>> = ({ actionHandl
     name: 'file',
     action: `${getServiceUrl('WORK_FLOW')}/uploader/upload`,
     headers: {
-      Authorization: `Bearer ${kc.token}`,
+      Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
     },
     beforeUpload: (file: { type: string; name: any }) => {
       const isExslFile = excelType.includes(file.type);

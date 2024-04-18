@@ -8,10 +8,7 @@ import { Button, Descriptions, List, message, Space, Typography, Upload } from '
 import { UploadFile } from 'antd/lib/upload/interface';
 import React, { useEffect, useState } from 'react';
 import FileUploaderInfoModal from './FileUploaderInfoModal';
-<<<<<<< HEAD
 import { kc } from '@/auth';
-=======
->>>>>>> origin/skh-01
 
 export type UploadType = UploadFile<string> & { title?: string; description?: string };
 type FileInfoType = {
@@ -44,11 +41,7 @@ const FileUploader: React.FC<{
 }) => {
     const [file, setFile] = useState<UploadFile>();
     const [fileList, setFileList] = useState<UploadType[]>([]);
-<<<<<<< HEAD
-    const token = kc.token //localStorage.getItem('accessToken');
-=======
     const token = localStorage.getItem('accessToken');
->>>>>>> origin/skh-01
     const requestActions = simpleRequestActions();
     const [forceReload, setForceReload] = useState(1);
     const services = FileServiceAPI(requestActions);

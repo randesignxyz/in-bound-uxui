@@ -18,7 +18,7 @@ export default ({ style, onSave, imageId }: { style?: CSSProperties, onSave: (fi
         </div>
     );
 
-    const token = kc.token //localStorage.getItem("accessToken")
+    const token = localStorage.getItem("accessToken")
     const uploadUrl = () => `${getServiceUrl('FILE')}/upload`
 
     const getFileUrl = async (fileId: string) => {

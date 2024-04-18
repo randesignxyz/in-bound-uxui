@@ -1,7 +1,6 @@
 import Keycloak from "keycloak-js"
 import { isOffline } from "./pages/utils"
 import { message } from "antd"
-import { queryCurrent } from "./services/user"
 
 const protocal = window.location.protocol
 const host = window.location.hostname
@@ -10,8 +9,8 @@ const port = window.location.port
 const kc_production = 'http://10.0.8.215:8989/auth/'
 const kc_qa = 'http://10.0.12.247:8989/auth/'
 //New keycloak
-// const kc_local = 'http://keycloak:8989/'
-const kc_local = 'http://localhost:8989/auth/'
+const kc_local = 'http://keycloak:8989/'
+// const kc_local = 'http://localhost:8989/auth/'
 const pro_host_name = 'ies.vital.com.kh'
 const pro_host_name1 = '10.0.8.215'
 const qa_host_name = '10.0.12.247'
@@ -59,6 +58,6 @@ export const keycloak = async (sso?: boolean) => {
         checkLoginIframe: true,
         onLoad: 'login-required',
     });
-    // kc.token && localStorage.setItem('accessToken', kc.token);
+    kc.token && localStorage.setItem('accessToken', kc.token);
     return kc
 }

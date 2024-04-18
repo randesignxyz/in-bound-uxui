@@ -1,10 +1,7 @@
 ﻿import type { RequestConfig, RequestOptions } from '@umijs/max';
 import { message, notification } from 'antd';
 import { offlineToken } from '../src/pages/utils';
-<<<<<<< HEAD
 import { kc } from '@/auth';
-=======
->>>>>>> origin/skh-01
 
 enum ErrorShowType {
   SILENT = 0,
@@ -22,11 +19,7 @@ interface ResponseStructure {
 }
 
 const header = (headers?: any): any => {
-<<<<<<< HEAD
-  const token = kc.token || offlineToken();
-=======
   const token = localStorage.getItem('accessToken') || offlineToken();
->>>>>>> origin/skh-01
   return {
     ...headers, ...token && {
       Authorization: `Bearer ${token}`,

@@ -49,8 +49,8 @@ export default ({ data, ...props }: Props) => {
     const timeDuesoon = mpd.dueSoonTimeThresholdInterval;
     if (mpd.timeInterval != null) {
       if (timeDuesoon != null) {
-        const diff = moment().add(timeDuesoon, dueSoonFrequency).diff(moment.now(), 'days');
-        const dsiff = moment(nextDueAt).diff(moment.now(), 'days');
+        const diff = moment().add(timeDuesoon, dueSoonFrequency).diff(moment(), 'days');
+        const dsiff = moment(nextDueAt).diff(moment(), 'days');
 
         if (dsiff <= 2 && dsiff >= 0) {
           return 'Due Soon';

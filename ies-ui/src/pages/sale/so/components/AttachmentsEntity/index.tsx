@@ -37,7 +37,7 @@ const AttachmentsEntity: React.FC<Props> = ({
 
   useEffect(() => {
     // setToken(localStorage.getItem('accessToken'));
-    kc.token && setToken(kc.token);
+    setToken(kc.token || '')
     // setPhotos(attachments || []);
   }, [token]);
 

@@ -1,5 +1,5 @@
 import { EditFilled, PlusCircleFilled } from "@ant-design/icons";
-import { ActionType } from "@ant-design/pro-components";
+import { ActionType, PageContainer } from "@ant-design/pro-components";
 import { Button, Row, Space, Spin, Tabs } from "antd";
 import { useState, useCallback, useEffect, useRef } from "react"
 import { simpleRequestActions } from "@/services/model";
@@ -17,14 +17,15 @@ import ServiceReminder from "./view/ServiceReminder";
 import Meintennece from "./view/Meintennece";
 import Accident from "./view/Accident";
 import Accessories from "./view/Accessories";
+import { history } from "@umijs/max";
 
 interface Props {
     id: string;
-    onAdd?: ()=>void;
-    onEdit?:(id:string) =>void;
+    onAdd?: () => void;
+    onEdit?: (id: string) => void;
 }
 
-export default ({ id, onAdd, onEdit}: Props) => {
+export default ({ id, onAdd, onEdit }: Props) => {
     const requestActions = simpleRequestActions();
     const service = VehicleServiceAPI(requestActions);
     const [vehicleBasicinfo, setVehicleBasicInfo] = useState<VehicleListItem>();
@@ -34,7 +35,7 @@ export default ({ id, onAdd, onEdit}: Props) => {
     }>({});
 
     const actionRef = useRef<ActionType>();
-    
+
     const initData = useCallback(async () => {
         const initData = await service.fetchVehicle(id)
         setVehicleBasicInfo(initData);
@@ -55,20 +56,20 @@ export default ({ id, onAdd, onEdit}: Props) => {
 
 
 
-    
+
 
     const tabItem = [
         {
-            label:"General Info",
-            key:"1",
-            children:(
+            label: "General Info",
+            key: "1",
+            children: (
                 <>
-                <BasicInfo
+                    <BasicInfo
                         data={vehicleBasicinfo}
 
                     />
-                  
-                    
+
+
                 </>
             )
         },
@@ -84,22 +85,22 @@ export default ({ id, onAdd, onEdit}: Props) => {
             children: <FuelHistory id={id} />,
         },
         {
-            label:"Inpection History",
-            key:"4",
-            children:<InspectionView id={id}/>
+            label: "Inpection History",
+            key: "4",
+            children: <InspectionView id={id} />
         },
         {
-            label:"Operator",
-            key:"5",
-            children:<AssignDriver id={id} />
+            label: "Operator",
+            key: "5",
+            children: <AssignDriver id={id} />
         },
-        
+
         {
             label: `Service Reminder`,
             key: '6',
             children: <ServiceReminder id={id} />
         },
-        
+
 
         {
             label: `Specifications`,
@@ -131,7 +132,7 @@ export default ({ id, onAdd, onEdit}: Props) => {
             label: 'Fleet',
         },
         {
-            path: FleetPaths.vehicle+"/list",
+            path: FleetPaths.vehicle + "/list",
             label: 'Vehicle',
         },
         {
@@ -142,33 +143,45 @@ export default ({ id, onAdd, onEdit}: Props) => {
     return (
         <>
             <Spin spinning={requestActions.request?.loading}>
-
-                <Row justify="space-between">
-                    <BreadCrumbCom separator=">" routes={routes} />
-                    <Space>
-                    <Button 
-                                icon={<EditFilled />}
-                                onClick={() => onEdit?.(id)}
-                            >
-                                Edit Info
-                            </Button>
-                            <Button
-                                onClick={() => onAdd?.()}
-                                type="primary"
-                                icon={<PlusCircleFilled />}
-                            >
-                                New
-                            </Button>
-                    </Space>
-                </Row>
-                <Tabs
+                <PageContainer
+                    onBack={() => history.push(`${FleetPaths.vehicle}/list`)}
+                    title="Details"
+                    subTitle={`#${vehicleBasicinfo?.plateNumber}`}
+                    extra={[
+                        <Button
+                            icon={<EditFilled />}
+                            onClick={() => onEdit?.(id)}
+                        >
+                            Edit Info
+                        </Button>,
+                        <Button
+                            onClick={() => onAdd?.()}
+                            type="primary"
+                            icon={<PlusCircleFilled />}
+                        >
+                            New
+                        </Button>
+                    ]}
+                >
+                    <Tabs
                         defaultActiveKey="1"
                         items={tabItem}
-                />
+                    />
+                </PageContainer>
+
+
+                {/* <Row justify="space-between">
+                    <BreadCrumbCom separator=">" routes={routes} />
+                    <Space>
+
+                    </Space>
+                </Row> */}
+
+
 
             </Spin>
 
-            
+
         </>
     )
 }

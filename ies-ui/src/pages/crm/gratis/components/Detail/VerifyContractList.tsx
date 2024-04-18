@@ -4,29 +4,15 @@ import { GratisContract, VerifyGratisContact } from "../../types";
 import { Button, Space, Tag, Tooltip } from "antd";
 import Table, { ColumnsType } from "antd/es/table";
 import { EyeOutlined } from "@ant-design/icons";
+import Status from "@/components/Status";
 
 
 const itemCols=(quickViewHandler:(id: number,orderNo: number)=>void): ColumnsType<VerifyGratisContact> => [
-   /* {
-        width: 20,
-        render: (_, r) => (
-          <Space size={1}>            
-            <Tooltip title="Quick data review">
-              <Button
-                type="link"
-                size="small"
-                icon={<EyeOutlined />}
-                onClick={() => quickViewHandler(r.gratisContractId,r.orderNo-1)}
-              />
-            </Tooltip>
-          </Space>
-        ),
-    },*/{
+   {
         title: '#',
         width:'20px',
         align: 'right',
-        dataIndex: 'orderNo',     
-        // render:  (_, r) => <Tooltip title="Quick data review"><a onClick={() => quickViewHandler(r.gratisContractId,r.orderNo-1)}>{r.orderNo}</a> </Tooltip>
+        dataIndex: 'orderNo',  
     },
     {
         title: 'Verified Date',
@@ -43,7 +29,7 @@ const itemCols=(quickViewHandler:(id: number,orderNo: number)=>void): ColumnsTyp
     },
     {
         title: 'Status',
-        render: (_, item) => <Tag color={getColorStatus(item.status)}>{item.status}</Tag>
+        render: (_, item) => <Status text={item?.status||'FAILED'} value={item?.status||'FAILED'}/>
     }
 ]
 

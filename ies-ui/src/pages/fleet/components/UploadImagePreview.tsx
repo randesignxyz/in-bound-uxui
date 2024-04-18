@@ -22,7 +22,7 @@ export default ({
   const [loading, setLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState<string>();
 
-  const token = kc.idToken //localStorage.getItem('accessToken');
+  const token = kc.token // localStorage.getItem('accessToken');
   const uploadUrl = () => `${getServiceUrl('FILE')}/upload`;
 
   const getFileUrl = async (fileId: string) => {

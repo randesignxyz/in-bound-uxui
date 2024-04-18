@@ -20,7 +20,7 @@ export default ({ icon, label, onChangeHandler, config }: ({
     }
 })) => {
     const [loading, setLoading] = useState(false)
-    const token = kc.token //localStorage.getItem("accessToken")
+    const token = kc.token
     const getUrl = () => {
         if (config.type == 'ImportData') {
             return `${getServiceUrl('FILE')}/import?key=${config.importedKey}`

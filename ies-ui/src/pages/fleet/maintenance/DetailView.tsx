@@ -2,7 +2,7 @@ import AttachedFileList from '@/components/Attachment/AttachedFileList';
 import { formatDateTime, formatter } from '@/pages/utils';
 import { simpleRequestActions } from '@/services/model';
 import { FieldTimeOutlined } from '@ant-design/icons';
-import { ActionType, ProDescriptions, ProList, ProTable } from '@ant-design/pro-components';
+import { ActionType, PageContainer, ProDescriptions, ProList, ProTable } from '@ant-design/pro-components';
 import { Card, Divider, Space, Spin, Tabs, Tag, Tooltip } from 'antd';
 import moment from 'moment';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -10,6 +10,7 @@ import { FleetPaths } from '..';
 import BreadCrumbCom from '../components/BreadCrumbCom';
 import { MaintenanceHistory, MaintenanceItem, MaintenneceDTO, MaintenneceDetailDTO } from './data';
 import { MaintenanceServiceAPI } from './service';
+import { history } from '@umijs/max';
 
 interface Props {
   onEdit: (id: string) => void;
@@ -48,9 +49,8 @@ export default ({ id, onEdit }: Props) => {
 
   const durationDate = (r: MaintenneceDTO) => {
     if ((r.formDate && r.toDate) !== null) {
-      const start = moment(r.formDate).utcOffset(0,true);
-      const end = moment(r.toDate).utcOffset(0,true);
-
+      const start = moment(r.formDate);
+      const end = moment(r.toDate);
       return moment.duration(start.diff(end)).humanize();
     }
     return '';
@@ -58,8 +58,13 @@ export default ({ id, onEdit }: Props) => {
 
   return (
     <>
-      <Spin spinning={requestActions.request?.loading || false}>
-        <BreadCrumbCom separator=">" routes={routes} />
+     <PageContainer 
+      onBack={()=>history.push(`${FleetPaths.mantenence}/list`)}
+      title={"Maintenance"}
+      subTitle={`#${maintenanceData?.vehicle?.plateNumber}`}
+     >
+     <Spin spinning={requestActions.request?.loading || false}>
+        {/* <BreadCrumbCom separator=">" routes={routes} /> */}
         <Space size={12} direction="vertical">
           <Card key={'maintenance'} size={'small'}>
             <ProDescriptions<MaintenneceDetailDTO>
@@ -163,20 +168,20 @@ export default ({ id, onEdit }: Props) => {
                         title: 'Items Service',
                         dataIndex: 'itemName',
                         search: false,
-                        render: (_, r) => r.serviceId.name,
+                        render: (_, r) => r.serviceId?.name,
                       },
                       {
                         title: 'Categories',
                         search: false,
                         key: 'itemName',
                         dataIndex: 'itemName',
-                        render: (_, r) => r.sparePart.name,
+                        render: (_, r) => r.sparePart?.name,
                       },
                       {
                         key: 'maintenanceType',
                         search: false,
                         title: 'Type',
-                        render: (_, r) => r.maintenanceType.name,
+                        render: (_, r) => r.maintenanceType?.name,
                       },
                       {
                         key: 'quantity',
@@ -251,6 +256,8 @@ export default ({ id, onEdit }: Props) => {
           />
         </Space>
       </Spin>
+     </PageContainer>
     </>
   );
 };
+

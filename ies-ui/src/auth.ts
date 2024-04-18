@@ -34,7 +34,7 @@ export const endpoint = (): {
 } => {
     return {
         url: keycloakUri(),
-        redirectUri: `${protocal}//${host}:${port}/`,
+        redirectUri: `${protocal}//${host}:${port}`,
     };
 
 };
@@ -63,3 +63,17 @@ export const keycloak = async (sso?: boolean) => {
     return kc
 }
 
+
+
+export const auth = async () => {
+    await keycloak()
+    try {
+        if (isOffline()) {
+            return undefined;
+        }
+        const currentUser = await queryCurrent();
+        return currentUser
+    } catch (error) {
+        return undefined;
+    }
+}

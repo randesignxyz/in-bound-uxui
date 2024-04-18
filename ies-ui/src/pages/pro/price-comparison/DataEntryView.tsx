@@ -654,7 +654,11 @@ export default ({
         } as AddPriceComparisonItem),
       );
 
+
     setItems((v) => [...v, ...addedItems].map((it, index) => ({ ...it, seq: index + 1 })));
+
+    console.log([...items, ...addedItems]);
+
 
     setFinderVisible(undefined);
   };

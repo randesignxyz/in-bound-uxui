@@ -1,121 +1,120 @@
-import { Button, Collapse, Menu, Space, notification } from "antd"
+import { Button, Segmented } from "antd"
 import FolderViewList from "./components/FolderViewList";
 import { useEffect, useState } from "react";
 import DocumentListView from "./documentation/DocumentListView";
 import { DMSPaths } from ".";
 import RecievedShare from "./share/RecievedShare";
 import FavoriteView from "./favorite/FavoriteView";
-import { ClusterOutlined, ShareAltOutlined, NodeCollapseOutlined, HistoryOutlined, ClockCircleOutlined } from "@ant-design/icons";
-import QuickAccess from "./components/QuickAccess";
+import { ShareAltOutlined, MenuFoldOutlined, FolderOutlined, SettingOutlined, BellOutlined, TeamOutlined } from "@ant-design/icons";
 import ReminderListView from "./reminder/ReminderListView";
-import DraftListView from "./quickaccess/DraftListView";
 import { DocumentationSearchByFolder } from "./documentation/data";
-import { history, useAccess, useParams } from "@umijs/max";
-import { NotificationPlacement } from "antd/lib/notification/interface";
-import { simpleRequestActions } from "@/services/model";
-import { ReminderServiceAPI } from "./reminder/service";
-import { ReminderDTO } from "./reminder/data";
+import { Access, history, useAccess, useParams } from "@umijs/max";
+import TeamsViewList from "./setting/teams/TeamsViewList";
 
 const APPDMS: React.FC = () => {
     const param = useParams();
-    const view = param["view"];
     const access = useAccess();
-    const requestAction = simpleRequestActions();
+    const view = param["view"];
     const [paramByFolder, setParamByFolder] = useState<DocumentationSearchByFolder>();
-
+    const [sidbarState, setSidbarState] = useState<boolean>(false);
+    const [divisionState, setDivisionState] = useState<string>("DOC");
+    const [libraryId, setLibraryId] = useState<number>();
+    const [menuStyleState, setMenuStyleState] = useState<React.CSSProperties>(
+        {
+            height: "90%",
+            width: "300px",
+            position: "fixed",
+            zIndex: "1",
+            top: "1០%",
+            left: 30,
+            backgroundColor: "white",
+            overflow: "auto",
+            borderRadius: 5,
+            boxShadow: "-1px 1px 25px -1px lightgray",
+            padding: 10
+        }
+    );
     useEffect(() => {
-        // onReminderNotificationData();
     }, []);
-
     return (
         <>
-           
             <div
-                style={{
-                    height: "90%",
-                    width: "300px",
-                    position: "fixed",
-                    zIndex: "1",
-                    top: "10%",
-                    left: 30,
-                    backgroundColor: "white",
-                    overflow: "auto",
-                    borderRadius: 5,
-                    boxShadow: "-1px 1px 25px -1px lightgray",
-                }}
+                style={menuStyleState}
             >
-                <Collapse
-                    ghost
-                    bordered={false}
-                    defaultActiveKey={["1", "2", "3"]}
-                    items={[
-                        {
-                            key: "1",
-                            label: <Space><ClusterOutlined />Your Workspace</Space>,
-                            children: <FolderViewList activeKey={view == "library" ? true : false} onSearch={(param: DocumentationSearchByFolder) => setParamByFolder(param)} />
-                        },
-                        {
-                            key: "3",
-                            label: <Space><HistoryOutlined /> Quick Access</Space>,
-                            children: <QuickAccess activeKey={view} />
-                        },
-                        {
-                            key: "2",
-                            label: <Space><ShareAltOutlined />Others</Space>,
-                            children: (
-                                <Menu
-                                    selectedKeys={[view || ""]}
-                                    theme='light'
-                                    style={{
-                                        width: "100%",
-                                        marginTop: -15
-                                    }}
-                                    mode='inline'
-                                    items={[
-                                        {
-                                            key: "received-share",
-                                            label: "Shareds",
-                                            icon: <NodeCollapseOutlined />,
-                                            onClick: () => history.push(`${DMSPaths.workspace}/received-share`)
-                                        },
-                                        {
-                                            key: "reminder",
-                                            label: "Reminder",
-                                            icon: <ClockCircleOutlined />,
-                                            onClick: () => history.push(`${DMSPaths.workspace}/reminder`),
-                                            theme: "light"
-                                        },
-                                    ]}
-                                />
-                            )
-                        },
-                    ]}
-                />
-                {access.canAccessDMSAdminMenu && (<div>
-                    <Button
-                        style={{
-                            width: "100%",
-                            bottom: 10,
-                            position: "absolute"
-
-                        }}
-                        onClick={() => history.push(`${DMSPaths.setting}/department`)}
-                    >Setting</Button>
-                </div>)}
+                <FolderViewList activeKey={view == "library" ? true : false}
+                    setLibrary={setLibraryId}
+                    onSearch={(param: DocumentationSearchByFolder) => setParamByFolder(param)} />
             </div>
             <div
-                style={{
-                    marginLeft: "300px",
-                    padding: "10px"
-                }}
+                style={
+                    sidbarState ? { marginLeft: 0, transition: "all 0.5s" } :
+                        {
+                            marginLeft: "300px",
+                            padding: "10px",
+                            transition: "all 0.5s"
+                        }}
             >
-                {
-                    view === "library" && (<DocumentListView paramSearch={paramByFolder} />) ||
-                    view === "received-share" && (<RecievedShare />) ||
-                    view === "favorite" && (<FavoriteView />) ||
-                    view === "draft" && (<DraftListView />) ||
-                    view === "reminder" && (<ReminderListView />)
+                <div style={{ display: "flex", width: "100%", margin: "5px 0" }}>
+                    <Button type="link" onClick={(e) => {
 
+                        if (sidbarState) {
+                            setSidbarState(false)
+                            setMenuStyleState((v) => ({ ...v, marginLeft: 0 }));
+                        } else {
+
+                            setSidbarState(true)
+                            setMenuStyleState((v) => ({ ...v, marginLeft: -350, transition: "all 0.5s" }));
+                        }
+                    }} icon={<MenuFoldOutlined />} />
+                    <Segmented
+                        style={{ width: "100%" }}
+                        accessKey={view}
+                        options={[
+                            {
+                                value: "library",
+                                label: "Document",
+                                icon: <FolderOutlined />,
+                            },
+                            {
+                                value: "share",
+                                // label: <Badge showZero dot overflowCount={9}>Shareds</Badge>,
+                                label:"Shared",
+                                icon: <ShareAltOutlined />,
+                            },
+                            {
+                                value: "reminder",
+                                label:"Reminders",
+                                // label:<Badge count={0} showZero offset={[-10,-5]}  style={{zIndex:90, position:"fixed"}} title="ASDASD" >Reminder</Badge> ,
+                                icon: <BellOutlined />,
+                            },
+                            {
+                                value: "team",
+                                label: "Teams",
+                                icon: <TeamOutlined />
+                            },
+                        ]}
+                        onChange={(e) => {
+                            if (e == "library") {
+                                history.push(`${DMSPaths.workspace}/${e}/${libraryId}`)
+                                setDivisionState(e.toString());
+                            }
+                            else {
+                                history.push(`${DMSPaths.workspace}/${e}`)
+                                setDivisionState(e.toString());
+                            }
+                        }}
+                    />
+                    <Access accessible={access.canAccessDMSAdminMenu}>
+                        <Button icon={<SettingOutlined />} type="link" onClick={() => history.push(`${DMSPaths.setting}/department`)} />
+                    </Access>
+                </div>
+                {
+                    view === "library" && (<DocumentListView paramSearch={paramByFolder} libraryId={libraryId || 0} />) ||
+                    view === "share" && (<RecievedShare  />) ||
+                    view === "favorite" && (<FavoriteView />) ||
+                    // view === "contract" && (<ContractListView />) ||
+                    view === "reminder" && (<ReminderListView />) ||
+                    view === "team" && (<TeamsViewList isCurrentUser={true} actionKey={view} />)
                 }
             </div>
         </>

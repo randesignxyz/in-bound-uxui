@@ -57,7 +57,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
         [
           'ROLE_DELIVERY_EXPENSE_ADMIN', 'ROLE_DELIVERY_EXPENSE_USER'
         ].some((it) => it === item),
-      ) || false,
+      ) || false, 
 
     canAccessDeliveryReports:
       currentUser?.authorities.some(
@@ -638,15 +638,19 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_ICT_WF_NEW_STAFF_REQUESTER'].some((it) => it === item),
       ) || false,
-
+    
+      // Reach-2024-02-13 
     canAccessFleetMenu:
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_FLEET_ADMIN'].some((it) => it === item),
       ) || false,
-
-    canAccessDMSMenu:
+      canAccessDMSMenu:
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_DMS'].some((it) => it === item),
+      ) || false,
+      canAccessDMSAdminMenu:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_DMS_ADMIN'].some((it) => it === item),
       ) || false,
     /**SKH-20231128: Appraisal Form **/
     isAccessHRApprasilSupport:

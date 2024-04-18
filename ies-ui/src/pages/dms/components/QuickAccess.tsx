@@ -1,4 +1,4 @@
-import { ClockCircleOutlined, FormOutlined, HeartOutlined } from "@ant-design/icons"
+import { FormOutlined, HeartOutlined } from "@ant-design/icons"
 import { history } from "@umijs/max"
 import { Menu } from "antd"
 import { DMSPaths } from "..";
@@ -28,12 +28,7 @@ export default ({activeKey }:Props) => {
                     icon:<HeartOutlined/>,
                     onClick: () => history.push(`${DMSPaths.workspace}/favorite`)
                 },
-                // {
-                //     key: "expire",
-                //     label: "Expiring Soon",
-                //     icon:<ClockCircleOutlined/>,
-                //     onClick: () => history.push(`${DMSPaths.workspace}/expire`)
-                // },
+          
             ]}
         >
 

@@ -9,9 +9,8 @@ export default () => {
       {(view, id, navigate) => {
         return (
           view == 'detail' && (
-            <DocumentationDetail id={parseInt(`${id}`)}/>
-
-          )
+            <DocumentationDetail id={parseInt(`${id}`)} />
+          ) 
         );
       }}
     </CrudWrapper>

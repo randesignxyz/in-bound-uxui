@@ -10,7 +10,7 @@ import {
   SisternodeOutlined,
 } from '@ant-design/icons';
 import type { ActionType } from '@ant-design/pro-table';
-import { useModel } from '@umijs/max';
+import { history, useModel } from '@umijs/max';
 import { Badge, Button, MenuProps, message, Modal, Radio, Space } from 'antd';
 import Dropdown from 'antd/lib/dropdown/dropdown';
 import moment from 'moment';
@@ -30,6 +30,7 @@ import {
 import ServiceReminderModalForm from './EntryFormModel';
 import ForceComplete from './ForceComplete';
 import { ReminderServiceAPI } from './service';
+import { PageContainer } from '@ant-design/pro-components';
 
 interface Props {
   onDetail?: (id: number) => void;
@@ -65,7 +66,7 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
     status: 'ALL',
   });
 
-  const getMenuItems = (item: ServiceReminderDTO):MenuProps["items"] => {
+  const getMenuItems = (item: ServiceReminderDTO): MenuProps["items"] => {
     return [
       {
         key: '1',
@@ -81,7 +82,7 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
         itemIcon: <AppstoreAddOutlined />,
         onClick: async () => {
           console.log(item);
-          
+
           setMaintenanceState({
             visible: { name: 'modal', type: 'ADD', payload: { entry: item } },
           });
@@ -108,13 +109,13 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
       //     },
       // },
       {
-        type:"divider"
+        type: "divider"
       },
       {
         key: '5',
         label: 'Delete',
         itemIcon: <DeleteOutlined />,
-        danger:true,
+        danger: true,
         onClick: () => {
           Modal.confirm({
             title: 'Confirm Service Reminder Deletion',
@@ -202,8 +203,8 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
     const timeDuesoon = mpd.dueSoonTimeThresholdInterval;
     if (mpd.timeInterval != null) {
       if (timeDuesoon != null) {
-        // const diff = moment().add(timeDuesoon, dueSoonFrequency).diff(moment.now(), 'days');
-        const dsiff = moment(nextDueAt).diff(moment.now(), 'days');
+        // const dsiff = moment().add(timeDuesoon, dueSoonFrequency).diff(moment.now(), 'days');
+        const dsiff = moment(nextDueAt)?.diff(moment(), 'days');
 
         if (dsiff <= 2 && dsiff >= 0) {
           return 'Due Soon';
@@ -212,11 +213,12 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
         } else {
           return 'Upcoming';
         }
+
       }
     }
   };
-  
-  
+
+
 
   const onAddHandler = () => {
     setSate((v) => ({
@@ -255,19 +257,19 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
         const response = await services.saveReminderHistory(entry);
         message.success('success');
         actionRef.current?.reloadAndRest?.();
-        setReminderHistorySate((v)=>({...v, visible:undefined}));
+        setReminderHistorySate((v) => ({ ...v, visible: undefined }));
       },
     });
   };
 
   return (
     <>
-      <BreadCrumbCom separator=">" routes={routes} />
-
-      <TableView<
-        ServiceReminderDTO,
-        { searchValue?: string; advanceSearch: ServiceReminderSearchParam }
-      >
+    {/* <BreadCrumbCom separator=">" routes={routes} /> */}
+    <PageContainer
+      onBack={()=>history.push(FleetPaths.fleet)}
+      title="Services Reminder"
+    >
+    <TableView<ServiceReminderDTO,{ searchValue?: string; advanceSearch: ServiceReminderSearchParam }>
         hasCriteria={Object.values(Omit(advanceSearchParams, ['status'])).some((v) => v)}
         cache
         columns={[
@@ -312,8 +314,8 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
                   r.status == 'Due Soon'
                     ? 'warning'
                     : r.status == 'Upcoming'
-                    ? 'processing'
-                    : 'error'
+                      ? 'processing'
+                      : 'error'
                 }
                 text={r.status}
               />
@@ -352,8 +354,8 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
                         meterFormat(r)?.status == 'Due Soon'
                           ? '#f3af28'
                           : meterFormat(r)?.status == 'Upcoming'
-                          ? ''
-                          : 'red',
+                            ? ''
+                            : 'red',
                     }}
                   >
                     {meterFormat(r)?.velue}
@@ -470,6 +472,10 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
           </>
         }
       />
+    </PageContainer>
+      
+
+     
 
       <ServiceReminderModalForm
         open={state.visible?.name == 'modal'}

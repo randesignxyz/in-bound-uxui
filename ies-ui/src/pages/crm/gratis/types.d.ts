@@ -44,6 +44,8 @@ export interface GratisContract {
   brand: string;
   subContract: SubContract;
   customer: LookupDataItem;
+  addressId?: number;
+  address?: string;
   effectiveDate: moment.Moment;
   expiryDate: moment.Moment;
   terms?: string;
@@ -72,6 +74,8 @@ export type VerifyGratisContact = {
   invoices?: GratisInvoice[];
   title?:string;
   durationText?:string;
+  uuid?:string;
+  totalCustomerVisitUpdated?: number
 
 }
 export interface GratisVerifyItem {
@@ -81,6 +85,8 @@ export interface GratisVerifyItem {
  itemCode: string;
  itemName: string;
  qty: number;
+ qty1: number;
+ qty2: number;
  uomCode: string;
  customerId: number;
  customerCode: string;
@@ -90,13 +96,14 @@ export interface GratisVerifyItem {
 export interface GratisVerifySchedule {
   id: number,  
   scheduledDate:moment.Moment;
+  completedDate?:moment.Moment;
   salespersonId: number;
   salesperson:string;
   customerId:number;
   contractId:number;
-  planned:string;
+  contractNo?:string;
+  scheduleType:string;
   status:string;
-  complianceCheck:string;
   complianceStatus:string;
  }
 export interface GratisInvoice {
@@ -111,6 +118,8 @@ export interface GratisInvoice {
   editable: boolean;
   dataSource: string;
   items?: GratisInvoiceItem[];
+  tranType?:string;
+  actionCode?:string;
 }
 export interface GratisInvoiceItem {
   invId: number;
@@ -180,12 +189,16 @@ export interface SettlementSearchDate {
 export interface CreateSettlemenDate { 
   label: string;
   remarks?: string;
-  contractId: number[];
+  contracts: ContractAddressPayload[];
   // contractTypeId?: number;
   dateFrom?: moment.Moment;
   dateTo?: moment.Moment;
   frequency?:string;
   contractTypeGroupCode?: string;
+}
+export interface ContractAddressPayload{
+  contractId: number;
+  addressId?: number;
 }
 
 export interface IncentiveSettlement {
@@ -194,6 +207,7 @@ export interface IncentiveSettlement {
   label: string;
   description: string;
   contractType?: LookupDataItem;
+  settledPeriod?: string;
   processDate: moment.Moment;
   createdBy: string;
   createdDate: moment.Moment;
@@ -258,8 +272,17 @@ export interface SettlementCycle {
   status: string;
 }
 export interface SearchCriteria{
+  id?:number;
   searchValue?:string;
   status?:string;
+  filter?: string;
+  dateFrom?: moment.Moment;
+  dateTo?: moment.Moment;
+}
+export interface GratisVisitScheduleParams{ 
+  gVerifyId?: number;
+  scheduleId?: number;
+  searchValue?:string;
 }
 
 export interface AdjustInfoOn {
@@ -303,6 +326,9 @@ interface AdjustItem {
   endedDate?: moment.Moment;
   dscription?: string;
 }
+interface AdjustCustomerVisitSchedule {   
+  id: number;   
+}
 interface HistoryItem {
  item: string;
  contractVerifyId: number;
@@ -322,6 +348,7 @@ interface HistorySubItem {
   modifiedBY: string;
   modifiedDate: moment.Moment;
   actionCode: string;
+  tranType?: string;
 }
 
 interface ItemSAP {
@@ -336,7 +363,10 @@ interface ItemSAP {
   itemCode: string;
   itemName: string;
   dscription: string?;
-
+  ds?: string;
+  startedDate: moment.Moment;
+  endedDate:  moment.Moment;
+  dataSource?:string;
 }
 
 export type ApprovalRequestPayload= {
@@ -344,3 +374,56 @@ export type ApprovalRequestPayload= {
   requester: string;
   requesterBuId: number;
 }
+
+export type GratisSuggestedCustomer= {
+  id: number;
+  incentiveSettlementId: number;
+  gcontractId: number;
+  gcontractVerifyId: number;
+  contractType: string;
+  customer: LookupDataItem;
+  brand: string;
+  terms?: string;
+  contractNo?: string;
+  title: string;
+  orderNo: number;
+  durationText?:string;
+  targets: number;
+  qtyLess: number;
+  qty: number;
+  percentage: number;
+  percentLess:number;
+  status: string;
+  soQty: number;
+  soInvQty: number;
+  totalQty: number;
+}
+export interface  GratisSuggestedCustomerVisit {
+  id: number,  
+  incentiveSettlementId: number;
+  gcontractId: number;
+  gcontractVerifyId: number;
+  contractType: string;
+  customer: LookupDataItem;
+  brand: string;
+  terms?: string;
+  gcontractNo?: string;
+  title: string;
+  orderNo: number;
+  durationText?:string;
+  scheduledDate:moment.Moment;
+  completedDate?:moment.Moment;
+  salespersonId: number;
+  salesperson:string;
+  customerId:number;
+  address?: string;
+  contractId:number;
+  contractNo?:string;
+  scheduleType:string;
+  status:string;
+  complianceStatus:string;
+  contractId1:number;
+  contractNo1?:string;
+  complianceStatus1?:string;
+  tranStatus?:string;
+ }

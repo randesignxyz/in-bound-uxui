@@ -96,12 +96,10 @@ export const errorConfig: RequestConfig = {
   },
   requestInterceptors: [
     async (config: RequestOptions) => {
-      const url = config?.url?.concat('?token = 123');
       const matchs = ['/api/', '/services/']
       const requiredToken = matchs.some(it => config.url?.startsWith(it))
-
       const hd = requiredToken ? await header(config.headers) : config.headers
-      return { ...config, headers: hd, url };
+      return { ...config, headers: hd };
     },
   ],
 

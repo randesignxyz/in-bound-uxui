@@ -14,7 +14,6 @@ import { useSafeState } from "ahooks"
 import { IncentiveSettlement } from "../../types"
 import {ExportOutlined, PlusCircleFilled, SelectOutlined } from "@ant-design/icons"
 import AdvanceSearch from "../AdvanceSearch"
-import SettlementContractList from "../SettlementContractList"
 import { ContractAdvanceSearchParams } from "@/pages/crm/contract/types"
 import Status from "@/components/Status"
 
@@ -50,6 +49,25 @@ const cols = (): ProColumns<IncentiveSettlement>[] => ([
     {
         title: 'Agreetment Type',
         render: (_, item) => item.contractType?.name
+    }, 
+    {            
+        dataIndex: 'settledPeriod',
+        sorter: 'settledPeriod',
+        title: 'Settlement Period',
+    },
+    {
+        align: 'right',
+        dataIndex: 'startedDate',
+        sorter: 'startedDate',
+        title: 'From',
+        render: (_, item) => formatDate(item.startedDate)
+    },
+    {
+        align: 'right',
+        dataIndex: 'endedDate',
+        sorter: 'endedDate',
+        title: 'To',
+        render: (_, item) => formatDate(item.endedDate)
     },
     {
         title: 'Created By',       
@@ -147,10 +165,12 @@ const GratisContractCheckListView = (actionHandler: { onDetail?: (record: Incent
                 }) as Promise<Paging<IncentiveSettlement>>,
                 onRequest: onRequestHandler,
             }}
+            /**
+             * SKH-20240110: remove this feature
             expandable={{
                 expandedRowRender: ((record: any) => <SettlementContractList item={record} />),
                 rowExpandable: (record:any) => true,
-            }}
+            }}*/
         />
     </div>
 }

@@ -3,7 +3,7 @@ import { Attachment,  DocumentationDTO } from "../documentation/data";
 
 
 interface ShareDTO{
-     id?:number,
+     id:number,
      recipient:string,
      expirationDate?: Moment.moment,
      effectiveDate?: Moment.moment,
@@ -12,16 +12,13 @@ interface ShareDTO{
      createdDate?:Moment.moment;
      lastModifiedDate?:Moment.moment;
      document:DocumentationDTO;
-     attachment:Attachment;
+     attachment:Attachment[];
      createdDate?:Moment.moment;
      type?:string;
      description?:string;
      accessible?:string;
      isOwner?:boolean;
 }
-
-
-
 interface ShareCreate{
      id?:number;
      recipient?:string;
@@ -29,11 +26,9 @@ interface ShareCreate{
      expirationDate?: Moment.moment;
      effectiveDate?: Moment.moment;
      description?:string;
-     groupId?:number;
+     teamId?:number;
      accessible:string;
 }
-
-
 interface ReceiveShareAdvanceSearchParam {
 
 }

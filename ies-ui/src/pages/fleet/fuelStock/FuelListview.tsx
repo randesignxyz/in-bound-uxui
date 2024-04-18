@@ -11,7 +11,7 @@ import {
   SyncOutlined,
 } from '@ant-design/icons';
 import { Liquid } from '@ant-design/plots';
-import { ActionType, ProDescriptions } from '@ant-design/pro-components';
+import { ActionType, PageContainer, ProDescriptions } from '@ant-design/pro-components';
 import { Button, Card, Dropdown, MenuProps, message, Modal, Row, Space, Tag } from 'antd';
 import Col from 'antd/lib/grid/col';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -23,6 +23,7 @@ import HistoryDrawer from './HistoryDrawer';
 import MonthlyEndingFormModal from './MonthlyEnding';
 import { TankFuelServiceAPI } from './service';
 import TankRefileFormModal from './TankRefillFormModal';
+import { history } from '@umijs/max';
 
 interface Props {
   onAdd?: () => void;
@@ -237,15 +238,10 @@ export default ({ onAdd, onDetail, onEdit, ...props }: Props) => {
   ];
   return (
     <>
-      <div
-        style={{
-          width: '100%',
-          display: 'flex',
-          justifyContent: 'space-between',
-        }}
-      >
-        <BreadCrumbCom separator=">" routes={routes} />
-        <Space>
+      <PageContainer
+        onBack={() => history.push(FleetPaths.fleet)}
+        title="Stocks"
+        extra={[
           <Button
             type="link"
             style={{ float: 'right' }}
@@ -253,112 +249,136 @@ export default ({ onAdd, onDetail, onEdit, ...props }: Props) => {
             onClick={() =>
               setFuelStockState({ visible: { name: 'modal', type: 'ADDNEW', payload: undefined } })
             }
-          />
+          />,
           <Button
             type="link"
             style={{ float: 'right' }}
             icon={<ReloadOutlined />}
             onClick={() => loadData()}
           />
-        </Space>
-      </div>
+        ]}
+      >
+        {/* <div
+          style={{
+            width: '100%',
+            display: 'flex',
+            justifyContent: 'space-between',
+          }}
+        >
+          <BreadCrumbCom separator=">" routes={routes} />
+          <Space>
 
-      <Row gutter={[16, 24]}>
-        {fuelStock.map((it, key) => (
-          <Col sm={24} lg={12}>
-            <Card
-              title={it.tankName}
-              extra={
-                <>
-                  <Dropdown
-                    menu={{
-                      items: getMenuItems(it),
-                      style: { width: 200 },
-                    }}
-                  >
-                    <a onClick={(e) => e.preventDefault()}>
-                      <DashOutlined />
-                    </a>
-                  </Dropdown>
-                </>
-              }
-            >
-              <Row gutter={[16, 24]}>
-                <Col span={12}>
-                  <ProDescriptions
-                    dataSource={fuelStock[key]}
-                    column={1}
-                    columns={[
-                      // {
-                      //     title: "Tank Name",
-                      //     dataIndex: "tankName",
-                      //     key: "volume",
+          </Space>
+        </div> */}
 
-                      // },
-                      {
-                        title: 'Fuel Type',
-                        dataIndex: 'fuelType',
-                        render: (_, r) => r?.fuelType?.name,
-                        key: 'ullage',
-                      },
-                      {
-                        title: 'Tank Capacity',
-                        dataIndex: 'tankCapacity',
-                        key: '1',
-                      },
-                      // {
-                      //     title: "Beginning Balance",
-                      //     dataIndex: "beginningInventory",
-                      //     key: "height"
-                      // },
-                      // {
-                      //     title: "Tank Usages",
-                      //     dataIndex: "tankUsages",
-                      //     key: "waterVolume"
-                      // },
-                      {
-                        title: 'Current Balance',
-                        dataIndex: 'currentInventory',
-                        key: 'waterVolume',
-                        render: (_, r) => r.currentInventory?.toFixed(2),
-                      },
-                      {
-                        title: 'Location',
-                        dataIndex: 'location',
-                        render: (_, r) => r?.location?.name,
-                        key: 'location',
-                      },
-                      {
-                        title: 'Status',
-                        dataIndex: 'status',
-                        key: 'status',
-                        render: (_, r) => (
-                          <Tag color={r.status == 'active' ? 'green' : 'red'}>{r.status}</Tag>
-                        ),
-                      },
-                    ]}
-                  />
-                </Col>
-                <Col span={12}>
-                  <Liquid
-                    percent={it.currentInventory / it.tankCapacity}
-                    autoFit={true}
-                    color={it.currentInventory / it.tankCapacity < 0.5 ? 'red' : ''}
-                    outline={{
-                      border: 4,
-                      distance: 8,
-                    }}
-                    wave={{
-                      length: 128,
-                    }}
-                  />
-                </Col>
-              </Row>
-            </Card>
-          </Col>
-        ))}
-      </Row>
+        <Row gutter={[16, 24]}>
+          {fuelStock.map((it, key) => (
+            <Col sm={24} lg={12}>
+              <Card
+                title={it.tankName}
+                extra={
+                  <>
+                    <Dropdown
+                      menu={{
+                        items: getMenuItems(it),
+                        style: { width: 200 },
+                      }}
+                    >
+                      <a onClick={(e) => e.preventDefault()}>
+                        <DashOutlined />
+                      </a>
+                    </Dropdown>
+                  </>
+                }
+              >
+                <Row gutter={[16, 24]}>
+                  <Col span={12}>
+                    <ProDescriptions
+                      dataSource={fuelStock[key]}
+                      column={1}
+                      columns={[
+                        // {
+                        //     title: "Tank Name",
+                        //     dataIndex: "tankName",
+                        //     key: "volume",
 
+                        // },
+                        {
+                          title: 'Fuel Type',
+                          dataIndex: 'fuelType',
+                          render: (_, r) => r?.fuelType?.name,
+                          key: 'ullage',
+                        },
+                        {
+                          title: 'Tank Capacity',
+                          dataIndex: 'tankCapacity',
+                          key: '1',
+                        },
+                        // {
+                        //     title: "Beginning Balance",
+                        //     dataIndex: "beginningInventory",
+                        //     key: "height"
+                        // },
+                        // {
+                        //     title: "Tank Usages",
+                        //     dataIndex: "tankUsages",
+                        //     key: "waterVolume"
+                        // },
+                        {
+                          title: 'Current Balance',
+                          dataIndex: 'currentInventory',
+                          key: 'waterVolume',
+                          render: (_, r) => r.currentInventory?.toFixed(2),
+                        },
+                        {
+                          title: 'Location',
+                          dataIndex: 'location',
+                          render: (_, r) => r?.location?.name,
+                          key: 'location',
+                        },
+                        {
+                          title: 'Status',
+                          dataIndex: 'status',
+                          key: 'status',
+                          render: (_, r) => (
+                            <Tag color={r.status == 'active' ? 'green' : 'red'}>{r.status}</Tag>
+                          ),
+                        },
+                      ]}
+                    />
+                  </Col>
+                  <Col span={12}>
+                    <Liquid
+                      percent={(it.currentInventory / it.tankCapacity)}
+                      
+                      autoFit={true}
+                      
+                      style= {{
+                        textFill: '#fff',
+                        // colorField:(it.currentInventory / it.tankCapacity) < 0.5 ? 'red' : "red",
+                        outlineBorder: 4,
+                        outlineDistance: 8,
+                        waveLength: 128,
+                        
+                      }}
+                      
+                      // color={it.currentInventory / it.tankCapacity < 0.5 ? 'red' : ''}
+                      // outline={{
+                      //   border: 4,
+                      //   distance: 8,
+                      // }}
+                      // wave={{
+                      //   length: 128,
+                      // }}
+                    />
+                  </Col>
+                </Row>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+
+      </PageContainer>
       <FuelStockEntryForm
         open={fuelStockState.visible?.name == 'modal'}
         onCancel={() => setFuelStockState((v) => ({ ...v, visible: undefined }))}

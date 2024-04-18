@@ -70,12 +70,29 @@ export default [
     access: 'canAccessCrmMenuItem',
     component: './crm/customer',
   },
-
+  {
+    path: '/external/crm/customer/:view/*',
+    name: 'view-customer',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    layout: false,
+    access: 'canAccessCrmMenuItem',
+    component: './crm/customer',
+  },
   {
     path: '/crm/visit-plan/:view/*',
     name: 'visit-plan',
     icon: 'TeamOutlined',
     hideInMenu: 'true',
+    access: 'canAccessCrmMenuItem',
+    component: './crm/visit-plan',
+  },
+  {
+    path: '/external/crm/visit-plan/:view/*',
+    name: 'visit-plan',
+    icon: 'TeamOutlined',
+    hideInMenu: 'true',
+    layout: false,
     access: 'canAccessCrmMenuItem',
     component: './crm/visit-plan',
   },
@@ -88,10 +105,28 @@ export default [
     component: './crm/visit-schedule',
   },
   {
+    path: '/external/crm/visit-schedule/:view/*',
+    name: 'visit-schedule',
+    icon: 'TeamOutlined',
+    hideInMenu: 'true',
+    layout: false,
+    access: 'canAccessCrmMenuItem',
+    component: './crm/visit-schedule',
+  },
+  {
     path: '/crm/contract/:view/*',
     name: 'contract',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
+    access: 'canAccessCrmMenuItem',
+    component: './crm/contract',
+  },
+  {
+    path: '/external/crm/contract/:view/*',
+    name: 'contract',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    layout: false,
     access: 'canAccessCrmMenuItem',
     component: './crm/contract',
   },
@@ -102,6 +137,23 @@ export default [
     hideInMenu: 'true',
     access: 'canAccessCrmMenuItem',
     component: './crm/notification',
+  },
+  {
+    path: '/crm/term/:view/*',
+    name: 'term',
+    icon: 'TeamOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessCrmMenuItem',
+    component: './crm/term',
+  },
+  {
+    path: '/external/crm/term/:view/*',
+    name: 'term',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    layout: false,
+    access: 'canAccessCrmMenuItem',
+    component: './crm/term',
   },
 
   /**********<<Pro**************/
@@ -895,47 +947,76 @@ export default [
   //  ================= END FLEET =================
 
 
-  // ================= DMS =======================
-  {
-    path: "/dms",
-    name: "dms",
-    icon: "FileSearchOutlined",
-    component: "./dms",
-    access: "canAccessDMSMenu",
-    redirect: "/dms/workspace/library"
-  },
+// ================= DMS =======================
+{
+  path:"/dms",
+  name:"dms",
+  icon:"FileSearchOutlined",
+  component:"./dms",
+  access:"canAccessDMSMenu",
+  redirect:"/dms/workspace/library"
+},
 
-  {
-    path: "/dms/workspace/:view",
-    name: "dms",
-    icon: "FileSearchOutlined",
-    component: "./dms",
-    access: "canAccessDMSMenu",
-    hideInMenu: 'true',
-  },
+{
+  path:"/dms/workspace/:view/*",
+  name:"dms",
+  icon:"FileSearchOutlined",
+  component:"./dms",
+  access:"canAccessDMSMenu",
+  hideInMenu: 'true',
+},
 
-  {
-    path: "/dms/setting/:view/*",
-    name: "dms",
-    component: "./dms/setting",
-    access: "canAccessDMSMenu",
-    hideInMenu: 'true',
-  },
-  {
-    path: "/dms/folder/:view/*",
-    name: "dms",
-    component: "./dms/folder",
-    access: "canAccessDMSMenu",
-    hideInMenu: 'true',
-  },
-  {
-    path: "/dms/document/:view/*",
-    name: "dms",
-    component: "./dms/documentation",
-    access: "canAccessDMSMenu",
-    hideInMenu: 'true',
-  },
-  // ==================== END DMS ================
+{
+  path:"/dms/setting/:view/*",
+  name:"dms",
+  component:"./dms/setting",
+  access:"canAccessDMSMenu",
+  hideInMenu: 'true',
+},
+{
+  path:"/dms/folder/:view/*",
+  name:"dms",
+  component:"./dms/folder",
+  access:"canAccessDMSMenu",
+  hideInMenu: 'true',
+},
+{
+  path:"/dms/document/:view/*",
+  name:"dms",
+  component:"./dms/documentation",
+  access:"canAccessDMSMenu",
+  hideInMenu: 'true',
+},
+{
+  path: '/external/dms/document/:view/*',
+  layout:false,
+  name:"dms",
+  component:"./dms/documentation",
+  access:"canAccessDMSMenu",
+  hideInMenu: 'true',
+},
+{
+  path:"/dms/contracts/:view/*",
+  name:"dms",
+  component:"./dms/contract",
+  access:"canAccessDMSMenu",
+  hideInMenu: 'true',
+},
+{
+  path:"/dms/share/:view/:id",
+  name:"dms",
+  component:"./dms/share",
+  access:"canAccessDMSMenu",
+  hideInMenu: 'true',
+},
+{
+  path:"/dms/company/:view/*",
+  name:"dms",
+  component:"./dms/contract/company",
+  access:"canAccessDMSMenu",
+  hideInMenu: 'true',
+},
+// ==================== END DMS ================
 
   //  =================Begin Prod =================
   {
@@ -973,8 +1054,8 @@ export default [
   },
   {
     path: '/',
-    // component: 'initial-page',
-    redirect: '/task-list',
+    component: 'initial-page',
+    // redirect: '/user/auth',
     // redirect: '/expense/delivery',
   },
   {

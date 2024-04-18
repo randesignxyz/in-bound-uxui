@@ -58,21 +58,14 @@ const AdvanceDocumentSearch: React.FC<Props> = ({
         form={form}
         onReset={() => onReset()}
         submitter={false}
-      // submitter={{
-      //   onSubmit: async () => {
-      //     
-      //     
-      //   },
-      // }}
       >
-
         <ProFormSelect
           name={"buId"}
           allowClear
           label={"Bussiness Unit"}
           request={async () => {
             const data = await CoreServiceAPI(requestActions).orgUnitList();
-            return data.map(i => ({ value: i.name, label: i.name }))
+            return data.map(i => ({ value: i.id, label: i.name }))
           }}
         />
         <ProFormSelect
@@ -87,7 +80,7 @@ const AdvanceDocumentSearch: React.FC<Props> = ({
                 advanceSearch: {}
               }
             });
-            return data.items.map(i => ({ value: i.name, label: i.name }))
+            return data.items.map(i => ({ value: i.id, label: i.name }))
           }}
         />
         <ProFormSelect
@@ -101,7 +94,7 @@ const AdvanceDocumentSearch: React.FC<Props> = ({
                 searchValue: k.keyWords || ""
               }
             });
-            return data.items.map(i => ({ value: i.name, label: i.name }))
+            return data.items.map(i => ({ value: i.id, label: i.name }))
           }}
         />
       </ProForm>

@@ -80,9 +80,17 @@ interface Props<T extends { id: number }, C> {
 }
 
 export const colLink =
-  <T extends { id?: any }>(onDetail?: (data: T) => void, displayData?: (data: T) => any) =>
+  <T extends { id?: any }>(onDetail?: (data: T) => void, displayData?: (data: T) => any, onOpenInTab?: (data: T) => void) =>
     (dom: React.ReactNode, data: T) => {
-      return <a onClick={() => onDetail?.(data)}>{displayData?.(data) || dom} </a>;
+      return <Space>
+
+        {onOpenInTab && <Button
+          type="link"
+          icon={<SelectOutlined />}
+          onClick={() => onOpenInTab(data)}
+        />}
+        <a onClick={() => onDetail?.(data)}>{displayData?.(data) || dom} </a>
+      </Space>
     };
 
 const TableView = <T extends { id: any }, C extends { searchValue?: string }>(

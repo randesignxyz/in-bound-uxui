@@ -6,6 +6,8 @@ interface DocumentTypeDTO{
     status:string;
     description?:string;
     requiredExpire?:boolean;
+    restrictFile?:boolean;
+    fileExtension?:string[];   
 }
 
 interface DocumentTypeCreate{
@@ -14,6 +16,9 @@ interface DocumentTypeCreate{
     status:string;
     description?:string;
     requiredExpire?:boolean;
+    restrictFile?:boolean;
+    fileExtension?:string;                            
+
 }
 
 interface DocumentTypeAdvanceSearch{

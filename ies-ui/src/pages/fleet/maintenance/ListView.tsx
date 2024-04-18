@@ -3,8 +3,8 @@ import { formatDate, formatter } from '@/pages/utils';
 import { Paging } from '@/services/API';
 import { simpleRequestActions } from '@/services/model';
 import { CopyOutlined, DashOutlined, DeleteOutlined, IssuesCloseOutlined, StopOutlined } from '@ant-design/icons';
-import { ActionType } from '@ant-design/pro-components';
-import { useModel } from '@umijs/max';
+import { ActionType, PageContainer } from '@ant-design/pro-components';
+import { history, useModel } from '@umijs/max';
 import { Badge, Button, Dropdown, MenuProps, message, Modal, Radio, Space, Tag, Tooltip } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import moment from 'moment';
@@ -145,9 +145,13 @@ export default ({ onDetail }: Props) => {
 
   return (
     <>
-      <BreadCrumbCom separator=">" routes={routes} />
+      {/* <BreadCrumbCom separator=">" routes={routes} /> */}
 
-      <TableView<MaintenneceDTO, { searchValue?: string }>
+     <PageContainer
+      onBack={()=>history.push(FleetPaths.fleet)}
+      title={"Maintenances"}
+     >
+     <TableView<MaintenneceDTO, { searchValue?: string }>
         hasCriteria={Object.values(Omit(advanceSearchParams, ['status'])).some((v) => v)}
         cache
         extraFilter={
@@ -310,6 +314,7 @@ export default ({ onDetail }: Props) => {
             }) as Promise<Paging<MaintenneceDTO>>,
         }}
       />
+     </PageContainer>
 
       <AdvanceSearch
         title="Advance Search"

@@ -36,7 +36,6 @@ const ImagePreview: React.FC<Props> = ({ version, fileId, fileName, ...rest }) =
       {image === 'error' && (
         <Upload
           headers={
-            //localStorage.getItem('accessToken')
             kc.token
               ? {
                 Authorization: `Bearer ${kc.token}`,

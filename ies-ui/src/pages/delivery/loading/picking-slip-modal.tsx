@@ -17,7 +17,7 @@ import ProForm, {
 } from '@ant-design/pro-form';
 import ProTable from '@ant-design/pro-table';
 import { useAccess } from '@umijs/max';
-import { Alert, Button, Checkbox, Col, Divider, message, Modal, Row, Spin, Typography } from 'antd';
+import { Alert, Button, Checkbox, Col, message, Modal, Row, Spin, Typography } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { sum, uniq } from 'lodash';
 import moment from 'moment';
@@ -78,7 +78,6 @@ const PickingSlip: React.FC<Props> = ({ cb, requestActions, itemDetail, ...props
   }>();
 
   const init = async () => {
-
     const rs = await fetchDataItemService<{ assignedDate: Moment, shift?: string }, { id: number }>({
       actionName: 'fetch-loading-by-id',
       endpoint: 'DELIVERY',
@@ -99,8 +98,6 @@ const PickingSlip: React.FC<Props> = ({ cb, requestActions, itemDetail, ...props
     init()
 
   }, [props.open]);
-
-
 
   useEffect(() => {
     if (!truckChanging && autoSearch > 0) {
@@ -137,9 +134,7 @@ const PickingSlip: React.FC<Props> = ({ cb, requestActions, itemDetail, ...props
       const driver = driverList.find(it => it.id === itemDetail?.loading?.driver.id)
       setTrucks(driver?.trucks)
       form.setFieldValue('driverId', itemDetail?.loading?.driver.id || driver?.id)
-
     }
-
     setAutoSearch(v => v + 1)
   }
 
@@ -150,6 +145,7 @@ const PickingSlip: React.FC<Props> = ({ cb, requestActions, itemDetail, ...props
       return;
     }
     const dataForm = await form.validateFields();
+
     if (((dataForm.driverId == itemDetail?.loading?.driver.id && dataForm.licensePlate == itemDetail?.loading?.truck.licensePlate) || !truckChanging) && sameQty()) {
       message.error('Cannot assign the same picking amount.');
       return;

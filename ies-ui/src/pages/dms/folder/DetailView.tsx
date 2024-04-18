@@ -1,6 +1,4 @@
 import { ProDescriptions } from "@ant-design/pro-components"
-import BreadCrumbCom from "../components/BreadCrumbCom"
-import { DMSPaths } from "..";
 import { FolderServiceAPI } from "./service";
 import { simpleRequestActions } from "@/services/model";
 import { Button } from "antd";
@@ -31,28 +29,14 @@ export default ({ id }: Props) => {
                 justifyContent: "space-between"
             }}
         >
-            <BreadCrumbCom
-                routes={[
-                    {
-                        label: "DMS",
-                        path: `${DMSPaths.dms}`
-                    },
-                    {
-                        label: id.toString(),
-                        path: ""
-                    }
-                ]}
-                separator='/'
-            />
             <Button
                 type="link"
                 icon={<FolderAddOutlined />}
-                onClick={()=>setState({visible:{name:"modal",type:"ADD"}})}
+                onClick={() => setState({ visible: { name: "modal", type: "ADD" } })}
             >
                 New Folder
             </Button>
         </Space>
-
         <ProDescriptions
             request={async () => {
                 const data = await service.fetch(id);
@@ -68,8 +52,6 @@ export default ({ id }: Props) => {
                 }
             ]}
         />
-
-
         <EntryForm
             open={state?.visible?.name === "modal"}
             onCancel={() => setState((v) => ({ ...v, visible: undefined }))}

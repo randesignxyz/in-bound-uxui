@@ -3,20 +3,20 @@ import { FieldTimeOutlined } from "@ant-design/icons";
 import { ActionType, ProList } from "@ant-design/pro-components";
 import { HistoryServiceAPI } from "./service";
 import { simpleRequestActions } from "@/services/model";
-import { formatDateTime, toReadable } from "@/pages/utils";
+import { formatDateTime } from "@/pages/utils";
 import moment from "moment";
 import { useRef } from "react";
+import { Tag } from "antd";
 
 interface Props {
-    intantId?: number
+    intantId?: number;
+    source:"CONTRACTS"|"DOCUMENTATION"
 }
 
-export default ({ intantId }: Props) => {
-
+export default ({ intantId, source }: Props) => {
     const requestAction = simpleRequestActions();
     const services = HistoryServiceAPI(requestAction)
     const actionRef = useRef<ActionType>();
-
     const onRequestHandler =async (params?:{
         current?:number,
         pageSizee?:number,  
@@ -25,7 +25,8 @@ export default ({ intantId }: Props) => {
             criteria: {
                 advanceSearch: {
                     actionType: "",
-                    instantId: intantId
+                    instantId: intantId,
+                    source:source
                 }
             },
             pagination:{
@@ -39,18 +40,15 @@ export default ({ intantId }: Props) => {
             total:data.total
         })
     }
-
     return (
         <ProList<HistoryDTO>
             pagination={{
                 pageSize: 10,
                 pageSizeOptions:[10]
-            
             }}
-
             metas={{
                 avatar: {render: () => <FieldTimeOutlined />},
-                title: {render: (_,r )=> `${toReadable(r.action)} by ${r.actionBy}`},
+                title: {render: (_,r )=> (<><Tag color="blue">{r.actionType}</Tag> <span style={{color:"gray"}}>{r.action} by: {r.actionBy}</span></>)},
                 subTitle: {render: (_,r )=> `${moment(moment(r.actionDate)).fromNow()}`},
                 description: {dataIndex: 'remark'},
                 actions:{
@@ -67,6 +65,5 @@ export default ({ intantId }: Props) => {
                 })
             }}
         />
-
     )
 }

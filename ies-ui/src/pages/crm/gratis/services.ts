@@ -2,7 +2,7 @@ import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { execDataService, execDataService0, fetchDataItemService, fetchDataListService, fetchDataPagingService } from "@/services/apiGateway";
 import { ContractLess } from "@/services/crm/contract";
 // import { LookupDataItem, LookupDataItem3 } from "@/services/data";
-import { AdjustItem, AdjustInfoOn, CreateSettlemenDate, GratisContract, GratisContractViewData, GratisVerifyItem, HistoryItem, IncentiveSettlement, LookupDataItem,  SaveChangeStatusData,  SaveGratisContractCheckListData, SearchCriteria, SettlementCycle, SettlementCycleActivity, SettlementCycleAdvanceSearchParams, SettlementSearchDate, VerifyGratisContact, ItemSAP, GratisVerifySchedule, ApprovalRequestPayload } from "./types";
+import { AdjustItem, AdjustInfoOn, CreateSettlemenDate, GratisContract, GratisContractViewData, GratisVerifyItem, HistoryItem, IncentiveSettlement, LookupDataItem,  SaveChangeStatusData,  SaveGratisContractCheckListData, SearchCriteria, SettlementCycle, SettlementCycleActivity, SettlementCycleAdvanceSearchParams, SettlementSearchDate, VerifyGratisContact, ItemSAP, GratisVerifySchedule, ApprovalRequestPayload, GratisSuggestedCustomer, GratisSuggestedCustomerVisit, GratisVisitScheduleParams } from "./types";
 import moment from "moment";
 
 export const GratisServices = {
@@ -32,12 +32,7 @@ export const GratisServices = {
         actionName: 'save-gratis-contract',
         endpoint: 'CRM',
         payload: data,
-    }), 
-    // saveVerifyGratisContract: (data: SaveGratisContractCheckListData) => execDataService0<SaveGratisContractCheckListData>({
-    //     actionName: 'save-verify-gratis-contract',
-    //     endpoint: 'CRM',
-    //     payload: data,
-    // }),
+    }),
     gratisVerifyContractCheckList: (criteria:{gContractId: number}) => fetchDataListService<VerifyGratisContact, any>({
         actionName: 'list-verify-gratis-contract',
         endpoint: 'CRM',
@@ -63,6 +58,30 @@ export const GratisServices = {
         endpoint: 'CRM',
         payload: {
             id: params.id,
+            ...params.criteria
+        },
+        pagination: {
+            page: params.pagination?.current,
+            pageSize: params.pagination?.pageSize
+        }
+    }),
+    fetchSuggestedCustomer: (params: {id: number,criteria?:SearchCriteria, pagination?: {current: number,pageSize?: number}},) => fetchDataPagingService<GratisSuggestedCustomer, {id: number,criteria?:SearchCriteria, pagination?: {current: number,pageSize?: number}}>({
+        actionName: 'gratis-suggested-customer',
+        endpoint: 'CRM',
+        payload: {
+            id: params.id,
+            ...params.criteria
+        },
+        pagination: {
+            page: params.pagination?.current,
+            pageSize: params.pagination?.pageSize
+        }
+    }),
+    fetchSuggestedCustomerVisit: (params: {gSettledId: number,criteria?:GratisVisitScheduleParams, pagination?: {current: number,pageSize?: number}},) => fetchDataPagingService<GratisSuggestedCustomerVisit, {gSettledId: number,criteria?:GratisVisitScheduleParams, pagination?: {current: number,pageSize?: number}}>({
+        actionName: 'gratis-suggested-customer-visit',
+        endpoint: 'CRM',
+        payload: {
+            gSettledId: params.gSettledId,
             ...params.criteria
         },
         pagination: {
@@ -142,25 +161,35 @@ export const GratisServices = {
             pageSize:pageSize
         }
     }),
-    fetchGratisVerifyItemList: (id: number) => fetchDataListService<GratisVerifyItem, any>({
+    fetchGratisVerifyItemList: (criteria:SearchCriteria) => fetchDataListService<GratisVerifyItem, any>({
         actionName: 'list-gratis-verify-item',
         endpoint: 'CRM',
-        payload: {id}
+        payload: criteria
     }),
-    fetchGratisVerifyScheduleList: (id: number) => fetchDataListService<GratisVerifySchedule, any>({
+    fetchGratisVerifyScheduleList: (criteria:SearchCriteria) => fetchDataListService<GratisVerifySchedule, any>({
         actionName: 'list-gratis-verify-schedule',
         endpoint: 'CRM',
-        payload: {id}
+        payload: criteria
     }),
     gratisSaleOrderList: (id: number) => fetchDataListService<AdjustInfoOn, any>({
         actionName: 'list-sale-order',
         endpoint: 'CRM',
         payload: {id}
     }),
-    getListItemSAP: (customerCode?: string,docNum?: string,dataSource?:string,startedDate?:moment.Moment,endedDate?:moment.Moment) => fetchDataListService<ItemSAP, any>({
-        actionName: 'list-item-sap',
+    // getListItemSAP: (customerCode?: string,docNum?: string,dataSource?:string,startedDate?:moment.Moment,endedDate?:moment.Moment) => fetchDataListService<ItemSAP, any>({
+    //     actionName: 'list-item-sap',
+    //     endpoint: 'CRM',
+    //     payload: {customerCode,docNum,dataSource,startedDate,endedDate}
+    // }),
+        getListItemAdjustment: (currentVerifyId: number,customerCode?: string,docNum?: string,dataSource?:string,startedDate?:moment.Moment,endedDate?:moment.Moment) => fetchDataListService<ItemSAP, any>({
+        actionName: 'list-item-adjustment',
         endpoint: 'CRM',
-        payload: {customerCode,docNum,dataSource,startedDate,endedDate}
+        payload: {currentVerifyId,customerCode,docNum,dataSource,startedDate,endedDate}
+    }),
+    getListSuggestionItemAdjustment: (incentiveSettlementId: number,gVerifyId?: number,searchValue?: string) => fetchDataListService<ItemSAP, any>({
+        actionName: 'list-gratis-suggested-item-adjustment',
+        endpoint: 'CRM',
+        payload: {incentiveSettlementId,gVerifyId,searchValue}
     }),
     adjustContractVerifyTrans: (id:number,adjItems: AdjustItem[]) => execDataService0<{contractVerifyId:number,items: AdjustItem[]}>({
         actionName: 'adjust-contract-verify-trans',
@@ -170,19 +199,29 @@ export const GratisServices = {
             items: adjItems
         },
     }),
+    synchroGratisCustomerVisitSchedule: (tranType: string, gSettledId:number,gVerifyId?: number,scheduleIds?:number[]) => execDataService0<{tranType:string,gSettledId:number,gVerifyId?: number,scheduleIds?:number[]}>({
+        actionName: 'synchro-gratis-customer-visit-schedule',
+        endpoint: 'CRM',
+        payload: {
+            gSettledId,
+            gVerifyId,
+            scheduleIds,
+            tranType
+        },
+    }),
     removeGContractVerifyTrans: (id:number) => execDataService0<{id:number}>({
         actionName: 'remove-g-contract-verify-tran',
         endpoint: 'CRM',
         payload: {id:id},
     }),
-    fetchHistoryGratisTransList: (id: number) => fetchDataListService<HistoryItem, any>({
+    fetchHistoryGratisTransList: (criteria:SearchCriteria) => fetchDataListService<HistoryItem, any>({
         actionName: 'list-gratis-history-trans',
         endpoint: 'CRM',
-        payload: {id}
+        payload: criteria
     }),
-    // importData: (id: number) => execDataService0<{id:number}>({
-    //     actionName: 'import-data-gratis',
-    //     endpoint: 'CRM',
-    //     payload: {id}
-    // }), 
+    fetchExistingGratisIncentive: (params:  SettlementSearchDate) => fetchDataListService<IncentiveSettlement, SettlementSearchDate>({
+        actionName: 'fetch-existing-gratis-incentive',
+        endpoint: 'CRM',
+        payload: params
+    })
 }

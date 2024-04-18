@@ -11,6 +11,7 @@ interface FolderDTO{
     type?:string;
     code?:string;
     libraryId?:number;
+    department?:DepartmentDTO;
 }
 
 interface FolderCreate{
@@ -21,6 +22,7 @@ interface FolderCreate{
     type?:string;
     location?:string
     libraryId?:number;
+    departmentId?:number;
 }
 
 interface FolderSearchParam{
@@ -41,10 +43,9 @@ interface ListItemsView {
 interface FolderAdvanceSearch {
     parentId?:number;
     libraryId?:number;
+    code?:string;
 }
 
-
-// display as folder 
 interface DataNode {
     title?: string;
     key: string;

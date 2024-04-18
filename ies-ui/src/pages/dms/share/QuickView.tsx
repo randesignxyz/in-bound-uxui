@@ -3,10 +3,9 @@ import { ShareDTO } from "./data"
 import { formatDate } from "@/pages/utils"
 import { TeamOutlined, UserOutlined, DeleteOutlined } from "@ant-design/icons"
 import { ActionType, ProList } from "@ant-design/pro-components"
-import { useRef } from "react"
+import { useEffect, useRef } from "react"
 import { simpleRequestActions } from "@/services/model"
 import { ShareServiceAPI } from "./service"
-
 
 interface Props extends DrawerProps{
     docId?:number
@@ -16,7 +15,9 @@ export default  ({ docId ,...props}:Props) =>{
     const actionRef = useRef<ActionType>();
     const requestActions = simpleRequestActions();
     const services = ShareServiceAPI(requestActions);
-
+    useEffect(()=>{
+        actionRef.current?.reload?.();
+    }, [props.open]);
     return (
         <>
             <Drawer

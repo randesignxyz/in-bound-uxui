@@ -17,7 +17,7 @@ import ProForm, {
 } from '@ant-design/pro-form';
 import ProTable from '@ant-design/pro-table';
 import { useAccess } from '@umijs/max';
-import { Alert, Button, Checkbox, Col, message, Modal, Row, Spin, Typography } from 'antd';
+import { Alert, Button, Checkbox, Col, Divider, message, Modal, Row, Spin, Typography } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { sum, uniq } from 'lodash';
 import moment from 'moment';
@@ -78,6 +78,7 @@ const PickingSlip: React.FC<Props> = ({ cb, requestActions, itemDetail, ...props
   }>();
 
   const init = async () => {
+
     const rs = await fetchDataItemService<{ assignedDate: Moment, shift?: string }, { id: number }>({
       actionName: 'fetch-loading-by-id',
       endpoint: 'DELIVERY',
@@ -98,6 +99,8 @@ const PickingSlip: React.FC<Props> = ({ cb, requestActions, itemDetail, ...props
     init()
 
   }, [props.open]);
+
+
 
   useEffect(() => {
     if (!truckChanging && autoSearch > 0) {
@@ -134,7 +137,9 @@ const PickingSlip: React.FC<Props> = ({ cb, requestActions, itemDetail, ...props
       const driver = driverList.find(it => it.id === itemDetail?.loading?.driver.id)
       setTrucks(driver?.trucks)
       form.setFieldValue('driverId', itemDetail?.loading?.driver.id || driver?.id)
+
     }
+
     setAutoSearch(v => v + 1)
   }
 
@@ -145,7 +150,6 @@ const PickingSlip: React.FC<Props> = ({ cb, requestActions, itemDetail, ...props
       return;
     }
     const dataForm = await form.validateFields();
-
     if (((dataForm.driverId == itemDetail?.loading?.driver.id && dataForm.licensePlate == itemDetail?.loading?.truck.licensePlate) || !truckChanging) && sameQty()) {
       message.error('Cannot assign the same picking amount.');
       return;
@@ -215,7 +219,7 @@ const PickingSlip: React.FC<Props> = ({ cb, requestActions, itemDetail, ...props
           form={form}
           submitter={false}
         >
-          {access.canAccessDeliveryMenuItem && <ProCard style={{ marginBlock: 5 }} boxShadow size="small" title="Searching">
+          {access.canAccessDeliveryMenuItem && <ProCard style={{marginBlock: 5}}  boxShadow size="small" title="Searching">
             <ProFormGroup >
               <Checkbox disabled={!access.canAccessDeliveryMenuItem} defaultChecked={false} onChange={e => changeTruckHandler(e.target.checked)} >
                 <Typography.Text strong type="warning">Change Truck</Typography.Text>
@@ -281,7 +285,7 @@ const PickingSlip: React.FC<Props> = ({ cb, requestActions, itemDetail, ...props
                 { title: 'UoM', dataIndex: 'uomCode' },
                 { title: 'Shipped Qty', dataIndex: 'qty', align: 'right', render: (_, r) => formatterQty.format(r.qty) },
               ]}
-              style={{ marginBlock: 5 }}
+              style={{marginBlock: 5}}
               size="small"
               dataSource={itemDetail?.loadingInfo?.items}
               options={false}
@@ -316,7 +320,7 @@ const PickingSlip: React.FC<Props> = ({ cb, requestActions, itemDetail, ...props
           </ProCard>
 
           {(loadingItem?.pickingItems?.length || 0) > 0 && (
-            <ProCard bordered title="Picking Items" size="small" style={{ marginBlock: 5 }}>
+            <ProCard  bordered title="Picking Items" size="small" style={{marginBlock: 5}}>
               <ProTable
                 columns={[
                   { title: 'Item Code', dataIndex: 'itemCode' },
@@ -346,7 +350,7 @@ const PickingSlip: React.FC<Props> = ({ cb, requestActions, itemDetail, ...props
           )}
 
           {access.canAccessDeliveryMenuItem && (loadingItem?.deliveryNoteListItems?.length || 0) > 0 && (
-            <ProCard bordered collapsible defaultCollapsed title="Delivery Note" size="small" style={{ marginBlock: 5 }}>
+            <ProCard bordered collapsible defaultCollapsed title="Delivery Note" size="small" style={{marginBlock: 5}}>
               <ProTable<DeliveryNoteListItem>
                 columns={[
                   { title: 'Del.Doc Num', dataIndex: 'docNum' },

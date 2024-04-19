@@ -510,8 +510,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
 
 
 
-
-    canAccessRetailer:
+      canAccessRetailer:
       currentUser?.authorities.some((item) =>
         ['ROLE_RETAILER_APP', 'ROLE_ADMIN'].some((it) => it === item),
       ) || false,
@@ -519,6 +518,21 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canCreateRetailer:
       currentUser?.authorities.some((item) =>
         ['ROLE_RETAILER_ADMIN', 'ROLE_ADMIN'].some((it) => it === item),
+      ) || false,
+    canAccessRetailerSalesperons:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_RETAILER_SALES_PERSON'].some((it) => it === item),
+      ) || false,
+
+    canViewRetailerSalesperons:
+      currentUser?.authorities.some((item) =>
+        [
+          'ROLE_RETAILER_SALES_PERSON',
+          'ROLE_RETAILER_SUPPORT',
+          'ROLE_RETAILER_APP',
+          'ROLE_RETAILER_ADMIN',
+          'ROLE_ADMIN',
+        ].some((it) => it === item),
       ) || false,
 
     canViewRetailer:
@@ -545,12 +559,12 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
 
     canAccessSettlementMenuItem:
       currentUser?.authorities.some((item) =>
-        ['ROLE_CASHIER', 'ROLE_ADMIN'].some((it) => it === item),
+        ['ROLE_CASHIER', 'ROLE_DSD_ADMIN', 'ROLE_ADMIN'].some((it) => it === item),
       ) || false,
 
     canAccessARMenuItem:
       currentUser?.authorities.some((item) =>
-        ['ROLE_AR', 'ROLE_ADMIN'].some((it) => it === item),
+        ['ROLE_AR', 'ROLE_DSD_ADMIN', 'ROLE_ADMIN'].some((it) => it === item),
       ) || false,
 
     canAccessTabWarehouse:

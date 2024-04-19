@@ -421,8 +421,12 @@ export interface StockControlDetail {
   serialNumber?: string;
   plateNumber?: string;
   soldAmount?: number;
+  isKeepForwarding?: boolean;
   transactions: StockQuantity[];
   settlement?: SettlementLessDto;
+  // children?: { string: StockDetailLess[] };
+  items?: StockDetailLess[];
+  pendingItems?: StockDetailLess[];
 }
 
 export interface ApprovalStockControlDto {
@@ -442,6 +446,7 @@ export interface ApprovalStockItemDto {
   expiredDate?: moment.Moment;
   isSplit: boolean;
   stockCategoryId?: number;
+  internalId?: string;
 }
 
 export interface SettlementLessDto {
@@ -557,6 +562,8 @@ export interface StockDetailItemLess {
   batchNo?: string;
   actualQty?: number;
   itemType?: number;
+  status: string;
+  internalId?: string;
 }
 
 export interface StockDetailItemSettle extends StockDetailItemLess {

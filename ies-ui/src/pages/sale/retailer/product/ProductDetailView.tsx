@@ -2,7 +2,7 @@ import DescriptionDisplay from '@/components/Descriptions';
 import { simpleRequestActions } from '@/services/model';
 import { FooterToolbar, ProForm, ProTable } from '@ant-design/pro-components';
 import { history, useAccess } from '@umijs/max';
-import { Button, Card, Col, message, Modal, Row, Space, Spin, Tag, Typography } from 'antd';
+import { Button, Card, Col, Modal, Row, Space, Spin, Tag, Typography, message } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { startCase } from 'lodash';
 import numeral from 'numeral';
@@ -29,6 +29,7 @@ export default ({ onEdit, id, onAdd }: Props) => {
   const requestActions = simpleRequestActions();
   const services = ProductServiceAPI(requestActions);
   const [product, setProduct] = useState<ProductDto>();
+  const [update, setUpdate] = useState<number>(0);
   const [form] = useForm<ProductDto>();
   const access = useAccess();
   const { confirm } = Modal;
@@ -55,7 +56,7 @@ export default ({ onEdit, id, onAdd }: Props) => {
         setProduct(await services.detailProduct(id));
       }
     })();
-  }, []);
+  }, [update]);
 
   const displayItems = [
     { label: 'Product Name', value: product?.name },
@@ -124,8 +125,11 @@ export default ({ onEdit, id, onAdd }: Props) => {
           });
           // await actionRef.current?.reload();
           message.info(response.message);
-        } catch (e) {
+        } catch (e: any) {
           message.error(e);
+        } finally {
+          setUpdate(update + 1);
+          // actionRef.current?.reload();
         }
       },
     });

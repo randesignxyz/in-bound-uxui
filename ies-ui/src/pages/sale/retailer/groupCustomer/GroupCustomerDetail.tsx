@@ -3,7 +3,7 @@ import { formatDate, formatDateTime } from '@/pages/utils';
 import { simpleRequestActions } from '@/services/model';
 import { ProTable } from '@ant-design/pro-components';
 import { history } from '@umijs/max';
-import { Button, Card, Row, Space, Switch, Tag } from 'antd';
+import { Button, Card, Row, Space, Spin, Switch, Tag } from 'antd';
 import { startCase } from 'lodash';
 import numeral from 'numeral';
 import { useCallback, useEffect, useState } from 'react';
@@ -51,7 +51,7 @@ export default ({ id, onEdit }: Props) => {
     {
       label: 'Is Default',
       value: customerGroup?.isDefault ?? false,
-      tag: (value: boolean) => <Switch defaultChecked={value} disabled />,
+      tag: (value: boolean) => <Switch checked={value} disabled />,
     },
     { label: 'Code', value: customerGroup?.code },
     {
@@ -74,7 +74,7 @@ export default ({ id, onEdit }: Props) => {
   }, []);
 
   return (
-    <>
+    <Spin spinning={requestActions.request?.loading}>
       <Row justify="space-between">
         <BreadCrumbCom separator=">" routes={routes} />
         <Space>
@@ -163,6 +163,6 @@ export default ({ id, onEdit }: Props) => {
           ]}
         />
       </Card>
-    </>
+    </Spin>
   );
 };

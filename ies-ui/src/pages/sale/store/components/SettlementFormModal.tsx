@@ -70,10 +70,10 @@ const SettlementFormModal: React.FC<Props> = ({
     if (!rest.open) return;
     setDataSource(data.dataSource);
     console.log(data.soldAmount);
+    formSettlement.resetFields();
     formSettlement.setFieldsValue({ soldAmount: data.soldAmount });
-    () => {
-      formSettlement.resetFields();
-    };
+    // () => {
+    // };
   }, [rest.open]);
 
   //   useEffect(() => {

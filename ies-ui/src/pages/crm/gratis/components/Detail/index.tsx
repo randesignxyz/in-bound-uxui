@@ -234,7 +234,8 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
       }
     })
   }
-  const adjustHandler = (verifyId: number,adjItems: AdjustItem[]  , cb:(v: boolean)=>void)=>{       
+  const adjustHandler = (verifyId: number,adjItems: AdjustItem[]  , cb:(v: boolean)=>void)=>{   
+    console.log('adj list',adjItems)    
     if(adjItems && adjItems.length==0) {
         message.warning('No data selected')
     }else{

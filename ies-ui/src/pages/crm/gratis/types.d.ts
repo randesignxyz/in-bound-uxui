@@ -320,6 +320,7 @@ interface AdjustItem {
   itemName?: string;
   lineNum?:number;
   qty?: number;
+  uomCode: string;
   contractVerifyId?: number;
   dataSource?:string;
   startedDate?: moment.Moment;
@@ -359,6 +360,7 @@ interface ItemSAP {
   canceled: string;
   customerCode : string;
   quantity: number;
+  uomCode: string;
   lineNum: number;
   itemCode: string;
   itemName: string;

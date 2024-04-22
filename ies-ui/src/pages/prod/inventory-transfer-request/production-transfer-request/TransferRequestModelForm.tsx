@@ -53,7 +53,7 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
   const [getqty, setGetQty] = useState<string>('');
   const [getRemark, setGetRmark] = useState<string | undefined>(undefined);
   const [advanceSearchParams, setAdvanceSearchParams] = useState<WarehouseAdvanceParams>({
-    tendency: 'ALL',
+    tendency: 'NVC',
   });
   const [act, setAct] = useState<ActivitiesItem[]>([
     {
@@ -90,22 +90,22 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
     setGetRmark(undefined);
     setGetTendency('');
     setGetQty('');
-    if (access.canAccessNVCItem) {
-      setAdvanceSearchParams((v: any) => ({ ...v, tendency: 'NVC' }));
-      actionRef.current?.reloadAndRest?.();
-    } else if (access.canAccessOFLItem) {
-      setAdvanceSearchParams((v: any) => ({ ...v, tendency: 'OFL' }));
-      actionRef.current?.reloadAndRest?.();
-    } else if (access.canAccessOMMItem) {
-      setAdvanceSearchParams((v: any) => ({ ...v, tendency: 'OMM' }));
-      actionRef.current?.reloadAndRest?.();
-    } else if (access.canAccessItem) {
-      setAdvanceSearchParams((v: any) => ({ ...v, tendency: 'ALL' }));
-      actionRef.current?.reloadAndRest?.();
-    } else {
-      setAdvanceSearchParams((v: any) => ({ ...v, tendency: 'none' }));
-      actionRef.current?.reloadAndRest?.();
-    }
+    // if (access.canAccessNVCItem) {
+    //   setAdvanceSearchParams((v: any) => ({ ...v, tendency: 'NVC' }));
+    //   actionRef.current?.reloadAndRest?.();
+    // } else if (access.canAccessOFLItem) {
+    //   setAdvanceSearchParams((v: any) => ({ ...v, tendency: 'OFL' }));
+    //   actionRef.current?.reloadAndRest?.();
+    // } else if (access.canAccessOMMItem) {
+    //   setAdvanceSearchParams((v: any) => ({ ...v, tendency: 'OMM' }));
+    //   actionRef.current?.reloadAndRest?.();
+    // } else if (access.canAccessItem) {
+    //   setAdvanceSearchParams((v: any) => ({ ...v, tendency: 'ALL' }));
+    //   actionRef.current?.reloadAndRest?.();
+    // } else {
+    //   setAdvanceSearchParams((v: any) => ({ ...v, tendency: 'none' }));
+    //   actionRef.current?.reloadAndRest?.();
+    // }
   }, [props.open]);
 
   useEffect(() => {
@@ -127,19 +127,19 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
           items: items.map((v) => ({ ...v })),
           item_count: items.length,
           activities: act,
-          fromWarehouse: getFromWarehouse,
-          toWarehouse: getToWarehouse,
-          apiReferenceNo: '20240223-12ddbb1',
-          vendorCode: '',
-          vendorName: '',
-          productionOfficer: 'Test 00e7',
-          comments: getRemark ? getRemark : '',
-          transferRequestDetails: items.map((v) => ({
-            ...v,
-            fromWarehouse: getFromWarehouse,
-            toWarehouse: getToWarehouse,
-            remark: v.remark === null ? '' : v.remark === undefined ? '' : v.remark,
-          })),
+          // fromWarehouse: getFromWarehouse,
+          // toWarehouse: getToWarehouse,
+          // apiReferenceNo: '20240223-12ddbb1',
+          // vendorCode: '',
+          // vendorName: '',
+          // productionOfficer: 'Test 00e7',
+          // comments: getRemark ? getRemark : '',
+          // transferRequestDetails: items.map((v) => ({
+          //   ...v,
+          //   fromWarehouse: getFromWarehouse,
+          //   toWarehouse: getToWarehouse,
+          //   remark: v.remark === null ? '' : v.remark === undefined ? '' : v.remark,
+          // })),
         };
         console.log(entity);
         // const act={
@@ -239,7 +239,7 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
                 request={async ({ keyWords }) => {
                   const data = await WarehouseServiceAPI(requestActions).page({
                     criteria: { searchValue: keyWords, advanceSearch: advanceSearchParams },
-                    pagination: { pageSize: 10 },
+                    pagination: { pageSize: 100 },
                   });
 
                   return data.items.map((obj) => ({

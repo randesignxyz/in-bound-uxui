@@ -18,6 +18,7 @@ import {
   ItemGroup,
   ItemSearch,
   Provided,
+  SAPTransferRequest,
   Supplier,
   SupplierSearch,
   TransferRequest,
@@ -147,6 +148,12 @@ const TransferRequestAction = {
     type: 'LIST_QUERY',
     payload: data,
   }),
+  save_to_sap:(data:SAPTransferRequest):ServiceApiType<SAPTransferRequest> => ({
+    actionName:'save-transfer-to-sap',
+    endpoint:'PROD',
+    type:'EXEC',
+    payload:data
+  })
 };
 
 export const TransferRequestServiceAPI = (requestAction: RequestActions) => {
@@ -187,6 +194,10 @@ export const TransferRequestServiceAPI = (requestAction: RequestActions) => {
       singleRequest<TransferRequest>(TransferRequestAction.get_to_excel(data))(
         requestAction,
       ) as Promise<TransferRequest>,
+    save_to_sap:(data:SAPTransferRequest)=>
+      singleRequest<{data:string; message:string}>(TransferRequestAction.save_to_sap(data))(
+        requestAction,
+      )
   };
 };
 

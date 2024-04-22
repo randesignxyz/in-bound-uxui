@@ -127,7 +127,7 @@ export default ({ onAddItem, updateQuantity, tendency }: Props) => {
             editable: false,
           },
           { title: 'UoM', dataIndex: 'inventoryUoM', editable: false, width: 60 },
-          { title: 'Remark', dataIndex: 'remark' },
+          // { title: 'Remark', dataIndex: 'remark' },
         ]}
       />
     </>

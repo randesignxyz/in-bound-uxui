@@ -297,6 +297,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         [
           'ROLE_ADMIN',
+          'ROLE_PROD_ADMIN',
           'ROLE_PROD_PRO_ADMIN',
           'ROLE_PROD_NVC_ADMIN',
           'ROLE_PROD_OFL_ADMIN',
@@ -309,6 +310,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         [
           'ROLE_ADMIN',
+          'ROLE_PROD_ADMIN',
           'ROLE_PROD_PRO_ADMIN',
           'ROLE_PROD_NVC_ADMIN',
           'ROLE_PROD_OFL_ADMIN',
@@ -321,6 +323,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         [
           'ROLE_ADMIN',
+          'ROLE_PROD_ADMIN',
           'ROLE_PROD_PRO_ADMIN',
           'ROLE_PROD_NVC_ADMIN',
           'ROLE_PROD_OFL_ADMIN',
@@ -333,6 +336,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         [
           'ROLE_ADMIN',
+          'ROLE_PROD_ADMIN',
           'ROLE_PROD_PRO_ADMIN',
           'ROLE_PROD_NVC_ADMIN',
           'ROLE_PROD_OFL_ADMIN',
@@ -340,10 +344,10 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
         ].some((it) => it === item),
       ) || false,
     canAccessAll:
-      currentUser?.authorities.some((item) => ['ROLE_ADMIN'].some((it) => it === item)) || false,
+      currentUser?.authorities.some((item) => ['ROLE_ADMIN','ROLE_PROD_ADMIN'].some((it) => it === item)) || false,
     canAccessItem:
       currentUser?.authorities.some((item) =>
-        ['ROLE_ADMIN', 'ROLE_PROD_PRO_ADMIN', 'ROLE_PROD_WARE_ADMIN'].some((it) => it === item),
+        ['ROLE_ADMIN','ROLE_PROD_ADMIN', 'ROLE_PROD_PRO_ADMIN', 'ROLE_PROD_WARE_ADMIN'].some((it) => it === item),
       ) || false,
     canAccessNVCItem:
       currentUser?.authorities.some((item) => ['ROLE_PROD_NVC_ADMIN'].some((it) => it === item)) ||

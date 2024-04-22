@@ -34,21 +34,21 @@ export const wsRetailerEndPoint =
 
 export const isUrl = (path: string): boolean => reg.test(path);
 
-export const isAntDesignPro = (): boolean => {
-    if (ANT_DESIGN_PRO_ONLY_DO_NOT_USE_IN_YOUR_PRODUCTION === 'site') {
-        return true;
-    }
-    return window.location.hostname === 'workflow';
-};
+// export const isAntDesignPro = (): boolean => {
+//     if (ANT_DESIGN_PRO_ONLY_DO_NOT_USE_IN_YOUR_PRODUCTION === 'site') {
+//         return true;
+//     }
+//     return window.location.hostname === 'workflow';
+// };
 
 //for the official demo site, used to close features that are not needed in the real development environment
-export const isAntDesignProOrDev = (): boolean => {
-    const { NODE_ENV } = process.env;
-    if (NODE_ENV === 'development') {
-        return true;
-    }
-    return isAntDesignPro();
-};
+// export const isAntDesignProOrDev = (): boolean => {
+//     const { NODE_ENV } = process.env;
+//     if (NODE_ENV === 'development') {
+//         return true;
+//     }
+//     return isAntDesignPro();
+// };
 
 export const getPageQuery = () => parse(window.location.href.split('?')[1]);
 

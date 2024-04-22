@@ -280,6 +280,22 @@ export default () => {
 
   }
 
+  const printPickingSlip = async (instanceId: number) => {
+    try {
+      await printPdf<{ id: number }>(requestActions)({
+        reportName: 'export-picking-slip',
+        data: { id: instanceId }
+      }, async () => {
+        await printPdf<{ id: number }>(requestActions)({
+          reportName: 'export-gate-pass',
+          data: { id: instanceId }
+        })
+      });
+    } catch (error: any) {
+      message.error(error.message || "Failed to generate report.")
+    }
+  }
+
   const getActions = (from: UiType, item?: AllocatedLoadingDockBase) => {
 
     const selected = item || selectedItem
@@ -318,7 +334,7 @@ export default () => {
                 onFetchAllocatedDockDetail(selected?.id)
               }
               const rs = await loadInstance(instanceId || 0)
-              setPrinting(rs.id)
+              await printPickingSlip(rs.id)
               await loadData()
             }
           })
@@ -348,21 +364,9 @@ export default () => {
         main: isLoaded,
         visible: !isPending && instanceId,
         icon: <PrinterOutlined />, onClick: async () => {
-          // const rs = await loadInstance(instanceId || 0)
-          // setPrinting(rs.id)
-          try {
-            await printPdf<{ id: number }>(requestActions)({
-              reportName: 'export-picking-slip',
-              data: { id: instanceId || 0 }
-            }, async () => {
-              await printPdf<{ id: number }>(requestActions)({
-                reportName: 'export-gate-pass',
-                data: { id: instanceId || 0 }
-              })
-            });
-          } catch (error: any) {
-            message.error(error.message || "Failed to generate report.")
-          }
+
+          await printPickingSlip(instanceId || 0)
+
         }
       },
       {

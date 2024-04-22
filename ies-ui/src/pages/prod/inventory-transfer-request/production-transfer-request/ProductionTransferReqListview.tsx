@@ -55,6 +55,7 @@ export default ({ onAdd }: Props) => {
     visible: boolean;
     id?: string;
     transfer_id?: string;
+    data?:any
   }>({
     visible: false,
     id: undefined,
@@ -325,7 +326,7 @@ export default ({ onAdd }: Props) => {
                     <Button
                       style={{ width: '30%' }}
                       onClick={() => {
-                        setApproveModal({ visible: true, id: r.id, transfer_id: r.transfer_id });
+                        setApproveModal({ visible: true, id: r.id, transfer_id: r.transfer_id,data:r });
                       }}
                     >
                       Approve
@@ -421,25 +422,54 @@ export default ({ onAdd }: Props) => {
         onCancel={() => {
           setApproveModal({ visible: false, id: undefined });
         }}
-        onSave={async (id, remark, transfer_id) => {
-          const response: { data: string; message: string } = (await services.status_change({
+        onSave={async (id, remark, transfer_id,data) => {
+          await services.save_to_sap({
             id: id,
-            remark: remark,
+            vendorCode: '',
+            vendorName: '',
+            fromWarehouse: data.from_warehouse.map((i:any)=>(i.whsCode)).toString(),
+            toWarehouse: data.to_warehouse.map((i:any)=>(i.whsCode)).toString(),
+            apiReferenceNo: '',
+            comments: remark === null ? '' : remark === undefined ? '' : remark,
+            transferRequestDetails: data.item.map((v:any) => ({
+                ...v,
+                itemCode:v.item_code,
+                itemName:v.item_name,
+                fromWarehouse: data.from_warehouse.map((i:any)=>(i.whsCode)).toString(),
+                toWarehouse: data.to_warehouse.map((i:any)=>(i.whsCode)).toString(),
+                remark: v.remark === null ? '' : v.remark === undefined ? '' : v.remark,
+              })),
             statusChange: 'request-production-approve',
             state: 'in-progress',
-          })) as { data: string; message: string };
-          await services.save_activites({
             activities_name: 'Production Approval',
             action: 'Approved',
-            remark: remark,
             transfer_request: transfer_id,
-          });
+            postingDate:new Date(data.posting_date).toISOString(),
+            docDueDate:new Date(data.due_date).toISOString(),
+            taxDate:new Date(data.posting_date).toISOString(),
+          })
           setApproveModal({ visible: false, id: undefined });
-          message.info(response.message);
+          message.success("Success");
           actionRef.current?.reload();
+          // const response: { data: string; message: string } = (await services.status_change({
+          //   id: id,
+          //   remark: remark,
+          //   statusChange: 'request-production-approve',
+          //   state: 'in-progress',
+          // })) as { data: string; message: string };
+          // await services.save_activites({
+          //   activities_name: 'Production Approval',
+          //   action: 'Approved',
+          //   remark: remark,
+          //   transfer_request: transfer_id,
+          // });
+          // setApproveModal({ visible: false, id: undefined });
+          // message.info(response.message);
+          // actionRef.current?.reload();
         }}
         id={approveModel.id ?? ''}
         transfer_id={approveModel.transfer_id ?? ''}
+        data={approveModel.data?? {}}
       />
 
       <ExportExcel

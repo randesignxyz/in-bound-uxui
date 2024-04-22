@@ -80,32 +80,31 @@ export type TransferRequestAdvanceParams = {
 
 export interface TransferRequestCreate {
   items: TransferRequestItem[];
-  taxDate: moment.Moment;
   transfer_type: string;
   business_unit: string;
-  fromWarehouse: string;
-  toWarehouse: string;
-  vendorCode: string;
-  vendorName: string;
-  productionOfficer: string;
-  apiReferenceNo: string;
   key: string;
   item_count: number;
   activities: ActivitiesItem[];
 }
 
 export interface SAPTransferRequest {
-  postingDate?: moment.Moment;
-  docDueDate?: moment.Moment;
-  taxDate?: moment.Moment;
+  postingDate?: string;
+  docDueDate?: string;
+  taxDate?: string;
   vendorCode: string;
   vendorName: string;
-  productionOfficer: string;
+  // productionOfficer: string;
   fromWarehouse: string;
   toWarehouse: string;
   apiReferenceNo: string;
   comments: string;
   transferRequestDetails: SAPTransferRequestDetail[];
+  statusChange: string;
+  state:string;
+  activities_name:string;
+  action:string;
+  transfer_request:string;
+  id:string
 }
 
 export interface SAPTransferRequestDetail {

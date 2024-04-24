@@ -320,7 +320,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
                     setIsSuggested(e?.toString()=='suggestion'?true:false)
                   }}
                 >
-                  <CheckCard avatar={<img src={suggestionIcon} style={{height:18, width:21}}/>} title='Adjustable Customer' size='small'  value="suggestion"  style={{width:'190px',borderStyle:'dashed'}}/>
+                  {isPending&&<CheckCard avatar={<img src={suggestionIcon} style={{height:18, width:21}}/>} title='Adjustable Customer' size='small'  value="suggestion"  style={{width:'190px',borderStyle:'dashed'}}/>}
                 </CheckCard.Group>
               </Space>
             }

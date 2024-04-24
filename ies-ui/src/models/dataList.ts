@@ -100,7 +100,7 @@ type DataList =
     data: Paging<PackagesLess>;
   }
   | {
-    type: 'stock';
+    type: 'stock-control';
     criteria?: any;
     data: Paging<StockControlLess>;
   }
@@ -294,7 +294,7 @@ type MomainType =
   | 'sale-order-delivery'
   | 'trade-offer'
   | 'list-notification'
-  | 'stock'
+  | 'stock-control'
   | 'sale-invoice'
   | 'team-work'
   | 'stockStore'

@@ -5,6 +5,7 @@ import customerIcon from '@/assets/customer.png';
 import orderIcon from '@/assets/order-items.png';
 import customerGroupIcon from '@/assets/people.png';
 import suggestionIcon from '@/assets/planner.png';
+import customerPricingIcon from '@/assets/price-comparison.png';
 import pricingIcon from '@/assets/pricing.png';
 import productIcon from '@/assets/product.png';
 import ListMenuComp from '@/components/ListMenu';
@@ -19,6 +20,7 @@ export const RetailerPath = {
   customergroup: '/retailer/group/customer',
   category: '/retailer/categories',
   ingredient: '/retailer/ingredients',
+  customer_pricing: '/retailer/customer_pricing',
   pricing: '/retailer/pricings',
   registration: '/retailer/registrations',
   settings: '/retailer/settings',
@@ -42,7 +44,7 @@ export default () => {
       description: 'Customer List.',
       link: `${RetailerPath.customer}/list`,
       icon: customerIcon,
-      visible: access.canViewRetailer,
+      visible: access.canAccessRetailerSalesperons || access.canViewRetailer,
     },
     {
       id: 'retailer_product',
@@ -69,12 +71,20 @@ export default () => {
       visible: access.canViewRetailer,
     },
     {
+      id: 'retailer_customer_pricing',
+      name: 'Customer Pricing',
+      description: 'Pricing Assign by SE.',
+      link: `${RetailerPath.customer_pricing}/create`,
+      icon: customerPricingIcon,
+      visible: access.canAccessRetailerSalesperons || access.canAccessRetailer,
+    },
+    {
       id: 'retailer_pricing',
       name: 'Pricing Rule',
       description: 'Pricing List.',
       link: `${RetailerPath.pricing}/list`,
       icon: pricingIcon,
-      visible: access.canCreateRetailer,
+      visible: access.canAccessRetailerSalesperons || access.canViewRetailer,
     },
     {
       id: 'retailer_cutomer_group',
@@ -82,7 +92,7 @@ export default () => {
       description: 'Group List.',
       link: `${RetailerPath.customergroup}/list`,
       icon: customerGroupIcon,
-      visible: access.canCreateRetailer,
+      visible: access.canAccessRetailerSalesperons || access.canCreateRetailer,
     },
     {
       id: 'registration_form',

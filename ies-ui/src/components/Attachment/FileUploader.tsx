@@ -8,6 +8,7 @@ import { Button, Descriptions, List, message, Space, Typography, Upload } from '
 import { UploadFile } from 'antd/lib/upload/interface';
 import React, { useEffect, useState } from 'react';
 import FileUploaderInfoModal from './FileUploaderInfoModal';
+import { kc } from '@/auth';
 
 export type UploadType = UploadFile<string> & { title?: string; description?: string };
 type FileInfoType = {

@@ -397,12 +397,28 @@ export default [
     access: 'canAccessARMenuItem',
     component: './sale/daily_report',
   },
+  {
+    path: '/sale/visit/:view/*',
+    name: 'sales-visit',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessAllMenuDSD',
+    component: './sale/visit',
+  },
+  {
+    path: '/sale/pricing/:view/*',
+    name: 'item-sales-line-price',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessAllMenuDSD',
+    component: './sale/pricing',
+  },
   /******************* Retailer *******************/
   {
     path: '/retailer',
     name: 'retailer',
     icon: 'UnorderedListOutlined',
-    access: 'canViewRetailer',
+    access: 'canViewRetailerSalesperons',
     component: './sale/retailer',
   },
 
@@ -420,7 +436,7 @@ export default [
     name: 'retailer_cutomer_group',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canCreateRetailer',
+    access: 'canViewRetailerSalesperons',
     component: './sale/retailer/groupCustomer',
   },
 
@@ -437,7 +453,7 @@ export default [
     name: 'retailer_customer',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canViewRetailer',
+    access: 'canViewRetailerSalesperons',
     component: './sale/retailer/customer',
   },
   {
@@ -457,12 +473,22 @@ export default [
     access: 'canAccessRetailer',
     component: './sale/retailer/ingredient',
   },
+
+  {
+    path: '/retailer/customer_pricing/:view/*',
+    name: 'retailer_customer_pricing',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canViewRetailerSalesperons',
+    component: './sale/retailer/customer_pricing',
+  },
+
   {
     path: '/retailer/pricings/:view/*',
     name: 'retailer_pricing',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canCreateRetailer',
+    access: 'canViewRetailerSalesperons',
     component: './sale/retailer/pricing',
   },
   {
@@ -481,7 +507,6 @@ export default [
     access: 'canCreateRetailer',
     component: './sale/retailer/settings',
   },
-
   /******************* Retailer *******************/
 
   /******************* Developer *******************/
@@ -947,101 +972,99 @@ export default [
   //  ================= END FLEET =================
 
 
-// ================= DMS =======================
-{
-  path:"/dms",
-  name:"dms",
-  icon:"FileSearchOutlined",
-  component:"./dms",
-  access:"canAccessDMSMenu",
-  redirect:"/dms/workspace/library"
-},
+  // ================= DMS =======================
+  {
+    path: "/dms",
+    name: "dms",
+    icon: "FileSearchOutlined",
+    component: "./dms",
+    access: "canAccessDMSMenu",
+    redirect: "/dms/workspace/library"
+  },
 
-{
-  path:"/dms/workspace/:view/*",
-  name:"dms",
-  icon:"FileSearchOutlined",
-  component:"./dms",
-  access:"canAccessDMSMenu",
-  hideInMenu: 'true',
-},
+  {
+    path: "/dms/workspace/:view/*",
+    name: "dms",
+    icon: "FileSearchOutlined",
+    component: "./dms",
+    access: "canAccessDMSMenu",
+    hideInMenu: 'true',
+  },
 
-{
-  path:"/dms/setting/:view/*",
-  name:"dms",
-  component:"./dms/setting",
-  access:"canAccessDMSMenu",
-  hideInMenu: 'true',
-},
-{
-  path:"/dms/folder/:view/*",
-  name:"dms",
-  component:"./dms/folder",
-  access:"canAccessDMSMenu",
-  hideInMenu: 'true',
-},
-{
-  path:"/dms/document/:view/*",
-  name:"dms",
-  component:"./dms/documentation",
-  access:"canAccessDMSMenu",
-  hideInMenu: 'true',
-},
-{
-  path: '/external/dms/document/:view/*',
-  layout:false,
-  name:"dms",
-  component:"./dms/documentation",
-  access:"canAccessDMSMenu",
-  hideInMenu: 'true',
-},
-{
-  path:"/dms/contracts/:view/*",
-  name:"dms",
-  component:"./dms/contract",
-  access:"canAccessDMSMenu",
-  hideInMenu: 'true',
-},
-{
-  path:"/dms/share/:view/:id",
-  name:"dms",
-  component:"./dms/share",
-  access:"canAccessDMSMenu",
-  hideInMenu: 'true',
-},
-{
-  path:"/dms/company/:view/*",
-  name:"dms",
-  component:"./dms/contract/company",
-  access:"canAccessDMSMenu",
-  hideInMenu: 'true',
-},
-// ==================== END DMS ================
+  {
+    path: "/dms/setting/:view/*",
+    name: "dms",
+    component: "./dms/setting",
+    access: "canAccessDMSMenu",
+    hideInMenu: 'true',
+  },
+  {
+    path: "/dms/folder/:view/*",
+    name: "dms",
+    component: "./dms/folder",
+    access: "canAccessDMSMenu",
+    hideInMenu: 'true',
+  },
+  {
+    path: "/dms/document/:view/*",
+    name: "dms",
+    component: "./dms/documentation",
+    access: "canAccessDMSMenu",
+    hideInMenu: 'true',
+  },
+  {
+    path: '/external/dms/document/:view/*',
+    layout: false,
+    name: "dms",
+    component: "./dms/documentation",
+    access: "canAccessDMSMenu",
+    hideInMenu: 'true',
+  },
+  {
+    path: "/dms/contracts/:view/*",
+    name: "dms",
+    component: "./dms/contract",
+    access: "canAccessDMSMenu",
+    hideInMenu: 'true',
+  },
+  {
+    path: "/dms/share/:view/:id",
+    name: "dms",
+    component: "./dms/share",
+    access: "canAccessDMSMenu",
+    hideInMenu: 'true',
+  },
+  {
+    path: "/dms/company/:view/*",
+    name: "dms",
+    component: "./dms/contract/company",
+    access: "canAccessDMSMenu",
+    hideInMenu: 'true',
+  },
+  // ==================== END DMS ================
 
   //  =================Begin Prod =================
   {
     path: '/prod',
     name: 'prod',
-    icon: 'SettingOutlined',
+    icon: 'ReconciliationOutlined',
     access: 'canAccessProdMenu',
-    component: './prod'
+    component: './prod',
   },
   {
     path: '/prod/inventory-transfer-request/:view/*',
     name: 'inventoryTransferRequest',
-    icon: 'SettingOutlined',
     hideInMenu: 'true',
     access: 'canAccessInventoryTranferRequestMenuItem',
-    component: './prod/inventory-transfer-request'
+    component: './prod/inventory-transfer-request',
   },
 
   {
-    path: '/prod/inventory-transfer/list',
+    path: '/prod/inventory-transfer/:view/*',
     name: 'inventoryTransfer',
-    icon: 'SettingOutlined',
     hideInMenu: 'true',
     access: 'canAccessInventoryTranferMenuItem',
-    component: './prod/inventory-transfer'
+    component: './prod/inventory-transfer/',
   },
 
   //  ================= END Prod =================
@@ -1056,7 +1079,7 @@ export default [
   },
   {
     path: '/',
-    component: 'initial-page',
+    // component: 'initial-page',
     // redirect: '/user/auth',
     redirect: '/task-list',
     // redirect: '/expense/delivery',

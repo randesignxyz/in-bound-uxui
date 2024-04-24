@@ -1,33 +1,33 @@
-import type { TableViewProps } from '@/components/DataCrud/TableView';
+import type { TableViewProps, TableViewSearchParams } from '@/components/DataCrud/TableView';
 import TableView from '@/components/DataCrud/TableView';
 import { formatDate } from '@/pages/utils';
 import type { Paging } from '@/services/API';
-import { getServiceUrl } from '@/services/ApiUrl';
+import { simpleRequestActions } from '@/services/model';
 import type {
   SaveStockControl,
   StockAdvanceSearchParams,
   StockControlLess,
 } from '@/services/sale/data';
 import { EditOutlined, PlusOutlined } from '@ant-design/icons';
+import { PageContainer } from '@ant-design/pro-components';
 import type { ActionType } from '@ant-design/pro-table';
 import { useSetState } from 'ahooks';
-import { Button, message, Modal, Radio, Space, Tag, Tooltip, Upload } from 'antd';
-import type { SortOrder } from 'antd/lib/table/interface';
+import { Button, Modal, Radio, Space, Tag, Tooltip, message } from 'antd';
 import { omit } from 'lodash';
 import { useEffect, useRef, useState } from 'react';
 import { history, useAccess, useModel } from 'umi';
 import { SalePaths } from '../..';
 import EditStockControlFormModal from '../EditStockControlFormModal';
-import { Model } from '../model';
 import StockControlFormModal from '../StockControlFormModal';
+import { Model } from '../model';
+import { StockControlServiceAPI } from '../services';
 import AdvanceSearch from './AdvanceSearch';
-import { kc } from '@/auth';
 
 const StockListView: React.FC<TableViewProps<StockControlLess>> = ({ actionHandlers }) => {
-  const excelType = [
-    'application/vnd.ms-excel',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  ];
+  // const excelType = [
+  //   'application/vnd.ms-excel',
+  //   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  // ];
   const cacheList = useModel('dataList');
   // const [transferModal, setTransferModal] = useSetState<{ visible?: boolean }>();
   const [addNewModal, setAddNewModal] = useSetState<{ visible?: boolean }>({});
@@ -39,46 +39,27 @@ const StockListView: React.FC<TableViewProps<StockControlLess>> = ({ actionHandl
   const access = useAccess();
   const { state, actions, modals } = Model();
   const [advanceSearchParams, setAdvanceSearchParams] = useState<StockAdvanceSearchParams>();
-  const [fileId, setFileId] = useState();
+  // const [fileId, setFileId] = useState();
   const [storageData, setStorageData] = useState<StockControlLess[]>([]);
 
-  const onRequestHandler = (
-    criteria?: { searchValue?: string; advanceSearch?: StockAdvanceSearchParams },
-    pagination?: {
-      pageSize?: number;
-      current?: number;
-    },
-    sort?: Record<string, SortOrder>,
-  ) => {
-    return actions
-      .loadListItem?.(criteria || { advanceSearch: advanceSearchParams }, pagination, sort)
-      .then((it) => {
+  const requestActions = simpleRequestActions();
+  const services = StockControlServiceAPI(requestActions);
+
+  const onRequestHandler = (params: TableViewSearchParams<StockAdvanceSearchParams>) => {
+    try {
+      return services.listStock?.(params).then((it) => {
         setStorageData(it.items);
         return cacheList.cacheDataList({
-          type: 'stock',
-          criteria: criteria?.advanceSearch || advanceSearchParams,
+          type: 'stock-control',
+          criteria: params,
           data: it,
         });
       }) as Promise<Paging<StockControlLess>>;
+    } catch (error: any) {
+      message.error(error.message);
+      return Promise.reject();
+    }
   };
-
-  // const onSaveActionHandler = (data: TopupLess, isView: boolean) => {
-  //   const msgTitle = `Save Transaction`;
-  //   Modal.confirm({
-  //     title: msgTitle,
-  //     content: 'Are you sure:',
-  //     onOk: async () => {
-  //       const result = await actions.transferMoney(data);
-  //       if (result && result.message === 'Ok') {
-  //         setTransferModal({ visible: false });
-  //         message.info(`Your transaction is saved.`);
-  //         isView
-  //           ? history.push(`${SalePaths.stock}/detail/${result.id}`)
-  //           : setForce({ update: force.update + 1 });
-  //       }
-  //     },
-  //   });
-  // };
 
   const onSaveAddNewStoreActionHandler = (data: SaveStockControl, isView: boolean) => {
     const msgTitle = `Save Transaction`;
@@ -93,9 +74,11 @@ const StockListView: React.FC<TableViewProps<StockControlLess>> = ({ actionHandl
           setAddNewModal({ visible: false });
           message.info(`Your transaction is saved.`);
           actionRef.current?.reload();
-          isView
-            ? history.push(`${SalePaths.stock}/detail/${result.id}`)
-            : setForce({ update: force.update + 1 });
+          if (isView) {
+            history.push(`${SalePaths.stock}/detail/${result.id}`);
+          } else {
+            setForce({ update: force.update + 1 });
+          }
         }
       },
     });
@@ -107,50 +90,54 @@ const StockListView: React.FC<TableViewProps<StockControlLess>> = ({ actionHandl
     })();
   }, []);
 
-  const importProps = {
-    name: 'file',
-    action: `${getServiceUrl('WORK_FLOW')}/uploader/upload`,
-    headers: {
-      Authorization: `Bearer ${kc.token}`,
-    },
-    beforeUpload: (file: { type: string; name: any }) => {
-      const isExslFile = excelType.includes(file.type);
-      if (!isExslFile) {
-        message.error(`${file.name} is not a excel file`);
-      }
-      return isExslFile ? true : Upload.LIST_IGNORE;
-    },
-    showUploadList: false,
-    onChange(info: any) {
-      if (info.file.status !== 'uploading') {
-        //console.log(info.file, info.fileList);
-      }
-      if (info.file.status === 'done') {
-        console.log(info);
-        info.fileList = [];
-        setFileId(info.file.response);
+  // const importProps = {
+  //   name: 'file',
+  //   action: `${getServiceUrl('WORK_FLOW')}/uploader/upload`,
+  //   headers: {
+  //     Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+  //   },
+  //   beforeUpload: (file: { type: string; name: any }) => {
+  //     const isExslFile = excelType.includes(file.type);
+  //     if (!isExslFile) {
+  //       message.error(`${file.name} is not a excel file`);
+  //     }
+  //     return isExslFile ? true : Upload.LIST_IGNORE;
+  //   },
+  //   showUploadList: false,
+  //   onChange(info: any) {
+  //     if (info.file.status !== 'uploading') {
+  //       //console.log(info.file, info.fileList);
+  //     }
+  //     if (info.file.status === 'done') {
+  //       console.log(info);
+  //       info.fileList = [];
+  //       setFileId(info.file.response);
 
-        Modal.confirm({
-          title: `Importing file '${info.file.name}'`,
-          content: 'Are you sure?',
-          onOk: async () => {
-            const result = await actions.importSalesStock(fileId || '');
-            // const result = { message: 'Ok' };
-            if (result && result.message === 'Ok') {
-              // setAddNewModal({ visible: false });
-              message.info(`Your records is imported.`);
-              actionRef.current?.reload();
-            }
-          },
-        });
-      } else if (info.file.status === 'error') {
-        message.error(`${info.file.name} file upload failed.`);
-      }
-    },
-  };
+  //       Modal.confirm({
+  //         title: `Importing file '${info.file.name}'`,
+  //         content: 'Are you sure?',
+  //         onOk: async () => {
+  //           const result = await actions.importSalesStock(fileId || '');
+  //           // const result = { message: 'Ok' };
+  //           if (result && result.message === 'Ok') {
+  //             // setAddNewModal({ visible: false });
+  //             message.info(`Your records is imported.`);
+  //             actionRef.current?.reload();
+  //           }
+  //         },
+  //       });
+  //     } else if (info.file.status === 'error') {
+  //       message.error(`${info.file.name} file upload failed.`);
+  //     }
+  //   },
+  // };
 
   return (
-    <>
+    <PageContainer
+      breadcrumb={undefined}
+      title={'Stock Control'}
+      onBack={() => history.push('/sale')}
+    >
       <TableView<
         StockControlLess,
         { searchValue?: string; advanceSearch?: StockAdvanceSearchParams }
@@ -187,38 +174,38 @@ const StockListView: React.FC<TableViewProps<StockControlLess>> = ({ actionHandl
         }
         tableProps={{
           actionRef: actionRef,
-          toolbar: !access.canAccessWarehouse
+          toolbar: !access.canAcessStockControlMenuItem
             ? undefined
             : {
-              actions: [
-                // <Upload {...importProps}>
-                //   <Tooltip placement="top" title="Import">
-                //     <Button type="link" icon={<UploadOutlined />}>
-                //       Import
-                //     </Button>
-                //   </Tooltip>
-                // </Upload>,
-                // <Button
-                //   key={'bt'}
-                //   type="link"
-                //   onClick={() => setTransferModal({ visible: true })}
-                //   icon={<RetweetOutlined />}
-                // />,
-                <Button
-                  key={'bt'}
-                  type="link"
-                  onClick={() => setAddNewModal({ visible: true })}
-                  icon={<PlusOutlined />}
-                />,
-              ],
-              // settings: [
-              //   {
-              //     icon: <SwapOutlined color="blue" />,
-              //     tooltip: 'Transfer Money',
-              //     onClick: () => setAddModal({ visible: true }),
-              //   },
-              // ],
-            },
+                actions: [
+                  // <Upload {...importProps}>
+                  //   <Tooltip placement="top" title="Import">
+                  //     <Button type="link" icon={<UploadOutlined />}>
+                  //       Import
+                  //     </Button>
+                  //   </Tooltip>
+                  // </Upload>,
+                  // <Button
+                  //   key={'bt'}
+                  //   type="link"
+                  //   onClick={() => setTransferModal({ visible: true })}
+                  //   icon={<RetweetOutlined />}
+                  // />,
+                  <Button
+                    key={'bt'}
+                    type="link"
+                    onClick={() => setAddNewModal({ visible: true })}
+                    icon={<PlusOutlined />}
+                  />,
+                ],
+                // settings: [
+                //   {
+                //     icon: <SwapOutlined color="blue" />,
+                //     tooltip: 'Transfer Money',
+                //     onClick: () => setAddModal({ visible: true }),
+                //   },
+                // ],
+              },
         }}
         actionHandlers={{
           onSearchCriteria: (data) => {
@@ -228,13 +215,28 @@ const StockListView: React.FC<TableViewProps<StockControlLess>> = ({ actionHandl
           //   setAddNewModal({ visible: true });
           // },
           onFirstLoad: () =>
-            cacheList.fetchDataList('stock').then((v) => {
+            cacheList.fetchDataList('stock-control').then((v) => {
               if (v) {
                 setAdvanceSearchParams(v.creteria);
                 return v.dataList;
-              } else return onRequestHandler();
+              } else {
+                return onRequestHandler({
+                  criteria: {
+                    advanceSearch: advanceSearchParams,
+                  },
+                });
+              }
             }) as Promise<Paging<StockControlLess>>,
-          onRequest: onRequestHandler,
+
+          onRequest: (criteria, pagination, sort) =>
+            onRequestHandler({
+              criteria: {
+                ...criteria,
+                advanceSearch: advanceSearchParams,
+                sort,
+              },
+              pagination,
+            }),
           onAdvanceSearchClicked: () => modals.showModal('advanceSearch'),
         }}
         columns={[
@@ -282,10 +284,10 @@ const StockListView: React.FC<TableViewProps<StockControlLess>> = ({ actionHandl
                   ? 'default'
                   : //: r.status === 'approved'
                   r.status === 'open'
-                    ? 'success'
-                    : r.status === 'canceled' || r.status === 'closed'
-                      ? 'magenta'
-                      : 'warning';
+                  ? 'success'
+                  : r.status === 'canceled' || r.status === 'closed'
+                  ? 'magenta'
+                  : 'warning';
               return (
                 <span>
                   <Tag color={color}>{r.status}</Tag>
@@ -309,22 +311,22 @@ const StockListView: React.FC<TableViewProps<StockControlLess>> = ({ actionHandl
           },
           access.canAcessStockControlMenuItem
             ? {
-              title: '',
-              align: 'center',
-              render: (_, r) => {
-                return (
-                  <Tooltip title="Edit" key="edit">
-                    <EditOutlined
-                      style={{ color: '#448DF7' }}
-                      onClick={() => {
-                        setEditModal({ visible: true, record: r });
-                      }}
-                    />
-                  </Tooltip>
-                );
-                // return <Checkbox defaultChecked={r.isActive ? true : false} disabled />;
-              },
-            }
+                title: '',
+                align: 'center',
+                render: (_, r) => {
+                  return (
+                    <Tooltip title="Edit" key="edit">
+                      <EditOutlined
+                        style={{ color: '#448DF7' }}
+                        onClick={() => {
+                          setEditModal({ visible: true, record: r });
+                        }}
+                      />
+                    </Tooltip>
+                  );
+                  // return <Checkbox defaultChecked={r.isActive ? true : false} disabled />;
+                },
+              }
             : {},
         ]}
       />
@@ -396,7 +398,7 @@ const StockListView: React.FC<TableViewProps<StockControlLess>> = ({ actionHandl
         }}
         onCancel={() => setAddNewModal({ visible: false })}
         actionHandlers={{
-          onLoadInitData: () => { },
+          onLoadInitData: () => {},
           onSave: onSaveAddNewStoreActionHandler,
           onFetchLastStockControl: (empNo: string) => {
             actions.fetchLastStockControl(empNo);
@@ -430,7 +432,7 @@ const StockListView: React.FC<TableViewProps<StockControlLess>> = ({ actionHandl
           actionRef.current?.reloadAndRest?.();
         }}
       />
-    </>
+    </PageContainer>
   );
 };
 

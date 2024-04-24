@@ -7,7 +7,7 @@ import {
   ProFormTextArea,
 } from '@ant-design/pro-components';
 import { history } from '@umijs/max';
-import { Button, Card, Col, message, Modal, Row } from 'antd';
+import { Button, Card, Col, Modal, Row, Spin, message } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { useEffect, useState } from 'react';
 import { RetailerPath } from '..';
@@ -105,101 +105,103 @@ export default ({ id, type }: Props) => {
   };
 
   return (
-    <ProForm
-      form={form}
-      {...layout}
-      layout="horizontal"
-      submitter={{
-        render: () => {
-          return (
-            <FooterToolbar>
-              {type === 'new' && (
-                <Button
-                  onClick={() => {
-                    history.push(`${RetailerPath.customergroup}/list`);
-                  }}
-                >
-                  Cancel
-                </Button>
-              )}
-              {type === 'new' && (
-                <Button
-                  onClick={() => {
-                    form.resetFields();
-                  }}
-                >
-                  Clear
-                </Button>
-              )}
-              {type === 'edit' && (
-                <Button
-                  onClick={() => {
-                    history.push(`${RetailerPath.customergroup}/detail/${id}`);
-                  }}
-                >
-                  Cancel
-                </Button>
-              )}
-              {type === 'edit' && (
-                <Button
-                  onClick={() => {
-                    form.resetFields();
-                  }}
-                >
-                  Reset
-                </Button>
-              )}
-              {type === 'new' && (
+    <Spin spinning={requestActions.request?.loading}>
+      <ProForm
+        form={form}
+        {...layout}
+        layout="horizontal"
+        submitter={{
+          render: () => {
+            return (
+              <FooterToolbar>
+                {type === 'new' && (
+                  <Button
+                    onClick={() => {
+                      history.push(`${RetailerPath.customergroup}/list`);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                )}
+                {type === 'new' && (
+                  <Button
+                    onClick={() => {
+                      form.resetFields();
+                    }}
+                  >
+                    Clear
+                  </Button>
+                )}
+                {type === 'edit' && (
+                  <Button
+                    onClick={() => {
+                      history.push(`${RetailerPath.customergroup}/detail/${id}`);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                )}
+                {type === 'edit' && (
+                  <Button
+                    onClick={() => {
+                      form.resetFields();
+                    }}
+                  >
+                    Reset
+                  </Button>
+                )}
+                {type === 'new' && (
+                  <Button
+                    type="primary"
+                    onClick={() => {
+                      onSaveActionHandler(true);
+                    }}
+                  >
+                    Save & Add New
+                  </Button>
+                )}
                 <Button
                   type="primary"
                   onClick={() => {
-                    onSaveActionHandler(true);
+                    onSaveActionHandler();
                   }}
                 >
-                  Save & Add New
+                  {type === 'new' ? 'Save & View' : 'Edit'}
                 </Button>
-              )}
-              <Button
-                type="primary"
-                onClick={() => {
-                  onSaveActionHandler();
-                }}
-              >
-                {type === 'new' ? 'Save & View' : 'Edit'}
-              </Button>
-            </FooterToolbar>
-          );
-        },
-      }}
-    >
-      <BreadCrumbCom separator=">" routes={routes} />
-      <Card
-        title={
-          'General Info'
-          // <TitleCard
-          // title="General Info"
-          // tagLable={type === 'new' ? 'New' : 'Edit'}
-          // color={type === 'new' ? 'blue' : 'warning'}
-          // />
-        }
-        size="small"
-        style={{ marginTop: 10, marginBottom: 20 }}
+              </FooterToolbar>
+            );
+          },
+        }}
       >
-        <Row gutter={50}>
-          <Col span={12}>
-            <ProFormText
-              label="Group Name"
-              name="name"
-              rules={[{ message: 'Please select product item.' }]}
-              required={true}
-            />
-            <ProFormTextArea label="Description" name="description" fieldProps={{ rows: 3 }} />
-            {type === 'new' && (
-              <ProFormSwitch name="isDefault" label="Set Default" disabled={disabledDefault} />
-            )}
-          </Col>
-        </Row>
-      </Card>
-    </ProForm>
+        <BreadCrumbCom separator=">" routes={routes} />
+        <Card
+          title={
+            'General Info'
+            // <TitleCard
+            // title="General Info"
+            // tagLable={type === 'new' ? 'New' : 'Edit'}
+            // color={type === 'new' ? 'blue' : 'warning'}
+            // />
+          }
+          size="small"
+          style={{ marginTop: 10, marginBottom: 20 }}
+        >
+          <Row gutter={50}>
+            <Col span={12}>
+              <ProFormText
+                label="Group Name"
+                name="name"
+                rules={[{ message: 'Please select product item.' }]}
+                required={true}
+              />
+              <ProFormTextArea label="Description" name="description" fieldProps={{ rows: 3 }} />
+              {type === 'new' && (
+                <ProFormSwitch name="isDefault" label="Set Default" disabled={disabledDefault} />
+              )}
+            </Col>
+          </Row>
+        </Card>
+      </ProForm>
+    </Spin>
   );
 };

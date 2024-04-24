@@ -14,7 +14,7 @@ const ImageUploader: React.FC<{
   required?: boolean;
 }> = ({ title, service = 'FILE', multiple, onSetFiles, required }) => {
   const [files, setFiles] = useState<UploadFile[]>([]);
-  const token = kc.token // localStorage.getItem('accessToken');
+  const token = localStorage.getItem('accessToken');
   const uploadUrl = () => {
     if ((service = 'FILE')) {
       return `${getServiceUrl('FILE')}/upload`;

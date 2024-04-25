@@ -399,6 +399,7 @@ export type GratisSuggestedCustomer= {
   soQty: number;
   soInvQty: number;
   totalQty: number;
+  gratisSettlementConfigId?: number;
 }
 export interface  GratisSuggestedCustomerVisit {
   id: number,  

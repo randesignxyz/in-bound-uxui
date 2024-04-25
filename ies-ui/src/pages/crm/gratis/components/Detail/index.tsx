@@ -155,9 +155,9 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
     setCriteria(v => ({ ...v, searchValue: value }));
     actionRef.current?.reloadAndRest?.();
   };
-  const onSearchSuggestedCustomerHandler = (value: string) => {
-    setCriteriaSuggested(v => ({ ...v, searchValue: value }));
-    actionSuggestedCustVisitRef.current?.reloadAndRest?.();
+  const onSearchSuggestedCustomerHandler = (value: string, cb: (v: boolean) => void) => {
+    setCriteriaSuggested(v => ({ ...v, searchValue: value }));  
+    cb?.(true)
   };
   const onSearchStatusHandler = (value: string) => {
     setCriteria(v => ({ ...v, status: value }));
@@ -234,7 +234,8 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
       }
     })
   }
-  const adjustHandler = (verifyId: number,adjItems: AdjustItem[]  , cb:(v: boolean)=>void)=>{       
+  const adjustHandler = (verifyId: number,adjItems: AdjustItem[]  , cb:(v: boolean)=>void)=>{   
+    console.log('adj list',adjItems)    
     if(adjItems && adjItems.length==0) {
         message.warning('No data selected')
     }else{
@@ -255,9 +256,9 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
         })  
     }      
   }
-  const initailSuggestionData =async (incentiveSettlementId:number,verifyId: number)=>{
+  const initailSuggestionData =async (incentiveSettlementId:number,verifyId: number,gratisSettlementConfigId?:number)=>{
     setSuggestionData(undefined)
-    await GratisServices.getListSuggestionItemAdjustment(incentiveSettlementId,verifyId).query(requestActions).then(it=>{
+    await GratisServices.getListSuggestionItemAdjustment(incentiveSettlementId,verifyId, gratisSettlementConfigId).query(requestActions).then(it=>{
       setSuggestionData(it)
     })
    
@@ -319,7 +320,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
                     setIsSuggested(e?.toString()=='suggestion'?true:false)
                   }}
                 >
-                  <CheckCard avatar={<img src={suggestionIcon} style={{height:18, width:21}}/>} title='Adjustable Customer' size='small'  value="suggestion"  style={{width:'190px',borderStyle:'dashed'}}/>
+                  {isPending&&<CheckCard avatar={<img src={suggestionIcon} style={{height:18, width:21}}/>} title='Adjustable Customer' size='small'  value="suggestion"  style={{width:'190px',borderStyle:'dashed'}}/>}
                 </CheckCard.Group>
               </Space>
             }
@@ -336,7 +337,11 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
                }}     
                 headerTitle={               
                   <Space>
-                    <Input.Search allowClear onSearch={onSearchSuggestedCustomerHandler} />                    
+                    <Input.Search allowClear 
+                      onSearch={(value: string)=>onSearchSuggestedCustomerHandler(value,(c:boolean)=>{
+                        actionSuggestedRef.current?.reloadAndRest?.();
+                      })} 
+                    />                    
                   </Space>    
                 } 
                 request={async (paging) => {
@@ -406,7 +411,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
                   render: (_,r) => //<Button type='link' icon={<EditOutlined/>}>Adjust</Button>
                   <SuggestionItemAdjustTranModal loading={requestActions.request?.loading} data={suggestionData ||[]} incentiveSettlementId = {r.incentiveSettlementId} verifyId={r.gcontractVerifyId} customerCode={r.customer?.code} title={'Adjustment'} 
                     onSave={(status, remarks, adjItems, cb) => adjustHandler(r.gcontractVerifyId, adjItems, cb)} 
-                    trigger={<Button type='link' icon={<EditOutlined/>} onClick={()=>initailSuggestionData(r.incentiveSettlementId,r.gcontractVerifyId)}>Adjust</Button>} 
+                    trigger={<Button type='link' icon={<EditOutlined/>} onClick={()=>initailSuggestionData(r.incentiveSettlementId,r.gcontractVerifyId,r.gratisSettlementConfigId)}>Adjust</Button>} 
                   />
                 }
               ]} 
@@ -423,7 +428,11 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
                }}     
                 headerTitle={               
                   <Space>
-                    <Input.Search allowClear onSearch={onSearchSuggestedCustomerHandler} />       
+                    <Input.Search allowClear 
+                     onSearch={(value: string)=>onSearchSuggestedCustomerHandler(value,(c:boolean)=>{
+                      actionSuggestedCustVisitRef.current?.reloadAndRest?.();
+                    })} 
+                    />       
                     {isPending&&isSynchAll&&<Button type='primary' icon={<SyncOutlined/>} onClick={()=>synchroGratisCustVisitAll(data?.id||0)}>Synch All</Button>}         
                   </Space>    
                 } 

@@ -22,7 +22,8 @@ export default ({
   const [loading, setLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState<string>();
 
-  const token = kc.token // localStorage.getItem('accessToken');
+  const token = kc.token 
+  // const token = localStorage.getItem('accessToken');
   const uploadUrl = () => `${getServiceUrl('FILE')}/upload`;
 
   const getFileUrl = async (fileId: string) => {
@@ -49,7 +50,7 @@ export default ({
   return (
     <>
       <Space direction="vertical" align="center">
-        <Image style={style} src={imageUrl ? imageUrl : defualtImage} />
+        <Image style={style} src={imageUrl ? imageUrl : defualtImage} width={200} height={150} />
         {displayOnly ? (
           ''
         ) : (

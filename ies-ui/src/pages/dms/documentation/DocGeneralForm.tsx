@@ -7,7 +7,6 @@ import { simpleRequestActions } from "@/services/model";
 interface Props {
     lookupData?: LookupDataDTO[];
 }
-
 export default ({ lookupData }: Props) => {
     const requestAction = simpleRequestActions();
     return (
@@ -70,7 +69,6 @@ export default ({ lookupData }: Props) => {
                         }}
                     />
                 </Col>
-              
                 <Col span={24}>
                     <ProFormTextArea
                         name={"description"}

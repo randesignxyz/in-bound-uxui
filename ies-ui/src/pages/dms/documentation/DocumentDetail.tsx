@@ -12,7 +12,6 @@ interface Props {
     actionRef?: any;
 }
 export default ({ document, actionRef }: Props) => {
-
     const [pathmodalState, setPathModalState] = useState<{
         visible?: {
             name: "DRAWER";
@@ -101,8 +100,6 @@ export default ({ document, actionRef }: Props) => {
                                                 title: "function",
                                                 render: (_, r) => document?.department?.name
                                             },
-
-
                                             {
                                                 title: "OpCos",
                                                 render: (_, r) => document?.opCo?.name
@@ -113,11 +110,9 @@ export default ({ document, actionRef }: Props) => {
                                                 render: (_, r) => r.documentation?.description,
                                                 span: 2
                                             },
-
-
                                         ]}
                                     />
-                                </Col>
+                                </Col> 
                                 <Col span={12}>
                                     <ProDescriptions
                                         dataSource={document}
@@ -158,21 +153,16 @@ export default ({ document, actionRef }: Props) => {
                                                 title: "Status",
                                                 render: (_, r) => <Badge status={r.status == "Inactive" ? "error" : "success"} text={r.status} />,
                                             },
-
-
                                         ]}
                                     />
                                 </Col>
-
                             </Row>
-
                         )
                     }
                     <ProDescriptions
                         dataSource={document}
                         column={{ md: 1, sm: 1, lg: 2, xl: 2 }}
                         actionRef={actionRef}
-
                     />
                 </ProCard>
                 <ProCard

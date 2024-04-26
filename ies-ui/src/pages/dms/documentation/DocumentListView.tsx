@@ -51,7 +51,6 @@ export default ({ paramSearch, libraryId }: Props) => {
             division: "DOC" | "CONTRACT"
         }
     }>();
-
     const [shareDrawerState, setShareDrawerState] = useState<{
         visible?: {
             name: "DRAWER";
@@ -84,12 +83,10 @@ export default ({ paramSearch, libraryId }: Props) => {
             documentId: number;
         }
     }>();
-
     const [advanceSearchParams, setAdvanceSearchParams] = useState<DocumentationAdvanceSearch>({
         status: "ALL",
     });
     const [advanceSearch, setAdvanceSearch] = useState<{ visible: boolean }>();
-
     const actionItem = (record: DocumentationDTO): MenuProps["items"] => [
 
         {
@@ -271,7 +268,6 @@ export default ({ paramSearch, libraryId }: Props) => {
             }),
         },
     ];
-
     return (
         <>
             <TableView<DocumentationDTO, { searchValue?: string }>
@@ -397,26 +393,29 @@ export default ({ paramSearch, libraryId }: Props) => {
                         title: "#",
                         sorter: "code",
                         width: 180,
-                        fixed:true,
-                        render: (_, r) => (<Space align="center" ><Button size="small" type="link" icon={<ExportOutlined />} onClick={() => {
-                            window.open(`/external/dms/document/detail/${r.id}`)?.focus();
-                        }} /><span>{r.documentation.docNumber}</span></Space>),
+                        render: (_, r) => (<Space align="center" >
+                            <Button size="small" type="link" icon={<ExportOutlined />} onClick={() => {
+                                window.open(`/external/dms/document/detail/${r.id}`)?.focus();
+                            }} />
+                            <Button
+                                type="link"
+                                size="small"
+                                onClick={() => history.push(`${DMSPaths.document}/detail/${r.id}`)}
+                            >
+                                {r.documentation.docNumber?r.documentation.docName:"N/A"}
+                            </Button>
+                        </Space>),
                     },
                     {
                         title: "Name",
                         sorter: "name",
-                        render: (_, r) => (
-                            <Button
-                                type="link"
-                                onClick={() => history.push(`${DMSPaths.document}/detail/${r.id}`)}
-                            >
-                                {r.documentation.docName}
-                            </Button>)
+                        width:400,
+                        render:(_,r)=>r.documentation?.docName,
                     },
                     {
                         title: "Expiry Date",
                         sorter: "expiryDate",
-                        fixed:true,
+                        fixed: true,
                         render: (_, r) => <span style={{ color: expriationStatus(r.term?.expiryDate) > 0 ? "red" : "" }}>{formatDate(r.term.expiryDate)}</span>
                     },
                     {
@@ -424,14 +423,14 @@ export default ({ paramSearch, libraryId }: Props) => {
                         sorter: "createdDate",
                         dataIndex: "createdDate",
                         valueType: "date",
-                        fixed:true,
+                        fixed: true,
                     },
                     {
                         title: "Updated",
                         sorter: "lastModifiedDate",
                         dataIndex: "lastModifiedDate",
                         valueType: "date",
-                        fixed:true,
+                        fixed: true,
                     },
                     {
                         title: "Type",
@@ -440,16 +439,15 @@ export default ({ paramSearch, libraryId }: Props) => {
                     {
                         title: "Status",
                         sorter: "status",
-                        fixed:true,
+                        fixed: true,
                         render: (_, r) => <Badge text={r.status} status={StatusColor.getColorStatus(r.status)} />
                     },
                     {
                         title: "Shared",
-                        align:"center",
+                        align: "center",
                         render: (_, r) => {
                             if (r.share > 0) {
                                 return <Button size="small" icon={<ShareAltOutlined />} type="link" onClick={() => setQuickViewDrawerState({ visible: { name: "DRAWER", docId: r.id } })} />
-                                // return <Badge size="small" count={r.share}> <Button size="small" icon={<ShareAltOutlined />} type="link" onClick={() => setQuickViewDrawerState({ visible: { name: "DRAWER", docId: r.id } })} /> </Badge>
                             }
                             else {
                                 return ""
@@ -475,6 +473,7 @@ export default ({ paramSearch, libraryId }: Props) => {
                 open={advanceSearch?.visible}
                 onClose={() => setAdvanceSearch({ visible: false })}
                 onReset={() => {
+                    setAdvanceSearchParams({})
                     actionRef.current?.reloadAndRest?.();
                 }}
                 onSearch={(data) => {
@@ -534,19 +533,19 @@ export default ({ paramSearch, libraryId }: Props) => {
                 onCancel={() => setDocumentState(v => ({ ...v, visible: undefined }))}
                 folderId={documentModalState?.visible?.folderId}
                 division={documentModalState?.visible?.division}
-                onSave={async (data: DocumentationCreate) => {
+                onSave={ (data: DocumentationCreate) => {
                     Modal.confirm({
                         title: "Save document",
-                         content:"are you sure?",
-                        onOk: () => {
+                        content: "are you sure?",
+                        onOk:async () => {
                             const entry = {
                                 ...data,
                                 libraryId: libraryId
                             }
-                            services.save(entry);
+                            await services.save(entry);
+                            actionRef.current?.reloadAndRest?.();
                             setDocumentState({ visible: undefined });
                             message.success("Success!");
-                            actionRef.current?.reloadAndRest?.();
                         }
                     });
                 }}

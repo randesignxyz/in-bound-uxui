@@ -17,16 +17,13 @@ interface Props extends DrawerFormProps {
     docId?: number;
     type?: string
 }
-
 const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...props }: Props) => {
-
     const requestAction = simpleRequestActions();
     const [form] = useForm<ShareCreate>();
     const [recipeintState, setRecipeintState] = useState<{
         recipeint?:boolean;
         group?:boolean;
     }>();
-
     useEffect(()=>{
         form.resetFields();
         setRecipeintState({group:false, recipeint:false})
@@ -123,9 +120,7 @@ const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...pr
                             }
                         }}
                     />
-                      
                         <p>OR</p>
-                    
                         <ProFormSelect
                             name={"groupId"}
                             label="User Group"
@@ -153,10 +148,7 @@ const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...pr
                                 }))
                             }}
                         />
-
-
                         <Divider orientation="left">Setting</Divider>
-
                         <Row gutter={16}>
                             <Col span={12}>
                                 <ProFormDatePicker
@@ -212,13 +204,9 @@ const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...pr
                             name={"description"}
                             label="Description"
                         />
-
-
                     </>
-
                 )
             }
-
         </DrawerForm>
     )
 }

@@ -102,6 +102,13 @@ const VehicleAction = {
     actionName: 'find-meter-history',
     payload: param ,
   }),
+
+  changeOdometer: (param:{vId?:String; odometer:number; reason?:string}):ServiceApiType<{odometer:number; reason?:string}> =>({
+    type:"EXEC",
+    actionName:"change-odometer",
+    endpoint:"FLEET",
+    payload:param
+  })
 };
 
 export const VehicleServiceAPI = (requestActions: RequestActions) => {
@@ -156,6 +163,8 @@ export const VehicleServiceAPI = (requestActions: RequestActions) => {
       singleRequest<MeterHistoryDTO>(VehicleAction.findMeterHistory(param))(
         requestActions,
       ) as Promise<MeterHistoryDTO>,
+    
+    changeOdometer: (params:{vId?:string; odometer:number; reason?:string})=>singleRequest<{vId?:String;odometer:number; reason?:string}>(VehicleAction.changeOdometer(params))(requestActions)
 
   };
 };

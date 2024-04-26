@@ -6,7 +6,7 @@ import {
   ProFormText,
 } from '@ant-design/pro-components';
 
-import { Modal, ModalProps, Switch } from 'antd';
+import { Modal, ModalProps, Switch, Tag } from 'antd';
 import { uniqueId } from 'lodash';
 import { useEffect, useRef, useState } from 'react';
 import { AccessoriesDTO, AddVehicleAccessory } from '../../accessory/data';
@@ -111,6 +111,7 @@ const AccessoriesModalForm: React.FC<Props> = ({ data, actionType, onSave, id, .
           {
             dataIndex: 'name',
             editable: false,
+            render:(_,r)=><>{r.name} <Tag color='geekblue' bordered={false}>{r.qty}</Tag></>
           },
           {
             dataIndex: 'quantity',

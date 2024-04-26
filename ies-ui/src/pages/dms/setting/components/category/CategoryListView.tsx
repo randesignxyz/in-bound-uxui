@@ -13,7 +13,6 @@ import { ActionType } from "@ant-design/pro-components";
 interface Props {
     actionKey?:string;
 }
-
 export default ({actionKey}:Props)=>{
     const requestAction = simpleRequestActions();
     const services  = CategoryServiceAPI(requestAction);
@@ -26,7 +25,6 @@ export default ({actionKey}:Props)=>{
         }
     }>();
     const items =(r?:CategoryDTO):MenuProps["items"] =>[
-
         {
             key:"2",
             label:"Edit",
@@ -36,7 +34,6 @@ export default ({actionKey}:Props)=>{
         {
             type:"divider"
         },
-
         {
             key:"4",
             label:"Delete",
@@ -59,8 +56,6 @@ export default ({actionKey}:Props)=>{
           return Promise.reject();
         }
       };
-
-      
     const onSave =async (data:CategoryCreate)=>{
         Modal.confirm({
             title: "Save Accessory record",
@@ -75,12 +70,9 @@ export default ({actionKey}:Props)=>{
                 actionRef.current?.reloadAndRest?.();
             }
         })
-
     }
     useEffect(()=>{
     }, [actionKey]);
-    
-
     return (
         <>
             <TableView<CategoryDTO, {searchValue:string}>
@@ -89,7 +81,6 @@ export default ({actionKey}:Props)=>{
                     {
                         title:"Name",
                         dataIndex:"name",
-
                     },
                     {
                         title:"Modified Date",
@@ -122,7 +113,6 @@ export default ({actionKey}:Props)=>{
                         }
                     },
                 ]}
-
                 tableProps={{
                     actionRef:actionRef
                 }}
@@ -154,10 +144,7 @@ export default ({actionKey}:Props)=>{
                         }
                       }) as Promise<Paging<CategoryDTO>>,
                   }}
-               
             />
-
-
             <CategoryEntryFormModal
                 open={state?.visible?.name === "modal"}
                 onCancel={() => setState(v => ({ ...v, visible: undefined }))}

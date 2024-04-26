@@ -1,6 +1,6 @@
 import { simpleRequestActions } from "@/services/model"
 import { ActionType, ProList } from "@ant-design/pro-components"
-import { Button, Flex } from "antd"
+import { Button, Flex, Tooltip } from "antd"
 import { DeleteOutlined, DownloadOutlined, EyeOutlined, ReloadOutlined } from "@ant-design/icons"
 import { downloadUploadFileV2 } from "@/services/apiGateway"
 import { formateBytes } from "../core"
@@ -14,15 +14,15 @@ import { formatDate } from "@/pages/utils"
 
 interface Props {
     docId?: number;
-    key?:string;
-    tabState?:string;
-    accessKey?:string;
+    key?: string;
+    tabState?: string;
+    accessKey?: string;
 }
 
 export default ({ docId, accessKey, tabState }: Props) => {
     const requestAction = simpleRequestActions();
     const actionRef = useRef<ActionType>();
-    const [forceUpdate, setForceUpdate ]=useState<string>();
+    const [forceUpdate, setForceUpdate] = useState<string>();
     const [state, setState] = useState<{
         visible?: {
             name: "DRAWER",
@@ -37,12 +37,23 @@ export default ({ docId, accessKey, tabState }: Props) => {
         })
     }
     useEffect(() => {
-         actionRef.current?.reload?.();
-    }, [ tabState, forceUpdate]);
-
-    useEffect(()=>{
         actionRef.current?.reload?.();
-    },[forceUpdate])
+    }, [tabState, forceUpdate, docId]);
+
+    useEffect(() => {
+        actionRef.current?.reload?.();
+    }, [forceUpdate])
+
+    const onCheckExtensionFile = (extension?: string) => {
+        if (extension?.split("/")[0] == "image") {
+            return true
+        }
+        else if (extension == "application/pdf") {
+            return true
+        }
+
+        return false
+    }
 
     return (<>
         <ProList<Attachment>
@@ -73,12 +84,11 @@ export default ({ docId, accessKey, tabState }: Props) => {
                 },
                 actions: {
                     render: (_, r) => [
-                        <Button
+                        onCheckExtensionFile(r.fileType) && <Button
                             type="link"
                             onClick={() => setState({ visible: { name: "DRAWER", payloads: r } })}
                             icon={<EyeOutlined />}
-                     
-                        >View</Button>,
+                        />,
                         <Button
                             icon={<DownloadOutlined />}
                             type="link"
@@ -88,28 +98,28 @@ export default ({ docId, accessKey, tabState }: Props) => {
                                     action: "files was downloaded",
                                     actionType: "Download",
                                     source: "DOCUMENTATION",
-
                                 }).then(it => {
                                     downloadUploadFileV2()(r?.fileId || "", r.fileName || "");
                                 });
                             }}
-                        >Download</Button>,
-                        <Button
-                            danger
-                            type="link"
-                            disabled={accessKey== "viewer"}
-                            icon={<DeleteOutlined />}
-                            onClick={async () => {
-                                Modal.confirm({
-                                    title: "Delete Attachment",
-                                    content: "Do you want to continue",
-                                    onOk: () => {
-                                        AttachmentServiceAPI(requestAction).delete(r.id);
-                                        setForceUpdate(Math.random().toString())
-                                    }
-                                })
-                            }}
-                        >Delete</Button>,
+                        />,
+                            <Button
+                                danger
+                                type="link"
+                                disabled={accessKey == "viewer"}
+                                icon={<DeleteOutlined />}
+                                onClick={async () => {
+                                    Modal.confirm({
+                                        title: "Delete Attachment",
+                                        content: "Do you want to continue",
+                                        onOk: () => {
+                                            AttachmentServiceAPI(requestAction).delete(r.id);
+                                            setForceUpdate(Math.random().toString())
+                                        }
+                                    })
+                                }}
+                            />
+
                     ]
                 }
             }}

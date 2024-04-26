@@ -7,7 +7,6 @@ import { DepartmentServiceAPI } from "../department/service";
 import { simpleRequestActions } from "@/services/model";
 import { LibraryServiceAPI } from "./service";
 
-
 interface Props extends FormModalProps {
     onSave: (data: LibraryCreate) => void;
     code?:string;
@@ -15,19 +14,16 @@ interface Props extends FormModalProps {
     libraryId?:number;
 }
 const LibraryModalEntry: React.FC<Props> = ({ onSave,isAdmin, code, libraryId, ...props }: Props) => {
-    
     const [form] = useForm<LibraryCreate>();
     const requestAction = simpleRequestActions();
     const onLaodData = async ()=>{
         const data = await LibraryServiceAPI(requestAction).fetch(libraryId);
        form.setFieldsValue(data);
-        
     }
     useEffect(() => {
         props.open && form.resetFields();
         props.open && libraryId && onLaodData();
     }, [props.open]);
-
     return (
         <>
             <FormModalComp
@@ -37,13 +33,11 @@ const LibraryModalEntry: React.FC<Props> = ({ onSave,isAdmin, code, libraryId, .
                     const entry = {
                         ...dataForm,
                         parseInt: 0,
-
                     }
                     onSave(entry);
                 }}
                 width="500px"
                 title="Library Form Register"
-
             >
                 <ProForm
                     form={form}
@@ -58,7 +52,6 @@ const LibraryModalEntry: React.FC<Props> = ({ onSave,isAdmin, code, libraryId, .
                         name={"location"}
                         label={"Library Location"}
                     />
-
                     <ProFormSelect
                         name={"type"}
                         label={"Type"}
@@ -76,7 +69,6 @@ const LibraryModalEntry: React.FC<Props> = ({ onSave,isAdmin, code, libraryId, .
                             },
                         ]}
                     />
-
                     <ProFormDependency dependencies={["type"]} name={["type"]}>
                         {({type}) => {
                             return (
@@ -103,7 +95,6 @@ const LibraryModalEntry: React.FC<Props> = ({ onSave,isAdmin, code, libraryId, .
                                 </>
                             )
                         }}
-
                     </ProFormDependency>
                     <ProFormSelect
                         initialValue={"active"}
@@ -126,9 +117,7 @@ const LibraryModalEntry: React.FC<Props> = ({ onSave,isAdmin, code, libraryId, .
                         label="Description"
                     />
                 </ProForm>
-
             </FormModalComp>
-
         </>
     )
 }

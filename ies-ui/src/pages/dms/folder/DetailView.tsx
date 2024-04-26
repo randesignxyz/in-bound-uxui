@@ -7,11 +7,9 @@ import { Space } from "antd/lib";
 import EntryForm from "./EntryForm";
 import { useState } from "react";
 import { FolderCreate } from "./data";
-
 interface Props {
     id: number
 }
-
 export default ({ id }: Props) => {
     const requestAction = simpleRequestActions();
     const service = FolderServiceAPI(requestAction);

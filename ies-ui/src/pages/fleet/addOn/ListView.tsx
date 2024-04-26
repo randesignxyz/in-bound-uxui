@@ -1,4 +1,4 @@
-import BreadCrumbCom from '@/pages/sale/retailer/components/BreadCrumbCom';
+
 import { Tabs } from 'antd';
 import { useState } from 'react';
 import { FleetPaths } from '..';
@@ -29,7 +29,7 @@ export default () => {
     <>
       {/* <BreadCrumbCom separator=">" routes={routes} /> */}
       <PageContainer
-        onBack={()=>history.push(FleetPaths.fleet)}
+        // onBack={()=>history.push(FleetPaths.fleet)}
         title="Set-up"
       >
       <Tabs

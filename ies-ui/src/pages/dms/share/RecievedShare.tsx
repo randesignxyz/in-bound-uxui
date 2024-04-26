@@ -124,9 +124,9 @@ export default () => {
                 columns={[
                     {
                         title:"Document Name",
-                        dataIndex:"docName",
+                        dataIndex:"title",
                         sorter:"docName",
-                        render:(_,r)=><Button type="link" onClick={()=>setDetailState({visible:{name:"MODAL", payload:r}})}>{r.document?.documentation?.docName}</Button>
+                        render:(_,r)=><Button type="link" size="small" onClick={()=>setDetailState({visible:{name:"MODAL", payload:r}})}>{r.document?.documentation?.docName}</Button>
                     },
                     {
                         title: "Shared by",

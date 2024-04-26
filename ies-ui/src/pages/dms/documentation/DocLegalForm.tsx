@@ -7,7 +7,6 @@ import { DepartmentServiceAPI } from "../setting/components/department/service";
 interface Props {
     lookupData?: LookupDataDTO[];
 }
-
 export default ({ lookupData }: Props) => {
     const requestAction = simpleRequestActions();
     return (
@@ -37,24 +36,6 @@ export default ({ lookupData }: Props) => {
                 </Col>
                 <Col span={8}>
                     <ProFormSelect
-                        name={"department"}
-                        rules={[{ required: true }]}
-                        label="Function"
-                        showSearch
-                        request={async (k: { keyWords: string }) => {
-                            const data = await DepartmentServiceAPI(requestAction).page({
-                                criteria: {
-                                    searchValue: k.keyWords || ""
-                                }
-                            });
-
-                            return data.items?.map(v => ({ label: <Space  size={"small"}><span>{v.name}</span><span style={{color:"gray"}}>{v.description}</span></Space>, value: v.id }))
-                        }}
-                    />
-                </Col>
-
-                <Col span={8}>
-                    <ProFormSelect
                         rules={[{ required: true }]}
                         label="Opcos"
                         name={"opCo"}
@@ -69,13 +50,28 @@ export default ({ lookupData }: Props) => {
                     />
                 </Col>
                 <Col span={8}>
+                    <ProFormSelect
+                        name={"department"}
+                        rules={[{ required: true }]}
+                        label="Function"
+                        showSearch
+                        request={async (k: { keyWords: string }) => {
+                            const data = await DepartmentServiceAPI(requestAction).page({
+                                criteria: {
+                                    searchValue: k.keyWords || ""
+                                }
+                            });
+                            return data.items?.map(v => ({ label: <Space  size={"small"}><span>{v.name}</span><span style={{color:"gray"}}>{v.description}</span></Space>, value: v.id }))
+                        }}
+                    />
+                </Col>
+                <Col span={8}>
                     <ProFormDatePicker
                         rules={[{ required: true }]}
                         name={"issuedDate"}
                         label="Issued Date"
                         width={"md"}
                     />
-
                 </Col>
                 <Col span={8}>
                     <ProFormDatePicker
@@ -92,8 +88,6 @@ export default ({ lookupData }: Props) => {
                     />
                 </Col>
             </Row>
-
-
         </>
     )
 }

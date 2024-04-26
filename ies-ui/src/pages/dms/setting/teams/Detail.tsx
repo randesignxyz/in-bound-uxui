@@ -2,11 +2,9 @@ import { ProDescriptions } from "@ant-design/pro-components";
 import { Card, Drawer, DrawerProps } from "antd";
 import { TeamsDTO } from "./data";
 
-
 interface Props extends DrawerProps{
     data?:TeamsDTO;
 }
-
 const TeamsDetail:React.FC<Props> = ({data,...props}) =>{
 
     return (
@@ -18,7 +16,6 @@ const TeamsDetail:React.FC<Props> = ({data,...props}) =>{
                 title="Group Detail"
             >
                 <Card
-                    
                 >
                     <ProDescriptions
                         dataSource={data}
@@ -30,12 +27,8 @@ const TeamsDetail:React.FC<Props> = ({data,...props}) =>{
                     />
 
                 </Card>
-
-                
-
             </Drawer>
         </>
     )
 }
-
 export default TeamsDetail

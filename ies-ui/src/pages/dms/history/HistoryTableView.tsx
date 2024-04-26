@@ -12,7 +12,6 @@ interface Props {
     intantId?: number;
     source:"CONTRACTS"|"DOCUMENTATION"
 }
-
 export default ({ intantId, source }: Props) => {
     const requestAction = simpleRequestActions();
     const services = HistoryServiceAPI(requestAction)

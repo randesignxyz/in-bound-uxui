@@ -848,11 +848,26 @@ export default [
     access: 'canAccessFleetMenu',
     component: './fleet/vehicle/',
   },
-
+  {
+    path: '/external/fleet/vehicle/:view/*',
+    layout:false,
+    name:"fleet",
+    component: './fleet/vehicle/',
+    access: 'canAccessFleetMenu',
+    hideInMenu: 'true',
+  },
 
   {
     path: '/fleet/maintenance/:view/*',
     name: 'fleet_maintenence',
+    hideInMenu: 'true',
+    access: 'canAccessFleetMenu',
+    component: './fleet/maintenance/',
+  },
+  {
+    path: '/external/fleet/maintenance/:view/*',
+    name: 'fleet_maintenence',
+    layout:false,
     hideInMenu: 'true',
     access: 'canAccessFleetMenu',
     component: './fleet/maintenance/',
@@ -864,6 +879,15 @@ export default [
     access: 'canAccessFleetMenu',
     component: './fleet/inspection/',
   },
+  {
+    path: '/external/fleet/inspection/:view/*',
+    name: 'inspection',
+    layout:false,
+    hideInMenu: 'true',
+    access: 'canAccessFleetMenu',
+    component: './fleet/inspection/',
+  },
+
   {
     path: '/fleet/accident/:view/*',
     name: 'fleet_accident',
@@ -926,6 +950,13 @@ export default [
     hideInMenu: 'true',
     access: 'canAccessFleetMenu',
     component: './fleet/fuelStock/',
+  },
+  {
+    path: '/fleet/accessory/:view/*',
+    name: 'fleet_accessory',
+    hideInMenu: 'true',
+    access: 'canAccessFleetMenu',
+    component: './fleet/accessory/',
   },
   //  ================= END FLEET =================
 

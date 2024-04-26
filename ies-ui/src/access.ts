@@ -172,6 +172,17 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         ['ROLE_CRM_ADMIN', 'ROLE_CRM_SALE_ADMIN', 'ROLE_ADMIN', 'ROLE_SALESPERSON'].some((it) => it === item),
       ) || false,
+
+    canImportContract:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_CRM_ADMIN', 'ROLE_ADMIN'].some((it) => it === item),
+      ) || false,
+
+    canAddEditContract: currentUser?.authorities.some((item) =>
+      ['ROLE_CRM_ADMIN', 'ROLE_ADMIN'].some((it) => it === item),
+    ) || false,
+
+
     canEditCustomerBasicInfo:
       currentUser?.authorities.some((item) =>
         ['ROLE_CRM_ADMIN', 'ROLE_ADMIN'].some((it) => it === item),

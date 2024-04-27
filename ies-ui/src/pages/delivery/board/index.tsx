@@ -13,6 +13,7 @@ import { FloatButton, message, Modal, Spin } from "antd";
 import { useEffect, useRef, useState } from "react";
 import AssignedDocModal from "./assigned-docs";
 import Detail from "./detail";
+import { history } from "@umijs/max";
 import ListView from "./list-view";
 import { ModalName, UiType, ViewController } from "./view-controller";
 import { ActionData } from "@/pages/type";
@@ -386,7 +387,7 @@ export default () => {
   return <PageContainer breadcrumb={undefined}
     title={'Delivery Board'}
 
-    onBack={() => history.back()}>
+    onBack={() => history.push('/delivery')}>
 
     {/* List view */}
     <ListView {...vc} />

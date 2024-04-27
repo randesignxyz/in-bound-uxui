@@ -165,7 +165,7 @@ export default () => {
 
 
   return (
-    <PageContainer breadcrumb={undefined} title={'Cash Collection'} onBack={history.back}>
+    <PageContainer breadcrumb={undefined} title={'Cash Collection'} onBack={() => history.push('/delivery')}>
       <Spin spinning={requestActions.request?.loading}>
         <TableView<CashCollectionListItem, { searchValue?: string }>
           extraFilter={
@@ -218,8 +218,8 @@ export default () => {
               align: 'left',
               render: (_, r) => formatDateTime(r.delivery.startedDate),
             },
-            { title: 'Invoice Amount',  align: 'left', render: (_,r) => formatter.format(r.amount) },
-            { title: 'Collected Amount',  align: 'left',render: (_,r) => formatter.format(r.collectedAmount) },
+            { title: 'Invoice Amount', align: 'left', render: (_, r) => formatter.format(r.amount) },
+            { title: 'Collected Amount', align: 'left', render: (_, r) => formatter.format(r.collectedAmount) },
             { title: 'Settled By', sorter: 'settledBy', dataIndex: 'settledBy' },
             {
               title: 'Settled Date',

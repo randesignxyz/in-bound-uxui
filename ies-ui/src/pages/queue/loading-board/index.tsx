@@ -65,6 +65,7 @@ import RemarkModalV2 from '@/components/remark-modal-v2';
 import CheckinInfo from '@/pages/delivery/checkin/CheckinInfo';
 import { QueuePaths } from '..';
 import StartLoadingModal from './start-loading-modal';
+import { DeliveryPaths } from '@/pages/delivery';
 
 const PENDING = "PENDING"
 const PICKING = "PICKING"
@@ -817,7 +818,7 @@ export default () => {
   }, [instance])
 
   return (
-    <PageContainer breadcrumb={undefined} title={'Loading Board'} onBack={history.back}>
+    <PageContainer breadcrumb={undefined} title={'Loading Board'} onBack={() => history.push('/delivery')}>
       {/* <Spin spinning={requestActions.request?.loading}> */}
       <Row style={{ marginBottom: 10 }}>
         <Col flex="300px">

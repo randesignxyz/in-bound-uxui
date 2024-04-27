@@ -141,7 +141,7 @@ export default () => {
   }, [searchParams.criteria?.advanceSearch?.status]);
 
   return (
-    <PageContainer breadcrumb={undefined} title={'Ticket Board'} onBack={history.back}>
+    <PageContainer breadcrumb={undefined} title={'Ticket Board'} onBack={() => history.push('/delivery')}>
       <Spin spinning={requestActions.request?.loading}>
         <Row style={{ marginBottom: 10 }}>
           <Col flex="300px">

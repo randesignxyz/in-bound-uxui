@@ -158,4 +158,5 @@ export default {
   'menu.sales-visit': 'Visit',
   'menu.item-sales-line-price': 'Item Sales Line Price',
   'menu.retailer_customer_pricing': 'Retailer Customer Pricing',
+  'menu.queue-dashboard': 'Queue Board'
 };

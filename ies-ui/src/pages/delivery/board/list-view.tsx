@@ -61,9 +61,7 @@ export default ({
     const [operatorCheckIn, setOperatorCheckIn] = useState<OperatorCheckIn>()
     const [statusFilter, setStatusFilter] = useState<string>('NONE_DN')
     const [list, setList] = useState<InstanceListItem[]>()
-    const [statusCount, setStatusCount] = useState<{ status: string, count?: number }[]>([
-
-    ])
+    const [statusCount, setStatusCount] = useState<{ status: string, count?: number }[]>([])
 
     const [searchParams, setSearchParams] = useState<
         TableViewSearchParams<InstanceAdvanceSearchParams>
@@ -446,7 +444,7 @@ export default ({
                                                 }
 
                                                 {
-                                                    r.loading.status == 'LOADING' && r.loading.loadingStarted && <ProDescriptions.Item label="Loading time">{
+                                                    r.loading.status == 'LOADING_STARTED' && r.loading.loadingStarted && <ProDescriptions.Item label="Loading time">{
                                                         moment(r.loading.loadingStarted).toNow()
                                                     }</ProDescriptions.Item>
                                                 }

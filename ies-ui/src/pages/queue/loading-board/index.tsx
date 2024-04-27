@@ -31,7 +31,6 @@ import {
   PrinterOutlined,
   ReloadOutlined, RetweetOutlined, StarFilled, StopOutlined, SwapOutlined, SyncOutlined, UnlockOutlined, UserOutlined
 } from '@ant-design/icons';
-import { history } from 'umi';
 import {
   Affix,
   Badge,

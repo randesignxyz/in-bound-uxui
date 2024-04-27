@@ -8,7 +8,7 @@ import { head, sumBy } from 'lodash';
 import moment from 'moment';
 import numeral from 'numeral';
 import { useEffect, useState } from 'react';
-import { history } from 'umi';
+import { history } from "@umijs/max";
 import { SalePaths } from '../..';
 import { Model } from '../model';
 import { DeliveryEntry, SoItemEntry } from '../reducer';
@@ -142,7 +142,7 @@ const EntryForm: React.FC<Props> = ({ type, id }) => {
       totalAmount: totalAmount,
     });
     actions.listTransportationOffer(defaultDelivery?.deliveryMethod);
-    return () => {};
+    return () => { };
   }, [state.data?.soItems]);
 
   useEffect(() => {

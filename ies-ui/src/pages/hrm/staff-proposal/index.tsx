@@ -1,5 +1,5 @@
 import BaseCrud from "@/components/base-crud"
-import { history } from 'umi';
+import { history } from "@umijs/max";
 import { SavePayLoad, SearchParams, StaffProposalDetail, StaffProposalFormNames, StaffProposalListItem } from "./data.types"
 import { createService } from "./services"
 import { simpleRequestActions } from "@/services/model"

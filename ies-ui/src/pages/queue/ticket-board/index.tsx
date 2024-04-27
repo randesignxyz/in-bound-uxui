@@ -21,7 +21,7 @@ import {
   Segmented, Space, Spin, Tag,
 } from 'antd';
 import { useEffect, useRef, useState } from 'react';
-import { history } from 'umi';
+import { history } from "@umijs/max";
 import ticketIcon from '@/assets/ticket.png';
 import { formatDateTime, server, toReadable } from '@/pages/utils';
 import moment from 'moment';

@@ -29,7 +29,7 @@ import { Button, Card, Col, Divider, Form, message, Modal, Row, Space, Spin } fr
 import { uniqueId } from 'lodash';
 import moment, { Moment } from 'moment';
 import { useEffect, useRef, useState } from 'react';
-import { history } from 'umi';
+import { history } from "@umijs/max";
 import SearchItemList from './components/SearchItemList';
 import { AcquisitionFormNames } from './process-flow';
 

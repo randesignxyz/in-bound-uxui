@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { history } from 'umi';
+import { history } from "@umijs/max";
 import { Affix, Dropdown, Button, Menu, Spin, Card } from 'antd'
 import { DownOutlined, PlusCircleOutlined } from '@ant-design/icons'
 import styles from './style.less';
@@ -30,7 +30,7 @@ export default () => {
         history.push(`/data-form/${item.procDefKey}/${item.procInstId}`);
     }, [])
 
-    const onSearchHandler = (data?: {isGlobal?: boolean, status?: string, searchValue?: string}) => {
+    const onSearchHandler = (data?: { isGlobal?: boolean, status?: string, searchValue?: string }) => {
 
         actions.loadInstanceList({
             criteria: {
@@ -61,8 +61,8 @@ export default () => {
 
         <Spin spinning={state.loading}>
 
-            <Card 
-            // bodyStyle={{ backgroundColor: '#fafafa' }}
+            <Card
+                // bodyStyle={{ backgroundColor: '#fafafa' }}
                 className={styles.listCard}
                 bordered={false}
                 extra={filterComp}>
@@ -88,7 +88,7 @@ export default () => {
                 onSelected={item => console.log(item)}
 
             />
-            <ProcessFlowModalMngt workflowModel = {model}/>
+            <ProcessFlowModalMngt workflowModel={model} />
         </Spin>
     </PageContainer>)
 }

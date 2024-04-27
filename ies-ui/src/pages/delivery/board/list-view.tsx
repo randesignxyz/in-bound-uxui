@@ -22,7 +22,7 @@ import {
     ReloadOutlined, StopOutlined,
 } from '@ant-design/icons';
 import { useEffect, useState } from 'react';
-import { history } from 'umi';
+import { history } from "@umijs/max";
 import { DeliveryPaths } from '..';
 import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import ReconnectingWebSocket from 'reconnecting-websocket';

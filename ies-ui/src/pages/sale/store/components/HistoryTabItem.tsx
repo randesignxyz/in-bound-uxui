@@ -5,7 +5,7 @@ import type { ActionType } from '@ant-design/pro-table';
 import ProTable from '@ant-design/pro-table';
 import { Card } from 'antd';
 import { useEffect, useRef } from 'react';
-import { history } from 'umi';
+import { history } from "@umijs/max";
 import { SalePaths } from '../..';
 import { Model } from '../model';
 import numeral from 'numeral';

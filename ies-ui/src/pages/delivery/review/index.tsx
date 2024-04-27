@@ -16,7 +16,7 @@ import { ActionType } from '@ant-design/pro-table';
 import { Button, message, Radio, Space, Spin, Tooltip } from 'antd';
 import moment from 'moment';
 import { useRef, useState } from 'react';
-import { history } from 'umi';
+import { history } from "@umijs/max";
 import { ReviewReport } from './data.type';
 import Exporter from './export';
 import ReviewItemView from './review-item';

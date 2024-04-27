@@ -2,7 +2,7 @@
 import { Form, Button, Spin, Tabs, Space } from "antd"
 import { SalePaths } from "../.."
 import { Model } from "../model"
-import { history } from 'umi'
+import { history } from "@umijs/max";
 import { DollarCircleOutlined } from "@ant-design/icons"
 import SoHeader from "../../so/components/SoHeader"
 import { FooterToolbar, ProForm } from "@ant-design/pro-components"
@@ -18,9 +18,9 @@ const layout = {
 };
 
 
-const EntryForm: React.FC<Props> = ({type, id}) => {
-    
-    const {state, actions} = Model()
+const EntryForm: React.FC<Props> = ({ type, id }) => {
+
+    const { state, actions } = Model()
 
 
     const onSaveActionHandler = async (isNew: boolean = false) => {
@@ -30,7 +30,7 @@ const EntryForm: React.FC<Props> = ({type, id}) => {
 
     return <Spin spinning={state.loading}>
         <ProForm
-            submitter = {{
+            submitter={{
                 render: () => {
                     return <FooterToolbar>
                         {type === 'new' && <Button onClick={() => {

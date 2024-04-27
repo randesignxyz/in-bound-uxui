@@ -1,8 +1,6 @@
-import { WarningOutlined } from "@ant-design/icons"
-import { PageLoading } from "@ant-design/pro-components"
-import { Empty, Flex, Spin, Typography } from "antd"
+import { Empty, Spin, Typography } from "antd"
 import { useEffect, useState } from "react"
-import { useAccess, history } from "umi"
+import { useAccess, history } from "@umijs/max";
 
 export default () => {
 

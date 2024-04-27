@@ -3,7 +3,7 @@ import ProTable, { ProColumns, ActionType } from "@ant-design/pro-table"
 import { Button, Space, Tag } from "antd"
 import { CheckCircleOutlined, DeleteOutlined, PlusOutlined, SelectOutlined, SyncOutlined } from "@ant-design/icons"
 import moment, { Moment } from "moment"
-import { history } from 'umi';
+import { history } from "@umijs/max";
 import { domain } from "@/services/del-expense/data"
 import { querySap } from "@/services/shared/queryData"
 import { PageContainer, ProCard, ProForm, ProFormDatePicker, ProFormGroup, ProFormSelect } from "@ant-design/pro-components"
@@ -16,7 +16,7 @@ const DeliveryListComp: React.FC<{
     forceUpdate: number;
     onAdd: () => void;
 }> = ({ initLookupData, onAdd, forceUpdate }) => {
-   
+
     const actionRef = useRef<ActionType>();
     const [form] = useForm<{ status?: string; settledDate?: Moment, outsource?: String; }>()
 
@@ -24,10 +24,10 @@ const DeliveryListComp: React.FC<{
 
     useEffect(() => {
         actionRef.current?.reloadAndRest && actionRef.current?.reloadAndRest()
-    }, [forceSearch,forceUpdate])
+    }, [forceSearch, forceUpdate])
 
 
-    const searchComp = <ProForm size="small" style={{ marginBottom: '-20px', width:'610px'}} form={form} submitter={false} onValuesChange={(changedValues) => {
+    const searchComp = <ProForm size="small" style={{ marginBottom: '-20px', width: '610px' }} form={form} submitter={false} onValuesChange={(changedValues) => {
         setForceSearch(v => v + 1)
     }} >
         <ProFormGroup size={"small"}>
@@ -51,16 +51,16 @@ const DeliveryListComp: React.FC<{
     }
     const cols: ProColumns<domain.delivery.DeliveryItem>[] = [
         {
-            title:'',
-            width:'15px',
-            render: (_, record) => {                
+            title: '',
+            width: '15px',
+            render: (_, record) => {
                 return <Space size={0}>
-                <Button
-                    type="link"  
-                    icon={<SelectOutlined/>}                  
-                    onClick={async () => {
-                      window.open(`./view/${record.id}`, '_blank')?.focus();
-                    }}/>
+                    <Button
+                        type="link"
+                        icon={<SelectOutlined />}
+                        onClick={async () => {
+                            window.open(`./view/${record.id}`, '_blank')?.focus();
+                        }} />
                 </Space>
             }
         },
@@ -70,11 +70,11 @@ const DeliveryListComp: React.FC<{
             hideInSearch: true,
             sorter: 'outsource',
             align: 'left',
-            render: (_, record) => {                
+            render: (_, record) => {
                 return <Space size={0}>
-                <Button
-                    type="link" 
-                    onClick={async () => { gotoView(record.id)}}                   
+                    <Button
+                        type="link"
+                        onClick={async () => { gotoView(record.id) }}
                     >{record.outsource}</Button>
                 </Space>
             }
@@ -122,7 +122,7 @@ const DeliveryListComp: React.FC<{
             title: 'Status',
 
             // render: (_, r) => <Tag icon={r.status == 'COMPLETED'||'CONFIRMED' ? <CheckCircleOutlined />:r.status == 'CANCELED' ? <DeleteOutlined/> : <SyncOutlined spin />}  color={r.status == 'COMPLETED' || 'CONFIRMED' ? "success": r.status == 'CANCELED' ?'red' : 'processing'}>{toReadable(r.status)}</Tag>,
-            render: (_, r) => <Status text={r.status}/>,
+            render: (_, r) => <Status text={r.status} />,
             hideInSearch: true,
             // align: 'center',
             width: '150px'

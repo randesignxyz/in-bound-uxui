@@ -1,6 +1,6 @@
 import { PageContainer } from '@ant-design/pro-components';
 import React from 'react'
-import { useParams, history } from 'umi';
+import { useParams, history } from "@umijs/max";
 
 type ViewType = 'list' | 'create' | 'detail' | 'edit' | 'view' | undefined;
 

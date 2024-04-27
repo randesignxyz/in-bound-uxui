@@ -7,7 +7,7 @@ import ProTable from '@ant-design/pro-table';
 import { Card, Col, Form, Row } from 'antd';
 import numeral from 'numeral';
 import React, { useEffect } from 'react';
-import { history } from 'umi';
+import { history } from "@umijs/max";
 
 interface Props {
   soDetail?: SoDetail;

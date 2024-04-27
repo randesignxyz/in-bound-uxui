@@ -14,7 +14,7 @@ import qrCodeIcon from '@/assets/qr-code.png';
 import forkLift from '@/assets/fork-lift.png';
 import { Divider, Menu } from 'antd';
 import { AreaChartOutlined, HistoryOutlined, PlusCircleOutlined } from '@ant-design/icons';
-import { useAccess, history } from 'umi';
+import { useAccess, history } from "@umijs/max";
 import { PageContainer } from '@ant-design/pro-components';
 import ModalMngt, { modalType } from './modal-mngt';
 import { useState } from 'react';

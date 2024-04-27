@@ -3,7 +3,7 @@ import { EditOutlined } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
 import { Button, message, Spin } from 'antd';
 import { useEffect } from 'react';
-import { history } from 'umi';
+import { history } from "@umijs/max";
 import { Model } from '../../Model';
 import NotificationFormView from './NotificationFormView';
 

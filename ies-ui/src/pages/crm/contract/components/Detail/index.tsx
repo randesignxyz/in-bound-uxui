@@ -1,6 +1,6 @@
 import { Space, Spin, Tag, message, Button, Alert } from 'antd';
 import { useEffect, useState } from 'react';
-import { history } from 'umi';
+import { history } from "@umijs/max";
 import { EditFilled, EditTwoTone, StopOutlined } from '@ant-design/icons';
 import { CrmPaths } from '@/pages/crm';
 import { PageContainer, ProCard, ProDescriptions } from '@ant-design/pro-components';
@@ -55,7 +55,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
     try {
       if (!!data) {
         await ContractServices.applyLocationToContract(data?.id, ids)(requestActions)
-        setData({...data, customerAddressList: ids})
+        setData({ ...data, customerAddressList: ids })
       }
       return true
     } catch (error: any) {
@@ -87,7 +87,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
             })
           }} icon={<EditFilled />} >Edit</Button>
           }
-          {data?.status != "TERMINATED"  && data && <RemarkModalV2<ContractViewData> required confirm title='Terminate Contracdt'
+          {data?.status != "TERMINATED" && data && <RemarkModalV2<ContractViewData> required confirm title='Terminate Contracdt'
             trigger={<Button danger icon={<StopOutlined />}>Termimate</Button>} item={data} onSave={async (item, remarks) => {
               try {
                 await ContractServices.terminateContract(item.id, remarks!!)(requestActions)
@@ -120,7 +120,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
         tabList={[
           { tab: "Terms", key: 'term', tabKey: 'term', },
           { tab: "POSM", key: "posm", tabKey: "posm" },
-          { tab: "Shipping Address", key: "shppingAddress", tabKey: "shppingAddress"},
+          { tab: "Shipping Address", key: "shppingAddress", tabKey: "shppingAddress" },
           { tab: "Activity Log", key: "activityLog", tabKey: "activityLog", }
         ]}
         onTabChange={(key) => {
@@ -131,7 +131,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
 
         {(() => {
           if (activeTab == 'term') {
-            const term = data?.terms?.name?  (data?.terms?.code+' - '+data?.terms?.name):''
+            const term = data?.terms?.name ? (data?.terms?.code + ' - ' + data?.terms?.name) : ''
             return <Term data={{ terms: term }} />
           }
           if (activeTab == "posm") {

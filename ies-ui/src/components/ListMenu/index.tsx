@@ -1,5 +1,5 @@
 import React from 'react';
-import { history } from 'umi';
+import { history } from "@umijs/max";
 import styles from './style.less';
 import { List, Card, Typography, Dropdown, MenuProps } from 'antd';
 import formLogo from '@/assets/icons8-form-80.png';

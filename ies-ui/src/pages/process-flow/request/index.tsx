@@ -20,7 +20,7 @@ import { PageContainer, ProList } from '@ant-design/pro-components';
 import { useAccess } from '@umijs/max';
 import { Button, Input, message, Select, Space, Tag } from 'antd';
 import { useEffect, useState } from 'react';
-import { history } from 'umi';
+import { history } from "@umijs/max";
 import { ProcessRequestItem } from './data.type';
 
 export default () => {

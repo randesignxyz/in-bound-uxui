@@ -8,7 +8,7 @@ import { PageContainer } from '@ant-design/pro-components';
 import { message, Modal, Spin } from 'antd';
 import moment from 'moment';
 import { useEffect, useState } from 'react';
-import { history } from 'umi';
+import { history } from "@umijs/max";
 import { DataViewProps } from '../../data';
 import { ActionBtn, MoreAction } from '../ActionBtn';
 import InstanceInfoComp from '../InstanceInfo';

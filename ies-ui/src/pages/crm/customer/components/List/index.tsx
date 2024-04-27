@@ -11,7 +11,7 @@ import AdvanceSearch from './AdvanceSearch';
 import Omit from 'omit.js';
 import { CloudDownloadOutlined, DashOutlined, DownOutlined, SelectOutlined, UserSwitchOutlined } from '@ant-design/icons';
 import { CrmPaths } from '@/pages/crm';
-import { history } from 'umi';
+import { history } from "@umijs/max";
 import ExportCustomer from './ExportCustomer';
 import ImportFileButton from '@/components/ImportFileButton';
 import TransferSE from './TransferSE';

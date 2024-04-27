@@ -12,6 +12,7 @@ import {
   LoadingServiceParams,
 } from '@/services/delivery/loading-bay-service-params';
 import { LoadingParams } from '@/services/delivery/loading-params';
+import { history } from "@umijs/max";
 import { simpleRequestActions } from '@/services/model';
 import {
   CheckCircleOutlined,

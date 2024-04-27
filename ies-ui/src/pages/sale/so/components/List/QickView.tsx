@@ -3,7 +3,7 @@ import { CrmPaths } from "@/pages/crm";
 import { formatDate, formatDateTime, formatter } from "@/pages/utils";
 import { SoDetail } from "@/services/sale/data";
 import { Card, Drawer, DrawerProps } from "antd";
-import { history } from 'umi'
+import { history } from "@umijs/max";
 
 interface Props extends DrawerProps {
     soDetail?: SoDetail,
@@ -61,8 +61,9 @@ const QuickView: React.FC<Props> = ({ soDetail, ...props }) => {
                 data={[
                     { label: 'Delivery Method', value: soDetail?.associatedTo.deliveryMethod?.name, },
                     { label: 'Delivery Date', value: formatDate(soDetail?.deliveryDate) },
-                    { label: 'Shipping Address Code',value: soDetail?.associatedTo.shippingAddress.address, },
-                    { label: 'Shipping Address',
+                    { label: 'Shipping Address Code', value: soDetail?.associatedTo.shippingAddress.address, },
+                    {
+                        label: 'Shipping Address',
                         value: [
                             { name: 'Street', value: soDetail?.associatedTo.shippingAddress.streetNo, },
                             { name: 'House#', value: soDetail?.associatedTo.shippingAddress.houseNo, },
@@ -82,16 +83,16 @@ const QuickView: React.FC<Props> = ({ soDetail, ...props }) => {
             />
         </Card>
         <Card style={{ marginTop: '10px' }} size="small" title="Order Amount">
-            <DescriptionDisplay column= {1} data={[
-                {label: 'Amount', value: formatter.format(soDetail?.amount || 0)},
-                {label: 'Discount Amount', value:  formatter.format(soDetail?.discountAmount|| 0)},
-                {label: 'VAT Amount', value:  formatter.format(soDetail?.vatAmount ||0 )},
-                {label: 'Total Amount', value:  formatter.format(soDetail?.totalAmount ||0 )},
+            <DescriptionDisplay column={1} data={[
+                { label: 'Amount', value: formatter.format(soDetail?.amount || 0) },
+                { label: 'Discount Amount', value: formatter.format(soDetail?.discountAmount || 0) },
+                { label: 'VAT Amount', value: formatter.format(soDetail?.vatAmount || 0) },
+                { label: 'Total Amount', value: formatter.format(soDetail?.totalAmount || 0) },
 
-            ]}/>
+            ]} />
         </Card>
         <Card style={{ marginTop: '10px' }} size="small" title="Attachment">
-            
+
         </Card>
     </Drawer>
 }

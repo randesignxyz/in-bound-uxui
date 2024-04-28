@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Select, Checkbox } from 'antd'
+import { Select, Checkbox, Flex, Space } from 'antd'
 import Search from "antd/lib/input/Search";
 
 
@@ -9,11 +9,11 @@ export interface FilterItem {
 }
 
 interface Props<T extends FilterItem> {
-  defaultValue?:string;
+  defaultValue?: string;
   items: T[];
   isGlobal?: boolean;
   selectedItem?: T;
-  onSearch: (data?: {isGlobal?: boolean, status?: string, searchValue?: string}) => void;
+  onSearch: (data?: { isGlobal?: boolean, status?: string, searchValue?: string }) => void;
 }
 
 const DefaultFilterComp = <T extends FilterItem>({
@@ -24,23 +24,26 @@ const DefaultFilterComp = <T extends FilterItem>({
   onSearch
 }: Props<T>) => {
 
-  return <div>
-    <Select
-      showSearch
-      defaultValue = {defaultValue}
-      value={selectedItem?.id}
-      style={{ width: 200 }}
-      placeholder="Filter Type"
-      options = {items.map(it => {
-        return {value: it.id, label: it.name}
-      })}
-      onSelect={(value: any) => onSearch({status: value})}/>
-      
-    <Search style={{ width: '272px', marginLeft: '16px' }} placeholder="Search" onSearch={value => onSearch({searchValue: value.trim()})} />
-    {/* <Checkbox style={{ marginLeft: '16px' }} defaultChecked={isGlobal} onChange={e => onSearch({isGlobal: e.target.checked}) }>
+  return (
+
+    <Space size={'small'}>
+      <Search style={{ width: '272px' }} placeholder="Search" onSearch={value => onSearch({ searchValue: value.trim() })} />
+      {/* <Checkbox style={{ marginLeft: '16px' }} defaultChecked={isGlobal} onChange={e => onSearch({isGlobal: e.target.checked}) }>
       Global
       </Checkbox> */}
-  </div>
+      <Select
+        showSearch
+        defaultValue={defaultValue}
+        value={selectedItem?.id}
+        style={{ width: 200 }}
+        placeholder="Filter Type"
+        options={items.map(it => {
+          return { value: it.id, label: it.name }
+        })}
+        onSelect={(value: any) => onSearch({ status: value })} />
+    </Space>)
+
+
 }
 
 export default DefaultFilterComp

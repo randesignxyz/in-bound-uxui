@@ -1,5 +1,5 @@
 
-import { Card, message, Modal, Spin } from 'antd';
+import { Button, Card, message, Modal, Space, Spin } from 'antd';
 import styles from './style.less';
 import DefaultFilterComp, { FilterItem } from '@/components/DefaultFilter';
 import { history, } from 'umi';
@@ -12,6 +12,7 @@ import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { TaskListAdvanceSearchParams } from '@/services/process-workflow/params';
 import { ActionType } from '@ant-design/pro-table';
 import { PageContainer } from '@ant-design/pro-components';
+import { ReloadOutlined } from '@ant-design/icons';
 export default () => {
 
     const model = ProcessFlowModel()
@@ -53,61 +54,64 @@ export default () => {
     };
 
     return <PageContainer title={false} >
-        <Spin spinning={state.loading}>
-            <Card
-                bodyStyle={{ backgroundColor: '#fafafa' }}
-                className={styles.listCard}
-                bordered={false}
-                extra={extraContent}
-            >
-                <TaskItemListView data={state.taskList}
-                    actionRef={actionRef}
-                    actionHandlers={{
-                        onGogoDataView: handleGogoDataView,
-                        onShowActionModal: (key, task) => task.formKey && actions.openActionForm(
-                            task.taskName, task.formKey,
-                            key, task.instanceInfo.processInstanceId,
-                            task.taskId
-                        ),
-                        onClaim: item => {
-                            Modal.confirm({
-                                title: "Claim Task",
-                                content: "Are you sure?",
-                                onOk: async () => {
-                                    await actions.claim({ taskId: item.taskId, ori: 'taskList' })
-                                    actionRef.current?.reloadAndRest?.()
-                                }
-                            })
-                        },
-                        onUnclaim: item => {
-                            Modal.confirm({
-                                title: "Unclaim Task",
-                                content: "Are you sure?",
-                                onOk: async () => {
-                                    await actions.unClaim({ taskId: item.taskId, ori: 'taskList' })
-                                    actionRef.current?.reloadAndRest?.()
-                                }
-                            })
-                        },
-                        onAssign: item => {
+        <Card
+            styles={{
+                body: { backgroundColor: '#fafafa' }
+            }}
 
-                        },
-                        onRequest: (pagination, sort) => onRequestHandler({
-                            criteria: {
-                                ...searchParams,
-                                advanceSearch: searchParams,
-                                sort,
-                            },
-                            pagination,
-                        }),
-                        onShowAuthorizedTasksModal: item => actions.showUserDest(item.taskId),
-                        onShowDiagram: item => actions.loadDiagram(item.instanceInfo.processInstanceId),
-                        onDownload: item => actions.downloadForm(item.instanceInfo.processInstanceId, `${item.instanceInfo.processName}.pdf`)
-                    }}
-                />
-            </Card>
-            <ProcessFlowModalMngt onRefresh={actionRef.current?.reloadAndRest} workflowModel={model} />
+            title={extraContent}
+            className={styles.listCard}
+            bordered={false}
+            extra={<Space>
+                <Button type='link' icon={<ReloadOutlined />} onClick={() => actionRef.current?.reloadAndRest?.()} />
+            </Space>}
+        >
+            <TaskItemListView data={state.taskList}
+                actionRef={actionRef}
+                actionHandlers={{
+                    onGogoDataView: handleGogoDataView,
+                    onShowActionModal: (key, task) => task.formKey && actions.openActionForm(
+                        task.taskName, task.formKey,
+                        key, task.instanceInfo.processInstanceId,
+                        task.taskId
+                    ),
+                    onClaim: item => {
+                        Modal.confirm({
+                            title: "Claim Task",
+                            content: "Are you sure?",
+                            onOk: async () => {
+                                await actions.claim({ taskId: item.taskId, ori: 'taskList' })
+                                actionRef.current?.reloadAndRest?.()
+                            }
+                        })
+                    },
+                    onUnclaim: item => {
+                        Modal.confirm({
+                            title: "Unclaim Task",
+                            content: "Are you sure?",
+                            onOk: async () => {
+                                await actions.unClaim({ taskId: item.taskId, ori: 'taskList' })
+                                actionRef.current?.reloadAndRest?.()
+                            }
+                        })
+                    },
+                    onAssign: item => {
 
-        </Spin>
-    </PageContainer>
+                    },
+                    onRequest: (pagination, sort) => onRequestHandler({
+                        criteria: {
+                            ...searchParams,
+                            advanceSearch: searchParams,
+                            sort,
+                        },
+                        pagination,
+                    }),
+                    onShowAuthorizedTasksModal: item => actions.showUserDest(item.taskId),
+                    onShowDiagram: item => actions.loadDiagram(item.instanceInfo.processInstanceId),
+                    onDownload: item => actions.downloadForm(item.instanceInfo.processInstanceId, `${item.instanceInfo.processName}.pdf`)
+                }}
+            />
+        </Card>
+        <ProcessFlowModalMngt onRefresh={actionRef.current?.reloadAndRest} workflowModel={model} />
+    </PageContainer >
 }

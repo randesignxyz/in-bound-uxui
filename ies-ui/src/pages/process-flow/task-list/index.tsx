@@ -7,12 +7,13 @@ import { UserTask } from '@/services/process-workflow/data';
 import TaskItemListView from './components/TaskItemListView';
 import { ProcessFlowModalMngt } from '../components/ProcessFlowModalWrapper';
 import ProcessFlowModel from '@/models/ProcessFlowModel';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { TaskListAdvanceSearchParams } from '@/services/process-workflow/params';
 import { ActionType } from '@ant-design/pro-table';
 import { PageContainer } from '@ant-design/pro-components';
 import { ReloadOutlined } from '@ant-design/icons';
+import { Switch } from 'antd/lib';
 export default () => {
 
     const model = ProcessFlowModel()
@@ -22,7 +23,10 @@ export default () => {
     const [searchParams, setSearchParams] = useState<TaskListAdvanceSearchParams>({
         isGlobal: true,
         status: detaultTaskStatus?.id || '',
+        latest: true,
     })
+
+    const [latest, setLatest] = useState(true)
 
     const extraContent = <DefaultFilterComp<FilterItem>
         items={state.taskStatusFilterList || []}
@@ -30,7 +34,7 @@ export default () => {
         selectedItem={state.taskStatusFilterList?.find(it => it.id == searchParams.status) || detaultTaskStatus}
 
         onSearch={data => {
-            setSearchParams(v => ({ ...v, ...data }))
+            setSearchParams(v => ({ ...v, ...data, latest: latest }))
             actionRef.current?.reloadAndRest?.()
         }} />
 
@@ -46,12 +50,21 @@ export default () => {
         params: TableViewSearchParams<TaskListAdvanceSearchParams>,
     ) => {
         try {
+
             return await actions.loadTaskList(params)
         } catch (error: any) {
             message.error(error.message || 'Failed to load data.');
             return Promise.reject();
         }
     };
+
+    useEffect(() => {
+        setSearchParams(v => ({ ...v, latest: latest }))
+        actionRef.current?.reloadAndRest?.()
+
+    }, [latest])
+
+
 
     return <PageContainer title={false} >
         <Card
@@ -63,6 +76,7 @@ export default () => {
             className={styles.listCard}
             bordered={false}
             extra={<Space>
+                <Switch checked={latest} onChange={checked => setLatest(checked)} checkedChildren="Latest" />
                 <Button type='link' icon={<ReloadOutlined />} onClick={() => actionRef.current?.reloadAndRest?.()} />
             </Space>}
         >
@@ -100,7 +114,8 @@ export default () => {
                     },
                     onRequest: (pagination, sort) => onRequestHandler({
                         criteria: {
-                            ...searchParams,
+                            ...{ searchParams, latest: latest },
+
                             advanceSearch: searchParams,
                             sort,
                         },

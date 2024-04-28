@@ -25,20 +25,20 @@ export default () => {
     const actions = commmonActions(dispatch, state)
     const requestActions = actions.requestActions()
     const workflowServices = WorkflowServiceAPI(requestActions)
-    
+
     /*** Methods */
     const loadInitData = async () => {
         if (initialState?.currentUser?.login) {
             await setRequestor(initialState.currentUser.login)
         }
     }
-    
+
     const setRequestor = async (userId?: string) => {
         try {
             if (userId) {
                 const user = await workflowServices.findUser({ id: userId })
                 user && dispatch({ type: 'setRequestUser', payload: user })
-    
+
             } else {
                 const user = initialState?.currentUser?.login && await workflowServices.findUser({ id: initialState.currentUser.login })
                 user && dispatch({ type: 'setRequestUser', payload: user })
@@ -46,7 +46,7 @@ export default () => {
         } catch (error: any) {
             message.error(error.message || 'Failed to load.')
         }
-        
+
 
     }
 
@@ -55,9 +55,9 @@ export default () => {
             if (userId) {
                 const user = await workflowServices.findUser({ id: userId })
                 return user
-    
+
             } else {
-                if(! initialState?.currentUser?.login  ){
+                if (!initialState?.currentUser?.login) {
                     message.error('No login user found.')
                     return
                 }
@@ -74,7 +74,7 @@ export default () => {
             if (userId) {
                 const user = await workflowServices.findUser({ id: userId })
                 user && dispatch({ type: 'setRequestUser', payload: user })
-    
+
             } else {
                 const user = initialState?.currentUser?.login && await workflowServices.findUser({ id: initialState.currentUser.login })
                 user && dispatch({ type: 'setRequestUser', payload: user })
@@ -82,14 +82,14 @@ export default () => {
         } catch (error: any) {
             message.error(error.message || 'Failed to load.')
         }
-        
+
 
     }
 
     const onSetFiles = (files: UploadFile[]) => {
         dispatch({ type: 'setFiles', payload: files })
     }
-    
+
     const addFile = (file: UploadFile) => {
         dispatch({ type: 'addFile', payload: file })
     }
@@ -98,7 +98,7 @@ export default () => {
         dispatch({ type: 'removeFile', payload: file })
     }
 
-    const clearUploadFiles = () => dispatch({type: 'clearUploadFiles' })
+    const clearUploadFiles = () => dispatch({ type: 'clearUploadFiles' })
 
     const startWorkflow = async (data: any, processDef: string, buId: number, formKey: string, comment?: string) => {
 
@@ -123,12 +123,12 @@ export default () => {
             const id = params?.taskId || state.instanceData?.task?.taskId
             if (!id) return
             const rs = await workflowServices.claim({ id: id })
-            
+
             dispatch({ type: 'isClaim', payload: { ori: params?.ori || 'instView', task: rs } })
 
-        } catch(error: any) {
+        } catch (error: any) {
             message.error(error.message || 'Failed to load data')
-         }
+        }
 
     }
 
@@ -138,9 +138,9 @@ export default () => {
             if (!id) return
             const rs = await workflowServices.unClaim({ id: id })
             dispatch({ type: 'isClaim', payload: { ori: params?.ori || 'instView', task: rs } })
-        } catch(error: any) {
+        } catch (error: any) {
             message.error(error.message || 'Failed to load data')
-         }
+        }
 
     }
 
@@ -148,13 +148,13 @@ export default () => {
         try {
             const rs = await workflowServices.findInstanceData()({ id: id, type: type })
             dispatch({ type: 'setInstanceData', payload: rs })
-        } catch(error:any) { 
+        } catch (error: any) {
             message.error(error.message || 'Failed to load data')
         }
 
     }
 
-    const  loadDiagram = async (instId?: string) => {
+    const loadDiagram = async (instId?: string) => {
 
         try {
             const id = instId || state.instanceData?.processInstance?.procInstId
@@ -166,12 +166,12 @@ export default () => {
             })
             actions.showModalAction('Diagram')
 
-        } catch(error: any) {
+        } catch (error: any) {
             message.error(error.message || 'Failed to load data')
-         }
+        }
     }
 
-    const openActionForm = (activity: string, formKey: string, action: string | 'start',procInstId: string, taskId?: string, payload?: any) => {
+    const openActionForm = (activity: string, formKey: string, action: string | 'start', procInstId: string, taskId?: string, payload?: any) => {
         dispatch({
             type: 'setActivityData', payload: {
                 activity: activity,
@@ -192,9 +192,9 @@ export default () => {
             if (params) {
                 dispatch({ type: 'setSearchParams', payload: params?.criteria || { state: 'ALL' } })
             }
-        } catch(error: any) {
+        } catch (error: any) {
             message.error(error.message || 'Failed to load data')
-         }
+        }
     }
     const selectedCompanyId = (id: number) => {
         dispatch({ type: 'setSelectedCompanyId', payload: { id: id } })
@@ -204,9 +204,9 @@ export default () => {
         try {
             const rs = await workflowServices.findProcessDef({ key: defKey })
             dispatch({ type: 'setProcessDefKey', payload: rs })
-        } catch(error: any) {
+        } catch (error: any) {
             message.error(error.message || 'Failed to load data')
-         }
+        }
     }
 
     const openStartMenu = async (id: number) => {
@@ -216,25 +216,31 @@ export default () => {
             dispatch({ type: 'setSelectedCompanyId', payload: { id: id } })
             // rs.length > 0 && actions.showModalAction('InstanceDefList')
             rs.length == 0 && message.warning("No process workflow available.")
-        } catch(error: any) {
+        } catch (error: any) {
             message.error(error.message || 'Failed to load data')
-         }
+        }
     }
 
     const loadProcessDefList = async (id: number) => {
         try {
             const rs = await workflowServices.findProcessDefList({ id: id })
             dispatch({ type: 'setInstanceDefList', payload: rs })
-        } catch(error: any) {
+        } catch (error: any) {
             message.error(error.message || 'Failed to load data')
-         }
+        }
     }
-    
 
-    const loadTaskList = ( params: TableViewSearchParams<TaskListAdvanceSearchParams>) =>{
-        return  workflowServices.findTaskList({
-            filter: params.criteria?.advanceSearch?.status|| '', searchValue: params.criteria?.searchValue
-        }, {page: (params.pagination?.current || 1) -1, pageSize: params.pagination?.pageSize} )
+
+    const loadTaskList = (params: TableViewSearchParams<TaskListAdvanceSearchParams>) => {
+
+        console.log(params);
+
+        return workflowServices.findTaskList({
+            filter: params.criteria?.advanceSearch?.status || '',
+            latest: params.criteria?.advanceSearch?.latest || false,
+            searchValue: params.criteria?.searchValue,
+
+        }, { page: (params.pagination?.current || 1) - 1, pageSize: params.pagination?.pageSize })
     }
 
     const downloadForm = async (pInst: string, fileName?: string) => {
@@ -288,32 +294,32 @@ export default () => {
                 }
             })
             actions.showModalAction('ShowUserDest')
-        } catch(error: any) {
+        } catch (error: any) {
             message.error(error.message || 'Failed to load data')
-         }
+        }
     }
 
-    const extractProcessDef = async (processDefId: string)=> {
+    const extractProcessDef = async (processDefId: string) => {
         return await workflowServices.extractProcessDef({
             id: processDefId
         })
     }
 
     const fetchWorkflowOriginator = async (processDefId: string) => {
-        return await workflowServices.fetchWorkflowOriginator({id: processDefId})
+        return await workflowServices.fetchWorkflowOriginator({ id: processDefId })
     }
     const fetchDestApproval = async (processDefId: string) => {
-        return await workflowServices.fetchDestApproval({id: processDefId})
+        return await workflowServices.fetchDestApproval({ id: processDefId })
     }
-    const  fetchNotificationFeedback = async (processDefId: string) => {
-        return await workflowServices.fetchNotificationFeedback({id: processDefId})
-    }
-    
-    const deployProcessDef = async(fileId: string) => {
-        await workflowServices.deployProcessDef({fileId: fileId})
+    const fetchNotificationFeedback = async (processDefId: string) => {
+        return await workflowServices.fetchNotificationFeedback({ id: processDefId })
     }
 
-    const saveDest = async(data: SaveFirstLevelApproval) => {
+    const deployProcessDef = async (fileId: string) => {
+        await workflowServices.deployProcessDef({ fileId: fileId })
+    }
+
+    const saveDest = async (data: SaveFirstLevelApproval) => {
         await workflowServices.saveDest(data)
     }
 
@@ -322,26 +328,26 @@ export default () => {
     }
 
     const saveContractTermTemp = async (data: ContractTermData) => {
-        return Promise.resolve({id: 1})
+        return Promise.resolve({ id: 1 })
     }
 
-    const listMessageTemplate = async() => {
+    const listMessageTemplate = async () => {
         return workflowServices.listMessageTemplate()
     }
 
     const saveConfigEndEvent = (params: ConfigEndEventParams) => {
         return workflowServices.saveConfigEndEvent(params)
     }
-    const fetchConfigEndEvent =  (eventId: string) => {
-        return  workflowServices.fetchConfigEntEvent({id: eventId})
+    const fetchConfigEndEvent = (eventId: string) => {
+        return workflowServices.fetchConfigEntEvent({ id: eventId })
     };
-    
+
     return {
         state: state,
         actions: {
             loadPRocessDef: loadPRocessDef,
             loadProcessDefList: loadProcessDefList,
-            openStartMenu: openStartMenu, 
+            openStartMenu: openStartMenu,
             loadInstanceList: loadInstanceList,
             loadTaskList: loadTaskList,
             showUserDest: showUserDest,
@@ -366,7 +372,7 @@ export default () => {
             fetchWorkflowOriginator: fetchWorkflowOriginator,
             fetchDestApproval: fetchDestApproval,
             fetchNotificationFeedback: fetchNotificationFeedback,
-            deployProcessDef: deployProcessDef, 
+            deployProcessDef: deployProcessDef,
             saveDest: saveDest,
             saveOriginator: saveOriginator,
             saveContractTermTemp: saveContractTermTemp,

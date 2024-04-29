@@ -55,6 +55,7 @@ export default ({ docId, accessKey, tabState }: Props) => {
         return false
     }
 
+
     return (<>
         <ProList<Attachment>
             actionRef={actionRef}
@@ -84,11 +85,13 @@ export default ({ docId, accessKey, tabState }: Props) => {
                 },
                 actions: {
                     render: (_, r) => [
+                       
                         onCheckExtensionFile(r.fileType) && <Button
                             type="link"
                             onClick={() => setState({ visible: { name: "DRAWER", payloads: r } })}
                             icon={<EyeOutlined />}
                         />,
+                       
                         <Button
                             icon={<DownloadOutlined />}
                             type="link"

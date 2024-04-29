@@ -20,10 +20,13 @@ export async function getInitialState(): Promise<{
   logout?: () => void;
   loading?: boolean;
 }> {
-
   moment.locale('en');
   if (getLocale() !== 'en-US') {
     setLocale('en-US');
+  }
+
+  if (location.pathname.startsWith("/external")) {
+    history.push(`${loginPath}/?path=${location.pathname}`);
   }
 
   return {
@@ -33,6 +36,7 @@ export async function getInitialState(): Promise<{
 }
 
 export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) => {
+
   return {
     actionsRender: () => [
       //<Question key="doc" />, <SelectLang key="SelectLang" />
@@ -50,7 +54,6 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
     footerRender: () => <Footer />,
     onPageChange: async () => {
       const { location } = history;
-
       if (!initialState?.currentUser && location.pathname !== loginPath) {
         history.push(`${loginPath}/?path=${location.pathname}`);
       }
@@ -86,8 +89,6 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
     menuHeaderRender: undefined,
     childrenRender: (children) => {
       if (initialState?.loading) return <PageLoading />;
-      console.log(children);
-
       return (
         <>
           <App>{children}</App>

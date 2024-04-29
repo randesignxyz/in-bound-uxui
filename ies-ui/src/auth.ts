@@ -49,6 +49,7 @@ export const kc = new Keycloak({
     url: Auth.url,
 
 })
+
 export const keycloak = async (sso?: boolean) => {
     if (isOffline()) return undefined
     kc.onTokenExpired = () => {
@@ -58,6 +59,7 @@ export const keycloak = async (sso?: boolean) => {
         checkLoginIframe: true,
         onLoad: 'login-required',
     });
+
     kc.token && localStorage.setItem('accessToken', kc.token);
     return kc
 }

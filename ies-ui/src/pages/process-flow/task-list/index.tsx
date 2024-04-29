@@ -114,7 +114,7 @@ export default () => {
                     },
                     onRequest: (pagination, sort) => onRequestHandler({
                         criteria: {
-                            ...{ searchParams, latest: latest },
+                            ...{ ...searchParams, latest: latest },
 
                             advanceSearch: searchParams,
                             sort,

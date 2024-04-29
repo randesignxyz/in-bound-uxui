@@ -202,8 +202,9 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
   return (
     <>
       <PageContainer
-        onBack={()=>history.push(`${FleetPaths.fleet}`)}
+        // onBack={()=>history.push(`${FleetPaths.fleet}`)}
         title="Fuel Lists"
+        
       >
       <Spin spinning={requestActions.request?.loading || false}>
         {/* <BreadCrumbCom separator=">" routes={routes} /> */}
@@ -229,7 +230,7 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
                   All
                 </Radio.Button>
                 <Radio.Button value="void" >
-                  VOID
+                  Void
                 </Radio.Button>
                 <Badge offset={[-20, 0]} count={0}></Badge>
               </Radio.Group>

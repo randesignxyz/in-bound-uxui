@@ -19,18 +19,15 @@ import ReminderListView from "../reminder/ReminderListView";
 import { DocumentationCreate, DocumentationDTO, UploadAttachmentFile } from "./data";
 import { Moment } from "moment";
 import DocFileUploadModal from "../attachment/DocFileUploadModal";
-import { history } from "@umijs/max";
 import DocumentDetail from "./DocumentDetail";
 import ContractViewDetail from "../contract/ContractViewDetail";
 import ShareListView from "../share/ShareListView";
-
+import { ExternalLayout } from "../dms";
 interface Props {
     id: number;
     share?: ShareDTO;
 }
-
 const alertMessage = (date: Moment, period?: number) => {
-
     if (expriationStatus(date) > 0) {
         return <Alert
             message={`document was expired `}
@@ -49,12 +46,11 @@ const alertMessage = (date: Moment, period?: number) => {
     }
 }
 const DocumentationDetail: React.FC<Props> = ({ id, share }) => {
-
     const requestAction = simpleRequestActions();
     const service = DocumentServiceAPI(requestAction);
     const [detail, setDetail] = useState<DocumentationDTO>();
     const actionRef = useRef<ActionType>();
-    const [tabState, setTabState] = useState<string>("2");
+    const [tabState, setTabState] = useState<string>("1");
     const [uploadFileState, setUploadFileState] = useState<{
         visible?: {
             name: "MODAL";
@@ -89,11 +85,10 @@ const DocumentationDetail: React.FC<Props> = ({ id, share }) => {
     useEffect(() => {
         loadData();
     }, [id]);
-
     return (<>
         <Spin spinning={requestAction.request?.loading}>
             <PageContainer
-                onBack={history.back}
+                onBack={!ExternalLayout.isExternal("dms/document/") ? ExternalLayout.handleBackHandler : undefined}
                 title="Documentation"
                 breadcrumb={undefined}
                 subTitle={`# ${detail?.documentation?.docName}`}
@@ -121,22 +116,11 @@ const DocumentationDetail: React.FC<Props> = ({ id, share }) => {
                         )
                     }
                 </>)}
-
                 <Tabs
                     defaultActiveKey={tabState}
                     items={[
                         {
-                            key: "2",
-                            label: "Shared",
-                            children: <ShareListView docId={detail?.id} />
-                        },
-                        {
-                            key: "3",
-                            label: "Reminder",
-                            children: <ReminderListView documentId={detail?.id} />
-                        },
-                        {
-                            key: "4",
+                            key: "1",
                             label: "Attachments",
                             children: <AttachmentView
                                 docId={detail?.id}
@@ -145,13 +129,23 @@ const DocumentationDetail: React.FC<Props> = ({ id, share }) => {
                             />
                         },
                         {
-                            key: "5",
+                            key: "2",
+                            label: "Shareds",
+                            children: <ShareListView docId={detail?.id} />
+                        },
+                        {
+                            key: "3",
+                            label: "Reminders",
+                            children: <ReminderListView documentId={detail?.id} />
+                        },
+                        
+                        {
+                            key: "4",
                             label: "Activities",
                             children: <HistoryTableView intantId={id} source="DOCUMENTATION" />
                         },
                     ]}
                 />
-
             </PageContainer>
         </Spin>
         <ShareDrawerForm
@@ -159,7 +153,7 @@ const DocumentationDetail: React.FC<Props> = ({ id, share }) => {
             onCancel={() => setShareState((v) => ({ visible: undefined }))}
             docId={id}
             onSave={async (data: ShareCreate) => {
-                const response = await ShareServiceAPI(requestAction).save(data) as ({
+                await ShareServiceAPI(requestAction).save(data) as ({
                     data?: string;
                     message?: string
                 });
@@ -174,14 +168,14 @@ const DocumentationDetail: React.FC<Props> = ({ id, share }) => {
                 Modal.confirm({
                     title: "Update Document",
                     content: "do you want update information this document?",
-                    onOk: () => {
-                        service.save(data);
+                    onOk: async() => {
+                        await service.save(data);
+                        actionRef.current?.reloadAndRest?.();
+                        loadData();
                         setState((v) => ({ visible: undefined }));
                         message.success("Success!");
-                        actionRef.current?.reload?.();
                     }
                 });
-
             }}
             division={state?.visible?.payload?.division}
             onCancel={() => setState((v) => ({ visible: undefined }))}
@@ -210,5 +204,4 @@ const DocumentationDetail: React.FC<Props> = ({ id, share }) => {
         />
     </>)
 }
-
 export default DocumentationDetail

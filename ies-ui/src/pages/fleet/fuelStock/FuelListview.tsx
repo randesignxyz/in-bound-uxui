@@ -12,7 +12,7 @@ import {
 } from '@ant-design/icons';
 import { Liquid } from '@ant-design/plots';
 import { ActionType, PageContainer, ProDescriptions } from '@ant-design/pro-components';
-import { Button, Card, Dropdown, MenuProps, message, Modal, Row, Space, Tag } from 'antd';
+import { Button, Card, Dropdown, Flex, MenuProps, message, Modal, Row, Space, Tag } from 'antd';
 import Col from 'antd/lib/grid/col';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FleetPaths } from '..';
@@ -24,6 +24,7 @@ import MonthlyEndingFormModal from './MonthlyEnding';
 import { TankFuelServiceAPI } from './service';
 import TankRefileFormModal from './TankRefillFormModal';
 import { history } from '@umijs/max';
+import { formatterQty } from '@/pages/utils';
 
 interface Props {
   onAdd?: () => void;
@@ -239,8 +240,9 @@ export default ({ onAdd, onDetail, onEdit, ...props }: Props) => {
   return (
     <>
       <PageContainer
-        onBack={() => history.push(FleetPaths.fleet)}
+        // onBack={() => history.push(FleetPaths.fleet)}
         title="Stocks"
+        loading={requestActions.request?.loading}
         extra={[
           <Button
             type="link"
@@ -272,110 +274,104 @@ export default ({ onAdd, onDetail, onEdit, ...props }: Props) => {
         </div> */}
 
         <Row gutter={[16, 24]}>
-          {fuelStock.map((it, key) => (
-            <Col sm={24} lg={12}>
-              <Card
-                title={it.tankName}
-                extra={
-                  <>
-                    <Dropdown
-                      menu={{
-                        items: getMenuItems(it),
-                        style: { width: 200 },
-                      }}
-                    >
-                      <a onClick={(e) => e.preventDefault()}>
-                        <DashOutlined />
-                      </a>
-                    </Dropdown>
-                  </>
-                }
-              >
-                <Row gutter={[16, 24]}>
-                  <Col span={12}>
-                    <ProDescriptions
-                      dataSource={fuelStock[key]}
-                      column={1}
-                      columns={[
-                        // {
-                        //     title: "Tank Name",
-                        //     dataIndex: "tankName",
-                        //     key: "volume",
+          {fuelStock.map((it, key) => {
+            const percentage = (it.currentInventory / it.tankCapacity).toFixed(5)
+            return (
+              <Col sm={24} lg={12}>
+                <Card
+                  title={it.tankName}
+                  extra={
+                    <>
+                      <Dropdown
+                        menu={{
+                          items: getMenuItems(it),
+                          style: { width: 200 },
+                        }}
+                      >
+                        <a onClick={(e) => e.preventDefault()}>
+                          <DashOutlined />
+                        </a>
+                      </Dropdown>
+                    </>
+                  }
+                >
+                  <Row gutter={[16, 24]}>
+                    <Col span={12}>
+                      <ProDescriptions
+                        dataSource={fuelStock[key]}
+                        column={1}
+                        columns={[
+                          // {
+                          //     title: "Tank Name",
+                          //     dataIndex: "tankName",
+                          //     key: "volume",
 
-                        // },
-                        {
-                          title: 'Fuel Type',
-                          dataIndex: 'fuelType',
-                          render: (_, r) => r?.fuelType?.name,
-                          key: 'ullage',
-                        },
-                        {
-                          title: 'Tank Capacity',
-                          dataIndex: 'tankCapacity',
-                          key: '1',
-                        },
-                        // {
-                        //     title: "Beginning Balance",
-                        //     dataIndex: "beginningInventory",
-                        //     key: "height"
-                        // },
-                        // {
-                        //     title: "Tank Usages",
-                        //     dataIndex: "tankUsages",
-                        //     key: "waterVolume"
-                        // },
-                        {
-                          title: 'Current Balance',
-                          dataIndex: 'currentInventory',
-                          key: 'waterVolume',
-                          render: (_, r) => r.currentInventory?.toFixed(2),
-                        },
-                        {
-                          title: 'Location',
-                          dataIndex: 'location',
-                          render: (_, r) => r?.location?.name,
-                          key: 'location',
-                        },
-                        {
-                          title: 'Status',
-                          dataIndex: 'status',
-                          key: 'status',
-                          render: (_, r) => (
-                            <Tag color={r.status == 'active' ? 'green' : 'red'}>{r.status}</Tag>
-                          ),
-                        },
-                      ]}
-                    />
-                  </Col>
-                  <Col span={12}>
-                    <Liquid
-                      percent={(it.currentInventory / it.tankCapacity)}
-                      
-                      autoFit={true}
-                      
-                      style= {{
-                        textFill: '#fff',
-                        // colorField:(it.currentInventory / it.tankCapacity) < 0.5 ? 'red' : "red",
-                        outlineBorder: 4,
-                        outlineDistance: 8,
-                        waveLength: 128,
+                          // },
+                          {
+                            title: 'Fuel Type',
+                            dataIndex: 'fuelType',
+                            render: (_, r) => r?.fuelType?.name,
+                            key: 'ullage',
+                          },
+                          {
+                            title: 'Tank Capacity',
+                            dataIndex: 'tankCapacity',
+                            key: '1',
+                          },
+                          // {
+                          //     title: "Beginning Balance",
+                          //     dataIndex: "beginningInventory",
+                          //     key: "height"
+                          // },
+                          // {
+                          //     title: "Tank Usages",
+                          //     dataIndex: "tankUsages",
+                          //     key: "waterVolume"
+                          // },
+                          {
+                            title: 'Current Balance',
+                            dataIndex: 'currentInventory',
+                            key: 'waterVolume',
+                            render: (_, r) => r.currentInventory?.toFixed(2),
+                          },
+                          {
+                            title: 'Location',
+                            dataIndex: 'location',
+                            render: (_, r) => r?.location?.name,
+                            key: 'location',
+                          },
+                          {
+                            title: 'Status',
+                            dataIndex: 'status',
+                            key: 'status',
+                            render: (_, r) => (
+                              <Tag color={r.status == 'active' ? 'green' : 'red'}>{r.status}</Tag>
+                            ),
+                          },
+                        ]}
+                      />
+                    </Col>
+                    <Col span={12}>
+                      <Liquid
+                        percent={parseFloat(percentage)}
+                        autoFit={true}
                         
-                      }}
-                      
-                      // color={it.currentInventory / it.tankCapacity < 0.5 ? 'red' : ''}
-                      // outline={{
-                      //   border: 4,
-                      //   distance: 8,
-                      // }}
-                      // wave={{
-                      //   length: 128,
-                      // }}
-                    />
-                  </Col>
-                </Row>
-              </Card>
-            </Col>
-          ))}
+                        style={{
+                          // textFill: '#FE9900',
+                          textFill:"black",
+                          outlineBorder: 4,
+                          outlineDistance: 8,
+                          waveLength: 128,
+
+                        }}
+                      />
+                    </Col>
+                  </Row>
+                </Card>
+               </Col>
+            )
+          }
+          )}
         </Row>
 
       </PageContainer>

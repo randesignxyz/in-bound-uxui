@@ -25,7 +25,7 @@ const APPDMS: React.FC = () => {
             width: "300px",
             position: "fixed",
             zIndex: "1",
-            top: "1០%",
+            // top: "10%",
             left: 30,
             backgroundColor: "white",
             overflow: "auto",
@@ -77,14 +77,12 @@ const APPDMS: React.FC = () => {
                             },
                             {
                                 value: "share",
-                                // label: <Badge showZero dot overflowCount={9}>Shareds</Badge>,
                                 label:"Shared",
                                 icon: <ShareAltOutlined />,
                             },
                             {
                                 value: "reminder",
                                 label:"Reminders",
-                                // label:<Badge count={0} showZero offset={[-10,-5]}  style={{zIndex:90, position:"fixed"}} title="ASDASD" >Reminder</Badge> ,
                                 icon: <BellOutlined />,
                             },
                             {

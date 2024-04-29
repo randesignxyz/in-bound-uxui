@@ -10,7 +10,6 @@ import { ProFormSelect } from '@ant-design/pro-components';
 import { CoreServiceAPI } from '../service';
 import { DepartmentServiceAPI } from '../setting/components/department/service';
 import { DocumentTypeServiceAPI } from '../setting/components/documentType/service';
-
 interface Props extends DrawerProps {
   initData?: DocumentationAdvanceSearch;
   deliveryMethodList?: SoDeliveryMethod[];
@@ -18,7 +17,6 @@ interface Props extends DrawerProps {
   onSearch: (params: DocumentationAdvanceSearch) => void;
   onReset: () => void;
 }
-
 const AdvanceDocumentSearch: React.FC<Props> = ({
   initData,
   onSearch,
@@ -32,7 +30,6 @@ const AdvanceDocumentSearch: React.FC<Props> = ({
     if (!props.open) return;
     form.setFieldsValue({ ...initData });
   }, [props.open]);
-
   const requestActions = simpleRequestActions();
   return (
     <Drawer
@@ -101,5 +98,4 @@ const AdvanceDocumentSearch: React.FC<Props> = ({
     </Drawer>
   );
 };
-
 export default AdvanceDocumentSearch

@@ -23,7 +23,7 @@ import QuickView from "../share/QuickView"
 import { HistoryServiceAPI } from "../history/service"
 import HistoryDoc from "./HistoryDoc"
 import MoveDocumentModal from "./MoveDocument"
-import { expriationStatus, status } from "../core"
+import { StatusColor, expriationStatus } from "../core"
 import { FavoriteServiceAPI } from "../favorite/service"
 import DocumentModalForm from "./EntryForm"
 
@@ -51,7 +51,6 @@ export default ({ paramSearch, libraryId }: Props) => {
             division: "DOC" | "CONTRACT"
         }
     }>();
-
     const [shareDrawerState, setShareDrawerState] = useState<{
         visible?: {
             name: "DRAWER";
@@ -84,12 +83,10 @@ export default ({ paramSearch, libraryId }: Props) => {
             documentId: number;
         }
     }>();
-  
     const [advanceSearchParams, setAdvanceSearchParams] = useState<DocumentationAdvanceSearch>({
         status: "ALL",
     });
     const [advanceSearch, setAdvanceSearch] = useState<{ visible: boolean }>();
-    
     const actionItem = (record: DocumentationDTO): MenuProps["items"] => [
 
         {
@@ -128,9 +125,13 @@ export default ({ paramSearch, libraryId }: Props) => {
             itemIcon: <SwapOutlined />,
             disabled: record.status == "Inactive" ? true : false,
             onClick: () => {
-                setMoveState({ visible: { name: "MODAL", moveDoc:{
-                    docId:record.id,
-                } } })
+                setMoveState({
+                    visible: {
+                        name: "MODAL", moveDoc: {
+                            docId: record.id,
+                        }
+                    }
+                })
             }
         },
         {
@@ -219,15 +220,12 @@ export default ({ paramSearch, libraryId }: Props) => {
             onClick: () => setHistoryState({ visible: { name: "DRAWER", docId: record.id } })
         },
     ];
-
-
     useEffect(() => {
         setAdvanceSearchParams({ ...paramSearch });
         actionRef.current?.reload?.()
-    }, [paramSearch]);
+    }, [paramSearch, libraryId]);
     const cacheList = useModel('dataList');
     const onRequestHandler = async (params: TableViewSearchParams<DocumentationAdvanceSearch>) => {
-
         try {
             return services.page(params).then((it) => {
                 return cacheList.cacheDataList({
@@ -270,7 +268,6 @@ export default ({ paramSearch, libraryId }: Props) => {
             }),
         },
     ];
-
     return (
         <>
             <TableView<DocumentationDTO, { searchValue?: string }>
@@ -283,19 +280,18 @@ export default ({ paramSearch, libraryId }: Props) => {
                             <Segmented
                                 defaultValue={advanceSearchParams.status}
                                 onChange={(e) => {
-                                    if(e=="ALL"){
+                                    if (e == "ALL") {
+                                        setAdvanceSearchParams((v) => ({
+                                            // ...v,
+                                            status: e.toString(),
+                                        }));
+                                    }
+                                    else {
                                         setAdvanceSearchParams((v) => ({
                                             ...v,
                                             status: e.toString(),
                                         }));
                                     }
-                                    else{
-                                        setAdvanceSearchParams((v) => ({
-                                            ...v,
-                                            status: e.toString(),
-                                        }));
-                                    }
-
                                     actionRef.current?.reloadAndRest?.();
                                 }}
                                 options={[
@@ -343,8 +339,8 @@ export default ({ paramSearch, libraryId }: Props) => {
                             <Dropdown
                                 menu={{
                                     items: itemCreateNew(),
-                                    style:{
-                                        width:200
+                                    style: {
+                                        width: 200
                                     }
                                 }}
                             >
@@ -365,7 +361,7 @@ export default ({ paramSearch, libraryId }: Props) => {
                                 ...criteria,
                                 advanceSearch: {
                                     ...advanceSearchParams,
-                                    library:libraryId
+                                    library: libraryId
                                 },
                                 sort,
                             },
@@ -373,7 +369,6 @@ export default ({ paramSearch, libraryId }: Props) => {
                         }),
                     onFirstLoad: () =>
                         cacheList.fetchDataList('dms-document').then((v) => {
-                       
                             if (v) {
                                 setAdvanceSearchParams({
                                     ...v.creteria?.criteria,
@@ -386,7 +381,7 @@ export default ({ paramSearch, libraryId }: Props) => {
                                         advanceSearch: {
                                             ...advanceSearchParams,
                                             library: parseInt(param["*"] || ""),
-                                            folderType:"LIBRARY"
+                                            folderType: "LIBRARY"
                                         }
                                     },
                                 });
@@ -398,24 +393,29 @@ export default ({ paramSearch, libraryId }: Props) => {
                         title: "#",
                         sorter: "code",
                         width: 180,
-                        render: (_, r) => (<Space align="center" ><Button size="small" type="link" icon={<ExportOutlined />} onClick={() => {
-                            window.open(`/external/dms/document/detail/${r.id}`)?.focus();
-                        }} /><span>{r.documentation.docNumber}</span></Space>),
+                        render: (_, r) => (<Space align="center" >
+                            <Button size="small" type="link" icon={<ExportOutlined />} onClick={() => {
+                                window.open(`/external/dms/document/detail/${r.id}`)?.focus();
+                            }} />
+                            <Button
+                                type="link"
+                                size="small"
+                                onClick={() => history.push(`${DMSPaths.document}/detail/${r.id}`)}
+                            >
+                                {r.documentation.docNumber?r.documentation.docName:"N/A"}
+                            </Button>
+                        </Space>),
                     },
                     {
                         title: "Name",
                         sorter: "name",
-                        render: (_, r) => (
-                            <Button
-                                type="link"
-                                onClick={() => history.push(`${DMSPaths.document}/detail/${r.id}`)}
-                            >
-                                {r.documentation.docName}
-                            </Button>)
+                        width:400,
+                        render:(_,r)=>r.documentation?.docName,
                     },
                     {
                         title: "Expiry Date",
                         sorter: "expiryDate",
+                        fixed: true,
                         render: (_, r) => <span style={{ color: expriationStatus(r.term?.expiryDate) > 0 ? "red" : "" }}>{formatDate(r.term.expiryDate)}</span>
                     },
                     {
@@ -423,12 +423,14 @@ export default ({ paramSearch, libraryId }: Props) => {
                         sorter: "createdDate",
                         dataIndex: "createdDate",
                         valueType: "date",
+                        fixed: true,
                     },
                     {
                         title: "Updated",
                         sorter: "lastModifiedDate",
                         dataIndex: "lastModifiedDate",
-                        valueType: "date"
+                        valueType: "date",
+                        fixed: true,
                     },
                     {
                         title: "Type",
@@ -437,13 +439,15 @@ export default ({ paramSearch, libraryId }: Props) => {
                     {
                         title: "Status",
                         sorter: "status",
-                        render:(_,r)=><Badge text={r.status} status={status(r.term.expiryDate).status} />
+                        fixed: true,
+                        render: (_, r) => <Badge text={r.status} status={StatusColor.getColorStatus(r.status)} />
                     },
                     {
                         title: "Shared",
+                        align: "center",
                         render: (_, r) => {
                             if (r.share > 0) {
-                                return <Button icon={<ShareAltOutlined />} type="link" onClick={() => setQuickViewDrawerState({ visible: { name: "DRAWER", docId: r.id } })} />
+                                return <Button size="small" icon={<ShareAltOutlined />} type="link" onClick={() => setQuickViewDrawerState({ visible: { name: "DRAWER", docId: r.id } })} />
                             }
                             else {
                                 return ""
@@ -469,6 +473,7 @@ export default ({ paramSearch, libraryId }: Props) => {
                 open={advanceSearch?.visible}
                 onClose={() => setAdvanceSearch({ visible: false })}
                 onReset={() => {
+                    setAdvanceSearchParams({})
                     actionRef.current?.reloadAndRest?.();
                 }}
                 onSearch={(data) => {
@@ -484,8 +489,8 @@ export default ({ paramSearch, libraryId }: Props) => {
                 onSave={(data: ShareCreate) => {
                     ShareServiceAPI(requestAction).save(data);
                     message.success("Success"),
-                        actionRef.current?.reloadAndRest?.();
-                    setShareDrawerState(() => ({ visible: undefined }));
+                        setShareDrawerState(() => ({ visible: undefined }));
+                    actionRef.current?.reloadAndRest?.();
                 }}
             />
             <ReminderModalForm
@@ -514,11 +519,11 @@ export default ({ paramSearch, libraryId }: Props) => {
                 open={moveState?.visible?.name == "MODAL"}
                 onCancel={() => setMoveState({ visible: undefined })}
                 data={moveState?.visible?.moveDoc}
-                onSave={(data:MoveDocParams) => {
+                onSave={(data: MoveDocParams) => {
                     services.moveDoc(data);
                     actionRef.current?.reload?.();
                     message.success("Success!");
-                    setMoveState({visible:undefined});
+                    setMoveState({ visible: undefined });
                 }}
             />
             < DocumentModalForm
@@ -528,16 +533,21 @@ export default ({ paramSearch, libraryId }: Props) => {
                 onCancel={() => setDocumentState(v => ({ ...v, visible: undefined }))}
                 folderId={documentModalState?.visible?.folderId}
                 division={documentModalState?.visible?.division}
-                onSave={async (data: DocumentationCreate) => {
-                    const entry = {
-                        ...data,
-                        libraryId: libraryId
-                    }
-                    services.save(entry);
-                    setDocumentState({ visible: undefined });
-                    actionRef.current?.reloadAndRest?.();
-                    message.success("Success!")
-                   
+                onSave={ (data: DocumentationCreate) => {
+                    Modal.confirm({
+                        title: "Save document",
+                        content: "are you sure?",
+                        onOk:async () => {
+                            const entry = {
+                                ...data,
+                                libraryId: libraryId
+                            }
+                            await services.save(entry);
+                            actionRef.current?.reloadAndRest?.();
+                            setDocumentState({ visible: undefined });
+                            message.success("Success!");
+                        }
+                    });
                 }}
             />
         </>

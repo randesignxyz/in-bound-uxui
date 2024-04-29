@@ -17,23 +17,17 @@ interface Props extends DrawerFormProps {
     docId?: number;
     type?: string
 }
-
 const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...props }: Props) => {
-
-
     const requestAction = simpleRequestActions();
     const [form] = useForm<ShareCreate>();
     const [recipeintState, setRecipeintState] = useState<{
         recipeint?:boolean;
         group?:boolean;
     }>();
-
     useEffect(()=>{
         form.resetFields();
         setRecipeintState({group:false, recipeint:false})
-    }, [props.open]);
-
-
+    }, [props.open]);      
     return (
         <DrawerForm
             width={500}
@@ -45,8 +39,7 @@ const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...pr
                 
             }}
             submitter={{
-                onSubmit:(as)=>{
-                    console.log(as);
+                onSubmit:()=>{
                 }
             }}
             onFinish={async () => {
@@ -57,7 +50,6 @@ const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...pr
                 }
                 onSave(entry)
             }}
-
         >
             {
                 type === "DETAIL" && (
@@ -108,12 +100,10 @@ const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...pr
                                 render:(_,r)=><Flex vertical><span>Accessible</span><Tag color="cyan" bordered={false}>{r.accessible}</Tag></Flex>
                             }
                         }}
-
                     />
                 ) ||
                 (
                     <>
-
                     <ProFormText
                         name={"recipient"}
                         label="Recipient"
@@ -130,9 +120,7 @@ const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...pr
                             }
                         }}
                     />
-                      
                         <p>OR</p>
-                    
                         <ProFormSelect
                             name={"groupId"}
                             label="User Group"
@@ -160,10 +148,7 @@ const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...pr
                                 }))
                             }}
                         />
-
-
                         <Divider orientation="left">Setting</Divider>
-
                         <Row gutter={16}>
                             <Col span={12}>
                                 <ProFormDatePicker
@@ -219,13 +204,9 @@ const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...pr
                             name={"description"}
                             label="Description"
                         />
-
-
                     </>
-
                 )
             }
-
         </DrawerForm>
     )
 }

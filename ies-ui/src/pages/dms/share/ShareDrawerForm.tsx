@@ -23,7 +23,6 @@ const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...pr
     }>();
     useEffect(() => {
         form.resetFields();
-        // const data = AccountServiceAPI(requestAction).fetchUser("reach.pheun").query(requestAction);
         setRecipeintState({ group: false, recipeint: false })
     }, [props.open]);
     return (

@@ -10,13 +10,10 @@ import { FolderServiceAPI } from "@/pages/dms/folder/service"
 interface Props{
     actionKey?:string
 }
-
 export default ({actionKey, ...props}:Props) =>{
-
     const requestAction = simpleRequestActions();
     const actionRef = useRef<ActionType>();
     const services = FolderServiceAPI(requestAction);
-
     const [state, setState] = useState<{
         visible?:{
             name:"MODAL";
@@ -26,7 +23,6 @@ export default ({actionKey, ...props}:Props) =>{
             }
         }
     }>();
-
     const items = (record:FolderDTO):MenuProps["items"] =>[
         {
             key:"view",
@@ -39,10 +35,7 @@ export default ({actionKey, ...props}:Props) =>{
             itemIcon:<EditOutlined/>,
             onClick:()=>setState({visible:{name:"MODAL",type:"EDIT",payload:{data:record}}})
         },
-      
-    ]
-
-
+    ];
     return (
         <>
             <ProTable<FolderDTO>
@@ -112,18 +105,15 @@ export default ({actionKey, ...props}:Props) =>{
                             advanceSearch:{
                                 code:"LIBRARY"
                             },
-                            
                         }
                     });
                     return Promise.resolve({
                         data:dataList.items,
                         success:true,
                         total:dataList.total
-                    })
+                    });
                 }}
-               
             />
-
             <FolderEntryForm
                 open={state?.visible?.name==="MODAL"}
                 onCancel={()=>setState(v=>({...v, visible:undefined}))}

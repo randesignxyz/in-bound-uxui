@@ -6,7 +6,10 @@ import {
   AccessoriesDTO,
   AccessoriesSearchParam,
   AddVehicleAccessory,
+  CategoryDTO,
 } from './data';
+import { ActivityLogAdvanceSearchParam, ActivityLogDTO } from '../data';
+import { Page } from '@/services/shared/data';
 
 const AccessoryAction = {
   page: (
@@ -21,9 +24,17 @@ const AccessoryAction = {
       page: params.pagination?.current,
     },
   }),
+  
 
   save: (data: AccessoriesCreate): ServiceApiType<AccessoriesCreate> => ({
     actionName: 'save-accessory',
+    endpoint: 'FLEET',
+    type: 'EXEC',
+    payload: data,
+  }),
+
+  deductAccessoryQTY: (data: AccessoriesCreate): ServiceApiType<AccessoriesCreate> => ({
+    actionName: 'deduct-accessory-qty',
     endpoint: 'FLEET',
     type: 'EXEC',
     payload: data,
@@ -49,6 +60,29 @@ const AccessoryAction = {
     type: 'EXEC',
     payload: { id },
   }),
+
+  pageCategory: (
+    params: TableViewSearchParams<AccessoriesSearchParam>,
+  ): ServiceApiType<{ searchValue?: string }> => ({
+    type: 'PAGING_QUERY',
+    actionName: 'page-category',
+    endpoint: 'FLEET',
+    payload: { ...params.criteria },
+    pagination: {
+      pageSize: params.pagination?.pageSize,
+      page: params.pagination?.current,
+    },
+  }),
+  pageActivityLog:(params:TableViewSearchParams<ActivityLogAdvanceSearchParam>):ServiceApiType<{searchValue?:string}> =>({
+    actionName:"page-activity-log",
+    endpoint:"FLEET",
+    type:"PAGING_QUERY",
+    payload:{...params.criteria},
+    pagination:{
+      pageSize:params.pagination?.pageSize,
+      page:params.pagination?.current
+    }
+  })
 };
 
 export const AccessoryServiceAPI = (requestActions: RequestActions) => {
@@ -60,6 +94,8 @@ export const AccessoryServiceAPI = (requestActions: RequestActions) => {
 
     save: (data: AccessoriesCreate) =>
       singleRequest<{ data: string; message: string }>(AccessoryAction.save(data))(requestActions),
+    deductAccessoryQTY: (data: AccessoriesCreate) =>
+      singleRequest<{ data: string; message: string }>(AccessoryAction.deductAccessoryQTY(data))(requestActions),
     delete: (id: number) =>
       singleRequest<{ data: string; message: string }>(AccessoryAction.delete(id))(requestActions),
 
@@ -72,5 +108,11 @@ export const AccessoryServiceAPI = (requestActions: RequestActions) => {
       singleRequest<AccessoriesDTO>(AccessoryAction.listAccessoriesByVehicle(id))(
         requestActions,
       ) as Promise<AccessoriesDTO[]>,
+    pageCategory: (params: TableViewSearchParams<AccessoriesSearchParam>) =>
+      singleRequest<CategoryDTO>(AccessoryAction.pageCategory(params))(requestActions) as Promise<
+        Paging<CategoryDTO>
+      >,
+
+    pageActivityLog:(params:TableViewSearchParams<ActivityLogAdvanceSearchParam>) =>singleRequest<ActivityLogDTO>(AccessoryAction.pageActivityLog(params))(requestActions) as Promise<Page<ActivityLogDTO>>
   };
 };

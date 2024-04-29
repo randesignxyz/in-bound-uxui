@@ -1,11 +1,7 @@
-import { ProFormSelect, ProFormText, ProFormDigit, ProFormTextArea, ProFormDatePicker, ProFormCheckbox, ProFormDependency } from "@ant-design/pro-components";
-import { Row, Col, Divider, Flex, Button, Input, Space, InputRef } from "antd";
+import { ProFormSelect, ProFormDependency } from "@ant-design/pro-components";
 import { CoreServiceAPI } from "../service";
-import { DepartmentServiceAPI } from "../setting/components/department/service";
-import { CompanySerivceAPI } from "./company/service";
 import { simpleRequestActions } from "@/services/model";
-import { PlusOutlined } from "@ant-design/icons";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import ContractGeneral from "./ContractGeneral";
 import ContractPurchase from "./ContractPurchase";
 import ContractSales from "./ContractSales";

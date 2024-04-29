@@ -1,27 +1,43 @@
+import { ActivityLogDTO } from "../data";
 
 export interface AccessoriesDTO{
+    imageLink: any;
     id:number;
+    partNumber:string;
     name:string;
+    category?:CategoryDTO;
     brand?:string;
-    code?:string;
+    model?:string;
+    serialNumber?:string;
+    qty:number;
+    unitCost:number;
+    unitType:string;
+    warehouse?:string;
+    vendor?:string;
+    manufacturer?:string;
     description?:string;
-    imageLink?:string;
-    quantity?:number;
     imageId?:string;
-    status?:string;
-    key:string;
-    selected?: boolean;
+    status:string,
+    activityLog:List<ActivityLogDTO>
 }
 
 export interface AccessoriesCreate{
     id?:number;
-    name:string;
+    partNumber?:string;
+    name?:string;
+    category?:number;
     brand?:string;
-    code?:string;
+    model?:string;
+    serialNumber?:string;
+    qty:number;
+    unitCost?:number;
+    unitType?:string;
+    warehouse?:string;
+    vendor?:string;
+    manufacturer?:string;
     description?:string;
     imageId?:string;
     status?:string;
-    quantity:number
 }
 
 
@@ -34,5 +50,17 @@ export interface AddVehicleAccessory{
 }
 
 export interface AccessoriesSearchParam{
-    searchValue?:string;
+    status:string
+}
+
+// interface AccessoryDeductQTY{
+//     qty:number;
+//     unitCost:string;
+//     id:number;
+// }
+
+interface CategoryDTO{
+    id:number;
+    name:string;
+    description:string;
 }

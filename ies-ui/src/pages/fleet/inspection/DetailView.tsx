@@ -7,6 +7,7 @@ import BreadCrumbCom from '../components/BreadCrumbCom';
 import { InspectionDTO, InspectionItemCreate } from './data';
 import { InspectionServiceAPI } from './service';
 import { history } from '@umijs/max';
+import { ExternalLayout } from '../fleet';
 
 interface Props {
   id: string;
@@ -21,21 +22,6 @@ export default ({ id }: Props) => {
     setInspectionData(await service.detail(id));
   }, []);
 
-  const routes = [
-    {
-      path: FleetPaths.fleet,
-      label: 'Fleet',
-    },
-    {
-      path: FleetPaths.inspection + '/list',
-      label: 'Inspection',
-    },
-    {
-      path: '',
-      label: 'Detail',
-    },
-  ];
-
   useEffect(() => {
     initData();
   }, []);
@@ -43,7 +29,7 @@ export default ({ id }: Props) => {
   return (
     <>
       <PageContainer
-        onBack={()=>history.push(`${FleetPaths.inspection}/list`)}
+        onBack={!ExternalLayout.isExternal("fleet/inspection") ? ExternalLayout.handleBackHandler : undefined}
         title="Inspection"
         subTitle={`#${inspectionData?.plateNumber}`}
       >

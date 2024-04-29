@@ -21,8 +21,8 @@ export default ({ referenceStringId, logParam , ...props }:Props) => {
                     criteria: {
                         searchValue: "",
                         advanceSearch: {
-                            source:logParam.source
-                            // referenceIntId: data?.id
+                            source:logParam.source,
+                            referenceStringId: referenceStringId
                         },
                     },
                     pagination: {

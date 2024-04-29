@@ -153,7 +153,7 @@ const DocumentationDetail: React.FC<Props> = ({ id, share }) => {
             onCancel={() => setShareState((v) => ({ visible: undefined }))}
             docId={id}
             onSave={async (data: ShareCreate) => {
-                const response = await ShareServiceAPI(requestAction).save(data) as ({
+                await ShareServiceAPI(requestAction).save(data) as ({
                     data?: string;
                     message?: string
                 });

@@ -6,11 +6,8 @@ import { ActionType, PageContainer, ProDescriptions, ProList, ProTable } from '@
 import { Card, Divider, Space, Spin, Tabs, Tag, Tooltip } from 'antd';
 import moment from 'moment';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { FleetPaths } from '..';
-import BreadCrumbCom from '../components/BreadCrumbCom';
 import { MaintenanceHistory, MaintenanceItem, MaintenneceDTO, MaintenneceDetailDTO } from './data';
 import { MaintenanceServiceAPI } from './service';
-import { history } from '@umijs/max';
 import { ExternalLayout } from '../fleet';
 
 interface Props {
@@ -29,25 +26,9 @@ export default ({ id, onEdit }: Props) => {
     setMaintenanceData(await service.detail(id));
   }, []);
 
-  const routes = [
-    {
-      path: FleetPaths.fleet,
-      label: 'Fleet',
-    },
-    {
-      path: FleetPaths.mantenence + '/list',
-      label: 'Maintenance',
-    },
-    {
-      path: '',
-      label: 'Detail',
-    },
-  ];
-
   useEffect(() => {
     initData();
   }, []);
-
   const durationDate = (r: MaintenneceDTO) => {
     if ((r.formDate && r.toDate) !== null) {
       const start = moment(r.formDate);
@@ -65,12 +46,11 @@ export default ({ id, onEdit }: Props) => {
       subTitle={`#${maintenanceData?.vehicle?.plateNumber}`}
      >
      <Spin spinning={requestActions.request?.loading || false}>
-        {/* <BreadCrumbCom separator=">" routes={routes} /> */}
         <Space size={12} direction="vertical">
           <Card key={'maintenance'} size={'small'}>
             <ProDescriptions<MaintenneceDetailDTO>
               dataSource={maintenanceData}
-              contentStyle={{ fontWeight: 'bold' }}
+              style={{ fontWeight: '500px' }}
               column={3}
               columns={[
                 {
@@ -108,7 +88,6 @@ export default ({ id, onEdit }: Props) => {
                   key: 'status',
                   title: 'Status',
                   render: (_, r) => <Tag color={'gold'}>{r.status}</Tag>,
-
                 },
                 {
                   key: 'duration',

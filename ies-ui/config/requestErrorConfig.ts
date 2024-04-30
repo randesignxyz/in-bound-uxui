@@ -96,7 +96,7 @@ export const errorConfig: RequestConfig = {
   },
   requestInterceptors: [
     async (config: RequestOptions) => {
-      const url = config?.url?.concat('?token = 123');
+      const url = config?.url
       const matchs = ['/api/', '/services/']
       const requiredToken = matchs.some(it => config.url?.startsWith(it))
 

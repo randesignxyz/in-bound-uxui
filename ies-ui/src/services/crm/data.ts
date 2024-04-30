@@ -100,7 +100,7 @@ export interface AddressData {
   longitude: string;
   provinceId: number;
   districtId: number;
-  communeId: number;
+  communeId?: number;
   villageId?: number;
   hotspot?: string;
   direction?: string;
@@ -184,16 +184,16 @@ export interface ContractTermInfo {
   lineItem: number;
   term: string;
   type:
-    | 'BIZ_NAME'
-    | 'OWNER_NAME'
-    | 'PHONE_LIST'
-    | 'PARTY_A'
-    | 'PARTY_B'
-    | 'COTRACT_DRUATION'
-    | 'EFFECTIVE_DATE'
-    | 'EXPIRY_DATE'
-    | 'ADDRESS'
-    | 'DURATION';
+  | 'BIZ_NAME'
+  | 'OWNER_NAME'
+  | 'PHONE_LIST'
+  | 'PARTY_A'
+  | 'PARTY_B'
+  | 'COTRACT_DRUATION'
+  | 'EFFECTIVE_DATE'
+  | 'EXPIRY_DATE'
+  | 'ADDRESS'
+  | 'DURATION';
 }
 
 export interface TermText {

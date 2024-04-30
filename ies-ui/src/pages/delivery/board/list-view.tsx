@@ -409,7 +409,6 @@ export default ({
                     <ProList<InstanceListItem>
                         showActions='hover'
                         size='small'
-                        // loading={false}
                         request={(criteria, pagination) =>
                             onRequestHandler({
                                 criteria: {
@@ -447,7 +446,6 @@ export default ({
                                                     moment(r.loading.assignedDate).toNow()
                                                 }</ProDescriptions.Item>
                                             }
-
                                             {
                                                 r.loading.status == 'LOADING_STARTED' && r.loading.loadingStarted && <ProDescriptions.Item label="Loading time">{
                                                     moment(r.loading.loadingStarted).toNow()
@@ -491,7 +489,6 @@ export default ({
                                     if (!r.changeRequest && (r?.loading?.status === 'PENDING' || r.loading.status == 'LOADED')) {
                                         return
                                     }
-
                                     const actions = getActions?.('LIST', r).filter(it => it.visible)
 
                                     if (actions?.length == 1) {
@@ -500,9 +497,6 @@ export default ({
                                     }
 
                                     const mainAction = actions?.find(it => it.main)
-
-
-
                                     return <DropdownButton onClick={() => {
                                         mainAction?.onClick?.(r.id)
                                     }} key={r.id}

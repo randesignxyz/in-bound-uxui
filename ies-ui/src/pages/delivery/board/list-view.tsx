@@ -113,7 +113,6 @@ export default ({
                     return 50
                 } else if (it.activity == "DELIVERY" && !!it.delivery.startedDate) {
                     return 60
-
                 } else return 100
 
             })
@@ -143,7 +142,6 @@ export default ({
 
 
         } catch (error: any) {
-            message.error(error.message || 'Failed to load data');
             return Promise.reject();
         }
     };
@@ -242,38 +240,43 @@ export default ({
         const itemToClaim = list?.find(it => !it.claimedBy && !it.holdBy && it.loading.status == 'LOADED' && !it.changeRequest)
         const claimedItem = list?.find(it => it.isOwner && !it.holdBy && it.loading.status == 'LOADED' && !it.changeRequest)
 
-        return <ProCard style={claimedItem && { backgroundColor: 'Highlight' }} bordered boxShadow colSpan={'50%'} title="Assign Docs" extra={
-            (() => {
-                if (claimedItem) {
-                    const actions = getActions?.('LIST', claimedItem).filter(it => it.visible)
-                    const mainAction = actions?.find(it => it.main)
-                    return <DropdownButton size='small' onClick={() => {
-                        mainAction?.onClick?.(claimedItem.id)
-                    }}
-                        key={claimedItem.id}
-                        menu={{
-                            items: actions?.filter(it => it.key != mainAction?.key).map(it => ({
-                                icon: it.icon, key: it.key, label: it.label, onClick: () => it.onClick?.(claimedItem.id),
-                                danger: it.type == 'Danger'
-                            }))
-                        }} > {mainAction?.icon} {
-                            mainAction?.label
-                        }</DropdownButton>
-                }
-
-                if (itemToClaim)
-                    return <Button icon={<PlayCircleOutlined />}
-                        loading={requestActions.request?.loading || false}
-                        onClick={() => {
-                            getActions?.('LIST', itemToClaim).find(it => it.key == 'claimed')?.onClick?.(itemToClaim?.id)
+        return <ProCard
+            style={claimedItem && { backgroundColor: 'Highlight' }}
+            bordered boxShadow
+            colSpan={'50%'}
+            title="Assign Docs"
+            extra={
+                (() => {
+                    if (claimedItem) {
+                        const actions = getActions?.('LIST', claimedItem).filter(it => it.visible)
+                        const mainAction = actions?.find(it => it.main)
+                        return <DropdownButton size='small' onClick={() => {
+                            mainAction?.onClick?.(claimedItem.id)
                         }}
-                        disabled={!operatorCheckIn} size='small' type='primary'>
-                        Serve Next
-                    </Button>
+                            key={claimedItem.id}
+                            menu={{
+                                items: actions?.filter(it => it.key != mainAction?.key).map(it => ({
+                                    icon: it.icon, key: it.key, label: it.label, onClick: () => it.onClick?.(claimedItem.id),
+                                    danger: it.type == 'Danger'
+                                }))
+                            }} > {mainAction?.icon} {
+                                mainAction?.label
+                            }</DropdownButton>
+                    }
 
-                return <Tag>No waiting</Tag>
-            })()
-        }>
+                    if (itemToClaim)
+                        return <Button icon={<PlayCircleOutlined />}
+                            loading={requestActions.request?.loading || false}
+                            onClick={() => {
+                                getActions?.('LIST', itemToClaim).find(it => it.key == 'claimed')?.onClick?.(itemToClaim?.id)
+                            }}
+                            disabled={!operatorCheckIn} size='small' type='primary'>
+                            Serve Next
+                        </Button>
+
+                    return <Tag>No waiting</Tag>
+                })()
+            }>
             <Descriptions>
                 <Descriptions.Item labelStyle={claimedItem && { color: 'whitesmoke' }} contentStyle={{ fontWeight: 'bolder', color: claimedItem ? 'whitesmoke' : undefined }} label="Ticket #">
                     {claimedItem?.ticketNo}
@@ -382,141 +385,143 @@ export default ({
                     </Space>
                 </Col>
             </Row>
-            <Spin spinning={requestActions.request?.loading || false}>
-                <ProCard split="horizontal">
-                    <Affix offsetTop={50}>
-                        <ProCard gutter={5}>
-                            {renderServingCreateDN()}
-                            {renderAssignDn()}
-                        </ProCard>
-                    </Affix>
-                    <ProCard>
-                        <CheckCard.Group onChange={values => setStatusFilter(values as string)} size='small' defaultValue={statusFilter}>
-                            <CheckCard style={{ width: 110 }} value={HOLD} avatar={<PauseCircleOutlined />} title="Hold" extra={<Badge count={statusCount.find(it => it.status == HOLD)?.count} />} />
-                            <CheckCard style={{ width: 140 }} value={NONE_DN} avatar={<StopOutlined />} title="None DN" extra={<Badge count={statusCount.find(it => it.status == NONE_DN)?.count} />} />
-                            <CheckCard style={{ width: 170 }} value={DN_ASSIGNED} avatar={<CheckCircleOutlined />} title="DN Assigned" extra={<Badge style={{ backgroundColor: '#52c41a' }} count={statusCount.find(it => it.status == DN_ASSIGNED)?.count} />} />
-                            <CheckCard style={{ width: 180 }} value={TRUCK_LOADING} avatar={<HourglassOutlined />} title="Truck Loading" extra={<Badge style={{ backgroundColor: '#52c41a' }} count={statusCount.find(it => it.status == TRUCK_LOADING)?.count} />} />
-                            <CheckCard style={{ width: 210 }} value={NONE_DOC} avatar={<StopOutlined />} title="Docs not Assigned" extra={<Badge count={statusCount.find(it => it.status == NONE_DOC)?.count} />} />
-                            <CheckCard style={{ width: 180 }} value={DOC_ASSIGNED} avatar={<CheckCircleOutlined />} title="Docs Assigned" extra={<Badge style={{ backgroundColor: '#52c41a' }} count={statusCount.find(it => it.status == DOC_ASSIGNED)?.count} />} />
-                            <CheckCard style={{ width: 180 }} value={TRIP_STARTED} avatar={<CheckCircleOutlined />} title="Trip Started" extra={<Badge style={{ backgroundColor: '#52c41a' }} count={statusCount.find(it => it.status == TRIP_STARTED)?.count} />} />
-                            <CheckCard style={{ width: 180 }} value={SHIPPING_CHANGED} avatar={<ExclamationCircleOutlined />} title="Ship. Changed" extra={<Badge count={statusCount.find(it => it.status == SHIPPING_CHANGED)?.count} />} />
-                        </CheckCard.Group>
-                        <ProList<InstanceListItem>
-                            showActions='hover'
-                            size='small'
-                            loading={false}
-                            request={(criteria, pagination) =>
-                                onRequestHandler({
-                                    criteria: {
-                                        ...criteria,
-                                        searchValue: searchParams.criteria?.searchValue,
-                                        advanceSearch: searchParams.criteria?.advanceSearch,
-                                    },
-                                    pagination,
-                                })
-                            }
-                            actionRef={actionRef}
-                            rowClassName={(record: InstanceListItem) => getColor(record)}
-                            metas={{
-                                avatar: { render: (_, r) => <img height="50px" src={getIcon(r)} /> },
-                                title: {
-                                    render: (_, r) => <a onClick={() => onOpenModal('LIST', 'detail', r.id, true)}>{[r.driver.firstName, r.driver.lastName].filter((it) => it).join(' ')}</a>
-                                },
-                                subTitle: {
-                                    render: (_, r) => (<Space>
-                                        {r.truck.licensePlate}
-                                        {
-                                            getTagDataList(r).filter(it => it.visible).map(it => (<Tag key={it.key} icon={it.icon} color={it.color}>{it.title}</Tag>))
-                                        }
-                                        {<Tag icon={<ClockCircleOutlined spin />} color="processing">{toReadable(r.activity)} - {toReadable(r.status)}</Tag>}
-                                    </Space>)
-                                },
-                                description: {
-                                    render: (_, r) => {
-                                        return <div>
-                                            <ProDescriptions size='small' column={4} style={{ width: 'calc(100vh - 5px)' }}>
-                                                <ProDescriptions.Item label="Ticket No"> {r.ticketNo}</ProDescriptions.Item>
-                                                <ProDescriptions.Item label="Loading Dock"> {r.loading.loadingDock}</ProDescriptions.Item>
-                                                {
-                                                    r.loading.status == 'PENDING' && <ProDescriptions.Item label="Waiting time">{
-                                                        moment(r.loading.assignedDate).toNow()
-                                                    }</ProDescriptions.Item>
-                                                }
 
-                                                {
-                                                    r.loading.status == 'LOADING_STARTED' && r.loading.loadingStarted && <ProDescriptions.Item label="Loading time">{
-                                                        moment(r.loading.loadingStarted).toNow()
-                                                    }</ProDescriptions.Item>
-                                                }
-                                                {
-                                                    r.delivery?.status == 'PENDING' && r.delivery.deliveryDate && !r.delivery?.assignedDocDate && <ProDescriptions.Item label="Waiting time(Docs)">{
-                                                        moment(r.delivery.deliveryDate).toNow()
-                                                    }</ProDescriptions.Item>
-                                                }
-                                                {
-                                                    r.delivery?.status == 'PENDING' && r.delivery?.assignedDocDate && <ProDescriptions.Item label="Waiting time">{
-                                                        moment(r.delivery.assignedDocDate).toNow()
-                                                    }</ProDescriptions.Item>
-                                                }
-                                                {
-                                                    r.delivery?.status == 'IN_PROGRESS' && <ProDescriptions.Item label="Delivery time">{
-                                                        moment(r.delivery.startedDate).toNow()
-                                                    }</ProDescriptions.Item>
-                                                }
-                                                {
-                                                    r.delivery?.status == 'DELIVERED' && <ProDescriptions.Item label="Delivery duration">{
-                                                        durationFormat(moment(r.delivery.startedDate), moment(r.delivery.finishedDate))
-                                                    }</ProDescriptions.Item>
-                                                }
-
-                                                {r.claimedBy && <ProDescriptions.Item label="Claimed By"> {r.claimedBy || 'N/A'} </ProDescriptions.Item>}
-                                                {r.loading.ownedTruckLoading && <ProDescriptions.Item label="Owned Truck Loading"> <Checkbox checked /> </ProDescriptions.Item>}
-                                            </ProDescriptions>
-                                        </div>
-                                    }
-                                },
-
-                                actions: {
-                                    render: (_, r) => {
-                                        if (!r.changeRequest && r.holdBy && ((!r.loading.canPick && r.loading.status == "PENDING") || r.loading.status == "LOADED") && !list?.some(it => it.isOwner && (it?.loading?.status === 'PENDING' || it.loading.status == 'LOADED'))) {
-                                            return <Button onClick={() => {
-                                                getActions?.('LIST', r).find(it => it.key == 'claimed')?.onClick?.(r?.id)
-                                            }}>Unhold</Button>
-                                        }
-                                        if (!r.changeRequest && (r?.loading?.status === 'PENDING' || r.loading.status == 'LOADED')) {
-                                            return
-                                        }
-
-                                        const actions = getActions?.('LIST', r).filter(it => it.visible)
-
-                                        if (actions?.length == 1) {
-                                            const action = actions[0]
-                                            return <Button type='link' icon={action.icon} onClick={() => action.onClick?.(r.id)} >{action.label}</Button>
-                                        }
-
-                                        const mainAction = actions?.find(it => it.main)
-
-
-
-                                        return <DropdownButton onClick={() => {
-                                            mainAction?.onClick?.(r.id)
-                                        }} key={r.id}
-                                            menu={{
-                                                items: actions?.filter(it => it.key != mainAction?.key).map(it => ({
-                                                    icon: it.icon, key: it.key, label: it.label, onClick: () => it.onClick?.(r.id),
-                                                    danger: it.type == 'Danger'
-                                                }))
-                                            }} > {mainAction?.icon} {
-                                                mainAction?.label
-                                            }</DropdownButton>
-                                    }
-                                }
-
-                            }}
-                        />
+            <ProCard split="horizontal">
+                <Affix offsetTop={50}>
+                    <ProCard gutter={5}>
+                        {renderServingCreateDN()}
+                        {renderAssignDn()}
                     </ProCard>
+                </Affix>
+                <ProCard>
+                    <CheckCard.Group onChange={values => setStatusFilter(values as string)} size='small' defaultValue={statusFilter}>
+                        <CheckCard style={{ width: 110 }} value={HOLD} avatar={<PauseCircleOutlined />} title="Hold" extra={<Badge count={statusCount.find(it => it.status == HOLD)?.count} />} />
+                        <CheckCard style={{ width: 140 }} value={NONE_DN} avatar={<StopOutlined />} title="None DN" extra={<Badge count={statusCount.find(it => it.status == NONE_DN)?.count} />} />
+                        <CheckCard style={{ width: 170 }} value={DN_ASSIGNED} avatar={<CheckCircleOutlined />} title="DN Assigned" extra={<Badge style={{ backgroundColor: '#52c41a' }} count={statusCount.find(it => it.status == DN_ASSIGNED)?.count} />} />
+                        <CheckCard style={{ width: 180 }} value={TRUCK_LOADING} avatar={<HourglassOutlined />} title="Truck Loading" extra={<Badge style={{ backgroundColor: '#52c41a' }} count={statusCount.find(it => it.status == TRUCK_LOADING)?.count} />} />
+                        <CheckCard style={{ width: 210 }} value={NONE_DOC} avatar={<StopOutlined />} title="Docs not Assigned" extra={<Badge count={statusCount.find(it => it.status == NONE_DOC)?.count} />} />
+                        <CheckCard style={{ width: 180 }} value={DOC_ASSIGNED} avatar={<CheckCircleOutlined />} title="Docs Assigned" extra={<Badge style={{ backgroundColor: '#52c41a' }} count={statusCount.find(it => it.status == DOC_ASSIGNED)?.count} />} />
+                        <CheckCard style={{ width: 180 }} value={TRIP_STARTED} avatar={<CheckCircleOutlined />} title="Trip Started" extra={<Badge style={{ backgroundColor: '#52c41a' }} count={statusCount.find(it => it.status == TRIP_STARTED)?.count} />} />
+                        <CheckCard style={{ width: 180 }} value={SHIPPING_CHANGED} avatar={<ExclamationCircleOutlined />} title="Ship. Changed" extra={<Badge count={statusCount.find(it => it.status == SHIPPING_CHANGED)?.count} />} />
+                    </CheckCard.Group>
+
+
+                    <ProList<InstanceListItem>
+                        showActions='hover'
+                        size='small'
+                        // loading={false}
+                        request={(criteria, pagination) =>
+                            onRequestHandler({
+                                criteria: {
+                                    ...criteria,
+                                    searchValue: searchParams.criteria?.searchValue,
+                                    advanceSearch: searchParams.criteria?.advanceSearch,
+                                },
+                                pagination,
+                            })
+                        }
+                        actionRef={actionRef}
+                        rowClassName={(record: InstanceListItem) => getColor(record)}
+                        metas={{
+                            avatar: { render: (_, r) => <img height="50px" src={getIcon(r)} /> },
+                            title: {
+                                render: (_, r) => <a onClick={() => onOpenModal('LIST', 'detail', r.id, true)}>{[r.driver.firstName, r.driver.lastName].filter((it) => it).join(' ')}</a>
+                            },
+                            subTitle: {
+                                render: (_, r) => (<Space>
+                                    {r.truck.licensePlate}
+                                    {
+                                        getTagDataList(r).filter(it => it.visible).map(it => (<Tag key={it.key} icon={it.icon} color={it.color}>{it.title}</Tag>))
+                                    }
+                                    {<Tag icon={<ClockCircleOutlined spin />} color="processing">{toReadable(r.activity)} - {toReadable(r.status)}</Tag>}
+                                </Space>)
+                            },
+                            description: {
+                                render: (_, r) => {
+                                    return <div>
+                                        <ProDescriptions size='small' column={4} style={{ width: 'calc(100vh - 5px)' }}>
+                                            <ProDescriptions.Item label="Ticket No"> {r.ticketNo}</ProDescriptions.Item>
+                                            <ProDescriptions.Item label="Loading Dock"> {r.loading.loadingDock}</ProDescriptions.Item>
+                                            {
+                                                r.loading.status == 'PENDING' && <ProDescriptions.Item label="Waiting time">{
+                                                    moment(r.loading.assignedDate).toNow()
+                                                }</ProDescriptions.Item>
+                                            }
+
+                                            {
+                                                r.loading.status == 'LOADING_STARTED' && r.loading.loadingStarted && <ProDescriptions.Item label="Loading time">{
+                                                    moment(r.loading.loadingStarted).toNow()
+                                                }</ProDescriptions.Item>
+                                            }
+                                            {
+                                                r.delivery?.status == 'PENDING' && r.delivery.deliveryDate && !r.delivery?.assignedDocDate && <ProDescriptions.Item label="Waiting time(Docs)">{
+                                                    moment(r.delivery.deliveryDate).toNow()
+                                                }</ProDescriptions.Item>
+                                            }
+                                            {
+                                                r.delivery?.status == 'PENDING' && r.delivery?.assignedDocDate && <ProDescriptions.Item label="Waiting time">{
+                                                    moment(r.delivery.assignedDocDate).toNow()
+                                                }</ProDescriptions.Item>
+                                            }
+                                            {
+                                                r.delivery?.status == 'IN_PROGRESS' && <ProDescriptions.Item label="Delivery time">{
+                                                    moment(r.delivery.startedDate).toNow()
+                                                }</ProDescriptions.Item>
+                                            }
+                                            {
+                                                r.delivery?.status == 'DELIVERED' && <ProDescriptions.Item label="Delivery duration">{
+                                                    durationFormat(moment(r.delivery.startedDate), moment(r.delivery.finishedDate))
+                                                }</ProDescriptions.Item>
+                                            }
+
+                                            {r.claimedBy && <ProDescriptions.Item label="Claimed By"> {r.claimedBy || 'N/A'} </ProDescriptions.Item>}
+                                            {r.loading.ownedTruckLoading && <ProDescriptions.Item label="Owned Truck Loading"> <Checkbox checked /> </ProDescriptions.Item>}
+                                        </ProDescriptions>
+                                    </div>
+                                }
+                            },
+
+                            actions: {
+                                render: (_, r) => {
+                                    if (!r.changeRequest && r.holdBy && ((!r.loading.canPick && r.loading.status == "PENDING") || r.loading.status == "LOADED") && !list?.some(it => it.isOwner && (it?.loading?.status === 'PENDING' || it.loading.status == 'LOADED'))) {
+                                        return <Button onClick={() => {
+                                            getActions?.('LIST', r).find(it => it.key == 'claimed')?.onClick?.(r?.id)
+                                        }}>Unhold</Button>
+                                    }
+                                    if (!r.changeRequest && (r?.loading?.status === 'PENDING' || r.loading.status == 'LOADED')) {
+                                        return
+                                    }
+
+                                    const actions = getActions?.('LIST', r).filter(it => it.visible)
+
+                                    if (actions?.length == 1) {
+                                        const action = actions[0]
+                                        return <Button type='link' icon={action.icon} onClick={() => action.onClick?.(r.id)} >{action.label}</Button>
+                                    }
+
+                                    const mainAction = actions?.find(it => it.main)
+
+
+
+                                    return <DropdownButton onClick={() => {
+                                        mainAction?.onClick?.(r.id)
+                                    }} key={r.id}
+                                        menu={{
+                                            items: actions?.filter(it => it.key != mainAction?.key).map(it => ({
+                                                icon: it.icon, key: it.key, label: it.label, onClick: () => it.onClick?.(r.id),
+                                                danger: it.type == 'Danger'
+                                            }))
+                                        }} > {mainAction?.icon} {
+                                            mainAction?.label
+                                        }</DropdownButton>
+                                }
+                            }
+
+                        }}
+                    />
                 </ProCard>
-            </Spin>
+            </ProCard>
+
         </>
 
     );

@@ -131,6 +131,15 @@ export interface DestUser {
   email?: string;
 }
 
+
+export interface Delegation {
+  user: DestUser
+  delegatedUser?: DestUser
+  effectiveDate: Moment
+  expiryDate?: Moment
+  remarks: string;
+}
+
 export interface DestGroup {
   groupId: string;
   groupName?: string;

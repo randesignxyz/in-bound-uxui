@@ -17,7 +17,6 @@ export const getGratisSettlementRequestForms = (): DataForm[] => [
             GratisSettlementFormNames.gratis_settlement_comm_approval,
             GratisSettlementFormNames.gratis_settlement_fin_approval,
             GratisSettlementFormNames.gratis_settlement_dmbo,
-            // GratisSettlementFormNames.gratis_settlement_dmbo2,
             GratisSettlementFormNames.gratis_settlement_mbo
 
         ],

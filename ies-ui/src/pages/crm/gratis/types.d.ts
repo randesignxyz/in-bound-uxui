@@ -430,3 +430,7 @@ export interface  GratisSuggestedCustomerVisit {
   complianceStatus1?:string;
   tranStatus?:string;
  }
+ export type GratisAdvanceSearchParams = {
+  status: 'ALL' | 'PENDING' | 'ISSUED' | 'CANCELED';
+  requestStatus?: string[];
+};

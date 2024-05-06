@@ -118,7 +118,7 @@ const ProcessDefDetailView: React.FC<Props> = ({ id, actionHandlers }) => {
           onCancel={() => modals.hideModal('originator-setup')}
         />
 
-        <DestApproval
+        {modals.isVisible('destination-setup') && <DestApproval
           workflow={processFlowModel}
           title={data?.destination?.taskName}
           width={'1000px'}
@@ -139,7 +139,7 @@ const ProcessDefDetailView: React.FC<Props> = ({ id, actionHandlers }) => {
             });
           }}
           onCancel={() => modals.hideModal('destination-setup')}
-        />
+        />}
 
         <EndTask
           workflow={processFlowModel}

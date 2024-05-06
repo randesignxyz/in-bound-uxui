@@ -140,6 +140,14 @@ export interface Delegation {
   remarks: string;
 }
 
+export interface DelegationSaveParams {
+  approver: string,
+  delegateTo: string,
+  effectiveDate: Moment
+  expiryDate?: Moment
+  remarks: string;
+}
+
 export interface DestGroup {
   groupId: string;
   groupName?: string;

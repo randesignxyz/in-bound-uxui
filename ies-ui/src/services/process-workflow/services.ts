@@ -1,8 +1,8 @@
 import { ServiceType } from "../API";
-import { execDownloadForm, execService, findAllService, findPagingService, findService, RequestActions } from "../apiGateway";
+import { execDataService0, execDownloadForm, execService, findAllService, findPagingService, findService, RequestActions } from "../apiGateway";
 import { AttachmentFile } from "../data";
 
-import { ActionData, BMPNData, ConfigEndEventParams, ConfigEndEventRs, DiagramData, InstanceActivity, InstanceSearchParams, MessageTemplate, NotificationFeedback, OriginatorAuth, ProcessInstance, ProcessInstanceData, ProcessInstanceDef, ProcessInstanceDefItem, SaveFirstLevelApproval, SaveWorkflowOriginator, StartProcessAction, UserDestItem, UserResult, UserTask } from "./data";
+import { ActionData, BMPNData, ConfigEndEventParams, ConfigEndEventRs, Delegation, DelegationSaveParams, DiagramData, InstanceActivity, InstanceSearchParams, MessageTemplate, NotificationFeedback, OriginatorAuth, ProcessInstance, ProcessInstanceData, ProcessInstanceDef, ProcessInstanceDefItem, SaveFirstLevelApproval, SaveWorkflowOriginator, StartProcessAction, UserDestItem, UserResult, UserTask } from "./data";
 
 export type WorkflowServiceName = 'fetchInstanceData'
   | 'fetchDiagram'
@@ -107,6 +107,7 @@ export const WorkflowServiceAPI = (actions?: RequestActions) => ({
 
   listActivity: findAllService<{ list: string[] }, InstanceActivity>(WorkFlowService('list-activity'), actions),
 
-  listAvailableProcessDef: findAllService<any, ProcessInstanceDefItem>(WorkFlowService('list-available-process-def'), actions)
+  listAvailableProcessDef: findAllService<any, ProcessInstanceDefItem>(WorkFlowService('list-available-process-def'), actions),
+
 })
 

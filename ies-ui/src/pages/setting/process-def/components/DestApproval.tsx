@@ -18,6 +18,7 @@ import React, { useEffect, useState } from 'react';
 import AssigneeComp from './Assignee';
 import CandidateUserComp from './CandidateUser';
 import DelegationForm from './DelegationForm';
+import DelegationList from './DelegationList';
 
 const notificationOptions: CheckboxOptionType[] = [
   { label: 'Completed', value: 'completed' },
@@ -55,6 +56,7 @@ const DestApproval: React.FC<{
   const [form] = Form.useForm<dataType>();
   const [messageTemplates, setMessageTemplates] = useState<MessageTemplate[]>();
   const [availableCandidates, setAvailableCandidates] = useState<DestUser[]>([]);
+  const [activeTab, setActiveTab] = useState<string>()
 
   useEffect(() => {
     initLoad();
@@ -151,6 +153,9 @@ const DestApproval: React.FC<{
       width={width}
       title={title}
       open={visible}
+      submitter={{
+        submitButtonProps: { disabled: activeTab == '4' }
+      }}
       // {...layout}
       form={form}
       layout="horizontal"
@@ -197,7 +202,7 @@ const DestApproval: React.FC<{
             name={'messageTemplateId'}
             options={(messageTemplates || []).map((it) => ({ value: it.id, label: it.name }))}
           />
-          <Tabs defaultActiveKey="1">
+          <Tabs onChange={key => setActiveTab(key)} defaultActiveKey="1">
             <Tabs.TabPane tab="Assignee" key="1">
               <AssigneeComp assignee={destination?.assignee} onSave={onSaveAssigneeHandler} />
             </Tabs.TabPane>
@@ -255,7 +260,6 @@ const DestApproval: React.FC<{
                 rowKey={(it) => it.userId}
                 metas={{
                   title: { dataIndex: 'userName' },
-
                   subTitle: {
                     render: (_, r) =>
                       [r.userId, r.email]
@@ -279,10 +283,7 @@ const DestApproval: React.FC<{
               />
             </Tabs.TabPane>
             <Tabs.TabPane tab="Delegation" key="4" >
-              <Flex justify='flex-end'>
-                <Flex> <DelegationForm onAdd={data => { }} trigger={<Button type='link' icon={<PlusCircleFilled />} />} /> </Flex>
-              </Flex>
-              <ProList<Delegation> dataSource={[]} />
+              <DelegationList destination={destination} />
             </Tabs.TabPane>
           </Tabs>
           {/* </ProForm> */}

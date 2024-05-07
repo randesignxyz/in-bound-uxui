@@ -26,10 +26,10 @@ const notificationOptions: CheckboxOptionType[] = [
   { label: 'Rejected (Extra)', value: 'rejected_extra' },
 ];
 
-const layout = {
-  labelCol: { span: 5 },
-  wrapperCol: { span: 15 },
-};
+// const layout = {
+//   labelCol: { span: 5 },
+//   wrapperCol: { span: 15 },
+// };
 
 type dataType = {
   notification: string[];
@@ -156,27 +156,14 @@ const DestApproval: React.FC<{
       submitter={{
         submitButtonProps: { disabled: activeTab == '4' }
       }}
-      // {...layout}
       form={form}
       layout="horizontal"
-      // destroyOnClose
       onFinish={async () => {
         form.validateFields().then(onFinishHandler);
       }}
       onOpenChange={visible => !visible && onCancel?.()}
     > <Spin spinning={false}>
         <Flex vertical>
-
-          {/* <Row> */}
-          {/* <Col flex="auto"> */}
-          {/* <ProForm
-            layout="horizontal"
-            submitter={false}
-            form={form}
-            {...layout}
-            labelAlign="right"
-          > */}
-
           <Form.Item name="notification" label="Notification">
             <Checkbox.Group
               options={notificationOptions.map((it) => {
@@ -286,10 +273,6 @@ const DestApproval: React.FC<{
               <DelegationList destination={destination} />
             </Tabs.TabPane>
           </Tabs>
-          {/* </ProForm> */}
-          {/* </Col> */}
-          {/* </Row> */}
-
         </Flex>
       </Spin>
     </DrawerForm>

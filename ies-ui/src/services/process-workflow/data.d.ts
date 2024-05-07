@@ -133,14 +133,16 @@ export interface DestUser {
 
 
 export interface Delegation {
-  user: DestUser
-  delegatedUser?: DestUser
+  id: number;
+  approver: LookupDataItem
+  delegateUser?: LookupDataItem
   effectiveDate: Moment
   expiryDate?: Moment
   remarks: string;
 }
 
 export interface DelegationSaveParams {
+  taskDefId: string;
   approver: string,
   delegateTo: string,
   effectiveDate: Moment

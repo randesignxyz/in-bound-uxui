@@ -4,12 +4,13 @@ import { Delegation, DelegationSaveParams, DestUser, SaveFirstLevelApproval } fr
 import { ModalForm, ModalFormProps, ProForm, ProFormDatePicker, ProFormSelect, ProFormTextArea } from "@ant-design/pro-components"
 import { Modal, message } from "antd";
 import _ from "lodash";
+import moment from "moment";
 
 interface Props extends ModalFormProps<DelegationSaveParams, { data: string }> {
     destination?: SaveFirstLevelApproval;
-    onAdd: (data: Delegation) => void;
+    onAdded: () => void;
 }
-export default ({ destination, onAdd, ...rest }: Props) => {
+export default ({ destination, onAdded, ...rest }: Props) => {
 
     const requestActions = simpleRequestActions()
     const accountServices = AccountServiceAPI(requestActions)
@@ -22,6 +23,8 @@ export default ({ destination, onAdd, ...rest }: Props) => {
         return (await accountServices.findUsers({ list: userIds })).map(it => ({ value: it.id, label: `${it.name}` }))
     }
 
+    console.log(destination?.assignee);
+
     const approvers: (DestUser | undefined)[] = [
         destination?.assignee.defaultAssignee,
         destination?.assignee.departmentHead ? { userId: 'head.department', userName: "Function Head" } : undefined,
@@ -30,7 +33,12 @@ export default ({ destination, onAdd, ...rest }: Props) => {
         ...(destination?.assignee.destSelectorList?.flatMap(it => ({ userId: it.userId, userName: it.userId })) || [])
     ].filter(it => it)
 
+    console.log(approvers);
+
     const assignedList = _.unionBy(approvers, it => it?.userId)
+
+    console.log(assignedList);
+
 
     return <ModalForm<DelegationSaveParams, { data: string }  >
         title="Delegation"
@@ -41,24 +49,30 @@ export default ({ destination, onAdd, ...rest }: Props) => {
                 content: "Are you sure?",
                 onOk: async () => {
                     try {
-                        await workflowServices.save(data)
+                        destination?.taskDefId && await workflowServices.save({
+                            ...data,
+                            taskDefId: destination?.taskDefId,
+                            effectiveDate: moment(data.effectiveDate),
+                            expiryDate: data.expiryDate ? moment(data.expiryDate) : undefined
+
+                        })
+                        onAdded()
                     } catch (error: any) {
                         message.error(error.message || "Failed to save data.")
                     }
                 }
             })
-            workflowServices.save(data)
+
         }}
     >
         <ProFormSelect
-            name={"approvers"}
+            name={"approver"}
             label="Approver"
-            request={async () => await listUserByUserIds(assignedList?.filter(it => it)?.map(it => it?.userId || ''))}
-
+            request={async () => [...(destination?.assignee.departmentHead ? [{ value: 'head.department', label: "Function Head" }] : []), ... await listUserByUserIds(assignedList?.filter(it => it)?.map(it => it?.userId || ''))]}
             rules={[{ required: true }]} />
         <ProFormSelect
             tooltip="Leave blank for auto approval"
-            name={"deligateTo"} label="Delegate To"
+            name={"delegateTo"} label="Delegate To"
             showSearch
             debounceTime={500} request={({ keyWords }) => loadUser(keyWords)}
         />

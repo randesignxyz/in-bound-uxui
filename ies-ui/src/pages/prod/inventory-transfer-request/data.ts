@@ -52,6 +52,7 @@ export interface TransferRequest {
   shift: string;
   activities: ActivitiesItem[];
   state: string;
+  sapDocNo: string
 }
 
 export interface TransferRequestItem {
@@ -70,6 +71,7 @@ export interface TransferRequestItem {
   is_receive: string;
   transfer_request: string;
   supplier: string;
+  oldtotal: string;
 }
 export type TransferRequestAdvanceParams = {
   searchValue?: string;
@@ -100,11 +102,11 @@ export interface SAPTransferRequest {
   comments: string;
   transferRequestDetails: SAPTransferRequestDetail[];
   statusChange: string;
-  state:string;
-  activities_name:string;
-  action:string;
-  transfer_request:string;
-  id:string
+  state: string;
+  activities_name: string;
+  action: string;
+  transfer_request: string;
+  id: string
 }
 
 export interface SAPTransferRequestDetail {
@@ -124,7 +126,20 @@ export interface TransferRequestStatusChange {
 }
 
 export interface Provided {
-  provided_item: ProvidedItem[];
+  item: ProvidedItem[];
+  transfer_request_id: string,
+  status: string
+}
+
+export interface ProvidedList {
+  id: number;
+  transfer_request_id: number,
+  provided: string,
+  status: string,
+  createdBy: string,
+  createdDate: string,
+  lastModifiedBy: string,
+  lastModifiedDate: string
 }
 
 export interface ProvidedItem {
@@ -133,8 +148,11 @@ export interface ProvidedItem {
   uom: string;
   quantity: string;
   remark: string;
-  received: string;
-  transfer_request: string;
+  itemReceive: string;
+  is_receive: string;
+  total: string;
+  supplier: string;
+  received:string
 }
 export interface ActivitiesItem {
   transfer_request?: string;
@@ -239,4 +257,9 @@ export interface AddSupplierParams {
   supplier: string;
   item_code: string;
   transfer_request: string;
+}
+
+export interface TotalProvideParams {
+  transfer_request_id?: string;
+  item_code: string;
 }

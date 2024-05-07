@@ -45,6 +45,7 @@ import { TankTransactionDTO } from '@/pages/fleet/fuelStock/data';
 import { AppraisalEmp } from '@/pages/hrm/appraisal-submit/data.types';
 import { CategoryDTO } from '@/pages/dms/setting/components/category/data';
 import { DocumentationDTO } from '@/pages/dms/documentation/data';
+import { TransferRequest } from '@/pages/prod/inventory-transfer-request/data';
 
 type DataList =
   | {
@@ -271,6 +272,11 @@ type DataList =
     type: 'appraisal-submit';
     criteria?: any;
     data: Paging<AppraisalEmp>;
+  }
+  | {
+    type: 'transfer-request-list';
+    criteria?: any;
+    data: Paging<TransferRequest>;
   };
 
 type MomainType =
@@ -316,7 +322,8 @@ type MomainType =
   | 'appraisal-submit'
   | 'dms-category'
   | 'dms-department'
-  | 'dms-document';
+  | 'dms-document'
+  | 'transfer-request-list';
 
 export default () => {
   const [cacheData, seCacheData] = useState<DataList>();

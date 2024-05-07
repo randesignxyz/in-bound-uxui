@@ -8,7 +8,8 @@ import Omit from 'omit.js';
 import { useEffect, useRef, useState } from 'react';
 import ApproveRemarkFormModal from '../../ApproveRemarkFormModal';
 import RemarkFormModal from '../../RemarkFormModal';
-import DetailView from '../DetailView';
+import DetailView from './DetailView';
+import { history } from 'umi'
 import { AddSupplierParams, TransferRequest, TransferRequestAdvanceParams } from '../data';
 import { ItemServiceAPI, TransferRequestServiceAPI } from '../service';
 import FormModal from './FormModal';
@@ -180,7 +181,10 @@ export default ({ onAdd }: Props) => {
             title: 'ID',
             dataIndex: 'id',
             render: (_, r) => (
-              <a onClick={() => onDetailhandler(r)}>PDR-{String(r.id).padStart(6, '0')}</a>
+              // <a onClick={() => onDetailhandler(r)}>PDR-{String(r.id).padStart(6, '0')}</a>
+              <a onClick={() => history.push(`/prod/inventory-transfer-request/detail/${r.id}`, { id: r.id })}>PDR-{String(r.id).padStart(6, '0')}</a>
+              
+              
             ),
           },
           {
@@ -260,8 +264,8 @@ export default ({ onAdd }: Props) => {
                     <Button
                       style={{ width: '30%' }}
                       onClick={() => {
-                        // setApproveModal({ visible: true, id: r.id, transfer_id: r.transfer_id });
-                        setModal({ visible: true, id: r.id, transfer_id: r.transfer_id, data: r });
+                        setApproveModal({ visible: true, id: r.id, transfer_id: r.transfer_id });
+                        // setModal({ visible: true, id: r.id, transfer_id: r.transfer_id, data: r });
                       }}
                     >
                       Approve
@@ -350,14 +354,14 @@ export default ({ onAdd }: Props) => {
         open={approveModel.visible}
         onCancel={() => {
           setApproveModal({ visible: false, id: undefined });
-        }}
+        } }
         onSave={async (id, remark, transfer_id) => {
-          const response: { data: string; message: string } = (await services.status_change({
+          const response: { data: string; message: string; } = (await services.status_change({
             id: id,
             remark: remark,
             statusChange: 'request-warehouse-approve',
             state: 'in-progress',
-          })) as { data: string; message: string };
+          })) as { data: string; message: string; };
           await services.save_activites({
             activities_name: 'Warehouse Approval',
             action: 'Approved',
@@ -367,11 +371,10 @@ export default ({ onAdd }: Props) => {
           setApproveModal({ visible: false, id: undefined });
           message.info(response.message);
           actionRef.current?.reload();
-        }}
+        } }
         id={approveModel.id ?? ''}
-        transfer_id={approveModel.transfer_id ?? ''}
-      />
-      <FormModal
+        transfer_id={approveModel.transfer_id ?? ''} data={undefined}      />
+      {/* <FormModal
         title="Approve Form"
         open={Model.visible}
         onCancel={() => {
@@ -426,7 +429,7 @@ export default ({ onAdd }: Props) => {
         id={Model.id ?? ''}
         transfer_id={Model.transfer_id ?? ''}
         data={Model.data ?? undefined}
-      />
+      /> */}
     </>
   );
 };

@@ -18,9 +18,12 @@ import {
   ItemGroup,
   ItemSearch,
   Provided,
+  ProvidedItem,
+  ProvidedList,
   SAPTransferRequest,
   Supplier,
   SupplierSearch,
+  TotalProvideParams,
   TransferRequest,
   TransferRequestCreate,
   TransferRequestSearch,
@@ -148,11 +151,29 @@ const TransferRequestAction = {
     type: 'LIST_QUERY',
     payload: data,
   }),
-  save_to_sap:(data:SAPTransferRequest):ServiceApiType<SAPTransferRequest> => ({
-    actionName:'save-transfer-to-sap',
-    endpoint:'PROD',
-    type:'EXEC',
-    payload:data
+  save_to_sap: (data: SAPTransferRequest): ServiceApiType<SAPTransferRequest> => ({
+    actionName: 'save-transfer-to-sap',
+    endpoint: 'PROD',
+    type: 'EXEC',
+    payload: data
+  }),
+  get_total_provide: (data: TotalProvideParams): ServiceApiType<TotalProvideParams> => ({
+    actionName: 'get-total-provide',
+    endpoint: 'PROD',
+    type: 'LIST_QUERY',
+    payload: data
+  }),
+  get_provided_list: (transfer_request_id: string): ServiceApiType<{ transfer_request_id: string }> => ({
+    actionName: 'get-provide-list',
+    endpoint: 'PROD',
+    type: 'LIST_QUERY',
+    payload: { transfer_request_id },
+  }),
+  get_provided_item: (provided:string): ServiceApiType<{provided:string}> =>({
+    actionName:'get-provide',
+    endpoint: 'PROD',
+    type: 'LIST_QUERY',
+    payload: {provided}
   })
 };
 
@@ -194,10 +215,23 @@ export const TransferRequestServiceAPI = (requestAction: RequestActions) => {
       singleRequest<TransferRequest>(TransferRequestAction.get_to_excel(data))(
         requestAction,
       ) as Promise<TransferRequest>,
-    save_to_sap:(data:SAPTransferRequest)=>
-      singleRequest<{data:string; message:string}>(TransferRequestAction.save_to_sap(data))(
+    save_to_sap: (data: SAPTransferRequest) =>
+      singleRequest<{ data: string; message: string }>(TransferRequestAction.save_to_sap(data))(
         requestAction,
-      )
+      ),
+    get_total_provide: (data: TotalProvideParams) =>
+      singleRequest<{ data: string; message: string }>(TransferRequestAction.get_total_provide(data))(
+        requestAction,
+      ),
+    get_provided_list: (transfer_request_id: string) =>
+      singleRequest<ProvidedList>(TransferRequestAction.get_provided_list(transfer_request_id))(
+        requestAction
+      ),
+      get_provided_item:(provided:string)=>
+        singleRequest<ProvidedItem>(TransferRequestAction.get_provided_item(provided))(
+          requestAction
+        )
+
   };
 };
 

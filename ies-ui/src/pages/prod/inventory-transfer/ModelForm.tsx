@@ -9,9 +9,10 @@ import {
   ProFormSelect,
   ProFormText,
   ProFormTextArea,
+  ProTable,
 } from '@ant-design/pro-components';
 import { useAccess } from '@umijs/max';
-import { Card, Col, Modal, Row, Typography, message } from 'antd';
+import { Card, Checkbox, Col, Modal, Row, Typography, message } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { Dayjs } from 'dayjs';
 import { useEffect, useRef, useState } from 'react';
@@ -23,6 +24,9 @@ import {
   TransferItem,
 } from './data';
 import { TransferServiceAPI } from './service';
+import { TransferRequestServiceAPI } from '../inventory-transfer-request/service';
+import { ProvidedList } from '../inventory-transfer-request/data';
+import TransferItemList from './TransferItemList';
 
 interface Props extends FormModalProps {
   data?: Transfer;
@@ -43,16 +47,21 @@ const ModelForm: React.FC<Props> = ({ onSave, data, close, ...props }) => {
   const requestActions = simpleRequestActions();
   const services = TransferServiceAPI(requestActions);
   const [updateStatus, setUpdateStatus] = useState('');
-  const [gettotal, setGetTotal] = useState<{ code: string; total: number }>({
-    code: '',
-    total: 0,
-  });
+  const [providedStatus, setProvidedStatus] = useState('');
+  const [providedList, setProvidedList] = useState<ProvidedList[]>([])
   const [advanceSearchParams, setAdvanceSearchParams] = useState<TransferAdvanceParams>({
     transfer_type: 'ALL',
     business_unit: 'ALL',
   });
   const editableFormRef = useRef<EditableFormInstance>();
   const [items, setItems] = useState<TransferItem[]>([]);
+
+  const [transferItemListOpen, setTransferItemListOpen] = useState<{ visible: boolean, provided: string, status?: string }>({ visible: false, provided: '' });
+  const [providedId, setProvidedId] = useState('')
+  const [gettotal, setGetTotal] = useState<{ code: string; total: number }>({
+    code: '',
+    total: 0,
+  });
 
   useEffect(() => {
     if (access.canAccessTransferWarehouseItem) {
@@ -74,55 +83,20 @@ const ModelForm: React.FC<Props> = ({ onSave, data, close, ...props }) => {
     if (props.open) {
       form.resetFields();
       setItems([]);
+      setProvidedList([])
       setGetTransfer(undefined);
     }
   }, [props.open]);
 
   useEffect(() => {
-    const updatedItems = getTransfer?.item.map((it) => {
-      const oldtotal = gettotal[it.item_code] || 0;
-      const received = it.itemReceive || 0;
-      const quantity = parseFloat(it.quantity) || 0;
-      const total = oldtotal + received;
-      const itemReceive = 0;
+    const updatedItems = getTransfer?.item.map((i) => {
+      const total = gettotal[i.item_code] || 0
 
-      let is_receive;
-      if (received === 0) {
-        is_receive = '';
-      } else {
-        if (parseFloat(oldtotal) + received === quantity) {
-          is_receive = 'True';
-        } else {
-          is_receive = 'False';
-        }
-      }
-      return { ...it, oldtotal, is_receive, total, itemReceive };
-    });
-    setItems(updatedItems);
-  }, [getTransfer]);
+      return { ...i, total }
+    })
+    setItems(updatedItems)
+  }, [gettotal]);
 
-  useEffect(() => {
-    let falseCount = 0;
-    let trueCount = 0;
-    let emptyStringCount = 0;
-    const it = items?.map((i) => i.is_receive);
-    it?.forEach((x) => {
-      if (x === 'False') {
-        falseCount++;
-      } else if (x === '') {
-        emptyStringCount++;
-      } else if (x === 'True') {
-        trueCount++;
-      }
-    });
-    console.log('False count:', falseCount);
-    // // console.log(data)
-    if (emptyStringCount + trueCount === it?.length) {
-      setUpdateStatus('completed');
-    } else {
-      setUpdateStatus('panding');
-    }
-  }, [items]);
 
   const onCancelTransfer = () => {
     Modal.confirm({
@@ -161,39 +135,138 @@ const ModelForm: React.FC<Props> = ({ onSave, data, close, ...props }) => {
     });
   };
 
+  const onSaveTransfer = (itm: any) => {
+    Modal.confirm({
+      title: 'Save Transfer record',
+      content: 'are you sure',
+      onOk: async () => {
+        try {
+          const updatedItems = itm?.map((it: any) => {
+            let itemReceive = it.received
+            let is_receive;
+            const oldtotal = gettotal[it.item_code] || 0;
+            const total = parseFloat(oldtotal) + parseFloat(it.received);
+            if (parseFloat(it.received) == 0) {
+              is_receive = '';
+            } else {
+              if (parseFloat(oldtotal) + parseFloat(itemReceive) == parseFloat(it.quantity)) {
+                is_receive = 'True';
+              } else {
+                is_receive = 'False';
+              }
+            }
+            return { ...it, itemReceive, is_receive, total, oldtotal };
+          });
+          const allReceived = itm?.every((item: any) => {
+            const Quantity = parseFloat(item?.quantity);
+            const receivedQuantity = parseFloat(String(item?.itemReceive)) || 0;
+            return ((gettotal[item.item_code] + receivedQuantity) === Quantity);
+          });
+          let state
+          if (allReceived) {
+            state = 'completed';
+          } else {
+            state = 'pending';
+          }
+
+          const dataForm = await form.validateFields();
+          const entity = {
+            ...dataForm,
+            id: getTransfer?.id,
+            items: updatedItems.map((v: any) => ({ ...v })),
+            transfer_type: getTransfer?.transfer_type,
+            business_unit: getTransfer?.business_unit,
+            transfer_request: getTransfer?.id,
+            posting_date: getTransfer?.posting_date,
+            due_date: getTransfer?.due_date,
+            from_warehouse: getFromWarehouse.toLocaleString(),
+            to_warehouse: getToWarehouse.toLocaleString(),
+            line: getTransfer?.line,
+            shift: getTransfer?.shift,
+            status: state,
+          };
+          const res = {
+            transfer_request: getTransfer?.id,
+          };
+          const change = {
+            status: 'done',
+            remark: '',
+            provided: providedId,
+          }
+          await services.save(entity)
+          await services.receive_change(res)
+          await services.update_provided_status(change)
+          setTransferItemListOpen({ visible: false, provided: '', status: '' })
+          close()
+          message.success('Success');
+          actionRef.current?.reloadAndRest?.();
+        } catch (error) {
+          console.error('An error occurred:', error);
+          message.error('Error');
+        }
+      },
+    });
+  };
+
+  const onRejectTransfer = () => {
+    Modal.confirm({
+      title: 'Reject Transfer',
+      content: 'are you sure',
+      onOk: async () => {
+        try {
+
+          const change = {
+            status: 'cancel',
+            remark: '',
+            provided: providedId,
+          }
+          await services.update_provided_status(change)
+          setTransferItemListOpen({ visible: false, provided: '', status: '' })
+          close()
+          message.success('Success');
+          actionRef.current?.reloadAndRest?.();
+        } catch (error) {
+          console.error('An error occurred:', error);
+          message.error('Error');
+        }
+      },
+    });
+  };
+
   return (
     <FormModalComp
       title="Inventory Transfer"
       {...props}
       // width={"400px"}
-      onSubmit={async () => {
-        const dataForm = await form.validateFields();
-        const isValid = items.every((item) => item.oldtotal + item.itemReceive <= item.quantity);
-        if (!isValid) {
-          message.error('Invalid Data');
-          return;
-        }
-        const entity = {
-          ...dataForm,
-          id: data?.id,
-          items: items.map((v) => ({ ...v })),
-          transfer_type: getTransfer?.transfer_type,
-          business_unit: getTransfer?.business_unit,
-          transfer_request: getTransfer?.id,
-          posting_date: getTransfer?.posting_date,
-          due_date: getTransfer?.due_date,
-          from_warehouse: getFromWarehouse.toLocaleString(),
-          to_warehouse: getToWarehouse.toLocaleString(),
-          line: getTransfer?.line,
-          shift: getTransfer?.shift,
-          status: updateStatus,
-        };
-        const res = {
-          ...dataForm,
-          transfer_request: getTransfer?.id,
-        };
-        onSave(entity, res);
-      }}
+      readOnly
+      // onSubmit={async () => {
+      //   const dataForm = await form.validateFields();
+      //   const isValid = items.every((item) => item.oldtotal + item.itemReceive <= item.quantity);
+      //   if (!isValid) {
+      //     message.error('Invalid Data');
+      //     return;
+      //   }
+      //   const entity = {
+      //     ...dataForm,
+      //     id: data?.id,
+      //     items: items.map((v) => ({ ...v })),
+      //     transfer_type: getTransfer?.transfer_type,
+      //     business_unit: getTransfer?.business_unit,
+      //     transfer_request: getTransfer?.id,
+      //     posting_date: getTransfer?.posting_date,
+      //     due_date: getTransfer?.due_date,
+      //     from_warehouse: getFromWarehouse.toLocaleString(),
+      //     to_warehouse: getToWarehouse.toLocaleString(),
+      //     line: getTransfer?.line,
+      //     shift: getTransfer?.shift,
+      //     status: updateStatus,
+      //   };
+      //   const res = {
+      //     ...dataForm,
+      //     transfer_request: getTransfer?.id,
+      //   };
+      //   onSave(entity, res);
+      // }}
       onResetForm={() => {
         form.resetFields();
       }}
@@ -222,16 +295,17 @@ const ModelForm: React.FC<Props> = ({ onSave, data, close, ...props }) => {
                   }));
                 }}
                 fieldProps={{
-                  onChange: async (e: number) => {
+                  onChange: async (e: any) => {
                     const transfer = await services.detail(e);
+                    const rs = await TransferRequestServiceAPI(requestActions).get_provided_list(e)
                     const itemcode = transfer.item.map((it) => it.item_code);
                     for (let i = 0; i < itemcode.length; i++) {
-                      const receive = await services.get_receive({
-                        transfer_request: transfer.id,
+                      const it = await services.get_item_for_close({
                         item_code: itemcode[i],
-                      });
-                      const val = receive.map((v) => parseFloat(v.received));
-
+                        transfer_request_id: transfer.id,
+                        status: 'done'
+                      })
+                      const val = it.map((v) => parseFloat(v.received));
                       let total = 0;
                       for (let r = 0; r < val.length; r++) {
                         total += val[r];
@@ -241,6 +315,7 @@ const ModelForm: React.FC<Props> = ({ onSave, data, close, ...props }) => {
                         [itemcode[i]]: total,
                       }));
                     }
+                    setProvidedList(rs)
                     setGetTransfer(transfer);
                     setGetToWarehouse(transfer.to_warehouse.map((v) => v.id));
                     setGetFromWarehouse(transfer.from_warehouse.map((v) => v.id));
@@ -340,70 +415,39 @@ const ModelForm: React.FC<Props> = ({ onSave, data, close, ...props }) => {
             </Col>
           </Row>
         </Card>
-        <Card title="Items" size="small">
-          <EditableProTable<TransferItem>
+        <Card title="Transfer" size="small">
+          <ProTable<ProvidedList>
             size="small"
             search={false}
             rowKey="id"
             editable={{
               type: 'multiple',
               editableKeys: getTransfer?.item.map((it) => it.id),
-              onValuesChange: async (_, recordList) => {
-                const updatedItems = recordList.map((it) => {
-                  const oldtotal = gettotal[it.item_code] || 0;
-                  const received = it.itemReceive || 0;
-                  const quantity = parseFloat(it.quantity) || 0;
-                  const total = oldtotal + received;
 
-                  let is_receive;
-                  if (received === 0) {
-                    is_receive = '';
-                  } else {
-                    if (parseFloat(oldtotal) + received === quantity) {
-                      is_receive = 'True';
-                    } else {
-                      is_receive = 'False';
-                    }
-                  }
-                  return { ...it, oldtotal, is_receive, total };
-                });
-                setItems(updatedItems);
-                // const trueIsReceiveCount = updatedItems.filter(item => item.is_receive === 'True').length;
-                // const IsReceiveNullCount = updatedItems.filter(item => item.is_receive === '').length;
-                // console.log(updatedItems.length)
-                // console.log(trueIsReceiveCount)
-                // console.log(IsReceiveNullCount)
-                // if (updatedItems.length == trueIsReceiveCount+IsReceiveNullCount) {
-                //   setUpdateStatus('completed')
-                // } else {
-                //   setUpdateStatus('panding')
-                // }
-              },
             }}
-            editableFormRef={editableFormRef}
-            value={getTransfer?.item}
-            recordCreatorProps={false}
+            dataSource={providedList}
+            options={{
+              density: false,
+              fullScreen: false,
+              reload: false,
+              setting: false,
+
+            }}
             pagination={false}
             columns={[
-              { title: 'No', render: (_, __, index) => index + 1, editable: false, width: 70 },
-              { title: 'Item Code', dataIndex: 'item_code', editable: false },
-              { title: 'Item Name', dataIndex: 'item_name', editable: false },
               {
-                title: 'Quantity',
-                dataIndex: 'quantity',
-                render: (_, r) => [r.quantity].join('/'),
-                editable: false,
+                title: '',
+                width: 50,
+                render: (_, r, index) => (r.status == 'cancel' ? <Checkbox indeterminate disabled /> : r.status == 'done' ? <Checkbox defaultChecked disabled /> : <Checkbox defaultChecked={false} disabled />),
               },
               {
-                title: 'Total',
-                dataIndex: 'total',
-                render: (_, r) => gettotal[r.item_code] || 0,
-                editable: false,
+                title: 'Transfer', render: (_, r, index) =>
+                  <a
+                    onClick={() => { setTransferItemListOpen({ visible: true, provided: r.provided, status: r.status }), setProvidedId(r.provided), setProvidedStatus(r.status) }}
+                  >
+                    {('Transfer ' + (index + 1))}
+                  </a>
               },
-              { title: 'Received', valueType: 'digit', width: 135, dataIndex: 'itemReceive' },
-              { title: 'Supplier', dataIndex: 'supplier', editable: false },
-              { title: 'UoM', dataIndex: 'uom', editable: false },
-              { title: 'Remark', dataIndex: 'remark', editable: false },
             ]}
           />
           <Col style={{ marginLeft: 'auto', textAlign: 'right' }}>
@@ -421,6 +465,14 @@ const ModelForm: React.FC<Props> = ({ onSave, data, close, ...props }) => {
           </Col>
         </Card>
       </ProForm>
+      <TransferItemList
+        provided={providedId}
+        status={providedStatus}
+        open={transferItemListOpen.visible}
+        onCancel={() => setTransferItemListOpen({ visible: false, provided: '', status: '' })}
+        onSave={(data) => { onSaveTransfer(data) }}
+        onReject={onRejectTransfer}
+      />
     </FormModalComp>
   );
 };

@@ -14,6 +14,8 @@ import {
   Transfer,
   TransferCreate,
   TransferSearch,
+  getItemforCloseParams,
+  updateProvidedParams,
 } from './data';
 
 // const TestingAction={
@@ -136,6 +138,18 @@ const TransferAction = {
     type: 'EXEC',
     payload: data,
   }),
+  update_provided_status: (data: updateProvidedParams): ServiceApiType<updateProvidedParams> => ({
+    actionName: 'update-provide-status',
+    endpoint: 'PROD',
+    type: 'EXEC',
+    payload: data,
+  }),
+  get_item_for_close: (data: getItemforCloseParams): ServiceApiType<getItemforCloseParams> => ({
+    actionName: 'get-provide-item-for-close',
+    endpoint: 'PROD',
+    type: 'LIST_QUERY',
+    payload: data,
+  }),
 };
 
 export const TransferServiceAPI = (requestAction: RequestActions) => {
@@ -166,6 +180,15 @@ export const TransferServiceAPI = (requestAction: RequestActions) => {
       ),
     close_request: (data: SAPCloseDoc) =>
       singleRequest<{ data: string; message: string }>(TransferAction.close_request(data))(
+        requestAction,
+      ),
+
+    update_provided_status: (data: updateProvidedParams) =>
+      singleRequest<{ data: string; message: string }>(TransferAction.update_provided_status(data))(
+        requestAction,
+      ),
+      get_item_for_close: (data: getItemforCloseParams) =>
+      singleRequest<{ data: string; message: string }>(TransferAction.get_item_for_close(data))(
         requestAction,
       ),
   };

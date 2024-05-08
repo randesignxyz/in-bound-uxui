@@ -74,6 +74,7 @@
 import CrudWrapper from '@/components/DataCrud/CrudWrapper';
 import { ProdPaths } from '../..';
 import ListView from './WarehouseTransferReqListview';
+import Detail from './Detail/index';
 
 export default () => {
   return (
@@ -95,7 +96,7 @@ export default () => {
             // ||
             // (view === 'create' && <EntryForm  />)
 
-            // ||(view ==="detail" && <DetailView id={id as string} /> )
+            // ||(view ==="detail" && <Detail id={id as string} /> )
           );
         }}
       </CrudWrapper>

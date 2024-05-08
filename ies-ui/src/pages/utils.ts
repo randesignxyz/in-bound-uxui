@@ -300,6 +300,7 @@ const readableWords = [
     { REMOVED: 'Removed' },
     { NEW_REQUEST: 'New Request' },
     { UPDATED: 'Updated' },
+    { NONE: 'NA' },
 ];
 export const toReadable = (word?: string) => {
     if (!word) return '';

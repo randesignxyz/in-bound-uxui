@@ -11,7 +11,7 @@ import { useEffect, useRef, useState } from 'react';
 import ApproveRemarkFormModal from '../../ApproveRemarkFormModal';
 import ExportExcel from '../../ExportExcel';
 import RemarkFormModal from '../../RemarkFormModal';
-import DetailView from '../DetailView';
+import DetailView from './DetailView';
 import { TransferRequest, TransferRequestAdvanceParams, TransferRequestCreate } from '../data';
 import { TransferRequestServiceAPI } from '../service';
 import TransferRequestModelForm from './TransferRequestModelForm';

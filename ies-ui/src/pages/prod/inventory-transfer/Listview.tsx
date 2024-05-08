@@ -346,7 +346,7 @@ export default ({}: Props) => {
         open={state.visible?.name === 'modal'}
         onCancel={() => setSate((v) => ({ ...v, visible: undefined }))}
         onSave={onSaveActionHandler}
-        close={() => setSate((v) => ({ ...v, visible: undefined }))}
+        close={() => {setSate((v) => ({ ...v, visible: undefined })),actionRef.current?.reloadAndRest?.();}}
       />
       <DetailView
         open={viewDetail.visible}

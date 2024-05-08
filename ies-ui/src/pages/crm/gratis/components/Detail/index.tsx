@@ -309,7 +309,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
               <Descriptions.Item label="Status"><Status value={stausText} text={stausText || 'PENDING'} /></Descriptions.Item>
               <Descriptions.Item label="For the period From" >{`${formatDate(data?.startedDate, 'MMM YYYY')} To ${formatDate(data?.endedDate, 'MMM YYYY')}`}</Descriptions.Item>
               <Descriptions.Item label="Remarks" span={2}>{data?.description}</Descriptions.Item>
-              <Descriptions.Item label="Form No">{data?.formNo}</Descriptions.Item>
+              <Descriptions.Item label="Form No"><Space> {data?.formNo?data?.formNo:'NA'} {data?.formNo && <Status value={data?.requestStatus} text={data?.requestStatus|| 'NA'} />}</Space></Descriptions.Item>
             </Descriptions>
           </ProCard>
           <ProCard title='' headerBordered size='small'

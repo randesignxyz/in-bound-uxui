@@ -12,7 +12,7 @@ import {
   ProFormTextArea,
 } from '@ant-design/pro-components';
 import { useAccess } from '@umijs/max';
-import { Button, Card, Col, Row } from 'antd';
+import { Button, Card, Col, Row, message } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { uniqueId } from 'lodash';
 import moment, { Moment } from 'moment';
@@ -120,7 +120,10 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
       // width={"400px"}
       onSubmit={async () => {
         const dataForm = await form.validateFields();
-
+        if (items.map(v=>v.quantity).some(quantity => parseFloat(quantity) === 0)) {
+          message.error("Quantity can't be 0");
+          return;
+        }
         const entity = {
           ...dataForm,
           id: data?.id,
@@ -141,7 +144,7 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
           //   remark: v.remark === null ? '' : v.remark === undefined ? '' : v.remark,
           // })),
         };
-        console.log(entity);
+
         // const act={
         //   ...dataForm,
         //   transfer_request: data?.id,
@@ -149,7 +152,8 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
         //   action:'Start Request',
         //   // remark:''
         // }
-        onSave(entity);
+        // onSave(entity);
+        console.log(entity)
       }}
       onResetForm={() => {
         form.resetFields();

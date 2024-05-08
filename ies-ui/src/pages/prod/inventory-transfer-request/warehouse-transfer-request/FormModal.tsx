@@ -1,9 +1,9 @@
 import FormModalComp, { FormModalProps } from '@/components/FormModal';
 import { simpleRequestActions } from '@/services/model';
 import { EditableFormInstance, EditableProTable } from '@ant-design/pro-components';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AddSupplierParams, TransferRequest, TransferRequestItem } from '../data';
-import { ItemServiceAPI } from '../service';
+import { ItemServiceAPI, TransferRequestServiceAPI } from '../service';
 // import { ReceiveStatusChange, ReceivedItem, Transfer, TransferItem } from '../data';
 
 interface Props extends FormModalProps {
@@ -12,18 +12,52 @@ interface Props extends FormModalProps {
   transfer_id: string;
   onSave: (data: AddSupplierParams, id: string, remarks: string, transfer_id: string) => void;
 }
-export default ({ onSave, data, ...props }: Props) => {
+export default ({ onSave, id, transfer_id, data, ...props }: Props) => {
   // const [form] = useForm<{ remarks: string }>();
   const [items, setItems] = useState<TransferRequestItem[]>([]);
   const requestActions = simpleRequestActions();
   const services = ItemServiceAPI(requestActions);
   const editableFormRef = useRef<EditableFormInstance>();
+  const [gettotalprovide, setGetTotalProvide] = useState<{ code: string; total: number }>({
+    code: '',
+    total: 0,
+  });
+
+  useEffect(() => {
+    if (props.open) {
+      const getReceive = async () => {
+        const itemcode = data?.item.map((it) => it.item_code);
+        for (let i = 0; i < itemcode.length; i++) {
+          console.log('hiiii');
+          const receive = await TransferRequestServiceAPI(requestActions).get_total_provide({
+            transfer_request: transfer_id,
+            item_code: itemcode[i]
+          })
+          const val = receive.map((v) => parseFloat(v.received));
+          let total = 0;
+          for (let r = 0; r < val.length; r++) {
+            total += val[r];
+          }
+          setGetTotalProvide((prevState) => ({
+            ...prevState,
+            [itemcode[i]]: total,
+          }));
+        }
+
+
+        // console.log(data)
+        // console.log(transfer_id)
+      }
+      getReceive()
+    }
+
+  }, [props.open]);
 
   return (
     <FormModalComp
       title="Inventory Transfer"
       {...props}
-      width={'900px'}
+      width={'1000px'}
       onSubmit={async () => {
         // const dataForm = await form.validateFields();
         // const entity = {
@@ -61,7 +95,26 @@ export default ({ onSave, data, ...props }: Props) => {
           type: 'multiple',
           editableKeys: data?.item.map((it) => it.id),
           onValuesChange: (_, recordList) => {
-            setItems(recordList.map((it) => ({ ...it })));
+            const updatedItems = recordList.map((it)=>{
+              const oldtotal = gettotalprovide[it.item_code] || 0;
+                  const received = it.itemReceive || 0;
+                  const quantity = parseFloat(it.quantity) || 0;
+                  const total = oldtotal + received; 
+
+                  let is_receive;
+                  if (received == 0) {
+                    is_receive = '';
+                  } else {
+                    if (oldtotal + received == quantity) {
+                      is_receive = 'True';
+                    } else {
+                      is_receive = 'False';
+                    }
+                  }
+                  return { ...it, oldtotal, is_receive, total };
+            })
+            console.log(updatedItems)
+            setItems(updatedItems);
           },
         }}
         editableFormRef={editableFormRef}
@@ -78,8 +131,16 @@ export default ({ onSave, data, ...props }: Props) => {
             render: (_, r) => [r.quantity].join('/'),
             editable: false,
           },
-          // { title: 'Provide', valueType: 'digit', width: 135, dataIndex: 'received', formItemProps: { rules: [{ required: true, }] } },
+          {
+            title: 'Provided',
+            dataIndex: 'total',
+            width: 80,
+            render: (_, r) => gettotalprovide[r.item_code] || 0,
+            editable: false,
+          },
           { title: 'UoM', dataIndex: 'uom', editable: false, width: 60 },
+          { title: 'Provide', valueType: 'digit', dataIndex: 'itemReceive' },
+         
           {
             title: 'Vendor',
             dataIndex: 'supplier',

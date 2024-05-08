@@ -8,16 +8,18 @@ import { ProColumns } from "@ant-design/pro-table"
 import { Button, Radio, Space, Tag, Tooltip } from "antd"
 import { history, useModel } from 'umi'
 import { GratisServices } from "../../services"
-import { ActionType } from "@ant-design/pro-components"
+import { ActionType, LightFilter, ProFormSelect } from "@ant-design/pro-components"
 import { useEffect, useRef } from "react"
 import { useSafeState } from "ahooks"
-import { IncentiveSettlement } from "../../types"
+import { GratisAdvanceSearchParams, IncentiveSettlement } from "../../types"
 import {ExportOutlined, PlusCircleFilled, SelectOutlined } from "@ant-design/icons"
 import AdvanceSearch from "../AdvanceSearch"
 import { ContractAdvanceSearchParams } from "@/pages/crm/contract/types"
 import Status from "@/components/Status"
 
-  
+type LightFilterProp = {
+    requestStatus?: string[]
+}
 const cols = (): ProColumns<IncentiveSettlement>[] => ([
     {
         title:'Form No #',
@@ -82,6 +84,10 @@ const cols = (): ProColumns<IncentiveSettlement>[] => ([
         render: (_, item) => formatDate(item.createdDate)
     },
     {
+        title: 'Request Status',
+        render: (_, item) =><Status text={item.requestStatus||''} value={item.requestStatus} />
+        
+        },{
         title: 'Status',
         render: (_, item) => {
             const stausText = (item?.requestStatus=='NONE'||item?.status!='PENDING')?  item?.status: (item?.requestStatus=='COMPLETED'?'APPROVED':item?.requestStatus)
@@ -96,7 +102,7 @@ const GratisContractCheckListView = (actionHandler: { onDetail?: (record: Incent
     const cacheList = useModel('dataList')
     const requestActions = simpleRequestActions()
     const actionRef = useRef<ActionType>();
-    const [advanceSearch, setAdanceSearch] = useSafeState<ContractAdvanceSearchParams>({ status: "ALL", processStatus: 'All' })
+    const [advanceSearch, setAdanceSearch] = useSafeState<GratisAdvanceSearchParams>({ status: "ALL" })
     const onRequestHandler = async (criteria?: { searchValue?: string },
         pagination?: {
             pageSize?: number;
@@ -155,6 +161,23 @@ const GratisContractCheckListView = (actionHandler: { onDetail?: (record: Incent
                         ]}
                         onChange={(e) => setAdanceSearch(v => ({ ...v, status: e.target.value }))}
                     />
+                    <LightFilter<LightFilterProp> 
+                        onValuesChange={(_, values) => {
+                            const requestStatus = values.requestStatus;
+                            setAdanceSearch(v => { return {...v,requestStatus: requestStatus}})
+                        }}
+                    >
+                        <ProFormSelect 
+                            name="requestStatus"
+                            label="Request Status"
+                            mode="multiple"
+                            options={[ 
+                            { label: "NA", value: "NONE" },
+                            { label: "Pending", value: "PENDING" },
+                            { label: "Completed", value: "COMPLETED" },
+                            { label: "Rejected", value: "REJECTED" }]}
+                        />
+                     </LightFilter>
                 </Space>
             }
             actionHandlers={{

@@ -89,13 +89,13 @@ export default () => {
         });
     }
 
-    const onUpdateCustomerCodeHisHandler = (customerId: number, l9?: string, l0?: string, m0?: string, remarks?: string) => {
+    const onUpdateCustomerCodeHisHandler = (customerId: number, l9?: string, l0?: string, m0?: string, c0?: string, remarks?: string) => {
         Modal.confirm({
             title: "Upldate customer code tracking",
             content: "Are you sure?",
             onOk: async () => {
                 try {
-                    await CustomerServices.updateCustomerCodeHis(customerId, l9, l0, m0, remarks)(requestAction)
+                    await CustomerServices.updateCustomerCodeHis(customerId, l9, l0, m0, c0, remarks)(requestAction)
                     forceReload?.cb?.()
                     modals.hideModal('code-tracking')
                 } catch (error) {

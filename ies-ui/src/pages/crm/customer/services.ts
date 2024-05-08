@@ -10,24 +10,24 @@ export const CustomerServices = {
     endpoint: 'CRM',
   }),
 
-  search: (searchValue?: string) =>  fetchDataListService<LookupDataItem, {searchValue?: string}>({
+  search: (searchValue?: string) => fetchDataListService<LookupDataItem, { searchValue?: string }>({
     actionName: 'lookup-customers',
     endpoint: 'CRM',
     payload: {
       searchValue
     }
-  }) , 
-
-  listCustomer: (saleId: number) => fetchDataListService<CustomerItemLess, {id: number}>({
-    actionName: 'list-customer-by-sale',
-    endpoint: 'CRM',
-    payload: {id: saleId}
   }),
 
-  listSupplyByCustomer: (customerId: number) => fetchDataListService<SupplySource, {id: number}>({
+  listCustomer: (saleId: number) => fetchDataListService<CustomerItemLess, { id: number }>({
+    actionName: 'list-customer-by-sale',
+    endpoint: 'CRM',
+    payload: { id: saleId }
+  }),
+
+  listSupplyByCustomer: (customerId: number) => fetchDataListService<SupplySource, { id: number }>({
     actionName: 'list-product-supply-by-customer',
     endpoint: 'CRM',
-    payload: {id: customerId}
+    payload: { id: customerId }
   }),
 
   saveSupplySource: (params: SaveSupplySourceParams) => execDataService0<SaveSupplySourceParams>({
@@ -36,13 +36,13 @@ export const CustomerServices = {
     payload: params
   }),
 
-  deleteSupplySource: (id: number) => execDataService0<{id: number}> ({
+  deleteSupplySource: (id: number) => execDataService0<{ id: number }>({
     actionName: 'delete-supply-source',
     endpoint: 'CRM',
-    payload :{id}
+    payload: { id }
   }),
 
-  transfers: (toSaleId: number, customerIdList: number[]) => execDataService0<{customerIdList: number[]; salespersonId: number;}>({
+  transfers: (toSaleId: number, customerIdList: number[]) => execDataService0<{ customerIdList: number[]; salespersonId: number; }>({
     actionName: 'transfer-customers',
     endpoint: 'CRM',
     payload: {
@@ -51,23 +51,23 @@ export const CustomerServices = {
     }
   }),
 
-  updateCustomerCodeHis: (customerId: number, idl9?: string, idl0?: string, idm0?: string, remarks?: string) => execDataService0<{
-    customerId: number; idl9?: string; idl0?: string; idm0?: string; remarks?: string
+  updateCustomerCodeHis: (customerId: number, idl9?: string, idl0?: string, idm0?: string, idc0?: string, remarks?: string) => execDataService0<{
+    customerId: number; idl9?: string; idl0?: string; idm0?: string; idc0?: string; remarks?: string
   }>({
     actionName: 'update-customer-code-his',
     endpoint: 'CRM',
     payload: {
-      customerId, idl9, idl0, idm0, remarks
+      customerId, idl9, idl0, idm0, idc0, remarks
     }
   }),
 
-  listBrand:  fetchDataListService<LookupDataItem>({
+  listBrand: fetchDataListService<LookupDataItem>({
     actionName: 'list-brand',
     responseKey: 'brandList',
     endpoint: 'CRM',
   }),
 
-  listDistributors: (searchValue?: string) => fetchDataPagingService<CustomerItemLess, {searchValue?: string}>({
+  listDistributors: (searchValue?: string) => fetchDataPagingService<CustomerItemLess, { searchValue?: string }>({
     actionName: 'list-distributor',
     endpoint: 'CRM',
     payload: {
@@ -75,19 +75,19 @@ export const CustomerServices = {
     }
   }),
 
-  saveCustomerPOSM: (params: SaveCustomerPosmParams ) => execDataService<{data: number}, SaveCustomerPosmParams>({
+  saveCustomerPOSM: (params: SaveCustomerPosmParams) => execDataService<{ data: number }, SaveCustomerPosmParams>({
     actionName: 'save-customer-posm',
     endpoint: 'CRM',
     payload: params
   }),
 
-  deleteCustomerPosm: (id: number) => execDataService0<{id: number}>({
+  deleteCustomerPosm: (id: number) => execDataService0<{ id: number }>({
     actionName: 'delete-customer-posm',
     endpoint: 'CRM',
-    payload: {id}
+    payload: { id }
   }),
 
-  checkPosm: (visitId: number, items: SavePosmItemCheckedParams[]) => execDataService0<{visitId: number; items: SavePosmItemCheckedParams[];}>({
+  checkPosm: (visitId: number, items: SavePosmItemCheckedParams[]) => execDataService0<{ visitId: number; items: SavePosmItemCheckedParams[]; }>({
     actionName: 'check-posm',
     endpoint: 'CRM',
     payload: {

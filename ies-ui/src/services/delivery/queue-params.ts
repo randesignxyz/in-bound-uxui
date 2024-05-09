@@ -20,11 +20,11 @@ export interface SaveLoadingDockParams {
 
 export const ReqQueuetParams = {
 
-    forceAssignLoadingDock:  execDataService0<any>({
+    forceAssignLoadingDock: execDataService0<any>({
         actionName: 'force-assign-loading-dock',
         endpoint: 'DELIVERY',
         payload: {}
-      }),
+    }),
 
     listAllQueueLayout: (): ServiceApiType<{}> => ({
         type: 'LIST_QUERY',
@@ -115,7 +115,7 @@ export const ReqQueuetParams = {
         payload: { id, loadingDockId, remarks }
     }),
 
-    assignedPickingSlip: (id: number, shift: string, isModified?: boolean , remarks?: string): ServiceApiType<{
+    assignedPickingSlip: (id: number, shift: string, isModified?: boolean, remarks?: string): ServiceApiType<{
         id: number;
         shift: string;
         isModified?: boolean;
@@ -124,10 +124,10 @@ export const ReqQueuetParams = {
         type: 'EXEC',
         endpoint: 'DELIVERY',
         actionName: 'assigned-picking-slip',
-        payload: { id, shift, isModified , remarks }
+        payload: { id, shift, isModified, remarks }
     }),
 
-    
+
     loadingCompleted: (id: number): ServiceApiType<{
         id: number
     }> => ({
@@ -154,5 +154,5 @@ export const ReqQueuetParams = {
         payload: {}
     }),
 
-   
+
 }

@@ -1,8 +1,8 @@
 import { simpleRequestActions } from '@/services/model';
-import { CheckCircleFilled, PlusOutlined, ReloadOutlined, StarOutlined } from '@ant-design/icons';
+import { CheckCircleFilled, PlusOutlined, ReloadOutlined, StarFilled, StarOutlined, StarTwoTone } from '@ant-design/icons';
 import ProList from '@ant-design/pro-list';
 import { ActionType } from '@ant-design/pro-table';
-import { Button, Col, Drawer, DrawerProps, List, Row } from 'antd';
+import { Button, Col, Drawer, DrawerProps, List, Row, Space } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { QueueLayoutItemList } from '../services/queue';
 import { QueueServices } from '../services/queue-service';
@@ -70,7 +70,7 @@ export default ({ selectedItem, onSelectedLayout, ...props }: Props) => {
             >
               <List.Item.Meta
                 title={
-                  <a
+                  <Space><a
                     onClick={() => {
                       setState((v) => ({
                         ...v,
@@ -83,9 +83,15 @@ export default ({ selectedItem, onSelectedLayout, ...props }: Props) => {
                   >
                     {item.layoutName}
                   </a>
+                    {item.isDefault && <StarTwoTone />}
+
+                  </Space>
+
                 }
+
+
                 description={`Rows: ${item.rows}, Columns: ${item.columns}, Width: ${item.displayBoxWidth}`}
-                avatar={item.isDefault && <StarOutlined />}
+
               />
             </List.Item>
           );

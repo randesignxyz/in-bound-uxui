@@ -17,7 +17,7 @@ import {
   SelectOutlined,
   SettingOutlined,
 } from '@ant-design/icons';
-import { Badge, Button, Card, Col, List, Row, Space, Typography } from 'antd';
+import { Button, Card, Col, List, Row, Space, Typography } from 'antd';
 import _ from 'lodash';
 import moment, { Moment } from 'moment';
 import { useEffect, useRef, useState } from 'react';
@@ -111,12 +111,8 @@ export default () => {
     const fillup =
       (selectedLayout?.columns || 0) * (selectedLayout?.rows || 0);
     const fillupNum = fillup > 0 ? fillup : 0;
-
     const fillupData = Array.from(Array(fillupNum).keys()).map((it) => ({ index: it }));
     setDisplayGrid(fillupData)
-
-    console.log(fillupData);
-
   }
 
   const loadData = async () => {
@@ -205,7 +201,11 @@ export default () => {
       )}
       {auth && (
         <div ref={ref}>
-          <Card bodyStyle={{ backgroundColor: 'white' }}>
+          <Card styles={{
+            body: {
+              backgroundColor: 'white'
+            }
+          }}>
             <List<{ index: number, data?: QueueDisplay }>
               grid={{ gutter: 15, lg: 3, md: 2, sm: 1, xs: 1, column: selectedLayout?.columns || 3 }}
               dataSource={dispayGrid}

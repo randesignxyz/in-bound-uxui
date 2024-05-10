@@ -8,7 +8,7 @@ import {
   ProFormText,
   ProFormTextArea,
 } from '@ant-design/pro-form';
-import { Button, message, Modal, Space, Spin } from 'antd';
+import { Button, Flex, message, Modal, Space, Spin } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { useEffect, useState } from 'react';
 import { LoadingLocationServices } from '../services/loading-bay-services';
@@ -38,7 +38,7 @@ export default ({ data, onReload, ...props }: Props) => {
     };
   }, [props.open]);
 
-  useEffect(() => {}, [state?.loadingDocks]);
+  useEffect(() => { }, [state?.loadingDocks]);
 
   const initialData = async () => {
     const loadingBays = await LoadingLocationServices.fetchListLoadingBay.query(requestActions);
@@ -55,6 +55,7 @@ export default ({ data, onReload, ...props }: Props) => {
       displayBoxHeight: data?.displayBoxHeight,
       loadingBayIds: loadingBayIds,
       loadingDockIds: data?.loadingDocks?.map((it) => it.id),
+      defaultForUser: data?.defaultForUser
     });
   };
 
@@ -116,40 +117,45 @@ export default ({ data, onReload, ...props }: Props) => {
         },
       }}
     >
-      <Spin spinning={requestActions.request?.loading}>
-        <ProFormText rules={[{ required: true }]} label="Name" name={'layoutName'} />
-        <ProFormDigit rules={[{ required: true }]} label="Columns" name="columns" />
-        <ProFormDigit rules={[{ required: true }]} label="Rows" name="rows" />
-        <ProFormDigit
-          rules={[{ required: true }]}
-          label="Dispay Block Width"
-          name="displayBoxWidth"
-        />
-        <ProFormDigit
-          rules={[{ required: true }]}
-          label="Dispay Block Height"
-          name="displayBoxHeight"
-        />
-        <ProFormSelect
-          mode="multiple"
-          label="Loading bay"
-          name={'loadingBayIds'}
-          options={state?.loadingBays?.map((it) => ({
-            label: it.name,
-            value: it.id,
-          }))}
-        />
-        <ProFormSelect
-          mode="multiple"
-          label="Loading Dock"
-          name={'loadingDockIds'}
-          options={state?.loadingDocks?.map((it) => ({
-            label: it.name,
-            value: it.id,
-          }))}
-        />
-        <ProFormTextArea label="Description" name="description" />
-      </Spin>
+      <Flex style={{ width: '100%' }} gap={"middle"}>
+        <Flex flex={1} vertical>
+          <ProFormText rules={[{ required: true }]} label="Name" name={'layoutName'} />
+          <ProFormDigit rules={[{ required: true }]} label="Columns" name="columns" />
+          <ProFormDigit rules={[{ required: true }]} label="Rows" name="rows" />
+          <ProFormDigit
+            rules={[{ required: true }]}
+            label="Dispay Block Width"
+            name="displayBoxWidth"
+          />
+        </Flex>
+        <Flex flex={1} vertical>
+          <ProFormDigit
+            rules={[{ required: true }]}
+            label="Dispay Block Height"
+            name="displayBoxHeight"
+          />
+          <ProFormSelect
+            mode="multiple"
+            label="Loading bay"
+            name={'loadingBayIds'}
+            options={state?.loadingBays?.map((it) => ({
+              label: it.name,
+              value: it.id,
+            }))}
+          />
+          <ProFormSelect
+            mode="multiple"
+            label="Loading Dock"
+            name={'loadingDockIds'}
+            options={state?.loadingDocks?.map((it) => ({
+              label: it.name,
+              value: it.id,
+            }))}
+          />
+          <ProFormText label="Default for user" name={"defaultForUser"} />
+        </Flex>
+      </Flex>
+      <ProFormTextArea label="Description" name="description" />
     </ModalForm>
   );
 };

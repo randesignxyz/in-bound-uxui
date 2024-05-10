@@ -1,6 +1,6 @@
 import { LoadingBay, LoadingDock } from "@/services/delivery/data";
 
-export type QueueLayoutItemList= {
+export type QueueLayoutItemList = {
     id: number;
     layoutName: string;
     rows: number;
@@ -10,6 +10,7 @@ export type QueueLayoutItemList= {
     loadingBays?: LoadingBay[]
     loadingDocks?: LoadingDock[]
     description?: string;
+    defaultForUser?: string;
     isDefault: boolean;
 }
 
@@ -35,4 +36,5 @@ export type QueueLayoutSaveParams = {
     loadingBayIds?: number[]
     loadingDockIds?: number[]
     description?: string;
+    defaultForUser?: string;
 }

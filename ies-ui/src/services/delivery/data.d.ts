@@ -38,6 +38,7 @@ export interface LoadingBay {
   name: string;
   status: string;
   priority?: number;
+  warehouse?: LookupDataItem;
   description?: string;
 }
 
@@ -333,6 +334,7 @@ export interface Officer {
   name: string;
   userName: string;
   loadingDocks: LoadingDockListItem[],
+  warehouses: LookupDataItem[];
   description?: string;
   createdBy: string;
   createdDate: Moment,
@@ -345,6 +347,7 @@ export interface SaveOfficer {
   name: string;
   userName: string;
   loadingDockIds: number[],
+  warehouses?: number[];
   description?: string;
 }
 

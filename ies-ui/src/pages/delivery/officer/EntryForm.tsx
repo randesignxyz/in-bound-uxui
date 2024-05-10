@@ -1,5 +1,7 @@
 import FormModalComp, { FormModalProps } from '@/components/FormModal';
 import { LoadingDock, Officer, SaveOfficer } from '@/services/delivery/data';
+import { LoadingParams } from '@/services/delivery/loading-params';
+import { simpleRequestActions } from '@/services/model';
 import ProForm, { ProFormSelect, ProFormText, ProFormTextArea } from '@ant-design/pro-form';
 import { Card } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
@@ -13,7 +15,7 @@ interface Props extends FormModalProps {
 
 const OfficerEntryModal: React.FC<Props> = ({ onSave, data, loadingDockList, ...props }) => {
   const [form] = useForm<SaveOfficer>();
-
+  const requestActions = simpleRequestActions();
   useEffect(() => {
     props.open && initDataForm();
   }, [props.open]);
@@ -24,6 +26,7 @@ const OfficerEntryModal: React.FC<Props> = ({ onSave, data, loadingDockList, ...
       name: data?.name,
       loadingDockIds: data?.loadingDocks?.map((it) => it.id),
       userName: data?.userName,
+      warehouses: data?.warehouses?.map(it => it.id),
       description: data?.description,
     });
   };
@@ -50,6 +53,9 @@ const OfficerEntryModal: React.FC<Props> = ({ onSave, data, loadingDockList, ...
             label="User Name"
             help={<span />}
           />
+          <ProFormSelect allowClear name={"warehouses"} mode='multiple' label="Warehouses" request={async () => {
+            return (await LoadingParams.listWarehouse.query(requestActions)).map(it => ({ label: it.name, value: it.id }))
+          }} />
           <ProFormSelect
             rules={[{ required: true }]}
             mode="multiple"

@@ -4,6 +4,7 @@ import { LoadingParams } from '@/services/delivery/loading-params';
 import { simpleRequestActions } from '@/services/model';
 import ProForm, { ProFormSelect, ProFormText, ProFormTextArea } from '@ant-design/pro-form';
 import { Card } from 'antd';
+import { Flex } from 'antd/lib';
 import { useForm } from 'antd/lib/form/Form';
 import { useEffect } from 'react';
 
@@ -34,7 +35,7 @@ const OfficerEntryModal: React.FC<Props> = ({ onSave, data, loadingDockList, ...
   return (
     <FormModalComp
       {...props}
-      width="500px"
+      width="800px"
       {...props}
       onSubmit={async () => {
         const dataForm = await form.validateFields();
@@ -45,7 +46,8 @@ const OfficerEntryModal: React.FC<Props> = ({ onSave, data, loadingDockList, ...
       }}
     >
       <Card>
-        <ProForm form={form} submitter={false}>
+        <ProForm style={{ width: '100%' }} form={form} submitter={false}>
+
           <ProFormText rules={[{ required: true }]} name={'name'} label="Name" help={<span />} />
           <ProFormText
             rules={[{ required: true }]}
@@ -56,6 +58,7 @@ const OfficerEntryModal: React.FC<Props> = ({ onSave, data, loadingDockList, ...
           <ProFormSelect allowClear name={"warehouses"} mode='multiple' label="Warehouses" request={async () => {
             return (await LoadingParams.listWarehouse.query(requestActions)).map(it => ({ label: it.name, value: it.id }))
           }} />
+
           <ProFormSelect
             rules={[{ required: true }]}
             mode="multiple"

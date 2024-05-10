@@ -327,6 +327,8 @@ export interface OfficerItem {
   name: string;
   userName: string;
   description?: string;
+  loadingDocks: LoadingDockListItem[],
+  warehouses: LookupDataItem[];
 }
 
 export interface Officer {

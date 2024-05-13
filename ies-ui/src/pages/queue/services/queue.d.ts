@@ -1,3 +1,4 @@
+import { LookupDataItem } from "@/services/data";
 import { LoadingBay, LoadingDock } from "@/services/delivery/data";
 
 export type QueueLayoutItemList = {
@@ -7,6 +8,7 @@ export type QueueLayoutItemList = {
     columns: number;
     displayBoxWidth: number;
     displayBoxHeight: number;
+    warehouses?: LookupDataItem[];
     loadingBays?: LoadingBay[]
     loadingDocks?: LoadingDock[]
     description?: string;
@@ -22,6 +24,7 @@ export type QueueLayoutConfig = {
     displayBoxWidth: number;
     displayBoxHeight: number;
     loadingBays?: LoadingBay[]
+    warehouses?: LookupDataItem[];
     loadingDocks?: LoadingDock[]
     description?: string;
 }
@@ -33,6 +36,7 @@ export type QueueLayoutSaveParams = {
     columns: number;
     displayBoxWidth: number;
     displayBoxHeight: number;
+    warehouseIds?: number[];
     loadingBayIds?: number[]
     loadingDockIds?: number[]
     description?: string;

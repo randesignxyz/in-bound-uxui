@@ -1,5 +1,5 @@
 import { simpleRequestActions } from '@/services/model';
-import { CheckCircleFilled, PlusOutlined, ReloadOutlined, StarFilled, StarOutlined, StarTwoTone } from '@ant-design/icons';
+import { CheckCircleFilled, CheckCircleTwoTone, EditFilled, PlusOutlined, ReloadOutlined, StarFilled, StarOutlined, StarTwoTone } from '@ant-design/icons';
 import ProList from '@ant-design/pro-list';
 import { ActionType } from '@ant-design/pro-table';
 import { Button, Col, Drawer, DrawerProps, List, Row, Space } from 'antd';
@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { QueueLayoutItemList } from '../services/queue';
 import { QueueServices } from '../services/queue-service';
 import LayoutEntryForm from './LayoutEntryForm';
+import { useAccess } from '@umijs/max';
 
 interface Props extends DrawerProps {
   selectedItem?: QueueLayoutItemList;
@@ -16,6 +17,7 @@ interface Props extends DrawerProps {
 export default ({ selectedItem, onSelectedLayout, ...props }: Props) => {
   const requestActions = simpleRequestActions();
   const actionRef = useRef<ActionType>();
+  const access = useAccess()
   const [state, setState] = useState<{
     modal?: {
       type: 'ENTRY';
@@ -41,11 +43,11 @@ export default ({ selectedItem, onSelectedLayout, ...props }: Props) => {
       <Row>
         <Col flex={'Auto'} />
         <Col>
-          <Button
+          {access.canEditQueueLayoutDisplay && <Button
             type="link"
             icon={<PlusOutlined />}
             onClick={() => setState((v) => ({ ...v, modal: { type: 'ENTRY' } }))}
-          />
+          />}
           <Button
             type="link"
             onClick={() => {
@@ -60,29 +62,32 @@ export default ({ selectedItem, onSelectedLayout, ...props }: Props) => {
           return (
             <List.Item
               actions={[
-                <Button
-                  type="link"
-                  disabled={item.id == selectedItem?.id}
-                  onClick={() => onSelectedLayout(item)}
-                  icon={<CheckCircleFilled />}
-                />,
+
+                item.id == selectedItem?.id && <CheckCircleTwoTone />,
               ]}
             >
               <List.Item.Meta
                 title={
-                  <Space><a
-                    onClick={() => {
-                      setState((v) => ({
-                        ...v,
-                        modal: {
-                          type: 'ENTRY',
-                          payload: item,
-                        },
-                      }));
-                    }}
-                  >
-                    {item.layoutName}
-                  </a>
+                  <Space>
+
+                    {access.canEditQueueLayoutDisplay && <Button type='link'
+                      onClick={() => {
+                        setState((v) => ({
+                          ...v,
+                          modal: {
+                            type: 'ENTRY',
+                            payload: item,
+                          },
+                        }));
+                      }}
+                      icon={<EditFilled />} />}
+                    <a
+                      onClick={() => onSelectedLayout(item)}
+                    >
+                      {item.layoutName}
+                    </a>
+
+
                     {item.isDefault && <StarTwoTone />}
 
                   </Space>

@@ -14,6 +14,7 @@ import { useEffect, useState } from 'react';
 import { LoadingLocationServices } from '../services/loading-bay-services';
 import { QueueLayoutItemList, QueueLayoutSaveParams } from '../services/queue';
 import { QueueServices } from '../services/queue-service';
+import { LoadingParams } from '@/services/delivery/loading-params';
 
 interface Props extends ModalFormProps<QueueLayoutSaveParams> {
   data?: QueueLayoutItemList;
@@ -53,6 +54,7 @@ export default ({ data, onReload, ...props }: Props) => {
       rows: data?.rows,
       displayBoxWidth: data?.displayBoxWidth,
       displayBoxHeight: data?.displayBoxHeight,
+      warehouseIds: data?.warehouses?.map(it => it.id),
       loadingBayIds: loadingBayIds,
       loadingDockIds: data?.loadingDocks?.map((it) => it.id),
       defaultForUser: data?.defaultForUser
@@ -78,6 +80,7 @@ export default ({ data, onReload, ...props }: Props) => {
       onFinish={async (dataForm) => {
         try {
           await QueueServices.saveQueueLayout({ ...dataForm, id: data?.id })(requestActions);
+          message.success("Successfully saved")
           onReload?.();
           return Promise.resolve();
         } catch (error: any) {
@@ -134,6 +137,9 @@ export default ({ data, onReload, ...props }: Props) => {
             label="Dispay Block Height"
             name="displayBoxHeight"
           />
+          <ProFormSelect allowClear name={"warehouseIds"} mode='multiple' label="Warehouses" request={async () => {
+            return (await LoadingParams.listWarehouse.query(requestActions)).map(it => ({ label: it.name, value: it.id }))
+          }} />
           <ProFormSelect
             mode="multiple"
             label="Loading bay"
@@ -152,9 +158,10 @@ export default ({ data, onReload, ...props }: Props) => {
               value: it.id,
             }))}
           />
-          <ProFormText label="Default for user" name={"defaultForUser"} />
+
         </Flex>
       </Flex>
+      <ProFormText label="Default for user" name={"defaultForUser"} />
       <ProFormTextArea label="Description" name="description" />
     </ModalForm>
   );

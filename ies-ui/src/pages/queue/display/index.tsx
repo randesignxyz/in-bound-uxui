@@ -9,6 +9,8 @@ import { DeliveryServiceAPI } from '@/services/delivery/services';
 import { simpleRequestActions } from '@/services/model';
 import {
   ArrowLeftOutlined,
+  ArrowRightOutlined,
+  CaretRightFilled,
   ClockCircleOutlined,
   FullscreenExitOutlined,
   FullscreenOutlined,
@@ -17,7 +19,7 @@ import {
   SelectOutlined,
   SettingOutlined,
 } from '@ant-design/icons';
-import { Button, Card, Col, List, Row, Space, Typography } from 'antd';
+import { Button, Card, Col, Flex, List, Row, Space, Typography } from 'antd';
 import _ from 'lodash';
 import moment, { Moment } from 'moment';
 import { useEffect, useRef, useState } from 'react';
@@ -57,6 +59,7 @@ export default () => {
   const [configVisible, SetConfigVisible] = useState(false);
   const [selectedLayout, setSelectedLayout] = useState<QueueLayoutItemList>();
   const [auth, setAuth] = useState(true);
+  const [forceUpdate, setForceUpdate] = useState<{ increase: number, loadingId?: number }>({ increase: 1 })
 
   useEffect(() => {
 
@@ -74,7 +77,10 @@ export default () => {
         const message = ev.data as string;
         const data = message.split(':');
         const loadingId = parseInt(data.length > 1 ? data[1] : '0');
+        console.log(selectedLayout);
         if (message.includes('refresh')) {
+          setForceUpdate(v => ({ increase: v.increase + 1, loadingId: loadingId }))
+          /*
           loadData().then(() => {
             if (loadingId > 0) {
               setForcePlaySound((v) => v + 1);
@@ -84,6 +90,7 @@ export default () => {
               }, 3000);
             }
           });
+          */
         }
       };
     };
@@ -107,6 +114,21 @@ export default () => {
     }
   }, [selectedLayout, auth]);
 
+
+  useEffect(() => {
+    if (selectedLayout && auth) {
+      loadData().then(() => {
+        if (forceUpdate.loadingId && forceUpdate.loadingId > 0) {
+          setForcePlaySound((v) => v + 1);
+          setCallLoading((v) => [...v, forceUpdate.loadingId || 0]);
+          setTimeout(() => {
+            setCallLoading((v) => v.filter((it) => it !== forceUpdate.loadingId));
+          }, 3000);
+        }
+      });
+    }
+  }, [forceUpdate.increase]);
+
   const prepareLayout = async () => {
     const fillup =
       (selectedLayout?.columns || 0) * (selectedLayout?.rows || 0);
@@ -116,7 +138,7 @@ export default () => {
   }
 
   const loadData = async () => {
-    const rs = await services.fetchQueueDisplayData();
+    const rs = await services.fetchQueueDisplayData(selectedLayout?.id);
     const list = rs.ticketList.map((it) => {
       const loading = rs.loading.find((i) => it.processInstance.id == i.processInstance.id);
       return {
@@ -209,23 +231,42 @@ export default () => {
             <List<{ index: number, data?: QueueDisplay }>
               grid={{ gutter: 15, lg: 3, md: 2, sm: 1, xs: 1, column: selectedLayout?.columns || 3 }}
               dataSource={dispayGrid}
+
               renderItem={(item) => {
 
                 const ticket = ticketList.length > item.index ? ticketList[item.index] : undefined
                 const color = ticket?.loadingDock ? '#ffbe6d' : '#dcdbd6';
                 return (
                   <List.Item
+
                     style={{
+
                       height: selectedLayout?.displayBoxHeight || undefined,
                       width: selectedLayout?.displayBoxWidth || undefined,
                       backgroundColor: color,
                     }}
                   >
 
-                    <Row>
-                      {/* <Col>
-                        <Badge count={item.index + 1} color='#faad14' />
-                      </Col> */}
+                    <Flex className={callLoading.some((it) => it == ticket?.loadingId) && styles.blinking} justify='space-between' align='center'>
+                      <Flex vertical align='flex-start'>
+                        <Typography.Text style={{ color: ticket?.loadingDock ? 'blue' : 'black', fontSize: 55, fontWeight: 'bolder' }}>
+                          {ticket?.ticketNo && ticket?.ticketNo}
+                        </Typography.Text>
+                        <Typography.Text style={{ fontSize: 20, fontWeight: 'bold', fontStyle: 'oblique' }} >{ticket?.truck && `${ticket?.truck}`}</Typography.Text>
+                      </Flex>
+                      <Flex> {ticket?.ticketNo && <CaretRightFilled style={{ fontSize: '32px', color: 'green' }} />}</Flex>
+                      <Flex vertical align='flex-end'>
+                        <Typography.Text style={{ color: ticket?.loadingDock ? 'blue' : 'black', fontSize: 55, fontWeight: 'bolder' }}>
+                          {ticket?.loadingDock || (ticket?.ticketNo && "រង់ចាំ")}
+                        </Typography.Text>
+                        <Typography.Text style={{ fontSize: 20, fontWeight: 'bold', fontStyle: 'oblique' }}>{ticket?.driver && `${ticket?.driver}`} </Typography.Text>
+
+                      </Flex>
+                    </Flex>
+
+
+
+                    {/* <Row>
                       <Col flex={"Auto"}>
                         <Row
                           className={callLoading.some((it) => it == ticket?.loadingId) && styles.blinking}
@@ -258,7 +299,7 @@ export default () => {
                           </Col>
                         </Row>
                       </Col>
-                    </Row>
+                    </Row> */}
 
 
                   </List.Item>

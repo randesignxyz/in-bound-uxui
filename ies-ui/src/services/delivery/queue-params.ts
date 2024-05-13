@@ -147,11 +147,13 @@ export const ReqQueuetParams = {
         payload: { id, deliveryNoteIds, invoiceIds }
     }),
 
-    fetchQueueDisplayData: (): ServiceApiType<{}> => ({
+    fetchQueueDisplayData: (layoutId?: number): ServiceApiType<{ layoutId?: number }> => ({
         type: 'FETCH_QUERY',
         endpoint: 'DELIVERY',
         actionName: 'fetch-queue-display-data',
-        payload: {}
+        payload: {
+            layoutId
+        }
     }),
 
 

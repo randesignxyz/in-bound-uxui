@@ -53,7 +53,6 @@ export default () => {
 
             return await actions.loadTaskList(params)
         } catch (error: any) {
-            message.error(error.message || 'Failed to load data.');
             return Promise.reject();
         }
     };

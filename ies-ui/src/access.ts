@@ -267,6 +267,11 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
         ['ROLE_ADMIN', 'ROLE_DELIVERY_SYS_ADMIN'].some((it) => it === item),
       ) || false,
 
+    canEditQueueLayoutDisplay: currentUser?.authorities.some((item) =>
+      ['ROLE_ADMIN', 'ROLE_EDIT_QUEUE_LAYOUT_DISPLAY_ADMIN'].some((it) => it === item),
+    ) || false,
+
+
     canAccessDeliverySettingMenuItem:
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_DELIVERY_SETTING_ADMIN'].some((it) => it === item),

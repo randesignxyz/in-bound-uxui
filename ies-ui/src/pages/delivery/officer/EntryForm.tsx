@@ -36,6 +36,7 @@ const OfficerEntryModal: React.FC<Props> = ({ onSave, data, loadingDockList, ...
     <FormModalComp
       {...props}
       width="800px"
+      title='Loading Officer'
       {...props}
       onSubmit={async () => {
         const dataForm = await form.validateFields();

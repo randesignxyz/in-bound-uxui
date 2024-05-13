@@ -1,4 +1,5 @@
 import {
+  formatDateTime,
   isOffline,
   offlineToken,
   removeOfflineToken,
@@ -12,6 +13,7 @@ import {
   ArrowRightOutlined,
   CaretRightFilled,
   ClockCircleOutlined,
+  FieldTimeOutlined,
   FullscreenExitOutlined,
   FullscreenOutlined,
   LogoutOutlined,
@@ -31,6 +33,8 @@ import { useFullscreen } from 'ahooks';
 import styles from './style.less';
 import { history } from '@umijs/max';
 import Login from '@/pages/User/Login';
+import Item from 'antd/lib/list/Item';
+import { FieldTimePicker, ProDescriptions, ProList } from '@ant-design/pro-components';
 
 const { Title } = Typography;
 
@@ -161,6 +165,48 @@ export default () => {
     ]);
   };
 
+  const gridRender = (item: { index: number, data?: QueueDisplay }) => {
+    const ticket = ticketList.length > item.index ? ticketList[item.index] : undefined
+    const color = ticket?.loadingDock ? '#ffbe6d' : '#dcdbd6';
+
+    return (
+      <List.Item
+
+        style={{
+
+          height: selectedLayout?.displayBoxHeight || undefined,
+          width: selectedLayout?.displayBoxWidth || undefined,
+          backgroundColor: color,
+        }}
+      >
+
+        <Flex className={callLoading.some((it) => it == ticket?.loadingId) && styles.blinking} justify='space-between' align='center'>
+          <Flex vertical align='flex-start'>
+            <Typography.Text style={{ color: ticket?.loadingDock ? 'blue' : 'black', fontSize: 45, fontWeight: 'bolder' }}>
+              {ticket?.ticketNo && ticket?.ticketNo}
+            </Typography.Text>
+            <Typography.Text style={{ fontSize: 20, fontWeight: 'bold', fontStyle: 'oblique' }} >{ticket?.truck && `${ticket?.truck}`}</Typography.Text>
+          </Flex>
+          <Flex> {ticket?.ticketNo && <CaretRightFilled style={{ fontSize: '32px', color: 'green' }} />}</Flex>
+          <Flex vertical align='flex-end'>
+            <Typography.Text style={{ color: ticket?.loadingDock ? 'blue' : 'black', fontSize: 45, fontWeight: 'bolder' }}>
+              {ticket?.loadingDock || (ticket?.ticketNo && "រង់ចាំ")}
+            </Typography.Text>
+            <Typography.Text style={{ fontSize: 20, fontWeight: 'bold', fontStyle: 'oblique' }}>{ticket?.driver && `${ticket?.driver}`} </Typography.Text>
+
+          </Flex>
+        </Flex>
+
+      </List.Item>
+    );
+  }
+
+  const listRender = (item: { index: number, data?: QueueDisplay }) => {
+    const ticket = ticketList.length > item.index ? ticketList[item.index] : undefined
+    const color = ticket?.loadingDock ? '#ffbe6d' : '#dcdbd6';
+    return <Item.Meta avatar={<FieldTimeOutlined />} title={ticket?.driver} description={ticket?.assignedDate} />
+  }
+
   return (
     <div>
       {auth && (
@@ -228,84 +274,33 @@ export default () => {
               backgroundColor: 'white'
             }
           }}>
-            <List<{ index: number, data?: QueueDisplay }>
+            {isFullscreen && <List<{ index: number, data?: QueueDisplay }>
               grid={{ gutter: 15, lg: 3, md: 2, sm: 1, xs: 1, column: selectedLayout?.columns || 3 }}
               dataSource={dispayGrid}
+              renderItem={gridRender}
+            />}
 
-              renderItem={(item) => {
-
-                const ticket = ticketList.length > item.index ? ticketList[item.index] : undefined
-                const color = ticket?.loadingDock ? '#ffbe6d' : '#dcdbd6';
-                return (
-                  <List.Item
-
-                    style={{
-
-                      height: selectedLayout?.displayBoxHeight || undefined,
-                      width: selectedLayout?.displayBoxWidth || undefined,
-                      backgroundColor: color,
-                    }}
-                  >
-
-                    <Flex className={callLoading.some((it) => it == ticket?.loadingId) && styles.blinking} justify='space-between' align='center'>
-                      <Flex vertical align='flex-start'>
-                        <Typography.Text style={{ color: ticket?.loadingDock ? 'blue' : 'black', fontSize: 55, fontWeight: 'bolder' }}>
-                          {ticket?.ticketNo && ticket?.ticketNo}
-                        </Typography.Text>
-                        <Typography.Text style={{ fontSize: 20, fontWeight: 'bold', fontStyle: 'oblique' }} >{ticket?.truck && `${ticket?.truck}`}</Typography.Text>
-                      </Flex>
-                      <Flex> {ticket?.ticketNo && <CaretRightFilled style={{ fontSize: '32px', color: 'green' }} />}</Flex>
-                      <Flex vertical align='flex-end'>
-                        <Typography.Text style={{ color: ticket?.loadingDock ? 'blue' : 'black', fontSize: 55, fontWeight: 'bolder' }}>
-                          {ticket?.loadingDock || (ticket?.ticketNo && "រង់ចាំ")}
-                        </Typography.Text>
-                        <Typography.Text style={{ fontSize: 20, fontWeight: 'bold', fontStyle: 'oblique' }}>{ticket?.driver && `${ticket?.driver}`} </Typography.Text>
-
-                      </Flex>
-                    </Flex>
+            {!isFullscreen && <ProList<QueueDisplay> dataSource={ticketList}
 
 
-
-                    {/* <Row>
-                      <Col flex={"Auto"}>
-                        <Row
-                          className={callLoading.some((it) => it == ticket?.loadingId) && styles.blinking}
-                          style={{
-                            alignItems: 'baseline',
-                            color: ticket?.loadingDock ? 'green' : 'black',
-                          }}
-                        >
-                          <Col>
-                            <Title style={{ color: ticket?.loadingDock ? 'green' : 'black' }}>
-                              {ticket?.ticketNo && ticket?.ticketNo}
-                            </Title>
-                          </Col>
-                          <Col flex={'Auto'} />
-                          <Col>
-                            {ticket?.id && (
-                              <Title style={{ color: ticket?.loadingDock ? 'green' : 'black' }}>
-                                {ticket?.loadingDock || <ClockCircleOutlined />}
-                              </Title>
-                            )}
-                          </Col>
-                        </Row>
-                        <Row>
-                          <Col>
-                            <Card.Meta title={ticket?.truck && `${ticket?.truck}`} />
-                          </Col>
-                          <Col flex="Auto" />
-                          <Col>
-                            <Card.Meta title={ticket?.truck && `${ticket?.driver}`} />
-                          </Col>
-                        </Row>
-                      </Col>
-                    </Row> */}
-
-
-                  </List.Item>
-                );
-              }}
-            />
+              metas={{
+                avatar: {
+                  render: () => <FieldTimeOutlined />
+                },
+                title: {
+                  render: (_, r) => r.truck
+                },
+                subTitle: {
+                  render: (_, r) => r.ticketNo
+                },
+                description: {
+                  render: (_, r) => <ProDescriptions<QueueDisplay> dataSource={r} column={4} columns={[
+                    { title: "Ticket No", render: () => r.ticketNo },
+                    { title: "Issued On", render: () => r.startedTime && formatDateTime(r.startedTime) },
+                    { title: "Loading Dock", render: () => r.loadingDock || "Waiting" }
+                  ]} />
+                }
+              }} />}
           </Card>
         </div>
       )}

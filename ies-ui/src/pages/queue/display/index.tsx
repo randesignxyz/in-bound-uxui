@@ -10,9 +10,7 @@ import { DeliveryServiceAPI } from '@/services/delivery/services';
 import { simpleRequestActions } from '@/services/model';
 import {
   ArrowLeftOutlined,
-  ArrowRightOutlined,
   CaretRightFilled,
-  ClockCircleOutlined,
   FieldTimeOutlined,
   FullscreenExitOutlined,
   FullscreenOutlined,
@@ -33,8 +31,7 @@ import { useFullscreen } from 'ahooks';
 import styles from './style.less';
 import { history } from '@umijs/max';
 import Login from '@/pages/User/Login';
-import Item from 'antd/lib/list/Item';
-import { FieldTimePicker, ProDescriptions, ProList } from '@ant-design/pro-components';
+import { ProDescriptions, ProList } from '@ant-design/pro-components';
 
 const { Title } = Typography;
 

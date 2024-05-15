@@ -21,7 +21,7 @@ import {
   SelectOutlined,
   SettingOutlined,
 } from '@ant-design/icons';
-import { Button, Card, Col, Flex, List, Row, Space, Typography } from 'antd';
+import { Button, Card, Col, Flex, List, Radio, Row, Space, Typography } from 'antd';
 import _ from 'lodash';
 import moment, { Moment } from 'moment';
 import { useEffect, useRef, useState } from 'react';
@@ -42,6 +42,8 @@ type QueueDisplay = {
   id?: number;
   loadingId?: number;
   assignedDate?: Moment;
+  issuedDate?: Moment;
+  createdDate?: Moment;
   ticketNo?: string;
   loadingDock?: string;
   driver?: string;
@@ -64,6 +66,7 @@ export default () => {
   const [selectedLayout, setSelectedLayout] = useState<QueueLayoutItemList>();
   const [auth, setAuth] = useState(true);
   const [forceUpdate, setForceUpdate] = useState<{ increase: number, loadingId?: number }>({ increase: 1 })
+  const [viewType, setViewType] = useState<'list' | 'grid'>('list')
 
   useEffect(() => {
 
@@ -150,6 +153,8 @@ export default () => {
         loadingId: loading?.id,
         ticketNo: it.ticketNum,
         assignedDate: loading?.assignedDate && moment(loading.assignedDate),
+        issuedDate: it.issuedDate,
+        createdDate: it.createdDate,
         loadingDock: loading?.loadingDock.name,
         driver: [it.processInstance.driver.firstName, it.processInstance.driver.lastName].join(' '),
         truck: it.processInstance.truck.licensePlate,
@@ -201,11 +206,11 @@ export default () => {
     );
   }
 
-  const listRender = (item: { index: number, data?: QueueDisplay }) => {
-    const ticket = ticketList.length > item.index ? ticketList[item.index] : undefined
-    const color = ticket?.loadingDock ? '#ffbe6d' : '#dcdbd6';
-    return <Item.Meta avatar={<FieldTimeOutlined />} title={ticket?.driver} description={ticket?.assignedDate} />
-  }
+  // const listRender = (item: { index: number, data?: QueueDisplay }) => {
+  //   const ticket = ticketList.length > item.index ? ticketList[item.index] : undefined
+  //   const color = ticket?.loadingDock ? '#ffbe6d' : '#dcdbd6';
+  //   return <Item.Meta avatar={<FieldTimeOutlined />} title={ticket?.driver} description={ticket?.issuedDate && moment(ticket.issuedDate).toNow()} />
+  // }
 
   return (
     <div>
@@ -217,6 +222,10 @@ export default () => {
           <Col flex="Auto" />
           <Col>
             <Space size={2}>
+              <Radio.Group defaultValue="list" onChange={e => setViewType(e.target.value)} buttonStyle="solid">
+                <Radio.Button value="list">List</Radio.Button>
+                <Radio.Button value="grid">Grid</Radio.Button>
+              </Radio.Group>
               {isOffline() && (
                 <Button
                   type="link"
@@ -274,13 +283,13 @@ export default () => {
               backgroundColor: 'white'
             }
           }}>
-            {isFullscreen && <List<{ index: number, data?: QueueDisplay }>
+            {(isFullscreen || viewType == 'grid') && <List<{ index: number, data?: QueueDisplay }>
               grid={{ gutter: 15, lg: 3, md: 2, sm: 1, xs: 1, column: selectedLayout?.columns || 3 }}
               dataSource={dispayGrid}
               renderItem={gridRender}
             />}
 
-            {!isFullscreen && <ProList<QueueDisplay> dataSource={ticketList}
+            {!isFullscreen && viewType == 'list' && <ProList<QueueDisplay> dataSource={ticketList}
 
 
               metas={{
@@ -291,12 +300,12 @@ export default () => {
                   render: (_, r) => r.truck
                 },
                 subTitle: {
-                  render: (_, r) => r.ticketNo
+                  render: (_, r) => r.driver
                 },
                 description: {
                   render: (_, r) => <ProDescriptions<QueueDisplay> dataSource={r} column={4} columns={[
                     { title: "Ticket No", render: () => r.ticketNo },
-                    { title: "Issued On", render: () => r.startedTime && formatDateTime(r.startedTime) },
+                    { title: "Issued On", render: () => r.createdDate && formatDateTime(r.createdDate) },
                     { title: "Loading Dock", render: () => r.loadingDock || "Waiting" }
                   ]} />
                 }

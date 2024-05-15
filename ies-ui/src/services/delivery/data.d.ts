@@ -217,6 +217,8 @@ export interface QueueTicket {
   processInstance: ProcessInstance;
   ticketNum: string;
   status: string;
+  issuedDate: Moment;
+  createdDate: Moment;
 }
 
 export interface ProcessInstance {

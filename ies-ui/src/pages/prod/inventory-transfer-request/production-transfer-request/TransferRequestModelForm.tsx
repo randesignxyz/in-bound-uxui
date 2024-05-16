@@ -152,8 +152,8 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
         //   action:'Start Request',
         //   // remark:''
         // }
-        // onSave(entity);
-        console.log(entity)
+        onSave(entity);
+        // console.log(entity)
       }}
       onResetForm={() => {
         form.resetFields();

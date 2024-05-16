@@ -294,6 +294,7 @@ export interface DriverListItem {
   driverLicenseType?: string;
   driverLicenseExpiredDate?: string;
   multiTicket?: boolean;
+  deliveryTracking?: boolean;
   description?: string;
   createdBy: string;
   createdDate: Moment;
@@ -313,6 +314,7 @@ export interface SaveDriver {
   driverLicenseType: string;
   driverLicenseExpiredDate: string;
   multiTicket?: boolean;
+  deliveryTracking?: boolean;
   description?: string;
 }
 
@@ -370,6 +372,7 @@ export interface Driver {
   multiTicket?: boolean;
   driverLicenseExpiredDate: string;
   description?: string;
+  deliveryTracking?: boolean;
 }
 
 export interface CompanyListItem {

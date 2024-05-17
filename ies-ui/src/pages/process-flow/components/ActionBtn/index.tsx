@@ -30,27 +30,21 @@ interface ActionBtnProps {
   item?: UserTask;
   taskActions?: boolean;
   hideExport?: boolean;
-  moreActions?: (MoreAction | undefined)[];
+  moreActions?: MoreAction[];
   onValidate?: (action: string, task?: UserTask) => boolean;
   actionHandler: (key: string, item?: UserTask) => void;
 }
 
 const getIcon = (action?: string) => {
-  switch (action) {
-    case 'Approved':
-    case 'Completed':
-      return <CheckOutlined />;
-    case 'Rejected':
-      return <StopOutlined />;
-    case 'Reassigned':
-      return <UserSwitchOutlined />;
-    case 'OnHold':
-      return <HolderOutlined />;
-    case 'Closed':
-      return <IssuesCloseOutlined />;
-    default:
-      return <SelectOutlined />;
-  }
+  const iconMap: Record<string, JSX.Element> = {
+    Approved: <CheckOutlined />,
+    Completed: <CheckOutlined />,
+    Rejected: <StopOutlined />,
+    Reassigned: <UserSwitchOutlined />,
+    OnHold: <HolderOutlined />,
+    Closed: <IssuesCloseOutlined />,
+  };
+  return iconMap[action || ''] || <SelectOutlined />;
 };
 
 const ActionButton: React.FC<{
@@ -70,6 +64,45 @@ const ActionButton: React.FC<{
   </Button>
 );
 
+const MoreActionsButtons: React.FC<{
+  moreActions?: MoreAction[];
+}> = ({ moreActions }) => (
+  <>
+    {moreActions?.filter(action => !action?.hidden).map(action => (
+      <Button
+        danger={action.danger}
+        icon={action.icon}
+        key={action.key}
+        onClick={action.action}
+      >
+        {action.name}
+      </Button>
+    ))}
+  </>
+);
+
+const TaskActionButtons: React.FC<{
+  item?: UserTask;
+  taskActions?: boolean;
+  actionHandler: (key: string, item?: UserTask) => void;
+}> = ({ item, taskActions, actionHandler }) => (
+  <>
+    {item && taskActions && !item.completed && (
+      <Button size="middle" onClick={() => actionHandler(item.claimed ? 'unclaimed' : 'claimed', item)}>
+        {item.claimed ? (
+          <>
+            <StopOutlined /> Unclaim
+          </>
+        ) : (
+          <>
+            <CheckCircleOutlined /> Claim
+          </>
+        )}
+      </Button>
+    )}
+  </>
+);
+
 export const ActionBtn: React.FC<ActionBtnProps> = ({
   item,
   hideExport,
@@ -82,24 +115,10 @@ export const ActionBtn: React.FC<ActionBtnProps> = ({
     ...(item && taskActions ? item.actions : []),
   ];
 
-  const onActionClick = () => {
-    if (item?.completed) return;
-    actionHandler(item?.claimed ? 'unclaimed' : 'claimed', item);
-  };
-
   return (
     <Space size="large">
       <Space>
-        {moreActions?.filter(action => !action?.hidden).map(action => (
-          <Button
-            danger={action?.danger}
-            icon={action?.icon}
-            key={action?.key}
-            onClick={action?.action}
-          >
-            {action?.name}
-          </Button>
-        ))}
+        <MoreActionsButtons moreActions={moreActions} />
         {actionList.filter(action => action).map(action => (
           <ActionButton key={action?.value} action={action} item={item} actionHandler={actionHandler} />
         ))}
@@ -113,19 +132,7 @@ export const ActionBtn: React.FC<ActionBtnProps> = ({
             Export
           </Button>
         )}
-        {taskActions && !item?.completed && (
-          <Button size="middle" onClick={onActionClick}>
-            {item?.claimed ? (
-              <>
-                <StopOutlined /> Unclaim
-              </>
-            ) : (
-              <>
-                <CheckCircleOutlined /> Claim
-              </>
-            )}
-          </Button>
-        )}
+        <TaskActionButtons item={item} taskActions={taskActions} actionHandler={actionHandler} />
       </Space>
     </Space>
   );

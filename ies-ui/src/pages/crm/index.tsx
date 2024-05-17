@@ -252,7 +252,22 @@ const Crm: React.FC = () => {
       description: 'Customer List',
       link: `${CrmPaths.customer}/list`,
       icon: CustomerIcon,
-      overlay: customerMenu,
+      menu: {
+        items: [{
+          type: 'group',
+          label: "Reports",
+          children: [
+            {
+              onClick: () => { setReport('customer-detail') },
+              icon: <BarChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+              label: 'Customer Detail',
+              key: "customer-detail-report"
+            }
+          ]
+
+        }]
+      }
+      // overlay: customerMenu,
     },
     {
       id: 'visitPlan',
@@ -338,9 +353,26 @@ const Crm: React.FC = () => {
       //link: `${CrmPaths.settlement}/list`,
       link: `${CrmPaths.gratisSettlement}/list`,
       icon: scheduleIcon,
-      overlay: GratistMenu
+      menu: {
+        items: [
+          {
+            type: 'group',
+            label: "Actions",
+            children: [
+              {
+                icon: <PlusCircleOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+                label: 'New Settlement',
+                onClick: () => {
+                  history.push(`${CrmPaths.settlement}/create`);
+                },
+                key: 'new-settlement'
+              }
+            ]
+          }
+        ]
+      },
+      // overlay: GratistMenu
     },
-    ,
     {
       id: 'terms',
       name: 'Terms',

@@ -145,7 +145,8 @@ export default () => {
       link: `${DeliveryPaths.board}`,
       icon: boardIcon,
       // isMenu: true,
-      overlay: deliveryMenu,
+
+      // overlay: deliveryMenu,
       visible: access.canAccessDeliveryMenuItem,
       menu: {
         items: [{

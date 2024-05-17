@@ -11,7 +11,7 @@ interface Props {
   onClose: () => void;
 }
 
-export type ReportName = 'sale-order-report' | 'dsd-reports' | 'dsd-lead-report';
+export type ReportName = 'sale-order-report' | 'dsd-reports' | 'dsd-lead-report' | 'visit-report';
 
 const Reports: React.FC<Props> = ({ reportName, onClose }) => {
   const requestActions = simpleRequestActions();

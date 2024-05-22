@@ -95,7 +95,7 @@ export default ({
             const list1 = _.sortBy<InstanceListItem>(result, it => it.ticketNum + (10000 * it.reset)).reverse()
             const list2 = _.sortBy<InstanceListItem>(list1, it => it.priority).reverse()
             setList(list2)
-            const list3 = list2.filter(it => it.changeRequest || !(it.isOwner && (it.loading.status == "PENDING" || it.loading.status == "LOADED")))
+            const list3 = list2.filter(it => it.changeRequest || !(it.isOwner && (it.loading.status == "LOADED")))
 
             const list = statusFilter ? list3 : _.sortBy<InstanceListItem>(list3, it => {
                 if (!it.loading.canPick && it.activity == "LOADING" && it.loading.status == 'PENDING' && !it.holdBy) {
@@ -121,7 +121,7 @@ export default ({
             setStatusCount([
                 { status: HOLD, count: list.filter(it => it.holdBy).length },
                 { status: NONE_DN, count: list.filter(it => !it.loading.canPick && it.activity == "LOADING" && it.loading.status == 'PENDING' && !it.holdBy).length },
-                { status: DN_ASSIGNED, count: list.filter(it => it.loading.canPick && it.activity == "LOADING" && it.loading.status == 'PENDING' && !it.holdBy).length },
+                { status: DN_ASSIGNED, count: list.filter(it => it.loading.canPick && it.activity == "LOADING" && it.loading.status == 'PENDING').length },
                 { status: TRUCK_LOADING, count: list.filter(it => it.loading.canPick && it.activity == "LOADING" && (it.loading.status == 'LOADING' || it.loading.status == 'LOADING_STARTED') && !it.holdBy).length },
                 { status: NONE_DOC, count: list.filter(it => it.activity == "DELIVERY" && it.delivery.status == 'PENDING' && !it.delivery.assignedDocDate && !it.holdBy).length },
                 { status: DOC_ASSIGNED, count: list.filter(it => it.activity == "DELIVERY" && it.delivery.status == 'PENDING' && !!it.delivery.assignedDocDate && !it.holdBy).length },
@@ -131,7 +131,7 @@ export default ({
             return {
                 data: list.filter(it => !statusFilter || (statusFilter == HOLD && it.holdBy) ||
                     (statusFilter == NONE_DN && !it.loading.canPick && it.activity == "LOADING" && it.loading.status == 'PENDING' && !it.holdBy) ||
-                    (statusFilter == DN_ASSIGNED && it.loading.canPick && it.activity == "LOADING" && it.loading.status == 'PENDING' && !it.holdBy) ||
+                    (statusFilter == DN_ASSIGNED && it.loading.canPick && it.activity == "LOADING" && it.loading.status == 'PENDING') ||
                     (statusFilter == TRUCK_LOADING && it.loading.canPick && it.activity == "LOADING" && (it.loading.status == 'LOADING' || it.loading.status == 'LOADING_STARTED') && !it.holdBy) ||
                     (statusFilter == NONE_DOC && it.activity == "DELIVERY" && it.delivery.status == 'PENDING' && !it.delivery.assignedDocDate && !it.holdBy) ||
                     (statusFilter == DOC_ASSIGNED && it.activity == "DELIVERY" && it.delivery.status == 'PENDING' && !!it.delivery.assignedDocDate && !it.holdBy) ||

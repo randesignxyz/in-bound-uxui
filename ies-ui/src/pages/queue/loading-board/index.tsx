@@ -400,7 +400,7 @@ export default () => {
         }
       },
       {
-        key: 'changePickingSlip', label: "Change Picking slip", visible: !isRequested && isLoading && claimed && instanceId, icon: <SwapOutlined />, onClick: async () => {
+        key: 'changePickingSlip', label: "Change Picking slip", visible: !isRequested && (isLoading || isLoadingStarted) && claimed && instanceId, icon: <SwapOutlined />, onClick: async () => {
           await loadInstance(instanceId || 0)
           setModal({
             type: 'PICKING-SLIP', from: from, cb: async () => {
@@ -413,7 +413,7 @@ export default () => {
         }
       },
       {
-        key: 'cancalPickingSlip', label: "Cancel Picking slip", visible: !isRequested && isLoading && claimed && instanceId, type: 'Danger', icon: <StopOutlined />, onClick: () => {
+        key: 'cancalPickingSlip', label: "Cancel Picking slip", visible: !isRequested && (isLoading || isLoadingStarted) && claimed && instanceId, type: 'Danger', icon: <StopOutlined />, onClick: () => {
           setModal({
             type: 'REMARKS', required: true, from: from, cb: (remarks) => {
               onCancelPickupHandler(selected?.loadingId || 0, remarks, async () => {

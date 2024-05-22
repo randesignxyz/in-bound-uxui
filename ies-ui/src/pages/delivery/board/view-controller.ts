@@ -7,16 +7,16 @@ import { MutableRefObject } from "react";
 
 export type UiType = 'LIST' | 'DETAIL'
 
-export type ModalName =  'detail' | 'assign-doc' | 'picking-slip'
+export type ModalName = 'detail' | 'assign-doc' | 'picking-slip' | 'change-picking-slip'
 
 
 export interface ViewController {
     requestActions: SimpleRequestActions;
     actions: {
-        onOpenModal: (from: UiType, modalName: ModalName, id?: number, isLoadDetail?: boolean, cb?: ()=> void) => void;
+        onOpenModal: (from: UiType, modalName: ModalName, id?: number, isLoadDetail?: boolean, cb?: () => void) => void;
         onCloseModal: (visible?: boolean) => void;
-        onClaim: (id?: number, cb?:()=> void) => void;
-        onRelease: (id?: number, cb?:()=> void) => void;
+        onClaim: (id?: number, cb?: () => void) => void;
+        onRelease: (id?: number, cb?: () => void) => void;
         onRefreshDetailData: (id?: number) => void;
         onRefreshLisViewData: () => void;
     },
@@ -26,7 +26,7 @@ export interface ViewController {
     },
     view: {
         loading?: boolean;
-        getActions?: (form: UiType, item?: InstanceBasic) =>  ActionData[];
+        getActions?: (form: UiType, item?: InstanceBasic) => ActionData[];
         actionRef: MutableRefObject<ActionType | undefined>;
     }
 }

@@ -24,7 +24,7 @@ import { PageContainer, PageHeaderProps, ProCard } from '@ant-design/pro-compone
 import { EllipsisOutlined } from '@ant-design/icons';
 import SupplySource from '../SupplySource';
 import ActivityLog from '@/components/ActivityLog';
-import { CustomerActionController } from '../..';
+import { CustomerActionController } from '../../index.tsx.old';
 import PosmView from '@/pages/crm/components/PosmView';
 import { simpleRequestActions } from '@/services/model';
 import { CustomerServices } from '../../services';

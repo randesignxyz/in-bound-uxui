@@ -15,7 +15,7 @@ import { history } from "@umijs/max";
 import ExportCustomer from './ExportCustomer';
 import ImportFileButton from '@/components/ImportFileButton';
 import TransferSE from './TransferSE';
-import { CustomerActionController } from '../..';
+import { CustomerActionController } from '../../index.tsx.old';
 import { ImportDataItem, ImportDataResponse } from '@/services/shared/data';
 import UploadData from '../UploadData';
 import Status from '@/components/Status';

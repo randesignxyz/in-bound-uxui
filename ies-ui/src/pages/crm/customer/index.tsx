@@ -1,39 +1,48 @@
-import { AttachmentModal } from "@/components/Attachment/AttachmentModal"
-import CrudWrapper from "@/components/DataCrud/CrudWrapper"
-import Remarks from "@/components/remarks"
-import { BasicData, CustomerItemBase } from "@/services/crm/data"
-import { simpleRequestActions } from "@/services/model"
-import {
-    CloseCircleOutlined, EditOutlined,
-    HistoryOutlined, PaperClipOutlined,
-    PlayCircleOutlined, ScheduleOutlined,
-    SwapOutlined, UpOutlined
-} from "@ant-design/icons"
-import { useAccess } from "@umijs/max"
-import { message, Modal, Spin } from "antd"
-import { ItemType } from "rc-menu/lib/interface"
-import { useState } from "react"
-import { CrmPaths } from ".."
-import BasicEntryModal from "./components/basic/BasicEntryModal"
-import CustomerCodeTracking from "./components/basic/CustomerCodeTracking"
-import UpgradeCustomer from "./components/basic/UpgradeCustomer"
-import CreateCustomer from "./components/Create"
-import CustomerDetailView from "./components/Detail"
-import Transfer from "./components/Detail/Transfer"
-import { CustomerListView } from "./components/List"
-import VisitSchduleGeneratedModal from "./components/VisitSchduleGeneratedModal"
-import { model } from "./model"
-import { CustomerServices } from "./services"
+import PageWrapper from "@/components/PageWrapper"
+import { BasicData, CustomerItemBase, CustomerItemLess } from "@/services/crm/data"
+import { CloseCircleOutlined, DashOutlined, EditOutlined, HistoryOutlined, PaperClipOutlined, PlayCircleOutlined, ScheduleOutlined, SwapOutlined, UpOutlined, UploadOutlined } from "@ant-design/icons"
+import { useAccess, useQuery, useQueryClient } from "@umijs/max"
+import { CrmServiceAPI } from "@/services/crm/services";
+import { Dropdown, Modal, Space, Typography, message } from "antd";
+import Status from "@/components/Status";
+import { toReadable } from "@/pages/utils";
+import { useState } from "react";
+import { FetchPagingParams } from "@/components/DataCrud/TableView";
+import CustomerDetailView from "./components/Detail";
+import { ItemType } from "rc-menu/lib/interface";
+import { model } from "./model";
+import { simpleRequestActions } from "@/services/model";
+import { CustomerServices } from "./services";
+import BasicEntryModal from "./components/basic/BasicEntryModal";
+import Transfer from "./components/Detail/Transfer";
+import UpgradeCustomer from "./components/basic/UpgradeCustomer";
+import Remarks from "@/components/remarks";
+import CustomerCodeTracking from "./components/basic/CustomerCodeTracking";
+import VisitSchduleGeneratedModal from "./components/VisitSchduleGeneratedModal";
+import { AttachmentModal } from "@/components/Attachment/AttachmentModal";
 
-export type CustomerActionController = {
-    getMenuItems: (item: CustomerItemBase, type: 'List' | 'Detail', cb?: () => void) => (ItemType & { display?: boolean })[]
+const crmServices = CrmServiceAPI();
+
+type FilterType = {
+    searchValue?: string;
+    status?: string;
 }
 
 export default () => {
 
+    const queryClient = useQueryClient();
+    const [filter, setFilter] = useState<FetchPagingParams<FilterType>>()
+
+    const { data, refetch, isFetching } = useQuery(['fetch-customer-list', filter], () => crmServices.findAllCustomer({
+        searchValue: filter?.criteria?.searchValue,
+        advanceSearch: { status: filter?.criteria?.status },
+        sort: filter?.sort,
+    }, { page: filter?.pagination?.current, pageSize: filter?.pagination?.pageSize }), {
+        refetchOnWindowFocus: false
+    });
+
     const { state, ops, actions, modals } = model();
     const access = useAccess();
-
     const [forceReload, setForceReload] = useState<{ cb?: () => void }>()
 
     const requestAction = simpleRequestActions()
@@ -47,6 +56,7 @@ export default () => {
         required: boolean;
         cb: (remakrs: string) => void;
     }>()
+
 
     const onCloseModalHandler = (visible?: boolean) => {
         if (!visible) setModal(undefined)
@@ -110,13 +120,11 @@ export default () => {
         })
     }
 
-    const getMenuItems = (item: CustomerItemBase, type: 'List' | 'Detail', forceReloadCb?: () => void): (ItemType & { display?: boolean })[] => {
-
+    const getMenuItems = (item: CustomerItemBase, type: 'List' | 'Detail', forceReloadCb?: () => void): (ItemType & { display?: boolean, icon?: React.ReactElement })[] => {
         const isDiabled = item?.status == 'Inactive'
-
         return [
             {
-                key: 'editBasicInfo', label: 'Edit Customer', itemIcon: <EditOutlined />, disabled: !(item?.source !== 'SAP') || (!access.canEditCustomerBasicInfo) || isDiabled, onClick: async () => {
+                key: 'editBasicInfo', label: 'Edit Customer', icon: <EditOutlined />, disabled: !(item?.source !== 'SAP') || (!access.canEditCustomerBasicInfo) || isDiabled, onClick: async () => {
                     await initData()
                     await ops.detail(item.id, true)
                     setForceReload({ cb: forceReloadCb })
@@ -125,21 +133,21 @@ export default () => {
             },
             { type: 'divider', display: true },
             {
-                key: 'promote-customer', label: 'Promote Customer', disabled: isDiabled || item.type.id != 102 || !item.code?.startsWith("L9"), itemIcon: <UpOutlined />, onClick: async () => {
+                key: 'promote-customer', label: 'Promote Customer', disabled: isDiabled || item.type.id != 102 || !item.code?.startsWith("L9"), icon: <UpOutlined />, onClick: async () => {
                     await ops.detail(item.id, true)
                     setForceReload({ cb: forceReloadCb })
                     modals.showModal('promote-customer')
                 }, display: true
             },
             {
-                key: 'customer_code_tracking', label: "Customer Code tracking", itemIcon: <HistoryOutlined />, onClick: async () => {
+                key: 'customer_code_tracking', label: "Customer Code tracking", icon: <HistoryOutlined />, onClick: async () => {
                     await ops.detail(item.id, true)
                     setForceReload({ cb: forceReloadCb })
                     modals.showModal('code-tracking')
                 }, display: true
             },
             {
-                key: 'transfer-customer', label: 'Transfer Salesperson', disabled: !access.canTransferSe || isDiabled || item?.type?.id != 102, itemIcon: <SwapOutlined />, onClick: async () => {
+                key: 'transfer-customer', label: 'Transfer Salesperson', disabled: !access.canTransferSe || isDiabled || item?.type?.id != 102, icon: <SwapOutlined />, onClick: async () => {
                     await initData()
                     await ops.detail(item.id, true)
                     setForceReload({ cb: forceReloadCb })
@@ -148,14 +156,14 @@ export default () => {
             },
             { type: 'divider', display: true },
             {
-                key: 'attachments', label: 'Attach Files', itemIcon: <PaperClipOutlined />, display: type == 'Detail', onClick: async () => {
+                key: 'attachments', label: 'Attach Files', icon: <PaperClipOutlined />, display: type == 'Detail', onClick: async () => {
                     await ops.detail(item.id, true)
                     setForceReload({ cb: forceReloadCb })
                     modals.showModal('attachments')
                 }
             },
             {
-                key: 'visitScheduleGen', label: 'Generate Schedule', disabled: !access.canVisitScheduleGen || isDiabled, itemIcon: <ScheduleOutlined />, display: type == 'Detail', onClick: async () => {
+                key: 'visitScheduleGen', label: 'Generate Schedule', disabled: !access.canVisitScheduleGen || isDiabled, icon: <ScheduleOutlined />, display: type == 'Detail', onClick: async () => {
                     await ops.detail(item.id, true)
                     setForceReload({ cb: forceReloadCb })
                     modals.showModal('visitScheduleGen')
@@ -164,7 +172,7 @@ export default () => {
 
             { type: 'divider', display: true },
             {
-                key: 'disabled', label: 'Disabled', disabled: item?.type?.id != 102 || !access.canActiveInactiveCustomer, itemIcon: <CloseCircleOutlined />, display: !isDiabled, onClick: async () => {
+                key: 'disabled', label: 'Disabled', disabled: item?.type?.id != 102 || !access.canActiveInactiveCustomer, icon: <CloseCircleOutlined />, display: !isDiabled, onClick: async () => {
                     setForceReload({ cb: forceReloadCb })
                     setModal({
                         type: 'remarks', required: true, cb: remarks => {
@@ -187,7 +195,7 @@ export default () => {
                 }
             },
             {
-                key: 'activate', label: 'Activate', disabled: item?.type?.id != 102 || !access.canActiveInactiveCustomer, itemIcon: <PlayCircleOutlined />, display: isDiabled, onClick: async () => {
+                key: 'activate', label: 'Activate', disabled: item?.type?.id != 102 || !access.canActiveInactiveCustomer, icon: <PlayCircleOutlined />, display: isDiabled, onClick: async () => {
                     setForceReload({ cb: forceReloadCb })
                     setModal({
                         type: 'remarks', required: true, cb: remarks => {
@@ -212,36 +220,88 @@ export default () => {
         ]
     }
 
-    const actl: CustomerActionController = {
-        getMenuItems: getMenuItems
-    }
+    return <><PageWrapper<CustomerItemLess, FilterType, { test: string, test1: string }> title="Customer"
+        detailViewRender={(item) => <CustomerDetailView openInTab id={item.id} getMenuItems={getMenuItems} />}
+        listView={{
+            type: 'Table',
+            statuses: [
+                { option: { label: 'All', value: 'ALL' }, subOptions: [] },
+                { option: { label: 'Active', value: 'Y' }, subOptions: [] },
+                { option: { label: 'Inactive', value: 'N' }, subOptions: [] }
+            ],
+            onFilter(filter, page, sort) {
+                setFilter({
+                    criteria: { ...filter, status: filter?.status == "ALL" ? undefined : filter?.status },
+                    pagination: page,
+                    sort: sort
+                })
+                queryClient.invalidateQueries(['fetch-customer-list', filter])
 
-    return <Spin spinning={state.loading || false}>
-        <CrudWrapper baseURL={CrmPaths.customer} >
+            },
+            onRefresh: refetch,
+            props: {
+                dataSource: data?.items,
+                pagination: {
+                    total: data?.total,
+                },
+                loading: isFetching,
+                // quickView: true,
+                fullView: {
+                    onOpen: item => window.open(`/external/crm/customer/detail/${item.id}`, '_blank')?.focus()
+                },
+                primaryCol: {
+                    title: 'Customer #'
+                },
+                columns: [
+                    {
+                        title: 'Customer Name', render: (_, r) => <Space>
+                            {<Typography.Text>{r.name}</Typography.Text>}
+                            {<Typography.Text type="secondary">{r.internalName}</Typography.Text>}
+                        </Space>
+                    },
+                    { title: 'Type', render: (_, r) => r.type.name },
+                    {
+                        title: 'Region',
+                        dataIndex: 'region',
+                    },
+                    { title: 'Saleperson', render: (_, r) => r.sale },
+                    { title: 'Channel', render: (_, r) => r.channel },
+                    { title: 'Outlet Type', render: (_, r) => r.outletType },
+                    { title: 'Status', render: (_, r) => <Status text={toReadable(r.status)} value={r.status} /> },
 
-            {(view, id, navigate) => {
+                    {
+                        render: (_, r) => <Dropdown menu={{
 
-                switch (view) {
-                    case 'list':
-                        return <CustomerListView actl={actl} actionHandlers={{
-                            onAdd: navigate?.goToCreate,
-                            onDetail: navigate?.goToDetail
-                        }} />
-                    case 'create':
-                        return <CreateCustomer />
-                    case 'detail':
-                        return <CustomerDetailView id={id as number} getMenuItems={actl.getMenuItems} actionHandlers={{
-                            onBack: navigate?.gotToListHandler
-                        }} />
-                    default:
-                        throw Error('Not supporte')
-                }
-            }}
+                            items: getMenuItems(r, 'List', () => refetch).filter(it => it.display)
 
-        </CrudWrapper>
+                        }}>
 
-
-
+                            <a onClick={(e) => e.preventDefault()}>
+                                <Space>
+                                    <DashOutlined />
+                                </Space>
+                            </a>
+                        </Dropdown>
+                    }
+                ]
+            },
+            actionNumShown: 2,
+            actions: [
+                {
+                    key: 'IMPORT', label: 'Import', icon: <UploadOutlined />, onClick: async () => {
+                        queryClient.invalidateQueries(['fetch-customer', 'hello'])
+                    }
+                },
+                {
+                    key: 'EXPORT', label: 'Export', icon: <UploadOutlined />, onClick: () => {
+                        const data = queryClient.getQueryData(['fetch-customer', 'hello'])
+                        console.log(data)
+                    }
+                },
+                { key: 'TRANSFER', label: 'Transfer SE', icon: <SwapOutlined style={{ fontSize: '16px', color: '#08c' }} /> }
+            ]
+        }}
+    />
         <BasicEntryModal
             layoutConfig={{
                 supplySource:
@@ -363,5 +423,5 @@ export default () => {
             }}
         />
 
-    </Spin>
+    </>
 }

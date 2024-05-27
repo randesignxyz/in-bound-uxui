@@ -70,14 +70,14 @@ export default [
     access: 'canAccessCrmMenuItem',
     component: './crm/customer',
   },
-  {
-    path: '/crm/customer/new',
-    name: 'customers',
-    icon: 'UnorderedListOutlined',
-    hideInMenu: 'true',
-    access: 'canAccessCrmMenuItem',
-    component: './crm/customer/CustomerNew',
-  },
+  // {
+  //   path: '/crm/customer/new',
+  //   name: 'customers',
+  //   icon: 'UnorderedListOutlined',
+  //   hideInMenu: 'true',
+  //   access: 'canAccessCrmMenuItem',
+  //   component: './crm/customer/CustomerNew',
+  // },
   {
     path: '/external/crm/customer/:view/*',
     name: 'view-customer',

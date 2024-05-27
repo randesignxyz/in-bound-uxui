@@ -2,7 +2,7 @@ import { PageContainer } from '@ant-design/pro-components';
 import React from 'react'
 import { useParams, history } from "@umijs/max";
 
-type ViewType = 'list' | 'create' | 'detail' | 'edit' | 'view' | undefined;
+export type ViewType = 'list' | 'create' | 'detail' | 'edit' | 'view' | undefined;
 
 interface Props {
     baseURL?: string;
@@ -12,7 +12,6 @@ interface Props {
         viewType: ViewType,
         id?: number | string,
         navigate?: {
-
             goToDetail?: (data: { id: number | string }) => void;
             gotToListHandler?: () => void;
             goToCreate?: (data?: { id?: number | string }) => void;
@@ -26,6 +25,7 @@ const CrudWrapper: React.FC<Props> = ({ baseURL, onBack, children, title }) => {
     const params = useParams()
 
     const view: ViewType = (params['view'] as ViewType) || undefined
+
     // console.log(view);
 
     const id = params['*']

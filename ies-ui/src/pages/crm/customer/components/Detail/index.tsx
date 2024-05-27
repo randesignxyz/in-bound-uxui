@@ -24,10 +24,10 @@ import { PageContainer, PageHeaderProps, ProCard } from '@ant-design/pro-compone
 import { EllipsisOutlined } from '@ant-design/icons';
 import SupplySource from '../SupplySource';
 import ActivityLog from '@/components/ActivityLog';
-import { CustomerActionController } from '../../index.tsx.old';
 import PosmView from '@/pages/crm/components/PosmView';
 import { simpleRequestActions } from '@/services/model';
 import { CustomerServices } from '../../services';
+import { CustomerActionController } from '../..';
 
 interface Props {
   id?: number;
@@ -346,7 +346,7 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
   </Spin>
 
 
-  return openInTab ? <ProCard title={<Space>#<Typography.Text strong copyable >{state.data?.detail?.code}</Typography.Text></Space>} extra={
+  return openInTab ? <ProCard title={<Space># <Typography.Text strong copyable >{state.data?.detail?.code}</Typography.Text></Space>} extra={
     <Dropdown
       menu={{
         items: state.data?.detail && getMenuItems(state.data?.detail, 'Detail', () => {

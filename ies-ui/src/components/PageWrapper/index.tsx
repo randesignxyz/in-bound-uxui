@@ -5,7 +5,7 @@ import { Button, Card, Dropdown, Flex, FloatButton, Input, MenuItemProps, Radio,
 import React, { useEffect, useRef } from "react";
 import { useState } from "react";
 import { CSS } from '@dnd-kit/utilities';
-import { ExportOutlined, EyeFilled, MoreOutlined, ReloadOutlined, UnorderedListOutlined } from "@ant-design/icons";
+import { ExportOutlined, EyeFilled, FileTextOutlined, MoreOutlined, ReloadOutlined, UnorderedListOutlined } from "@ant-design/icons";
 import { MenuItemType } from "rc-menu/lib/interface";
 import { SortOrder } from "antd/lib/table/interface";
 import { SegmentedLabeledOption, SegmentedOptions } from "antd/es/segmented";
@@ -160,6 +160,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
                     setTabList(v => [...v, {
                         tab: entity.code,
                         key: entity.code,
+                        icon: <FileTextOutlined />,
                         children: detailViewRender?.(entity)
                     }])
                     entity.code && setActiveKey({ key: entity.code, item: entity })

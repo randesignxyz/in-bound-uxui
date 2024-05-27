@@ -1,7 +1,7 @@
 import PageWrapper from "@/components/PageWrapper"
 import { BasicData, CustomerItemBase, CustomerItemLess } from "@/services/crm/data"
 import { CloseCircleOutlined, DashOutlined, EditOutlined, HistoryOutlined, PaperClipOutlined, PlayCircleOutlined, ScheduleOutlined, SwapOutlined, UpOutlined, UploadOutlined } from "@ant-design/icons"
-import { useAccess, useQuery, useQueryClient } from "@umijs/max"
+import { useAccess, useParams, useQuery, useQueryClient } from "@umijs/max"
 import { CrmServiceAPI } from "@/services/crm/services";
 import { Dropdown, Modal, Space, Typography, message } from "antd";
 import Status from "@/components/Status";
@@ -20,6 +20,7 @@ import Remarks from "@/components/remarks";
 import CustomerCodeTracking from "./components/basic/CustomerCodeTracking";
 import VisitSchduleGeneratedModal from "./components/VisitSchduleGeneratedModal";
 import { AttachmentModal } from "@/components/Attachment/AttachmentModal";
+import { ViewType } from "@/components/DataCrud/CrudWrapper";
 
 const crmServices = CrmServiceAPI();
 
@@ -28,7 +29,17 @@ type FilterType = {
     status?: string;
 }
 
+export type CustomerActionController = {
+    getMenuItems: (item: CustomerItemBase, type: 'List' | 'Detail', cb?: () => void) => (ItemType & { display?: boolean })[]
+}
+
+
+
+
 export default () => {
+    const params = useParams()
+    const view: ViewType = (params['view'] as ViewType) || undefined
+    const id = params['*']
 
     const queryClient = useQueryClient();
     const [filter, setFilter] = useState<FetchPagingParams<FilterType>>()
@@ -220,88 +231,90 @@ export default () => {
         ]
     }
 
-    return <><PageWrapper<CustomerItemLess, FilterType, { test: string, test1: string }> title="Customer"
-        detailViewRender={(item) => <CustomerDetailView openInTab id={item.id} getMenuItems={getMenuItems} />}
-        listView={{
-            type: 'Table',
-            statuses: [
-                { option: { label: 'All', value: 'ALL' }, subOptions: [] },
-                { option: { label: 'Active', value: 'Y' }, subOptions: [] },
-                { option: { label: 'Inactive', value: 'N' }, subOptions: [] }
-            ],
-            onFilter(filter, page, sort) {
-                setFilter({
-                    criteria: { ...filter, status: filter?.status == "ALL" ? undefined : filter?.status },
-                    pagination: page,
-                    sort: sort
-                })
-                queryClient.invalidateQueries(['fetch-customer-list', filter])
+    return <>
+        {view == 'list' && <PageWrapper<CustomerItemLess, FilterType, { test: string, test1: string }> title="Customer"
+            detailViewRender={(item) => <CustomerDetailView openInTab id={item.id} getMenuItems={getMenuItems} />}
+            listView={{
+                type: 'Table',
+                statuses: [
+                    { option: { label: 'All', value: 'ALL' }, subOptions: [] },
+                    { option: { label: 'Active', value: 'Y' }, subOptions: [] },
+                    { option: { label: 'Inactive', value: 'N' }, subOptions: [] }
+                ],
+                onFilter(filter, page, sort) {
+                    setFilter({
+                        criteria: { ...filter, status: filter?.status == "ALL" ? undefined : filter?.status },
+                        pagination: page,
+                        sort: sort
+                    })
+                    queryClient.invalidateQueries(['fetch-customer-list', filter])
 
-            },
-            onRefresh: refetch,
-            props: {
-                dataSource: data?.items,
-                pagination: {
-                    total: data?.total,
                 },
-                loading: isFetching,
-                // quickView: true,
-                fullView: {
-                    onOpen: item => window.open(`/external/crm/customer/detail/${item.id}`, '_blank')?.focus()
-                },
-                primaryCol: {
-                    title: 'Customer #'
-                },
-                columns: [
-                    {
-                        title: 'Customer Name', render: (_, r) => <Space>
-                            {<Typography.Text>{r.name}</Typography.Text>}
-                            {<Typography.Text type="secondary">{r.internalName}</Typography.Text>}
-                        </Space>
+                onRefresh: refetch,
+                props: {
+                    dataSource: data?.items,
+                    pagination: {
+                        total: data?.total,
                     },
-                    { title: 'Type', render: (_, r) => r.type.name },
-                    {
-                        title: 'Region',
-                        dataIndex: 'region',
+                    loading: isFetching,
+                    // quickView: true,
+                    fullView: {
+                        onOpen: item => window.open(`/external/crm/customer/detail/${item.id}`, '_blank')?.focus()
                     },
-                    { title: 'Saleperson', render: (_, r) => r.sale },
-                    { title: 'Channel', render: (_, r) => r.channel },
-                    { title: 'Outlet Type', render: (_, r) => r.outletType },
-                    { title: 'Status', render: (_, r) => <Status text={toReadable(r.status)} value={r.status} /> },
+                    primaryCol: {
+                        title: 'Customer #'
+                    },
+                    columns: [
+                        {
+                            title: 'Customer Name', render: (_, r) => <Space>
+                                {<Typography.Text>{r.name}</Typography.Text>}
+                                {<Typography.Text type="secondary">{r.internalName}</Typography.Text>}
+                            </Space>
+                        },
+                        { title: 'Type', render: (_, r) => r.type.name },
+                        {
+                            title: 'Region',
+                            dataIndex: 'region',
+                        },
+                        { title: 'Saleperson', render: (_, r) => r.sale },
+                        { title: 'Channel', render: (_, r) => r.channel },
+                        { title: 'Outlet Type', render: (_, r) => r.outletType },
+                        { title: 'Status', render: (_, r) => <Status text={toReadable(r.status)} value={r.status} /> },
+                        {
+                            render: (_, r) => <Dropdown menu={{
 
+                                items: getMenuItems(r, 'List', () => refetch).filter(it => it.display)
+
+                            }}>
+                                <a onClick={(e) => e.preventDefault()}>
+                                    <Space>
+                                        <DashOutlined />
+                                    </Space>
+                                </a>
+                            </Dropdown>
+                        }
+                    ]
+                },
+                actionNumShown: 2,
+                actions: [
                     {
-                        render: (_, r) => <Dropdown menu={{
-
-                            items: getMenuItems(r, 'List', () => refetch).filter(it => it.display)
-
-                        }}>
-
-                            <a onClick={(e) => e.preventDefault()}>
-                                <Space>
-                                    <DashOutlined />
-                                </Space>
-                            </a>
-                        </Dropdown>
-                    }
+                        key: 'IMPORT', label: 'Import', icon: <UploadOutlined />, onClick: async () => {
+                            queryClient.invalidateQueries(['fetch-customer', 'hello'])
+                        }
+                    },
+                    {
+                        key: 'EXPORT', label: 'Export', icon: <UploadOutlined />, onClick: () => {
+                            const data = queryClient.getQueryData(['fetch-customer', 'hello'])
+                            console.log(data)
+                        }
+                    },
+                    { key: 'TRANSFER', label: 'Transfer SE', icon: <SwapOutlined style={{ fontSize: '16px', color: '#08c' }} /> }
                 ]
-            },
-            actionNumShown: 2,
-            actions: [
-                {
-                    key: 'IMPORT', label: 'Import', icon: <UploadOutlined />, onClick: async () => {
-                        queryClient.invalidateQueries(['fetch-customer', 'hello'])
-                    }
-                },
-                {
-                    key: 'EXPORT', label: 'Export', icon: <UploadOutlined />, onClick: () => {
-                        const data = queryClient.getQueryData(['fetch-customer', 'hello'])
-                        console.log(data)
-                    }
-                },
-                { key: 'TRANSFER', label: 'Transfer SE', icon: <SwapOutlined style={{ fontSize: '16px', color: '#08c' }} /> }
-            ]
-        }}
-    />
+            }}
+        />}
+        {view == 'detail' && id && <CustomerDetailView id={id as unknown as number} getMenuItems={getMenuItems} actionHandlers={{
+            onBack: () => { }
+        }} />}
         <BasicEntryModal
             layoutConfig={{
                 supplySource:

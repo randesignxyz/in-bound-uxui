@@ -1,15 +1,14 @@
 import PageWrapper from "@/components/PageWrapper"
 import { BasicData, CustomerItemBase, CustomerItemLess } from "@/services/crm/data"
-import { CloseCircleOutlined, DashOutlined, EditOutlined, HistoryOutlined, PaperClipOutlined, PlayCircleOutlined, ScheduleOutlined, SwapOutlined, UpOutlined, UploadOutlined } from "@ant-design/icons"
+import { CloseCircleOutlined, DashOutlined, DownloadOutlined, EditOutlined, HistoryOutlined, PaperClipOutlined, PlayCircleOutlined, ScheduleOutlined, SwapOutlined, UpOutlined, UploadOutlined } from "@ant-design/icons"
 import { useAccess, useParams, useQuery, useQueryClient } from "@umijs/max"
 import { CrmServiceAPI } from "@/services/crm/services";
-import { Dropdown, Modal, Space, Typography, message } from "antd";
+import { Dropdown, Modal, Space, Spin, Typography, message } from "antd";
 import Status from "@/components/Status";
 import { toReadable } from "@/pages/utils";
 import { useState } from "react";
 import { FetchPagingParams } from "@/components/DataCrud/TableView";
 import CustomerDetailView from "./components/Detail";
-import { ItemType } from "rc-menu/lib/interface";
 import { model } from "./model";
 import { simpleRequestActions } from "@/services/model";
 import { CustomerServices } from "./services";
@@ -20,29 +19,28 @@ import Remarks from "@/components/remarks";
 import CustomerCodeTracking from "./components/basic/CustomerCodeTracking";
 import VisitSchduleGeneratedModal from "./components/VisitSchduleGeneratedModal";
 import { AttachmentModal } from "@/components/Attachment/AttachmentModal";
-import { ViewType } from "@/components/DataCrud/CrudWrapper";
-
+import { ActionBarType } from "@/components/ActionBar";
+import AdvanceSearch from "./components/List/AdvanceSearch";
+import TransferSE from "./components/List/TransferSE";
+import UploadData from "./components/UploadData";
+import ExportCustomer from "./components/List/ExportCustomer";
+import { ImportDataItem, ImportDataResponse } from "@/services/shared/data";
+import ImportFileButton from "@/components/ImportFileButton";
 const crmServices = CrmServiceAPI();
-
 type FilterType = {
     searchValue?: string;
     status?: string;
 }
 
 export type CustomerActionController = {
-    getMenuItems: (item: CustomerItemBase, type: 'List' | 'Detail', cb?: () => void) => (ItemType & { display?: boolean })[]
+    getMenuItems: (item: CustomerItemBase, type: 'List' | 'Detail', cb?: () => void) => ActionBarType[]
 }
 
-
-
-
 export default () => {
-    const params = useParams()
-    const view: ViewType = (params['view'] as ViewType) || undefined
-    const id = params['*']
-
     const queryClient = useQueryClient();
     const [filter, setFilter] = useState<FetchPagingParams<FilterType>>()
+    const [importData, setImportData] = useState<ImportDataResponse>()
+    const [loading, setLoading] = useState(false);
 
     const { data, refetch, isFetching } = useQuery(['fetch-customer-list', filter], () => crmServices.findAllCustomer({
         searchValue: filter?.criteria?.searchValue,
@@ -131,7 +129,7 @@ export default () => {
         })
     }
 
-    const getMenuItems = (item: CustomerItemBase, type: 'List' | 'Detail', forceReloadCb?: () => void): (ItemType & { display?: boolean, icon?: React.ReactElement })[] => {
+    const getMenuItems = (item: CustomerItemBase, type: 'List' | 'Detail', forceReloadCb?: () => void): ActionBarType[] => {
         const isDiabled = item?.status == 'Inactive'
         return [
             {
@@ -140,22 +138,22 @@ export default () => {
                     await ops.detail(item.id, true)
                     setForceReload({ cb: forceReloadCb })
                     modals.showModal('editBasicInfo')
-                }, display: true
+                }, visible: true
             },
-            { type: 'divider', display: true },
+            { type: 'divider', visible: true },
             {
                 key: 'promote-customer', label: 'Promote Customer', disabled: isDiabled || item.type.id != 102 || !item.code?.startsWith("L9"), icon: <UpOutlined />, onClick: async () => {
                     await ops.detail(item.id, true)
                     setForceReload({ cb: forceReloadCb })
                     modals.showModal('promote-customer')
-                }, display: true
+                }, visible: true
             },
             {
                 key: 'customer_code_tracking', label: "Customer Code tracking", icon: <HistoryOutlined />, onClick: async () => {
                     await ops.detail(item.id, true)
                     setForceReload({ cb: forceReloadCb })
                     modals.showModal('code-tracking')
-                }, display: true
+                }, visible: true
             },
             {
                 key: 'transfer-customer', label: 'Transfer Salesperson', disabled: !access.canTransferSe || isDiabled || item?.type?.id != 102, icon: <SwapOutlined />, onClick: async () => {
@@ -163,27 +161,27 @@ export default () => {
                     await ops.detail(item.id, true)
                     setForceReload({ cb: forceReloadCb })
                     modals.showModal('transfer-customer')
-                }, display: true
+                }, visible: true
             },
-            { type: 'divider', display: true },
+            { type: 'divider', visible: true },
             {
-                key: 'attachments', label: 'Attach Files', icon: <PaperClipOutlined />, display: type == 'Detail', onClick: async () => {
+                key: 'attachments', label: 'Attach Files', icon: <PaperClipOutlined />, visible: type == 'Detail', onClick: async () => {
                     await ops.detail(item.id, true)
                     setForceReload({ cb: forceReloadCb })
                     modals.showModal('attachments')
                 }
             },
             {
-                key: 'visitScheduleGen', label: 'Generate Schedule', disabled: !access.canVisitScheduleGen || isDiabled, icon: <ScheduleOutlined />, display: type == 'Detail', onClick: async () => {
+                key: 'visitScheduleGen', label: 'Generate Schedule', disabled: !access.canVisitScheduleGen || isDiabled, icon: <ScheduleOutlined />, visible: type == 'Detail', onClick: async () => {
                     await ops.detail(item.id, true)
                     setForceReload({ cb: forceReloadCb })
                     modals.showModal('visitScheduleGen')
                 }
             },
 
-            { type: 'divider', display: true },
+            { type: 'divider' },
             {
-                key: 'disabled', label: 'Disabled', disabled: item?.type?.id != 102 || !access.canActiveInactiveCustomer, icon: <CloseCircleOutlined />, display: !isDiabled, onClick: async () => {
+                key: 'disabled', label: 'Disabled', disabled: item?.type?.id != 102 || !access.canActiveInactiveCustomer, icon: <CloseCircleOutlined />, visible: !isDiabled, onClick: async () => {
                     setForceReload({ cb: forceReloadCb })
                     setModal({
                         type: 'remarks', required: true, cb: remarks => {
@@ -206,7 +204,7 @@ export default () => {
                 }
             },
             {
-                key: 'activate', label: 'Activate', disabled: item?.type?.id != 102 || !access.canActiveInactiveCustomer, icon: <PlayCircleOutlined />, display: isDiabled, onClick: async () => {
+                key: 'activate', label: 'Activate', disabled: item?.type?.id != 102 || !access.canActiveInactiveCustomer, icon: <PlayCircleOutlined />, visible: isDiabled, onClick: async () => {
                     setForceReload({ cb: forceReloadCb })
                     setModal({
                         type: 'remarks', required: true, cb: remarks => {
@@ -231,9 +229,9 @@ export default () => {
         ]
     }
 
-    return <>
-        {view == 'list' && <PageWrapper<CustomerItemLess, FilterType, { test: string, test1: string }> title="Customer"
-            detailViewRender={(item) => <CustomerDetailView openInTab id={item.id} getMenuItems={getMenuItems} />}
+    return <Spin spinning={loading}>
+        <PageWrapper<CustomerItemLess, FilterType, {}> title="Customer"
+            detailViewRender={(id, target) => <CustomerDetailView openInTab={target == 'page-tab' ? true : undefined} id={id} getMenuItems={getMenuItems} />}
             listView={{
                 type: 'Table',
                 statuses: [
@@ -283,7 +281,7 @@ export default () => {
                         {
                             render: (_, r) => <Dropdown menu={{
 
-                                items: getMenuItems(r, 'List', () => refetch).filter(it => it.display)
+                                items: getMenuItems(r, 'List', () => refetch).filter(it => it.visible)
 
                             }}>
                                 <a onClick={(e) => e.preventDefault()}>
@@ -296,25 +294,30 @@ export default () => {
                     ]
                 },
                 actionNumShown: 2,
+                actionButtons: access.crmAdmin ?
+                    [<ImportFileButton<ImportDataItem>
+                        importedKey="INDIRECT_CUSTOMER"
+                        onDataResponse={data => {
+                            setImportData(data)
+                        }}
+                        onHandleChange={(status) => {
+                            setLoading(status == 'uploading');
+                            if (status == 'done') {
+                                message.info('Data uploaded.');
+                            }
+                        }}
+                    />] : []
+                ,
                 actions: [
                     {
-                        key: 'IMPORT', label: 'Import', icon: <UploadOutlined />, onClick: async () => {
-                            queryClient.invalidateQueries(['fetch-customer', 'hello'])
+                        key: 'EXPORT', label: 'Export', icon: <DownloadOutlined />, onClick: () => {
+                            modals.showModal('export-customer')
                         }
                     },
-                    {
-                        key: 'EXPORT', label: 'Export', icon: <UploadOutlined />, onClick: () => {
-                            const data = queryClient.getQueryData(['fetch-customer', 'hello'])
-                            console.log(data)
-                        }
-                    },
-                    { key: 'TRANSFER', label: 'Transfer SE', icon: <SwapOutlined style={{ fontSize: '16px', color: '#08c' }} /> }
+                    { key: 'TRANSFER', label: 'Transfer SE', onClick: () => modals.showModal('transfer-customers'), icon: <SwapOutlined style={{ fontSize: '16px', color: '#08c' }} /> }
                 ]
             }}
-        />}
-        {view == 'detail' && id && <CustomerDetailView id={id as unknown as number} getMenuItems={getMenuItems} actionHandlers={{
-            onBack: () => { }
-        }} />}
+        />
         <BasicEntryModal
             layoutConfig={{
                 supplySource:
@@ -436,5 +439,77 @@ export default () => {
             }}
         />
 
-    </>
+        <AdvanceSearch
+            width="400px"
+            placement="right"
+            // closable
+            title="Advance Customer Search"
+            open={modals.isVisible('advanceSearch')}
+            // initData={advanceSearchParams}
+            lookupDataList={state.initData?.lookupDataList}
+            seList={state.initData?.seList}
+            outletTypeList={state.initData?.outletTypeList}
+            onClose={() => {
+                //setAdvanceSearchParams(undefined)
+                modals.hideModal('advanceSearch');
+            }}
+            onReset={() => {
+                // setAdvanceSearchParams({ status: 'Y' });
+                // actionRef.current?.reloadAndRest?.();
+            }}
+            onSearch={(data) => {
+                // setAdvanceSearchParams((v) => ({ ...v, ...data }));
+                // actionRef.current?.reloadAndRest?.();
+            }}
+        />
+        <ExportCustomer
+            title="Export Customer"
+            open={modals.isVisible('export-customer')}
+            onCancel={() => modals.hideModal('export-customer')}
+            confirmLoading={state.loading}
+            lookupDataList={[]}
+            outletTypeList={state.initData?.outletTypeList || []}
+            seList={state.initData?.seList || []}
+            provinceList={state.initData?.provinceList || []}
+            regionList={state.initData?.regionList || []}
+            onExport={async (
+                regionId,
+                provinceId,
+                salespersonId,
+                customerTypeId,
+                outletTypeId,
+                source,
+                status,
+                neverVisit,
+                neverVisitDate,
+                hasNoPlan,
+            ) => {
+                try {
+                    await ops.exportCustomer(
+                        regionId,
+                        provinceId,
+                        salespersonId,
+                        customerTypeId,
+                        outletTypeId,
+                        source,
+                        status,
+                        neverVisit,
+                        neverVisitDate,
+                        hasNoPlan,
+                    );
+                    message.success('Export successfully.');
+                } catch (error: any) {
+                    message.error(error.message || 'Failed to export.');
+                }
+            }}
+        />
+
+
+        {modals.isVisible('transfer-customers') && <TransferSE
+            open={true}
+            onOpenChange={(visible) => !visible && modals.hideModal('transfer-customers')} />}
+
+        <UploadData title="Import indirect customer" onCancel={() => setImportData(undefined)} open={!!importData} data={importData} />
+
+    </Spin>
 }

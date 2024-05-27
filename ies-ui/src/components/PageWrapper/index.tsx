@@ -1,7 +1,7 @@
 import { ActionType, PageContainer, ParamsType, ProCard, ProColumns, ProForm, ProFormSelect, ProTable, ProTableProps, QueryFilter } from "@ant-design/pro-components"
 import { DndContext, DragEndEvent, PointerSensor, useSensor } from "@dnd-kit/core";
 import { SortableContext, arrayMove, horizontalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
-import { Button, Card, Dropdown, Flex, FloatButton, Input, MenuItemProps, Radio, Segmented, Space, TabPaneProps, TablePaginationConfig, Typography, message } from "antd";
+import { Alert, Button, Card, Dropdown, Flex, FloatButton, Input, MenuItemProps, Radio, Segmented, Space, TabPaneProps, TablePaginationConfig, Typography, message } from "antd";
 import React, { useEffect, useRef } from "react";
 import { useState } from "react";
 import { CSS } from '@dnd-kit/utilities';
@@ -9,6 +9,9 @@ import { ExportOutlined, EyeFilled, FileTextOutlined, MoreOutlined, ReloadOutlin
 import { MenuItemType } from "rc-menu/lib/interface";
 import { SortOrder } from "antd/lib/table/interface";
 import { SegmentedLabeledOption, SegmentedOptions } from "antd/es/segmented";
+import { useParams } from "@umijs/max";
+import { ViewType } from "../DataCrud/CrudWrapper";
+import ActionBar from "../ActionBar";
 
 interface Props<ListDataType extends Record<string, any>, FilterType extends Record<string, any>, ValueType> {
     title?: string;
@@ -25,6 +28,7 @@ interface Props<ListDataType extends Record<string, any>, FilterType extends Rec
         type: "List",
     }) & {
         statuses?: { option: SegmentedLabeledOption, subOptions: SegmentedOptions[] }[]
+        actionButtons?: React.ReactElement[],
         actionNumShown?: number;
         actions?: (Omit<MenuItemType, 'onClick' | 'itemIcon'> & { icon?: React.ReactNode, onClick?: () => void })[];
         onFilter?: (filter?: FilterType, page?: {
@@ -34,7 +38,7 @@ interface Props<ListDataType extends Record<string, any>, FilterType extends Rec
         onRefresh?: () => void;
     }
 
-    detailViewRender?: (item: ListDataType) => React.ReactNode,
+    detailViewRender?: (id: number, target: 'page-tab' | 'browser-tab') => React.ReactNode,
 
 }
 
@@ -69,6 +73,10 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
 
 }: Props<ListDataType, FilterType, ValueType>) => {
 
+    const params = useParams()
+    const view: ViewType = (params['view'] as ViewType) || undefined
+    const id = params['*']
+
     const [forceReload, setForceReload] = useState(0)
     const actionRef = useRef<ActionType>()
     const [filterData, setFilterData] = useState<FilterType>()
@@ -78,24 +86,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
         sort: Record<string, SortOrder>
     }>()
 
-    const actionRender = () => {
-        const shownList = listView.actions?.slice(0, listView.actionNumShown || 3) || []
-        const moreList = listView.actions?.slice(listView.actionNumShown || 3)
-        return <Flex flex={1} justify="flex-end">
-            {(shownList).map(it => <Button key={it.key} type="link" icon={it.icon} onClick={it.onClick}>{it.label}</Button>)}
-            {moreList && <Dropdown menu={{
-                items: moreList.map(it => ({
-                    key: it.key,
-                    label: it.label,
-                    icon: it.icon,
-                    onClick: it.onClick
-                }))
-            }}>
-                <Button type="link" icon={<MoreOutlined />} />
-            </Dropdown>}
-            <Button type="link" onClick={listView.onRefresh} icon={<ReloadOutlined />} />
-        </Flex>
-    }
+
     const filterBar = <ProCard size="small">
         <Flex>
             <Flex> <Input.Search onSearch={value => {
@@ -112,7 +103,8 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
                 )} />}
 
             </Flex>
-            {actionRender()}
+            <ActionBar actionButtons={listView.actionButtons} actions={listView.actions || []} numOfActionOnBar={3} />
+            <Button type="link" onClick={listView.onRefresh} icon={<ReloadOutlined />} />
         </Flex>
     </ProCard>
 
@@ -161,7 +153,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
                         tab: entity.code,
                         key: entity.code,
                         icon: <FileTextOutlined />,
-                        children: detailViewRender?.(entity)
+                        children: detailViewRender?.(entity.id, 'page-tab')
                     }])
                     entity.code && setActiveKey({ key: entity.code, item: entity })
                 }
@@ -176,8 +168,9 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
         console.log('Refresh');
     }, [forceReload])
 
-    return (
-        <PageContainer title={false}
+
+    if (view == 'list') {
+        return <PageContainer title={false}
             tabProps={{
                 type: 'editable-card',
                 defaultActiveKey: 'list',
@@ -226,5 +219,10 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
 
             <FloatButton.BackTop />
         </PageContainer>
-    )
+    }
+
+    if (view == 'detail') {
+        return detailViewRender?.(id as unknown as number, 'browser-tab')
+    }
+    return <Alert type="error" message="Not supported." />
 }

@@ -206,9 +206,7 @@ export const CustomerListView: React.FC<TableViewProps<CustomerItemLess> & { act
           },
           {
             render: (_, r) => <Dropdown menu={{
-
-              items: actl.getMenuItems(r, 'List', () => actionRef.current?.reloadAndRest?.()).filter(it => it.display)
-
+              items: actl.getMenuItems(r, 'List', () => actionRef.current?.reloadAndRest?.()).filter(it => it.visible)
             }}>
 
               <a onClick={(e) => e.preventDefault()}>

@@ -28,6 +28,7 @@ import PosmView from '@/pages/crm/components/PosmView';
 import { simpleRequestActions } from '@/services/model';
 import { CustomerServices } from '../../services';
 import { CustomerActionController } from '../..';
+import ActionBar from '@/components/ActionBar';
 
 interface Props {
   id?: number;
@@ -346,17 +347,11 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
   </Spin>
 
 
-  return openInTab ? <ProCard title={<Space># <Typography.Text strong copyable >{state.data?.detail?.code}</Typography.Text></Space>} extra={
-    <Dropdown
-      menu={{
-        items: state.data?.detail && getMenuItems(state.data?.detail, 'Detail', () => {
-          ops.detail(state.data?.detail?.id)
-        }).filter(it => it.display)
-      }}
-    >
-      <Button type='primary' icon={<EllipsisOutlined />} />
-    </Dropdown>
-  } >
+  return openInTab ? <ProCard title={<Space># <Typography.Text strong copyable >{state.data?.detail?.code}</Typography.Text></Space>}
+    extra={<ActionBar actions={state.data?.detail && getMenuItems(state.data?.detail, 'Detail', () => {
+      ops.detail(state.data?.detail?.id)
+    }).filter(it => it.visible) || []} numOfActionOnBar={0} />
+    }>
     {content}
   </ProCard> : (
 
@@ -366,16 +361,9 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
       subTitle={state.data?.detail?.code}
       breadcrumbRender={openInTab ? false : undefined}
       onBack={actionHandlers?.onBack}
-      extra={
-        <Dropdown
-          menu={{
-            items: state.data?.detail && getMenuItems(state.data?.detail, 'Detail', () => {
-              ops.detail(state.data?.detail?.id)
-            }).filter(it => it.display)
-          }}
-        >
-          <Button type='primary' icon={<EllipsisOutlined />} />
-        </Dropdown>
+      extra={<ActionBar actions={state.data?.detail && getMenuItems(state.data?.detail, 'Detail', () => {
+        ops.detail(state.data?.detail?.id)
+      }).filter(it => it.visible) || []} numOfActionOnBar={4} />
       }
     >
       {content}

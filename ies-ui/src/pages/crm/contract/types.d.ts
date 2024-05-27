@@ -25,7 +25,7 @@ export type ContractAdvanceSearchParams = {
   startedDateFrom?: moment.Moment,
   startedDateTo?: moment.Moment,
   endedDateFrom?: moment.Moment,
-  endedDateTo?:  moment.Moment,
+  endedDateTo?: moment.Moment,
 };
 
 export type ContractPOSMItem = {

@@ -16,7 +16,9 @@ interface Props<ListDataType extends Record<string, any>, FilterType extends Rec
         type: "Table"
         props: ProTableProps<ListDataType, ParamsType, ValueType> & {
             quickView?: boolean
-            fullView?: boolean
+            fullView?: {
+                onOpen: (item: ListDataType) => void
+            }
             primaryCol?: ProColumns<ListDataType, ValueType>
         }
     } | {
@@ -143,7 +145,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
             width: 30,
             render: (_, r) => <Space>
                 {listView.props.quickView && <Button type="link" size="small" icon={<EyeFilled />} />}
-                {listView.props.fullView && <Button type="link" size="small" icon={<ExportOutlined />} />}
+                {listView.props.fullView && <Button type="link" size="small" onClick={() => listView.props.fullView?.onOpen?.(r)} icon={<ExportOutlined />} />}
             </Space>,
         }
     ] : []

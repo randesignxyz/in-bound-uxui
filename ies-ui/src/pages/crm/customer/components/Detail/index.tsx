@@ -350,7 +350,7 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
   return openInTab ? <ProCard title={<Space># <Typography.Text strong copyable >{state.data?.detail?.code}</Typography.Text></Space>}
     extra={<ActionBar actions={state.data?.detail && getMenuItems(state.data?.detail, 'Detail', () => {
       ops.detail(state.data?.detail?.id)
-    }).filter(it => it.visible) || []} numOfActionOnBar={0} />
+    }).filter(it => it.visible) || []} numOfActionOnBar={4} />
     }>
     {content}
   </ProCard> : (

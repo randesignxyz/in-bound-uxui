@@ -7,6 +7,8 @@ import routes from './routes';
 
 const { REACT_APP_ENV = 'dev' } = process.env;
 
+const API_SERVER = '/path/to/api/server';
+
 export default defineConfig({
   /**
    * @name 
@@ -123,6 +125,19 @@ export default defineConfig({
   ],
   mfsu: {
     strategy: 'normal',
+  },
+  plugins: [],
+  reactQuery: {
+    devtool: {
+      initialIsOpen: true,
+    },
+    queryClient: {
+      defaultOptions: {
+        queries: {
+
+        }
+      }
+    }
   },
   esbuildMinifyIIFE: true,
   requestRecord: {},

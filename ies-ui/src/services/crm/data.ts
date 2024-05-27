@@ -36,6 +36,9 @@ export interface CustomerItemLess extends CustomerItemBase {
   district: string;
   commune: string;
   address: string;
+  region?: string;
+  channel?: string;
+  outletType?: string;
   sale: string;
 }
 

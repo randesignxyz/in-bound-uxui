@@ -265,7 +265,7 @@ export default () => {
     { key: 'issueDN', label: 'Issue DN', type: 'Primary', visible: picking, main: claimed, icon: <FileDoneOutlined />, onClick: () => onOpenModalHandler(from, 'picking-slip', item?.id, true) },
 
     {
-      key: 'pickingChangeRequest', label: "Change Picking Request", visible: claimed && !item?.changeRequest && (statuses.isLoading || statuses.isLoadingStarted), type: 'Primary', main: true, icon: <SwapOutlined />,
+      key: 'pickingChangeRequest', label: "Change Picking Request", visible: claimed && item?.isOwner && !item?.changeRequest && (statuses.isLoading || statuses.isLoadingStarted), type: 'Primary', main: true, icon: <SwapOutlined />,
       onClick: async () => onOpenModalHandler(from, 'change-picking-slip', item?.id, true)
     },
     { key: 'assignDoc', label: 'Assign Doc', type: 'Primary', visible: pendingDelivery, main: claimed, icon: <FileDoneOutlined />, onClick: () => onOpenModalHandler(from, 'assign-doc', item?.id, true) },
@@ -276,7 +276,7 @@ export default () => {
       label: 'Cancel Change Request',
       type: 'Danger',
       icon: <StopOutlined />,
-      visible: item?.claimedBy !== null && item?.changeRequest, onClick: () => {
+      visible: item?.isOwner && item?.changeRequest, onClick: () => {
         setModal({
           type: 'REMARKS', required: true, from: from, cb: (remarks) => {
             onCancelChangeRequestHandler(selected.loading.id, remarks, () => {

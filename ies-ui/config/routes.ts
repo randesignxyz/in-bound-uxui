@@ -71,6 +71,14 @@ export default [
     component: './crm/customer',
   },
   {
+    path: '/crm/customer/new',
+    name: 'customers',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessCrmMenuItem',
+    component: './crm/customer/CustomerNew',
+  },
+  {
     path: '/external/crm/customer/:view/*',
     name: 'view-customer',
     icon: 'UnorderedListOutlined',
@@ -892,8 +900,8 @@ export default [
   },
   {
     path: '/external/fleet/vehicle/:view/*',
-    layout:false,
-    name:"fleet",
+    layout: false,
+    name: "fleet",
     component: './fleet/vehicle/',
     access: 'canAccessFleetMenu',
     hideInMenu: 'true',
@@ -909,7 +917,7 @@ export default [
   {
     path: '/external/fleet/maintenance/:view/*',
     name: 'fleet_maintenence',
-    layout:false,
+    layout: false,
     hideInMenu: 'true',
     access: 'canAccessFleetMenu',
     component: './fleet/maintenance/',
@@ -924,7 +932,7 @@ export default [
   {
     path: '/external/fleet/inspection/:view/*',
     name: 'inspection',
-    layout:false,
+    layout: false,
     hideInMenu: 'true',
     access: 'canAccessFleetMenu',
     component: './fleet/inspection/',

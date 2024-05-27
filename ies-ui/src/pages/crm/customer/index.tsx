@@ -1,10 +1,14 @@
 import { AttachmentModal } from "@/components/Attachment/AttachmentModal"
 import CrudWrapper from "@/components/DataCrud/CrudWrapper"
 import Remarks from "@/components/remarks"
-import { CustomerServiceAPI } from "@/pages/sale/retailer/customer/services"
 import { BasicData, CustomerItemBase } from "@/services/crm/data"
 import { simpleRequestActions } from "@/services/model"
-import { CloseCircleOutlined, EditOutlined, HistoryOutlined, PaperClipOutlined, PlayCircleOutlined, ScheduleOutlined, SwapOutlined, UpCircleFilled, UpOutlined } from "@ant-design/icons"
+import {
+    CloseCircleOutlined, EditOutlined,
+    HistoryOutlined, PaperClipOutlined,
+    PlayCircleOutlined, ScheduleOutlined,
+    SwapOutlined, UpOutlined
+} from "@ant-design/icons"
 import { useAccess } from "@umijs/max"
 import { message, Modal, Spin } from "antd"
 import { ItemType } from "rc-menu/lib/interface"

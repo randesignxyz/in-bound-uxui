@@ -192,126 +192,126 @@ type LocationsParams = {
 
 export type InitVisitScheduleParamsType =
   | {
-      actionName: 'sale';
-      responseKey: string;
-      payload: {};
-    }
+    actionName: 'sale';
+    responseKey: string;
+    payload: {};
+  }
   | {
-      actionName: 'listCustomer';
-      responseKey: string;
-      payload: {};
-    }
+    actionName: 'listCustomer';
+    responseKey: string;
+    payload: {};
+  }
   | {
-      actionName: 'lookupDataList';
-      responseKey: string;
-      payload: {};
-    }
+    actionName: 'lookupDataList';
+    responseKey: string;
+    payload: {};
+  }
   | {
-      actionName: 'region';
-      responseKey: string;
-      payload: {};
-    }
+    actionName: 'region';
+    responseKey: string;
+    payload: {};
+  }
   | {
-      actionName: 'division';
-      responseKey: string;
-      payload: {};
-    }
+    actionName: 'division';
+    responseKey: string;
+    payload: {};
+  }
   | undefined;
 
 export type InitCustomerParamsType =
   | {
-      actionName: 'customer';
-      type: 'Single';
-      payload: {
-        id: number;
-      };
-    }
+    actionName: 'customer';
+    type: 'Single';
+    payload: {
+      id: number;
+    };
+  }
   | {
-      actionName: 'get-address-by-customer-id';
-      type: 'Single';
-      responseKey: string;
-      payload: {
-        id: number;
-      };
-    }
+    actionName: 'get-address-by-customer-id';
+    type: 'Single';
+    responseKey: string;
+    payload: {
+      id: number;
+    };
+  }
   | {
-      actionName: 'list-incentive-scheme';
-      responseKey: 'incentiveSchemeList';
-      payload: {};
-    }
+    actionName: 'list-incentive-scheme';
+    responseKey: 'incentiveSchemeList';
+    payload: {};
+  }
   | {
-      actionName: 'listSubContractType';
-      responseKey: 'subContractTypeList';
-      payload: {
-        id: number;
-      };
-    }
+    actionName: 'listSubContractType';
+    responseKey: 'subContractTypeList';
+    payload: {
+      id: number;
+    };
+  }
   | {
-      actionName: 'listAddressByCustomerId';
-      responseKey: string;
-      payload: {
-        id: number;
-      };
-    }
+    actionName: 'listAddressByCustomerId';
+    responseKey: string;
+    payload: {
+      id: number;
+    };
+  }
   | {
-      actionName: 'shippingChannelList';
-      payload: {
-        id?: number;
-      };
-    }
+    actionName: 'shippingChannelList';
+    payload: {
+      id?: number;
+    };
+  }
   | {
-      actionName: 'locations';
-      responseKey: string;
-      payload: LocationsParams;
-    }
+    actionName: 'locations';
+    responseKey: string;
+    payload: LocationsParams;
+  }
   | {
-      actionName: 'outletTypeList';
-      payload: {};
-    }
+    actionName: 'outletTypeList';
+    payload: {};
+  }
   | {
-      actionName: 'sale';
-      responseKey: string;
-      payload: {};
-    }
+    actionName: 'sale';
+    responseKey: string;
+    payload: {};
+  }
   | {
-      actionName: 'lookupDataList';
-      payload: { list: LookupDataType[] };
-    }
+    actionName: 'lookupDataList';
+    payload: { list: LookupDataType[] };
+  }
   | {
-      actionName: 'product';
-      responseKey: 'productList';
-      payload: {};
-    }
+    actionName: 'product';
+    responseKey: 'productList';
+    payload: {};
+  }
   | {
-      actionName: 'item';
-      responseKey: 'itemList';
-      payload: {};
-    }
+    actionName: 'item';
+    responseKey: 'itemList';
+    payload: {};
+  }
   | {
-      actionName: 'locations';
-      responseKey: 'regionList';
-      payload: {};
-    }
+    actionName: 'locations';
+    responseKey: 'regionList';
+    payload: {};
+  }
   | {
-      actionName: 'list-region-by-provinces';
-      responseKey: 'regionList';
-      payload: {
-        ids: number[];
-      };
-    }
+    actionName: 'list-region-by-provinces';
+    responseKey: 'regionList';
+    payload: {
+      ids: number[];
+    };
+  }
   | {
-      actionName: 'list-supply-source-by-provinces';
-      responseKey: 'supplySources';
-      payload: {
-        ids: number[];
-      };
-    }
+    actionName: 'list-supply-source-by-provinces';
+    responseKey: 'supplySources';
+    payload: {
+      ids: number[];
+    };
+  }
   | {
-      actionName: 'get-current-salesperson';
-      responseKey: 'currentSalesperson';
-      type: 'Single';
-      payload: {};
-    }
+    actionName: 'get-current-salesperson';
+    responseKey: 'currentSalesperson';
+    type: 'Single';
+    payload: {};
+  }
   | undefined;
 
 const ReqParams = {
@@ -462,7 +462,7 @@ export const CrmServiceAPI = (actions?: RequestActions) => ({
 
   //Customer
   findAllCustomer: findPagingService<
-    { searchValue?: string; sort?: Record<string, SortOrder> },
+    { searchValue?: string; advanceSearch?: any, sort?: Record<string, SortOrder> },
     CustomerItemLess
   >(CrmService('searchCustomer'), actions),
 
@@ -654,12 +654,12 @@ export const CrmServiceAPI = (actions?: RequestActions) => ({
     actions,
   ),
 
-  listAddressDetailByCustomerId:  findAllService<{ id: number }, AddresssView>(
+  listAddressDetailByCustomerId: findAllService<{ id: number }, AddresssView>(
     CrmService('list-address-detail-by-customer-id'),
     actions,
   ),
-  
-  listVisitPlanByCustomerId: findAllService<{id: number}, VisitPlanListItem>(
+
+  listVisitPlanByCustomerId: findAllService<{ id: number }, VisitPlanListItem>(
     CrmService('list-visit-plan-by-customer-id'),
     actions
   ),

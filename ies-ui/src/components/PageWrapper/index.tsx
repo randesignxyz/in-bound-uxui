@@ -1,11 +1,11 @@
-import { ActionType, PageContainer, ParamsType, ProCard, ProColumns, ProForm, ProFormSelect, ProTable, ProTableProps, QueryFilter } from "@ant-design/pro-components"
+import { ActionType, PageContainer, ParamsType, ProCard, ProColumns, ProListProps, ProTable, ProTableProps } from "@ant-design/pro-components"
 import { DndContext, DragEndEvent, PointerSensor, useSensor } from "@dnd-kit/core";
 import { SortableContext, arrayMove, horizontalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
-import { Alert, Button, Card, Dropdown, Flex, FloatButton, Input, MenuItemProps, Radio, Segmented, Space, TabPaneProps, TablePaginationConfig, Typography, message } from "antd";
+import { Alert, Button, Flex, FloatButton, Input, Segmented, Space, TabPaneProps, Typography } from "antd";
 import React, { useEffect, useRef } from "react";
 import { useState } from "react";
 import { CSS } from '@dnd-kit/utilities';
-import { ExportOutlined, EyeFilled, FileTextOutlined, MoreOutlined, ReloadOutlined, UnorderedListOutlined } from "@ant-design/icons";
+import { ExportOutlined, EyeFilled, FileSearchOutlined, FileTextOutlined, ReloadOutlined, UnorderedListOutlined } from "@ant-design/icons";
 import { MenuItemType } from "rc-menu/lib/interface";
 import { SortOrder } from "antd/lib/table/interface";
 import { SegmentedLabeledOption, SegmentedOptions } from "antd/es/segmented";
@@ -26,6 +26,7 @@ interface Props<ListDataType extends Record<string, any>, FilterType extends Rec
         }
     } | {
         type: "List",
+        props: ProListProps<ListDataType, ParamsType, ValueType>
     }) & {
         statuses?: { option: SegmentedLabeledOption, subOptions: SegmentedOptions[] }[]
         actionButtons?: React.ReactElement[],
@@ -35,6 +36,7 @@ interface Props<ListDataType extends Record<string, any>, FilterType extends Rec
             pageSize?: number;
             current?: number;
         }, sort?: Record<string, SortOrder>) => void;
+        onOpenAdvanceSearch?: () => void;
         onRefresh?: () => void;
     }
 
@@ -89,15 +91,20 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
 
     const filterBar = <ProCard size="small">
         <Flex>
-            <Flex> <Input.Search onSearch={value => {
-                setFilterData(v => ({ ...v, searchValue: value }) as any)
-                actionRef.current?.reload(true)
-            }} /></Flex>
             <Flex>
+                <Input.Search onSearch={value => {
+                    setFilterData(v => ({ ...v, searchValue: value }) as any)
+                    reloadList(true)
+                }} />
+            </Flex>
+            {listView.onOpenAdvanceSearch && <Flex>
+                <Button icon={<FileSearchOutlined />} onClick={listView.onOpenAdvanceSearch} />
+            </Flex>}
+            <Flex style={{ marginLeft: 20 }}>
 
                 {listView.statuses && <Segmented onChange={(value) => {
                     setFilterData(v => ({ ...v, status: value }) as any)
-                    actionRef.current?.reload(true)
+                    reloadList(true)
                 }} options={listView.statuses.map(it =>
                     it.option
                 )} />}
@@ -168,7 +175,14 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
         console.log('Refresh');
     }, [forceReload])
 
+    const reloadList = (resetPageIndex?: boolean | undefined) => {
+        if (listView.props.actionRef) {
+            (listView.props.actionRef as any).current?.reload(resetPageIndex);
+            return
+        }
+        actionRef.current?.reload(resetPageIndex);
 
+    }
     if (view == 'list') {
         return <PageContainer title={false}
             tabProps={{
@@ -202,7 +216,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
             {activeKey.key == 'list' && listView.type == 'Table' && <ProTable<ListDataType, ParamsType, ValueType>
                 size="small"
                 manualRequest={true}
-
+                actionRef={actionRef}
                 {...listView.props}
                 request={async (params, sort) => {
                     setTableInfo({ ...params, current: (params.current || 1) - 1, sort })
@@ -210,7 +224,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
                     return []
                 }
                 }
-                actionRef={actionRef}
+
                 rowKey={listView.props.rowKey || 'id'}
                 columns={[...viewActionCols, ...primaryCols, ...(listView.props.columns || [])]}
                 search={false}

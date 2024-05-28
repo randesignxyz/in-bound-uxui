@@ -1,12 +1,12 @@
 import PageWrapper from "@/components/PageWrapper"
-import { BasicData, CustomerItemBase, CustomerItemLess } from "@/services/crm/data"
+import { BasicData, CustomerAdvanceSearchParams, CustomerItemBase, CustomerItemLess } from "@/services/crm/data"
 import { CloseCircleOutlined, DashOutlined, DownloadOutlined, EditOutlined, HistoryOutlined, PaperClipOutlined, PlayCircleOutlined, ScheduleOutlined, SwapOutlined, UpOutlined, UploadOutlined } from "@ant-design/icons"
 import { useAccess, useParams, useQuery, useQueryClient } from "@umijs/max"
 import { CrmServiceAPI } from "@/services/crm/services";
 import { Dropdown, Modal, Space, Spin, Typography, message } from "antd";
 import Status from "@/components/Status";
 import { toReadable } from "@/pages/utils";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { FetchPagingParams } from "@/components/DataCrud/TableView";
 import CustomerDetailView from "./components/Detail";
 import { model } from "./model";
@@ -26,11 +26,12 @@ import UploadData from "./components/UploadData";
 import ExportCustomer from "./components/List/ExportCustomer";
 import { ImportDataItem, ImportDataResponse } from "@/services/shared/data";
 import ImportFileButton from "@/components/ImportFileButton";
+import { ActionType } from "@ant-design/pro-components";
 const crmServices = CrmServiceAPI();
 type FilterType = {
     searchValue?: string;
     status?: string;
-}
+} & CustomerAdvanceSearchParams
 
 export type CustomerActionController = {
     getMenuItems: (item: CustomerItemBase, type: 'List' | 'Detail', cb?: () => void) => ActionBarType[]
@@ -42,9 +43,11 @@ export default () => {
     const [importData, setImportData] = useState<ImportDataResponse>()
     const [loading, setLoading] = useState(false);
 
+    const actionRef = useRef<ActionType>();
+
     const { data, refetch, isFetching } = useQuery(['fetch-customer-list', filter], () => crmServices.findAllCustomer({
         searchValue: filter?.criteria?.searchValue,
-        advanceSearch: { status: filter?.criteria?.status },
+        advanceSearch: { ...filter?.criteria },
         sort: filter?.sort,
     }, { page: filter?.pagination?.current, pageSize: filter?.pagination?.pageSize }), {
         refetchOnWindowFocus: false
@@ -239,21 +242,28 @@ export default () => {
                     { option: { label: 'Active', value: 'Y' }, subOptions: [] },
                     { option: { label: 'Inactive', value: 'N' }, subOptions: [] }
                 ],
-                onFilter(filter, page, sort) {
-                    setFilter({
-                        criteria: { ...filter, status: filter?.status == "ALL" ? undefined : filter?.status },
+                onFilter(filterParams, page, sort) {
+                    setFilter(v => ({
+                        ...v,
+                        criteria: {
+                            ...v?.criteria,
+                            searchValue: filterParams?.searchValue,
+                            status: filterParams?.status == "ALL" ? undefined : filterParams?.status
+                        },
                         pagination: page,
                         sort: sort
-                    })
+                    }))
                     queryClient.invalidateQueries(['fetch-customer-list', filter])
 
                 },
+                onOpenAdvanceSearch: () => { modals.showModal('advanceSearch') },
                 onRefresh: refetch,
                 props: {
                     dataSource: data?.items,
                     pagination: {
                         total: data?.total,
                     },
+                    actionRef: actionRef,
                     loading: isFetching,
                     // quickView: true,
                     fullView: {
@@ -440,9 +450,9 @@ export default () => {
         />
 
         <AdvanceSearch
-            width="400px"
-            placement="right"
-            // closable
+            width="500px"
+            // placement="right"
+            closable
             title="Advance Customer Search"
             open={modals.isVisible('advanceSearch')}
             // initData={advanceSearchParams}
@@ -450,16 +460,24 @@ export default () => {
             seList={state.initData?.seList}
             outletTypeList={state.initData?.outletTypeList}
             onClose={() => {
-                //setAdvanceSearchParams(undefined)
                 modals.hideModal('advanceSearch');
             }}
             onReset={() => {
-                // setAdvanceSearchParams({ status: 'Y' });
-                // actionRef.current?.reloadAndRest?.();
+                setFilter(v => ({
+                    ...v, criteria: {
+                        ...v?.criteria,
+                        customerTypeId: undefined,
+                        divisionId: undefined,
+                        outletTypeId: undefined,
+                        source: undefined,
+                        salespersonId: undefined
+                    }
+                }))
+
             }}
             onSearch={(data) => {
-                // setAdvanceSearchParams((v) => ({ ...v, ...data }));
-                // actionRef.current?.reloadAndRest?.();
+                setFilter(v => ({ ...v, criteria: { ...v?.criteria, ...data } }))
+                actionRef.current?.reload?.(true);
             }}
         />
         <ExportCustomer

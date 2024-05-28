@@ -489,6 +489,7 @@ export const CrmServiceAPI = (actions?: RequestActions) => ({
   ),
 
   initCustomerData: findMultiService<InitCustomerParamsType, {}>(CrmService(), actions),
+
   initVisitScheduleData: findMultiService<InitVisitScheduleParamsType, {}>(CrmService(), actions),
   checkInitialSponsor: findService<{ id: number }, IntialSponsor>(
     CrmService('check-initial-sponsor'),

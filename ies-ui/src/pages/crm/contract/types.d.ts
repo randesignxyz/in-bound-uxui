@@ -19,6 +19,7 @@ export type SaveContactData = {
 export type ContractAdvanceSearchParams = {
   status: 'ALL' | 'ACTIVE' | 'INACTIVE' | 'EXPIRED';
   processStatus: 'All' | 'NEW' | 'RENEW' | 'TERMINATED',
+  searchValue?: string;
   brandId?: number[],
   contractTypeId?: number[],
   termId?: number[],

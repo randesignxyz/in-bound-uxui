@@ -28,7 +28,7 @@ interface Props<ListDataType extends Record<string, any>, FilterType extends Rec
         type: "List",
         props: ProListProps<ListDataType, ParamsType, ValueType>
     }) & {
-        statuses?: { option: SegmentedLabeledOption, subOptions: SegmentedOptions[] }[]
+        statuses?: { option: SegmentedLabeledOption, subOptions?: SegmentedOptions[] }[]
         actionButtons?: React.ReactElement[],
         actionNumShown?: number;
         actions?: (Omit<MenuItemType, 'onClick' | 'itemIcon'> & { icon?: React.ReactNode, onClick?: () => void })[];
@@ -36,6 +36,7 @@ interface Props<ListDataType extends Record<string, any>, FilterType extends Rec
             pageSize?: number;
             current?: number;
         }, sort?: Record<string, SortOrder>) => void;
+        advanceSearchButton?: React.ReactElement;
         onOpenAdvanceSearch?: () => void;
         onRefresh?: () => void;
     }
@@ -88,7 +89,6 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
         sort: Record<string, SortOrder>
     }>()
 
-
     const filterBar = <ProCard size="small">
         <Flex>
             <Flex>
@@ -98,7 +98,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
                 }} />
             </Flex>
             {listView.onOpenAdvanceSearch && <Flex>
-                <Button icon={<FileSearchOutlined />} onClick={listView.onOpenAdvanceSearch} />
+                {listView.advanceSearchButton || <Button icon={<FileSearchOutlined />} onClick={listView.onOpenAdvanceSearch} />}
             </Flex>}
             <Flex style={{ marginLeft: 20 }}>
 
@@ -152,7 +152,9 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
     const primaryCols: ProColumns<ListDataType, ValueType>[] = listView.type == 'Table' && listView.props.primaryCol ? [{
         ...listView.props.primaryCol,
         render: (dom, entity, index, action, schema) => listView.props.primaryCol?.render?.(dom, entity, index, action, schema) || <Flex>
-            <Typography.Link copyable onClick={() => {
+            <Typography.Link copyable={entity.code ? {
+                text: entity.code,
+            } : false} onClick={() => {
                 if (tabList.some(it => it.key == entity.code)) {
                     entity.code && setActiveKey({ key: entity.code, item: entity })
                 } else {
@@ -164,7 +166,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
                     }])
                     entity.code && setActiveKey({ key: entity.code, item: entity })
                 }
-            }}> {entity.code} </Typography.Link>
+            }}> {entity.code || 'n/a'} </Typography.Link>
 
         </Flex>
     }] : []
@@ -213,23 +215,24 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
                     }
                 },
             }} tabList={tabList}>
-            {activeKey.key == 'list' && listView.type == 'Table' && <ProTable<ListDataType, ParamsType, ValueType>
-                size="small"
-                manualRequest={true}
-                actionRef={actionRef}
-                {...listView.props}
-                request={async (params, sort) => {
-                    setTableInfo({ ...params, current: (params.current || 1) - 1, sort })
-                    setForceReload(v => v + 1)
-                    return []
-                }
-                }
+            {activeKey.key == 'list' && listView.type == 'Table' &&
+                <ProTable<ListDataType, ParamsType, ValueType>
+                    size="small"
+                    manualRequest={true}
+                    actionRef={actionRef}
+                    {...listView.props}
+                    request={async (params, sort) => {
+                        setTableInfo({ ...params, current: (params.current || 1) - 1, sort })
+                        setForceReload(v => v + 1)
+                        return []
+                    }
+                    }
 
-                rowKey={listView.props.rowKey || 'id'}
-                columns={[...viewActionCols, ...primaryCols, ...(listView.props.columns || [])]}
-                search={false}
-                options={false}
-            />}
+                    rowKey={listView.props.rowKey || 'id'}
+                    columns={[...viewActionCols, ...primaryCols, ...(listView.props.columns || [])]}
+                    search={false}
+                    options={false}
+                />}
 
             <FloatButton.BackTop />
         </PageContainer>

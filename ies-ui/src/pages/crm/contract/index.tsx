@@ -1,19 +1,51 @@
-import CrudWrapper from "@/components/DataCrud/CrudWrapper"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { CrmPaths } from ".."
 import ContractModal from "./components/ContractModal"
-import ContactDetailView from "./components/Detail"
-import ContractListView from "./components/List"
+import PageWrapper from "@/components/PageWrapper"
+import { ActionType } from "@ant-design/pro-components"
+import { useQuery, history, useAccess } from "@umijs/max"
+import { ContractServices } from "./services"
+import { FetchPagingParams } from "@/components/DataCrud/TableView"
+import { ContractAdvanceSearchParams, ImportedContract } from "./types"
+import { ContractLess } from "@/services/crm/contract"
+import { Button, Space, Tooltip, Typography, message } from "antd"
+import { FileSearchOutlined, PlusOutlined } from "@ant-design/icons"
+import { formatDate } from "@/pages/utils"
+import Status from "@/components/Status"
+import ImportFileButton from "@/components/ImportFileButton"
+import { useSafeState } from "ahooks"
+import { DataResponse } from "@/services/shared/data"
+import ImportContract from "./import-contract"
+import AdvanceSearch from "./components/AdvanceSearch"
 
 export default () => {
 
-    const [modalVisible, setModalVisible] = useState<{ type: 'ADD', id?: number , cb?: undefined} | {type: 'EDIT', id?: number, cb?:() => void  }>()
-
-    const onEditHandler =  (id: number, cb?: () => void) => {
-        setModalVisible({type: 'EDIT', id: id, cb: cb})
+    const [modalVisible, setModalVisible] = useState<{ type: 'ADD', id?: number, cb?: undefined } | { type: 'EDIT', id?: number, cb?: () => void }>()
+    const actionRef = useRef<ActionType>();
+    const access = useAccess()
+    const [loading, setLoading] = useSafeState(false)
+    const onEditHandler = (id: number, cb?: () => void) => {
+        setModalVisible({ type: 'EDIT', id: id, cb: cb })
     }
+
+    const [filter, setFilter] = useState<FetchPagingParams<ContractAdvanceSearchParams>>({ criteria: { status: "ACTIVE", processStatus: 'All' } })
+    const [importContractData, setImportContractData] = useState<DataResponse<ImportedContract>>()
+    // const queryClient = useQueryClient();
+    const { data, isFetching } = useQuery(['fetch-contract-list', filter], () => ContractServices.list({
+        criteria: {
+            searchValue: filter.criteria?.searchValue,
+            advanceSearch: filter.criteria,
+            sort: filter.sort,
+        },
+        pagination: {
+            pageSize: filter.pagination?.pageSize,
+            current: filter.pagination?.current
+        }
+
+    }).query())
+
     return (<>
-        <CrudWrapper baseURL={CrmPaths.contract}>
+        {/* <CrudWrapper baseURL={CrmPaths.contract}>
             {
                 (view, id, navigate) => {
                     switch (view) {
@@ -24,8 +56,159 @@ export default () => {
                 }
             }
 
-        </CrudWrapper>
-        {modalVisible?.type  &&  <ContractModal onRefresh={modalVisible.cb} contractId={ modalVisible.id} open = {true} onOpenChange = {visible => !visible && setModalVisible(undefined)}/>}
+        </CrudWrapper> */}
+        <PageWrapper<ContractLess, ContractAdvanceSearchParams, {} >
+            listView={{
+                type: 'Table',
+                statuses: [{
+                    option: { label: 'All', value: 'ALL' },
+                },
+                {
+                    option: { label: 'Active', value: 'ACTIVE' },
+                }, {
+                    option: { label: 'Expired', value: 'EXPIRED' },
+                }, {
+                    option: { label: 'Terminated', value: 'TERMINATED' },
+                }],
+                advanceSearchButton: <AdvanceSearch onSearch={async (brandId, contractTypeId, termId, startedDateFrom, startedDateTo, endedDateFrom, endedDateTo) => {
+                    // setAdanceSearch(v => ({ ...v, brandId: brandId, contractTypeId: contractTypeId, termId: termId, startedDateFrom: startedDateFrom, startedDateTo: startedDateTo, endedDateFrom, endedDateTo: endedDateTo }))
+                    // actionRef.current?.reloadAndRest?.()
+
+                    setFilter(v => ({
+                        ...v,
+                        criteria: {
+                            ...v.criteria,
+                            status: v.criteria?.status || 'ACTIVE',
+                            processStatus: 'All',
+                            brandId: brandId,
+                            contractTypeId: contractTypeId,
+                            termId: termId,
+                            startedDateFrom: startedDateFrom,
+                            startedDateTo: startedDateTo, endedDateFrom,
+                            endedDateTo: endedDateTo
+                        },
+                        pagination: {
+
+                        }
+                    }))
+                }} trigger={<Button icon={<FileSearchOutlined />} />} />,
+                onOpenAdvanceSearch: () => { },
+                actionButtons: [
+
+                    access.canImportContract && <Tooltip placement="top" title="Import">
+                        <ImportFileButton<ImportedContract> importedKey="CONTRACT"
+                            onDataResponse={setImportContractData}
+                            onHandleChange={status => {
+                                setLoading(status == 'uploading')
+                                if (status == 'done') {
+                                    message.info("Upload completed.")
+                                }
+                            }} />
+                    </Tooltip>,
+                    access.canAddEditContract && <Button type="link" onClick={() => setModalVisible({ type: 'ADD' })} icon={<PlusOutlined />} >Add</Button>
+                ].filter(it => it) as React.ReactElement[],
+                onFilter: (params, pages, sorts) => {
+                    setFilter(v => ({
+                        ...v,
+                        keywords: params?.searchValue?.replaceAll(/,/g, "").trim(),
+                        criteria: { ...v.criteria, ...params, status: params?.status || 'ACTIVE', processStatus: 'All' },
+                        sort: sorts,
+                        pagination: {
+                            current: pages?.current,
+                            pageSize: pages?.pageSize
+                        }
+                    }))
+
+                    // queryClient.invalidateQueries(['fetch-contract-list', filter])
+
+                },
+                props: {
+                    dataSource: data?.items.map(it => ({ ...it, code: it.contractNo })),
+                    pagination: { total: data?.total },
+                    actionRef: actionRef,
+                    loading: isFetching,
+
+                    fullView: {
+                        onOpen: item => window.open(`/external/crm/contract/detail/${item.id}`, '_blank')?.focus()
+                    },
+                    primaryCol: {
+                        title: 'Agreement #',
+                        width: 170
+
+                    },
+                    columns: [
+                        {
+                            title: 'Customer #',
+                            sorter: 'customerNo',
+                            width: 120,
+                            render: (_, rd) => <Space>
+                                {/* <Button
+                                    type="link"
+                                    icon={<SelectOutlined />}
+                                    onClick={async () => {
+                                        window.open(`/external/crm/customer/detail/${rd.customer.id}`, '_blank')?.focus();
+                                    }}
+                                /> */}
+                                <a onClick={() => { history.push(`${CrmPaths.customer}/detail/${rd.customer.id}`) }} >{rd.customer.code || 'Not Assigned'}</a>
+                            </Space>
+
+
+                        },
+                        {
+                            title: 'Business Name',
+                            sorter: 'customerName',
+                            render: (_, rd) => <Space>
+                                {<Typography.Text>{rd.customer.name}</Typography.Text>}
+                                {<Typography.Text type="secondary">{rd.customer?.description}</Typography.Text>}
+                            </Space>
+                        },
+                        {
+                            dataIndex: 'contractType',
+                            title: 'Agreement Type',
+                            sorter: 'contractType',
+                            render: (_, r) => r.contractType
+                        }, {
+                            dataIndex: 'brand',
+                            title: 'Brand',
+
+                        }, {
+                            title: 'Budget Code',
+                            sorter: 'budgetCode',
+                            width: 120,
+                            render: (_, r) => r.budgetCode
+                        }, {
+                            align: 'right',
+                            dataIndex: 'effectiveDate',
+                            sorter: 'effectiveDate',
+                            title: 'Start Date',
+                            width: 100,
+                            render: (_, item) => formatDate(item.effectiveDate)
+                        },
+                        {
+                            align: 'right',
+                            dataIndex: 'expiryDate',
+                            sorter: 'expiryDate',
+                            title: 'End Date',
+                            width: 100,
+                            render: (_, item) => formatDate(item.expiryDate)
+                        },
+                        {
+                            title: 'Status',
+                            width: 110,
+                            render: (_, item) => item.status && <Status text={item.status} />
+                        },
+                        {
+                            title: 'Terms',
+                            render: (_, item) => item.terms
+                        },
+
+                    ]
+                }
+
+            }}
+        />
+        {importContractData && <ImportContract open data={importContractData} onCancel={() => setImportContractData(undefined)} />}
+        {modalVisible?.type && <ContractModal onRefresh={modalVisible.cb} contractId={modalVisible.id} open={true} onOpenChange={visible => !visible && setModalVisible(undefined)} />}
     </>
     )
 }

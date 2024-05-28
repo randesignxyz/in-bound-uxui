@@ -233,7 +233,8 @@ export default () => {
     }
 
     return <Spin spinning={loading}>
-        <PageWrapper<CustomerItemLess, FilterType, {}> title="Customer"
+        <PageWrapper<CustomerItemLess, FilterType, {}>
+            title="Customer"
             detailViewRender={(id, target) => <CustomerDetailView openInTab={target == 'page-tab' ? true : undefined} id={id} getMenuItems={getMenuItems} />}
             listView={{
                 type: 'Table',
@@ -253,7 +254,7 @@ export default () => {
                         pagination: page,
                         sort: sort
                     }))
-                    queryClient.invalidateQueries(['fetch-customer-list', filter])
+                    // queryClient.invalidateQueries(['fetch-customer-list', filter])
 
                 },
                 onOpenAdvanceSearch: () => { modals.showModal('advanceSearch') },
@@ -270,11 +271,14 @@ export default () => {
                         onOpen: item => window.open(`/external/crm/customer/detail/${item.id}`, '_blank')?.focus()
                     },
                     primaryCol: {
-                        title: 'Customer #'
+                        title: 'Customer #',
+                        sorter: 'customerCode'
                     },
                     columns: [
                         {
-                            title: 'Customer Name', render: (_, r) => <Space>
+                            title: 'Customer Name',
+                            sorter: 'customerName',
+                            render: (_, r) => <Space>
                                 {<Typography.Text>{r.name}</Typography.Text>}
                                 {<Typography.Text type="secondary">{r.internalName}</Typography.Text>}
                             </Space>
@@ -283,6 +287,7 @@ export default () => {
                         {
                             title: 'Region',
                             dataIndex: 'region',
+
                         },
                         { title: 'Saleperson', render: (_, r) => r.sale },
                         { title: 'Channel', render: (_, r) => r.channel },

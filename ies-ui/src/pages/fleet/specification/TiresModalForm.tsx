@@ -11,14 +11,14 @@ import { FormModalProps } from '@/components/FormModal';
 import { Button, Col, message, Modal, Row } from 'antd';
 import { useForm } from 'antd/es/form/Form';
 import { useEffect } from 'react';
-import { TireVehicleCreate, TireVehicleDTO } from './data.d';
+import { TireAssignCreate, TireVehicleDTO } from './data.d';
 import { SpecificationServiceAPI } from './service';
 
 interface Props extends FormModalProps {
   data?: TireVehicleDTO;
   id?: string;
   loadData: () => void;
-  onSave: (data: TireVehicleCreate) => void;
+  onSave: (data: TireAssignCreate) => void;
 }
 
 const TireModalForm: React.FC<Props> = ({

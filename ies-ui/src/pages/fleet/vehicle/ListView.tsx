@@ -3,6 +3,7 @@ import BreadCrumbCom from '@/pages/sale/retailer/components/BreadCrumbCom';
 import { Paging } from '@/services/API';
 import { simpleRequestActions } from '@/services/model';
 import {
+  AimOutlined,
   ArrowRightOutlined,
   CiCircleOutlined,
   CloseCircleOutlined,
@@ -23,13 +24,16 @@ import { FleetPaths } from '..';
 import AdvanceVehicleSearch from '../components/AdvanceVehicleSearch';
 import AssignDriverFormModal from '../driver/AssignDriverFormModal';
 import { DriverDTO, VehicleDriverCreate, VehicleDriverDTO } from '../driver/data';
-import { VehicleAdvanSearch as VehicleAdvanceSearch, VehicleListItem } from './data';
+import { Vehicle, VehicleAdvanSearch as VehicleAdvanceSearch, VehicleListItem } from './data';
 import { VehicleServiceAPI } from './service';
 import { formatDate } from '@/pages/utils';
 import moment from 'moment';
 import { PageContainer } from '@ant-design/pro-components';
 import { Flex } from 'antd/lib';
 import OdometerIssue from './OdometerIssue';
+import TireAssigntoVehicleModal from '../tires/AssignTireVehicle';
+import { TireAssignCreate } from '../specification/data';
+import { SpecificationServiceAPI } from '../specification/service';
 
 interface Props {
   onDetail?: (id: string) => void;
@@ -45,6 +49,13 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
       name: "MODAL",
       type: "ADD" | "EDIT",
       payload?: VehicleListItem
+    }
+  }>();
+  const [tireState, setTireState] = useState<{
+    visible?:{
+      name:"MODAL",
+      type:"ADD"|"EDIT";
+      payload?:VehicleListItem;
     }
   }>();
   const [advanceSearch, setAdvanceSearch] = useState<{ visible: boolean }>();
@@ -129,6 +140,12 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
         label: 'Odometer Issue',
         itemIcon: <DashboardOutlined />,
         onClick: () => setOdometerIssue({ visible: { name: 'MODAL', type: 'EDIT', payload: item } })
+      },
+      {
+        key: "tire",
+        label: 'Assign Tires',
+        itemIcon: <AimOutlined />,
+        onClick: () => setTireState({ visible: { name: 'MODAL', type: 'EDIT', payload:item} })
       },
       {
         type: 'divider',
@@ -423,7 +440,21 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
             })
           }}
         />
-
+        <TireAssigntoVehicleModal
+          open={tireState?.visible?.name==="MODAL"}
+          onCancel={()=>setTireState((v)=>({...v,visible:undefined}))}
+          vehicleId={tireState?.visible?.payload?.id}
+          onSave={(data:TireAssignCreate)=>{
+              Modal.confirm({
+                title:"Save tire for vehicle",
+                content:"are your sure record your enter is correct?",
+                onOk:async()=>{
+                  SpecificationServiceAPI(requestActions).saveVehicleTire(data);
+                  setTireState({visible:undefined});
+                }
+              })
+          }}
+        />
       </>
     </PageContainer>
 

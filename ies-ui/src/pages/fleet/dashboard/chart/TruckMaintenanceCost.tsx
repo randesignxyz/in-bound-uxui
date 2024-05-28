@@ -6,7 +6,7 @@ import { TruckMaintenanceCostDTO, TruckMaintenanceCostParam } from '../data';
 import { Card, Spin } from 'antd';
 import { ProForm, ProFormDatePicker, ProFormSelect } from '@ant-design/pro-components';
 import { useForm } from 'antd/lib/form/Form';
-import { formatter } from '@/pages/utils';
+import { formatter, formatterQty } from '@/pages/utils';
 
 const TruckMaintenanceCost = () => {
   const [data, setData] = useState<TruckMaintenanceCostDTO[]>([]);
@@ -62,15 +62,20 @@ const TruckMaintenanceCost = () => {
   >
     <Spin spinning={requestActions.request?.loading || false}>
       <Column
-
         data={data}
         xField={'truckNumber'}
         yField={'totalCost'}
+        // label={{
+        //   position:"top",
+        //   formatter:(r:number)=>{
+        //     return `${r?formatterQty.format(r):"00"}`
+        //   }
+        // }}
         label={{
-          position:"top",
-          formatter:(r)=>{
-            return `${formatter.format(r.totalCost)}`
-          }
+          text: (r: { totalCost: any; }) => {
+            return formatter.format(r.totalCost)
+          },
+          textBaseline: 'bottom',
         }}
         xAxis={{
           label: {
@@ -81,6 +86,7 @@ const TruckMaintenanceCost = () => {
           start: 0,
           end: data.length,
         }}
+
       /></Spin></Card>;
 };
 

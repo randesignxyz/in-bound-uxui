@@ -2,17 +2,13 @@ import { simpleRequestActions } from '@/services/model';
 import { PageContainer, ProDescriptions, ProTable } from '@ant-design/pro-components';
 import { Card, Space, Spin, Tag } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
-import { FleetPaths } from '..';
-import BreadCrumbCom from '../components/BreadCrumbCom';
 import { InspectionDTO, InspectionItemCreate } from './data';
 import { InspectionServiceAPI } from './service';
-import { history } from '@umijs/max';
 import { ExternalLayout } from '../fleet';
 
 interface Props {
   id: string;
 }
-
 export default ({ id }: Props) => {
   const requestActions = simpleRequestActions();
   const service = InspectionServiceAPI(requestActions);
@@ -25,7 +21,6 @@ export default ({ id }: Props) => {
   useEffect(() => {
     initData();
   }, []);
-
   return (
     <>
       <PageContainer
@@ -34,7 +29,6 @@ export default ({ id }: Props) => {
         subTitle={`#${inspectionData?.plateNumber}`}
       >
         <Spin spinning={requestActions.request?.loading}>
-          {/* <BreadCrumbCom separator=">" routes={routes} /> */}
           <Space size={12} direction="vertical">
             <Card key={'inspection'} size={'small'}>
               <ProDescriptions<InspectionDTO>

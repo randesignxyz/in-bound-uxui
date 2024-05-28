@@ -29,8 +29,6 @@ export default ({ defualtData, vehicleId,vehicleDriver, onSave, ...props }: Prop
   const [vehicleData, setVehicleData] = useState<VehicleListItem[]>();
   const [driverData, setDriverData] = useState<DriverDTO[]>();
 
-console.log(defualtData);
-
   useEffect(() => {
     props.open && initailForm();
     props.open && onVehicleData();

@@ -30,6 +30,7 @@ interface UserDataDTO {
         fullName: string;
         userName: string;
         department: number;
+        email?:string
 }
 interface UserDataAdvanceSearchParam {
 

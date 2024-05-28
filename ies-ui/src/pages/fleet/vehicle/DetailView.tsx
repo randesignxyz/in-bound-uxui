@@ -1,6 +1,6 @@
-import { EditFilled, PlusCircleFilled } from "@ant-design/icons";
+import { AimOutlined, CarOutlined, CheckSquareOutlined, DashboardOutlined, EditFilled, FileProtectOutlined, PlayCircleOutlined, PlusCircleFilled, PlusCircleOutlined, PlusOutlined } from "@ant-design/icons";
 import { ActionType, PageContainer } from "@ant-design/pro-components";
-import { Button, Spin, Tabs } from "antd";
+import { Button, Dropdown, MenuProps, Modal, Spin, Tabs, message } from "antd";
 import { useState, useCallback, useEffect, useRef } from "react"
 import { simpleRequestActions } from "@/services/model";
 import { VehicleListItem } from "./data";
@@ -17,6 +17,13 @@ import Accident from "./view/Accident";
 import Accessories from "./view/Accessories";
 import { ExternalLayout } from "../fleet";
 import ActivityLogListView from "../components/ActivityLogListView";
+import OdometerIssue from "./OdometerIssue";
+import TireAssigntoVehicleModal from "../tires/AssignTireVehicle";
+import { TireAssignCreate } from "../specification/data";
+import { SpecificationServiceAPI } from "../specification/service";
+import { DriverDTO, VehicleDriverCreate, VehicleDriverDTO } from "../driver/data";
+import AssignDriverFormModal from "../driver/AssignDriverFormModal";
+
 
 interface Props {
     id: string;
@@ -32,9 +39,25 @@ export default ({ id, onAdd, onEdit }: Props) => {
         visible?: { name: 'modal'; type: 'ADD' | 'Edit'; payload?: { vehicle: VehicleListItem } };
 
     }>({});
+    const [odometerIssue, setOdometerIssue] = useState<{
+        visible?: {
+            name: "MODAL",
+            type: "ADD" | "EDIT",
+            payload?: VehicleListItem
+        }
+    }>();
+    const [tireState, setTireState] = useState<{
+        visible?: {
+            name: "MODAL",
+            type: "ADD" | "EDIT";
+            payload?: VehicleListItem;
+        }
+    }>();
+    const [assignState, setAssignState] = useState<{
+        visible?: { name: 'modal'; type: 'ADD' | 'Edit'; vehicleId?: VehicleListItem; driver?: DriverDTO, vehicleDriver?: VehicleDriverDTO };
+    }>({});
 
     const actionRef = useRef<ActionType>();
-
     const initData = useCallback(async () => {
         const initData = await service.fetchVehicle(id)
         setVehicleBasicInfo(initData);
@@ -117,7 +140,34 @@ export default ({ id, onAdd, onEdit }: Props) => {
         {
             label: `Log`,
             key: 'log',
-            children: <ActivityLogListView referenceStringId={id} logParam={{source:"VEHICLE"}} />
+            children: <ActivityLogListView referenceStringId={id} logParam={{ source: "VEHICLE" }} />
+        },
+    ]
+
+    const items: MenuProps["items"] = [
+        {
+            key: "vehicle",
+            label: "Add Vehicle",
+            itemIcon: <CarOutlined />,
+            onClick: () => onAdd?.()
+        },
+        {
+            key: "operator",
+            label: "Assign Operator",
+            itemIcon: <FileProtectOutlined />,
+            onClick:() =>setAssignState({ visible: { name: 'modal', type: 'ADD', vehicleId: vehicleBasicinfo, driver: vehicleBasicinfo?.driver, vehicleDriver: vehicleBasicinfo?.vehicleDriver } })
+        },
+        {
+            key: "odometer",
+            label: "Change Odometer",
+            itemIcon: <DashboardOutlined />,
+            onClick: () => setOdometerIssue({ visible: { name: 'MODAL', type: 'EDIT', payload: vehicleBasicinfo } })
+        },
+        {
+            key: "tire",
+            label: "Assign Tire",
+            itemIcon:<AimOutlined />,
+            onClick: () => setTireState({ visible: { name: "MODAL", type: "ADD", payload: vehicleBasicinfo } })
         },
     ]
 
@@ -129,22 +179,28 @@ export default ({ id, onAdd, onEdit }: Props) => {
                     title="Details"
                     subTitle={`#${vehicleBasicinfo?.plateNumber}`}
                     tabProps={{
-                        size:"small"
+                        size: "small"
                     }}
                     extra={[
+
                         <Button
                             icon={<EditFilled />}
                             onClick={() => onEdit?.(id)}
                         >
-                            Edit Info
+                            Edit
                         </Button>,
-                        <Button
-                            onClick={() => onAdd?.()}
+                        // <Button
+                        //     onClick={() => onAdd?.()}
+                        //     type="primary"
+                        //     icon={<PlusOutlined />}
+                        // >
+                        //     New
+                        // </Button>,
+                        <Dropdown.Button
+                            icon={<PlusCircleOutlined />}
                             type="primary"
-                            icon={<PlusCircleFilled />}
-                        >
-                            New
-                        </Button>
+                            menu={{ items, style: { width: 200 } }}
+                        >Add </Dropdown.Button>,
                     ]}
                     tabList={tabItem}
                 >
@@ -154,6 +210,62 @@ export default ({ id, onAdd, onEdit }: Props) => {
                     /> */}
                 </PageContainer>
             </Spin>
+            <OdometerIssue
+                open={odometerIssue?.visible?.name === "MODAL"}
+                onCancel={() => setOdometerIssue({ visible: undefined })}
+                data={odometerIssue?.visible?.payload}
+                onSave={(data: { vId?: string; odometer: number; reason?: string }) => {
+                    Modal.confirm({
+                        title: "Change Odometer",
+                        content: "are you sure? This odometer will be set as current meter!",
+                        onOk: async () => {
+                            await service.changeOdometer(data);
+                            actionRef.current?.reload?.();
+                            setOdometerIssue({ visible: undefined });
+                        }
+                    })
+                }}
+            />
+
+            <TireAssigntoVehicleModal
+                open={tireState?.visible?.name === "MODAL"}
+                onCancel={() => setTireState((v) => ({ ...v, visible: undefined }))}
+                vehicleId={tireState?.visible?.payload?.id}
+                onSave={(data: TireAssignCreate) => {
+                    Modal.confirm({
+                        title: "Save tire for vehicle",
+                        content: "are your sure record your enter is correct?",
+                        onOk: async () => {
+                            SpecificationServiceAPI(requestActions).saveVehicleTire(data);
+                            setTireState({ visible: undefined });
+                        }
+                    })
+                }}
+            />
+            <AssignDriverFormModal
+                open={assignState.visible?.name === 'modal'}
+                vehicleId={assignState.visible?.vehicleId}
+                vehicleDriver={assignState.visible?.vehicleDriver}
+                modalProps={{
+                    onCancel: () => setAssignState((v) => ({ ...v, visible: undefined })),
+                    okText: 'Submit',
+                }}
+                onSave={(data: VehicleDriverCreate) => {
+                    Modal.confirm({
+                        title: `Assign Operator to Vehicle`,
+                        content: 'are you sure?',
+                        onOk: async () => {
+                            const response = (await service.saveVehicleDriver(data)) as {
+                                data: string;
+                                message: string;
+                            };
+                            setAssignState((v) => ({ ...v, visible: undefined }));
+                            actionRef.current?.reloadAndRest?.();
+                            message.success('SUCCESS SAVED');
+                        },
+                    });
+                }}
+            />
         </>
     )
 }

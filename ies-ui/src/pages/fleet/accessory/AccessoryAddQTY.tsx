@@ -7,14 +7,14 @@ interface Props extends FormModalProps{
     data?:AccessoriesDTO;
     onSave:(data:AccessoriesCreate)=>void
 }
-const AccessoryDeductQTY:React.FC<Props> = ({data, onSave,...props}) =>{
+const AccessoryAddQTY:React.FC<Props> = ({data, onSave,...props}) =>{
     const [form] = useForm<AccessoriesDTO>();
     return (
         <>
             <FormModalComp
                 {...props}
                 width="500px"
-                title="Deduct Quanity Accessory"
+                title="Add Quanity Form"
                 onSubmit={async () =>{
                     const formData = await form.validateFields();
                     const entry ={
@@ -44,4 +44,4 @@ const AccessoryDeductQTY:React.FC<Props> = ({data, onSave,...props}) =>{
     )
 }
 
-export default AccessoryDeductQTY
+export default AccessoryAddQTY

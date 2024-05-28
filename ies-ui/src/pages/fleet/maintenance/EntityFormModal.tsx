@@ -325,7 +325,6 @@ const MaintenanceModalForm: React.FC<Props> = ({
           data: string;
           message: string;
         };
-
         actionRef.current?.reloadAndRest?.();
         history.push(`${FleetPaths.mantenence}/detail/${response.data}`);
         message.success(response.message);
@@ -338,7 +337,6 @@ const MaintenanceModalForm: React.FC<Props> = ({
       id: e || serviceReminder?.vehicleId.id,
       status: 'active',
     });
-
     VehicleServiceAPI(requestActions)
       .findMeterHistory({
         vehicleId: e || '',
@@ -396,7 +394,6 @@ const MaintenanceModalForm: React.FC<Props> = ({
                       keyWords || dataEntry?.vehicle?.id || serviceReminder?.vehicleId?.id,
                   },
                 });
-
                 setVehicle(data.items);
                 return data.items.map((obj) => ({ value: obj.id, label: `${obj.plateNumber}` }));
               }}
@@ -476,7 +473,6 @@ const MaintenanceModalForm: React.FC<Props> = ({
                   const newValue = ('0'.repeat(6) + e.currentTarget?.value.toString()).slice(-6);
                   form.setFieldValue('referentNumber', newValue);
                 },
-
               }}
             />
           </Col>
@@ -562,7 +558,6 @@ const MaintenanceModalForm: React.FC<Props> = ({
                       const serviceTaskItem = await ServiceTasksServiceAPI(requestActions).fetch(
                         row.serviceId,
                       );
-
                       if ((await form.validateFields(['vehicleId'])) && itemName != null) {
                         const vehicleId = form.getFieldValue('vehicleId');
                         const vehicle = await VehicleServiceAPI(requestActions).fetchVehicle(
@@ -602,7 +597,6 @@ const MaintenanceModalForm: React.FC<Props> = ({
           onSetFiles={(files) => setUploadFileIds(files.map((it) => it.response))}
         />
       </ProForm>
-
       <ServiceReminderModalForm
         open={reminderModalState?.visible?.name === 'modal'}
         onSave={(data: ServiceReminderCreate) => {
@@ -614,7 +608,6 @@ const MaintenanceModalForm: React.FC<Props> = ({
                 data: string;
                 message: string;
               };
-
               setReminderModalState((v) => ({ ...v, visible: undefined }));
             },
           });

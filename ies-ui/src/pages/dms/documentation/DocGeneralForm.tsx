@@ -64,7 +64,6 @@ export default ({ lookupData }: Props) => {
                                     searchValue: k.keyWords || ""
                                 }
                             });
-
                             return data.items?.map(v => ({ label: <Space  size={"small"}><span>{v.name}</span><span style={{color:"gray"}}>{v.description}</span></Space>, value: v.id }))
                         }}
                     />

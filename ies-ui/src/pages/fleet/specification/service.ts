@@ -1,12 +1,12 @@
 
 import { ServiceApiType, RequestActions, singleRequest } from "@/services/apiGateway";
-import { BatteryVehicleCreate, BatteryVehicleDTO, NormFuelConsumptionCreate, NormFuelConsumptionDTO, TireVehicleDTO, TireVehicleCreate } from "./data.d";
+import { BatteryVehicleCreate, BatteryVehicleDTO, NormFuelConsumptionCreate, NormFuelConsumptionDTO, TireVehicleDTO, TireAssignCreate, TireAssignParam } from "./data.d";
 
 
 const SpecificationAction = {
 
 
-  saveVehicleTire: (data: TireVehicleCreate): ServiceApiType<TireVehicleCreate> => ({
+  saveVehicleTire: (data: TireAssignCreate): ServiceApiType<TireAssignCreate> => ({
     type: "EXEC",
     actionName: 'save-vehicle-tire',
     endpoint: 'FLEET',
@@ -14,11 +14,11 @@ const SpecificationAction = {
 
   }),
 
-  listVehicleTire: (id?: string): ServiceApiType<{ id?: string }> => ({
+  listVehicleTire: (params:TireAssignParam): ServiceApiType<TireAssignParam> => ({
     type: "LIST_QUERY",
     actionName: "list-vehicle-tire",
     endpoint: "FLEET",
-    payload: { id }
+    payload: params
   }),
 
   saveBattery: (data: BatteryVehicleCreate): ServiceApiType<BatteryVehicleCreate> => ({
@@ -69,10 +69,10 @@ export const SpecificationServiceAPI = (requestActions: RequestActions) => {
   return {
 
 
-    listVehicleTire: (id: string) => singleRequest<TireVehicleDTO>(SpecificationAction.listVehicleTire(id))(requestActions) as Promise<TireVehicleDTO[]>,
+    listVehicleTire: (params:TireAssignParam) => singleRequest<TireVehicleDTO>(SpecificationAction.listVehicleTire(params))(requestActions) as Promise<TireVehicleDTO[]>,
 
 
-    saveVehicleTire: (params: TireVehicleCreate) =>
+    saveVehicleTire: (params: TireAssignCreate) =>
       singleRequest<{ data: string; message: string }>(SpecificationAction.saveVehicleTire(params))(
         requestActions,
       ),

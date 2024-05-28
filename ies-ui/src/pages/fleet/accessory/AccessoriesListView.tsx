@@ -15,7 +15,7 @@ import Dropdown from 'antd/lib/dropdown/dropdown';
 import { MenuProps } from 'antd/lib/menu';
 import AccessoryDetailView from './Detail';
 import { formatter } from '@/pages/utils';
-import AccessoryDeductQTY from './AccessoryDeductQTY';
+import AccessoryAddQTY from './AccessoryAddQTY';
 interface Props {
 }
 export default () => {
@@ -84,7 +84,7 @@ export default () => {
         },
         {
             key: 4,
-            label: "Deduc Quantity",
+            label: "Add Quantity",
             itemIcon: <PlusCircleOutlined />,
             onClick: () => setDeduction({ visible: { name: "MODAL",  payload: r } })
         },
@@ -234,7 +234,7 @@ export default () => {
             data={detailState?.visible?.payload}
             onClose={() => setDetailState((v) => ({ ...v, visible: undefined }))}
         />
-        <AccessoryDeductQTY
+        <AccessoryAddQTY
             open={deduction?.visible?.name=="MODAL"}
             onCancel={()=>setDeduction((v)=>({...v,visible:undefined}))}
             data={deduction?.visible?.payload}

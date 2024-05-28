@@ -82,16 +82,6 @@ export default () => {
             {
                 type: "divider"
             },
-            // {
-            //     key: "5",
-            //     label: "Delete",
-            //     danger: true,
-            //     itemIcon: <DeleteOutlined />,
-            //     disabled: preview || viewer,
-            //     onClick: async () => {
-            //         await services.delete()
-            //     }
-            // },
             {
                 key: "6",
                 label: "History",

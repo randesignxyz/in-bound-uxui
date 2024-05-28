@@ -6,8 +6,10 @@ import AccessoriesListView from '../accessory/AccessoriesListView';
 import DriverModalForm from '../driver/DriverFormModal';
 import ListView from '../driver/ListView';
 import VendorListView from '../vendor/VendorListView';
-import { PageContainer } from '@ant-design/pro-components';
+import { PageContainer, ProCard } from '@ant-design/pro-components';
 import { history } from '@umijs/max';
+import TaskListView from '../serviceTask/TaskListView';
+import TireVehicleAssignListView from '../tires/TireListView';
 
 export default () => {
   const [driverState, setDriverState] = useState<{
@@ -27,8 +29,41 @@ export default () => {
 
   return (
     <>
+    <PageContainer
+    title={false}
+      tabProps={{
+        type:"card"
+      }}
+     tabList={[
+      {
+        key:"driver",
+        tab:"Driver (Operator) ",
+        children:<ListView/>
+      },
+      {
+        key:"servicetask",
+        tab:"Service Task",
+        children:<TaskListView/>
+      },
+      {
+        key:"Vendors",
+        tab:"Vendors",
+        children: <VendorListView />,
+      },
+      {
+        key:"Accessories",
+        tab:"Accessories",
+        children: <AccessoriesListView />,
+      },
+      {
+        key:"Tyre Management",
+        tab:"Tyre Management",
+        children: <TireVehicleAssignListView />,
+      },
+     ]}
+    />
       {/* <BreadCrumbCom separator=">" routes={routes} /> */}
-      <PageContainer
+      {/* <PageContainer
         // onBack={()=>history.push(FleetPaths.fleet)}
         title="Set-up"
       >
@@ -51,7 +86,7 @@ export default () => {
           },
         ]}
       />
-      </PageContainer>
+      </PageContainer> */}
 
       <DriverModalForm
         open={driverState.visible?.name == 'modal'}

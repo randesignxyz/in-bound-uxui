@@ -15,7 +15,6 @@ interface Props {
   onAdd?: () => void;
   id: string;
 }
-
 export default ({ id, onEdit }: Props) => {
   const requestActions = simpleRequestActions();
   const actionRef = useRef<ActionType>();
@@ -82,7 +81,6 @@ export default ({ id, onEdit }: Props) => {
                   title: 'Total Amount',
                   dataIndex: 'totalCost',
                   render: (_, r) => <Tag color={'gold'}>{formatter.format(r.totalCost)}</Tag>,
-
                 },
                 {
                   key: 'status',
@@ -103,7 +101,6 @@ export default ({ id, onEdit }: Props) => {
                   >
                     {durationDate(r) || '-'}
                   </Tooltip>,
-                  
                 },
                 {
                   key: 'reference',
@@ -120,7 +117,6 @@ export default ({ id, onEdit }: Props) => {
                   title: 'Created By',
                   dataIndex: 'createdBy',
                   span: 3,
-
                 },
                 {
                   key: 'createddate',

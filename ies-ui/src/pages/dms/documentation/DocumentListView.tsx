@@ -36,7 +36,7 @@ interface Props {
     libraryId: number;
 }
 
-export default ({ paramSearch, libraryId }: Props) => {
+export default ({ paramSearch, libraryId, folderId }: Props) => {
     const requestAction = simpleRequestActions();
     const services = DocumentServiceAPI(requestAction);
     const actionRef = useRef<ActionType>();
@@ -84,7 +84,7 @@ export default ({ paramSearch, libraryId }: Props) => {
         }
     }>();
     const [advanceSearchParams, setAdvanceSearchParams] = useState<DocumentationAdvanceSearch>({
-        status: "ALL",
+        status: "All",
     });
     const [advanceSearch, setAdvanceSearch] = useState<{ visible: boolean }>();
     const actionItem = (record: DocumentationDTO): MenuProps["items"] => [
@@ -268,6 +268,9 @@ export default ({ paramSearch, libraryId }: Props) => {
             }),
         },
     ];
+
+    console.log(folderId);
+    
     return (
         <>
             <TableView<DocumentationDTO, { searchValue?: string }>
@@ -278,11 +281,10 @@ export default ({ paramSearch, libraryId }: Props) => {
                     <>
                         <Flex justify="space-between" align="baseline" gap={20}>
                             <Segmented
-                                defaultValue={advanceSearchParams.status}
+                                value={advanceSearchParams.status}
                                 onChange={(e) => {
-                                    if (e == "ALL") {
+                                    if (e == "All") {
                                         setAdvanceSearchParams((v) => ({
-                                            // ...v,
                                             status: e.toString(),
                                         }));
                                     }
@@ -296,8 +298,8 @@ export default ({ paramSearch, libraryId }: Props) => {
                                 }}
                                 options={[
                                     {
-                                        label: "ALL",
-                                        value: "ALL"
+                                        label: "All",
+                                        value: "All"
                                     },
                                     {
                                         label: "Active",
@@ -310,10 +312,11 @@ export default ({ paramSearch, libraryId }: Props) => {
                                 ]}
                             />
                             <Segmented
-                                defaultValue={advanceSearchParams.status}
+                                value={advanceSearchParams.status =="All"?"":advanceSearchParams.division}
                                 onChange={(e) => {
                                     setAdvanceSearchParams((v) => ({
                                         ...v,
+                                        status:undefined,
                                         division: e.toString(),
                                     }));
                                     actionRef.current?.reloadAndRest?.();
@@ -321,11 +324,11 @@ export default ({ paramSearch, libraryId }: Props) => {
                                 options={[
                                     {
                                         label: "Document",
-                                        value: "doc"
+                                        value: "DOC"
                                     },
                                     {
                                         label: "Contract",
-                                        value: "contract"
+                                        value: "CONTRACT"
                                     },
                                 ]}
                             />
@@ -372,7 +375,7 @@ export default ({ paramSearch, libraryId }: Props) => {
                             if (v) {
                                 setAdvanceSearchParams({
                                     ...v.creteria?.criteria,
-                                    status: v.creteria?.criteria?.advanceSearch?.status ?? "ALL",
+                                    status: v.creteria?.criteria?.advanceSearch?.status ?? "All",
                                 });
                                 return v.dataList;
                             } else {
@@ -380,7 +383,7 @@ export default ({ paramSearch, libraryId }: Props) => {
                                     criteria: {
                                         advanceSearch: {
                                             ...advanceSearchParams,
-                                            library: parseInt(param["*"] || ""),
+                                            library: libraryId,
                                             folderType: "LIBRARY"
                                         }
                                     },
@@ -402,7 +405,7 @@ export default ({ paramSearch, libraryId }: Props) => {
                                 size="small"
                                 onClick={() => history.push(`${DMSPaths.document}/detail/${r.id}`)}
                             >
-                                {r.documentation.docNumber?r.documentation.docName:"N/A"}
+                                {r.documentation.docNumber?r.documentation.docNumber:"N/A"}
                             </Button>
                         </Space>),
                     },
@@ -455,6 +458,7 @@ export default ({ paramSearch, libraryId }: Props) => {
                         }
                     },
                     {
+                        title:"Action",
                         render: (_, r) => (<Dropdown
                             menu={{
                                 items: actionItem(r),
@@ -514,7 +518,6 @@ export default ({ paramSearch, libraryId }: Props) => {
                 onClose={() => setHistoryState((v) => ({ ...v, visible: undefined }))}
                 docId={historyState?.visible?.docId}
             />
-
             <MoveDocumentModal
                 open={moveState?.visible?.name == "MODAL"}
                 onCancel={() => setMoveState({ visible: undefined })}
@@ -531,7 +534,6 @@ export default ({ paramSearch, libraryId }: Props) => {
                 type={documentModalState?.visible?.type}
                 libraryId={documentModalState?.visible?.libraryId}
                 onCancel={() => setDocumentState(v => ({ ...v, visible: undefined }))}
-                folderId={documentModalState?.visible?.folderId}
                 division={documentModalState?.visible?.division}
                 onSave={ (data: DocumentationCreate) => {
                     Modal.confirm({
@@ -540,7 +542,8 @@ export default ({ paramSearch, libraryId }: Props) => {
                         onOk:async () => {
                             const entry = {
                                 ...data,
-                                libraryId: libraryId
+                                libraryId: libraryId,
+                                folderId:folderId
                             }
                             await services.save(entry);
                             actionRef.current?.reloadAndRest?.();

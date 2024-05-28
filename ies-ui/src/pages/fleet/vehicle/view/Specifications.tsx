@@ -1,20 +1,25 @@
 import { simpleRequestActions } from '@/services/model';
 import { EditOutlined } from '@ant-design/icons';
 import { ActionType, ProDescriptions, ProTable } from '@ant-design/pro-components';
-import { Button, Card, message, Space } from 'antd';
-import { useRef, useState } from 'react';
+import { Badge, Button, Card, Col, message, Row, Space } from 'antd';
+import { useEffect, useRef, useState } from 'react';
 import BatteryModalForm from '../../specification/BatteryModalForm';
 import {
   BatteryVehicleCreate,
   BatteryVehicleDTO,
   NormFuelConsumptionCreate,
   NormFuelConsumptionDTO,
-  TireVehicleCreate,
+  TireAssignCreate as TireAssignCreate,
+  TireAssignParam,
   TireVehicleDTO,
 } from '../../specification/data.d';
 import NormFuelConsumption from '../../specification/NormFuelConsumption';
 import { SpecificationServiceAPI } from '../../specification/service';
 import TireModalForm from '../../specification/TiresModalForm';
+import TiresInterface from '../../components/Tires';
+import TableView from '@/components/DataCrud/TableView';
+import { VehicleListItem } from '../data';
+import TireVehicleAssignListView from '../../tires/TireListView';
 
 interface Props {
   id: string;
@@ -37,7 +42,8 @@ export default ({ id }: Props) => {
     };
   }>({});
 
-  const [tireItem, setTireItem] = useState<{
+  const [tireList, setTireList] = useState<TireVehicleDTO[]>();
+  const [tireItemState, setTireItemState] = useState<{
     visible?: {
       name: 'modal';
       type: 'ADD' | 'Edit';
@@ -53,12 +59,12 @@ export default ({ id }: Props) => {
     };
   }>({});
 
-  const onSaveTireItem = async (data: TireVehicleCreate) => {
+  const onSaveTireItem = async (data: TireAssignCreate) => {
     const response = (await services.saveVehicleTire(data)) as {
       data: string;
       message: string;
     };
-    setTireItem((v) => ({ visible: undefined }));
+    setTireItemState((v) => ({ visible: undefined }));
     message.success(response.message);
     actionTireRef.current?.reloadAndRest?.();
   };
@@ -73,6 +79,26 @@ export default ({ id }: Props) => {
     actionRef.current?.reloadAndRest?.();
   };
 
+  const onTireRequest = async (param:TireAssignParam) => {
+    const data = await services.listVehicleTire(
+      {
+        vehicleId:param.vehicleId,
+        tirePosition:param.tirePosition
+      }
+    );
+    if(param.tirePosition ==""){
+      setTireList(data);
+    }
+    
+    return Promise.resolve({
+      data: data,
+      success: true,
+    });
+  }
+
+  useEffect(()=>{
+    
+  },[]);
   return (
     <>
       <Space direction="vertical" size={15}>
@@ -86,7 +112,6 @@ export default ({ id }: Props) => {
               onClick={async () => {
                 try {
                   const record = await services.fetchNormFuelConsumption(id);
-
                   setNormFuelConsuption((v) => ({
                     ...v,
                     visible: {
@@ -149,7 +174,6 @@ export default ({ id }: Props) => {
             ]}
           />
         </Card>
-
         <Card
           size="small"
           title="Battery"
@@ -238,7 +262,7 @@ export default ({ id }: Props) => {
             ]}
           />
         </Card>
-        <Card
+        {/* <Card
           size="small"
           title="Tires"
           key={'tires'}
@@ -246,7 +270,7 @@ export default ({ id }: Props) => {
             <Button
               type="link"
               onClick={() => {
-                setTireItem((v) => ({
+                setTireItemState((v) => ({
                   visible: { name: 'modal', type: 'ADD' },
                 }));
               }}
@@ -254,81 +278,166 @@ export default ({ id }: Props) => {
               add
             </Button>,
           ]}
-        >
-          <ProTable<TireVehicleDTO>
-            toolBarRender={false}
-            search={false}
-            request={async () => {
-              const data = await services.listVehicleTire(id);
+        > */}
+          <TireVehicleAssignListView vehicleId={id}/>
+          {/* <Row gutter={12}>
+            <Col span={8}>
+              <Card>
+                <TiresInterface
+                  onTireClick={(e) => {
+                      onTireRequest({
+                        tirePosition: e?.value||"",
+                        vehicleId: id
+                      });
+                  }}
+                  dataSource={tireList?.map(it => ({ value: it.tirePosition, key: it.tirePosition, }))}
+                  key={Math.random()}
+                />
+              </Card>
+            </Col>
+            <Col span={16}>
+              <Card>
+                <TableView<VehicleListItem,{searchValue?:string}>
+                    columns={[
+                      {
+                        key: 'tireSize',
+                        title: 'Tire Size',
+                        render: (_, r) => [r.tireWidth, r.wheelDiameter].filter((it) => it).join('/'),
+                      },
+                      {
+                        key: 'tireInfo',
+                        title: 'Tire Info',
+                        render: (_, r) => [r.brand, r.model, r.code].filter((it) => it).join('/'),
+                      },
+  
+                      {
+                        key: 'position',
+                        title: 'Position',
+                        dataIndex: 'tirePosition',
+                      },
+                      {
+                        key: 'durability',
+                        title: 'Durability',
+                        dataIndex: 'durability',
+                      },
+                      {
+                        key: 'purchaseDate',
+                        title: 'Purchase Date',
+                        valueType: 'date',
+                        dataIndex: 'purchaseDate',
+                      },
+                      {
+                        key: 'lastModified',
+                        title: 'Last Modified by',
+                        dataIndex: 'lastModifiedBy',
+                      },
+                      {
+                        title: "Status",
+                        dataIndex: "status",
+                        render: (_, r) => <Badge text={r.status} status={r.status == "using" ? "processing" : "error"} />
+                      },
+                      {
+                        render: (_, r) => {
+                          return (
+                            <>
+                              <Button
+                                icon={<EditOutlined />}
+                                type="link"
+                                onClick={() => {
+                                  setTireItemState((v) => ({
+                                    ...v,
+                                    visible: { name: 'modal', type: 'Edit', payload: { enity: r } },
+                                  }));
+                                }}
+                              />
+                            </>
+                          );
+                        },
+                      },
+                    ]}
+                />
+                <ProTable<TireVehicleDTO>
+                  size='small'
+                  toolBarRender={false}
+                  search={false}
+                  request={()=>{
+                    return onTireRequest({
+                      vehicleId:id,
+                      tirePosition:""
+                    })
+                  }}
+                  actionRef={actionTireRef}
+                  columns={[
+                    {
+                      key: 'tireSize',
+                      title: 'Tire Size',
+                      render: (_, r) => [r.tireWidth, r.wheelDiameter].filter((it) => it).join('/'),
+                    },
+                    {
+                      key: 'tireInfo',
+                      title: 'Tire Info',
+                      render: (_, r) => [r.brand, r.model, r.code].filter((it) => it).join('/'),
+                    },
 
-              return Promise.resolve({
-                data: data,
-                success: true,
-              });
-            }}
-            actionRef={actionTireRef}
-            columns={[
-              {
-                key: 'tireSize',
-                title: 'Tire Size',
-                render: (_, r) => [r.tireWidth, r.wheelDiameter].filter((it) => it).join('/'),
-              },
-              {
-                key: 'tireInfo',
-                title: 'Tire Info',
-                render: (_, r) => [r.brand, r.model, r.code].filter((it) => it).join('/'),
-              },
+                    {
+                      key: 'position',
+                      title: 'Position',
+                      dataIndex: 'tirePosition',
+                    },
+                    {
+                      key: 'durability',
+                      title: 'Durability',
+                      dataIndex: 'durability',
+                    },
+                    {
+                      key: 'purchaseDate',
+                      title: 'Purchase Date',
+                      valueType: 'date',
+                      dataIndex: 'purchaseDate',
+                    },
+                    {
+                      key: 'lastModified',
+                      title: 'Last Modified by',
+                      dataIndex: 'lastModifiedBy',
+                    },
+                    {
+                      title: "Status",
+                      dataIndex: "status",
+                      render: (_, r) => <Badge text={r.status} status={r.status == "using" ? "processing" : "error"} />
+                    },
+                    {
+                      render: (_, r) => {
+                        return (
+                          <>
+                            <Button
+                              icon={<EditOutlined />}
+                              type="link"
+                              onClick={() => {
+                                setTireItemState((v) => ({
+                                  ...v,
+                                  visible: { name: 'modal', type: 'Edit', payload: { enity: r } },
+                                }));
+                              }}
+                            />
+                          </>
+                        );
+                      },
+                    },
+                  ]}
+                />
+              </Card>
+            </Col>
+          </Row> */}
+        {/* </Card> */}
 
-              {
-                key: 'position',
-                title: 'Position',
-                dataIndex: 'tirePosition',
-              },
-              {
-                key: 'durability',
-                title: 'Durability',
-                dataIndex: 'durability',
-              },
-              {
-                key: 'purchaseDate',
-                title: 'Purchase Date',
-                valueType: 'date',
-                dataIndex: 'purchaseDate',
-              },
-              {
-                key: 'lastModified',
-                title: 'Last Modified by',
-                dataIndex: 'lastModifiedBy',
-              },
-              {
-                render: (_, r) => {
-                  return (
-                    <>
-                      <Button
-                        icon={<EditOutlined />}
-                        type="link"
-                        onClick={() => {
-                          setTireItem((v) => ({
-                            ...v,
-                            visible: { name: 'modal', type: 'Edit', payload: { enity: r } },
-                          }));
-                        }}
-                      />
-                    </>
-                  );
-                },
-              },
-            ]}
-          />
-        </Card>
       </Space>
       <TireModalForm
         id={id}
-        open={tireItem.visible?.name == 'modal'}
-        onCancel={() => setTireItem((v) => ({ ...v, visible: undefined }))}
+        open={tireItemState.visible?.name == 'modal'}
+        onCancel={() => setTireItemState((v) => ({ ...v, visible: undefined }))}
         loadData={() => actionRef.current?.reload()}
         onSave={onSaveTireItem}
-        data={tireItem.visible?.payload?.enity}
+        data={tireItemState.visible?.payload?.enity}
       />
 
       <BatteryModalForm

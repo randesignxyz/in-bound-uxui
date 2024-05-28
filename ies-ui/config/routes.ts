@@ -972,7 +972,7 @@ export default [
 },
 
 {
-  path:"/dms/workspace/:view/*",
+  path:"/dms/workspace/:view",
   name:"dms",
   icon:"FileSearchOutlined",
   component:"./dms",

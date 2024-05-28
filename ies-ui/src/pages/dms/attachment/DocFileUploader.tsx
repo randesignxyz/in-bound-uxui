@@ -7,6 +7,7 @@ import Dragger from "antd/lib/upload/Dragger";
 import { UploadFile } from "antd/es/upload/interface";
 import { kc } from '@/auth';
 
+
 export type UploadType = UploadFile<string> & { title?: string; description?: string };
 
 interface Props {
@@ -34,7 +35,6 @@ const DocFileUploader: React.FC<Props> = ({ required= false, onGetFile, multi, m
     useEffect(() => {
         fileList.every((it) => it.status == 'done') && onGetFile?.(fileList);
     }, [forceReload]);
-
 
     const uploadUrl = () => {
         if ((service = 'FILE')) {

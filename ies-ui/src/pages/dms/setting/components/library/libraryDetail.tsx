@@ -9,7 +9,6 @@ import { useEffect, useRef } from "react";
 interface Props extends DrawerProps {
     data?: FolderDTO
 }
-
 const LibraryDetail: React.FC<Props> = ({ data, ...props }) => {
     const requestActions = simpleRequestActions();
     const services = FolderServiceAPI(requestActions);

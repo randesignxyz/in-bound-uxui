@@ -27,7 +27,6 @@ export default ({ id }: Props) => {
     visible?: { name: 'modal'; type: 'ADD' | 'Edit'; payload?: { vehicle: ServiceReminderDTO } };
   }>({});
 
-  const [advanceSearch, setAdvanceSearch] = useState<{ visible: boolean }>();
   const [advanceSearchParams, setAdvanceSearchParams] = useState<ServiceReminderSearchParam>({
     status: 'ALL',
   });
@@ -57,7 +56,6 @@ export default ({ id }: Props) => {
       return moment(value).fromNow().replace('in', '') + ' from now';
     }
 
-    // return date
   };
 
   const meterFormat = (r: ServiceReminderDTO) => {

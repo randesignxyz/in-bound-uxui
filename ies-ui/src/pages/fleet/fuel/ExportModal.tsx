@@ -28,8 +28,6 @@ export default ({ onSubmitExport, ...props }: Props) => {
       form={form}
       onFinish={async () => {
         const dataEntry = await form.validateFields();
-      
-        
         const entry = {
           ...dataEntry,
           truckCapacity:dataEntry.truckCapacity?.toString()
@@ -50,10 +48,6 @@ export default ({ onSubmitExport, ...props }: Props) => {
                 label: 'DAILY',
                 value: 'DAILY',
               },
-              // {
-              //   label: 'WEEKLY',
-              //   value: 'WEEKLY',
-              // },
               {
                 label: 'MONTHLY',
                 value: 'MONTHLY',
@@ -64,38 +58,6 @@ export default ({ onSubmitExport, ...props }: Props) => {
               },
             ]}
           />
-        </Col>
-        {/* <Col span={24}>
-          <ProFormSelect
-            name={'vehicle'}
-            label="Vehicle"
-            showSearch
-            request={async (k: { keyWords: string }) => {
-              const response = await VehicleServiceAPI(requestActions).pageVehicle({
-                criteria: { searchValue: k.keyWords },
-              });
-              return response.items.map((it) => ({ value: it.id, label: it.plateNumber }));
-            }}
-          />
-        </Col> */}
-        {/* <Col span={24}>
-          <ProFormSelect
-            name={'driver'}
-            label="Driver"
-            showSearch
-            request={async (k: { keyWords: string }) => {
-              const response = await DriverServiceAPI(requestActions).page({
-                criteria: { searchValue: k.keyWords },
-              });
-              return response.items.map((it) => ({
-                value: it.id,
-                label: [it.firstName, it.lastName].filter((it) => it).join(' '),
-              }));
-            }}
-          />
-        </Col> */}
-        <Col span={24}>
-
         </Col>
         <Col span={24}>
           <ProFormDependency dependencies={["reportType"]} name={["reportType"]}>
@@ -123,55 +85,9 @@ export default ({ onSubmitExport, ...props }: Props) => {
                 )
             }}
           </ProFormDependency>
-
         </Col>
         <Col span={24}>
-          {/* <ProFormRadio.Group
-            name={'dateType'}
-            initialValue={'DATE'}
-            label="Select Date"
-            options={[
-              {
-                label: 'Date',
-                value: 'DATE',
-              },
-              {
-                label: 'Date Rank',
-                value: 'DATERANK',
-              },
-            ]}
-          /> */}
           <ProFormDatePicker.Month width={'md'} label="Select Date" name={'date'} rules={[{ required: true }]} />
-          {/* <ProFormDependency dependencies={['reportType']} name={['reportType']}>
-            {({ reportType }) => {
-              return (
-                // reportType == "DIALY" && (<ProFormDependency dependencies={["dateType"]} name={["dateType"]}>
-                //     {({ dateType }) => {
-                //         return (
-                //             dateType == "DATE" && <ProFormDatePicker width={"md"} label="Select Date" name={"date"} /> ||
-                //             dateType == "DATERANK" && <ProFormDateRangePicker width={"md"} label="Select Date Rank" name={"dateRank"}/>
-                //         )
-                //     }}
-                // </ProFormDependency>) ||
-                <ProFormDependency dependencies={['dateType']} name={['dateType']}>
-                  {({ dateType }) => {
-                    return (
-                      (dateType == 'DATE' && (
-                        <ProFormDatePicker.Month width={'md'} label="Select Date" name={'date'} />
-                      )) ||
-                      (dateType == 'DATERANK' && (
-                        <ProFormDateMonthRangePicker
-                          width={'md'}
-                          label="Select Date Rank"
-                          name={'dateRank'}
-                        />
-                      ))
-                    );
-                  }}
-                </ProFormDependency>
-              );
-            }}
-          </ProFormDependency> */}
         </Col>
       </Row>
     </ModalForm>

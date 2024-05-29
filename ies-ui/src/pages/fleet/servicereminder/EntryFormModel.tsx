@@ -8,7 +8,6 @@ import {
   ProFormSelect,
   ProFormText,
 } from '@ant-design/pro-components';
-
 import FormModalComp, { FormModalProps } from '@/components/FormModal';
 import { Checkbox, Col, Row, Space } from 'antd';
 import { useForm } from 'antd/es/form/Form';
@@ -28,7 +27,6 @@ interface Props extends FormModalProps {
   fromFuel?: string;
   outReminder?: { vehicle: VehicleListItem; serviceTask?: ServiceTasksDTO };
 }
-
 const ServiceReminderModalForm: React.FC<Props> = ({
   onSave,
   outReminder,
@@ -42,8 +40,6 @@ const ServiceReminderModalForm: React.FC<Props> = ({
   const requestActions = simpleRequestActions();
   const [manually, setManuanlly] = useState(true);
   const [vehicle, setVehicle] = useState<VehicleListItem>();
-
-
   useEffect(() => {
     props.open && initFormData();
     props.open && data
@@ -54,7 +50,6 @@ const ServiceReminderModalForm: React.FC<Props> = ({
       onAutoCompleteVehicleService(outReminder.vehicle.id , outReminder.serviceTask?.id || 0);
     props.open && fromFuel && form.setFieldValue("vehicleId", fromFuel)
   }, [props.open]);
-
   const initFormData = () => {
     form.setFieldsValue({
       ...data,
@@ -62,7 +57,6 @@ const ServiceReminderModalForm: React.FC<Props> = ({
       vehicleId: data?.vehicleId.id,
     });
   };
-
   const onSetTimeNextDue = (date: Date) => {
     const timeFrequency = form.getFieldValue('timeFrequency');
     const timeInterval = form.getFieldValue('timeInterval');
@@ -76,29 +70,23 @@ const ServiceReminderModalForm: React.FC<Props> = ({
       form.setFieldValue('nextDueAt', new Date(date.setDate(date.getDate() + timeInterval * 366)));
     }
   };
-
   const onServiceLoad = async (keyWords?: string, vehicleId?: string) => {
     const response = await ServiceTasksServiceAPI(requestActions).page({
       criteria: { searchValue: keyWords },
     });
-
     const data = response.items.map((it) => {
       return {
         value: it.id,
         label: it.name,
       };
     });
-
     return data;
   };
-
   const onAutoCompleteVehicleService = (vehicleId: string, serviceId: number) => {
     ReminderServiceAPI(requestActions)
       .fetchVehicleServiceTask({ vehicleId: vehicleId, serviceTaskId: serviceId })
       .then((item) => {
         return form.setFieldsValue({
-          // ...item,
-          // vehicleId: item.vehicleId.id || "",
           dueSoonMeterThreshold: item.dueSoonMeterThreshold,
           nextDueAt: item.nextDueAt,
           dueSoonTimeThresholdInterval: item.dueSoonTimeThresholdInterval,
@@ -125,16 +113,12 @@ const ServiceReminderModalForm: React.FC<Props> = ({
         });
       });
   };
-
-
-
   return (
     <FormModalComp
       title="Service Reminder"
       {...props}
       onSubmit={async () => {
         const dataForm = await form.validateFields();
-
         const entity = {
           ...dataForm,
           status: 'Upcoming',
@@ -158,29 +142,21 @@ const ServiceReminderModalForm: React.FC<Props> = ({
                 const recordList = await VehicleServiceAPI(requestActions).pageVehicle({
                   criteria: { searchValue: k.keyWords || data?.vehicleId?.id || outReminder?.vehicle?.id || fromFuel },
                 });
-
-                // setVehicle(data.items);
-                // console.log(data.items);
-
                 return recordList.items.map((it, index) => ({
                   value: it.id,
                   label: [it.plateNumber].join('-'),
                   key: index,
-
                 }));
               }}
               fieldProps={{
                 onSelect: async (e) => {
                   setVehicle(await VehicleServiceAPI(requestActions).fetchVehicle(e))
                 },
-
                 onChange: (value) => {
                   onServiceLoad('', value);
-
                 },
               }}
             />
-
             <ProFormDependency dependencies={['vehicleId']} name={['vehicleId']}>
               {({ vehicleId }) => {
                 return (
@@ -218,7 +194,6 @@ const ServiceReminderModalForm: React.FC<Props> = ({
                 );
               }}
             </ProFormDependency>
-
             <ProFormRadio.Group
               name={'scheduleType'}
               layout="horizontal"
@@ -313,7 +288,6 @@ const ServiceReminderModalForm: React.FC<Props> = ({
                         </Col>
                       </Row>
                     )}
-
                     {(scheduleType == 'METER' || scheduleType == 'ALL') && (
                       <Row gutter={6}>
                         <Col span={12}>
@@ -344,7 +318,6 @@ const ServiceReminderModalForm: React.FC<Props> = ({
                 );
               }}
             </ProFormDependency>
-
             <Row gutter={6} style={{ display: '' }}>
               <Space>
                 <Checkbox
@@ -385,24 +358,18 @@ const ServiceReminderModalForm: React.FC<Props> = ({
                 </ProFormDependency>
                 <ProFormDigit
                   disabled={manually}
-                  // disabled={true}
                   name="nextDueMeter"
                   width={'md'}
                   allowClear
                   label="Next Due Primary Meter"
                   fieldProps={{
                     placeholder: 'enter kilometer',
-                    // value: value || 0,
                   }}
                 />
               </Col>
             </Row>
           </Col>
         </Row>
-
-        {/* <ProFormDependency dependencies={["timeInterval", "timeFrequency", "meterInterval",""]} name={}> */}
-
-        {/* </ProFormDependency> */}
       </ProForm>
     </FormModalComp>
   );

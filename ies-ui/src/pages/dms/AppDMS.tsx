@@ -32,8 +32,8 @@ const APPDMS: React.FC = () => {
             padding: 10
         }
     );
-    useEffect(() => {
-    }, []);
+    // useEffect(() => {
+    // }, []);
     const onTableSelectd = (e: string) => {
         if (e == "library") {
             history.push(`${DMSPaths.workspace}/${e}`);

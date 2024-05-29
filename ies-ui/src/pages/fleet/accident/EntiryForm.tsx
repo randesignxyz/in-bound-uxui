@@ -1,6 +1,5 @@
 import { simpleRequestActions } from "@/services/model";
 import { ProDescriptions, ProForm, ProFormCheckbox, ProFormDatePicker, ProFormMoney, ProFormSelect, ProFormTextArea } from "@ant-design/pro-components"
-
 import { Col, Divider, Row, Space } from "antd"
 import { useForm } from "antd/es/form/Form";
 import { useEffect, useState } from "react";
@@ -13,46 +12,34 @@ import { AccidentCreate, AccidentDTO } from "./data";
 import { DriverServiceAPI } from "../driver/service";
 import { VehicleListItem } from "../vehicle/data";
 import FileUploader from "@/components/Attachment/FileUploader";
-
 interface Props extends FormModalProps {
     data?: AccidentDTO;
     onSave: (data: AccidentCreate) => void;
-    actionType?: String;
-    id: string;
-
+    vehicleId:string;
 }
-
-
-
-const AccidentModalForm: React.FC<Props> = ({ onSave, data, actionType, id, ...props }) => {
+const AccidentModalForm: React.FC<Props> = ({ onSave,vehicleId, data, ...props }) => {
     const [form] = useForm<AccidentCreate>();
     const requestActions = simpleRequestActions();
     const [vehicleBasicinfo, setVehicleBasicInfo] = useState<VehicleListItem>();
     const [lookupData, setLookupData] = useState<LookUpDataDTO[]>([]);
     const [uploadFileIds, setUploadFileIds] = useState<string[]>([]);
-
     useEffect(() => {
         props.open && initFormData();
         props.open && dataLoad()
         props.open && truckLoadData()
     }, [props.open]);
-
     const dataLoad = async () => {
         setLookupData(
             await LookupDataServiceAPI(requestActions).lookupData({ type: "ACCIDENT" })
         )
-
         setVehicleBasicInfo(
-            await VehicleServiceAPI(requestActions).fetchVehicle(id)
+            await VehicleServiceAPI(requestActions).fetchVehicle(vehicleId)
         )
     }
-
     const accidentType = lookupData.filter(it => it.code === "ACCIDENTTYPE").map((it) => ({ value: it.id, label: it.name }));
     const weather = lookupData.filter(it => it.code === "WEATHER").map((it) => ({ value: it.id, label: it.name }));
     const lightCondition = lookupData.filter(it => it.code === "LIGHT").map((it) => ({ value: it.id, label: it.name }));
     const preAccident = lookupData.filter(it => it.code === "PREACCIDENT").map((it) => ({ value: it.id, label: it.name }));
-
-
     const truckLoadData = async (value?: string) => {
         const response = await VehicleServiceAPI(requestActions).pageVehicle({
             criteria: { searchValue: value },
@@ -73,11 +60,7 @@ const AccidentModalForm: React.FC<Props> = ({ onSave, data, actionType, id, ...p
             key: Math.random().toString()
         }))
     }
-
-
-
     const initFormData = () => {
-
         form.setFieldsValue({
             ...data,
             accidentType:data?.accidentType?.id,
@@ -87,10 +70,7 @@ const AccidentModalForm: React.FC<Props> = ({ onSave, data, actionType, id, ...p
             driverName:data?.driverName?.id,
         });
     };
-
-
     return (
-
         <FormModalComp
             title="Create Service Task"
             {...props}
@@ -98,15 +78,13 @@ const AccidentModalForm: React.FC<Props> = ({ onSave, data, actionType, id, ...p
                 const dataForm = await form.validateFields();
                 const entity = {
                     ...dataForm,
-                    vehicleId: id,
+                    vehicleId: vehicleId,
                     id: data?.id,
                     attacheFile: uploadFileIds
                 }
                 onSave(entity)
-
             }}
         >
-
             <ProForm
                 form={form}
                 submitter={false}
@@ -135,9 +113,7 @@ const AccidentModalForm: React.FC<Props> = ({ onSave, data, actionType, id, ...p
                     ]}
                     dataSource={vehicleBasicinfo}
                 />
-
                 <Divider plain orientation={"left"}>Accident Infomation</Divider>
-
                 <Row gutter={6}>
                     <Col span={24}>
                         <ProFormSelect
@@ -154,9 +130,7 @@ const AccidentModalForm: React.FC<Props> = ({ onSave, data, actionType, id, ...p
                             }}
                         />
                     </Col>
-
                 </Row>
-
                 <Row gutter={6}>
                     <Col span={6}>
                         <ProFormSelect
@@ -206,8 +180,6 @@ const AccidentModalForm: React.FC<Props> = ({ onSave, data, actionType, id, ...p
                             ]}
                         />
                     </Col>
-
-                    {/* <Row gutter={6}> */}
                     <Col span={6}>
                         <ProFormDatePicker
                             name="accidentDate"
@@ -232,8 +204,6 @@ const AccidentModalForm: React.FC<Props> = ({ onSave, data, actionType, id, ...p
                             label="Police Report"
                         />
                     </Col>
-                    {/* </Row> */}
-
                     <Col span={24}>
                         <ProFormTextArea
                             label="Location of Accident"
@@ -257,16 +227,9 @@ const AccidentModalForm: React.FC<Props> = ({ onSave, data, actionType, id, ...p
                         <FileUploader service="FILE" title="Attachment file" multiple
                           onSetFiles={files => setUploadFileIds(files.map(it => it.response))} 
                         />
-                      
                     </Col>
                 </Row>
-
-
-
-
             </ProForm>
-
-
         </FormModalComp>
     );
 };

@@ -1,5 +1,4 @@
 import TableView, { TableViewSearchParams } from '@/components/DataCrud/TableView';
-import BreadCrumbCom from '@/pages/sale/retailer/components/BreadCrumbCom';
 import { Paging } from '@/services/API';
 import { simpleRequestActions } from '@/services/model';
 import {
@@ -16,24 +15,22 @@ import {
   WarningOutlined,
 } from '@ant-design/icons';
 import type { ActionType } from '@ant-design/pro-table';
-import { history, useModel } from '@umijs/max';
+import { useModel } from '@umijs/max';
 import { Badge, Button, Dropdown, MenuProps, message, Modal, Popover, Radio, Space, Tag, Tooltip } from 'antd';
 import Omit from 'omit.js';
-import { useRef, useState } from 'react';
-import { FleetPaths } from '..';
+import {  useRef, useState } from 'react';
 import AdvanceVehicleSearch from '../components/AdvanceVehicleSearch';
 import AssignDriverFormModal from '../driver/AssignDriverFormModal';
 import { DriverDTO, VehicleDriverCreate, VehicleDriverDTO } from '../driver/data';
-import { Vehicle, VehicleAdvanSearch as VehicleAdvanceSearch, VehicleListItem } from './data';
+import { VehicleAdvanSearch as VehicleAdvanceSearch, VehicleListItem } from './data';
 import { VehicleServiceAPI } from './service';
 import { formatDate } from '@/pages/utils';
 import moment from 'moment';
-import { PageContainer } from '@ant-design/pro-components';
-import { Flex } from 'antd/lib';
 import OdometerIssue from './OdometerIssue';
 import TireAssigntoVehicleModal from '../tires/AssignTireVehicle';
 import { TireAssignCreate } from '../specification/data';
 import { SpecificationServiceAPI } from '../specification/service';
+import { PageContainer } from '@ant-design/pro-components';
 
 interface Props {
   onDetail?: (id: string) => void;
@@ -68,7 +65,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
   }>({});
 
   const cacheList = useModel('dataList');
-
   const onRequestHandler = async (params: TableViewSearchParams<VehicleAdvanceSearch>) => {
     try {
       return services.pageVehicle(params).then((it) => {
@@ -85,22 +81,10 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
   };
 
   const actionRef = useRef<ActionType>();
-
-  const routes = [
-    {
-      path: FleetPaths.fleet,
-      label: 'Fleet',
-    },
-    {
-      path: '',
-      label: 'Vehicle',
-    },
-  ];
-
   const onStatusChange = (id: string, status: string) => {
     Modal.confirm({
       title: ` Vehicle Change to ${status}`,
-      content: 'are you sure? this status will be effect to action with vehicle',
+      content: 'Are you sure? This status will affect action with the vehicle',
       onOk: async () => {
         await services.status({
           id: id,
@@ -111,7 +95,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
       },
     });
   }
-
   const getMenuItems = (item: VehicleListItem): MenuProps["items"] => {
     return [
       {
@@ -176,15 +159,13 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
           },
         ]
       },
-
     ];
   };
 
   return (
-
     <PageContainer
-      // onBack={() => history.push(FleetPaths.fleet)}
       title="Vehicles"
+      ghost
     >
       <>
         <TableView<VehicleListItem, { searchValue?: string; advanceSearch: VehicleAdvanceSearch }>
@@ -195,7 +176,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
               title: 'No',
               render: (_, r, index) => index + 1,
             },
-
             {
               title: 'Plate Number',
               dataIndex: 'plateNumber',
@@ -245,17 +225,16 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
                 />
               ),
             },
-
             {
               title: 'Branding Type',
-              sorter: 'group',
+              sorter: 'brandingType',
               render: (_, r) => (r.brandingType ? r.brandingType.name : '-'),
             },
             {
               title: 'Odometer',
-              // sorter: 'odometer',
+              sorter: 'odometer',
               render: (_, r) => (
-                <Tag color="gold">{[r.currentMeter?.meterValue, 'km'].join(' ')}</Tag>
+                <Tag color="gold" bordered={false}>{[r.currentMeter?.meterValue].join(' ').concat("km")}</Tag>
               ),
             },
             {
@@ -288,9 +267,7 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
                   )}
                 </>
               </>
-
             },
-
             {
               key: 'action',
               title: 'Action',
@@ -307,13 +284,11 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
                         <DashOutlined />
                       </a>
                     </Dropdown>
-
                     {(!r.vehicleDriver || !r.normFuelConsumption) && <Tooltip
-                      // title={"Warning"}
                       title={
                         <>
-                          {!r.vehicleDriver && <p>- Currently this truck no operator</p>}
-                          {!r.normFuelConsumption && <p>- Please set up norm consumption for control average of tank refile</p>}
+                          {!r.vehicleDriver && <p>- Currently, this truck has no operator.</p>}
+                          {!r.normFuelConsumption && <p>- Please set up norm consumption to control the average tank refile.</p>}
                         </>
                       }
                     >
@@ -380,8 +355,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
             </Space>
           }
         />
-
-
         <AdvanceVehicleSearch
           title="Advance Search"
           closable
@@ -398,7 +371,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
             actionRef.current?.reloadAndRest?.();
           }}
         />
-
         <AssignDriverFormModal
           open={assignState.visible?.name === 'modal'}
           vehicleId={assignState.visible?.vehicleId}
@@ -423,7 +395,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
             });
           }}
         />
-
         <OdometerIssue
           open={odometerIssue?.visible?.name === "MODAL"}
           onCancel={() => setOdometerIssue({ visible: undefined })}
@@ -431,7 +402,7 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
           onSave={(data: { vId?:string; odometer: number; reason?: string }) => {
             Modal.confirm({
               title: "Change Odometer",
-              content: "are you sure? This odometer will be set as current meter!",
+              content: "Are you sure? This odometer will be set as a current meter!",
               onOk: async () => {
                 await services.changeOdometer(data);
                 actionRef.current?.reload?.();
@@ -447,7 +418,7 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
           onSave={(data:TireAssignCreate)=>{
               Modal.confirm({
                 title:"Save tire for vehicle",
-                content:"are your sure record your enter is correct?",
+                content:"Are you sure the record you entered is correct?",
                 onOk:async()=>{
                   SpecificationServiceAPI(requestActions).saveVehicleTire(data);
                   setTireState({visible:undefined});
@@ -456,8 +427,7 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
           }}
         />
       </>
-    </PageContainer>
-
-
+     </PageContainer> 
   );
 };
+

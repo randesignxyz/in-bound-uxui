@@ -1,13 +1,12 @@
 import { simpleRequestActions } from "@/services/model"
 import { useRef, useState } from "react"
 import { ActionType, ProTable } from "@ant-design/pro-components"
-import { Button, Dropdown, MenuProps, Modal, message } from "antd"
+import { Button, Dropdown, MenuProps, Modal, Tag, message } from "antd"
 import { ArrowRightOutlined, EditOutlined, EllipsisOutlined, PlusOutlined, UsergroupAddOutlined } from "@ant-design/icons"
 import FolderEntryForm from "@/pages/dms/folder/EntryForm"
 import { CollaboratorCreate, FolderCreate, FolderDTO } from "@/pages/dms/folder/data"
 import { FolderServiceAPI } from "@/pages/dms/folder/service"
 import CollaboratorsModalForm from "./CollaboratorModalForm"
-import LibraryDetail from "./libraryDetail"
 
 interface Props {
     actionKey?: string
@@ -102,7 +101,8 @@ export default ({ actionKey, ...props }: Props) => {
                     {
                         title:"Collaborators",
                         dataIndex:"collaborator",
-                        valueType:"digit"
+                        valueType:"digit",
+                        render:(_,r)=><Tag color="gold" bordered={false}>{r.collaborator}</Tag>
                     },
                     {
                         render: (_, r) => (<>
@@ -163,11 +163,6 @@ export default ({ actionKey, ...props }: Props) => {
                 }}
                 data={collaboratorState?.visible?.payloads}
                 onCancel={() => setCollaboratorState({ visible: undefined })}
-            />
-            <LibraryDetail
-                open={detailState?.visible?.name==="DRAWER"}
-                onClose={()=>setDetailState({visible:undefined})}
-                data={detailState?.visible?.payloads}
             />
         </>
     )

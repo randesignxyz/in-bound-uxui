@@ -2,16 +2,15 @@ import TableView, { TableViewSearchParams } from '@/components/DataCrud/TableVie
 import { formatDate } from '@/pages/utils';
 import { Paging } from '@/services/API';
 import { simpleRequestActions } from '@/services/model';
-import { ArrowRightOutlined, BellOutlined, BlockOutlined, DashOutlined, DeleteOutlined, ExportOutlined, ToolOutlined } from '@ant-design/icons';
+import { ArrowRightOutlined, BlockOutlined, DashOutlined, DeleteOutlined, ExportOutlined } from '@ant-design/icons';
 import type { ActionType } from '@ant-design/pro-table';
 import { useModel } from '@umijs/max';
-import { Button, Dropdown, Flex, MenuProps, message, Modal, Popover, Radio, Space, Tag } from 'antd';
+import { Button, Dropdown, MenuProps, message, Modal, Popover, Radio, Space, Tag } from 'antd';
 import Omit from 'omit.js';
 import { useRef, useState } from 'react';
 import { InspectionAdvanceParams, InspectionDTO } from './data';
 import { InspectionServiceAPI } from './service';
 import { PageContainer } from '@ant-design/pro-components';
-import MaintenanceModalForm from '../maintenance/EntityFormModal';
 
 interface Props {
   onDetail?: (id: string) => void;
@@ -27,13 +26,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
   const [advanceSearchParams, setAdvanceSearchParams] = useState<InspectionAdvanceParams>({
     status: 'ALL',
   });
-  // const [maintenanceState, setMaintenanceState] = useState<{
-  //   visible?:{
-  //     name:"MODAL";
-  //     type:"ADD"|"EDDIT";
-  //     payloads?:VendorDTO
-  //   }
-  // }>();
   const actionRef = useRef<ActionType>();
   const cacheList = useModel('dataList');
   const onRequestHandler = async (params: TableViewSearchParams<InspectionAdvanceParams>) => {
@@ -50,7 +42,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
       return Promise.reject();
     }
   };
-
   const items = (row: InspectionDTO): MenuProps['items'] => [
     {
       key: 1,
@@ -58,12 +49,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
       itemIcon: <ArrowRightOutlined />,
       onClick: () => onDetail?.(row.id),
     },
-    // {
-    //   key: "toMaintenance",
-    //   label: 'To Maintanace',
-    //   itemIcon: < ToolOutlined />,
-    //   onClick: () => setMaintenanceState({visible:{name:"MODAL",type:"ADD", }})
-    // },
     {
       key: 2,
       label: 'Void',
@@ -141,7 +126,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
                 </Radio.Group>
               </Space>
             </div>
-
           }
           tableProps={{
             actionRef: actionRef,
@@ -289,13 +273,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
               }) as Promise<Paging<InspectionDTO>>,
           }}
         />
-
-{/* 
-        <MaintenanceModalForm
-          open={maintenanceState?.visible?.name=="MODAL"}
-          onCancel={()=>setMaintenanceState((v)=>({...v, visible:undefined}))}
-          dataEntry={{vehicle:}}
-        /> */}
       </PageContainer>
     </>
   );

@@ -14,7 +14,7 @@ interface FolderDTO{
     code?:string;
     libraryId?:number;
     department?:DepartmentDTO;
-    collaborator?:CollaboratorDTO[]
+    collaborator?:number
 }
 
 interface FolderCreate{

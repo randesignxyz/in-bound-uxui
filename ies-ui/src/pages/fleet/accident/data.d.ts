@@ -36,11 +36,6 @@ export interface AccidentCreate {
 }
 
 export interface AccidentAdvanceSearch{
-    status:string;
-}
-
-export interface SearchAccidentParam {
-    searchValue?: string;
-    // status:string,
-    // advanceSearch:AccidentAdvanceSearch
+    status?:string;
+    vehicleId:string
 }

@@ -7,10 +7,8 @@ interface Props extends ModalFormProps {
   reminderId?: number;
   reminderDTO?: ServiceReminderDTO;
 }
-
 export default ({ onSave, reminderId, reminderDTO, ...props }: Props) => {
   const [form] = useForm<ReminderHistory>();
-
   return (
     <ModalForm
       {...props}

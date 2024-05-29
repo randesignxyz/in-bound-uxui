@@ -3,8 +3,6 @@ import { Paging } from "@/services/API";
 import { RequestActions, ServiceApiType, singleRequest } from "@/services/apiGateway";
 import { DriverSearchParam, DriverCreate, DriverDTO, VehicleDriverDTO } from "./data";
 
-
-
 const DriverAction  =  {
 
     page: (params : TableViewSearchParams<DriverSearchParam>):ServiceApiType<{searchValue?:string}>=>({
@@ -50,12 +48,9 @@ const DriverAction  =  {
 
 export const DriverServiceAPI = (requestActions: RequestActions) => {
     return {
-       page : (params: TableViewSearchParams<DriverSearchParam>)=>
-       singleRequest<DriverDTO>(DriverAction.page(params))(requestActions) as Promise<Paging<DriverDTO>> ,
-
+       page : (params: TableViewSearchParams<DriverSearchParam>)=>singleRequest<DriverDTO>(DriverAction.page(params))(requestActions) as Promise<Paging<DriverDTO>> ,
        listVehicleDriver:(params?:string)=>singleRequest<VehicleDriverDTO>(DriverAction.listVehicleDriver(params))(requestActions) as Promise<VehicleDriverDTO[]>,
        list:(params: DriverSearchParam)=>singleRequest<DriverDTO>(DriverAction.list(params))(requestActions) as Promise<DriverDTO[]>,
-
        save: (data: DriverCreate) =>singleRequest<{data:string, message:string}>(DriverAction.save(data))(requestActions),
        removeVehicleDriver: (id:number) =>singleRequest<{data:string, message:string}>(DriverAction.removeVehicleDriver(id))(requestActions),
 

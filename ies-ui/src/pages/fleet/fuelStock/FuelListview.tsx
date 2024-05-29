@@ -12,19 +12,16 @@ import {
 } from '@ant-design/icons';
 import { Liquid } from '@ant-design/plots';
 import { ActionType, PageContainer, ProDescriptions } from '@ant-design/pro-components';
-import { Button, Card, Dropdown, Flex, MenuProps, message, Modal, Row, Space, Tag } from 'antd';
+import { Button, Card, Dropdown, MenuProps, message, Modal, Row, Tag } from 'antd';
 import Col from 'antd/lib/grid/col';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FleetPaths } from '..';
-import BreadCrumbCom from '../components/BreadCrumbCom';
 import { TankCreate, TankDTO, TankMonthlyEndingCreate, TankTransactionCreate } from './data';
 import FuelStockEntryForm from './FuelStockEntryForm';
 import HistoryDrawer from './HistoryDrawer';
 import MonthlyEndingFormModal from './MonthlyEnding';
 import { TankFuelServiceAPI } from './service';
 import TankRefileFormModal from './TankRefillFormModal';
-import { history } from '@umijs/max';
-import { formatterQty } from '@/pages/utils';
 
 interface Props {
   onAdd?: () => void;
@@ -49,7 +46,6 @@ export default ({ onAdd, onDetail, onEdit, ...props }: Props) => {
       payload: { entry: TankDTO };
     };
   }>({});
-
   const [monthlyEndingState, setMonthlyEndingState] = useState<{
     visible?: {
       name: 'modal';
@@ -59,11 +55,9 @@ export default ({ onAdd, onDetail, onEdit, ...props }: Props) => {
       payload: { entry: TankDTO };
     };
   }>({});
-
   const [historyState, setHistoryState] = useState<{
     visible?: { open: boolean; payloads?: { entry: TankDTO } };
   }>({});
-
   const loadData = useCallback(async () => {
     const data = await services.list('');
     setFuelStock(data);
@@ -71,18 +65,6 @@ export default ({ onAdd, onDetail, onEdit, ...props }: Props) => {
   useEffect(() => {
     loadData();
   }, [actionRef]);
-
-  const config = {
-    percent: 0.75,
-    outline: {
-      border: 4,
-      distance: 8,
-    },
-    wave: {
-      length: 128,
-    },
-  };
-
   const onSaveFuelTransaction = (data: TankTransactionCreate) => {
     Modal.confirm({
       title: 'Save Tank Refill',
@@ -99,7 +81,6 @@ export default ({ onAdd, onDetail, onEdit, ...props }: Props) => {
       },
     });
   };
-
   const onSaveMonthlyEnding = (data: TankMonthlyEndingCreate) => {
     Modal.confirm({
       title: 'Save Tank Refill',
@@ -126,14 +107,12 @@ export default ({ onAdd, onDetail, onEdit, ...props }: Props) => {
           data?: TankCreate;
           message?: string;
         };
-
         setFuelStockState((v) => ({ ...v, visible: undefined }));
         message.success(response.message);
         actionRef.current?.reloadAndRest?.();
       },
     });
   };
-
   const getMenuItems = (r: TankDTO): MenuProps['items'] => {
     return [
       {
@@ -226,21 +205,9 @@ export default ({ onAdd, onDetail, onEdit, ...props }: Props) => {
       },
     ];
   };
-
-  const routes = [
-    {
-      path: FleetPaths.fleet,
-      label: 'Fleet',
-    },
-    {
-      path: '',
-      label: 'Stock',
-    },
-  ];
   return (
     <>
       <PageContainer
-        // onBack={() => history.push(FleetPaths.fleet)}
         title="Stocks"
         loading={requestActions.request?.loading}
         extra={[
@@ -260,19 +227,6 @@ export default ({ onAdd, onDetail, onEdit, ...props }: Props) => {
           />
         ]}
       >
-        {/* <div
-          style={{
-            width: '100%',
-            display: 'flex',
-            justifyContent: 'space-between',
-          }}
-        >
-          <BreadCrumbCom separator=">" routes={routes} />
-          <Space>
-
-          </Space>
-        </div> */}
-
         <Row gutter={[16, 24]}>
           {fuelStock.map((it, key) => {
             const percentage = (it.currentInventory / it.tankCapacity).toFixed(5)
@@ -301,12 +255,6 @@ export default ({ onAdd, onDetail, onEdit, ...props }: Props) => {
                         dataSource={fuelStock[key]}
                         column={1}
                         columns={[
-                          // {
-                          //     title: "Tank Name",
-                          //     dataIndex: "tankName",
-                          //     key: "volume",
-
-                          // },
                           {
                             title: 'Fuel Type',
                             dataIndex: 'fuelType',
@@ -318,16 +266,6 @@ export default ({ onAdd, onDetail, onEdit, ...props }: Props) => {
                             dataIndex: 'tankCapacity',
                             key: '1',
                           },
-                          // {
-                          //     title: "Beginning Balance",
-                          //     dataIndex: "beginningInventory",
-                          //     key: "height"
-                          // },
-                          // {
-                          //     title: "Tank Usages",
-                          //     dataIndex: "tankUsages",
-                          //     key: "waterVolume"
-                          // },
                           {
                             title: 'Current Balance',
                             dataIndex: 'currentInventory',
@@ -355,14 +293,11 @@ export default ({ onAdd, onDetail, onEdit, ...props }: Props) => {
                       <Liquid
                         percent={parseFloat(percentage)}
                         autoFit={true}
-                        
                         style={{
-                          // textFill: '#FE9900',
                           textFill:"black",
                           outlineBorder: 4,
                           outlineDistance: 8,
                           waveLength: 128,
-
                         }}
                       />
                     </Col>
@@ -373,7 +308,6 @@ export default ({ onAdd, onDetail, onEdit, ...props }: Props) => {
           }
           )}
         </Row>
-
       </PageContainer>
       <FuelStockEntryForm
         open={fuelStockState.visible?.name == 'modal'}

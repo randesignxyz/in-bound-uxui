@@ -28,13 +28,11 @@ export default ({ defualtData, vehicleId,vehicleDriver, onSave, ...props }: Prop
   const [form] = useForm<VehicleDriverCreate>();
   const [vehicleData, setVehicleData] = useState<VehicleListItem[]>();
   const [driverData, setDriverData] = useState<DriverDTO[]>();
-
   useEffect(() => {
     props.open && initailForm();
     props.open && onVehicleData();
     props.open && onDriverData();
   }, [props.open]);
-
   const initailForm = () => {
     form.setFieldsValue({
       ...defualtData?.vehicleDriver || vehicleDriver,
@@ -42,7 +40,6 @@ export default ({ defualtData, vehicleId,vehicleDriver, onSave, ...props }: Prop
       driverId: defualtData?.id || vehicleId?.driver?.id,
     });
   };
-
   const onVehicleData = (keyWords?: string) => {
     VehicleServiceAPI(requestAction).pageVehicle({
       criteria: { searchValue: keyWords || defualtData?.vehicle?.id || vehicleId?.id },
@@ -50,7 +47,6 @@ export default ({ defualtData, vehicleId,vehicleDriver, onSave, ...props }: Prop
       setVehicleData(it.items);
     });
   }
-
   const onDriverData = (keyWords?: string) => {
     DriverServiceAPI(requestAction).page({
       criteria: { searchValue: keyWords, advanceSearch: keyWords ? undefined : { id: defualtData?.id || vehicleId?.driver?.id } },
@@ -58,7 +54,6 @@ export default ({ defualtData, vehicleId,vehicleDriver, onSave, ...props }: Prop
       setDriverData(it.items);
     });
   }
-
   return (
     <ModalForm
       {...props}
@@ -67,11 +62,9 @@ export default ({ defualtData, vehicleId,vehicleDriver, onSave, ...props }: Prop
       form={form}
       onFinish={async () => {
         const dataForm = await form.validateFields();
-
         const entry = {
           ...dataForm,
         };
-
         onSave(entry);
       }}
     >
@@ -92,7 +85,6 @@ export default ({ defualtData, vehicleId,vehicleDriver, onSave, ...props }: Prop
                 onVehicleData(e);
               }
             }}
-
           />
         </Col>
         <Col span={18}>
@@ -109,7 +101,6 @@ export default ({ defualtData, vehicleId,vehicleDriver, onSave, ...props }: Prop
                 onDriverData(e);
               }
             }}
-
           />
         </Col>
         <Col span={6}>

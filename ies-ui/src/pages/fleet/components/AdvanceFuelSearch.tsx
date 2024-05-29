@@ -17,7 +17,6 @@ interface Props extends DrawerProps {
   onSearch: (params: FuelAvanceSearchParam) => void;
   onReset: () => void;
 }
-
 const AdvanceFuelSearch: React.FC<Props> = ({
   initData,
   onSearch,
@@ -64,8 +63,6 @@ const AdvanceFuelSearch: React.FC<Props> = ({
             showSearch
             allowClear
             request={async(k:{keyWords:string})=>{
-      
-              
               const data = await DriverServiceAPI(requestActions).page({
                 criteria:{searchValue:k.keyWords}
               });

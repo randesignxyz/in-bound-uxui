@@ -105,7 +105,6 @@ export default ({ onDetail }: Props) => {
 
       <PageContainer
         title={"Maintenances"}
-        
       >
         <TableView<MaintenneceDTO, { searchValue?: string }>
           hasCriteria={Object.values(Omit(advanceSearchParams, ['status'])).some((v) => v)}
@@ -125,7 +124,6 @@ export default ({ onDetail }: Props) => {
                 <Radio.Button value="ALL" style={{ borderRadius: 5 }}>
                   All
                 </Radio.Button>
-
                 <Badge size="small" offset={[-20, 0]} count={0}>
                   <Radio.Button value="Void">Void</Radio.Button>
                 </Badge>
@@ -270,7 +268,6 @@ export default ({ onDetail }: Props) => {
               }) as Promise<Paging<MaintenneceDTO>>,
           }}
         />
-
         <AdvanceSearch
           title="Advance Search"
           closable
@@ -308,8 +305,6 @@ export default ({ onDetail }: Props) => {
           data={forcCompleteState.visible?.payload}
         />
       </PageContainer>
-
-
   );
 };
 

@@ -5,7 +5,6 @@ import EntityForm from "./EntityForm"
 import ListView from "./ListView"
 
 export default () => {
-
     return( 
     <CrudWrapper baseURL={FleetPaths.vehicle} >
         {(view, id, navigate) => {
@@ -48,12 +47,6 @@ export default () => {
                      />
                 ))
             )
-            // switch (view) {
-            //     case 'list':
-            //         return <ListView />
-            //     default:
-            //         throw Error('Not supported')
-            // }
         }}
     </CrudWrapper>
     )

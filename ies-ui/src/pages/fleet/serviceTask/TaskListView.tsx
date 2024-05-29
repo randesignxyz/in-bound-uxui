@@ -1,18 +1,15 @@
 import TableView, { TableViewSearchParams } from '@/components/DataCrud/TableView';
-import BreadCrumbCom from '@/pages/sale/retailer/components/BreadCrumbCom';
 import { Paging } from '@/services/API';
 import { simpleRequestActions } from '@/services/model';
 import { DashOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
 import type { ActionType } from '@ant-design/pro-table';
-import { history, useModel } from '@umijs/max';
+import { useModel } from '@umijs/max';
 import { Badge, Dropdown, MenuProps, message, Modal, Radio, Space } from 'antd';
 import Omit from 'omit.js';
 import { useRef, useState } from 'react';
-import { FleetPaths } from '..';
 import { ServiceTasksCreate, ServiceTasksDTO, ServiceTasksSearch } from './data';
 import ServiceTasksModalForm from './EntryFormModel';
 import { ServiceTasksServiceAPI } from './service';
-import { PageContainer } from '@ant-design/pro-components';
 
 interface Props {
   onDetail?: (id: string) => void;
@@ -31,9 +28,7 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
   const [advanceSearchParams, setAdvanceSearchParams] = useState<ServiceTasksSearch>({
     status: 'ALL',
   });
-
   const cacheList = useModel('dataList');
-
   const onRequestHandler = async (params: TableViewSearchParams<{ searchValue?: string }>) => {
     try {
       return services.page(params).then((it) => {
@@ -48,27 +43,13 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
       return Promise.reject();
     }
   };
-
   const actionRef = useRef<ActionType>();
-
   const onAddHandler = async () => {
     setSate((v) => ({
       ...v,
       visible: { name: 'modal', type: 'ADD' },
     }));
   };
-
-  const routes = [
-    {
-      path: FleetPaths.fleet,
-      label: 'Fleet',
-    },
-    {
-      path: '',
-      label: 'Service Tasks',
-    },
-  ];
-
   const onSaveHandler = (data: ServiceTasksCreate) => {
     Modal.confirm({
       title: 'Save Service Task',
@@ -84,52 +65,38 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
       },
     });
   };
-
-  const items = (items:ServiceTasksDTO):MenuProps["items"]  => [
+  const items = (items: ServiceTasksDTO): MenuProps["items"] => [
     {
-      key:1,
-      label:"Edit",
-      itemIcon:<EditOutlined/>
+      key: 1,
+      label: "Edit",
+      itemIcon: <EditOutlined />
     },
     {
-      key:2,
-      label:items.status==="Active"?"Inactive":"Active",
-      itemIcon:<EyeOutlined/>,
-    
-      onClick:()=>{
-          Modal.confirm({
-            title:`change status to ${items.status==="Active"?"Inactive":"Active"}`,
-            content:"are you sure",
-            onOk:async()=>{
-              await services.status({
-                id:items.id,
-                status:items.status==="Active"?"Inactive":"Active"
-              });
-              message.success("success");
-              actionRef.current?.reloadAndRest?.();
-            }
-          })
+      key: 2,
+      label: items.status === "Active" ? "Inactive" : "Active",
+      itemIcon: <EyeOutlined />,
+      onClick: () => {
+        Modal.confirm({
+          title: `change status to ${items.status === "Active" ? "Inactive" : "Active"}`,
+          content: "are you sure",
+          onOk: async () => {
+            await services.status({
+              id: items.id,
+              status: items.status === "Active" ? "Inactive" : "Active"
+            });
+            message.success("success");
+            actionRef.current?.reloadAndRest?.();
+          }
+        })
       }
     },
     {
-      type:"divider"
+      type: "divider"
     },
-    // {
-    //   key:3,
-    //   label:"Delete",
-    //   itemIcon:<DeleteOutlined/>,
-    //   danger: true,
-    // },
-  ]
-
+  ];
   return (
     <>
-      {/* <BreadCrumbCom separator=">" routes={routes} /> */}
-     <PageContainer
-      // onBack={()=>history.push(FleetPaths.fleet)}
-      title="Service Tasks "
-     >
-     <TableView<ServiceTasksDTO, { searchValue?: string }>
+      <TableView<ServiceTasksDTO, { searchValue?: string }>
         hasCriteria={Object.values(Omit(advanceSearchParams, ['status'])).some((v) => v)}
         cache
         columns={[
@@ -137,7 +104,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
             title: 'Name',
             dataIndex: 'name',
           },
-
           {
             title: 'Reminder',
             dataIndex: 'remider',
@@ -159,19 +125,14 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
               <Space>
                 <Dropdown
                   menu={{
-                    items:items(r),
-                    style:{width:200},
-                    onLoad:(e)=>{
-                      console.log(e);
-                      
-                    },
-                    onClick:(e)=>{
-                      
-                       e.key === "1" &&  setSate((v) => ({...v,visible: { name: 'modal', type: 'Edit', payload: { vehicle: r } },}));
+                    items: items(r),
+                    style: { width: 200 },
+                    onClick: (e) => {
+                      e.key === "1" && setSate((v) => ({ ...v, visible: { name: 'modal', type: 'Edit', payload: { vehicle: r } }, }));
                     }
                   }}
                 >
-                  <a><DashOutlined/></a>
+                  <a><DashOutlined /></a>
                 </Dropdown>
               </Space>
             ),
@@ -218,7 +179,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
                   ...v,
                   status: e.target.value,
                 }));
-
                 actionRef.current?.reloadAndRest?.();
               }}
             >
@@ -229,8 +189,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
           </Space>
         }
       />
-
-     </PageContainer>
       <ServiceTasksModalForm
         open={state.visible?.name == 'modal'}
         onCancel={() => setSate((v) => ({ ...v, visible: undefined }))}

@@ -1,8 +1,5 @@
-
-
 import { simpleRequestActions } from "@/services/model";
 import { ProForm, ProFormDigit, ProFormTextArea, ProDescriptions, ProFormDatePicker, ProFormSelect, ProFormText } from '@ant-design/pro-components';
-
 import { Col, Row } from 'antd';
 import { useEffect } from "react";
 import FormModalComp, { FormModalProps } from "@/components/FormModal";
@@ -20,20 +17,14 @@ interface Props extends FormModalProps {
     title?: string;
 }
 
-
-
 const TankRefileFormModal: React.FC<Props> = ({ onSave, data, title, actionType, type, id, ...props }) => {
     const [form] = useForm<TankTransactionCreate>();
     const requestActions = simpleRequestActions();
-
-
     useEffect(() => {
         props.open && initFormData();
 
     }, [props.open]);
-
     const initFormData = () => {
-
         form.setFieldsValue({
             quantity: undefined,
             unitPrice: undefined,
@@ -42,12 +33,7 @@ const TankRefileFormModal: React.FC<Props> = ({ onSave, data, title, actionType,
             transactionType: undefined,
         });
     };
-
-
-
-
     return (
-
         <FormModalComp
             title={title}
             {...props}
@@ -60,16 +46,12 @@ const TankRefileFormModal: React.FC<Props> = ({ onSave, data, title, actionType,
                     currentBalance: data?.currentInventory,
                     beginningBalance: data?.beginningInventory,
                 }
-                
                 onSave(entry);
-
             }}
             onResetForm={() => {
                 form.resetFields();
             }}
-
         >
-
             <ProDescriptions<TankDTO>
                 dataSource={data}
                 contentStyle={{ fontWeight: "bold" }}
@@ -120,12 +102,8 @@ const TankRefileFormModal: React.FC<Props> = ({ onSave, data, title, actionType,
                                 name={"quantity"}
                                 label="Quantity(L)"
                                 rules={[{ required: true,max:(data!!.tankCapacity - data!!.currentInventory), type:"number"}]}
-                               
                             />
-
                         </Col>
-
-                      
                         <Col span={12}>
                             <ProFormDatePicker
                                 name={"dateRefill"}
@@ -160,8 +138,6 @@ const TankRefileFormModal: React.FC<Props> = ({ onSave, data, title, actionType,
                                     label="Quantity"
                                     rules={[{ 
                                         required: true,
-                                        
-                                    
                                     }]}
                                 />
                             </Col>
@@ -172,7 +148,6 @@ const TankRefileFormModal: React.FC<Props> = ({ onSave, data, title, actionType,
                                     request={async () => {
                                         const data = await LookupDataServiceAPI(requestActions).lookupData({ type: "VEHICLE" });
                                         return data.filter(it => it.code === "COMPANY").map((it) => ({ value: it.name.toString(), label: it.name, key: it.id }));
-
                                     }}
                                 />
                             </Col>
@@ -184,27 +159,17 @@ const TankRefileFormModal: React.FC<Props> = ({ onSave, data, title, actionType,
                                     initialValue={moment()}
                                 />
                             </Col>
-
                             <Col span={24}>
                                 <ProFormTextArea
                                     name={"remark"}
                                     label="Remark"
                                 />
-
                             </Col>
                         </Row>
                     )
-
-
                 }
-
-
             </ProForm>
-
-
-
         </FormModalComp>
-
     );
 };
 

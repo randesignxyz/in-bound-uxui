@@ -4,13 +4,9 @@ import dashboard from '@/assets/dashboard.png';
 import fleet from '@/assets/fleet.png';
 import fuelStation from '@/assets/gas-station.png';
 import fuelStock from '@/assets/oil-tank.png';
-import taskList from '@/assets/task-list.png';
-import inventory from '@/assets/inventory.png';
 import vehicletool from '@/assets/vehicle-tools.png';
 import maintenancePlan from '@/assets/web-maintenance.png';
 import ListMenuComp from '@/components/ListMenu';
-import report from '@/assets/report.png';
-import { PageContainer } from '@ant-design/pro-components';
 
 export const FleetPaths = {
   fleet: '/fleet',
@@ -20,7 +16,6 @@ export const FleetPaths = {
   inspection: '/fleet/inspection',
   serviceTasks: '/fleet/service-tasks',
 };
-
 export default () => {
   const items = [
     {
@@ -72,14 +67,14 @@ export default () => {
       icon: dashboard,
       isMenu: true,
     },
-    {
-      id: 'servicetasks',
-      name: 'Service Tasks',
-      description: 'Create and View Tasks',
-      link: `/fleet/service-tasks/list`,
-      icon: taskList,
-      isMenu: true,
-    },
+    // {
+    //   id: 'servicetasks',
+    //   name: 'Service Tasks',
+    //   description: 'Create and View Tasks',
+    //   link: `/fleet/service-tasks/list`,
+    //   icon: taskList,
+    //   isMenu: true,
+    // },
     {
       id: 'stock',
       name: 'Fuel & Energy',
@@ -88,14 +83,14 @@ export default () => {
       icon: fuelStock,
       isMenu: true,
     },
-    {
-      id: 'accessory',
-      name: 'Accessory Stock',
-      description: 'Track spare auto parts inventory',
-      link: `/fleet/accessory/list`,
-      icon: inventory,
-      isMenu: true,
-    },
+    // {
+    //   id: 'accessory',
+    //   name: 'Accessory Stock',
+    //   description: 'Track spare auto parts inventory',
+    //   link: `/fleet/accessory/list`,
+    //   icon: inventory,
+    //   isMenu: true,
+    // },
     {
       id: 'add_on',
       name: 'Set up',
@@ -104,19 +99,9 @@ export default () => {
       icon: addon,
       isMenu: true,
     },
-    // {
-    //   id: 'report',
-    //   name: 'Reports',
-    //   description: 'export as document',
-    //   link: `/fleet/report/list`,
-    //   icon: report,
-    //   isMenu: true,
-    // },
   ];
 
   return (
-    <PageContainer title={false} >
       <ListMenuComp items={items} />
-    </PageContainer>
   );
 };

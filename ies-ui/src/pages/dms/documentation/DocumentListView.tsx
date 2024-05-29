@@ -35,7 +35,6 @@ interface Props {
     folderId?: number;
     libraryId: number;
 }
-
 export default ({ paramSearch, libraryId, folderId }: Props) => {
     const requestAction = simpleRequestActions();
     const services = DocumentServiceAPI(requestAction);
@@ -163,8 +162,8 @@ export default ({ paramSearch, libraryId, folderId }: Props) => {
             itemIcon: <DeleteOutlined />,
             onClick: () => {
                 Modal.confirm({
-                    title: "Move Documentation to Trash",
-                    content: "are you sure, you want to move document trash? You can restore document",
+                    title: "Move documentation to Trash",
+                    content: "Are you sure you want to move documents to trash? You can restore the document",
                     onOk: () => {
                         services.moveToTrash(record.id).then(() => {
                             actionRef.current?.reloadAndRest?.();
@@ -181,8 +180,8 @@ export default ({ paramSearch, libraryId, folderId }: Props) => {
             itemIcon: <HistoryOutlined />,
             onClick: () => {
                 Modal.confirm({
-                    title: "Restore Documentation ",
-                    content: "are you sure, you want to move document trash? You can restore document",
+                    title: "Restore Documentation",
+                    content: "Are you sure you want to move documents to trash? You can restore the document",
                     onOk: () => {
                         services.moveToTrash(record.id).then(() => {
                             actionRef.current?.reloadAndRest?.();
@@ -203,11 +202,11 @@ export default ({ paramSearch, libraryId, folderId }: Props) => {
             onClick: () => {
                 Modal.confirm({
                     title: "Delete Documentation",
-                    content: "are you sure, you want to delete document? You can not undo this action",
+                    content: "Are you sure you want to delete the document? You cannot undo this action.",
                     onOk: () => {
                         services.delete(record.id).then(() => {
                             actionRef.current?.reloadAndRest?.();
-                            message.success("document was deleted");
+                            message.success("document in the database was deleted.");
                         });
                     }
                 })
@@ -221,8 +220,7 @@ export default ({ paramSearch, libraryId, folderId }: Props) => {
         },
     ];
     useEffect(() => {
-        setAdvanceSearchParams({ ...paramSearch });
-        actionRef.current?.reload?.()
+        actionRef.current?.reload?.();
     }, [paramSearch, libraryId]);
     const cacheList = useModel('dataList');
     const onRequestHandler = async (params: TableViewSearchParams<DocumentationAdvanceSearch>) => {
@@ -239,7 +237,6 @@ export default ({ paramSearch, libraryId, folderId }: Props) => {
             return Promise.reject();
         }
     };
-
     const itemCreateNew = (): MenuProps["items"] => [
         {
             key: "1",
@@ -268,9 +265,6 @@ export default ({ paramSearch, libraryId, folderId }: Props) => {
             }),
         },
     ];
-
-    console.log(folderId);
-    
     return (
         <>
             <TableView<DocumentationDTO, { searchValue?: string }>
@@ -370,26 +364,26 @@ export default ({ paramSearch, libraryId, folderId }: Props) => {
                             },
                             pagination,
                         }),
-                    onFirstLoad: () =>
-                        cacheList.fetchDataList('dms-document').then((v) => {
-                            if (v) {
-                                setAdvanceSearchParams({
-                                    ...v.creteria?.criteria,
-                                    status: v.creteria?.criteria?.advanceSearch?.status ?? "All",
-                                });
-                                return v.dataList;
-                            } else {
-                                return onRequestHandler({
-                                    criteria: {
-                                        advanceSearch: {
-                                            ...advanceSearchParams,
-                                            library: libraryId,
-                                            folderType: "LIBRARY"
-                                        }
-                                    },
-                                });
-                            }
-                        }) as Promise<Paging<DocumentationDTO>>,
+                    // onFirstLoad: () =>
+                    //     cacheList.fetchDataList('dms-document').then((v) => {
+                    //         if (v) {
+                    //             setAdvanceSearchParams({
+                    //                 ...v.creteria?.criteria,
+                    //                 status: v.creteria?.criteria?.advanceSearch?.status ?? "All",
+                    //             });
+                    //             return v.dataList;
+                    //         } else {
+                    //             return onRequestHandler({
+                    //                 criteria: {
+                    //                     advanceSearch: {
+                    //                         ...advanceSearchParams,
+                    //                         library: libraryId,
+                    //                         folderType: "LIBRARY"
+                    //                     }
+                    //                 },
+                    //             });
+                    //         }
+                    //     }) as Promise<Paging<DocumentationDTO>>,
                 }}
                 columns={[
                     {

@@ -16,7 +16,6 @@ interface Props extends FormModalProps {
     onSave: (data: AccessoriesCreate) => void;
     actionType?: String;
 }
-
 const EntryModalForm: React.FC<Props> = ({ onSave, data, actionType, ...props }) => {
     const [form] = useForm<AccessoriesCreate>();
     const requestActions = simpleRequestActions();
@@ -205,14 +204,6 @@ const EntryModalForm: React.FC<Props> = ({ onSave, data, actionType, ...props })
                                 }}
                                 onSave={async (fileId) => {
                                     setImageId(fileId);
-                                    try {
-                                        // profile && await ProfileServices.saveProfileImage({
-                                        //     employeeId: profile.id,
-                                        //     imageId: fileId
-                                        // })(requestActions)
-                                    } catch (error: any) {
-                                        message.error(error.message || 'failed to upload image.');
-                                    }
                                 }}
                             />
                         </div>

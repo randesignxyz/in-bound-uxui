@@ -10,14 +10,12 @@ import {
   SisternodeOutlined,
 } from '@ant-design/icons';
 import type { ActionType } from '@ant-design/pro-table';
-import { history, useModel } from '@umijs/max';
+import { useModel } from '@umijs/max';
 import { Badge, Button, MenuProps, message, Modal, Radio, Space } from 'antd';
 import Dropdown from 'antd/lib/dropdown/dropdown';
 import moment from 'moment';
 import Omit from 'omit.js';
 import { useRef, useState } from 'react';
-import { FleetPaths } from '..';
-import BreadCrumbCom from '../components/BreadCrumbCom';
 import MaintenanceModalForm from '../maintenance/EntityFormModal';
 import CompletedHistory from './CompletedHistory';
 import {
@@ -37,7 +35,6 @@ interface Props {
   onAdd?: () => void;
   onEdit?: (id: number) => void;
 }
-
 export default ({ onDetail, onAdd, onEdit }: Props) => {
   const requestActions = simpleRequestActions();
   const services = ReminderServiceAPI(requestActions);
@@ -53,19 +50,15 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
       reminderDTO: ServiceReminderDTO;
     };
   }>({});
-
   const [alertHistorystate, setAlertHistorySate] = useState<{
     visible?: { name: 'modal'; type: 'ADD' | 'Edit'; record?: ServiceReminderDTO };
   }>({});
-
   const [maintenanceState, setMaintenanceState] = useState<{
     visible?: { name: 'modal'; type: 'ADD' | 'Edit'; payload?: { entry: ServiceReminderDTO } };
   }>({});
-
   const [advanceSearchParams, setAdvanceSearchParams] = useState<ServiceReminderSearchParam>({
     status: 'ALL',
   });
-
   const getMenuItems = (item: ServiceReminderDTO): MenuProps["items"] => {
     return [
       {
@@ -97,17 +90,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
             visible: { name: 'modal', type: 'ADD', reminderId: item.id, reminderDTO: item },
           }),
       },
-
-      // {
-      //     key: '4',
-      //     label: 'History',
-      //     display:true,
-      //     // disabled:item.status==="void" ?true:false,
-      //     itemIcon:<HistoryOutlined/>,
-      //     onClick: async () => {
-      //         setAlertHistorySate({visible:{name : "modal", type:"ADD", id:item.id}})
-      //     },
-      // },
       {
         type: "divider"
       },
@@ -131,22 +113,8 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
       },
     ];
   };
-
-  const routes = [
-    {
-      path: FleetPaths.fleet,
-      label: 'Fleet',
-    },
-    {
-      path: '',
-      label: 'Service Reminder',
-    },
-  ];
-
   const cacheList = useModel('dataList');
-
   const onRequestHandler = async (params: TableViewSearchParams<ServiceReminderSearchParam>) => {
-
     try {
       return services.page(params).then((it) => {
         return cacheList.cacheDataList({
@@ -161,20 +129,15 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
     }
   };
   const actionRef = useRef<ActionType>();
-
   const formatDatewithNumber = (value: moment.Moment) => {
     if (moment(value).fromNow().search('ago') > 0) {
       return moment(value).fromNow().replace('in', '');
     } else {
       return moment(value).fromNow().replace('in', '') + ' from now';
     }
-
-    // return date
   };
-
   const meterFormat = (r: ServiceReminderDTO) => {
     const dmt = r.dueSoonMeterThreshold || 20;
-
     if (
       r.nextDueMeter - r.meterHistory?.meterValue > 0 &&
       r.nextDueMeter - r.meterHistory?.meterValue <= dmt
@@ -184,7 +147,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
         status: 'Due Soon',
       };
     }
-
     if (r.meterHistory?.meterValue > r.nextDueMeter) {
       return {
         velue: `${r.meterHistory?.meterValue - r.nextDueMeter} km overdue`,
@@ -199,13 +161,10 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
   };
   const status = (mpd: ServiceReminderDTO) => {
     const nextDueAt = mpd.nextDueAt;
-    const dueSoonFrequency = mpd.dueSoonTimeThresholdFrequency;
     const timeDuesoon = mpd.dueSoonTimeThresholdInterval;
     if (mpd.timeInterval != null) {
       if (timeDuesoon != null) {
-        // const dsiff = moment().add(timeDuesoon, dueSoonFrequency).diff(moment.now(), 'days');
         const dsiff = moment(nextDueAt)?.diff(moment(), 'days');
-
         if (dsiff <= 2 && dsiff >= 0) {
           return 'Due Soon';
         } else if (dsiff <= 0) {
@@ -213,20 +172,15 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
         } else {
           return 'Upcoming';
         }
-
       }
     }
   };
-
-
-
   const onAddHandler = () => {
     setSate((v) => ({
       ...v,
       visible: { name: 'modal', type: 'ADD' },
     }));
   };
-
   const onSaveActionHandler = (data: ServiceReminderCreate) => {
     Modal.confirm({
       title: 'Save Service Reminder Record',
@@ -237,13 +191,11 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
           message: string;
         };
         setSate((v) => ({ ...v, visible: undefined }));
-
         actionRef.current?.reloadAndRest?.();
         message.success(response.data);
       },
     });
   };
-
   const onSaveRemiderHistory = (data: ReminderHistory) => {
     Modal.confirm({
       title: 'Force Update Rminder Service',
@@ -261,12 +213,9 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
       },
     });
   };
-
   return (
     <>
-    {/* <BreadCrumbCom separator=">" routes={routes} /> */}
     <PageContainer
-      // onBack={()=>history.push(FleetPaths.fleet)}
       title="Services Reminder"
     >
     <TableView<ServiceReminderDTO,{ searchValue?: string; advanceSearch: ServiceReminderSearchParam }>
@@ -343,7 +292,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
                 ) : (
                   ''
                 )}
-
                 {r.meterInterval ? (
                   <p
                     style={{
@@ -473,29 +421,22 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
         }
       />
     </PageContainer>
-      
-
-     
-
       <ServiceReminderModalForm
         open={state.visible?.name == 'modal'}
         onCancel={() => setSate((v) => ({ ...v, visible: undefined }))}
         onSave={onSaveActionHandler}
         data={state.visible?.payload?.vehicle}
       />
-
       <MaintenanceModalForm
         open={maintenanceState.visible?.name == 'modal'}
         onCancel={() => setMaintenanceState((v) => ({ ...v, visible: undefined }))}
         serviceReminder={maintenanceState.visible?.payload?.entry}
       />
-
       <CompletedHistory
         data={alertHistorystate.visible?.record}
         open={alertHistorystate.visible?.name === 'modal'}
         onClose={() => setAlertHistorySate((v) => ({ ...v, visible: undefined }))}
       />
-
       <ForceComplete
         open={reminderHistorystate.visible?.name === 'modal'}
         onSave={onSaveRemiderHistory}

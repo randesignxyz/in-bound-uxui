@@ -15,7 +15,6 @@ interface Props extends DrawerProps {
   onSearch: (params: DeliveryAdvanceSearchParams) => void;
   onReset: () => void;
 }
-
 const AdvanceVehicleSearch: React.FC<Props> = ({
   initData,
   onSearch,
@@ -25,27 +24,19 @@ const AdvanceVehicleSearch: React.FC<Props> = ({
   ...props
 }) => {
   const requestActions = simpleRequestActions();
-
   const [form] = useForm<DeliveryAdvanceSearchParams>();
   const [lookup, setLookup] = useState<LookUpDataDTO[]>([]);
   const loadData = async () => {
     const response = await LookupDataServiceAPI(requestActions).lookupData({ type: 'VEHICLE' });
     setLookup(response);
   };
-
   useEffect(() => {
     if (!props.open) return;
     form.setFieldsValue({ ...initData });
     props.open && loadData();
   }, [props.open]);
-
-  const group = lookup
-    .filter((it) => it.code == 'GROUP')
-    .map((it) => ({ value: it.id, label: it.name }));
-  const vehicleType = lookup
-    .filter((it) => it.code == 'VEHICLETYPE')
-    .map((it) => ({ value: it.id, label: it.name }));
-
+  const group = lookup.filter((it) => it.code == 'GROUP').map((it) => ({ value: it.id, label: it.name }));
+  const vehicleType = lookup.filter((it) => it.code == 'VEHICLETYPE').map((it) => ({ value: it.id, label: it.name }));
   return (
     <Drawer {...props}>
       <ProForm

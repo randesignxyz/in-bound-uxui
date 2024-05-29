@@ -39,7 +39,6 @@ export default () => {
               onChange: (value) => {},
             }}
           />
-
           <ProFormDependency dependencies={['vehicleId']} name={['vehicleId']}>
             {({ vehicleId }) => {
               return (
@@ -61,7 +60,6 @@ export default () => {
                         label: it.name,
                         disabled: it.serviceTaskVehicle?.vehicleId === vehicleId ? true : false,
                       }));
-
                     return response.items.map((it) => ({ value: it.id, label: it.name }));
                   }}
                   rules={[
@@ -73,7 +71,6 @@ export default () => {
               );
             }}
           </ProFormDependency>
-
           <ProFormRadio.Group
             name={'scheduleType'}
             layout="horizontal"
@@ -99,11 +96,6 @@ export default () => {
                           rules={[{ required: true }]}
                           min={1}
                           label="Time Interval (every)"
-                          fieldProps={
-                            {
-                              //   onChange: () => onSetTimeNextDue(new Date())
-                            }
-                          }
                         />
                       </Col>
                       <Col span={5}>
@@ -111,11 +103,6 @@ export default () => {
                           style={{ marginTop: 30 }}
                           name={'timeFrequency'}
                           rules={[{ required: true }]}
-                          fieldProps={
-                            {
-                              //   onChange: () => onSetTimeNextDue(new Date())
-                            }
-                          }
                           options={[
                             {
                               value: 'days',
@@ -175,7 +162,6 @@ export default () => {
                       </Col>
                     </Row>
                   )}
-
                   {(scheduleType == 'METER' || scheduleType == 'ALL') && (
                     <Row gutter={6}>
                       <Col span={12}>
@@ -206,12 +192,10 @@ export default () => {
               );
             }}
           </ProFormDependency>
-
           <Row gutter={6} style={{ display: 'none' }}>
             <Space>
               <Checkbox
                 defaultChecked={false}
-                //   onChange={(e) => setManuanlly(!e.target.checked)}
                 id="manuanlly"
               />
             </Space>
@@ -233,7 +217,6 @@ export default () => {
                 {({ meterInterval, vehicleId }) => {
                   return (
                     <ProFormDigit
-                      // disabled={manually}
                       disabled={true}
                       name="nextDueMeter"
                       width={'md'}
@@ -241,7 +224,6 @@ export default () => {
                       label="Next Due Primary Meter"
                       fieldProps={{
                         placeholder: 'enter kilometer',
-                        //   value:value
                       }}
                     />
                   );

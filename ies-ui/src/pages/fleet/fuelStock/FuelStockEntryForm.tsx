@@ -34,15 +34,11 @@ const FuelStockEntryForm: React.FC<Props> = ({ onSave, data, actionType, type, i
 
   useEffect(() => {
     props.open && initFormData();
-    // form.resetFields();
     lookupData();
   }, [props.open]);
 
   const initFormData = () => {
     form.setFieldsValue({
-      // beginningInventory:data?.beginningInventory,
-      // currentInventory:data?.currentInventory,
-      // description:data?.
     });
   };
 
@@ -100,8 +96,6 @@ const FuelStockEntryForm: React.FC<Props> = ({ onSave, data, actionType, type, i
                         initialValue={0}
                         rules={[
                           {
-                            //   required: true,
-                            //   max: tankCapacity,
                             type: 'number',
                           },
                         ]}
@@ -120,8 +114,6 @@ const FuelStockEntryForm: React.FC<Props> = ({ onSave, data, actionType, type, i
                         label="Initial Balance"
                         rules={[
                           {
-                            //   required: true,
-                            //   max: tankCapacity,
                             type: 'number',
                           },
                         ]}
@@ -210,7 +202,6 @@ const FuelStockEntryForm: React.FC<Props> = ({ onSave, data, actionType, type, i
                 },
               ]}
             />
-
             <ProFormDigit name={'quantity'} label="Quantity" />
           </ProForm>
         </>

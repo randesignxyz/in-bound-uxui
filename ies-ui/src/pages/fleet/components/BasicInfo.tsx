@@ -1,6 +1,5 @@
 import { simpleRequestActions } from '@/services/model';
 import { ProDescriptions } from '@ant-design/pro-components';
-import { useGetState } from 'ahooks';
 import { Badge, Card, Col, message, Row, Space, Tag } from 'antd';
 import { useEffect } from 'react';
 import { VehicleListItem } from '../vehicle/data';
@@ -16,10 +15,7 @@ interface Props {
 
 export default ({ data, displayImage = true }: Props) => {
   const requestAction = simpleRequestActions();
-  const [imageId, setImageId] = useGetState('');
-
   useEffect(() => {}, [data?.id]);
-
   return (
     <>
       <Space direction="vertical" size={20}>
@@ -109,9 +105,7 @@ export default ({ data, displayImage = true }: Props) => {
                 defualtImage={truckDefaultIcon}
                 imageId={data?.profilePicture?.fileId}
                 onSave={async (fileId) => {
-                  setImageId(fileId);
                   try {
-                    const entry = {};
                     await VehicleServiceAPI(requestAction).profilePicture({
                       attachedTo: data?.id || '',
                       fileId: fileId,
@@ -161,7 +155,7 @@ export default ({ data, displayImage = true }: Props) => {
             ]}
           />
         </Card>
-        <Card size="small" title="Truck Cab">
+        <Card size="small" title="Vehicle Capacity">
           <ProDescriptions
             size="small"
             contentStyle={{
@@ -202,7 +196,7 @@ export default ({ data, displayImage = true }: Props) => {
             ]}
           />
         </Card>
-        <Card size="small" title="Truck Loading">
+        <Card size="small" title="Vehicle Loading">
           <ProDescriptions
             size="small"
             contentStyle={{

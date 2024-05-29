@@ -20,11 +20,6 @@ export default () => {
                       }}
                     />
                 ))
-                
-                // ||
-                // (view === 'create' && <EntryForm  />) 
-
-                // ||(view ==="detail" && <DetailView id={id as string} />)
             )
         }}
     </CrudWrapper>

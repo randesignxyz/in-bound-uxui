@@ -18,14 +18,10 @@ interface Props extends FormModalProps {
   id?: string;
 
 }
-
-
-
 const ServiceTasksModalForm: React.FC<Props> = ({ onSave, data, actionType, id, ...props }) => {
   const [form] = useForm<ServiceTasksCreate>();
   const requestActions = simpleRequestActions()
   const [lookupData, setLookupData] = useState<LookUpDataDTO[]>([]);
-
   useEffect(() => {
     props.open && initFormData();
     props.open && dataLoad()

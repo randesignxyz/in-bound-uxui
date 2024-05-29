@@ -8,7 +8,6 @@ import {
   ProFormSelect,
   ProFormText,
 } from '@ant-design/pro-components';
-
 import FileUploader from '@/components/Attachment/FileUploader';
 import FormModalComp, { FormModalProps } from '@/components/FormModal';
 import { FieldTimeOutlined, PlusOutlined } from '@ant-design/icons';
@@ -37,7 +36,6 @@ interface Props extends FormModalProps {
   actionType?: String;
   id?: string;
 }
-
 const FuelModalForm: React.FC<Props> = ({ onSave, data, actionType, id, ...props }) => {
   const [form] = useForm<FuelCreate>();
   const requestActions = simpleRequestActions();
@@ -56,8 +54,6 @@ const FuelModalForm: React.FC<Props> = ({ onSave, data, actionType, id, ...props
       payload: { vehicle: string };
     };
   }>();
-
-
   const lookupData = async () => {
     const dataLookup = LookupDataServiceAPI(requestActions).lookupData({ type: 'VEHICLE' });
     setFuelLookup(await dataLookup);
@@ -68,7 +64,6 @@ const FuelModalForm: React.FC<Props> = ({ onSave, data, actionType, id, ...props
     lookupData();
     props.open && onVehicleChange(data?.vehicleId?.id);
   }, [props.open]);
-
   const initFormData = () => {
     form.setFieldsValue({
       ...data,
@@ -81,13 +76,11 @@ const FuelModalForm: React.FC<Props> = ({ onSave, data, actionType, id, ...props
       gasStation: data?.gasStation?.id
     });
   };
-
   const onVehicleChange = async (e: string | undefined) => {
     const data = await DriverServiceAPI(requestActions).listVehicleDriver({
       id: e || '',
       status: 'active',
     });
-
     if (data.length > 0) {
       setVehicleDriver(data);
       form.setFieldValue(['driverId'], data.map((it) => it.driverId?.id)[0]);
@@ -138,7 +131,6 @@ const FuelModalForm: React.FC<Props> = ({ onSave, data, actionType, id, ...props
               .filter((it) => it.code === 'FUELTYPE')
               .map((it) => ({ value: it?.id, label: it?.name }))}
           />
-
           <ProFormSelect
             addonBefore="Location"
             name={'location'}
@@ -152,7 +144,6 @@ const FuelModalForm: React.FC<Props> = ({ onSave, data, actionType, id, ...props
             }}
           />
         </div>
-        {/* </Space> */}
         <ProFormDependency dependencies={['vehicleId', 'gasType']} name={['vehicleId', 'gasType']}>
           {({ vehicleId, gasType }) => {
             return gasType == 1063 ? (
@@ -249,10 +240,8 @@ const FuelModalForm: React.FC<Props> = ({ onSave, data, actionType, id, ...props
                     labelAlign="left"
                     width={'lg'}
                     label="Gas Station"
-                    // disabled={data?true:false}
                     name="gasStation"
                     initialValue={gasStaion[0]?.id}
-
                     options={gasStaion
                       .filter(
                         (it) =>
@@ -283,7 +272,6 @@ const FuelModalForm: React.FC<Props> = ({ onSave, data, actionType, id, ...props
               max={500}
               rules={[{ required: true }]}
             />
-
             <ProFormDependency dependencies={["gasType"]} name={["gasType"]}>
               {({ gasType }) => {
                 return (
@@ -303,7 +291,6 @@ const FuelModalForm: React.FC<Props> = ({ onSave, data, actionType, id, ...props
                 )
               }}
             </ProFormDependency>
-
             <ProFormSelect
               name={'pumpBy'}
               label={'Pump Attendent'}
@@ -381,9 +368,7 @@ const FuelModalForm: React.FC<Props> = ({ onSave, data, actionType, id, ...props
               }}
             />
           </Col>
-          {/* <ProFormText hidden={true} name={'status'} initialValue={'Normal'} /> */}
           <ProFormText hidden={true} name={'numberKilometer'} />
-
           <ProFormDependency
             dependencies={['quantity', 'kilometer', 'vehicleId']}
             name={['quantity', 'kilometer', 'vehicleId']}
@@ -392,22 +377,9 @@ const FuelModalForm: React.FC<Props> = ({ onSave, data, actionType, id, ...props
               const destination = kilometer - odometer;
               const currentRate = (quantity / destination) * 100;
               const previousRate = vehicle.find(it => it.id === vehicleId)?.normFuelConsumption?.usage;
-
-              // previousRate && console.log(
-              //   currentRate,
-              //   previousRate,
-              //   (currentRate-previousRate )
-              // );
               form.setFieldValue("numberKilometer", destination);
               if (previousRate) {
                 if (currentRate > previousRate) {
-                  // setWaringElement({
-                  //   status:"Over rate",
-                  //   kilometer:destination
-                  // })
-                  // form.setFieldValue("status", "Over rate");
-
-
                   return (<Col span={24}>
                     <span style={{ color: 'red' }}>This truck consumes more fuel than the limit, this is just a warning</span>
                   </Col>)
@@ -415,24 +387,10 @@ const FuelModalForm: React.FC<Props> = ({ onSave, data, actionType, id, ...props
                 else {
                   return ""
                 }
-
               }
-
               return "No consumption rate setup yet!"
-
-
-              // if (usageRate > normFuelConsumption[0]!?.usageRate) {
-              //   form.setFieldValue('status', 'Over Rate');
-
-              //   return (
-
-              //   );
-              // } else {
-              //   return '';
-              // }
             }}
           </ProFormDependency>
-
           <Col span={24}>
             <FileUploader
               service="FILE"
@@ -442,7 +400,6 @@ const FuelModalForm: React.FC<Props> = ({ onSave, data, actionType, id, ...props
           </Col>
         </Row>
       </ProForm>
-
       <ServiceReminderModalForm
         open={reminderModalState?.visible?.name === 'modal'}
         onSave={(data: ServiceReminderCreate) => {
@@ -450,10 +407,7 @@ const FuelModalForm: React.FC<Props> = ({ onSave, data, actionType, id, ...props
             title: 'Save Service Reminder Record',
             content: ' are you sure?',
             onOk: async () => {
-              const response = (await ReminderServiceAPI(requestActions).save(data)) as {
-                data: string;
-                message: string;
-              };
+              await ReminderServiceAPI(requestActions).save(data);
               setReminderModalState((v) => ({ ...v, visible: undefined }));
             },
           });

@@ -12,10 +12,13 @@ export default ({ data, ...props }: Props) => {
             <Drawer
                 {...props}
                 width={800}
-                bodyStyle={{ backgroundColor:"#fafafa" }}
+                title={`Information about ${data?.name}`}
+                styles={{
+                    body:{
+                        backgroundColor:"#fafafa"
+                    }
+                }}
             >
-
-
                 <Space direction="vertical" size={12}>
                 <Card
                     title="Infomation"
@@ -36,11 +39,6 @@ export default ({ data, ...props }: Props) => {
                                 title: "Name",
                                 dataIndex: "name"
                             },
-                            // {
-                            //     key: "latin_name",
-                            //     title: "Latin Name",
-                            //     dataIndex: "latinName"
-                            // },
                             {
                                 key: "group",
                                 title: "Group",
@@ -109,14 +107,10 @@ export default ({ data, ...props }: Props) => {
                                 dataIndex: "specialist",
                                 span:3
                             },
-
                         ]}
                     />
                 </Card>
                 </Space>
-
-
-
             </Drawer>
         </>
     )

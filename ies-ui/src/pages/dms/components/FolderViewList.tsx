@@ -248,7 +248,6 @@ export default ({ onSearch, activeKey, moveDoc, onMove, setFolder: setFolderId, 
                 type={documentModalState?.visible?.type}
                 libraryId={documentModalState?.visible?.libraryId}
                 onCancel={() => setDocumentState(v => ({ ...v, visible: undefined }))}
-                folderId={documentModalState?.visible?.folderId}
                 division={documentModalState?.visible?.division}
                 onSave={async (data: DocumentationCreate) => {
                     const response = await DocumentServiceAPI(requestAction).save(data) as unknown as ({

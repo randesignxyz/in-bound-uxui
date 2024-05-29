@@ -73,38 +73,26 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
             onClick:()=>setDetailState({visible:{name:"modal", type:"ADD", payload:{vehicle:record}}})
         },
     ]
-
     return (
         <>
             <Spin spinning={requestActions.request?.loading}>
-         
-
                 <TableView<VendorDTO, { searchValue?: string , advanceSearch: DriverSearchParam}>
                     hasCriteria={Object.values(Omit(advanceSearchParams, ['status'])).some((v) => v)}
                     cache
                     displayOnly
-                    extraFilter={
-                        <Space size="large">
-                          
-                        </Space>
-                    }
                     columns={[
                        
                         {
                             key: "code",
                             title: "Code",
-                            dataIndex: "code"
+                            dataIndex: "code",
+                            render:(_,r)=><Button type='link' onClick={()=>setDetailState({visible:{name:"modal", type:"ADD", payload:{vehicle:r}}})}>{r.code?r.code:"N/A"}</Button>
                         },
                         {
                             key: "name_en",
                             title: "Name",
                             dataIndex: "name"
                         },
-                        // {
-                        //     key: "latin_name",
-                        //     title: "Latin Name",
-                        //     dataIndex: "latinName"
-                        // },
                         {
                             key: "group",
                             title: "Group",
@@ -121,7 +109,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
                             title: "Specialist",
                             dataIndex: "specialist"
                         },
-                       
                         {
                             title: "Action",
                             render: (_, r) => (<>
@@ -139,12 +126,10 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
                                 </Dropdown>
                             </>)
                         },
-
                     ]}
                     tableProps={{
                         actionRef: actionRef,
                     }}
-                    // advanceSearch
                     actionHandlers={{
                         onAdvanceSearchClicked: () => setAdvanceSearch({ visible: true }),
                         onRequest: (criteria, pagination, sort) =>
@@ -173,37 +158,13 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
                               }
                             }) as Promise<Paging<VendorDTO>>,
                     }}
-
-
                 />
             </Spin>
-
-            
             <DetailViewDrawer
                 onClose={()=>setDetailState((v)=>({...v, visible:undefined}))}
                 open={detailState?.visible?.name==="modal"}
                 data={detailState.visible?.payload?.vehicle}
-                
             />
-
-            {/* <AdvanceFuelSearch
-                title="Advance Search"
-                closable
-                open={advanceSearch?.visible}
-                initData={advanceSearchParams}
-                onClose={() => {
-                  setAdvanceSearch({ visible: false });
-                }}
-                onReset={() => {
-                  actionRef.current?.reloadAndRest?.();
-                }}
-                onSearch={(data) => {
-                  setAdvanceSearchParams((v) => ({ ...v, ...data, status: v.status }));
-                  actionRef.current?.reloadAndRest?.();
-                }}
-            /> */}
-
-
         </>
     )
 }

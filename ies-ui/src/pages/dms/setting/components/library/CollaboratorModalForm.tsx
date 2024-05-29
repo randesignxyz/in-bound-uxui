@@ -51,7 +51,8 @@ const CollaboratorsModalForm: React.FC<Props> = ({ data, onSave, ...props }) => 
                 </Space>
                 <ProFormSelect
                     fieldProps={{
-                        mode: "multiple"
+                        mode: "multiple",
+                       defaultOpen:false,
                     }}
                     rules={[{required:true}]}
                     debounceTime={500}

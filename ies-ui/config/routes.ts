@@ -887,14 +887,6 @@ export default [
     access: 'canAccessFleetMenu',
     component: './fleet/inspection/',
   },
-
-  {
-    path: '/fleet/accident/:view/*',
-    name: 'fleet_accident',
-    hideInMenu: 'true',
-    access: 'canAccessFleetMenu',
-    component: './fleet/accident/',
-  },
   {
     path: '/fleet/fuel/:view/*',
     name: 'fleet_fuel',

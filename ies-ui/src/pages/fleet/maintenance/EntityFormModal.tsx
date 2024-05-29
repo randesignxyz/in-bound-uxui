@@ -57,10 +57,8 @@ const MaintenanceModalForm: React.FC<Props> = ({
   const [lookupData, setLookupData] = useState<LookUpDataDTO[]>([]);
   const [vehicleDriver, setVehicleDriver] = useState<VehicleDriverDTO[]>([]);
   const [odometer, setOdometer] = useState();
-  const [vehicle, setVehicle] = useState<VehicleListItem[]>([]);
   const [uploadFileIds, setUploadFileIds] = useState<string[]>([]);
   const services = MaintenanceServiceAPI(requestActions);
-
   const [reminderModalState, setReminderModalState] = useState<{
     visible?: {
       name: 'modal';
@@ -69,14 +67,11 @@ const MaintenanceModalForm: React.FC<Props> = ({
     };
   }>();
   const [dataSource, setDataSource] = useState<MaintenanceItemCreate[]>();
-
   const onServiceTaskData = async (k?: { keyWords: string }) => {
     const data = await ServiceTasksServiceAPI(requestActions).page({
       criteria: { searchValue: k?.keyWords || serviceReminder?.serviceTask?.name },
     });
-
     const items = data.items.map((it) => ({ label: it.name, value: it.id }));
-
     if (
       dataEntry?.item &&
       !items.some((ob) => dataEntry.item?.find((it) => it.serviceId?.id === ob.value))
@@ -88,7 +83,6 @@ const MaintenanceModalForm: React.FC<Props> = ({
       }));
       return [...expenceData, ...items];
     }
-
     if (serviceReminder && !items.some((ob) => serviceReminder.serviceTask?.id === ob.value)) {
       const expenceData = {
         value: serviceReminder.serviceTask?.id,
@@ -98,9 +92,6 @@ const MaintenanceModalForm: React.FC<Props> = ({
     }
     return items;
   };
-
-
-
   useEffect(() => {
     props.open && initFormData();
     dataLoad();
@@ -353,7 +344,6 @@ const MaintenanceModalForm: React.FC<Props> = ({
       form.setFieldValue(['driverId'], '');
     }
   };
-
   return (
     <FormModalComp
       title="Service & Maintenance"
@@ -394,7 +384,6 @@ const MaintenanceModalForm: React.FC<Props> = ({
                       keyWords || dataEntry?.vehicle?.id || serviceReminder?.vehicleId?.id,
                   },
                 });
-                setVehicle(data.items);
                 return data.items.map((obj) => ({ value: obj.id, label: `${obj.plateNumber}` }));
               }}
               fieldProps={{
@@ -467,7 +456,6 @@ const MaintenanceModalForm: React.FC<Props> = ({
               name="referentNumber"
               label="Receipt Number"
               placeholder="receipt number (optional)"
-
               fieldProps={{
                 onKeyUp: (e) => {
                   const newValue = ('0'.repeat(6) + e.currentTarget?.value.toString()).slice(-6);
@@ -604,10 +592,7 @@ const MaintenanceModalForm: React.FC<Props> = ({
             title: 'Save Service Reminder Record',
             content: ' are you sure?',
             onOk: async () => {
-              const response = (await ReminderServiceAPI(requestActions).save(data)) as {
-                data: string;
-                message: string;
-              };
+              await ReminderServiceAPI(requestActions).save(data);
               setReminderModalState((v) => ({ ...v, visible: undefined }));
             },
           });

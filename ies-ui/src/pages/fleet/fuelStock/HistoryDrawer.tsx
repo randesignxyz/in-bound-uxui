@@ -43,7 +43,6 @@ export default ({ data, ...props }: Props) => {
   const [quantityState, setQuantityState] = useState<{
     withdraw?: number | 0;
     plus?: number | 0;
-    // usageTotal: number|0;
   }>();
 
   useEffect(() => {
@@ -145,7 +144,6 @@ export default ({ data, ...props }: Props) => {
       },
     ];
   };
-
   const expandedRowRender = (e?: any) => {
     return (
       <ProTable<TankTransactionDTO>
@@ -294,7 +292,6 @@ export default ({ data, ...props }: Props) => {
               title={'Current Balance'}
               value={data?.currentInventory?.toFixed(2)}
               style={{ backgroundColor: '#e8e2bd', borderRadius: 5, padding: 5 }}
-              // precision={2}
               valueStyle={{ color: '#3f8600' }}
             />
           </Col>

@@ -13,7 +13,6 @@ import FuelHistory from "./view/FuelHistory";
 import InspectionView from "./view/InspectionView";
 import ServiceReminder from "./view/ServiceReminder";
 import Meintennece from "./view/Meintennece";
-import Accident from "./view/Accident";
 import Accessories from "./view/Accessories";
 import { ExternalLayout } from "../fleet";
 import ActivityLogListView from "../components/ActivityLogListView";
@@ -23,6 +22,7 @@ import { TireAssignCreate } from "../specification/data";
 import { SpecificationServiceAPI } from "../specification/service";
 import { DriverDTO, VehicleDriverCreate, VehicleDriverDTO } from "../driver/data";
 import AssignDriverFormModal from "../driver/AssignDriverFormModal";
+import AccidentListView from "../accident/AccidentListView";
 
 
 interface Props {
@@ -102,12 +102,12 @@ export default ({ id, onAdd, onEdit }: Props) => {
         {
             label: "Inpection History",
             key: "4",
-            children: <InspectionView id={id} />
+            children: <InspectionView vehicleId={id} />
         },
         {
             label: "Operator",
             key: "5",
-            children: <AssignDriver id={id} />
+            children: <AssignDriver vehicleId={id} />
         },
 
         {
@@ -125,7 +125,7 @@ export default ({ id, onAdd, onEdit }: Props) => {
         {
             label: `Accidentals`,
             key: '9',
-            children: <Accident id={id} />
+            children: <AccidentListView vehicleId={id} />
         },
         {
             label: `Accessories`,
@@ -189,13 +189,6 @@ export default ({ id, onAdd, onEdit }: Props) => {
                         >
                             Edit
                         </Button>,
-                        // <Button
-                        //     onClick={() => onAdd?.()}
-                        //     type="primary"
-                        //     icon={<PlusOutlined />}
-                        // >
-                        //     New
-                        // </Button>,
                         <Dropdown.Button
                             icon={<PlusCircleOutlined />}
                             type="primary"
@@ -204,10 +197,6 @@ export default ({ id, onAdd, onEdit }: Props) => {
                     ]}
                     tabList={tabItem}
                 >
-                    {/* <Tabs
-                        defaultActiveKey="1"
-                        items={tabItem}
-                    /> */}
                 </PageContainer>
             </Spin>
             <OdometerIssue

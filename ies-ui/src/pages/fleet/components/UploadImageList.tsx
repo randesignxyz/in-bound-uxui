@@ -10,10 +10,6 @@ export interface Props {
   onSetFileIds?: (fileIds: string[]) => void;
   readonly?: true;
 }
-
-/**
- * Use Files service instead of Workflow service
- */
 export default ({ initFiles, readonly, onSetFileIds }: Props) => {
   const [attachfileVisible, setAttachfileVisible] = useState<boolean>(false);
   const [attachFiles, setAttachFiles] = useState<AttachmentFile[]>([]);
@@ -33,7 +29,6 @@ export default ({ initFiles, readonly, onSetFileIds }: Props) => {
       }
     })();
   }, [initFiles]);
-
   return (
     <Card
       title={!readonly && 'Attachment'}
@@ -48,7 +43,6 @@ export default ({ initFiles, readonly, onSetFileIds }: Props) => {
         )
       }
     >
-      {/* <Image width={200} src="https://gw.alipayobjects.com/zos/rmsportal/KDpgvguMpGfqaHPjicRK.svg" /> */}
       <Image.PreviewGroup
         preview={{
           onChange: (current, prev) =>

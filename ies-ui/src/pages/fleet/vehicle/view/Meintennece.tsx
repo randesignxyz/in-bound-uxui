@@ -19,26 +19,22 @@ interface Props {
 export default ({ id }: Props) => {
   const requestActions = simpleRequestActions();
   const services = MaintenanceServiceAPI(requestActions);
-
   const [advanceSearch, setAdvanceSearch] = useState<{ visible: boolean }>();
   const [advanceSearchParams, setAdvanceSearchParams] = useState<FuelAvanceSearchParam>({
     status: 'ALL',
   });
 
   const actionRef = useRef<ActionType>();
-
   const durationDate = (r: MaintenneceDTO) => {
     if (r.formDate && r.toDate !== null) {
       const start = moment(r.formDate);
       const end = moment(r.toDate);
-
       return moment.duration(start.diff(end)).humanize();
     }
     return '';
   };
 
   const cacheList = useModel('dataList');
-
   const onRequestHandler = async (params: TableViewSearchParams<MaintenaceAdvanceSearch>) => {
     try {
       return services
@@ -74,7 +70,6 @@ export default ({ id }: Props) => {
                 ...v,
                 status: e.target.value,
               }));
-
               actionRef.current?.reloadAndRest?.();
             }}
           >

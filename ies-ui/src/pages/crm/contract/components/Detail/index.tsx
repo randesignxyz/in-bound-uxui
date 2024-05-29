@@ -1,7 +1,7 @@
-import { Space, Spin, Tag, message, Button, Alert } from 'antd';
+import { Space, Spin, Tag, message, Button } from 'antd';
 import { useEffect, useState } from 'react';
 import { history } from "@umijs/max";
-import { EditFilled, EditTwoTone, StopOutlined } from '@ant-design/icons';
+import { EditFilled, StopOutlined } from '@ant-design/icons';
 import { CrmPaths } from '@/pages/crm';
 import { PageContainer, ProCard, ProDescriptions } from '@ant-design/pro-components';
 import { simpleRequestActions } from '@/services/model';
@@ -14,11 +14,15 @@ import PosmView from '@/pages/crm/components/PosmView';
 import ActivityLog from '@/components/ActivityLog';
 import { useAccess } from '@umijs/max';
 import RemarkModalV2 from '@/components/remark-modal-v2';
-import ListView from '@/pages/pro/requisition/ListView';
 import Address from './Address';
 import { AddressInfo } from '@/services/crm/data';
 
-const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: (id: number, cb?: () => void) => void }> = ({ id, onEdit }) => {
+const ContactDetailView: React.FC<{
+  id: number,
+  openInTab?: boolean;
+  onRefresh?: () => void,
+  onEdit: (id: number, cb?: () => void) => void
+}> = ({ id, openInTab, onEdit }) => {
   const requestActions = simpleRequestActions()
   const [data, setData] = useSafeState<ContractViewData>()
   const access = useAccess()
@@ -68,7 +72,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
     <Spin spinning={requestActions.request?.loading || false}>
       <PageContainer
         breadcrumb={undefined}
-        onBack={handleBackHandler}
+        // onBack={!openInTab ? handleBackHandler : undefined}
         title={
           <Space>
             <div>{`Contract No: ${data?.contractNo || 'n/a'}`}</div>
@@ -100,7 +104,6 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
               return false
             }} />}
         </Space>
-
         }
         content={<ProCard>
           {data && <ProDescriptions dataSource={data} columns={[
@@ -156,7 +159,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
         })()}
 
       </PageContainer>
-    </Spin>
+    </Spin >
   );
 };
 

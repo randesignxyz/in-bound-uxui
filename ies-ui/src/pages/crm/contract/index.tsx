@@ -8,7 +8,7 @@ import { ContractServices } from "./services"
 import { FetchPagingParams } from "@/components/DataCrud/TableView"
 import { ContractAdvanceSearchParams, ImportedContract } from "./types"
 import { ContractLess } from "@/services/crm/contract"
-import { Button, Space, Tooltip, Typography, message } from "antd"
+import { Badge, Button, Space, Tooltip, Typography, message } from "antd"
 import { FileSearchOutlined, PlusOutlined } from "@ant-design/icons"
 import { formatDate } from "@/pages/utils"
 import Status from "@/components/Status"
@@ -17,6 +17,8 @@ import { useSafeState } from "ahooks"
 import { DataResponse } from "@/services/shared/data"
 import ImportContract from "./import-contract"
 import AdvanceSearch from "./components/AdvanceSearch"
+import CustomerDetailView from "../customer/components/Detail"
+import ContactDetailView from "./components/Detail"
 
 export default () => {
 
@@ -30,7 +32,6 @@ export default () => {
 
     const [filter, setFilter] = useState<FetchPagingParams<ContractAdvanceSearchParams>>({ criteria: { status: "ACTIVE", processStatus: 'All' } })
     const [importContractData, setImportContractData] = useState<DataResponse<ImportedContract>>()
-    // const queryClient = useQueryClient();
     const { data, isFetching } = useQuery(['fetch-contract-list', filter], () => ContractServices.list({
         criteria: {
             searchValue: filter.criteria?.searchValue,
@@ -58,6 +59,15 @@ export default () => {
 
         </CrudWrapper> */}
         <PageWrapper<ContractLess, ContractAdvanceSearchParams, {} >
+            detailViewRender={(id, target, item, key) => {
+                return key == 'customerNo' ? {
+                    panel: <CustomerDetailView getMenuItems={() => []} id={id} openInTab={target == 'page-tab' ? true : undefined} />,
+                    tabLabel: <Badge dot><Typography.Text>{item?.customer.code}</Typography.Text>  </Badge>,
+                } : {
+                    panel: <ContactDetailView onEdit={onEditHandler} openInTab={target == 'page-tab'} id={id} />,
+                    tabLabel: item?.contractNo,
+                }
+            }}
             listView={{
                 type: 'Table',
                 statuses: [{
@@ -70,10 +80,11 @@ export default () => {
                 }, {
                     option: { label: 'Terminated', value: 'TERMINATED' },
                 }],
-                advanceSearchButton: <AdvanceSearch onSearch={async (brandId, contractTypeId, termId, startedDateFrom, startedDateTo, endedDateFrom, endedDateTo) => {
-                    // setAdanceSearch(v => ({ ...v, brandId: brandId, contractTypeId: contractTypeId, termId: termId, startedDateFrom: startedDateFrom, startedDateTo: startedDateTo, endedDateFrom, endedDateTo: endedDateTo }))
-                    // actionRef.current?.reloadAndRest?.()
-
+                advanceSearchButton: <AdvanceSearch onSearch={async (
+                    brandId, contractTypeId, termId,
+                    startedDateFrom, startedDateTo,
+                    endedDateFrom, endedDateTo
+                ) => {
                     setFilter(v => ({
                         ...v,
                         criteria: {
@@ -105,7 +116,10 @@ export default () => {
                                 }
                             }} />
                     </Tooltip>,
-                    access.canAddEditContract && <Button type="link" onClick={() => setModalVisible({ type: 'ADD' })} icon={<PlusOutlined />} >Add</Button>
+                    access.canAddEditContract && <Button type="link"
+                        onClick={() => setModalVisible({ type: 'ADD' })}
+                        icon={<PlusOutlined />} >Add
+                    </Button>
                 ].filter(it => it) as React.ReactElement[],
                 onFilter: (params, pages, sorts) => {
                     setFilter(v => ({
@@ -122,6 +136,15 @@ export default () => {
                     // queryClient.invalidateQueries(['fetch-contract-list', filter])
 
                 },
+                onColumnLinkRender: (key) => {
+                    console.log(key);
+
+                    if (key.toString() == "customerNo") {
+                        return (item) => item.customer.code
+                    }
+                    return () => undefined
+
+                },
                 props: {
                     dataSource: data?.items.map(it => ({ ...it, code: it.contractNo })),
                     pagination: { total: data?.total },
@@ -136,9 +159,11 @@ export default () => {
                         width: 170
 
                     },
+
                     columns: [
                         {
                             title: 'Customer #',
+                            key: 'customerNo',
                             sorter: 'customerNo',
                             width: 120,
                             render: (_, rd) => <Space>

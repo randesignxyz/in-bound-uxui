@@ -235,7 +235,10 @@ export default () => {
     return <Spin spinning={loading}>
         <PageWrapper<CustomerItemLess, FilterType, {}>
             title="Customer"
-            detailViewRender={(id, target) => <CustomerDetailView openInTab={target == 'page-tab' ? true : undefined} id={id} getMenuItems={getMenuItems} />}
+            detailViewRender={(id, target, item) => ({
+                panel: <CustomerDetailView openInTab={target == 'page-tab' ? true : undefined} id={id} getMenuItems={getMenuItems} />,
+                tabLabel: item?.code
+            })}
             listView={{
                 type: 'Table',
                 statuses: [
@@ -272,7 +275,8 @@ export default () => {
                     },
                     primaryCol: {
                         title: 'Customer #',
-                        sorter: 'customerCode'
+                        sorter: 'customerCode',
+                        width: 120
                     },
                     columns: [
                         {

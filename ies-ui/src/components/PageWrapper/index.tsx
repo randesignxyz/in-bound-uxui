@@ -9,12 +9,18 @@ import { ExportOutlined, EyeFilled, FileSearchOutlined, FileTextOutlined, Reload
 import { MenuItemType } from "rc-menu/lib/interface";
 import { SortOrder } from "antd/lib/table/interface";
 import { SegmentedLabeledOption, SegmentedOptions } from "antd/es/segmented";
-import { useParams } from "@umijs/max";
+import { Link, useParams } from "@umijs/max";
 import { ViewType } from "../DataCrud/CrudWrapper";
 import ActionBar from "../ActionBar";
 
+
 interface Props<ListDataType extends Record<string, any>, FilterType extends Record<string, any>, ValueType> {
     title?: string;
+    detailViewRender?: (id: number, target: 'page-tab' | 'browser-tab', item?: ListDataType, key?: React.Key) => {
+        tabLabel: React.ReactNode,
+        tabIcon?: React.ReactNode,
+        panel: React.ReactNode
+    };
     listView: ({
         type: "Table"
         props: ProTableProps<ListDataType, ParamsType, ValueType> & {
@@ -22,12 +28,14 @@ interface Props<ListDataType extends Record<string, any>, FilterType extends Rec
             fullView?: {
                 onOpen: (item: ListDataType) => void
             }
+
             primaryCol?: ProColumns<ListDataType, ValueType>
         }
     } | {
         type: "List",
         props: ProListProps<ListDataType, ParamsType, ValueType>
     }) & {
+        onColumnLinkRender?: (key: React.Key) => (item: ListDataType) => React.ReactNode | undefined;
         statuses?: { option: SegmentedLabeledOption, subOptions?: SegmentedOptions[] }[]
         actionButtons?: React.ReactElement[],
         actionNumShown?: number;
@@ -39,10 +47,7 @@ interface Props<ListDataType extends Record<string, any>, FilterType extends Rec
         advanceSearchButton?: React.ReactElement;
         onOpenAdvanceSearch?: () => void;
         onRefresh?: () => void;
-    }
-
-    detailViewRender?: (id: number, target: 'page-tab' | 'browser-tab') => React.ReactNode,
-
+    };
 }
 
 interface DraggableTabPaneProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -79,7 +84,6 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
     const params = useParams()
     const view: ViewType = (params['view'] as ViewType) || undefined
     const id = params['*']
-
     const [forceReload, setForceReload] = useState(0)
     const actionRef = useRef<ActionType>()
     const [filterData, setFilterData] = useState<FilterType>()
@@ -149,6 +153,23 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
         }
     ] : []
 
+    const addTab = (item: ListDataType, key?: React.Key) => {
+
+        const gKey = `${key?.toString() || 'default'}-${item.id}`
+        if (tabList.some(it => it.key == gKey)) {
+            item.code && setActiveKey({ key: gKey, item: item })
+        } else {
+            const tab = detailViewRender?.(item.id, 'page-tab', item, key)
+            setTabList(v => [...v, {
+                tab: tab?.tabLabel || item.code,
+                key: gKey,
+                icon: tab?.tabIcon || <FileTextOutlined />,
+                children: tab?.panel
+            }])
+            item.code && setActiveKey({ key: gKey, item: item })
+        }
+    }
+
     const primaryCols: ProColumns<ListDataType, ValueType>[] = listView.type == 'Table' && listView.props.primaryCol ? [{
         ...listView.props.primaryCol,
         render: (dom, entity, index, action, schema) => listView.props.primaryCol?.render?.(dom, entity, index, action, schema) || <Flex>
@@ -158,13 +179,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
                 if (tabList.some(it => it.key == entity.code)) {
                     entity.code && setActiveKey({ key: entity.code, item: entity })
                 } else {
-                    setTabList(v => [...v, {
-                        tab: entity.code,
-                        key: entity.code,
-                        icon: <FileTextOutlined />,
-                        children: detailViewRender?.(entity.id, 'page-tab')
-                    }])
-                    entity.code && setActiveKey({ key: entity.code, item: entity })
+                    addTab(entity)
                 }
             }}> {entity.code || 'n/a'} </Typography.Link>
 
@@ -174,7 +189,6 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
 
     useEffect(() => {
         listView.onFilter?.(filterData, { pageSize: tableInfo?.pageSize, current: tableInfo?.current }, tableInfo?.sort)
-        console.log('Refresh');
     }, [forceReload])
 
     const reloadList = (resetPageIndex?: boolean | undefined) => {
@@ -225,11 +239,17 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
                         setTableInfo({ ...params, current: (params.current || 1) - 1, sort })
                         setForceReload(v => v + 1)
                         return []
-                    }
-                    }
+                    }}
 
                     rowKey={listView.props.rowKey || 'id'}
-                    columns={[...viewActionCols, ...primaryCols, ...(listView.props.columns || [])]}
+                    columns={[...viewActionCols, ...primaryCols, ...(listView.props.columns?.map(it => {
+                        const comp = it.key ? listView.onColumnLinkRender?.(it.key) : undefined
+                        if (comp) {
+                            return { ...it, render: (_: any, r: ListDataType) => <a onClick={() => addTab(r, it.key)}>{comp(r)}</a> }
+                        } else {
+                            return it
+                        }
+                    }) || [])]}
                     search={false}
                     options={false}
                 />}
@@ -239,7 +259,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
     }
 
     if (view == 'detail') {
-        return detailViewRender?.(id as unknown as number, 'browser-tab')
+        return detailViewRender?.(id as unknown as number, 'browser-tab').panel
     }
     return <Alert type="error" message="Not supported." />
 }

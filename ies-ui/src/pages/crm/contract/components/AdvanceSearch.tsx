@@ -1,7 +1,7 @@
 import { MultiRequest } from "@/services/apiGateway"
 import { LookupData, LookupDataItem } from "@/services/data"
 import { simpleRequestActions } from "@/services/model"
-import { DrawerForm, ProForm, ProFormDatePicker, ProFormDateRangePicker, ProFormGroup, ProFormSelect } from "@ant-design/pro-components"
+import { DrawerForm, ProForm, ProFormDateRangePicker, ProFormSelect } from "@ant-design/pro-components"
 import { useForm } from "antd/lib/form/Form"
 import { useEffect, useState } from "react"
 import { ContractServices } from "../services"
@@ -48,7 +48,6 @@ export default ({ trigger, onSearch }: {
                     ContractServices.listContractType().queryParams,
                     ContractServices.listTerms().queryParams,
                     CustomerServices.listBrand.queryParams
-
                 ]
             )(requestActions)
             setLookupData(rs)
@@ -74,7 +73,8 @@ export default ({ trigger, onSearch }: {
                     startedDateFrom,
                     startedDateTo,
                     endedDateFrom,
-                    endedDateTo)
+                    endedDateTo
+                )
 
             } catch (error: any) {
                 message.error(error.message || 'Failed to search')
@@ -95,9 +95,17 @@ export default ({ trigger, onSearch }: {
     >
         <Spin spinning={requestActions.request?.loading || false}>
             <ProForm<DataFormType> form={form} submitter={false}>
-                <ProFormSelect showSearch allowClear mode="multiple" name={"brandId"} label="Brand" options={lookupData?.brandList?.map(it => ({ label: it.name, value: it.id }))} />
-                <ProFormSelect showSearch allowClear mode="multiple" name={"contractTypeId"} label="Contract Tyoe" options={lookupData?.contractTypes?.map(it => ({ label: it.name, value: it.id }))} />
-                <ProFormSelect showSearch allowClear mode="multiple" name="termId" label="Terms" options={lookupData?.terms?.map(it => ({ label: it.name, value: it.id }))} />
+                <ProFormSelect showSearch allowClear
+                    mode="multiple" name={"brandId"}
+                    label="Brand"
+                    options={lookupData?.brandList?.map(it => ({ label: it.name, value: it.id }))} />
+                <ProFormSelect showSearch allowClear mode="multiple"
+                    name={"contractTypeId"} label="Contract Tyoe"
+                    options={lookupData?.contractTypes?.map(it => ({ label: it.name, value: it.id }))} />
+                <ProFormSelect showSearch
+                    allowClear mode="multiple"
+                    name="termId" label="Terms"
+                    options={lookupData?.terms?.map(it => ({ label: it.name, value: it.id }))} />
                 <ProFormDateRangePicker name={"startedDateRange"} label={"Start Date"} />
                 <ProFormDateRangePicker name={"endedDateRange"} label={"End Date"} />
             </ProForm>

@@ -38,7 +38,6 @@ export type CustomerActionController = {
 }
 
 export default () => {
-    // const queryClient = useQueryClient();
     const [filter, setFilter] = useState<FetchPagingParams<FilterType>>()
     const [importData, setImportData] = useState<ImportDataResponse>()
     const [loading, setLoading] = useState(false);
@@ -56,8 +55,8 @@ export default () => {
     const { state, ops, actions, modals } = model();
     const access = useAccess();
     const [forceReload, setForceReload] = useState<{ cb?: () => void }>()
-
     const requestAction = simpleRequestActions()
+
     const initData = async () => {
         if (!state.initData) {
             await ops.initData('Detail')
@@ -124,10 +123,7 @@ export default () => {
                     await CustomerServices.updateCustomerCodeHis(customerId, l9, l0, m0, c0, remarks)(requestAction)
                     forceReload?.cb?.()
                     modals.hideModal('code-tracking')
-                } catch (error) {
-
-                }
-
+                } catch (error) { }
             }
         })
     }
@@ -183,6 +179,7 @@ export default () => {
             },
 
             { type: 'divider' },
+
             {
                 key: 'disabled', label: 'Disabled', disabled: item?.type?.id != 102 || !access.canActiveInactiveCustomer, icon: <CloseCircleOutlined />, visible: !isDiabled, onClick: async () => {
                     setForceReload({ cb: forceReloadCb })
@@ -374,7 +371,6 @@ export default () => {
             seList={
                 state.initData?.seList?.filter((it) => it.id !== state.data?.detail?.sale?.id) || []
             }
-
             open={modals.isVisible('transfer-customer')}
             currentSe={[state.data?.detail?.code, state.data?.detail?.sale?.name].join("-")}
             onCancel={() => modals.hideModal('transfer-customer')}

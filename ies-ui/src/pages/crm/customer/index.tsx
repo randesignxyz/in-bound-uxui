@@ -38,7 +38,7 @@ export type CustomerActionController = {
 }
 
 export default () => {
-    const queryClient = useQueryClient();
+    // const queryClient = useQueryClient();
     const [filter, setFilter] = useState<FetchPagingParams<FilterType>>()
     const [importData, setImportData] = useState<ImportDataResponse>()
     const [loading, setLoading] = useState(false);
@@ -254,10 +254,9 @@ export default () => {
                             searchValue: filterParams?.searchValue,
                             status: filterParams?.status == "ALL" ? undefined : filterParams?.status
                         },
-                        pagination: page,
+                        pagination: { ...page, current: (page?.current || 1) - 1 },
                         sort: sort
                     }))
-                    // queryClient.invalidateQueries(['fetch-customer-list', filter])
 
                 },
                 onOpenAdvanceSearch: () => { modals.showModal('advanceSearch') },

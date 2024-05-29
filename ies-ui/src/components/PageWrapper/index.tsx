@@ -236,7 +236,9 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
                     actionRef={actionRef}
                     {...listView.props}
                     request={async (params, sort) => {
-                        setTableInfo({ ...params, current: (params.current || 1) - 1, sort })
+                        console.log(params);
+
+                        setTableInfo({ ...params, current: params.current, pageSize: params.pageSize, sort })
                         setForceReload(v => v + 1)
                         return []
                     }}

@@ -3,7 +3,7 @@ import { CrmPaths } from ".."
 import ContractModal from "./components/ContractModal"
 import PageWrapper from "@/components/PageWrapper"
 import { ActionType } from "@ant-design/pro-components"
-import { useQuery, history, useAccess } from "@umijs/max"
+import { useQuery, history, useAccess, useQueryClient } from "@umijs/max"
 import { ContractServices } from "./services"
 import { FetchPagingParams } from "@/components/DataCrud/TableView"
 import { ContractAdvanceSearchParams, ImportedContract } from "./types"
@@ -32,7 +32,7 @@ export default () => {
 
     const [filter, setFilter] = useState<FetchPagingParams<ContractAdvanceSearchParams>>({ criteria: { status: "ACTIVE", processStatus: 'All' } })
     const [importContractData, setImportContractData] = useState<DataResponse<ImportedContract>>()
-    const { data, isFetching } = useQuery(['fetch-contract-list', filter], () => ContractServices.list({
+    const { data, refetch, isFetching } = useQuery(['fetch-contract-list', filter], () => ContractServices.list({
         criteria: {
             searchValue: filter.criteria?.searchValue,
             advanceSearch: filter.criteria,
@@ -43,7 +43,10 @@ export default () => {
             current: filter.pagination?.current
         }
 
-    }).query())
+    }).query(), {
+        refetchOnWindowFocus: false,
+        staleTime: 1000,
+    })
 
     return (<>
         {/* <CrudWrapper baseURL={CrmPaths.contract}>
@@ -85,6 +88,7 @@ export default () => {
                     startedDateFrom, startedDateTo,
                     endedDateFrom, endedDateTo
                 ) => {
+
                     setFilter(v => ({
                         ...v,
                         criteria: {
@@ -102,8 +106,10 @@ export default () => {
 
                         }
                     }))
+
                 }} trigger={<Button icon={<FileSearchOutlined />} />} />,
                 onOpenAdvanceSearch: () => { },
+                onRefresh: refetch,
                 actionButtons: [
 
                     access.canImportContract && <Tooltip placement="top" title="Import">
@@ -122,22 +128,16 @@ export default () => {
                     </Button>
                 ].filter(it => it) as React.ReactElement[],
                 onFilter: (params, pages, sorts) => {
+
                     setFilter(v => ({
                         ...v,
                         keywords: params?.searchValue?.replaceAll(/,/g, "").trim(),
                         criteria: { ...v.criteria, ...params, status: params?.status || 'ACTIVE', processStatus: 'All' },
                         sort: sorts,
-                        pagination: {
-                            current: pages?.current,
-                            pageSize: pages?.pageSize
-                        }
+                        pagination: pages
                     }))
-
-                    // queryClient.invalidateQueries(['fetch-contract-list', filter])
-
                 },
                 onColumnLinkRender: (key) => {
-                    console.log(key);
 
                     if (key.toString() == "customerNo") {
                         return (item) => item.customer.code

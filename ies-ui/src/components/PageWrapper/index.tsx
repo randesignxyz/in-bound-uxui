@@ -1,18 +1,31 @@
-import { ActionType, PageContainer, ParamsType, ProCard, ProColumns, ProListProps, ProTable, ProTableProps } from "@ant-design/pro-components"
+import {
+    ActionType, PageContainer, ParamsType, ProCard,
+    ProColumns, ProListProps, ProTable, ProTableProps
+} from "@ant-design/pro-components"
 import { DndContext, DragEndEvent, PointerSensor, useSensor } from "@dnd-kit/core";
-import { SortableContext, arrayMove, horizontalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
-import { Alert, Button, Flex, FloatButton, Input, Segmented, Space, TabPaneProps, Typography } from "antd";
+import {
+    SortableContext, arrayMove,
+    horizontalListSortingStrategy, useSortable
+} from "@dnd-kit/sortable";
+import {
+    Alert, Button, Flex,
+    FloatButton, Input,
+    Segmented, Space,
+    TabPaneProps, Typography
+} from "antd";
 import React, { useEffect, useRef } from "react";
 import { useState } from "react";
 import { CSS } from '@dnd-kit/utilities';
-import { ExportOutlined, EyeFilled, FileSearchOutlined, FileTextOutlined, ReloadOutlined, UnorderedListOutlined } from "@ant-design/icons";
+import {
+    ExportOutlined, EyeFilled, FileSearchOutlined,
+    FileTextOutlined, ReloadOutlined, UnorderedListOutlined
+} from "@ant-design/icons";
 import { MenuItemType } from "rc-menu/lib/interface";
 import { SortOrder } from "antd/lib/table/interface";
 import { SegmentedLabeledOption, SegmentedOptions } from "antd/es/segmented";
-import { Link, useParams } from "@umijs/max";
+import { useParams } from "@umijs/max";
 import { ViewType } from "../DataCrud/CrudWrapper";
 import ActionBar from "../ActionBar";
-
 
 interface Props<ListDataType extends Record<string, any>, FilterType extends Record<string, any>, ValueType> {
     title?: string;
@@ -75,11 +88,11 @@ const DraggableTabNode = ({ className, ...props }: DraggableTabPaneProps) => {
 };
 
 
-export default <ListDataType extends Record<string, any> & { id: number, code?: string }, FilterType extends Record<string, any> & { searchValue?: string; status?: string; }, ValueType>({
-    listView,
-    detailViewRender,
-
-}: Props<ListDataType, FilterType, ValueType>) => {
+export default <ListDataType extends Record<string, any> & { id: number, code?: string }, FilterType
+    extends Record<string, any> & { searchValue?: string; status?: string; }, ValueType>({
+        listView,
+        detailViewRender,
+    }: Props<ListDataType, FilterType, ValueType>) => {
 
     const params = useParams()
     const view: ViewType = (params['view'] as ViewType) || undefined
@@ -157,7 +170,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
 
         const gKey = `${key?.toString() || 'default'}-${item.id}`
         if (tabList.some(it => it.key == gKey)) {
-            item.code && setActiveKey({ key: gKey, item: item })
+            setActiveKey({ key: gKey, item: item })
         } else {
             const tab = detailViewRender?.(item.id, 'page-tab', item, key)
             setTabList(v => [...v, {
@@ -166,24 +179,37 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
                 icon: tab?.tabIcon || <FileTextOutlined />,
                 children: tab?.panel
             }])
-            item.code && setActiveKey({ key: gKey, item: item })
+            setActiveKey({ key: gKey, item: item })
         }
+
     }
 
     const primaryCols: ProColumns<ListDataType, ValueType>[] = listView.type == 'Table' && listView.props.primaryCol ? [{
         ...listView.props.primaryCol,
-        render: (dom, entity, index, action, schema) => listView.props.primaryCol?.render?.(dom, entity, index, action, schema) || <Flex>
-            <Typography.Link copyable={entity.code ? {
-                text: entity.code,
-            } : false} onClick={() => {
-                if (tabList.some(it => it.key == entity.code)) {
-                    entity.code && setActiveKey({ key: entity.code, item: entity })
-                } else {
-                    addTab(entity)
-                }
-            }}> {entity.code || 'n/a'} </Typography.Link>
+        render: (dom, entity, index, action, schema) => {
+            const comp = listView.props.primaryCol?.render?.(dom, entity, index, action, schema)
+            if (listView.props.primaryCol?.render) {
+                return <Flex><Typography.Link onClick={() => {
+                    if (tabList.some(it => it.key == entity.code)) {
+                        entity.code && setActiveKey({ key: entity.code, item: entity })
+                    } else {
+                        addTab(entity)
+                    }
+                }}> {comp as any} </Typography.Link></Flex>
+            }
+            return <Flex>
+                <Typography.Link copyable={entity.code ? {
+                    text: entity.code,
+                } : false} onClick={() => {
+                    if (tabList.some(it => it.key == entity.code)) {
+                        entity.code && setActiveKey({ key: entity.code, item: entity })
+                    } else {
+                        addTab(entity)
+                    }
+                }}> {entity.code || 'n/a'} </Typography.Link>
 
-        </Flex>
+            </Flex>
+        }
     }] : []
 
 
@@ -236,8 +262,6 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
                     actionRef={actionRef}
                     {...listView.props}
                     request={async (params, sort) => {
-                        console.log(params);
-
                         setTableInfo({ ...params, current: params.current, pageSize: params.pageSize, sort })
                         setForceReload(v => v + 1)
                         return []

@@ -1,7 +1,6 @@
-import CrudWrapper from "@/components/DataCrud/CrudWrapper"
-import { Spin } from "antd"
+import { Badge, Spin, Typography } from "antd"
 import PageWrapper from "@/components/PageWrapper"
-import { CustomerItemLess, VisitScheduleAdvanceSearchParams, VisitScheduleItem } from "@/services/crm/data"
+import { VisitScheduleAdvanceSearchParams, VisitScheduleItem } from "@/services/crm/data"
 import { useState } from "react"
 import { FetchPagingParams } from "@/components/DataCrud/TableView"
 import { Model } from "./model"
@@ -66,25 +65,43 @@ export default () => {
                 }
             </CrudWrapper> */}
 
-            <PageWrapper<VisitScheduleItem, FilterType, {}> listView={{
+            <PageWrapper<VisitScheduleItem, FilterType, {}>
+                detailViewRender={(id, target, item, key) => {
+                    return key == 'customerNo' ? {
+                        panel: <>{item?.customer.code}</>,
+                        tabLabel: <Badge dot><Typography.Text>{item?.customer.code}</Typography.Text>  </Badge>,
+                    } : {
+                        panel: <>{item?.scheduleDate}</>,
 
-                type: 'Table',
+                        tabLabel: item?.scheduleDate && formatDate(item.scheduleDate),
+                    }
+                }}
+                listView={{
 
-                props: {
-                    loading: isFetching,
-                    dataSource: data?.items,
-                    pagination: {
-                        total: data?.total
+                    type: 'Table',
+
+                    props: {
+                        loading: isFetching,
+                        dataSource: data?.items,
+                        pagination: {
+                            total: data?.total
+                        },
+                        primaryCol: {
+                            title: 'Schedule Date',
+                            sorter: 'scheduleDate',
+                            key: 'scheduleId',
+                            render: (_, r) => formatDate(r.scheduleDate),
+                            width: 130,
+                        },
+                        columns: [{
+                            // title: 'Schedule Date',
+                            // width: 130,
+                            // render: (_, r) => <a onClick={() => { }}>{formatDate(r.scheduleDate)}</a>,
+                            // sorter: 'scheduleDate',
+                        }]
                     },
-                    columns: [{
-                        title: 'Schedule Date',
-                        width: 130,
-                        render: (_, r) => <a onClick={() => { }}>{formatDate(r.scheduleDate)}</a>,
-                        sorter: 'scheduleDate',
-                    }]
-                },
 
-            }} />
+                }} />
         </Spin>
     )
 }

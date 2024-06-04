@@ -10,14 +10,14 @@ import {
 import {
     Alert, Button, Flex,
     FloatButton, Input,
-    Segmented, Space,
+    Segmented,
     TabPaneProps, Typography
 } from "antd";
 import React, { useEffect, useRef } from "react";
 import { useState } from "react";
 import { CSS } from '@dnd-kit/utilities';
 import {
-    ExportOutlined, EyeFilled, FileSearchOutlined,
+    ExportOutlined, FileSearchOutlined,
     FileTextOutlined, ReloadOutlined, UnorderedListOutlined
 } from "@ant-design/icons";
 import { MenuItemType } from "rc-menu/lib/interface";
@@ -27,17 +27,22 @@ import { useParams } from "@umijs/max";
 import { ViewType } from "../DataCrud/CrudWrapper";
 import ActionBar from "../ActionBar";
 
+type TabRenderProps = {
+    value?: React.ReactNode;
+    onOpenIconClick?: () => void;
+    tabLabel: React.ReactNode;
+    tabIcon?: React.ReactNode;
+    panel: React.ReactNode;
+}
+
 interface Props<ListDataType extends Record<string, any>, FilterType extends Record<string, any>, ValueType> {
     title?: string;
-    detailViewRender?: (id: number, target: 'page-tab' | 'browser-tab', item?: ListDataType, key?: React.Key) => {
-        tabLabel: React.ReactNode,
-        tabIcon?: React.ReactNode,
-        panel: React.ReactNode
-    };
+    detailViewRender?: (id: number, target: 'page-tab' | 'browser-tab', item?: ListDataType, key?: React.Key) => React.ReactNode;
     listView: ({
         type: "Table"
-        props: ProTableProps<ListDataType, ParamsType, ValueType> & {
+        props: Omit<ProTableProps<ListDataType, ParamsType, ValueType>, 'columns'> & {
             quickView?: boolean
+            columns: (ProColumns<ListDataType, ValueType> & { tabRender?: (item: ListDataType) => TabRenderProps })[];
             fullView?: {
                 onOpen: (item: ListDataType) => void
             }
@@ -46,9 +51,14 @@ interface Props<ListDataType extends Record<string, any>, FilterType extends Rec
         }
     } | {
         type: "List",
-        props: ProListProps<ListDataType, ParamsType, ValueType>
+        props: Omit<ProListProps<ListDataType, ParamsType, ValueType>, 'columns'> & { columns: string[] }
     }) & {
-        onColumnLinkRender?: (key: React.Key) => (item: ListDataType) => React.ReactNode | undefined;
+        onColumnLinkRender?: (id: number, target: 'page-tab' | 'browser-tab', item?: ListDataType, key?: React.Key) => {
+            value?: React.ReactNode,
+            tabLabel: React.ReactNode,
+            tabIcon?: React.ReactNode,
+            panel: React.ReactNode
+        };
         statuses?: { option: SegmentedLabeledOption, subOptions?: SegmentedOptions[] }[]
         actionButtons?: React.ReactElement[],
         actionNumShown?: number;
@@ -107,28 +117,32 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
     }>()
 
     const filterBar = <ProCard size="small">
-        <Flex>
+        <Flex >
             <Flex>
-                <Input.Search onSearch={value => {
-                    setFilterData(v => ({ ...v, searchValue: value }) as any)
-                    reloadList(true)
-                }} />
-            </Flex>
-            {listView.onOpenAdvanceSearch && <Flex>
-                {listView.advanceSearchButton || <Button icon={<FileSearchOutlined />} onClick={listView.onOpenAdvanceSearch} />}
-            </Flex>}
-            <Flex style={{ marginLeft: 20 }}>
+                <Flex>
+                    <Input.Search onSearch={value => {
+                        setFilterData(v => ({ ...v, searchValue: value }) as any)
+                        reloadList(true)
+                    }} />
+                </Flex>
+                {listView.onOpenAdvanceSearch && <Flex>
+                    {listView.advanceSearchButton || <Button icon={<FileSearchOutlined />} onClick={listView.onOpenAdvanceSearch} />}
+                </Flex>}
+                <Flex style={{ marginLeft: 20 }}>
 
-                {listView.statuses && <Segmented onChange={(value) => {
-                    setFilterData(v => ({ ...v, status: value }) as any)
-                    reloadList(true)
-                }} options={listView.statuses.map(it =>
-                    it.option
-                )} />}
+                    {listView.statuses && <Segmented onChange={(value) => {
+                        setFilterData(v => ({ ...v, status: value }) as any)
+                        reloadList(true)
+                    }} options={listView.statuses.map(it =>
+                        it.option
+                    )} />}
 
+                </Flex>
             </Flex>
-            <ActionBar actionButtons={listView.actionButtons} actions={listView.actions || []} numOfActionOnBar={3} />
-            <Button type="link" onClick={listView.onRefresh} icon={<ReloadOutlined />} />
+            <Flex flex={1} justify="flex-end">
+                <ActionBar actionButtons={listView.actionButtons} actions={listView.actions || []} numOfActionOnBar={3} />
+                <Button type="link" onClick={listView.onRefresh} icon={<ReloadOutlined />} />
+            </Flex>
         </Flex>
     </ProCard>
 
@@ -156,63 +170,22 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
         }
     };
 
-    const viewActionCols: ProColumns<ListDataType, ValueType>[] = listView.type == 'Table' && (listView.props.quickView || listView.props.fullView) ? [
-        {
-            width: 30,
-            render: (_, r) => <Space>
-                {listView.props.quickView && <Button type="link" size="small" icon={<EyeFilled />} />}
-                {listView.props.fullView && <Button type="link" size="small" onClick={() => listView.props.fullView?.onOpen?.(r)} icon={<ExportOutlined />} />}
-            </Space>,
-        }
-    ] : []
-
-    const addTab = (item: ListDataType, key?: React.Key) => {
+    const addTab = (item: ListDataType, props?: TabRenderProps, key?: React.Key) => {
 
         const gKey = `${key?.toString() || 'default'}-${item.id}`
         if (tabList.some(it => it.key == gKey)) {
             setActiveKey({ key: gKey, item: item })
         } else {
-            const tab = detailViewRender?.(item.id, 'page-tab', item, key)
             setTabList(v => [...v, {
-                tab: tab?.tabLabel || item.code,
+                tab: props?.tabLabel || item.code,
                 key: gKey,
-                icon: tab?.tabIcon || <FileTextOutlined />,
-                children: tab?.panel
+                icon: props?.tabIcon || <FileTextOutlined />,
+                children: props?.panel
             }])
             setActiveKey({ key: gKey, item: item })
         }
 
     }
-
-    const primaryCols: ProColumns<ListDataType, ValueType>[] = listView.type == 'Table' && listView.props.primaryCol ? [{
-        ...listView.props.primaryCol,
-        render: (dom, entity, index, action, schema) => {
-            const comp = listView.props.primaryCol?.render?.(dom, entity, index, action, schema)
-            if (listView.props.primaryCol?.render) {
-                return <Flex><Typography.Link onClick={() => {
-                    if (tabList.some(it => it.key == entity.code)) {
-                        entity.code && setActiveKey({ key: entity.code, item: entity })
-                    } else {
-                        addTab(entity)
-                    }
-                }}> {comp as any} </Typography.Link></Flex>
-            }
-            return <Flex>
-                <Typography.Link copyable={entity.code ? {
-                    text: entity.code,
-                } : false} onClick={() => {
-                    if (tabList.some(it => it.key == entity.code)) {
-                        entity.code && setActiveKey({ key: entity.code, item: entity })
-                    } else {
-                        addTab(entity)
-                    }
-                }}> {entity.code || 'n/a'} </Typography.Link>
-
-            </Flex>
-        }
-    }] : []
-
-
     useEffect(() => {
         listView.onFilter?.(filterData, { pageSize: tableInfo?.pageSize, current: tableInfo?.current }, tableInfo?.sort)
     }, [forceReload])
@@ -268,14 +241,21 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
                     }}
 
                     rowKey={listView.props.rowKey || 'id'}
-                    columns={[...viewActionCols, ...primaryCols, ...(listView.props.columns?.map(it => {
-                        const comp = it.key ? listView.onColumnLinkRender?.(it.key) : undefined
-                        if (comp) {
-                            return { ...it, render: (_: any, r: ListDataType) => <a onClick={() => addTab(r, it.key)}>{comp(r)}</a> }
-                        } else {
-                            return it
+                    columns={listView.props.columns?.map(it => {
+                        return {
+                            ...it, render: it.tabRender ? (_: any, r: ListDataType) => {
+                                const render = it.tabRender?.(r)
+                                const valComp = <Typography.Link onClick={() => addTab(r, render, it.key)}>{render?.value}</Typography.Link>
+                                if (render?.onOpenIconClick) {
+                                    return <Flex>
+                                        <Button type="link" size="small" onClick={render?.onOpenIconClick} icon={<ExportOutlined />} />
+                                        {valComp}
+                                    </Flex>
+                                }
+                                return valComp
+                            } : it.render
                         }
-                    }) || [])]}
+                    })}
                     search={false}
                     options={false}
                 />}
@@ -285,7 +265,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
     }
 
     if (view == 'detail') {
-        return detailViewRender?.(id as unknown as number, 'browser-tab').panel
+        return detailViewRender?.(id as unknown as number, 'browser-tab')
     }
     return <Alert type="error" message="Not supported." />
 }

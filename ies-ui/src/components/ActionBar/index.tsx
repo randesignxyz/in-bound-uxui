@@ -14,7 +14,7 @@ export default ({ actionButtons, actions, numOfActionOnBar }: {
 }) => {
     const shownList = actions.slice(0, numOfActionOnBar || 0) || []
     const moreList = actions?.slice(numOfActionOnBar || 0)
-    return <Flex flex={1} justify="flex-end">
+    return <Flex >
         {actionButtons}
         {(shownList.filter(it => (it as MenuDividerType).type != 'divider')).map(it => {
 

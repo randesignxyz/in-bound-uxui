@@ -62,15 +62,7 @@ export default () => {
 
         </CrudWrapper> */}
         <PageWrapper<ContractLess, ContractAdvanceSearchParams, {} >
-            detailViewRender={(id, target, item, key) => {
-                return key == 'customerNo' ? {
-                    panel: <CustomerDetailView getMenuItems={() => []} id={id} openInTab={target == 'page-tab' ? true : undefined} />,
-                    tabLabel: <Badge dot><Typography.Text>{item?.customer.code}</Typography.Text>  </Badge>,
-                } : {
-                    panel: <ContactDetailView onEdit={onEditHandler} openInTab={target == 'page-tab'} id={id} />,
-                    tabLabel: item?.contractNo,
-                }
-            }}
+            detailViewRender={(id, target, item, key) => <ContactDetailView onEdit={onEditHandler} openInTab={false} id={id} />}
             listView={{
                 type: 'Table',
                 statuses: [{
@@ -137,46 +129,43 @@ export default () => {
                         pagination: pages
                     }))
                 },
-                onColumnLinkRender: (key) => {
+                // onColumnLinkRender: (key) => {
 
-                    if (key.toString() == "customerNo") {
-                        return (item) => item.customer.code
-                    }
-                    return () => undefined
+                //     if (key.toString() == "customerNo") {
+                //         return (item) => item.customer.code
+                //     }
+                //     return () => undefined
 
-                },
+                // },
                 props: {
                     dataSource: data?.items.map(it => ({ ...it, code: it.contractNo })),
                     pagination: { total: data?.total },
                     actionRef: actionRef,
                     loading: isFetching,
-
-                    fullView: {
-                        onOpen: item => window.open(`/external/crm/contract/detail/${item.id}`, '_blank')?.focus()
-                    },
-                    primaryCol: {
-                        title: 'Agreement #',
-                        width: 170
-
-                    },
-
                     columns: [
+                        {
+                            title: 'Agreement #',
+                            width: 170,
+                            key: 'agreementNo',
+                            tabRender: item => ({
+                                value: item.contractNo,
+                                onOpenIconClick: () => window.open(`/external/crm/contract/detail/${item.id}`, '_blank')?.focus(),
+                                panel: <ContactDetailView onEdit={onEditHandler} openInTab={true} id={item.id} />,
+                                tabLabel: item?.contractNo,
+                            })
+
+                        },
                         {
                             title: 'Customer #',
                             key: 'customerNo',
                             sorter: 'customerNo',
                             width: 120,
-                            render: (_, rd) => <Space>
-                                {/* <Button
-                                    type="link"
-                                    icon={<SelectOutlined />}
-                                    onClick={async () => {
-                                        window.open(`/external/crm/customer/detail/${rd.customer.id}`, '_blank')?.focus();
-                                    }}
-                                /> */}
-                                <a onClick={() => { history.push(`${CrmPaths.customer}/detail/${rd.customer.id}`) }} >{rd.customer.code || 'Not Assigned'}</a>
-                            </Space>
-
+                            tabRender: item => ({
+                                value: item.customer.code,
+                                onOpenIconClick: () => window.open(`/external/crm/customer/detail/${item.customer.id}`, '_blank')?.focus(),
+                                panel: <CustomerDetailView getMenuItems={() => []} id={item?.customer.id} openInTab={true} />,
+                                tabLabel: <Badge dot><Typography.Text>{item?.customer.code}</Typography.Text>  </Badge>,
+                            })
 
                         },
                         {

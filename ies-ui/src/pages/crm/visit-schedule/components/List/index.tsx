@@ -66,6 +66,8 @@ const VisitScheduleListView: React.FC<ListProps> = ({ onDetail }) => {
       });
     })();
   }, []);
+
+
   useEffect(() => {
     actionRef.current?.reload();
     actions.initialData();

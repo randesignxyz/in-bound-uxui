@@ -232,10 +232,7 @@ export default () => {
     return <Spin spinning={loading}>
         <PageWrapper<CustomerItemLess, FilterType, {}>
             title="Customer"
-            detailViewRender={(id, target, item) => ({
-                panel: <CustomerDetailView openInTab={target == 'page-tab' ? true : undefined} id={id} getMenuItems={getMenuItems} />,
-                tabLabel: item?.code
-            })}
+            detailViewRender={(id, target, item) => <CustomerDetailView id={id} getMenuItems={getMenuItems} />}
             listView={{
                 type: 'Table',
                 statuses: [
@@ -265,16 +262,18 @@ export default () => {
                     },
                     actionRef: actionRef,
                     loading: isFetching,
-                    // quickView: true,
-                    fullView: {
-                        onOpen: item => window.open(`/external/crm/customer/detail/${item.id}`, '_blank')?.focus()
-                    },
-                    primaryCol: {
-                        title: 'Customer #',
-                        sorter: 'customerCode',
-                        width: 120
-                    },
                     columns: [
+                        {
+                            title: 'Customer #',
+                            sorter: 'customerCode',
+                            width: 120,
+                            tabRender: item => ({
+                                onOpenIconClick: () => window.open(`/external/crm/customer/detail/${item.id}`, '_blank')?.focus(),
+                                value: item.code,
+                                panel: <CustomerDetailView openInTab id={item.id} getMenuItems={getMenuItems} />,
+                                tabLabel: item?.code
+                            })
+                        },
                         {
                             title: 'Customer Name',
                             sorter: 'customerName',

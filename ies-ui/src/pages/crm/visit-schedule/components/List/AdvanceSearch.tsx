@@ -9,7 +9,7 @@ export interface AdvanceSearchProps extends DrawerProps {
   seList: LookupDataItem[];
   lookupList: LookupData[];
   contractTypes?: LookupData[];
-  initData: VisitScheduleAdvanceSearchParams;
+  initData?: VisitScheduleAdvanceSearchParams;
   onSearch: (params: VisitScheduleAdvanceSearchParams) => void;
   onReset: () => void;
 }
@@ -27,7 +27,7 @@ const AdvanceSearch: React.FC<AdvanceSearchProps> = ({
 
   useEffect(() => {
     if (!props.open) return;
-    form.setFieldsValue(initData);
+    form.setFieldsValue(initData || {});
   }, [props.open]);
 
   return (
@@ -46,7 +46,7 @@ const AdvanceSearch: React.FC<AdvanceSearchProps> = ({
           },
         }}
       >
-        {initData.status == 'COMPLETED' && (
+        {initData?.status == 'COMPLETED' && (
           <ProFormSelect
             label="Type"
             name="planned"
@@ -69,9 +69,9 @@ const AdvanceSearch: React.FC<AdvanceSearchProps> = ({
           allowClear
           options={lookupList?.filter(it => it.type == 'CUSTOMER_DIVISION')?.map(it => {
             return { value: it.id, label: it.name }
-      })} 
+          })}
         />
-      <ProFormSelect
+        <ProFormSelect
           label="Salesperson"
           name="salespersonId"
           width="md"
@@ -83,10 +83,10 @@ const AdvanceSearch: React.FC<AdvanceSearchProps> = ({
         />
 
         <ProFormDateRangePicker width="md" label="Schedule Date" name="dates" />
-        {initData.status == 'COMPLETED' && (
+        {initData?.status == 'COMPLETED' && (
           <ProFormDateRangePicker width="md" label="Completed Date" name="completedDate" />
         )}
-        {initData.status == 'COMPLETED' && (
+        {initData?.status == 'COMPLETED' && (
           <ProFormSelect label="Contract Type"
             name="contractTypeIds"
             mode='multiple'

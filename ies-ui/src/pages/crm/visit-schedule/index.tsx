@@ -10,7 +10,7 @@ import { MultiRequest, fetchDataListService } from "@/services/apiGateway"
 import { LookupData } from "@/services/data"
 import { formatDate, formatDateTime } from "@/pages/utils"
 import { CrmServiceAPI } from "@/services/crm/services"
-import { CheckCircleOutlined, EyeOutlined, PaperClipOutlined, ScheduleOutlined, SelectOutlined } from "@ant-design/icons"
+import { CheckCircleOutlined, ExportOutlined, EyeOutlined, PaperClipOutlined, ScheduleOutlined, SelectOutlined } from "@ant-design/icons"
 import CustomerDetailView from "../customer/components/Detail"
 import { CrmPaths } from ".."
 import VisitScheduleDetailView from "./components/Detail"
@@ -24,15 +24,12 @@ type FilterType = {
 export default () => {
 
     const { state, actions, modals } = Model();
-
     const crmServices = CrmServiceAPI()
     const [filter, setFilter] = useState<FetchPagingParams<VisitScheduleAdvanceSearchParams>>({
         criteria: {
             status: 'COMPLETED',
         }
     })
-
-
 
     const lookup = useQuery(['visit-schedule-lookup-data'], () => MultiRequest<{
         contractTypes: LookupData[];
@@ -46,21 +43,16 @@ export default () => {
         }).queryParams
     ])(), { refetchOnWindowFocus: false })
 
-
     const { data, refetch, isFetching } = useQuery(
         ['fetch-visit-schedule-paging', filter],
         () => crmServices.listVisitSchedule({ ...filter }, filter.pagination,),
         { refetchOnWindowFocus: false }
     )
 
-
-
-
     const quickViewHandler = async (data: VisitScheduleItem) => {
         await actions.detail(data.id);
         modals.showModal('quick-view');
     };
-
 
     useEffect(() => {
         actions.initialData();
@@ -125,7 +117,7 @@ export default () => {
                                             <Button
                                                 type="link"
                                                 size="small"
-                                                icon={<SelectOutlined />}
+                                                icon={<ExportOutlined />}
                                                 onClick={async () => {
                                                     window.open(`/external/crm/visit-schedule/detail/${r.id}`, '_blank')?.focus();
                                                 }}
@@ -156,7 +148,7 @@ export default () => {
                                     // onOpenIconClick: () => window.open(`/external/crm/visit-schedule/detail/${item.id}`, '_blank')?.focus(),
                                     value: item?.scheduleDate && formatDate(item.scheduleDate),
                                     panel: <VisitScheduleDetailView id={item.id} />,
-                                    tabLabel: item?.scheduleDate && formatDate(item.scheduleDate),
+                                    tabLabel: `${item?.scheduleDate && formatDate(item.scheduleDate)}(${item.customer.code})`,
                                 })
                             },
                             {

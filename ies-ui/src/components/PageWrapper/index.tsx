@@ -2,11 +2,19 @@ import {
     ActionType, PageContainer, ParamsType, ProCard,
     ProColumns, ProListProps, ProTable, ProTableProps
 } from "@ant-design/pro-components"
-import { DndContext, DragEndEvent, PointerSensor, useSensor } from "@dnd-kit/core";
+
+import {
+    DndContext,
+    DragEndEvent,
+    PointerSensor,
+    useSensor
+} from "@dnd-kit/core";
+
 import {
     SortableContext, arrayMove,
     horizontalListSortingStrategy, useSortable
 } from "@dnd-kit/sortable";
+
 import {
     Alert, Button, Flex,
     FloatButton, Input,
@@ -18,14 +26,20 @@ import { useState } from "react";
 import { CSS } from '@dnd-kit/utilities';
 import {
     ExportOutlined, FileSearchOutlined,
-    FileTextOutlined, ReloadOutlined, UnorderedListOutlined
+    FileTextOutlined, ReloadOutlined,
+    UnorderedListOutlined
 } from "@ant-design/icons";
+
 import { MenuItemType } from "rc-menu/lib/interface";
 import { SortOrder } from "antd/lib/table/interface";
-import { SegmentedLabeledOption, SegmentedOptions } from "antd/es/segmented";
+import {
+    SegmentedLabeledOption,
+} from "antd/es/segmented";
 import { useParams } from "@umijs/max";
 import { ViewType } from "../DataCrud/CrudWrapper";
 import ActionBar from "../ActionBar";
+import TableView from "./TableView";
+import FilterBar from "./FilterBar";
 
 type TabRenderProps = {
     value?: React.ReactNode;
@@ -53,20 +67,24 @@ interface Props<ListDataType extends Record<string, any>, FilterType extends Rec
         type: "List",
         props: Omit<ProListProps<ListDataType, ParamsType, ValueType>, 'columns'> & { columns: string[] }
     }) & {
+        extraFilter?: React.ReactNode;
         onColumnLinkRender?: (id: number, target: 'page-tab' | 'browser-tab', item?: ListDataType, key?: React.Key) => {
             value?: React.ReactNode,
             tabLabel: React.ReactNode,
             tabIcon?: React.ReactNode,
             panel: React.ReactNode
         };
-        statuses?: { option: SegmentedLabeledOption, subOptions?: SegmentedOptions[] }[]
+
+        statuses?: { option: SegmentedLabeledOption & { default?: true }, subOptions?: (SegmentedLabeledOption & { default?: true })[] }[]
         actionButtons?: React.ReactElement[],
         actionNumShown?: number;
+
         actions?: (Omit<MenuItemType, 'onClick' | 'itemIcon'> & { icon?: React.ReactNode, onClick?: () => void })[];
-        onFilter?: (filter?: FilterType, page?: {
+        onFilter?: (params?: FilterType, page?: {
             pageSize?: number;
             current?: number;
         }, sort?: Record<string, SortOrder>) => void;
+
         advanceSearchButton?: React.ReactElement;
         onOpenAdvanceSearch?: () => void;
         onRefresh?: () => void;
@@ -99,7 +117,7 @@ const DraggableTabNode = ({ className, ...props }: DraggableTabPaneProps) => {
 
 
 export default <ListDataType extends Record<string, any> & { id: number, code?: string }, FilterType
-    extends Record<string, any> & { searchValue?: string; status?: string; }, ValueType>({
+    extends { searchValue?: string; status?: string; }, ValueType>({
         listView,
         detailViewRender,
     }: Props<ListDataType, FilterType, ValueType>) => {
@@ -116,6 +134,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
         sort: Record<string, SortOrder>
     }>()
 
+
     const filterBar = <ProCard size="small">
         <Flex >
             <Flex>
@@ -125,17 +144,20 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
                         reloadList(true)
                     }} />
                 </Flex>
-                {listView.onOpenAdvanceSearch && <Flex>
+                {(listView.onOpenAdvanceSearch || listView.advanceSearchButton) && <Flex>
                     {listView.advanceSearchButton || <Button icon={<FileSearchOutlined />} onClick={listView.onOpenAdvanceSearch} />}
                 </Flex>}
                 <Flex style={{ marginLeft: 20 }}>
 
-                    {listView.statuses && <Segmented onChange={(value) => {
+                    {listView.statuses && <Segmented defaultValue={listView.statuses.find(it => it.option.default)?.option.value} onChange={(value) => {
                         setFilterData(v => ({ ...v, status: value }) as any)
                         reloadList(true)
                     }} options={listView.statuses.map(it =>
                         it.option
                     )} />}
+
+
+                    {listView.statuses?.find(it => it.option.value == filterData?.status || it.option)?.subOptions?.map(it => <div>{it.label}</div>)}
 
                 </Flex>
             </Flex>
@@ -144,6 +166,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
                 <Button type="link" onClick={listView.onRefresh} icon={<ReloadOutlined />} />
             </Flex>
         </Flex>
+
     </ProCard>
 
     const [tabList, setTabList] = useState<(TabPaneProps & {
@@ -153,7 +176,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
         {
             tab: "List", key: 'list', tabKey: 'list', closable: false,
             icon: <UnorderedListOutlined />,
-            children: filterBar
+            children: <FilterBar statuses={listView.statuses || []} advanceSearchButton={listView.advanceSearchButton} onOpenAdvanceSearch={listView.onOpenAdvanceSearch} />
         }
     ])
     const [activeKey, setActiveKey] = useState<{ key: string, item?: ListDataType }>({ key: 'list' })
@@ -228,7 +251,9 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
                     }
                 },
             }} tabList={tabList}>
-            {activeKey.key == 'list' && listView.type == 'Table' &&
+
+            {activeKey.key == 'list' && listView.type == 'Table' && <>
+                {listView.extraFilter}
                 <ProTable<ListDataType, ParamsType, ValueType>
                     size="small"
                     manualRequest={true}
@@ -238,6 +263,10 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
                         setTableInfo({ ...params, current: params.current, pageSize: params.pageSize, sort })
                         setForceReload(v => v + 1)
                         return []
+                    }}
+                    onReset={() => {
+                        console.log('reset');
+
                     }}
 
                     rowKey={listView.props.rowKey || 'id'}
@@ -258,7 +287,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
                     })}
                     search={false}
                     options={false}
-                />}
+                /></>}
 
             <FloatButton.BackTop />
         </PageContainer>

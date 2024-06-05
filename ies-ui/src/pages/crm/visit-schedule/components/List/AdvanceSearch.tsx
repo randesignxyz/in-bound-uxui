@@ -46,19 +46,18 @@ const AdvanceSearch: React.FC<AdvanceSearchProps> = ({
           },
         }}
       >
-        {initData?.status == 'COMPLETED' && (
-          <ProFormSelect
-            label="Type"
-            name="planned"
-            width="md"
-            showSearch
-            allowClear
-            options={[
-              { value: 'Y', label: 'Planned' },
-              { value: 'N', label: 'Manual' },
-            ]}
-          />
-        )}
+        <ProFormSelect
+          label="Type"
+          name="planned"
+          width="md"
+          showSearch
+          allowClear
+          options={[
+            { value: 'Y', label: 'Planned' },
+            { value: 'N', label: 'Manual' },
+          ]}
+        />
+
 
         <ProFormSelect
           label="Division"
@@ -83,20 +82,19 @@ const AdvanceSearch: React.FC<AdvanceSearchProps> = ({
         />
 
         <ProFormDateRangePicker width="md" label="Schedule Date" name="dates" />
-        {initData?.status == 'COMPLETED' && (
-          <ProFormDateRangePicker width="md" label="Completed Date" name="completedDate" />
-        )}
-        {initData?.status == 'COMPLETED' && (
-          <ProFormSelect label="Contract Type"
-            name="contractTypeIds"
-            mode='multiple'
-            width="md"
-            showSearch
-            allowClear
-            options={contractTypes?.map((it) => {
-              return { label: it.name, value: it.id }
-            })} />
-        )}
+
+        <ProFormDateRangePicker width="md" label="Completed Date" name="completedDate" />
+
+
+        <ProFormSelect label="Contract Type"
+          name="contractTypeIds"
+          mode='multiple'
+          width="md"
+          showSearch
+          allowClear
+          options={contractTypes?.map((it) => {
+            return { label: it.name, value: it.id }
+          })} />
 
       </ProForm>
     </Drawer>

@@ -1,6 +1,6 @@
 import { ContractCheckedDataView, ContractViewData, POSMView } from '@/pages/crm/contract/types';
 import moment, { Moment } from 'moment';
-import { LookupData, LookupDataItem, LookupDataType } from '../data';
+import { CustomerLess, LookupData, LookupDataItem, LookupDataType } from '../data';
 import { CustomerSaleInfo, ProductItem } from '../sale/data';
 import { ContactData, ContactListItem } from './contact';
 import { ContractLess, SubContractType } from './contract';
@@ -610,7 +610,7 @@ export interface PosmReview {
 
 export interface VisitScheduleItem {
   id: number;
-  customer: LookupDataItem;
+  customer: CustomerLess;
   salesperson: LookupDataItem;
   address: LookupDataItem;
   customerAddressId: number;

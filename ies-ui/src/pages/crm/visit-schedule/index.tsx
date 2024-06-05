@@ -1,26 +1,26 @@
-import { Badge, Button, Checkbox, Modal, Space, Spin, Tag, Tooltip, Typography, message } from "antd"
+import { Badge, Button, Checkbox, Modal, Space, Spin, Switch, Tag, Tooltip, Typography, message } from "antd"
 import PageWrapper from "@/components/PageWrapper"
 import { VisitScheduleAdvanceSearchParams, VisitScheduleItem } from "@/services/crm/data"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { FetchPagingParams } from "@/components/DataCrud/TableView"
 import { Model } from "./model"
-import { useQuery, history } from "@umijs/max"
+import { useQuery } from "@umijs/max"
 import { ContractServices } from "../contract/services"
 import { MultiRequest, fetchDataListService } from "@/services/apiGateway"
 import { LookupData } from "@/services/data"
-import { formatDate, formatDateTime } from "@/pages/utils"
+import { formatDate, formatDateTime, toReadable } from "@/pages/utils"
 import { CrmServiceAPI } from "@/services/crm/services"
-import { CheckCircleOutlined, ExportOutlined, EyeOutlined, PaperClipOutlined, ScheduleOutlined, SelectOutlined } from "@ant-design/icons"
+import { CheckCircleOutlined, ExportOutlined, EyeOutlined, PaperClipOutlined, ScheduleOutlined } from "@ant-design/icons"
 import CustomerDetailView from "../customer/components/Detail"
-import { CrmPaths } from ".."
 import VisitScheduleDetailView from "./components/Detail"
 import AdvanceSearch from "./components/List/AdvanceSearch"
 import QuickView from "./components/quick-view"
 import GenerateScheduleModal from "./components/GenerateScheduleModal"
+import Status from "@/components/Status"
+import { ActionType, LightFilter, ProCard, ProFormDatePicker, ProFormSelect } from "@ant-design/pro-components"
+import { Moment } from "moment"
 
-type FilterType = {
-
-}
+type FilterType = VisitScheduleAdvanceSearchParams & { searchValue?: string; status?: string; }
 export default () => {
 
     const { state, actions, modals } = Model();
@@ -30,6 +30,16 @@ export default () => {
             status: 'COMPLETED',
         }
     })
+
+    interface LightFilterProp {
+        hasAttachment: string;
+        checkFilter?: string[];
+        contractVerified?: string;
+        posmVerified?: string;
+        month?: Moment;
+        divisionIds?: number[];
+    }
+
 
     const lookup = useQuery(['visit-schedule-lookup-data'], () => MultiRequest<{
         contractTypes: LookupData[];
@@ -45,7 +55,9 @@ export default () => {
 
     const { data, refetch, isFetching } = useQuery(
         ['fetch-visit-schedule-paging', filter],
-        () => crmServices.listVisitSchedule({ ...filter }, filter.pagination,),
+        () => crmServices.listVisitSchedule({
+            ...filter,
+        }, { ...filter.pagination, page: (filter.pagination?.current || 1) - 1 },),
         { refetchOnWindowFocus: false }
     )
 
@@ -54,9 +66,66 @@ export default () => {
         modals.showModal('quick-view');
     };
 
+    const actionRef = useRef<ActionType>()
+
     useEffect(() => {
         actions.initialData();
     }, []);
+
+    const extraFilter = <ProCard>
+        <LightFilter<LightFilterProp> >
+            <ProFormSelect
+                name="checkFilter"
+                label="For Verify"
+                mode="multiple"
+                options={[
+                    { label: 'Has Contract', value: 'hasContract' },
+                    { label: 'Has POSM', value: 'hasPosm' },
+                ]}
+            />
+
+            <ProFormSelect
+                name="contractVerified"
+                label="Contract Verified"
+                options={[
+                    { label: 'Yes', value: 'yes' },
+                    { label: 'No', value: 'no' },
+                ]}
+            />
+
+            <ProFormSelect
+                name="posmVerified"
+                label="POSM Verified"
+                options={[
+                    { label: 'Yes', value: 'yes' },
+                    { label: 'No', value: 'no' },
+                ]}
+            />
+            <ProFormDatePicker.Month name={'month'} label="Month" />
+            <ProFormSelect
+                label="Division"
+                name="divisionIds"
+                mode="multiple"
+                width="md"
+                showSearch
+                allowClear
+            // options={lookupData?.lookupList
+            //     ?.filter((it) => it.type === 'CUSTOMER_DIVISION')
+            //     ?.map((it) => {
+            //         return { value: it.id, label: it.name };
+            //     })}
+            />
+            {filter.criteria?.status === 'COMPLETED' && (
+                <Space>
+                    <Typography.Text type="secondary">Has Error Attachment</Typography.Text>
+                    <Switch
+                    // onChange={_onChange}
+                    // defaultChecked={advanceSearchParams.hasAttachment}
+                    />
+                </Space>
+            )}
+        </LightFilter>
+    </ProCard>
 
     return (
         <Spin spinning={false}>
@@ -79,13 +148,17 @@ export default () => {
 
             <PageWrapper<VisitScheduleItem, FilterType, {}>
                 detailViewRender={(id) => <VisitScheduleDetailView id={id} />}
+
                 listView={{
+                    extraFilter: filter.criteria?.status || 'COMPLETED' == "COMPLETED" ? extraFilter : <div />,
                     statuses: [
-                        { option: { label: 'All', value: 'ALL' }, subOptions: [] },
+                        { option: { label: 'All', value: 'ALL', }, subOptions: [] },
                         { option: { label: 'Pending', value: 'PENDING' }, subOptions: [] },
-                        { option: { label: 'Completed', value: 'COMPLETED' }, subOptions: [] },
+                        { option: { label: 'Completed', value: 'COMPLETED', default: true }, subOptions: [{ label: 'a', value: 'a' }] },
                         { option: { label: 'Canceled', value: 'CANCELED' }, subOptions: [] }
                     ],
+                    onRefresh: refetch,
+
                     actionButtons: [<Tooltip title="Genderate visit schedule">
                         <Button
                             type="link"
@@ -95,9 +168,19 @@ export default () => {
                     </Tooltip>],
                     onOpenAdvanceSearch: () => { modals.showModal('advanceSearch') },
                     type: 'Table',
+                    onFilter(params, page, sort) {
+                        setFilter(v => ({
+                            ...v,
+                            keywords: params?.searchValue,
+                            criteria: { ...v.criteria, ...params, status: params?.status == "ALL" ? undefined : params?.status },
+                            pagination: { ...page },
+                            sort: sort
+                        }))
+                    },
                     props: {
                         loading: isFetching,
                         dataSource: data?.items,
+                        actionRef: actionRef,
                         pagination: {
                             total: data?.total
                         },
@@ -153,7 +236,6 @@ export default () => {
                             },
                             {
                                 title: 'Cust. Code',
-
                                 // render: (_, r) => r.customer.code,
                                 width: 110,
                                 key: 'customerCode',
@@ -175,6 +257,7 @@ export default () => {
                             },
 
                             { title: 'Address', render: (_, r) => r.address.name },
+                            { title: 'Division', render: (_, r) => r.customer.division },
                             {
                                 title: 'Manual',
                                 width: 60,
@@ -201,6 +284,10 @@ export default () => {
                                 width: 150,
                                 // hideInTable: advanceSearchParams.status === 'PENDING',
                                 sorter: 'completedDate',
+                            },
+                            {
+                                title: 'Status',
+                                render: (_, r) => <Status value={r.status} text={toReadable(r.status)} />
                             },
                             {
                                 title: 'Verified',
@@ -263,17 +350,19 @@ export default () => {
                 contractTypes={lookup.data?.contractTypes || []}
                 lookupList={lookup.data?.lookupDataList || []}
                 onSearch={(data) => {
-                    // setAdvanceSearchParams((v) => ({
-                    //     ...v,
-                    //     ...data,
-                    // }));
-                    // actionRef.current?.reloadAndRest?.();
+
+                    setFilter(v => ({ ...v, criteria: { ...v.criteria, ...data } }))
+                    actionRef.current?.reload?.(true);
+
                 }}
                 onReset={() => {
-                    // setAdvanceSearchParams((v) => ({ status: v.status }));
-                    // actionRef.current?.reloadAndRest?.();
+
+                    setFilter(v => ({ ...v, criteria: { status: v.criteria?.status } }))
+                    actionRef.current?.reload?.(true);
                 }}
             />
+
+
             {modals.isVisible('quick-view') && (
                 <QuickView
                     title="Vsisit Schedule Detail"

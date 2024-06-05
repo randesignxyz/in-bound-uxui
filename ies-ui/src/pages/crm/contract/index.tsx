@@ -92,18 +92,19 @@ export default () => {
                             termId: termId,
                             startedDateFrom: startedDateFrom,
                             startedDateTo: startedDateTo, endedDateFrom,
-                            endedDateTo: endedDateTo
+                            endedDateTo: endedDateTo,
                         },
-                        pagination: {
 
-                        }
+                        pagination: {
+                        },
                     }))
 
+
+                    actionRef.current?.reload?.(true)
+
                 }} trigger={<Button icon={<FileSearchOutlined />} />} />,
-                onOpenAdvanceSearch: () => { },
                 onRefresh: refetch,
                 actionButtons: [
-
                     access.canImportContract && <Tooltip placement="top" title="Import">
                         <ImportFileButton<ImportedContract> importedKey="CONTRACT"
                             onDataResponse={setImportContractData}

@@ -15,11 +15,11 @@ export default ({ actionButtons, actions, numOfActionOnBar }: {
     const shownList = actions.slice(0, numOfActionOnBar || 0) || []
     const moreList = actions?.slice(numOfActionOnBar || 0)
     return <Flex >
-        {actionButtons}
-        {(shownList.filter(it => (it as MenuDividerType).type != 'divider')).map(it => {
+        {actionButtons?.map((it, index) => ({ ...it, key: it.key || `action-${index}` }))}
+        {(shownList.filter((it) => (it as MenuDividerType).type != 'divider')).map((it, index) => {
 
             const item = it as MenuType
-            return < Button key={item.key} type="link" icon={item.icon} onClick={item.onClick} > {item.label}</Button>
+            return < Button key={`bt-${index}`} type="link" icon={item.icon} onClick={item.onClick} > {item.label}</Button>
 
         })}
         {

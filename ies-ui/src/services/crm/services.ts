@@ -717,10 +717,13 @@ export const CrmServiceAPI = (actions?: RequestActions) => ({
     CrmService('get-visit-schedule'),
     actions,
   ),
+
   listVisitSchedule: findPagingService<
     { searchValue?: string; sort?: Record<string, SortOrder> },
     VisitScheduleItem
   >(CrmService('list-visit-schedule'), actions),
+
+
   listVisitScheduleByDate: findAllService<{ date: moment.Moment }, VisitScheduleItem>(
     CrmService('list-visit-schedule-by-date'),
     actions,

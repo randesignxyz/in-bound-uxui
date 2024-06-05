@@ -134,7 +134,6 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
         sort: Record<string, SortOrder>
     }>()
 
-
     const filterBar = <ProCard size="small">
         <Flex >
             <Flex>
@@ -176,7 +175,13 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
         {
             tab: "List", key: 'list', tabKey: 'list', closable: false,
             icon: <UnorderedListOutlined />,
-            children: <FilterBar statuses={listView.statuses || []} advanceSearchButton={listView.advanceSearchButton} onOpenAdvanceSearch={listView.onOpenAdvanceSearch} />
+            children: <FilterBar
+                statuses={listView.statuses || []}
+                actionButtons={listView.actionButtons}
+                actions={listView.actions}
+                advanceSearchButton={listView.advanceSearchButton}
+                onRefresh={listView.onRefresh}
+                onOpenAdvanceSearch={listView.onOpenAdvanceSearch} />
         }
     ])
     const [activeKey, setActiveKey] = useState<{ key: string, item?: ListDataType }>({ key: 'list' })

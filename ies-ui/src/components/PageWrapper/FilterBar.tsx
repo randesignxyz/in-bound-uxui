@@ -22,8 +22,8 @@ export default ({ statuses, actionButtons, actions, advanceSearchButton, onOpenA
     return <ProCard size="small">
         <Flex >
             <Flex>
-                <Flex>
-                    <Input.Search onSearch={onSearch} />
+                <Flex >
+                    <Input.Search allowClear onSearch={onSearch} />
                 </Flex>
                 {(onOpenAdvanceSearch || advanceSearchButton) && <Flex>
                     {advanceSearchButton || <Button icon={<FileSearchOutlined />} onClick={onOpenAdvanceSearch} />}

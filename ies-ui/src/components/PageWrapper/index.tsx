@@ -21,7 +21,7 @@ import {
     Segmented,
     TabPaneProps, Typography
 } from "antd";
-import React, { useEffect, useRef } from "react";
+import React, { memo, useEffect, useRef } from "react";
 import { useState } from "react";
 import { CSS } from '@dnd-kit/utilities';
 import {
@@ -38,7 +38,6 @@ import {
 import { useParams } from "@umijs/max";
 import { ViewType } from "../DataCrud/CrudWrapper";
 import ActionBar from "../ActionBar";
-import TableView from "./TableView";
 import FilterBar from "./FilterBar";
 
 type TabRenderProps = {
@@ -67,7 +66,7 @@ interface Props<ListDataType extends Record<string, any>, FilterType extends Rec
         type: "List",
         props: Omit<ProListProps<ListDataType, ParamsType, ValueType>, 'columns'> & { columns: string[] }
     }) & {
-        extraFilter?: React.ReactNode;
+        onExtraFilterRender?: (params?: FilterType) => React.ReactNode;
         onColumnLinkRender?: (id: number, target: 'page-tab' | 'browser-tab', item?: ListDataType, key?: React.Key) => {
             value?: React.ReactNode,
             tabLabel: React.ReactNode,
@@ -181,6 +180,14 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
                 actions={listView.actions}
                 advanceSearchButton={listView.advanceSearchButton}
                 onRefresh={listView.onRefresh}
+                onSearch={keyworkds => {
+                    setFilterData(v => ({ ...v, searchValue: keyworkds }) as any)
+                    reloadList(true)
+                }}
+                onStatusChanged={status => {
+                    setFilterData(v => ({ ...v, status: status }) as any)
+                    reloadList(true)
+                }}
                 onOpenAdvanceSearch={listView.onOpenAdvanceSearch} />
         }
     ])
@@ -214,6 +221,9 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
         }
 
     }
+
+
+
     useEffect(() => {
         listView.onFilter?.(filterData, { pageSize: tableInfo?.pageSize, current: tableInfo?.current }, tableInfo?.sort)
     }, [forceReload])
@@ -258,7 +268,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
             }} tabList={tabList}>
 
             {activeKey.key == 'list' && listView.type == 'Table' && <>
-                {listView.extraFilter}
+                {listView.onExtraFilterRender?.(filterData)}
                 <ProTable<ListDataType, ParamsType, ValueType>
                     size="small"
                     manualRequest={true}

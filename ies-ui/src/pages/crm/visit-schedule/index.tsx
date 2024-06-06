@@ -10,14 +10,19 @@ import { MultiRequest, fetchDataListService } from "@/services/apiGateway"
 import { LookupData } from "@/services/data"
 import { formatDate, formatDateTime, toReadable } from "@/pages/utils"
 import { CrmServiceAPI } from "@/services/crm/services"
-import { CheckCircleOutlined, ExportOutlined, EyeOutlined, PaperClipOutlined, ScheduleOutlined } from "@ant-design/icons"
+import {
+    CheckCircleOutlined, ExportOutlined,
+    EyeOutlined, PaperClipOutlined,
+    ScheduleOutlined
+
+} from "@ant-design/icons"
 import CustomerDetailView from "../customer/components/Detail"
 import VisitScheduleDetailView from "./components/Detail"
 import AdvanceSearch from "./components/List/AdvanceSearch"
 import QuickView from "./components/quick-view"
 import GenerateScheduleModal from "./components/GenerateScheduleModal"
 import Status from "@/components/Status"
-import { ActionType, LightFilter, ProCard, ProFormDatePicker, ProFormSelect } from "@ant-design/pro-components"
+import { ActionType, LightFilter, ProCard, ProFormDatePicker, ProFormSelect, ProFormSwitch } from "@ant-design/pro-components"
 import { Moment } from "moment"
 
 type FilterType = VisitScheduleAdvanceSearchParams & { searchValue?: string; status?: string; }
@@ -32,7 +37,7 @@ export default () => {
     })
 
     interface LightFilterProp {
-        hasAttachment: string;
+        hasAttachment?: boolean;
         checkFilter?: string[];
         contractVerified?: string;
         posmVerified?: string;
@@ -58,7 +63,7 @@ export default () => {
         () => crmServices.listVisitSchedule({
             ...filter,
         }, { ...filter.pagination, page: (filter.pagination?.current || 1) - 1 },),
-        { refetchOnWindowFocus: false }
+        { refetchOnWindowFocus: false, staleTime: 1000 }
     )
 
     const quickViewHandler = async (data: VisitScheduleItem) => {
@@ -73,7 +78,30 @@ export default () => {
     }, []);
 
     const extraFilter = <ProCard>
-        <LightFilter<LightFilterProp> >
+        <LightFilter<LightFilterProp> onValuesChange={(_, values) => {
+            // const hasAttachment =
+            //     'hasAttachment' in values ? values['hasAttachment'] === 'yes' ? true
+            //         : values['hasAttachment'] === 'null' ? undefined : false
+            //         : undefined;
+
+            setFilter((v) => ({
+                ...v,
+                criteria: {
+                    ...v.criteria,
+                    hasContractOnly: values.checkFilter?.includes('hasContract'),
+                    hasPosmCheckedOnly: values.checkFilter?.includes('hasPosm'),
+                    contractVerified: values.contractVerified
+                        ? values.contractVerified === 'yes'
+                        : undefined,
+                    posmVerified: values.posmVerified ? values.posmVerified === 'yes' : undefined,
+                    month: values.month,
+                    hasAttachment: values.hasAttachment,
+                    divisionIds: values.divisionIds,
+                }
+            }));
+
+            actionRef.current?.reloadAndRest?.();
+        }}>
             <ProFormSelect
                 name="checkFilter"
                 label="For Verify"
@@ -84,23 +112,6 @@ export default () => {
                 ]}
             />
 
-            <ProFormSelect
-                name="contractVerified"
-                label="Contract Verified"
-                options={[
-                    { label: 'Yes', value: 'yes' },
-                    { label: 'No', value: 'no' },
-                ]}
-            />
-
-            <ProFormSelect
-                name="posmVerified"
-                label="POSM Verified"
-                options={[
-                    { label: 'Yes', value: 'yes' },
-                    { label: 'No', value: 'no' },
-                ]}
-            />
             <ProFormDatePicker.Month name={'month'} label="Month" />
             <ProFormSelect
                 label="Division"
@@ -109,18 +120,37 @@ export default () => {
                 width="md"
                 showSearch
                 allowClear
-            // options={lookupData?.lookupList
-            //     ?.filter((it) => it.type === 'CUSTOMER_DIVISION')
-            //     ?.map((it) => {
-            //         return { value: it.id, label: it.name };
-            //     })}
+                options={lookup?.data?.lookupDataList
+                    ?.filter((it) => it.type === 'CUSTOMER_DIVISION')
+                    ?.map((it) => {
+                        return { value: it.id, label: it.name };
+                    })}
             />
-            {filter.criteria?.status === 'COMPLETED' && (
+
+            {(filter.criteria?.status || 'COMPLETED') === 'COMPLETED' && <ProFormSelect
+                name="contractVerified"
+                label="Contract Verified"
+                options={[
+                    { label: 'Yes', value: 'yes' },
+                    { label: 'No', value: 'no' },
+                ]}
+            />
+            }
+            {(filter.criteria?.status || 'COMPLETED') === 'COMPLETED' && <ProFormSelect
+                name="posmVerified"
+                label="POSM Verified"
+                options={[
+                    { label: 'Yes', value: 'yes' },
+                    { label: 'No', value: 'no' },
+                ]}
+            />}
+
+            {(filter.criteria?.status || 'COMPLETED') === 'COMPLETED' && (
                 <Space>
                     <Typography.Text type="secondary">Has Error Attachment</Typography.Text>
-                    <Switch
-                    // onChange={_onChange}
-                    // defaultChecked={advanceSearchParams.hasAttachment}
+                    <ProFormSwitch
+                        // onChange={_onChange}
+                        name={"hasAttachment"}
                     />
                 </Space>
             )}
@@ -150,11 +180,11 @@ export default () => {
                 detailViewRender={(id) => <VisitScheduleDetailView id={id} />}
 
                 listView={{
-                    extraFilter: filter.criteria?.status || 'COMPLETED' == "COMPLETED" ? extraFilter : <div />,
+                    onExtraFilterRender: () => filter.criteria?.status || 'COMPLETED' == "COMPLETED" ? extraFilter : <div />,
                     statuses: [
                         { option: { label: 'All', value: 'ALL', }, subOptions: [] },
                         { option: { label: 'Pending', value: 'PENDING' }, subOptions: [] },
-                        { option: { label: 'Completed', value: 'COMPLETED', default: true }, subOptions: [{ label: 'a', value: 'a' }] },
+                        { option: { label: 'Completed', value: 'COMPLETED', default: true }, subOptions: [] },
                         { option: { label: 'Canceled', value: 'CANCELED' }, subOptions: [] }
                     ],
                     onRefresh: refetch,
@@ -350,18 +380,14 @@ export default () => {
                 contractTypes={lookup.data?.contractTypes || []}
                 lookupList={lookup.data?.lookupDataList || []}
                 onSearch={(data) => {
-
-                    setFilter(v => ({ ...v, criteria: { ...v.criteria, ...data } }))
+                    setFilter(v => ({ ...v, criteria: { ...v.criteria, ...data }, pagination: {} }))
                     actionRef.current?.reload?.(true);
-
                 }}
                 onReset={() => {
-
-                    setFilter(v => ({ ...v, criteria: { status: v.criteria?.status } }))
+                    setFilter(v => ({ ...v, criteria: { status: v.criteria?.status }, pagination: {} }))
                     actionRef.current?.reload?.(true);
                 }}
             />
-
 
             {modals.isVisible('quick-view') && (
                 <QuickView

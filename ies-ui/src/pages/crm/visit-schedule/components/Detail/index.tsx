@@ -42,10 +42,11 @@ interface ImageData {
 
 export interface DetailProps {
   id: number;
+  openInPageTab?: true;
   onBack?: () => void;
 }
 
-const VisitScheduleDetailView: React.FC<DetailProps> = ({ id, onBack }) => {
+const VisitScheduleDetailView: React.FC<DetailProps> = ({ id, openInPageTab, onBack }) => {
   const { state, actions, modals } = Model();
   const [images, setImage] = useState<ImageData[]>([]);
   const [showModal, setShowModal] = useState<{
@@ -134,8 +135,8 @@ const VisitScheduleDetailView: React.FC<DetailProps> = ({ id, onBack }) => {
           <Space>
             {access.canVerifyContractCompliance &&
               (state.data?.detail?.posmItems?.length || 0) +
-                (state.data?.detail?.posmReviewList?.length || 0) >
-                0 &&
+              (state.data?.detail?.posmReviewList?.length || 0) >
+              0 &&
               (state.data?.detail?.posmCheckedList?.length || 0) === 0 && (
                 <Button
                   type="primary"
@@ -320,12 +321,12 @@ const VisitScheduleDetailView: React.FC<DetailProps> = ({ id, onBack }) => {
                           r.status === 'Pending'
                             ? 'processing'
                             : r.status === 'Posted'
-                            ? 'success'
-                            : r.status === 'Failed'
-                            ? 'error'
-                            : r.status === 'Canceled'
-                            ? 'default'
-                            : 'warning';
+                              ? 'success'
+                              : r.status === 'Failed'
+                                ? 'error'
+                                : r.status === 'Canceled'
+                                  ? 'default'
+                                  : 'warning';
                         return <Tag color={color}>{r.status}</Tag>;
                       },
                     },

@@ -7,8 +7,8 @@ interface Props {
     }
 }
 
-const Edit: React.FC<Props> = ({ id }) => {
-    return <EntryForm type = 'edit' id = {id} />
+const Edit: React.FC<Props> = ({ id, actionHandlers }) => {
+    return <EntryForm type='edit' id={id} onBack={actionHandlers?.onBack} />
 }
 
 export default Edit

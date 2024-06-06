@@ -6,7 +6,8 @@ import { useState } from "react"
 import ActionBar from "../ActionBar"
 import { MenuItemType } from "antd/lib/menu/hooks/useItems"
 
-export default ({ statuses, actionButtons, actions, advanceSearchButton, onOpenAdvanceSearch, onRefresh, onSearch, onStatusChanged }: {
+export default ({ statuses, actionButtons, actions, advanceSearchButton, onStatusRender, onOpenAdvanceSearch, onRefresh, onSearch, onStatusChanged }: {
+    onStatusRender?: React.ReactNode,
     statuses: { option: SegmentedLabeledOption & { default?: true }, subOptions?: (SegmentedLabeledOption & { default?: true })[] }[],
     advanceSearchButton?: React.ReactElement;
     actionButtons?: React.ReactElement[],
@@ -30,15 +31,18 @@ export default ({ statuses, actionButtons, actions, advanceSearchButton, onOpenA
                 </Flex>}
                 <Flex style={{ marginLeft: 20 }}>
 
-                    {statuses && <Segmented defaultValue={statuses.find(it => it.option.default)?.option.value} onChange={(value) => {
-                        onStatusChanged?.(value as string)
-                        setSubStatuses(statuses.find(it => it.option.value == value)?.subOptions || [])
-                    }} options={statuses.map(it =>
-                        it.option
-                    )} />}
+                    {
+                        statuses && !onStatusRender ?
+                            <Segmented defaultValue={statuses.find(it => it.option.default)?.option.value} onChange={(value) => {
+                                onStatusChanged?.(value as string)
+                                setSubStatuses(statuses.find(it => it.option.value == value)?.subOptions || [])
+                            }} options={statuses.map(it =>
+                                it.option
+                            )} /> : onStatusRender
 
+                    }
                 </Flex>
-                {subStatuses.length > 0 ? <Flex style={{ marginLeft: 20 }}>
+                {subStatuses.length > 0 && !onStatusRender ? <Flex style={{ marginLeft: 20 }}>
                     <Segmented options={subStatuses} />
                 </Flex> : <></>}
             </Flex>
@@ -48,5 +52,5 @@ export default ({ statuses, actionButtons, actions, advanceSearchButton, onOpenA
             </Flex>
         </Flex>
 
-    </ProCard>
+    </ProCard >
 }

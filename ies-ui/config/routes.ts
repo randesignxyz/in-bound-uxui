@@ -1,4 +1,6 @@
-﻿/**
+﻿import { layout } from "@/app";
+
+/**
  *
  * @doc https://umijs.org/docs/guides/routes
  */
@@ -312,6 +314,16 @@ export default [
     name: 'so',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
+    access: 'canAccessSaleMenuItems',
+    component: './sale/so',
+  },
+
+  {
+    path: 'external/sale/so/:view/*',
+    name: 'so',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    layout: false,
     access: 'canAccessSaleMenuItems',
     component: './sale/so',
   },

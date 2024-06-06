@@ -1,3 +1,4 @@
+import { ViewType } from '@/components/DataCrud/CrudWrapper';
 import { map } from 'lodash';
 import moment from 'moment';
 import { parse } from 'querystring';

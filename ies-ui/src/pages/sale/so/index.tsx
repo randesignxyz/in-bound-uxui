@@ -1,28 +1,23 @@
 import CrudWrapper from "@/components/DataCrud/CrudWrapper"
 import { SalePaths } from ".."
-import  '@/pages/index.less'
-import SoListView from "./components/List"
+import '@/pages/index.less'
 import SoDetailView from "./components/Detail"
-import Edit from "./components/Edit"
-import Create from "./components/Create"
 import { Access, useAccess } from "umi"
+import MainPage from "./MainPage"
 
 export default () => {
 
     const access = useAccess()
 
-    return <CrudWrapper baseURL={SalePaths.so} >
+    return <CrudWrapper baseURL={SalePaths.so} disablePageContainer >
         {
             (view, id, navigate) => {
-               return view === 'list' && <SoListView actionHandlers = {{
-                onAdd: navigate?.goToCreate,
-                onDetail: navigate?.goToDetail,
-               }}  /> ||
-               view === 'detail' && <SoDetailView id = {id as number}  actionHandlers = {{
-                   onBack: navigate?.gotToListHandler
-               }} /> ||
-               view === 'create' && <Access accessible = {access.canCreateEditSo} fallback={<div>Unauthorized</div>}> <Create/> </Access> ||
-               view === 'edit' && <Access accessible = {access.canCreateEditSo} fallback={<div>Unauthorized</div>}> <Edit id = {id as number}/> </Access>
+                return view === 'list' && <MainPage /> ||
+                    view === 'detail' && <SoDetailView id={id as number} actionHandlers={{
+                        onBack: navigate?.gotToListHandler
+                    }} /> || <div>Unauthorized</div>
+                //view === 'create' && <Access accessible={access.canCreateEditSo} fallback={<div>Unauthorized</div>}> <Create /> </Access> ||
+                //view === 'edit' && <Access accessible={access.canCreateEditSo} fallback={<div>Unauthorized</div>}> <Edit id={id as number} /></Access>
             }
         }
     </CrudWrapper>

@@ -8,6 +8,7 @@ interface Props {
     baseURL?: string;
     title?: string;
     onBack?: () => void;
+    disablePageContainer?: true
     children?: (
         viewType: ViewType,
         id?: number | string,
@@ -21,7 +22,7 @@ interface Props {
 }
 
 
-const CrudWrapper: React.FC<Props> = ({ baseURL, onBack, children, title }) => {
+const CrudWrapper: React.FC<Props> = ({ baseURL, onBack, children, title, disablePageContainer }) => {
     const params = useParams()
 
     const view: ViewType = (params['view'] as ViewType) || undefined
@@ -49,18 +50,19 @@ const CrudWrapper: React.FC<Props> = ({ baseURL, onBack, children, title }) => {
         baseURL && history.push(`${baseURL}/edit/${data.id}`)
     }
 
-    return <PageContainer onBack={onBack} title={title ? title : false}>
-        {view == undefined ? <div>Not implemented</div> : children?.(
-            view,
-            id,
-            {
-                goToCreate: onGotoCreateHandler,
-                goToDetail: onGoToDetailHandler,
-                gotToListHandler: onGoToListHandler,
-                gotoEdit: onGoToEditHandler
-            }
-        )
+    const content = view == undefined ? <div>Not implemented</div> : children?.(
+        view,
+        id,
+        {
+            goToCreate: onGotoCreateHandler,
+            goToDetail: onGoToDetailHandler,
+            gotToListHandler: onGoToListHandler,
+            gotoEdit: onGoToEditHandler
         }
+    )
+
+    return disablePageContainer ? <>{content}</> : <PageContainer onBack={onBack} title={title ? title : false}>
+        {content}
     </PageContainer>
 
 }

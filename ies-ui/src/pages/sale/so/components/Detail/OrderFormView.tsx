@@ -1,32 +1,18 @@
 import DescriptionDisplay, { DescriptionDisplayDataItem } from '@/components/Descriptions';
 import { CrmPaths } from '@/pages/crm';
 import { formatDate, formatDateTime } from '@/pages/utils';
-import { SoDetail, SoItemDetail } from '@/services/sale/data';
-import ProForm, { ProFormField } from '@ant-design/pro-form';
-import ProTable from '@ant-design/pro-table';
-import { Card, Col, Form, Row } from 'antd';
-import numeral from 'numeral';
-import React, { useEffect } from 'react';
+import { SoDetail } from '@/services/sale/data';
+import { Card } from 'antd';
+import React from 'react';
 import { history } from "@umijs/max";
 
 interface Props {
+  actionButtons?: React.ReactNode;
   soDetail?: SoDetail;
 }
 
-const layout1 = {
-  labelCol: { span: 10 },
-  wrapperCol: { span: 14 },
-};
+const OrderFormView: React.FC<Props> = ({ actionButtons, soDetail }) => {
 
-interface SummaryAmount {
-  subTotal: number;
-  discountAmount: number;
-  vatAmount: number;
-  totalAmount: number;
-}
-
-const OrderFormView: React.FC<Props> = ({ soDetail }) => {
-  const [formSum] = Form.useForm<SummaryAmount>();
   const displayItems: (DescriptionDisplayDataItem | undefined)[] = [
     { label: 'So #', value: soDetail?.soNo },
     { label: 'Orderd Date', value: formatDateTime(soDetail?.orderedDate) },
@@ -63,27 +49,9 @@ const OrderFormView: React.FC<Props> = ({ soDetail }) => {
     { label: 'Distributor', value: soDetail?.distributor?.name },
   ];
 
-  useEffect(() => {
-    if (soDetail) {
-      formSum.setFieldsValue({
-        subTotal: soDetail?.amount,
-        discountAmount: soDetail?.discountAmount,
-        vatAmount: soDetail?.vatAmount,
-        totalAmount: soDetail?.totalAmount,
-      });
-    }
-    // soDetail &&
-    //   formSum.setFieldsValue({
-    //     subTotal: soDetail?.amount,
-    //     discountAmount: soDetail?.discountAmount,
-    //     vatAmount: soDetail?.vatAmount,
-    //     totalAmount: soDetail?.totalAmount,
-    //   });
-  }, [soDetail]);
-
   return (
     <div>
-      <Card size="small" title="General">
+      <Card size="small" title="General" extra={actionButtons}>
         <DescriptionDisplay data={displayItems} />
       </Card>
       {soDetail?.distributor && soDetail.distributor.noneOfl && (
@@ -130,151 +98,11 @@ const OrderFormView: React.FC<Props> = ({ soDetail }) => {
                 .map((it) => `${it.name} ${it.value}`)
                 .join(', '),
             },
+          ]}
+        />
+      </Card>
 
-            // { label: 'Ship to Name', value: soDetail?.shipToName },
-            // { label: 'Shipp to phone number', value: soDetail?.shipPhoneNumber }
-          ]}
-        />
-      </Card>
-      <Card style={{ marginTop: '10px' }} size="small" title="Line Items">
-        <ProTable<SoItemDetail>
-          size="small"
-          sortDirections={['ascend']}
-          showSorterTooltip={false}
-          columns={[
-            {
-              title: '#',
-              dataIndex: 'index',
-              defaultSortOrder: 'ascend',
-              sorter: (a, b) => a.index! - b.index!,
-            },
-            { title: 'Code', dataIndex: 'itemCode' },
-            { title: 'Description', dataIndex: 'description' },
-            { title: 'Type', dataIndex: 'type' },
-            // { title: 'Delivered Date',render: (_, data) => "" /*formatDate(data.deliveredDate)*/, align: 'right'},
-            { title: 'Budget Code', dataIndex: 'budgetCode' },
-            {
-              title: 'Qty',
-              dataIndex: 'qty',
-              align: 'right',
-            },
-            { title: 'UoM', render: (_, data) => data.uom },
-            {
-              title: 'Price',
-              // dataIndex: 'price',
-              align: 'right',
-              // valueType: {
-              //   type: 'money',
-              //   locale: 'en-US',
-              //   precision: 6,
-              // },
-              render: (_, r) => {
-                return numeral(r.price).format('$ 0,0.000000');
-              },
-            },
-            {
-              title: 'Amount',
-              // dataIndex: 'amount',
-              align: 'right',
-              // valueType: {
-              //   type: 'money',
-              //   locale: 'en-US',
-              //   precision: 6,
-              // },
-              render: (_, r) => {
-                return numeral(r.amount).format('$ 0,0.000000');
-              },
-            },
-            {
-              title: 'Discount',
-              // dataIndex: 'discountPercent',
-              align: 'right',
-              // valueType: {
-              //   type: 'percent',
-              //   // locale: 'en-US',
-              // },
-              render: (_, r) => {
-                return numeral(r.discountPercent).format('0 %');
-              },
-            },
-            {
-              title: 'Total Amount',
-              // dataIndex: 'totalAmount',
-              align: 'right',
-              render: (_, r) => {
-                // return 'aaaa'
-                return numeral(r.totalAmount).format('$ 0,0.000000');
-              },
-              // valueType: {
-              //   type: 'money',
-              //   locale: 'en-US',
-              //   precision: 6,
-              // },
-            },
-            // { title: 'Remarks', dataIndex: 'remarks' },
-          ]}
-          rowKey="id"
-          pagination={false}
-          bordered={false}
-          search={false}
-          options={{
-            setting: false,
-            density: false,
-            fullScreen: false,
-            reload: false,
-          }}
-          dataSource={soDetail?.items}
-        />
-      </Card>
-      <Card>
-        <ProForm
-          {...layout1}
-          style={{ fontWeight: 'bolder' }}
-          submitter={false}
-          // labelAlign='left'
-          layout="horizontal"
-          form={formSum}
-        >
-          <Row>
-            <Col flex="Auto" />
-            <Col flex="350px">
-              <ProFormField
-                // valueType={{ type: 'money', locale: 'en-US', precision: 6 }}
-                render={(_, r) => {
-                  return numeral(r['value']).format('$ 0,0.000000');
-                }}
-                label="Sub Total"
-                name="subTotal"
-                readonly
-              />
-              {/* <ProFormField
-                  valueType={{ type: 'money', locale: 'en-US' }}
-                  label="Discount Amount"
-                  name="discountAmount"
-                  readonly
-                /> */}
-              <ProFormField
-                // valueType={{ type: 'money', locale: 'en-US', precision: 6 }}
-                render={(_, r) => {
-                  return numeral(r['value']).format('$ 0,0.000000');
-                }}
-                label="VAT Amount"
-                name="vatAmount"
-                readonly
-              />
-              <ProFormField
-                // valueType={{ type: 'money', locale: 'en-US', precision: 6 }}
-                render={(_, r) => {
-                  return numeral(r['value']).format('$ 0,0.000000');
-                }}
-                label="Total Amount"
-                name="totalAmount"
-                readonly
-              />
-            </Col>
-          </Row>
-        </ProForm>
-      </Card>
+
     </div>
   );
 };

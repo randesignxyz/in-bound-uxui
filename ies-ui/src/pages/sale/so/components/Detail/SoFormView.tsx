@@ -4,12 +4,9 @@ import { Space, Tabs } from 'antd';
 import AttachmentsView from './AttachementsView';
 import DeliveryListItemView from './DeliveryItemListView';
 import OrderFormView from './OrderFormView';
+import OrderLineItems from './OrderLineItems';
 
-interface Props {
-  data?: SoDetail;
-}
-
-const SoFormView: React.FC<Props> = ({ data }) => {
+const SoFormView = ({ data }: { data?: SoDetail; }) => {
   return (
     <Tabs>
       <Tabs.TabPane
@@ -20,7 +17,7 @@ const SoFormView: React.FC<Props> = ({ data }) => {
         }
         key="saleOrder"
       >
-        <OrderFormView soDetail={data} />
+        <OrderLineItems data={data} />
       </Tabs.TabPane>
       <Tabs.TabPane
         tab={

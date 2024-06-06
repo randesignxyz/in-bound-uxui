@@ -158,7 +158,7 @@ export default () => {
     </ProCard>
 
     return (
-        <Spin spinning={false}>
+        <Spin spinning={state.loading || false}>
 
             {/* <CrudWrapper baseURL={CrmPaths.visitSchedule}>
                 {

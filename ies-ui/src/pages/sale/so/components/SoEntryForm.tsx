@@ -21,6 +21,7 @@ import ItemList from './SoItemList';
 
 type Props = {
   type: 'new' | 'edit';
+  onBack?: (id?: number) => void;
   id?: number;
 };
 
@@ -47,7 +48,7 @@ export interface DeliveryInfo {
   address?: AddressInfo;
 }
 
-const EntryForm: React.FC<Props> = ({ type, id }) => {
+const EntryForm: React.FC<Props> = ({ type, id, onBack }) => {
   const { state, actions, modals } = Model();
   const { data } = state;
   const [form] = Form.useForm<So>();
@@ -108,13 +109,6 @@ const EntryForm: React.FC<Props> = ({ type, id }) => {
     actions.clearSoItem();
   }, [customerId]);
 
-  // useEffect(() => {
-  //     if (!state.data?.soDetail?.associatedTo.customer.id) return
-  //     actions.loadDependencyCustomer(state.data?.soDetail?.associatedTo.customer.id)
-
-  // }, [state.data?.soDetail?.associatedTo.customer.id])
-
-  //Default address to first record
   useEffect(() => {
     const defaultAddress = head(state.data?.initData?.addressList);
     form.setFieldsValue({
@@ -177,9 +171,7 @@ const EntryForm: React.FC<Props> = ({ type, id }) => {
       .join(', ');
   };
   const onSaveActionHandler = async (isNew: boolean = false) => {
-    // state.data?.attachments?.forEach((element) => {
-    //   console.log(`image id = ${element.imageId}, status = ${element.status}`);
-    // });
+
     try {
       const dataFrom = await form.validateFields();
       const sumData = await formSum.validateFields();
@@ -188,8 +180,7 @@ const EntryForm: React.FC<Props> = ({ type, id }) => {
         return;
       }
       if (
-        (state.data?.deliveryList?.flatMap((it) => it.itemList).filter((it) => it.qty < 0).length ||
-          0) > 0
+        (state.data?.deliveryList?.flatMap((it) => it.itemList).filter((it) => it.qty < 0).length || 0) > 0
       ) {
         message.error('Delivery quantity cannot be negative.');
         return;
@@ -220,9 +211,9 @@ const EntryForm: React.FC<Props> = ({ type, id }) => {
               attachments: state.data?.attachments,
             });
             if (isNew) {
-              actions.clearSoItem();
-              form.resetFields();
-            } else history.push(`${SalePaths.so}/detail/${so.id}`);
+              console.log(so);
+              onBack?.(so.id);
+            } else onBack?.();
           } catch (error: any) {
             if (error.message.indexOf('Direct MC') !== -1) message.error(error.message);
             else message.error('Failed to save.');
@@ -291,38 +282,28 @@ const EntryForm: React.FC<Props> = ({ type, id }) => {
                 {type === 'edit' && (
                   <Button
                     onClick={() => {
-                      history.push(`${SalePaths.so}/detail/${id}`);
+                      onBack?.()
                     }}
                   >
-                    Cancel
+                    Back
                   </Button>
                 )}
                 {type === 'edit' && (
                   <Button
                     onClick={() => {
-                      //form.resetFields()
+                      form.resetFields()
                     }}
                   >
                     Reset
                   </Button>
                 )}
-                {type === 'new' && (
-                  <Button
-                    type="primary"
-                    onClick={() => {
-                      onSaveActionHandler(true);
-                    }}
-                  >
-                    Save & Add New
-                  </Button>
-                )}
                 <Button
                   type="primary"
                   onClick={() => {
-                    onSaveActionHandler();
+                    onSaveActionHandler(type === 'new');
                   }}
                 >
-                  {type === 'new' ? 'Save & View' : 'Edit'}
+                  {type === 'new' ? 'Save' : 'Edit'}
                 </Button>
               </FooterToolbar>
             );

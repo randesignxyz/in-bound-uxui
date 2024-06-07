@@ -49,7 +49,6 @@ export default () => {
     })
 
     return (<>
-
         <PageWrapper<ContractLess, ContractAdvanceSearchParams, {} >
             listView={{
                 type: 'Table',
@@ -132,7 +131,7 @@ export default () => {
                             tabRender: item => ({
                                 value: item.contractNo || 'n/a',
                                 onOpenIconClick: () => window.open(`/external/crm/contract/detail/${item.id}`, '_blank')?.focus(),
-                                panel: <ContactDetailView onEdit={onEditHandler} openInTab={true} id={item.id} />,
+                                panel: <ContactDetailView onEdit={onEditHandler} openInTab id={item.id} />,
                                 tabLabel: item?.contractNo || `For ${item.customer.code}`,
                             })
 

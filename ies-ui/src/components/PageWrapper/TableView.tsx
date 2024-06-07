@@ -3,8 +3,6 @@ import { TabRenderProps, TableViewProps } from "./type";
 import { Button, Flex, Typography } from "antd";
 import { ExportOutlined } from "@ant-design/icons";
 
-
-
 export default <ListDataType extends Record<string, any> & { id: number, code?: string }, FilterType
     extends { searchValue?: string; status?: string; }, ValueType>(
         { listView, onAddTab }:

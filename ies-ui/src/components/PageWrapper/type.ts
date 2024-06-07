@@ -12,7 +12,6 @@ export type TabRenderProps = {
     panel: React.ReactNode;
 }
 
-
 export interface BastListViewProps<ListDataType extends Record<string, any> & { id: number, code?: string }, FilterType
     extends { searchValue?: string; status?: string; }, ValueType> {
     title?: string;
@@ -45,7 +44,7 @@ export interface TableViewProps<ListDataType extends Record<string, any> & { id:
     type: "Table"
     props: Omit<ProTableProps<ListDataType, ParamsType, ValueType>, 'columns'> & {
         quickView?: boolean
-        columns: (ProColumns<ListDataType, ValueType>)[];
+        columns: (ProColumns<ListDataType, ValueType> & { tabRender?: (item: ListDataType) => TabRenderProps })[];
         fullView?: {
             onOpen: (item: ListDataType) => void
         }

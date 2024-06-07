@@ -1,6 +1,5 @@
 
 import '@/pages/index.less'
-import SoDetailView from "./components/Detail"
 import { Badge, Button, Space, Spin, Typography } from "antd"
 import PageWrapper from "@/components/PageWrapper"
 import { SoAdvanceSearchParams, SoItemLess } from "@/services/sale/data"
@@ -9,13 +8,14 @@ import { Model } from "./model"
 import { useEffect, useRef, useState } from "react"
 import { FetchPagingParams } from "@/components/DataCrud/TableView"
 import { ActionType } from "@ant-design/pro-components"
-import { useQuery } from "@umijs/max"
+import { useAccess, useQuery } from "@umijs/max"
 import CustomerDetailView from "@/pages/crm/customer/components/Detail"
 import { formatDateTime } from "@/pages/utils"
 import Status from "@/components/Status"
 import StatusBar from "./components/List/StatusBar"
 import ViewWrapper from './ViewWrapper'
-import Create from './components/Create'
+import QuickView from './components/List/QickView'
+import AdvanceSearch from './components/List/AdvanceSearch'
 
 type FilterType = SoAdvanceSearchParams & {
     searchValue?: string; status?: string;
@@ -23,6 +23,7 @@ type FilterType = SoAdvanceSearchParams & {
 export default () => {
     const { state, actions, modals } = Model();
     const actionRef = useRef<ActionType>();
+    const access = useAccess();
     const [filter, setFilter] = useState<FetchPagingParams<SoAdvanceSearchParams>>({
         criteria: {
             status: 'Pending',
@@ -30,8 +31,7 @@ export default () => {
         }
     })
 
-    const [disbleQuery, setDisableQuery] = useState(true)
-    const { data, isFetching } = useQuery(['fetch-sale-pagin', filter], () => actions.loadListItem({
+    const { data, isFetching, refetch } = useQuery(['fetch-sale-pagin', filter], () => actions.loadListItem({
         advanceSearch: { ...filter.criteria },
         searchValue: filter.keywords
     }, filter.pagination, filter.sort), {
@@ -40,23 +40,61 @@ export default () => {
     })
 
     const statusBarRef = useRef<{ refresh: (pending?: number, failed?: number) => void }>()
+
     useEffect(() => {
-        statusBarRef.current?.refresh(state.data?.soSummary?.pendingDirect, state.data?.soSummary?.failed)
+        actions.initilizeData();
+    }, []);
+
+    useEffect(() => {
+        const pendingCount = filter.criteria?.customerType == 'ALL' ? (state.data?.soSummary?.pendingDirect || 0) + (state.data?.soSummary?.pendingIndirect || 0) :
+            filter.criteria?.customerType == 'Direct' ? state.data?.soSummary?.pendingDirect : state.data?.soSummary?.pendingIndirect
+        statusBarRef.current?.refresh(pendingCount, state.data?.soSummary?.failed)
     }, [state.data?.soSummary])
     return <Spin spinning={false}>
         <PageWrapper<SoItemLess, FilterType, {}>
-            onNewRender={(key) => <ViewWrapper addNew tabKey={key} />}
+            onNewRender={(key) => access.canCreateEditSo && <ViewWrapper openInTab addNew tabKey={key} />}
             listView={{
                 type: 'Table',
                 title: 'Sale List',
-                onStatusRender: <StatusBar ref={statusBarRef} onCustomerTypeChanged={() => { }} onStatusChanged={() => { }} />,
-                onFilter: (params) => {
+                onOpenAdvanceSearch: () => modals.showModal('advanceSearch'),
+                onStatusRender: <StatusBar ref={statusBarRef} onCustomerTypeChanged={(value) => {
+                    setFilter(v => ({
+                        ...v,
 
+                        criteria: {
+                            ...v.criteria,
+                            customerType: value
+                        }
+                    }))
+                    actionRef.current?.reload(true)
+                }} onStatusChanged={(value) => {
+                    setFilter(v => ({
+                        ...v,
+                        criteria: {
+                            ...v.criteria,
+                            status: value
+                        }
+                    }))
+                    actionRef.current?.reload(true)
+                }} />,
+                onRefresh: refetch,
+                onFilter: (params, page, sort) => {
+                    setFilter(v => (
+                        {
+                            ...v, keywords: params?.searchValue
+                            , criteria: {
+                                ...v.criteria,
+
+                                ...params
+                            }, pagination: page,
+                            sort
+                        }
+                    ))
                 },
-                // onRefresh: refetch,
                 props: {
                     dataSource: data?.items,
                     loading: isFetching,
+
                     actionRef: actionRef,
                     pagination: {
                         total: data?.total
@@ -76,8 +114,8 @@ export default () => {
                                     type="link"
                                     icon={<EyeOutlined />}
                                     onClick={async () => {
-                                        // await actions.fetchSo(r.id);
-                                        // modals.showModal('quickView');
+                                        await actions.fetchSo(r.id);
+                                        modals.showModal('quickView');
                                     }}
                                 />
                                 {r.hasAttachment && (
@@ -92,7 +130,7 @@ export default () => {
                         key: 'poNo',
                         tabRender: item => ({
                             value: item.poNo,
-                            panel: <ViewWrapper id={item.id} />,
+                            panel: <ViewWrapper openInTab id={item.id} />,
                             tabLabel: item.poNo
                         })
                     }, {
@@ -160,6 +198,48 @@ export default () => {
                     },]
                 }
             }} />
+
+        <QuickView
+            width={1000}
+            title="Quick View"
+            open={modals.isVisible('quickView')}
+            onOpenChange={(visible) => {
+                !visible && modals.hideModal('quickView');
+            }}
+            soDetail={state.data?.soDetail}
+        />
+
+        <AdvanceSearch
+            width={500}
+            title="Advance Search"
+            open={modals.isVisible('advanceSearch')}
+            onOpenChange={(visible) => {
+                !visible && modals.hideModal('advanceSearch');
+            }}
+            initData={filter.criteria}
+            salespersons={state.data?.initData?.salespersons}
+            lookDataList={state.data?.initData?.lookDataList}
+            onSearch={(data) => {
+                setFilter(v => ({
+                    ...v,
+                    criteria: {
+                        ...v.criteria,
+                        ...data
+                    }
+                }))
+                actionRef.current?.reload?.(true);
+            }}
+            onReset={() => {
+                setFilter(v => ({
+                    ...v,
+                    criteria: {
+                        status: v.criteria?.status,
+                        customerType: v.criteria?.customerType
+                    }
+                }))
+                actionRef.current?.reload?.(true);
+            }}
+        />
 
     </Spin>
 }

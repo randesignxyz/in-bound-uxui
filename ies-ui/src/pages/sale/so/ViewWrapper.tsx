@@ -4,9 +4,10 @@ import SoDetailView from "./components/Detail"
 import Edit from "./components/Edit";
 import Create from "./components/Create";
 
-export default ({ id, addNew, tabKey, actionHandlers }: {
+export default ({ id, addNew, tabKey, openInTab, actionHandlers }: {
     addNew?: true;
     tabKey?: string;
+    openInTab?: true;
     id?: number;
     actionHandlers?: {
         onBack?: () => void;
@@ -17,12 +18,12 @@ export default ({ id, addNew, tabKey, actionHandlers }: {
     const [soId, setId] = useState(id)
 
     return <>
-        {viewType == 'detail' ? <SoDetailView id={soId} openInTab actionHandlers={{
+        {viewType == 'detail' ? <SoDetailView id={soId} openInTab={openInTab} actionHandlers={{
             onBack: actionHandlers?.onBack,
             onEdit: () => setViewType('edit')
         }} /> : <></>}
 
-        {viewType == 'edit' && soId ? <Edit id={soId} actionHandlers={{ onBack: () => setViewType('detail') }} /> : <></>}
+        {viewType == 'edit' && soId ? <Edit openInTab={openInTab} id={soId} actionHandlers={{ onBack: () => setViewType('detail') }} /> : <></>}
 
         {viewType == 'create' && tabKey ? <Create key={tabKey} actionHandlers={{
             onBack: (newId) => {

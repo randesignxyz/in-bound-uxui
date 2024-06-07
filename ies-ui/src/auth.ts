@@ -51,15 +51,21 @@ export const kc = new Keycloak({
 })
 
 export const keycloak = async (sso?: boolean) => {
-    if (isOffline()) return undefined
-    kc.onTokenExpired = () => {
-        message.error("Session expired")
-    }
-    await kc.init({
-        checkLoginIframe: true,
-        onLoad: 'login-required',
-    });
 
-    kc.token && localStorage.setItem('accessToken', kc.token);
-    return kc
+    try {
+        if (isOffline()) return undefined
+        kc.onTokenExpired = () => {
+            message.error("Session expired")
+        }
+        await kc.init({
+            checkLoginIframe: true,
+            onLoad: 'login-required',
+        });
+
+        kc.token && localStorage.setItem('accessToken', kc.token);
+        return kc
+    } catch (error) {
+        // message.error("Failed to make authentcation.")
+    }
+
 }

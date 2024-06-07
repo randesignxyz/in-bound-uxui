@@ -34,7 +34,7 @@ const StatusBar = forwardRef(({ onStatusChanged, onCustomerTypeChanged }: { onSt
         </Radio.Group>
 
         <Radio.Group
-            defaultValue={'All'}
+            defaultValue={'Direct'}
             onChange={(e) => onCustomerTypeChanged(e.target.value)}
         >
             <Radio.Button value="All">All</Radio.Button>

@@ -118,7 +118,6 @@ const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
       Edit
     </Button>,
     state.data?.soDetail?.invoiceType === 121 && (
-      // state.data?.soDetail?.associatedTo.customer.code?.startsWith('C') && (
       <Button
         type="link"
         htmlType="button"
@@ -150,7 +149,6 @@ const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
         breadcrumb={undefined}
         title={!openInTab && "PO#"}
         subTitle={!openInTab && state.data?.soDetail?.docEntryNum}
-        // onBack={() => !openInTab && actionHandlers?.onBack?.()}
         content={<OrderFormView soDetail={state.data?.soDetail} />}
         extra={
           access.canCreateEditSo && !openInTab &&

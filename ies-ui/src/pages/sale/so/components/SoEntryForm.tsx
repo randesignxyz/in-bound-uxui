@@ -2,14 +2,12 @@ import { Delivery, So, SoDeliveryMethod } from '@/services/sale/data';
 import { DollarCircleOutlined, EnvironmentOutlined, PaperClipOutlined } from '@ant-design/icons';
 
 import { AddressInfo } from '@/services/crm/data';
-import { FooterToolbar, ProForm, ProFormField } from '@ant-design/pro-components';
+import { FooterToolbar, PageContainer, ProForm, ProFormField } from '@ant-design/pro-components';
 import { Button, Card, Col, Form, message, Modal, Row, Space, Spin, Tabs } from 'antd';
 import { head, sumBy } from 'lodash';
 import moment from 'moment';
 import numeral from 'numeral';
 import { useEffect, useState } from 'react';
-import { history } from "@umijs/max";
-import { SalePaths } from '../..';
 import { Model } from '../model';
 import { DeliveryEntry, SoItemEntry } from '../reducer';
 import AttachmentsEntity from './AttachmentsEntity';
@@ -20,6 +18,7 @@ import SoHeader from './SoHeader';
 import ItemList from './SoItemList';
 
 type Props = {
+  openInTab?: true;
   type: 'new' | 'edit';
   onBack?: (id?: number) => void;
   id?: number;
@@ -48,7 +47,7 @@ export interface DeliveryInfo {
   address?: AddressInfo;
 }
 
-const EntryForm: React.FC<Props> = ({ type, id, onBack }) => {
+const EntryForm: React.FC<Props> = ({ type, id, openInTab, onBack }) => {
   const { state, actions, modals } = Model();
   const { data } = state;
   const [form] = Form.useForm<So>();
@@ -60,8 +59,6 @@ const EntryForm: React.FC<Props> = ({ type, id, onBack }) => {
   }>();
   const [selectedItem, setSelectedItem] = useState<SoItemEntry>();
   const [defaultDelivery, setDefaulDelivery] = useState<DeliveryInfo>();
-
-  // const files = useState<UploadFile[]>([]);
 
   useEffect(() => {
     actions.initData();
@@ -262,277 +259,277 @@ const EntryForm: React.FC<Props> = ({ type, id, onBack }) => {
     return actions.getSoItems(state.data?.transportation || [], defaultDelivery?.deliveryMethod);
   };
 
-  return (
-    <Spin spinning={state.loading}>
-      <ProForm
-        submitter={{
-          render: () => {
-            return (
-              <FooterToolbar>
-                {type === 'new' && (
-                  <Button
-                    onClick={() => {
-                      form.resetFields();
-                    }}
-                  >
-                    Clear
-                  </Button>
-                )}
 
-                {type === 'edit' && (
-                  <Button
-                    onClick={() => {
-                      onBack?.()
-                    }}
-                  >
-                    Back
-                  </Button>
-                )}
-                {type === 'edit' && (
-                  <Button
-                    onClick={() => {
-                      form.resetFields()
-                    }}
-                  >
-                    Reset
-                  </Button>
-                )}
+  const content = <>
+    <ProForm
+      submitter={{
+        render: () => {
+          return (
+            <FooterToolbar>
+              {type === 'new' && (
                 <Button
-                  type="primary"
                   onClick={() => {
-                    onSaveActionHandler(type === 'new');
+                    form.resetFields();
                   }}
                 >
-                  {type === 'new' ? 'Save' : 'Edit'}
+                  Clear
                 </Button>
-              </FooterToolbar>
-            );
-          },
-        }}
-      />
-      <Form.Provider>
-        <Tabs>
-          <Tabs.TabPane
-            tab={
-              <Space size={0}>
-                <DollarCircleOutlined /> <span>Sale Order</span>
-              </Space>
-            }
-            key="saleOrder"
-          >
-            <ProForm
-              // labelAlign='left'
+              )}
 
-              layout="horizontal"
-              {...layout}
-              size="middle"
-              submitter={false}
-              onValuesChange={onFormvalueChanged}
-              form={form}
-            >
-              <SoHeader
-                data={{
-                  so: data?.soDetail,
-                  addressList: data?.initData?.addressList,
-                  salePersonList: data?.initData?.salePersonList,
-                  deliveryMethodList: data?.initData?.deliveryMethodList,
-                  requiredFields: requiredFields,
-                  // budgetCodes: data?.initData?.listBudget,
-                  isIndirectCustomer: data?.customerSaleInfo?.isIndirectCustomer,
-                  distributors: data?.customerSaleInfo?.distributors,
+              {type === 'edit' && (
+                <Button
+                  onClick={() => {
+                    onBack?.()
+                  }}
+                >
+                  Back
+                </Button>
+              )}
+              {type === 'edit' && (
+                <Button
+                  onClick={() => {
+                    initialFormData()
+                  }}
+                >
+                  Reset
+                </Button>
+              )}
+              <Button
+                type="primary"
+                onClick={() => {
+                  onSaveActionHandler(type === 'new');
                 }}
-              />
-            </ProForm>
-            <ItemList
-              data={{
-                lineItemList: dataSources(),
-                disabled: customerId === undefined,
-                itemList: state.data?.initData?.itemList,
-              }}
-              actionHandlers={{
-                onSelectedItem: (item, auto) => {
-                  if (item && customerId) {
-                    setSelectedItem(undefined);
-                    actions.findProductItem(item.id, customerId, auto);
-                  }
-                },
-                onRemove: actions.removeSoItem,
-                onEdit: (data, auto) => {
-                  setSelectedItem(data);
+              >
+                {type === 'new' ? 'Save' : 'Edit'}
+              </Button>
+            </FooterToolbar>
+          );
+        },
+      }}
+    />
+    <Form.Provider>
+      <Tabs>
+        <Tabs.TabPane
+          tab={
+            <Space size={0}>
+              <DollarCircleOutlined /> <span>Sale Order</span>
+            </Space>
+          }
+          key="saleOrder"
+        >
+          <ProForm
+            // labelAlign='left'
 
-                  if (customerId) actions.findProductItem(data.itemId, customerId, auto);
-                  modals.showModal('item-entry');
-                },
-              }}
-            />
-
-            <ProForm
-              {...layout1}
-              submitter={false}
-              // labelAlign='left'
-              style={{ fontWeight: 'bolder' }}
-              layout="horizontal"
-              form={formSum}
-            >
-              <Card size="small" style={{ marginTop: 10, marginBottom: 20 }}>
-                {/* <Row hidden={Object.keys(state.data?.customerSaleInfo?.transportationMOQ ?? {}).length <= 0}>
-                                <Col flex='Auto' />
-                                <Col flex='300px'>
-                                    Self Transportation&nbsp;&nbsp;
-                                    <Switch disabled={allowClaimed()} checkedChildren="On" onChange={(checked) => setClaimed(checked)} unCheckedChildren="Off" />
-                                </Col>
-                            </Row> */}
-                <Row>
-                  <Col flex="Auto" />
-                  <Col flex="350px">
-                    <ProFormField
-                      // valueType={{ type: 'money', locale: "en-US" }}
-                      render={(_, r) => {
-                        return numeral(r['value']).format('$ 0,0.000000');
-                      }}
-                      label="Sub Total"
-                      name="subTotal"
-                      readonly
-                    />
-                    {/* <ProFormField valueType={{ type: 'money', locale: "en-US" }} label='Discount Amount' name='discountAmount' readonly /> */}
-                    <ProFormField
-                      // valueType={{ type: 'money', locale: "en-US", precision: 6 }}
-                      render={(_, r) => {
-                        return numeral(r['value']).format('$ 0,0.000000');
-                      }}
-                      label="VAT Amount"
-                      name="vatAmount"
-                      readonly
-                    />
-                    <ProFormField
-                      // valueType={{ type: 'money', locale: "en-US", precision: 6 }}
-                      render={(_, r) => {
-                        return numeral(r['value']).format('$ 0,0.000000');
-                      }}
-                      label="Total Amount"
-                      name="totalAmount"
-                      readonly
-                    />
-                  </Col>
-                </Row>
-              </Card>
-            </ProForm>
-          </Tabs.TabPane>
-          <Tabs.TabPane
-            disabled={
-              !defaultDelivery || !defaultDelivery.address || (data?.soItems?.length || 0) <= 0
-            }
-            tab={
-              <Space size={0}>
-                <EnvironmentOutlined /> <span>Delivery</span>
-              </Space>
-            }
-            key="delivery"
+            layout="horizontal"
+            {...layout}
+            size="middle"
+            submitter={false}
+            onValuesChange={onFormvalueChanged}
+            form={form}
           >
-            <DeliveryItemList
+            <SoHeader
               data={{
-                defaultDelivery: defaultDelivery,
-                addressList: state.data?.initData?.addressList,
-                itemList: state.data?.deliveryList,
-              }}
-              actionHandlers={{
-                onSave: (delivery: DeliveryEntry) => {
-                  actions.saveShipping(delivery, defaultDelivery?.deliveryMethod);
-                },
-                delete: (key: string) => {
-                  actions.deleteShipping(key, defaultDelivery?.deliveryMethod);
-                },
+                so: data?.soDetail,
+                addressList: data?.initData?.addressList,
+                salePersonList: data?.initData?.salePersonList,
+                deliveryMethodList: data?.initData?.deliveryMethodList,
+                requiredFields: requiredFields,
+                // budgetCodes: data?.initData?.listBudget,
+                isIndirectCustomer: data?.customerSaleInfo?.isIndirectCustomer,
+                distributors: data?.customerSaleInfo?.distributors,
               }}
             />
-          </Tabs.TabPane>
-          {/* Attachment Tab */}
-          <Tabs.TabPane
-            tab={
-              <Space size={0}>
-                <PaperClipOutlined /> <span>Attachment</span>
-              </Space>
-            }
-            key="attachement"
+          </ProForm>
+          <ItemList
+            data={{
+              lineItemList: dataSources(),
+              disabled: customerId === undefined,
+              itemList: state.data?.initData?.itemList,
+            }}
+            actionHandlers={{
+              onSelectedItem: (item, auto) => {
+                if (item && customerId) {
+                  setSelectedItem(undefined);
+                  actions.findProductItem(item.id, customerId, auto);
+                }
+              },
+              onRemove: actions.removeSoItem,
+              onEdit: (data, auto) => {
+                setSelectedItem(data);
+
+                if (customerId) actions.findProductItem(data.itemId, customerId, auto);
+                modals.showModal('item-entry');
+              },
+            }}
+          />
+
+          <ProForm
+            {...layout1}
+            submitter={false}
+            // labelAlign='left'
+            style={{ fontWeight: 'bolder' }}
+            layout="horizontal"
+            form={formSum}
           >
-            <AttachmentsEntity
-              attachments={data?.attachments || []}
-              isCreated={!id}
-              multiple={false}
-              actionHandlers={{
-                // onAddFile: (file) => {
-                //   files[1]((v) => [...v, file]);
-                // },
-                onAddFile: actions.saveAttachment,
-                onRemoveFile: actions.deleteAttachment,
-                // onRemoveFile: (file) => {
-                //   files[1]((v) => v.filter((it) => it.uid !== file.uid));
-                // },
-              }}
-            />
-          </Tabs.TabPane>
-        </Tabs>
-      </Form.Provider>
+            <Card size="small" style={{ marginTop: 10, marginBottom: 20 }}>
+              <Row>
+                <Col flex="Auto" />
+                <Col flex="350px">
+                  <ProFormField
+                    // valueType={{ type: 'money', locale: "en-US" }}
+                    render={(_, r) => {
+                      return numeral(r['value']).format('$ 0,0.000000');
+                    }}
+                    label="Sub Total"
+                    name="subTotal"
+                    readonly
+                  />
+                  {/* <ProFormField valueType={{ type: 'money', locale: "en-US" }} label='Discount Amount' name='discountAmount' readonly /> */}
+                  <ProFormField
+                    // valueType={{ type: 'money', locale: "en-US", precision: 6 }}
+                    render={(_, r) => {
+                      return numeral(r['value']).format('$ 0,0.000000');
+                    }}
+                    label="VAT Amount"
+                    name="vatAmount"
+                    readonly
+                  />
+                  <ProFormField
+                    // valueType={{ type: 'money', locale: "en-US", precision: 6 }}
+                    render={(_, r) => {
+                      return numeral(r['value']).format('$ 0,0.000000');
+                    }}
+                    label="Total Amount"
+                    name="totalAmount"
+                    readonly
+                  />
+                </Col>
+              </Row>
+            </Card>
+          </ProForm>
+        </Tabs.TabPane>
+        <Tabs.TabPane
+          disabled={
+            !defaultDelivery || !defaultDelivery.address || (data?.soItems?.length || 0) <= 0
+          }
+          tab={
+            <Space size={0}>
+              <EnvironmentOutlined /> <span>Delivery</span>
+            </Space>
+          }
+          key="delivery"
+        >
+          <DeliveryItemList
+            data={{
+              defaultDelivery: defaultDelivery,
+              addressList: state.data?.initData?.addressList,
+              itemList: state.data?.deliveryList,
+            }}
+            actionHandlers={{
+              onSave: (delivery: DeliveryEntry) => {
+                actions.saveShipping(delivery, defaultDelivery?.deliveryMethod);
+              },
+              delete: (key: string) => {
+                actions.deleteShipping(key, defaultDelivery?.deliveryMethod);
+              },
+            }}
+          />
+        </Tabs.TabPane>
+        {/* Attachment Tab */}
+        <Tabs.TabPane
+          tab={
+            <Space size={0}>
+              <PaperClipOutlined /> <span>Attachment</span>
+            </Space>
+          }
+          key="attachement"
+        >
+          <AttachmentsEntity
+            attachments={data?.attachments || []}
+            isCreated={!id}
+            multiple={false}
+            actionHandlers={{
+              // onAddFile: (file) => {
+              //   files[1]((v) => [...v, file]);
+              // },
+              onAddFile: actions.saveAttachment,
+              onRemoveFile: actions.deleteAttachment,
+              // onRemoveFile: (file) => {
+              //   files[1]((v) => v.filter((it) => it.uid !== file.uid));
+              // },
+            }}
+          />
+        </Tabs.TabPane>
+      </Tabs>
+    </Form.Provider>
 
-      <PackageItemEntry
-        width="1050px"
-        loading={state.loading}
-        title="Product Line Item"
-        open={modals.isVisible('item-entry') && state.data?.productItem?.hasOffer}
-        onCancel={() => modals.hideModal('item-entry')}
-        data={{
-          budgetLess: state.data?.initData?.listBudget,
-          seq: (state.data?.soItems?.length || 1) * 1000,
-          soLineItems:
-            selectedItem &&
-            state.data?.soItems?.filter(
-              (it) => it.key === selectedItem?.key || it.parentKey === selectedItem?.key,
-            ),
-          productItem: state.data?.productItem,
-          packageOffers: state.data?.packageOffer,
-          defaultSaleType: state.data?.initData?.lookDataList
-            ?.filter((it) => it.type === 'SALE_TYPE')
-            .find((it) => it.code === 'STD'),
-          saleTypes: state.data?.initData?.lookDataList?.filter((it) => it.type === 'SALE_TYPE'),
-        }}
-        actionHandlers={{
-          onLoadOffer: (data) => {
-            if (customerId)
-              actions.getOffer({
-                customerId: customerId,
-                items: data,
-              });
-          },
-          onAddSoItem: (data) => {
-            actions.saveSoItems(data);
-            modals.hideModal('item-entry');
-          },
-        }}
-      />
+    <PackageItemEntry
+      width="1050px"
+      loading={state.loading}
+      title="Product Line Item"
+      open={modals.isVisible('item-entry') && state.data?.productItem?.hasOffer}
+      onCancel={() => modals.hideModal('item-entry')}
+      data={{
+        budgetLess: state.data?.initData?.listBudget,
+        seq: (state.data?.soItems?.length || 1) * 1000,
+        soLineItems:
+          selectedItem &&
+          state.data?.soItems?.filter(
+            (it) => it.key === selectedItem?.key || it.parentKey === selectedItem?.key,
+          ),
+        productItem: state.data?.productItem,
+        packageOffers: state.data?.packageOffer,
+        defaultSaleType: state.data?.initData?.lookDataList
+          ?.filter((it) => it.type === 'SALE_TYPE')
+          .find((it) => it.code === 'STD'),
+        saleTypes: state.data?.initData?.lookDataList?.filter((it) => it.type === 'SALE_TYPE'),
+      }}
+      actionHandlers={{
+        onLoadOffer: (data) => {
+          if (customerId)
+            actions.getOffer({
+              customerId: customerId,
+              items: data,
+            });
+        },
+        onAddSoItem: (data) => {
+          actions.saveSoItems(data);
+          modals.hideModal('item-entry');
+        },
+      }}
+    />
 
-      <SimpleItemEntry
-        loading={state.loading}
-        open={modals.isVisible('item-entry') && !state.data?.productItem?.hasOffer}
-        onCancel={() => modals.hideModal('item-entry')}
-        width="500px"
-        data={{
-          seq: selectedItem?.seq || ((state.data?.soItems?.length || 0) + 1) * 1000,
-          productItem: state.data?.productItem,
-          soLineItem: selectedItem,
-          budgetList: state.data?.initData?.listBudget,
-          defaultSaleType: state.data?.initData?.lookDataList
-            ?.filter((it) => it.type === 'SALE_TYPE')
-            .find((it) => it.code === 'STD'),
-          saleTypes: state.data?.initData?.lookDataList?.filter((it) => it.type === 'SALE_TYPE'),
-        }}
-        actionHandlers={{
-          onAddItem: (data) => {
-            actions.saveSoItem(data);
-            setSelectedItem(undefined);
-            modals.hideModal('item-entry');
-          },
-        }}
-      />
-    </Spin>
+    <SimpleItemEntry
+      loading={state.loading}
+      open={modals.isVisible('item-entry') && !state.data?.productItem?.hasOffer}
+      onCancel={() => modals.hideModal('item-entry')}
+      width="500px"
+      data={{
+        seq: selectedItem?.seq || ((state.data?.soItems?.length || 0) + 1) * 1000,
+        productItem: state.data?.productItem,
+        soLineItem: selectedItem,
+        budgetList: state.data?.initData?.listBudget,
+        defaultSaleType: state.data?.initData?.lookDataList
+          ?.filter((it) => it.type === 'SALE_TYPE')
+          .find((it) => it.code === 'STD'),
+        saleTypes: state.data?.initData?.lookDataList?.filter((it) => it.type === 'SALE_TYPE'),
+      }}
+      actionHandlers={{
+        onAddItem: (data) => {
+          actions.saveSoItem(data);
+          setSelectedItem(undefined);
+          modals.hideModal('item-entry');
+        },
+      }}
+    />
+  </>
+
+  return (
+    openInTab ? <Spin spinning={state.loading}>
+      {content}
+    </Spin> : <PageContainer title="PO#" subTitle={state.data?.soDetail?.docEntryNum}>
+      {content}
+    </PageContainer>
   );
 };
 

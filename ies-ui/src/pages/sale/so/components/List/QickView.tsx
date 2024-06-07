@@ -4,13 +4,17 @@ import { formatDate, formatDateTime, formatter } from "@/pages/utils";
 import { SoDetail } from "@/services/sale/data";
 import { Card, Drawer, DrawerProps } from "antd";
 import { history } from "@umijs/max";
+import { DrawerForm, DrawerFormProps } from "@ant-design/pro-components";
 
-interface Props extends DrawerProps {
+interface Props extends DrawerFormProps {
     soDetail?: SoDetail,
 }
 
 const QuickView: React.FC<Props> = ({ soDetail, ...props }) => {
-    return <Drawer {...props}>
+    return <DrawerForm {...props} submitter={false} resize={{
+        minWidth: 800,
+        maxWidth: window.innerWidth * 0.8
+    }}>
         <Card size="small" title="General">
             <DescriptionDisplay
                 column={2}
@@ -76,9 +80,6 @@ const QuickView: React.FC<Props> = ({ soDetail, ...props }) => {
                             .map((it) => `${it.name} ${it.value}`)
                             .join(', '),
                     },
-
-                    // { label: 'Ship to Name', value: soDetail?.shipToName },
-                    // { label: 'Shipp to phone number', value: soDetail?.shipPhoneNumber }
                 ]}
             />
         </Card>
@@ -94,7 +95,7 @@ const QuickView: React.FC<Props> = ({ soDetail, ...props }) => {
         <Card style={{ marginTop: '10px' }} size="small" title="Attachment">
 
         </Card>
-    </Drawer>
+    </DrawerForm>
 }
 
 export default QuickView

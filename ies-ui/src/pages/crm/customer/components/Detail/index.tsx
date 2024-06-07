@@ -27,8 +27,8 @@ import ActivityLog from '@/components/ActivityLog';
 import PosmView from '@/pages/crm/components/PosmView';
 import { simpleRequestActions } from '@/services/model';
 import { CustomerServices } from '../../services';
-import { CustomerActionController } from '../..';
 import ActionBar from '@/components/ActionBar';
+import { CustomerActionController } from '../..';
 
 interface Props {
   id?: number;
@@ -357,10 +357,10 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
 
     <PageContainer
       // breadcrumb={undefined}
-      title="Customer"
+      title="Customer #"
       subTitle={state.data?.detail?.code}
       breadcrumbRender={openInTab ? false : undefined}
-      onBack={actionHandlers?.onBack}
+      // onBack={actionHandlers?.onBack}
       extra={<ActionBar actions={state.data?.detail && getMenuItems(state.data?.detail, 'Detail', () => {
         ops.detail(state.data?.detail?.id)
       }).filter(it => it.visible) || []} numOfActionOnBar={4} />

@@ -9,6 +9,9 @@ import { errorConfig } from '../config/requestErrorConfig';
 import React from 'react';
 import { App } from 'antd';
 import moment from 'moment';
+import { endpoint, kc, keycloak } from './auth';
+import { queryCurrent } from './services/user';
+import { isOffline } from './pages/utils';
 const isDev = process.env.NODE_ENV === 'development';
 const loginPath = '/user/auth';
 /**
@@ -25,21 +28,47 @@ export async function getInitialState(): Promise<{
     setLocale('en-US');
   }
 
-  if (location.pathname.startsWith("/external")) {
-    history.push(`${loginPath}/?path=${location.pathname}`);
-  }
+  try {
+    if (isOffline()) {
+      return {};
+    }
+    const ckRs = await keycloak();
+    const currentUser = await queryCurrent();
+    //   if (currentUser)
+    //     setInitialState({
+    //       ...initialState,
+    //       currentUser: currentUser,
+    //       logout: () => {
+    //         ck?.clearToken();
+    //         ck?.logout({
+    //           redirectUri: endpoint().redirectUri,
+    //         });
+    //       },
+    //     });
 
-  return {
-    currentUser: undefined,
-    settings: defaultSettings as Partial<LayoutSettings>,
-  };
+
+    return {
+      currentUser: currentUser,
+      settings: defaultSettings as Partial<LayoutSettings>,
+      logout: () => {
+        ckRs?.clearToken();
+        ckRs?.logout({
+          redirectUri: endpoint().redirectUri,
+        })
+      }
+    }
+  } catch (error) {
+    return {
+      currentUser: undefined,
+      settings: defaultSettings as Partial<LayoutSettings>,
+    };
+  }
 }
 
 export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) => {
 
   return {
     actionsRender: () => [
-      //<Question key="doc" />, <SelectLang key="SelectLang" />
     ],
     avatarProps: {
       src: initialState?.currentUser?.avatar,
@@ -52,12 +81,12 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
       content: "Dev"
     },
     footerRender: () => <Footer />,
-    onPageChange: async () => {
-      const { location } = history;
-      if (!initialState?.currentUser && location.pathname !== loginPath) {
-        history.push(`${loginPath}/?path=${location.pathname}`);
-      }
-    },
+    // onPageChange: async () => {
+    //   const { location } = history;
+    //   if (!initialState?.currentUser && location.pathname !== loginPath) {
+    //     history.push(`${loginPath}/?path=${location.pathname}`);
+    //   }
+    // },
     bgLayoutImgList: [
       {
         src: 'https://mdn.alipayobjects.com/yuyan_qk0oxh/afts/img/D2LWSqNny4sAAAAAAAAAAAAAFl94AQBr',

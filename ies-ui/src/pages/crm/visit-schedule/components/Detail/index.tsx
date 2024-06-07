@@ -92,36 +92,6 @@ const VisitScheduleDetailView: React.FC<DetailProps> = ({ id, openInTab, onBack 
       setImage([...posImags, ...attachmentImages]);
     }
 
-    // if (state.data?.detail?.posmReviewList) {
-    //   state.data?.detail?.posmReviewList
-    //     ?.flatMap((it) => {
-    //       return it.attachments?.map((ti) => {
-    //         return { id: ti.imageId, name: it.posm.name };
-    //       });
-    //     })
-    //     .concat(
-    //       state.data?.detail?.visit && state.data?.detail?.visit?.checkInImage
-    //         ? [{ id: state.data?.detail?.visit?.checkInImage, name: 'Check In' }]
-    //         : [],
-    //     )
-    //     .map((it) => {
-    //       it &&
-    //         getUploadFileObjectUrl()(it.id).then((image) => {
-    //           setImage((v) => [...v, { id: it.id, name: it.name, image: image }]);
-    //         });
-    //     });
-    // }
-
-    // state.data?.detail?.attachments &&
-    //   state.data?.detail?.attachments.map((it, index) => {
-    //     it &&
-    //       getUploadFileObjectUrl()(it.imageId).then((image) => {
-    //         setImage((v) => [
-    //           ...v,
-    //           { id: it.imageId, name: `Attachment ${index + 1}`, image: image },
-    //         ]);
-    //       });
-    //   });
   }, [state.data?.detail?.posmReviewList]);
 
 

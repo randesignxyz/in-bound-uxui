@@ -66,6 +66,7 @@ export const keycloak = async (sso?: boolean) => {
         return kc
     } catch (error) {
         // message.error("Failed to make authentcation.")
+        console.error(error)
     }
 
 }

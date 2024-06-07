@@ -1130,9 +1130,9 @@ export default [
   },
   {
     path: '/',
-    // component: 'initial-page',
+    component: 'initial-page',
     // redirect: '/user/auth',
-    redirect: '/task-list',
+    // redirect: '/task-list',
     // redirect: '/expense/delivery',
   },
   {

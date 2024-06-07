@@ -6,32 +6,25 @@ export default () => {
 
     const access = useAccess()
     const [loading, setLoading] = useState<boolean>(true)
+    const redirectList = [
+        { access: access.canAccessTaskListMenu, path: './task-list' },
+        { access: access.canAccessCrmMenuItem, path: './crm' },
+        { access: access.canAccessHrMenu, path: './hrm' },
+        { access: access.canAccessProMenuItem, path: './pro' },
+        { access: access.canAccesDeliveyMenu, path: './delivery' },
+        { access: access.canAccessFleetMenu, path: './fleet' },
+        { access: access.canAccessProdMenu, path: './prod' },
+        { access: access.canAccessDeliveryExpenseMenu, path: './expense/delivery' },
+    ]
 
     useEffect(() => {
-        if (access.canAccessTaskListMenu) {
-            history.push("task-list")
-        } else if (access.canAccessCrmMenuItem) {
-            history.push("crm")
-        }
-        else if (access.canAccessProMenuItem) {
-            history.push("pro")
-        }
-        else if (access.canAccesDeliveyMenu) {
-            history.push("delivery")
-        }
-        else if (access.canAccessDeliveryExpenseMenu) {
-            history.push("expense/delivery")
-        }
-        else if (access.canAccessFleetMenu) {
-            history.push("fleet")
-        }
-        else {
-            setLoading(false)
-        }
+        const path = redirectList.find(it => it.access)?.path
+        if (path) history.push(path)
+        setLoading(false)
     }, [])
 
     return <Spin spinning={loading}>
-        <Empty
+        {!loading && <Empty
             image={Empty.PRESENTED_IMAGE_DEFAULT}
             imageStyle={{ height: 60 }}
             description={
@@ -44,8 +37,7 @@ export default () => {
                     </Typography.Title>
                 </span>
             }
-        >
-            {/* <Button type="primary">Create Now</Button> */}
-        </Empty>
+        />}
+
     </Spin>
 }

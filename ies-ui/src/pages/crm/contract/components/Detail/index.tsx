@@ -16,6 +16,7 @@ import { useAccess } from '@umijs/max';
 import RemarkModalV2 from '@/components/remark-modal-v2';
 import Address from './Address';
 import { AddressInfo } from '@/services/crm/data';
+import Status from '@/components/Status';
 
 const ContactDetailView: React.FC<{
   id: number,
@@ -46,15 +47,6 @@ const ContactDetailView: React.FC<{
 
   const [activeTab, setActiveTab] = useState<string>('term')
 
-  const handleBackHandler = () => {
-    history.push(`${CrmPaths.contract}/list`);
-  };
-
-  // const fetchAddressInfo = async () => {
-  //   const rs = await ContractServices.listShippingAddressByCustomerId(data!.customer.id).query(requestActions)
-  //   return rs
-  // }
-
   const onApplyLocation = async (ids: number[]) => {
     try {
       if (!!data) {
@@ -72,27 +64,23 @@ const ContactDetailView: React.FC<{
     <Spin spinning={requestActions.request?.loading || false}>
       <PageContainer
         breadcrumb={undefined}
-        // onBack={!openInTab ? handleBackHandler : undefined}
         title={
           <Space>
-            <div>{`Contract No: ${data?.contractNo || 'n/a'}`}</div>
-            {data?.status && (
-              <Tag color={getColorStatus(data?.status)}>
-                {data?.status}
-              </Tag>
-            )}
+            <div>{`Contract #`}</div>
           </Space>
         }
 
+        subTitle={data?.contractNo || 'n/a'}
+
         extra={access.crmAdmin && <Space>
-          {data?.status != "TERMINATED" && <Button type='primary' onClick={() => {
+          {data?.status != "TERMINATED" && <Button type='link' onClick={() => {
             data && onEdit(data.id, () => {
               loadData()
             })
           }} icon={<EditFilled />} >Edit</Button>
           }
           {data?.status != "TERMINATED" && data && <RemarkModalV2<ContractViewData> required confirm title='Terminate Contracdt'
-            trigger={<Button danger icon={<StopOutlined />}>Termimate</Button>} item={data} onSave={async (item, remarks) => {
+            trigger={<Button danger type='link' icon={<StopOutlined />}>Termimate</Button>} item={data} onSave={async (item, remarks) => {
               try {
                 await ContractServices.terminateContract(item.id, remarks!!)(requestActions)
                 loadData()
@@ -107,7 +95,7 @@ const ContactDetailView: React.FC<{
         }
         content={<ProCard>
           {data && <ProDescriptions dataSource={data} columns={[
-            // { label: "Contract No", dataIndex: "contractNo", },
+            { label: "Status", render: (_, r) => <Status text={r.status} />, },
             { label: "Contract Type", render: (_, r) => r.contractType.name },
             { label: "Brand", render: (_, r) => r.brand.name },
             { label: "Budget Code", render: (_, r) => r.budgetCode },

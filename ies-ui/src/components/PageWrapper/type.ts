@@ -45,7 +45,7 @@ export interface TableViewProps<ListDataType extends Record<string, any> & { id:
     type: "Table"
     props: Omit<ProTableProps<ListDataType, ParamsType, ValueType>, 'columns'> & {
         quickView?: boolean
-        columns: (ProColumns<ListDataType, ValueType> & { tabRender?: (item: ListDataType) => TabRenderProps })[];
+        columns: (ProColumns<ListDataType, ValueType>)[];
         fullView?: {
             onOpen: (item: ListDataType) => void
         }

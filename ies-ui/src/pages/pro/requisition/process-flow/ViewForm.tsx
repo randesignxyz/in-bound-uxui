@@ -33,6 +33,8 @@ export default (props: DataViewProps) => {
     }
   };
 
+
+
   const refreshData = async () => {
     try {
       await workflowModel.actions.loadInstanceData(props.id, props.type || 'task');

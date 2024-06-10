@@ -2,18 +2,18 @@ import { useParams } from 'umi'
 import { DataViewProps } from '../data'
 import { getViewForm } from '../form-resources'
 
-export default () => {
+export default (props: { formKey?: string; id?: string, openInTab?: true }) => {
 
     const params = useParams()
-    const formKey = params['formKey']
-    const id = params['id']
-        
+    const formKey = props.formKey || params['formKey']
+    const id = props.id || params['id']
 
     const dataViewProps = (): DataViewProps => {
         return {
             type: 'task',
             id: id || '',
-            formKey: formKey||'',
+            openInTab: props.openInTab,
+            formKey: formKey || '',
             showDiagramHandler: () => { },
             actionHandler: () => { },
         }

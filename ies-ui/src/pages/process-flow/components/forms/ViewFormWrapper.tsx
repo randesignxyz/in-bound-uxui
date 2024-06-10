@@ -57,8 +57,6 @@ const ViewFormWrapper = <T extends { id: number }>(props: Props<T>) => {
     enabledUplodFile
   } = props;
 
-
-
   const refreshData = async () => {
     try {
       await workflowModel.actions.loadInstanceData(workflowProp.id, workflowProp.type || 'task');
@@ -84,7 +82,7 @@ const ViewFormWrapper = <T extends { id: number }>(props: Props<T>) => {
           taskActions={taskActions}
           onValidate={actionHandlers?.onValidate}
           actionHandler={actionHandler}
-          moreActions={moreActions}
+          moreActions={moreActions?.filter(it => it) as MoreAction[]}
         />
       }{' '}
     </>
@@ -180,7 +178,7 @@ const ViewFormWrapper = <T extends { id: number }>(props: Props<T>) => {
   return (
     <Spin spinning={(state.loading || false) || (requestActions.request?.loading || false)}>
       <PageContainer
-        onBack={!isExternal() ? handleBackHandler : undefined}
+        onBack={!isExternal() && !props.workflowProp.openInTab ? handleBackHandler : undefined}
         title={state.instanceData?.processInstance?.procName}
         subTitle={`# ${state.instanceData?.processInstance?.businessKey}`}
         content={instanceInfo}

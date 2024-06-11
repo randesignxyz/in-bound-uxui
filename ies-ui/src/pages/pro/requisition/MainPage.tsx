@@ -2,40 +2,74 @@ import { TableViewSearchParams } from "@/components/DataCrud/TableView"
 import PageWrapper from "@/components/PageWrapper"
 import Status from "@/components/Status"
 import { formatDate, formatter } from "@/pages/utils"
-import { RequisitionListItem } from "@/services/pro/data"
+import { ProDepartment, RequisitionDetailResponse, RequisitionListItem } from "@/services/pro/data"
 import { RequisitionAdvanceSearchParams } from "@/services/pro/req-params"
 import { RequisitionServiceAPI } from "@/services/pro/services"
 import { CheckOutlined, CopyFilled, EditFilled, ExportOutlined, EyeFilled, PartitionOutlined, UploadOutlined } from "@ant-design/icons"
 import { useQuery } from "@umijs/max"
-import { Button, Flex, Modal, Space, Spin, Tooltip, message } from "antd"
+import { Button, Flex, Modal, Space, Spin, Tooltip, Typography, message } from "antd"
 import { useState } from "react"
 import Form from "@/pages/process-flow/form"
+import DataDetailView from "./DataDetailView"
+import AdvanceSearch from "./components/AdvanceSearch"
 
 export default () => {
 
     const services = RequisitionServiceAPI();
 
+    const [viewDetail, setViewDetail] = useState<{
+        visible: boolean;
+        data?: RequisitionDetailResponse;
+    }>({ visible: false });
+    const [advanceSearch, setAdvanceSearch] = useState<{ visible: boolean }>();
+    const [listDepartment, setListDepartment] = useState<ProDepartment[]>([]);
+    const [openFlow, setOpenFlow] = useState<RequisitionListItem>();
+
+
     const [filter, setFilter] = useState<TableViewSearchParams<RequisitionAdvanceSearchParams>>({
         criteria: { advanceSearch: { status: 'ALL' } }
     })
 
-    const { data, refetch } = useQuery(['fetch-customer-list'], () => services.list(filter), {
+    const { data, isFetching, refetch } = useQuery(['fetch-customer-list', filter], () => services.list(filter), {
         refetchOnWindowFocus: false
     })
+    const onDetailhandler = async (data: RequisitionListItem) => {
+        try {
+            const detail = await services.detail(data.id);
+
+            setViewDetail({ visible: true, data: detail });
+        } catch (error: any) {
+            message.error(error.message || 'Faild to load data.');
+        }
+    };
+
+    const listDepts = async () => {
+        try {
+            const depts = await services.listProDepartment();
+            setListDepartment(depts);
+        } catch (error: any) {
+            message.error(error.message);
+        }
+    };
 
     return <Spin spinning={false}>
-        <PageWrapper<RequisitionListItem, {}, {}>
+        <PageWrapper<RequisitionListItem, RequisitionAdvanceSearchParams, {}>
 
             listView={{
                 type: 'Table',
                 title: "PR List",
+                onOpenAdvanceSearch: async () => {
+                    await listDepts();
+                    setAdvanceSearch({ visible: true });
+
+                },
                 statuses: [
-                    { option: { label: 'All', value: 'ALL' }, },
+                    { option: { label: 'All', value: 'ALL', default: true }, },
                     { option: { label: 'Draft', value: 'DRAFT' }, },
                     { option: { label: 'Pending', value: 'PENDING' }, },
                     {
                         option: { label: 'Approved', value: 'APPROVED', }, subOptions: [
-                            { label: 'All', value: 'ALL' },
+                            { label: 'All', value: 'ALL', default: true },
                             { label: 'Posted', value: 'POSTED' },
                             { label: 'Closed', value: 'CLOSED' },
                             { label: 'Canceled', value: 'CANCELED' },
@@ -44,20 +78,43 @@ export default () => {
                     },
                     { option: { label: 'Rejected', value: 'REJECTED' }, },
                 ],
+                onFilter: (params, page, sort) => {
+                    setFilter(v => ({
+                        ...v,
+                        criteria: {
+                            ...v.criteria,
+                            searchValue: params?.searchValue,
+                            advanceSearch: {
+                                ...v.criteria?.advanceSearch,
+                                ...params,
+                                status: params?.status || 'ALL',
+                                integratedStatus: params?.subStatus
+                            },
+                            sort: sort,
+                        },
 
+                        pagination: page,
+                    }))
+                },
+                onRefresh: refetch,
                 props: {
                     dataSource: data?.items,
-                    pagination: { total: data?.pageSize },
+                    pagination: { total: data?.total },
+                    loading: isFetching,
+                    bordered: true,
+
                     columns: [
                         {
-                            width: 10, render: (_, r) => (
-                                <Space size={1}>
+                            width: 10,
+                            render: (_, r) => (
+                                <Space size={0}>
                                     <Tooltip title="View data in new browser tab.">
                                         <Button
+                                            disabled={r.processStatus == 'DRAFT'}
                                             type="link"
                                             size="small"
                                             icon={<ExportOutlined />}
-                                            onClick={async () => {
+                                            onClick={() => {
                                                 window.open(`/external/data-form/requisition_request_process/${r.instanceId}`, '_blank')?.focus();
                                             }}
                                         />
@@ -67,13 +124,15 @@ export default () => {
                                             size="small"
                                             type="link"
                                             icon={<EyeFilled />}
-                                        //onClick={() => onDetailhandler(r)}
+                                            onClick={() => onDetailhandler(r)}
+                                            disabled={r.processStatus == 'DRAFT'}
                                         />
                                     </Tooltip>
                                     <Tooltip title="Copy Data">
                                         <Button
                                             size="small"
                                             type="link"
+                                            disabled={r.processStatus == 'DRAFT'}
                                             icon={<CopyFilled />}
                                         //onClick={() => history.push(`/pro/requisition/create/${r.id}`)}
                                         />
@@ -93,13 +152,22 @@ export default () => {
                             )
                         },
                         {
-                            title: 'Form No', sorter: 'formNo', width: 80, tabRender: item => ({
+                            title: 'Form No', sorter: 'formNo', width: 100, tabRender: item => ({
                                 value: item.formNo,
-
                                 tabLabel: item.formNo,
                                 panel: <Form openInTab formKey="requisition_request_process" id={item.instanceId} />,
 
                             })
+                        },
+                        {
+                            title: 'Reason',
+                            render: (_, r) => <Typography.Paragraph style={{ fontWeight: 'lighter' }} ellipsis={{
+                                rows: 2,
+                                defaultExpanded: false,
+                                expandable: true,
+                                symbol: 'more'
+                            }} >{r.reason}</Typography.Paragraph>,
+                            dataIndex: 'reason',
                         },
                         {
                             title: 'Requisition Infomation',
@@ -147,7 +215,7 @@ export default () => {
                                 {
                                     title: 'Status',
                                     dataIndex: 'processStatus',
-                                    width: 70,
+                                    width: 100,
                                     render: (_, r) => r.processStatus && <Status text={r.processStatus} />,
                                 },
                             ],
@@ -155,6 +223,7 @@ export default () => {
 
                         {
                             title: 'SAP Information',
+
                             hideInTable: !['APPROVED', 'ALL'].some((it) => it == filter.criteria?.advanceSearch?.status),
                             children: [
                                 {
@@ -171,7 +240,7 @@ export default () => {
                                 },
                                 {
                                     title: 'Status',
-                                    width: 70,
+                                    width: 80,
                                     dataIndex: 'sapStatus',
                                     // hideInTable: !['APPROVED', 'ALL'].some((it) => it == advanceSearchParams.status),
                                     render: (_, r) => r.sapStatus && <Status text={r.sapStatus} />,
@@ -182,7 +251,11 @@ export default () => {
                             width: 5,
                             render: (_, r) => (
                                 <Flex>
-                                    <Button type="link" title='View Flow' onClick={() => setOpenFlow(r)} icon={<PartitionOutlined />} />
+                                    <Button type="link" title='View Flow' onClick={() => {
+                                        // setOpenFlow(r)
+                                    }
+
+                                    } icon={<PartitionOutlined />} />
                                     {r.sapStatus == 'FAILED' && <Button title='Post to SAP' danger type="link" onClick={() => {
                                         Modal.confirm({
                                             title: 'Post to SAP',
@@ -208,7 +281,41 @@ export default () => {
                 }
             }}
         />
-
+        <DataDetailView
+            open={viewDetail.visible}
+            data={viewDetail.data}
+            reload={async (id) => {
+                const detail = await services.detail(id);
+                await setViewDetail((v) => ({ ...v, data: detail }));
+            }}
+            onEdit={() => {
+                // viewDetail.data?.id && onEdit?.(viewDetail.data?.id)
+            }}
+            onAdd={() => {
+                // viewDetail.data?.id && onAdd?.(viewDetail.data?.id)
+            }}
+            onOpenChange={(v) => v == false && setViewDetail({ visible: false })}
+        />
+        <AdvanceSearch
+            title="Advance Search"
+            closable
+            open={advanceSearch?.visible}
+            // onVisibleChange = {v => setAdvanceSearch({visible: v})}
+            initData={filter.criteria?.advanceSearch}
+            onClose={() => {
+                console.log('advance search in pro visible ', advanceSearch);
+                setAdvanceSearch({ visible: false });
+            }}
+            onReset={() => {
+                // setAdvanceSearchParams({ status: 'ALL' });
+                // actionRef.current?.reloadAndRest?.();
+            }}
+            onSearch={(data) => {
+                // setAdvanceSearchParams((v) => ({ ...v, ...data, status: v.status }));
+                // actionRef.current?.reloadAndRest?.();
+            }}
+            listDepts={listDepartment}
+        />
     </Spin>
 
 }

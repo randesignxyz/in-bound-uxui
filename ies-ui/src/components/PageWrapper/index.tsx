@@ -25,7 +25,6 @@ import { CSS } from '@dnd-kit/utilities';
 import {
     FileAddOutlined,
     FileTextOutlined,
-    PlusOutlined,
     UnorderedListOutlined
 } from "@ant-design/icons";
 
@@ -65,7 +64,7 @@ const DraggableTabNode = ({ className, ...props }: DraggableTabPaneProps) => {
 };
 
 export default <ListDataType extends Record<string, any> & { id: number, code?: string }, FilterType
-    extends { searchValue?: string; status?: string; }, ValueType>({
+    extends Record<string, any> & { searchValue?: string; status?: string; subStatus?: string }, ValueType>({
         onNewRender,
         listView,
     }: Props<ListDataType, FilterType, ValueType>) => {
@@ -100,6 +99,10 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
             }}
             onStatusChanged={status => {
                 setFilterData(v => ({ ...v, status: status }) as any)
+                reloadList(true)
+            }}
+            onSubStatusChanged={value => {
+                setFilterData(v => ({ ...v, subStatus: value }) as any)
                 reloadList(true)
             }}
             onOpenAdvanceSearch={listView.onOpenAdvanceSearch} />

@@ -6,14 +6,22 @@ import { useState } from "react"
 import ActionBar from "../ActionBar"
 import { MenuItemType } from "antd/lib/menu/hooks/useItems"
 
-export default ({ statuses, actionButtons, actions, advanceSearchButton, onStatusRender, onOpenAdvanceSearch, onRefresh, onSearch, onStatusChanged }: {
+export default ({
+    statuses, actionButtons,
+    actions, advanceSearchButton,
+    onStatusRender, onOpenAdvanceSearch,
+    onRefresh, onSearch,
+    onStatusChanged,
+    onSubStatusChanged
+}: {
     onStatusRender?: React.ReactNode,
     statuses: { option: SegmentedLabeledOption & { default?: true }, subOptions?: (SegmentedLabeledOption & { default?: true })[] }[],
     advanceSearchButton?: React.ReactElement;
     actionButtons?: React.ReactElement[],
     actions?: (Omit<MenuItemType, 'onClick' | 'itemIcon'> & { icon?: React.ReactNode, onClick?: () => void })[];
     onSearch?: (keywords?: string) => void;
-    onStatusChanged?: (status?: string) => void;
+    onStatusChanged?: (status: string | number) => void;
+    onSubStatusChanged?: (status?: string | number) => void;
     onOpenAdvanceSearch?: () => void;
     onRefresh?: () => void;
 
@@ -34,8 +42,10 @@ export default ({ statuses, actionButtons, actions, advanceSearchButton, onStatu
                     {
                         statuses && !onStatusRender ?
                             <Segmented defaultValue={statuses.find(it => it.option.default)?.option.value} onChange={(value) => {
-                                onStatusChanged?.(value as string)
-                                setSubStatuses(statuses.find(it => it.option.value == value)?.subOptions || [])
+                                onStatusChanged?.(value)
+                                const sub = statuses.find(it => it.option.value == value)?.subOptions || []
+                                onSubStatusChanged?.(sub.find(it => it.default)?.value)
+                                setSubStatuses(v => sub)
                             }} options={statuses.map(it =>
                                 it.option
                             )} /> : onStatusRender
@@ -43,7 +53,11 @@ export default ({ statuses, actionButtons, actions, advanceSearchButton, onStatu
                     }
                 </Flex>
                 {subStatuses.length > 0 && !onStatusRender ? <Flex style={{ marginLeft: 20 }}>
-                    <Segmented options={subStatuses} />
+                    <Segmented
+                        options={subStatuses}
+                        onChange={onSubStatusChanged}
+                        defaultValue={subStatuses.find(it => it.default)?.value || subStatuses.find(it => it)?.value}
+                    />
                 </Flex> : <></>}
             </Flex>
             <Flex flex={1} justify="flex-end">

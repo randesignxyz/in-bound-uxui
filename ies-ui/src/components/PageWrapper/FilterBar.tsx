@@ -1,13 +1,15 @@
 import { FileSearchOutlined, ReloadOutlined } from "@ant-design/icons"
 import { ProCard } from "@ant-design/pro-components"
-import { Button, Flex, Input, Segmented } from "antd"
+import { Button, ButtonProps, Flex, Input, Segmented } from "antd"
 import { SegmentedLabeledOption } from "antd/lib/segmented"
 import { useState } from "react"
 import ActionBar from "../ActionBar"
 import { MenuItemType } from "antd/lib/menu/hooks/useItems"
+import { TabRenderProps } from "./type"
 
 export default ({
     statuses, actionButtons,
+    onAddTab,
     actions, advanceSearchButton,
     onStatusRender, onOpenAdvanceSearch,
     onRefresh, onSearch,
@@ -15,9 +17,15 @@ export default ({
     onSubStatusChanged
 }: {
     onStatusRender?: React.ReactNode,
+    onAddTab?: (props?: TabRenderProps) => void;
     statuses: { option: SegmentedLabeledOption & { default?: true }, subOptions?: (SegmentedLabeledOption & { default?: true })[] }[],
     advanceSearchButton?: React.ReactElement;
-    actionButtons?: React.ReactElement[],
+    actionButtons?: (React.ReactNode | (ButtonProps & {
+        key?: React.Key;
+        tabRender?: TabRenderProps; //if defined, onClick is overight
+        tooltip?: string;
+
+    }))[],
     actions?: (Omit<MenuItemType, 'onClick' | 'itemIcon'> & { icon?: React.ReactNode, onClick?: () => void })[];
     onSearch?: (keywords?: string) => void;
     onStatusChanged?: (status: string | number) => void;
@@ -61,7 +69,7 @@ export default ({
                 </Flex> : <></>}
             </Flex>
             <Flex flex={1} justify="flex-end">
-                <ActionBar actionButtons={actionButtons} actions={actions || []} numOfActionOnBar={3} />
+                <ActionBar actionButtons={actionButtons} onAddTab={onAddTab} actions={actions || []} numOfActionOnBar={3} />
                 <Button type="link" onClick={onRefresh} icon={<ReloadOutlined />} />
             </Flex>
         </Flex>

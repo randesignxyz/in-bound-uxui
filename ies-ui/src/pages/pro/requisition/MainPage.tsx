@@ -12,6 +12,7 @@ import { useState } from "react"
 import Form from "@/pages/process-flow/form"
 import DataDetailView from "./DataDetailView"
 import AdvanceSearch from "./components/AdvanceSearch"
+import Flow from "../flow"
 
 export default () => {
 
@@ -61,8 +62,8 @@ export default () => {
                 onOpenAdvanceSearch: async () => {
                     await listDepts();
                     setAdvanceSearch({ visible: true });
-
                 },
+
                 statuses: [
                     { option: { label: 'All', value: 'ALL', default: true }, },
                     { option: { label: 'Draft', value: 'DRAFT' }, },
@@ -102,55 +103,19 @@ export default () => {
                     pagination: { total: data?.total },
                     loading: isFetching,
                     bordered: true,
-
-                    columns: [
+                    actionButtonsRender: (item) => ([
+                        { tooltip: 'View data in new browser tab', type: 'link', disabled: item.processStatus == 'DRAFT', size: 'small', icon: <ExportOutlined />, onClick: () => window.open(`/external/data-form/requisition_request_process/${item.instanceId}`, '_blank')?.focus() },
+                        { tooltip: 'Quick view', type: 'link', disabled: item.processStatus == 'DRAFT', size: 'small', icon: <EyeFilled />, onClick: () => onDetailhandler(item) },
                         {
-                            width: 10,
-                            render: (_, r) => (
-                                <Space size={0}>
-                                    <Tooltip title="View data in new browser tab.">
-                                        <Button
-                                            disabled={r.processStatus == 'DRAFT'}
-                                            type="link"
-                                            size="small"
-                                            icon={<ExportOutlined />}
-                                            onClick={() => {
-                                                window.open(`/external/data-form/requisition_request_process/${r.instanceId}`, '_blank')?.focus();
-                                            }}
-                                        />
-                                    </Tooltip>
-                                    <Tooltip title="View Data">
-                                        <Button
-                                            size="small"
-                                            type="link"
-                                            icon={<EyeFilled />}
-                                            onClick={() => onDetailhandler(r)}
-                                            disabled={r.processStatus == 'DRAFT'}
-                                        />
-                                    </Tooltip>
-                                    <Tooltip title="Copy Data">
-                                        <Button
-                                            size="small"
-                                            type="link"
-                                            disabled={r.processStatus == 'DRAFT'}
-                                            icon={<CopyFilled />}
-                                        //onClick={() => history.push(`/pro/requisition/create/${r.id}`)}
-                                        />
-                                    </Tooltip>
+                            tooltip: 'Clone', type: 'link', disabled: item.processStatus == 'DRAFT', size: 'small', icon: <CopyFilled />, tabRender: {
+                                tabLabel: "Clone",
+                                panel: <></>,
+                                tabIcon: <CopyFilled />
+                            }
+                        }
 
-                                    {!r.formNo && (
-                                        <Tooltip title="Edit">
-                                            <Button
-                                                size="small"
-                                                type="link"
-                                                icon={<EditFilled />}
-                                            //onClick={() => history.push(`/pro/requisition/edit/${r.id}`)}
-                                            />
-                                        </Tooltip>
-                                    )}
-                                </Space>
-                            )
-                        },
+                    ]),
+                    columns: [
                         {
                             title: 'Form No', sorter: 'formNo', width: 100, tabRender: item => ({
                                 value: item.formNo,
@@ -161,7 +126,7 @@ export default () => {
                         },
                         {
                             title: 'Reason',
-                            render: (_, r) => <Typography.Paragraph style={{ fontWeight: 'lighter' }} ellipsis={{
+                            render: (_, r) => <Typography.Paragraph style={{ fontWeight: 350 }} ellipsis={{
                                 rows: 2,
                                 defaultExpanded: false,
                                 expandable: true,
@@ -216,14 +181,13 @@ export default () => {
                                     title: 'Status',
                                     dataIndex: 'processStatus',
                                     width: 100,
-                                    render: (_, r) => r.processStatus && <Status text={r.processStatus} />,
+                                    render: (_, r) => r.processStatus && <Status size="small" text={r.processStatus} />,
                                 },
                             ],
                         },
 
                         {
                             title: 'SAP Information',
-
                             hideInTable: !['APPROVED', 'ALL'].some((it) => it == filter.criteria?.advanceSearch?.status),
                             children: [
                                 {
@@ -240,10 +204,11 @@ export default () => {
                                 },
                                 {
                                     title: 'Status',
-                                    width: 80,
+                                    width: 100,
+
                                     dataIndex: 'sapStatus',
                                     // hideInTable: !['APPROVED', 'ALL'].some((it) => it == advanceSearchParams.status),
-                                    render: (_, r) => r.sapStatus && <Status text={r.sapStatus} />,
+                                    render: (_, r) => r.sapStatus && <Status size="small" text={r.sapStatus} />,
                                 },
                             ],
                         },
@@ -252,7 +217,7 @@ export default () => {
                             render: (_, r) => (
                                 <Flex>
                                     <Button type="link" title='View Flow' onClick={() => {
-                                        // setOpenFlow(r)
+                                        setOpenFlow(r)
                                     }
 
                                     } icon={<PartitionOutlined />} />
@@ -286,7 +251,7 @@ export default () => {
             data={viewDetail.data}
             reload={async (id) => {
                 const detail = await services.detail(id);
-                await setViewDetail((v) => ({ ...v, data: detail }));
+                setViewDetail((v) => ({ ...v, data: detail }));
             }}
             onEdit={() => {
                 // viewDetail.data?.id && onEdit?.(viewDetail.data?.id)
@@ -315,6 +280,13 @@ export default () => {
                 // actionRef.current?.reloadAndRest?.();
             }}
             listDepts={listDepartment}
+        />
+
+        <Flow
+            open={!!openFlow}
+            onOpenChange={(visible) => !visible && setOpenFlow(undefined)}
+            type={'PR'}
+            fromId={openFlow?.id || 0}
         />
     </Spin>
 

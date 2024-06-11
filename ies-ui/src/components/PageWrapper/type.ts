@@ -1,5 +1,6 @@
 
 import { ParamsType, ProColumns, ProTableProps } from "@ant-design/pro-components";
+import { ButtonProps } from "antd";
 import { MenuItemType } from "antd/lib/menu/hooks/useItems"
 import { SegmentedLabeledOption } from "antd/lib/segmented";
 import { SortOrder } from "antd/lib/table/interface";
@@ -25,7 +26,12 @@ export interface BastListViewProps<ListDataType extends Record<string, any> & { 
 
     statuses?: { option: SegmentedLabeledOption & { default?: true }, subOptions?: (SegmentedLabeledOption & { default?: true })[] }[]
     onStatusRender?: React.ReactNode,
-    actionButtons?: React.ReactElement[],
+    actionButtons?: (React.ReactNode | (ButtonProps & {
+        key?: React.Key;
+        tabRender?: TabRenderProps; //if defined, onClick is overight
+        tooltip?: string;
+
+    }))[],
     actionNumShown?: number;
 
     actions?: (Omit<MenuItemType, 'onClick' | 'itemIcon'> & { icon?: React.ReactNode, onClick?: () => void })[];
@@ -43,7 +49,12 @@ export interface TableViewProps<ListDataType extends Record<string, any> & { id:
     extends { searchValue?: string; status?: string; }, ValueType> extends BastListViewProps<ListDataType, FilterType, ValueType> {
     type: "Table"
     props: Omit<ProTableProps<ListDataType, ParamsType, ValueType>, 'columns'> & {
-        quickView?: boolean
+        actionButtonsRender?: (item: ListDataType) => (ButtonProps & {
+            key?: React.Key;
+            tabRender?: TabRenderProps; //if defined, onClick is overight
+            tooltip?: string;
+
+        })[];
         columns: (ProColumns<ListDataType, ValueType> & { tabRender?: (item: ListDataType) => TabRenderProps })[];
         fullView?: {
             onOpen: (item: ListDataType) => void

@@ -15,7 +15,6 @@ import {
 } from "@dnd-kit/sortable";
 
 import {
-    Alert,
     FloatButton,
     TabPaneProps,
 } from "antd";
@@ -52,7 +51,7 @@ const DraggableTabNode = ({ className, ...props }: DraggableTabPaneProps) => {
         ...props.style,
         transform: CSS.Translate.toString(transform),
         transition,
-        cursor: 'move',
+        cursor: 'grab',
     };
 
     return React.cloneElement(props.children as React.ReactElement, {
@@ -79,34 +78,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
     const [tabList, setTabList] = useState<(TabPaneProps & {
         key?: React.Key;
         data?: ListDataType
-    })[]>([{
-        tab: listView.title || "List",
-        key: 'list',
-        tabKey: 'list',
-        closable: false,
-
-        icon: <UnorderedListOutlined />,
-        children: <FilterBar
-            onStatusRender={listView.onStatusRender}
-            statuses={listView.statuses || []}
-            actionButtons={listView.actionButtons}
-            actions={listView.actions}
-            advanceSearchButton={listView.advanceSearchButton}
-            onRefresh={listView.onRefresh}
-            onSearch={keyworkds => {
-                setFilterData(v => ({ ...v, searchValue: keyworkds }) as any)
-                reloadList(true)
-            }}
-            onStatusChanged={status => {
-                setFilterData(v => ({ ...v, status: status }) as any)
-                reloadList(true)
-            }}
-            onSubStatusChanged={value => {
-                setFilterData(v => ({ ...v, subStatus: value }) as any)
-                reloadList(true)
-            }}
-            onOpenAdvanceSearch={listView.onOpenAdvanceSearch} />
-    }])
+    })[]>([])
 
     const [activeKey, setActiveKey] = useState<{ key: string, item?: ListDataType }>({ key: 'list' })
     const sensor = useSensor(PointerSensor, { activationConstraint: { distance: 10 } });
@@ -120,9 +92,14 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
         }
     };
 
-    const newTab = () => {
+    const newTab = (props?: TabRenderProps) => {
         const gKey = `default-${uniqueId("add")}`
-        setTabList(v => [...v, {
+        setTabList(v => [...v, props ? {
+            tab: props.value || "new",
+            key: gKey,
+            icon: props.tabIcon || <FileAddOutlined />,
+            children: props.panel
+        } : {
             tab: "new",
             key: gKey,
             icon: <FileAddOutlined />,
@@ -157,6 +134,38 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
         }
         actionRef.current?.reload(resetPageIndex);
     }
+
+    useEffect(() => {
+        setTabList([{
+            tab: listView.title || "List",
+            key: 'list',
+            tabKey: 'list',
+            closable: false,
+
+            icon: <UnorderedListOutlined />,
+            children: <FilterBar
+                onStatusRender={listView.onStatusRender}
+                statuses={listView.statuses || []}
+                actionButtons={listView.actionButtons}
+                actions={listView.actions}
+                advanceSearchButton={listView.advanceSearchButton}
+                onRefresh={listView.onRefresh}
+                onAddTab={newTab}
+                onSearch={keyworkds => {
+                    setFilterData(v => ({ ...v, searchValue: keyworkds }) as any)
+                    reloadList(true)
+                }}
+                onStatusChanged={status => {
+                    setFilterData(v => ({ ...v, status: status }) as any)
+                    reloadList(true)
+                }}
+                onSubStatusChanged={value => {
+                    setFilterData(v => ({ ...v, subStatus: value }) as any)
+                    reloadList(true)
+                }}
+                onOpenAdvanceSearch={listView.onOpenAdvanceSearch} />
+        }])
+    }, [])
     return <PageContainer title={false}
         tabProps={{
             type: 'editable-card',

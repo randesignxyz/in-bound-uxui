@@ -66,7 +66,7 @@ export default ({ addedItems, onAddItem, ...rest }: Props) => {
       title="Select item"
       resize={{
         maxWidth: window.innerWidth * 0.99,
-        minWidth: 1000,
+        minWidth: 800,
       }}
       submitter={false}
     >

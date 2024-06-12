@@ -5,19 +5,21 @@ import { formatDate, formatter } from "@/pages/utils"
 import { ProDepartment, RequisitionDetailResponse, RequisitionListItem } from "@/services/pro/data"
 import { RequisitionAdvanceSearchParams } from "@/services/pro/req-params"
 import { RequisitionServiceAPI } from "@/services/pro/services"
-import { CheckOutlined, CopyFilled, EditFilled, ExportOutlined, EyeFilled, PartitionOutlined, UploadOutlined } from "@ant-design/icons"
+import {
+    CheckOutlined, CopyFilled, ExportOutlined, EyeFilled,
+    FileOutlined, PartitionOutlined, PlusCircleOutlined, UploadOutlined
+} from "@ant-design/icons"
 import { useQuery } from "@umijs/max"
-import { Button, Flex, Modal, Space, Spin, Tooltip, Typography, message } from "antd"
+import { Button, Flex, Modal, Spin, Typography, message } from "antd"
 import { useState } from "react"
 import Form from "@/pages/process-flow/form"
 import DataDetailView from "./DataDetailView"
 import AdvanceSearch from "./components/AdvanceSearch"
 import Flow from "../flow"
+import DataEntryView from "./DataEntryView"
 
 export default () => {
-
     const services = RequisitionServiceAPI();
-
     const [viewDetail, setViewDetail] = useState<{
         visible: boolean;
         data?: RequisitionDetailResponse;
@@ -25,8 +27,6 @@ export default () => {
     const [advanceSearch, setAdvanceSearch] = useState<{ visible: boolean }>();
     const [listDepartment, setListDepartment] = useState<ProDepartment[]>([]);
     const [openFlow, setOpenFlow] = useState<RequisitionListItem>();
-
-
     const [filter, setFilter] = useState<TableViewSearchParams<RequisitionAdvanceSearchParams>>({
         criteria: { advanceSearch: { status: 'ALL' } }
     })
@@ -37,7 +37,6 @@ export default () => {
     const onDetailhandler = async (data: RequisitionListItem) => {
         try {
             const detail = await services.detail(data.id);
-
             setViewDetail({ visible: true, data: detail });
         } catch (error: any) {
             message.error(error.message || 'Faild to load data.');
@@ -55,8 +54,19 @@ export default () => {
 
     return <Spin spinning={false}>
         <PageWrapper<RequisitionListItem, RequisitionAdvanceSearchParams, {}>
-
             listView={{
+                actionButtons: [{
+                    icon: <PlusCircleOutlined />,
+                    type: 'link',
+                    tabRender: {
+                        tabIcon: <FileOutlined />,
+                        panel: (onCloseTab) => <DataEntryView onCloseTab={() => {
+                            onCloseTab?.()
+                            refetch()
+                        }} openInTab onBack={() => { }} type="CREATE" />,
+                        tabLabel: 'New PR'
+                    }
+                }],
                 type: 'Table',
                 title: "PR List",
                 onOpenAdvanceSearch: async () => {
@@ -105,11 +115,15 @@ export default () => {
                     bordered: true,
                     actionButtonsRender: (item) => ([
                         { tooltip: 'View data in new browser tab', type: 'link', disabled: item.processStatus == 'DRAFT', size: 'small', icon: <ExportOutlined />, onClick: () => window.open(`/external/data-form/requisition_request_process/${item.instanceId}`, '_blank')?.focus() },
-                        { tooltip: 'Quick view', type: 'link', disabled: item.processStatus == 'DRAFT', size: 'small', icon: <EyeFilled />, onClick: () => onDetailhandler(item) },
+                        { tooltip: 'Quick view', type: 'link', size: 'small', icon: <EyeFilled />, onClick: () => onDetailhandler(item) },
                         {
-                            tooltip: 'Clone', type: 'link', disabled: item.processStatus == 'DRAFT', size: 'small', icon: <CopyFilled />, tabRender: {
+                            tooltip: 'Clone', type: 'link', size: 'small', icon: <CopyFilled />, tabRender: {
                                 tabLabel: "Clone",
-                                panel: <></>,
+                                panel: (onCloseTab) => <DataEntryView onCloseTab={() => {
+                                    onCloseTab?.()
+                                    refetch()
+
+                                }} id={item.id} type="CREATE" openInTab />,
                                 tabIcon: <CopyFilled />
                             }
                         }
@@ -118,10 +132,13 @@ export default () => {
                     columns: [
                         {
                             title: 'Form No', sorter: 'formNo', width: 100, tabRender: item => ({
-                                value: item.formNo,
-                                tabLabel: item.formNo,
-                                panel: <Form openInTab formKey="requisition_request_process" id={item.instanceId} />,
+                                value: item.formNo || "n/a",
+                                tabLabel: item.formNo || 'Draft',
+                                panel: (onCloseTab) => item.processStatus == 'DRAFT' ? <DataEntryView onCloseTab={() => {
+                                    onCloseTab?.()
+                                    refetch()
 
+                                }} id={item.id} type="EDIT" openInTab /> : <Form openInTab formKey="requisition_request_process" id={item.instanceId} />,
                             })
                         },
                         {

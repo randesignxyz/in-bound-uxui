@@ -8,14 +8,13 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
         { listView, onAddTab }:
             { listView: TableViewProps<ListDataType, FilterType, ValueType>; onAddTab: (item: ListDataType, props?: TabRenderProps, key?: React.Key) => void }
     ) => {
-
-
     return <ProTable<ListDataType, {}, ValueType>
         size="small"
         manualRequest={true}
         {...listView.props}
         rowKey={listView.props.rowKey || 'id'}
         columns={[listView.props.actionButtonsRender ? {
+            width: 10,
             render: (_, r) => {
                 const render = listView.props.actionButtonsRender?.(r)!!
                 return <Space size={0}>

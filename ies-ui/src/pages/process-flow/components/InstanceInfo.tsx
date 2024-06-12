@@ -25,7 +25,9 @@ const InstanceInfoComp: React.FC<{
   processInstance?: ProcessInstance;
   userTask?: UserTask;
   loading?: boolean;
-}> = ({ requestor, processInstance, userTask }) => {
+  title?: string;
+  extra?: React.ReactNode;
+}> = ({ title, requestor, processInstance, userTask, extra }) => {
 
   const requestActions = simpleRequestActions();
   const [contact, setContact] = useState<BasicContactData>()
@@ -55,12 +57,12 @@ const InstanceInfoComp: React.FC<{
     //{ label: 'Task Name', value: userTask.taskName },
     //{ label: 'Assignee', value: userTask.assigneeInfo ? [userTask.assigneeInfo?.name, userTask.assigneeInfo?.employee?.empNo].filter(it => it).join(' - ') : 'N/A' },
     { label: 'Task Started Date', value: moment(userTask.created).format("YYYY-MM-DD HH:mm:ss") },
-    { label: 'Task Ended Date', value: userTask.ended?moment(userTask?.ended).format("YYYY-MM-DD HH:mm:ss"): 'N/A' } ,
+    { label: 'Task Ended Date', value: userTask.ended ? moment(userTask?.ended).format("YYYY-MM-DD HH:mm:ss") : 'N/A' },
     userTask.description ? { label: 'Description', value: userTask.description } : undefined,
     { label: 'Task Status', value: <Tag color={userTask.completed ? "success" : "processing"}  >{userTask.completed ? "Completed" : "Active"}</Tag> },
   ]
 
-  return <ProCard collapsible size='small' title="Request Info" direction="row" gutter={[5, 5]}>
+  return <ProCard collapsible size='small' title="Request Info" subTitle={title} direction="row" gutter={[5, 5]} extra={extra}>
     <ProCard bordered size='small' title="Requested By " subTitle={`${[requestor?.employee?.empNo, requestor?.name].filter(it => it).join(' ')} - ${requestor?.employee?.jobTitle || ''}`}>
       <Descriptions column={taskDisplay ? 2 : undefined} contentStyle={{ fontWeight: 'bold' }} size='small' >
         {items.map(it => (

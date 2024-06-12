@@ -43,14 +43,14 @@ export default ({ data, onEdit, onAdd, reload, ...rest }: Props) => {
                   Submit Request
                 </Button>
               )}
-              {data?.processStatus?.toLocaleLowerCase() == 'draft' && (
+              {/* {data?.processStatus?.toLocaleLowerCase() == 'draft' && (
                 <Button icon={<EditFilled />} type="link" onClick={onEdit}>
                   Edit
                 </Button>
               )}
               <Button icon={<CopyOutlined />} type="link" onClick={onAdd}>
                 Copy Data
-              </Button>
+              </Button> */}
               {access.canPostPRrToSap &&
                 data &&
                 data?.processStatus?.toLocaleLowerCase() == 'approved' &&

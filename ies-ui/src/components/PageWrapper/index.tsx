@@ -98,7 +98,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
             tab: props.value || "new",
             key: gKey,
             icon: props.tabIcon || <FileAddOutlined />,
-            children: props.panel
+            children: props.panel(() => { removeTab(gKey) })
         } : {
             tab: "new",
             key: gKey,
@@ -117,10 +117,15 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
                 tab: props?.tabLabel || item.code,
                 key: gKey,
                 icon: props?.tabIcon || <FileTextOutlined />,
-                children: props?.panel
+                children: props?.panel(() => { removeTab(gKey) })
             }])
             setActiveKey({ key: gKey, item: item })
         }
+    }
+
+    const removeTab = (key: string) => {
+        setTabList(v => v.filter(it => it.key != key))
+        setActiveKey({ key: 'list' })
     }
 
     useEffect(() => {
@@ -191,8 +196,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
             },
             onEdit: (e, action) => {
                 if (action == 'remove') {
-                    setTabList(v => v.filter(it => it.key != e.toString()))
-                    setActiveKey({ key: 'list' })
+                    removeTab(e.toString())
                 } else {
                     newTab()
                 }

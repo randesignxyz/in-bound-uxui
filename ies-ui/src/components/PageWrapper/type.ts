@@ -10,7 +10,7 @@ export type TabRenderProps = {
     onOpenIconClick?: () => void;
     tabLabel: React.ReactNode;
     tabIcon?: React.ReactNode;
-    panel: React.ReactNode;
+    panel: (onCloseTab?: () => void) => React.ReactNode;
 }
 
 export interface BastListViewProps<ListDataType extends Record<string, any> & { id: number, code?: string }, FilterType

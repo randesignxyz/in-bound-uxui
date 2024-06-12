@@ -25,7 +25,7 @@ export default ({ id, addNew, tabKey, openInTab, actionHandlers }: {
 
         {viewType == 'edit' && soId ? <Edit openInTab={openInTab} id={soId} actionHandlers={{ onBack: () => setViewType('detail') }} /> : <></>}
 
-        {viewType == 'create' && tabKey ? <Create key={tabKey} actionHandlers={{
+        {viewType == 'create' && tabKey ? <Create openInTab={openInTab} key={tabKey} actionHandlers={{
             onBack: (newId) => {
                 setId(() => newId)
                 setViewType(() => 'detail')

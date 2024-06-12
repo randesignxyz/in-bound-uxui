@@ -98,7 +98,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
             tab: props.value || "new",
             key: gKey,
             icon: props.tabIcon || <FileAddOutlined />,
-            children: props.panel(() => { removeTab(gKey) })
+            children: props.panel(() => { removeTab(gKey) }, gKey,)
         } : {
             tab: "new",
             key: gKey,
@@ -117,7 +117,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
                 tab: props?.tabLabel || item.code,
                 key: gKey,
                 icon: props?.tabIcon || <FileTextOutlined />,
-                children: props?.panel(() => { removeTab(gKey) })
+                children: props?.panel(() => { removeTab(gKey) }, gKey)
             }])
             setActiveKey({ key: gKey, item: item })
         }

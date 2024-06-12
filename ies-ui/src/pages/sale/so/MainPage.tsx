@@ -3,7 +3,7 @@ import '@/pages/index.less'
 import { Badge, Button, Space, Spin, Typography } from "antd"
 import PageWrapper from "@/components/PageWrapper"
 import { SoAdvanceSearchParams, SoItemLess } from "@/services/sale/data"
-import { EyeOutlined, PaperClipOutlined, SelectOutlined } from "@ant-design/icons"
+import { EyeOutlined, FileOutlined, PaperClipOutlined, PlusCircleOutlined, SelectOutlined } from "@ant-design/icons"
 import { Model } from "./model"
 import { useEffect, useRef, useState } from "react"
 import { FetchPagingParams } from "@/components/DataCrud/TableView"
@@ -52,10 +52,21 @@ export default () => {
     }, [state.data?.soSummary])
     return <Spin spinning={false}>
         <PageWrapper<SoItemLess, FilterType, {}>
-            onNewRender={(key) => access.canCreateEditSo && <ViewWrapper openInTab addNew tabKey={key} />}
+            // onNewRender={(key) => access.canCreateEditSo && <ViewWrapper openInTab addNew tabKey={key} />}
             listView={{
                 type: 'Table',
-                title: 'Sale List',
+                title: 'SO List',
+                actionButtons: [{
+                    icon: <PlusCircleOutlined />,
+                    type: 'link',
+                    disabled: !access.canCreateEditSo,
+                    tabRender: {
+                        value: 'New SO',
+                        tabIcon: <FileOutlined />,
+                        panel: (_, key) => <ViewWrapper addNew openInTab tabKey={key} />,
+                        tabLabel: 'New SO'
+                    }
+                }],
                 onOpenAdvanceSearch: () => modals.showModal('advanceSearch'),
                 onStatusRender: <StatusBar ref={statusBarRef} onCustomerTypeChanged={(value) => {
                     setFilter(v => ({
@@ -130,7 +141,7 @@ export default () => {
                         key: 'poNo',
                         tabRender: item => ({
                             value: item.poNo,
-                            panel: <ViewWrapper openInTab id={item.id} />,
+                            panel: () => <ViewWrapper openInTab id={item.id} />,
                             tabLabel: item.poNo
                         })
                     }, {
@@ -146,7 +157,7 @@ export default () => {
                         key: 'customerCode',
                         tabRender: item => ({
                             value: `${item.customerCode} - ${item.customerName}`,
-                            panel: <CustomerDetailView id={item.customerId} openInTab getMenuItems={() => []} />,
+                            panel: () => <CustomerDetailView id={item.customerId} openInTab getMenuItems={() => []} />,
                             tabLabel: <Badge dot><Typography.Text>{item.customerCode}</Typography.Text>  </Badge>,
                         })
                     }, {

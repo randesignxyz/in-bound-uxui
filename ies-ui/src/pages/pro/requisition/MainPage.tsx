@@ -60,10 +60,12 @@ export default () => {
                     type: 'link',
                     tabRender: {
                         tabIcon: <FileOutlined />,
-                        panel: (onCloseTab) => <DataEntryView onCloseTab={() => {
-                            onCloseTab?.()
-                            refetch()
-                        }} openInTab onBack={() => { }} type="CREATE" />,
+                        panel: (onCloseTab) => <DataEntryView
+                            onCloseTab={() => {
+                                onCloseTab?.()
+                                refetch()
+                            }}
+                            openInTab onBack={() => { }} type="CREATE" />,
                         tabLabel: 'New PR'
                     }
                 }],
@@ -118,7 +120,7 @@ export default () => {
                         { tooltip: 'Quick view', type: 'link', size: 'small', icon: <EyeFilled />, onClick: () => onDetailhandler(item) },
                         {
                             tooltip: 'Clone', type: 'link', size: 'small', icon: <CopyFilled />, tabRender: {
-                                tabLabel: "Clone",
+                                tabLabel: item.formNo ? `Clone(# ${item.formNo})` : 'Clone',
                                 panel: (onCloseTab) => <DataEntryView onCloseTab={() => {
                                     onCloseTab?.()
                                     refetch()

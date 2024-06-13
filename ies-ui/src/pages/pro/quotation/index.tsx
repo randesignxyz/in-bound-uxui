@@ -1,16 +1,16 @@
 import CrudWrapper from "@/components/DataCrud/CrudWrapper";
 import { ProPaths } from "..";
-import ListView from "./ListView";
 import DataEntryView from "./DataEntryView";
 import DataDetailView from "./DataDetailView";
+import MainPage from "./MainPage";
 
 export default () => {
 
-    return <CrudWrapper baseURL={ProPaths.quotation} >
+    return <CrudWrapper disablePageContainer baseURL={ProPaths.quotation} >
         {(view, id, navigate) => {
             switch (view) {
                 case 'list':
-                    return <ListView onAdd={id => navigate?.goToCreate?.({ id })} onEdit={id => navigate?.gotoEdit?.({ id })} />
+                    return <MainPage /> //<ListView onAdd={id => navigate?.goToCreate?.({ id })} onEdit={id => navigate?.gotoEdit?.({ id })} />
                 case 'create':
                     return <DataEntryView onBack={() => navigate?.gotToListHandler?.()} type="CREATE" id={id as number} />
                 case 'edit':
@@ -21,7 +21,5 @@ export default () => {
                     throw Error('Not supported')
             }
         }}
-
-
     </CrudWrapper>
 }

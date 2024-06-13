@@ -7,6 +7,7 @@ import { SortOrder } from "antd/lib/table/interface";
 
 export type TabRenderProps = {
     value?: React.ReactNode;
+    extra?: React.ReactNode;
     onOpenIconClick?: () => void;
     tabLabel: React.ReactNode;
     tabIcon?: React.ReactNode;
@@ -28,7 +29,7 @@ export interface BastListViewProps<ListDataType extends Record<string, any> & { 
     onStatusRender?: React.ReactNode,
     actionButtons?: (React.ReactNode | (ButtonProps & {
         key?: React.Key;
-        tabRender?: TabRenderProps; //if defined, onClick is overight
+        tabRender?: Omit<TabRenderProps, 'value'>; //if defined, onClick is overight
         tooltip?: string;
 
     }))[],
@@ -51,7 +52,7 @@ export interface TableViewProps<ListDataType extends Record<string, any> & { id:
     props: Omit<ProTableProps<ListDataType, ParamsType, ValueType>, 'columns'> & {
         actionButtonsRender?: (item: ListDataType) => (ButtonProps & {
             key?: React.Key;
-            tabRender?: TabRenderProps; //if defined, onClick is overight
+            tabRender?: Omit<TabRenderProps, 'value'>; //if defined, onClick is overight
             tooltip?: string;
 
         })[];

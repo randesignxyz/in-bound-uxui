@@ -95,7 +95,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
     const newTab = (props?: TabRenderProps) => {
         const gKey = `default-${uniqueId("add")}`
         setTabList(v => [...v, props ? {
-            tab: props.value || "new",
+            tab: props.tabLabel || "new",
             key: gKey,
             icon: props.tabIcon || <FileAddOutlined />,
             children: props.panel(() => { removeTab(gKey) }, gKey,)

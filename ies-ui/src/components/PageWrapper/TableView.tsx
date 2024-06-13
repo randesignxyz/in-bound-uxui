@@ -13,10 +13,10 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
         manualRequest={true}
         {...listView.props}
         rowKey={listView.props.rowKey || 'id'}
-        columns={[listView.props.actionButtonsRender ? {
+        columns={[listView.props.actionButtonsColumnRender ? {
             width: 10,
             render: (_, r) => {
-                const render = listView.props.actionButtonsRender?.(r)!!
+                const render = listView.props.actionButtonsColumnRender?.(r)!!
                 return <Space size={0}>
                     {
                         render.map((it, index) => <Tooltip title={it.tooltip} key={`action-tooltip-${r.id}-${index}`}>{

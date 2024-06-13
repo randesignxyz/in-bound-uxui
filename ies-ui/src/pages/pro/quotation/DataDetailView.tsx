@@ -16,11 +16,13 @@ import { simpleRequestActions } from '@/services/model';
 
 export default ({
   id,
+  openInTab,
   onBack,
   onEdit,
   onAdd,
 }: {
   id?: number;
+  openInTab?: true;
   onBack: () => void;
   onAdd?: (id?: number) => void;
   onEdit?: (id: number) => void;
@@ -109,312 +111,314 @@ export default ({
     );
   };
 
-  return (
-    <PageContainer
-      onBack={onBack}
-      title="Quotation"
-      subTitle={data?.code}
-      loading={srv.requestAction.request?.loading || false}
-      extra={
-        <Space>
-          {data?.status == 'PENDING' && (
-            <RemarkModalV2
-              required
-              confirm
-              title="Void Quotation"
-              trigger={
-                <Button type="link" danger icon={<DeleteOutlined />}>
-                  Void
-                </Button>
-              }
-              item={{
-                id: data.id,
-              }}
-              onSave={(_, remarks) => onVoidHandler(remarks!)}
-            />
-          )}
 
-          {(['SELECTED', 'REJECTED'].some(it => it == data?.status) && (data?.integratedStatus || 'FAILED') == 'FAILED') &&
-            <Button danger type="link" icon={<UploadOutlined />} onClick={() => data && onPostQP(data)}>
-              Post To SAP
-            </Button>}
-          <Button type="link" icon={<PartitionOutlined />} onClick={() => id && setOpenFlow(id)}>
-            Flow
+  const actionButtons = <Space>
+    {data?.status == 'PENDING' && (
+      <RemarkModalV2
+        required
+        confirm
+        title="Void Quotation"
+        trigger={
+          <Button type="link" danger icon={<DeleteOutlined />}>
+            Void
           </Button>
-
-          {data?.status == 'PENDING' && (
-            <Button type="link" icon={<EditOutlined />} onClick={() => id && onEdit?.(id)}>
-              Edit
-            </Button>
-          )}
-          <Button type="link" icon={<CopyOutlined />} onClick={() => onAdd?.(id)}>
-            Copy
-          </Button>
-          <Button type="link" icon={<PlusOutlined />} onClick={() => onAdd?.()}>
-            New
-          </Button>
-          {/* {(data?.integratedStatus || 'FAILED') != 'FAILED' && <Button loading={action.request?.loading || false} type='link' onClick={async () => {
-
-            try {
-              await downloadReport<{ processInstId: string; processDefKey: string; }>(action)({
-                reportName: 'export-form',
-                fileName: `${data?.code}_${moment().toDate().toDateString()}`,
-                type: 'PDF',
-                data: {
-                  processDefKey: 'quotation-form',
-                  processInstId: `${data?.id}-${data?.code}`
-                }
-              })
-            } catch (error: any) {
-              message.error(error.message || 'Failed to export data.')
-            }
-          }} icon={<ExportOutlined />}>Export</Button>} */}
-        </Space>
-      }
-    >
-      {data && (
-        <Space direction="vertical" style={{ width: '100%' }}>
-          <ProCard
-            bordered
-            style={{ marginBlockStart: 8 }}
-            direction="row"
-            size="small"
-            title={'Genernal'}
-          >
-            <Flex justify="space-between">
-              <Flex style={{ width: 700 }}>
-                <ProDescriptions<QuotationDetail>
-                  dataSource={data}
-                  column={2}
-                  columns={[
-                    {
-                      title: 'Vendor',
-
-                      render: (_, r) => (
-                        <Space.Compact>
-                          {[r.vendor.code, r.vendorName].filter((it) => it).join('-')}
-                          {(r.vendor.id || 0) < 0 && r.status == 'SELECTED' && (
-                            <ChangeVendorForm
-                              trigger={
-                                <Button danger size="small" type="link" icon={<EditOutlined />} />
-                              }
-                              quotationId={data.id}
-                              onRefresh={() => {
-                                initData();
-                              }}
-                            />
-                          )}
-                        </Space.Compact>
-                      ),
-                    },
-                    { title: 'Contact Person', render: (_, r) => r.contactPerson },
-                    { title: 'Phone1', render: (_, r) => r.phone1 },
-                    { title: 'Phone2', render: (_, r) => r.phone2 },
-                    { title: 'Mail', render: (_, r) => r.mail },
-                    { title: 'Address', render: (_, r) => r.address },
-                    { title: 'Payment Group', render: (_, r) => r.paymentGroup },
-                    { title: 'Vendor Ref No', render: (_, r) => r.refNo },
-                    { title: 'Issued Date', render: (_, r) => formatDate(r.issuedDate) },
-                    { title: 'Required Date', render: (_, r) => formatDate(r.requiredDate) },
-                    { title: 'Service', render: (_, r) => <Checkbox checked={r.service} /> },
-                  ]}
-                />
-              </Flex>
-              <Flex style={{ width: 400 }}>
-                <ProDescriptions<QuotationDetail>
-                  dataSource={data}
-                  column={1}
-                  columns={[
-                    { title: 'Delivery Lead Time', dataIndex: 'leadTime' },
-                    { title: 'Warranty', dataIndex: 'warranty' },
-                    { title: 'Trade Term', dataIndex: 'tradeTerms' },
-                    { title: 'Specifications', dataIndex: 'specifications' },
-                    {
-                      title: 'Void Remarks',
-                      hideInDescriptions: !data.voidReason,
-                      render: (_, r) => r.voidReason,
-                    },
-
-                    {
-                      title: 'Status',
-                      render: (_, r) => <Status value={r.status} text={toReadable(r.status)} />,
-                    },
-                  ]}
-                />
-              </Flex>
-            </Flex>
-          </ProCard>
-          <ProCard
-            bordered
-            size="small"
-            direction="column"
-            title={`${data.service ? 'Sevice List' : 'Item List'}`}
-          >
-            <Table<QuotationItemtDetail>
-              dataSource={data.items}
-              rowKey={'id'}
-              pagination={false}
-              expandable={{
-                expandedRowRender: linkPR,
-                rowExpandable: (record) => record.prLinked.length > 0,
-              }}
-              size="small"
-              columns={
-                data.service
-                  ? [
-                    { title: 'No', dataIndex: 'no' },
-                    { title: 'Service', dataIndex: 'itemName' },
-                    { title: 'Description', dataIndex: 'description' },
-                    {
-                      title: 'Amount',
-                      width: 150,
-                      align: 'right',
-                      render: (_, r) => formatter.format(r.amount),
-                    },
-                    {
-                      title: 'Discount (%)',
-                      width: 130,
-                      align: 'right',
-                      render: (_, r) =>
-                        r.discountPercentage != undefined
-                          ? formatterPercentage.format(r.discountPercentage / 100)
-                          : '',
-                    },
-                    {
-                      title: 'Amt. After Discount',
-                      align: 'right',
-                      width: 150,
-                      render: (_, r) => formatter.format(r.amountAfterDiscount),
-                    },
-                    { title: 'Remarks', dataIndex: 'remarks' },
-                  ]
-                  : [
-                    { title: 'No', dataIndex: 'no' },
-                    { title: 'Item Code', dataIndex: 'itemCode' },
-                    { title: 'item Name', dataIndex: 'itemName' },
-                    { title: 'Description', dataIndex: 'description' },
-                    { title: 'Qty', width: 100, align: 'right', dataIndex: 'qty' },
-                    { title: 'UoM', width: 100, dataIndex: 'uomName' },
-                    {
-                      title: 'Price',
-                      width: 150,
-                      align: 'right',
-                      render: (_, r) => formatter.format(r.price),
-                    },
-                    {
-                      title: 'Amount',
-                      width: 150,
-                      align: 'right',
-                      render: (_, r) => formatter.format(r.amount),
-                    },
-                    {
-                      title: 'Discount (%)',
-                      width: 120,
-                      align: 'right',
-                      render: (_, r) =>
-                        r.discountPercentage != undefined
-                          ? formatterPercentage.format(r.discountPercentage / 100)
-                          : '',
-                    },
-                    {
-                      title: 'Amt. After Discount',
-                      width: 150,
-                      align: 'right',
-                      render: (_, r) => formatter.format(r.amountAfterDiscount),
-                    },
-                    { title: 'Remarks', dataIndex: 'remarks' },
-                  ]
-              }
-              footer={() => (
-                <ProCard>
-                  <ProCard size="small">
-                    <ProDescriptions<QuotationDetail>
-                      dataSource={data}
-                      column={1}
-                      columns={[
-                        {
-                          title: 'Buyer',
-                          render: (_, r) =>
-                            [r.buyer?.code, r.buyer?.name].filter((it) => it).join(' - '),
-                        },
-                        {
-                          title: 'Owner',
-                          render: (_, r) =>
-                            [r.owner?.code, r.owner?.name].filter((it) => it).join(' - '),
-                        },
-                        { title: 'Remarks', dataIndex: 'remarks' },
-                      ]}
-                    />
-                  </ProCard>
-                  <ProCard size="small" colSpan={'500px'}>
-                    <Form
-                      labelCol={{ span: 12 }}
-                      wrapperCol={{ span: 12 }}
-                      style={{ maxWidth: 600 }}
-                    >
-                      <Form.Item
-                        style={{ fontWeight: 'bolder' }}
-                        label="Total Amount Before Discount"
-                      >
-                        <Input value={formatter.format(data.totalAmount)} />
-                      </Form.Item>
-                      <Form.Item label="Discount">
-                        <Space.Compact>
-                          <Input
-                            style={{
-                              width: '30%',
-                            }}
-                            value={
-                              data.discountPercentage != undefined
-                                ? formatterPercentage.format(data.discountPercentage / 100)
-                                : ''
-                            }
-                          />
-                          <Input
-                            style={{
-                              width: '70%',
-                            }}
-                            value={
-                              data.discountAmount != undefined
-                                ? formatter.format(data.discountAmount)
-                                : ''
-                            }
-                          />
-                        </Space.Compact>
-                      </Form.Item>
-                      <Form.Item label="Tax">
-                        <Input style={{
-                          width: '30%',
-                        }} value={data.tax != undefined ? formatterPercentage.format(data.tax / 100) : ''} />
-                      </Form.Item>
-                      <Form.Item style={{ fontWeight: 'bolder' }} label="Total Payment Due">
-                        <Input value={formatter.format(data.paymentDue)} />
-                      </Form.Item>
-                    </Form>
-                  </ProCard>
-                </ProCard>
-              )}
-            />
-          </ProCard>
-          {(data.attachmentFiles?.length || 0) > 0 && (
-            <AttachedFileList
-              readonly={true}
-              title="Attachment Files"
-              removeButton={false}
-              initFiles={
-                data.attachmentFiles?.map((it) => ({ activity: 'Upload', fileId: it })) || []
-              }
-            />
-          )}
-        </Space>
-      )}
-
-      <Flow
-        open={!!openFlow}
-        onOpenChange={(visible) => !visible && setOpenFlow(undefined)}
-        type={'PQ'}
-        fromId={openFlow || 0}
+        }
+        item={{
+          id: data.id,
+        }}
+        onSave={(_, remarks) => onVoidHandler(remarks!)}
       />
-    </PageContainer>
+    )}
+
+    {(['SELECTED', 'REJECTED'].some(it => it == data?.status) && (data?.integratedStatus || 'FAILED') == 'FAILED') &&
+      <Button danger type="link" icon={<UploadOutlined />} onClick={() => data && onPostQP(data)}>
+        Post To SAP
+      </Button>}
+    <Button type="link" icon={<PartitionOutlined />} onClick={() => id && setOpenFlow(id)}>
+      Flow
+    </Button>
+
+    {data?.status == 'PENDING' && (
+      <Button type="link" icon={<EditOutlined />} onClick={() => id && onEdit?.(id)}>
+        Edit
+      </Button>
+    )}
+    <Button type="link" icon={<CopyOutlined />} onClick={() => onAdd?.(id)}>
+      Copy
+    </Button>
+    {/* <Button type="link" icon={<PlusOutlined />} onClick={() => onAdd?.()}>
+      New
+    </Button> */}
+    {/* {(data?.integratedStatus || 'FAILED') != 'FAILED' && <Button loading={action.request?.loading || false} type='link' onClick={async () => {
+
+    try {
+      await downloadReport<{ processInstId: string; processDefKey: string; }>(action)({
+        reportName: 'export-form',
+        fileName: `${data?.code}_${moment().toDate().toDateString()}`,
+        type: 'PDF',
+        data: {
+          processDefKey: 'quotation-form',
+          processInstId: `${data?.id}-${data?.code}`
+        }
+      })
+    } catch (error: any) {
+      message.error(error.message || 'Failed to export data.')
+    }
+  }} icon={<ExportOutlined />}>Export</Button>} */}
+  </Space>
+  const content = data && <Space direction="vertical" style={{ width: '100%' }}>
+    <ProCard
+      bordered
+      style={{ marginBlockStart: 8 }}
+      direction="row"
+      size="small"
+      title={'Genernal'}
+      extra={openInTab && actionButtons}
+    >
+      <Flex justify="space-between">
+        <Flex style={{ width: 700 }}>
+          <ProDescriptions<QuotationDetail>
+            dataSource={data}
+            column={2}
+            columns={[
+              {
+                title: 'Vendor',
+
+                render: (_, r) => (
+                  <Space.Compact>
+                    {[r.vendor.code, r.vendorName].filter((it) => it).join('-')}
+                    {(r.vendor.id || 0) < 0 && r.status == 'SELECTED' && (
+                      <ChangeVendorForm
+                        trigger={
+                          <Button danger size="small" type="link" icon={<EditOutlined />} />
+                        }
+                        quotationId={data.id}
+                        onRefresh={() => {
+                          initData();
+                        }}
+                      />
+                    )}
+                  </Space.Compact>
+                ),
+              },
+              { title: 'Contact Person', render: (_, r) => r.contactPerson },
+              { title: 'Phone1', render: (_, r) => r.phone1 },
+              { title: 'Phone2', render: (_, r) => r.phone2 },
+              { title: 'Mail', render: (_, r) => r.mail },
+              { title: 'Address', render: (_, r) => r.address },
+              { title: 'Payment Group', render: (_, r) => r.paymentGroup },
+              { title: 'Vendor Ref No', render: (_, r) => r.refNo },
+              { title: 'Issued Date', render: (_, r) => formatDate(r.issuedDate) },
+              { title: 'Required Date', render: (_, r) => formatDate(r.requiredDate) },
+              { title: 'Service', render: (_, r) => <Checkbox checked={r.service} /> },
+            ]}
+          />
+        </Flex>
+        <Flex style={{ width: 400 }}>
+          <ProDescriptions<QuotationDetail>
+            dataSource={data}
+            column={1}
+            columns={[
+              { title: 'Delivery Lead Time', dataIndex: 'leadTime' },
+              { title: 'Warranty', dataIndex: 'warranty' },
+              { title: 'Trade Term', dataIndex: 'tradeTerms' },
+              { title: 'Specifications', dataIndex: 'specifications' },
+              {
+                title: 'Void Remarks',
+                hideInDescriptions: !data.voidReason,
+                render: (_, r) => r.voidReason,
+              },
+
+              {
+                title: 'Status',
+                render: (_, r) => <Status value={r.status} text={toReadable(r.status)} />,
+              },
+            ]}
+          />
+        </Flex>
+      </Flex>
+    </ProCard>
+    <ProCard
+      bordered
+      size="small"
+      direction="column"
+      title={`${data.service ? 'Sevice List' : 'Item List'}`}
+    >
+      <Table<QuotationItemtDetail>
+        dataSource={data.items}
+        rowKey={'id'}
+        pagination={false}
+        expandable={{
+          expandedRowRender: linkPR,
+          rowExpandable: (record) => record.prLinked.length > 0,
+        }}
+        size="small"
+        columns={
+          data.service
+            ? [
+              { title: 'No', dataIndex: 'no' },
+              { title: 'Service', dataIndex: 'itemName' },
+              { title: 'Description', dataIndex: 'description' },
+              {
+                title: 'Amount',
+                width: 150,
+                align: 'right',
+                render: (_, r) => formatter.format(r.amount),
+              },
+              {
+                title: 'Discount (%)',
+                width: 130,
+                align: 'right',
+                render: (_, r) =>
+                  r.discountPercentage != undefined
+                    ? formatterPercentage.format(r.discountPercentage / 100)
+                    : '',
+              },
+              {
+                title: 'Amt. After Discount',
+                align: 'right',
+                width: 150,
+                render: (_, r) => formatter.format(r.amountAfterDiscount),
+              },
+              { title: 'Remarks', dataIndex: 'remarks' },
+            ]
+            : [
+              { title: 'No', dataIndex: 'no' },
+              { title: 'Item Code', dataIndex: 'itemCode' },
+              { title: 'item Name', dataIndex: 'itemName' },
+              { title: 'Description', dataIndex: 'description' },
+              { title: 'Qty', width: 100, align: 'right', dataIndex: 'qty' },
+              { title: 'UoM', width: 100, dataIndex: 'uomName' },
+              {
+                title: 'Price',
+                width: 150,
+                align: 'right',
+                render: (_, r) => formatter.format(r.price),
+              },
+              {
+                title: 'Amount',
+                width: 150,
+                align: 'right',
+                render: (_, r) => formatter.format(r.amount),
+              },
+              {
+                title: 'Discount (%)',
+                width: 120,
+                align: 'right',
+                render: (_, r) =>
+                  r.discountPercentage != undefined
+                    ? formatterPercentage.format(r.discountPercentage / 100)
+                    : '',
+              },
+              {
+                title: 'Amt. After Discount',
+                width: 150,
+                align: 'right',
+                render: (_, r) => formatter.format(r.amountAfterDiscount),
+              },
+              { title: 'Remarks', dataIndex: 'remarks' },
+            ]
+        }
+        footer={() => (
+          <ProCard>
+            <ProCard size="small">
+              <ProDescriptions<QuotationDetail>
+                dataSource={data}
+                column={1}
+                columns={[
+                  {
+                    title: 'Buyer',
+                    render: (_, r) =>
+                      [r.buyer?.code, r.buyer?.name].filter((it) => it).join(' - '),
+                  },
+                  {
+                    title: 'Owner',
+                    render: (_, r) =>
+                      [r.owner?.code, r.owner?.name].filter((it) => it).join(' - '),
+                  },
+                  { title: 'Remarks', dataIndex: 'remarks' },
+                ]}
+              />
+            </ProCard>
+            <ProCard size="small" colSpan={'500px'}>
+              <Form
+                labelCol={{ span: 12 }}
+                wrapperCol={{ span: 12 }}
+                style={{ maxWidth: 600 }}
+              >
+                <Form.Item
+                  style={{ fontWeight: 'bolder' }}
+                  label="Total Amount Before Discount"
+                >
+                  <Input value={formatter.format(data.totalAmount)} />
+                </Form.Item>
+                <Form.Item label="Discount">
+                  <Space.Compact>
+                    <Input
+                      style={{
+                        width: '30%',
+                      }}
+                      value={
+                        data.discountPercentage != undefined
+                          ? formatterPercentage.format(data.discountPercentage / 100)
+                          : ''
+                      }
+                    />
+                    <Input
+                      style={{
+                        width: '70%',
+                      }}
+                      value={
+                        data.discountAmount != undefined
+                          ? formatter.format(data.discountAmount)
+                          : ''
+                      }
+                    />
+                  </Space.Compact>
+                </Form.Item>
+                <Form.Item label="Tax">
+                  <Input style={{
+                    width: '30%',
+                  }} value={data.tax != undefined ? formatterPercentage.format(data.tax / 100) : ''} />
+                </Form.Item>
+                <Form.Item style={{ fontWeight: 'bolder' }} label="Total Payment Due">
+                  <Input value={formatter.format(data.paymentDue)} />
+                </Form.Item>
+              </Form>
+            </ProCard>
+          </ProCard>
+        )}
+      />
+    </ProCard>
+    {(data.attachmentFiles?.length || 0) > 0 && (
+      <AttachedFileList
+        readonly={true}
+        title="Attachment Files"
+        removeButton={false}
+        initFiles={
+          data.attachmentFiles?.map((it) => ({ activity: 'Upload', fileId: it })) || []
+        }
+      />
+    )}
+  </Space>
+  return (
+    <>
+      {openInTab ? content : <PageContainer
+        onBack={onBack}
+        title="Quotation"
+        subTitle={data?.code}
+        loading={srv.requestAction.request?.loading || false}
+        extra={actionButtons}
+      >
+        {content}
+
+        <Flow
+          open={!!openFlow}
+          onOpenChange={(visible) => !visible && setOpenFlow(undefined)}
+          type={'PQ'}
+          fromId={openFlow || 0}
+        />
+      </PageContainer>}
+    </>
   );
 };

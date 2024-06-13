@@ -50,7 +50,7 @@ export interface TableViewProps<ListDataType extends Record<string, any> & { id:
     extends { searchValue?: string; status?: string; }, ValueType> extends BastListViewProps<ListDataType, FilterType, ValueType> {
     type: "Table"
     props: Omit<ProTableProps<ListDataType, ParamsType, ValueType>, 'columns'> & {
-        actionButtonsRender?: (item: ListDataType) => (ButtonProps & {
+        actionButtonsColumnRender?: (item: ListDataType) => (ButtonProps & {
             key?: React.Key;
             tabRender?: Omit<TabRenderProps, 'value'>; //if defined, onClick is overight
             tooltip?: string;

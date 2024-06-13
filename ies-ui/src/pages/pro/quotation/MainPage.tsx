@@ -2,31 +2,71 @@ import PageWrapper from "@/components/PageWrapper"
 import { QuotationListItem, QuotationSearchParams } from "./data"
 import { createQuotationService } from "./services";
 import { useQuery } from "@umijs/max";
-import { Button, Checkbox, Flex } from "antd";
+import { Button, Checkbox, Flex, Modal, message } from "antd";
 import { formatter } from "@/pages/utils";
 import Status from "@/components/Status";
-import { PartitionOutlined, UploadOutlined } from "@ant-design/icons";
+import { CheckOutlined, CopyFilled, ExportOutlined, FileOutlined, PartitionOutlined, PlusCircleOutlined, UploadOutlined } from "@ant-design/icons";
 import { useState } from "react";
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { ProPaths } from "..";
+import Flow from "../flow";
+import DataDetailView from "./DataDetailView";
+import DataEntryView from "./DataEntryView";
 
 export default () => {
 
     const srv = createQuotationService();
 
-    const { data, refetch, isFetching } = useQuery(['fetch-quotation-list'], () => srv.fetchPaging({
-        criteria: {}
-    }))
+
+    const [openFlow, setOpenFlow] = useState<QuotationListItem>();
 
     const [filter, setFilter] = useState<TableViewSearchParams<QuotationSearchParams>>()
 
-    return <PageWrapper<QuotationListItem, QuotationSearchParams & {
+    const { data, refetch, isFetching } = useQuery(['fetch-quotation-list', filter], () => srv.fetchPaging({
+        criteria: { ...filter?.criteria?.advanceSearch },
+        keywords: filter?.criteria?.searchValue,
+        pagination: filter?.pagination,
+        sort: filter?.criteria?.sort
+    }))
+
+    const onPostQP = (item: QuotationListItem) => {
+        Modal.confirm({
+            title: 'Post to SAP',
+            content: 'Are you sure?',
+            onOk: async () => {
+                try {
+                    await srv.postPQ(item.id)
+                    message.success("Successfully posted.")
+                    refetch()
+                } catch (error: any) {
+                    message.error(error.message || "Failed to post.")
+                    refetch()
+                }
+            }
+        })
+    }
+
+    return <> <PageWrapper<QuotationListItem, QuotationSearchParams & {
         searchValue?: string;
         status?: string; subStatus?: string
     }, {}>
         listView={{
             type: 'Table',
             title: 'Quotation List',
+            actionButtons: [{
+                icon: <PlusCircleOutlined />,
+                type: 'link',
+                tabRender: {
+                    tabIcon: <FileOutlined />,
+                    panel: (onCloseTab) => <DataEntryView
+                        onCloseTab={() => {
+                            onCloseTab?.()
+                            refetch()
+                        }}
+                        openInTab onBack={() => { }} type="CREATE" />,
+                    tabLabel: 'New Quotation'
+                }
+            }],
             statuses: [
                 { option: { label: 'All', value: 'ALL', default: true }, },
                 { option: { label: 'Pending', value: 'PENDING' }, subOptions: [] },
@@ -35,6 +75,23 @@ export default () => {
                 { option: { label: 'Expired', value: 'EXPIRED' } },
                 { option: { label: 'Void', value: 'VOID' } },
             ],
+            onRefresh: refetch,
+            onFilter: (params, page, sort) => {
+                setFilter(v => ({
+                    ...v, criteria: {
+                        ...v?.criteria,
+                        searchValue: params?.searchValue,
+                        advanceSearch: {
+                            keyword: params?.searchValue,
+                            status: params?.status,
+
+                        },
+                        sort: sort
+                    },
+                    pagination: page
+
+                }))
+            },
             props: {
                 loading: isFetching,
                 dataSource: data?.items,
@@ -42,45 +99,62 @@ export default () => {
                     total: data?.total
                 },
                 bordered: true,
+                actionButtonsColumnRender: (item) => [
+                    { tooltip: 'View data in new browser tab', type: 'link', size: 'small', icon: <ExportOutlined />, onClick: () => window.open(`/external${ProPaths.quotation}/detail/${item.id}`, '_blank')?.focus() },
+                    {
+                        tooltip: 'Copy', type: 'link', size: 'small', icon: <CopyFilled />, tabRender: {
+                            tabLabel: `Copy(# ${item.code})`,
+                            panel: (onCloseTab) => <DataEntryView
+                                onCloseTab={() => {
+                                    onCloseTab?.()
+                                    refetch()
+                                }}
+                                id={item.id}
+                                openInTab onBack={() => { }} type="CREATE" />,
+                            tabIcon: <CopyFilled />
+                        }
+                    }
 
+                ],
                 columns: [{
                     title: 'Code #',
                     sorter: 'codeNo',
-                    width: 140,
+                    width: 110,
                     tabRender: (item) => ({
-                        onOpenIconClick: () => window.open(`/external/${ProPaths.quotation}/detail/${item.id}`, '_blank')?.focus(),
-                        panel: () => <></>,
+                        panel: () => <DataDetailView openInTab id={item.id} onBack={() => { }} />,
                         tabLabel: item.code,
                         value: item.code,
 
                     }),
                 }, {
-                    title: 'Info',
+                    title: 'Vendor',
                     children: [
                         { title: 'Vendor Ref#', width: 130, render: (_, r) => r.refNo },
-                        {
-                            title: 'Srv',
-                            width: 20,
-                            align: 'center',
-                            render: (_, r) => <Checkbox checked={!!r.service} />,
-                        },
+
                         {
                             title: 'Vendor',
                             sorter: 'vendor',
                             render: (_, r) => [r.vendor.code, r.vendor.name].filter((it) => it).join(' - '),
                         },
-                        { title: 'Issued Date', sorter: 'issuedDate', align: 'right', width: 110, dataIndex: 'issuedDate' },
-                        {
-                            title: 'Pay. Due Amt',
-                            sorter: 'paymentDueAmount',
-                            width: 110,
-                            align: 'right',
-                            render: (_, r) => formatter.format(r.paymentDue),
-                        },
-                        { title: 'Status', render: (_, r) => <Status text={r.status} /> },
-                    ],
-                },
 
+                    ],
+                }, {
+                    title: 'Info',
+                    children: [{
+                        title: 'Srv',
+                        width: 20,
+                        align: 'center',
+                        render: (_, r) => r.service && <CheckOutlined size={5} />,
+                    }, { title: 'Issued Date', sorter: 'issuedDate', align: 'right', width: 110, dataIndex: 'issuedDate' },
+                    {
+                        title: 'Pay. Due Amt',
+                        sorter: 'paymentDueAmount',
+                        // width: 110,
+                        align: 'right',
+                        render: (_, r) => formatter.format(r.paymentDue),
+                    },
+                    { title: 'Status', render: (_, r) => <Status text={r.status} /> },]
+                },
                 {
                     title: 'SAP Info',
                     hideInTable: !['ALL', 'SELECTED', 'REJECTED'].some((it) => it == filter?.criteria?.advanceSearch?.status),
@@ -94,10 +168,10 @@ export default () => {
                     render: (_, r) => (
                         <Flex >
                             <Button type="link" title='View Flow' onClick={() => {
-                                //  setOpenFlow(r)
+                                setOpenFlow(r)
                             }} icon={<PartitionOutlined />} />
                             {(['SELECTED', 'REJECTED'].some(it => it == r.status) && (r.integratedStatus || 'FAILED') == 'FAILED') && <Button title='Post quotation to to SAP' type="link" danger onClick={() => {
-                                //onPostQP(r)
+                                onPostQP(r)
                             }
                             } icon={<UploadOutlined />} />}
                         </Flex>
@@ -105,7 +179,14 @@ export default () => {
                     ),
                 },]
             }
-        }}>
+        }} />
 
-    </PageWrapper>
+
+        <Flow
+            open={!!openFlow}
+            onOpenChange={(visible) => !visible && setOpenFlow(undefined)}
+            type={'PQ'}
+            fromId={openFlow?.id || 0}
+        />
+    </>
 }

@@ -81,10 +81,14 @@ type DataFormType = {
 export default ({
   id,
   type,
+  onCloseTab,
+  openInTab,
   onBack,
 }: {
   id?: number;
+  openInTab?: true;
   type: 'CREATE' | 'EDIT';
+  onCloseTab?: () => void;
   onBack: () => void;
 }) => {
   const srv = createQuotationService();
@@ -446,847 +450,846 @@ export default ({
     }
   }, [items, services, forceUpdate]);
 
-  return (
-    <PageContainer
+  const actionButtons = dataChangedProtection && lockEnabled() ? (
+    <Button
+      type="link"
+      onClick={() => setDataChangedProtection(false)}
+      icon={<UnlockOutlined />}
+    >
+      Unlock
+    </Button>
+  ) : (
+    lockEnabled() && (
+      <Button
+        type="link"
+        onClick={() => setDataChangedProtection(true)}
+        icon={<LockOutlined />}
+      >
+        Lock
+      </Button>
+    )
+  )
+
+  const content = <Space direction="vertical" style={{ width: '100%' }}>
+    <ProForm
+      form={form}
+      submitter={{
+        render: () => (
+          <FooterToolbar>
+            <Button style={{ marginRight: 10 }} onClick={onBack}>
+              Cancel
+            </Button>
+            <Button onClick={clearForm}>Clear</Button>
+            <Button type="primary" onClick={onSave}>
+              Submit
+            </Button>
+          </FooterToolbar>
+        ),
+      }}
+    >
+      <ProCard
+        bordered
+        style={{ marginBlockStart: 8 }}
+        gutter={8}
+        direction="row"
+        size="small"
+        title={'Genernal'}
+        extra={openInTab && actionButtons}
+      >
+        <ProCard size="small" colSpan={'500px'}>
+          <ProFormGroup direction="horizontal">
+            <ProForm.Item
+              required
+              style={{ marginBottom: 0 }}
+              tooltip="Please check Manual to input none SAP vendor."
+              label="Vendor"
+            >
+              <Space>
+                <ProFormCheckbox disabled={dataChangedProtection} name={'noneVendor'}>
+                  Manual
+                </ProFormCheckbox>
+                <ProFormDependency name={['noneVendor']}>
+                  {({ noneVendor }) => {
+                    if (noneVendor)
+                      return (
+                        <ProFormText
+                          disabled={dataChangedProtection}
+                          rules={[{ required: true }]}
+                          name={'vendorName'}
+                          width={380}
+                        />
+                      );
+
+                    return (
+                      <ProFormSelect
+                        disabled={dataChangedProtection}
+                        rules={[{ required: true }]}
+                        name={'vendorId'}
+                        fieldProps={{ popupMatchSelectWidth: 500 }}
+                        allowClear
+                        showSearch
+                        request={onFindVendorHandler}
+                        width={380}
+                      />
+                    );
+                  }}
+                </ProFormDependency>
+              </Space>
+            </ProForm.Item>
+          </ProFormGroup>
+
+          <ProFormGroup>
+            <ProFormDependency name={['noneVendor']}>
+              {({ noneVendor }) => {
+                if (!noneVendor) {
+                  return (
+                    <ProFormSelect
+                      name={'contactPersonId'}
+                      label="Contact Person"
+                      disabled={dataChangedProtection}
+                      width={470}
+                      rules={[{ required: true }]}
+                      options={vendorDetail?.contactList.map((it) => ({
+                        label: it.contactName,
+                        value: it.id,
+                      }))}
+                    />
+                  );
+                }
+                return (
+                  <ProFormText
+                    disabled={dataChangedProtection}
+                    rules={[{ required: true }]}
+                    tooltip="Max length is 100 characters"
+                    fieldProps={{ maxLength: 100 }}
+                    label="Contact Person"
+                    name={'contactPerson'}
+                    placeholder={'Contact Person'}
+                    width={470}
+                  />
+                );
+              }}
+            </ProFormDependency>
+          </ProFormGroup>
+          <ProFormGroup>
+            <ProFormText
+              disabled={dataChangedProtection}
+              rules={[{ required: true }]}
+              tooltip="Max length is 50 characters"
+              fieldProps={{ maxLength: 50 }}
+              name={'phone1'}
+              label="Phone1"
+              width={'sm'}
+            />
+            <ProFormText
+              disabled={dataChangedProtection}
+              tooltip="Max length is 50 characters"
+              fieldProps={{ maxLength: 50 }}
+              name={'phone2'}
+              label="Phone2"
+              width={'sm'}
+            />
+          </ProFormGroup>
+          <ProFormText
+            disabled={dataChangedProtection}
+            tooltip="Max length is 100 characters"
+            fieldProps={{ maxLength: 100 }}
+            width={470}
+            name={'mail'}
+            label="E-Mail"
+          />
+          <ProFormTextArea
+            disabled={dataChangedProtection}
+            name={'address'}
+            tooltip="Max length is 500 characters"
+            fieldProps={{ rows: 1, maxLength: 500 }}
+            width={500}
+            label="Address"
+          />
+          <ProFormDependency name={['noneVendor']}>
+            {({ noneVendor }) => {
+              if (!noneVendor)
+                return (
+                  <ProFormText
+                    disabled={dataChangedProtection}
+                    name={'paymentGroup'}
+                    fieldProps={{ readOnly: true }}
+                    width={470}
+                    label="Payment Terms"
+                  />
+                );
+
+              return (
+                <ProFormSelect
+                  disabled={dataChangedProtection}
+                  label="Payment Terms"
+                  rules={[{ required: true }]}
+                  name={'paymentGroupId'}
+                  allowClear
+                  showSearch
+                  request={onFindPaymentGroup}
+                  width={470}
+                />
+              );
+            }}
+          </ProFormDependency>
+        </ProCard>
+
+        <ProCard />
+        <ProCard size="small" colSpan={'500px'}>
+          <ProFormGroup direction="horizontal">
+            <ProFormText
+              name={'refNo'}
+              fieldProps={{
+                maxLength: 50,
+              }}
+              rules={[{ required: true }]}
+              width={'sm'}
+              label="Vendor Ref. No"
+            />
+            <ProFormDatePicker
+              name={'issuedDate'}
+              rules={[{ required: true }]}
+              width={'sm'}
+              label="Issued Date"
+            />
+          </ProFormGroup>
+          <ProFormGroup direction="horizontal">
+            <ProFormDatePicker
+              rules={[{ required: true }]}
+              name={'requiredDate'}
+              width={'sm'}
+              label="Required Date"
+            />
+            <ProFormDatePicker
+              rules={[{ required: true }]}
+              width={'sm'}
+              name={'validUntil'}
+              label="Valid Until"
+            />
+          </ProFormGroup>
+          <ProFormTextArea
+            name={'leadTime'}
+            tooltip="Max lenght is 500 characters"
+            fieldProps={{ rows: 1, maxLength: 500 }}
+            width={500}
+            label="Delivery Lead Time"
+          />
+          <ProFormTextArea
+            name={'warranty'}
+            tooltip="Max lenght is 500 characters"
+            fieldProps={{ rows: 1, maxLength: 500 }}
+            width={500}
+            label="Warranty"
+          />
+          <ProFormTextArea
+            name={'tradeTerms'}
+            tooltip="Max lenght is 500 characters"
+            fieldProps={{ rows: 1, maxLength: 500 }}
+            width={500}
+            label="Trade Terms"
+          />
+          <ProFormTextArea
+            name={'specifications'}
+            tooltip="Max lenght is 500 characters"
+            fieldProps={{ rows: 1, maxLength: 500 }}
+            width={500}
+            label="Specifications"
+          />
+        </ProCard>
+
+        {/* <ProCard colSpan={'20px'} /> */}
+      </ProCard>
+    </ProForm>
+
+    <ProCard
+      bordered
+      size="small"
+      direction="column"
+      title={isService ? 'Service List' : 'Item List'}
+      extra={
+        <ProForm form={form} submitter={false}>
+          <Space align="baseline">
+            <ProFormSwitch
+              disabled={!!id || services.length > 0 || items.length > 0}
+              name={'isService'}
+              // isService
+              unCheckedChildren={'Item'}
+              checkedChildren={'Service'}
+            />
+            <Button danger type='link' disabled={isService ? services.length == 0 : items.length == 0} icon={<ClearOutlined />} onClick={() => {
+              setItems([])
+              setServices([])
+            }} />
+          </Space>
+        </ProForm>
+      }
+    >
+      {!isService && (
+        <EditableProTable<SaveQuotationItem>
+          value={items.map((it, index) => ({ ...it, no: index + 1 }))}
+          size="small"
+          recordCreatorProps={{
+            creatorButtonText: 'Add Item ',
+            onClick: () => {
+              setAddItemVisible(true);
+            },
+            record: () => ({} as SaveQuotationItem),
+          }}
+          key={'pro-item-list'}
+          rowKey="key"
+          rowSelection={
+            !!mergeItemEnabled && {
+              selectedRowKeys: mergeItems.map((it) => it.key),
+              getCheckboxProps: (r) => {
+                return {
+                  disabled:
+                    r.itemId != mergeItemEnabled.itemId || r.key == mergeItemEnabled.key,
+                };
+              },
+              onChange(_, selectedRows) {
+                setMergeItems(selectedRows);
+              },
+            }
+          }
+          editableFormRef={editableFormRef}
+          controlled
+          editable={{
+            type: 'multiple',
+            editableKeys: items.map((it) => it.key),
+            actionRender: (row) => [
+              <Space key={'k1' + row.key} size={'small'} align="baseline">
+                {!mergeItemEnabled && (
+                  <Popconfirm
+                    title="Delete the item"
+                    description="Are you sure to delete?"
+                    onConfirm={() => setItems((v) => v.filter((it) => it.key != row.key))}
+                    icon={<QuestionCircleOutlined style={{ color: 'red' }} />}
+                  >
+                    <Button danger type="link" size="small" icon={<MinusCircleOutlined />} />
+                  </Popconfirm>
+                )}
+
+                {row.item &&
+                  !mergeItemEnabled &&
+                  items.filter((it) => it.itemId == row.itemId && it.key == '------').length > 1 && (
+                    <Button
+                      onClick={() => {
+                        setMergeItemEnabled(row);
+                        setMergeItems(items.filter((it) => it.itemId == row.itemId));
+                      }}
+                      type="link"
+                      icon={<MergeCellsOutlined />}
+                    />
+                  )}
+
+                {mergeItemEnabled?.key == row.key && (
+                  <Button
+                    onClick={() => {
+                      setMergeItemEnabled(undefined);
+                      setMergeItems([]);
+                    }}
+                    danger
+                    type="link"
+                    disabled={!(row.item?.prItems && row.item?.prItems.length > 0)}
+                    icon={<RollbackOutlined />}
+                  />
+                )}
+
+                {mergeItemEnabled?.key == row.key && (
+                  <Popconfirm
+                    title="Merge Item"
+                    description="Are you sure to merge?"
+                    onConfirm={() => {
+                      doMerge();
+                    }}
+                  >
+                    <Button
+                      type="link"
+                      // disabled={
+                      //   mergeItems.filter((it) => it.key != mergeItemEnabled.key).length == 0
+                      // }
+                      icon={<CheckCircleOutlined />}
+                    />
+                  </Popconfirm>
+                )}
+              </Space>,
+            ],
+            onValuesChange: (_, recordList) => {
+              const newItems = recordList.map((it) => {
+                const newAmount = (it.price || 0) * (it.qty || 0);
+                const newAmountAfterDiscount = round(
+                  newAmount * (1 - (it.discount || 0) / 100),
+                  2,
+                );
+                return {
+                  ...it,
+                  amount: newAmount,
+                  amountAfterDiscount: newAmountAfterDiscount,
+                };
+              });
+              // setForceUpdate(v => v+1)
+              setItems(newItems);
+            },
+          }}
+          expandable={{
+            expandedRowRender: linkPR,
+            rowExpandable: (record) => record.prLinked.length > 0,
+          }}
+          columns={[
+            {
+              title: '#',
+              dataIndex: 'no',
+              readonly: true,
+              width: 30,
+              render: (_, r) => r.no,
+            },
+            {
+              title: 'Item Code',
+              dataIndex: 'itemCode',
+              readonly: true,
+              width: 90,
+              render: (_, r) => r.itemCode,
+            },
+            {
+              title: 'Item Name',
+              dataIndex: 'itemName',
+              readonly: true,
+              responsive: ['sm', 'md'],
+              render: (_, r) => r.itemName,
+            },
+            {
+              title: 'Description',
+              // width: 170,
+              dataIndex: 'description',
+              tooltip: 'Max length is 1000 characters',
+              valueType: 'textarea',
+              fieldProps: { rows: 1 },
+              responsive: ['sm', 'md'],
+            },
+            {
+              title: 'Qty',
+              formItemProps: { rules: [{ required: true }] },
+              fieldProps: {
+                style: { width: 70 },
+                disabled: dataChangedProtection,
+                precision: 2,
+                min: 0,
+              },
+              dataIndex: 'qty',
+              align: 'center',
+              valueType: 'digit',
+              width: 80,
+            },
+            {
+              title: 'UoM',
+              width: 100,
+              dataIndex: 'uomName',
+              valueType: 'select',
+              formItemProps: { rules: [{ required: true }] },
+              fieldProps: {
+                style: { width: 90 },
+                required: true,
+                disabled: dataChangedProtection,
+                showSearch: true,
+                popupMatchSelectWidth: 200,
+              },
+              valueEnum: (r) =>
+                (r.item?.uomList || []).reduce(
+                  (acc, cur) => ({ ...acc, [cur.id]: cur.name }),
+                  {},
+                ),
+            },
+            {
+              title: 'Price',
+              dataIndex: 'price',
+
+              fieldProps: {
+                style: { width: 90 },
+              },
+              formItemProps: {
+                rules: [{ required: true }],
+              },
+              valueType: 'money',
+              width: 100,
+              align: 'right',
+            },
+            {
+              title: 'Amount',
+              width: 100,
+              align: 'right',
+              editable: false,
+              renderText: (_, record) => formatter.format(record.amount),
+            },
+            {
+              title: 'Dis. (%)',
+              fieldProps: {
+                max: 90,
+                min: 0,
+              },
+              align: 'right',
+              valueType: 'digit',
+              dataIndex: 'discount',
+              width: 90,
+            },
+            {
+              title: 'After Dis.',
+              align: 'right',
+              editable: false,
+              dataIndex: 'amountAfterDiscount',
+              valueType: 'money',
+              width: 110,
+              renderText: (_, record) => formatter.format(record.amountAfterDiscount),
+            },
+            {
+              title: 'Remarks',
+              dataIndex: 'remarks',
+              valueType: 'textarea',
+              tooltip: 'Max length is 1000 characters',
+              responsive: ['xs', 'md'],
+              fieldProps: { rows: 1 },
+              render: (_, r) => r.remarks,
+            },
+            {
+              valueType: 'option',
+              width: 60,
+              hideInTable: dataChangedProtection,
+              render: () => {
+                return null;
+              },
+            },
+          ]}
+        />
+      )}
+
+      {isService && (
+        <EditableProTable<SaveQuotationItem>
+          value={services.map((it, index) => ({ ...it, no: index + 1 }))}
+          rowKey="key"
+          size="small"
+          key={'pro-item-service'}
+          recordCreatorProps={{
+            creatorButtonText: 'Add Service ',
+            onClick: () => {
+              setAddItemVisible(true);
+            },
+            record: () => ({} as SaveQuotationItem),
+          }}
+          editableFormRef={editableFormRef}
+          controlled
+          expandable={{
+            expandedRowRender: linkPR,
+            rowExpandable: (record) => record.prLinked.length > 0,
+          }}
+          editable={{
+            type: 'multiple',
+            editableKeys: services.map((it) => it.key),
+            onValuesChange: (_, recordList) => {
+              const newServices = recordList.map((it) => {
+                const newAmount = it.amount || 0;
+                const newAmountAfterDiscount = round(
+                  newAmount * (1 - (it.discount || 0) / 100),
+                  2,
+                );
+                return {
+                  ...it,
+                  amount: newAmount,
+                  amountAfterDiscount: newAmountAfterDiscount,
+                };
+              });
+
+              setServices(newServices);
+            },
+            actionRender: (row) => [
+              <Space size={'small'} align="baseline">
+                {row.item && (
+                  <AddService
+                    key={`${row.key}-edit-service`}
+                    item={row.item}
+                    editData={{ ...row }}
+                    onSave={(data) => {
+                      const newServices = services.map((it) => {
+                        if (it.key == data.key) {
+                          return { ...it, ...data };
+                        } else return it;
+                      });
+                      setServices(newServices);
+                    }}
+                    trigger={
+                      <Button
+                        type="link"
+                        disabled={!(row.item?.prItems && row.item?.prItems.length > 0)}
+                        icon={<EditOutlined />}
+                      />
+                    }
+                  />
+                )}
+
+                <Popconfirm
+                  key={`${row.key}-confirm`}
+                  title="Delete the service"
+                  description="Are you sure to delete?"
+                  onConfirm={() => setServices((v) => v.filter((it) => it.key != row.key))}
+                  icon={<QuestionCircleOutlined style={{ color: 'red' }} />}
+                >
+                  <Button
+                    disabled={dataChangedProtection}
+                    danger
+                    type="link"
+                    size="small"
+                    icon={<DeleteOutlined />}
+                  />
+                </Popconfirm>
+              </Space>,
+            ],
+          }}
+          columns={[
+            {
+              title: '#',
+              dataIndex: 'no',
+              readonly: true,
+              width: 20,
+              render: (_, r) => r.no,
+            },
+            {
+              title: 'Service Name',
+              dataIndex: 'itemName',
+              responsive: ['sm', 'md'],
+
+              formItemProps: {
+                rules: [{ required: true }],
+              },
+            },
+            {
+              title: 'Description',
+              dataIndex: 'description',
+              valueType: 'textarea',
+              responsive: ['md', 'lg'],
+              tooltip: 'Max length is 1000 characters',
+              fieldProps: {
+                rows: 1,
+              },
+            },
+            {
+              title: 'Amount',
+              width: 150,
+              align: 'right',
+              valueType: 'digit',
+              dataIndex: 'amount',
+              formItemProps: {
+                rules: [{ required: true }],
+              },
+              fieldProps: {
+                style: { width: 130 },
+                precision: 2,
+                min: 0,
+              },
+            },
+            {
+              title: 'Dis. (%)',
+              fieldProps: {
+                style: { width: 80 },
+                max: 100,
+                min: 0,
+              },
+
+              align: 'right',
+              valueType: 'digit',
+              dataIndex: 'discount',
+              width: 100,
+            },
+            {
+              title: 'Amt. after Dis.',
+              align: 'right',
+              editable: false,
+              dataIndex: 'amountAfterDiscount',
+              valueType: 'money',
+              width: 130,
+              renderText: (_, record) => formatter.format(record.amountAfterDiscount),
+            },
+            {
+              title: 'Remarks',
+              dataIndex: 'remarks',
+              valueType: 'textarea',
+              tooltip: 'Max length is 1000 characters',
+              responsive: ['sm', 'md'],
+              fieldProps: { rows: 1 },
+              render: (_, r) => r.remarks,
+            },
+            {
+              valueType: 'option',
+              width: 80,
+              render: () => {
+                return null;
+              },
+            },
+          ]}
+        />
+      )}
+
+      <ProCard direction="row" size="small">
+        <ProForm form={form} submitter={false}>
+          <ProCard size="small" colSpan={'500px'}>
+            <ProFormTextArea
+              name={'remarks'}
+              tooltip="Max length is 1000 characters"
+              fieldProps={{ rows: 6, maxLength: 1000 }}
+              width={'xl'}
+              label="Remarks"
+            />
+          </ProCard>
+        </ProForm>
+        <ProCard />
+        <ProCard size="small" colSpan={'500px'}>
+          <ProForm
+            form={form}
+            labelCol={{ span: 8 }}
+            wrapperCol={{ span: 16 }}
+            onValuesChange={(changedValues) => {
+              const { vendorId, discountPercentage, discountAmount, isService, tax } =
+                changedValues;
+
+              const amount = form.getFieldValue('amount');
+
+              if ('discountPercentage' in changedValues) {
+                form.setFieldsValue({
+                  discountAmount: (discountPercentage * amount) / 100,
+                });
+
+                setForceUpdate((v) => v + 1);
+                return;
+              }
+
+              if ('discountAmount' in changedValues) {
+                form.setFieldsValue({
+                  discountPercentage: round((discountAmount * 100) / amount, 2),
+                });
+                setForceUpdate((v) => v + 1);
+                return;
+              }
+              if (tax) {
+                setForceUpdate((v) => v + 1);
+              }
+              if (
+                (discountAmount == undefined || discountPercentage == undefined) &&
+                (form.getFieldValue('discountAmount') == undefined ||
+                  form.getFieldValue('discountPercentage') == undefined)
+              ) {
+                setForceUpdate((v) => v + 1);
+                form.resetFields(['discountPercentage', 'discountAmount']);
+              }
+
+              if ('vendorId' in changedValues) {
+                onSelectVendor(vendorId);
+              }
+
+              if ('isService' in changedValues) {
+                setIsService(isService);
+              }
+            }}
+            labelAlign="right"
+            layout="horizontal"
+            submitter={false}
+          >
+            <ProFormMoney
+              formItemProps={{
+                style: {
+                  fontWeight: 'bolder',
+                },
+              }}
+              // locale="en-US"
+              name={'amount'}
+              width={'sm'}
+              readonly
+              label="Total Before Discount"
+            />
+            <ProForm.Item style={{ marginBottom: 0 }} label="Discount">
+              <Space.Compact>
+                <ProFormDigit
+                  name={'discountPercentage'}
+                  placeholder={'%'}
+                  fieldProps={{
+                    max: 100,
+                    min: 0,
+                  }}
+                  width={70}
+                />
+                <ProFormMoney
+                  locale="en-US"
+                  name={'discountAmount'}
+                  placeholder={'Amount'}
+                  width={150}
+                />
+              </Space.Compact>
+            </ProForm.Item>
+            <ProFormDigit
+              label="Tax"
+              name={'tax'}
+              width={70}
+              placeholder={'%'}
+              fieldProps={{
+                max: 100,
+                min: 0,
+              }}
+            />
+            <ProFormMoney
+              formItemProps={{
+                style: {
+                  fontWeight: 'bolder',
+                },
+              }}
+              fieldProps={{}}
+
+              readonly
+              name={'amountAfterDiscount'}
+              label="Total Payment Due"
+              width={'sm'}
+            />
+          </ProForm>
+        </ProCard>
+      </ProCard>
+    </ProCard>
+    <FileUploader
+      title="Attachments"
+      multiple
+      showTitle
+      addFileInfo
+      service="FILE"
+      initFiles={type == 'EDIT' ? data?.attachmentFiles : []}
+      onSetFiles={(files) => {
+        setUploadFiles(files.map((it) => it.response));
+      }}
+    />
+  </Space>
+
+  return (<Spin spinning={srv.requestAction.request?.loading || false}>
+    {openInTab ? content : <PageContainer
       onBack={history.back}
       title={`${type == 'CREATE' ? 'New Quotation' : 'Edit Quotation'}`}
       subTitle={!!id && `${type == 'CREATE' ? 'Copy From' : ''} ${data?.code}`}
-      extra={
-        dataChangedProtection && lockEnabled() ? (
-          <Button
-            type="link"
-            onClick={() => setDataChangedProtection(false)}
-            icon={<UnlockOutlined />}
-          >
-            Unlock
-          </Button>
-        ) : (
-          lockEnabled() && (
-            <Button
-              type="link"
-              onClick={() => setDataChangedProtection(true)}
-              icon={<LockOutlined />}
-            >
-              Lock
-            </Button>
-          )
-        )
-      }
+      extra={actionButtons}
     >
-      <Spin spinning={srv.requestAction.request?.loading || false}>
-        {dataLoaded && (
-          <Space direction="vertical" style={{ width: '100%' }}>
-            <ProForm
-              form={form}
-              submitter={{
-                render: () => (
-                  <FooterToolbar>
-                    <Button style={{ marginRight: 10 }} onClick={onBack}>
-                      Cancel
-                    </Button>
-                    <Button onClick={clearForm}>Clear</Button>
-                    <Button type="primary" onClick={onSave}>
-                      Submit
-                    </Button>
-                  </FooterToolbar>
-                ),
-              }}
-            >
-              <ProCard
-                bordered
-                style={{ marginBlockStart: 8 }}
-                gutter={8}
-                direction="row"
-                size="small"
-                title={'Genernal'}
-              >
-                <ProCard size="small" colSpan={'500px'}>
-                  <ProFormGroup direction="horizontal">
-                    <ProForm.Item
-                      required
-                      style={{ marginBottom: 0 }}
-                      tooltip="Please check Manual to input none SAP vendor."
-                      label="Vendor"
-                    >
-                      <Space>
-                        <ProFormCheckbox disabled={dataChangedProtection} name={'noneVendor'}>
-                          Manual
-                        </ProFormCheckbox>
-                        <ProFormDependency name={['noneVendor']}>
-                          {({ noneVendor }) => {
-                            if (noneVendor)
-                              return (
-                                <ProFormText
-                                  disabled={dataChangedProtection}
-                                  rules={[{ required: true }]}
-                                  name={'vendorName'}
-                                  width={380}
-                                />
-                              );
-
-                            return (
-                              <ProFormSelect
-                                disabled={dataChangedProtection}
-                                rules={[{ required: true }]}
-                                name={'vendorId'}
-                                fieldProps={{ popupMatchSelectWidth: 500 }}
-                                allowClear
-                                showSearch
-                                request={onFindVendorHandler}
-                                width={380}
-                              />
-                            );
-                          }}
-                        </ProFormDependency>
-                      </Space>
-                    </ProForm.Item>
-                  </ProFormGroup>
-
-                  <ProFormGroup>
-                    <ProFormDependency name={['noneVendor']}>
-                      {({ noneVendor }) => {
-                        if (!noneVendor) {
-                          return (
-                            <ProFormSelect
-                              name={'contactPersonId'}
-                              label="Contact Person"
-                              disabled={dataChangedProtection}
-                              width={470}
-                              rules={[{ required: true }]}
-                              options={vendorDetail?.contactList.map((it) => ({
-                                label: it.contactName,
-                                value: it.id,
-                              }))}
-                            />
-                          );
-                        }
-                        return (
-                          <ProFormText
-                            disabled={dataChangedProtection}
-                            rules={[{ required: true }]}
-                            tooltip="Max length is 100 characters"
-                            fieldProps={{ maxLength: 100 }}
-                            label="Contact Person"
-                            name={'contactPerson'}
-                            placeholder={'Contact Person'}
-                            width={470}
-                          />
-                        );
-                      }}
-                    </ProFormDependency>
-                  </ProFormGroup>
-                  <ProFormGroup>
-                    <ProFormText
-                      disabled={dataChangedProtection}
-                      rules={[{ required: true }]}
-                      tooltip="Max length is 50 characters"
-                      fieldProps={{ maxLength: 50 }}
-                      name={'phone1'}
-                      label="Phone1"
-                      width={'sm'}
-                    />
-                    <ProFormText
-                      disabled={dataChangedProtection}
-                      tooltip="Max length is 50 characters"
-                      fieldProps={{ maxLength: 50 }}
-                      name={'phone2'}
-                      label="Phone2"
-                      width={'sm'}
-                    />
-                  </ProFormGroup>
-                  <ProFormText
-                    disabled={dataChangedProtection}
-                    tooltip="Max length is 100 characters"
-                    fieldProps={{ maxLength: 100 }}
-                    width={470}
-                    name={'mail'}
-                    label="E-Mail"
-                  />
-                  <ProFormTextArea
-                    disabled={dataChangedProtection}
-                    name={'address'}
-                    tooltip="Max length is 500 characters"
-                    fieldProps={{ rows: 1, maxLength: 500 }}
-                    width={500}
-                    label="Address"
-                  />
-                  <ProFormDependency name={['noneVendor']}>
-                    {({ noneVendor }) => {
-                      if (!noneVendor)
-                        return (
-                          <ProFormText
-                            disabled={dataChangedProtection}
-                            name={'paymentGroup'}
-                            fieldProps={{ readOnly: true }}
-                            width={470}
-                            label="Payment Terms"
-                          />
-                        );
-
-                      return (
-                        <ProFormSelect
-                          disabled={dataChangedProtection}
-                          label="Payment Terms"
-                          rules={[{ required: true }]}
-                          name={'paymentGroupId'}
-                          allowClear
-                          showSearch
-                          request={onFindPaymentGroup}
-                          width={470}
-                        />
-                      );
-                    }}
-                  </ProFormDependency>
-                </ProCard>
-
-                <ProCard />
-                <ProCard size="small" colSpan={'500px'}>
-                  <ProFormGroup direction="horizontal">
-                    <ProFormText
-                      name={'refNo'}
-                      fieldProps={{
-                        maxLength: 50,
-                      }}
-                      rules={[{ required: true }]}
-                      width={'sm'}
-                      label="Vendor Ref. No"
-                    />
-                    <ProFormDatePicker
-                      name={'issuedDate'}
-                      rules={[{ required: true }]}
-                      width={'sm'}
-                      label="Issued Date"
-                    />
-                  </ProFormGroup>
-                  <ProFormGroup direction="horizontal">
-                    <ProFormDatePicker
-                      rules={[{ required: true }]}
-                      name={'requiredDate'}
-                      width={'sm'}
-                      label="Required Date"
-                    />
-                    <ProFormDatePicker
-                      rules={[{ required: true }]}
-                      width={'sm'}
-                      name={'validUntil'}
-                      label="Valid Until"
-                    />
-                  </ProFormGroup>
-                  <ProFormTextArea
-                    name={'leadTime'}
-                    tooltip="Max lenght is 500 characters"
-                    fieldProps={{ rows: 1, maxLength: 500 }}
-                    width={500}
-                    label="Delivery Lead Time"
-                  />
-                  <ProFormTextArea
-                    name={'warranty'}
-                    tooltip="Max lenght is 500 characters"
-                    fieldProps={{ rows: 1, maxLength: 500 }}
-                    width={500}
-                    label="Warranty"
-                  />
-                  <ProFormTextArea
-                    name={'tradeTerms'}
-                    tooltip="Max lenght is 500 characters"
-                    fieldProps={{ rows: 1, maxLength: 500 }}
-                    width={500}
-                    label="Trade Terms"
-                  />
-                  <ProFormTextArea
-                    name={'specifications'}
-                    tooltip="Max lenght is 500 characters"
-                    fieldProps={{ rows: 1, maxLength: 500 }}
-                    width={500}
-                    label="Specifications"
-                  />
-                </ProCard>
-
-                {/* <ProCard colSpan={'20px'} /> */}
-              </ProCard>
-            </ProForm>
-
-            <ProCard
-              bordered
-              size="small"
-              direction="column"
-              title={isService ? 'Service List' : 'Item List'}
-              extra={
-                <ProForm form={form} submitter={false}>
-                  <Space align="baseline">
-                    <ProFormSwitch
-                      disabled={!!id || services.length > 0 || items.length > 0}
-                      name={'isService'}
-                      // isService
-                      unCheckedChildren={'Item'}
-                      checkedChildren={'Service'}
-                    />
-                    <Button danger type='link' disabled={isService ? services.length == 0 : items.length == 0} icon={<ClearOutlined />} onClick={() => {
-                      setItems([])
-                      setServices([])
-                    }} />
-                  </Space>
-                </ProForm>
-              }
-            >
-              {!isService && (
-                <EditableProTable<SaveQuotationItem>
-                  value={items.map((it, index) => ({ ...it, no: index + 1 }))}
-                  size="small"
-                  recordCreatorProps={{
-                    creatorButtonText: 'Add Item ',
-                    onClick: () => {
-                      setAddItemVisible(true);
-                    },
-                    record: () => ({} as SaveQuotationItem),
-                  }}
-                  key={'pro-item-list'}
-                  rowKey="key"
-                  rowSelection={
-                    !!mergeItemEnabled && {
-                      selectedRowKeys: mergeItems.map((it) => it.key),
-                      getCheckboxProps: (r) => {
-                        return {
-                          disabled:
-                            r.itemId != mergeItemEnabled.itemId || r.key == mergeItemEnabled.key,
-                        };
-                      },
-                      onChange(_, selectedRows) {
-                        setMergeItems(selectedRows);
-                      },
-                    }
-                  }
-                  editableFormRef={editableFormRef}
-                  controlled
-                  editable={{
-                    type: 'multiple',
-                    editableKeys: items.map((it) => it.key),
-                    actionRender: (row) => [
-                      <Space key={'k1' + row.key} size={'small'} align="baseline">
-                        {!mergeItemEnabled && (
-                          <Popconfirm
-                            title="Delete the item"
-                            description="Are you sure to delete?"
-                            onConfirm={() => setItems((v) => v.filter((it) => it.key != row.key))}
-                            icon={<QuestionCircleOutlined style={{ color: 'red' }} />}
-                          >
-                            <Button danger type="link" size="small" icon={<MinusCircleOutlined />} />
-                          </Popconfirm>
-                        )}
-
-                        {row.item &&
-                          !mergeItemEnabled &&
-                          items.filter((it) => it.itemId == row.itemId && it.key == '------').length > 1 && (
-                            <Button
-                              onClick={() => {
-                                setMergeItemEnabled(row);
-                                setMergeItems(items.filter((it) => it.itemId == row.itemId));
-                              }}
-                              type="link"
-                              icon={<MergeCellsOutlined />}
-                            />
-                          )}
-
-                        {mergeItemEnabled?.key == row.key && (
-                          <Button
-                            onClick={() => {
-                              setMergeItemEnabled(undefined);
-                              setMergeItems([]);
-                            }}
-                            danger
-                            type="link"
-                            disabled={!(row.item?.prItems && row.item?.prItems.length > 0)}
-                            icon={<RollbackOutlined />}
-                          />
-                        )}
-
-                        {mergeItemEnabled?.key == row.key && (
-                          <Popconfirm
-                            title="Merge Item"
-                            description="Are you sure to merge?"
-                            onConfirm={() => {
-                              doMerge();
-                            }}
-                          >
-                            <Button
-                              type="link"
-                              // disabled={
-                              //   mergeItems.filter((it) => it.key != mergeItemEnabled.key).length == 0
-                              // }
-                              icon={<CheckCircleOutlined />}
-                            />
-                          </Popconfirm>
-                        )}
-                      </Space>,
-                    ],
-                    onValuesChange: (_, recordList) => {
-                      const newItems = recordList.map((it) => {
-                        const newAmount = (it.price || 0) * (it.qty || 0);
-                        const newAmountAfterDiscount = round(
-                          newAmount * (1 - (it.discount || 0) / 100),
-                          2,
-                        );
-                        return {
-                          ...it,
-                          amount: newAmount,
-                          amountAfterDiscount: newAmountAfterDiscount,
-                        };
-                      });
-                      // setForceUpdate(v => v+1)
-                      setItems(newItems);
-                    },
-                  }}
-                  expandable={{
-                    expandedRowRender: linkPR,
-                    rowExpandable: (record) => record.prLinked.length > 0,
-                  }}
-                  columns={[
-                    {
-                      title: '#',
-                      dataIndex: 'no',
-                      readonly: true,
-                      width: 30,
-                      render: (_, r) => r.no,
-                    },
-                    {
-                      title: 'Item Code',
-                      dataIndex: 'itemCode',
-                      readonly: true,
-                      width: 90,
-                      render: (_, r) => r.itemCode,
-                    },
-                    {
-                      title: 'Item Name',
-                      dataIndex: 'itemName',
-                      readonly: true,
-                      responsive: ['sm', 'md'],
-                      render: (_, r) => r.itemName,
-                    },
-                    {
-                      title: 'Description',
-                      // width: 170,
-                      dataIndex: 'description',
-                      tooltip: 'Max length is 1000 characters',
-                      valueType: 'textarea',
-                      fieldProps: { rows: 1 },
-                      responsive: ['sm', 'md'],
-                    },
-                    {
-                      title: 'Qty',
-                      formItemProps: { rules: [{ required: true }] },
-                      fieldProps: {
-                        style: { width: 70 },
-                        disabled: dataChangedProtection,
-                        precision: 2,
-                        min: 0,
-                      },
-                      dataIndex: 'qty',
-                      align: 'center',
-                      valueType: 'digit',
-                      width: 80,
-                    },
-                    {
-                      title: 'UoM',
-                      width: 100,
-                      dataIndex: 'uomName',
-                      valueType: 'select',
-                      formItemProps: { rules: [{ required: true }] },
-                      fieldProps: {
-                        style: { width: 90 },
-                        required: true,
-                        disabled: dataChangedProtection,
-                        showSearch: true,
-                        popupMatchSelectWidth: 200,
-                      },
-                      valueEnum: (r) =>
-                        (r.item?.uomList || []).reduce(
-                          (acc, cur) => ({ ...acc, [cur.id]: cur.name }),
-                          {},
-                        ),
-                    },
-                    {
-                      title: 'Price',
-                      dataIndex: 'price',
-
-                      fieldProps: {
-                        style: { width: 90 },
-                      },
-                      formItemProps: {
-                        rules: [{ required: true }],
-                      },
-                      valueType: 'money',
-                      width: 100,
-                      align: 'right',
-                    },
-                    {
-                      title: 'Amount',
-                      width: 100,
-                      align: 'right',
-                      editable: false,
-                      renderText: (_, record) => formatter.format(record.amount),
-                    },
-                    {
-                      title: 'Dis. (%)',
-                      fieldProps: {
-                        max: 90,
-                        min: 0,
-                      },
-                      align: 'right',
-                      valueType: 'digit',
-                      dataIndex: 'discount',
-                      width: 90,
-                    },
-                    {
-                      title: 'After Dis.',
-                      align: 'right',
-                      editable: false,
-                      dataIndex: 'amountAfterDiscount',
-                      valueType: 'money',
-                      width: 110,
-                      renderText: (_, record) => formatter.format(record.amountAfterDiscount),
-                    },
-                    {
-                      title: 'Remarks',
-                      dataIndex: 'remarks',
-                      valueType: 'textarea',
-                      tooltip: 'Max length is 1000 characters',
-                      responsive: ['xs', 'md'],
-                      fieldProps: { rows: 1 },
-                      render: (_, r) => r.remarks,
-                    },
-                    {
-                      valueType: 'option',
-                      width: 60,
-                      hideInTable: dataChangedProtection,
-                      render: () => {
-                        return null;
-                      },
-                    },
-                  ]}
-                />
-              )}
-
-              {isService && (
-                <EditableProTable<SaveQuotationItem>
-                  value={services.map((it, index) => ({ ...it, no: index + 1 }))}
-                  rowKey="key"
-                  size="small"
-                  key={'pro-item-service'}
-                  recordCreatorProps={{
-                    creatorButtonText: 'Add Service ',
-                    onClick: () => {
-                      setAddItemVisible(true);
-                    },
-                    record: () => ({} as SaveQuotationItem),
-                  }}
-                  editableFormRef={editableFormRef}
-                  controlled
-                  expandable={{
-                    expandedRowRender: linkPR,
-                    rowExpandable: (record) => record.prLinked.length > 0,
-                  }}
-                  editable={{
-                    type: 'multiple',
-                    editableKeys: services.map((it) => it.key),
-                    onValuesChange: (_, recordList) => {
-                      const newServices = recordList.map((it) => {
-                        const newAmount = it.amount || 0;
-                        const newAmountAfterDiscount = round(
-                          newAmount * (1 - (it.discount || 0) / 100),
-                          2,
-                        );
-                        return {
-                          ...it,
-                          amount: newAmount,
-                          amountAfterDiscount: newAmountAfterDiscount,
-                        };
-                      });
-
-                      setServices(newServices);
-                    },
-                    actionRender: (row) => [
-                      <Space size={'small'} align="baseline">
-                        {row.item && (
-                          <AddService
-                            key={`${row.key}-edit-service`}
-                            item={row.item}
-                            editData={{ ...row }}
-                            onSave={(data) => {
-                              const newServices = services.map((it) => {
-                                if (it.key == data.key) {
-                                  return { ...it, ...data };
-                                } else return it;
-                              });
-                              setServices(newServices);
-                            }}
-                            trigger={
-                              <Button
-                                type="link"
-                                disabled={!(row.item?.prItems && row.item?.prItems.length > 0)}
-                                icon={<EditOutlined />}
-                              />
-                            }
-                          />
-                        )}
-
-                        <Popconfirm
-                          key={`${row.key}-confirm`}
-                          title="Delete the service"
-                          description="Are you sure to delete?"
-                          onConfirm={() => setServices((v) => v.filter((it) => it.key != row.key))}
-                          icon={<QuestionCircleOutlined style={{ color: 'red' }} />}
-                        >
-                          <Button
-                            disabled={dataChangedProtection}
-                            danger
-                            type="link"
-                            size="small"
-                            icon={<DeleteOutlined />}
-                          />
-                        </Popconfirm>
-                      </Space>,
-                    ],
-                  }}
-                  columns={[
-                    {
-                      title: '#',
-                      dataIndex: 'no',
-                      readonly: true,
-                      width: 20,
-                      render: (_, r) => r.no,
-                    },
-                    {
-                      title: 'Service Name',
-                      dataIndex: 'itemName',
-                      responsive: ['sm', 'md'],
-
-                      formItemProps: {
-                        rules: [{ required: true }],
-                      },
-                    },
-                    {
-                      title: 'Description',
-                      dataIndex: 'description',
-                      valueType: 'textarea',
-                      responsive: ['md', 'lg'],
-                      tooltip: 'Max length is 1000 characters',
-                      fieldProps: {
-                        rows: 1,
-                      },
-                    },
-                    {
-                      title: 'Amount',
-                      width: 150,
-                      align: 'right',
-                      valueType: 'digit',
-                      dataIndex: 'amount',
-                      formItemProps: {
-                        rules: [{ required: true }],
-                      },
-                      fieldProps: {
-                        style: { width: 130 },
-                        precision: 2,
-                        min: 0,
-                      },
-                    },
-                    {
-                      title: 'Dis. (%)',
-                      fieldProps: {
-                        style: { width: 80 },
-                        max: 100,
-                        min: 0,
-                      },
-
-                      align: 'right',
-                      valueType: 'digit',
-                      dataIndex: 'discount',
-                      width: 100,
-                    },
-                    {
-                      title: 'Amt. after Dis.',
-                      align: 'right',
-                      editable: false,
-                      dataIndex: 'amountAfterDiscount',
-                      valueType: 'money',
-                      width: 130,
-                      renderText: (_, record) => formatter.format(record.amountAfterDiscount),
-                    },
-                    {
-                      title: 'Remarks',
-                      dataIndex: 'remarks',
-                      valueType: 'textarea',
-                      tooltip: 'Max length is 1000 characters',
-                      responsive: ['sm', 'md'],
-                      fieldProps: { rows: 1 },
-                      render: (_, r) => r.remarks,
-                    },
-                    {
-                      valueType: 'option',
-                      width: 80,
-                      render: () => {
-                        return null;
-                      },
-                    },
-                  ]}
-                />
-              )}
-
-              <ProCard direction="row" size="small">
-                <ProForm form={form} submitter={false}>
-                  <ProCard size="small" colSpan={'500px'}>
-                    <ProFormTextArea
-                      name={'remarks'}
-                      tooltip="Max length is 1000 characters"
-                      fieldProps={{ rows: 6, maxLength: 1000 }}
-                      width={'xl'}
-                      label="Remarks"
-                    />
-                  </ProCard>
-                </ProForm>
-                <ProCard />
-                <ProCard size="small" colSpan={'500px'}>
-                  <ProForm
-                    form={form}
-                    labelCol={{ span: 8 }}
-                    wrapperCol={{ span: 16 }}
-                    onValuesChange={(changedValues) => {
-                      const { vendorId, discountPercentage, discountAmount, isService, tax } =
-                        changedValues;
-
-                      const amount = form.getFieldValue('amount');
-
-                      if ('discountPercentage' in changedValues) {
-                        form.setFieldsValue({
-                          discountAmount: (discountPercentage * amount) / 100,
-                        });
-
-                        setForceUpdate((v) => v + 1);
-                        return;
-                      }
-
-                      if ('discountAmount' in changedValues) {
-                        form.setFieldsValue({
-                          discountPercentage: round((discountAmount * 100) / amount, 2),
-                        });
-                        setForceUpdate((v) => v + 1);
-                        return;
-                      }
-                      if (tax) {
-                        setForceUpdate((v) => v + 1);
-                      }
-                      if (
-                        (discountAmount == undefined || discountPercentage == undefined) &&
-                        (form.getFieldValue('discountAmount') == undefined ||
-                          form.getFieldValue('discountPercentage') == undefined)
-                      ) {
-                        setForceUpdate((v) => v + 1);
-                        form.resetFields(['discountPercentage', 'discountAmount']);
-                      }
-
-                      if ('vendorId' in changedValues) {
-                        onSelectVendor(vendorId);
-                      }
-
-                      if ('isService' in changedValues) {
-                        setIsService(isService);
-                      }
-                    }}
-                    labelAlign="right"
-                    layout="horizontal"
-                    submitter={false}
-                  >
-                    <ProFormMoney
-                      formItemProps={{
-                        style: {
-                          fontWeight: 'bolder',
-                        },
-                      }}
-                      // locale="en-US"
-                      name={'amount'}
-                      width={'sm'}
-                      readonly
-                      label="Total Before Discount"
-                    />
-                    <ProForm.Item style={{ marginBottom: 0 }} label="Discount">
-                      <Space.Compact>
-                        <ProFormDigit
-                          name={'discountPercentage'}
-                          placeholder={'%'}
-                          fieldProps={{
-                            max: 100,
-                            min: 0,
-                          }}
-                          width={70}
-                        />
-                        <ProFormMoney
-                          locale="en-US"
-                          name={'discountAmount'}
-                          placeholder={'Amount'}
-                          width={150}
-                        />
-                      </Space.Compact>
-                    </ProForm.Item>
-                    <ProFormDigit
-                      label="Tax"
-                      name={'tax'}
-                      width={70}
-                      placeholder={'%'}
-                      fieldProps={{
-                        max: 100,
-                        min: 0,
-                      }}
-                    />
-                    <ProFormMoney
-                      formItemProps={{
-                        style: {
-                          fontWeight: 'bolder',
-                        },
-                      }}
-                      fieldProps={{}}
-
-                      readonly
-                      name={'amountAfterDiscount'}
-                      label="Total Payment Due"
-                      width={'sm'}
-                    />
-                  </ProForm>
-                </ProCard>
-              </ProCard>
-            </ProCard>
-            <FileUploader
-              title="Attachments"
-              multiple
-              showTitle
-              addFileInfo
-              service="FILE"
-              initFiles={type == 'EDIT' ? data?.attachmentFiles : []}
-              onSetFiles={(files) => {
-                setUploadFiles(files.map((it) => it.response));
-              }}
-            />
-          </Space>
-        )}
-
-        <QuotationItemFinder
-          onSaveMulti={(datas) => datas.forEach((it) => onSaveHandler(it))}
-          addedItems={isService ? services : items}
-          isService={isService}
-          open={addItemVisible}
-          onOpenChange={(visible) => !visible && setAddItemVisible(false)}
-          getAddedItem={(id, isService) => {
-            if (!isService) {
-              return items.find((it) => it.itemId == id);
-            }
-          }}
-          onSave={(record, isService) => {
-            if (isService) {
-              setServices((v) => [...v, record].map((it, index) => ({ ...it, no: index + 1 })));
-            } else {
-              onSaveHandler(record);
-            }
-          }}
-        />
-      </Spin>
-    </PageContainer>
+      {dataLoaded && (content)}
+    </PageContainer>}
+    <QuotationItemFinder
+      onSaveMulti={(datas) => datas.forEach((it) => onSaveHandler(it))}
+      addedItems={isService ? services : items}
+      isService={isService}
+      open={addItemVisible}
+      onOpenChange={(visible) => !visible && setAddItemVisible(false)}
+      getAddedItem={(id, isService) => {
+        if (!isService) {
+          return items.find((it) => it.itemId == id);
+        }
+      }}
+      onSave={(record, isService) => {
+        if (isService) {
+          setServices((v) => [...v, record].map((it, index) => ({ ...it, no: index + 1 })));
+        } else {
+          onSaveHandler(record);
+        }
+      }}
+    />
+  </Spin>
   );
 };

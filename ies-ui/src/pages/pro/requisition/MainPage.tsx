@@ -115,7 +115,7 @@ export default () => {
                     pagination: { total: data?.total },
                     loading: isFetching,
                     bordered: true,
-                    actionButtonsRender: (item) => ([
+                    actionButtonsColumnRender: (item) => ([
                         { tooltip: 'View data in new browser tab', type: 'link', disabled: item.processStatus == 'DRAFT', size: 'small', icon: <ExportOutlined />, onClick: () => window.open(`/external/data-form/requisition_request_process/${item.instanceId}`, '_blank')?.focus() },
                         { tooltip: 'Quick view', type: 'link', size: 'small', icon: <EyeFilled />, onClick: () => onDetailhandler(item) },
                         {

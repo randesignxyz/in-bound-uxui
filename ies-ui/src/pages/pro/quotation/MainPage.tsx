@@ -16,12 +16,8 @@ import DataEntryView from "./DataEntryView";
 export default () => {
 
     const srv = createQuotationService();
-
-
     const [openFlow, setOpenFlow] = useState<QuotationListItem>();
-
     const [filter, setFilter] = useState<TableViewSearchParams<QuotationSearchParams>>()
-
     const { data, refetch, isFetching } = useQuery(['fetch-quotation-list', filter], () => srv.fetchPaging({
         criteria: { ...filter?.criteria?.advanceSearch },
         keywords: filter?.criteria?.searchValue,
@@ -46,7 +42,7 @@ export default () => {
         })
     }
 
-    return <> <PageWrapper<QuotationListItem, QuotationSearchParams & {
+    return <><PageWrapper<QuotationListItem, QuotationSearchParams & {
         searchValue?: string;
         status?: string; subStatus?: string
     }, {}>
@@ -84,7 +80,6 @@ export default () => {
                         advanceSearch: {
                             keyword: params?.searchValue,
                             status: params?.status,
-
                         },
                         sort: sort
                     },
@@ -100,7 +95,11 @@ export default () => {
                 },
                 bordered: true,
                 actionButtonsColumnRender: (item) => [
-                    { tooltip: 'View data in new browser tab', type: 'link', size: 'small', icon: <ExportOutlined />, onClick: () => window.open(`/external${ProPaths.quotation}/detail/${item.id}`, '_blank')?.focus() },
+                    {
+                        tooltip: 'View data in new browser tab',
+                        type: 'link', size: 'small', icon: <ExportOutlined />,
+                        onClick: () => window.open(`/external${ProPaths.quotation}/detail/${item.id}`, '_blank')?.focus()
+                    },
                     {
                         tooltip: 'Copy', type: 'link', size: 'small', icon: <CopyFilled />, tabRender: {
                             tabLabel: `Copy(# ${item.code})`,
@@ -114,7 +113,6 @@ export default () => {
                             tabIcon: <CopyFilled />
                         }
                     }
-
                 ],
                 columns: [{
                     title: 'Code #',

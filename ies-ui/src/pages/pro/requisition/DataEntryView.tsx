@@ -76,21 +76,17 @@ export default ({
 
 
   const initData = async () => {
-    try {
-      const budgetCodes = await services.listBudgetCode();
-      setBudgetCodesList(budgetCodes);
-      if (id && id > 0) {
-        const data = await services.detail(id);
-        initFormData(data);
-      }
-    } catch (error: any) {
-      message.error(error.message || 'Failed to load data');
+    services.listBudgetCode().then(budgetCodes => setBudgetCodesList(budgetCodes));
+
+    if (id && id > 0) {
+      const data = await services.detail(id);
+      initFormData(data);
     }
   };
 
   useEffect(() => {
     initData();
-  }, []);
+  }, [id]);
 
 
   const initFormData = (data: RequisitionDetailResponse) => {

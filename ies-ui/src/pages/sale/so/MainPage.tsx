@@ -61,7 +61,6 @@ export default () => {
                     type: 'link',
                     disabled: !access.canCreateEditSo,
                     tabRender: {
-                        value: 'New SO',
                         tabIcon: <FileOutlined />,
                         panel: (_, key) => <ViewWrapper addNew openInTab tabKey={key} />,
                         tabLabel: 'New SO'

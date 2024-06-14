@@ -241,7 +241,7 @@ export default () => {
                                 tabRender: item => ({
                                     // onOpenIconClick: () => window.open(`/external/crm/visit-schedule/detail/${item.id}`, '_blank')?.focus(),
                                     value: item?.scheduleDate && formatDate(item.scheduleDate),
-                                    panel: <VisitScheduleDetailView openInTab id={item.id} />,
+                                    panel: (_) => <VisitScheduleDetailView openInTab id={item.id} />,
                                     tabLabel: `${item?.scheduleDate && formatDate(item.scheduleDate)}(${item.customer.code})`,
                                 })
                             },
@@ -255,7 +255,7 @@ export default () => {
                                 tabRender: item => ({
                                     value: item?.customer.code,
                                     onOpenIconClick: () => window.open(`/external/crm/customer/detail/${item.customer.id}`, '_blank')?.focus(),
-                                    panel: <CustomerDetailView getMenuItems={() => []} id={item?.customer.id} openInTab={true} />,
+                                    panel: (_) => <CustomerDetailView getMenuItems={() => []} id={item?.customer.id} openInTab={true} />,
                                     tabLabel: <Badge dot><Typography.Text>{item?.customer.code}</Typography.Text>  </Badge>,
                                 })
                             },

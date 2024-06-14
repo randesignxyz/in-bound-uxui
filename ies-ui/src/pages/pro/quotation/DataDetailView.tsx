@@ -30,7 +30,6 @@ export default ({
   const srv = createQuotationService();
   const [data, setData] = useState<QuotationDetail>();
   const [openFlow, setOpenFlow] = useState<number>()
-  const action = simpleRequestActions()
   const initData = async () => {
     if (id) {
       try {
@@ -67,9 +66,7 @@ export default ({
           initData();
         } catch (error: any) {
           message.error(error.message || "Failed to post.")
-
         }
-
       }
     })
   }
@@ -411,14 +408,13 @@ export default ({
         extra={actionButtons}
       >
         {content}
-
-        <Flow
-          open={!!openFlow}
-          onOpenChange={(visible) => !visible && setOpenFlow(undefined)}
-          type={'PQ'}
-          fromId={openFlow || 0}
-        />
       </PageContainer>}
+      <Flow
+        open={!!openFlow}
+        onOpenChange={(visible) => !visible && setOpenFlow(undefined)}
+        type={'PQ'}
+        fromId={openFlow || 0}
+      />
     </>
   );
 };

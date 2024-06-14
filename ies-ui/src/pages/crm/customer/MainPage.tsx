@@ -8,7 +8,6 @@ import Status from "@/components/Status";
 import { toReadable } from "@/pages/utils";
 import { useRef, useState } from "react";
 import { FetchPagingParams } from "@/components/DataCrud/TableView";
-import CustomerDetailView from "./components/Detail";
 import { model } from "./model";
 import AdvanceSearch from "./components/List/AdvanceSearch";
 import TransferSE from "./components/List/TransferSE";
@@ -81,12 +80,13 @@ export default ({ getMenuItems }: CustomerActionController) => {
                             title: 'Customer #',
                             sorter: 'customerCode',
                             width: 120,
-                            tabRender: item => ({
-                                onOpenIconClick: () => window.open(`/external/crm/customer/detail/${item.id}`, '_blank')?.focus(),
-                                value: item.code,
-                                panel: <CustomerDetailView openInTab id={item.id} getMenuItems={getMenuItems} />,
-                                tabLabel: item?.code
-                            })
+
+                            // tabRender: item => ({
+                            //     onOpenIconClick: () => window.open(`/external/crm/customer/detail/${item.id}`, '_blank')?.focus(),
+                            //     value: item.code,
+                            //     panel: (_) => <CustomerDetailView openInTab id={item.id} getMenuItems={getMenuItems} />,
+                            //     tabLabel: item?.code
+                            // })
                         },
                         {
                             title: 'Customer Name',

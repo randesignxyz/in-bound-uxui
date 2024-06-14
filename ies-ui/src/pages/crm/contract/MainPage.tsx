@@ -131,7 +131,7 @@ export default () => {
                             tabRender: item => ({
                                 value: item.contractNo || 'n/a',
                                 onOpenIconClick: () => window.open(`/external/crm/contract/detail/${item.id}`, '_blank')?.focus(),
-                                panel: <ContactDetailView onEdit={onEditHandler} openInTab id={item.id} />,
+                                panel: (_) => <ContactDetailView onEdit={onEditHandler} openInTab id={item.id} />,
                                 tabLabel: item?.contractNo || `For ${item.customer.code}`,
                             })
 
@@ -144,7 +144,7 @@ export default () => {
                             tabRender: item => ({
                                 value: item.customer.code,
                                 onOpenIconClick: () => window.open(`/external/crm/customer/detail/${item.customer.id}`, '_blank')?.focus(),
-                                panel: <CustomerDetailView getMenuItems={() => []} id={item?.customer.id} openInTab={true} />,
+                                panel: (_) => <CustomerDetailView getMenuItems={() => []} id={item?.customer.id} openInTab={true} />,
                                 tabLabel: <Badge dot><Typography.Text>{item?.customer.code}</Typography.Text>  </Badge>,
                             })
 

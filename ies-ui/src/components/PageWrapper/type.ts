@@ -4,14 +4,26 @@ import { ButtonProps } from "antd";
 import { MenuItemType } from "antd/lib/menu/hooks/useItems"
 import { SegmentedLabeledOption } from "antd/lib/segmented";
 import { SortOrder } from "antd/lib/table/interface";
+import React from "react";
+
+export type ActionType = 'add' | 'edit' | 'view' | 'copy' | 'action1' | 'action2' | 'action3'
 
 export type TabRenderProps = {
-    value?: React.ReactNode;
+    value?: React.ReactNode; //TODO: to be removed
     extra?: React.ReactNode;
-    onOpenIconClick?: () => void;
+    action?: ActionType;
+    onOpenIconClick?: () => void; //TODO: to be removed
     tabLabel: React.ReactNode;
     tabIcon?: React.ReactNode;
-    panel: (onCloseTab?: () => void, key?: string) => React.ReactNode;
+    tabKey?: React.Key;
+    panel: (props: {
+        onCloseTab?: () => void;
+        key?: React.Key,
+        onAddTab?: (props: TabRenderProps, key?: React.Key) => void,
+        onRenderTab?: (props: TabRenderProps, key?: React.Key) => void,
+        onChangeTabLabel?: (label: React.ReactElement) => void;
+        onActionTriggered?: (actionType: ActionType, props?: TabRenderProps, key?: React.Key) => void,
+    }) => React.ReactNode;
 }
 
 export interface BastListViewProps<ListDataType extends Record<string, any> & { id: number, code?: string }, FilterType
@@ -29,10 +41,11 @@ export interface BastListViewProps<ListDataType extends Record<string, any> & { 
     onStatusRender?: React.ReactNode,
     actionButtons?: (React.ReactNode | (ButtonProps & {
         key?: React.Key;
-        tabRender?: Omit<TabRenderProps, 'value'>; //if defined, onClick is overight
+        actionType?: ActionType;
+        //tabRender?: Omit<TabRenderProps, 'value'>; //if defined, onClick is overight
         tooltip?: string;
-
     }))[],
+
     actionNumShown?: number;
 
     actions?: (Omit<MenuItemType, 'onClick' | 'itemIcon'> & { icon?: React.ReactNode, onClick?: () => void })[];
@@ -51,28 +64,36 @@ export interface TableViewProps<ListDataType extends Record<string, any> & { id:
     type: "Table"
     props: Omit<ProTableProps<ListDataType, ParamsType, ValueType>, 'columns'> & {
         actionButtonsColumnRender?: (item: ListDataType) => (ButtonProps & {
-            key?: React.Key;
-            tabRender?: Omit<TabRenderProps, 'value'>; //if defined, onClick is overight
+            actionType?: ActionType;
             tooltip?: string;
 
         })[];
-        columns: (ProColumns<ListDataType, ValueType> & { tabRender?: (item: ListDataType) => TabRenderProps })[];
+        columns: (ProColumns<ListDataType, ValueType> & {
+            actionProps?: (item: ListDataType) => {
+                type: ActionType;
+                label: string;
+            };
+            tabRender?: (item: ListDataType) => TabRenderProps;
+        })[];
         fullView?: {
             onOpen: (item: ListDataType) => void
         }
-
         primaryCol?: ProColumns<ListDataType, ValueType>
     }
 }
-
-
 
 export interface ListViewProps<ListDataType extends Record<string, any> & { id: number, code?: string }, FilterType
     extends { searchValue?: string; status?: string; }, ValueType> extends BastListViewProps<ListDataType, FilterType, ValueType> {
     type: "Table"
     props: Omit<ProTableProps<ListDataType, ParamsType, ValueType>, 'columns'> & {
         quickView?: boolean
-        columns: (ProColumns<ListDataType, ValueType> & { tabRender?: (item: ListDataType) => TabRenderProps })[];
+        columns: (ProColumns<ListDataType, ValueType> & {
+            actionProps?: (item: ListDataType) => {
+                type: ActionType;
+                label: string;
+            },
+            tabRender?: (item: ListDataType) => TabRenderProps //TODO: to be removed
+        })[];
         fullView?: {
             onOpen: (item: ListDataType) => void
         }

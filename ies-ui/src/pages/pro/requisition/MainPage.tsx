@@ -17,6 +17,7 @@ import DataDetailView from "./DataDetailView"
 import AdvanceSearch from "./components/AdvanceSearch"
 import Flow from "../flow"
 import DataEntryView from "./DataEntryView"
+import { uniqueId } from "lodash"
 
 export default () => {
     const services = RequisitionServiceAPI();
@@ -34,6 +35,7 @@ export default () => {
     const { data, isFetching, refetch } = useQuery(['fetch-customer-list', filter], () => services.list(filter), {
         refetchOnWindowFocus: false
     })
+
     const onDetailhandler = async (data: RequisitionListItem) => {
         try {
             const detail = await services.detail(data.id);
@@ -54,20 +56,41 @@ export default () => {
 
     return <Spin spinning={false}>
         <PageWrapper<RequisitionListItem, RequisitionAdvanceSearchParams, {}>
+            tabRender={item => [
+                {
+                    action: "add",
+                    tabIcon: <FileOutlined />,
+                    tabLabel: 'New PR',
+                    panel: (props) => <DataEntryView
+                        onCloseTab={() => {
+                            props?.onCloseTab?.()
+                            refetch()
+                        }} openInTab onBack={() => { }} type="CREATE" />,
+                }, {
+                    action: 'copy',
+                    tabLabel: item?.formNo ? `Copy(# ${item.formNo})` : 'Copy',
+                    tabKey: `copy-${item?.id}-${uniqueId('copy')}`,
+                    panel: (props) => item?.id && <DataEntryView onCloseTab={() => {
+                        props?.onCloseTab?.()
+                        refetch()
+                    }} id={item.id} type="CREATE" openInTab />,
+                    tabIcon: <CopyFilled />
+                }, {
+                    action: 'view',
+                    value: item?.formNo || "n/a",
+                    tabLabel: item?.formNo || 'Draft',
+                    panel: (props) => item?.processStatus == 'DRAFT' ? <DataEntryView onCloseTab={() => {
+                        props?.onCloseTab?.()
+                        refetch()
+                    }} id={item.id} type="EDIT" openInTab /> : <Form openInTab formKey="requisition_request_process" id={item?.instanceId} />,
+                }
+            ]}
             listView={{
+
                 actionButtons: [{
                     icon: <PlusCircleOutlined />,
                     type: 'link',
-                    tabRender: {
-                        tabIcon: <FileOutlined />,
-                        panel: (onCloseTab) => <DataEntryView
-                            onCloseTab={() => {
-                                onCloseTab?.()
-                                refetch()
-                            }}
-                            openInTab onBack={() => { }} type="CREATE" />,
-                        tabLabel: 'New PR'
-                    }
+                    actionType: 'add'
                 }],
                 type: 'Table',
                 title: "PR List",
@@ -75,7 +98,6 @@ export default () => {
                     await listDepts();
                     setAdvanceSearch({ visible: true });
                 },
-
                 statuses: [
                     { option: { label: 'All', value: 'ALL', default: true }, },
                     { option: { label: 'Draft', value: 'DRAFT' }, },
@@ -119,29 +141,16 @@ export default () => {
                         { tooltip: 'View data in new browser tab', type: 'link', disabled: item.processStatus == 'DRAFT', size: 'small', icon: <ExportOutlined />, onClick: () => window.open(`/external/data-form/requisition_request_process/${item.instanceId}`, '_blank')?.focus() },
                         { tooltip: 'Quick view', type: 'link', size: 'small', icon: <EyeFilled />, onClick: () => onDetailhandler(item) },
                         {
-                            tooltip: 'Clone', type: 'link', size: 'small', icon: <CopyFilled />, tabRender: {
-                                tabLabel: item.formNo ? `Clone(# ${item.formNo})` : 'Clone',
-                                panel: (onCloseTab) => <DataEntryView onCloseTab={() => {
-                                    onCloseTab?.()
-                                    refetch()
-
-                                }} id={item.id} type="CREATE" openInTab />,
-                                tabIcon: <CopyFilled />
-                            }
+                            tooltip: 'Copy', type: 'link',
+                            size: 'small', icon: <CopyFilled />,
+                            actionType: 'copy'
                         }
 
                     ]),
                     columns: [
                         {
-                            title: 'Form No', sorter: 'formNo', width: 100, tabRender: item => ({
-                                value: item.formNo || "n/a",
-                                tabLabel: item.formNo || 'Draft',
-                                panel: (onCloseTab) => item.processStatus == 'DRAFT' ? <DataEntryView onCloseTab={() => {
-                                    onCloseTab?.()
-                                    refetch()
-
-                                }} id={item.id} type="EDIT" openInTab /> : <Form openInTab formKey="requisition_request_process" id={item.instanceId} />,
-                            })
+                            title: 'Form No', sorter: 'formNo', width: 100,
+                            actionProps: (item) => ({ type: 'view', label: item.formNo || "n/a" })
                         },
                         {
                             title: 'Reason',
@@ -264,6 +273,7 @@ export default () => {
                     ]
                 }
             }}
+
         />
         <DataDetailView
             open={viewDetail.visible}

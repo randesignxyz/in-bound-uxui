@@ -2,8 +2,9 @@ import { MoreOutlined } from "@ant-design/icons";
 import { Button, ButtonProps, Divider, Dropdown, Flex } from "antd";
 import { MenuDividerType, MenuItemType } from "rc-menu/lib/interface";
 import React from "react";
-import { TabRenderProps } from "../PageWrapper/type";
+import { ActionType, TabRenderProps } from "../PageWrapper/type";
 import { isReactNode } from "@/pages/utils";
+import { omit } from "lodash";
 
 type MenuType = (Omit<MenuItemType, 'onClick' | 'itemIcon'> & { icon?: React.ReactNode, onClick?: () => void })
 
@@ -12,11 +13,11 @@ export type ActionBarType = (MenuType | MenuDividerType) & { visible?: boolean }
 export default ({ actionButtons, actions, onAddTab, numOfActionOnBar }: {
     actionButtons?: (React.ReactNode | (ButtonProps & {
         key?: React.Key;
-        tabRender?: TabRenderProps; //if defined, onClick is overight
+        actionType?: ActionType;
         tooltip?: string;
 
     }))[],
-    onAddTab?: (props?: TabRenderProps) => void;
+    onAddTab?: (actionType: ActionType) => void;
     actions: ActionBarType[];
     numOfActionOnBar?: number
 }) => {
@@ -28,8 +29,8 @@ export default ({ actionButtons, actions, onAddTab, numOfActionOnBar }: {
             if (isReactNode(it)) {
                 return it
             } else {
-                return !it.tabRender ? <Button {...it} key={`action-bar-${index}`} /> : <Button  {...it} key={`action-bar-${index}`}
-                    onClick={() => onAddTab?.(it.tabRender)}
+                return !it.actionType ? <Button {...(omit(it, 'tabRender'))} key={`action-bar-${index}`} /> : <Button  {...(omit(it, 'tabRender'))} key={`action-bar-${index}`}
+                    onClick={() => it.actionType && onAddTab?.(it.actionType)}
                 />
             }
         })}

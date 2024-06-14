@@ -5,24 +5,28 @@ import { SegmentedLabeledOption } from "antd/lib/segmented"
 import { useState } from "react"
 import ActionBar from "../ActionBar"
 import { MenuItemType } from "antd/lib/menu/hooks/useItems"
-import { TabRenderProps } from "./type"
+import { ActionType } from "./type"
 
 export default ({
-    statuses, actionButtons,
+    statuses,
+    actionButtons,
     onAddTab,
-    actions, advanceSearchButton,
-    onStatusRender, onOpenAdvanceSearch,
+    actions,
+    advanceSearchButton,
+    onStatusRender,
+    onOpenAdvanceSearch,
     onRefresh, onSearch,
     onStatusChanged,
     onSubStatusChanged
 }: {
     onStatusRender?: React.ReactNode,
-    onAddTab?: (props?: TabRenderProps) => void;
+    onAddTab?: (actionType: ActionType) => void;
     statuses: { option: SegmentedLabeledOption & { default?: true }, subOptions?: (SegmentedLabeledOption & { default?: true })[] }[],
     advanceSearchButton?: React.ReactElement;
     actionButtons?: (React.ReactNode | (ButtonProps & {
         key?: React.Key;
-        tabRender?: TabRenderProps; //if defined, onClick is overight
+        actionType?: ActionType
+        // tabRender?: TabRenderProps; //if defined, onClick is overight
         tooltip?: string;
 
     }))[],
@@ -69,7 +73,9 @@ export default ({
                 </Flex> : <></>}
             </Flex>
             <Flex flex={1} justify="flex-end">
-                <ActionBar actionButtons={actionButtons} onAddTab={onAddTab} actions={actions || []} numOfActionOnBar={3} />
+                <ActionBar actionButtons={actionButtons}
+                    onAddTab={onAddTab}
+                    actions={actions || []} numOfActionOnBar={3} />
                 <Button type="link" onClick={onRefresh} icon={<ReloadOutlined />} />
             </Flex>
         </Flex>

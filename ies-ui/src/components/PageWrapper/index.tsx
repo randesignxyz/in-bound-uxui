@@ -35,6 +35,9 @@ import { uniqueId } from "lodash";
 
 interface Props<ListDataType extends Record<string, any> & { id: number, code?: string }, FilterType extends Record<string, any>, ValueType> {
     onNewRender?: (key: string) => React.ReactNode;
+
+    tabRender?: (item?: ListDataType) => TabRenderProps[];
+
     listView: TableViewProps<ListDataType, FilterType, ValueType> | ListViewProps<ListDataType, FilterType, ValueType>
 }
 
@@ -64,6 +67,7 @@ const DraggableTabNode = ({ className, ...props }: DraggableTabPaneProps) => {
 
 export default <ListDataType extends Record<string, any> & { id: number, code?: string }, FilterType
     extends Record<string, any> & { searchValue?: string; status?: string; subStatus?: string }, ValueType>({
+        tabRender,
         onNewRender,
         listView,
     }: Props<ListDataType, FilterType, ValueType>) => {
@@ -98,7 +102,11 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
             tab: props.tabLabel || "new",
             key: gKey,
             icon: props.tabIcon || <FileAddOutlined />,
-            children: props.panel(() => { removeTab(gKey) }, gKey,)
+            children: props.panel({
+                onCloseTab: () => { removeTab(gKey) }, key: gKey,
+                // onAddTab: (props, key) => addTab( props, key) 
+                onChangeTabLabel: label => changeTabLabel(label, gKey)
+            })
         } : {
             tab: "new",
             key: gKey,
@@ -108,8 +116,35 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
         setActiveKey({ key: gKey })
     }
 
+    const changeTabLabel = (label: React.ReactNode, key: string) => {
+        setTabList(v => v.map(it => {
+
+            if (it.key == key) {
+                return { ...it, tab: label }
+            } else return it
+        }))
+    }
+
+    const reRenderTab = (item: ListDataType, props?: TabRenderProps, key?: React.Key) => {
+        const gKey = `${key?.toString() || props?.tabKey || 'default'}-${item.id}`
+        setTabList(v => v.map(it => {
+
+            if (it.key == gKey) {
+                return {
+                    ...it, tab: props?.tabLabel || item.code, icon: props?.tabIcon || <FileTextOutlined />, children: props?.panel({
+                        key: gKey,
+                        onCloseTab: () => { removeTab(gKey) },
+                        onAddTab: (props, key) => addTab(item, props, key),
+                        onRenderTab: (props, key) => reRenderTab(item, props, key),
+                        onChangeTabLabel: (label) => { changeTabLabel(label, gKey) }
+                    })
+                }
+            } else return it
+        }))
+    }
+
     const addTab = (item: ListDataType, props?: TabRenderProps, key?: React.Key) => {
-        const gKey = `${key?.toString() || 'default'}-${item.id}`
+        const gKey = `${key?.toString() || props?.tabKey || 'default'}-${item.id}`
         if (tabList.some(it => it.key == gKey)) {
             setActiveKey({ key: gKey, item: item })
         } else {
@@ -117,7 +152,14 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
                 tab: props?.tabLabel || item.code,
                 key: gKey,
                 icon: props?.tabIcon || <FileTextOutlined />,
-                children: props?.panel(() => { removeTab(gKey) }, gKey)
+
+                children: props?.panel({
+                    key: gKey,
+                    onCloseTab: () => { removeTab(gKey) },
+                    onAddTab: (props, key) => addTab(item, props, key),
+                    onRenderTab: (props, key) => reRenderTab(item, props, key),
+                    onChangeTabLabel: (label) => { changeTabLabel(label, gKey) }
+                })
             }])
             setActiveKey({ key: gKey, item: item })
         }
@@ -146,7 +188,6 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
             key: 'list',
             tabKey: 'list',
             closable: false,
-
             icon: <UnorderedListOutlined />,
             children: <FilterBar
                 onStatusRender={listView.onStatusRender}
@@ -155,7 +196,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
                 actions={listView.actions}
                 advanceSearchButton={listView.advanceSearchButton}
                 onRefresh={listView.onRefresh}
-                onAddTab={newTab}
+                onAddTab={(actionType) => actionType == 'add' && newTab(tabRender?.().find(it => it.action == actionType))}
                 onSearch={keyworkds => {
                     setFilterData(v => ({ ...v, searchValue: keyworkds }) as any)
                     reloadList(true)
@@ -190,7 +231,6 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
                 </DndContext>
             ),
             hideAdd: !onNewRender,
-
             onChange(activeKey) {
                 setActiveKey({ key: activeKey, item: tabList.find(it => it.key == activeKey)?.data })
             },
@@ -205,7 +245,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
 
         {activeKey.key == 'list' && listView.type == 'Table' && <>
             {listView.onExtraFilterRender?.(filterData)}
-            <TableView listView={{
+            <TableView tabRender={tabRender} listView={{
                 ...listView, props: {
                     ...listView.props,
                     actionRef: listView.props.actionRef || actionRef,

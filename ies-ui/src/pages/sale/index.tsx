@@ -12,6 +12,10 @@ import settlementIcon from '@/assets/receive-cash.png';
 import dailyReportIcon from '@/assets/dsd-report-icon.png';
 
 // import soInvoiceIcon from '@/assets/sale-invoice.png';
+import agreementIcon from '@/assets/agreement.png';
+import complainIcon from '@/assets/complain.png';
+import purchaseOrderIcon from '@/assets/order-items.png';
+
 import saleIcon from '@/assets/shopping.png';
 import stockIcon from '@/assets/stock.png';
 import storeIcon from '@/assets/store.png';
@@ -31,6 +35,7 @@ import type { ReportName } from './reports';
 
 import { PageContainer } from '@ant-design/pro-components';
 import { MenuProps } from 'rc-menu';
+import { MPUPath } from './mpu';
 import Reports from './reports';
 {
   /* <TeamOutlined /> */
@@ -205,7 +210,7 @@ export default () => {
     {
       id: 'stock',
       name: 'Stock Control',
-      description: 'Van Sale or MPU',
+      description: 'Van Sale',
       link: `${SalePaths.stock}/list`,
       icon: stockIcon,
       visible: access.canAcessStockControlMenuItem,
@@ -290,6 +295,51 @@ export default () => {
     },
   ];
 
+  const mpuMenuItems = [
+    {
+      id: 'rsm_request',
+      name: 'RSM Request',
+      description: '',
+      link: `${MPUPath.rsmRequest}/list`,
+      icon: agreementIcon,
+      visible: access.canAccessViewMpu,
+    },
+    {
+      id: 'mpu_po',
+      name: 'MPU Purchase Order',
+      description: '',
+      link: `${MPUPath.mpuPurchaseOrder}/list`,
+      icon: purchaseOrderIcon,
+      visible: access.canAccessViewMpu,
+    },
+    {
+      id: 'mpu_stock',
+      name: 'MPU Stock',
+      description: '',
+      link: `${MPUPath.mpuStock}/list`,
+      icon: stockIcon,
+      visible: access.canAccessViewMpu,
+    },
+
+    {
+      id: 'mpu_count_stock',
+      name: 'Daily Count Stock',
+      description: '',
+      link: `${MPUPath.mpuCountStock}/list`,
+      icon: complainIcon,
+      visible: access.canAccessViewMpu,
+    },
+
+    {
+      id: 'mpu_report',
+      name: 'MPU Report',
+      description: '',
+      link: `${MPUPath.mpuReport}/list`,
+      icon: reportIcon,
+      visible: access.canAccessViewMpu,
+    },
+  ];
+
   // const retailerMenuItems = [
   //   {
   //     id: 'retailer',
@@ -329,12 +379,12 @@ export default () => {
           <ListMenuComp items={stockMenuItems} />
         </>
       )}
-      {/* {access.canAccessRetailer && (
+      {access.canAccessViewMpu && (
         <>
           <Divider />
-          <ListMenuComp items={retailerMenuItems} />
+          <ListMenuComp items={mpuMenuItems} />
         </>
-      )} */}
+      )}
     </PageContainer>
   );
 };

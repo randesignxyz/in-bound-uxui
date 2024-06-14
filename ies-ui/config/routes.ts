@@ -413,6 +413,61 @@ export default [
     access: 'canAccessAllMenuDSD',
     component: './sale/pricing',
   },
+
+  /******************* MPU *******************/
+
+  // {
+  //   path: '/sale/mpu',
+  //   name: 'mpu',
+  //   icon: 'UnorderedListOutlined',
+  //   access: 'canAccessViewMpu',
+  //   component: './sale/mpu',
+  // },
+
+  // {
+  //   path: '/sale/stock/:view/*',
+  //   name: 'stock',
+  //   icon: 'UnorderedListOutlined',
+  //   hideInMenu: 'true',
+  //   access: 'canAcessStockControlMenuItem',
+  //   component: './sale/stock-control',
+  // },
+
+  {
+    path: '/sale/mpu/:view/*',
+    name: 'sale_rsm_request',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessViewMpu',
+    component: './sale/mpu/request',
+  },
+  {
+    path: '/sale/mpu_stock/:view/*',
+    name: 'sale_mpu_stock',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessViewMpu',
+    component: './sale/mpu/stock',
+  },
+  {
+    path: '/sale/mpu_purchase_order/:view/*',
+    name: 'sale_mpu_purchase_order',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessViewMpu',
+    component: './sale/mpu/purchase_order',
+  },
+  {
+    path: '/sale/mpu_count_stock/:view/*',
+    name: 'sale_mpu_count_stock',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessViewMpu',
+    component: './sale/mpu/count_stock',
+  },
+
+  /******************* MPU *******************/
+
   /******************* Retailer *******************/
   {
     path: '/retailer',
@@ -666,7 +721,6 @@ export default [
     component: './delivery/truck',
   },
 
-
   /************************ Queque  ******************/
 
   // {
@@ -872,7 +926,6 @@ export default [
   },
   /*************Delivery Expense>>********************/
 
-
   //  =================  FLEET =================
 
   {
@@ -890,7 +943,6 @@ export default [
     access: 'canAccessFleetMenu',
     component: './fleet/vehicle/',
   },
-
 
   {
     path: '/fleet/maintenance/:view/*',
@@ -971,77 +1023,76 @@ export default [
   },
   //  ================= END FLEET =================
 
+  // ================= DMS =======================
+  {
+    path: '/dms',
+    name: 'dms',
+    icon: 'FileSearchOutlined',
+    component: './dms',
+    access: 'canAccessDMSMenu',
+    redirect: '/dms/workspace/library',
+  },
 
-// ================= DMS =======================
-{
-  path:"/dms",
-  name:"dms",
-  icon:"FileSearchOutlined",
-  component:"./dms",
-  access:"canAccessDMSMenu",
-  redirect:"/dms/workspace/library"
-},
+  {
+    path: '/dms/workspace/:view/*',
+    name: 'dms',
+    icon: 'FileSearchOutlined',
+    component: './dms',
+    access: 'canAccessDMSMenu',
+    hideInMenu: 'true',
+  },
 
-{
-  path:"/dms/workspace/:view/*",
-  name:"dms",
-  icon:"FileSearchOutlined",
-  component:"./dms",
-  access:"canAccessDMSMenu",
-  hideInMenu: 'true',
-},
-
-{
-  path:"/dms/setting/:view/*",
-  name:"dms",
-  component:"./dms/setting",
-  access:"canAccessDMSMenu",
-  hideInMenu: 'true',
-},
-{
-  path:"/dms/folder/:view/*",
-  name:"dms",
-  component:"./dms/folder",
-  access:"canAccessDMSMenu",
-  hideInMenu: 'true',
-},
-{
-  path:"/dms/document/:view/*",
-  name:"dms",
-  component:"./dms/documentation",
-  access:"canAccessDMSMenu",
-  hideInMenu: 'true',
-},
-{
-  path: '/external/dms/document/:view/*',
-  layout:false,
-  name:"dms",
-  component:"./dms/documentation",
-  access:"canAccessDMSMenu",
-  hideInMenu: 'true',
-},
-{
-  path:"/dms/contracts/:view/*",
-  name:"dms",
-  component:"./dms/contract",
-  access:"canAccessDMSMenu",
-  hideInMenu: 'true',
-},
-{
-  path:"/dms/share/:view/:id",
-  name:"dms",
-  component:"./dms/share",
-  access:"canAccessDMSMenu",
-  hideInMenu: 'true',
-},
-{
-  path:"/dms/company/:view/*",
-  name:"dms",
-  component:"./dms/contract/company",
-  access:"canAccessDMSMenu",
-  hideInMenu: 'true',
-},
-// ==================== END DMS ================
+  {
+    path: '/dms/setting/:view/*',
+    name: 'dms',
+    component: './dms/setting',
+    access: 'canAccessDMSMenu',
+    hideInMenu: 'true',
+  },
+  {
+    path: '/dms/folder/:view/*',
+    name: 'dms',
+    component: './dms/folder',
+    access: 'canAccessDMSMenu',
+    hideInMenu: 'true',
+  },
+  {
+    path: '/dms/document/:view/*',
+    name: 'dms',
+    component: './dms/documentation',
+    access: 'canAccessDMSMenu',
+    hideInMenu: 'true',
+  },
+  {
+    path: '/external/dms/document/:view/*',
+    layout: false,
+    name: 'dms',
+    component: './dms/documentation',
+    access: 'canAccessDMSMenu',
+    hideInMenu: 'true',
+  },
+  {
+    path: '/dms/contracts/:view/*',
+    name: 'dms',
+    component: './dms/contract',
+    access: 'canAccessDMSMenu',
+    hideInMenu: 'true',
+  },
+  {
+    path: '/dms/share/:view/:id',
+    name: 'dms',
+    component: './dms/share',
+    access: 'canAccessDMSMenu',
+    hideInMenu: 'true',
+  },
+  {
+    path: '/dms/company/:view/*',
+    name: 'dms',
+    component: './dms/contract/company',
+    access: 'canAccessDMSMenu',
+    hideInMenu: 'true',
+  },
+  // ==================== END DMS ================
 
   //  =================Begin Prod =================
   {

@@ -8,13 +8,11 @@ import { FuelDTO } from './data';
 interface Props extends DrawerProps {
   data?: FuelDTO;
 }
-
 export default ({ data, ...props }: Props) => {
   const actionType = useRef<ActionType>();
   useEffect(() => {
     props.open;
   }, [props.open]);
-
   return (
     <>
       <Drawer {...props} width={800}

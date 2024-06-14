@@ -1,6 +1,6 @@
-import { AimOutlined, CarOutlined, CheckSquareOutlined, DashboardOutlined, EditFilled, FileProtectOutlined, PlayCircleOutlined, PlusCircleFilled, PlusCircleOutlined, PlusOutlined } from "@ant-design/icons";
+import { AimOutlined, CarOutlined, DashboardOutlined, EditFilled, FileProtectOutlined, PlusCircleOutlined } from "@ant-design/icons";
 import { ActionType, PageContainer } from "@ant-design/pro-components";
-import { Button, Dropdown, MenuProps, Modal, Spin, Tabs, message } from "antd";
+import { Button, Dropdown, MenuProps, Modal, message } from "antd";
 import { useState, useCallback, useEffect, useRef } from "react"
 import { simpleRequestActions } from "@/services/model";
 import { VehicleListItem } from "./data";
@@ -23,7 +23,7 @@ import { SpecificationServiceAPI } from "../specification/service";
 import { DriverDTO, VehicleDriverCreate, VehicleDriverDTO } from "../driver/data";
 import AssignDriverFormModal from "../driver/AssignDriverFormModal";
 import AccidentListView from "../accident/AccidentListView";
-
+import { useParams } from "@umijs/max";
 
 interface Props {
     id: string;
@@ -35,10 +35,8 @@ export default ({ id, onAdd, onEdit }: Props) => {
     const requestActions = simpleRequestActions();
     const service = VehicleServiceAPI(requestActions);
     const [vehicleBasicinfo, setVehicleBasicInfo] = useState<VehicleListItem>();
-    const [state, setSate] = useState<{
-        visible?: { name: 'modal'; type: 'ADD' | 'Edit'; payload?: { vehicle: VehicleListItem } };
-
-    }>({});
+    const parm = useParams();
+    const tab = parm["tab"];
     const [odometerIssue, setOdometerIssue] = useState<{
         visible?: {
             name: "MODAL",
@@ -54,7 +52,13 @@ export default ({ id, onAdd, onEdit }: Props) => {
         }
     }>();
     const [assignState, setAssignState] = useState<{
-        visible?: { name: 'modal'; type: 'ADD' | 'Edit'; vehicleId?: VehicleListItem; driver?: DriverDTO, vehicleDriver?: VehicleDriverDTO };
+        visible?: { 
+            name: 'modal'; 
+            type: 'ADD' | 'Edit'; 
+            vehicleId?: VehicleListItem; 
+            driver?: DriverDTO, 
+            vehicleDriver?: VehicleDriverDTO 
+        };
     }>({});
 
     const actionRef = useRef<ActionType>();
@@ -62,24 +66,13 @@ export default ({ id, onAdd, onEdit }: Props) => {
         const initData = await service.fetchVehicle(id)
         setVehicleBasicInfo(initData);
     }, [id]);
-
     useEffect(() => {
         initData()
     }, [initData])
-
-    const onAddHandler = async () => {
-        setSate((v) => ({
-            ...v,
-            visible: { name: 'modal', type: 'ADD' },
-        }));
-    };
-
-
-
     const tabItem = [
         {
             label: "General Info",
-            key: "1",
+            key: "info",
             children: (
                 <>
                     <BasicInfo
@@ -88,53 +81,49 @@ export default ({ id, onAdd, onEdit }: Props) => {
                 </>
             )
         },
-
         {
             label: `Maintenance`,
-            key: '2',
+            key: 'maintenance',
             children: <Meintennece id={id} />,
         },
         {
             label: `Fuel History`,
-            key: '3',
+            key: 'fuel',
             children: <FuelHistory id={id} />,
         },
         {
             label: "Inpection History",
-            key: "4",
+            key: "inspection",
             children: <InspectionView vehicleId={id} />
         },
         {
             label: "Operator",
-            key: "5",
+            key: "operation",
             children: <AssignDriver vehicleId={id} />
         },
-
         {
             label: `Service Reminder`,
-            key: '6',
+            key: 'reminder',
             children: <ServiceReminder id={id} />
         },
-
-
         {
             label: `Specifications`,
-            key: '8',
+            key: 'specification',
             children: <Specifications id={id} />
         },
         {
             label: `Accidentals`,
-            key: '9',
+            key: 'accidental',
             children: <AccidentListView vehicleId={id} />
         },
         {
             label: `Accessories`,
-            key: '10',
+            key: 'accessories',
             children: <Accessories id={id} />
         },
         {
             label: `Meter History`,
-            key: '7',
+            key: 'meter',
             children: <MeterHistory id={id} />
         },
         {
@@ -142,7 +131,7 @@ export default ({ id, onAdd, onEdit }: Props) => {
             key: 'log',
             children: <ActivityLogListView referenceStringId={id} logParam={{ source: "VEHICLE" }} />
         },
-    ]
+    ];
 
     const items: MenuProps["items"] = [
         {
@@ -155,7 +144,7 @@ export default ({ id, onAdd, onEdit }: Props) => {
             key: "operator",
             label: "Assign Operator",
             itemIcon: <FileProtectOutlined />,
-            onClick:() =>setAssignState({ visible: { name: 'modal', type: 'ADD', vehicleId: vehicleBasicinfo, driver: vehicleBasicinfo?.driver, vehicleDriver: vehicleBasicinfo?.vehicleDriver } })
+            onClick: () => setAssignState({ visible: { name: 'modal', type: 'ADD', vehicleId: vehicleBasicinfo, driver: vehicleBasicinfo?.driver, vehicleDriver: vehicleBasicinfo?.vehicleDriver } })
         },
         {
             key: "odometer",
@@ -166,39 +155,39 @@ export default ({ id, onAdd, onEdit }: Props) => {
         {
             key: "tire",
             label: "Assign Tire",
-            itemIcon:<AimOutlined />,
+            itemIcon: <AimOutlined />,
             onClick: () => setTireState({ visible: { name: "MODAL", type: "ADD", payload: vehicleBasicinfo } })
         },
-    ]
+    ];
 
     return (
         <>
-            <Spin spinning={requestActions.request?.loading}>
-                <PageContainer
-                    onBack={!ExternalLayout.isExternal("fleet/vehicle") ? ExternalLayout.handleBackHandler : undefined}
-                    title="Details"
-                    subTitle={`#${vehicleBasicinfo?.plateNumber}`}
-                    tabProps={{
-                        size: "small"
-                    }}
-                    extra={[
-
-                        <Button
-                            icon={<EditFilled />}
-                            onClick={() => onEdit?.(id)}
-                        >
-                            Edit
-                        </Button>,
-                        <Dropdown.Button
-                            icon={<PlusCircleOutlined />}
-                            type="primary"
-                            menu={{ items, style: { width: 200 } }}
-                        >Add </Dropdown.Button>,
-                    ]}
-                    tabList={tabItem}
-                >
-                </PageContainer>
-            </Spin>
+            <PageContainer
+                onBack={!ExternalLayout.isExternal("fleet/vehicle") ? ExternalLayout.handleBackHandler : undefined}
+                title="Details"
+                subTitle={`#${vehicleBasicinfo?.plateNumber}`}      
+                style={{
+                    margin: "-30px -40px 0",
+                }}
+                tabProps={{
+                    size: "small",
+                    accessKey:tab,  
+                }}
+                extra={[
+                    <Button
+                        icon={<EditFilled />}
+                        onClick={() => onEdit?.(id)}
+                    >
+                        Edit
+                    </Button>,
+                    <Dropdown.Button
+                        icon={<PlusCircleOutlined />}
+                        type="primary"
+                        menu={{ items, style: { width: 200 } }}
+                    >Add </Dropdown.Button>,
+                ]}
+                tabList={tabItem}
+            />
             <OdometerIssue
                 open={odometerIssue?.visible?.name === "MODAL"}
                 onCancel={() => setOdometerIssue({ visible: undefined })}

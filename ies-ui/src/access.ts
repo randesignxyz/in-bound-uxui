@@ -580,7 +580,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       // Reach-2024-02-13 
     canAccessFleetMenu:
       currentUser?.authorities.some((item) =>
-        ['ROLE_ADMIN', 'ROLE_FLEET_ADMIN'].some((it) => it === item),
+        ['ROLE_FLEET_ADMIN','ROLE_FLEET'].some((it) => it === item),
       ) || false,
       canAccessDMSMenu:
       currentUser?.authorities.some((item) =>

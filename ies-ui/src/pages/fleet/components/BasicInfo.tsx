@@ -123,6 +123,7 @@ export default ({ data, displayImage = true }: Props) => {
         <Card size="small" key={'Classification'} title="Classification">
           <ProDescriptions<VehicleListItem>
             dataSource={data}
+            column={{ xs:1,sm:2, md:3, lg:4, xxl:4,xl:4 }}
             columns={[
               {
                 title: 'Branding Type',
@@ -134,6 +135,12 @@ export default ({ data, displayImage = true }: Props) => {
                 key: 'ownership',
                 render: (_, r) => r.ownership?.name,
               },
+              {
+                title: 'Group',
+                key: 'businness',
+                render: (_, r) => r.businessUnit?.name,
+              },
+             
               {
                 title: 'Status',
                 key: 'status',

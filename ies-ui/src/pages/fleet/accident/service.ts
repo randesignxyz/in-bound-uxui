@@ -33,7 +33,6 @@ const AccidentAction = {
 export const AccidentServiceAPI = (requestActions: RequestActions) => {
     return {
       page : (params: TableViewSearchParams<AccidentAdvanceSearch>)=>singleRequest<AccidentDTO>(AccidentAction.page(params))(requestActions) as Promise<Paging<AccidentDTO>> ,
-
       save: (data: AccidentCreate) =>singleRequest<{data:string, message:string}>(AccidentAction.save(data))(requestActions),
       
     }

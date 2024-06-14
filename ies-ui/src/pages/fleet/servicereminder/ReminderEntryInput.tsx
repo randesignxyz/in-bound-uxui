@@ -11,7 +11,6 @@ import { useForm } from 'antd/es/form/Form';
 import { ServiceTasksServiceAPI } from '../serviceTask/service';
 import { VehicleServiceAPI } from '../vehicle/service';
 import { ServiceReminderCreate } from './data';
-
 export default () => {
   const [form] = useForm<ServiceReminderCreate>();
   const requestActions = simpleRequestActions();

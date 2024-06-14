@@ -10,7 +10,7 @@ import {
   SisternodeOutlined,
 } from '@ant-design/icons';
 import type { ActionType } from '@ant-design/pro-table';
-import { useModel } from '@umijs/max';
+import { history, useModel } from '@umijs/max';
 import { Badge, Button, MenuProps, message, Modal, Radio, Space } from 'antd';
 import Dropdown from 'antd/lib/dropdown/dropdown';
 import moment from 'moment';
@@ -215,237 +215,240 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
   };
   return (
     <>
-    <PageContainer
-      title="Services Reminder"
-    >
-    <TableView<ServiceReminderDTO,{ searchValue?: string; advanceSearch: ServiceReminderSearchParam }>
-        hasCriteria={Object.values(Omit(advanceSearchParams, ['status'])).some((v) => v)}
-        cache
-        columns={[
-          {
-            key: 'Vehicle',
-            title: 'Vehicle',
-            sorter: 'vehicleId',
-            render: (_, r) => (
-              <Button
-                type="link"
-                onClick={() =>
-                  setSate({ visible: { name: 'modal', type: 'Edit', payload: { vehicle: r } } })
-                }
-              >
-                {[r.vehicleId.plateNumber].filter((it) => it).join('-')}
-              </Button>
-            ),
-          },
-          {
-            key: 'Service Tasks',
-            title: 'Service Tasks',
-            sorter: 'serviceTaskId',
-            render: (_, r) => (
-              <>
-                {setStatusCount(r.statusCount)}
-                <p style={{ margin: 0, padding: 0 }}>{r.serviceTask?.name}</p>
-                <p style={{ color: 'gray', fontSize: '12px', margin: 0, padding: 0 }}>
-                  Every{r.timeInterval ? ` ${r.timeInterval} ${r.timeFrequency} or` : ''}{' '}
-                  {r.meterInterval ? ` ${r.meterInterval} km` : ''}
-                </p>
-              </>
-            ),
-          },
-          {
-            key: 'Status',
-            title: 'Status',
-            dataIndex: 'status',
-            sorter: 'status',
-            render: (_, r) => (
-              <Badge
-                status={
-                  r.status == 'Due Soon'
-                    ? 'warning'
-                    : r.status == 'Upcoming'
-                      ? 'processing'
-                      : 'error'
-                }
-                text={r.status}
-              />
-            ),
-          },
-          {
-            key: 'remaining',
-            title: 'Remaining',
-            dataIndex: 'checked',
-            sorter: 'nextDueAt',
-            render: (_, r) => (
-              <>
-                {r.timeInterval ? (
-                  <p
-                    style={{
-                      fontSize: '13px',
-                      margin: 0,
-                      padding: 0,
-                      color:
-                        status(r) == 'Due Soon' ? '#f3af28' : status(r) == 'Upcoming' ? '' : 'red',
-                    }}
-                  >
-                    {formatDatewithNumber(r.nextDueAt)}{' '}
-                  </p>
-                ) : (
-                  ''
-                )}
-                {r.meterInterval ? (
-                  <p
-                    style={{
-                      fontSize: '13px',
-                      margin: 0,
-                      padding: 0,
-                      color:
-                        meterFormat(r)?.status == 'Due Soon'
-                          ? '#f3af28'
-                          : meterFormat(r)?.status == 'Upcoming'
-                            ? ''
-                            : 'red',
-                    }}
-                  >
-                    {meterFormat(r)?.velue}
-                  </p>
-                ) : (
-                  ''
-                )}
-              </>
-            ),
-          },
-          {
-            key: 'remind',
-            title: 'Next Due',
-            dataIndex: 'nextDueAt',
-            sorter: 'nextDueAt',
-            valueType: 'date',
-            render: (_, r) => {
-              if (r.nextDueAt && r.nextDueMeter) {
-                return (
-                  <>
-                    <span>{formatDate(r.nextDueAt)}</span>
-                    <br />
-                    <span>{r.nextDueMeter}km</span>
-                  </>
-                );
-              } else if (r.nextDueAt) {
-                return <span>{formatDate(r.nextDueAt)}</span>;
-              } else {
-                return <span>{r.nextDueMeter}km</span>;
-              }
+      <PageContainer
+        title={"Service Reminder"}
+        onBack={() => history.push("/fleet")}
+        fixedHeader
+      >
+        <TableView<ServiceReminderDTO, { searchValue?: string; advanceSearch: ServiceReminderSearchParam }>
+          hasCriteria={Object.values(Omit(advanceSearchParams, ['status'])).some((v) => v)}
+          cache
+          columns={[
+            {
+              key: 'Vehicle',
+              title: 'Vehicle',
+              sorter: 'vehicleId',
+              render: (_, r) => (
+                <Button
+                  type="link"
+                  onClick={() =>
+                    setSate({ visible: { name: 'modal', type: 'Edit', payload: { vehicle: r } } })
+                  }
+                >
+                  {[r.vehicleId.plateNumber].filter((it) => it).join('-')}
+                </Button>
+              ),
             },
-          },
-          {
-            key: 'Last Completed',
-            title: 'Last Completed',
-            valueType: 'date',
-            dataIndex: 'lastModifiedDate',
-            sorter: 'lastModifiedDate',
-          },
-          {
-            key: 'action',
-            title: '',
-            width: 50,
-            render: (_, r) => (
-              <Dropdown
-                menu={{
-                  items: getMenuItems(r),
-                  style: { width: 200 },
-                }}
-              >
-                <a onClick={(e) => e.preventDefault()}>
-                  <DashOutlined />
-                </a>
-              </Dropdown>
-            ),
-          },
-        ]}
-        actionHandlers={{
-          onAdd: () => onAddHandler(),
-          onRequest: (criteria, pagination, sort) =>
-            onRequestHandler({
-              criteria: {
-                ...criteria,
-                advanceSearch: advanceSearchParams,
-                sort,
+            {
+              key: 'Service Tasks',
+              title: 'Service Tasks',
+              sorter: 'serviceTaskId',
+              render: (_, r) => (
+                <>
+                  {setStatusCount(r.statusCount)}
+                  <p style={{ margin: 0, padding: 0 }}>{r.serviceTask?.name}</p>
+                  <p style={{ color: 'gray', fontSize: '12px', margin: 0, padding: 0 }}>
+                    Every{r.timeInterval ? ` ${r.timeInterval} ${r.timeFrequency} or` : ''}{' '}
+                    {r.meterInterval ? ` ${r.meterInterval} km` : ''}
+                  </p>
+                </>
+              ),
+            },
+            {
+              key: 'Status',
+              title: 'Status',
+              dataIndex: 'status',
+              sorter: 'status',
+              render: (_, r) => (
+                <Badge
+                  status={
+                    r.status == 'Due Soon'
+                      ? 'warning'
+                      : r.status == 'Upcoming'
+                        ? 'processing'
+                        : 'error'
+                  }
+                  text={r.status}
+                />
+              ),
+            },
+            {
+              key: 'remaining',
+              title: 'Remaining',
+              dataIndex: 'checked',
+              sorter: 'nextDueAt',
+              render: (_, r) => (
+                <>
+                  {r.timeInterval ? (
+                    <p
+                      style={{
+                        fontSize: '13px',
+                        margin: 0,
+                        padding: 0,
+                        color:
+                          status(r) == 'Due Soon' ? '#f3af28' : status(r) == 'Upcoming' ? '' : 'red',
+                      }}
+                    >
+                      {formatDatewithNumber(r.nextDueAt)}{' '}
+                    </p>
+                  ) : (
+                    ''
+                  )}
+                  {r.meterInterval ? (
+                    <p
+                      style={{
+                        fontSize: '13px',
+                        margin: 0,
+                        padding: 0,
+                        color:
+                          meterFormat(r)?.status == 'Due Soon'
+                            ? '#f3af28'
+                            : meterFormat(r)?.status == 'Upcoming'
+                              ? ''
+                              : 'red',
+                      }}
+                    >
+                      {meterFormat(r)?.velue}
+                    </p>
+                  ) : (
+                    ''
+                  )}
+                </>
+              ),
+            },
+            {
+              key: 'remind',
+              title: 'Next Due',
+              dataIndex: 'nextDueAt',
+              sorter: 'nextDueAt',
+              valueType: 'date',
+              render: (_, r) => {
+                if (r.nextDueAt && r.nextDueMeter) {
+                  return (
+                    <>
+                      <span>{formatDate(r.nextDueAt)}</span>
+                      <br />
+                      <span>{r.nextDueMeter}km</span>
+                    </>
+                  );
+                } else if (r.nextDueAt) {
+                  return <span>{formatDate(r.nextDueAt)}</span>;
+                } else {
+                  return <span>{r.nextDueMeter}km</span>;
+                }
               },
-              pagination,
-            }),
-          onFirstLoad: () =>
-            cacheList.fetchDataList('fleet-maintenance-plan').then((v: any) => {
-              if (v) {
-                setAdvanceSearchParams({
-                  ...v.creteria?.criteria,
-                  status: v.creteria?.criteria?.advanceSearch?.status ?? 'ALL',
-                });
-                return v.dataList;
-              } else {
-                return onRequestHandler({
-                  criteria: {
-                    advanceSearch: advanceSearchParams,
-                  },
-                });
-              }
-            }) as Promise<Paging<ServiceReminderDTO>>,
-        }}
-        tableProps={{
-          actionRef: actionRef,
-        }}
-        extraFilter={
-          <>
-            <Space size="large" direction="horizontal">
-              <Radio.Group
-                value={advanceSearchParams.status}
-                onChange={(e) => {
-                  setAdvanceSearchParams((v) => ({
-                    ...v,
-                    status: e.target.value,
-                  }));
-                  actionRef.current?.reloadAndRest?.();
-                }}
-              >
-                <Radio.Button value="ALL">All</Radio.Button>
-                <Badge showZero={true} color={'blue'} count={statusCount?.upcoming}>
-                  <Radio.Button value="Upcoming">Upcoming</Radio.Button>
-                </Badge>
-                <Badge showZero={true} color={'yellow'} count={statusCount?.dueSoon}>
-                  <Radio.Button value="Due Soon">Due Soon</Radio.Button>
-                </Badge>
-                <Badge showZero={true} count={statusCount?.overdue} color={'red'}>
-                  <Radio.Button value="Overdue">Overdue</Radio.Button>
-                </Badge>
-              </Radio.Group>
-            </Space>
-          </>
-        }
-      />
-    </PageContainer>
-      <ServiceReminderModalForm
-        open={state.visible?.name == 'modal'}
-        onCancel={() => setSate((v) => ({ ...v, visible: undefined }))}
-        onSave={onSaveActionHandler}
-        data={state.visible?.payload?.vehicle}
-      />
-      <MaintenanceModalForm
-        open={maintenanceState.visible?.name == 'modal'}
-        onCancel={() => setMaintenanceState((v) => ({ ...v, visible: undefined }))}
-        serviceReminder={maintenanceState.visible?.payload?.entry}
-      />
-      <CompletedHistory
-        data={alertHistorystate.visible?.record}
-        open={alertHistorystate.visible?.name === 'modal'}
-        onClose={() => setAlertHistorySate((v) => ({ ...v, visible: undefined }))}
-      />
-      <ForceComplete
-        open={reminderHistorystate.visible?.name === 'modal'}
-        onSave={onSaveRemiderHistory}
-        reminderId={reminderHistorystate.visible?.reminderId}
-        modalProps={{
-          onCancel: () => setReminderHistorySate((v) => ({ ...v, visible: undefined })),
-        }}
-        reminderDTO={reminderHistorystate.visible?.reminderDTO}
-      />
+            },
+            {
+              key: 'Last Completed',
+              title: 'Last Completed',
+              valueType: 'date',
+              dataIndex: 'lastModifiedDate',
+              sorter: 'lastModifiedDate',
+            },
+            {
+              key: 'action',
+              title: '',
+              width: 50,
+              render: (_, r) => (
+                <Dropdown
+                  menu={{
+                    items: getMenuItems(r),
+                    style: { width: 200 },
+                  }}
+                >
+                  <a onClick={(e) => e.preventDefault()}>
+                    <DashOutlined />
+                  </a>
+                </Dropdown>
+              ),
+            },
+          ]}
+          actionHandlers={{
+            onAdd: () => onAddHandler(),
+            onRequest: (criteria, pagination, sort) =>
+              onRequestHandler({
+                criteria: {
+                  ...criteria,
+                  advanceSearch: advanceSearchParams,
+                  sort,
+                },
+                pagination,
+              }),
+            onFirstLoad: () =>
+              cacheList.fetchDataList('fleet-maintenance-plan').then((v: any) => {
+                if (v) {
+                  setAdvanceSearchParams({
+                    ...v.creteria?.criteria,
+                    status: v.creteria?.criteria?.advanceSearch?.status ?? 'ALL',
+                  });
+                  return v.dataList;
+                } else {
+                  return onRequestHandler({
+                    criteria: {
+                      advanceSearch: advanceSearchParams,
+                    },
+                  });
+                }
+              }) as Promise<Paging<ServiceReminderDTO>>,
+          }}
+          tableProps={{
+            actionRef: actionRef,
+          }}
+          extraFilter={
+            <>
+              <Space size="large" direction="horizontal">
+                <Radio.Group
+                  value={advanceSearchParams.status}
+                  onChange={(e) => {
+                    setAdvanceSearchParams((v) => ({
+                      ...v,
+                      status: e.target.value,
+                    }));
+                    actionRef.current?.reloadAndRest?.();
+                  }}
+                >
+                  <Radio.Button value="ALL">All</Radio.Button>
+                  <Badge showZero={true} color={'blue'} count={statusCount?.upcoming}>
+                    <Radio.Button value="Upcoming">Upcoming</Radio.Button>
+                  </Badge>
+                  <Badge showZero={true} color={'yellow'} count={statusCount?.dueSoon}>
+                    <Radio.Button value="Due Soon">Due Soon</Radio.Button>
+                  </Badge>
+                  <Badge showZero={true} count={statusCount?.overdue} color={'red'}>
+                    <Radio.Button value="Overdue">Overdue</Radio.Button>
+                  </Badge>
+                </Radio.Group>
+              </Space>
+            </>
+          }
+        />
+
+        <ServiceReminderModalForm
+          open={state.visible?.name == 'modal'}
+          onCancel={() => setSate((v) => ({ ...v, visible: undefined }))}
+          onSave={onSaveActionHandler}
+          data={state.visible?.payload?.vehicle}
+        />
+        <MaintenanceModalForm
+          open={maintenanceState.visible?.name == 'modal'}
+          onCancel={() => setMaintenanceState((v) => ({ ...v, visible: undefined }))}
+          serviceReminder={maintenanceState.visible?.payload?.entry}
+        />
+        <CompletedHistory
+          data={alertHistorystate.visible?.record}
+          open={alertHistorystate.visible?.name === 'modal'}
+          onClose={() => setAlertHistorySate((v) => ({ ...v, visible: undefined }))}
+        />
+        <ForceComplete
+          open={reminderHistorystate.visible?.name === 'modal'}
+          onSave={onSaveRemiderHistory}
+          reminderId={reminderHistorystate.visible?.reminderId}
+          modalProps={{
+            onCancel: () => setReminderHistorySate((v) => ({ ...v, visible: undefined })),
+          }}
+          reminderDTO={reminderHistorystate.visible?.reminderDTO}
+        />
+      </PageContainer>
     </>
   );
 };

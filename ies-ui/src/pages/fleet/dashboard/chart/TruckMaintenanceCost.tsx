@@ -6,7 +6,7 @@ import { TruckMaintenanceCostDTO, TruckMaintenanceCostParam } from '../data';
 import { Card, Spin } from 'antd';
 import { ProForm, ProFormDatePicker, ProFormSelect } from '@ant-design/pro-components';
 import { useForm } from 'antd/lib/form/Form';
-import { formatter, formatterQty } from '@/pages/utils';
+import { formatter } from '@/pages/utils';
 
 const TruckMaintenanceCost = () => {
   const [data, setData] = useState<TruckMaintenanceCostDTO[]>([]);

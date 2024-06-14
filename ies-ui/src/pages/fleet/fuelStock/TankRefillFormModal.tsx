@@ -3,10 +3,10 @@ import { ProForm, ProFormDigit, ProFormTextArea, ProDescriptions, ProFormDatePic
 import { Col, Row } from 'antd';
 import { useEffect } from "react";
 import FormModalComp, { FormModalProps } from "@/components/FormModal";
-import { LookupDataServiceAPI } from "../lookupData/service";
 import { useForm } from "antd/lib/form/Form";
 import { TankTransactionCreate, TankDTO } from "./data";
 import moment from "moment";
+import { FleetServiceAPI } from "../service";
 
 interface Props extends FormModalProps {
     data?: TankDTO;
@@ -16,13 +16,11 @@ interface Props extends FormModalProps {
     type?: string | "ADDNEW" | "STOCKIN",
     title?: string;
 }
-
 const TankRefileFormModal: React.FC<Props> = ({ onSave, data, title, actionType, type, id, ...props }) => {
     const [form] = useForm<TankTransactionCreate>();
     const requestActions = simpleRequestActions();
     useEffect(() => {
         props.open && initFormData();
-
     }, [props.open]);
     const initFormData = () => {
         form.setFieldsValue({
@@ -146,7 +144,7 @@ const TankRefileFormModal: React.FC<Props> = ({ onSave, data, title, actionType,
                                     name={"transactionName"}
                                     label="Source"
                                     request={async () => {
-                                        const data = await LookupDataServiceAPI(requestActions).lookupData({ type: "VEHICLE" });
+                                        const data = await FleetServiceAPI(requestActions).lookupData({ type: "VEHICLE" });
                                         return data.filter(it => it.code === "COMPANY").map((it) => ({ value: it.name.toString(), label: it.name, key: it.id }));
                                     }}
                                 />

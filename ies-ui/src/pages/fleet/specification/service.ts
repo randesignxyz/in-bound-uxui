@@ -67,39 +67,14 @@ const SpecificationAction = {
 
 export const SpecificationServiceAPI = (requestActions: RequestActions) => {
   return {
-
-
     listVehicleTire: (params:TireAssignParam) => singleRequest<TireVehicleDTO>(SpecificationAction.listVehicleTire(params))(requestActions) as Promise<TireVehicleDTO[]>,
-
-
-    saveVehicleTire: (params: TireAssignCreate) =>
-      singleRequest<{ data: string; message: string }>(SpecificationAction.saveVehicleTire(params))(
-        requestActions,
-      ),
-
+    saveVehicleTire: (params: TireAssignCreate) =>singleRequest<{ data: string; message: string }>(SpecificationAction.saveVehicleTire(params))(requestActions),
     // ============================== battery ==============================
-    saveBattery: (params: BatteryVehicleCreate) =>
-      singleRequest<{ data: string; message: string }>(SpecificationAction.saveBattery(params))(
-        requestActions,
-      ),
-    fetchBattery: (id: string) =>
-      singleRequest<BatteryVehicleDTO>(SpecificationAction.fetchBattery(id))(
-        requestActions,
-      ) as Promise<BatteryVehicleDTO>,
-
+    saveBattery: (params: BatteryVehicleCreate) =>singleRequest<{ data: string; message: string }>(SpecificationAction.saveBattery(params))(requestActions),
+    fetchBattery: (id: string) =>singleRequest<BatteryVehicleDTO>(SpecificationAction.fetchBattery(id))(requestActions) as Promise<BatteryVehicleDTO>,
     listBattery: (id: string) => singleRequest<BatteryVehicleDTO>(SpecificationAction.listBattery(id))(requestActions) as Promise<BatteryVehicleDTO[]>,
-
-   
-    
     // ======= norm fuel consumtion =======
-    saveNormFuelConsumption: (params: NormFuelConsumptionCreate) =>
-      singleRequest<{ data: NormFuelConsumptionCreate; message: string }>(SpecificationAction.saveNormFuelConsumption(params))(
-        requestActions,
-    ),
-
-    fetchNormFuelConsumption: (id: string) =>
-      singleRequest<NormFuelConsumptionDTO>(SpecificationAction.fetchNormFuelConsumption(id))(
-        requestActions,
-      ) as Promise<NormFuelConsumptionDTO>,
+    saveNormFuelConsumption: (params: NormFuelConsumptionCreate) =>singleRequest<{ data: NormFuelConsumptionCreate; message: string }>(SpecificationAction.saveNormFuelConsumption(params))(requestActions),
+    fetchNormFuelConsumption: (id: string) =>singleRequest<NormFuelConsumptionDTO>(SpecificationAction.fetchNormFuelConsumption(id))(requestActions) as Promise<NormFuelConsumptionDTO>,
   }
 };

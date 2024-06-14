@@ -113,57 +113,19 @@ const VehicleAction = {
 
 export const VehicleServiceAPI = (requestActions: RequestActions) => {
   return {
-    pageVehicle: (params: TableViewSearchParams<VehicleSearchParam>) =>
-      singleRequest<VehicleListItem>(VehicleAction.page(params))(requestActions) as Promise<
-        Paging<VehicleListItem>
-      >,
-
-    fetchVehicle: (id: string) =>
-      singleRequest<VehicleListItem>(VehicleAction.fetchVehicle(id))(
-        requestActions,
-      ) as Promise<VehicleListItem>,
-
-    save: (params: SaveVehicle) =>
-      singleRequest<{ data: string; message: string }>(VehicleAction.saveVehicle(params))(
-        requestActions,
-      ),
-    status: (params: { id: string; status: string }) =>
-      singleRequest<{ data: string; message: string }>(VehicleAction.status(params))(
-        requestActions,
-      ),
-
-    saveVehicleDriver: (param: VehicleDriverCreate) =>
-      singleRequest<{ data: string; message: string }>(VehicleAction.saveVehicleDriver(param))(
-        requestActions,
-      ),
-
-    profilePicture: (param: AttachmentFilesCreate) =>
-      singleRequest<{ data: string; message: string }>(VehicleAction.profilePicture(param))(
-        requestActions,
-      ),
+    pageVehicle: (params: TableViewSearchParams<VehicleSearchParam>) =>singleRequest<VehicleListItem>(VehicleAction.page(params))(requestActions) as Promise<Paging<VehicleListItem>>,
+    fetchVehicle: (id: string) =>singleRequest<VehicleListItem>(VehicleAction.fetchVehicle(id))(requestActions) as Promise<VehicleListItem>,
+    save: (params: SaveVehicle) =>singleRequest<{ data: string; message: string }>(VehicleAction.saveVehicle(params))(requestActions),
+    status: (params: { id: string; status: string }) =>singleRequest<{ data: string; message: string }>(VehicleAction.status(params))(requestActions),
+    saveVehicleDriver: (param: VehicleDriverCreate) =>singleRequest<{ data: string; message: string }>(VehicleAction.saveVehicleDriver(param))(requestActions),
+    profilePicture: (param: AttachmentFilesCreate) =>singleRequest<{ data: string; message: string }>(VehicleAction.profilePicture(param))(requestActions),
 
     // extra attribute
-    pageMeterHistory: (params: TableViewSearchParams<MeterHistorySearchParam>) =>
-      singleRequest<MeterHistoryDTO>(VehicleAction.meterhistory(params))(requestActions) as Promise<
-        Paging<MeterHistoryDTO>
-      >,
-    updateMeterHistory: (params: MeterHistoryDTO) =>
-      singleRequest<{ data: string; message: string }>(VehicleAction.updateMeterHistory(params))(
-        requestActions,
-      ),
-    deleteMeterHistory: (params: MeterHistoryDTO) =>
-      singleRequest<{ data: string; message: string }>(VehicleAction.deleteMeterHistory(params))(
-        requestActions,
-      ),
-    fetchMeterHistory: (param: MeterFetchParam) =>
-      singleRequest<MeterHistoryDTO>(VehicleAction.fetchMeterHistory(param))(
-        requestActions,
-      ) as Promise<MeterHistoryDTO>,
-    findMeterHistory: (param: MeterTypeParam) =>
-      singleRequest<MeterHistoryDTO>(VehicleAction.findMeterHistory(param))(
-        requestActions,
-      ) as Promise<MeterHistoryDTO>,
-    
+    pageMeterHistory: (params: TableViewSearchParams<MeterHistorySearchParam>) =>singleRequest<MeterHistoryDTO>(VehicleAction.meterhistory(params))(requestActions) as Promise<Paging<MeterHistoryDTO>>,
+    updateMeterHistory: (params: MeterHistoryDTO) =>singleRequest<{ data: string; message: string }>(VehicleAction.updateMeterHistory(params))(requestActions),
+    deleteMeterHistory: (params: MeterHistoryDTO) =>singleRequest<{ data: string; message: string }>(VehicleAction.deleteMeterHistory(params))(requestActions),
+    fetchMeterHistory: (param: MeterFetchParam) =>singleRequest<MeterHistoryDTO>(VehicleAction.fetchMeterHistory(param))(requestActions) as Promise<MeterHistoryDTO>,
+    findMeterHistory: (param: MeterTypeParam) =>singleRequest<MeterHistoryDTO>(VehicleAction.findMeterHistory(param))(requestActions) as Promise<MeterHistoryDTO>,
     changeOdometer: (params:{vId?:string; odometer:number; reason?:string})=>singleRequest<{vId?:String;odometer:number; reason?:string}>(VehicleAction.changeOdometer(params))(requestActions)
 
   };

@@ -4,12 +4,11 @@ import { Paging } from '@/services/API';
 import { simpleRequestActions } from '@/services/model';
 import { ActionType } from '@ant-design/pro-components';
 import { useModel } from '@umijs/max';
-import { Badge, message, Modal } from 'antd';
+import { Badge, message } from 'antd';
 import moment from 'moment';
 import Omit from 'omit.js';
 import { useRef, useState } from 'react';
 import {
-  ServiceReminderCreate,
   ServiceReminderDTO,
   ServiceReminderSearchParam,
 } from '../../servicereminder/data';
@@ -85,13 +84,10 @@ export default ({ id }: Props) => {
   };
   const status = (mpd: ServiceReminderDTO) => {
     const nextDueAt = mpd.nextDueAt;
-    const dueSoonFrequency = mpd.dueSoonTimeThresholdFrequency;
     const timeDuesoon = mpd.dueSoonTimeThresholdInterval;
     if (mpd.timeInterval != null) {
       if (timeDuesoon != null) {
-        const diff = moment().add(timeDuesoon, dueSoonFrequency).diff(moment.now(), 'days');
-        const dsiff = moment(nextDueAt).diff(moment.now(), 'days');
-
+        const dsiff = moment(nextDueAt).diff(moment(), 'days');
         if (dsiff <= 2 && dsiff >= 0) {
           return 'Due Soon';
         } else if (dsiff <= 0) {
@@ -108,23 +104,6 @@ export default ({ id }: Props) => {
       ...v,
       visible: { name: 'modal', type: 'ADD' },
     }));
-  };
-
-  const onSaveActionHandler = (data: ServiceReminderCreate) => {
-    Modal.confirm({
-      title: 'Are you sure',
-      content: 'Save record',
-      onOk: async () => {
-        const response = (await services.save(data)) as {
-          data: string;
-          message: string;
-        };
-        setSate((v) => ({ ...v, visible: undefined }));
-
-        actionRef.current?.reloadAndRest?.();
-        message.success(response.data);
-      },
-    });
   };
 
   return (
@@ -159,21 +138,21 @@ export default ({ id }: Props) => {
             ),
           },
           {
-            key: 'Status',
-            title: 'Status',
-            dataIndex: 'status',
-            sorter: 'status',
-            render: (_, r) => (
-              <Badge
-                status={
-                  r.status == 'Due Soon'
-                    ? 'warning'
-                    : r.status == 'Upcoming'
-                    ? 'processing'
-                    : 'error'
-                }
-                text={r.status}
-              />
+            key       : 'Status',
+            title     : 'Status',
+            dataIndex : 'status',
+            sorter    : 'status',
+            render    : (_, r) => (
+                        <Badge
+                          status={
+                            r.status == 'Due Soon'
+                              ? 'warning'
+                              : r.status == 'Upcoming'
+                              ? 'processing'
+                              : 'error'
+                          }
+                          text={r.status}
+                        />
             ),
           },
           {

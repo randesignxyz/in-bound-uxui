@@ -12,7 +12,6 @@ interface Props extends FormModalProps {
     type?: string | "ADDNEW" | "STOCKIN",
     title?: string;
 }
-
 const MonthlyEndingFormModal: React.FC<Props> = ({ onSave, data, title, actionType, type, id, ...props }) => {
     const [form] = useForm<TankMonthlyEndingCreate>();
     useEffect(() => {

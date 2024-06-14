@@ -9,11 +9,8 @@ interface Props extends DrawerProps {
     data?:AccidentDTO
 }
 const DetialView: React.FC<Props> = ({ data,...props}) => {
-
     useEffect(()=>{
-
     },[props.open]);
-
     return (
         <Drawer
             title="Detail"
@@ -60,7 +57,6 @@ const DetialView: React.FC<Props> = ({ data,...props}) => {
                     layout='vertical'
                     contentStyle={{ fontWeight: 'bold' }}
                     columns={[
-
                         {
                             title: "Date ",
                             key: "date",
@@ -112,7 +108,6 @@ const DetialView: React.FC<Props> = ({ data,...props}) => {
                         },
                     ]}
                     dataSource={data}
-
                 />
             </Card>
             <AttachedFileList

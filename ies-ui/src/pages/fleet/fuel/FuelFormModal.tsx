@@ -19,8 +19,6 @@ import { VehicleDriverDTO } from '../driver/data';
 import { DriverServiceAPI } from '../driver/service';
 import { TankDTO } from '../fuelStock/data';
 import { TankFuelServiceAPI } from '../fuelStock/service';
-import { LookUpDataDTO } from '../lookupData/data';
-import { LookupDataServiceAPI } from '../lookupData/service';
 import { ServiceReminderCreate } from '../servicereminder/data';
 import ServiceReminderModalForm from '../servicereminder/EntryFormModel';
 import { ReminderServiceAPI } from '../servicereminder/service';
@@ -28,7 +26,9 @@ import { VehicleListItem } from '../vehicle/data';
 import { VehicleServiceAPI } from '../vehicle/service';
 import { FuelCreate, FuelDTO } from './data';
 import { FuelServiceAPI } from './service';
-import { AddOnServiceAPI } from '../addOn/service';
+import { AddOnServiceAPI } from '../setting/service';
+import { FleetServiceAPI } from '../service';
+import { LookUpDataDTO } from '../data';
 
 interface Props extends FormModalProps {
   data?: FuelDTO;
@@ -55,7 +55,7 @@ const FuelModalForm: React.FC<Props> = ({ onSave, data, actionType, id, ...props
     };
   }>();
   const lookupData = async () => {
-    const dataLookup = LookupDataServiceAPI(requestActions).lookupData({ type: 'VEHICLE' });
+    const dataLookup = FleetServiceAPI(requestActions).lookupData({ type: 'VEHICLE' });
     setFuelLookup(await dataLookup);
     setGasStation(await TankFuelServiceAPI(requestActions).list(''));
   };
@@ -137,7 +137,7 @@ const FuelModalForm: React.FC<Props> = ({ onSave, data, actionType, id, ...props
             rules={[{ required: true }]}
             initialValue={1001}
             request={async () => {
-              const data = await LookupDataServiceAPI(requestActions).lookupData({ type: 'FUEL' });
+              const data = await FleetServiceAPI(requestActions).lookupData({ type: 'FUEL' });
               return data
                 .filter((it) => it.code == 'GASSTATION')
                 .map((it, index) => ({ value: it?.id, label: it?.name, key: index, selected: true }));

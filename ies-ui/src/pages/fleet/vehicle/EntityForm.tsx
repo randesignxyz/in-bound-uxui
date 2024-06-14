@@ -9,10 +9,10 @@ import { uniqueId } from 'lodash';
 import moment from 'moment';
 import { useEffect, useRef, useState } from 'react';
 import { FleetPaths } from '..';
-import { LookUpDataDTO } from '../lookupData/data';
-import { LookupDataServiceAPI } from '../lookupData/service';
 import { SaveVehicle, VehicleListItem } from './data';
 import { VehicleServiceAPI } from './service';
+import { FleetServiceAPI } from '../service';
+import { LookUpDataDTO } from '../data';
 
 interface Props extends FormModalProps {
   type: 'new' | 'edit';
@@ -29,7 +29,7 @@ export default ({ type, id }: Props) => {
   const services = VehicleServiceAPI(requestActions);
   const [vehicle, setVihicle] = useState<VehicleListItem>();
   const loadData = async () => {
-    const rsn = await LookupDataServiceAPI(requestActions).lookupData({ type: 'VEHICLE' });
+    const rsn = await FleetServiceAPI(requestActions).lookupData({ type: 'VEHICLE' });
     setLookupData(rsn);
     if (id) {
       setVihicle(await services.fetchVehicle(id));
@@ -121,276 +121,293 @@ export default ({ type, id }: Props) => {
     }
   };
 
+
   return (
     <>
       <PageContainer
         loading={requestActions.request?.loading}
         title={`${id ? 'Edit' : 'New'} Vehicle`}
-        onBack={()=>history.back()}
-        subTitle={`${id?vehicle?.plateNumber:""}`}
-        
-      >
-        <ProForm
-          labelAlign="left"
-          title="General info"
-          form={form}
-          formRef={formRef}
-          submitter={{
-            render: () => {
-              return (
-                <FooterToolbar>
-                  {type === 'new' && (
-                    <Button
-                      onClick={() => {
-                        form.resetFields();
-                      }}
-                    >
-                      Clear
-                    </Button>
-                  )}
+        onBack={() => history.back()}
+        subTitle={`${id ? vehicle?.plateNumber : ""}`}
+        style={{
+          margin: "-30px -40px 0",
+        }}
+        fixedHeader
+      />
+      <ProForm
+        labelAlign="left"
+        title="General info"
+        form={form}
+        formRef={formRef}
+        submitter={{
+          render: () => {
+            return (
+              <FooterToolbar>
+                {type === 'new' && (
+                  <Button
+                    onClick={() => {
+                      form.resetFields();
+                    }}
+                  >
+                    Clear
+                  </Button>
+                )}
 
-                  {type === 'edit' && (
-                    <Button
-                      onClick={() => {
-                        history.push('/fleet/vehicle/list');
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                  )}
-                  {type === 'edit' && (
-                    <Button
-                      onClick={() => {
-                        form.resetFields();
-                      }}
-                    >
-                      Reset
-                    </Button>
-                  )}
-                  {type === 'new' && (
-                    <Button
-                      type="primary"
-                      onClick={() => {
-                        onSaveActionHandler(true);
-                      }}
-                    >
-                      Save & Add New
-                    </Button>
-                  )}
+                {type === 'edit' && (
+                  <Button
+                    onClick={() => {
+                      history.push('/fleet/vehicle/list');
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                )}
+                {type === 'edit' && (
+                  <Button
+                    onClick={() => {
+                      form.resetFields();
+                    }}
+                  >
+                    Reset
+                  </Button>
+                )}
+                {type === 'new' && (
                   <Button
                     type="primary"
                     onClick={() => {
-                      onSaveActionHandler();
+                      onSaveActionHandler(true);
                     }}
                   >
-                    {type === 'new' ? 'Save & View' : 'Update'}
+                    Save & Add New
                   </Button>
-                </FooterToolbar>
-              );
-            },
-          }}
-        >
-          <Flex vertical gap={18}>
-            <Card size='small' title="Identification">
-              <Row gutter={12}>
-                <Col span={12}>
-                  <ProFormText
-                    label="Plate Number"
-                    key={'plateNumber'}
-                    name={'plateNumber'}
-                    rules={[{ required: true }]}
-                  />
-                </Col>
-                <Col span={12}>
-                  <ProFormText
-                    key="vehicleRegisterNumber"
-                    label="Vehicle Register Number"
-                    name={'vehicleRegisterNumber'}
-                  />
-                </Col>
-              </Row>
-              <Row gutter={12}>
-                <Col span={6}>
-                  <ProFormSelect
-                    label="Type"
-                    key="vehicleTypeId"
-                    name="vehicleTypeId"
-                    showSearch={true}
-                    options={vehicleTypes}
-                    rules={[{ required: true }]}
-                  />
-                </Col>
-                <Col span={6}>
-                  <ProFormSelect
-                    label="Fuel Type"
-                    key="fueltype"
-                    name="fuelTypeId"
-                    showSearch={true}
-                    options={fuelTypes}
-                    rules={[{ required: true }]}
-                  />
-                </Col>
-                <Col span={6}>
-                  <ProFormSelect
-                    label="Weight"
-                    key="weightId"
-                    name="weightId"
-                    showSearch={true}
-                    options={weight}
-                    rules={[{ required: true }]}
-                  />
+                )}
+                <Button
+                  type="primary"
+                  onClick={() => {
+                    onSaveActionHandler();
+                  }}
+                >
+                  {type === 'new' ? 'Save & View' : 'Update'}
+                </Button>
+              </FooterToolbar>
+            );
+          },
+        }}
+      >
+        <Flex vertical gap={18}>
+          <Card size='small' title="Identification">
+            <Row gutter={12}>
+              <Col span={12}>
+                <ProFormText
+                  label="Plate Number"
+                  key={'plateNumber'}
+                  name={'plateNumber'}
+                  rules={[{ required: true }]}
+                />
+              </Col>
+              <Col span={12}>
+                <ProFormText
+                  key="vehicleRegisterNumber"
+                  label="Vehicle Register Number"
+                  name={'vehicleRegisterNumber'}
+                />
+              </Col>
+            </Row>
+            <Row gutter={12}>
+              <Col span={6}>
+                <ProFormSelect
+                  label="Type"
+                  key="vehicleTypeId"
+                  name="vehicleTypeId"
+                  showSearch={true}
+                  options={vehicleTypes}
+                  rules={[{ required: true }]}
+                />
+              </Col>
+              <Col span={6}>
+                <ProFormSelect
+                  label="Fuel Type"
+                  key="fueltype"
+                  name="fuelTypeId"
+                  showSearch={true}
+                  options={fuelTypes}
+                  rules={[{ required: true }]}
+                />
+              </Col>
+              <Col span={6}>
+                <ProFormSelect
+                  label="Weight"
+                  key="weightId"
+                  name="weightId"
+                  showSearch={true}
+                  options={weight}
+                  rules={[{ required: true }]}
+                />
 
-                </Col>
-                <Col span={6}>
-                  <ProFormText label="V.I.N" key={'vin'} name={'vin'} />
-                </Col>
-              </Row>
-              <Row gutter={12}>
-                <Col span={4}>
-                  <ProFormDatePicker.Year
-                    label="Years"
-                    key="year"
-                    width={"md"}
-                    name="year"
-                    rules={[{ required: true }]}
-                    fieldProps={{
-                      disabledDate: (current) => {
-                        const currentYear = new Date().getFullYear();
-                        return current.year() > currentYear;
-                      },
-                    }}
-                  />
-                </Col>
-                <Col span={4}>
-                  <ProFormSelect
-                    label="Brand"
-                    key="makeId"
-                    name="makeId"
-                    showSearch={true}
-                    options={brands}
-                    rules={[{ required: true }]}
-                  />
-                </Col>
-                <Col span={6}>
-                  <ProFormText label="Model" key="model" name="model" />
-                </Col>
-                <Col span={6}>
-                  <ProFormText label="Engine" key={'engine'} name={'engine'} />
-                </Col>
-                <Col span={4}>
-                  <ProFormSelect
-                    showSearch={true}
-                    label="Color"
-                    key="colorId"
-                    name="colorId"
-                    options={colors}
-                  />
-                </Col>
-              </Row>
-            </Card>
-            <Card size="small" key={'Classification'} title="Classification">
-              <Row gutter={12}>
-                <Col span={6}>
-                  <ProFormSelect
-                    label="Status"
-                    key="stutus"
-                    name="status"
-                    options={statusId}
-                    rules={[{ required: true }]}
-                  />
-                </Col>
-                <Col span={6}>
-                  <ProFormSelect
-                    key={'brandingType'}
-                    name={'brandingType'}
-                    label="Branding Type"
-                    options={brandingType}
-                  />
-                </Col>
-                <Col span={6}>
-                  <ProFormSelect
-                    name={'department'}
-                    label="Department"
-                  />
-                </Col>
-                <Col span={6}>
-                  <ProFormSelect
-                    key="ownership "
-                    name="ownership"
-                    options={ownership}
-                    label="Ownership "
-                  />
-                </Col>
-              </Row>
-            </Card>
-            <Card key={'weight'} size="small" title="Vehicle Capacity">
-              <Row gutter={4}>
-                <Col span={4}>
-                  <ProFormDigit
-                    key="truckHead"
-                    name="truckHead"
-                    max={20}
-                    label="Head of Truck length(m)"
-                  />
-                </Col>
-                <Col span={4}>
-                  <ProFormDigit key={'boxLength'} name={'boxLength'} max={20} label="Box Length(m)" />
-                </Col>
-                <Col span={4}>
-                  <ProFormDigit key="boxHigh" name="boxHigh" max={20} label="Box High(m)" />
-                </Col>
-                <Col span={4}>
-                  <ProFormDigit key={'boxWidth'} name={'boxWidth'} max={20} label="Box Width(m)" />
-                </Col>
-                <Col span={4}>
-                  <ProFormDependency
-                    dependencies={['boxHigh', 'boxWidth', 'boxLength']}
-                    name={['boxHigh', 'boxWidth', 'boxLength']}
-                  >
-                    {({ boxHigh, boxWidth, boxLength }) => {
-                      form.setFieldValue('boxCBM', boxHigh * boxWidth * boxLength);
-                      return (
-                        <>
-                          <ProFormDigit
-                            key="boxCBM"
-                            name="boxCBM"
-                            label="Box CBM(m)"
-                            fieldProps={{
-                              value: (boxHigh * boxWidth * boxLength) | 0,
-                            }}
-                          />
-                        </>
-                      );
-                    }}
-                  </ProFormDependency>
-                </Col>
-                <Col span={4}>
-                  <ProFormDependency
-                    dependencies={['boxHigh', 'truckHead']}
-                    name={['boxHigh', 'truckHead']}
-                  >
-                    {({ boxHigh, truckHead }) => {
-                      form.setFieldValue('totalLength', boxHigh + truckHead);
-                      return (
-                        <>
-                          <ProFormDigit
-                            key={'totalLength'}
-                            name={'totalLength'}
-                            label="Total length Of Truck(m)"
-                            fieldProps={{
-                              value: boxHigh + truckHead || 0,
-                            }}
-                          />
-                        </>
-                      );
-                    }}
-                  </ProFormDependency>
-                </Col>
-              </Row>
-            </Card>
-          </Flex>
-        </ProForm>
-      </PageContainer>
+              </Col>
+              <Col span={6}>
+                <ProFormText label="V.I.N" key={'vin'} name={'vin'} />
+              </Col>
+            </Row>
+            <Row gutter={12}>
+              <Col span={4}>
+                <ProFormDatePicker.Year
+                  label="Years"
+                  key="year"
+                  width={"md"}
+                  name="year"
+                  rules={[{ required: true }]}
+                  fieldProps={{
+                    disabledDate: (current) => {
+                      const currentYear = new Date().getFullYear();
+                      return current.year() > currentYear;
+                    },
+                  }}
+                />
+              </Col>
+              <Col span={4}>
+                <ProFormSelect
+                  label="Brand"
+                  key="makeId"
+                  name="makeId"
+                  showSearch={true}
+                  options={brands}
+                  rules={[{ required: true }]}
+                />
+              </Col>
+              <Col span={6}>
+                <ProFormText label="Model" key="model" name="model" />
+              </Col>
+              <Col span={6}>
+                <ProFormText label="Engine" key={'engine'} name={'engine'} />
+              </Col>
+              <Col span={4}>
+                <ProFormSelect
+                  showSearch={true}
+                  label="Color"
+                  key="colorId"
+                  name="colorId"
+                  options={colors}
+                />
+              </Col>
+            </Row>
+          </Card>
+          <Card size="small" key={'Classification'} title="Classification">
+            <Row gutter={12}>
+              <Col span={6}>
+                <ProFormSelect
+                  label="Status"
+                  key="stutus"
+                  name="status"
+                  options={statusId}
+                  rules={[{ required: true }]}
+                />
+              </Col>
+              <Col span={6}>
+                <ProFormSelect
+                  key={'brandingType'}
+                  name={'brandingType'}
+                  label="Branding Type"
+                  options={brandingType}
+                />
+              </Col>
+              {/* <Col span={6}>
+                
+                <ProFormCascader
+                  name={'bu'}
+                  label="Group"
+                  
+                  fieldProps={{
+                    showSearch: true
+                  }}
+                  request={async (k) => {
+                    const data = await FleetServiceAPI(requestActions).buList();
+                    const items = data.filter(t => t.parentId == null).map((v) => ({
+                      label: v.name, value: v.id,
+                      children: data.filter(o => v.id == o.parentId).map((b => ({ label: b.name, value: b.id })))
+                    }));
+                    return items
+                  }}
+                />
+
+              </Col> */}
+              <Col span={6}>
+                <ProFormSelect
+                  key="ownership "
+                  name="ownership"
+                  options={ownership}
+                  label="Ownership"
+                />
+              </Col>
+            </Row>
+          </Card>
+          <Card key={'weight'} size="small" title="Vehicle Capacity">
+            <Row gutter={4}>
+              <Col span={4}>
+                <ProFormDigit
+                  key="truckHead"
+                  name="truckHead"
+                  max={20}
+                  label="Head of Truck length(m)"
+                />
+              </Col>
+              <Col span={4}>
+                <ProFormDigit key={'boxLength'} name={'boxLength'} max={20} label="Box Length(m)" />
+              </Col>
+              <Col span={4}>
+                <ProFormDigit key="boxHigh" name="boxHigh" max={20} label="Box High(m)" />
+              </Col>
+              <Col span={4}>
+                <ProFormDigit key={'boxWidth'} name={'boxWidth'} max={20} label="Box Width(m)" />
+              </Col>
+              <Col span={4}>
+                <ProFormDependency
+                  dependencies={['boxHigh', 'boxWidth', 'boxLength']}
+                  name={['boxHigh', 'boxWidth', 'boxLength']}
+                >
+                  {({ boxHigh, boxWidth, boxLength }) => {
+                    form.setFieldValue('boxCBM', boxHigh * boxWidth * boxLength);
+                    return (
+                      <>
+                        <ProFormDigit
+                          key="boxCBM"
+                          name="boxCBM"
+                          label="Box CBM(m)"
+                          fieldProps={{
+                            value: (boxHigh * boxWidth * boxLength) | 0,
+                          }}
+                        />
+                      </>
+                    );
+                  }}
+                </ProFormDependency>
+              </Col>
+              <Col span={4}>
+                <ProFormDependency
+                  dependencies={['boxHigh', 'truckHead']}
+                  name={['boxHigh', 'truckHead']}
+                >
+                  {({ boxHigh, truckHead }) => {
+                    form.setFieldValue('totalLength', boxHigh + truckHead);
+                    return (
+                      <>
+                        <ProFormDigit
+                          key={'totalLength'}
+                          name={'totalLength'}
+                          label="Total length Of Truck(m)"
+                          fieldProps={{
+                            value: boxHigh + truckHead || 0,
+                          }}
+                        />
+                      </>
+                    );
+                  }}
+                </ProFormDependency>
+              </Col>
+            </Row>
+          </Card>
+        </Flex>
+      </ProForm>
     </>
   );
 };

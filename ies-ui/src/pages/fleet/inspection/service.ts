@@ -58,13 +58,8 @@ export const InspectionServiceAPI = (requestActions: RequestActions) => {
         save: (data: InspectionCreate) => singleRequest<{ data: string, message: string }>(InspectionAction.save(data))(requestActions),
         delete: (data: InspectionDeleteOrVoidParam) => singleRequest<{ data: string, message: string }>(InspectionAction.delete(data))(requestActions),
         void: (data: InspectionDeleteOrVoidParam) => singleRequest<{ data: string, message: string }>(InspectionAction.void(data))(requestActions),
-
-        page: (params: TableViewSearchParams<InspectionAdvanceParams>) =>
-            singleRequest<InspectionDTO>(InspectionAction.page(params))(requestActions) as Promise<Paging<InspectionDTO>>,
-
+        page: (params: TableViewSearchParams<InspectionAdvanceParams>) =>singleRequest<InspectionDTO>(InspectionAction.page(params))(requestActions) as Promise<Paging<InspectionDTO>>,
         detail: (id: string) => singleRequest<InspectionDTO>(InspectionAction.detail(id))(requestActions) as Promise<InspectionDTO>,
-
-        inspectionLookupList: (codeType: string) =>
-            singleRequest<InspectionLookup>(InspectionAction.inpectionLookupList(codeType))(requestActions) as Promise<InspectionLookup[]>
+        inspectionLookupList: (codeType: string) =>singleRequest<InspectionLookup>(InspectionAction.inpectionLookupList(codeType))(requestActions) as Promise<InspectionLookup[]>
     }
 };

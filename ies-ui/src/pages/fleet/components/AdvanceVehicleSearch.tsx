@@ -5,8 +5,8 @@ import ProForm, { ProFormSelect } from '@ant-design/pro-form';
 import { Drawer, DrawerProps } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { useEffect, useState } from 'react';
-import { LookUpDataDTO } from '../lookupData/data';
-import { LookupDataServiceAPI } from '../lookupData/service';
+import { FleetServiceAPI } from '../service';
+import { LookUpDataDTO } from '../data';
 
 interface Props extends DrawerProps {
   initData?: DeliveryAdvanceSearchParams;
@@ -27,7 +27,7 @@ const AdvanceVehicleSearch: React.FC<Props> = ({
   const [form] = useForm<DeliveryAdvanceSearchParams>();
   const [lookup, setLookup] = useState<LookUpDataDTO[]>([]);
   const loadData = async () => {
-    const response = await LookupDataServiceAPI(requestActions).lookupData({ type: 'VEHICLE' });
+    const response = await FleetServiceAPI(requestActions).lookupData({ type: 'VEHICLE' });
     setLookup(response);
   };
   useEffect(() => {
@@ -56,7 +56,8 @@ const AdvanceVehicleSearch: React.FC<Props> = ({
           showSearch
           options={vehicleType}
         />
-        <ProFormSelect label="Group" name={'brandingType'} showSearch allowClear options={group} />
+        <ProFormSelect label="Branding Type" name={'brandingType'} showSearch allowClear options={group} />
+        
       </ProForm>
     </Drawer>
   );

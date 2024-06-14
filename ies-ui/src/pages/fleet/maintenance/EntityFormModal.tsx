@@ -21,11 +21,9 @@ import { useForm } from 'antd/es/form/Form';
 import { uniqueId } from 'lodash';
 import { useEffect, useRef, useState } from 'react';
 import { FleetPaths } from '..';
-import { AddOnServiceAPI } from '../addOn/service';
+import { AddOnServiceAPI } from '../setting/service';
 import { VehicleDriverDTO } from '../driver/data';
 import { DriverServiceAPI } from '../driver/service';
-import { LookUpDataDTO } from '../lookupData/data';
-import { LookupDataServiceAPI } from '../lookupData/service';
 import { ServiceReminderCreate, ServiceReminderDTO } from '../servicereminder/data';
 import ServiceReminderModalForm from '../servicereminder/EntryFormModel';
 import { ReminderServiceAPI } from '../servicereminder/service';
@@ -35,6 +33,8 @@ import { VehicleListItem } from '../vehicle/data';
 import { VehicleServiceAPI } from '../vehicle/service';
 import { MaintenanceCreate, MaintenanceItemCreate, MaintenneceDTO } from './data';
 import { MaintenanceServiceAPI } from './service';
+import { FleetServiceAPI } from '../service';
+import { LookUpDataDTO } from '../data';
 
 interface Props extends FormModalProps {
   dataEntry?: MaintenneceDTO;
@@ -114,9 +114,8 @@ const MaintenanceModalForm: React.FC<Props> = ({
     props.open && onServiceTaskData();
   }, [props.open]);
   const dataLoad = async () => {
-    setLookupData(await LookupDataServiceAPI(requestActions).lookupData({ type: 'MAINTENANCE' }));
+    setLookupData(await FleetServiceAPI(requestActions).lookupData({ type: 'MAINTENANCE' }));
   };
-
   const initFormData = () => {
     form.setFieldsValue({
       ...dataEntry,
@@ -129,7 +128,6 @@ const MaintenanceModalForm: React.FC<Props> = ({
     });
     setDataSource([]);
   };
-
   const columns: ProColumns<MaintenanceItemCreate>[] = [
     {
       title: 'Item Service',
@@ -154,7 +152,6 @@ const MaintenanceModalForm: React.FC<Props> = ({
         ],
       },
     },
-
     {
       title: 'Category',
       dataIndex: 'sparePart',
@@ -306,7 +303,6 @@ const MaintenanceModalForm: React.FC<Props> = ({
       ],
     },
   ];
-
   const onSaveActionHandler = (data: MaintenanceCreate) => {
     Modal.confirm({
       title: 'Save Maintenance Record',
@@ -322,7 +318,6 @@ const MaintenanceModalForm: React.FC<Props> = ({
       },
     });
   };
-
   const onVehicleChange = async (e: string | undefined) => {
     const data = await DriverServiceAPI(requestActions).listVehicleDriver({
       id: e || serviceReminder?.vehicleId.id,

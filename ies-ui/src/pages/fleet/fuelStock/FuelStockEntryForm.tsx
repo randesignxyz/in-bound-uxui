@@ -13,8 +13,8 @@ import FormModalComp, { FormModalProps } from '@/components/FormModal';
 import { Col, Row } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { useCallback, useEffect } from 'react';
-import { LookupDataServiceAPI } from '../lookupData/service';
 import { TankCreate, TankDTO } from './data';
+import { FleetServiceAPI } from '../service';
 
 interface Props extends FormModalProps {
   data?: TankDTO;
@@ -29,7 +29,7 @@ const FuelStockEntryForm: React.FC<Props> = ({ onSave, data, actionType, type, i
   const requestActions = simpleRequestActions();
 
   const lookupData = useCallback(async () => {
-    const dataLookup = LookupDataServiceAPI(requestActions).lookupData({ type: 'FUEL' });
+    const dataLookup = FleetServiceAPI(requestActions).lookupData({ type: 'FUEL' });
   }, []);
 
   useEffect(() => {
@@ -74,7 +74,7 @@ const FuelStockEntryForm: React.FC<Props> = ({ onSave, data, actionType, type, i
                   label="Fuel Type"
                   rules={[{ required: true }]}
                   request={async () => {
-                    const data = await LookupDataServiceAPI(requestActions).lookupData({
+                    const data = await FleetServiceAPI(requestActions).lookupData({
                       type: 'VEHICLE',
                     });
                     return data
@@ -144,7 +144,7 @@ const FuelStockEntryForm: React.FC<Props> = ({ onSave, data, actionType, type, i
                   label="Location"
                   rules={[{ required: true }]}
                   request={async () => {
-                    const data = await LookupDataServiceAPI(requestActions).lookupData({
+                    const data = await FleetServiceAPI(requestActions).lookupData({
                       type: 'FUEL',
                     });
                     return data

@@ -1,11 +1,9 @@
 import { ProDescriptions } from "@ant-design/pro-components";
 import { Card, Drawer, DrawerProps, Space } from 'antd';
 
-
 interface Props extends DrawerProps {
     data?: VendorDTO;
 }
-
 export default ({ data, ...props }: Props) => {
     return (
         <>
@@ -65,13 +63,11 @@ export default ({ data, ...props }: Props) => {
                                 title: "Phone1",
                                 dataIndex: "phone"
                             },
-
                             {
                                 key: "phone1",
                                 title: "Phone2",
                                 dataIndex: "phone1"
                             },
-
                         ]}
                     />
                 </Card>
@@ -89,7 +85,6 @@ export default ({ data, ...props }: Props) => {
                                 dataIndex: "address",
                                 span:3
                             },
-
                         ]}
                     />
                 </Card>

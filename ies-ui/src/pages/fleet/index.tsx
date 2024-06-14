@@ -7,6 +7,7 @@ import fuelStock from '@/assets/oil-tank.png';
 import vehicletool from '@/assets/vehicle-tools.png';
 import maintenancePlan from '@/assets/web-maintenance.png';
 import ListMenuComp from '@/components/ListMenu';
+import { useId } from 'react';
 
 export const FleetPaths = {
   fleet: '/fleet',
@@ -22,7 +23,7 @@ export default () => {
       id: 'vehicle',
       name: 'Vehicle',
       description: 'Vehicle List',
-      link: `${FleetPaths.vehicle}/list`,
+      link: `${FleetPaths.vehicle}/list/${useId()}`,
       icon: fleet,
     },
     {
@@ -92,10 +93,10 @@ export default () => {
     //   isMenu: true,
     // },
     {
-      id: 'add_on',
-      name: 'Set up',
-      description: 'Modules to Other Component',
-      link: `/fleet/add-on/list`,
+      id: 'setting',
+      name: 'Setting',
+      description: 'Modules set up ',
+      link: `/fleet/setting/driver`,
       icon: addon,
       isMenu: true,
     },

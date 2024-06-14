@@ -90,9 +90,9 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
         })
       }
     },
-    {
-      type: "divider"
-    },
+    // {
+    //   type: "divider"
+    // },
   ];
   return (
     <>

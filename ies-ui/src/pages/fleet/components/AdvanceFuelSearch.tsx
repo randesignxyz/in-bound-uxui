@@ -5,10 +5,10 @@ import ProForm from '@ant-design/pro-form';
 import { Drawer, DrawerProps } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { useEffect } from 'react';
-import { LookupDataServiceAPI } from '../lookupData/service';
 import { simpleRequestActions } from '@/services/model';
 import { DriverServiceAPI } from '../driver/service';
 import { FuelAvanceSearchParam } from '../fuel/data';
+import { FleetServiceAPI } from '../service';
 
 interface Props extends DrawerProps {
   initData?: DeliveryAdvanceSearchParams;
@@ -50,7 +50,7 @@ const AdvanceFuelSearch: React.FC<Props> = ({
             showSearch
             allowClear
             request={async()=>{
-              const data = await LookupDataServiceAPI(requestActions).lookupData({type:"VEHICLE"});
+              const data = await FleetServiceAPI(requestActions).lookupData({type:"VEHICLE"});
               return data.filter(it=>it.code =='FUELTYPE').map(it=>({
                 label:it.name,
                 value:it.id

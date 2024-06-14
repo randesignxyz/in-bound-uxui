@@ -25,16 +25,13 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
         }
     }>();
     return <>
-
         <TableView
             actionHandlers={{
                 onAdd: () => setState({ visible: { name: "MODAL", type: "ADD" } }),
-
             }}
             tableProps={{
                 actionRef: actionRef
             }}
-
             columns={[
                 {
                     title: "Part",
@@ -49,7 +46,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
                     title: "Category",
                     dataIndex: "category"
                 },
-
                 {
                     title: "Description",
                     dataIndex: "category",
@@ -81,9 +77,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
                 },
             ]}
         />
-
-
-
         <InventoryForm
             onSave={(data: InventoryCreate) => {
                 Modal.confirm({

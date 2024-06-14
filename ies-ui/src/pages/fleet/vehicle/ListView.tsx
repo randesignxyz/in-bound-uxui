@@ -15,10 +15,10 @@ import {
   WarningOutlined,
 } from '@ant-design/icons';
 import type { ActionType } from '@ant-design/pro-table';
-import { useModel } from '@umijs/max';
+import { history, useModel } from '@umijs/max';
 import { Badge, Button, Dropdown, MenuProps, message, Modal, Popover, Radio, Space, Tag, Tooltip } from 'antd';
 import Omit from 'omit.js';
-import {  useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import AdvanceVehicleSearch from '../components/AdvanceVehicleSearch';
 import AssignDriverFormModal from '../driver/AssignDriverFormModal';
 import { DriverDTO, VehicleDriverCreate, VehicleDriverDTO } from '../driver/data';
@@ -49,10 +49,10 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
     }
   }>();
   const [tireState, setTireState] = useState<{
-    visible?:{
-      name:"MODAL",
-      type:"ADD"|"EDIT";
-      payload?:VehicleListItem;
+    visible?: {
+      name: "MODAL",
+      type: "ADD" | "EDIT";
+      payload?: VehicleListItem;
     }
   }>();
   const [advanceSearch, setAdvanceSearch] = useState<{ visible: boolean }>();
@@ -61,7 +61,13 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
   });
 
   const [assignState, setAssignState] = useState<{
-    visible?: { name: 'modal'; type: 'ADD' | 'Edit'; vehicleId?: VehicleListItem; driver?: DriverDTO, vehicleDriver?: VehicleDriverDTO };
+    visible?: {
+      name: 'modal';
+      type: 'ADD' | 'Edit';
+      vehicleId?: VehicleListItem;
+      driver?: DriverDTO,
+      vehicleDriver?: VehicleDriverDTO
+    };
   }>({});
 
   const cacheList = useModel('dataList');
@@ -79,7 +85,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
       return Promise.reject();
     }
   };
-
   const actionRef = useRef<ActionType>();
   const onStatusChange = (id: string, status: string) => {
     Modal.confirm({
@@ -128,7 +133,7 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
         key: "tire",
         label: 'Assign Tires',
         itemIcon: <AimOutlined />,
-        onClick: () => setTireState({ visible: { name: 'MODAL', type: 'EDIT', payload:item} })
+        onClick: () => setTireState({ visible: { name: 'MODAL', type: 'EDIT', payload: item } })
       },
       {
         type: 'divider',
@@ -161,12 +166,17 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
       },
     ];
   };
-
   return (
-    <PageContainer
-      title="Vehicles"
-      ghost
-    >
+    <>
+      <PageContainer
+        title="Vehicles"
+        ghost
+        onBack={() => history.push("/fleet")}
+        style={{
+          margin: "-30px -40px 0",
+        }}
+        fixedHeader
+      />
       <>
         <TableView<VehicleListItem, { searchValue?: string; advanceSearch: VehicleAdvanceSearch }>
           hasCriteria={Object.values(Omit(advanceSearchParams, ['status'])).some((v) => v)}
@@ -399,7 +409,7 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
           open={odometerIssue?.visible?.name === "MODAL"}
           onCancel={() => setOdometerIssue({ visible: undefined })}
           data={odometerIssue?.visible?.payload}
-          onSave={(data: { vId?:string; odometer: number; reason?: string }) => {
+          onSave={(data: { vId?: string; odometer: number; reason?: string }) => {
             Modal.confirm({
               title: "Change Odometer",
               content: "Are you sure? This odometer will be set as a current meter!",
@@ -412,22 +422,22 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
           }}
         />
         <TireAssigntoVehicleModal
-          open={tireState?.visible?.name==="MODAL"}
-          onCancel={()=>setTireState((v)=>({...v,visible:undefined}))}
+          open={tireState?.visible?.name === "MODAL"}
+          onCancel={() => setTireState((v) => ({ ...v, visible: undefined }))}
           vehicleId={tireState?.visible?.payload?.id}
-          onSave={(data:TireAssignCreate)=>{
-              Modal.confirm({
-                title:"Save tire for vehicle",
-                content:"Are you sure the record you entered is correct?",
-                onOk:async()=>{
-                  SpecificationServiceAPI(requestActions).saveVehicleTire(data);
-                  setTireState({visible:undefined});
-                }
-              })
+          onSave={(data: TireAssignCreate) => {
+            Modal.confirm({
+              title: "Save tire for vehicle",
+              content: "Are you sure the record you entered is correct?",
+              onOk: async () => {
+                SpecificationServiceAPI(requestActions).saveVehicleTire(data);
+                setTireState({ visible: undefined });
+              }
+            })
           }}
         />
       </>
-     </PageContainer> 
+    </>
   );
 };
 

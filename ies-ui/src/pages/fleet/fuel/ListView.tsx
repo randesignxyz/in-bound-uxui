@@ -13,7 +13,7 @@ import {
   PlusOutlined,
 } from '@ant-design/icons';
 import type { ActionType } from '@ant-design/pro-table';
-import { useModel } from '@umijs/max';
+import { history, useModel } from '@umijs/max';
 import {
   Badge,
   Button,
@@ -141,7 +141,7 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
       label: row.status == 'void' ? 'Unvoid' : 'Void',
       itemIcon: <BlockOutlined />,
       style: { color: row.status == 'void' ? '' : 'red' },
-      disabled: moment(row.createdDate).isBefore(moment(), 'month'),
+      // disabled: moment(row.createdDate).isBefore(moment(), 'month'),
       onClick: () => {
         Modal.confirm({
           title: 'Confirm Fuel Entry Void',
@@ -162,7 +162,7 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
       key: '3',
       label: 'Edit',
       itemIcon: <EditOutlined />,
-      disabled: moment(row.createdDate).isBefore(moment(), 'month'),
+      // disabled: moment(row.createdDate).isBefore(moment(), 'month'),
       onClick: () => {
         setSate({ visible: { name: 'modal', type: 'Edit', payload: { vehicle: row } } });
       },
@@ -173,7 +173,7 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
     {
       key: '4',
       label: 'Delete',
-      disabled: moment(row.createdDate).isBefore(moment(), 'month'),
+      // disabled: moment(row.createdDate).isBefore(moment(), 'month'),
       itemIcon: <DeleteOutlined />,
       danger: true,
       onClick: () => {
@@ -194,6 +194,8 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
     <>
       <PageContainer
         title="Fuel Lists"
+        onBack={()=>history.push("/fleet")}
+        fixedHeader
       >
       <Spin spinning={requestActions.request?.loading || false}>
         <TableView
@@ -243,7 +245,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
               sorter: 'driverName',
               dataIndex: 'driverName',
             },
-
             {
               key: 'pumpBy',
               title: 'Pump By',

@@ -13,7 +13,6 @@ export default ({ id }: Props) => {
   const requestActions = simpleRequestActions();
   const service = InspectionServiceAPI(requestActions);
   const [inspectionData, setInspectionData] = useState<InspectionDTO>();
-
   const initData = useCallback(async () => {
     setInspectionData(await service.detail(id));
   }, []);
@@ -27,7 +26,11 @@ export default ({ id }: Props) => {
         onBack={!ExternalLayout.isExternal("fleet/inspection") ? ExternalLayout.handleBackHandler : undefined}
         title="Inspection"
         subTitle={`#${inspectionData?.plateNumber}`}
-      >
+        fixedHeader
+        style={{
+          margin:"-30px -40px 0",
+        }}
+      />
         <Spin spinning={requestActions.request?.loading}>
           <Space size={12} direction="vertical">
             <Card key={'inspection'} size={'small'}>
@@ -136,7 +139,6 @@ export default ({ id }: Props) => {
             </Card>
           </Space>
         </Spin>
-      </PageContainer>
     </>
   );
 };

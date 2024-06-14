@@ -9,6 +9,7 @@ import MonthlyAvgTruckRepair from "./chart/MonthlyAvgTruckRepair";
 import DeselFuelCompareBetweenDate from "./chart/DeselFuelCompareBetweenDate";
 import VehicleInspectionDaysInMonth from "./chart/VehicleInspectionDaysInMonth";
 import { PageContainer } from "@ant-design/pro-components";
+import { history } from "@umijs/max";
 
 export default () => {
     const [displayState, setDisplayState] = useState(12);
@@ -62,6 +63,8 @@ export default () => {
         <>
             <PageContainer
                 title="Dashboard"
+                fixedHeader
+                onBack={() => history.push("/fleet")}
                 extra={[
                     <Space size={20}>
 

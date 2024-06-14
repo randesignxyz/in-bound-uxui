@@ -152,7 +152,7 @@ const ServiceReminderModalForm: React.FC<Props> = ({
                 onSelect: async (e) => {
                   setVehicle(await VehicleServiceAPI(requestActions).fetchVehicle(e))
                 },
-                onChange: (value) => {
+                onChange: (value:string) => {
                   onServiceLoad('', value);
                 },
               }}
@@ -183,7 +183,7 @@ const ServiceReminderModalForm: React.FC<Props> = ({
                       return items
                     }}
                     fieldProps={{
-                      onChange: (e) => onAutoCompleteVehicleService(vehicleId, e),
+                      onChange: (e:number) => onAutoCompleteVehicleService(vehicleId, e),
                     }}
                     rules={[
                       {
@@ -326,7 +326,7 @@ const ServiceReminderModalForm: React.FC<Props> = ({
                   id="manuanlly"
                 />
                 <label itemID="manuanlly">
-                  Manually set the due date and/or meter for the next reminder
+                    Manually set the due date and/or meter for the next reminder.
                   <p style={{ fontSize: 11, color: 'gray', margin: 0, padding: 0 }}>
                     Adjust the schedule by updating the next reminder's meter and/or date.
                   </p>

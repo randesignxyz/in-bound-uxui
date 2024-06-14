@@ -895,11 +895,11 @@ export default [
     component: './fleet/fuel/',
   },
   {
-    path: '/fleet/add-on/:view/*',
-    name: 'fleet_add_on',
+    path: '/fleet/setting/:view',
+    name: 'Setting',
     hideInMenu: 'true',
     access: 'canAccessFleetMenu',
-    component: './fleet/addOn/',
+    component: './fleet/setting/',
   },
   {
     path: '/fleet/fuel-stock/:view/*',

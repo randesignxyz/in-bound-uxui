@@ -4,7 +4,7 @@ import { Paging } from '@/services/API';
 import { simpleRequestActions } from '@/services/model';
 import { ArrowRightOutlined, BlockOutlined, DashOutlined, DeleteOutlined, ExportOutlined } from '@ant-design/icons';
 import type { ActionType } from '@ant-design/pro-table';
-import { useModel } from '@umijs/max';
+import { history, useModel } from '@umijs/max';
 import { Button, Dropdown, MenuProps, message, Modal, Popover, Radio, Space, Tag } from 'antd';
 import Omit from 'omit.js';
 import { useRef, useState } from 'react';
@@ -99,7 +99,12 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
     <>
       <PageContainer
         title="Inspections"
-      >
+        onBack={()=>history.push("/fleet")}
+        style={{
+          margin:"-30px -40px 0",
+        }}
+        fixedHeader
+      />
         <TableView<InspectionDTO, { searchValue?: string }>
           hasCriteria={Object.values(Omit(advanceSearchParams, ['status'])).some((v) => v)}
           cache
@@ -273,7 +278,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
               }) as Promise<Paging<InspectionDTO>>,
           }}
         />
-      </PageContainer>
     </>
   );
 };

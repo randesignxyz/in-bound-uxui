@@ -10,7 +10,7 @@ import {
 import { Col, Row } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { DieselMonthlyReportParams } from './data';
-import { LookupDataServiceAPI } from '../lookupData/service';
+import { FleetServiceAPI } from '../service';
 
 interface Props extends ModalFormProps {
   onSubmitExport: (param: DieselMonthlyReportParams) => void;
@@ -68,7 +68,7 @@ export default ({ onSubmitExport, ...props }: Props) => {
                 label={"Truck Capacity"}
                 rules={[{required:true}]}
                 request={async () => {
-                  const data = await LookupDataServiceAPI(requestActions).lookupData({ type: "VEHICLE" });
+                  const data = await FleetServiceAPI(requestActions).lookupData({ type: "VEHICLE" });
                   return data.filter(it => it.code === "WEIGHT").map(it => ({ value: it.id, label: it.name }));
                 }}
               />) ||
@@ -78,7 +78,7 @@ export default ({ onSubmitExport, ...props }: Props) => {
                     label={"Fuel Type"}
                     rules={[{required:true}]}
                     request={async () => {
-                      const data = await LookupDataServiceAPI(requestActions).lookupData({ type: "VEHICLE" });
+                      const data = await FleetServiceAPI(requestActions).lookupData({ type: "VEHICLE" });
                       return data.filter(it => it.code === "FUELTYPE").map(it => ({ value: it.id, label: it.name }));
                     }}
                   />

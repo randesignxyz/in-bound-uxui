@@ -4,14 +4,14 @@ import { Col, Divider, Row, Space } from "antd"
 import { useForm } from "antd/es/form/Form";
 import { useEffect, useState } from "react";
 import FormModalComp, { FormModalProps } from "@/components/FormModal";
-import { LookupDataServiceAPI } from "../lookupData/service";
-import { LookUpDataDTO } from "../lookupData/data";
 import { VehicleServiceAPI } from "../vehicle/service";
 import { CarOutlined } from "@ant-design/icons";
 import { AccidentCreate, AccidentDTO } from "./data";
 import { DriverServiceAPI } from "../driver/service";
 import { VehicleListItem } from "../vehicle/data";
 import FileUploader from "@/components/Attachment/FileUploader";
+import { FleetServiceAPI } from "../service";
+import { LookUpDataDTO } from "../data";
 interface Props extends FormModalProps {
     data?: AccidentDTO;
     onSave: (data: AccidentCreate) => void;
@@ -30,7 +30,7 @@ const AccidentModalForm: React.FC<Props> = ({ onSave,vehicleId, data, ...props }
     }, [props.open]);
     const dataLoad = async () => {
         setLookupData(
-            await LookupDataServiceAPI(requestActions).lookupData({ type: "ACCIDENT" })
+            await FleetServiceAPI(requestActions).lookupData({ type: "ACCIDENT" })
         )
         setVehicleBasicInfo(
             await VehicleServiceAPI(requestActions).fetchVehicle(vehicleId)

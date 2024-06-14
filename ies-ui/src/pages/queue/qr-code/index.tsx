@@ -3,14 +3,14 @@ import { QueuePaths } from ".."
 import { QRCodeListView } from "./ListView"
 
 export default () => {
-    
 
-    return <CrudWrapper baseURL={QueuePaths.qrCode} >
+
+    return <CrudWrapper onBack={() => history.back()} title="QR Codes" baseURL={QueuePaths.qrCode} >
 
         {(view) => {
             switch (view) {
                 case 'list':
-                    return <QRCodeListView/>
+                    return <QRCodeListView />
                 default:
                     throw Error('Not supported')
             }

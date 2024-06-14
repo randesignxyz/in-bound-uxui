@@ -138,6 +138,23 @@ export default [
     access: 'canAccessCrmMenuItem',
     component: './crm/notification',
   },
+  {
+    path: '/crm/term/:view/*',
+    name: 'term',
+    icon: 'TeamOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessCrmMenuItem',
+    component: './crm/term',
+  },
+  {
+    path: '/external/crm/term/:view/*',
+    name: 'term',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    layout: false,
+    access: 'canAccessCrmMenuItem',
+    component: './crm/term',
+  },
 
   /**********<<Pro**************/
   {
@@ -380,12 +397,83 @@ export default [
     access: 'canAccessARMenuItem',
     component: './sale/daily_report',
   },
+  {
+    path: '/sale/visit/:view/*',
+    name: 'sales-visit',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessAllMenuDSD',
+    component: './sale/visit',
+  },
+  {
+    path: '/sale/pricing/:view/*',
+    name: 'item-sales-line-price',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessAllMenuDSD',
+    component: './sale/pricing',
+  },
+
+  /******************* MPU *******************/
+
+  // {
+  //   path: '/sale/mpu',
+  //   name: 'mpu',
+  //   icon: 'UnorderedListOutlined',
+  //   access: 'canAccessViewMpu',
+  //   component: './sale/mpu',
+  // },
+
+  // {
+  //   path: '/sale/stock/:view/*',
+  //   name: 'stock',
+  //   icon: 'UnorderedListOutlined',
+  //   hideInMenu: 'true',
+  //   access: 'canAcessStockControlMenuItem',
+  //   component: './sale/stock-control',
+  // },
+
+  {
+    path: '/sale/mpu/:view/*',
+    name: 'sale_rsm_request',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessViewMpu',
+    component: './sale/mpu/request',
+  },
+  {
+    path: '/sale/mpu_stock/:view/*',
+    name: 'sale_mpu_stock',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessViewMpu',
+    component: './sale/mpu/stock',
+  },
+  {
+    path: '/sale/mpu_purchase_order/:view/*',
+    name: 'sale_mpu_purchase_order',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessViewMpu',
+    component: './sale/mpu/purchase_order',
+  },
+  {
+    path: '/sale/mpu_count_stock/:view/*',
+    name: 'sale_mpu_count_stock',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessViewMpu',
+    component: './sale/mpu/count_stock',
+  },
+
+  /******************* MPU *******************/
+
   /******************* Retailer *******************/
   {
     path: '/retailer',
     name: 'retailer',
     icon: 'UnorderedListOutlined',
-    access: 'canViewRetailer',
+    access: 'canViewRetailerSalesperons',
     component: './sale/retailer',
   },
 
@@ -403,7 +491,7 @@ export default [
     name: 'retailer_cutomer_group',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canCreateRetailer',
+    access: 'canViewRetailerSalesperons',
     component: './sale/retailer/groupCustomer',
   },
 
@@ -420,7 +508,7 @@ export default [
     name: 'retailer_customer',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canViewRetailer',
+    access: 'canViewRetailerSalesperons',
     component: './sale/retailer/customer',
   },
   {
@@ -440,12 +528,22 @@ export default [
     access: 'canAccessRetailer',
     component: './sale/retailer/ingredient',
   },
+
+  {
+    path: '/retailer/customer_pricing/:view/*',
+    name: 'retailer_customer_pricing',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canViewRetailerSalesperons',
+    component: './sale/retailer/customer_pricing',
+  },
+
   {
     path: '/retailer/pricings/:view/*',
     name: 'retailer_pricing',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canCreateRetailer',
+    access: 'canViewRetailerSalesperons',
     component: './sale/retailer/pricing',
   },
   {
@@ -464,7 +562,6 @@ export default [
     access: 'canCreateRetailer',
     component: './sale/retailer/settings',
   },
-
   /******************* Retailer *******************/
 
   /******************* Developer *******************/
@@ -623,7 +720,6 @@ export default [
     access: 'canAccessDeliveryTruck',
     component: './delivery/truck',
   },
-
 
   /************************ Queque  ******************/
 
@@ -830,7 +926,6 @@ export default [
   },
   /*************Delivery Expense>>********************/
 
-
   //  =================  FLEET =================
 
   {
@@ -952,16 +1047,24 @@ export default [
   },
   //  ================= END FLEET =================
 
+  // ================= DMS =======================
+  {
+    path: '/dms',
+    name: 'dms',
+    icon: 'FileSearchOutlined',
+    component: './dms',
+    access: 'canAccessDMSMenu',
+    redirect: '/dms/workspace/library',
+  },
 
-// ================= DMS =======================
-{
-  path:"/dms",
-  name:"dms",
-  icon:"FileSearchOutlined",
-  component:"./dms",
-  access:"canAccessDMSMenu",
-  redirect:"/dms/workspace/library"
-},
+  {
+    path: '/dms/workspace/:view/*',
+    name: 'dms',
+    icon: 'FileSearchOutlined',
+    component: './dms',
+    access: 'canAccessDMSMenu',
+    hideInMenu: 'true',
+  },
 
 {
   path:"/dms/workspace/:view",
@@ -1028,26 +1131,24 @@ export default [
   {
     path: '/prod',
     name: 'prod',
-    icon: 'SettingOutlined',
+    icon: 'ReconciliationOutlined',
     access: 'canAccessProdMenu',
-    component: './prod'
+    component: './prod',
   },
   {
     path: '/prod/inventory-transfer-request/:view/*',
     name: 'inventoryTransferRequest',
-    icon: 'SettingOutlined',
     hideInMenu: 'true',
     access: 'canAccessInventoryTranferRequestMenuItem',
-    component: './prod/inventory-transfer-request'
+    component: './prod/inventory-transfer-request',
   },
 
   {
-    path: '/prod/inventory-transfer/list',
+    path: '/prod/inventory-transfer/:view/*',
     name: 'inventoryTransfer',
-    icon: 'SettingOutlined',
     hideInMenu: 'true',
     access: 'canAccessInventoryTranferMenuItem',
-    component: './prod/inventory-transfer'
+    component: './prod/inventory-transfer/',
   },
 
   //  ================= END Prod =================
@@ -1064,6 +1165,7 @@ export default [
     path: '/',
     component: 'initial-page',
     // redirect: '/user/auth',
+    redirect: '/task-list',
     // redirect: '/expense/delivery',
   },
   {

@@ -7,7 +7,7 @@ import { InstanceSrvParams } from "@/services/delivery/instance-service-params";
 import { InstanceBasic, InstanceDetail } from "@/services/delivery/instance.types";
 import { LoadingParams } from "@/services/delivery/loading-params";
 import { simpleRequestActions } from "@/services/model";
-import { CheckCircleOutlined, CloseCircleOutlined, EyeFilled, FileDoneOutlined, PauseOutlined, StopOutlined, SwapOutlined } from "@ant-design/icons";
+import { CheckCircleOutlined, CloseCircleOutlined, EyeFilled, FileDoneOutlined, PauseOutlined, StopOutlined, SwapOutlined, UnlockOutlined } from "@ant-design/icons";
 import { ActionType, PageContainer } from "@ant-design/pro-components";
 import { FloatButton, message, Modal, Spin } from "antd";
 import { useEffect, useRef, useState } from "react";
@@ -88,7 +88,7 @@ export default () => {
   }
 
   const onRefreshDatahHandler = async (id?: number) => {
-    actionRef.current?.reloadAndRest?.()
+    await actionRef.current?.reloadAndRest?.()
     await loadDetail(id || selectedItem?.id || 0)
     setForceupdate(v => v + 1)
   }
@@ -255,11 +255,7 @@ export default () => {
 
     { key: 'assignDoc', label: 'Assign Doc', type: 'Primary', visible: pendingDelivery, main: claimed, icon: <FileDoneOutlined />, onClick: () => onOpenModalHandler(from, 'assign-doc', item?.id, true) },
     { key: 'reassignDoc', label: 'Reassign Doc', visible: delivering, icon: <SwapOutlined />, onClick: async () => await onOpenModalHandler(from, 'assign-doc', item?.id, true) },
-    {
-      key: 'cancelDelivery', label: 'Cancel Delivery', visible: delivering, type: 'Danger', main: claimed, icon: <StopOutlined />, onClick: () => {
-        setModal({ type: 'CANCEL_DELIVERY', from: 'LIST', deliveryId: item?.delivery.id || 0 })
-      }
-    },
+
     {
       key: 'cancelChangeRequest', label: 'Cancel Change Request', type: 'Danger', icon: <StopOutlined />, visible: item?.claimedBy !== null && item?.changeRequest, onClick: () => {
         setModal({
@@ -268,7 +264,7 @@ export default () => {
               if (from === 'DETAIL') {
                 onRefreshDatahHandler(selected.id)
               }
-              actionRef.current?.reloadAndRest?.()
+              // actionRef.current?.reloadAndRest?.()
             })
           }
         })
@@ -289,7 +285,7 @@ export default () => {
       }
     },
     {
-      key: 'released', label: "Release", main: true, icon: <StopOutlined />, onClick: (id) => {
+      key: 'released', label: "Release Claim", main: true, icon: <UnlockOutlined />, onClick: () => {
         onReleaseHandler(item?.id, async () => {
           if (from == 'DETAIL') {
             await loadDetail(selected.id)
@@ -306,10 +302,15 @@ export default () => {
               if (from === 'DETAIL') {
                 await loadDetail(selected.id)
               }
-              actionRef.current?.reloadAndRest?.()
+              // actionRef.current?.reloadAndRest?.()
             })
           }
         })
+      }
+    },
+    {
+      key: 'cancelDelivery', label: 'Cancel Delivery', visible: delivering || pendingDelivery, type: 'Danger', main: claimed, icon: <StopOutlined />, onClick: () => {
+        setModal({ type: 'CANCEL_DELIVERY', from: 'LIST', deliveryId: item?.delivery.id || 0 })
       }
     },
     ]
@@ -384,7 +385,7 @@ export default () => {
 
   return <PageContainer breadcrumb={undefined}
     title={'Delivery Board'}
-    
+
     onBack={() => history.back()}>
 
     {/* List view */}

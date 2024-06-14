@@ -3,6 +3,7 @@ import CustomerIcon from '@/assets/customer.png';
 import notificationIcon from '@/assets/megaphone.png';
 import planIcon from '@/assets/plan.png';
 import scheduleIcon from '@/assets/schedule.png';
+import agreementIcon from '@/assets/agreement.png'
 import type { ListMenuItem } from '@/components/ListMenu';
 import ListMenuComp from '@/components/ListMenu';
 import '@/pages/index.less';
@@ -15,6 +16,7 @@ import { PageContainer } from '@ant-design/pro-components';
 import PosmMonitoring from './reports/PosmMonitoring';
 import AgreementCompliant from './reports/AgreementCompliant';
 import ContractReport from './contract/components/ContractReport';
+import TermReport from './term/components/TermReport';
 
 export const CrmPaths = {
   contact: '/crm/contact',
@@ -27,6 +29,7 @@ export const CrmPaths = {
   setup: '/crm/setup',
   notification: '/crm/notification',
   gratisSettlement: '/crm/gratis',
+  terms: '/crm/term',
 };
 const Crm: React.FC = () => {
   const access = useAccess();
@@ -337,6 +340,18 @@ const Crm: React.FC = () => {
       icon: scheduleIcon,
       overlay: GratistMenu
     },
+    ,
+    {
+      id: 'terms',
+      name: 'Terms',
+      description: 'Terms List',
+      //link: `${CrmPaths.settlement}/list`,
+      link: `${CrmPaths.terms}/list`,
+      icon: agreementIcon,
+      menu: {
+        items: [{label: <TermReport trigger={<a >Export</a>}/> , key: 'exportTerm', icon: <ExportOutlined style={{ fontSize: '16px', color: '#08c' }}/>}]
+      }
+    }
   ];
 
   return (

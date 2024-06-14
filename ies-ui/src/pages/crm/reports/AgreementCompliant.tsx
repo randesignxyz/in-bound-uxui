@@ -13,7 +13,7 @@ type InitType = {
     provinceList?: Locations[],
     regionList?: Locations[],
     seList?: LookupDataItem[],
-    lookupDataList?: LookupData[];    
+    lookupDataList?: LookupData[];
 }
 
 type DataFormType = {
@@ -71,14 +71,14 @@ export default ({ trigger }: { trigger?: JSX.Element }) => {
     useEffect(() => {
         init()
 
-        return ()=> {
+        return () => {
             form.resetFields()
         }
     }, [])
 
     return <ModalForm
         trigger={trigger}
-        form = {form}
+        form={form}
         title="Agreement Compliance Report"
         onFinish={async () => {
             await onDowloadReportHandler()

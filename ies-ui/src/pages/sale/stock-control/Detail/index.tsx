@@ -1,10 +1,5 @@
 import { simpleRequestActions } from '@/services/model';
-import type {
-  ExchangeRate,
-  SaleInvoiceLess,
-  SaveStockControl,
-  // StockDetailItemSettle,
-} from '@/services/sale/data';
+import type { ExchangeRate, SaleInvoiceLess, SaveStockControl } from '@/services/sale/data';
 import {
   AuditOutlined,
   DashboardOutlined,
@@ -173,9 +168,9 @@ const StockControlDetail: React.FC<Props> = ({ id, actionHandlers }) => {
         <Tabs defaultActiveKey="stockControl">
           <Tabs.TabPane
             tab={
-              <Space size={0}>
+              <Space size={4}>
                 {/* <ScheduleOutlined /> <span>Transaction</span> */}
-                <DashboardOutlined /> <span>Dashboard</span>
+                <DashboardOutlined /> <span>Transaction</span>
               </Space>
             }
             key="dashboardTabItem"
@@ -194,7 +189,7 @@ const StockControlDetail: React.FC<Props> = ({ id, actionHandlers }) => {
 
           <Tabs.TabPane
             tab={
-              <Space size={0}>
+              <Space size={4}>
                 <ShopOutlined /> <span>Stock</span>
               </Space>
             }
@@ -207,8 +202,8 @@ const StockControlDetail: React.FC<Props> = ({ id, actionHandlers }) => {
                 isOpen: isOpenStock(),
                 details: state.data?.detail,
                 types: state.data?.initData?.types,
-                loading: state.loading,
-                listStockDetailItem: state.data?.listStockDetailItem,
+                // loading: state.loading,
+                listStockDetailItem: state.data?.detail?.items ?? [],
               }}
               // actionHandlers={{
               //   onTransferMoney: () => setAddModal({ visible: true }),
@@ -227,8 +222,8 @@ const StockControlDetail: React.FC<Props> = ({ id, actionHandlers }) => {
             <>
               <Tabs.TabPane
                 tab={
-                  <Space size={0}>
-                    <AuditOutlined /> <span>Sale Invoice</span>
+                  <Space size={4}>
+                    <AuditOutlined /> <span>Sales Invoice</span>
                   </Space>
                 }
                 key="saleInvoiceTab"

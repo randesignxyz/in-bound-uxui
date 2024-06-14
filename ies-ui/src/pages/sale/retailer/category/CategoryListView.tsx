@@ -5,8 +5,8 @@ import type { Paging } from '@/services/API';
 import { simpleRequestActions } from '@/services/model';
 import { EditOutlined } from '@ant-design/icons';
 import type { ActionType } from '@ant-design/pro-table';
-import { useModel } from '@umijs/max';
-import { Badge, Button, message, Modal, Radio, Row, Space, Tag, Tooltip } from 'antd';
+import { useAccess, useModel } from '@umijs/max';
+import { Badge, Button, Modal, Radio, Row, Space, Tag, Tooltip, message } from 'antd';
 import { startCase } from 'lodash';
 import Omit from 'omit.js';
 import { useRef, useState } from 'react';
@@ -30,6 +30,8 @@ export default ({ onDetail }: Props) => {
     status: 'ALL',
   });
   const actionRef = useRef<ActionType>();
+
+  const access = useAccess();
 
   const cacheList = useModel('dataList');
   const [state, setSate] = useState<{
@@ -96,6 +98,7 @@ export default ({ onDetail }: Props) => {
       <TableView<CategoryDto, { searchValue?: string; advanceSearch: CategoryAdvanceSearchParams }>
         hasCriteria={Object.values(Omit(advanceSearchParams, ['status'])).some((v) => v)}
         cache
+        displayOnly={!access.canCreateRetailer}
         extraFilter={
           <Space size="large">
             <Radio.Group
@@ -163,6 +166,7 @@ export default ({ onDetail }: Props) => {
           {
             title: 'Action',
             align: 'center',
+            hideInTable: !access.canCreateRetailer,
             render: (_, r) => {
               return (
                 <Tooltip title="Edit" key={`edit-${r.id}`}>

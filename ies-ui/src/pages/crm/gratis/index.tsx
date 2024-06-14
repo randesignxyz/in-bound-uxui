@@ -18,7 +18,7 @@ export default () => {
     //     setForceUpdate(v => v + 1)
     // }
     return (<>
-        <CrudWrapper baseURL={CrmPaths.contract}>
+        <CrudWrapper baseURL={CrmPaths.gratisSettlement}>
             {
                 (view, id, navigate) => {
                     switch (view) {

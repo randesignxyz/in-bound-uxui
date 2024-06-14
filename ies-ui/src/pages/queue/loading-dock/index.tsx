@@ -4,11 +4,11 @@ import { LoadingDockListView } from "./ListView"
 
 export default () => {
 
-    return <CrudWrapper baseURL={QueuePaths.loadingDock} >
+    return <CrudWrapper onBack={() => history.back()} title="Loading Docks" baseURL={QueuePaths.loadingDock} >
         {(view) => {
             switch (view) {
                 case 'list':
-                    return <LoadingDockListView/>
+                    return <LoadingDockListView />
                 default:
                     throw Error('Not supported')
             }

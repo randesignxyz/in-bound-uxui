@@ -1,9 +1,8 @@
 import CrudWrapper from '@/components/DataCrud/CrudWrapper';
 import { RetailerPath } from '..';
 import CustomerDetailView from './CustomerDetailView';
-import CustomerEdit from './CustomerEdit';
+
 import CustomerListView from './CustomerListView';
-import CustomerRequest from './CustomerUpgrade';
 
 export default () => {
   // const access = useAccess();
@@ -32,11 +31,11 @@ export default () => {
                 navigate?.gotoEdit?.({ id: id });
               }}
             />
-          )) ||
-          (view === 'edit' && <CustomerEdit />) ||
-          (view === 'create' && <CustomerRequest />)
+          )) 
+          // ||
+          // (view === 'edit' && <CustomerEntryFormView type="edit" id={id as string} />) ||
+          // (view === 'create' && <CustomerEntryFormView type="new" />)
         );
-
         //  ||
         //    view === 'create' && <Access accessible = {access.canCreateEditSo} fallback={<div>Unauthorized</div>}> <Create/> </Access> ||
         //    view === 'edit' && <Access accessible = {access.canCreateEditSo} fallback={<div>Unauthorized</div>}> <Edit id = {id as number}/> </Access>

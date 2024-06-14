@@ -45,7 +45,6 @@ const IssueDNModal: React.FC<Props> = ({ cb, requestActions, itemDetail, ...prop
     const [truckChanging, setTruckChanging] = useState(false)
     const [driverList, setDriverList] = useState<Driver[]>()
     const [trucks, setTrucks] = useState<Truck[]>()
-    const [showTotalPickedAmount, setShowTotalPickedAmount] = useState(true)
     const [autoSearch, setAutoSearch] = useState(0)
 
     const [form] = useForm<{
@@ -88,6 +87,8 @@ const IssueDNModal: React.FC<Props> = ({ cb, requestActions, itemDetail, ...prop
             // form.setFieldValue('whsCode', warehouseList.find(it => it === 'OFL-WH02') || warehouseList.find(it => it))
 
         } catch (error: any) {
+            console.log(error);
+
             message.error(error.message || 'Failed to load data.');
         }
     };
@@ -102,42 +103,44 @@ const IssueDNModal: React.FC<Props> = ({ cb, requestActions, itemDetail, ...prop
             setTrucks(driver?.trucks)
             form.setFieldValue('driverId', itemDetail?.loading?.driver.id || driver?.id)
         }
-        setAutoSearch(v => v+1)
+        setAutoSearch(v => v + 1)
     }
 
 
     const issueDNHandler = () => {
-        
+
         Modal.confirm({
             title: 'DN issued comfirmation',
             content: 'Are you sure?',
             onOk: async () => {
-            try {
-                if(!itemDetail?.loading?.id ) {
-                    message.error("Data not found.")
-                    return
-                }
-                const formData = await form.validateFields(['driverId', 'licensePlate', 'docDate', 'shift'])
-                const { docDate, shift, driverId, licensePlate } = formData
-                await execDataService0({
-                    actionName: 'issue-dn',
-                    endpoint: 'DELIVERY',
-                    payload: { 
-                      id: itemDetail?.loading?.id || 0, 
-                      docDate: docDate , 
-                      shift, 
-                      driverId: truckChanging?driverId : undefined , 
-                      licensePlate: truckChanging ? licensePlate : undefined
+                try {
+                    if (!itemDetail?.loading?.id) {
+                        message.error("Data not found.")
+                        return
                     }
-                  })(requestActions)
-                props.onCancel?.()
-                cb?.()
-            } catch (error: any) {
-                message.error(error.message || `Failed to issue db`);
-            }
+                    const formData = await form.validateFields(['driverId', 'licensePlate', 'docDate', 'shift'])
+                    const { docDate, shift, driverId, licensePlate } = formData
+                    await execDataService0({
+                        actionName: 'issue-dn',
+                        endpoint: 'DELIVERY',
+                        payload: {
+                            id: itemDetail?.loading?.id || 0,
+                            docDate: docDate,
+                            shift,
+                            driverId: truckChanging ? driverId : undefined,
+                            licensePlate: truckChanging ? licensePlate : undefined
+                        }
+                    })(requestActions)
+                    props.onCancel?.()
+                    cb?.()
+                } catch (error: any) {
+
+
+                    message.error(error.message || `Failed to issue db`);
+                }
             },
         });
-        }
+    }
 
 
     const expandedRowRender = (item: DeliveryNoteDetail) => {

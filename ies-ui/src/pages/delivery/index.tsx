@@ -13,9 +13,11 @@ import settingIcon from '@/assets/settings.png';
 import qrCodeIcon from '@/assets/qr-code.png';
 import forkLift from '@/assets/fork-lift.png';
 import { Divider, Menu } from 'antd';
-import { HistoryOutlined } from '@ant-design/icons';
+import { AreaChartOutlined, HistoryOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import { useAccess, history } from 'umi';
 import { PageContainer } from '@ant-design/pro-components';
+import ModalMngt, { modalType } from './modal-mngt';
+import { useState } from 'react';
 
 export const DeliveryPaths = {
   default: '/delivery/default',
@@ -35,7 +37,10 @@ export const DeliveryPaths = {
   review: '/delivery/review',
   reviewer: '/delivery/reviewer',
   history: '/delivery/history',
+  loadingHistory: '/delivery/loading-history',
+  deliveryHistory: '/delivery/list-instances-delivery'
 };
+
 
 export const QueuePaths = {
   ticket: '/delivery/ticket',
@@ -53,6 +58,9 @@ export const QueuePaths = {
 export default () => {
 
   const access = useAccess()
+  const [modal, setModal] = useState<modalType>()
+
+
   const deliveryMenu = (
     <Menu
       items={[
@@ -75,18 +83,21 @@ export default () => {
       icon: ticketIcon,
       // isMenu: true,
       visible: access.canAccessDeliveryMenuItem,
-      overlay: (
-        <Menu
-          items={[
-            {
-              label: 'View History',
-              icon: <HistoryOutlined />,
-              key: 'ticket-history',
-              onClick: () => history.push(QueuePaths.history),
-            },
-          ]}
-        />
-      ),
+      menu: {
+        items: [{
+          label: 'Issue Ticket',
+          icon: <PlusCircleOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+          key: 'issue-ticket',
+          onClick: () => setModal({ type: 'ISSUE_TICKET' }),
+        }, {
+          type: 'divider'
+        }, {
+          label: 'View History',
+          icon: <HistoryOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+          key: 'ticket-history',
+          onClick: () => history.push(QueuePaths.history),
+        }]
+      }
     },
     {
       id: 'dashboard',
@@ -94,10 +105,30 @@ export default () => {
       description: 'Manage Loading',
       link: `${QueuePaths.loadingBoard}`,
       icon: forkLift,
-      visible: access.canAccessDeliveryLoading
+      visible: access.canAccessDeliveryLoading,
+      menu: {
+        items: [{
+          label: 'Loading History',
+          icon: <HistoryOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+          key: 'loading-list',
+          onClick: () => history.push(DeliveryPaths.loadingHistory),
+        },
+        {
+          type: 'divider'
+        },
+        {
+          label: 'Loading Time Report',
+          icon: <AreaChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+          key: 'loading-time-report',
+          onClick: () => setModal({
+            type: 'LOADING_TIME'
+          }),
+        }]
+      }
+
     },
     {
-      id: 'dashboard',
+      id: 'queueBoard',
       name: 'Queue Board',
       description: 'Display Board',
       link: `${QueuePaths.display}`,
@@ -115,7 +146,26 @@ export default () => {
       icon: boardIcon,
       // isMenu: true,
       overlay: deliveryMenu,
-      visible: access.canAccessDeliveryMenuItem
+      visible: access.canAccessDeliveryMenuItem,
+      menu: {
+        items: [{
+          label: 'Delivery History',
+          icon: <HistoryOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+          key: 'delivery-list',
+          onClick: () => history.push(DeliveryPaths.history),
+        },
+        {
+          type: 'divider'
+        },
+        {
+          label: 'Delivery Time Report',
+          icon: <AreaChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+          key: 'delivery-time-report',
+          onClick: () => setModal({
+            type: 'DELIVERY_TIME'
+          }),
+        }]
+      }
     },
     {
       id: 'cashCollection',
@@ -231,6 +281,7 @@ export default () => {
       {setupItems.some(it => it.visible) && <ListMenuComp items={setupItems} />}
       {setupItems.some(it => it.visible) && <Divider />}
       {queueSetupItems.some(it => it.visible) && <ListMenuComp items={queueSetupItems} />}
+      <ModalMngt modal={modal} onClose={() => setModal(undefined)} />
     </PageContainer>
   );
 };

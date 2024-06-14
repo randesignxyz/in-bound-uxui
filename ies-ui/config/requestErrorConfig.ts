@@ -1,7 +1,7 @@
 ﻿import type { RequestConfig, RequestOptions } from '@umijs/max';
 import { message, notification } from 'antd';
-import { offlineToken } from './pages/utils';
-import { kc } from './auth';
+import { offlineToken } from '../src/pages/utils';
+import { kc } from '@/auth';
 
 enum ErrorShowType {
   SILENT = 0,
@@ -19,8 +19,7 @@ interface ResponseStructure {
 }
 
 const header = (headers?: any): any => {
-  // const token = localStorage.getItem('accessToken') || offlineToken();
-  const token = kc.token || offlineToken();
+  const token = localStorage.getItem('accessToken') || offlineToken();
   return {
     ...headers, ...token && {
       Authorization: `Bearer ${token}`,
@@ -78,7 +77,16 @@ export const errorConfig: RequestConfig = {
           }
         }
       } else if (error.response) {
-        message.error(`Response status:${error.response.status}`);
+        const { response: { status, data } } = error;
+        if (status === 500 || data?.status === 550 || status === 505) {
+          const { response: { data: { message } } } = error;
+          const errorMessage = message || error.response.message
+          throw { error, message: errorMessage }
+        } else if (status == 404) {
+          message.error("Services not responding.");
+          return
+        }
+        message.error(` Response status:${error.response.status}`);
       } else if (error.request) {
         message.error('None response! Please retry.');
       } else {
@@ -88,10 +96,12 @@ export const errorConfig: RequestConfig = {
   },
   requestInterceptors: [
     async (config: RequestOptions) => {
+      const url = config?.url?.concat('?token = 123');
       const matchs = ['/api/', '/services/']
       const requiredToken = matchs.some(it => config.url?.startsWith(it))
+
       const hd = requiredToken ? await header(config.headers) : config.headers
-      return { ...config, headers: hd };
+      return { ...config, headers: hd, url };
     },
   ],
 

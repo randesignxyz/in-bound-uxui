@@ -36,8 +36,7 @@ const AttachmentsEntity: React.FC<Props> = ({
   //   const [photos, setPhotos] = useState<{ id: number; imageId: string }[]>([]);
 
   useEffect(() => {
-    // setToken(localStorage.getItem('accessToken'));
-    setToken(kc.token || '')
+    setToken(localStorage.getItem('accessToken'));
     // setPhotos(attachments || []);
   }, [token]);
 

@@ -12,11 +12,10 @@ import { useEffect, useState } from 'react';
 import { TicketServices } from './services';
 import { simpleRequestActions } from '@/services/model';
 import { ProFormDependency, ProFormText } from '@ant-design/pro-components';
+import { DeliveryServiceAPI } from '@/services/delivery/services';
 
 interface Props extends ModalFormProps {
-
-  qrCodes: QRCode[];
-  onRefresh: () => void
+  onRefresh?: () => void
 }
 
 interface FormData {
@@ -31,11 +30,13 @@ interface FormData {
   remarks: string;
 }
 
-const IssueTicketModal: React.FC<Props> = ({ qrCodes, onRefresh, ...rest }) => {
+const IssueTicketModal: React.FC<Props> = ({ onRefresh, ...rest }) => {
   const [form] = useForm<FormData>();
   const requestActions = simpleRequestActions()
   const [trucks, setTrucks] = useState<Truck[]>([])
+  const [qrCodes, setQrCodes] = useState<QRCode[]>([])
 
+  const services = DeliveryServiceAPI(requestActions);
 
   const onSearchDriver = async (params: { keyWords?: string }) => {
     return (await TicketServices.listDriver(params.keyWords).query(requestActions)).map(it => ({ label: [it.firstName, it.lastName].join(" "), value: it.id }))
@@ -84,6 +85,7 @@ const IssueTicketModal: React.FC<Props> = ({ qrCodes, onRefresh, ...rest }) => {
       onOk: async () => {
         try {
           await TicketServices.issueManualPickupTicket({ qrCodeId: qrCodeId, licensePlate: licensePlate, remarks: remarks })(requestActions)
+          onRefresh?.()
           message.success('Ticket issued successfully.');
         } catch (error: any) {
           message.error(error.message || 'Failed to issue ticket.');
@@ -93,11 +95,15 @@ const IssueTicketModal: React.FC<Props> = ({ qrCodes, onRefresh, ...rest }) => {
   }
 
   useEffect(() => {
-    if (rest.open) {
+    if (!rest.open) return
+    services.listAllQRCode().then(items => {
+      setQrCodes(items)
       form.setFieldsValue({
-        qrCodeId: qrCodes.find(it => it)?.id
+        qrCodeId: items.find(it => it)?.id
       })
-    }
+    });
+
+
   }, [rest.open])
 
   return (
@@ -107,8 +113,6 @@ const IssueTicketModal: React.FC<Props> = ({ qrCodes, onRefresh, ...rest }) => {
 
         if ('driverId' in changedValued) {
           const { driverId } = changedValued
-          console.log('change driver', driverId);
-
           form.resetFields(['truckId'])
           findDriver(driverId)
         }
@@ -120,7 +124,7 @@ const IssueTicketModal: React.FC<Props> = ({ qrCodes, onRefresh, ...rest }) => {
       initialValues={{
         pickup: true,
       }}
-      title="Queue Ticket"
+      title="Issue Ticket"
       submitter={{
         render: (props, defaultDoms) => {
           return [

@@ -9,7 +9,7 @@ import {
   InstanceListItem,
 } from '@/services/delivery/instance.types';
 import { simpleRequestActions } from '@/services/model';
-import { EyeFilled } from '@ant-design/icons';
+import { DownloadOutlined, EyeFilled } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
 import { ActionType } from '@ant-design/pro-table';
 import { Button, FloatButton, message, Segmented, Space, Spin, Tooltip } from 'antd';
@@ -19,6 +19,7 @@ import { history } from 'umi';
 import Detail from '../board/detail';
 import { ViewController } from '../board/view-controller';
 import AdvanceSearch from './advance-search';
+import Reports, { modalType } from '../modal-mngt';
 export default () => {
   const requestActions = simpleRequestActions();
 
@@ -69,6 +70,7 @@ export default () => {
 
   const [selectedItem, setSelectedItem] = useState<InstanceDetail>();
   const [showAdvanceSearch, setShowAdvanceSearch] = useState(false);
+  const [modal, setModal] = useState<modalType>()
 
   const onRequestHandler = async (params: TableViewSearchParams<InstanceAdvanceSearchParams>) => {
     try {
@@ -87,7 +89,7 @@ export default () => {
 
   const onDetailHandler = async (id: number) => {
     try {
-        const rs = (await singleRequest(InstanceSrvParams.fetch(id))(
+      const rs = (await singleRequest(InstanceSrvParams.fetch(id))(
         requestActions,
       )) as InstanceDetail;
       setSelectedItem(rs);
@@ -165,6 +167,11 @@ export default () => {
           ]}
           tableProps={{
             actionRef: actionRef,
+            toolbar: {
+              actions: [
+                <Button onClick={() => setModal({ type: 'DELIVERY_TIME', props: {} })} type='link' icon={<DownloadOutlined />}>Export</Button>
+              ]
+            }
           }}
           advanceSearch
           actionHandlers={{
@@ -203,16 +210,17 @@ export default () => {
         <Detail
           width={1200}
           title={'Delivery Detail'}
-          open = {!!selectedItem}
-          onClose = {() => onCloseHandler()}
+          open={!!selectedItem}
+          onClose={() => onCloseHandler()}
           {...vc}
         />
 
         <AdvanceSearch
           open={showAdvanceSearch}
-          onVisibleChange={(visible) => !visible && setShowAdvanceSearch(false)}
+          onOpenChange={(visible) => !visible && setShowAdvanceSearch(false)}
         />
       </Spin>
+      <Reports modal={modal} onClose={() => setModal(undefined)} />
       <FloatButton.BackTop />
     </PageContainer>
   );

@@ -3,7 +3,7 @@ import { LoadingListItem, PickingSlipItem } from '@/services/delivery/data';
 import { ProCard } from '@ant-design/pro-components';
 import ProList from '@ant-design/pro-list';
 import ProTable, { ActionType } from '@ant-design/pro-table';
-import { Button, Col, Descriptions, Drawer, DrawerProps, Row, Space, Spin, Timeline, Typography } from 'antd';
+import { Button, Checkbox, Col, Descriptions, Drawer, DrawerProps, Row, Space, Spin, Timeline, Typography } from 'antd';
 import { SortOrder } from 'antd/lib/table/interface';
 import { useEffect, useRef } from 'react';
 import { ViewController } from './vc';
@@ -86,6 +86,7 @@ export default ({
                   <Descriptions.Item label="Ended Date">
                     {item?.loadingEndedDate && formatDateTime(item?.loadingEndedDate)}
                   </Descriptions.Item>
+                  <Descriptions.Item label="Owned Truck Loading"><Checkbox checked={item.ownedTruckLoading} /> </Descriptions.Item>
                   <Descriptions.Item label="Loading Team">{item?.loadingTeam?.name}</Descriptions.Item>
                 </Descriptions>
               </Col>

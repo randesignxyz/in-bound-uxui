@@ -7,15 +7,16 @@ import { LookupData } from "@/services/data";
 import { simpleRequestActions } from "@/services/model";
 import { MultiRequest } from "@/services/apiGateway";
 import { GratisServices } from "../services";
-import { Button, Space, message } from "antd";
-import { CreateSettlemenDate, SettlementSearchDate} from "../types";
+import { Button, Modal, Space, message } from "antd";
+import { ContractAddressPayload, CreateSettlemenDate, IncentiveSettlement, SettlementSearchDate} from "../types";
 import { ContractLess } from "@/services/crm/contract";
 import moment from "moment";
 import ConfirmSaveSettlement from "./ConfirmSaveSettlement";
 import SettlementTransactionSearchModal from "./SettlementTransactionSearchModal";
-import { DeleteOutlined } from "@ant-design/icons";
+import { DeleteOutlined, ExportOutlined } from "@ant-design/icons";
 import { formatDate } from "@/pages/utils";
 import { values } from "lodash";
+import Status from "@/components/Status";
 
 interface SettlemenSearchForm{
     contractTypeId: string;
@@ -102,7 +103,7 @@ const SettlementView: React.FC<{}> = ({}) =>{
                     var data = {
                         label:label,
                         remarks:remakrs,
-                        contractId: dataSettled?.map(it=> it.id),
+                        contracts: dataSettled?.map(it=> {return {contractId:it.id, addressId: it.addressId} as ContractAddressPayload}),
                         dateFrom: params?.dateFrom,
                         dateTo: params?.dateTo,
                         frequency: frequency,
@@ -122,8 +123,15 @@ const SettlementView: React.FC<{}> = ({}) =>{
         title:'Agreement Name',
         dataIndex:'contractNo'
     },{
+        title:'Budget Code',
+        dataIndex:'budgetCode'
+    },{
         title:'Customer',
-        render: (_, r) => `${r.customer?.code} ${r.customer?.name}`
+        // render: (_, r) => `${r.customer?.code} ${r.customer?.name}`
+        render: (_, r) => <div>
+        <span>{r.customer?.code} {r.customer?.name}</span>
+        <div style={{padding:2,fontSize:13,color:'#b49900',borderRadius:5}}>{r?.address}</div>
+    </div>
     },{
         title:'Budget Code',
         dataIndex:'budgetCode'
@@ -139,20 +147,125 @@ const SettlementView: React.FC<{}> = ({}) =>{
         dataIndex:'terms'
     },{
         title:'Action',
-        render:(_,r)=> <Button onClick={(v)=> setDataSettled(v=> v.filter(it => it.id!=r.id))} icon ={<DeleteOutlined style={{color:"red"}}/>}></Button>
+        render:(_,r)=> <Button onClick={(v)=> setDataSettled(v=> v.filter(it => it.uuId!=r.uuId))} icon ={<DeleteOutlined style={{color:"red"}}/>}></Button>
     }]
+
+    const cols1 = (): ProColumns<IncentiveSettlement>[] => ([
+        {
+            title:'Form No #',
+            dataIndex: 'formNo',
+            sorter: 'formNo',
+            width: 140,
+            render: (_, r) => (
+              <Space size={1}>
+                <Button
+                    type="link"
+                    size="small"
+                    icon={<ExportOutlined />}
+                    onClick={async () => {
+                        window.open(`/external/crm/gratis/detail/${r.id}`, '_blank')?.focus();
+                    }}
+                />
+                {r.formNo? r.formNo:'NA'}
+              </Space>
+            ),
+        },
+        {
+            title: 'Settlement Name',
+            dataIndex: 'label',
+            sorter: 'label',
+            render: (_, item) => `${item.label}`
+        },
+        {
+            title: 'Agreetment Type',
+            render: (_, item) => item.contractType?.name
+        }, 
+        {            
+            dataIndex: 'settledPeriod',
+            sorter: 'settledPeriod',
+            title: 'Settlement Period',
+        },
+        {
+            align: 'right',
+            dataIndex: 'startedDate',
+            sorter: 'startedDate',
+            title: 'From',
+            render: (_, item) => formatDate(item.startedDate)
+        },
+        {
+            align: 'right',
+            dataIndex: 'endedDate',
+            sorter: 'endedDate',
+            title: 'To',
+            render: (_, item) => formatDate(item.endedDate)
+        },
+        {
+            title: 'Created By',       
+            dataIndex: 'createdBy',
+            sorter: 'createdBy'
+        },
+        {
+            align: 'right',
+            dataIndex: 'createdDate',
+            sorter: 'createdDate',
+            title: 'Created Date',
+            render: (_, item) => formatDate(item.createdDate)
+        },
+        {
+            title: 'Status',
+            render: (_, item) => {
+                const stausText = (item?.requestStatus=='NONE'||item?.status!='PENDING')?  item?.status: (item?.requestStatus=='COMPLETED'?'APPROVED':item?.requestStatus)
+                return <Status value={stausText} text={stausText||'PENDING'}/>
+            }
+        }
+    ])
+    
 
     const onSubmit= async()=>{
         await form.validateFields()
-        setModalSearchTrans({
-            type: 'search-settlement-trans',
-            required: true,           
-            async cb(selected) {                               
-                setDataSettled(v=> [...v,...selected])
-                setModalSearchTrans(undefined)  
-                actionRef.current?.reload()  
+        try{
+            const rs = await GratisServices.fetchExistingGratisIncentive({...params}).query(requestActions)          
+            if(rs && rs.length> 0){
+                Modal.warning({
+                    title: 'Settlement Period',
+                    width: '80%',
+                    content: (
+                        <Space direction="vertical">
+                            <div>• If there is pending settlement, please finish it first.</div>
+                            <div>• If this period is already settled, please select another.</div>
+                            <ProTable<IncentiveSettlement>
+                            search={false}
+                            size='small'
+                            cardBordered={false}
+                            cardProps={false}
+                            options={{
+                                fullScreen: false,
+                                density: false,
+                                reload: false,
+                                setting: false,
+                            }}     
+                            pagination={false}
+                            dataSource={rs}
+                            columns={cols1()}
+                        />
+                        </Space>
+                        
+                    ),
+                  });
+            }else{
+                setModalSearchTrans({
+                    type: 'search-settlement-trans',
+                    required: true,           
+                    async cb(selected) {                               
+                        setDataSettled(v=> [...v,...selected])
+                        setModalSearchTrans(undefined)  
+                        actionRef.current?.reload()  
+                    }
+                })
             }
-        })
+        } catch(ex){
+            message.error('Not found')
+        }
     }
     const onReset= async()=>{
         form.resetFields()
@@ -259,7 +372,7 @@ const SettlementView: React.FC<{}> = ({}) =>{
                     
                     <div style={{marginTop:'24px'}}>
                         <Button name=";;" style={{marginRight:2}} onClick={onReset}> Reset</Button>
-                        <Button name=";;" type="primary" onClick={onSubmit}> Add Customer</Button>
+                        <Button loading={requestActions.request?.loading} name=";;" type="primary" onClick={onSubmit}> Add Customer</Button>
                     </div>
                 </ProFormGroup>                 
                 </ProForm>          
@@ -297,7 +410,7 @@ const SettlementView: React.FC<{}> = ({}) =>{
                 gratisIncentive={lookupData?.gratisIncentive}
                 skuSettled={lookupData?.skuSettled}
                 loading={requestActions.request?.loading || false}
-                />
+            />
         }
         </PageContainer>
     )

@@ -12,7 +12,7 @@ import { simpleRequestActions } from "@/services/model";
 
 
 
-const GratisVerifytemList: React.FC<{item: GratisVerifyItem, onFinish:()=> void}> = ({item,onFinish}) => {
+const GratisVerifytemList: React.FC<{item: GratisVerifyItem,isVerify: boolean; onFinish:()=> void}> = ({item, isVerify,onFinish}) => {
   const requestActions = simpleRequestActions()
   const removeHandler= async (id: number) =>{
     try {
@@ -23,7 +23,7 @@ const GratisVerifytemList: React.FC<{item: GratisVerifyItem, onFinish:()=> void}
     }
   }
 
-  return <ProTable<GratisInvoice>
+  return <ProTable<GratisInvoice> loading={requestActions.request?.loading}
     search={false}     
     // actionRef={actionRef}
     cardProps={false}
@@ -36,10 +36,14 @@ const GratisVerifytemList: React.FC<{item: GratisVerifyItem, onFinish:()=> void}
     columns={[
       {
         title: 'Doc No',  
-        render:  (_, r) => <Tooltip title={toReadable(r.dataSource)}>{r.editable?<FileTextOutlined/> :<AuditOutlined/>} {r.invNum}</Tooltip> 
+        // render:  (_, r) => <Tooltip title={toReadable(r.dataSource)}>{r.editable?<FileTextOutlined/> :<AuditOutlined/>} {r.invNum}</Tooltip> 
+        render:  (_, r) => <div>{r.editable?<FileTextOutlined/> :<AuditOutlined/>} {r.invNum}</div>
       },{
         title: 'Doc Date',     
         render:  (_, r) => formatDate(r.invDate)
+      },{
+        title: 'Type',     
+        render:  (_, r) =>r.actionCode
       },{
         title: 'Quantity',
         align: 'right',
@@ -48,9 +52,9 @@ const GratisVerifytemList: React.FC<{item: GratisVerifyItem, onFinish:()=> void}
         title:'',
         align: 'left',
         width: 12,
-        render:(_,r) => r.editable?
+        render:(_,r) => r.editable && isVerify?
           <PopconfirmMe onConfirm={()=>{removeHandler(r.id)}} placement="leftBottom" title='Confirmation' description="Are you sure to Remove?">
-            <Button size="small" icon={<DeleteOutlined/>} danger></Button>
+            <Button size="small" type="link" icon={<DeleteOutlined/>} danger></Button>
           </PopconfirmMe>:''      
       }
     ]}

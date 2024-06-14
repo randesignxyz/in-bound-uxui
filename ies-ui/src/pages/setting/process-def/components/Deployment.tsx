@@ -13,7 +13,7 @@ const Deployment: React.FC<{
   onHide: () => void;
 }> = ({ visible, loading, onDeploy, onHide }) => {
   const [selectedFile, setSelectedFile] = useState<UploadFile>();
-  const token = kc.token //localStorage.getItem('accessToken');
+  const token = localStorage.getItem('accessToken');
   const [form] = Form.useForm();
 
   const clearForm = () => {

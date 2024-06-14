@@ -11,7 +11,7 @@ import { kc } from '@/auth';
 export type UploadType = UploadFile<string> & { title?: string; description?: string };
 
 interface Props {
-    required?: boolean ;
+    required?: boolean;
     accept?: string;
     docTypeId?: number;
     service?: 'WORK_FLOW' | 'FILE';
@@ -20,14 +20,14 @@ interface Props {
     maxCount?: number;
 }
 
-const DocFileUploader: React.FC<Props> = ({ required= false, onGetFile, multi, maxCount, accept, docTypeId, service = "FILE" }) => {
+const DocFileUploader: React.FC<Props> = ({ required = false, onGetFile, multi, maxCount, accept, docTypeId, service = "FILE" }) => {
     const requestActions = simpleRequestActions();
     const [fileExtension, setFileExtension] = useState<string[]>();
-    const token =kc.token;
+    const token = localStorage.getItem('accessToken');
     const [fileList, setFileList] = useState<UploadType[]>([]);
     const [forceReload, setForceReload] = useState(1);
 
-    
+
     useEffect(() => {
 
     }, [docTypeId]);
@@ -47,7 +47,7 @@ const DocFileUploader: React.FC<Props> = ({ required= false, onGetFile, multi, m
     return (<>
         <Dragger
             headers={token ? { Authorization: `Bearer ${token}`, } : {}}
-            accept={fileExtension?.toString()|| accept}
+            accept={fileExtension?.toString() || accept}
             action={uploadUrl}
             multiple={multi ? true : false}
             onChange={({ file, fileList }) => {
@@ -68,7 +68,7 @@ const DocFileUploader: React.FC<Props> = ({ required= false, onGetFile, multi, m
             <p className="ant-upload-text">Click or drag file to this area to upload</p>
         </Dragger>
         {
-            required ?<div className="ant-form-item-explain-error" style={{color:"#ff4d4f"}}>Please click or drag this field is required</div>:""
+            required ? <div className="ant-form-item-explain-error" style={{ color: "#ff4d4f" }}>Please click or drag this field is required</div> : ""
         }
     </>)
 }

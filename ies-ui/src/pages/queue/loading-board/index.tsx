@@ -3,7 +3,7 @@ import stopping from '@/assets/no-stopping.png';
 import timeLeft from '@/assets/time-left.png';
 import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { Paging } from '@/services/API';
-import { MultiRequest, execDataService0, fetchDataItemService, singleRequest } from '@/services/apiGateway';
+import { MultiRequest, downloadReport, execDataService0, fetchDataItemService, printPdf, singleRequest } from '@/services/apiGateway';
 import { Loaded, LoadingBayListItem, LoadingCapacityListItem, LoadingListItem } from '@/services/delivery/data';
 import {
   AllocatedLoadingDock,
@@ -25,19 +25,18 @@ import {
   InfoCircleOutlined,
   LoginOutlined,
   LogoutOutlined,
-  OneToOneOutlined,
   PauseCircleOutlined,
   PauseOutlined,
   PlayCircleOutlined,
   PrinterOutlined,
-  ReloadOutlined, RetweetOutlined, StopOutlined, SwapOutlined, SyncOutlined, UserOutlined
+  ReloadOutlined, RetweetOutlined, StarFilled, StopOutlined, SwapOutlined, SyncOutlined, UnlockOutlined, UserOutlined
 } from '@ant-design/icons';
 import { history } from 'umi';
 import {
   Affix,
   Badge,
   Button, Checkbox, Col, Input,
-  message, Modal, Popconfirm, Row, Segmented, Space, Spin, Tag
+  message, Modal, Row, Segmented, Space, Spin, Tag
 } from 'antd';
 import moment from 'moment';
 import { useEffect, useRef, useState } from 'react';
@@ -51,8 +50,8 @@ import styles from './style.less';
 import Remarks from '@/components/remarks';
 import LoadingCapacitySelect from './LoadingCapacitySelect';
 import Transfer from './Transfer';
-import FinishLoadingModal from '../ticket/finish-loading-modal';
-import { SaveLoadedParam } from '@/services/delivery/req-params';
+import FinishLoadingModal from './finish-loading-modal';
+import { SaveLoadedParam, startLoadingParam } from '@/services/delivery/req-params';
 import ChangeRequest from './ChangeRequest';
 import { InstanceSrvParams } from '@/services/delivery/instance-service-params';
 import { useReactToPrint } from 'react-to-print';
@@ -65,12 +64,13 @@ import { OperatorCheckIn } from '@/pages/delivery/board/data';
 import RemarkModalV2 from '@/components/remark-modal-v2';
 import CheckinInfo from '@/pages/delivery/checkin/CheckinInfo';
 import { QueuePaths } from '..';
-
+import StartLoadingModal from './start-loading-modal';
 
 const PENDING = "PENDING"
 const PICKING = "PICKING"
 const CHANGE_REQUEST = "CHANGE_REQUEST"
 const LOADING = "LOADING"
+const LOADING_STARTED = "LOADING_STARTED"
 const HOLD = "HOLD"
 const LOADED = "LOADED"
 
@@ -101,11 +101,12 @@ export default () => {
   const [modal, setModal] = useState<
     { from?: UiType; } & (
       { type: undefined } |
+      { type: 'START', payload: Loaded, ownedTruckLoading?: boolean, callback?: () => void } |
       { type: 'DONE', payload: Loaded, callback: () => void } |
       { type: 'TRANSFER' } |
       { type: 'LOADING_CAPACITY' } |
       { type: 'REMARKS', required?: boolean, cb: (remarks: string) => void; } |
-      { type: 'CONFIRM_REQUEST', cb?: () => void; } |
+      { type: 'CONFIRM_REQUEST', cb?: () => Promise<void>; } |
       { type: 'PICKING-SLIP', cb?: () => void; }
     )
   >({ type: undefined })
@@ -174,6 +175,36 @@ export default () => {
       message.error(error.message || `Failed to load data`);
     }
   };
+
+  const onStartLoaingHandler = async (loadingId: number, ownedTruckLoadin?: boolean, cb?: () => void) => {
+
+    try {
+      const rs = (await singleRequest<Loaded>(LoadingParams.fetchLoadedItem(loadingId))(
+        requestActions,
+      )) as Loaded;
+      rs && setModal({ type: 'START', payload: rs, ownedTruckLoading: ownedTruckLoadin, callback: cb });
+    } catch (error: any) {
+      message.error(error.message || `Failed to load data`);
+    }
+  };
+
+  const onLoadingStartedhandler = (params: startLoadingParam, cb?: () => void) => {
+    Modal.confirm({
+      title: 'Start Loading',
+      content: 'Are you sure?',
+      onOk: async () => {
+        try {
+          await singleRequest(LoadingParams.startLoading(params))(requestActions);
+          message.success('Loading is started.');
+          cb?.()
+          onCloseModalHandler()
+        } catch (error: any) {
+          message.error(error.message || `Failed to start loading`);
+        }
+      },
+    });
+  };
+
 
   const onCompletedhandler = (params: SaveLoadedParam, cb: () => void) => {
     Modal.confirm({
@@ -256,6 +287,7 @@ export default () => {
     if (!selected) return []
     const isPending = selected?.status === 'PENDING'
     const isLoading = selected?.status === 'LOADING'
+    const isLoadingStarted = selected?.status == LOADING_STARTED
     const isLoaded = selected?.status === 'LOADED'
     const claimed = !!selected?.claimedBy
     const isRequested = !!selected.loadedChangeRequest
@@ -301,23 +333,38 @@ export default () => {
         onClick: async () => {
           const rs = await loadInstance(instanceId || 0)
           setModal({
-            type: 'CONFIRM_REQUEST', cb: () => {
+            type: 'CONFIRM_REQUEST', cb: async () => {
               if (from === 'DETAIL') {
-                onFetchAllocatedDockDetail(selected?.id)
+                await onFetchAllocatedDockDetail(selected?.id)
               }
-              loadData()
+              await loadData()
             }
           })
         }
       },
       {
-        key: 'printPickingSlip', label: "Print Picking slip", main: isLoaded, visible: !isPending && instanceId, icon: <PrinterOutlined />, onClick: async () => {
-          const rs = await loadInstance(instanceId || 0)
-          setPrinting(rs.id)
+        key: 'printPickingSlip',
+        label: "Print Picking slip",
+        main: isLoaded,
+        visible: !isPending && instanceId,
+        icon: <PrinterOutlined />, onClick: async () => {
+          // const rs = await loadInstance(instanceId || 0)
+          // setPrinting(rs.id)
+          try {
+            await printPdf<{ id: number }>(requestActions)({
+              reportName: 'export-picking-slip',
+              data: { id: instanceId || 0 }
+            }, async () => {
+              await printPdf<{ id: number }>(requestActions)({
+                reportName: 'export-gate-pass',
+                data: { id: instanceId || 0 }
+              })
+            });
+          } catch (error: any) {
+            message.error(error.message || "Failed to generate report.")
+          }
         }
       },
-
-
       {
         key: 'hold', label: 'Hold', visible: claimed && isPending, main: false, icon: <PauseOutlined />, onClick: () => {
           setModal({
@@ -334,7 +381,7 @@ export default () => {
       },
 
       {
-        key: 'release', label: 'Release Claim', visible: claimed && instanceId && (!isLoaded || isRequested), main: !isRequested && !isLoading, icon: <StopOutlined />,
+        key: 'release', label: 'Release Claim', visible: claimed && instanceId && (!isLoaded || isRequested || !isLoadingStarted), main: !isRequested && !isLoadingStarted && !isLoading, icon: <UnlockOutlined />,
         onClick: () => {
           onReleaseHandler(instanceId, async () => {
             if (from == 'DETAIL') {
@@ -374,7 +421,18 @@ export default () => {
 
       { seperator: true, visible: (isLoading || claimed) && instanceId && !isLoaded },
       {
-        key: 'done', label: "Complete", visible: isLoading && !isRequested && claimed, main: true, type: 'Primary', icon: <FileDoneOutlined />, onClick: () => {
+        key: 'start', label: "Start Loading", visible: isLoading && !isRequested && claimed, main: true, type: 'Primary', icon: <PlayCircleOutlined />, onClick: () => {
+
+          selected?.loadingId && onStartLoaingHandler(selected.loadingId, selected.ownedTruckLoading, () => {
+            if (from == 'DETAIL') {
+              onFetchAllocatedDockDetail(selected?.id)
+            }
+            loadData()
+          })
+        }
+      },
+      {
+        key: 'done', label: "Complete", visible: isLoadingStarted && !isRequested && claimed, main: true, type: 'Primary', icon: <FileDoneOutlined />, onClick: () => {
           selected?.loadingId && onCompleteHandler(selected.loadingId, () => {
             if (from == 'DETAIL') {
               onFetchAllocatedDockDetail(selected?.id)
@@ -466,8 +524,6 @@ export default () => {
         requestActions,
       );
 
-      console.log(statusFilter);
-
       setLoadingBayList(rs.loadingBayList);
 
       const list = rs.allocatedLoadingDockList
@@ -485,13 +541,10 @@ export default () => {
         { status: CHANGE_REQUEST, count: list1.filter(it => it.loadedChangeRequest).length },
         { status: PENDING, count: list1.filter(it => it.status == PENDING && !it.holdBy && !it.canPick && !it.loadedChangeRequest).length },
         { status: PICKING, count: list1.filter(it => it.status == PENDING && !it.holdBy && it.canPick && !it.loadedChangeRequest).length },
-        { status: LOADING, count: list1.filter(it => it.status == LOADING && !it.holdBy && !it.loadedChangeRequest).length },
+        { status: LOADING, count: list1.filter(it => (it.status == LOADING || it.status == LOADING_STARTED) && !it.holdBy && !it.loadedChangeRequest).length },
         { status: LOADED, count: list1.filter(it => it.status == LOADED && !it.holdBy).length }
       ])
       setLoadingDockList(list)
-
-      console.log(statusFilter);
-
 
       setLoadingDockListDisplay(
         list1
@@ -500,7 +553,7 @@ export default () => {
             (statusFilter == CHANGE_REQUEST && it.loadedChangeRequest && !it.holdBy) ||
             (statusFilter == PICKING && it.status == PENDING && it.canPick && !it.holdBy && !it.loadedChangeRequest) ||
             (statusFilter == PENDING && it.status == PENDING && !it.canPick && !it.holdBy && !it.loadedChangeRequest) ||
-            (statusFilter == LOADING && it.status == LOADING && !it.holdBy && !it.loadedChangeRequest) ||
+            (statusFilter == LOADING && (it.status == LOADING || it.status == LOADING_STARTED) && !it.holdBy && !it.loadedChangeRequest) ||
             (statusFilter == LOADED && it.status == LOADED && !it.holdBy) ||
             !statusFilter
           )
@@ -563,7 +616,6 @@ export default () => {
       },
     });
   }
-
 
   const onSaveLoadingCapacityHandler = (loadingCapacityIds: number[]) => {
     Modal.confirm({
@@ -659,7 +711,6 @@ export default () => {
         } catch (error: any) {
           message.error(error.message || 'Failed to close.')
         }
-
       }
     })
 
@@ -687,7 +738,7 @@ export default () => {
           await singleRequest(LoadingServiceParams.onChangRequest({
             loadingId, approved, remarks
           }))(requestActions);
-          modal.type === 'CONFIRM_REQUEST' && modal.cb?.()
+          modal.type === 'CONFIRM_REQUEST' && await modal.cb?.()
           onCloseModalHandler()
         } catch (error: any) {
           message.error(error.message || `Failed to ${approved ? 'approve' : 'reject'}.`)
@@ -705,30 +756,32 @@ export default () => {
 
     const itemToClaim = loadingDockList.find(it => !it.isOwner && it.canPick && !it.claimedBy && !it.holdBy && it.status == "PENDING")
     const claimedItem = loadingDockList.find(it => it.isOwner && !it.holdBy && it.canPick && it.status == "PENDING")
-    return <ProCard boxShadow bordered title="Serving Picking" extra={
+    return <ProCard style={claimedItem && { backgroundColor: 'Highlight' }} boxShadow bordered title="Serving Picking" extra={
       (() => {
 
         if (claimedItem) {
           const mainAction = (vc.view.getActions?.('LIST', claimedItem) || []).filter(it => it.visible && it.main).find(it => it)
-          return <DropdownButton onClick={() => {
-            if (!mainAction) {
-              message.warning(`Blocked by ${claimedItem.claimedBy}`)
-            }
-            mainAction?.onClick?.(claimedItem.id)
-          }} key={claimedItem.id}
+          return <DropdownButton
+            onClick={() => {
+              if (!mainAction) {
+                message.warning(`Blocked by ${claimedItem.claimedBy}`)
+              }
+              mainAction?.onClick?.(claimedItem.id)
+            }} key={claimedItem.id}
             menu={{
               items: (vc.view.getActions?.('LIST', claimedItem) || []).filter(it => it.visible && it.key != mainAction?.key).map((it, index) => (it.seperator ? { type: 'divider', key: `dv-${index}` } : {
                 icon: it.icon, key: it.key, label: it.label, onClick: () => it.onClick?.(claimedItem.id),
                 danger: it.type == 'Danger'
               }))
-            }} >
+            }}  >
+            {mainAction?.icon}
             {(vc.view.getActions?.('LIST', claimedItem) || []).filter(it => it.visible && it.main)?.map(it => it.label).find(it => it) || <ClockCircleOutlined spin />}
           </DropdownButton>
         }
 
-        if (itemToClaim) return <Button 
-          icon={<PlayCircleOutlined />} loading={requestActions.request?.loading || false} 
-          onClick={()=> {
+        if (itemToClaim) return <Button
+          icon={<PlayCircleOutlined />} loading={requestActions.request?.loading || false}
+          onClick={() => {
             onClaimHandler(itemToClaim?.instanceId, async () => {
               await loadData()
             })
@@ -743,10 +796,10 @@ export default () => {
 
     } >
       <ProDescriptions>
-        <ProDescriptions.Item contentStyle={{ fontWeight: 'bolder' }} label="Ticket #">{claimedItem?.ticketNum}</ProDescriptions.Item>
-        <ProDescriptions.Item label="Driver">{claimedItem?.driver}</ProDescriptions.Item>
-        <ProDescriptions.Item label="Truck">{claimedItem?.truckNo}</ProDescriptions.Item>
-        {(claimedItem?.combinedLoadingDocks?.length || 0) > 0 && <ProDescriptions.Item label="Combined with">{claimedItem?.combinedLoadingDocks?.map(it => it.name).join(", ")}</ProDescriptions.Item>}
+        <ProDescriptions.Item labelStyle={claimedItem && { color: 'whitesmoke' }} contentStyle={{ fontWeight: 'bolder', color: claimedItem ? 'whitesmoke' : undefined }} label="Ticket #">{claimedItem?.ticketNum}</ProDescriptions.Item>
+        <ProDescriptions.Item labelStyle={claimedItem && { color: 'whitesmoke' }} contentStyle={claimedItem && { color: 'whitesmoke' }} label="Driver">{claimedItem?.driver}</ProDescriptions.Item>
+        <ProDescriptions.Item labelStyle={claimedItem && { color: 'whitesmoke' }} contentStyle={claimedItem && { color: 'whitesmoke' }} label="Truck">{claimedItem?.truckNo}</ProDescriptions.Item>
+        {(claimedItem?.combinedLoadingDocks?.length || 0) > 0 && <ProDescriptions.Item labelStyle={claimedItem && { color: 'whitesmoke' }} contentStyle={claimedItem && { color: 'whitesmoke' }} label="Combined with">{claimedItem?.combinedLoadingDocks?.map(it => it.name).join(", ")}</ProDescriptions.Item>}
       </ProDescriptions>
 
     </ProCard>
@@ -819,103 +872,104 @@ export default () => {
           </Space>
         </Col>
       </Row>
+      <Spin spinning={requestActions.request?.loading || false}>
+        <ProCard split='horizontal'>
+          <Affix offsetTop={60}>
+            {renderServing()}
+          </Affix>
+          <ProCard
+            style={{ marginBlock: 5 }}
 
-      <ProCard split='horizontal'>
-        <Affix offsetTop={60}>
-          {renderServing()}
-        </Affix>
-        <ProCard
-          style={{ marginBlock: 5 }}
-          title="Waiting List"
-          subTitle={<Spin spinning={requestActions.request?.loading || false} />}
-          extra={<CheckCard.Group onChange={values => {
-            console.log("on change ", values);
+          >
+            <CheckCard.Group onChange={values => {
 
-            setStatusFilter(values as string)
-          }
-          } size='small' defaultValue={statusFilter}>
-            <CheckCard size='small' style={{ width: 150 }} value={HOLD} avatar={<PauseCircleOutlined />} title="Hold" subTitle={<Badge count={statusCount?.find(it => it.status == HOLD)?.count} />} />
-            <CheckCard size='small' style={{ width: 200 }} value={CHANGE_REQUEST} avatar={<SwapOutlined />} title="Change Request" subTitle={<Badge count={statusCount?.find(it => it.status == CHANGE_REQUEST)?.count} />} />
-            <CheckCard size='small' style={{ width: 150 }} value={PENDING} avatar={<ClockCircleOutlined spin />} title="Pending" subTitle={<Badge count={statusCount?.find(it => it.status == PENDING)?.count} />} />
-            <CheckCard size='small' style={{ width: 150 }} value={PICKING} avatar={<ClockCircleOutlined spin />} title="Picking" subTitle={<Badge count={statusCount?.find(it => it.status == PICKING)?.count} />} />
-            <CheckCard size='small' style={{ width: 150 }} value={LOADING} avatar={<SyncOutlined spin />} title="Loading" subTitle={<Badge count={statusCount?.find(it => it.status == LOADING)?.count} />} />
-            <CheckCard size='small' style={{ width: 150 }} value={LOADED} avatar={<CheckCircleOutlined />} title="Loaded" subTitle={<Badge count={statusCount?.find(it => it.status == LOADED)?.count} />} />
-          </CheckCard.Group>}
-        >
-          <ProList<AllocatedLoadingDock>
-            showActions='hover'
-            size='small'
-
-            rowKey='id'
-            dataSource={loadingDockListDisplay}
-            rowClassName={(item: AllocatedLoadingDock) => !item.isActive ? styles.color1 : item.allocated ? styles.color2 : styles.color3}
-            metas={{
-              avatar: { render: (_, r) => <img width={"50px"} src={!r.isActive ? stopping : r.allocated ? forkLift : timeLeft} /> },
-              title: {
-                render: (_, r) => <a onClick={() => onFetchAllocatedDockDetail(r.id, () => setViewDetail(true))}>{[r.code, ...(r.combinedLoadingDocks || []).map(it => it.code)].join()}</a>
-              },
-              subTitle: {
-                render: (_, r) => {
-                  const statusList = [
-                    { key: 'issueDn', label: 'Issue DN', icon: <ClockCircleOutlined spin />, visible: !r.canPick && r.status == 'PENDING', color: 'processing' },
-                    { key: 'issueDn', label: 'DN Issued', icon: <CheckCircleOutlined />, visible: r.canPick && r.status == 'PENDING', color: 'success' },
-                    { key: 'hold', label: 'Hold', icon: <PauseCircleOutlined />, color: 'warning', visible: !!r.holdBy },
-                    { key: 'pickingSlip', label: 'Picking Slip', icon: <ClockCircleOutlined spin />, visible: r.status == 'PENDING', color: 'processing' },
-                    { key: 'pickingSlip', label: 'Picking Slip', icon: <CheckCircleOutlined />, visible: r.status != 'PENDING' && r.allocated, color: 'success' },
-                    { key: 'loading', label: 'Loading', icon: <ClockCircleOutlined spin />, visible: r.status == 'LOADING', color: 'processing' },
-                    { key: 'loaded', label: 'Loaded', icon: <CheckCircleOutlined />, visible: r.status == 'LOADED', color: 'success' },
-                    { key: 'changeRequest', alert: true, label: 'Change Request', icon: <ClockCircleOutlined spin />, visible: r.loadedChangeRequest, color: 'processing' },
-                  ]
-                  return (<Space>
-                    {r.ticketNum && `#${r.ticketNum}`}
-                    {!r.autoAssigned && <Tag icon={<UserOutlined />}>Manual Assign</Tag>}
-                    {statusList.filter(it => it.visible).map(it => (<Tag key={it.key} className={it.alert && styles.blinking} color={it.color} icon={it.icon}>
-                      {it.label}
-                    </Tag>))}
-                  </Space>)
-                }
-              },
-              actions: {
-                render: (_, r) => {
-                  if (r.holdBy && r.status == "PENDING" && r.canPick && !loadingDockList?.some(it => it.isOwner && it.status === 'PENDING')) {
-                    return <Button onClick={() => {
-                      getActions?.('LIST', r).find(it => it.key == 'claim')?.onClick?.(r?.id)
-                    }}>Unhold</Button>
+              setStatusFilter(values as string)
+            }
+            } size='small' defaultValue={statusFilter}>
+              <CheckCard size='small' style={{ width: 150 }} value={HOLD} avatar={<PauseCircleOutlined />} title="Hold" extra={<Badge count={statusCount?.find(it => it.status == HOLD)?.count} />} />
+              <CheckCard size='small' style={{ width: 200 }} value={CHANGE_REQUEST} avatar={<SwapOutlined />} title="Change Request" extra={<Badge count={statusCount?.find(it => it.status == CHANGE_REQUEST)?.count} />} />
+              <CheckCard size='small' style={{ width: 150 }} value={PENDING} avatar={<ClockCircleOutlined spin />} title="Pending" extra={<Badge style={{ backgroundColor: '#52c41a' }} count={statusCount?.find(it => it.status == PENDING)?.count} />} />
+              <CheckCard size='small' style={{ width: 150 }} value={PICKING} avatar={<ClockCircleOutlined spin />} title="Picking" extra={<Badge count={statusCount?.find(it => it.status == PICKING)?.count} />} />
+              <CheckCard size='small' style={{ width: 150 }} value={LOADING} avatar={<SyncOutlined spin />} title="Loading" extra={<Badge count={statusCount?.find(it => it.status == LOADING)?.count} />} />
+              <CheckCard size='small' style={{ width: 150 }} value={LOADED} avatar={<CheckCircleOutlined />} title="Loaded" extra={<Badge style={{ backgroundColor: '#52c41a' }} count={statusCount?.find(it => it.status == LOADED)?.count} />} />
+            </CheckCard.Group>
+            <ProList<AllocatedLoadingDock>
+              showActions='hover'
+              size='small'
+              rowKey='id'
+              dataSource={loadingDockListDisplay}
+              rowClassName={(item: AllocatedLoadingDock) => !item.isActive ? styles.color1 : item.allocated ? styles.color2 : styles.color3}
+              metas={{
+                avatar: { render: (_, r) => <img width={"50px"} src={!r.isActive ? stopping : r.allocated ? forkLift : timeLeft} /> },
+                title: {
+                  render: (_, r) => <a onClick={() => onFetchAllocatedDockDetail(r.id, () => setViewDetail(true))}>{[r.code, ...(r.combinedLoadingDocks || []).map(it => it.code)].join()}</a>
+                },
+                subTitle: {
+                  render: (_, r) => {
+                    const statusList = [
+                      { key: 'issueDn', label: 'Issue DN', icon: <ClockCircleOutlined spin />, visible: !r.canPick && r.status == 'PENDING', color: 'processing' },
+                      { key: 'issueDn', label: 'DN Issued', icon: <CheckCircleOutlined />, visible: r.canPick && r.status == 'PENDING', color: 'success' },
+                      { key: 'hold', label: 'Hold', icon: <PauseCircleOutlined />, color: 'warning', visible: !!r.holdBy },
+                      { key: 'pickingSlip', label: 'Picking Slip', icon: <ClockCircleOutlined spin />, visible: r.status == 'PENDING', color: 'processing' },
+                      { key: 'pickingSlip', label: 'Picking Slip', icon: <CheckCircleOutlined />, visible: r.status != 'PENDING' && r.allocated, color: 'success' },
+                      { key: 'loading', label: 'Loading', icon: <ClockCircleOutlined spin />, visible: r.status == 'LOADING', color: 'processing' },
+                      { key: 'loaded', label: 'Loaded', icon: <CheckCircleOutlined />, visible: r.status == 'LOADED', color: 'success' },
+                      { key: 'changeRequest', alert: true, label: 'Change Request', icon: <ClockCircleOutlined spin />, visible: r.loadedChangeRequest, color: 'processing' },
+                    ]
+                    return (<Space>
+                      {r.ticketNum && `#${r.ticketNum}`}
+                      {!r.autoAssigned && <Tag icon={<UserOutlined />}>Manual Assign</Tag>}
+                      {statusList.filter(it => it.visible).map(it => (<Tag key={it.key} className={it.alert && styles.blinking} color={it.color} icon={it.icon}>
+                        {it.label}
+                      </Tag>))}
+                    </Space>)
                   }
-
-                  if (r.status == 'PENDING') return
-                  const mainAction = (vc.view.getActions?.('LIST', r) || []).filter(it => it.visible && it.main).find(it => it)
-                  return <DropdownButton onClick={() => {
-                    if (!mainAction) {
-                      message.warning(`Blocked by ${r.claimedBy}`)
+                },
+                actions: {
+                  render: (_, r) => {
+                    if (r.holdBy && r.status == "PENDING" && r.canPick && !loadingDockList?.some(it => it.isOwner && it.status === 'PENDING')) {
+                      return <Button onClick={() => {
+                        getActions?.('LIST', r).find(it => it.key == 'claim')?.onClick?.(r?.id)
+                      }}>Unhold</Button>
                     }
-                    mainAction?.onClick?.(r.id)
-                  }} key={r.id}
-                    menu={{
-                      items: (vc.view.getActions?.('LIST', r) || []).filter(it => it.visible && it.key != mainAction?.key).map((it, index) => (it.seperator ? { type: 'divider', key: `dv-${index}` } : {
-                        icon: it.icon, key: it.key, label: it.label, onClick: () => it.onClick?.(r.id),
-                        danger: it.type == 'Danger'
-                      }))
-                    }} >
-                    {(vc.view.getActions?.('LIST', r) || []).filter(it => it.visible && it.main)?.map(it => it.label).find(it => it) || <ClockCircleOutlined spin />}
-                  </DropdownButton>
+
+                    if (r.status == 'PENDING') return
+                    const mainAction = (vc.view.getActions?.('LIST', r) || []).filter(it => it.visible && it.main).find(it => it)
+                    return <DropdownButton onClick={() => {
+                      if (!mainAction) {
+                        message.warning(`Blocked by ${r.claimedBy}`)
+                      }
+                      mainAction?.onClick?.(r.id)
+                    }} key={r.id}
+                      menu={{
+                        items: (vc.view.getActions?.('LIST', r) || []).filter(it => it.visible && it.key != mainAction?.key).map((it, index) => (it.seperator ? { type: 'divider', key: `dv-${index}` } : {
+                          icon: it.icon, key: it.key, label: it.label, onClick: () => it.onClick?.(r.id),
+                          danger: it.type == 'Danger'
+                        }))
+                      }} >
+                      {mainAction?.icon}
+                      {(vc.view.getActions?.('LIST', r) || []).filter(it => it.visible && it.main)?.map(it => it.label).find(it => it) || <ClockCircleOutlined spin />}
+                    </DropdownButton>
+                  }
+                },
+                description: {
+                  render: (_, r) => (
+                    <ProDescriptions size='small' column={4} style={{ width: 'calc(100vh - 5px)' }}>
+                      <ProDescriptions.Item label="License Plate #"> {r.truckNo || 'N/A'}</ProDescriptions.Item>
+                      <ProDescriptions.Item label="Driver Name"> {r.driver || 'N/A'}</ProDescriptions.Item>
+                      {r.loadingStartedDate && !r?.loadingEndedDate && <ProDescriptions.Item label="Waiting Time"> {moment(r.loadingStartedDate).toNow()}</ProDescriptions.Item>}
+                      {r.loadingEndedDate && r.status == 'LOADED' && <ProDescriptions.Item label="Loading Time"> {durationFormat(moment(r.loadingStartedDate), moment(r.loadingEndedDate))}</ProDescriptions.Item>}
+                      {r.ownedTruckLoading && <ProDescriptions.Item label="Owned Truck Loading"> <Checkbox checked={r.ownedTruckLoading} /> </ProDescriptions.Item>}
+                      {r.claimedBy && <ProDescriptions.Item label="Claimed By"> {r.claimedBy}</ProDescriptions.Item>}
+
+                    </ProDescriptions>
+                  )
                 }
-              },
-              description: {
-                render: (_, r) => (
-                  <ProDescriptions size='small' column={4} style={{ width: 'calc(100vh - 5px)' }}>
-                    <ProDescriptions.Item label="License Plate #"> {r.truckNo || 'N/A'}</ProDescriptions.Item>
-                    <ProDescriptions.Item label="Driver Name"> {r.driver || 'N/A'}</ProDescriptions.Item>
-                    {r.loadingStartedDate && !r?.loadingEndedDate && <ProDescriptions.Item label="Waiting Time"> {moment(r.loadingStartedDate).toNow()}</ProDescriptions.Item>}
-                    {r.loadingEndedDate && r.status == 'LOADED' && <ProDescriptions.Item label="Loading Time"> {durationFormat(moment(r.loadingStartedDate), moment(r.loadingEndedDate))}</ProDescriptions.Item>}
-                    {r.claimedBy && <ProDescriptions.Item label="Claimed By"> {r.claimedBy}</ProDescriptions.Item>}
-                  </ProDescriptions>
-                )
-              }
-            }}
-          />
+              }}
+            />
+          </ProCard>
         </ProCard>
-      </ProCard>
+      </Spin>
       <Detail
         title={
           <Space>
@@ -935,6 +989,16 @@ export default () => {
           required={modal.required}
           onSave={modal.cb} />
       }
+
+      {modal.type === 'START' && (
+        <StartLoadingModal
+          onOpenChange={onCloseModalHandler}
+          open={modal.type === 'START'}
+          ownedTruckLoading={modal.ownedTruckLoading}
+          loaded={modal.payload}
+          onSave={data => onLoadingStartedhandler(data, modal?.callback)}
+        />
+      )}
 
       {modal.type === 'DONE' && (
         <FinishLoadingModal
@@ -979,6 +1043,7 @@ export default () => {
         open={true}
         onCancel={onCloseModalHandler}
       />}
+
       {instance?.id == printing && <PickingSlipToPrint data={instance} ref={componentRef} />}
 
     </PageContainer>

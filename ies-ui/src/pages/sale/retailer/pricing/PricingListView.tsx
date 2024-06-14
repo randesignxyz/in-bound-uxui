@@ -4,8 +4,8 @@ import { formatDate } from '@/pages/utils';
 import type { Paging } from '@/services/API';
 import { simpleRequestActions } from '@/services/model';
 import type { ActionType } from '@ant-design/pro-components';
-import { history, useModel } from '@umijs/max';
-import { Badge, Button, message, Radio, Row, Space, Tag, Tooltip } from 'antd';
+import { history, useAccess, useModel } from '@umijs/max';
+import { Badge, Button, Radio, Row, Space, Tag, Tooltip, message } from 'antd';
 import Omit from 'omit.js';
 import { useRef, useState } from 'react';
 import { SalePaths } from '../..';
@@ -31,6 +31,8 @@ export default ({ onAdd, onDetail, onEdit }: Props) => {
   const [advanceSearchParams, setAdvanceSearchParams] = useState<PricingAdvanceSearchParams>({
     status: 'ALL',
   });
+
+  const access = useAccess();
 
   const actionRef = useRef<ActionType>();
 
@@ -70,6 +72,7 @@ export default ({ onAdd, onDetail, onEdit }: Props) => {
       <TableView<ItemsPricing, { searchValue?: string; advanceSearch: PricingAdvanceSearchParams }>
         hasCriteria={Object.values(Omit(advanceSearchParams, ['status'])).some((v) => v)}
         cache
+        displayOnly={!access.canCreateRetailer}
         extraFilter={
           <Space size="large">
             <Radio.Group

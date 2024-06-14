@@ -131,7 +131,8 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
 
         {(() => {
           if (activeTab == 'term') {
-            return <Term data={{ terms: data?.terms?.name || '' }} />
+            const term = data?.terms?.name?  (data?.terms?.code+' - '+data?.terms?.name):''
+            return <Term data={{ terms: term }} />
           }
           if (activeTab == "posm") {
             return data?.id && <PosmView requestActions={requestActions} listPosm={() => ContractServices.listContractPOSM(data.id).query(requestActions)}

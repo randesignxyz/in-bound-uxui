@@ -97,7 +97,6 @@ const TableView = <T extends { id: any }, C extends { searchValue?: string }>(
   props: Props<T, C>,
 ) => {
   const {
-    bordered,
     columns,
     // title,
     addButtonLabel,

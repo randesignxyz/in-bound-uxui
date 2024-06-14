@@ -42,6 +42,7 @@ const QueueEntryModal: React.FC<Props> = ({ onSave, data, init, ...props }) => {
   }, [props.open]);
 
   const initForm = () => {
+
     form.setFieldsValue({
       name: data?.name,
       format: data?.format,
@@ -51,6 +52,7 @@ const QueueEntryModal: React.FC<Props> = ({ onSave, data, init, ...props }) => {
       transportSourceIds: data?.transportSourceIds,
       resetNum: data?.resetNum || 1000,
       dailyReset: data?.dailyReset || true,
+      ownedTruckLoading: data?.ownedTruckLoading,
       overwriteAssigned: data?.overwriteAssigned || false,
       warehouseId: data?.warehouseId,
     });
@@ -83,6 +85,7 @@ const QueueEntryModal: React.FC<Props> = ({ onSave, data, init, ...props }) => {
                   label="Reset Num"
                   name={'resetNum'}
                 />
+                <ProFormRate name={'priority'} label="Priority" />
               </Col>
               <Col flex={'400px'}>
                 <ProFormSelect
@@ -96,13 +99,14 @@ const QueueEntryModal: React.FC<Props> = ({ onSave, data, init, ...props }) => {
                 />
                 <ProFormCheckbox label="Daily Reset" name={'dailyReset'} />
                 <ProFormCheckbox label="Overwirte Assigned" name={'overwriteAssigned'} />
+                <ProFormCheckbox label="Owned truck loading" name={'ownedTruckLoading'} />
               </Col>
             </Row>
           </Card>
           <Card size="small" bordered={false}>
             <Row>
               <Col flex={'Auto'}>
-                <ProFormRate {...layout1} name={'priority'} label="Priority" />
+
 
                 <ProFormSelect
                   {...layout1}

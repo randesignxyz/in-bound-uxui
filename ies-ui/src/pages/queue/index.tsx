@@ -6,6 +6,7 @@ import settingIcon from '@/assets/settings.png'
 import qrCodeIcon from '@/assets/qr-code.png'
 import forkLift from '@/assets/fork-lift.png'
 import { Divider } from "antd"
+import { BarChartOutlined } from "@ant-design/icons"
 
 export const QueuePaths = {
    ticket: '/queue/ticket',
@@ -41,7 +42,16 @@ const items: ListMenuItem[] = [
       name: 'Loading Board',
       description: 'Manage Loading',
       link: `${QueuePaths.loadingBoard}`,
-      icon: forkLift
+      icon: forkLift,
+      menu: {
+         items: [
+            {
+               label: "Loading Report",
+               key: 'loading-report',
+               icon: <BarChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+            }
+         ]
+      }
    },
    {
       id: 'dashboard',
@@ -50,7 +60,7 @@ const items: ListMenuItem[] = [
       link: `${QueuePaths.display}`,
       icon: queueIcon
    },
-   
+
 ]
 
 const setupItems = [
@@ -86,8 +96,8 @@ const setupItems = [
 
 export default () => {
    return <>
-   <ListMenuComp items={items} />
-   <Divider/>
-   <ListMenuComp items={setupItems} />
-   </> 
+      <ListMenuComp items={items} />
+      <Divider />
+      <ListMenuComp items={setupItems} />
+   </>
 }

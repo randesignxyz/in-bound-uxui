@@ -2,7 +2,7 @@ import { Moment } from "moment";
 
 export type QueueTicketAdvanceSearchParams = {
   activeOnly?: true,
-  status:  'ALL' | 'QUEUED' | 'SERVING' | 'SERVED'| 'HOLD' | 'CANCELED';
+  status: 'ALL' | 'QUEUED' | 'SERVING' | 'SERVED' | 'HOLD' | 'CANCELED';
 };
 
 export type LoadingAdvanceSearchParams = {
@@ -15,7 +15,7 @@ export type DeliveryAdvanceSearchParams = {
 };
 
 export type DeliveryCashCollectionParams = {
-  status:  'ALL' | 'UN_SETTLED' | 'SETTLED';
+  status: 'ALL' | 'UN_SETTLED' | 'SETTLED';
 };
 
 export type ReviewerParams = {
@@ -34,6 +34,11 @@ export type SaveLoadedParam = {
   transferZeroLoaded?: boolean
 };
 
+export type startLoadingParam = {
+  id: number;
+  loadingTeamId?: number;
+  remarks?: string;
+};
 
 export type ChangeRequestParam = {
   loadingId: number;
@@ -56,5 +61,5 @@ export type SettledInvoice = {
   id: number;
   settledAmount: number;
   refDoc?: String;
-  validDate?: Moment; 
+  validDate?: Moment;
 };

@@ -38,25 +38,25 @@ export default () => {
     status: 'PENDING',
   });
 
-  useEffect(() => {}, []);
+  useEffect(() => { }, []);
 
   const [modal, setModal] = useState<
     | {
-        type: 'PICKING-SLIP';
-        payload: {
-          loadingItem: LoadingListItem;
-          isModified?: boolean;
-          pickingSlipItems: PickingSlipItem[];
-          deliveryNoteListItems: DeliveryNoteListItem[];
-        };
-      }
+      type: 'PICKING-SLIP';
+      payload: {
+        loadingItem: LoadingListItem;
+        isModified?: boolean;
+        pickingSlipItems: PickingSlipItem[];
+        deliveryNoteListItems: DeliveryNoteListItem[];
+      };
+    }
     | {
-        type: 'FINISH_LOADING';
-        payload: {
-          loadingItem: LoadingListItem;
-          loaded: Loaded;
-        };
-      }
+      type: 'FINISH_LOADING';
+      payload: {
+        loadingItem: LoadingListItem;
+        loaded: Loaded;
+      };
+    }
     | { type: 'CANCEL'; payload: LoadingListItem }
     | { type: 'VIEW'; payload: LoadedInfo }
     | { type: 'NONE' }
@@ -328,7 +328,7 @@ export default () => {
           title="Loading"
           data={modal.payload}
           open={modal.type === 'VIEW'}
-          
+
           onVisibleChange={closeModal}
         />
       )}

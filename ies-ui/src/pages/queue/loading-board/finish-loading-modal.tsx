@@ -3,7 +3,7 @@ import { Loaded, LoadedItem, LoadingTeam } from '@/services/delivery/data';
 import { SaveLoadedParam } from '@/services/delivery/req-params';
 import { simpleRequestActions } from '@/services/model';
 import { ProFormCheckbox, ProFormSelect } from '@ant-design/pro-components';
-import  {
+import {
   ModalForm,
   ModalFormProps,
   ProFormDigit,
@@ -42,7 +42,7 @@ const FinishLoadingModal: React.FC<Props> = ({ loaded, onSave, ...props }) => {
   }, [props.open]);
 
 
-  
+
   const initDataForm = () => {
     const items = loaded.items.map((it) => ({
       ...it,
@@ -71,11 +71,11 @@ const FinishLoadingModal: React.FC<Props> = ({ loaded, onSave, ...props }) => {
   return (
     <ModalForm
       form={form}
-      onValuesChange = {(_, values) => {
-        const items = (values.items || []) as {loadedQty: number}[]
-        const hasZeroLoadedQty = items?.some(it => it.loadedQty ==0 )
+      onValuesChange={(_, values) => {
+        const items = (values.items || []) as { loadedQty: number }[]
+        const hasZeroLoadedQty = items?.some(it => it.loadedQty == 0)
         setSecondaryLoading(!!hasZeroLoadedQty)
-        
+
       }}
       title="Finish Loading"
       {...props}
@@ -86,7 +86,7 @@ const FinishLoadingModal: React.FC<Props> = ({ loaded, onSave, ...props }) => {
           id: loaded.id,
           loadingTeamId: formData.loadingTeamId,
           loadedRemarks: formData.loadedRemarks,
-          transferZeroLoaded : formData.transferZeroLoaded,
+          transferZeroLoaded: formData.transferZeroLoaded,
           items: formData.items.map((it) => ({
             id: it.id,
             loadedQty: it.loadedQty,
@@ -97,10 +97,10 @@ const FinishLoadingModal: React.FC<Props> = ({ loaded, onSave, ...props }) => {
       <Card size="small" bordered={false}>
         <ProFormList
           name="items"
-          
+
           children={undefined}
           creatorButtonProps={false}
-          
+
           copyIconProps={false}
           deleteIconProps={false}
           itemRender={(_, listMeta) => (
@@ -165,7 +165,7 @@ const FinishLoadingModal: React.FC<Props> = ({ loaded, onSave, ...props }) => {
                 <ProFormDigit
                   label={listMeta.index === 0 && 'Loaded Qty'}
                   placeholder="Loaded Qty"
-                  disabled = {!loaded.allowedActualLoadingAmount}
+                  disabled={!loaded.allowedActualLoadingAmount}
                   rules={[{ required: true }]}
                   width={100}
                   min={0}
@@ -181,10 +181,9 @@ const FinishLoadingModal: React.FC<Props> = ({ loaded, onSave, ...props }) => {
           )}
         />
 
-        <ProFormSelect name={'loadingTeamId'} allowClear showSearch width={'md'} label = "Loading Team" options={loadingTeam?.map(it => ({label: it.name, value: it.id}))}/>
+        {/* <ProFormSelect name={'loadingTeamId'} allowClear showSearch width={'md'} label="Loading Team" options={loadingTeam?.map(it => ({ label: it.name, value: it.id }))} /> */}
         <ProFormTextArea name={'loadedRemarks'} label="Remarks" />
-
-       {secondaryLoading && <ProFormCheckbox name={'transferZeroLoaded'} label = 'Transfer none loaded to second warehouse'/>}
+        {secondaryLoading && <ProFormCheckbox name={'transferZeroLoaded'} label='Transfer none loaded to second warehouse' />}
 
         {/* </ProForm> */}
       </Card>

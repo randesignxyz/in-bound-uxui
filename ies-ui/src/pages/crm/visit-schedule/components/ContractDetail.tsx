@@ -11,7 +11,10 @@ export default ({ detail, refresh }: { detail?: VisitScheduleDetail;   refresh?:
 
     const access = useAccess()
     
-    return <div> {detail?.contracts?.sort((a, b)=> moment(b?.expireDate).dayOfYear()- moment(a?.expireDate).dayOfYear()).map(it => {
+    return <div> {detail?.contracts?.sort((a, b)=> 
+            //moment(b?.expireDate).dayOfYear()- moment(a?.expireDate).dayOfYear()
+            moment(b?.expireDate).day() - moment(a?.expireDate).day()
+        ).map(it => {
         const contractChecked = detail.contractCheckedList.find(i => i.contractId == it.id)
         return <ProCard
             bordered key={`contract-${it.id}`}

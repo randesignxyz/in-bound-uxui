@@ -19,10 +19,13 @@ import ProTable from '@ant-design/pro-table';
 import {
   Button,
   Card,
+  Checkbox,
+  Col,
   Drawer,
   DrawerProps,
   message,
   Modal,
+  Row,
   Space,
   Spin,
   Tag,
@@ -34,7 +37,6 @@ import { CollectedInvoice } from '../assigned-docs';
 import ResolveShipping from '../resolve-shipping';
 import { ViewController } from '../view-controller';
 import FreighDetail from './FreighDetail';
-import RemarkModalV2 from '@/components/remark-modal-v2';
 
 interface Props extends DrawerProps, ViewController {
   forceRefresh?: number;
@@ -103,30 +105,30 @@ export default ({ forceRefresh, requestActions, data: { itemDetail }, actions: {
   }
 
 
-  const onClearCancel = async (item: FreightDetail, remarks?: string) => {
-    Modal.confirm({
-      title: "Clear Canceled DN", content: 'Are you sure?', onOk: async () => {
-        try {
-          await DeliveryParams.clearCancelDn(item.id, remarks!!)(requestActions)
+  // const onClearCancel = async (item: FreightDetail, remarks?: string) => {
+  //   Modal.confirm({
+  //     title: "Clear Canceled DN", content: 'Are you sure?', onOk: async () => {
+  //       try {
+  //         await DeliveryParams.clearCancelDn(item.id, remarks!!)(requestActions)
 
-        } catch (error: any) {
-          message.error(error.message || 'Failed to clear.')
-        }
-      }
-    })
-  }
+  //       } catch (error: any) {
+  //         message.error(error.message || 'Failed to clear.')
+  //       }
+  //     }
+  //   })
+  // }
 
-  const onClearChangeLocation = async (item: FreightDetail, remarks?: string) => {
-    Modal.confirm({
-      title: "Clear Changed Location DN", content: 'Are you sure?', onOk: async () => {
-        try {
-          await DeliveryParams.clearChangedLocationDn(item.id, remarks!!)(requestActions)
-        } catch (error: any) {
-          message.error(error.message || 'Failed to clear.')
-        }
-      }
-    })
-  }
+  // const onClearChangeLocation = async (item: FreightDetail, remarks?: string) => {
+  //   Modal.confirm({
+  //     title: "Clear Changed Location DN", content: 'Are you sure?', onOk: async () => {
+  //       try {
+  //         await DeliveryParams.clearChangedLocationDn(item.id, remarks!!)(requestActions)
+  //       } catch (error: any) {
+  //         message.error(error.message || 'Failed to clear.')
+  //       }
+  //     }
+  //   })
+  // }
 
   const fetchResolveDn = async (dnDate: Moment, shipToCode: string) => {
     return DeliveryParams.fetchResolvingDn(itemDetail?.delivery.id || 0, dnDate, shipToCode).query(requestActions)
@@ -201,6 +203,7 @@ export default ({ forceRefresh, requestActions, data: { itemDetail }, actions: {
             </ProDescriptions.Item>
             <ProDescriptions.Item label="Loading Dock">{itemDetail?.loading?.loadingDock}</ProDescriptions.Item>
             <ProDescriptions.Item label="Claimed By">{itemDetail?.claimedBy}</ProDescriptions.Item>
+            <ProDescriptions.Item label="Owned Truck Loading"><Checkbox checked={!!itemDetail?.loading.ownedTruckLoading} /></ProDescriptions.Item>
           </ProDescriptions>
         </Card>
 
@@ -224,9 +227,24 @@ export default ({ forceRefresh, requestActions, data: { itemDetail }, actions: {
                 { title: 'Batch', dataIndex: 'batchNum' },
                 { title: 'Warehouse', dataIndex: 'whsCode' },
                 { title: 'UoM', dataIndex: 'uom' },
-                { title: 'Quantity', dataIndex: 'qty' },
-                { title: 'Loaded Qty', dataIndex: 'loadedQty' },
+                { title: 'Quantity', dataIndex: 'qty', align: 'right' },
+                { title: 'Loaded Qty', dataIndex: 'loadedQty', align: 'right', width: '120px' },
               ]}
+              footer={(data) => (
+                <Row>
+                  <Col flex={'Auto'} style={{ fontWeight: 'bold' }}>
+                    Total
+                  </Col>
+                  <Col flex={'100px'} style={{ textAlign: 'end', fontWeight: 'bold' }}>
+                    {' '}
+                    {data.map((it) => it.qty || 0).reduce((p, c) => p + c, 0)}{' '}
+                  </Col>
+                  <Col flex={'120px'} style={{ textAlign: 'end', fontWeight: 'bold' }}>
+                    {' '}
+                    {data.map((it) => it.loadedQty || 0).reduce((p, c) => p + c, 0)}{' '}
+                  </Col>
+                </Row>
+              )}
             />
           </Card>
         )}
@@ -261,8 +279,20 @@ export default ({ forceRefresh, requestActions, data: { itemDetail }, actions: {
                 { title: 'Batch', dataIndex: 'batchNum' },
                 { title: 'Warehouse', dataIndex: 'whsCode' },
                 { title: 'UoM', dataIndex: 'uom' },
-                { title: 'Quantity', dataIndex: 'qty' },
+                { title: 'Quantity', dataIndex: 'qty', align: 'right' },
               ]}
+
+              footer={(data) => (
+                <Row>
+                  <Col flex={'Auto'} style={{ fontWeight: 'bold' }}>
+                    Total
+                  </Col>
+                  <Col flex={'100px'} style={{ textAlign: 'end', fontWeight: 'bold' }}>
+                    {' '}
+                    {data.map((it) => it.qty || 0).reduce((p, c) => p + c, 0)}{' '}
+                  </Col>
+                </Row>
+              )}
             />
           </Card>
         )}
@@ -277,13 +307,11 @@ export default ({ forceRefresh, requestActions, data: { itemDetail }, actions: {
               }}
               rowKey="id"
               // showActions="hover"
-
               metas={{
                 avatar: {
                   render: () => <AimOutlined />,
                 },
                 title: {
-
                   render: (_, r) => (
                     <a style={(!!r.shippingLocation || r.canceled) ? itemDetail?.status === 'COMPLETED' ? { color: 'gray', textDecoration: 'line-through' } : { color: 'red', textDecoration: 'line-through' } : {}} onClick={() => { }}>
                       <Space direction='horizontal'>
@@ -307,34 +335,11 @@ export default ({ forceRefresh, requestActions, data: { itemDetail }, actions: {
                     {r.canceled && <Tag color="error" >
                       <Space>
                         Canceled
-                        {/* <RemarkModalV2 trigger={<a style={{ color: 'red' }}><CloseCircleFilled /></a>}
-                          required item={r} title='Clear canceled delivery'
-                          onSave={async (item, remarks) => {
-                            try {
-                              await onClearCancel(item, remarks)
-                              return true
-                            } catch (error) {
-                              return false
-                            }
-
-                          }} /> */}
                       </Space>
                     </Tag>}
                     {r.shippingLocation && <Tag color="error">
                       <Space>
                         Location Changed
-                        {/* <RemarkModalV2 trigger={<a style={{ color: 'red' }}><CloseCircleFilled /></a>}
-                          required item={r} title='Clear change delivery location'
-                          onSave={async (item, remarks) => {
-                            try {
-                              await onClearChangeLocation(item, remarks)
-                              return true
-                            } catch (error) {
-                              return false
-                            }
-
-                          }}
-                        /> */}
                       </Space>
                     </Tag>}
                   </div>

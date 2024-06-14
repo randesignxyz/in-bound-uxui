@@ -7,7 +7,7 @@ import { InstanceDetail } from '@/services/delivery/instance.types';
 import { LoadingParams } from '@/services/delivery/loading-params';
 import { SimpleRequestActions } from '@/services/model';
 import { SearchOutlined } from '@ant-design/icons';
-import { ProCard } from '@ant-design/pro-components';
+import { ProCard, ProFormCheckbox } from '@ant-design/pro-components';
 import ProForm, {
   ProFormDatePicker,
   ProFormGroup,
@@ -74,6 +74,7 @@ const PickingSlip: React.FC<Props> = ({ cb, requestActions, itemDetail, ...props
     whsCode?: string;
     shift: string;
     remarks?: string;
+    ownedTruckLoading?: boolean;
   }>();
 
   const init = async () => {
@@ -120,6 +121,7 @@ const PickingSlip: React.FC<Props> = ({ cb, requestActions, itemDetail, ...props
       const warehouseList = uniq(rs.pickingItems.filter(it => it.whsCode).map(it => it.whsCode || ''))
       setWarehouses(warehouseList)
       form.setFieldValue('whsCode', warehouseList.find(it => it === 'OFL-WH02') || warehouseList.find(it => it))
+      form.setFieldValue('ownedTruckLoading', rs.ownedTruckLoading)
 
     } catch (error: any) {
       message.error(error.message || 'Failed to load data.');
@@ -168,7 +170,9 @@ const PickingSlip: React.FC<Props> = ({ cb, requestActions, itemDetail, ...props
               dataForm.remarks,
               dataForm.driverId,
               dataForm.licensePlate,
-              itemDetail !== null
+              itemDetail !== null,
+              dataForm.ownedTruckLoading
+
             ),
           )(requestActions);
           props.onCancel?.();
@@ -299,16 +303,21 @@ const PickingSlip: React.FC<Props> = ({ cb, requestActions, itemDetail, ...props
                 </Row>
               )}
             />
+
+
+
           </ProCard>}
 
-          {warehouses.length > 1 && <ProCard bordered size='small' title='Warehouse'>
-            <ProFormSelect
+          <ProCard bordered size='small'>
+            {warehouses.length > 1 && <ProFormSelect
               name={'whsCode'}
               width={'md'}
               rules={[{ required: true }]}
               label="First loading Warehouse"
               options={warehouses} />
-          </ProCard>}
+            }
+            <ProFormCheckbox name={'ownedTruckLoading'} >Own truck loading</ProFormCheckbox>
+          </ProCard>
 
           {(loadingItem?.pickingItems?.length || 0) > 0 && (
             <ProCard  bordered title="Picking Items" size="small" style={{marginBlock: 5}}>

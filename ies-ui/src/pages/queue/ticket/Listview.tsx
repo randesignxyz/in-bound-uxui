@@ -129,7 +129,7 @@ export const QueueTicketListView: React.FC<TableViewProps<QueueTicketListItem>> 
           if (data.type == 'Delivery') {
             await singleRequest(TicketServiceParams.issueManualDiliveryTicket({ ...data }))(requestActions);
           }
-          if(data.type == 'Pickup' ) {
+          if (data.type == 'Pickup') {
             await singleRequest(TicketServiceParams.issueManualPickupTicket({ ...data }))(requestActions);
           }
           message.success('Ticket issued');
@@ -194,7 +194,7 @@ export const QueueTicketListView: React.FC<TableViewProps<QueueTicketListItem>> 
             sorter: 'truckNo',
             render: (_, r) => [r.truck.code].join('-'),
           },
-          { title: 'Load Capacity', align: 'right', render: (_, r) => r.truck.loadingCapacity },
+          { title: 'Load Capacity', align: 'right', render: (_, r) => r.truck.loadingCapacity?.name },
           {
             title: 'Status',
             hideInTable: searchParams.status !== 'ALL',
@@ -317,7 +317,7 @@ export const QueueTicketListView: React.FC<TableViewProps<QueueTicketListItem>> 
         />
       )}
 
-      {state.visible?.type === 'ISSUE_QUEUE' && (
+      {/* {state.visible?.type === 'ISSUE_QUEUE' && (
         <IssueTicketModal
           open={state.visible.type === 'ISSUE_QUEUE'}
           onLoadDrivers={onLoadDriverHandler}
@@ -325,7 +325,7 @@ export const QueueTicketListView: React.FC<TableViewProps<QueueTicketListItem>> 
           onIssue={issueTicketHandler}
           qrCodes={state.visible.payload}
         />
-      )}
+      )} */}
     </Spin>
   );
 };

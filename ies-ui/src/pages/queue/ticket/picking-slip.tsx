@@ -38,7 +38,7 @@ const PickingSlip: React.FC<Props> = ({ data, onSave, ...props }) => {
             shift: shift,
         })
 
-        setPickingList(data.pickingSlipItems.filter(it =>  it.shift === shift))
+        setPickingList(data.pickingSlipItems.filter(it => it.shift === shift))
         setDeliveryNoteList(data.deliveryNoteListItems.filter(it => it.shift === shift))
 
     }, [props.visible])
@@ -57,13 +57,13 @@ const PickingSlip: React.FC<Props> = ({ data, onSave, ...props }) => {
                         setDeliveryNoteList(data.deliveryNoteListItems.filter(it => it.shift === values.shift))
 
                     }}
-                    
+
                     form={form}
                     submitter={false}>
-                    <ProFormGroup style = {{width: '100%'}}>
-                        <ProFormText disabled label='Truck' name={'licensePlate'} width={'sm'}  />
+                    <ProFormGroup style={{ width: '100%' }}>
+                        <ProFormText disabled label='Truck' name={'licensePlate'} width={'sm'} />
                         <ProFormSelect allowClear={false} rules={[{ required: true }]} label='Shift' name={'shift'} width={'sm'} options={shiftList} />
-                        <ProFormTextArea fieldProps={{rows: 1}} label="Remarks" width="md" name={"remarks"} />
+                        <ProFormTextArea fieldProps={{ rows: 1 }} label="Remarks" width="md" name={"remarks"} />
                     </ProFormGroup>
 
                 </ProForm>
@@ -86,14 +86,14 @@ const PickingSlip: React.FC<Props> = ({ data, onSave, ...props }) => {
                 />
             </Card>
             <Card title="Delivery Note" size="small" style={{ marginTop: '5px' }}>
-            <ProTable<DeliveryNoteListItem>
+                <ProTable<DeliveryNoteListItem>
                     columns={[
                         { title: 'Del.Doc Num', dataIndex: 'docNum' },
                         { title: 'Cust. Code', dataIndex: 'cardCode' },
                         { title: 'Cust. Name', dataIndex: 'cardName' },
                         { title: 'Shipped To', dataIndex: 'shipToCode' },
                         { title: 'Quantity', dataIndex: 'qty', align: 'right' },
-                        { title: 'Invoice', dataIndex: 'invDocNum',  },
+                        { title: 'Invoice', dataIndex: 'invDocNum', },
                         { title: 'Inv.Amount', dataIndex: 'invAmount', align: 'right' },
                     ]}
                     size="small"

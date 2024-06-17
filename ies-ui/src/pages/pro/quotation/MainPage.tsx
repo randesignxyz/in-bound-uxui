@@ -2,10 +2,15 @@ import PageWrapper from "@/components/PageWrapper"
 import { QuotationListItem, QuotationSearchParams } from "./data"
 import { createQuotationService } from "./services";
 import { useQuery } from "@umijs/max";
-import { Button, Checkbox, Flex, Modal, message } from "antd";
+import { Button, Flex, Modal, message } from "antd";
 import { formatter } from "@/pages/utils";
 import Status from "@/components/Status";
-import { CheckOutlined, CopyFilled, EditOutlined, ExportOutlined, FileOutlined, PartitionOutlined, PlusCircleOutlined, UploadOutlined } from "@ant-design/icons";
+import {
+    CheckOutlined, CopyFilled,
+    EditOutlined, ExportOutlined,
+    PartitionOutlined,
+    PlusCircleOutlined, UploadOutlined
+} from "@ant-design/icons";
 import { useState } from "react";
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { ProPaths } from "..";
@@ -13,7 +18,6 @@ import Flow from "../flow";
 import DataDetailView from "./DataDetailView";
 import DataEntryView from "./DataEntryView";
 import { uniqueId } from "lodash";
-import { TabRenderProps } from "@/components/PageWrapper/type";
 
 export default () => {
 
@@ -43,35 +47,6 @@ export default () => {
             }
         })
     }
-
-    // const copyProps = (item: QuotationListItem) => ({
-    //     tabLabel: `Copy (# ${item.code})`,
-    //     tabKey: `Copy - ${item.id} -${uniqueId("copy")} `,
-    //     tabIcon: <CopyFilled />,
-    //     panel: (props) => <DataEntryView
-    //         onCloseTab={() => {
-    //             props?.onCloseTab?.()
-    //             refetch()
-    //         }}
-    //         id={item.id}
-
-    //         openInTab onBack={() => { }} type="CREATE" />,
-    // }) as Omit<TabRenderProps, 'value'>
-
-
-    // const editProps = (item: QuotationListItem) => ({
-    //     tabLabel: item.code,
-    //     value: item.code,
-    //     panel: (props) => <DataEntryView
-    //         onCloseTab={() => {
-    //             props?.onCloseTab?.()
-    //             refetch()
-    //         }}
-    //         id={item.id}
-
-    //         openInTab onBack={() => { }} type="EDIT" />,
-    //     tabIcon: <EditOutlined />
-    // }) as Omit<TabRenderProps, 'value'>
 
     return <><PageWrapper<QuotationListItem, QuotationSearchParams & {
         searchValue?: string;
@@ -112,10 +87,10 @@ export default () => {
                 tabLabel: `Copy (# ${item?.code})`,
                 tabKey: `copy-${item?.id}-${uniqueId("copy")} `,
                 tabIcon: <CopyFilled />,
-                panel: ({ onUpdateTab, key }) => <DataEntryView
+                panel: ({ onUpdateTab, onCloseTab, key }) => <DataEntryView
                     id={item?.id}
                     onView={(added) => onUpdateTab?.('view', added, undefined, key)}
-                    openInTab onBack={() => { }} type="CREATE" />,
+                    openInTab onBack={() => { onCloseTab?.() }} type="CREATE" />,
             }
         ]}
         listView={{
@@ -161,7 +136,7 @@ export default () => {
                     {
                         tooltip: 'View data in new browser tab',
                         type: 'link', size: 'small', icon: <ExportOutlined />,
-                        onClick: () => window.open(`/ external${ProPaths.quotation} /detail/${item.id} `, '_blank')?.focus()
+                        onClick: () => window.open(`/external${ProPaths.quotation}/detail/${item.id} `, '_blank')?.focus()
                     },
                     {
                         tooltip: 'Copy', type: 'link', size: 'small', icon: <CopyFilled />,

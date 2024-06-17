@@ -401,7 +401,7 @@ export default ({
   return (
     <>
       {openInTab ? content : <PageContainer
-        onBack={onBack}
+        // onBack={onBack}
         title="Quotation"
         subTitle={data?.code}
         loading={srv.requestAction.request?.loading || false}

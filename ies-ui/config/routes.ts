@@ -1,6 +1,4 @@
-﻿import { layout } from "@/app";
-
-/**
+﻿/**
  *
  * @doc https://umijs.org/docs/guides/routes
  */
@@ -173,6 +171,7 @@ export default [
     icon: 'FormOutlined',
     access: 'canAccessProMenuItem',
     component: './pro',
+
   },
 
   {

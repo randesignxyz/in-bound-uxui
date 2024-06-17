@@ -68,7 +68,7 @@ export default () => {
                         }} openInTab onBack={() => { }} type="CREATE" />,
                 }, {
                     action: 'copy',
-                    tabLabel: item?.formNo ? `Copy(# ${item.formNo})` : 'Copy',
+                    tabLabel: item?.formNo ? `Copy (#${item.formNo})` : 'Copy',
                     tabKey: `copy-${item?.id}-${uniqueId('copy')}`,
                     panel: (props) => item?.id && <DataEntryView onCloseTab={() => {
                         props?.onCloseTab?.()
@@ -86,11 +86,10 @@ export default () => {
                 }
             ]}
             listView={{
-
                 actionButtons: [{
                     icon: <PlusCircleOutlined />,
                     type: 'link',
-                    actionType: 'add'
+                    addNewTab: true
                 }],
                 type: 'Table',
                 title: "PR List",
@@ -127,7 +126,6 @@ export default () => {
                             },
                             sort: sort,
                         },
-
                         pagination: page,
                     }))
                 },
@@ -145,7 +143,6 @@ export default () => {
                             size: 'small', icon: <CopyFilled />,
                             actionType: 'copy'
                         }
-
                     ]),
                     columns: [
                         {

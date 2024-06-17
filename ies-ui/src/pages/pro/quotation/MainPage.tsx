@@ -44,36 +44,34 @@ export default () => {
         })
     }
 
-    const copyProps = (item: QuotationListItem) => ({
-        tabLabel: `Copy(# ${item.code})`,
-        tabKey: `Copy - ${item.id} -${uniqueId("copy")} `,
-        tabIcon: <CopyFilled />,
-        panel: (props) => <DataEntryView
-            onCloseTab={() => {
-                props?.onCloseTab?.()
-                refetch()
-            }}
-            id={item.id}
+    // const copyProps = (item: QuotationListItem) => ({
+    //     tabLabel: `Copy (# ${item.code})`,
+    //     tabKey: `Copy - ${item.id} -${uniqueId("copy")} `,
+    //     tabIcon: <CopyFilled />,
+    //     panel: (props) => <DataEntryView
+    //         onCloseTab={() => {
+    //             props?.onCloseTab?.()
+    //             refetch()
+    //         }}
+    //         id={item.id}
 
-            openInTab onBack={() => { }} type="CREATE" />,
-    }) as Omit<TabRenderProps, 'value'>
-
-
-    const editProps = (item: QuotationListItem) => ({
-        tabLabel: item.code,
-        value: item.code,
-        panel: (props) => <DataEntryView
-            onCloseTab={() => {
-                props?.onCloseTab?.()
-                refetch()
-            }}
-            id={item.id}
-
-            openInTab onBack={() => { }} type="EDIT" />,
-        tabIcon: <EditOutlined />
-    }) as Omit<TabRenderProps, 'value'>
+    //         openInTab onBack={() => { }} type="CREATE" />,
+    // }) as Omit<TabRenderProps, 'value'>
 
 
+    // const editProps = (item: QuotationListItem) => ({
+    //     tabLabel: item.code,
+    //     value: item.code,
+    //     panel: (props) => <DataEntryView
+    //         onCloseTab={() => {
+    //             props?.onCloseTab?.()
+    //             refetch()
+    //         }}
+    //         id={item.id}
+
+    //         openInTab onBack={() => { }} type="EDIT" />,
+    //     tabIcon: <EditOutlined />
+    // }) as Omit<TabRenderProps, 'value'>
 
     return <><PageWrapper<QuotationListItem, QuotationSearchParams & {
         searchValue?: string;
@@ -82,40 +80,41 @@ export default () => {
         tabRender={(item) => [
             {
                 action: 'add',
-                panel: ({ onCloseTab, onAddTab, onRenderTab }) => <DataEntryView
-                    onCloseTab={() => {
-                        onCloseTab?.()
-                        refetch()
+                panel: ({ onCloseTab, onUpdateTab, key }) => <DataEntryView
+                    onView={(added) => {
+                        onUpdateTab?.('view', added, undefined, key)
                     }}
-                    openInTab onBack={() => { }} type="CREATE" />,
+                    openInTab onBack={() => { onCloseTab?.() }} type="CREATE" />,
                 tabLabel: "New",
             },
             {
                 action: 'edit',
-                panel: ({ onCloseTab, onAddTab, onRenderTab }) => <DataEntryView
-                    onCloseTab={() => {
-                        onCloseTab?.()
-                        refetch()
-                    }}
-                    openInTab onBack={() => { }} type="CREATE" />,
+                panel: ({ onUpdateTab, key }) => <DataEntryView
+                    id={item?.id}
+                    openInTab
+                    onView={() => item && onUpdateTab?.('view', undefined, undefined, key)}
+                    onBack={() => {
+                        onUpdateTab?.('view', undefined, undefined, key)
+                    }} type="EDIT" />,
                 tabLabel: item?.code,
                 tabIcon: <EditOutlined />
             },
             {
                 action: 'view',
-                panel: () => <DataDetailView openInTab id={item?.id} onBack={() => { }} />,
+                panel: ({ onAddTab, onUpdateTab, key }) => <DataDetailView
+                    openInTab id={item?.id}
+                    onEdit={() => onUpdateTab?.('edit', undefined, undefined, key)}
+                    onAdd={() => onAddTab?.('copy', undefined)}
+                    onBack={() => { }} />,
                 tabLabel: item?.code,
             }, {
-                tabLabel: `Copy(# ${item?.code})`,
                 action: 'copy',
-                tabKey: `Copy - ${item?.id} -${uniqueId("copy")} `,
+                tabLabel: `Copy (# ${item?.code})`,
+                tabKey: `copy-${item?.id}-${uniqueId("copy")} `,
                 tabIcon: <CopyFilled />,
-                panel: ({ onCloseTab, onAddTab, onRenderTab }) => <DataEntryView
+                panel: ({ onUpdateTab, key }) => <DataEntryView
                     id={item?.id}
-                    onCloseTab={() => {
-                        onCloseTab?.()
-                        refetch()
-                    }}
+                    onView={(added) => onUpdateTab?.('view', added, undefined, key)}
                     openInTab onBack={() => { }} type="CREATE" />,
             }
         ]}
@@ -125,7 +124,7 @@ export default () => {
             actionButtons: [{
                 icon: <PlusCircleOutlined />,
                 type: 'link',
-                actionType: 'add'
+                addNewTab: true
             }],
             statuses: [
                 { option: { label: 'All', value: 'ALL', default: true }, },

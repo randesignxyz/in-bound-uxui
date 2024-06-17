@@ -68,7 +68,6 @@ const DraggableTabNode = ({ className, ...props }: DraggableTabPaneProps) => {
 export default <ListDataType extends Record<string, any> & { id: number, code?: string }, FilterType
     extends Record<string, any> & { searchValue?: string; status?: string; subStatus?: string }, ValueType>({
         tabRender,
-        onNewRender,
         listView,
     }: Props<ListDataType, FilterType, ValueType>) => {
     const [forceReload, setForceReload] = useState(0)
@@ -84,7 +83,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
         data?: ListDataType
     })[]>([])
 
-    const [activeKey, setActiveKey] = useState<{ key: string, item?: ListDataType }>({ key: 'list' })
+    const [activeKey, setActiveKey] = useState<{ key: string }>({ key: 'list' })
     const sensor = useSensor(PointerSensor, { activationConstraint: { distance: 10 } });
     const onDragEnd = ({ active, over }: DragEndEvent) => {
         if (active.id !== over?.id) {
@@ -96,25 +95,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
         }
     };
 
-    const newTab = (props?: TabRenderProps) => {
-        const gKey = `default-${uniqueId("add")}`
-        setTabList(v => [...v, props ? {
-            tab: props.tabLabel || "new",
-            key: gKey,
-            icon: props.tabIcon || <FileAddOutlined />,
-            children: props.panel({
-                onCloseTab: () => { removeTab(gKey) }, key: gKey,
-                // onAddTab: (props, key) => addTab( props, key) 
-                onChangeTabLabel: label => changeTabLabel(label, gKey)
-            })
-        } : {
-            tab: "new",
-            key: gKey,
-            icon: <FileAddOutlined />,
-            children: onNewRender?.(gKey)
-        }])
-        setActiveKey({ key: gKey })
-    }
+
 
     const changeTabLabel = (label: React.ReactNode, key: string) => {
         setTabList(v => v.map(it => {
@@ -126,47 +107,81 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
     }
 
     const reRenderTab = (item: ListDataType, props?: TabRenderProps, key?: React.Key) => {
-        const gKey = `${key?.toString() || props?.tabKey || 'default'}-${item.id}`
+        console.log('rerender ', item, 'key', key);
+        const gKey = key?.toString() || props?.tabKey?.toString() || `default-${item.id}`
         setTabList(v => v.map(it => {
-
+            console.log(gKey, v);
             if (it.key == gKey) {
                 return {
-                    ...it, tab: props?.tabLabel || item.code, icon: props?.tabIcon || <FileTextOutlined />, children: props?.panel({
+                    ...it, tab: props?.tabLabel || item.code,
+                    tabKey: gKey,
+                    icon: props?.tabIcon || <FileTextOutlined />,
+                    children: props?.panel?.({
                         key: gKey,
                         onCloseTab: () => { removeTab(gKey) },
-                        onAddTab: (props, key) => addTab(item, props, key),
-                        onRenderTab: (props, key) => reRenderTab(item, props, key),
-                        onChangeTabLabel: (label) => { changeTabLabel(label, gKey) }
+                        onAddTab: (actionType, props, key) => addTab(item, props || tabRender?.(item).find(it => it.action == actionType), key),
+                        onUpdateTab: (actionType, newItem, props, key) => reRenderTab(newItem || item, props || tabRender?.(newItem || item).find(it => it.action == actionType), key),
+                        onChangeTabLabel: (label) => { changeTabLabel(label, gKey) },
                     })
                 }
             } else return it
         }))
     }
 
-    const addTab = (item: ListDataType, props?: TabRenderProps, key?: React.Key) => {
-        const gKey = `${key?.toString() || props?.tabKey || 'default'}-${item.id}`
-        if (tabList.some(it => it.key == gKey)) {
-            setActiveKey({ key: gKey, item: item })
-        } else {
-            setTabList(v => [...v, {
-                tab: props?.tabLabel || item.code,
-                key: gKey,
-                icon: props?.tabIcon || <FileTextOutlined />,
+    const newTab = (props: TabRenderProps) => {
+        const gKey = `default-${uniqueId("add-")}`
+        setTabList(v => [...v, {
+            tab: props.tabLabel || "new",
+            key: gKey,
+            tabKey: gKey,
+            icon: props.tabIcon || <FileAddOutlined />,
+            children: props.panel?.({
+                onCloseTab: () => { removeTab(gKey) }, key: gKey,
+                onAddTab() {
+                    throw Error("Not support")
+                },
+                onUpdateTab: (actionType, newItem, props, key) => reRenderTab(newItem, props || tabRender?.(newItem).find(it => it.action == actionType), key),
+                onChangeTabLabel: label => changeTabLabel(label, gKey)
+            })
+        }])
+        setActiveKey({ key: gKey })
+    }
 
-                children: props?.panel({
+    const addTab = (item: ListDataType, props?: TabRenderProps, key?: React.Key) => {
+        const gKey = key?.toString() || props?.tabKey?.toString() || `default-${item.id}`
+        if (tabList.some(it => it.key == gKey)) {
+            setActiveKey({ key: gKey, })
+        } else {
+            setTabList(v => {
+                return [...v, {
+                    tab: props?.tabLabel || item.code,
                     key: gKey,
-                    onCloseTab: () => { removeTab(gKey) },
-                    onAddTab: (props, key) => addTab(item, props, key),
-                    onRenderTab: (props, key) => reRenderTab(item, props, key),
-                    onChangeTabLabel: (label) => { changeTabLabel(label, gKey) }
-                })
-            }])
-            setActiveKey({ key: gKey, item: item })
+                    tabKey: gKey,
+                    icon: props?.tabIcon || <FileTextOutlined />,
+
+                    children: props?.panel?.({
+                        key: gKey,
+                        onCloseTab: () => { removeTab(gKey) },
+                        onAddTab: (actionType, props, key) => addTab(item, props || tabRender?.(item).find(it => it.action == actionType), key),
+                        onUpdateTab: (actionType, newItem, props, key) => reRenderTab(newItem || item, props || tabRender?.(newItem || item).find(it => it.action == actionType), key),
+                        onChangeTabLabel: (label) => { changeTabLabel(label, gKey) },
+                    })
+                }]
+            })
+
+            setActiveKey({ key: gKey })
         }
     }
 
     const removeTab = (key: string) => {
-        setTabList(v => v.filter(it => it.key != key))
+
+        console.log('outside', tabList);
+
+        setTabList(v => {
+            console.log(v);
+
+            return v.filter(it => it.key != key)
+        })
         setActiveKey({ key: 'list' })
     }
 
@@ -196,7 +211,10 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
                 actions={listView.actions}
                 advanceSearchButton={listView.advanceSearchButton}
                 onRefresh={listView.onRefresh}
-                onAddTab={(actionType) => actionType == 'add' && newTab(tabRender?.().find(it => it.action == actionType))}
+                onAddTab={() => {
+                    const tabProps = tabRender?.().find(it => it.action == 'add')
+                    tabProps && newTab(tabProps)
+                }}
                 onSearch={keyworkds => {
                     setFilterData(v => ({ ...v, searchValue: keyworkds }) as any)
                     reloadList(true)
@@ -230,15 +248,16 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
                     </SortableContext>
                 </DndContext>
             ),
-            hideAdd: !onNewRender,
+            hideAdd: !tabRender?.().find(it => it.action == 'add'),
             onChange(activeKey) {
-                setActiveKey({ key: activeKey, item: tabList.find(it => it.key == activeKey)?.data })
+                setActiveKey({ key: activeKey })
             },
             onEdit: (e, action) => {
                 if (action == 'remove') {
                     removeTab(e.toString())
                 } else {
-                    newTab()
+                    const tabProps = tabRender?.().find(it => it.action == 'add')
+                    tabProps && newTab(tabProps)
                 }
             },
         }} tabList={tabList}>

@@ -16,13 +16,13 @@ export type TabRenderProps = {
     tabLabel: React.ReactNode;
     tabIcon?: React.ReactNode;
     tabKey?: React.Key;
-    panel: (props: {
+    panel?: (props: {
         onCloseTab?: () => void;
-        key?: React.Key,
-        onAddTab?: (props: TabRenderProps, key?: React.Key) => void,
-        onRenderTab?: (props: TabRenderProps, key?: React.Key) => void,
-        onChangeTabLabel?: (label: React.ReactElement) => void;
-        onActionTriggered?: (actionType: ActionType, props?: TabRenderProps, key?: React.Key) => void,
+        key: React.Key,
+        onAddTab: (actionType: ActionType, props?: TabRenderProps, key?: React.Key) => void,
+        onUpdateTab: (actionType: ActionType, newItem?: any, props?: TabRenderProps, key?: React.Key) => void,
+        onChangeTabLabel: (label: React.ReactElement) => void;
+        // onActionTriggered?: (actionType: ActionType, props?: TabRenderProps, key?: React.Key) => void,
     }) => React.ReactNode;
 }
 
@@ -41,8 +41,7 @@ export interface BastListViewProps<ListDataType extends Record<string, any> & { 
     onStatusRender?: React.ReactNode,
     actionButtons?: (React.ReactNode | (ButtonProps & {
         key?: React.Key;
-        actionType?: ActionType;
-        //tabRender?: Omit<TabRenderProps, 'value'>; //if defined, onClick is overight
+        addNewTab?: true;
         tooltip?: string;
     }))[],
 

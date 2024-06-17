@@ -5,7 +5,6 @@ import { SegmentedLabeledOption } from "antd/lib/segmented"
 import { useState } from "react"
 import ActionBar from "../ActionBar"
 import { MenuItemType } from "antd/lib/menu/hooks/useItems"
-import { ActionType } from "./type"
 
 export default ({
     statuses,
@@ -20,13 +19,11 @@ export default ({
     onSubStatusChanged
 }: {
     onStatusRender?: React.ReactNode,
-    onAddTab?: (actionType: ActionType) => void;
+    onAddTab?: () => void;
     statuses: { option: SegmentedLabeledOption & { default?: true }, subOptions?: (SegmentedLabeledOption & { default?: true })[] }[],
     advanceSearchButton?: React.ReactElement;
     actionButtons?: (React.ReactNode | (ButtonProps & {
         key?: React.Key;
-        actionType?: ActionType
-        // tabRender?: TabRenderProps; //if defined, onClick is overight
         tooltip?: string;
 
     }))[],

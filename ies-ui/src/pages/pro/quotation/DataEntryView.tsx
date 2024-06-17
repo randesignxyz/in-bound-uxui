@@ -38,7 +38,7 @@ import { Moment } from 'moment';
 import { useEffect, useRef, useState } from 'react';
 import { createVendorService } from '../vendor/services';
 import AddService from './AddService';
-import { PrItem, QuotationDetail, QuotationSavePayload, SaveQuotationItem } from './data';
+import { PrItem, QuotationDetail, QuotationListItem, QuotationSavePayload, SaveQuotationItem } from './data';
 
 import _ from 'lodash';
 import { ProPaths } from '..';
@@ -81,14 +81,14 @@ type DataFormType = {
 export default ({
   id,
   type,
-  onCloseTab,
+  onView,
   openInTab,
   onBack,
 }: {
   id?: number;
   openInTab?: true;
   type: 'CREATE' | 'EDIT';
-  onCloseTab?: () => void;
+  onView?: (added: QuotationListItem) => void;
   onBack: () => void;
 }) => {
   const srv = createQuotationService();
@@ -257,7 +257,8 @@ export default ({
             };
 
             const rs = await srv.saveItem(saveData);
-            history.push(ProPaths.quotation + `/detail/${rs.data}`);
+            onView?.(rs.data)
+            // history.push(ProPaths.quotation + `/detail/${rs.data}`);
           } catch (error: any) {
             message.error(error.message || 'Failed to save.');
           }

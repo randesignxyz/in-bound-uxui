@@ -136,7 +136,11 @@ export default () => {
                     loading: isFetching,
                     bordered: true,
                     actionButtonsColumnRender: (item) => ([
-                        { tooltip: 'View data in new browser tab', type: 'link', disabled: item.processStatus == 'DRAFT', size: 'small', icon: <ExportOutlined />, onClick: () => window.open(`/external/data-form/requisition_request_process/${item.instanceId}`, '_blank')?.focus() },
+                        {
+                            tooltip: 'View data in new browser tab', type: 'link',
+                            disabled: item.processStatus == 'DRAFT', size: 'small', icon: <ExportOutlined />,
+                            onClick: () => window.open(`/external/data-form/requisition_request_process/${item.instanceId}`, '_blank')?.focus()
+                        },
                         { tooltip: 'Quick view', type: 'link', size: 'small', icon: <EyeFilled />, onClick: () => onDetailhandler(item) },
                         {
                             tooltip: 'Copy', type: 'link',

@@ -152,6 +152,7 @@ const offerComparisons: { label: string; value: PriceOfferType; id: number }[] =
 export default ({
   // id,
   onBack,
+  onView
   // onEdit,
   // onAdd,
 }: {
@@ -160,6 +161,7 @@ export default ({
   onBack: () => void;
   onAdd?: (id?: number) => void;
   onEdit?: (id: number) => void;
+  onView?: (processInstId: string, fornNo: string) => void;
 }) => {
   const { message } = App.useApp();
   const priceComparisonSrv = createPriceComparisonService();
@@ -569,8 +571,6 @@ export default ({
             const quotation = quotations.find(
               (q) => q.priceOffer == po.value && q.vendor.id == v.id,
             );
-
-
             return {
               priceOffer: po.value,
               vendorId: v.id,
@@ -965,8 +965,9 @@ export default ({
     try {
       const rs = await priceComparisonSrv.saveItem(saveData);
       const { processInstId, formNo } = rs;
+      onView?.(processInstId, formNo)
       message.success(`Your request is submitted. Please track the request with form no ${formNo}`);
-      history.push(`/data-form/${PriceComparisonFormNames.processDefKey}/${processInstId}`);
+      // history.push(`/data-form/${PriceComparisonFormNames.processDefKey}/${processInstId}`);
     } catch (error: any) {
       message.error(error.message || 'Failed to make request.');
     }

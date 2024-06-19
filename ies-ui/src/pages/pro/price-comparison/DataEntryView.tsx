@@ -13,9 +13,11 @@ import {
   DeleteOutlined,
   InfoCircleOutlined,
   MinusCircleOutlined,
+  PaperClipOutlined,
   PlusOutlined,
   QuestionCircleOutlined,
   SplitCellsOutlined,
+  StockOutlined,
   SwapOutlined,
 } from '@ant-design/icons';
 import {
@@ -970,8 +972,9 @@ export default ({
     }
   };
   return (
-    <PageContainer title="Price Comparison Requisition Form" onBack={() => history.back()}>
+    <>
       <ProForm
+
         form={form}
         submitter={{
           render: () => (
@@ -1011,6 +1014,8 @@ export default ({
         }}
       />
       <ProCard
+        size='small'
+        title={<Space><StockOutlined />Quotation Comparison</Space>}
         direction="column"
         extra={
           <Space align="baseline">
@@ -1481,7 +1486,7 @@ export default ({
           />
         </ProCard>
 
-        <ProCard title="Attachment Files" bordered style={{ marginBlockStart: 8 }}>
+        <ProCard title={<Space size={0}><PaperClipOutlined />Attachment Files</Space>} bordered style={{ marginBlockStart: 8 }}>
           <FileUploader
             multiple
             showTitle={false}
@@ -1492,7 +1497,7 @@ export default ({
             }}
           />
         </ProCard>
-      </ProCard>
+      </ProCard >
 
       <ProcessFlowModalWrapper
         type="action"
@@ -1533,6 +1538,6 @@ export default ({
         // onSave={  => onAddItemHandler}
         isService={isService}
       />
-    </PageContainer>
+    </ >
   );
 };

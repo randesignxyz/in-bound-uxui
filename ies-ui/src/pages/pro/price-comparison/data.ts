@@ -7,7 +7,7 @@ import { SummaryTypes } from "./DataEntryView";
 export type PriceComparisonListItem = {
     id: number;
     requisition: LookupDataItem;
-    processInstId: number;
+    processInstId: string;
     formNo: string;
     remarks: string;
     priceOfferedTime: number;

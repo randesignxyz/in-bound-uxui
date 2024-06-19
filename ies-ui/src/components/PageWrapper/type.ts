@@ -9,7 +9,6 @@ import React from "react";
 export type ActionType = 'add' | 'edit' | 'view' | 'copy' | 'action1' | 'action2' | 'action3'
 
 export type TabRenderProps = {
-    value?: React.ReactNode; //TODO: to be removed
     extra?: React.ReactNode;
     action?: ActionType;
     tabLabel: React.ReactNode;

@@ -9,7 +9,7 @@ import { FetchPagingParams } from "@/components/DataCrud/TableView"
 import { ContractAdvanceSearchParams, ImportedContract } from "./types"
 import { ContractLess } from "@/services/crm/contract"
 import { Badge, Button, Space, Tooltip, Typography, message } from "antd"
-import { FileSearchOutlined, PlusOutlined } from "@ant-design/icons"
+import { ExportOutlined, FileSearchOutlined, PlusOutlined } from "@ant-design/icons"
 import { formatDate } from "@/pages/utils"
 import Status from "@/components/Status"
 import ImportFileButton from "@/components/ImportFileButton"
@@ -50,6 +50,15 @@ export default () => {
 
     return (<>
         <PageWrapper<ContractLess, ContractAdvanceSearchParams, {} >
+            tabRender={item => [
+                { action: 'view', tabLabel: item?.contractNo || `For ${item?.customer.code}`, panel: _ => item?.id && <ContactDetailView onEdit={onEditHandler} openInTab id={item.id} /> },
+                {
+                    action: 'action1', value: item?.customer.code,
+                    onOpenIconClick: () => window.open(`/external/crm/customer/detail/${item?.customer.id}`, '_blank')?.focus(),
+                    panel: (_) => <CustomerDetailView getMenuItems={() => []} id={item?.customer.id} openInTab={true} />,
+                    tabLabel: <Badge dot><Typography.Text>{item?.customer.code}</Typography.Text>  </Badge>,
+                }
+            ]}
             listView={{
                 type: 'Table',
                 title: "Contract List",
@@ -128,12 +137,19 @@ export default () => {
                             title: 'Agreement #',
                             width: 170,
                             key: 'agreementNo',
-                            tabRender: item => ({
-                                value: item.contractNo || 'n/a',
-                                onOpenIconClick: () => window.open(`/external/crm/contract/detail/${item.id}`, '_blank')?.focus(),
-                                panel: (_) => <ContactDetailView onEdit={onEditHandler} openInTab id={item.id} />,
-                                tabLabel: item?.contractNo || `For ${item.customer.code}`,
+                            actionProps: (item) => ({
+                                type: 'view',
+                                label: item.contractNo || 'n/a',
+                                actionButtons: [
+                                    { icon: <ExportOutlined />, type: 'link', size: 'small', onClick: () => window.open(`/external/crm/contract/detail/${item.id}`, '_blank')?.focus() }
+                                ]
                             })
+                            // tabRender: item => ({
+                            //     value: item.contractNo || 'n/a',
+                            //     onOpenIconClick: () => window.open(`/external/crm/contract/detail/${item.id}`, '_blank')?.focus(),
+                            //     panel: (_) => <ContactDetailView onEdit={onEditHandler} openInTab id={item.id} />,
+                            //     tabLabel: item?.contractNo || `For ${item.customer.code}`,
+                            // })
 
                         },
                         {
@@ -141,6 +157,13 @@ export default () => {
                             key: 'customerNo',
                             sorter: 'customerNo',
                             width: 120,
+                            actionProps: (item) => ({
+                                type: 'action1',
+                                label: item.customer.code || '',
+                                actionButtons: [
+                                    { icon: <ExportOutlined />, type: 'link', size: 'small', onClick: () => window.open(`/external/crm/customer/detail/${item.customer.id}`, '_blank')?.focus() }
+                                ]
+                            }),
                             tabRender: item => ({
                                 value: item.customer.code,
                                 onOpenIconClick: () => window.open(`/external/crm/customer/detail/${item.customer.id}`, '_blank')?.focus(),

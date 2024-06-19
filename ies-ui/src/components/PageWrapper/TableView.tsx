@@ -2,14 +2,10 @@ import { ProTable } from "@ant-design/pro-components";
 import { TabRenderProps, TableViewProps } from "./type";
 import { Button, Flex, Space, Tooltip, Typography } from "antd";
 import { omit } from "lodash";
-import { ExportOutlined } from "@ant-design/icons";
-
-
 
 export default <ListDataType extends Record<string, any> & { id: number, code?: string }, FilterType
     extends { searchValue?: string; status?: string; }, ValueType>(
         { listView, tabRender, onAddTab }: {
-
             listView: TableViewProps<ListDataType, FilterType, ValueType>;
             onAddTab: (item: ListDataType, props?: TabRenderProps, key?: React.Key) => void;
             tabRender?: (item: ListDataType) => TabRenderProps[];
@@ -41,13 +37,15 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
             return {
                 ...it, render: it.actionProps ? (_: any, r: ListDataType) => {
                     const actionProps = it.actionProps?.(r)
-                    const render = tabRender?.(r).find(it1 => it1.action == actionProps?.type) //it.tabRender?.(r)
+                    const render = tabRender?.(r).find(it1 => it1.action == actionProps?.type)
                     const valComp = <Typography.Link onClick={() => onAddTab(r, render,)}>{actionProps?.label}</Typography.Link>
-                    if (render?.onOpenIconClick) {
-                        return <Flex>
-                            <Button type="link" size="small" onClick={render?.onOpenIconClick} icon={<ExportOutlined />} />
+
+                    if ((actionProps?.actionButtons?.length || 0) > 0) {
+                        return <Space size={0}>
+                            {actionProps?.actionButtons?.filter((it) => !it.hiden && (!it.position || it.position == 'first')).map((it, index) => <Button {...it} key={`${r.id}-${it.position}-${index}`} />)}
                             {valComp}
-                        </Flex>
+                            {actionProps?.actionButtons?.filter((it) => !it.hiden && it.position == 'last').map((it, index) => <Button {...it} key={`${r.id}-${it.position}-${index}`} />)}
+                        </Space>
                     }
                     return valComp
                 } : it.render

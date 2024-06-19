@@ -3,7 +3,7 @@ import '@/pages/index.less'
 import { Badge, Button, Space, Spin, Typography } from "antd"
 import PageWrapper from "@/components/PageWrapper"
 import { SoAdvanceSearchParams, SoItemLess } from "@/services/sale/data"
-import { EyeOutlined, FileOutlined, PaperClipOutlined, PlusCircleOutlined, SelectOutlined } from "@ant-design/icons"
+import { ExportOutlined, EyeOutlined, FileOutlined, PaperClipOutlined, PlusCircleOutlined, SelectOutlined } from "@ant-design/icons"
 import { Model } from "./model"
 import { useEffect, useRef, useState } from "react"
 import { FetchPagingParams } from "@/components/DataCrud/TableView"
@@ -53,18 +53,27 @@ export default () => {
     return <Spin spinning={false}>
         <PageWrapper<SoItemLess, FilterType, {}>
             // onNewRender={(key) => access.canCreateEditSo && <ViewWrapper openInTab addNew tabKey={key} />}
+            tabRender={item => [
+                { action: 'add', tabIcon: <FileOutlined />, panel: ({ key }) => <ViewWrapper addNew openInTab tabKey={key.toString()} />, tabLabel: 'New SO' },
+                {
+                    action: 'view', value: item?.poNo,
+                    panel: () => <ViewWrapper openInTab id={item?.id} />,
+                    tabLabel: item?.poNo
+                },
+                {
+                    action: 'action1', value: `${item?.customerCode} - ${item?.customerName}`,
+                    panel: () => <CustomerDetailView id={item?.customerId} openInTab getMenuItems={() => []} />,
+                    tabLabel: <Badge dot><Typography.Text>{item?.customerCode}</Typography.Text>  </Badge>,
+                }
+            ]}
             listView={{
                 type: 'Table',
                 title: 'SO List',
                 actionButtons: [{
                     icon: <PlusCircleOutlined />,
                     type: 'link',
+                    addNewTab: true,
                     disabled: !access.canCreateEditSo,
-                    tabRender: {
-                        tabIcon: <FileOutlined />,
-                        panel: (_, key) => <ViewWrapper addNew openInTab tabKey={key} />,
-                        tabLabel: 'New SO'
-                    }
                 }],
                 onOpenAdvanceSearch: () => modals.showModal('advanceSearch'),
                 onStatusRender: <StatusBar ref={statusBarRef} onCustomerTypeChanged={(value) => {
@@ -109,39 +118,41 @@ export default () => {
                     pagination: {
                         total: data?.total
                     },
+                    actionButtonsColumnRender: item => [
+                        {
+                            type: "link",
+                            size: 'small',
+                            icon: < ExportOutlined />,
+                            onClick: () => window.open(`/external/sale/so/detail/${item.id}`, '_blank')?.focus()
+                        },
+                        {
+                            type: 'link',
+                            size: 'small',
+                            icon: <EyeOutlined />,
+                            onClick: async () => {
+                                await actions.fetchSo(item.id);
+                                modals.showModal('quickView');
+                            }
+                        }
+                    ],
                     columns: [{
-                        width: 50,
-                        render: (_, r) => (
-                            <Space size={0}>
-                                <Button
-                                    type="link"
-                                    icon={<SelectOutlined />}
-                                    onClick={async () => {
-                                        window.open(`/external/sale/so/detail/${r.id}`, '_blank')?.focus();
-                                    }}
-                                />
-                                <Button
-                                    type="link"
-                                    icon={<EyeOutlined />}
-                                    onClick={async () => {
-                                        await actions.fetchSo(r.id);
-                                        modals.showModal('quickView');
-                                    }}
-                                />
-                                {r.hasAttachment && (
-                                    <PaperClipOutlined style={{ color: `${r.uploaded ? '#A0A0A0' : 'red'}` }} />
-                                )}
-                            </Space>
-                        )
-                    }, {
                         title: 'PO #',
                         sorter: 'poNo',
-                        width: 130,
+                        width: 140,
                         key: 'poNo',
-                        tabRender: item => ({
-                            value: item.poNo,
-                            panel: () => <ViewWrapper openInTab id={item.id} />,
-                            tabLabel: item.poNo
+
+                        actionProps: (item) => ({
+                            type: 'view',
+                            label: item.poNo || '',
+                            actionButtons: [
+                                {
+                                    type: 'link',
+                                    size: 'small',
+                                    position: 'last',
+                                    hidden: !item.hasAttachment,
+                                    icon: <PaperClipOutlined style={{ color: `${item.uploaded ? '#A0A0A0' : 'red'}` }} />
+                                }
+                            ]
                         })
                     }, {
                         title: 'SO #',
@@ -154,11 +165,8 @@ export default () => {
                         title: 'Customer',
                         sorter: 'customerCode',
                         key: 'customerCode',
-                        tabRender: item => ({
-                            value: `${item.customerCode} - ${item.customerName}`,
-                            panel: () => <CustomerDetailView id={item.customerId} openInTab getMenuItems={() => []} />,
-                            tabLabel: <Badge dot><Typography.Text>{item.customerCode}</Typography.Text>  </Badge>,
-                        })
+                        actionProps: item => ({ type: 'action1', label: item.customerCode, actionButtons: [{ type: 'link', size: 'small', icon: <ExportOutlined />, onClick: () => { window.open(`/external/crm/customer/detail/${item?.customerId}`, '_blank')?.focus() } }] }),
+
                     }, {
                         title: 'Ship To',
                         render: (_, data) => data.shippingAddress,

@@ -1,6 +1,6 @@
 import PageWrapper from "@/components/PageWrapper"
 import { CustomerAdvanceSearchParams, CustomerItemLess } from "@/services/crm/data"
-import { DashOutlined, DownloadOutlined, SwapOutlined } from "@ant-design/icons"
+import { DashOutlined, DownloadOutlined, ExportOutlined, SwapOutlined } from "@ant-design/icons"
 import { useAccess, useQuery } from "@umijs/max"
 import { CrmServiceAPI } from "@/services/crm/services";
 import { Dropdown, Space, Spin, Typography, message } from "antd";
@@ -17,6 +17,7 @@ import { ImportDataItem, ImportDataResponse } from "@/services/shared/data";
 import ImportFileButton from "@/components/ImportFileButton";
 import { ActionType } from "@ant-design/pro-components";
 import { CustomerActionController } from ".";
+import CustomerDetailView from "./components/Detail";
 const crmServices = CrmServiceAPI();
 type FilterType = {
     searchValue?: string;
@@ -44,7 +45,14 @@ export default ({ getMenuItems }: CustomerActionController) => {
 
     return <Spin spinning={loading}>
         <PageWrapper<CustomerItemLess, FilterType, {}>
+            tabRender={item => [
+                {
+                    action: 'view',
+                    tabLabel: item?.code,
+                    panel: (_) => <CustomerDetailView openInTab id={item?.id} getMenuItems={getMenuItems} />
 
+                }
+            ]}
             listView={{
                 type: 'Table',
                 title: 'Customer List',
@@ -80,6 +88,14 @@ export default ({ getMenuItems }: CustomerActionController) => {
                             title: 'Customer #',
                             sorter: 'customerCode',
                             width: 120,
+                            actionProps: (item) => ({
+                                type: 'view',
+                                label: item.code || '',
+                                actionButtons: [{ type: 'link', size: 'small', icon: <ExportOutlined />, onClick: () => window.open(`/external/crm/customer/detail/${item.id}`, '_blank')?.focus() }]
+                            }),
+
+
+
 
                             // tabRender: item => ({
                             //     onOpenIconClick: () => window.open(`/external/crm/customer/detail/${item.id}`, '_blank')?.focus(),

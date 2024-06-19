@@ -70,6 +70,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
         tabRender,
         listView,
     }: Props<ListDataType, FilterType, ValueType>) => {
+
     const [forceReload, setForceReload] = useState(0)
     const actionRef = useRef<ActionType>()
     const [filterData, setFilterData] = useState<FilterType>()
@@ -94,8 +95,6 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
             });
         }
     };
-
-
 
     const changeTabLabel = (label: React.ReactNode, key: string) => {
         setTabList(v => v.map(it => {

@@ -111,6 +111,7 @@ export default () => {
                 { option: { label: 'Pending', value: 'PENDING' }, subOptions: [] },
                 { option: { label: 'In Process', value: 'IN_PROGRESS' } },
                 { option: { label: 'Selected', value: 'SELECTED' } },
+                { option: { label: 'Rejected', value: 'REJECTED' } },
                 { option: { label: 'Expired', value: 'EXPIRED' } },
                 { option: { label: 'Void', value: 'VOID' } },
             ],

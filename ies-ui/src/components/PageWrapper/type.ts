@@ -12,7 +12,6 @@ export type TabRenderProps = {
     value?: React.ReactNode; //TODO: to be removed
     extra?: React.ReactNode;
     action?: ActionType;
-    onOpenIconClick?: () => void; //TODO: to be removed
     tabLabel: React.ReactNode;
     tabIcon?: React.ReactNode;
     tabKey?: React.Key;
@@ -69,6 +68,7 @@ export interface TableViewProps<ListDataType extends Record<string, any> & { id:
         })[];
         columns: (ProColumns<ListDataType, ValueType> & {
             actionProps?: (item: ListDataType) => {
+                actionButtons?: (ButtonProps & { position?: 'first' | 'last', hiden?: true })[];
                 type: ActionType;
                 label: string;
             };
@@ -90,6 +90,7 @@ export interface ListViewProps<ListDataType extends Record<string, any> & { id: 
             actionProps?: (item: ListDataType) => {
                 type: ActionType;
                 label: string;
+                actionButtons?: (ButtonProps & { position?: 'first' | 'last', visible?: true })[];
             },
             tabRender?: (item: ListDataType) => TabRenderProps //TODO: to be removed
         })[];

@@ -422,7 +422,7 @@ const VisitScheduleDetailView: React.FC<DetailProps> = ({ id, openInTab, onBack 
         breadcrumb={undefined}
         title="Visit Schedule"
         subTitle={formatDate(state.data?.detail?.scheduleDate)}
-        onBack={onBack}
+        // onBack={onBack}
         extra={actionButtons}
       >
         {content}

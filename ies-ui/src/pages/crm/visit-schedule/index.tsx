@@ -7,7 +7,7 @@ import MainPage from "./MainPage"
 export default () => {
 
     return (
-        <CrudWrapper baseURL={CrmPaths.visitSchedule}>
+        <CrudWrapper disablePageContainer baseURL={CrmPaths.visitSchedule}>
             {
                 (view, id, navigate) => {
                     switch (view) {

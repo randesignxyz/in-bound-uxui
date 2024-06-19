@@ -160,6 +160,20 @@ export default () => {
     return (
         <Spin spinning={state.loading || false}>
             <PageWrapper<VisitScheduleItem, FilterType, {}>
+                tabRender={item => [
+                    {
+                        action: 'view',
+                        value: item?.scheduleDate && formatDate(item.scheduleDate),
+                        panel: (_) => <VisitScheduleDetailView openInTab id={item?.id!!} />,
+                        tabLabel: `${item?.scheduleDate && formatDate(item.scheduleDate)} (${item?.customer.code})`,
+                    },
+                    {
+                        action: 'action1',
+                        value: item?.customer.code,
+                        panel: (_) => <CustomerDetailView getMenuItems={() => []} id={item?.customer.id} openInTab={true} />,
+                        tabLabel: <Badge dot><Typography.Text>{item?.customer.code}</Typography.Text>  </Badge>,
+                    }
+                ]}
                 listView={{
                     onExtraFilterRender: () => filter.criteria?.status || 'COMPLETED' == "COMPLETED" ? extraFilter : <div />,
                     statuses: [
@@ -202,48 +216,38 @@ export default () => {
 
                             width: 130,
                         },
-                        columns: [
+                        actionButtonsColumnRender: item => [
                             {
-                                width: 20,
-                                render: (_, r) => (
-                                    <Space size={1}>
-                                        <Tooltip title="View data in new browser tab.">
-                                            <Button
-                                                type="link"
-                                                size="small"
-                                                icon={<ExportOutlined />}
-                                                onClick={async () => {
-                                                    window.open(`/external/crm/visit-schedule/detail/${r.id}`, '_blank')?.focus();
-                                                }}
-                                            />
-                                        </Tooltip>
-                                        <Tooltip title="Quick data review">
-                                            <Button
-                                                type="link"
-                                                size="small"
-                                                icon={<EyeOutlined />}
-                                                onClick={() => quickViewHandler(r)}
-                                            />
-                                        </Tooltip>
-                                        {r.status === 'COMPLETED' && r.hasAttachment && (
-                                            <PaperClipOutlined
-                                                style={{ color: `${r.hasErrorAttachment === false ? '#A0A0A0' : 'red'}` }}
-                                            />
-                                        )}
-                                    </Space>
-                                ),
+                                type: "link",
+                                size: "small",
+                                icon: <ExportOutlined />,
+                                onClick: () => window.open(`/external/crm/visit-schedule/detail/${item.id}`, '_blank')?.focus(),
+                                tooltip: "View data in new browser tab."
                             },
+                            {
+                                tooltip: 'Quick data review',
+                                type: "link",
+                                size: "small",
+                                icon: <EyeOutlined />,
+                                onClick: () => quickViewHandler(item)
+                            }
+                        ],
+                        columns: [
                             {
                                 title: 'Schedule Date',
                                 sorter: 'scheduleDate',
                                 key: 'scheduleDate',
                                 width: 130,
-                                tabRender: item => ({
-                                    // onOpenIconClick: () => window.open(`/external/crm/visit-schedule/detail/${item.id}`, '_blank')?.focus(),
-                                    value: item?.scheduleDate && formatDate(item.scheduleDate),
-                                    panel: (_) => <VisitScheduleDetailView openInTab id={item.id} />,
-                                    tabLabel: `${item?.scheduleDate && formatDate(item.scheduleDate)}(${item.customer.code})`,
-                                })
+                                actionProps: (item) => ({
+                                    type: 'view',
+                                    label: `${formatDate(item.scheduleDate)}`,
+                                    actionButtons: [
+
+                                        { hidden: !(item.status === 'COMPLETED' && item.hasAttachment), type: 'link', size: 'small', position: 'last', icon: <PaperClipOutlined style={{ color: `${item.hasErrorAttachment === false ? '#A0A0A0' : 'red'}` }} /> }
+                                    ]
+
+                                }),
+
                             },
                             {
                                 title: 'Cust. Code',
@@ -252,12 +256,17 @@ export default () => {
                                 key: 'customerCode',
                                 // [r.customer.code, r.customer.name].filter((it) => it).join(' - ')
                                 sorter: 'customerCode',
-                                tabRender: item => ({
-                                    value: item?.customer.code,
-                                    onOpenIconClick: () => window.open(`/external/crm/customer/detail/${item.customer.id}`, '_blank')?.focus(),
-                                    panel: (_) => <CustomerDetailView getMenuItems={() => []} id={item?.customer.id} openInTab={true} />,
-                                    tabLabel: <Badge dot><Typography.Text>{item?.customer.code}</Typography.Text>  </Badge>,
-                                })
+                                actionProps: (item) => ({
+                                    type: 'action1',
+                                    label: item?.customer.code,
+                                    actionButtons: [{
+                                        size: 'small',
+                                        type: 'link',
+                                        icon: <ExportOutlined />,
+                                        onClick: () => window.open(`/external/crm/customer/detail/${item.customer.id}`, '_blank')?.focus(),
+                                    }]
+                                }),
+
                             },
                             {
                                 title: 'Salesperson',

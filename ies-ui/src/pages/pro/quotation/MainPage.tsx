@@ -58,6 +58,7 @@ export default () => {
                 panel: ({ onCloseTab, onUpdateTab, key }) => <DataEntryView
                     onView={(added) => {
                         onUpdateTab?.('view', added, undefined, key)
+                        refetch()
                     }}
                     openInTab onBack={() => { onCloseTab?.() }} type="CREATE" />,
                 tabLabel: "New",
@@ -70,6 +71,7 @@ export default () => {
                     onView={() => item && onUpdateTab?.('view', undefined, undefined, key)}
                     onBack={() => {
                         onUpdateTab?.('view', undefined, undefined, key)
+                        refetch()
                     }} type="EDIT" />,
                 tabLabel: item?.code,
                 tabIcon: <EditOutlined />
@@ -80,7 +82,7 @@ export default () => {
                     openInTab id={item?.id}
                     onEdit={() => onUpdateTab?.('edit', undefined, undefined, key)}
                     onAdd={() => onAddTab?.('copy', undefined)}
-                    onBack={() => { }} />,
+                />,
                 tabLabel: item?.code,
             }, {
                 action: 'copy',
@@ -89,7 +91,10 @@ export default () => {
                 tabIcon: <CopyFilled />,
                 panel: ({ onUpdateTab, onCloseTab, key }) => <DataEntryView
                     id={item?.id}
-                    onView={(added) => onUpdateTab?.('view', added, undefined, key)}
+                    onView={(added) => {
+                        onUpdateTab?.('view', added, undefined, key)
+                        refetch()
+                    }}
                     openInTab onBack={() => { onCloseTab?.() }} type="CREATE" />,
             }
         ]}

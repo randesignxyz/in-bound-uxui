@@ -23,7 +23,7 @@ export default ({
 }: {
   id?: number;
   openInTab?: true;
-  onBack: () => void;
+  onBack?: () => void;
   onAdd?: (id?: number) => void;
   onEdit?: (id: number) => void;
 }) => {

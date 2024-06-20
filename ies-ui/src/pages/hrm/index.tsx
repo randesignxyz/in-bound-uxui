@@ -66,7 +66,7 @@ export default () => {
 
     return (
         <PageContainer title={false}>
-            {/* <ListMenuComp items={items} /> */}
+            <ListMenuComp items={items} />
         </PageContainer>
     )
 }

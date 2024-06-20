@@ -79,11 +79,6 @@ export default () => {
 
     const extraFilter = <ProCard>
         <LightFilter<LightFilterProp> onValuesChange={(_, values) => {
-            // const hasAttachment =
-            //     'hasAttachment' in values ? values['hasAttachment'] === 'yes' ? true
-            //         : values['hasAttachment'] === 'null' ? undefined : false
-            //         : undefined;
-
             setFilter((v) => ({
                 ...v,
                 criteria: {
@@ -184,7 +179,7 @@ export default () => {
                     ],
                     onRefresh: refetch,
                     title: "Visit Schedule List",
-                    actionButtons: [<Tooltip title="Genderate visit schedule">
+                    actionButtons: [<Tooltip key={'generate-visit-plan '} title="Genderate visit schedule">
                         <Button
                             type="link"
                             onClick={() => modals.showModal('generate-schedule')}

@@ -116,7 +116,7 @@ export default () => {
                                 label: item.formNo,
                                 actionButtons: [{
                                     type: 'link', icon: <ExportOutlined />,
-                                    size: "small", onclick: () => window
+                                    size: "small", onClick: () => window
                                         .open(
                                             `/external/data-form/${PoRequestFormNames.processDefKey}/${item.processInstId}`,
                                         )

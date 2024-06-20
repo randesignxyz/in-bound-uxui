@@ -144,6 +144,7 @@ export default ({ getMenuItems }: CustomerActionController) => {
                         onDataResponse={data => {
                             setImportData(data)
                         }}
+                        key={'import-customer'}
                         onHandleChange={(status) => {
                             setLoading(status == 'uploading');
                             if (status == 'done') {

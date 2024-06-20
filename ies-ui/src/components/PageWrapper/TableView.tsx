@@ -23,8 +23,8 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
                 return <Space size={0}>
                     {
                         render.map((it, index) => <Tooltip title={it.tooltip} key={`action-tooltip-${r.id}-${index}`}>{
-                            !it.actionType ? <Button key={`action-${r.id}-${index}`} {...it} /> : <Button
-                                key={`action-bt-${r.id}-${index}`} {...(omit(it, 'tabRender'))}
+                            !it.actionType ? <Button key={`action-${r.id}-${index}`} {...(omit(it, 'actionType'))} /> : <Button
+                                key={`action-bt-${r.id}-${index}`} {...(omit(it, 'actionType'))}
                                 onClick={() => {
                                     const renderer = tabRender?.(r).find(it1 => it1.action == it.actionType)
                                     onAddTab(r, renderer)
@@ -33,7 +33,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
                     }
                 </Space>
             }
-        } : { hidden: true }, ...listView.props.columns?.map(it => {
+        } : { hideInTable: true }, ...listView.props.columns?.map(it => {
             return {
                 ...it, render: it.actionProps ? (_: any, r: ListDataType) => {
                     const actionProps = it.actionProps?.(r)

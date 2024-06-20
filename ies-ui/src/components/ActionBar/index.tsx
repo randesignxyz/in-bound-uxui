@@ -1,5 +1,5 @@
 import { MoreOutlined } from "@ant-design/icons";
-import { Button, ButtonProps, Divider, Dropdown, Flex } from "antd";
+import { Button, ButtonProps, Divider, Dropdown, Flex, Space } from "antd";
 import { MenuDividerType, MenuItemType } from "rc-menu/lib/interface";
 import React from "react";
 import { isReactNode } from "@/pages/utils";
@@ -22,25 +22,25 @@ export default ({ actionButtons, actions, onAddTab, numOfActionOnBar }: {
 }) => {
     const shownList = actions.slice(0, numOfActionOnBar || 0) || []
     const moreList = actions?.slice(numOfActionOnBar || 0)
-    return <Flex >
+    return <Flex  >
         {actionButtons?.map((it, index) => {
-
             if (isReactNode(it)) {
                 return it
             } else {
-                return !it.addNewTab ? <Button {...(omit(it, 'addNewTab'))} key={`action-bar-${index}`} /> : <Button  {...(omit(it, 'addNewTab'))} key={`action-bar-${index}`}
+                return !it.addNewTab ? <Button  {...(omit(it, 'addNewTab'))} key={`action-bar-${index}`} /> : <Button  {...(omit(it, 'addNewTab'))} key={`action-bar-${index}`}
                     onClick={() => it.addNewTab && onAddTab?.()}
                 />
             }
         })}
+
         {
             (shownList.filter((it) => (it as MenuDividerType).type != 'divider')).map((it, index) => {
-
                 const item = it as MenuType
                 return < Button key={`bt-${index}`} type="link" icon={item.icon} onClick={item.onClick} > {item.label}</Button>
 
             })
         }
+
         {
             moreList.length > 0 && <Dropdown menu={{
                 items: moreList

@@ -102,9 +102,10 @@ export default () => {
                 }} trigger={<Button icon={<FileSearchOutlined />} />} />,
                 onRefresh: refetch,
                 actionButtons: [
-                    access.canImportContract && <Tooltip placement="top" title="Import">
+                    access.canImportContract && <Tooltip placement="top" key={'upload-contact'} title="Import">
                         <ImportFileButton<ImportedContract> importedKey="CONTRACT"
                             onDataResponse={setImportContractData}
+
                             onHandleChange={status => {
                                 setLoading(status == 'uploading')
                                 if (status == 'done') {
@@ -114,6 +115,7 @@ export default () => {
                     </Tooltip>,
                     access.canAddEditContract && <Button type="link"
                         onClick={() => setModalVisible({ type: 'ADD' })}
+                        key={'add-contact'}
                         icon={<PlusOutlined />} >Add
                     </Button>
                 ].filter(it => it) as React.ReactElement[],

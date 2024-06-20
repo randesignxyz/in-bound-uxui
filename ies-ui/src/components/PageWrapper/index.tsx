@@ -106,10 +106,9 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
     }
 
     const reRenderTab = (item: ListDataType, props?: TabRenderProps, key?: React.Key) => {
-        console.log('rerender ', item, 'key', key);
+
         const gKey = key?.toString() || props?.tabKey?.toString() || `default-${item.id}`
         setTabList(v => v.map(it => {
-            console.log(gKey, v);
             if (it.key == gKey) {
                 return {
                     ...it, tab: props?.tabLabel || item.code,
@@ -173,12 +172,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
     }
 
     const removeTab = (key: string) => {
-
-        console.log('outside', tabList);
-
         setTabList(v => {
-            console.log(v);
-
             return v.filter(it => it.key != key)
         })
         setActiveKey({ key: 'list' })

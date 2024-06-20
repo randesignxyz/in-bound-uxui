@@ -15,7 +15,7 @@ export type TabRenderProps = {
     tabIcon?: React.ReactNode;
     tabKey?: React.Key;
     panel?: (props: {
-        onCloseTab?: () => void;
+        onCloseTab: () => void;
         key: React.Key,
         onAddTab: (actionType: ActionType, props?: TabRenderProps, key?: React.Key) => void,
         onUpdateTab: (actionType: ActionType, newItem?: any, props?: TabRenderProps, key?: React.Key) => void,

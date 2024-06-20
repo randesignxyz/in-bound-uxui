@@ -12,7 +12,7 @@ export type PriceComparisonListItem = {
     remarks: string;
     priceOfferedTime: number;
     justifications?: string;
-    quotations: PriceComparisonItemQuotation[],
+    quotations?: PriceComparisonItemQuotation[],
     vendorCode: string;
     vendorName: string;
     requestedDate: moment.Moment;
@@ -29,6 +29,7 @@ export type PriceComparisonSearchParams = {
     quotationIds?: number[];
     type?: string;
     status?: string,
+    searchValue?: string;
     workflowStatus?: string;
 }
 

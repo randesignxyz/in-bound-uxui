@@ -78,11 +78,13 @@ type DataFormType = {
 export default ({
   id,
   type,
+  onView,
   onBack,
 }: {
   id?: number;
   type: 'CREATE' | 'EDIT';
   onBack: () => void;
+  onView?: (processInstId: string, fornNo: string) => void;
 }) => {
   const [form] = useForm<DataFormType>();
   const vendorSrv = createVendorService();
@@ -141,9 +143,7 @@ export default ({
   const onSelectVendor = async (vendorId: number) => {
     try {
       if (vendorId < 0) return;
-
       const rs = await vendorSrv.fetchItem(vendorId);
-
       setVendor(rs);
     } catch (error: any) {
       message.error(error.message || 'Failed to fetch date.');
@@ -309,10 +309,10 @@ export default ({
         files: uploadFiles,
       };
       const rs = await srv.saveItem(data);
-
       const { processInstId, formNo } = rs;
+      onView?.(processInstId, formNo)
       message.success(`Your request is submitted. Please track the request with form no ${formNo}`);
-      history.push(`/data-form/${PoRequestFormNames.processDefKey}/${processInstId}`);
+      // history.push(`/data-form/${PoRequestFormNames.processDefKey}/${processInstId}`);
     } catch (error: any) {
       message.error(error.message || 'Failed to submit.');
     }
@@ -365,7 +365,7 @@ export default ({
   }, [items, forceUpdate]);
 
   return (
-    <PageContainer onBack={history.back} title="New Po Request">
+    <>
       <ProForm
         form={form}
         submitter={{
@@ -953,6 +953,6 @@ export default ({
         }}
         vendor={vendor}
       />
-    </PageContainer>
+    </ >
   );
 };

@@ -18,16 +18,23 @@ import DataEntryView from "./DataEntryView"
 export default () => {
 
     const srv = createPriceComparisonService();
-    const [forceReload, setForceReload] = useState(0)
+    // const [forceReload, setForceReload] = useState(0)
     const srvQuote = createQuotationService()
     const [openFlow, setOpenFlow] = useState<PriceComparisonListItem>();
     const [filter, setFilter] = useState<TableViewSearchParams<PriceComparisonSearchParams>>({ criteria: { advanceSearch: { status: 'ALL' } } })
+
     const { data, refetch } = useQuery([filter], () => srv.fetchPaging({
         keywords: filter.criteria?.searchValue,
         criteria: {
+            ...filter.criteria?.advanceSearch,
             keyword: filter.criteria?.searchValue,
-        }
-    }))
+
+        },
+        pagination: { ...filter.pagination, current: (filter.pagination?.current || 1) - 1 },
+        sort: filter.criteria?.sort
+    }), {
+        refetchOnWindowFocus: false
+    })
     data?.items
     const onPosting = (item: PriceComparisonListItem) => {
         Modal.confirm({
@@ -37,20 +44,20 @@ export default () => {
                 try {
                     await srvQuote.postPQs(item.id)
                     message.success("Successfully posted.")
-                    setForceReload(v => v + 1)
+                    refetch()
                 } catch (error: any) {
                     message.error(error.message || "Failed to post.")
-                    setForceReload(v => v + 1)
                 }
             }
         })
     }
 
     return <> <PageWrapper<PriceComparisonListItem, PriceComparisonSearchParams, {}>
+
         tabRender={(item) => [
             {
-                action: 'add', panel: ({ onUpdateTab, key }) => <DataEntryView
-                    onBack={() => { }}
+                action: 'add', panel: ({ onUpdateTab, onCloseTab, key }) => <DataEntryView
+                    onBack={() => { onCloseTab() }}
                     onView={(processInstId, formNo) => {
                         onUpdateTab('view', { processInstId: processInstId, formNo: formNo } as any, undefined, key)
                         refetch()
@@ -66,12 +73,26 @@ export default () => {
                 tabLabel: item?.formNo,
             }
         ]}
+
         listView={{
             type: 'Table',
             onRefresh: refetch,
+            onFilter: (params, page, sort) => {
+                console.log(params?.status);
+
+                setFilter(v => ({
+                    ...v,
+                    criteria: {
+                        searchValue: params?.searchValue,
+                        advanceSearch: { ...v.criteria?.advanceSearch, ...params, workflowStatus: params?.status, status: undefined },
+                        sort: sort,
+                    },
+                    pagination: page
+                }))
+            },
             statuses: [
                 { option: { label: 'All', value: 'ALL', default: true } },
-                { option: { label: 'Pending', value: 'PENDING' } },
+                { option: { label: 'Pending', value: 'REQUESTED' } },
                 { option: { label: 'In Process', value: 'IN_PROGRESS' } },
                 { option: { label: 'Approved', value: 'APPROVED' } },
                 { option: { label: 'Rejected', value: 'REJECTED' } },
@@ -79,9 +100,11 @@ export default () => {
             actionButtons: [
                 { addNewTab: true, icon: <PlusCircleFilled />, type: 'link' }
             ],
+
             props: {
                 dataSource: data?.items,
                 pagination: { total: data?.total },
+
                 columns: [
                     {
                         title: "Form #",
@@ -103,7 +126,7 @@ export default () => {
                     {
                         title: "Vendor",
                         render: (_, r) => {
-                            return uniq(r.quotations.filter(it => it.selected).map((it) => it.vendorCode || 'N/A')).join(', ');
+                            return uniq(r.quotations?.filter(it => it.selected).map((it) => it.vendorCode || 'N/A')).join(', ');
                         },
                     },
                     {
@@ -144,7 +167,7 @@ export default () => {
                         render: (_, r) => (
                             <Flex>
                                 <Button type="link" title='View Flow' onClick={() => setOpenFlow(r)} icon={<PartitionOutlined />} />
-                                {r.workflowStatus == 'APPROVED' && r.quotations.some(it => (it.integratedStatus || 'FAILED') == 'FAILED') && <Button
+                                {r.workflowStatus == 'APPROVED' && r.quotations?.some(it => (it.integratedStatus || 'FAILED') == 'FAILED') && <Button
                                     title='Post all quotations to to SAP' type="link"
                                     danger onClick={() => { onPosting(r) }} icon={<UploadOutlined />} />}
                             </Flex>

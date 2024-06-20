@@ -36,10 +36,12 @@ export type PoRequestListItem = {
 }
 
 export type PoRequestSearchParams = {
-    keyword?: string,
-    status?: string,
+    keyword?: string;
+    status?: string;
+    subStatus?: string;
+    searchValue?: string;
+    workflowStatus?: string;
 }
-
 
 export type SavePoItem = {
     id?: number;

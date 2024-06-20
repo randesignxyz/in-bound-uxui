@@ -15,10 +15,7 @@ import DataEntryView from "./DataEntryView"
 export default () => {
 
     const [openFlow, setOpenFlow] = useState<PoRequestListItem>();
-    const [selectedStatus, setSelectedSatus] = useState<string>('ALL');
-
     const srv = createPoService();
-
     const [filter, setFilter] = useState<TableViewSearchParams<PoRequestSearchParams>>({
         criteria: {
             advanceSearch: {

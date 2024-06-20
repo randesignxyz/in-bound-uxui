@@ -46,7 +46,7 @@ export default () => {
                 try {
                     await srv.postPo(item.id)
                     message.success("Successfully posted.")
-                    // setForceReload(v => v + 1)
+                    refetch()
                 } catch (error: any) {
                     message.error(error.message || "Failed to post.")
                     // setForceReload(v => v + 1)
@@ -75,7 +75,6 @@ export default () => {
                                 status: params?.subStatus
                             },
                             sort: sort,
-
                         },
                         pagination: page
                     })

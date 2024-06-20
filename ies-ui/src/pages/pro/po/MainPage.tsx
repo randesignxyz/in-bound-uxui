@@ -154,7 +154,7 @@ export default () => {
 
                         {
                             title: 'SAP Information',
-                            hideInTable: !['ALL', 'APPROVED'].some((it) => it == selectedStatus),
+                            hideInTable: !['ALL', 'APPROVED'].some((it) => it == filter.criteria?.advanceSearch?.workflowStatus),
                             children: [
                                 { title: 'Posted Date', sorter: "postedDate", render: (_, r) => r.postedDate && formatDate(r.postedDate) },
                                 { title: 'Doc Num', render: (_, r) => r.sapDocNo },

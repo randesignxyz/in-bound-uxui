@@ -288,11 +288,11 @@ export default () => {
     try {
       await printPdf<{ id: number }>(requestActions)({
         reportName: 'export-picking-slip',
-        data: { id: instanceId }
+        data: { id: 69724 }
       }, async () => {
         await printPdf<{ id: number }>(requestActions)({
           reportName: 'export-gate-pass',
-          data: { id: instanceId }
+          data: { id: 69724 }
         })
       });
     } catch (error: any) {

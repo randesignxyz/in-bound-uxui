@@ -17,6 +17,7 @@ export const createQuotationService = (): CrudBaseServices1<
     listItemByKeywords: (keywords?: string, fromPrOnly?: boolean) => Promise<Paging<Item>>
     fetchItems: (ids: number[]) => Promise<QuotationDetail[]>
     void: (id: number, remarks: string) => Promise<void>
+    select: (id: number, remarks: string) => Promise<void>
     fetchQuotationForPc: (params: FetchPagingParams<QuotationSearchParams>) => Promise<Paging<QuotationListItem>>,
     getVendorChangedRequired: () => Promise<{ data: number }>,
     postPQ: (id: number) => Promise<void>,
@@ -129,6 +130,13 @@ export const createQuotationService = (): CrudBaseServices1<
             endpoint: 'PRO',
 
         }).query(request),
+
+        select: async (id, remarks) => execDataService0<{ id: Number; remarks: string }>({
+            actionName: 'select-quotation',
+            endpoint: 'PRO',
+            payload: { id, remarks }
+        })(request),
+
 
         fetchQuotationForPc: (params: FetchPagingParams<QuotationSearchParams>) => fetchDataPagingService<QuotationListItem, FetchPagingParams<QuotationSearchParams>>({
             actionName: 'fetch-pr-for-pc',

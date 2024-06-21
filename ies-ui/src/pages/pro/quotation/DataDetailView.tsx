@@ -2,7 +2,7 @@ import AttachedFileList from '@/components/Attachment/AttachedFileList';
 import RemarkModalV2 from '@/components/remark-modal-v2';
 import Status from '@/components/Status';
 import { formatDate, formatter, formatterPercentage, toReadable } from '@/pages/utils';
-import { CopyOutlined, DeleteOutlined, EditOutlined, ExportOutlined, PartitionOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
+import { CheckOutlined, CopyOutlined, DeleteOutlined, EditOutlined, ExportOutlined, PartitionOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
 import { PageContainer, ProCard, ProDescriptions } from '@ant-design/pro-components';
 import { Button, Checkbox, Flex, Form, Input, message, Modal, Space, Table } from 'antd';
 import { useEffect, useState } from 'react';
@@ -48,9 +48,29 @@ export default ({
     try {
       await srv.void(data?.id!!, remarks);
       initData();
+      message.success("Successfully voided.")
       return true;
     } catch (error: any) {
       message.error(error.messge || 'Failed to void.');
+      return false;
+    }
+  };
+
+  const onSelectHandler = async (remarks: string) => {
+    try {
+      await srv.select(data?.id!!, remarks);
+      initData();
+      try {
+        await srv.postPQ(data?.id!!)
+      } catch (error: any) {
+        message.error(error.message || 'Failed to post to SAP.');
+        return false;
+      }
+
+      message.success("Successfully selected.")
+      return true;
+    } catch (error: any) {
+      message.error(error.message || 'Failed to select.');
       return false;
     }
   };
@@ -124,6 +144,23 @@ export default ({
           id: data.id,
         }}
         onSave={(_, remarks) => onVoidHandler(remarks!)}
+      />
+    )}
+
+    {data?.status == 'PENDING' && (
+      <RemarkModalV2
+        required
+        confirm
+        title="Select Quotation"
+        trigger={
+          <Button type="link" icon={<CheckOutlined />}>
+            Select
+          </Button>
+        }
+        item={{
+          id: data.id,
+        }}
+        onSave={(_, remarks) => onSelectHandler(remarks!)}
       />
     )}
 
@@ -208,6 +245,7 @@ export default ({
               { title: 'Issued Date', render: (_, r) => formatDate(r.issuedDate) },
               { title: 'Required Date', render: (_, r) => formatDate(r.requiredDate) },
               { title: 'Service', render: (_, r) => <Checkbox checked={r.service} /> },
+
             ]}
           />
         </Flex>
@@ -230,6 +268,7 @@ export default ({
                 title: 'Status',
                 render: (_, r) => <Status value={r.status} text={toReadable(r.status)} />,
               },
+              { title: 'Select Remarks', render: (_, r) => r.selectRemarks, hideInDescriptions: !data?.selectRemarks }
             ]}
           />
         </Flex>

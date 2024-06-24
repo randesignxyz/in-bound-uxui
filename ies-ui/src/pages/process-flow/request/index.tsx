@@ -53,6 +53,7 @@ export default () => {
     if (key == 'requisition_request_process' && access.canCreatePR) return true;
     if (key == PriceComparisonFormNames.processDefKey && access.canAccessProQCMenuItem) return true;
     if (key == PoRequestFormNames.processDefKey && access.canAccessProPOMenuItem) return true;
+    if (key == 'fma_stock_request_process' && access.canCreatePR) return true;
 
     return false;
   };

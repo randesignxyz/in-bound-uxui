@@ -1068,6 +1068,40 @@ export default [
   },
 
   //  ================= END Prod =================
+  //  ================= START In-house Stock ==============
+  {
+    path: '/stock',
+    name: 'inhouse-stock',
+    icon: 'ShopOutlined',
+    access: 'canAccessCrmMenuItem',
+    component: './fma-stock',
+  },
+  {
+    path: '/stock/request/:view/*',
+    name: 'inhouse-stock-request',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessCrmMenuItem',
+    component: './fma-stock/request',
+  },
+  {
+    path: '/stock/item/:view/*',
+    name: 'inhouse-stock-item',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessCrmMenuItem',
+    component: './fma-stock/item',
+  },
+  {
+    path: '/external/stock/item/:view/*',
+    name: 'inhouse-stock-item',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    layout: false,
+    access: 'canAccessCrmMenuItem',
+    component: './fma-stock/item',
+  },
+  //  ================= END In-house Stock ================
   //  ================= Setting =================
 
   {

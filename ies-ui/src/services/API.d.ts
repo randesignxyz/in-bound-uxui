@@ -2,7 +2,7 @@
 export type ExportType = 'PDF' | 'EXCEL'
 
 
-export type Endpoint = 'INVENTORY' | 'SAP' | 'WORK_FLOW' | 'CRM' | 'SALE' | 'SETTING' | 'DELIVERY' | 'FILE' | 'PRO' | 'ICT' | 'HR' | 'RETAILER' | 'FLEET' | 'SAP_SOURCE' | 'DLV_EXPENSE' | 'PROD' | 'DMS'
+export type Endpoint = 'INVENTORY' | 'SAP' | 'WORK_FLOW' | 'CRM' | 'SALE' | 'SETTING' | 'DELIVERY' | 'FILE' | 'PRO' | 'ICT' | 'HR' | 'RETAILER' | 'FLEET' | 'SAP_SOURCE' | 'DLV_EXPENSE' | 'PROD' | 'DMS' |'FMA'
 
 
 // export interface ServiceType {

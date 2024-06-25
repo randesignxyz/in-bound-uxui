@@ -124,13 +124,13 @@ export default ({
     };
   };
 
-  const onSearchHandler = async ({ keywords }: { keywords?: string }) => {
+  const onSearchHandler = async ({ keyWords }: { keyWords?: string }) => {
     try {
       if (searchBy == 'QC') {
         const rs = await qcSrv.fetchPaging({
-          keywords: keywords,
+          keywords: keyWords,
           criteria: {
-            keyword: keywords,
+            keyword: keyWords,
             isService: isService,
             workflowStatus: 'APPROVED',
             status: 'OPENED',
@@ -143,17 +143,17 @@ export default ({
         }));
       }
       if (searchBy == 'PQ') {
-        const rs = await pqSrv.fetchPaging({
-          keywords: keywords,
+        const rs = await pqSrv.fetchQuotationForPo({
+          keywords: keyWords,
           criteria: {
             isService: isService,
-            keyword: keywords,
-            status: 'SELECTED',
+            keyword: keyWords,
+            // status: 'SELECTED',
 
           },
         });
 
-        return rs.items.map((it) => ({
+        return rs.map((it) => ({
           label: it.code,
           value: it.id,
         }));
@@ -162,7 +162,7 @@ export default ({
       if (searchBy == 'PR') {
         const rs = await prSrv.list({
           criteria: {
-            searchValue: keywords,
+            searchValue: keyWords,
             advanceSearch: {
               service: isService,
               integratedStatus: 'POSTED',
@@ -363,7 +363,9 @@ export default ({
                   r.refType != 'ITEM' && (
                     <ProDescriptions<PoItemSearch>
                       dataSource={r}
+                      size='small'
                       column={3}
+
                       columns={[
                         {
                           label: 'Ref #',

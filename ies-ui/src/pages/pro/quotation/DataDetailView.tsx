@@ -263,7 +263,6 @@ export default ({
                 hideInDescriptions: !data.voidReason,
                 render: (_, r) => r.voidReason,
               },
-
               {
                 title: 'Status',
                 render: (_, r) => <Status value={r.status} text={toReadable(r.status)} />,

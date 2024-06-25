@@ -57,7 +57,12 @@ export default () => {
 
             tabRender={item => [
                 { action: 'view', tabLabel: item?.formNo, panel: ({ }) => <Form formKey={PoRequestFormNames.processDefKey} id={item?.processInstId} openInTab /> },
-                { action: 'add', tabLabel: 'New PO', panel: ({ onCloseTab }) => <DataEntryView onBack={onCloseTab} type="CREATE" /> }
+                {
+                    action: 'add', tabLabel: 'New PO', panel: ({ onCloseTab, onUpdateTab, key }) => <DataEntryView onBack={onCloseTab} onView={(processInstId, formNo) => {
+                        onUpdateTab?.('view', { processInstId: processInstId, formNo: formNo }, undefined, key)
+                        refetch()
+                    }} type="CREATE" />
+                }
             ]}
             listView={{
                 onRefresh: refetch,

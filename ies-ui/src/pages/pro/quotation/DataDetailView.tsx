@@ -147,7 +147,7 @@ export default ({
       />
     )}
 
-    {data?.status == 'PENDING' && (
+    {data?.status == 'PENDING' && data.totalAmount <= 500 && (
       <RemarkModalV2
         required
         confirm

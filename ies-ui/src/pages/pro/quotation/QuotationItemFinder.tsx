@@ -88,7 +88,7 @@ export default ({
         : quotationSrv.listItemByPr(ids, keywords));
       return rs;
     } catch (error: any) {
-      message.error(error.message || 'Failed to fetch data');
+      // message.error(error.message || 'Failed to fetch data');
       return [];
     }
   };
@@ -98,7 +98,7 @@ export default ({
       const rs = await quotationSrv.listItemByKeywords(criteria?.keywords, criteria?.fromPrOnly);
       return rs.items;
     } catch (error: any) {
-      message.error(error.message || 'Failed to fetch data');
+      // message.error(error.message || 'Failed to fetch data');
       return [];
     }
   };
@@ -366,12 +366,12 @@ export default ({
                         { label: 'Amount', render: (_, r) => formatter.format(r.amount) },
                         {
                           label: 'Ordered Qty',
-                          hideInDescriptions: !item?.orderdQty,
+                          hideInDescriptions: !item?.orderdQty || isService,
                           render: (_, r) => r.orderdQty && formatterQty.format(r.orderdQty),
                         },
                         {
                           label: 'Purchased Qty',
-                          hideInDescriptions: !item?.purchaseQty,
+                          hideInDescriptions: !item?.purchaseQty || isService,
                           render: (_, r) => r.purchaseQty && formatterQty.format(r.purchaseQty),
                         },
                       ]}

@@ -107,11 +107,32 @@ export default () => {
                 addNewTab: true
             }],
             statuses: [
-                { option: { label: 'All', value: 'ALL', default: true }, },
+                {
+                    option: { label: 'All', value: 'ALL', default: true, }, subOptions: [
+                        { label: 'ALL', value: 'ALL', },
+                        { label: 'Posted', value: 'POSTED' },
+                        { label: 'Failed', value: 'FAILED' },
+
+                    ]
+                },
                 { option: { label: 'Pending', value: 'PENDING' }, subOptions: [] },
                 { option: { label: 'In Process', value: 'IN_PROGRESS' } },
-                { option: { label: 'Selected', value: 'SELECTED' } },
-                { option: { label: 'Rejected', value: 'REJECTED' } },
+                {
+                    option: { label: 'Selected', value: 'SELECTED' }, subOptions: [
+                        { label: 'ALL', value: 'ALL', },
+                        { label: 'Posted', value: 'POSTED' },
+                        { label: 'Failed', value: 'FAILED' },
+
+                    ]
+                },
+                {
+                    option: { label: 'Rejected', value: 'REJECTED' }, subOptions: [
+                        { label: 'ALL', value: 'ALL', },
+                        { label: 'Posted', value: 'POSTED' },
+                        { label: 'Failed', value: 'FAILED' },
+
+                    ]
+                },
                 { option: { label: 'Expired', value: 'EXPIRED' } },
                 { option: { label: 'Void', value: 'VOID' } },
             ],
@@ -124,6 +145,7 @@ export default () => {
                         advanceSearch: {
                             keyword: params?.searchValue,
                             status: params?.status,
+                            subStatus: params?.subStatus
                         },
                         sort: sort
                     },

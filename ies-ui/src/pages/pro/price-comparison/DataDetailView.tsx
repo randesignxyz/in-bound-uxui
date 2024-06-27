@@ -268,8 +268,11 @@ export default ({
                   const item = it.items.find((i) => i.priceOffer == offer.id && i.vendorId == v.id);
                   return (
                     <Table.Summary.Cell align={align(it.type)} index={index1 + 1}>
-                      {item?.text && item.text}
-                      {item?.amount && item.amount > 0 ? formatter.format(item?.amount) : ''}
+                      <Flex key={`${item?.id}-${it.type}`} justify='space-between'>
+                        {item?.text && item.text}
+                        {item?.amount && item.amount > 0 ? formatter.format(item?.amount) : ''}
+                        {item?.selected && <Checkbox checked />}
+                      </Flex>
                     </Table.Summary.Cell>
                   );
                 }),

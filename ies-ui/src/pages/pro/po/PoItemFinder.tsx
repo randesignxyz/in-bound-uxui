@@ -212,7 +212,7 @@ export default ({
         price: it.price || 0,
         uomId: it.uomId,
         uomName: it.uomName,
-        qty: it.qty || 1,
+        qty: ((it.qty || 0) - (it.orderedQty || 0) - (it.purchasedQty || 0)),
         amount: it.amount || 0,
         amountAfterDiscount: it.amount || 0,
         item: it,
@@ -384,21 +384,26 @@ export default ({
                         {
                           label: 'Qty',
                           hideInDescriptions: isService,
-                          render: (_, r) => r.qty && formatterQty.format(r.qty),
+                          render: (_, r) => formatterQty.format(r.qty || 0),
                         },
                         {
                           label: 'Ordered Qty',
                           hideInDescriptions: isService,
-                          render: (_, r) => r.orderedQty && formatterQty.format(r.orderedQty),
+                          render: (_, r) => formatterQty.format(r.orderedQty || 0),
                         },
                         {
                           label: 'Purchased Qty',
                           hideInDescriptions: isService,
-                          render: (_, r) => r.purchasedQty && formatterQty.format(r.purchasedQty),
+                          render: (_, r) => formatterQty.format(r.purchasedQty || 0),
+                        },
+                        {
+                          label: 'Available Qty',
+                          hideInDescriptions: isService,
+                          render: (_, r) => formatterQty.format((r.qty || 0) - (r.purchasedQty || 0) - (r.orderedQty || 0)),
                         },
                         {
                           label: 'Amount',
-                          render: (_, r) => r.amount && formatter.format(r.amount),
+                          render: (_, r) => formatter.format(r.amount || 0),
                         },
                       ]}
                     />

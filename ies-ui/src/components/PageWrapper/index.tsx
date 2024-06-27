@@ -34,10 +34,9 @@ import TableView from "./TableView";
 import { uniqueId } from "lodash";
 
 interface Props<ListDataType extends Record<string, any> & { id: number, code?: string }, FilterType extends Record<string, any>, ValueType> {
+
     onNewRender?: (key: string) => React.ReactNode;
-
     tabRender?: (item?: ListDataType) => TabRenderProps[];
-
     listView: TableViewProps<ListDataType, FilterType, ValueType> | ListViewProps<ListDataType, FilterType, ValueType>
 }
 

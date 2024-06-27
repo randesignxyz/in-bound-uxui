@@ -2,7 +2,7 @@ import { FileSearchOutlined, ReloadOutlined } from "@ant-design/icons"
 import { ProCard } from "@ant-design/pro-components"
 import { Button, ButtonProps, Flex, Input, Segmented } from "antd"
 import { SegmentedLabeledOption } from "antd/lib/segmented"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import ActionBar from "../ActionBar"
 import { MenuItemType } from "antd/lib/menu/hooks/useItems"
 
@@ -37,6 +37,13 @@ export default ({
 }) => {
     const [subStatuses, setSubStatuses] = useState<(SegmentedLabeledOption & { default?: true })[]>(statuses.find(it => it.option.default)?.subOptions || [])
 
+    const [subStatusValue, setSubStatusValue] = useState<string | number>()
+
+
+    useEffect(() => {
+        setSubStatusValue(statuses.find(it => it.option.default)?.subOptions?.find(it => it.default)?.value)
+    }, [])
+
     return <ProCard size="small">
         <Flex >
             <Flex>
@@ -53,6 +60,7 @@ export default ({
                             <Segmented defaultValue={statuses.find(it => it.option.default)?.option.value} onChange={(value) => {
                                 onStatusChanged?.(value)
                                 const sub = statuses.find(it => it.option.value == value)?.subOptions || []
+                                setSubStatusValue(sub.find(it => it.default)?.value)
                                 onSubStatusChanged?.(sub.find(it => it.default)?.value)
                                 setSubStatuses(v => sub)
                             }} options={statuses.map(it =>
@@ -64,7 +72,11 @@ export default ({
                 {subStatuses.length > 0 && !onStatusRender ? <Flex style={{ marginLeft: 20 }}>
                     <Segmented
                         options={subStatuses}
-                        onChange={onSubStatusChanged}
+                        onChange={(value) => {
+                            setSubStatusValue(value)
+                            onSubStatusChanged?.(value)
+                        }}
+                        value={subStatusValue}
                         defaultValue={subStatuses.find(it => it.default)?.value || subStatuses.find(it => it)?.value}
                     />
                 </Flex> : <></>}

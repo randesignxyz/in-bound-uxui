@@ -57,7 +57,6 @@ export default () => {
             {
                 action: 'add',
                 panel: ({ onCloseTab, onUpdateTab, key, currentTabKey }) => <DataEntryView
-                    showSubmitter={() => key == currentTabKey}
                     onView={(added) => {
                         onUpdateTab?.('view', added, undefined, key)
                         refetch()

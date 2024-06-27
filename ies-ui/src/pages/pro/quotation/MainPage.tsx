@@ -52,10 +52,12 @@ export default () => {
         searchValue?: string;
         status?: string; subStatus?: string
     }, {}>
+
         tabRender={(item) => [
             {
                 action: 'add',
-                panel: ({ onCloseTab, onUpdateTab, key }) => <DataEntryView
+                panel: ({ onCloseTab, onUpdateTab, key, currentTabKey }) => <DataEntryView
+                    showSubmitter={() => key == currentTabKey}
                     onView={(added) => {
                         onUpdateTab?.('view', added, undefined, key)
                         refetch()
@@ -109,7 +111,7 @@ export default () => {
             statuses: [
                 {
                     option: { label: 'All', value: 'ALL', default: true, }, subOptions: [
-                        { label: 'ALL', value: 'ALL', },
+                        { label: 'ALL', value: 'ALL', default: true },
                         { label: 'Posted', value: 'POSTED' },
                         { label: 'Failed', value: 'FAILED' },
 
@@ -119,7 +121,7 @@ export default () => {
                 { option: { label: 'In Process', value: 'IN_PROGRESS' } },
                 {
                     option: { label: 'Selected', value: 'SELECTED' }, subOptions: [
-                        { label: 'ALL', value: 'ALL', },
+                        { label: 'ALL', value: 'ALL', default: true },
                         { label: 'Posted', value: 'POSTED' },
                         { label: 'Failed', value: 'FAILED' },
 
@@ -127,13 +129,13 @@ export default () => {
                 },
                 {
                     option: { label: 'Rejected', value: 'REJECTED' }, subOptions: [
-                        { label: 'ALL', value: 'ALL', },
+                        { label: 'ALL', value: 'ALL', default: true },
                         { label: 'Posted', value: 'POSTED' },
                         { label: 'Failed', value: 'FAILED' },
 
                     ]
                 },
-                { option: { label: 'Expired', value: 'EXPIRED' } },
+                // { option: { label: 'Expired', value: 'EXPIRED' } },
                 { option: { label: 'Void', value: 'VOID' } },
             ],
             onRefresh: refetch,

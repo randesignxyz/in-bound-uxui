@@ -115,6 +115,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
                     icon: props?.tabIcon || <FileTextOutlined />,
                     children: props?.panel?.({
                         key: gKey,
+                        currentTabKey: activeKey.key,
                         onCloseTab: () => { removeTab(gKey) },
                         onAddTab: (actionType, props, key) => addTab(item, props || tabRender?.(item).find(it => it.action == actionType), key),
                         onUpdateTab: (actionType, newItem, props, key) => reRenderTab(newItem || item, props || tabRender?.(newItem || item).find(it => it.action == actionType), key),
@@ -131,9 +132,12 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
             tab: props.tabLabel || "new",
             key: gKey,
             tabKey: gKey,
+
             icon: props.tabIcon || <FileAddOutlined />,
             children: props.panel?.({
-                onCloseTab: () => { removeTab(gKey) }, key: gKey,
+                onCloseTab: () => { removeTab(gKey) },
+                key: gKey,
+                currentTabKey: activeKey.key,
                 onAddTab() {
                     throw Error("Not support")
                 },
@@ -158,6 +162,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
 
                     children: props?.panel?.({
                         key: gKey,
+                        currentTabKey: activeKey.key,
                         onCloseTab: () => { removeTab(gKey) },
                         onAddTab: (actionType, props, key) => addTab(item, props || tabRender?.(item).find(it => it.action == actionType), key),
                         onUpdateTab: (actionType, newItem, props, key) => reRenderTab(newItem || item, props || tabRender?.(newItem || item).find(it => it.action == actionType), key),
@@ -227,6 +232,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
             type: 'editable-card',
             defaultActiveKey: 'list',
             activeKey: activeKey.key,
+
             renderTabBar: (tabBarProps, DefaultTabBar) => (
                 <DndContext sensors={[sensor]} onDragEnd={onDragEnd}>
                     <SortableContext items={tabList.map((i) => i.key as string)} strategy={horizontalListSortingStrategy}>
@@ -257,7 +263,8 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
         {activeKey.key == 'list' && listView.type == 'Table' && <>
             {listView.onExtraFilterRender?.(filterData)}
             <TableView tabRender={tabRender} listView={{
-                ...listView, props: {
+                ...listView,
+                props: {
                     ...listView.props,
                     actionRef: listView.props.actionRef || actionRef,
                     request: async (params, sort) => {

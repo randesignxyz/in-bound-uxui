@@ -62,7 +62,7 @@ export default () => {
                         refetch()
                     }}
                     openInTab onBack={() => { onCloseTab?.() }} type="CREATE" />,
-                tabLabel: "New",
+                tabLabel: "New QP",
             },
             {
                 action: 'edit',

@@ -53,6 +53,7 @@ import { PriceComparisonSavePayload } from './data';
 import ItemFinder from './ItemFinder';
 import { PriceComparisonFormNames } from './process-flow/data';
 import { createPriceComparisonService } from './service';
+import { useInView } from 'react-intersection-observer';
 
 export type PriceOfferType = 'first' | 'last';
 
@@ -191,6 +192,8 @@ export default ({
     priceOffer: PriceOfferType;
     vendorKey?: string;
   }>();
+
+  const { ref, inView } = useInView({});
 
   const onAddOtherCostHandler = (type: SummaryTypes) => {
     const seq = otherCost.filter((it) => it.type == type).length + 1;
@@ -971,13 +974,13 @@ export default ({
     }
   };
   return (
-    <>
+    <div ref={ref}>
       <ProForm
 
         form={form}
         submitter={{
           render: () => (
-            <FooterToolbar>
+            inView ? <FooterToolbar>
               <Button style={{ marginRight: 10 }} onClick={onBack}>
                 Cancel
               </Button>
@@ -1008,7 +1011,7 @@ export default ({
               >
                 Submit
               </Button>
-            </FooterToolbar>
+            </FooterToolbar> : <></>
           ),
         }}
       />
@@ -1537,6 +1540,6 @@ export default ({
         // onSave={  => onAddItemHandler}
         isService={isService}
       />
-    </ >
+    </div >
   );
 };

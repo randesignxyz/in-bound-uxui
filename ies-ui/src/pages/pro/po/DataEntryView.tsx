@@ -45,6 +45,7 @@ import {
 import PoItemFinder from './PoItemFinder';
 import { createPoService } from './services';
 import { Moment } from 'moment';
+import { useInView } from 'react-intersection-observer';
 
 type DataFormType = {
   vendorId: number;
@@ -76,8 +77,6 @@ type DataFormType = {
 };
 
 export default ({
-  id,
-  type,
   onView,
   onBack,
 }: {
@@ -101,6 +100,8 @@ export default ({
   const [requestVisible, setRequestVisible] = useState(false);
   const [addItemVisible, setAddItemVisible] = useState(false);
   const [isService, setIsService] = useState(false);
+
+  const { ref, inView } = useInView({});
 
   const onFindVendorHandler = async ({ keyWords }: { keyWords?: string }) => {
     const rs = await vendorSrv.fetchPaging({
@@ -365,12 +366,12 @@ export default ({
   }, [items, forceUpdate]);
 
   return (
-    <>
+    <div ref={ref}>
       <ProForm
         form={form}
         submitter={{
           render: () => (
-            <FooterToolbar>
+            inView ? <FooterToolbar>
               <Button style={{ marginRight: 10 }} onClick={onBack}>
                 Cancel
               </Button>
@@ -387,7 +388,7 @@ export default ({
               >
                 Request
               </Button>
-            </FooterToolbar>
+            </FooterToolbar> : <></>
           ),
         }}
       >
@@ -953,6 +954,6 @@ export default ({
         }}
         vendor={vendor}
       />
-    </ >
+    </ div >
   );
 };

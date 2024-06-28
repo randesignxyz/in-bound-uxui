@@ -93,7 +93,7 @@ export default ({
   onBack: () => void;
 }) => {
 
-  const { ref, inView, entry } = useInView({});
+  const { ref, inView } = useInView({});
 
   const srv = createQuotationService();
   const vendorSrv = createVendorService();
@@ -431,8 +431,6 @@ export default ({
     initData().finally(() => setDataLoaded(true));
   }, []);
 
-
-  const tab1FooterRef = useRef(null);
 
   useEffect(() => {
     const amount = (isService ? services : items)

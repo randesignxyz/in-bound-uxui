@@ -144,7 +144,7 @@ export default () => {
                                     render: (_, r) => r.isService && <CheckOutlined />,
                                 },
                                 { title: 'Payment Term', sorter: 'paymentTerm', dataIndex: 'paymentTerm' },
-                                { title: 'Payment Due', sorter: 'paymentDue', render: (_, r) => formatter.format(r.paymentDue) },
+                                { title: 'Payment Due', align: 'right', sorter: 'paymentDue', render: (_, r) => formatter.format(r.paymentDue) },
                             ]
 
                         },
@@ -152,7 +152,7 @@ export default () => {
                             title: 'Request infomation',
                             children: [
                                 { title: 'Requestor', sorter: 'requestedBy', dataIndex: 'requestedBy' },
-                                { title: 'Requested Date', sorter: 'requestedDate', render: (_, r) => formatDateTime(r.createdDate) },
+                                { title: 'Requested Date', align: 'right', sorter: 'requestedDate', render: (_, r) => formatDateTime(r.createdDate) },
                                 { title: 'Status', render: (_, r) => <Status text={r.workflowStatus} /> },
                             ]
                         },
@@ -161,7 +161,7 @@ export default () => {
                             title: 'SAP Information',
                             hideInTable: !['ALL', 'APPROVED'].some((it) => it == filter.criteria?.advanceSearch?.workflowStatus),
                             children: [
-                                { title: 'Posted Date', sorter: "postedDate", render: (_, r) => r.postedDate && formatDate(r.postedDate) },
+                                { title: 'Posted Date', sorter: "postedDate", align: 'right', render: (_, r) => r.postedDate && formatDate(r.postedDate) },
                                 { title: 'Doc Num', render: (_, r) => r.sapDocNo },
                                 { title: 'Status', render: (_, r) => r.integratedStatus && <Status text={r.integratedStatus} /> },
                             ],

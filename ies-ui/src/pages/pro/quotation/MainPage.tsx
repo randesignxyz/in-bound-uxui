@@ -63,8 +63,7 @@ export default () => {
                     }}
                     openInTab onBack={() => { onCloseTab?.() }} type="CREATE" />,
                 tabLabel: "New QP",
-            },
-            {
+            }, {
                 action: 'edit',
                 panel: ({ onUpdateTab, key }) => <DataEntryView
                     id={item?.id}
@@ -76,8 +75,7 @@ export default () => {
                     }} type="EDIT" />,
                 tabLabel: item?.code,
                 tabIcon: <EditOutlined />
-            },
-            {
+            }, {
                 action: 'view',
                 panel: ({ onAddTab, onUpdateTab, key }) => <DataDetailView
                     openInTab id={item?.id}

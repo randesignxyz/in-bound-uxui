@@ -87,7 +87,6 @@ export default ({
       quotation?.price && quotation.price > 0 ? (
         <Space>
           <Typography.Text strong={quotation.selected}>
-            {' '}
             {formatter.format(quotation.price)}
           </Typography.Text>
           {quotation.selected && <Checkbox checked />}
@@ -180,8 +179,8 @@ export default ({
       'awardedLogisticesFee',
       'totalPrice',
       'grantTotal',
-      // 'freight',
-      // 'clearanceAgent',
+      'freight',
+      'clearanceAgent',
     ].some((it) => it == type)
       ? 'right'
       : undefined;
@@ -268,11 +267,15 @@ export default ({
                   const item = it.items.find((i) => i.priceOffer == offer.id && i.vendorId == v.id);
                   return (
                     <Table.Summary.Cell align={align(it.type)} index={index1 + 1}>
-                      <Flex key={`${item?.id}-${it.type}`} justify='space-between'>
-                        {item?.text && item.text}
-                        {item?.amount && item.amount > 0 ? formatter.format(item?.amount) : ''}
+                      <Space>
+                        <Typography.Text strong={item?.selected}>
+                          {item?.text && item.text}
+                          {item?.amount && item.amount > 0 ? formatter.format(item?.amount) : ''}
+                        </Typography.Text>
+
+                        {' '}
                         {item?.selected && <Checkbox checked />}
-                      </Flex>
+                      </Space>
                     </Table.Summary.Cell>
                   );
                 }),
@@ -339,7 +342,6 @@ export default ({
             },
             {
               title: 'First Offer Unit Price',
-
               children: vendors?.map((it) => ({
                 align: 'right',
                 title: renderVendorTitle(1, it),
@@ -348,7 +350,6 @@ export default ({
             },
             {
               title: 'Last Offer Unit Price',
-
               children: vendors?.map((it) => ({
                 title: renderVendorTitle(0, it),
                 align: 'right',

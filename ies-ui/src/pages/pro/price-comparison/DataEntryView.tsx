@@ -788,8 +788,6 @@ export default ({
             ],
           }}
         >
-
-
           <Flex align='flex-end' vertical>
             {[<Typography.Link>{vendor.name}</Typography.Link>, <Typography.Text type="secondary"> {quotation?.code}</Typography.Text>].filter(it => it).map((it, index) => (<Flex key={`${vendor.key}-${index}`}> {it}</Flex>))}
           </Flex>
@@ -910,60 +908,64 @@ export default ({
     comment?: string,
   ) => {
     const dataForm = await form.validateFields();
-    const saveData: PriceComparisonSavePayload = {
-      processDef: processDef,
-      formKey: formKey,
-      buId: buId,
-      isService: isService,
-      requestor: requestor.id,
-      acceptedBy: dataForm.acceptedBy,
-      remarks: comment!!,
-      justifications: dataForm.justifications,
-      items: items.map((it) => {
-
-        const selectedQuotation = quotations.find(q => q.id == itemsSelected.find(it1 => it1.key == it.key)?.quotationId)
-        return {
-          itemId: it.itemId,
-          seq: it.seq,
-          baseItemId: selectedQuotation?.items.find(it1 => it1.itemId == it.itemId && it1.baseItemId == it.baseItemId)?.id,
-          baseType: 'PQ',
-          itemCode: it.itemCode,
-          itemName: it.itemName,
-          description: it.description,
-          qty: it.qty,
-          targetPrice: it.targetPrice || 0,
-          uomId: it.uomList.find((it) => it.name == it.name)?.id || it.uomId,
-          uomName: it.uomName,
-          quotationList: quotations.map((q) => ({
-            quotationId: q.id,
-            quotationNo: q.code,
-            vendorId: q.vendor.id || 0,
-            vendorCode: q.vendor.code,
-            vendorName: q.vendor.name,
-            priceOffer: q.priceOffer == 'first' ? 1 : 0,
-            selected: itemsSelected.some(
-              (it1) => it1.vendorId == q.vendor.id && it1.priceOffer == q.priceOffer && it1.key == it.key,
-            ),
-            price: q.items.find((it1) => it1.itemId == it.itemId && it1.baseItemId == it.baseItemId)?.price || 0,
-          })),
-        };
-      }),
-      otherCostItems: summary.map((it) => ({
-        seq: 0,
-        type: it.type,
-        key: it.key,
-        providerName: it.title || '',
-        items: (it.values || []).map((it1) => ({
-          priceOffer: it1.priceOffer == 'first' ? 1 : 0,
-          vendorId: it1.vendorId,
-          amount: it1.numberValue,
-          selected: it1.selected || false,
-          text: it1.stringValue,
-        })),
-      })),
-      files: uploadFiles,
-    };
     try {
+      const acceptedFunction = await EmployeeServices.fetchFunctionByUser(dataForm.acceptedBy).query()
+      console.log(acceptedFunction);
+
+      return
+      const saveData: PriceComparisonSavePayload = {
+        processDef: processDef,
+        formKey: formKey,
+        buId: buId,
+        isService: isService,
+        requestor: requestor.id,
+        acceptedBy: dataForm.acceptedBy,
+        acceptedFunction: acceptedFunction.name,
+        remarks: comment!!,
+        justifications: dataForm.justifications,
+        items: items.map((it) => {
+          const selectedQuotation = quotations.find(q => q.id == itemsSelected.find(it1 => it1.key == it.key)?.quotationId)
+          return {
+            itemId: it.itemId,
+            seq: it.seq,
+            baseItemId: selectedQuotation?.items.find(it1 => it1.itemId == it.itemId && it1.baseItemId == it.baseItemId)?.id,
+            baseType: 'PQ',
+            itemCode: it.itemCode,
+            itemName: it.itemName,
+            description: it.description,
+            qty: it.qty,
+            targetPrice: it.targetPrice || 0,
+            uomId: it.uomList.find((it) => it.name == it.name)?.id || it.uomId,
+            uomName: it.uomName,
+            quotationList: quotations.map((q) => ({
+              quotationId: q.id,
+              quotationNo: q.code,
+              vendorId: q.vendor.id || 0,
+              vendorCode: q.vendor.code,
+              vendorName: q.vendor.name,
+              priceOffer: q.priceOffer == 'first' ? 1 : 0,
+              selected: itemsSelected.some(
+                (it1) => it1.vendorId == q.vendor.id && it1.priceOffer == q.priceOffer && it1.key == it.key,
+              ),
+              price: q.items.find((it1) => it1.itemId == it.itemId && it1.baseItemId == it.baseItemId)?.price || 0,
+            })),
+          };
+        }),
+        otherCostItems: summary.map((it) => ({
+          seq: 0,
+          type: it.type,
+          key: it.key,
+          providerName: it.title || '',
+          items: (it.values || []).map((it1) => ({
+            priceOffer: it1.priceOffer == 'first' ? 1 : 0,
+            vendorId: it1.vendorId,
+            amount: it1.numberValue,
+            selected: it1.selected || false,
+            text: it1.stringValue,
+          })),
+        })),
+        files: uploadFiles,
+      };
       const rs = await priceComparisonSrv.saveItem(saveData);
       const { processInstId, formNo } = rs;
       onView?.(processInstId, formNo)
@@ -1147,7 +1149,6 @@ export default ({
                   </Flex>
                 ),
               },
-
               {
                 title: 'Description',
                 valueType: 'textarea',

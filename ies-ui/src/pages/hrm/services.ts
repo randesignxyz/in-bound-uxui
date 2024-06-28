@@ -140,6 +140,19 @@ export const EmployeeServices = {
     payload: { buId, keywords, users }
   }),
 
+  fetchFunctionByUser: (user: string) => fetchDataItemService<Department, { id: string }>({
+    actionName: 'fetch-function-by-user',
+    endpoint: 'HR',
+    payload: { id: user }
+  }),
+
+
+  fetchFunctionsByUsers: (users: string[]) => fetchDataListService<Department, { list: string[] }>({
+    actionName: 'fetch-function-by-users',
+    endpoint: 'HR',
+    payload: { list: users }
+  }),
+
   fetchHodByDeptAndBu: (deptId: number, buId: number) => fetchDataItemService<EmployeeListItem, { deptId: number; buId: number; }>({
     actionName: 'fetch-hod-by-dept-bu',
     endpoint: 'HR',

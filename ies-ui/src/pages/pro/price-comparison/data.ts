@@ -89,6 +89,7 @@ export type PriceComparisonSavePayload = {
     otherCostItems: PriceComparisonOtherCost[];
     files: string[];
     acceptedBy: string;
+    acceptedFunction: string;
 }
 
 

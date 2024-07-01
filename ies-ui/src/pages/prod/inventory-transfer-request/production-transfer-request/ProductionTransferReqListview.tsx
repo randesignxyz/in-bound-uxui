@@ -231,12 +231,12 @@ export default ({ onAdd }: Props) => {
                 icon={<PlusOutlined />}
                 onClick={() => onAddHandler()}
               />,
-              <Button
-                key="click-export"
-                type="link"
-                icon={<FileExcelOutlined />}
-                onClick={() => setExportModal({ visible: true })}
-              />,
+              // <Button
+              //   key="click-export"
+              //   type="link"
+              //   icon={<FileExcelOutlined />}
+              //   onClick={() => setExportModal({ visible: true })}
+              // />,
             ],
           },
         }}

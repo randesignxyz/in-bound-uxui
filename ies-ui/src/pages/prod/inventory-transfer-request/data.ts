@@ -4,7 +4,7 @@
 // }
 
 import { SortOrder } from 'antd/es/table/interface';
-import moment from 'moment';
+import moment, { Moment } from 'moment';
 
 // export type TransferRequestSearchParams = {
 //     keyword?: string,
@@ -52,7 +52,8 @@ export interface TransferRequest {
   shift: string;
   activities: ActivitiesItem[];
   state: string;
-  sapDocNo: string
+  sapDocNo: string;
+  sapDocEntry?: number;
 }
 
 export interface TransferRequestItem {
@@ -128,7 +129,11 @@ export interface TransferRequestStatusChange {
 export interface Provided {
   item: ProvidedItem[];
   transfer_request_id: string,
-  status: string
+  status: string,
+  transfer_request?:string,
+  activities_name?:string,
+  action?: string,
+  remark?: string
 }
 
 export interface ProvidedList {
@@ -160,7 +165,7 @@ export interface ActivitiesItem {
   action: string;
   remark?: string;
   actionBy?: string;
-  actionDate?: string;
+  actionDate?: Moment;
   id?: number;
 }
 
@@ -262,4 +267,23 @@ export interface AddSupplierParams {
 export interface TotalProvideParams {
   transfer_request_id?: string;
   item_code: string;
+}
+
+export interface closeParams{
+  docEntry: number,
+  id:string,
+  statusChange:string,
+  state:string,
+  remark:string,
+  transfer_request?: string;
+  activities_name: string;
+  action: string;
+  actionBy?: string;
+  actionDate?: Moment;
+}
+
+export interface ProductionLine{
+  id?:number,
+  prdcode: string,
+  prdname: string
 }

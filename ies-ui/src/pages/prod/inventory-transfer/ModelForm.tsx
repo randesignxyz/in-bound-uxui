@@ -99,6 +99,7 @@ const ModelForm: React.FC<Props> = ({ onSave, data, close, ...props }) => {
 
 
   const onCancelTransfer = () => {
+    console.log(items)
     Modal.confirm({
       title: 'Cancel Transfer / Close Transfer',
       content: 'are you sure',

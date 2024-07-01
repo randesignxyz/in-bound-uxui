@@ -150,6 +150,12 @@ const TransferAction = {
     type: 'LIST_QUERY',
     payload: data,
   }),
+  detail_sap: (docEntry: number): ServiceApiType<{ docEntry: number }> => ({
+    actionName: 'detail-sap-transfer',
+    endpoint: 'PROD',
+    type: 'FETCH_QUERY',
+    payload: { docEntry },
+  }),
 };
 
 export const TransferServiceAPI = (requestAction: RequestActions) => {
@@ -187,9 +193,12 @@ export const TransferServiceAPI = (requestAction: RequestActions) => {
       singleRequest<{ data: string; message: string }>(TransferAction.update_provided_status(data))(
         requestAction,
       ),
-      get_item_for_close: (data: getItemforCloseParams) =>
+    get_item_for_close: (data: getItemforCloseParams) =>
       singleRequest<{ data: string; message: string }>(TransferAction.get_item_for_close(data))(
         requestAction,
       ),
+    detail_sap: (docEntry: number) =>
+      singleRequest<Transfer>(TransferAction.detail_sap(docEntry))(requestAction) as Promise<Transfer>,
+
   };
 };

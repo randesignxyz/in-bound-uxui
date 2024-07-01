@@ -17,6 +17,7 @@ import {
   Item,
   ItemGroup,
   ItemSearch,
+  ProductionLine,
   Provided,
   ProvidedItem,
   ProvidedList,
@@ -30,6 +31,7 @@ import {
   TransferRequestStatusChange,
   Warehouse,
   WarehouseSearch,
+  closeParams,
 } from './data';
 
 // export const createTransferRequestService = (): CrudBaseServices1<
@@ -169,11 +171,23 @@ const TransferRequestAction = {
     type: 'LIST_QUERY',
     payload: { transfer_request_id },
   }),
-  get_provided_item: (provided:string): ServiceApiType<{provided:string}> =>({
-    actionName:'get-provide',
+  get_provided_item: (provided: string): ServiceApiType<{ provided: string }> => ({
+    actionName: 'get-provide',
     endpoint: 'PROD',
     type: 'LIST_QUERY',
-    payload: {provided}
+    payload: { provided }
+  }),
+  close_transfer: (data: closeParams): ServiceApiType<closeParams> => ({
+    actionName: 'close-transfer',
+    endpoint: 'PROD',
+    type: 'EXEC',
+    payload: data
+  }),
+  get_line: (): ServiceApiType<{}> => ({
+    actionName: 'get-line',
+    endpoint: 'PROD',
+    type: 'LIST_QUERY',
+    payload: {},
   })
 };
 
@@ -227,10 +241,17 @@ export const TransferRequestServiceAPI = (requestAction: RequestActions) => {
       singleRequest<ProvidedList>(TransferRequestAction.get_provided_list(transfer_request_id))(
         requestAction
       ),
-      get_provided_item:(provided:string)=>
-        singleRequest<ProvidedItem>(TransferRequestAction.get_provided_item(provided))(
-          requestAction
-        )
+    get_provided_item: (provided: string) =>
+      singleRequest<ProvidedItem>(TransferRequestAction.get_provided_item(provided))(
+        requestAction
+      ),
+    close_transfer: (data: closeParams) =>
+      singleRequest<{ data: string; message: string }>(TransferRequestAction.close_transfer(data))(
+        requestAction,
+      ),
+    get_line: () => singleRequest<ProductionLine>(TransferRequestAction.get_line())(
+      requestAction
+    ),
 
   };
 };

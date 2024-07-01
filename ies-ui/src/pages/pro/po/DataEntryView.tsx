@@ -17,6 +17,7 @@ import {
   FooterToolbar,
   PageContainer,
   ProCard,
+  ProDescriptions,
   ProForm,
   ProFormDatePicker,
   ProFormDigit,
@@ -26,6 +27,7 @@ import {
   ProFormSwitch,
   ProFormText,
   ProFormTextArea,
+  ProList,
   ProTable,
 } from '@ant-design/pro-components';
 import { history } from '@umijs/max';
@@ -46,6 +48,7 @@ import PoItemFinder from './PoItemFinder';
 import { createPoService } from './services';
 import { Moment } from 'moment';
 import { useInView } from 'react-intersection-observer';
+import { LookupDataItem3 } from '@/services/data';
 
 type DataFormType = {
   vendorId: number;
@@ -163,38 +166,60 @@ export default ({
 
   const linkObject = (record: SavePoItem) => {
     return (
-      <ProTable<PoItemSearch>
-        size="small"
-        rowKey={'id'}
-        search={false}
-        options={false}
-        pagination={false}
-        dataSource={[record.item, ...(record.combineWith || [])]}
-        columns={[
-          { title: 'Liked To', render: (_, r) => r.refType },
-          {
-            title: 'Doc No',
-            render: (_, r) =>
-              r.relatedTo
-                ?.filter((it) => it.type == r.refType)
-                .map((it) => it.code)
-                .join(', '),
+      <ProList<LookupDataItem3>
+        dataSource={[...(record.item.relatedTo || []), ...(record.combineWith?.flatMap(it => it.relatedTo || []) || [])]}
+        ghost={true}
+        grid={{ gutter: 16, column: 4 }}
+        itemCardProps={{
+          ghost: true
+        }}
+        metas={{
+          title: {
+            render: (_, r) => r.type
           },
-          { title: 'Qty', hideInTable: isService, align: 'right', render: (_, r) => r.qty },
-          { title: 'UoM', hideInTable: isService, render: (_, r) => r.uomName },
-          {
-            title: 'Price',
-            align: 'right',
-            hideInTable: isService,
-            render: (_, r) => r.price && formatter.format(r.price),
+          subTitle: {
+            render: (_, r) => r.code
           },
-          {
-            title: 'Amount',
-            align: 'right',
-            render: (_, r) => formatter.format((r.price || 0) * (r.qty || 1)),
-          },
-        ]}
+          content: {
+            render: (_, r) => <ProDescriptions<LookupDataItem3> columns={[
+              { title: '', hideInDescriptions: isService, render: (_, r1) => r1.name }
+            ]} />
+          }
+        }}
+
       />
+      // <ProTable<PoItemSearch>
+      //   size="small"
+      //   rowKey={'id'}
+      //   search={false}
+      //   options={false}
+      //   pagination={false}
+      //   dataSource={[record.item, ...(record.combineWith || [])]}
+      //   columns={[
+      //     { title: 'Liked To', render: (_, r) => r.refType },
+      //     {
+      //       title: 'Doc No',
+      //       render: (_, r) =>
+      //         r.relatedTo
+      //           ?.filter((it) => it.type == r.refType)
+      //           .map((it) => it.code)
+      //           .join(', '),
+      //     },
+      //     { title: 'Qty', hideInTable: isService, align: 'right', render: (_, r) => r.qty },
+      //     { title: 'UoM', hideInTable: isService, render: (_, r) => r.uomName },
+      //     {
+      //       title: 'Price',
+      //       align: 'right',
+      //       hideInTable: isService,
+      //       render: (_, r) => r.price && formatter.format(r.price),
+      //     },
+      //     {
+      //       title: 'Amount',
+      //       align: 'right',
+      //       render: (_, r) => formatter.format((r.price || 0) * (r.qty || 1)),
+      //     },
+      //   ]}
+      // />
     );
   };
 
@@ -928,6 +953,10 @@ export default ({
         isService={isService}
         onOpenChange={(visible) => !visible && setAddItemVisible(false)}
         onSave={(data) => {
+
+          console.log('data', data);
+          console.log('items', data.map(it => it.item));
+
           if (
             vendor &&
             data.some((it) =>

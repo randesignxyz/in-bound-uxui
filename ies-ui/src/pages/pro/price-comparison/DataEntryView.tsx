@@ -910,9 +910,6 @@ export default ({
     const dataForm = await form.validateFields();
     try {
       const acceptedFunction = await EmployeeServices.fetchFunctionByUser(dataForm.acceptedBy).query()
-      console.log(acceptedFunction);
-
-      return
       const saveData: PriceComparisonSavePayload = {
         processDef: processDef,
         formKey: formKey,

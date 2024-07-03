@@ -1,4 +1,4 @@
-import { Badge, Button, Checkbox, Modal, Space, Spin, Tag, Tooltip, Typography, message } from "antd"
+import { Badge, Button, Modal, Space, Spin, Tag, Tooltip, Typography, message } from "antd"
 import PageWrapper from "@/components/PageWrapper"
 import { VisitScheduleAdvanceSearchParams, VisitScheduleItem } from "@/services/crm/data"
 import { useEffect, useRef, useState } from "react"
@@ -11,7 +11,7 @@ import { LookupData } from "@/services/data"
 import { formatDate, formatDateTime, toReadable } from "@/pages/utils"
 import { CrmServiceAPI } from "@/services/crm/services"
 import {
-    CheckCircleOutlined, ExportOutlined,
+    CheckCircleOutlined, CheckOutlined, ExportOutlined,
     EyeOutlined, PaperClipOutlined,
     ScheduleOutlined
 
@@ -44,7 +44,6 @@ export default () => {
         month?: Moment;
         divisionIds?: number[];
     }
-
 
     const lookup = useQuery(['visit-schedule-lookup-data'], () => MultiRequest<{
         contractTypes: LookupData[];
@@ -97,16 +96,6 @@ export default () => {
 
             actionRef.current?.reloadAndRest?.();
         }}>
-            <ProFormSelect
-                name="checkFilter"
-                label="For Verify"
-                mode="multiple"
-                options={[
-                    { label: 'Has Contract', value: 'hasContract' },
-                    { label: 'Has POSM', value: 'hasPosm' },
-                ]}
-            />
-
             <ProFormDatePicker.Month name={'month'} label="Month" />
             <ProFormSelect
                 label="Division"
@@ -121,7 +110,15 @@ export default () => {
                         return { value: it.id, label: it.name };
                     })}
             />
-
+            <ProFormSelect
+                name="checkFilter"
+                label="For Verify"
+                mode="multiple"
+                options={[
+                    { label: 'Has Contract', value: 'hasContract' },
+                    { label: 'Has POSM', value: 'hasPosm' },
+                ]}
+            />
             {(filter.criteria?.status || 'COMPLETED') === 'COMPLETED' && <ProFormSelect
                 name="contractVerified"
                 label="Contract Verified"
@@ -142,7 +139,7 @@ export default () => {
 
             {(filter.criteria?.status || 'COMPLETED') === 'COMPLETED' && (
                 <Space>
-                    <Typography.Text type="secondary">Has Error Attachment</Typography.Text>
+                    <Typography.Text type="secondary">Attachment Only</Typography.Text>
                     <ProFormSwitch
                         // onChange={_onChange}
                         name={"hasAttachment"}
@@ -192,7 +189,7 @@ export default () => {
                         setFilter(v => ({
                             ...v,
                             keywords: params?.searchValue,
-                            criteria: { ...v.criteria, ...params, status: params?.status == "ALL" ? undefined : params?.status },
+                            criteria: { ...v.criteria, ...params, status: params?.status == "ALL" ? undefined : params?.status || 'COMPLETED' },
                             pagination: { ...page },
                             sort: sort
                         }))
@@ -208,7 +205,6 @@ export default () => {
                             title: 'Schedule Date',
                             sorter: 'scheduleDate',
                             key: 'scheduleId',
-
                             width: 130,
                         },
                         actionButtonsColumnRender: item => [
@@ -237,10 +233,8 @@ export default () => {
                                     type: 'view',
                                     label: `${formatDate(item.scheduleDate)}`,
                                     actionButtons: [
-
                                         { hidden: !(item.status === 'COMPLETED' && item.hasAttachment), type: 'link', size: 'small', position: 'last', icon: <PaperClipOutlined style={{ color: `${item.hasErrorAttachment === false ? '#A0A0A0' : 'red'}` }} /> }
                                     ]
-
                                 }),
 
                             },
@@ -278,7 +272,7 @@ export default () => {
                                 width: 60,
                                 render: (_, r) => {
                                     // let color = r.scheduleType === 'Planned' ? 'green' : 'volcano';
-                                    return r.scheduleType != 'Planned' && <Checkbox checked={true} />
+                                    return r.scheduleType != 'Planned' && <CheckOutlined size={10} />
                                 },
                             },
                             {
@@ -302,6 +296,7 @@ export default () => {
                             },
                             {
                                 title: 'Status',
+                                width: 100,
                                 render: (_, r) => <Status value={r.status} text={toReadable(r.status)} />
                             },
                             {

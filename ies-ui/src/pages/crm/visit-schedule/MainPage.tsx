@@ -141,8 +141,16 @@ export default () => {
                 <Space>
                     <Typography.Text type="secondary">Attachment Only</Typography.Text>
                     <ProFormSwitch
-                        // onChange={_onChange}
                         name={"hasAttachment"}
+                    />
+                </Space>
+            )}
+
+            {(filter.criteria?.status || 'COMPLETED') === 'COMPLETED' && filter.criteria?.hasAttachment && (
+                <Space>
+                    <Typography.Text type="secondary">Upload Failed</Typography.Text>
+                    <ProFormSwitch
+                        name={"uploadFailed"}
                     />
                 </Space>
             )}

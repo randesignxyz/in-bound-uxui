@@ -87,32 +87,13 @@ const AccessoryAction = {
 
 export const AccessoryServiceAPI = (requestActions: RequestActions) => {
   return {
-    page: (params: TableViewSearchParams<AccessoriesSearchParam>) =>
-      singleRequest<AccessoriesDTO>(AccessoryAction.page(params))(requestActions) as Promise<
-        Paging<AccessoriesDTO>
-      >,
-
-    save: (data: AccessoriesCreate) =>
-      singleRequest<{ data: string; message: string }>(AccessoryAction.save(data))(requestActions),
-    deductAccessoryQTY: (data: AccessoriesCreate) =>
-      singleRequest<{ data: string; message: string }>(AccessoryAction.deductAccessoryQTY(data))(requestActions),
-    delete: (id: number) =>
-      singleRequest<{ data: string; message: string }>(AccessoryAction.delete(id))(requestActions),
-
-    addAccessoriesToVehicle: (params: AddVehicleAccessory) =>
-      singleRequest<{ data: string; message: string }>(
-        AccessoryAction.addAccessorieTovehicle(params),
-      )(requestActions),
-
-    list: (id: string) =>
-      singleRequest<AccessoriesDTO>(AccessoryAction.listAccessoriesByVehicle(id))(
-        requestActions,
-      ) as Promise<AccessoriesDTO[]>,
-    pageCategory: (params: TableViewSearchParams<AccessoriesSearchParam>) =>
-      singleRequest<CategoryDTO>(AccessoryAction.pageCategory(params))(requestActions) as Promise<
-        Paging<CategoryDTO>
-      >,
-
+    page: (params: TableViewSearchParams<AccessoriesSearchParam>) =>singleRequest<AccessoriesDTO>(AccessoryAction.page(params))(requestActions) as Promise<Paging<AccessoriesDTO>>,
+    save: (data: AccessoriesCreate) =>singleRequest<{ data: string; message: string }>(AccessoryAction.save(data))(requestActions),
+    deductAccessoryQTY: (data: AccessoriesCreate) =>singleRequest<{ data: string; message: string }>(AccessoryAction.deductAccessoryQTY(data))(requestActions),
+    delete: (id: number) =>singleRequest<{ data: string; message: string }>(AccessoryAction.delete(id))(requestActions),
+    addAccessoriesToVehicle: (params: AddVehicleAccessory) =>singleRequest<{ data: string; message: string }>(AccessoryAction.addAccessorieTovehicle(params))(requestActions),
+    list: (id: string) =>singleRequest<AccessoriesDTO>(AccessoryAction.listAccessoriesByVehicle(id))(requestActions) as Promise<AccessoriesDTO[]>,
+    pageCategory: (params: TableViewSearchParams<AccessoriesSearchParam>) =>singleRequest<CategoryDTO>(AccessoryAction.pageCategory(params))(requestActions) as Promise<Paging<CategoryDTO>>,
     pageActivityLog:(params:TableViewSearchParams<ActivityLogAdvanceSearchParam>) =>singleRequest<ActivityLogDTO>(AccessoryAction.pageActivityLog(params))(requestActions) as Promise<Page<ActivityLogDTO>>
   };
 };

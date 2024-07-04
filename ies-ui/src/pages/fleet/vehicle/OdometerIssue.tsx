@@ -65,7 +65,7 @@ const OdometerIssue: React.FC<Props> = ({ onSave, data, ...props }) => {
                             ]}
                         />
                     </Card>
-                    <Alert message="You can now manually change odometer and odometer you change not effect to old data." type="info" showIcon />
+                    <Alert message="You can now manually change the odometer, and the odometer you change does not affect old data." type="info" showIcon />
                     <>
                         <ProFormDigit
                             name={"odometer"}

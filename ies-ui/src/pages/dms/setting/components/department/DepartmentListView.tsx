@@ -124,7 +124,6 @@ export default ({ actionKey }: Props) => {
                             return (<>
                                 <p>{r.description}</p>
                                 <Flex wrap="wrap" gap={"small"}>
-
                                     {r.users?.map(it => (<Tag color="geekblue">{it.fullName}</Tag>))}
                                 </Flex>
                             </>)

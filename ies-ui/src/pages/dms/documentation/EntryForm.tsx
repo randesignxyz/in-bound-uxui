@@ -10,15 +10,15 @@ import DocumentationEntry from "./DocumentationEntry";
 import ContractEntry from "../contract/ContractEntry";
 interface Props extends FormModalProps {
   type?: 'ADD' | 'EDIT';
-  folderId?: number;
   onSave: (data: DocumentationCreate) => void;
   data?: DocumentationDTO;
   libraryId?: number;
   division?: string;
 }
-const DocumentModalForm: React.FC<Props> = ({ type, onSave, division, folderId, data, libraryId, ...props }: Props) => {
+const DocumentModalForm: React.FC<Props> = ({ type, onSave, division, data, libraryId, ...props }: Props) => {
   const [fileUpload, setFileUpload] = useState<{ file?: UploadFile[], required?: boolean }>();
   const [form] = useForm<DocumentationCreate>();
+
   useEffect(() => {
     props.open && data && form.setFieldsValue({
       ...data.documentation,
@@ -42,7 +42,6 @@ const DocumentModalForm: React.FC<Props> = ({ type, onSave, division, folderId, 
             const entry: DocumentationCreate = {
               id: data?.id,
               libraryId: libraryId,
-              folderId: folderId,
               division: division,
               category:dataForm.category,
               buId: dataForm.buId,
@@ -87,7 +86,6 @@ const DocumentModalForm: React.FC<Props> = ({ type, onSave, division, folderId, 
           <DocumentationEntry data={data}/> ||
           <ContractEntry data={data} />
         }
-
         {!data && (
           <DocFileUploader
             service="FILE"

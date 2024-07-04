@@ -1,6 +1,5 @@
 import { simpleRequestActions } from "@/services/model";
 import { ProForm, ProFormDigit, ProFormSelect, ProFormText, ProFormTextArea } from "@ant-design/pro-components"
-
 import { Col, Row, Space, message } from 'antd';
 import { useForm } from "antd/es/form/Form";
 import { useEffect } from "react";
@@ -17,7 +16,6 @@ interface Props extends FormModalProps {
     onSave: (data: AccessoriesCreate) => void;
     actionType?: String;
 }
-
 const EntryModalForm: React.FC<Props> = ({ onSave, data, actionType, ...props }) => {
     const [form] = useForm<AccessoriesCreate>();
     const requestActions = simpleRequestActions();
@@ -93,13 +91,12 @@ const EntryModalForm: React.FC<Props> = ({ onSave, data, actionType, ...props })
                             showSearch
                             debounceTime={500}
                             request={async(k:{keyWords:string})=>{
-                                
                                 const data = await AccessoryServiceAPI(requestActions).pageCategory({
                                     criteria:{
                                         searchValue:k.keyWords
                                     }
                                 });
-                                return data.items.map(o=>({value:o.id, label:o.name}))
+                                return data.items.map(o=>({value:o.id, label:o.name}));
                             }}
                         />
                     </Col>
@@ -207,14 +204,6 @@ const EntryModalForm: React.FC<Props> = ({ onSave, data, actionType, ...props })
                                 }}
                                 onSave={async (fileId) => {
                                     setImageId(fileId);
-                                    try {
-                                        // profile && await ProfileServices.saveProfileImage({
-                                        //     employeeId: profile.id,
-                                        //     imageId: fileId
-                                        // })(requestActions)
-                                    } catch (error: any) {
-                                        message.error(error.message || 'failed to upload image.')
-                                    }
                                 }}
                             />
                         </div>
@@ -232,5 +221,4 @@ const EntryModalForm: React.FC<Props> = ({ onSave, data, actionType, ...props })
         </FormModalComp >
     );
 };
-
 export default EntryModalForm;        

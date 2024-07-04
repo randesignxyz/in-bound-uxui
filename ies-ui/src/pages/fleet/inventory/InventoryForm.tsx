@@ -9,12 +9,8 @@ interface Props extends FormModalProps {
     onSave: (data:InventoryCreate) => void,
     data?: InventoryCreate
 }
-type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0];
-
-
 const InventoryForm: React.FC<Props> = ({ onSave, data, ...props }) => {
     const [form] = useForm<InventoryCreate>();
-   
     return (
         <>
             <FormModalComp
@@ -22,8 +18,7 @@ const InventoryForm: React.FC<Props> = ({ onSave, data, ...props }) => {
                 title="New Inventory"   
                 onSubmit={async () => {
                     const dataForm = await form.validateFields();
-                    onSave(dataForm)
-                    
+                    onSave(dataForm);
                 }}
             >
                 <ProForm
@@ -43,7 +38,6 @@ const InventoryForm: React.FC<Props> = ({ onSave, data, ...props }) => {
                                 name={"partNumber"}
                                 label="Part Number"
                                 rules={[{ required: true }]}
-
                             />
                         </Col>
                         <Col span={7}>
@@ -70,7 +64,6 @@ const InventoryForm: React.FC<Props> = ({ onSave, data, ...props }) => {
                                 label="Serial Number"
                             />
                         </Col>
-
                     </Row>
                     <Row gutter={16} >
                         <Col span={18}>
@@ -126,7 +119,6 @@ const InventoryForm: React.FC<Props> = ({ onSave, data, ...props }) => {
                                     <ProFormText
                                         name={"warehouse"}
                                         label="Warehouse"
-
                                     />
                                 </Col>
                                 <Col span={8}>
@@ -143,31 +135,8 @@ const InventoryForm: React.FC<Props> = ({ onSave, data, ...props }) => {
                                 </Col>
                             </Row>
                         </Col>
-                        {/* <Col span={6} >
-                            <div style={{
-                                display: "block",
-
-                            }}>
-                                <Upload
-                                    showUploadList={false}
-                                    listType="picture-card"
-                                    multiple={false}
-                                    beforeUpload={(file) => {
-                                        const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
-                                        const isLt2M = file.size / 1024 / 1024 < 2;
-                                        return isJpgOrPng && isLt2M
-                                    }}
-                                    onPreview={onPrevew}
-                                    onChange={onChange}
-                                >
-                                    {imageUrl ? <img src={imageUrl} alt="avatar" style={{ width: '100%' }} /> : <UploadOutlined />}
-                                </Upload>
-                            </div>
-                        </Col> */}
                     </Row>
                     <Row gutter={16}>
-
-
                         <Col span={24}>
                             <ProFormTextArea
                                 name="description"
@@ -175,7 +144,6 @@ const InventoryForm: React.FC<Props> = ({ onSave, data, ...props }) => {
                             />
                         </Col>
                     </Row>
-
                 </ProForm>
             </FormModalComp>
         </>

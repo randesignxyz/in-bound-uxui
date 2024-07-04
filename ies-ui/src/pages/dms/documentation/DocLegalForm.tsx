@@ -31,7 +31,6 @@ export default ({ lookupData }: Props) => {
                         rules={[{ required: true }]}
                         label={"Organization"}
                         name={"institute"}
-                      
                     />
                 </Col>
                 <Col span={8}>

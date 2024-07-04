@@ -5,9 +5,9 @@ import { Card, Spin } from 'antd';
 import { useForm } from 'antd/es/form/Form';
 import moment from 'moment';
 import { useEffect, useState } from 'react';
-import { LookupDataServiceAPI } from '../../lookupData/service';
 import { ServiceTaskMoreMaintenanceDTO, ServiceTaskMoreMaintenanceParam } from '../data';
 import { DashboardServiceAPI } from '../service';
+import { FleetServiceAPI } from '../../service';
 
 const ServiceTaskTracker = () => {
   const [data, setData] = useState<ServiceTaskMoreMaintenanceDTO[]>([]);
@@ -59,7 +59,7 @@ const ServiceTaskTracker = () => {
             name={'gasType'}
             initialValue={1060}
             request={async () => {
-              const lookup = await LookupDataServiceAPI(requestActions).lookupData({
+              const lookup = await FleetServiceAPI(requestActions).lookupData({
                 type: 'VEHICLE',
               });
               return lookup

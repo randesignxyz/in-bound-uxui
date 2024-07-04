@@ -24,10 +24,6 @@ const ImageUploader: React.FC<{
   };
 
   return (
-    // <ProCard
-    //   title={<Space size={1}>  {required && <Typography.Text type="danger">*</Typography.Text>} {title || 'Attachment Files'} </Space>}
-    //   size="small"
-    // >
     <Upload
       multiple={multiple}
       showUploadList={false}
@@ -60,15 +56,11 @@ const ImageUploader: React.FC<{
           });
         }
       }}
-    // showUploadList={{
-    //   showDownloadIcon: true,
-    // }}
     >
       <Button type="link" icon={<UploadOutlined />}>
         Upload
       </Button>
     </Upload>
-    // </ProCard >
   );
 };
 

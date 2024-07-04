@@ -5,8 +5,8 @@ import { simpleRequestActions } from "@/services/model"
 import { useRef } from "react"
 import TableView, { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { Paging } from '@/services/API';
-import { message, Modal, Space, Tag } from 'antd';
-import { history, useModel } from '@umijs/max';
+import { Button, message, Modal, Space, Tag } from 'antd';
+import { useModel } from '@umijs/max';
 import EntryModalForm from './EntiryFormModal';
 import { useState } from 'react';
 import { ArrowRightOutlined, DashOutlined, DeleteOutlined, EditOutlined, PlusCircleOutlined } from '@ant-design/icons';
@@ -15,9 +15,8 @@ import Dropdown from 'antd/lib/dropdown/dropdown';
 import { MenuProps } from 'antd/lib/menu';
 import AccessoryDetailView from './Detail';
 import { formatter } from '@/pages/utils';
-import AccessoryDeductQTY from './AccessoryDeductQTY';
-interface Props {
-}
+import AccessoryAddQTY from './AccessoryAddQTY';
+
 export default () => {
     const requestAction = simpleRequestActions();
     const services = AccessoryServiceAPI(requestAction);
@@ -32,7 +31,7 @@ export default () => {
     }>();
     const [advanceSearchParams, setAdvanceSearchParams] = useState<AccessoriesSearchParam>({
         status: 'ALL',
-      });
+    });
     const cacheList = useModel('dataList');
     const onRequestHandler = async (params: TableViewSearchParams<AccessoriesSearchParam>) => {
         try {
@@ -84,9 +83,9 @@ export default () => {
         },
         {
             key: 4,
-            label: "Deduc Quantity",
+            label: "Add Quantity",
             itemIcon: <PlusCircleOutlined />,
-            onClick: () => setDeduction({ visible: { name: "MODAL",  payload: r } })
+            onClick: () => setDeduction({ visible: { name: "MODAL", payload: r } })
         },
         {
             type: "divider"
@@ -100,9 +99,9 @@ export default () => {
         },
     ];
     const [deduction, setDeduction] = useState<{
-        visible?:{
-            name:"MODAL",
-            payload?:AccessoriesDTO
+        visible?: {
+            name: "MODAL",
+            payload?: AccessoriesDTO
         }
     }>();
     const onDelete = (r: AccessoriesDTO) => {
@@ -117,141 +116,138 @@ export default () => {
         });
     }
     return (
-        <PageContainer
-            // onBack={()=>history.back()}
-            title={"Accessories Stock "}
-        >
-        <TableView<AccessoriesDTO, { searchValue?: string }>
-            tableProps={{
-                actionRef: actionRef,
-            }}
-            actionHandlers={{
-                onAdd: onAddHandler,
-                onRequest: (criteria, pagination, sort) =>
-                    onRequestHandler({
-                        criteria:{
-                            ...criteria,
-                            advanceSearch:advanceSearchParams,
-                            sort
-                        }
-                    }),
+        <>
+            <TableView<AccessoriesDTO, { searchValue?: string }>
+                tableProps={{
+                    actionRef: actionRef,
+                }}
+                actionHandlers={{
+                    onAdd: onAddHandler,
+                    onRequest: (criteria, pagination, sort) =>
+                        onRequestHandler({
+                            criteria: {
+                                ...criteria,
+                                advanceSearch: advanceSearchParams,
+                                sort
+                            }
+                        }),
                     onFirstLoad: () =>
                         cacheList.fetchDataList('retailer-customer').then((v) => {
-                          if (v) {
-                            setAdvanceSearchParams({
-                              ...v.creteria?.criteria,
-                              status: v.creteria?.criteria?.advanceSearch?.status ?? 'ALL',
-                            });
-                            return v.dataList;
-                          } else {
-                            return onRequestHandler({
-                              criteria: {
-                                advanceSearch: advanceSearchParams,
-                              },
-                            });
-                          }
+                            if (v) {
+                                setAdvanceSearchParams({
+                                    ...v.creteria?.criteria,
+                                    status: v.creteria?.criteria?.advanceSearch?.status ?? 'ALL',
+                                });
+                                return v.dataList;
+                            } else {
+                                return onRequestHandler({
+                                    criteria: {
+                                        advanceSearch: advanceSearchParams,
+                                    },
+                                });
+                            }
                         }) as Promise<Paging<AccessoriesDTO>>,
-            }}
-            extraFilter={
-                <Space size="large">
-                </Space>
-            }
-            columns={[
-                {
-                    title: "Part",
-                    dataIndex: "partNumber",
-                    sorter: "partNumber"
-                },
-                {
-                    title: "Name",
-                    dataIndex: "name",
-                    sorter: true
-                },
-                {
-                    title: "Category",
-                    dataIndex: "category",
-                    render:(_,r)=>r.category?.name,
-                    sorter: "category",
-                },
-                {
-                    title: "Manufacturer",
-                    dataIndex: "manufacturer",
-                    sorter: "manufacturer",
-                },
-                {
-                    title: "Quantity",
-                    dataIndex: "qty",
-                    sorter: true,
-                    render:(_,r)=>`${r.qty.toFixed(2).toString()}`
-                },
-                {
-                    title: "Unit Cost",
-                    dataIndex: "unitCost",
-                    sorter: true,
-                    valueType: "money",
-                    render:(_,r)=><Tag color='gold' bordered={false}>{formatter.format( r.unitCost)}</Tag>
-                },
-                {
-                    title: "Vendors",
-                    dataIndex: "vendor",
-                    sorter: true
-                },
-                {
-                    title: "Action",
-                    width: 70,
-                    render: (_, r) => (
-                        <Dropdown
-                            menu={{
-                                items: getItem(r),
-                                style: { width: 200 }
-                            }}
-                        >
-                            <a>
-                                <DashOutlined />
-                            </a>
-                        </Dropdown>
-
-                    )
-                },
-            ]}
-        />
-        <EntryModalForm
-            actionType={""}
-            open={state.visible?.name == "modal"}
-            onCancel={() => setState((v) => ({ ...v, visible: undefined }))}
-            onSave={onSaveActionHandler}
-            data={state.visible?.payload?.vehicle}
-        />
-        <AddToVehicleModal
-            id=''
-            actionType={""}
-            open={addToVehicle.visible?.name == "modal"}
-            onCancel={() => setAddToVehicle((v) => ({ ...v, visible: undefined }))}
-            onSave={onSaveActionHandler}
-        />
-        <AccessoryDetailView
-            open={detailState?.visible?.name === "DRAWER"}
-            data={detailState?.visible?.payload}
-            onClose={() => setDetailState((v) => ({ ...v, visible: undefined }))}
-        />
-        <AccessoryDeductQTY
-            open={deduction?.visible?.name=="MODAL"}
-            onCancel={()=>setDeduction((v)=>({...v,visible:undefined}))}
-            data={deduction?.visible?.payload}
-            onSave={(data:AccessoriesCreate)=>{
-                Modal.confirm({
-                    title:"Deduct quantity into accessory",
-                    content:"are you sure?",
-                    onOk:()=>{
-                        services.deductAccessoryQTY(data).then(it=>{
-                            message.success("SUCCESS!");
-                            actionRef.current?.reload?.();
-                            setDeduction((v)=>({...v, visible:undefined}));
-                        })
-                    }
-                })
-            }}
-        />
-    </PageContainer>)
-
+                }}
+                extraFilter={
+                    <Space size="large">
+                    </Space>
+                }
+                columns={[
+                    {
+                        title: "Part",
+                        dataIndex: "partNumber",
+                        sorter: "partNumber",
+                        render:(_,r)=><Button type='link' onClick={()=>setDetailState({ visible: { name: "DRAWER", payload: r } })}>{r.partNumber}</Button>
+                    },
+                    {
+                        title: "Name",
+                        dataIndex: "name",
+                        sorter: true
+                    },
+                    {
+                        title: "Category",
+                        dataIndex: "category",
+                        render: (_, r) => r.category?.name,
+                        sorter: "category",
+                    },
+                    {
+                        title: "Manufacturer",
+                        dataIndex: "manufacturer",
+                        sorter: "manufacturer",
+                    },
+                    {
+                        title: "Quantity",
+                        dataIndex: "qty",
+                        sorter: true,
+                        render: (_, r) => `${r.qty.toFixed(2).toString()}`
+                    },
+                    {
+                        title: "Unit Cost",
+                        dataIndex: "unitCost",
+                        sorter: true,
+                        valueType: "money",
+                        render: (_, r) => <Tag color='gold' bordered={false}>{formatter.format(r.unitCost)}</Tag>
+                    },
+                    {
+                        title: "Vendors",
+                        dataIndex: "vendor",
+                        sorter: true
+                    },
+                    {
+                        title: "Action",
+                        width: 70,
+                        render: (_, r) => (
+                            <Dropdown
+                                menu={{
+                                    items: getItem(r),
+                                    style: { width: 200 }
+                                }}
+                            >
+                                <a>
+                                    <DashOutlined />
+                                </a>
+                            </Dropdown>
+                        )
+                    },
+                ]}
+            />
+            <EntryModalForm
+                actionType={""}
+                open={state.visible?.name == "modal"}
+                onCancel={() => setState((v) => ({ ...v, visible: undefined }))}
+                onSave={onSaveActionHandler}
+                data={state.visible?.payload?.vehicle}
+            />
+            <AddToVehicleModal
+                id=''
+                actionType={""}
+                open={addToVehicle.visible?.name == "modal"}
+                onCancel={() => setAddToVehicle((v) => ({ ...v, visible: undefined }))}
+                onSave={onSaveActionHandler}
+            />
+            <AccessoryDetailView
+                open={detailState?.visible?.name === "DRAWER"}
+                data={detailState?.visible?.payload}
+                onClose={() => setDetailState((v) => ({ ...v, visible: undefined }))}
+            />
+            <AccessoryAddQTY
+                open={deduction?.visible?.name == "MODAL"}
+                onCancel={() => setDeduction((v) => ({ ...v, visible: undefined }))}
+                data={deduction?.visible?.payload}
+                onSave={(data: AccessoriesCreate) => {
+                    Modal.confirm({
+                        title: "Deduct quantity into accessory",
+                        content: "are you sure?",
+                        onOk: () => {
+                            services.deductAccessoryQTY(data).then(it => {
+                                message.success("SUCCESS!");
+                                actionRef.current?.reload?.();
+                                setDeduction((v) => ({ ...v, visible: undefined }));
+                            })
+                        }
+                    })
+                }}
+            />
+            </>
+    )
 }

@@ -3,7 +3,6 @@ import { FleetPaths } from "..";
 import ListView from "./ListView";
 
 export default ()=>{
-
     return <CrudWrapper baseURL={FleetPaths.mantenence}>
     {(view, id, navigate) => {
       return (

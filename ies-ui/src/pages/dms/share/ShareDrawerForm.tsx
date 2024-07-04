@@ -147,15 +147,15 @@ const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...pr
                     options={[
                         {
                             value: "previewer",
-                            label: "Previewer"
+                            label: "Preview"
                         },
                         {
                             value: "viewer",
-                            label: "Viewer"
+                            label: "View"
                         },
                         {
                             value: "editor",
-                            label: "Editor"
+                            label: "Edit"
                         },
                     ]}
                 />

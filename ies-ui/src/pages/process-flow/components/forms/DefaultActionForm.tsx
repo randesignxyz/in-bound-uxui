@@ -1,16 +1,13 @@
 import React, { useEffect } from 'react';
 import ProForm, { ProFormTextArea } from '@ant-design/pro-form';
-import { Card, Form, message } from 'antd';
+import { Form, message } from 'antd';
 import { Modal } from 'antd';
 import { ActionDataFormProps } from '../../data';
 import ActionFormWrapper from './ActionFormWrapper';
 import { ProCard } from '@ant-design/pro-components';
 
 const DefaultActionForm: React.FC<ActionDataFormProps> = (props) => {
-  // const commentRequiredActions = ['Rejected', 'Reworked'];
-  // const checkCommentRequired = commentRequiredActions.some(
-  //   (item) => item.toLowerCase() === props.action.toLowerCase(),
-  // );
+
   const [form] = Form.useForm<{ comment?: string }>();
 
   useEffect(()=> {
@@ -33,7 +30,6 @@ const DefaultActionForm: React.FC<ActionDataFormProps> = (props) => {
         onCompleted: async () => {
           try {
             const values = await form.validateFields();
-
             Modal.confirm({
               title: 'Workflow Action',
               content: 'Are you sure?',
@@ -56,7 +52,6 @@ const DefaultActionForm: React.FC<ActionDataFormProps> = (props) => {
       <ProCard size='small'>
         <ProForm form={form} submitter = {false} >
           <ProFormTextArea
-            // rules={[{ required: checkCommentRequired }]}
             rules={[{ required: true }]}
             label = "Comment"
             name="comment"

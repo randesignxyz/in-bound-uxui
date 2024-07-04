@@ -5,7 +5,6 @@ import {
   ProFormText,
   ProFormTextArea,
 } from '@ant-design/pro-components';
-
 import FormModalComp, { FormModalProps } from '@/components/FormModal';
 import { useGetState } from 'ahooks';
 import { Col, message, Row } from 'antd';
@@ -20,22 +19,18 @@ interface Props extends FormModalProps {
   actionType?: String;
   id?: string;
 }
-
 const DriverModalForm: React.FC<Props> = ({ onSave, data, actionType, id, ...props }) => {
   const [form] = useForm<DriverCreate>();
   const [imageId, setImageId] = useGetState('');
-
   useEffect(() => {
     props.open && initFormData();
     props.open && !data && form.resetFields();
   }, [props.open]);
-
   const initFormData = () => {
     form.setFieldsValue({
       ...data,
     });
   };
-
   return (
     <FormModalComp
       title="Driver Infomation"
@@ -95,10 +90,6 @@ const DriverModalForm: React.FC<Props> = ({ onSave, data, actionType, id, ...pro
               onSave={async (fileId) => {
                 setImageId(fileId);
                 try {
-                  // profile && await ProfileServices.saveProfileImage({
-                  //     employeeId: profile.id,
-                  //     imageId: fileId
-                  // })(requestActions)
                 } catch (error: any) {
                   message.error(error.message || 'failed to upload image.');
                 }
@@ -160,11 +151,9 @@ const DriverModalForm: React.FC<Props> = ({ onSave, data, actionType, id, ...pro
             />
           </Col>
         </Row>
-
         <ProFormTextArea name="address" label="Address" />
       </ProForm>
     </FormModalComp>
   );
 };
-
 export default DriverModalForm;

@@ -1,6 +1,7 @@
 import { ActivityLogDTO } from "../data";
 
 export interface AccessoriesDTO{
+    quantity: number;
     imageLink: any;
     id:number;
     partNumber:string;

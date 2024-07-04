@@ -3,6 +3,7 @@ import { FleetPaths } from '..';
 import DetailView from './DetailView';
 import EntryForm from './EntryForm';
 import ListView from './Listview';
+
 export default () => {
   return (
     <CrudWrapper baseURL={FleetPaths.inspection}>

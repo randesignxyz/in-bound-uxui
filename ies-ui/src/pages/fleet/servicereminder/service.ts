@@ -67,17 +67,11 @@ const ReminderAction  =  {
 
 export const ReminderServiceAPI = (requestActions: RequestActions) => {
     return {
-        page: (params: TableViewSearchParams<ServiceReminderSearchParam>) =>
-        singleRequest<ServiceReminderDTO>(ReminderAction.page(params))(requestActions) as Promise<Paging<ServiceReminderDTO>>,
-
+        page: (params: TableViewSearchParams<ServiceReminderSearchParam>) =>singleRequest<ServiceReminderDTO>(ReminderAction.page(params))(requestActions) as Promise<Paging<ServiceReminderDTO>>,
         save:(data: ServiceReminderCreate)=>singleRequest<{data:string, message:string}>(ReminderAction.save(data))(requestActions),
         delete:(id:number)=>singleRequest<{data:string, message:string}>(ReminderAction.delete(id))(requestActions),
-
         listAlertHistory:(id:number)=>singleRequest<ServiceReminderMaintenance>(ReminderAction.listAlertHistory(id))(requestActions) as Promise<ServiceReminderMaintenance[]>,
-        
-        pageReminderHistory: (params: TableViewSearchParams<ReminderHistorySearch>) =>
-        singleRequest<ReminderHistory>(ReminderAction.pageReminderHistory(params))(requestActions) as Promise<Paging<ReminderHistory>>,
-
+        pageReminderHistory: (params: TableViewSearchParams<ReminderHistorySearch>) =>singleRequest<ReminderHistory>(ReminderAction.pageReminderHistory(params))(requestActions) as Promise<Paging<ReminderHistory>>,
         saveReminderHistory:(data: ReminderHistory)=>singleRequest<{data:string, message:string}>(ReminderAction.saveReminderHistory(data))(requestActions),
         fetchVehicleServiceTask:(param:{vehicleId:string,serviceTaskId:number })=>singleRequest<ServiceReminderDTO>(ReminderAction.fetchVehicleServiceTask(param))(requestActions) as Promise<ServiceReminderDTO>,
     }

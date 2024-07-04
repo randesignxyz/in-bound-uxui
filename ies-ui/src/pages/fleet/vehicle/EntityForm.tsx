@@ -1,19 +1,18 @@
 import { FormModalProps } from '@/components/FormModal';
 import { simpleRequestActions } from '@/services/model';
-import { FooterToolbar, ProFormDependency, ProFormDigit } from '@ant-design/pro-components';
+import { FooterToolbar, PageContainer, ProFormDependency, ProFormDigit } from '@ant-design/pro-components';
 import ProForm, { ProFormDatePicker, ProFormSelect, ProFormText } from '@ant-design/pro-form';
 import { history } from '@umijs/max';
-import { Button, Card, Col, message, Modal, Row, Spin } from 'antd';
+import { Button, Card, Col, Flex, message, Modal, Row } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { uniqueId } from 'lodash';
 import moment from 'moment';
 import { useEffect, useRef, useState } from 'react';
 import { FleetPaths } from '..';
-import BreadCrumbCom from '../components/BreadCrumbCom';
-import { LookUpDataDTO } from '../lookupData/data';
-import { LookupDataServiceAPI } from '../lookupData/service';
 import { SaveVehicle, VehicleListItem } from './data';
 import { VehicleServiceAPI } from './service';
+import { FleetServiceAPI } from '../service';
+import { LookUpDataDTO } from '../data';
 
 interface Props extends FormModalProps {
   type: 'new' | 'edit';
@@ -22,17 +21,15 @@ interface Props extends FormModalProps {
   onDetail?: (id: string) => void;
 }
 
-export default ({ type, id, onEdit, onDetail }: Props) => {
+export default ({ type, id }: Props) => {
   const [form] = useForm<SaveVehicle>();
   const formRef = useRef(null);
   const requestActions = simpleRequestActions();
   const [lookupDatas, setLookupData] = useState<LookUpDataDTO[]>([]);
   const services = VehicleServiceAPI(requestActions);
   const [vehicle, setVihicle] = useState<VehicleListItem>();
-
-  const [truckWeight, setTruckWeight] = useState<{ boxCBM: number; totalLength: number }>();
   const loadData = async () => {
-    const rsn = await LookupDataServiceAPI(requestActions).lookupData({ type: 'VEHICLE' });
+    const rsn = await FleetServiceAPI(requestActions).lookupData({ type: 'VEHICLE' });
     setLookupData(rsn);
     if (id) {
       setVihicle(await services.fetchVehicle(id));
@@ -102,7 +99,6 @@ export default ({ type, id, onEdit, onDetail }: Props) => {
       id: id,
       vehicleCapacityId: vehicle?.vehicleCapacity?.id,
     };
-
     try {
       const title = `${id === undefined ? 'Create' : 'Update'} Vehicle.`;
       Modal.confirm({
@@ -125,159 +121,112 @@ export default ({ type, id, onEdit, onDetail }: Props) => {
     }
   };
 
-  const routes = [
-    {
-      path: FleetPaths.fleet,
-      label: 'Fleet',
-    },
-    {
-      path: FleetPaths.vehicle + '/list',
-      label: 'Vehicle',
-    },
-    {
-      path: '',
-      label: id ? 'Edit' : 'Create',
-    },
-  ];
+
   return (
     <>
-      <BreadCrumbCom separator=">" routes={routes} />
-      <Spin spinning={requestActions.request?.loading}>
-        <ProForm
-          labelAlign="left"
-          title="General info"
-          form={form}
-          formRef={formRef}
-          submitter={{
-            render: () => {
-              return (
-                <FooterToolbar>
-                  {type === 'new' && (
-                    <Button
-                      onClick={() => {
-                        form.resetFields();
-                      }}
-                    >
-                      Clear
-                    </Button>
-                  )}
+      <PageContainer
+        loading={requestActions.request?.loading}
+        title={`${id ? 'Edit' : 'New'} Vehicle`}
+        onBack={() => history.back()}
+        subTitle={`${id ? vehicle?.plateNumber : ""}`}
+        style={{
+          margin: "-30px -40px 0",
+        }}
+        fixedHeader
+      />
+      <ProForm
+        labelAlign="left"
+        title="General info"
+        form={form}
+        formRef={formRef}
+        submitter={{
+          render: () => {
+            return (
+              <FooterToolbar>
+                {type === 'new' && (
+                  <Button
+                    onClick={() => {
+                      form.resetFields();
+                    }}
+                  >
+                    Clear
+                  </Button>
+                )}
 
-                  {type === 'edit' && (
-                    <Button
-                      onClick={() => {
-                        history.push('/fleet/vehicle/list');
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                  )}
-                  {type === 'edit' && (
-                    <Button
-                      onClick={() => {
-                        form.resetFields();
-                      }}
-                    >
-                      Reset
-                    </Button>
-                  )}
-                  {type === 'new' && (
-                    <Button
-                      type="primary"
-                      onClick={() => {
-                        onSaveActionHandler(true);
-                      }}
-                    >
-                      Save & Add New
-                    </Button>
-                  )}
+                {type === 'edit' && (
+                  <Button
+                    onClick={() => {
+                      history.push('/fleet/vehicle/list');
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                )}
+                {type === 'edit' && (
+                  <Button
+                    onClick={() => {
+                      form.resetFields();
+                    }}
+                  >
+                    Reset
+                  </Button>
+                )}
+                {type === 'new' && (
                   <Button
                     type="primary"
                     onClick={() => {
-                      onSaveActionHandler();
+                      onSaveActionHandler(true);
                     }}
                   >
-                    {type === 'new' ? 'Save & View' : 'Update'}
+                    Save & Add New
                   </Button>
-                </FooterToolbar>
-              );
-            },
-          }}
-        >
-          <Card key={'general'} size="small" title="General Information">
-            <Row gutter={4}>
-              <Col span={7} flex="50%" key={'generalinfo'}>
+                )}
+                <Button
+                  type="primary"
+                  onClick={() => {
+                    onSaveActionHandler();
+                  }}
+                >
+                  {type === 'new' ? 'Save & View' : 'Update'}
+                </Button>
+              </FooterToolbar>
+            );
+          },
+        }}
+      >
+        <Flex vertical gap={18}>
+          <Card size='small' title="Identification">
+            <Row gutter={12}>
+              <Col span={12}>
                 <ProFormText
                   label="Plate Number"
-                  width={'sm'}
                   key={'plateNumber'}
                   name={'plateNumber'}
                   rules={[{ required: true }]}
                 />
+              </Col>
+              <Col span={12}>
                 <ProFormText
-                  width={'sm'}
                   key="vehicleRegisterNumber"
                   label="Vehicle Register Number"
                   name={'vehicleRegisterNumber'}
                 />
-                <ProFormText width={'sm'} label="V.I.N" key={'vin'} name={'vin'} />
-                <ProFormText width={'sm'} label="Engine" key={'engine'} name={'engine'} />
               </Col>
-              <Col span={7} flex="50%" key="2">
+            </Row>
+            <Row gutter={12}>
+              <Col span={6}>
                 <ProFormSelect
-                  label="Brand"
-                  width={'sm'}
-                  key="makeId"
-                  name="makeId"
-                  showSearch={true}
-                  options={brands}
-                  rules={[{ required: true }]}
-                />
-                <ProFormText label="Model" width={'sm'} key="model" name="model" />
-                <ProFormDatePicker.Year
-                  label="Years"
-                  width={'sm'}
-                  key="year"
-                  name="year"
-                  rules={[{required:true}]}
-                  fieldProps={{
-                    disabledDate: (current) => {
-                      const currentYear = new Date().getFullYear();
-                      return current.year() > currentYear;
-                    },
-                  }}
-                />
-                <ProFormSelect
-                  showSearch={true}
-                  label="Color"
-                  width={'sm'}
-                  key="colorId"
-                  name="colorId"
-                  options={colors}
-                />
-              </Col>
-              <Col span={7} flex="50%" key={3}>
-                <ProFormSelect
-                  label="Type of Vehicle"
-                  width={'sm'}
+                  label="Type"
                   key="vehicleTypeId"
                   name="vehicleTypeId"
                   showSearch={true}
                   options={vehicleTypes}
                   rules={[{ required: true }]}
                 />
-                <ProFormSelect
-                  label="Weight"
-                  width={'sm'}
-                  key="weightId"
-                  name="weightId"
-                  showSearch={true}
-                  options={weight}
-                  rules={[{ required: true }]}
-                />
-
+              </Col>
+              <Col span={6}>
                 <ProFormSelect
                   label="Fuel Type"
-                  width={'sm'}
                   key="fueltype"
                   name="fuelTypeId"
                   showSearch={true}
@@ -285,10 +234,66 @@ export default ({ type, id, onEdit, onDetail }: Props) => {
                   rules={[{ required: true }]}
                 />
               </Col>
+              <Col span={6}>
+                <ProFormSelect
+                  label="Weight"
+                  key="weightId"
+                  name="weightId"
+                  showSearch={true}
+                  options={weight}
+                  rules={[{ required: true }]}
+                />
+
+              </Col>
+              <Col span={6}>
+                <ProFormText label="V.I.N" key={'vin'} name={'vin'} />
+              </Col>
+            </Row>
+            <Row gutter={12}>
+              <Col span={4}>
+                <ProFormDatePicker.Year
+                  label="Years"
+                  key="year"
+                  width={"md"}
+                  name="year"
+                  rules={[{ required: true }]}
+                  fieldProps={{
+                    disabledDate: (current) => {
+                      const currentYear = new Date().getFullYear();
+                      return current.year() > currentYear;
+                    },
+                  }}
+                />
+              </Col>
+              <Col span={4}>
+                <ProFormSelect
+                  label="Brand"
+                  key="makeId"
+                  name="makeId"
+                  showSearch={true}
+                  options={brands}
+                  rules={[{ required: true }]}
+                />
+              </Col>
+              <Col span={6}>
+                <ProFormText label="Model" key="model" name="model" />
+              </Col>
+              <Col span={6}>
+                <ProFormText label="Engine" key={'engine'} name={'engine'} />
+              </Col>
+              <Col span={4}>
+                <ProFormSelect
+                  showSearch={true}
+                  label="Color"
+                  key="colorId"
+                  name="colorId"
+                  options={colors}
+                />
+              </Col>
             </Row>
           </Card>
           <Card size="small" key={'Classification'} title="Classification">
-            <Row gutter={4}>
+            <Row gutter={12}>
               <Col span={6}>
                 <ProFormSelect
                   label="Status"
@@ -307,34 +312,37 @@ export default ({ type, id, onEdit, onDetail }: Props) => {
                 />
               </Col>
               {/* <Col span={6}>
-                                <ProFormSelect
-                                    key="operator"
-                                    name="operator"
-                                    label="Operator"
-                                    showSearch
-                                    debounceTime={500}
-                                    request={async (val) => {
-                                        const data = await DriverServiceAPI(requestActions).page({ criteria: { searchValue: val.keyWord } });
-                                        return data.items.map((it) => ({
-                                            value: it.id,
-                                            label: [it.firstName, it.lastName, it.phone].join("-")
-                                        }))
-                                    }}
-                                />
-                            </Col> */}
+                
+                <ProFormCascader
+                  name={'bu'}
+                  label="Group"
+                  
+                  fieldProps={{
+                    showSearch: true
+                  }}
+                  request={async (k) => {
+                    const data = await FleetServiceAPI(requestActions).buList();
+                    const items = data.filter(t => t.parentId == null).map((v) => ({
+                      label: v.name, value: v.id,
+                      children: data.filter(o => v.id == o.parentId).map((b => ({ label: b.name, value: b.id })))
+                    }));
+                    return items
+                  }}
+                />
+
+              </Col> */}
               <Col span={6}>
                 <ProFormSelect
                   key="ownership "
                   name="ownership"
                   options={ownership}
-                  label="Ownership "
+                  label="Ownership"
                 />
               </Col>
             </Row>
           </Card>
-          <Card key={'weight'} size="small" title="Truck Cab">
+          <Card key={'weight'} size="small" title="Vehicle Capacity">
             <Row gutter={4}>
-              {/* <Space> */}
               <Col span={4}>
                 <ProFormDigit
                   key="truckHead"
@@ -343,7 +351,6 @@ export default ({ type, id, onEdit, onDetail }: Props) => {
                   label="Head of Truck length(m)"
                 />
               </Col>
-
               <Col span={4}>
                 <ProFormDigit key={'boxLength'} name={'boxLength'} max={20} label="Box Length(m)" />
               </Col>
@@ -397,11 +404,10 @@ export default ({ type, id, onEdit, onDetail }: Props) => {
                   }}
                 </ProFormDependency>
               </Col>
-              {/* </Space> */}
             </Row>
           </Card>
-        </ProForm>
-      </Spin>
+        </Flex>
+      </ProForm>
     </>
   );
 };

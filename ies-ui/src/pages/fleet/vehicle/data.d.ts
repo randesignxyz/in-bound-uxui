@@ -3,6 +3,7 @@ import { DriverDTO, VehicleDriverDTO } from '../driver/data';
 import { AttachmentFilesDTO } from '../lookupData/data';
 import { NormFuelConsumptionDTO } from '../specification/data.d';
 import { LookUpDataDTO } from './lookupData/data';
+import { BusnessUnit } from '../data';
 
 export interface VehicleListItem {
   id: string;
@@ -28,6 +29,7 @@ export interface VehicleListItem {
   normFuelConsumption?: NormFuelConsumptionDTO;
   ownership?: LookUpDataDTO;
   vehicleDriver?: VehicleDriverDTO;
+  businessUnit?:BusnessUnit;
 }
 
 export interface SaveVehicle {

@@ -1,7 +1,7 @@
 
 import CrudWrapper from "@/components/DataCrud/CrudWrapper"
 import { FleetPaths } from "..";
-import Listview from "./ListView";
+import TaskListView from "./TaskListView";
 export default () => {
 
     return( 
@@ -9,7 +9,7 @@ export default () => {
         {(view, id, navigate) => {
             return (
                 (view == 'list' && (
-                    <Listview
+                    <TaskListView
                         onAdd={()=>navigate?.goToCreate?.()}
                         onDetail={(id) => {
                         navigate?.goToDetail?.({ id: id });
@@ -20,11 +20,6 @@ export default () => {
                       }}
                     />
                 ))
-                
-                // ||
-                // (view === 'create' && <EntryForm  />) 
-
-                // ||(view ==="detail" && <DetailView id={id as string} />)
             )
         }}
     </CrudWrapper>

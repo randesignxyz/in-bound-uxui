@@ -50,13 +50,10 @@ const DriverAction  =  {
 
 export const DriverServiceAPI = (requestActions: RequestActions) => {
     return {
-       page : (params: TableViewSearchParams<DriverSearchParam>)=>
-       singleRequest<DriverDTO>(DriverAction.page(params))(requestActions) as Promise<Paging<DriverDTO>> ,
-
-       listVehicleDriver:(param:VehicleDriverListParam)=>singleRequest<VehicleDriverDTO>(DriverAction.listVehicleDriver(param))(requestActions) as Promise<VehicleDriverDTO[]>,
-       list:(params: DriverSearchParam)=>singleRequest<DriverDTO>(DriverAction.list(params))(requestActions) as Promise<DriverDTO[]>,
-
-       save: (data: DriverCreate) =>singleRequest<{data:string, message:string}>(DriverAction.save(data))(requestActions),
+       page               : (params: TableViewSearchParams<DriverSearchParam>)=>singleRequest<DriverDTO>(DriverAction.page(params))(requestActions) as Promise<Paging<DriverDTO>> ,
+       listVehicleDriver  :(param:VehicleDriverListParam)=>singleRequest<VehicleDriverDTO>(DriverAction.listVehicleDriver(param))(requestActions) as Promise<VehicleDriverDTO[]>,
+       list               :(params: DriverSearchParam)=>singleRequest<DriverDTO>(DriverAction.list(params))(requestActions) as Promise<DriverDTO[]>,
+       save               : (data: DriverCreate) =>singleRequest<{data:string, message:string}>(DriverAction.save(data))(requestActions),
        removeVehicleDriver: (id:number) =>singleRequest<{data:string, message:string}>(DriverAction.removeVehicleDriver(id))(requestActions),
 
     }

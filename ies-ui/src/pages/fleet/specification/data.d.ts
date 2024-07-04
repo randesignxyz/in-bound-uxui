@@ -1,5 +1,4 @@
 
-
 // ================= Model Tire item apply for each vehicle ====================
 export interface TireVehicleDTO{
     id:number;
@@ -16,14 +15,20 @@ export interface TireVehicleDTO{
     status:string;
     createdBy:string;
     lastModifiedBy:string;
-    lastModifiedDate:moment.Moment
+    lastModifiedDate:moment.Moment;
+    operation:string;
 }
 
-export interface TireVehicleCreate{
+interface TireAssignParam{
+    vehicleId:string;
+    tirePosition?:string;
+}
+
+export interface TireAssignCreate{
     id?:number;
     axleType: string;
-    tirePosition:string;
-    vehicleId:string;
+    tirePosition?:string;
+    vehicleId?:string;
     tireWidth:number;
     wheelDiameter:number;
     brand?:string;
@@ -34,9 +39,6 @@ export interface TireVehicleCreate{
     status:string;
 }
 // ====================== END =====================
-
-
-
 
 // ================= Model Battery item apply for each vehicle ====================
 export interface BatteryVehicleDTO{
@@ -67,7 +69,6 @@ export interface BatteryVehicleCreate{
 
 }
 // ====================== END =====================
-
 
 // ================= Norm Consupmtion Specification Vehicle  ====================
 export interface NormFuelConsumptionCreate{

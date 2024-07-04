@@ -19,7 +19,6 @@ export default ({ data }:Props) => {
         });
         setLookupData(data);
       }
-
       useEffect(()=>{
          onLookupData();
       },[]);
@@ -48,7 +47,5 @@ export default ({ data }:Props) => {
                     return category=="GENERAL" && (<DocGeneralForm lookupData={lookupData} />)|| <DocLegalForm lookupData={lookupData} />
                 }}
             </ProFormDependency>
-
     </>)
-
 }

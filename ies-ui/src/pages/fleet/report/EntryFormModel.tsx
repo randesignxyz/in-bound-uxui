@@ -5,11 +5,11 @@ import { Col, Row, Space } from "antd"
 import { useForm } from "antd/es/form/Form";
 import { useEffect, useState } from "react";
 import FormModalComp, { FormModalProps } from "@/components/FormModal";
-import { LookupDataServiceAPI } from "../lookupData/service";
-import { LookUpDataDTO } from "../lookupData/data";
 import { VehicleServiceAPI } from "../vehicle/service";
 import { CarOutlined } from "@ant-design/icons";
 import { ServiceTasksCreate, ServiceTasksDTO } from "./data";
+import { FleetServiceAPI } from "../service";
+import { LookUpDataDTO } from "../data";
 
 interface Props extends FormModalProps {
   data?: ServiceTasksDTO;
@@ -34,7 +34,7 @@ const ServiceTasksModalForm: React.FC<Props> = ({ onSave, data, actionType, id, 
 
   const dataLoad = async () => {
     setLookupData(
-      await LookupDataServiceAPI(requestActions).lookupData({ type: "MAINTENANCEPLAN" })
+      await FleetServiceAPI(requestActions).lookupData({ type: "MAINTENANCEPLAN" })
     )
   }
 

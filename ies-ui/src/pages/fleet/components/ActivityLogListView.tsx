@@ -10,7 +10,6 @@ interface Props{
     referenceStringId:string;
     logParam:ActivityLogAdvanceSearchParam
 }
-
 export default ({ referenceStringId, logParam , ...props }:Props) => {
     const requestActions = simpleRequestActions();
     const services = AccessoryServiceAPI(requestActions);
@@ -36,7 +35,6 @@ export default ({ referenceStringId, logParam , ...props }:Props) => {
             }}
             pagination={{
             }}
-            // actionRef={actionRef}
             metas={{
                 title: {
                     dataIndex: "activity"

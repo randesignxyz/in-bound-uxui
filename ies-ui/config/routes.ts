@@ -432,6 +432,61 @@ export default [
     access: 'canAccessAllMenuDSD',
     component: './sale/pricing',
   },
+
+  /******************* MPU *******************/
+
+  // {
+  //   path: '/sale/mpu',
+  //   name: 'mpu',
+  //   icon: 'UnorderedListOutlined',
+  //   access: 'canAccessViewMpu',
+  //   component: './sale/mpu',
+  // },
+
+  // {
+  //   path: '/sale/stock/:view/*',
+  //   name: 'stock',
+  //   icon: 'UnorderedListOutlined',
+  //   hideInMenu: 'true',
+  //   access: 'canAcessStockControlMenuItem',
+  //   component: './sale/stock-control',
+  // },
+
+  {
+    path: '/sale/mpu/:view/*',
+    name: 'sale_rsm_request',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessViewMpu',
+    component: './sale/mpu/request',
+  },
+  {
+    path: '/sale/mpu_stock/:view/*',
+    name: 'sale_mpu_stock',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessViewMpu',
+    component: './sale/mpu/stock',
+  },
+  {
+    path: '/sale/mpu_purchase_order/:view/*',
+    name: 'sale_mpu_purchase_order',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessViewMpu',
+    component: './sale/mpu/purchase_order',
+  },
+  {
+    path: '/sale/mpu_count_stock/:view/*',
+    name: 'sale_mpu_count_stock',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessViewMpu',
+    component: './sale/mpu/count_stock',
+  },
+
+  /******************* MPU *******************/
+
   /******************* Retailer *******************/
   {
     path: '/retailer',
@@ -685,7 +740,6 @@ export default [
     component: './delivery/truck',
   },
 
-
   /************************ Queque  ******************/
 
   // {
@@ -891,7 +945,6 @@ export default [
   },
   /*************Delivery Expense>>********************/
 
-
   //  =================  FLEET =================
 
   {
@@ -948,14 +1001,6 @@ export default [
     access: 'canAccessFleetMenu',
     component: './fleet/inspection/',
   },
-
-  {
-    path: '/fleet/accident/:view/*',
-    name: 'fleet_accident',
-    hideInMenu: 'true',
-    access: 'canAccessFleetMenu',
-    component: './fleet/accident/',
-  },
   {
     path: '/fleet/fuel/:view/*',
     name: 'fleet_fuel',
@@ -964,11 +1009,11 @@ export default [
     component: './fleet/fuel/',
   },
   {
-    path: '/fleet/add-on/:view/*',
-    name: 'fleet_add_on',
+    path: '/fleet/setting/:view',
+    name: 'Setting',
     hideInMenu: 'true',
     access: 'canAccessFleetMenu',
-    component: './fleet/addOn/',
+    component: './fleet/setting/',
   },
   {
     path: '/fleet/fuel-stock/:view/*',
@@ -1021,19 +1066,27 @@ export default [
   },
   //  ================= END FLEET =================
 
-
   // ================= DMS =======================
   {
-    path: "/dms",
-    name: "dms",
-    icon: "FileSearchOutlined",
-    component: "./dms",
-    access: "canAccessDMSMenu",
-    redirect: "/dms/workspace/library"
+    path: '/dms',
+    name: 'dms',
+    icon: 'FileSearchOutlined',
+    component: './dms',
+    access: 'canAccessDMSMenu',
+    redirect: '/dms/workspace/library',
   },
 
   {
-    path: "/dms/workspace/:view/*",
+    path: '/dms/workspace/:view/*',
+    name: 'dms',
+    icon: 'FileSearchOutlined',
+    component: './dms',
+    access: 'canAccessDMSMenu',
+    hideInMenu: 'true',
+  },
+
+  {
+    path: "/dms/workspace/:view",
     name: "dms",
     icon: "FileSearchOutlined",
     component: "./dms",

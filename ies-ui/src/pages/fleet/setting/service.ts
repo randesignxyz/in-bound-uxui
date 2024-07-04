@@ -32,17 +32,8 @@ const AddOnAction  =  {
 
 export const AddOnServiceAPI = (requestActions: RequestActions) => {
     return {
-       page : (params: TableViewSearchParams<SearchVendorParam>)=>
-       singleRequest<VendorDTO>(AddOnAction.page(params))(requestActions) as Promise<Paging<VendorDTO>> ,
-
-      save: (params: VendorCreate) =>
-      singleRequest<{ data: string; message: string }>(AddOnAction.save(params))(
-        requestActions,
-      ),
-
-
-      // tire position
-    
+       page : (params: TableViewSearchParams<SearchVendorParam>)=>singleRequest<VendorDTO>(AddOnAction.page(params))(requestActions) as Promise<Paging<VendorDTO>> ,
+       save: (params: VendorCreate) =>singleRequest<{ data: string; message: string }>(AddOnAction.save(params))(requestActions),
     }
 };
   

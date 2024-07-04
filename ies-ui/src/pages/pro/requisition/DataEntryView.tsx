@@ -32,6 +32,7 @@ import { useEffect, useRef, useState } from 'react';
 import { history } from "@umijs/max";
 import SearchItemList from './components/SearchItemList';
 import { AcquisitionFormNames } from './process-flow';
+import { useInView } from 'react-intersection-observer';
 
 export default ({
   id,
@@ -63,6 +64,8 @@ export default ({
 
   const [forceClearUpload, setForceClearUpload] = useState(0);
   const [fileIds, setFileIds] = useState<string[]>([]);
+
+  const { ref, inView } = useInView({});
 
   const clear = () => {
     form.resetFields();
@@ -154,8 +157,10 @@ export default ({
     };
   };
 
-  const layout = <ProForm
+  const layout = <div ref={ref}><ProForm
+
     form={form}
+
     onValuesChange={(changeValue, values) => {
       const { budgetCodeRequired, service } = changeValue;
 
@@ -168,7 +173,7 @@ export default ({
     }}
     submitter={{
       render: () => (
-        <FooterToolbar>
+        inView ? <FooterToolbar>
           {!openInTab && <Button style={{ marginRight: 10 }} onClick={() => history.back()}>
             Cancel
           </Button>}
@@ -211,7 +216,7 @@ export default ({
           >
             Submit
           </Button>
-        </FooterToolbar>
+        </FooterToolbar> : <></>
       ),
     }}
   >
@@ -503,6 +508,7 @@ export default ({
       }}
     />
   </ProForm>
+  </div>
   return (
     <Spin spinning={requestActions.request?.loading}>
 

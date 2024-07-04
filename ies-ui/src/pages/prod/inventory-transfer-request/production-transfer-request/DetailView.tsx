@@ -38,17 +38,17 @@ export default ({ data, ...rest }: Props) => {
             <Descriptions.Item label="To Warehouse" style={{ fontWeight: 'bolder' }}>
               {data?.to_warehouse.map((w) => w.whsCode)}
             </Descriptions.Item>
+            <Descriptions.Item label="Line">{data?.line}</Descriptions.Item>
             <Descriptions.Item label="Posting Date">
               {formatDate(data?.posting_date)}
             </Descriptions.Item>
             <Descriptions.Item label="Due Date">{formatDate(data?.due_date)}</Descriptions.Item>
-            <Descriptions.Item label="Remark">{data?.remark || '-'}</Descriptions.Item>
             <Descriptions.Item label="Created Date">
               {data?.createdDate && formatDateTime(data?.createdDate)}
             </Descriptions.Item>
             <Descriptions.Item label="Created By">{data?.createdBy}</Descriptions.Item>
-            {data?.sapDocNo && (
-            <Descriptions.Item label="Sap Doc No">{data?.sapDocNo}</Descriptions.Item>
+            {data?.sapDocEntry && (
+            <Descriptions.Item label="Sap Doc No">{data?.sapDocEntry}</Descriptions.Item>
             )}
             {data?.lastModifiedBy && (
               <Descriptions.Item label="Last Modified By">{data?.lastModifiedBy}</Descriptions.Item>

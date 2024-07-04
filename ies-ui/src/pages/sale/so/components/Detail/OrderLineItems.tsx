@@ -2,6 +2,7 @@ import { SoDetail, SoItemDetail } from "@/services/sale/data";
 import { ProForm, ProFormField, ProTable } from "@ant-design/pro-components";
 import { Card, Col, Form, Row } from "antd";
 import numeral from 'numeral';
+import { useEffect } from "react";
 
 const layout = {
     labelCol: { span: 10 },
@@ -19,6 +20,12 @@ interface SummaryAmount {
 export default ({ data }: { data?: SoDetail; }) => {
 
     const [formSum] = Form.useForm<SummaryAmount>();
+
+    useEffect(() => {
+        console.log(data);
+
+        formSum.setFieldsValue({ subTotal: data?.amount, totalAmount: data?.totalAmount })
+    }, [data])
 
     return <Card style={{ marginTop: '10px' }} size="small" title="Line Items">
         <ProTable<SoItemDetail>

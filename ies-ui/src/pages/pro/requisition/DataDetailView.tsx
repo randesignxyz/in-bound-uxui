@@ -3,7 +3,7 @@ import { simpleRequestActions } from '@/services/model';
 import { RequisitionDetailResponse } from '@/services/pro/data';
 import { RequisitionServiceAPI } from '@/services/pro/services';
 import { StartWorkFlowParam } from '@/services/process-workflow/params';
-import { EditFilled, FormOutlined, CopyOutlined } from '@ant-design/icons';
+import { FormOutlined } from '@ant-design/icons';
 import { DrawerForm, DrawerFormProps } from '@ant-design/pro-form';
 import { Button, message, Modal, Space, Spin } from 'antd';
 import { useState } from 'react';
@@ -43,14 +43,6 @@ export default ({ data, onEdit, onAdd, reload, ...rest }: Props) => {
                   Submit Request
                 </Button>
               )}
-              {/* {data?.processStatus?.toLocaleLowerCase() == 'draft' && (
-                <Button icon={<EditFilled />} type="link" onClick={onEdit}>
-                  Edit
-                </Button>
-              )}
-              <Button icon={<CopyOutlined />} type="link" onClick={onAdd}>
-                Copy Data
-              </Button> */}
               {access.canPostPRrToSap &&
                 data &&
                 data?.processStatus?.toLocaleLowerCase() == 'approved' &&
@@ -95,12 +87,10 @@ export default ({ data, onEdit, onAdd, reload, ...rest }: Props) => {
           actionHandlers={{
             onStartWorkflow: async (processDef, formKey, buId, requestor, comment) => {
               if (!data?.id) return;
-
               const reqData: StartWorkFlowParam<{ id: number }> = {
                 processDef: processDef,
                 formKey: formKey,
                 buId: buId,
-
                 requestor: requestor.id,
                 comment: comment,
                 payload: {

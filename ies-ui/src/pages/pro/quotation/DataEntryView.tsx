@@ -31,20 +31,20 @@ import {
   ProFormTextArea,
 } from '@ant-design/pro-components';
 import { history } from '@umijs/max';
-import { Button, message, Modal, Popconfirm, Space, Spin, Table } from 'antd';
+import { Button, Flex, FloatButton, message, Modal, Popconfirm, Space, Spin, Table } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { round, uniqueId } from 'lodash';
 import { Moment } from 'moment';
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createVendorService } from '../vendor/services';
 import AddService from './AddService';
 import { PrItem, QuotationDetail, QuotationListItem, QuotationSavePayload, SaveQuotationItem } from './data';
 
 import _ from 'lodash';
-import { ProPaths } from '..';
 import { VendorDetail } from '../vendor/vendor';
 import QuotationItemFinder from './QuotationItemFinder';
 import { createQuotationService } from './services';
+import { useInView } from 'react-intersection-observer';
 
 type DataFormType = {
   vendorId?: number;
@@ -87,10 +87,14 @@ export default ({
 }: {
   id?: number;
   openInTab?: true;
+  tabKey?: string;
   type: 'CREATE' | 'EDIT';
   onView?: (added: QuotationListItem) => void;
   onBack: () => void;
 }) => {
+
+  const { ref, inView } = useInView({});
+
   const srv = createQuotationService();
   const vendorSrv = createVendorService();
   const [items, setItems] = useState<SaveQuotationItem[]>([]);
@@ -107,9 +111,7 @@ export default ({
   const [mergeItems, setMergeItems] = useState<SaveQuotationItem[]>([]);
   const [vendorDetail, setVendorDetail] = useState<VendorDetail>();
   const lockEnabled = () => type == 'CREATE' && !!id;
-
   const [addItemVisible, setAddItemVisible] = useState(false);
-
   const onFindVendorHandler = async ({ keyWords }: { keyWords?: string }) => {
     const rs = await vendorSrv.fetchPaging({
       keywords: keyWords,
@@ -398,8 +400,7 @@ export default ({
     const removeItems = mergeItems.filter((it) => it.key != mergeItemEnabled?.key);
 
     setItems((v) =>
-      v
-        .filter((it) => !removeItems.some((i) => i.key == it.key))
+      v.filter((it) => !removeItems.some((i) => i.key == it.key))
         .map((it, index) =>
           it.key == mergeItemEnabled?.key
             ? {
@@ -430,13 +431,13 @@ export default ({
     initData().finally(() => setDataLoaded(true));
   }, []);
 
+
   useEffect(() => {
     const amount = (isService ? services : items)
       .map((it) => it.amountAfterDiscount || 0)
       .reduce((p, c) => p + c, 0);
     const discountPercentage = form.getFieldValue('discountPercentage') || 0;
     const discountAmount = amount == 0 ? 0 : round(((discountPercentage || 0) * amount) / 100, 2);
-
     const amountAfterDiscount = amount - discountAmount;
     const tax = form.getFieldValue('tax') || 0;
     const taxAmount = amount == 0 ? 0 : round((amountAfterDiscount * tax) / 100, 2) || 0;
@@ -471,20 +472,18 @@ export default ({
     )
   )
 
-  const content = <Space direction="vertical" style={{ width: '100%' }}>
+
+
+  const content = <Space ref={ref} direction="vertical" style={{ width: '100%' }}>
     <ProForm
       form={form}
       submitter={{
         render: () => (
-          <FooterToolbar>
-            <Button style={{ marginRight: 10 }} onClick={onBack}>
-              Cancel
-            </Button>
+          inView ? <FooterToolbar portalDom >
+            <Button style={{ marginRight: 10 }} onClick={onBack}>Cancel</Button>
             <Button onClick={clearForm}>Clear</Button>
-            <Button type="primary" onClick={onSave}>
-              Submit
-            </Button>
-          </FooterToolbar>
+            <Button type="primary" onClick={onSave}>Submit</Button>
+          </FooterToolbar> : <></>
         ),
       }}
     >

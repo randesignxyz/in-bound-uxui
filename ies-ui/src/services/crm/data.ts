@@ -380,6 +380,7 @@ export interface VisitScheduleAdvanceSearchParams {
   contractVerified?: boolean;
   posmVerified?: boolean;
   hasAttachment?: boolean;
+  uploadFailed?: boolean;
   // hasErrorAttachment?: boolean;
 }
 

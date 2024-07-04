@@ -18,6 +18,7 @@ export const getPriceComparisonForms = (): DataForm[] => [
       PriceComparisonFormNames.proFunction,
       PriceComparisonFormNames.requestedFunction,
       PriceComparisonFormNames.finFunction,
+      PriceComparisonFormNames.dmbo,
       PriceComparisonFormNames.dmbo1,
       PriceComparisonFormNames.dmbo2,
       PriceComparisonFormNames.mbo,

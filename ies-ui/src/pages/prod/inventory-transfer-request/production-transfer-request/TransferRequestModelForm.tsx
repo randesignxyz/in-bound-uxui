@@ -26,7 +26,7 @@ import {
   Warehouse,
   WarehouseAdvanceParams,
 } from '../data';
-import { WarehouseServiceAPI } from '../service';
+import { TransferRequestServiceAPI, WarehouseServiceAPI } from '../service';
 import SelectItemTab from './SelectItemTab';
 
 interface Props extends FormModalProps {
@@ -182,32 +182,39 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
             </Col>
             <Col span={8}>
               <ProFormSelect
-                options={[
-                  {
-                    value: 'Line 1',
-                    label: 'Line 1',
-                  },
-                  {
-                    value: 'Line 2',
-                    label: 'Line 2',
-                  },
-                  {
-                    value: 'Line 3',
-                    label: 'Line 3',
-                  },
-                  {
-                    value: 'Line 4',
-                    label: 'Line 4',
-                  },
-                  {
-                    value: 'Line 5',
-                    label: 'Line 5',
-                  },
-                  {
-                    value: 'Line 6',
-                    label: 'Line 6',
-                  },
-                ]}
+                // options={[
+                //   {
+                //     value: 'Line 1',
+                //     label: 'Line 1',
+                //   },
+                //   {
+                //     value: 'Line 2',
+                //     label: 'Line 2',
+                //   },
+                //   {
+                //     value: 'Line 3',
+                //     label: 'Line 3',
+                //   },
+                //   {
+                //     value: 'Line 4',
+                //     label: 'Line 4',
+                //   },
+                //   {
+                //     value: 'Line 5',
+                //     label: 'Line 5',
+                //   },
+                //   {
+                //     value: 'Line 6',
+                //     label: 'Line 6',
+                //   },
+                // ]}
+                request={async()=>{
+                  const line = await TransferRequestServiceAPI(requestActions).get_line()
+                  return line.map((obj)=>({
+                    value: obj.prdname,
+                    label :obj.prdname
+                  }))
+                }}
                 // initialValue="PM/RM"
                 name="line"
                 label="Line"

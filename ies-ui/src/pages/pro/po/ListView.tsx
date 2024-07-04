@@ -20,7 +20,7 @@ interface Props {
   onEdit?: (id: number) => void;
 }
 
-export default ({ onAdd, onEdit }: Props) => {
+export default ({ onAdd }: Props) => {
   const srv = createPoService();
   const access = useAccess();
   const [openFlow, setOpenFlow] = useState<PoRequestListItem>();

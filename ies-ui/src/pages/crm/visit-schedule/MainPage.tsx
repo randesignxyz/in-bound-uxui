@@ -179,7 +179,7 @@ export default () => {
                         action: 'action1',
                         value: item?.customer.code,
                         panel: (_) => <CustomerDetailView getMenuItems={() => []} id={item?.customer.id} openInTab={true} />,
-                        tabLabel: <Badge dot><Typography.Text>{item?.customer.code}</Typography.Text>  </Badge>,
+                        tabLabel: <Badge dot><Typography.Text>{item?.customer.code}</Typography.Text></Badge>,
                     }
                 ]}
                 listView={{

@@ -1,3 +1,4 @@
+import { formatterQty } from '@/pages/utils';
 import { fetchDataListService } from '@/services/apiGateway';
 import { Loaded, LoadedItem, LoadingTeam } from '@/services/delivery/data';
 import { SaveLoadedParam, startLoadingParam } from '@/services/delivery/req-params';
@@ -8,7 +9,7 @@ import {
   ModalFormProps,
   ProFormTextArea,
 } from '@ant-design/pro-form';
-import { Card } from 'antd';
+import { Card, Col, Row } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { useEffect, useState } from 'react';
 
@@ -97,6 +98,17 @@ const StartLoadingModal: React.FC<Props> = ({ loaded, ownedTruckLoading, onSave,
           { title: 'WSH Code', dataIndex: 'whsCode' },
           { title: 'Qty', dataIndex: 'qty', align: 'right' },
         ]}
+        footer={(data) => (
+          <Row>
+            <Col flex={'Auto'} style={{ fontWeight: 'bold' }}>
+              Total
+            </Col>
+            <Col flex={'100px'} style={{ textAlign: 'end', fontWeight: 'bold' }}>
+              {formatterQty.format(data.map((it) => (it.qty || 0))?.reduce((p, c) => p + c, 0))}
+            </Col>
+          </Row>
+        )}
+
       />
 
       <Card style={{ margin: 20 }} size="small" bordered={false}>

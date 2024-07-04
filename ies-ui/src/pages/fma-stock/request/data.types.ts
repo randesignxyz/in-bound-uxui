@@ -110,20 +110,24 @@ export interface StockRequestResponse {
 }
 export interface StockRequestItemDetailResponse {
   id: number;
+  key: string;
   itemId: number;
   itemCode: string;
   itemName: string;
   qty: number;
   uom: string;
   remarks?: string;
+  stockRemarks?: string;
   seqNo: number;
 }
 export interface StockRequestDetailResponse {
-  id: number;
+  id: number;  
+  instanceId: string;
   requestedDate: Moment;
   formNo?: string;
   reason: string;
   remarks?: string;
+  stockRemarks?: string;
   processStatus: string;
   deptId: number;
   groupId: number;

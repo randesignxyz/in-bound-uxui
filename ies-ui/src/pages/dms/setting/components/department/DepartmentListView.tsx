@@ -24,14 +24,12 @@ export default ({ actionKey }: Props) => {
             payLoad?: DepartmentDTO
         }
     }>();
-
     const [assignDepartmentState, setAssignDepartmentState] = useState<{
         visible?: {
             name: "MODAL";
             deparment?: DepartmentDTO;
         }
     }>();
-
     const [userGroupState, setUserGroupState] = useState<{
         visible?: {
             name: "modal";
@@ -39,17 +37,14 @@ export default ({ actionKey }: Props) => {
             payLoad?: { record?: DepartmentDTO }
         }
     }>();
-
     const onLoad = async () => {
         const data = await services.page({
             criteria: { searchValue: "", advanceSearch: {} }
         });
     }
-
     useEffect(() => {
         onLoad();
     }, [actionKey]);
-
     const onSave = async (data: DeparmentCreate) => {
         Modal.confirm({
             title: "Save Accessory record",
@@ -135,33 +130,7 @@ export default ({ actionKey }: Props) => {
                             </>)
                         }
                     },
-                    actions: {
-                        search:false,
-                        render: (_, r) => [
-                            // <Button
-                            //     type="link"
-                            //     icon={<EditOutlined />}
-                            //     onClick={() => setState({ visible: { name: "modal", type: "ADD", payLoad: r } })}
-                            // />,
-                            // <Button
-                            //     type="link"
-                            //     icon={<InfoCircleOutlined />}
-                            // />,
-                            // <Button
-                            //     type="link"
-                            //     icon={<UserAddOutlined />}
-                            //     onClick={() => {
-                            //         setAssignDepartmentState({ visible: { name: "MODAL", deparment: r } })
-                            //     }}
-                            // />,
-                            // <Button
-                            //     type="link"
-                            //     icon={<DeleteOutlined style={{ color: "red" }} />}
-                            // />,
-                        ]
-                    },
                 }}
-
             />
             <UserGroupEntryModal
                 open={userGroupState?.visible?.name === "modal"}
@@ -171,14 +140,12 @@ export default ({ actionKey }: Props) => {
                     setUserGroupState((v) => ({ ...v, visible: undefined }));
                 }}
             />
-
             <DepartmentEntryFormModal
                 open={state?.visible?.name === "modal"}
                 onCancel={() => setState(v => ({ ...v, visible: undefined }))}
                 onSave={onSave}
                 data={state?.visible?.payLoad}
             />
-
             <AsseignUserModalForm
                 open={assignDepartmentState?.visible?.name == "MODAL"}
                 onSave={async (data: AssignDepartment) => {

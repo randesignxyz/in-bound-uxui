@@ -28,8 +28,8 @@ export default ({ processInstaceId, forceReload }: { processInstaceId: string, f
                     dataSource={dataDetail}
                     columns={[
                         { title: "Name", dataIndex: 'empName', },
-                        { title: "Job Title", render: (_, r) => r?.jobTitle?.name },
-                        { title: "Job Title", render: (_, r) => r?.segment?.name },
+                        { title: "Position", render: (_, r) => r?.jobTitle?.name },
+                        { title: "Employee Segment", render: (_, r) => r?.segment?.name },
                         { title: "BU", render: (_, r) => r?.bu?.name },
                         { title: "Function", render: (_, r) => r?.department?.name },
                         { title: "Sub Function", render: (_, r) => r?.subDepartment?.name },
@@ -40,9 +40,11 @@ export default ({ processInstaceId, forceReload }: { processInstaceId: string, f
                         { title: "Direct supervisor", render: (_, r) => r?.directReportTo?.name },
                         { title: "Group day-off", render: (_, r) => r?.dayOffGroup?.name },
                         { title: "Starting Date", render: (_, r) => r?.startingDate && formatDate(r.startingDate) },
-                        { title: "Requisition No#", render: (_, r) => r?.requisition && <a target="_blank" onClick={() => {
-                            window.open(`/data-form/staff_requisition_request_process/${r?.requisition.code}`, '_blank')?.focus();
-                        }}>  {r?.requisition.name }</a>},
+                        {
+                            title: "Requisition No#", render: (_, r) => r?.requisition && <a target="_blank" onClick={() => {
+                                window.open(`/data-form/staff_requisition_request_process/${r?.requisition.code}`, '_blank')?.focus();
+                            }}>  {r?.requisition.name}</a>
+                        },
                     ]}
 
                 />
@@ -69,7 +71,7 @@ export default ({ processInstaceId, forceReload }: { processInstaceId: string, f
                     columns={[
                         { dataIndex: 'checked', width: 50, render: (_, r) => <Checkbox checked={r.checked} /> },
                         { dataIndex: "itemName", width: 300 },
-                        { dataIndex: "amount" , width: 100, align: 'right', render: (_,r) => (r.amount || 0)>0 && r.checked && formatter.format(r.amount || 0) },
+                        { dataIndex: "amount", width: 100, align: 'right', render: (_, r) => (r.amount || 0) > 0 && r.checked && formatter.format(r.amount || 0) },
                         { dataIndex: "remarks" }
                     ]}
                 />

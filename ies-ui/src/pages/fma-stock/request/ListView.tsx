@@ -27,9 +27,12 @@ export default ({ onAdd, onEdit }: Props) => {
   const [advanceSearchParams, setAdvanceSearchParams] = useState<StockRequestAdvanceSearchParams>({
       status: 'ALL',
   });
+
   const [viewDetail, setViewDetail] = useState<{
     visible: boolean;
     data?: StockRequestDetailResponse;
+    instId?: string;
+    forceRefresh?: number;
   }>({ visible: false });
 
   const onRequestHandler = async (
@@ -51,7 +54,14 @@ export default ({ onAdd, onEdit }: Props) => {
   const onDetailhandler = async (data: StockRequestListItem) => {
     try {
       const detail = await services.detailByProcessFlow(data.instanceId||'');
-      setViewDetail({ visible: true, data: detail });
+      setViewDetail(v=> {
+        return { 
+          visible: true, 
+          data: detail, 
+          instId: data.instanceId||'',
+          forceRefresh: v?.forceRefresh||0 + 1
+        }
+      });
     } catch (error: any) {
       message.error(error.message || 'Faild to load data.');
     }
@@ -192,8 +202,9 @@ export default ({ onAdd, onEdit }: Props) => {
       }}           
     />
     <DataDetailView
-      open={viewDetail.visible}
-      data={viewDetail.data}
+      open={viewDetail.visible}     
+      instId= {viewDetail.instId}
+      forceRefresh={viewDetail.forceRefresh}
       onOpenChange={(v) => v == false && setViewDetail({ visible: false })}
     /> 
   </PageContainer>

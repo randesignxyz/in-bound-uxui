@@ -166,6 +166,7 @@ export type QuotationDetail = {
     integratedStatus?: string;
     status?: string;
     voidReason?: string;
+    selectRemarks?: string;
 
 }
 

@@ -85,7 +85,6 @@ const ContractFormRequest: React.FC<Props> = ({ onSave, ...props }) => {
                                                 const stringName = inputRef.current?.input?.value
                                                 const data ={
                                                     name:stringName,
-                                                    // companyNumber:stringName?.split(/\s/).reduce((response,word)=> response+=word.slice(0,1),'')
                                                     companyNumber:stringName?.substring(0,3).toUpperCase(),
                                                 }
                                                     CompanySerivceAPI(requestAction).save(data).then(s=>{
@@ -142,14 +141,8 @@ const ContractFormRequest: React.FC<Props> = ({ onSave, ...props }) => {
                                     name={"postalCode"}
                                     label="Company Postal Code"
                                 />
-                                {/* <ProFormText
-                                    name={"manager"}
-                                    label="Contract Manager"
-                                /> */}
                         </Col>
                     </Row>
-
-
 
                 </ProForm>
 

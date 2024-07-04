@@ -7,6 +7,10 @@ import { PageContainer } from '@ant-design/pro-components';
 export const SettingPaths = {
     workflow: '/setting/process-def',
 }
+export const NCMStockPaths = {
+    request: '/stock/request',
+    item: '/stock/item',
+}
 
 const processDefList = [
     {
@@ -15,6 +19,13 @@ const processDefList = [
         description: 'Associated groups, Associated users, Assignee ',
         icon: workflowIcon,
         link: `${SettingPaths.workflow}/list`,
+    },
+    {
+        id: 'inhouse_stock_item',
+        name: 'NCM Item List',
+        description: 'NCM Item Management',
+        link: `${NCMStockPaths.item}/list`,
+       
     },
 ];
 

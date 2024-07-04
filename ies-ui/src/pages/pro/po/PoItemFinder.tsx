@@ -149,6 +149,7 @@ export default ({
             isService: isService,
             keyword: keywords,
             status: 'SELECTED',
+
           },
         });
 

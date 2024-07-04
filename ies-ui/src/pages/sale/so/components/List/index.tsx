@@ -222,7 +222,7 @@ const SoListView: React.FC<TableViewProps<SoItemLess>> = ({ actionHandlers }) =>
           },
           {
             title: 'Status',
-            render: (_, r) =>r.status && <Status text={r.status}/>,
+            render: (_, r) => r.status && <Status text={r.status} />,
           },
           {
             title: 'Source',
@@ -233,25 +233,20 @@ const SoListView: React.FC<TableViewProps<SoItemLess>> = ({ actionHandlers }) =>
 
       <QuickView
         width="700px"
-        placement="right"
-        closable
-        destroyOnClose
         title="Quick View"
         open={modals.isVisible('quickView')}
-        onClose={() => {
-          modals.hideModal('quickView');
+        onOpenChange={(visible) => {
+          !visible && modals.hideModal('quickView');
         }}
         soDetail={state.data?.soDetail}
       />
 
       <AdvanceSearch
         width="400px"
-        placement="right"
-        closable
         title="Advance Search"
         open={modals.isVisible('advanceSearch')}
-        onClose={() => {
-          modals.hideModal('advanceSearch');
+        onOpenChange={(visible) => {
+          !visible && modals.hideModal('advanceSearch');
         }}
         initData={advanceSearchParams}
         salespersons={state.data?.initData?.salespersons}

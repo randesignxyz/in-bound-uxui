@@ -20,12 +20,12 @@ export default () => {
     const access = useAccess()
     const items: ListMenuItem[] = [
         {
-          id: 'employee',
-          name: 'Employee',
-          description: 'Employee List',
-          link: `${HrmPaths.employee}/list`,
-          visible: access.canAccessHrEmployeeMenuItem,
-          icon: requisitionIcon,
+            id: 'employee',
+            name: 'Employee',
+            description: 'Employee List',
+            link: `${HrmPaths.employee}/list`,
+            visible: access.canAccessHrEmployeeMenuItem,
+            icon: requisitionIcon,
         },
         {
             id: 'employee-requisition',
@@ -59,13 +59,13 @@ export default () => {
             link: `${HrmPaths.appraisalRequest}/list`,
             icon: performanceReview,
             menu: {
-                items: [{label: <PerformanceReport trigger={<a >Export</a>}/> , key: 'exportContract', icon: <ExportOutlined style={{ fontSize: '16px', color: '#08c' }}/>}]
+                items: [{ label: <PerformanceReport trigger={<a >Export</a>} />, key: 'exportContract', icon: <ExportOutlined style={{ fontSize: '16px', color: '#08c' }} /> }]
             }
         }
     ]
 
     return (
-        <PageContainer title = {false}>
+        <PageContainer title={false}>
             <ListMenuComp items={items} />
         </PageContainer>
     )

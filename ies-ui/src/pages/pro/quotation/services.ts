@@ -17,6 +17,7 @@ export const createQuotationService = (): CrudBaseServices1<
     listItemByKeywords: (keywords?: string, fromPrOnly?: boolean) => Promise<Paging<Item>>
     fetchItems: (ids: number[]) => Promise<QuotationDetail[]>
     void: (id: number, remarks: string) => Promise<void>
+    select: (id: number, remarks: string) => Promise<void>
     fetchQuotationForPc: (params: FetchPagingParams<QuotationSearchParams>) => Promise<Paging<QuotationListItem>>,
     getVendorChangedRequired: () => Promise<{ data: number }>,
     postPQ: (id: number) => Promise<void>,
@@ -38,7 +39,8 @@ export const createQuotationService = (): CrudBaseServices1<
             }).query(request)
 
             try {
-                const empList = await EmployeeServices.listAllByIds([...list.items.map(it => it.buyerId), ...list.items.map(it => it.ownerId)]).query(request)
+                const ids = [...list.items.map(it => it.buyerId), ...list.items.map(it => it.ownerId)].filter(it => it > 0)
+                const empList = ids.length == 0 ? [] : await EmployeeServices.listAllByIds(ids).query(request)
 
                 return {
                     ...list, items: list.items.map(it => {
@@ -128,6 +130,13 @@ export const createQuotationService = (): CrudBaseServices1<
             endpoint: 'PRO',
 
         }).query(request),
+
+        select: async (id, remarks) => execDataService0<{ id: Number; remarks: string }>({
+            actionName: 'select-quotation',
+            endpoint: 'PRO',
+            payload: { id, remarks }
+        })(request),
+
 
         fetchQuotationForPc: (params: FetchPagingParams<QuotationSearchParams>) => fetchDataPagingService<QuotationListItem, FetchPagingParams<QuotationSearchParams>>({
             actionName: 'fetch-pr-for-pc',

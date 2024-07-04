@@ -2,7 +2,7 @@ import { UIBuilder } from '@/components/UIBuilder';
 import { Locations } from '@/services/crm/data';
 import { LookupData } from '@/services/data';
 import { ProFormSelect, ProFormText } from '@ant-design/pro-form';
-import { Card,  Form, Select, Space } from 'antd';
+import { Card, Form, Select, Space } from 'antd';
 
 const width = 215;
 
@@ -33,15 +33,15 @@ const AddressEntryForm: React.FC<AddressEntryFormProps> = ({
     <div>
       {!addressReadonly && (
         <Card style={{ marginBottom: 10 }} size="small">
-         {!defaultAddress && !isEdit && <ProFormSelect
+          {!defaultAddress && !isEdit && <ProFormSelect
             label="Type"
             name="typeId"
             width="md"
-            allowClear = {false}
+            allowClear={false}
             help={<span />}
             rules={[{ required: true }]}
             options={UIBuilder.toOption(
-              initData?.lookupDataList?.filter((it) => it.type == 'ADDRESS_TYPE' ),
+              initData?.lookupDataList?.filter((it) => it.type == 'ADDRESS_TYPE'),
             )}
           />}
           <ProFormText
@@ -49,7 +49,7 @@ const AddressEntryForm: React.FC<AddressEntryFormProps> = ({
             width="md"
             label="Address Name"
             help={<span />}
-            // rules={[{ required: true }]}
+          // rules={[{ required: true }]}
           />
           <Form.Item label="Address(KH)">
             <Space>
@@ -79,8 +79,8 @@ const AddressEntryForm: React.FC<AddressEntryFormProps> = ({
           <Form.Item required label="Address(Latin)">
             <Space size={2} direction="vertical">
               <Space>
-                <ProFormText width={width} help={<span />} name="houseNo" placeholder="House #"/>
-                <ProFormText width={width} help={<span />} name="streetNo" placeholder="Street No"/>
+                <ProFormText width={width} help={<span />} name="houseNo" placeholder="House #" />
+                <ProFormText width={width} help={<span />} name="streetNo" placeholder="Street No" />
                 <ProFormText width={width} help={<span />} name="streetName" placeholder="Street Name" />
               </Space>
               <Space>
@@ -167,7 +167,7 @@ const AddressEntryForm: React.FC<AddressEntryFormProps> = ({
           <ProFormText name="hotspot" width="md" label="Hotspot" />
           <ProFormText name="direction" width="md" label="Direction" />
         </Card>
-      )}      
+      )}
     </div>
   );
 };

@@ -2,7 +2,7 @@ import TableView, { TableViewSearchParams } from '@/components/DataCrud/TableVie
 import { formatDate } from '@/pages/utils';
 import { Paging } from '@/services/API';
 import { simpleRequestActions } from '@/services/model';
-import { ArrowRightOutlined, BlockOutlined, DashOutlined, DeleteOutlined } from '@ant-design/icons';
+import { ArrowRightOutlined, BlockOutlined, DashOutlined, DeleteOutlined, ExportOutlined } from '@ant-design/icons';
 import type { ActionType } from '@ant-design/pro-table';
 import { history, useModel } from '@umijs/max';
 import { Button, Dropdown, MenuProps, message, Modal, Popover, Radio, Space, Tag } from 'antd';
@@ -116,7 +116,7 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
     <>
       {/* <BreadCrumbCom separator=">" routes={routes} /> */}
       <PageContainer
-        onBack={()=>history.push(`${FleetPaths.fleet}`)}
+        // onBack={()=>history.push(`${FleetPaths.fleet}`)}
         title="Inspections"
       >
         <TableView<InspectionDTO, { searchValue?: string }>
@@ -136,10 +136,10 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
                 }}
               >
                 <Radio.Button value="ALL">All</Radio.Button>
-                <Radio.Button value="DAILY">DAILY</Radio.Button>
-                <Radio.Button value="WEEKLY">WEEKLY</Radio.Button>
-                <Radio.Button value="MONTHLY">MONTHLY</Radio.Button>
-                <Radio.Button value="ANNUALLY">ANNUALLY</Radio.Button>
+                <Radio.Button value="DAILY">Daily</Radio.Button>
+                <Radio.Button value="WEEKLY">Weekly</Radio.Button>
+                <Radio.Button value="MONTHLY">Monthly</Radio.Button>
+                <Radio.Button value="ANNUALLY">Annually</Radio.Button>
               </Radio.Group>
             </Space>
           }
@@ -153,8 +153,13 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
               valueType: 'date',
               sorter: 'createdDate',
               dataIndex: 'createdDate',
-              render: (_, r) => <Button type='link' onClick={() => onDetail?.(r.id)}>{formatDate(r.createdDate)}</Button>
+              render: (_, r) => (
+                <>
+                  <Button icon={<ExportOutlined/>} size='small' type='link' onClick={() => window.open(`/external/fleet/inspection/detail/${r.id}`)?.focus()} />
+                  <Button type='link' onClick={() => onDetail?.(r.id)}>{formatDate(r.createdDate)}</Button>
 
+                </>
+              )
             },
             {
               key: 'duration',

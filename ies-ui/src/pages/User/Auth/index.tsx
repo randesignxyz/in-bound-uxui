@@ -37,8 +37,6 @@ export default () => {
   }, []);
 
   useEffect(() => {
-    console.log(initialState?.currentUser);
-
     if (initialState?.currentUser) {
       const redirect = searchParams.get('path');
       if (redirect == '/') {

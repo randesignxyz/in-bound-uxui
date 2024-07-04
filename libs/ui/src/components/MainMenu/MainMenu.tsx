@@ -6,7 +6,6 @@ import defaultIcon from "./../../assets/menu-icon.png"
 import { DownOutlined } from "@ant-design/icons";
 import Paragraph from "antd/lib/typography/Paragraph";
 
-
 const onOpenHandler = (item: ListMenuItem) => {
   if (item.onClick) {
     item.onClick();
@@ -62,10 +61,10 @@ const createMenus = (key: string, items: ListMenuItem[]) => <List<ListMenuItem>
 />
 
 const MainMenu = (props: MainMenuProps) => {
-  const size = props.items.length -1
+  const size = props.items.length - 1
   return <Flex vertical>
     {props.items.map((it) => <div>
-      { it.menu.devider && <Divider  orientation="left" orientationMargin={"0px"} style={{marginTop: '0px'}}>{it.menu.devider.label}</Divider> }
+      {it.menu.devider && <Divider orientation="left" orientationMargin={"0px"} style={{ marginTop: '0px' }}>{it.menu.devider.label}</Divider>}
       {createMenus(it.menu.key, it.menu.items)}
     </div>)}
   </Flex>

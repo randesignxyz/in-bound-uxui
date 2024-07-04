@@ -1,7 +1,7 @@
 import FileUploader from '@/components/Attachment/FileUploader';
 import { EmployeeServices } from '@/pages/hrm/services';
 import { ProcessFlowModalWrapper } from '@/pages/process-flow/components/ProcessFlowModalWrapper';
-import { formatDate, formatter, formatterPercentage } from '@/pages/utils';
+import { formatter, formatterPercentage } from '@/pages/utils';
 import { LookupDataItem } from '@/services/data';
 import { RequisitionListItem } from '@/services/pro/data';
 import { UserResult } from '@/services/process-workflow/data';
@@ -13,16 +13,17 @@ import {
   DeleteOutlined,
   InfoCircleOutlined,
   MinusCircleOutlined,
+  PaperClipOutlined,
   PlusOutlined,
   QuestionCircleOutlined,
   SplitCellsOutlined,
+  StockOutlined,
   SwapOutlined,
 } from '@ant-design/icons';
 import {
   EditableFormInstance,
   EditableProTable,
   FooterToolbar,
-  PageContainer,
   ProCard,
   ProColumns,
   ProForm,
@@ -31,7 +32,6 @@ import {
   ProFormText,
   ProFormTextArea,
 } from '@ant-design/pro-components';
-import { history } from '@umijs/max';
 import {
   App,
   Button,
@@ -150,6 +150,7 @@ const offerComparisons: { label: string; value: PriceOfferType; id: number }[] =
 export default ({
   // id,
   onBack,
+  onView
   // onEdit,
   // onAdd,
 }: {
@@ -158,6 +159,7 @@ export default ({
   onBack: () => void;
   onAdd?: (id?: number) => void;
   onEdit?: (id: number) => void;
+  onView?: (processInstId: string, fornNo: string) => void;
 }) => {
   const { message } = App.useApp();
   const priceComparisonSrv = createPriceComparisonService();
@@ -567,8 +569,6 @@ export default ({
             const quotation = quotations.find(
               (q) => q.priceOffer == po.value && q.vendor.id == v.id,
             );
-
-
             return {
               priceOffer: po.value,
               vendorId: v.id,
@@ -963,15 +963,17 @@ export default ({
     try {
       const rs = await priceComparisonSrv.saveItem(saveData);
       const { processInstId, formNo } = rs;
+      onView?.(processInstId, formNo)
       message.success(`Your request is submitted. Please track the request with form no ${formNo}`);
-      history.push(`/data-form/${PriceComparisonFormNames.processDefKey}/${processInstId}`);
+      // history.push(`/data-form/${PriceComparisonFormNames.processDefKey}/${processInstId}`);
     } catch (error: any) {
       message.error(error.message || 'Failed to make request.');
     }
   };
   return (
-    <PageContainer title="Price Comparison Requisition Form" onBack={() => history.back()}>
+    <>
       <ProForm
+
         form={form}
         submitter={{
           render: () => (
@@ -1011,6 +1013,8 @@ export default ({
         }}
       />
       <ProCard
+        size='small'
+        title={<Space><StockOutlined />Quotation Comparison</Space>}
         direction="column"
         extra={
           <Space align="baseline">
@@ -1481,7 +1485,7 @@ export default ({
           />
         </ProCard>
 
-        <ProCard title="Attachment Files" bordered style={{ marginBlockStart: 8 }}>
+        <ProCard title={<Space size={0}><PaperClipOutlined />Attachment Files</Space>} bordered style={{ marginBlockStart: 8 }}>
           <FileUploader
             multiple
             showTitle={false}
@@ -1492,7 +1496,7 @@ export default ({
             }}
           />
         </ProCard>
-      </ProCard>
+      </ProCard >
 
       <ProcessFlowModalWrapper
         type="action"
@@ -1533,6 +1537,6 @@ export default ({
         // onSave={  => onAddItemHandler}
         isService={isService}
       />
-    </PageContainer>
+    </ >
   );
 };

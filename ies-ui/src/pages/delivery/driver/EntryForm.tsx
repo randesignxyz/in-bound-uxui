@@ -42,6 +42,7 @@ const TruckEntryModal: React.FC<Props> = ({ companyList, truckList, onSave, data
       driverLicenseExpiredDate: data?.driverLicenseExpiredDate,
       description: data?.description,
       accountName: data?.accountName,
+      deliveryTracking: data?.deliveryTracking == undefined ? true : data.deliveryTracking
     });
   };
 
@@ -91,14 +92,14 @@ const TruckEntryModal: React.FC<Props> = ({ companyList, truckList, onSave, data
                 label="ID Card"
                 help={<span />}
               />
-              
+
               <ProFormText
                 // rules={[{ required: true }]}
                 name={'accountName'}
                 label="Account Name"
                 help={<span />}
               />
-              
+
               <ProFormSelect
                 // rules={[{ required: true }]}
                 name={'driverLicenseType'}
@@ -143,7 +144,8 @@ const TruckEntryModal: React.FC<Props> = ({ companyList, truckList, onSave, data
                   value: it.id || 0,
                 }))}
               />
-              <ProFormCheckbox name={'multiTicket'} label ="Issued Multi Ticket"/>
+              <ProFormCheckbox name={'multiTicket'} label="Issued Multi Ticket" />
+              <ProFormCheckbox name={'deliveryTracking'} label="Delivery Tracking" />
               <ProFormTextArea name={'description'} label="Description" />
             </Col>
             <Col flex={'Auto'} />

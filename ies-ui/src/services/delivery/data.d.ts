@@ -38,6 +38,7 @@ export interface LoadingBay {
   name: string;
   status: string;
   priority?: number;
+  warehouse?: LookupDataItem;
   description?: string;
 }
 
@@ -216,6 +217,8 @@ export interface QueueTicket {
   processInstance: ProcessInstance;
   ticketNum: string;
   status: string;
+  issuedDate: Moment;
+  createdDate: Moment;
 }
 
 export interface ProcessInstance {
@@ -291,6 +294,7 @@ export interface DriverListItem {
   driverLicenseType?: string;
   driverLicenseExpiredDate?: string;
   multiTicket?: boolean;
+  deliveryTracking?: boolean;
   description?: string;
   createdBy: string;
   createdDate: Moment;
@@ -310,6 +314,7 @@ export interface SaveDriver {
   driverLicenseType: string;
   driverLicenseExpiredDate: string;
   multiTicket?: boolean;
+  deliveryTracking?: boolean;
   description?: string;
 }
 
@@ -326,6 +331,8 @@ export interface OfficerItem {
   name: string;
   userName: string;
   description?: string;
+  loadingDocks: LoadingDockListItem[],
+  warehouses: LookupDataItem[];
 }
 
 export interface Officer {
@@ -333,6 +340,7 @@ export interface Officer {
   name: string;
   userName: string;
   loadingDocks: LoadingDockListItem[],
+  warehouses: LookupDataItem[];
   description?: string;
   createdBy: string;
   createdDate: Moment,
@@ -345,6 +353,7 @@ export interface SaveOfficer {
   name: string;
   userName: string;
   loadingDockIds: number[],
+  warehouses?: number[];
   description?: string;
 }
 
@@ -363,6 +372,7 @@ export interface Driver {
   multiTicket?: boolean;
   driverLicenseExpiredDate: string;
   description?: string;
+  deliveryTracking?: boolean;
 }
 
 export interface CompanyListItem {

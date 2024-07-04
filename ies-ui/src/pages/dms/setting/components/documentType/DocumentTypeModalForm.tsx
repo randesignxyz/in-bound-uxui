@@ -22,7 +22,6 @@ const DocumentTypeModalForm: React.FC<Props> = ({ onSave, data, ...props }) => {
             <FormModalComp
                 {...props}
                 width="600px"
-
                 onSubmit={async () => {
                     const dataForm = await form.validateFields();
                     onSave({
@@ -30,7 +29,6 @@ const DocumentTypeModalForm: React.FC<Props> = ({ onSave, data, ...props }) => {
                         ...dataForm,
                         fileExtension:dataForm.fileExtension?.toString()
                     });
-
                 }}
                 title="Create Document Type"
             >
@@ -73,26 +71,21 @@ const DocumentTypeModalForm: React.FC<Props> = ({ onSave, data, ...props }) => {
                                 label="Require Expire Date"
                             />
                         </Col>
-
                         <Col span={24}>
                             <ProFormTextArea
                                 label="Description"
                                 name={"description"}
                             />
                         </Col>
-
                         <Col span={24}>
                             <ProFormCheckbox
                                 label="File Types"
                                 addonAfter={"Restrict File Types"}
                                 name={"restrictFile"}
                             />
-
                         </Col>
-
                         <ProFormDependency dependencies={["restrictFile"]} name={["restrictFile"]}>
                             {({ restrictFile }) => {
-                                
                                 return (<>
                                     <ProFormCheckbox.Group
                                         disabled={!restrictFile}
@@ -135,11 +128,8 @@ const DocumentTypeModalForm: React.FC<Props> = ({ onSave, data, ...props }) => {
                                 </>)
                             }}
                         </ProFormDependency>
-
                     </Row>
-
                 </ProForm>
-
             </FormModalComp>
         </>
     )

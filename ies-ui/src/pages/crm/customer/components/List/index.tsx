@@ -11,7 +11,7 @@ import AdvanceSearch from './AdvanceSearch';
 import Omit from 'omit.js';
 import { CloudDownloadOutlined, DashOutlined, DownOutlined, SelectOutlined, UserSwitchOutlined } from '@ant-design/icons';
 import { CrmPaths } from '@/pages/crm';
-import { history } from 'umi';
+import { history } from "@umijs/max";
 import ExportCustomer from './ExportCustomer';
 import ImportFileButton from '@/components/ImportFileButton';
 import TransferSE from './TransferSE';
@@ -206,9 +206,7 @@ export const CustomerListView: React.FC<TableViewProps<CustomerItemLess> & { act
           },
           {
             render: (_, r) => <Dropdown menu={{
-
-              items: actl.getMenuItems(r, 'List', () => actionRef.current?.reloadAndRest?.()).filter(it => it.display)
-
+              items: actl.getMenuItems(r, 'List', () => actionRef.current?.reloadAndRest?.()).filter(it => it.visible)
             }}>
 
               <a onClick={(e) => e.preventDefault()}>

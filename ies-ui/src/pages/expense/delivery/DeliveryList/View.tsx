@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { useParams, useModel, history } from 'umi'
+import { useParams, useModel, history } from "@umijs/max";
 import { Card, Descriptions, Dropdown, Button, Modal, message, Spin, Space, Typography, Tag } from 'antd'
 import moment from 'moment'
 import { FileExcelOutlined, CaretDownOutlined, ReloadOutlined, CheckOutlined, FilePdfOutlined, StopOutlined, AuditOutlined, RotateLeftOutlined } from '@ant-design/icons'

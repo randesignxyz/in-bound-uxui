@@ -1,14 +1,16 @@
 import ViewFormWrapper from "@/pages/process-flow/components/forms/ViewFormWrapper";
 import { DataViewProps } from "@/pages/process-flow/data";
-import { Card, Spin, message } from "antd";
+import { Card, Descriptions, Divider, Spin, message } from "antd";
 import ViewData from "../components/ViewData";
 import { simpleRequestActions } from "@/services/model";
 import { useEffect, useState } from "react";
 import { StockRequestDetailResponse } from "../data.types";
 import ProcessFlowModel from "@/models/ProcessFlowModel";
 import { createService } from "../services";
+import { ProCard } from "@ant-design/pro-components";
+import { formatDateTime } from "@/pages/utils";
 
-export default (props: DataViewProps) => {
+export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
     const workflowModel = ProcessFlowModel();
     const requestActions = simpleRequestActions();
     const services = createService(requestActions);
@@ -16,17 +18,17 @@ export default (props: DataViewProps) => {
 
     useEffect(() => {
         loadData();
-      }, [workflowModel.state.instanceData]);
+    }, [workflowModel.state.instanceData]);
     
-    const loadData = async () => {
     const instId = workflowModel.state?.instanceData?.processInstance?.procInstId;
-    if (!instId) return;
-    try {
-        const data = await services.detailByProcessFlow(instId);
-        setStockRequest({ ...data });
-    } catch (error: any) {
-        message.error(error.message || 'Failed to load stock request.');
-    }
+    const loadData = async () => {
+      if (!instId) return;
+      try {
+          const data = await services.detailByProcessFlow(instId);
+          setStockRequest({ ...data });
+      } catch (error: any) {
+          message.error(error.message || 'Failed to load stock request.');
+      }
     };
 
     return(  
@@ -36,16 +38,8 @@ export default (props: DataViewProps) => {
         attachedFiles={stockRequest?.fileIds?.map(it => ({ fileId: it, activity: 'Start' }))}
     >
         {(data) => {
-        return (<Spin spinning={requestActions.request?.loading}>
-          <Card title='Item list' size='small' style={{ marginTop: 10 }}>
-            <ViewData data={stockRequest} />
-          </Card>
-          {/* <Flow
-            open={!!openFlow}
-            onOpenChange={(visible) => !visible && setOpenFlow(undefined)}
-            type={'PR'}
-            fromId={openFlow || 0}
-          /> */}
+        return (<Spin spinning={requestActions.request?.loading}>          
+            {instId && <ViewData title="Item Request List" instId={instId}/>}
         </Spin>)
       }}
     </ViewFormWrapper>)

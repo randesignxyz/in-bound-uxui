@@ -6,7 +6,7 @@ import { DeliveryParams } from '@/services/delivery/delivery-params';
 import { DeliveryServiceAPI } from '@/services/delivery/services';
 import { simpleRequestActions } from '@/services/model';
 import { ActionType } from '@ant-design/pro-table';
-import { message, Modal, Spin } from 'antd';
+import { Checkbox, message, Modal, Spin } from 'antd';
 import { useRef, useState } from 'react';
 import TruckEntryModal from './EntryForm';
 
@@ -100,6 +100,7 @@ export default () => {
           { title: 'ID Card', dataIndex: 'idCard' },
           { title: 'Driver License', dataIndex: 'driverLicense' },
           { title: 'Driver License Type', dataIndex: 'driverLicenseType' },
+          { title: 'Delivery Tracking', render: (_, r) => <Checkbox checked={r.deliveryTracking == undefined ? true : r.deliveryTracking} /> },
           { title: 'Driver License Expired Date', dataIndex: 'driverLicenseExpiredDate' },
           { title: 'Created By', dataIndex: 'createdBy' },
           {

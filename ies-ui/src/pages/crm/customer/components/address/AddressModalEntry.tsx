@@ -42,7 +42,11 @@ const AddressModalEntry: React.FC<Props> = ({
       typeId: initData?.lookupDataList?.some((it) => it.id == DEFAULT_ADDRESS_TYPE_ID)
         ? DEFAULT_ADDRESS_TYPE_ID
         : initData?.lookupDataList?.find((it) => true)?.id,
-      ...data,
+      ...{
+        ...data, communeId: data?.communeId == 0 ? undefined : data?.communeId,
+        villageId: data?.villageId == 0 ? undefined : data?.villageId
+      }
+      ,
     });
 
     return () => {

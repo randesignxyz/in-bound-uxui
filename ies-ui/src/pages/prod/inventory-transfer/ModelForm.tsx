@@ -438,14 +438,14 @@ const ModelForm: React.FC<Props> = ({ onSave, data, close, ...props }) => {
               {
                 title: '',
                 width: 50,
-                render: (_, r, index) => (r.status == 'cancel' ? <Checkbox indeterminate disabled /> : r.status == 'done' ? <Checkbox defaultChecked disabled /> : <Checkbox defaultChecked={false} disabled />),
+                render: (_, r) => (r.status == 'cancel' ? <Checkbox indeterminate disabled /> : r.status == 'done' ? <Checkbox defaultChecked disabled /> : <Checkbox defaultChecked={false} disabled />),
               },
               {
                 title: 'Transfer', render: (_, r, index) =>
                   <a
                     onClick={() => { setTransferItemListOpen({ visible: true, provided: r.provided, status: r.status }), setProvidedId(r.provided), setProvidedStatus(r.status) }}
                   >
-                    {('Transfer ' + (index + 1))}
+                    {`Transfer ${index + 1}`}
                   </a>
               },
             ]}

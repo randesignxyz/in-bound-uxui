@@ -5,10 +5,12 @@ import fleet from '@/assets/fleet.png';
 import fuelStation from '@/assets/gas-station.png';
 import fuelStock from '@/assets/oil-tank.png';
 import taskList from '@/assets/task-list.png';
+import inventory from '@/assets/inventory.png';
 import vehicletool from '@/assets/vehicle-tools.png';
 import maintenancePlan from '@/assets/web-maintenance.png';
 import ListMenuComp from '@/components/ListMenu';
 import report from '@/assets/report.png';
+import { PageContainer } from '@ant-design/pro-components';
 
 export const FleetPaths = {
   fleet: '/fleet',
@@ -80,10 +82,18 @@ export default () => {
     },
     {
       id: 'stock',
-      name: 'Stock',
+      name: 'Fuel & Energy',
       description: 'Diesel and Lubricant',
       link: `/fleet/stock/list`,
       icon: fuelStock,
+      isMenu: true,
+    },
+    {
+      id: 'accessory',
+      name: 'Accessory Stock',
+      description: 'Track spare auto parts inventory',
+      link: `/fleet/accessory/list`,
+      icon: inventory,
       isMenu: true,
     },
     {
@@ -105,8 +115,8 @@ export default () => {
   ];
 
   return (
-    <>
+    <PageContainer title={false} >
       <ListMenuComp items={items} />
-    </>
+    </PageContainer>
   );
 };

@@ -5,16 +5,22 @@ import { downloadReport } from '@/services/apiGateway';
 import { SimpleRequestActions, simpleRequestActions } from '@/services/model';
 import { ProcessInstanceData, UserTask } from '@/services/process-workflow/data';
 import { PageContainer } from '@ant-design/pro-components';
-import { message, Modal, Spin } from 'antd';
+import { Flex, message, Modal, Spin, TabPaneProps, Tabs } from 'antd';
 import moment from 'moment';
 import { useEffect, useState } from 'react';
-import { history } from 'umi';
+import { history } from "@umijs/max";
 import { DataViewProps } from '../../data';
 import { ActionBtn, MoreAction } from '../ActionBtn';
 import InstanceInfoComp from '../InstanceInfo';
 import { ProcessFlowModalMngt } from '../ProcessFlowModalWrapper';
 import ActivityView from './ActivityView';
+import { FormOutlined, PaperClipOutlined, UnorderedListOutlined } from '@ant-design/icons';
 
+
+interface Tab extends Omit<TabPaneProps, 'tab'> {
+  key: string;
+  label: React.ReactNode;
+}
 type WorkflfowAttachmentFile = {
   fileId: string, activity: string
 }
@@ -57,8 +63,6 @@ const ViewFormWrapper = <T extends { id: number }>(props: Props<T>) => {
     enabledUplodFile
   } = props;
 
-
-
   const refreshData = async () => {
     try {
       await workflowModel.actions.loadInstanceData(workflowProp.id, workflowProp.type || 'task');
@@ -84,21 +88,13 @@ const ViewFormWrapper = <T extends { id: number }>(props: Props<T>) => {
           taskActions={taskActions}
           onValidate={actionHandlers?.onValidate}
           actionHandler={actionHandler}
-          moreActions={moreActions}
+          moreActions={moreActions?.filter(it => it) as MoreAction[]}
         />
-      }{' '}
+      }
     </>
   );
 
-  const [contentType, setContentType] = useState('dataForm');
-
-  const instanceInfo = state.instanceData && (
-    <InstanceInfoComp
-      requestor={state.instanceData?.requestor}
-      userTask={state.instanceData?.task}
-      processInstance={state.instanceData.processInstance}
-    />
-  );
+  // const [contentType, setContentType] = useState('dataForm');
 
   const handleBackHandler = () => {
     history.back();
@@ -160,6 +156,64 @@ const ViewFormWrapper = <T extends { id: number }>(props: Props<T>) => {
       );
     }
   };
+
+
+  const instanceInfo = state.instanceData && (
+    <InstanceInfoComp
+      requestor={state.instanceData?.requestor}
+      userTask={state.instanceData?.task}
+      processInstance={state.instanceData.processInstance}
+      extra={props.workflowProp.openInTab && extraContent(
+        handleAction,
+        state.instanceData?.task,
+        workflowProp.type == 'task',
+        moreActions?.(state.instanceData),
+      )}
+    />
+  );
+
+  const tabList: Tab[] = [
+    { key: 'dataForm', icon: <FormOutlined />, tabKey: 'dataForm', label: 'Data Form', children: children(state.instanceData, forceReload) },
+    { key: 'activities', icon: <UnorderedListOutlined />, tabKey: 'activities', label: 'Activities', children: <ActivityView activityList={state.instanceData?.activities || []} /> },
+    {
+      key: 'attachment', icon: <PaperClipOutlined />, disabled: (attachedFiles?.length || 0) == 0, tabKey: 'attachment', label: 'Attachments', children: <AttachedFileList readonly={!enabledUplodFile}
+        removeButton={false}
+        onSetUploadFile={files =>
+          //Save file
+          files.length > 0 && onUpdateFileIds?.(
+            state?.instanceData?.processInstance?.procInstId || '',
+            files.map(it => it.response!!))
+
+
+        }
+        initFiles={[...(attachedFiles || []), ...(state.instanceData?.attachmentFiles || [])]} />
+    }
+  ]
+
+
+  const notPageContainer = <Flex vertical>
+    {instanceInfo}
+    <Tabs items={tabList} />
+  </Flex>
+
+  const pageContainer = <PageContainer
+    onBack={!isExternal() && !props.workflowProp.openInTab ? handleBackHandler : undefined}
+    title={state.instanceData?.processInstance?.procName}
+    subTitle={`# ${state.instanceData?.processInstance?.businessKey}`}
+    content={instanceInfo}
+    tabProps={{
+      size: 'small',
+    }}
+    tabList={tabList}
+    // onTabChange={setContentType}
+    extra={extraContent(
+      handleAction,
+      state.instanceData?.task,
+      workflowProp.type == 'task',
+      moreActions?.(state.instanceData),
+    )}
+  />
+
   useEffect(() => {
     (async () => {
       try {
@@ -177,30 +231,14 @@ const ViewFormWrapper = <T extends { id: number }>(props: Props<T>) => {
       onSetProcessData?.(state.instanceData)
   }, [state.instanceData])
 
+
   return (
     <Spin spinning={(state.loading || false) || (requestActions.request?.loading || false)}>
-      <PageContainer
-        onBack={!isExternal() ? handleBackHandler : undefined}
-        title={state.instanceData?.processInstance?.procName}
-        subTitle={`# ${state.instanceData?.processInstance?.businessKey}`}
-        content={instanceInfo}
-        tabProps={{
-          size: 'small',
-        }}
-        tabList={[
-          { tab: 'Data Form', key: 'dataForm', tabKey: 'dataForm' },
-          { tab: 'Activities', key: 'activities', tabKey: 'activities' },
-          { tab: 'Attachments', disabled: (attachedFiles?.length || 0) == 0 && (state.instanceData?.attachmentFiles.length || 0) == 0, key: 'attachment', tabKey: 'attachment' },
-        ]}
-        onTabChange={setContentType}
-        extra={extraContent(
-          handleAction,
-          state.instanceData?.task,
-          workflowProp.type == 'task',
-          moreActions?.(state.instanceData),
-        )}
-      >
-        <Spin spinning={(state.loading || false)}>
+
+
+      {props.workflowProp.openInTab ? notPageContainer : pageContainer}
+
+      {/* <Spin spinning={(state.loading || false)}>
           {contentType == 'dataForm' && state.instanceData && children(state.instanceData, forceReload)}
           {contentType == 'activities' && (
             <ActivityView activityList={state.instanceData?.activities || []} />
@@ -218,13 +256,14 @@ const ViewFormWrapper = <T extends { id: number }>(props: Props<T>) => {
 
               }
               initFiles={[...(attachedFiles || []), ...(state.instanceData?.attachmentFiles || [])]} />}
-        </Spin>
+        </Spin> */}
 
-        <ProcessFlowModalMngt
-          onRefresh={refreshData}
-          workflowModel={workflowModel}
-        />
-      </PageContainer>
+      {/* 
+      </PageContainer> */}
+      <ProcessFlowModalMngt
+        onRefresh={refreshData}
+        workflowModel={workflowModel}
+      />
 
     </Spin>
   );

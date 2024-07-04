@@ -1,6 +1,8 @@
+import { ViewType } from '@/components/DataCrud/CrudWrapper';
 import { map } from 'lodash';
 import moment from 'moment';
 import { parse } from 'querystring';
+import React from 'react';
 
 /* eslint no-useless-escape:0 import/prefer-default-export:0 */
 const reg =
@@ -340,3 +342,23 @@ export const blobToBase64 = function (blob: Blob, callback: (base64: string) => 
     };
     reader.readAsDataURL(blob);
 };
+
+export function isReactNode(value: any): value is React.ReactNode {
+    if (value === null || value === undefined || typeof value === 'boolean') {
+        return true;
+    }
+
+    if (typeof value === 'string' || typeof value === 'number') {
+        return true;
+    }
+
+    if (Array.isArray(value)) {
+        return value.every(isReactNode);
+    }
+
+    if (React.isValidElement(value)) {
+        return true;
+    }
+
+    return false;
+}

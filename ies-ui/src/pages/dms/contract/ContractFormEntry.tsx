@@ -2,9 +2,7 @@ import FormModalComp, { FormModalProps } from "@/components/FormModal"
 import { ProForm } from "@ant-design/pro-components"
 import { useForm } from "antd/lib/form/Form"
 import { ContractCreate, ContractDTO } from "./data"
-import { InputRef } from "antd"
-import { simpleRequestActions } from "@/services/model"
-import { useEffect, useRef, useState } from "react"
+import { useEffect } from "react"
 import DocFileUploader from "../attachment/DocFileUploader"
 import { DocumentationCreate } from "../documentation/data"
 
@@ -14,13 +12,8 @@ interface Props extends FormModalProps {
 }
 
 const ContractFormEntry: React.FC<Props> = ({ onSave, data, ...props }) => {
-    const requestAction = simpleRequestActions();
-    const inputRef = useRef<InputRef>(null);
-    const [name, setName] = useState('');
+
     const [form] = useForm<DocumentationCreate>();
-    const onNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setName(event.target.value);
-    };
     useEffect(() => {
         props.open && form.resetFields();
         props.open && data && form.setFieldsValue({
@@ -36,16 +29,6 @@ const ContractFormEntry: React.FC<Props> = ({ onSave, data, ...props }) => {
             title="Contract Infomation"
             onSubmit={async () => {
                 const dataForm = await form.validateFields();
-                const entry:DocumentationCreate = {
-                    // ...dataForm,
-                    id: data?.id,   
-                    libraryId:1,
-                    folderId:3,
-                    term:{
-                        ...dataForm
-                    },
-                    content:{...dataForm}
-                }
                 
                 // onSave(entry);
             }}

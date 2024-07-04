@@ -37,6 +37,7 @@ export default (props: DataViewProps) => {
     <ViewFormWrapper<{ id: number }>
       workflowProp={props}
       attachedFiles={attatchFiles}
+
       moreActions={() => [
         {
           icon: <UploadOutlined />,

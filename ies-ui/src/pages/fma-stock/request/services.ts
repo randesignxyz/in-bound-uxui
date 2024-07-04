@@ -2,7 +2,7 @@ import { FetchPagingParams } from "@/components/DataCrud/TableView";
 import { execDataService, fetchDataItemService, fetchDataListService, fetchDataPagingService } from "@/services/apiGateway";
 import { SimpleRequestActions } from "@/services/model";
 import { ItemDetail, ItemGroupListItem, ItemListItem,  SearchParams,  StockRequest, StockRequestDetailResponse, StockRequestListItem, StockRequestResponse, UoMItemList } from "./data.types";
-import { StartWorkFlowParam } from "@/services/process-workflow/params";
+import { StartWorkFlowParam, TaskActionDataParam } from "@/services/process-workflow/params";
 import detail from "@/pages/fma/new-staff/detail";
 
 export const createService = (request: SimpleRequestActions) => {
@@ -57,5 +57,11 @@ export const createService = (request: SimpleRequestActions) => {
                 }
             }).query(request)
         ,
+        updatStockRemarks: (params: TaskActionDataParam<{items:{id: number, stockRemarks?: string}[]}>) => 
+            execDataService<{message: string,id: number}, TaskActionDataParam<{items:{id: number, stockRemarks?: string}[]}>>({
+                actionName: 'update-stock-remarks',
+                endpoint: 'FMA',
+                payload: params
+            })(request),
     }
 }

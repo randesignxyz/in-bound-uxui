@@ -185,7 +185,7 @@ export default () => {
   //   />
   // );
 
-  const stockMenuItems = [
+  const stockMenuItems: ListMenuItem[] = [
     {
       id: 'suggestion',
       name: 'Task List',
@@ -249,7 +249,43 @@ export default () => {
       description: 'All Reports in DSD.',
       icon: reportIcon,
       visible: access.canAccessAllMenuDSD,
-      overlay: reportsMenu,
+      menu: {
+        onClick: (info) => {
+          switch (info.key) {
+            // case 'newSaleOrder':
+            //   history.push(`${SalePaths.so}/create`);
+            //   break;
+            case 'lead-reports':
+              setReport('dsd-lead-report');
+              break;
+            case 'dsd-reports':
+              setReport('dsd-reports');
+              break;
+            case 'visit-reports':
+              setReport('visit-report');
+              break;
+            default:
+              message.error('Something went wrong.');
+          }
+          return undefined;
+        },
+        items: [
+          // getItem('Export Leads', 'lead-reports', <BarChartOutlined />),
+          // getItem('Sales Invoice Report', 'dsd-reports', <AuditOutlined />),
+          getItem(
+            'Reports',
+            'lead-report-menu',
+            null,
+            [
+              getItem('Export Leads', 'lead-reports', <TeamOutlined />),
+              getItem('Sales Invoice Report', 'dsd-reports', <TagsOutlined />),
+              getItem('Visit Report', 'visit-reports', <ScheduleOutlined />),
+            ],
+            'group',
+          ),
+        ]
+      }
+      // overlay: reportsMenu,
       // onClick: () => {
       //   setReport('dsd-reports');
       // },
@@ -271,7 +307,38 @@ export default () => {
       description: 'Sale Order List',
       link: `${SalePaths.so}/list`,
       icon: saleIcon,
-      overlay: soMenu,
+      menu: {
+        onClick: (info) => {
+          switch (info.key) {
+            case 'newSaleOrder':
+              history.push(`${SalePaths.so}/create`);
+              break;
+            case 'sale-order-report':
+              setReport('sale-order-report');
+              break;
+            default:
+              message.error('Something went wrong.');
+          }
+          return undefined;
+        },
+        items: [
+          getItem(
+            'Actions',
+            'action-menu',
+            null,
+            [getItem('New SO', 'newSaleOrder', <PlusCircleOutlined />)],
+            'group',
+          ),
+          getItem(
+            'Reports',
+            'report-menu',
+            null,
+            [getItem('Sale Order Report', 'sale-order-report', <BarChartOutlined />)],
+            'group',
+          ),
+        ]
+      }
+      // overlay: soMenu,
     },
     {
       id: 'deliveryPlan',
@@ -321,14 +388,15 @@ export default () => {
       {access.canAccessSaleMenuItems && <ListMenuComp items={items} />}
       {/* <ListMenuComp items={retailerMenuItems} /> */}
       <Reports reportName={report} onClose={() => setReport(undefined)} />
+
       {(access.canAcessStockControlMenuItem ||
         access.canAccessSettlementMenuItem ||
         access.canAccessARMenuItem) && (
-        <>
-          <Divider />
-          <ListMenuComp items={stockMenuItems} />
-        </>
-      )}
+          <>
+            <Divider />
+            <ListMenuComp items={stockMenuItems} />
+          </>
+        )}
       {/* {access.canAccessRetailer && (
         <>
           <Divider />

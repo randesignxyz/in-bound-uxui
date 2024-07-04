@@ -1,6 +1,6 @@
 import { Space, Spin, Tag, message, Button, Tooltip, Descriptions, Modal, Dropdown, Input, Radio } from 'antd';
 import { useEffect, useRef, useState } from 'react';
-import { history } from 'umi';
+import { history } from "@umijs/max";
 import { CaretDownOutlined, EditOutlined, EyeOutlined, FieldTimeOutlined, FileAddOutlined, FileDoneOutlined, FileExcelOutlined, FilePdfOutlined, MessageOutlined, PartitionOutlined, QuestionCircleOutlined, SelectOutlined, StopOutlined, SyncOutlined } from '@ant-design/icons';
 import { CrmPaths } from '@/pages/crm';
 import { ActionType, CheckCard, PageContainer, ProCard, ProList, ProTable } from '@ant-design/pro-components';
@@ -39,9 +39,9 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
   const [spinTip, setspinTip] = useSafeState<string>('');
   const [criteria, setCriteria] = useState<SearchCriteria>()
   const [forceRefresh, setForceRefresh] = useState<number>(1)
-  const [isSuggested,setIsSuggested] = useState<boolean>(false)
+  const [isSuggested, setIsSuggested] = useState<boolean>(false)
   const [criteriaSuggested, setCriteriaSuggested] = useState<SearchCriteria>()
-  const [isSynchAll,setIsSynchAll] = useState<boolean>(false)
+  const [isSynchAll, setIsSynchAll] = useState<boolean>(false)
   const [suggestionData, setSuggestionData] = useState<ItemSAP[]>()
 
   const model = ProcessFlowModel()
@@ -156,7 +156,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
     actionRef.current?.reloadAndRest?.();
   };
   const onSearchSuggestedCustomerHandler = (value: string, cb: (v: boolean) => void) => {
-    setCriteriaSuggested(v => ({ ...v, searchValue: value }));  
+    setCriteriaSuggested(v => ({ ...v, searchValue: value }));
     cb?.(true)
   };
   const onSearchStatusHandler = (value: string) => {
@@ -165,7 +165,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
   };
   const dataReport = (data: { id?: number, label?: string, status?: string, contractTypeCode?: string }, exportType: 'PDF' | 'EXCEL'): DownloadData<CriteriaExportReport> => {
 
-    var direct = data?.contractTypeCode == 'OTHER' ? 'Display':data?.contractTypeCode == 'IN_DIRECT' ?'Indirect' : 'Direct'
+    var direct = data?.contractTypeCode == 'OTHER' ? 'Display' : data?.contractTypeCode == 'IN_DIRECT' ? 'Indirect' : 'Direct'
     var issued = data?.status == 'ISSUED' ? 'Issued' : ''
     var reportName = replace('SettlementIncentive@@##Report', '@@', direct)
     reportName = replace(reportName, '##', issued)
@@ -205,64 +205,64 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
   const isRequestPending = data?.requestStatus == 'PENDING' ? true : false
 
   const stausText = (data?.requestStatus == 'NONE' || data?.status != 'PENDING') ? data?.status : (data?.requestStatus == 'COMPLETED' ? 'APPROVED' : data?.requestStatus)
-  const contractTypeDirect = data?.contractType?.code=='DIRECT'?true:false
-  const groupTypeOther=data?.contractType?.code=='OTHER'?true:false
-  const  optionsStatus=[
-    { label: "All", value: "ALL",sort:1 },
-    { label: "Achieved", value: "ACHIEVED",sort:2 },   
-    { label: "Failed", value: "FAILED",sort:4 }
+  const contractTypeDirect = data?.contractType?.code == 'DIRECT' ? true : false
+  const groupTypeOther = data?.contractType?.code == 'OTHER' ? true : false
+  const optionsStatus = [
+    { label: "All", value: "ALL", sort: 1 },
+    { label: "Achieved", value: "ACHIEVED", sort: 2 },
+    { label: "Failed", value: "FAILED", sort: 4 }
   ]
-  if(!contractTypeDirect){
-    optionsStatus.push({ label: "Achieved*", value: "N-ACHIEVED",sort:3 })
+  if (!contractTypeDirect) {
+    optionsStatus.push({ label: "Achieved*", value: "N-ACHIEVED", sort: 3 })
   }
-  const synchroGratisCustomerVisit= async (tranType: string,gSettledId:number,gVerifyId?: number,scheduleIds?:number[])=>{
+  const synchroGratisCustomerVisit = async (tranType: string, gSettledId: number, gVerifyId?: number, scheduleIds?: number[]) => {
     try {
-      await GratisServices.synchroGratisCustomerVisitSchedule(tranType,gSettledId,gVerifyId,scheduleIds)(requestActions)                       
+      await GratisServices.synchroGratisCustomerVisitSchedule(tranType, gSettledId, gVerifyId, scheduleIds)(requestActions)
       // cb(true)
       actionSuggestedCustVisitRef.current?.reload()
       // onFinish()
       loadData()
-    }catch (error: any) {
-        message.error(error.message || 'Failed to change status.')
+    } catch (error: any) {
+      message.error(error.message || 'Failed to change status.')
     }
   }
-  const synchroGratisCustVisitAll=async (gSettledId:number)=>{
+  const synchroGratisCustVisitAll = async (gSettledId: number) => {
     Modal.confirm({
       title: 'Synch All', content: 'Are you sure to update all customer visit schedule?',
       onOk: async () => {
-        synchroGratisCustomerVisit('all',gSettledId,-1)
+        synchroGratisCustomerVisit('all', gSettledId, -1)
       }
     })
   }
-  const adjustHandler = (verifyId: number,adjItems: AdjustItem[]  , cb:(v: boolean)=>void)=>{   
-    console.log('adj list',adjItems)    
-    if(adjItems && adjItems.length==0) {
-        message.warning('No data selected')
-    }else{
-        Modal.confirm({
-            title: "", content: 'Are you sure?', 
-            onOk: async () => {
-                try {
-                
-                    await GratisServices.adjustContractVerifyTrans(verifyId,adjItems)(requestActions)                       
-                    cb(true)
-                    actionSuggestedRef.current?.reload()
-                    // onFinish()
-                    // loadData()
-                }catch (error: any) {
-                    message.error(error.message || 'Failed to change status.')
-                }
-            }
-        })  
-    }      
+  const adjustHandler = (verifyId: number, adjItems: AdjustItem[], cb: (v: boolean) => void) => {
+    console.log('adj list', adjItems)
+    if (adjItems && adjItems.length == 0) {
+      message.warning('No data selected')
+    } else {
+      Modal.confirm({
+        title: "", content: 'Are you sure?',
+        onOk: async () => {
+          try {
+
+            await GratisServices.adjustContractVerifyTrans(verifyId, adjItems)(requestActions)
+            cb(true)
+            actionSuggestedRef.current?.reload()
+            // onFinish()
+            // loadData()
+          } catch (error: any) {
+            message.error(error.message || 'Failed to change status.')
+          }
+        }
+      })
+    }
   }
-  const initailSuggestionData =async (incentiveSettlementId:number,verifyId: number,gratisSettlementConfigId?:number)=>{
+  const initailSuggestionData = async (incentiveSettlementId: number, verifyId: number, gratisSettlementConfigId?: number) => {
     setSuggestionData(undefined)
-    await GratisServices.getListSuggestionItemAdjustment(incentiveSettlementId,verifyId, gratisSettlementConfigId).query(requestActions).then(it=>{
+    await GratisServices.getListSuggestionItemAdjustment(incentiveSettlementId, verifyId, gratisSettlementConfigId).query(requestActions).then(it => {
       setSuggestionData(it)
     })
-   
-  }  
+
+  }
 
   return (
     <Spin spinning={requestActions.request?.loading || false} tip={spinTip}>
@@ -284,7 +284,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
             }
             {isProcessCalculate && isPending && isRequestCompleted && <Button onClick={onIssueHandler} type='primary' key="1" icon={<FileDoneOutlined />}>Issue</Button>}
             {(isCreated || isProcessCalculate) && isPending && (isRequestNA || isRequestRejected) && <ConfirmModalForm title={''} submitText='Cancel' required onSave={(remarks, cb) => onCancleHandler(remarks, cb)} trigger={<Button key="0" danger icon={<StopOutlined />}>Cancel</Button>} />}
-            {isCreated && isPending && <Button type='primary' key="1" style={{padding:'0px 8px 0px 8px'}} icon={<img src={processIcon} width={25} height={25}/>} onClick={processSettlementCycle}>Process Cycle</Button>}
+            {isCreated && isPending && <Button type='primary' key="1" style={{ padding: '0px 8px 0px 8px' }} icon={<img src={processIcon} width={25} height={25} />} onClick={processSettlementCycle}>Process Cycle</Button>}
             {isProcessCalculate && (isPending || isIssued) && <Dropdown key="3" trigger={['click']} menu={{
               items: [{
                 label: 'Settlement Cycle', key: 'gratis-settlement-cycle-report', icon: <FileExcelOutlined />, onClick: () => {
@@ -315,229 +315,229 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
           <ProCard title='' headerBordered size='small'
             extra={
               <Space>
-                <CheckCard.Group value={isSuggested?'suggestion':undefined}
-                  onChange={(e)=>{
-                    setIsSuggested(e?.toString()=='suggestion'?true:false)
+                <CheckCard.Group value={isSuggested ? 'suggestion' : undefined}
+                  onChange={(e) => {
+                    setIsSuggested(e?.toString() == 'suggestion' ? true : false)
                   }}
                 >
-                  {isPending&&isRequestNA &&<CheckCard avatar={<img src={suggestionIcon} style={{height:18, width:21}}/>} title='Adjustable Customer' size='small'  value="suggestion"  style={{width:'190px',borderStyle:'dashed'}}/>}
+                  {isPending && isRequestNA && <CheckCard avatar={<img src={suggestionIcon} style={{ height: 18, width: 21 }} />} title='Adjustable Customer' size='small' value="suggestion" style={{ width: '190px', borderStyle: 'dashed' }} />}
                 </CheckCard.Group>
               </Space>
             }
           >
-            {!groupTypeOther&&isSuggested&&<ProTable<GratisSuggestedCustomer>
-               actionRef={actionSuggestedRef}
-               search={false}
-               size='small'
-               options={{
-                 fullScreen: false,
-                 density: false,
-                 reload: true,
-                 setting: false,
-               }}     
-                headerTitle={               
-                  <Space>
-                    <Input.Search allowClear 
-                      onSearch={(value: string)=>onSearchSuggestedCustomerHandler(value,(c:boolean)=>{
-                        actionSuggestedRef.current?.reloadAndRest?.();
-                      })} 
-                    />                    
-                  </Space>    
-                } 
-                request={async (paging) => {
-                  return GratisServices.fetchSuggestedCustomer({ id: id, criteria: {...criteriaSuggested,filter:'suggestion'}, pagination: { current: paging?.current || 0, pageSize: paging?.pageSize || 20 } }).query(requestActions).then(it => {
-                    return {
-                      success: true,
-                      total: it.total,
-                      data: it.items
-                    }
-                  })
-                }}
-                rowKey={'id'}
-                columns={[{
-                  title:'Verified Date',
-                  dataIndex: 'contractId',
-                  render: (_, r) => (
-                    <Space size={1}>
-                      <Tooltip title="Quick data review">
-                        <Button
-                          type="link"
-                          size="small"
-                          icon={<EyeOutlined />}
-                          onClick={() => quickViewHandler(r?.gcontractId, r?.orderNo-1)}
-                        >{r.durationText}</Button>
-                      </Tooltip>                      
-                    </Space>
-                  ),
-                }, {
-                  title: 'Agreement Name',
-                  dataIndex: 'gContractNo',
-                  render: (_, r) => <Tooltip title={!r?.terms ? 'No Term' : r?.terms}><MessageOutlined /> {r?.contractNo}</Tooltip>
-                },{
-                  title:'Total Qty',
-                  dataIndex:'percentage',
-                  render: (_, r) => r?.percentage? <div><span>{`${r?.percentage}%`}</span><div style={{padding:2,fontSize:13,color:'#b49900',borderRadius:5}}>{`(${r?.qty}/${r?.targets})`}</div></div>:'-'
-                },{
-                  title:'+Qty',
-                  dataIndex: 'percentLess',
-                  render: (_, r) => {
-                    const so = r?.soQty>0? `SO: ${r?.soQty}`:''
-                    const inv = r.soInvQty>0 ? `INV: ${r?.soInvQty}`:''
-                    return r?.percentLess? <div>
-                      <span>{`${r?.percentLess}%`}</span>
-                      <div style={{padding:2,fontSize:13,color:'#b49900',borderRadius:5}}>
-                        {`(${r?.qtyLess}/${r?.targets}) ${so} ${inv}`}
-                      </div>
-                    </div>:'-'
+            {!groupTypeOther && isSuggested && <ProTable<GratisSuggestedCustomer>
+              actionRef={actionSuggestedRef}
+              search={false}
+              size='small'
+              options={{
+                fullScreen: false,
+                density: false,
+                reload: true,
+                setting: false,
+              }}
+              headerTitle={
+                <Space>
+                  <Input.Search allowClear
+                    onSearch={(value: string) => onSearchSuggestedCustomerHandler(value, (c: boolean) => {
+                      actionSuggestedRef.current?.reloadAndRest?.();
+                    })}
+                  />
+                </Space>
+              }
+              request={async (paging) => {
+                return GratisServices.fetchSuggestedCustomer({ id: id, criteria: { ...criteriaSuggested, filter: 'suggestion' }, pagination: { current: paging?.current || 0, pageSize: paging?.pageSize || 20 } }).query(requestActions).then(it => {
+                  return {
+                    success: true,
+                    total: it.total,
+                    data: it.items
                   }
-                },/* {
+                })
+              }}
+              rowKey={'id'}
+              columns={[{
+                title: 'Verified Date',
+                dataIndex: 'contractId',
+                render: (_, r) => (
+                  <Space size={1}>
+                    <Tooltip title="Quick data review">
+                      <Button
+                        type="link"
+                        size="small"
+                        icon={<EyeOutlined />}
+                        onClick={() => quickViewHandler(r?.gcontractId, r?.orderNo - 1)}
+                      >{r.durationText}</Button>
+                    </Tooltip>
+                  </Space>
+                ),
+              }, {
+                title: 'Agreement Name',
+                dataIndex: 'gContractNo',
+                render: (_, r) => <Tooltip title={!r?.terms ? 'No Term' : r?.terms}><MessageOutlined /> {r?.contractNo}</Tooltip>
+              }, {
+                title: 'Total Qty',
+                dataIndex: 'percentage',
+                render: (_, r) => r?.percentage ? <div><span>{`${r?.percentage}%`}</span><div style={{ padding: 2, fontSize: 13, color: '#b49900', borderRadius: 5 }}>{`(${r?.qty}/${r?.targets})`}</div></div> : '-'
+              }, {
+                title: '+Qty',
+                dataIndex: 'percentLess',
+                render: (_, r) => {
+                  const so = r?.soQty > 0 ? `SO: ${r?.soQty}` : ''
+                  const inv = r.soInvQty > 0 ? `INV: ${r?.soInvQty}` : ''
+                  return r?.percentLess ? <div>
+                    <span>{`${r?.percentLess}%`}</span>
+                    <div style={{ padding: 2, fontSize: 13, color: '#b49900', borderRadius: 5 }}>
+                      {`(${r?.qtyLess}/${r?.targets}) ${so} ${inv}`}
+                    </div>
+                  </div> : '-'
+                }
+              },/* {
                   title: 'Customer Code',
                   dataIndex: 'gcontractId',
                   render: (_, r) => r?.customer?.code
                 },*/ {
-                  title: 'Customer',  
-                  render: (_, r) =>    <span>{r.customer?.code} - {r.customer?.name}</span>
-                }, {
-                  title: 'Brand',  
-                  render: (_, r) => r.brand
-                }, {
-                  title: 'Status',
-                  dataIndex: 'Status',
-                  render: (_, r) => <Status text={r?.status||'FAILED'} value={r?.status} />
-                },{
-                  title: 'Action',
-                  align: 'center',
-                  width: 15,
-                  render: (_,r) => //<Button type='link' icon={<EditOutlined/>}>Adjust</Button>
-                  <SuggestionItemAdjustTranModal loading={requestActions.request?.loading} data={suggestionData ||[]} incentiveSettlementId = {r.incentiveSettlementId} verifyId={r.gcontractVerifyId} customerCode={r.customer?.code} title={'Adjustment'} 
-                    onSave={(status, remarks, adjItems, cb) => adjustHandler(r.gcontractVerifyId, adjItems, cb)} 
-                    trigger={<Button type='link' icon={<EditOutlined/>} onClick={()=>initailSuggestionData(r.incentiveSettlementId,r.gcontractVerifyId,r.gratisSettlementConfigId)}>Adjust</Button>} 
+                title: 'Customer',
+                render: (_, r) => <span>{r.customer?.code} - {r.customer?.name}</span>
+              }, {
+                title: 'Brand',
+                render: (_, r) => r.brand
+              }, {
+                title: 'Status',
+                dataIndex: 'Status',
+                render: (_, r) => <Status text={r?.status || 'FAILED'} value={r?.status} />
+              }, {
+                title: 'Action',
+                align: 'center',
+                width: 15,
+                render: (_, r) => //<Button type='link' icon={<EditOutlined/>}>Adjust</Button>
+                  <SuggestionItemAdjustTranModal loading={requestActions.request?.loading} data={suggestionData || []} incentiveSettlementId={r.incentiveSettlementId} verifyId={r.gcontractVerifyId} customerCode={r.customer?.code} title={'Adjustment'}
+                    onSave={(status, remarks, adjItems, cb) => adjustHandler(r.gcontractVerifyId, adjItems, cb)}
+                    trigger={<Button type='link' icon={<EditOutlined />} onClick={() => initailSuggestionData(r.incentiveSettlementId, r.gcontractVerifyId, r.gratisSettlementConfigId)}>Adjust</Button>}
                   />
-                }
-              ]} 
+              }
+              ]}
             />}
-            {groupTypeOther&&isSuggested&&<ProTable<GratisSuggestedCustomerVisit>
-               actionRef={actionSuggestedCustVisitRef}
-               search={false}
-               size='small'
-               options={{
-                 fullScreen: false,
-                 density: false,
-                 reload: true,
-                 setting: false,
-               }}     
-                headerTitle={               
-                  <Space>
-                    <Input.Search allowClear 
-                     onSearch={(value: string)=>onSearchSuggestedCustomerHandler(value,(c:boolean)=>{
+            {groupTypeOther && isSuggested && <ProTable<GratisSuggestedCustomerVisit>
+              actionRef={actionSuggestedCustVisitRef}
+              search={false}
+              size='small'
+              options={{
+                fullScreen: false,
+                density: false,
+                reload: true,
+                setting: false,
+              }}
+              headerTitle={
+                <Space>
+                  <Input.Search allowClear
+                    onSearch={(value: string) => onSearchSuggestedCustomerHandler(value, (c: boolean) => {
                       actionSuggestedCustVisitRef.current?.reloadAndRest?.();
-                    })} 
-                    />       
-                    {isPending&&isSynchAll&&<Button type='primary' icon={<SyncOutlined/>} onClick={()=>synchroGratisCustVisitAll(data?.id||0)}>Synch All</Button>}         
-                  </Space>    
-                } 
-                request={async (paging) => {
-                  return GratisServices.fetchSuggestedCustomerVisit({ gSettledId: id,criteria:{...criteriaSuggested}, pagination: { current: paging?.current || 0, pageSize: paging?.pageSize || 20 } }).query(requestActions).then(it => {
-                    setIsSynchAll(it.total||0>0?true:false)
-                    return {
-                      success: true,
-                      total: it.total,
-                      data: it.items
-                    }
-                  })
-                }}
-                rowKey={'id'}
-                columns={[{
-                  title:'Verified Date',
-                  dataIndex: 'gcontractId',
-                  render: (_, r) => (
-                    <Space size={1}>
-                      <Tooltip title="Quick data review">
-                        <Button
-                          type="link"
-                          size="small"
-                          icon={<EyeOutlined />}
-                          onClick={() => quickViewHandler(r?.gcontractId, r?.orderNo-1)}
-                        >{r.durationText}</Button>
-                      </Tooltip>                      
-                    </Space>
-                  ),
-                }, {
-                  title: 'Agreement Name',
-                  dataIndex: 'contractNo',
-                  render: (_, r) => <Tooltip title={!r?.terms ? 'No Term' : r?.terms}><MessageOutlined /> {r?.gcontractNo}</Tooltip>
-                }, {
-                  title: 'Customer',
-                  dataIndex: 'gcontractId',
-                  // render: (_, r) => `${r?.customer?.code} - ${r?.customer?.name}`
-                  render: (_, r) => <div>
-                    <span>{r.customer?.code} - {r.customer?.name}</span>
-                    <div style={{padding:2,fontSize:13,color:'#b49900',borderRadius:5}}>{r?.address}</div>
-                  </div>
-                }, {
-                  title: 'Brand',  
-                  render: (_, r) => r.brand
-                },{
-                  title: 'Schedule Date',
-                  width: 130,
-                  render: (_, r) => (
+                    })}
+                  />
+                  {isPending && isSynchAll && <Button type='primary' icon={<SyncOutlined />} onClick={() => synchroGratisCustVisitAll(data?.id || 0)}>Synch All</Button>}
+                </Space>
+              }
+              request={async (paging) => {
+                return GratisServices.fetchSuggestedCustomerVisit({ gSettledId: id, criteria: { ...criteriaSuggested }, pagination: { current: paging?.current || 0, pageSize: paging?.pageSize || 20 } }).query(requestActions).then(it => {
+                  setIsSynchAll(it.total || 0 > 0 ? true : false)
+                  return {
+                    success: true,
+                    total: it.total,
+                    data: it.items
+                  }
+                })
+              }}
+              rowKey={'id'}
+              columns={[{
+                title: 'Verified Date',
+                dataIndex: 'gcontractId',
+                render: (_, r) => (
                   <Space size={1}>
-                      <Tooltip title="View data in new browser tab.">
+                    <Tooltip title="Quick data review">
                       <Button
-                          type="link"
-                          size="small"
-                          icon={<SelectOutlined />}
-                          onClick={async () => {
-                          window.open(`./../../visit-schedule/detail/${r.id}`, '_blank')?.focus();
-                          }}
-                      />
-                      </Tooltip>    
-                      {formatDate(r.scheduledDate)}               
+                        type="link"
+                        size="small"
+                        icon={<EyeOutlined />}
+                        onClick={() => quickViewHandler(r?.gcontractId, r?.orderNo - 1)}
+                      >{r.durationText}</Button>
+                    </Tooltip>
                   </Space>
-                  ),
+                ),
+              }, {
+                title: 'Agreement Name',
+                dataIndex: 'contractNo',
+                render: (_, r) => <Tooltip title={!r?.terms ? 'No Term' : r?.terms}><MessageOutlined /> {r?.gcontractNo}</Tooltip>
+              }, {
+                title: 'Customer',
+                dataIndex: 'gcontractId',
+                // render: (_, r) => `${r?.customer?.code} - ${r?.customer?.name}`
+                render: (_, r) => <div>
+                  <span>{r.customer?.code} - {r.customer?.name}</span>
+                  <div style={{ padding: 2, fontSize: 13, color: '#b49900', borderRadius: 5 }}>{r?.address}</div>
+                </div>
+              }, {
+                title: 'Brand',
+                render: (_, r) => r.brand
+              }, {
+                title: 'Schedule Date',
+                width: 130,
+                render: (_, r) => (
+                  <Space size={1}>
+                    <Tooltip title="View data in new browser tab.">
+                      <Button
+                        type="link"
+                        size="small"
+                        icon={<SelectOutlined />}
+                        onClick={async () => {
+                          window.open(`./../../visit-schedule/detail/${r.id}`, '_blank')?.focus();
+                        }}
+                      />
+                    </Tooltip>
+                    {formatDate(r.scheduledDate)}
+                  </Space>
+                ),
               },
-              { 
-                  title: 'Schedule Type',
-                  render:(_,r) => toReadable(r.scheduleType)
+              {
+                title: 'Schedule Type',
+                render: (_, r) => toReadable(r.scheduleType)
 
               },
               {
-                  title: 'Salesperson',
-                  render: (_, r) => r.salesperson
+                title: 'Salesperson',
+                render: (_, r) => r.salesperson
               },
               {
-                  title: 'Contract No',
-                  render:(_,r) =>  toReadable(r.contractNo)
+                title: 'Contract No',
+                render: (_, r) => toReadable(r.contractNo)
               },
               {
-                  title: 'Compliance Check',
-                  render:(_,r) =>  toReadable(r.complianceStatus)
+                title: 'Compliance Check',
+                render: (_, r) => toReadable(r.complianceStatus)
               },
               {
                 title: 'Contract No (Verified)',
-                render:(_,r) =>  toReadable(r.contractNo1)
+                render: (_, r) => toReadable(r.contractNo1)
               },
               {
                 title: 'Compliance Check (Updated)',
-                render:(_,r) =>  toReadable(r.complianceStatus1)
-              }, 
+                render: (_, r) => toReadable(r.complianceStatus1)
+              },
               {
                 title: 'Status',
                 dataIndex: 'tranStatus',
-                render: (_, r) => r?.tranStatus||'Updated'
-              }, 
+                render: (_, r) => r?.tranStatus || 'Updated'
+              },
               {
                 title: 'Action',
                 dataIndex: 'Status',
-                render: (_, r) => isPending&&<Popconfirm title='Confirm' placement='left' description='Are you sure to update customer visit schedule?'  
-                    onConfirm={()=>{ synchroGratisCustomerVisit('single', r.incentiveSettlementId,  r.gcontractVerifyId,[r.id])}}
-                  > 
-                    <Button type="primary" size="small" icon={<SyncOutlined/>}>Synch</Button>
-                  </Popconfirm>
+                render: (_, r) => isPending && <Popconfirm title='Confirm' placement='left' description='Are you sure to update customer visit schedule?'
+                  onConfirm={() => { synchroGratisCustomerVisit('single', r.incentiveSettlementId, r.gcontractVerifyId, [r.id]) }}
+                >
+                  <Button type="primary" size="small" icon={<SyncOutlined />}>Synch</Button>
+                </Popconfirm>
               }
-          ]}
+              ]}
             />}
-            {!isSuggested&&<ProTable<GratisContract>
+            {!isSuggested && <ProTable<GratisContract>
               actionRef={actionRef}
               search={false}
               size='small'
@@ -548,28 +548,28 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
                 setting: false,
               }}
               headerTitle={
-                <div style={{position:'absolute',flex:1,width:'95%'}}>
-                  <div style={{float:'left'}}> 
+                <div style={{ position: 'absolute', flex: 1, width: '95%' }}>
+                  <div style={{ float: 'left' }}>
                     <Space>
                       <Input.Search allowClear onSearch={onSearchHandler} />
                       <Radio.Group optionType="button"
                         defaultValue={"ALL"}
-                        options={optionsStatus.sort((a,b)=> a.sort-b.sort )}
+                        options={optionsStatus.sort((a, b) => a.sort - b.sort)}
                         onChange={(e) => {
                           onSearchStatusHandler(e.target.value)
                         }}
                       />
                     </Space>
                   </div>
-                  <div style={{float:'left', paddingLeft:15, marginTop:0}}> 
+                  <div style={{ float: 'left', paddingLeft: 15, marginTop: 0 }}>
                     <Space>
-                      <CheckCard.Group value={criteria?.filter} style={{border:0}}
-                        onChange={(e)=>{
+                      <CheckCard.Group value={criteria?.filter} style={{ border: 0 }}
+                        onChange={(e) => {
                           setCriteria(v => ({ ...v, filter: e?.toString() }));
                           actionRef.current?.reloadAndRest?.();
                         }}
                       >
-                        <CheckCard bordered={false} avatar={<EditOutlined/>} title='Adjusted' size='small'  value="adjusted" style={{width:'110px',borderStyle:'dashed'}}/>
+                        <CheckCard bordered={false} avatar={<EditOutlined />} title='Adjusted' size='small' value="adjusted" style={{ width: '110px', borderStyle: 'dashed' }} />
                         {/* {criteria?.status=='FAILED' &&<CheckCard avatar={<img src={suggestionIcon} style={{height:18, width:21}}/>} title='Suggestion' size='small'  value="suggestion"  style={{width:'130px'}}/>}                   */}
                       </CheckCard.Group>
                     </Space>
@@ -606,8 +606,8 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
                 render: (_, r) => <Tooltip title={!r?.terms ? 'No Term' : r?.terms}><MessageOutlined /> {r?.contractNo}</Tooltip>
               },
               {
-                  title: 'Agreetment Type',
-                  render: (_, item) => item.contractType
+                title: 'Agreetment Type',
+                render: (_, item) => item.contractType
               },/* {
                 title: 'Customer Code',
 
@@ -617,9 +617,9 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
 
                 // render: (_, r) => r?.customer?.name
                 render: (_, r) => <div>
-                <span>{r.customer?.code} - {r.customer?.name}</span>
-                {(r?.address && r?.address!= r.customer?.name) &&<div style={{padding:2,fontSize:13,color:'#b49900',borderRadius:5}}>{r?.address}</div>}
-            </div>
+                  <span>{r.customer?.code} - {r.customer?.name}</span>
+                  {(r?.address && r?.address != r.customer?.name) && <div style={{ padding: 2, fontSize: 13, color: '#b49900', borderRadius: 5 }}>{r?.address}</div>}
+                </div>
               }, {
                 title: 'Brand',
 
@@ -638,18 +638,18 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
                   var status = r.achieved == 0 ? 'Failed' : 'Achieved'
                   var statusText = (r.months || 0) > 1 ? r.achieved + '/' + r.months + ' | Achieved' : toReadable(status)
                   return <Space>
-                    {(r.months || 0) > 1 ?<span style={{border:0, color: (r.achieved == 0 ? '#ff4d4f' : '#52c41a')}}>
+                    {(r.months || 0) > 1 ? <span style={{ border: 0, color: (r.achieved == 0 ? '#ff4d4f' : '#52c41a') }}>
                       {statusText}{((r?.achieved || 0) > 0 && (r?.achieved || 0) != (r.months || 0)) && <span style={{ color: 'red' }}>*</span>}
-                    </span>:<Status text={status} value={status} />
+                    </span> : <Status text={status} value={status} />
                     }
                   </Space>
                 }
               }
               ]}
-              expandable={!contractTypeDirect?{
+              expandable={!contractTypeDirect ? {
                 expandedRowRender: (record => <VerifyContractList quickViewHandler={quickViewHandler} item={record} />),
                 rowExpandable: record => true,
-              }:{}}
+              } : {}}
             />}
           </ProCard>
           <ProCard title='Activities' defaultCollapsed collapsible headerBordered size='small'>
@@ -676,7 +676,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
           status={data?.status || ''}
           groupTypeCode={data?.contractType?.code}
           currentNum={gContract.orderNo}
-          isVerify={(isCreated || isProcessCalculate) && isPending && (isDirect||isInDirect||isOther) && (isRequestNA || isRequestRejected)}
+          isVerify={(isCreated || isProcessCalculate) && isPending && (isDirect || isInDirect || isOther) && (isRequestNA || isRequestRejected)}
           open={modals.isVisible('verifyContractQuickView')}
           onOpenModalChange={(v: any) => !v && modals.hideModal('verifyContractQuickView')}
           reloadQuickView={reloadQuickView}

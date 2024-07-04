@@ -129,4 +129,5 @@ export interface CustomerLess {
   code: string;
   internalName: string;
   name: string;
+  division?: string;
 }

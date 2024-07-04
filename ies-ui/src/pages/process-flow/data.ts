@@ -52,6 +52,7 @@ export interface DataViewProps {
     id: string;
     formKey: string;
     type?: 'inst' | 'task';
+    openInTab?: true;
     showDiagramHandler: (task: UserTask) => void;
     actionHandler: (action: string, task: UserTask, cb?: () => void) => void;
     forceUpdate?: number;

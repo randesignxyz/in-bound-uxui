@@ -19,13 +19,14 @@ export type SaveContactData = {
 export type ContractAdvanceSearchParams = {
   status: 'ALL' | 'ACTIVE' | 'INACTIVE' | 'EXPIRED';
   processStatus: 'All' | 'NEW' | 'RENEW' | 'TERMINATED',
+  searchValue?: string;
   brandId?: number[],
   contractTypeId?: number[],
   termId?: number[],
   startedDateFrom?: moment.Moment,
   startedDateTo?: moment.Moment,
   endedDateFrom?: moment.Moment,
-  endedDateTo?:  moment.Moment,
+  endedDateTo?: moment.Moment,
 };
 
 export type ContractPOSMItem = {

@@ -13,30 +13,29 @@ export const StockRequestFormNames = {
     physicalStock: 'fma_stock_request_check_physical_stock',
 };
 
-export const AcquisitionForm: DataForm[] = [
-    {
-      formKey: [StockRequestFormNames.start],
-      dataViewForm: (props: DataViewProps) => <ViewForm {...props} type="inst" />,
-      actionDataForm: (props: ActionDataFormProps) => <DefaultStartForm {...props} />,
-      quickView: (task: UserTask) => <QuickView {...task} />,
-    },
-    {
-      formKey: [
-        StockRequestFormNames.functionRequest,
-        StockRequestFormNames.physicalStock,
-        StockRequestFormNames.functionApproval,       
-      ],
-      dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,
-      actionDataForm: (props: ActionDataFormProps) => <DefaultActionForm {...props} />,
-    },
-    // {
-    //   formKey: [AcquisitionFormNames.budgetControoler],
-    //   dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,
-    //   actionDataForm: (props: ActionDataFormProps) => <BudgetControlForm {...props} />,
-    // },
-    // {
-    //   formKey: [AcquisitionFormNames.pro],
-    //   dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,
-    //   actionDataForm: (props: ActionDataFormProps) => <ProReviewForm {...props} />,
-    // },
-  ];
+// export const AcquisitionForm: DataForm[] = [
+//     {
+//       formKey: [StockRequestFormNames.start],
+//       dataViewForm: (props: DataViewProps) => <ViewForm {...props} type="inst" />,
+//       actionDataForm: (props: ActionDataFormProps) => <DefaultStartForm {...props} />,
+//       quickView: (task: UserTask) => <QuickView {...task} />,
+//     },
+//     {
+//       formKey: [       
+//         StockRequestFormNames.physicalStock,
+//         StockRequestFormNames.functionApproval,       
+//       ],
+//       dataViewForm: (props: DataViewProps) => <div>Heelll</div>,
+//       actionDataForm: (props: ActionDataFormProps) => <DefaultActionForm {...props} />,
+//     },
+//     {
+//       formKey: [ StockRequestFormNames.functionRequest,],
+//       dataViewForm: (props: DataViewProps) => <div>Hello</div>,
+//       actionDataForm: (props: ActionDataFormProps) => <DefaultActionForm {...props} />,
+//     },
+//     // {
+//     //   formKey: [AcquisitionFormNames.pro],
+//     //   dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,
+//     //   actionDataForm: (props: ActionDataFormProps) => <ProReviewForm {...props} />,
+//     // },
+//   ];

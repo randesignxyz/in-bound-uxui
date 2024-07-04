@@ -243,7 +243,7 @@ const Crm: React.FC = () => {
       icon: ContactIcon,
       visible: access.canAccessContact,
       menu: {
-        items: [{label: <ContractReport trigger={<a >Export</a>}/> , key: 'exportContract', icon: <ExportOutlined style={{ fontSize: '16px', color: '#08c' }}/>}]
+        items: [{ label: <ContractReport trigger={<a >Export</a>} />, key: 'exportContract', icon: <ExportOutlined style={{ fontSize: '16px', color: '#08c' }} /> }]
       }
     },
     {
@@ -252,7 +252,22 @@ const Crm: React.FC = () => {
       description: 'Customer List',
       link: `${CrmPaths.customer}/list`,
       icon: CustomerIcon,
-      overlay: customerMenu,
+      menu: {
+        items: [{
+          type: 'group',
+          label: "Reports",
+          children: [
+            {
+              onClick: () => { setReport('customer-detail') },
+              icon: <BarChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+              label: 'Customer Detail',
+              key: "customer-detail-report"
+            }
+          ]
+
+        }]
+      }
+      // overlay: customerMenu,
     },
     {
       id: 'visitPlan',
@@ -277,26 +292,26 @@ const Crm: React.FC = () => {
               label: 'Visit Schedule Report',
               key: 'visit-schedule-report',
               icon: <BarChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
-              onClick: ()=> setReport('visit-schedule')
+              onClick: () => setReport('visit-schedule')
             },
             {
               label: 'POSM Report',
               key: 'posm-report',
               icon: <BarChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
-              onClick: ()=> setReport('posm-report')
+              onClick: () => setReport('posm-report')
             },
             {
               label: 'Stock Count Report',
               key: 'stock-count-report',
               icon: <BarChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
-              onClick: ()=>  setReport('stock-count-report')
+              onClick: () => setReport('stock-count-report')
             },
 
             {
               label: 'Call Productivity Report',
               key: "productivity-report",
               icon: <BarChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
-              onClick: ()=>  setReport('productivity-report')
+              onClick: () => setReport('productivity-report')
             },
           ]
 
@@ -305,17 +320,17 @@ const Crm: React.FC = () => {
           label: "Verification",
           children: [
             {
-              label: <AgreementCompliant trigger={<a>Agreement Compliance</a>}/>,
+              label: <AgreementCompliant trigger={<a>Agreement Compliance</a>} />,
               key: 'greement-compliance-report',
               icon: <BarChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
-              onClick: ()=>  setReport('agreement-compliance-report'),
+              onClick: () => setReport('agreement-compliance-report'),
               disabled: !access.crmAdmin
             },
             {
-              label: <PosmMonitoring trigger={<a>POSM Monitoring</a>}/>,
+              label: <PosmMonitoring trigger={<a>POSM Monitoring</a>} />,
               key: 'posm-monitoring-report',
               icon: <BarChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
-              onClick: ()=> setReport('posm-monitoring-report'),
+              onClick: () => setReport('posm-monitoring-report'),
               disabled: !access.crmAdmin
             }
           ]
@@ -338,9 +353,26 @@ const Crm: React.FC = () => {
       //link: `${CrmPaths.settlement}/list`,
       link: `${CrmPaths.gratisSettlement}/list`,
       icon: scheduleIcon,
-      overlay: GratistMenu
+      menu: {
+        items: [
+          {
+            type: 'group',
+            label: "Actions",
+            children: [
+              {
+                icon: <PlusCircleOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+                label: 'New Settlement',
+                onClick: () => {
+                  history.push(`${CrmPaths.settlement}/create`);
+                },
+                key: 'new-settlement'
+              }
+            ]
+          }
+        ]
+      },
+      // overlay: GratistMenu
     },
-    ,
     {
       id: 'terms',
       name: 'Terms',
@@ -349,13 +381,13 @@ const Crm: React.FC = () => {
       link: `${CrmPaths.terms}/list`,
       icon: agreementIcon,
       menu: {
-        items: [{label: <TermReport trigger={<a >Export</a>}/> , key: 'exportTerm', icon: <ExportOutlined style={{ fontSize: '16px', color: '#08c' }}/>}]
+        items: [{ label: <TermReport trigger={<a >Export</a>} />, key: 'exportTerm', icon: <ExportOutlined style={{ fontSize: '16px', color: '#08c' }} /> }]
       }
     }
   ];
 
   return (
-    <PageContainer contentWidth='Fluid'  title={false}>
+    <PageContainer contentWidth='Fluid' title={false}>
       <ListMenuComp items={items} />
       <Reports reportName={report} onClose={() => setReport(undefined)} />
     </PageContainer>

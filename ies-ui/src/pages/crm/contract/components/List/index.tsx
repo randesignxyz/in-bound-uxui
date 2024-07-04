@@ -18,6 +18,7 @@ import ImportFileButton from "@/components/ImportFileButton"
 import ImportContract from "../../import-contract"
 import { DataResponse } from "@/services/shared/data"
 import Status from "@/components/Status"
+import { useAccess } from "@umijs/max"
 
 const cols = (onDetail?: (record: ContractLess) => void): ProColumns<ContractLess>[] => ([
     {
@@ -122,6 +123,8 @@ const ContractListView = (actionHandler: { onDetail?: (record: ContractLess) => 
 
     const [loading, setLoading] = useSafeState(false)
 
+    const access = useAccess()
+
     useEffect(() => {
         actionRef.current?.reloadAndRest?.()
     }, [advanceSearch])
@@ -135,7 +138,7 @@ const ContractListView = (actionHandler: { onDetail?: (record: ContractLess) => 
                 toolbar: {
                     actions: [
                         // <Button icon = {<UploadOutlined/>}>Import</Button>,
-                        <Tooltip placement="top" title="Import">
+                        access.canImportContract && <Tooltip placement="top" title="Import">
                             <ImportFileButton<ImportedContract> importedKey="CONTRACT"
                                 onDataResponse={setImportContractData}
                                 onHandleChange={status => {
@@ -144,8 +147,8 @@ const ContractListView = (actionHandler: { onDetail?: (record: ContractLess) => 
                                         message.info("Upload completed.")
                                     }
                                 }} />
-                        </Tooltip>, ,
-                        <Button type="primary" onClick={actionHandler.onAdd} icon={<PlusCircleFilled />} >Add</Button>
+                        </Tooltip>,
+                        access.canAddEditContract && <Button type="primary" onClick={actionHandler.onAdd} icon={<PlusCircleFilled />} >Add</Button>
                     ]
                 }
 

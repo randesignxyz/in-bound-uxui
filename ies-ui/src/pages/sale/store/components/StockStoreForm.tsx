@@ -6,7 +6,7 @@ import { useSetState } from 'ahooks';
 import { Button, Card, Col, message, Modal, Row, Space, Tooltip } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { useEffect, useRef, useState } from 'react';
-import { history } from 'umi';
+import { history } from "@umijs/max";
 import { SalePaths } from '../..';
 import VehicleFormModal from '../../stock-control/VehicleFormModal';
 import { Model } from '../model';
@@ -219,7 +219,7 @@ const StockStoreForm: React.FC<Props> = ({ id, type }) => {
           dataSource={state.data?.members}
           toolBarRender={() => [
             <ProFormSelect
-            key={"salesteamwork"}
+              key={"salesteamwork"}
               width="sm"
               name="memberShip"
               //label="Select member"

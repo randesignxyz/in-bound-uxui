@@ -1,18 +1,18 @@
 import { PageContainer } from '@ant-design/pro-components';
 import React from 'react'
-import { useParams, history } from 'umi';
+import { useParams, history } from "@umijs/max";
 
-type ViewType = 'list' | 'create' | 'detail' | 'edit' | 'view' | undefined;
+export type ViewType = 'list' | 'create' | 'detail' | 'edit' | 'view' | undefined;
 
 interface Props {
     baseURL?: string;
     title?: string;
     onBack?: () => void;
+    disablePageContainer?: true
     children?: (
         viewType: ViewType,
         id?: number | string,
         navigate?: {
-
             goToDetail?: (data: { id: number | string }) => void;
             gotToListHandler?: () => void;
             goToCreate?: (data?: { id?: number | string }) => void;
@@ -22,10 +22,11 @@ interface Props {
 }
 
 
-const CrudWrapper: React.FC<Props> = ({ baseURL, onBack, children, title }) => {
+const CrudWrapper: React.FC<Props> = ({ baseURL, onBack, children, title, disablePageContainer }) => {
     const params = useParams()
 
     const view: ViewType = (params['view'] as ViewType) || undefined
+
     // console.log(view);
 
     const id = params['*']
@@ -49,18 +50,19 @@ const CrudWrapper: React.FC<Props> = ({ baseURL, onBack, children, title }) => {
         baseURL && history.push(`${baseURL}/edit/${data.id}`)
     }
 
-    return <PageContainer onBack={onBack} title={title ? title : false}>
-        {view == undefined ? <div>Not implemented</div> : children?.(
-            view,
-            id,
-            {
-                goToCreate: onGotoCreateHandler,
-                goToDetail: onGoToDetailHandler,
-                gotToListHandler: onGoToListHandler,
-                gotoEdit: onGoToEditHandler
-            }
-        )
+    const content = view == undefined ? <div>Not implemented</div> : children?.(
+        view,
+        id,
+        {
+            goToCreate: onGotoCreateHandler,
+            goToDetail: onGoToDetailHandler,
+            gotToListHandler: onGoToListHandler,
+            gotoEdit: onGoToEditHandler
         }
+    )
+
+    return disablePageContainer ? <>{content}</> : <PageContainer onBack={onBack} title={title ? title : false}>
+        {content}
     </PageContainer>
 
 }

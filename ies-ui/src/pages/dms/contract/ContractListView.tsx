@@ -2,7 +2,7 @@ import TableView, { TableViewSearchParams } from "@/components/DataCrud/TableVie
 import { ArrowRightOutlined, DeleteOutlined, EllipsisOutlined } from "@ant-design/icons"
 import { Badge, Button, Dropdown, Modal, message } from "antd"
 import ContractFormRequest from "./ContractFormRequest";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { ContractServiceAPI } from "./service";
 import { simpleRequestActions } from "@/services/model";
 import { ContractDTO, ContractRequestCreate } from "./data";
@@ -12,7 +12,6 @@ import { ContractAdvanceSearchParams } from "@/pages/crm/contract/types";
 import { MenuProps } from "antd/lib";
 import { DMSPaths } from "..";
 import { ActionType } from "@ant-design/pro-components";
-import { DocumentServiceAPI } from "../documentation/service";
 
 
 
@@ -142,21 +141,6 @@ export default () => {
                         title:"Expriry Date",
                         dataIndex:"expiryDate"
                     },
-                    
-                    // {
-                    //     title: "Process By",
-                    //     dataIndex: "createdBy"
-                    // },
-                    // {
-                    //     title: "Created On",
-                    //     dataIndex: "createdDate",
-                    //     valueType:"date"
-                    // },
-                    // {
-                    //     title: "Submitted On",
-                    //     dataIndex: "createdDate",
-                    //     valueType:"date"
-                    // },
                     {
                         title: "Request Status",
                         render:(_,r)=><Badge color="green" text={r.status} />

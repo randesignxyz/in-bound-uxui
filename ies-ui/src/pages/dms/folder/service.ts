@@ -48,9 +48,6 @@ const FolderAction = {
   }),
 }
 
-
-
-
 export const FolderServiceAPI = (requestActions: RequestActions) => {
   return {
     save: (data: FolderCreate) => singleRequest<{ data: string, message: string }>(FolderAction.save(data))(requestActions),

@@ -20,8 +20,9 @@ import { PageContainer, ProList } from '@ant-design/pro-components';
 import { useAccess } from '@umijs/max';
 import { Button, Input, message, Select, Space, Tag } from 'antd';
 import { useEffect, useState } from 'react';
-import { history } from 'umi';
+import { history } from "@umijs/max";
 import { ProcessRequestItem } from './data.type';
+import { StockRequestFormNames } from '@/pages/fma-stock/request/process-flow';
 
 export default () => {
   const [data, setData] = useState<ProcessRequestItem[]>([]);
@@ -54,6 +55,8 @@ export default () => {
     if (key == PriceComparisonFormNames.processDefKey && access.canAccessProQCMenuItem) return true;
     if (key == PoRequestFormNames.processDefKey && access.canAccessProPOMenuItem) return true;
     if (key == 'fma_stock_request_process' && access.canCreatePR) return true;
+    if (key == StockRequestFormNames.processDefKey && access.canCreateNCMRequest) return true;
+    console.log('key: ',key)
 
     return false;
   };

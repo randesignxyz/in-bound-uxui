@@ -1,14 +1,17 @@
 import { DrawerForm, DrawerFormProps } from "@ant-design/pro-components";
 import { StockRequestDetailResponse } from "./data.types";
 import ViewData from "./components/ViewData";
+import { useState } from "react";
 
 interface Props extends DrawerFormProps {
-    data?: StockRequestDetailResponse;
+    instId?: string;
+    forceRefresh?: number;
     reload?: (id: number) => Promise<void>;
     onEdit?: () => void;
     onAdd?: () => void;
 }
-export default ({ data, onEdit, onAdd, reload, ...rest }: Props) => {
+export default ({ instId, forceRefresh, onEdit, onAdd, reload, ...rest }: Props) => {
+   
     return(
         <DrawerForm
             title="Stock Request Detail"
@@ -19,7 +22,7 @@ export default ({ data, onEdit, onAdd, reload, ...rest }: Props) => {
             }}
             submitter={false}
         >
-            <ViewData data={data} />
+        <ViewData instId={instId} forceRefresh={forceRefresh} />
         </DrawerForm>
     )
 }

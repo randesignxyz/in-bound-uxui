@@ -79,12 +79,15 @@ export default () => {
         columns={[
           {
             title: 'Name',
+            width: 150,
             render: colLink(
               (r) => onOpenEntryHandler(r),
               (r) => r.name,
             ),
           },
-          { title: 'User Name', dataIndex: 'userName' },
+          { title: 'User Name', width: 150, dataIndex: 'userName' },
+          { title: "Warehouses", render: (_, r) => r.warehouses.map(it => it.name).join(", ") },
+          { title: "Default Loading Docks", render: (_, r) => r.loadingDocks.map(it => it.name).join(", ") },
           { title: 'Description', dataIndex: 'description' },
         ]}
         tableProps={{

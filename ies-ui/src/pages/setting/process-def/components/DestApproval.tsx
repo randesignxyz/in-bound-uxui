@@ -1,6 +1,7 @@
 import { IProcessWorkflowModel } from '@/models/process-flow/data';
 import SearchAccountComp from '@/pages/process-flow/components/SearchAccount';
 import {
+  Delegation,
   DestUser,
   MessageTemplate,
   SaveFirstLevelApproval,
@@ -8,14 +9,16 @@ import {
   SaveFirstLevelCandidateUser,
 } from '@/services/process-workflow/data';
 import { DeleteOutlined, PlusCircleFilled } from '@ant-design/icons';
-import { ModalForm, ProFormCheckbox, ProList } from '@ant-design/pro-components';
-import ProForm, { ProFormSelect } from '@ant-design/pro-form';
-import { Button, Checkbox, Col, Form, message, Modal, Row, Spin, Tabs, Tag } from 'antd';
+import { DrawerForm, ModalForm, ProFormCheckbox, ProList } from '@ant-design/pro-components';
+import { ProFormSelect } from '@ant-design/pro-form';
+import { Button, Checkbox, Col, Drawer, Flex, Form, message, Modal, Row, Spin, Tabs, Tag } from 'antd';
 import { CheckboxOptionType } from 'antd/lib/checkbox';
 import { uniqueId } from 'lodash';
 import React, { useEffect, useState } from 'react';
 import AssigneeComp from './Assignee';
 import CandidateUserComp from './CandidateUser';
+import DelegationForm from './DelegationForm';
+import DelegationList from './DelegationList';
 
 const notificationOptions: CheckboxOptionType[] = [
   { label: 'Completed', value: 'completed' },
@@ -23,10 +26,10 @@ const notificationOptions: CheckboxOptionType[] = [
   { label: 'Rejected (Extra)', value: 'rejected_extra' },
 ];
 
-const layout = {
-  labelCol: { span: 5 },
-  wrapperCol: { span: 15 },
-};
+// const layout = {
+//   labelCol: { span: 5 },
+//   wrapperCol: { span: 15 },
+// };
 
 type dataType = {
   notification: string[];
@@ -53,6 +56,7 @@ const DestApproval: React.FC<{
   const [form] = Form.useForm<dataType>();
   const [messageTemplates, setMessageTemplates] = useState<MessageTemplate[]>();
   const [availableCandidates, setAvailableCandidates] = useState<DestUser[]>([]);
+  const [activeTab, setActiveTab] = useState<string>()
 
   useEffect(() => {
     initLoad();
@@ -145,137 +149,133 @@ const DestApproval: React.FC<{
   };
 
   return (
-    <Modal
+    <DrawerForm
       width={width}
       title={title}
       open={visible}
-      destroyOnClose
-      onOk={() => {
+      submitter={{
+        submitButtonProps: { disabled: activeTab == '4' }
+      }}
+      form={form}
+      layout="horizontal"
+      onFinish={async () => {
         form.validateFields().then(onFinishHandler);
       }}
-      onCancel={onCancel}
-    >
-      <Spin spinning={false}>
-        <Row>
-          <Col flex="auto">
-            <ProForm
-              layout="horizontal"
-              submitter={false}
-              form={form}
-              {...layout}
-              labelAlign="right"
-            >
-              <Form.Item name="notification" label="Notification">
-                <Checkbox.Group
-                  options={notificationOptions.map((it) => {
-                    return { value: it.value, label: it.label };
-                  })}
-                />
-              </Form.Item>
-              <Form.Item label="Modify Payload" valuePropName="checked" name="modifyPayload">
-                <Checkbox />
-              </Form.Item>
+      onOpenChange={visible => !visible && onCancel?.()}
+    > <Spin spinning={false}>
+        <Flex vertical>
+          <Form.Item name="notification" label="Notification">
+            <Checkbox.Group
+              options={notificationOptions.map((it) => {
+                return { value: it.value, label: it.label };
+              })}
+            />
+          </Form.Item>
 
-              <Form.Item
-                label="Ingore Repeated User Action"
-                valuePropName="checked"
-                name="ingoreRepeatedUserAction"
-              >
-                <Checkbox />
-              </Form.Item>
-              <ProFormSelect
-                rules={[{ required: true }]}
-                label="Task Message Template"
-                name={'messageTemplateId'}
-                options={(messageTemplates || []).map((it) => ({ value: it.id, label: it.name }))}
+          <Form.Item label="Modify Payload" valuePropName="checked" name="modifyPayload">
+            <Checkbox />
+          </Form.Item>
+
+          <Form.Item
+            label="Ingore Repeated User Action"
+            valuePropName="checked"
+            name="ingoreRepeatedUserAction"
+          >
+            <Checkbox />
+          </Form.Item>
+          <ProFormSelect
+            rules={[{ required: true }]}
+            label="Task Message Template"
+            name={'messageTemplateId'}
+            options={(messageTemplates || []).map((it) => ({ value: it.id, label: it.name }))}
+          />
+          <Tabs onChange={key => setActiveTab(key)} defaultActiveKey="1">
+            <Tabs.TabPane tab="Assignee" key="1">
+              <AssigneeComp assignee={destination?.assignee} onSave={onSaveAssigneeHandler} />
+            </Tabs.TabPane>
+            <Tabs.TabPane tab="Candidate Users" key="2">
+              <CandidateUserComp
+                candidateUser={destination?.candidateUser}
+                onSaveHandler={onSaveCandidateUserHandler}
               />
-              <Tabs defaultActiveKey="1">
-                <Tabs.TabPane tab="Assignee" key="1">
-                  <AssigneeComp assignee={destination?.assignee} onSave={onSaveAssigneeHandler} />
-                </Tabs.TabPane>
-                <Tabs.TabPane tab="Candidate Users" key="2">
-                  <CandidateUserComp
-                    candidateUser={destination?.candidateUser}
-                    onSaveHandler={onSaveCandidateUserHandler}
+            </Tabs.TabPane>
+            <Tabs.TabPane tab="Available Candidate" key={'3'}>
+              <Row>
+                <Col flex={'Auto'}>
+                  <ProFormCheckbox.Group
+                    name={'candidateOptions'}
+                    options={[
+                      { label: 'Sub task', value: 'SUB_TASK' },
+                      { label: 'Reassign', value: 'REASSIGN' },
+                    ]}
                   />
-                </Tabs.TabPane>
-                <Tabs.TabPane tab="Available Candidate" key={'3'}>
-                  <Row>
-                    <Col flex={'Auto'}>
-                      <ProFormCheckbox.Group
-                        name={'candidateOptions'}
-                        options={[
-                          { label: 'Sub task', value: 'SUB_TASK' },
-                          { label: 'Reassign', value: 'REASSIGN' },
-                        ]}
-                      />
-                    </Col>
-                    <Col>
-                      <ModalForm
-                        title="Assign available candidate"
-                        modalProps={{ destroyOnClose: true }}
-                        submitter={{
-                          submitButtonProps: {
-                            style: {
-                              display: 'none',
-                            },
-                          },
-                        }}
-                        trigger={<Button type="link" icon={<PlusCircleFilled />} />}
-                      >
-                        <SearchAccountComp
-                          type={'user'}
-                          approverOnly={false}
-                          selected={availableCandidates.map((it) => ({
-                            id: it.userId,
-                            name: it.userName || '',
-                            type: 'USER',
-                          }))}
-                          onValues={(items) =>
-                            setAvailableCandidates(
-                              items.map((it) => ({ userId: it.id, userName: it.name })),
-                            )
-                          }
-                          onAdded={() => { }}
-                        />
-                      </ModalForm>
-                    </Col>
-                  </Row>
-                  <ProList<DestUser>
-                    dataSource={availableCandidates}
-                    showActions="hover"
-                    rowKey={(it) => it.userId}
-                    metas={{
-                      title: { dataIndex: 'userName' },
-
-                      subTitle: {
-                        render: (_, r) =>
-                          [r.userId, r.email]
-                            .filter((it) => it)
-                            .map((it) => <Tag key={`${uniqueId(it)}`}>{it}</Tag>),
-                      },
-                      actions: {
-                        render: (_, r) => [
-                          <Button
-                            type="link"
-                            size="small"
-                            danger
-                            icon={<DeleteOutlined />}
-                            onClick={() =>
-                              setAvailableCandidates((v) => v.filter((it) => it.userId != r.userId))
-                            }
-                          />,
-                        ],
+                </Col>
+                <Col>
+                  <ModalForm
+                    title="Assign available candidate"
+                    modalProps={{ destroyOnClose: true }}
+                    submitter={{
+                      submitButtonProps: {
+                        style: {
+                          display: 'none',
+                        },
                       },
                     }}
-                  />
-                </Tabs.TabPane>
-              </Tabs>
-            </ProForm>
-          </Col>
-        </Row>
+                    trigger={<Button type="link" icon={<PlusCircleFilled />} />}
+                  >
+                    <SearchAccountComp
+                      type={'user'}
+                      approverOnly={false}
+                      selected={availableCandidates.map((it) => ({
+                        id: it.userId,
+                        name: it.userName || '',
+                        type: 'USER',
+                      }))}
+                      onValues={(items) =>
+                        setAvailableCandidates(
+                          items.map((it) => ({ userId: it.id, userName: it.name })),
+                        )
+                      }
+                      onAdded={() => { }}
+                    />
+                  </ModalForm>
+                </Col>
+              </Row>
+              <ProList<DestUser>
+                dataSource={availableCandidates}
+                showActions="hover"
+                rowKey={(it) => it.userId}
+                metas={{
+                  title: { dataIndex: 'userName' },
+                  subTitle: {
+                    render: (_, r) =>
+                      [r.userId, r.email]
+                        .filter((it) => it)
+                        .map((it) => <Tag key={`${uniqueId(it)}`}>{it}</Tag>),
+                  },
+                  actions: {
+                    render: (_, r) => [
+                      <Button
+                        type="link"
+                        size="small"
+                        danger
+                        icon={<DeleteOutlined />}
+                        onClick={() =>
+                          setAvailableCandidates((v) => v.filter((it) => it.userId != r.userId))
+                        }
+                      />,
+                    ],
+                  },
+                }}
+              />
+            </Tabs.TabPane>
+            <Tabs.TabPane tab="Delegation" key="4" >
+              <DelegationList destination={destination} />
+            </Tabs.TabPane>
+          </Tabs>
+        </Flex>
       </Spin>
-    </Modal>
+    </DrawerForm>
   );
 };
 

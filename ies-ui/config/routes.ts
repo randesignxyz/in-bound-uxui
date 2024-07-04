@@ -70,6 +70,14 @@ export default [
     access: 'canAccessCrmMenuItem',
     component: './crm/customer',
   },
+  // {
+  //   path: '/crm/customer/new',
+  //   name: 'customers',
+  //   icon: 'UnorderedListOutlined',
+  //   hideInMenu: 'true',
+  //   access: 'canAccessCrmMenuItem',
+  //   component: './crm/customer/CustomerNew',
+  // },
   {
     path: '/external/crm/customer/:view/*',
     name: 'view-customer',
@@ -163,6 +171,7 @@ export default [
     icon: 'FormOutlined',
     access: 'canAccessProMenuItem',
     component: './pro',
+
   },
 
   {
@@ -304,6 +313,16 @@ export default [
     name: 'so',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
+    access: 'canAccessSaleMenuItems',
+    component: './sale/so',
+  },
+
+  {
+    path: 'external/sale/so/:view/*',
+    name: 'so',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    layout: false,
     access: 'canAccessSaleMenuItems',
     component: './sale/so',
   },
@@ -890,11 +909,26 @@ export default [
     access: 'canAccessFleetMenu',
     component: './fleet/vehicle/',
   },
-
+  {
+    path: '/external/fleet/vehicle/:view/*',
+    layout: false,
+    name: "fleet",
+    component: './fleet/vehicle/',
+    access: 'canAccessFleetMenu',
+    hideInMenu: 'true',
+  },
 
   {
     path: '/fleet/maintenance/:view/*',
     name: 'fleet_maintenence',
+    hideInMenu: 'true',
+    access: 'canAccessFleetMenu',
+    component: './fleet/maintenance/',
+  },
+  {
+    path: '/external/fleet/maintenance/:view/*',
+    name: 'fleet_maintenence',
+    layout: false,
     hideInMenu: 'true',
     access: 'canAccessFleetMenu',
     component: './fleet/maintenance/',
@@ -906,6 +940,15 @@ export default [
     access: 'canAccessFleetMenu',
     component: './fleet/inspection/',
   },
+  {
+    path: '/external/fleet/inspection/:view/*',
+    name: 'inspection',
+    layout: false,
+    hideInMenu: 'true',
+    access: 'canAccessFleetMenu',
+    component: './fleet/inspection/',
+  },
+
   {
     path: '/fleet/accident/:view/*',
     name: 'fleet_accident',
@@ -968,6 +1011,13 @@ export default [
     hideInMenu: 'true',
     access: 'canAccessFleetMenu',
     component: './fleet/fuelStock/',
+  },
+  {
+    path: '/fleet/accessory/:view/*',
+    name: 'fleet_accessory',
+    hideInMenu: 'true',
+    access: 'canAccessFleetMenu',
+    component: './fleet/accessory/',
   },
   //  ================= END FLEET =================
 
@@ -1070,13 +1120,6 @@ export default [
   //  ================= END Prod =================
   //  ================= START In-house Stock ==============
   {
-    path: '/stock',
-    name: 'inhouse-stock',
-    icon: 'ShopOutlined',
-    access: 'canAccessCrmMenuItem',
-    component: './fma-stock',
-  },
-  {
     path: '/stock/request/:view/*',
     name: 'inhouse-stock-request',
     icon: 'UnorderedListOutlined',
@@ -1113,9 +1156,9 @@ export default [
   },
   {
     path: '/',
-    // component: 'initial-page',
+    component: 'initial-page',
     // redirect: '/user/auth',
-    redirect: '/task-list',
+    // redirect: '/task-list',
     // redirect: '/expense/delivery',
   },
   {

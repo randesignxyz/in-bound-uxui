@@ -2,7 +2,7 @@ import TableView, { TableViewSearchParams } from '@/components/DataCrud/TableVie
 import { formatDate, formatter } from '@/pages/utils';
 import { Paging } from '@/services/API';
 import { simpleRequestActions } from '@/services/model';
-import { CopyOutlined, DashOutlined, DeleteOutlined, IssuesCloseOutlined, StopOutlined } from '@ant-design/icons';
+import { CopyOutlined, DashOutlined, DeleteOutlined, ExportOutlined, IssuesCloseOutlined, StopOutlined } from '@ant-design/icons';
 import { ActionType, PageContainer } from '@ant-design/pro-components';
 import { history, useModel } from '@umijs/max';
 import { Badge, Button, Dropdown, MenuProps, message, Modal, Radio, Space, Tag, Tooltip } from 'antd';
@@ -148,7 +148,7 @@ export default ({ onDetail }: Props) => {
       {/* <BreadCrumbCom separator=">" routes={routes} /> */}
 
      <PageContainer
-      onBack={()=>history.push(FleetPaths.fleet)}
+      // onBack={()=>history.push(FleetPaths.fleet)}
       title={"Maintenances"}
      >
      <TableView<MaintenneceDTO, { searchValue?: string }>
@@ -186,6 +186,7 @@ export default ({ onDetail }: Props) => {
             valueType: 'date',
             render: (_, r) => (
               <>
+              <Button icon={<ExportOutlined/>} size='small' type='link' onClick={() => window.open(`/external/fleet/maintenance/detail/${r.id}`)?.focus()} />
                 <Button
                   type="link"
                   onClick={() => {

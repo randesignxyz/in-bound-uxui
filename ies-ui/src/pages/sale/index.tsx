@@ -447,7 +447,7 @@ export default () => {
             <ListMenuComp items={stockMenuItems} />
           </>
         )}
-      {/* {access.canAccessRetailer && (
+      {access.canAccessRetailer && (
         <>
           <Divider />
           <ListMenuComp items={mpuMenuItems} />

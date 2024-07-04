@@ -375,11 +375,12 @@ export interface VisitScheduleAdvanceSearchParams {
   hasContractOnly?: boolean;
   hasPosmCheckedOnly?: boolean;
   contractTypeIds?: number[];
-  devisionIds?: number[];
+  divisionIds?: number[];
   month?: Moment;
   contractVerified?: boolean;
   posmVerified?: boolean;
   hasAttachment?: boolean;
+  hasErrorAttachment?: boolean;
   uploadFailed?: boolean;
   // hasErrorAttachment?: boolean;
 }

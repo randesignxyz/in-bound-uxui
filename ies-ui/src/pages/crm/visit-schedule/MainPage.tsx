@@ -38,6 +38,7 @@ export default () => {
 
     interface LightFilterProp {
         hasAttachment?: boolean;
+        hasErrorAttachment?: boolean;
         checkFilter?: string[];
         contractVerified?: string;
         posmVerified?: string;
@@ -90,13 +91,14 @@ export default () => {
                     posmVerified: values.posmVerified ? values.posmVerified === 'yes' : undefined,
                     month: values.month,
                     hasAttachment: values.hasAttachment,
+                    hasErrorAttachment: values.hasErrorAttachment,
                     divisionIds: values.divisionIds,
                 }
             }));
 
             actionRef.current?.reloadAndRest?.();
         }}>
-            <ProFormDatePicker.Month name={'month'} label="Month" />
+            <ProFormDatePicker.Month initialValue={filter.criteria?.month} name={'month'} label="Month" />
             <ProFormSelect
                 label="Division"
                 name="divisionIds"
@@ -104,6 +106,7 @@ export default () => {
                 width="md"
                 showSearch
                 allowClear
+                initialValue={filter.criteria?.divisionIds}
                 options={lookup?.data?.lookupDataList
                     ?.filter((it) => it.type === 'CUSTOMER_DIVISION')
                     ?.map((it) => {
@@ -114,6 +117,7 @@ export default () => {
                 name="checkFilter"
                 label="For Verify"
                 mode="multiple"
+                initialValue={[filter.criteria?.hasContractOnly ? 'hasContract' : undefined, filter.criteria?.hasPosmCheckedOnly ? 'hasPosm' : undefined].filter(it => it)}
                 options={[
                     { label: 'Has Contract', value: 'hasContract' },
                     { label: 'Has POSM', value: 'hasPosm' },
@@ -122,6 +126,7 @@ export default () => {
             {(filter.criteria?.status || 'COMPLETED') === 'COMPLETED' && <ProFormSelect
                 name="contractVerified"
                 label="Contract Verified"
+                initialValue={filter.criteria?.contractVerified == undefined ? undefined : filter.criteria?.contractVerified ? 'yes' : 'no'}
                 options={[
                     { label: 'Yes', value: 'yes' },
                     { label: 'No', value: 'no' },
@@ -131,6 +136,7 @@ export default () => {
             {(filter.criteria?.status || 'COMPLETED') === 'COMPLETED' && <ProFormSelect
                 name="posmVerified"
                 label="POSM Verified"
+                initialValue={filter.criteria?.posmVerified == undefined ? undefined : filter.criteria?.posmVerified ? 'yes' : 'no'}
                 options={[
                     { label: 'Yes', value: 'yes' },
                     { label: 'No', value: 'no' },
@@ -141,6 +147,7 @@ export default () => {
                 <Space>
                     <Typography.Text type="secondary">Attachment Only</Typography.Text>
                     <ProFormSwitch
+                        initialValue={filter.criteria?.hasAttachment}
                         name={"hasAttachment"}
                     />
                 </Space>
@@ -150,7 +157,8 @@ export default () => {
                 <Space>
                     <Typography.Text type="secondary">Upload Failed</Typography.Text>
                     <ProFormSwitch
-                        name={"uploadFailed"}
+                        initialValue={filter.criteria?.hasErrorAttachment}
+                        name={"hasErrorAttachment"}
                     />
                 </Space>
             )}

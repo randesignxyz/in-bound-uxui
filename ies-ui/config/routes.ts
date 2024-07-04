@@ -1117,6 +1117,28 @@ export default [
     component: './prod/inventory-transfer/',
   },
 
+  {
+    path: '/prod/daily-water-treatment/:view/*',
+    name: 'dailyWaterTreatment',
+    hideInMenu: 'true',
+    access: 'canAccessDailyWaterTreatmentMenuItem',
+    component: './prod/daily-water-treatment/',
+  },
+  {
+    path: '/prod/daily-pre-water-treatment/:view/*',
+    name: 'dailyPreWaterTreatment',
+    hideInMenu: 'true',
+    access: 'canAccessDailyPreWaterTreatmentMenuItem',
+    component: './prod/daily-pre-water-treatment/',
+  },
+  {
+    path: '/prod/daily-haccp-monitoring/:view/*',
+    name: 'dailyHACCPMonitoring',
+    hideInMenu: 'true',
+    access: 'canAccessDailyHACCPMonitoringMenuItem',
+    component: './prod/daily-haccp-monitoring/',
+  },
+
   //  ================= END Prod =================
   //  ================= START In-house Stock ==============
   {

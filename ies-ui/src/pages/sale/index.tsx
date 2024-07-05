@@ -387,7 +387,6 @@ export default () => {
       icon: stockIcon,
       visible: access.canAccessViewMpu,
     },
-
     {
       id: 'mpu_count_stock',
       name: 'Daily Count Stock',

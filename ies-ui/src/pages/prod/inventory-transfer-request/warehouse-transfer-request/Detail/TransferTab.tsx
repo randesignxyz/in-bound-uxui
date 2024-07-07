@@ -100,7 +100,7 @@ export default ({ providedList, data, refresh, ...rest }: Props) => {
                 }}
 
                 toolbar={
-                    data.status === 'request-warehouse-approve' ? {
+                    (data.status === 'request-warehouse-approve' && data.transfer_type == 'PM/RM')? {
                         actions: [
                             <Button
                                 key="add-button"

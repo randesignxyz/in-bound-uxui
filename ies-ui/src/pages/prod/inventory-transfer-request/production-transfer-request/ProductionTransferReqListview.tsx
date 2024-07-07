@@ -2,10 +2,10 @@ import TableView, { TableViewSearchParams } from '@/components/DataCrud/TableVie
 import { Paging } from '@/services/API';
 import { downloadReport } from '@/services/apiGateway';
 import { simpleRequestActions } from '@/services/model';
-import { FileExcelOutlined, PlusOutlined } from '@ant-design/icons';
+import { EyeFilled, FileExcelOutlined, PlusOutlined } from '@ant-design/icons';
 import { ActionType } from '@ant-design/pro-components';
 import { useAccess, useModel } from '@umijs/max';
-import { Button, Modal, Radio, Select, Space, Tag, message } from 'antd';
+import { Button, Modal, Radio, Select, Space, Tag, Tooltip, message } from 'antd';
 import Omit from 'omit.js';
 import { useEffect, useRef, useState } from 'react';
 import ApproveRemarkFormModal from '../../ApproveRemarkFormModal';
@@ -15,7 +15,7 @@ import DetailView from './DetailView';
 import { TransferRequest, TransferRequestAdvanceParams, TransferRequestCreate } from '../data';
 import { TransferRequestServiceAPI } from '../service';
 import TransferRequestModelForm from './TransferRequestModelForm';
-// import InventoryModelForm from "./InventoryModelForm";
+import { history } from 'umi'
 
 interface Props {
   onDetail?: (id: string) => void;
@@ -242,11 +242,28 @@ export default ({ onAdd }: Props) => {
         }}
         columns={[
           {
+            title: '',
+            width: 10,
+            render: (_, r) => (
+              <Space size={1}>
+
+                <Tooltip title="View Data">
+                  <Button
+                    size="small"
+                    type="link"
+                    icon={<EyeFilled />}
+                    onClick={() => onDetailhandler(r)}
+                  />
+                </Tooltip>
+              </Space>
+            ),
+          },
+          {
             key: 'id',
             title: 'ID',
             dataIndex: 'id',
             render: (_, r) => (
-              <a onClick={() => onDetailhandler(r)}>PDR-{String(r.id).padStart(6, '0')}</a>
+              <a onClick={() => history.push(`/prod/inventory-transfer-request/view/${r.id}`, { id: r.id })}>PDR-{String(r.id).padStart(6, '0')}</a>
             ),
           },
           {

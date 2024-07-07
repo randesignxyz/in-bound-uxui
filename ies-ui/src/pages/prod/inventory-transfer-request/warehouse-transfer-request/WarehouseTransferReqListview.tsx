@@ -3,7 +3,7 @@ import { Paging } from '@/services/API';
 import { simpleRequestActions } from '@/services/model';
 import { ActionType } from '@ant-design/pro-components';
 import { useAccess, useModel } from '@umijs/max';
-import { Button, Modal, Radio, Select, Space, Tag, message } from 'antd';
+import { Button, Modal, Radio, Select, Space, Tag, Tooltip, message } from 'antd';
 import Omit from 'omit.js';
 import { useEffect, useRef, useState } from 'react';
 import ApproveRemarkFormModal from '../../ApproveRemarkFormModal';
@@ -14,6 +14,7 @@ import { AddSupplierParams, TransferRequest, TransferRequestAdvanceParams } from
 import { ItemServiceAPI, TransferRequestServiceAPI } from '../service';
 import FormModal from './FormModal';
 import { TransferServiceAPI } from '../../inventory-transfer/service';
+import { EyeFilled } from '@ant-design/icons';
 // import InventoryModelForm from "./InventoryModelForm";
 
 interface Props {
@@ -209,6 +210,23 @@ export default ({ onAdd }: Props) => {
           actionRef: actionRef,
         }}
         columns={[
+          {
+            title: '',
+            width: 10,
+            render: (_, r) => (
+              <Space size={1}>
+
+                <Tooltip title="View Data">
+                  <Button
+                    size="small"
+                    type="link"
+                    icon={<EyeFilled />}
+                    onClick={() => onDetailhandler(r)}
+                  />
+                </Tooltip>
+              </Space>
+            ),
+          },
           {
             key: 'id',
             title: 'ID',

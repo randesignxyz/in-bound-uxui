@@ -7,7 +7,7 @@ import {
     ProFormTextArea,   
   } from '@ant-design/pro-components';
 import { useForm } from 'antd/lib/form/Form';
-import { SaveItemData } from "../data.types";
+import { SaveItemData, UoM } from "../data.types";
 import { Checkbox, Modal, Spin, message } from "antd";
 import { simpleRequestActions } from "@/services/model";
 import { createService } from "../services";
@@ -22,18 +22,20 @@ export default ({type, itemId, onRefresh,...rest}: ModalFormProps<SaveItemData> 
     const requestActions = simpleRequestActions();
     const services = createService(requestActions);
     const srv = createSrv(requestActions)
-    const uomList = [{name: 'Set'},{name: 'EA'},{name: 'Box'}]
+    const [uomList,setUomList] =useState<UoM[]>()
     const readonly = type=='EDIT'?true:false
-    // const title = type=='EDIT'?'Edit':'New Item'
+   
     useEffect(()=>{
         type=='EDIT'?services.fetchItem(itemId||0).then(rs=> {
-            console.log('payload111', rs)
             setTitle(type=='EDIT'?'Edit - ' + rs.itemCode:'New Item')
             form.setFieldsValue(rs)
             form.setFieldValue('groupId',rs.itemGroup.id)
         }):form.setFieldValue('isActiveY',true)
         srv.listAllItemGroup().then(rs=>{
             setGroup(rs)
+        })
+        services.fetchUoMList().then(rs=> {
+            setUomList(rs)
         })
     },[type])
     const onSaveHandler = async () =>{      
@@ -69,7 +71,7 @@ export default ({type, itemId, onRefresh,...rest}: ModalFormProps<SaveItemData> 
             {!readonly && <ProFormText label='Item Code' name={'itemCode'} rules={[{ required: true }]} readonly={readonly}/>}
             <ProFormText label='Abr.' name={'itemAbr'} rules={[{ required: true }]}/>
             <ProFormText label='Item Name' name={'itemName'} rules={[{ required: true }]}/>
-            <ProFormSelect label='UoM' name={'defaultUoM'} mode="single" colSize={1} readonly={false} rules={[{ required: true }]} options={uomList?.map(it =>{ return {label: it.name,value: it.name}})} />
+            <ProFormSelect label='UoM' name={'defaultUoM'} mode="single" colSize={1} readonly={false} rules={[{ required: true }]} options={uomList?.map(it =>{ return {label: it.code,value: it.code}})} />
             <ProFormSelect label='Group' name={'groupId'} mode="single" colSize={1} readonly={false} rules={[{ required: true }]} options={group?.map(it =>{ return {label: it.itemGroupName,value: it.id}})} />
             <ProFormTextArea label='Description' name={'description'} rules={[{ required: false }]}/>
             <ProFormCheckbox  name='isActiveY'>Active</ProFormCheckbox>

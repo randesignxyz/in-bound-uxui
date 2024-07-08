@@ -44,4 +44,9 @@ export type SaveItemData = {
 export type ItemAdvanceSearchParams = {  
     status: 'ALL'| 'Y' | 'N'
     groupIds?: number[];
-  };
+};
+export type UoM = {  
+    id: number
+    code: string
+    name?: string
+};

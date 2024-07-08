@@ -7,7 +7,7 @@ import { SavePayLoad } from "@/pages/fma/new-staff/data.types"
 import { StartWorkFlowParam } from "@/services/process-workflow/params"
 import { ITRequestDetail } from "@/pages/ict/it-request/data.types"
 import { Paging } from "@/services/API"
-import { ItemList, SaveItemData, SearchItemParams,ItemDetail } from "./data.types"
+import { ItemList, SaveItemData, SearchItemParams,ItemDetail, UoM } from "./data.types"
 
 export const createService = (request: SimpleRequestActions): CrudBaseServices<
     ItemList,
@@ -15,6 +15,7 @@ export const createService = (request: SimpleRequestActions): CrudBaseServices<
     SearchItemParams &{keyword?:string},
     SaveItemData    
 > & {
+    fetchUoMList:()=> Promise<UoM[]>
     // request: (params: StartWorkFlowParam<StockRequest>) =>  Promise<StockRequestResponse>
     // listAllItemGroup: () => Promise<ItemGroupListItem[]>
     // detail: (id: number) => Promise<ItemDetail>
@@ -54,6 +55,13 @@ export const createService = (request: SimpleRequestActions): CrudBaseServices<
                 endpoint: 'FMA',
                 payload: data
             })(request)
+        ,
+        fetchUoMList: async () =>
+            fetchDataListService<any, UoM>({
+                actionName: 'fetch-uom',
+                endpoint: 'FMA',
+                // payload: {}
+            }).query(request)
         ,
 
     }

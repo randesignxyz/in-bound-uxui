@@ -51,7 +51,7 @@ export default (props: ActionDataFormProps) => {
                         taskId: props.activityData?.taskId || '',
                         actionName: props.action,
                         comment: dataForm.comment,  
-                        payload: {items:saveItems},                     
+                        payload: {items:saveItems||[]},                     
                         fileIds: files.map(it=> it.response)
                     } as TaskActionDataParam<{items:{id: number, stockRemarks?: string}[]}>
                     console.log('save data: ', data)

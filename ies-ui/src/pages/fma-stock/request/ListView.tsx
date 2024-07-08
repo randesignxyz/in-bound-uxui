@@ -124,12 +124,12 @@ export default ({ onAdd, onEdit }: Props) => {
                   type="link"
                   icon={<ExportOutlined />}
                   onClick={async () => {
-                    window.open(`/external/data-form/fma_stock_request_process/${r.instanceId}`, '_blank')?.focus();
+                    window.open(`/external/data-form/ncm_stock_request_process/${r.instanceId}`, '_blank')?.focus();
                   }}
                 />
                 <a
                   onClick={() =>
-                    history.push(`/data-form/fma_stock_request_process/${r.instanceId}`)
+                    history.push(`/data-form/ncm_stock_request_process/${r.instanceId}`)
                   }
                 >
                   {r.formNo}
@@ -160,9 +160,9 @@ export default ({ onAdd, onEdit }: Props) => {
           },
           {
             title: 'Status',
-            dataIndex: 'processStatus',
+            dataIndex: 'workflowStatus',
             width: 70,
-            render: (_, r) => r.processStatus && <Status text={r.processStatus} />,
+            render: (_, r) => r.workflowStatus && <Status text={r.workflowStatus} />,
           }
         ]}
         actionHandlers={{

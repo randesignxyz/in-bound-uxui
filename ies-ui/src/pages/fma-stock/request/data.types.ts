@@ -22,7 +22,8 @@ export interface StockRequestListItem {
   remarks?: string
   requestedBy?: string
   createdDate?: Moment
-  processStatus: string
+  workflowStatus?: string
+  status?: string
 } 
 export interface StockRequestLess {
   id: number;

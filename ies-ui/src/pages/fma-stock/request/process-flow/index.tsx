@@ -6,11 +6,11 @@ import QuickView from './QuickView';
 import ViewForm from './ViewForm';
 
 export const StockRequestFormNames = {
-    processDefKey: 'fma_stock_request_process',
-    start: 'fma_stock_request_process',
-    functionRequest: 'fma_stock_request_function_request',
-    functionApproval: 'fma_stock_request_function_approval',
-    physicalStock: 'fma_stock_request_check_physical_stock',
+    processDefKey: 'ncm_stock_request_process',
+    start: 'ncm_stock_request_process',
+    functionRequest: 'ncm_stock_request_function_request',
+    functionApproval: 'ncm_stock_request_function_approval',
+    physicalStock: 'ncm_stock_request_check_physical_stock',
 };
 
 // export const AcquisitionForm: DataForm[] = [

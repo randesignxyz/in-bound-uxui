@@ -59,10 +59,6 @@ export default ({
         message.error('Please add some request items.');
         return Promise.reject();
       }
-      // if (dataForm.service && (addedServices.length || 0) == 0) {
-      //   message.error('Please add some reqisition service.');
-      //   return Promise.reject();
-      // }
       return {
         ...dataForm,
         id: type == 'EDIT' ? id : undefined,
@@ -127,6 +123,15 @@ export default ({
           <Card title="General" size="small">
             <Row gutter={20}>
               <Col flex={'400px'}>
+                <ProFormTextArea
+                  hasFeedback={false}
+                  help={<span />}
+                  rules={[{ required: true, whitespace: true }]}
+                  label="Reason"
+                  name={'reason'}
+                />
+              </Col>
+              <Col flex={'200px'}>
                 <ProFormDatePicker
                   rules={[
                     {
@@ -143,23 +148,23 @@ export default ({
                   label=" Expected date"
                   name={'requestDate'}
                 />               
-              </Col>
+              </Col>             
             </Row>
-            <Row gutter={20}>
-              <Col flex={'400px'}>
+            {/* <Row gutter={20}>
+              <Col flex={'500px'}>
                 <ProFormTextArea
                   hasFeedback={false}
-                  help={<span />}
+                  // help={<span />}
                   rules={[{ required: true, whitespace: true }]}
                   label="Reason"
                   name={'reason'}
                 />
               </Col>
-              <Col flex={'400px'}>
-                <ProFormTextArea label="Remarks" name={'remarks'} />
-              </Col>
-              <Col flex={'Auto'} />
-            </Row>
+              // {/* <Col flex={'400px'}>
+              //   <ProFormTextArea label="Remarks" name={'remarks'} />
+              // </Col>
+              // <Col flex={'Auto'} /> 
+            </Row> */}
           </Card>
           <Card
             title="Line Items"
@@ -200,12 +205,7 @@ export default ({
                   icon={<MinusCircleOutlined />}
                 />,
               ],
-              onValuesChange: (_, recordList) => {
-                // form.setFieldsValue({
-                //   totalAmount: recordList
-                //     .map((it) => (it.qty || 0))
-                //     .reduce((p, c) => p + c, 0),
-                // });
+              onValuesChange: (_, recordList) => {               
                 setAddedItems(
                   recordList.map((it) => ({
                     ...it,                   
@@ -223,13 +223,7 @@ export default ({
             columns={[
               { title: 'No', width: 50, editable: false, render: (_, __, index) => index + 1 },
               { title: 'Item Code', width: 100, editable: false, dataIndex: 'itemCode' },
-              { title: 'Item Name', editable: false, dataIndex: 'itemName' },
-              // {
-              //   title: 'Description',
-              //   valueType: 'textarea',
-              //   fieldProps: { rows: 1, maxLength: 700 },
-              //   dataIndex: 'description',
-              // },
+              { title: 'Item Name', editable: false, dataIndex: 'itemName' },            
               {
                 title: 'Qty',
                 width: 100,
@@ -244,13 +238,7 @@ export default ({
                 dataIndex: 'uom',
                 valueType: 'select',
                 formItemProps: { rules: [{ required: true }] },
-                valueEnum: (r) => itemUomList.filter(it => it.itemCode == r.itemCode).reduce((acc, cur) => ({ ...acc, [cur.uom]: cur.uom }), {})
-                // request: async (_, { record }: { record: StockRequestItem }) => {
-                //   console.log('select uom',itemUomList)
-                //   return itemUomList
-                //     .filter((it) => it.itemCode == record.itemCode)
-                //     .map((it) => ({ label: it.uom, value: it.uom }));
-                // },                
+                valueEnum: (r) => itemUomList.filter(it => it.itemCode == r.itemCode).reduce((acc, cur) => ({ ...acc, [cur.uom]: cur.uom }), {})                
               },
               {
                 title: 'Remarks',
@@ -324,7 +312,6 @@ export default ({
                 payload: dataForm,
               };
               try {
-                console.log('data request item: ',data)
                 const rs = await services.request(data);
                 message.success(
                   `Your request is submitted. Please track the request with form no ${rs.formNo} `,

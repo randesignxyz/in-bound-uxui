@@ -750,7 +750,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           'ROLE_HR_APPRAISAL_REQUEST_SM_EXECTIVE'].some((it) => it === item),
       ) || false,
     canCreateNCMRequest:
-      currentUser?.authorities.some((item) => ['ROLE_ADMIN','ROLE_FMA_STOCK_REQUEST_APPROVAL'].some((it) => it === item)) ||
+      currentUser?.authorities.some((item) => ['ROLE_ADMIN','ROLE_NCM_STOCK_REQUEST_APPROVAL'].some((it) => it === item)) ||
       false,  
   };
 }

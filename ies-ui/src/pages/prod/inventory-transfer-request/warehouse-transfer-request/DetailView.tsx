@@ -35,12 +35,6 @@ export default ({ data, ...rest }: Props) => {
   return (
     <DrawerForm submitter={false} title={
       <div>
-        <span style={{ float: 'right' }}>
-          <Button onClick={()=>setTransferOpen({ visible: true,item_data:data })} type="primary">
-          {/* <Button onClick={() => console.log(data)} type="primary"> */}
-            Transfer
-          </Button>
-        </span>
         Inventory Transfer Request Detail
       </div>} {...rest}>
       <Spin spinning={false}>
@@ -96,7 +90,7 @@ export default ({ data, ...rest }: Props) => {
               { title: 'Item Name', dataIndex: 'item_name' },
               { title: 'Quantity', dataIndex: 'quantity' },
               { title: 'UoM', dataIndex: 'uom' },
-              { title: 'Supplier', dataIndex: 'supplier' },
+              { title: 'Vendor', dataIndex: 'supplier' },
               { title: 'Remark', dataIndex: 'remark' },
             ]}
           />
@@ -104,38 +98,6 @@ export default ({ data, ...rest }: Props) => {
             <Col flex={'Auto'} />
             <Col flex={'300px'}></Col>
           </Row>
-          <Divider />
-          <ProList<ActivitiesItem>
-            rowKey="id"
-            headerTitle="Activities"
-            dataSource={data?.activities}
-            metas={{
-              title: {
-                dataIndex: 'activities_name',
-              },
-              subTitle: {
-                render: (_, r) => {
-                  return [
-                    [r.action, r.actionBy].join(' by '),
-                    [' ' + formatDatewithNumber(r.actionDate ?? moment())],
-                  ];
-                },
-              },
-              description: {
-                dataIndex: 'remark',
-              },
-              actions: {
-                render: (_, r) => [moment(r.actionDate).format('YYYY-MM-DD HH:m:ss a')],
-              },
-              // avatar: {
-              //   dataIndex: 'image',
-              //   editable: false,
-              // },
-              // description: {
-              //   dataIndex: 'desc',
-              // },
-            }}
-          />
         </ProCard>
       </Spin>
       <TransferModelForm

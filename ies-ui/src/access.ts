@@ -391,6 +391,47 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canAccessTransferProductionItem:
       currentUser?.authorities.some((item) => ['ROLE_PROD_PRO_ADMIN'].some((it) => it === item)) ||
       false,
+    currentUser,
+    canAccessDailyWaterTreatmentMenuItem:
+      currentUser?.authorities.some((item) =>
+        [
+          'ROLE_ADMIN',
+          'ROLE_PROD_DWT_USER'
+        ].some((it) => it === item),
+      ) || false,
+    canAssignItem:
+      currentUser?.authorities.some((item) =>
+        [
+          'ROLE_ADMIN'
+        ].some((it) => it === item),
+      ) || false,
+
+    canAccessDailyWaterTreatmentAssignItem:
+      currentUser?.authorities.some((item) =>
+        [
+          'ROLE_PROD_DWT_USER'
+        ].some((it) => it === item),
+      ) || false,
+    canAccessDailyPreWaterTreatmentMenuItem:
+      currentUser?.authorities.some((item) =>
+        [
+          'ROLE_ADMIN',
+          'ROLE_PROD_PWT_USER'
+        ].some((it) => it === item),
+      ) || false,
+      canAssignItemPre:
+      currentUser?.authorities.some((item) =>
+        [
+          'ROLE_ADMIN'
+        ].some((it) => it === item),
+      ) || false,
+      canAccessDailyHACCPMonitoringMenuItem:
+      currentUser?.authorities.some((item) =>
+        [
+          'ROLE_ADMIN',
+          'ROLE_PROD_HACCP_USER'
+        ].some((it) => it === item),
+      ) || false,
 
     /*****Queque */
     canAccesSqueueMenu:

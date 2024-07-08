@@ -79,7 +79,7 @@ export default ({ data, ...rest }: Props) => {
               { title: 'Item Name', dataIndex: 'item_name' },
               { title: 'Quantity', dataIndex: 'quantity' },
               { title: 'UoM', dataIndex: 'uom' },
-              { title: 'Supplier', dataIndex: 'supplier' },
+              { title: 'Vendor', dataIndex: 'supplier' },
               { title: 'Remark', dataIndex: 'remark' },
             ]}
           />

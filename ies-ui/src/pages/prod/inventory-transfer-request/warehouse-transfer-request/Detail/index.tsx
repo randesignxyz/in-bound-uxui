@@ -115,7 +115,6 @@ export default ({ id, ...rest }: Props) => {
     <>
       <Row justify="space-between">
         <BreadCrumbCom separator=">" routes={routes} />
-
         {data?.status == 'request-production-approve' ?
           <Space>
             <Button

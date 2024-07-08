@@ -51,6 +51,7 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
   const [getToWarehouse, setGetToWarehouse] = useState('');
   const [itemTabVisible, setItemTabVisible] = useState(false);
   const [getqty, setGetQty] = useState<string>('');
+ const [postingDate, setPostingDate] = useState(moment());
   const [getRemark, setGetRmark] = useState<string | undefined>(undefined);
   const [advanceSearchParams, setAdvanceSearchParams] = useState<WarehouseAdvanceParams>({
     tendency: 'NVC',
@@ -90,6 +91,7 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
     setGetRmark(undefined);
     setGetTendency('');
     setGetQty('');
+    setPostingDate(moment())
     // if (access.canAccessNVCItem) {
     //   setAdvanceSearchParams((v: any) => ({ ...v, tendency: 'NVC' }));
     //   actionRef.current?.reloadAndRest?.();
@@ -130,6 +132,7 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
           items: items.map((v) => ({ ...v })),
           item_count: items.length,
           activities: act,
+          taxDate:postingDate
           // fromWarehouse: getFromWarehouse,
           // toWarehouse: getToWarehouse,
           // apiReferenceNo: '20240223-12ddbb1',
@@ -304,7 +307,7 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
             </Col>
             <Col span={4}>
               <ProFormDatePicker
-                initialValue={moment()}
+                initialValue={postingDate}
                 rules={[
                   {
                     required: true,
@@ -319,9 +322,12 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
                 ]}
                 label="Posting Date"
                 name={'postingDate'}
+                fieldProps={{
+                  onChange: ((e,date)=>{setPostingDate(moment(date))}) // Capture selected date
+              }}
               />
             </Col>
-            <Col span={4} style={{ display: 'none' }}>
+            {/* <Col span={4} style={{ display: 'none' }}>
               <ProFormDatePicker
                 initialValue={moment()}
                 rules={[
@@ -339,21 +345,23 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
                 label="Tax Date"
                 name={'taxDate'}
               />
-            </Col>
+            </Col> */}
             <Col span={4}>
               <ProFormDatePicker
+              initialValue={moment(postingDate)}
                 rules={[
                   {
                     required: true,
-                    validator: (rules, value) => {
-                      if ((value as Moment).startOf('day').isBefore(moment().startOf('day'))) {
-                        return Promise.reject('Due date cannot be back date.');
-                      } else {
-                        return Promise.resolve();
+                   
+                    validator: async (rule, value) => {
+                      if ((value as Moment).startOf('day').isBefore(moment(postingDate).startOf('day'))) {
+                          return Promise.reject('Due date cannot be before posting date.');
                       }
-                    },
+                      return Promise.resolve();
+                  },
                   },
                 ]}
+                
                 label="Due Date"
                 name={'docDueDate'}
               />

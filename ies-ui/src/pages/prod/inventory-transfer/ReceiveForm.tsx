@@ -20,6 +20,9 @@ import TransferItemList from './TransferItemList';
 import RejectFormModal from './RejectFormModal';
 import ReceiveFormModal from './ReceiveFormModal';
 import CloseTransferFormModal from './CloseTransferFormModal';
+import { useAccess } from '@umijs/max';
+import TransferTab from './TransferTab';
+import ActivitiesTab from './ActivitiesTab';
 
 interface Props extends DrawerFormProps {
     // data?: TransferRequest;
@@ -32,6 +35,7 @@ interface Props extends DrawerFormProps {
 export default ({ id, ...rest }: Props) => {
     const [form] = useForm<TransferCreate>();
     const actionRef = useRef<ActionType>();
+    const access = useAccess();
     const { Text } = Typography;
     const requestActions = simpleRequestActions();
     const services = TransferServiceAPI(requestActions);
@@ -114,19 +118,19 @@ export default ({ id, ...rest }: Props) => {
 
     useEffect(() => {
         const updatedItems = getTransfer?.item.map((i) => {
-          const total = gettotal[i.item_code] || 0
-    
-          return { ...i, total }
+            const total = gettotal[i.item_code] || 0
+
+            return { ...i, total }
         })
         setItems(updatedItems)
-      }, [gettotal]);
+    }, [gettotal]);
 
     return (
         <>
             <Row justify="space-between">
                 <>
                     <BreadCrumbCom separator=">" routes={routes} />
-                    {getChange ?
+                    {(getChange && (access.canAccessTransferProductionItem || access.canAccessAll) && getTransfer?.transfer_type == 'PM/RM') ?
                         <Button
                             //   type="danger"
                             onClick={() => setCloseModal(true)}
@@ -139,7 +143,20 @@ export default ({ id, ...rest }: Props) => {
                         >
                             Cancel Transfer / Close Transfer
                         </Button>
-                        : <></>}
+                        : (getChange && (access.canAccessTransferWarehouseItem || access.canAccessAll) && getTransfer?.transfer_type == 'FG') ?
+                            <Button
+                                //   type="danger"
+                                onClick={() => setCloseModal(true)}
+                                style={{
+                                    cursor: 'pointer',
+                                    color: 'red',
+                                    borderColor: 'red',
+                                    transition: 'color 0.3s ease',
+                                }}
+                            >
+                                Cancel Transfer / Close Transfer
+                            </Button>
+                            : <></>}
                 </>
             </Row>
             <ProForm submitter={false} form={form} style={{ marginTop: 20 }}>
@@ -280,8 +297,21 @@ export default ({ id, ...rest }: Props) => {
                             />
                         </Col>
                     </Row>
-
-                    <Card title="Transfer" size="small" extra={<a onClick={() => setRefresh(true)} style={{ color: 'black' }}><RedoOutlined /></a>}>
+                    <Tabs
+                        items={[
+                            {
+                                label: 'Transfer',
+                                key: '1',
+                                children: <TransferTab providedList={providedList} data={getTransfer ?? {}} refresh={(v) => { v == true ? setRefresh(true) : setRefresh(false) }} />,
+                            },
+                            {
+                                label: 'Activities',
+                                key: '2',
+                                children: <ActivitiesTab data={getTransfer} />,
+                            },
+                        ]}
+                    />
+                    {/* <Card title="Transfer" size="small" extra={<a onClick={() => setRefresh(true)} style={{ color: 'black' }}><RedoOutlined /></a>}>
                         <ProTable<ProvidedList>
                             size="small"
                             search={false}
@@ -335,17 +365,17 @@ export default ({ id, ...rest }: Props) => {
                                 },
                             ]}
                         />
-                    </Card>
+                    </Card> */}
                 </Card>
 
             </ProForm>
 
-            <TransferItemList
+            {/* <TransferItemList
                 provided={providedId}
                 status={providedStatus}
                 open={transferItemListOpen.visible}
                 onCancel={() => setTransferItemListOpen({ visible: false, provided: '', status: '' })}
-                // onSave={(data) => { onSaveTransfer(data) }}
+                type={getTransfer?.transfer_type}
                 onSave={(itm) => (setReceiveModal({ visible: true }), setItm(itm))}
                 onReject={() => setCommentModal({ visible: true })}
             />
@@ -453,7 +483,7 @@ export default ({ id, ...rest }: Props) => {
                         message.error('Error');
                     }
                 }}
-            />
+            /> */}
             <CloseTransferFormModal
                 open={closeModal}
                 onCancel={() => setCloseModal(false)}
@@ -461,36 +491,36 @@ export default ({ id, ...rest }: Props) => {
                     try {
                         const dataForm = await form.validateFields();
                         const closedoc = {
-                          docEntry: getTransfer?.sapDocEntry,
-                          ...dataForm,
-                          id: getTransfer?.id,
-                          items: items.map((v) => ({ ...v })),
-                          transfer_type: getTransfer?.transfer_type,
-                          business_unit: getTransfer?.business_unit,
-                          transfer_request: getTransfer?.id,
-                          posting_date: getTransfer?.posting_date,
-                          due_date: getTransfer?.due_date,
-                          from_warehouse: getFromWarehouse.toLocaleString(),
-                          to_warehouse: getToWarehouse.toLocaleString(),
-                          line: getTransfer?.line,
-                          shift: getTransfer?.shift,
-                          status: 'completed',
-                          statusChange: 'received',
-                          state: 'completed',
-                          activities_name: 'Receive',
-                          action: `Close Transfer`,
-                          transfer_request_id:getTransfer?.transfer_id,
-                          remark:remarks
+                            docEntry: getTransfer?.sapDocEntry,
+                            ...dataForm,
+                            id: getTransfer?.id,
+                            items: items.map((v) => ({ ...v })),
+                            transfer_type: getTransfer?.transfer_type,
+                            business_unit: getTransfer?.business_unit,
+                            transfer_request: getTransfer?.id,
+                            posting_date: getTransfer?.posting_date,
+                            due_date: getTransfer?.due_date,
+                            from_warehouse: getFromWarehouse.toLocaleString(),
+                            to_warehouse: getToWarehouse.toLocaleString(),
+                            line: getTransfer?.line,
+                            shift: getTransfer?.shift,
+                            status: 'completed',
+                            statusChange: 'received',
+                            state: 'completed',
+                            activities_name: 'Receive',
+                            action: `Close Transfer`,
+                            transfer_request_id: getTransfer?.transfer_id,
+                            remark: remarks
                         };
                         await services.close_request(closedoc);
                         setRefresh(true)
                         setCloseModal(false)
                         message.success('Success');
-                      } catch (error) {
+                    } catch (error) {
                         console.error('An error occurred:', error);
                         message.error('Error');
-                      }
-                    
+                    }
+
                 }}
             />
         </>

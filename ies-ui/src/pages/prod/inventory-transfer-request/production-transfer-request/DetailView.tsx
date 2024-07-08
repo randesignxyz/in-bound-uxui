@@ -86,38 +86,6 @@ export default ({ data, ...rest }: Props) => {
             <Col flex={'Auto'} />
             <Col flex={'300px'}></Col>
           </Row>
-          <Divider />
-          <ProList<ActivitiesItem>
-            rowKey="id"
-            headerTitle="Activities"
-            dataSource={data?.activities}
-            metas={{
-              title: {
-                dataIndex: 'activities_name',
-              },
-              subTitle: {
-                render: (_, r) => {
-                  return [
-                    [r.action, r.actionBy].join(' by '),
-                    [' ' + formatDatewithNumber(r.actionDate)],
-                  ];
-                },
-              },
-              description: {
-                dataIndex: 'remark',
-              },
-              actions: {
-                render: (_, r) => [moment(r.actionDate).format('YYYY-MM-DD HH:m:ss a')],
-              },
-              // avatar: {
-              //   dataIndex: 'image',
-              //   editable: false,
-              // },
-              // description: {
-              //   dataIndex: 'desc',
-              // },
-            }}
-          />
         </ProCard>
       </Spin>
     </DrawerForm>

@@ -25,9 +25,9 @@ export default ({ providedList, data, refresh, ...rest }: Props) => {
     const [addtransferOpen, setAddTransferOpen] = useState<{ visible: boolean; }>({ visible: false });
     const [detailtransferOpen, setDeatilTransferOpen] = useState<{ visible: boolean, provided: string }>({ visible: false, provided: '' });
     const [providedId, setProvidedId] = useState('')
-    
+
     const onSaveTransfer = (da: ProvidedItem[]) => {
-        if (da.length == 0){
+        if (da.length == 0) {
             message.error('Please enter provide');
             return
         }
@@ -36,7 +36,14 @@ export default ({ providedList, data, refresh, ...rest }: Props) => {
             content: 'are you sure',
             onOk: async () => {
                 try {
-                    await TransferRequestServiceAPI(requestActions).provided({ item: da, status: '', transfer_request_id: data.id,transfer_request:data.transfer_id, activities_name: 'Transfer', action:`Add Transfer ${providedList.length+1}`})
+                    await TransferRequestServiceAPI(requestActions).provided({
+                        item: da,
+                        status: '',
+                        transfer_request_id: data.id,
+                        transfer_request: data.transfer_id,
+                        activities_name: 'Transfer',
+                        action: `Add Transfer ${providedList.length + 1}`
+                    })
                     setAddTransferOpen({ visible: false })
                     actionRef.current?.reloadAndRest?.();
                     refresh(true)
@@ -50,33 +57,34 @@ export default ({ providedList, data, refresh, ...rest }: Props) => {
 
     const getSap = async () => {
         try {
-          const detail_sap = await TransferServiceAPI(requestActions).detail_sap(data.sapDocEntry);
-          const detail = await services.detail(data.id);
-    
-          if (detail_sap?.transferRequests[0].transferRequestDetails && detail?.item) {
-            // Convert the second list to a map for easy lookup
-            const detailMap = new Map(detail.item.map(item => [item.item_code, item]));
-    
-            for (const sapItem of detail_sap?.transferRequests[0].transferRequestDetails) {
-              const detailItem = detailMap.get(sapItem.itemCode);
-              if (detailItem) {
-                // Compare quantity
-                if (sapItem.quantity !== parseInt(detailItem.quantity)) {
-                  message.error(`Mismatch found for item code ${sapItem.itemCode} in IES ${detailItem.quantity} in SAP ${sapItem.quantity}!`);
-                  return
+            const detail_sap = await TransferServiceAPI(requestActions).detail_sap(data.sapDocEntry);
+            const detail = await services.detail(data.id);
+
+            if (detail_sap?.transferRequests[0].transferRequestDetails && detail?.item) {
+                // Convert the second list to a map for easy lookup
+                const detailMap = new Map(detail.item.map(item => [item.item_code, item]));
+
+                for (const sapItem of detail_sap?.transferRequests[0].transferRequestDetails) {
+                    const detailItem = detailMap.get(sapItem.itemCode);
+                    if (detailItem) {
+                        // Compare quantity
+                        if (sapItem.quantity !== parseInt(detailItem.quantity)) {
+                            message.error(`Mismatch found for item code ${sapItem.itemCode} in IES ${detailItem.quantity} in SAP ${sapItem.quantity}!`);
+                            return
+                        }
+                        setAddTransferOpen({ visible: true })
+                    } else {
+                        message.error(`Item code ${sapItem.itemCode} not found in the sap list!`);
+                    }
                 }
-                setAddTransferOpen({ visible: true })              } else {
-                message.error(`Item code ${sapItem.itemCode} not found in the sap list!`);
-              }
+            } else {
+                console.error("One of the lists is undefined or empty.");
             }
-          } else {
-            console.error("One of the lists is undefined or empty.");
-          }
         } catch (error) {
-          console.error('An error occurred:', error);
-          message.error('Error');
+            console.error('An error occurred:', error);
+            message.error('Error');
         }
-      }
+    }
     return (
         <>
             <ProTable<ProvidedList>
@@ -92,7 +100,7 @@ export default ({ providedList, data, refresh, ...rest }: Props) => {
                 }}
 
                 toolbar={
-                    data.status === 'request-warehouse-approve' ? {
+                    (data.status === 'request-warehouse-approve' && data.transfer_type == 'PM/RM')? {
                         actions: [
                             <Button
                                 key="add-button"

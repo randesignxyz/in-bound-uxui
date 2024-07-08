@@ -47,6 +47,7 @@ export default ({ transfer_request_id, data,onSave,...props }: Props) => {
         }
       }
       getReceive()
+      setItems([])
     }
 
   }, [props.open]);

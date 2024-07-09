@@ -917,6 +917,7 @@ export default ({
         isService: isService,
         requestor: requestor.id,
         acceptedBy: dataForm.acceptedBy,
+        acceptedFunctionId: acceptedFunction.id,
         acceptedFunction: acceptedFunction.name,
         remarks: comment!!,
         justifications: dataForm.justifications,

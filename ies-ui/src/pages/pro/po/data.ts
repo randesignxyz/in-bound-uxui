@@ -1,5 +1,6 @@
 import { LookupDataItem, LookupDataItem3 } from "@/services/data"
 import moment, { Moment } from "moment"
+import { RelatedObj } from "../services";
 
 
 export type PoItemRefType = 'QC' | 'QUOTATION' | 'PR' | 'ITEM';
@@ -62,9 +63,12 @@ export type SavePoItem = {
     amountAfterDiscount: number;
     amount: number;
     item: PoItemSearch,
+    refId: number;
+    refType: string;
     combineWith?: PoItemSearch[],
     linkObject: LookupDataItem3[],
     remarks?: string;
+    relatedObjects: RelatedObj[]
 }
 
 export type LinkedTo = {

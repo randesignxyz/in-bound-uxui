@@ -49,6 +49,7 @@ import { createPoService } from './services';
 import { Moment } from 'moment';
 import { useInView } from 'react-intersection-observer';
 import { LookupDataItem3 } from '@/services/data';
+import { getRelatedItms, RelatedObj } from '../services';
 
 type DataFormType = {
   vendorId: number;
@@ -166,8 +167,9 @@ export default ({
 
   const linkObject = (record: SavePoItem) => {
     return (
-      <ProList<LookupDataItem3>
-        dataSource={[...(record.item.relatedTo || []), ...(record.combineWith?.flatMap(it => it.relatedTo || []) || [])]}
+      <ProList<RelatedObj>
+        // dataSource={[...(record.item.relatedTo || []), ...(record.combineWith?.flatMap(it => it.relatedTo || []) || [])]}
+        dataSource={record.relatedObjects}
         ghost={true}
         grid={{ gutter: 16, column: 4 }}
         itemCardProps={{
@@ -181,45 +183,13 @@ export default ({
             render: (_, r) => r.code
           },
           content: {
-            render: (_, r) => <ProDescriptions<LookupDataItem3> columns={[
-              { title: '', hideInDescriptions: isService, render: (_, r1) => r1.name }
-            ]} />
+            render: (_, r) => <>{r.items.map(it => <Flex key={`${it.id}-${r.type}-${r.id}`}>
+              {it.itemCode} x {it.qty}
+            </Flex>)}</>
           }
         }}
 
       />
-      // <ProTable<PoItemSearch>
-      //   size="small"
-      //   rowKey={'id'}
-      //   search={false}
-      //   options={false}
-      //   pagination={false}
-      //   dataSource={[record.item, ...(record.combineWith || [])]}
-      //   columns={[
-      //     { title: 'Liked To', render: (_, r) => r.refType },
-      //     {
-      //       title: 'Doc No',
-      //       render: (_, r) =>
-      //         r.relatedTo
-      //           ?.filter((it) => it.type == r.refType)
-      //           .map((it) => it.code)
-      //           .join(', '),
-      //     },
-      //     { title: 'Qty', hideInTable: isService, align: 'right', render: (_, r) => r.qty },
-      //     { title: 'UoM', hideInTable: isService, render: (_, r) => r.uomName },
-      //     {
-      //       title: 'Price',
-      //       align: 'right',
-      //       hideInTable: isService,
-      //       render: (_, r) => r.price && formatter.format(r.price),
-      //     },
-      //     {
-      //       title: 'Amount',
-      //       align: 'right',
-      //       render: (_, r) => formatter.format((r.price || 0) * (r.qty || 1)),
-      //     },
-      //   ]}
-      // />
     );
   };
 
@@ -664,13 +634,6 @@ export default ({
                     </Flex>
                   ),
                 },
-                // {
-                //   title: isService ? 'Service Name' : 'Item Name',
-
-                //   readonly: true,
-                //   responsive: ['xs', 'sm'],
-                //   dataIndex: 'itemName',
-                // },
                 {
                   title: 'Description',
                   valueType: 'textarea',
@@ -952,11 +915,7 @@ export default ({
         open={addItemVisible}
         isService={isService}
         onOpenChange={(visible) => !visible && setAddItemVisible(false)}
-        onSave={(data) => {
-
-          console.log('data', data);
-          console.log('items', data.map(it => it.item));
-
+        onSave={async (data) => {
           if (
             vendor &&
             data.some((it) =>
@@ -979,7 +938,18 @@ export default ({
             form.setFieldsValue({ vendorId: vendorFromItem.id });
           }
 
-          setItems((v) => [...v, ...data].map((it, index) => ({ ...it, baseItemId: it.item.baseItemId, baseType: it.item.baseType, seq: index + 1 })));
+          const itemList = (await Promise.all(data.map(it => getRelatedItms(it.refId, it.refType).query().then(items => ({ itemId: it.refId, type: it.refType, items: items }))))).flatMap(it => it)
+
+          setItems((v) => [...v, ...data].map((it, index) => ({
+            ...it,
+            baseItemId: it.item.baseItemId,
+            relatedObjects: itemList.find(i => i.itemId == it.refId && i.type == it.refType)?.items || [],
+            baseType: it.item.baseType,
+            seq: index + 1
+          })));
+
+
+
         }}
         vendor={vendor}
       />

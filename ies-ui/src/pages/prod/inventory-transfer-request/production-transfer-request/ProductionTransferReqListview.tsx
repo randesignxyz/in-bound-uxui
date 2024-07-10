@@ -55,7 +55,7 @@ export default ({ onAdd }: Props) => {
     visible: boolean;
     id?: string;
     transfer_id?: string;
-    data?:any
+    data?: any
   }>({
     visible: false,
     id: undefined,
@@ -343,7 +343,7 @@ export default ({ onAdd }: Props) => {
                     <Button
                       style={{ width: '30%' }}
                       onClick={() => {
-                        setApproveModal({ visible: true, id: r.id, transfer_id: r.transfer_id,data:r });
+                        setApproveModal({ visible: true, id: r.id, transfer_id: r.transfer_id, data: r });
                       }}
                     >
                       Approve
@@ -439,32 +439,33 @@ export default ({ onAdd }: Props) => {
         onCancel={() => {
           setApproveModal({ visible: false, id: undefined });
         }}
-        onSave={async (id, remark, transfer_id,data) => {
-          await services.save_to_sap({
+        onSave={async (id, remark, transfer_id, data) => {
+          const entity = {
             id: id,
             vendorCode: '',
             vendorName: '',
-            fromWarehouse: data.from_warehouse.map((i:any)=>(i.whsCode)).toString(),
-            toWarehouse: data.to_warehouse.map((i:any)=>(i.whsCode)).toString(),
+            fromWarehouse: data.from_warehouse.map((i: any) => (i.whsCode)).toString(),
+            toWarehouse: data.to_warehouse.map((i: any) => (i.whsCode)).toString(),
             apiReferenceNo: '',
-            comments: remark === null ? '' : remark === undefined ? '' : remark,
-            transferRequestDetails: data.item.map((v:any) => ({
-                ...v,
-                itemCode:v.item_code,
-                itemName:v.item_name,
-                fromWarehouse: data.from_warehouse.map((i:any)=>(i.whsCode)).toString(),
-                toWarehouse: data.to_warehouse.map((i:any)=>(i.whsCode)).toString(),
-                remark: v.remark === null ? '' : v.remark === undefined ? '' : v.remark,
-              })),
+            comments: data.line + ', ' + data.shift,
+            transferRequestDetails: data.item.map((v: any) => ({
+              ...v,
+              itemCode: v.item_code,
+              itemName: v.item_name,
+              fromWarehouse: data.from_warehouse.map((i: any) => (i.whsCode)).toString(),
+              toWarehouse: data.to_warehouse.map((i: any) => (i.whsCode)).toString(),
+              remark: v.remark === null ? '' : v.remark === undefined ? '' : v.remark,
+            })),
             statusChange: 'request-production-approve',
             state: 'in-progress',
             activities_name: 'Production Approval',
             action: 'Approved',
             transfer_request: transfer_id,
-            postingDate:new Date(data.posting_date).toISOString(),
-            docDueDate:new Date(data.due_date).toISOString(),
-            taxDate:new Date(data.posting_date).toISOString(),
-          })
+            postingDate: new Date(data.posting_date).toISOString(),
+            docDueDate: new Date(data.due_date).toISOString(),
+            taxDate: new Date(data.posting_date).toISOString(),
+          }
+          await services.save_to_sap(entity)
           setApproveModal({ visible: false, id: undefined });
           message.success("Success");
           actionRef.current?.reload();
@@ -486,7 +487,7 @@ export default ({ onAdd }: Props) => {
         }}
         id={approveModel.id ?? ''}
         transfer_id={approveModel.transfer_id ?? ''}
-        data={approveModel.data?? {}}
+        data={approveModel.data ?? {}}
       />
 
       <ExportExcel

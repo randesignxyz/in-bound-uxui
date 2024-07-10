@@ -3,9 +3,14 @@ import { ProcessFlowModalWrapper } from '@/pages/process-flow/components/Process
 import { formatter } from '@/pages/utils';
 import { UserResult } from '@/services/process-workflow/data';
 import {
+  CaretRightOutlined,
   CheckCircleOutlined,
   ClearOutlined,
   DeleteOutlined,
+  DollarOutlined,
+  DotChartOutlined,
+  EyeFilled,
+  MenuOutlined,
   MergeCellsOutlined,
   MinusCircleOutlined,
   QuestionCircleOutlined,
@@ -50,6 +55,9 @@ import { Moment } from 'moment';
 import { useInView } from 'react-intersection-observer';
 import { LookupDataItem3 } from '@/services/data';
 import { getRelatedItms, RelatedObj } from '../services';
+import Icon from '@ant-design/icons/lib/components/Icon';
+import Link from 'antd/es/typography/Link';
+import { Divider } from 'rc-menu';
 
 type DataFormType = {
   vendorId: number;
@@ -173,18 +181,47 @@ export default ({
         ghost={true}
         grid={{ gutter: 16, column: 4 }}
         itemCardProps={{
+          size: 'small',
           ghost: true
         }}
         metas={{
           title: {
-            render: (_, r) => r.type
+            render: (_, r) => r.type,
           },
           subTitle: {
-            render: (_, r) => r.code
+            render: (_, r) => <Link>{r.code}</Link>
           },
           content: {
-            render: (_, r) => <>{r.items.map(it => <Flex key={`${it.id}-${r.type}-${r.id}`}>
-              {it.itemCode} x {it.qty}
+            render: (_, r) => <>{r.items.map(it => <Flex vertical key={`${it.id}-${r.type}-${r.id}`}>
+
+              <Flex gap={5}>
+                <Flex> <CaretRightOutlined /> </Flex>
+                <Flex> Item: </Flex>
+                <Flex> {`${it.itemCode} - ${it.itemName}`} </Flex>
+              </Flex>
+              <Flex gap={5}>
+                <Flex> <CaretRightOutlined /> </Flex>
+                <Flex> Desc: </Flex>
+                <Flex> {it.itemDescription} </Flex>
+              </Flex>
+              <Flex gap={5}>
+                <Flex> <CaretRightOutlined /> </Flex>
+                <Flex> Qty: </Flex>
+                <Flex> {it.qty} </Flex>
+                {r.type == 'PR' && <Flex> Ordered: </Flex>}
+                {r.type == 'PR' && <Flex> {it.orderedQty || 0} </Flex>}
+
+                {r.type == 'PR' && <Flex> Purchased: </Flex>}
+                {r.type == 'PR' && <Flex> {it.purchasedQty || 0} </Flex>}
+                {r.type == 'PR' && <Flex> Available: </Flex>}
+                {r.type == 'PR' && <Flex> {it.availableQty || 0} </Flex>}
+              </Flex>
+              <Flex gap={5}>
+                <Flex> <CaretRightOutlined /></Flex>
+                <Flex> Price: </Flex>
+                <Flex> {formatter.format(it.price)} </Flex>
+
+              </Flex>
             </Flex>)}</>
           }
         }}

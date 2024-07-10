@@ -22,7 +22,11 @@ export type RelatedItem = {
     itemName: string;
     itemDescription?: string;
     qty: number;
+    orderedQty?: number;
+    purchasedQty?: number;
+    availableQty?: number;
     uom: string;
+    price: number;
 }
 
 export const getRelatedItms = (itemId: number, objectTpe: string) => fetchDataListService<RelatedObj, { itemId: number, objectTpe: string }>({

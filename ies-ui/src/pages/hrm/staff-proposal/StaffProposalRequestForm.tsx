@@ -153,8 +153,6 @@ export default ({ visisble, formKey, onClose, cb }: ActionCompProps & { formKey:
   useEffect(() => {
     if (!visisble) return;
 
-    console.log('formKey ************', formKey);
-
     (async () => {
       const lk = await EmployeeServices.listLookupData([
         'EMPLOYEE_SEGMENT',

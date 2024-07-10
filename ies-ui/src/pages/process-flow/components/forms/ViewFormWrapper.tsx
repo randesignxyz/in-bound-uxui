@@ -176,7 +176,7 @@ const ViewFormWrapper = <T extends { id: number }>(props: Props<T>) => {
     { key: 'dataForm', icon: <FormOutlined />, tabKey: 'dataForm', label: 'Data Form', children: children(state.instanceData, forceReload) },
     { key: 'activities', icon: <UnorderedListOutlined />, tabKey: 'activities', label: 'Activities', children: <ActivityView activityList={state.instanceData?.activities || []} /> },
     {
-      key: 'attachment', icon: <PaperClipOutlined />, disabled: (attachedFiles?.length || 0) == 0, tabKey: 'attachment', label: 'Attachments', children: <AttachedFileList readonly={!enabledUplodFile}
+      key: 'attachment', icon: <PaperClipOutlined />, disabled: ((attachedFiles?.length || 0) == 0 || (state.instanceData?.attachmentFiles || []).length == 0), tabKey: 'attachment', label: 'Attachments', children: <AttachedFileList readonly={!enabledUplodFile}
         removeButton={false}
         onSetUploadFile={files =>
           //Save file

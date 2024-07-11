@@ -29,7 +29,15 @@ export type RelatedItem = {
     price: number;
 }
 
-export const getRelatedItms = (itemId: number, objectTpe: string, isService?: boolean) => fetchDataListService<RelatedObj, { itemId: number, objectTpe: string; isService?: boolean }>({
+export const getRelatedItms = (
+    itemId: number,
+    objectTpe: string,
+    isService?: boolean
+) => fetchDataListService<RelatedObj, {
+    itemId: number,
+    objectTpe: string;
+    isService?: boolean
+}>({
     actionName: 'fetch-related-items',
     endpoint: 'PRO',
     payload: {

@@ -30,6 +30,13 @@ export const EmployeeServices = {
     endpoint: 'HR',
   }),
 
+  listDepartmentByIds: (ids: number[]) => fetchDataListService<Department, { ids: number[] }>({
+    actionName: 'list-department-by-ids',
+    responseKey: 'deptList',
+    payload: { ids },
+    endpoint: 'HR',
+  }),
+
   listSubDepartment: fetchDataListService<SubDepartment>({
     actionName: 'list-sub-department',
     responseKey: 'subDeptList',

@@ -45,11 +45,9 @@ const StoreListView: React.FC<TableViewProps<StockStoreLess>> = ({ actionHandler
         });
       }) as Promise<Paging<StockStoreLess>>;
   };
-
   useEffect(() => {
     actions.initData();
   }, []);
-
   return (
     <>
       <TableView<
@@ -125,14 +123,12 @@ const StoreListView: React.FC<TableViewProps<StockStoreLess>> = ({ actionHandler
               );
             },
           },
-
           {
             title: 'Store Type',
             render: (_, r) => {
               return r.members?.find((it) => it.isRequester)?.role;
             },
           },
-
           {
             title: 'Vehicle',
             render: (_, r) => {
@@ -173,10 +169,9 @@ const StoreListView: React.FC<TableViewProps<StockStoreLess>> = ({ actionHandler
           },
           {
             title: 'Description',
-            dataIndex: 'description',
+            dataIndex: 'description', 
           },
-          access.canOpenStore
-            ? {
+          access.canOpenStore? {
                 title: '',
                 align: 'center',
                 render: (_, r) => {
@@ -225,7 +220,6 @@ const StoreListView: React.FC<TableViewProps<StockStoreLess>> = ({ actionHandler
           },
         }}
       />
-
       <AdvanceSearch
         width="400px"
         placement="right"
@@ -236,7 +230,6 @@ const StoreListView: React.FC<TableViewProps<StockStoreLess>> = ({ actionHandler
           modals.hideModal('advanceSearch');
         }}
         initData={advanceSearchParams}
-        // salespersons={state.data?.initData?.salespersonList}
         onSearch={(data) => {
           setAdvanceSearchParams((v) => ({ ...v, ...data, status: v?.status }));
           actionRef.current?.reloadAndRest?.();

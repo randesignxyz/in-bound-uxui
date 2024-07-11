@@ -1,42 +1,20 @@
 import CrudWrapper from '@/components/DataCrud/CrudWrapper';
 import { MPUPath } from '..';
 import MpuPurchaseOrderListView from './MpuPurchaseOrderListView';
+import MpuPurchaseOrderDetail from './MpuPurchaseOrderDetail';
 
 export default () => {
-  // const access = useAccess();
   return (
-    <CrudWrapper baseURL={MPUPath.rsmRequest}>
+    <CrudWrapper baseURL={MPUPath.mpuPurchaseOrder}>
       {(view, id, navigate) => {
         return (
-          view === 'list' && <MpuPurchaseOrderListView /> //||
-          //     <CustomerPricingList
-          //       onAdd={() => navigate?.goToCreate?.()}
-          //       // eslint-disable-next-line @typescript-eslint/no-shadow
-          //       onDetail={(id) => {
-          //         navigate?.goToDetail?.({ id: id });
-          //       }}
-          //       // eslint-disable-next-line @typescript-eslint/no-shadow
-          //       onEdit={(id) => {
-          //         navigate?.gotoEdit?.({ id: id });
-          //       }}
-          //     />
-          //   )
-          //     ||
-          //   (view === 'detail' && (
-          //     <CustomerDetailView
-          //       id={id as string}
-          //       // eslint-disable-next-line @typescript-eslint/no-shadow
-          //       onEdit={(id) => {
-          //         navigate?.gotoEdit?.({ id: id });
-          //       }}
-          //     />
-          //   )) ||
-          //   (view === 'edit' && <CustomerEntryFormView type="edit" id={id as string} />) ||
-          //   (view === 'create' && <MpuRequestEntryForm type="new" />)
+          view === 'list' && <MpuPurchaseOrderListView
+            onDetail={(id) => {
+              navigate?.goToDetail?.({ id: id });
+            }}
+          /> ||
+          view == "detail" && <MpuPurchaseOrderDetail id={id as number} />
         );
-        //  ||
-        //    view === 'create' && <Access accessible = {access.canCreateEditSo} fallback={<div>Unauthorized</div>}> <Create/> </Access> ||
-        //    view === 'edit' && <Access accessible = {access.canCreateEditSo} fallback={<div>Unauthorized</div>}> <Edit id = {id as number}/> </Access>
       }}
     </CrudWrapper>
   );

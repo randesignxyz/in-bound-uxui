@@ -53,7 +53,7 @@ const APPDMS: React.FC = () => {
                     setFolder={setFolderId}
                     onSearch={(param: DocumentationSearchByFolder) => setParamByFolder(param)}
                     onFolderSelected={() => {
-                        onTableSelectd("library")
+                        onTableSelectd("library");
                     }}
                 />
             </div>

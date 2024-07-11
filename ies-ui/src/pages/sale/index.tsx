@@ -197,7 +197,8 @@ export default () => {
       description: 'Task list of stock control',
       link: `${SalePaths.suggestion}/list`,
       icon: plannerIcon,
-      visible: access.canAcessStockControlMenuItem || access.canAccessSettlementMenuItem,
+      // visible: access.canAcessStockControlMenuItem || access.canAccessSettlementMenuItem,
+      visible:access.canAccessSaleTaskList
     },
     {
       id: 'store',
@@ -205,7 +206,8 @@ export default () => {
       description: 'Store for Van Sale and MPU',
       link: `${SalePaths.store}/list`,
       icon: storeIcon,
-      visible: access.canAccessAllMenuDSD,
+      // visible: access.canAccessAllMenuDSD || access.canAccessTabWarehouse,
+      visible : access.canAccessSaleStore
     },
     {
       id: 'stock',
@@ -221,7 +223,8 @@ export default () => {
       description: 'DSD Visit',
       link: `${SalePaths.visit}/list`,
       icon: scheduleIcon,
-      visible: access.canAccessAllMenuDSD,
+      // visible: access.canAccessAllMenuDSD,
+      visible: access.canAccessSaleVisit,
     },
     {
       id: 'settlement',
@@ -229,7 +232,8 @@ export default () => {
       description: 'Cash collection list',
       link: `${SalePaths.settlement}/list`,
       icon: settlementIcon,
-      visible: access.canAccessSettlementMenuItem,
+      // visible: access.canAccessSettlementMenuItem,
+      visible: access.canAccessSaleCash,
     },
     {
       id: 'lead',
@@ -238,7 +242,8 @@ export default () => {
       link: `${SalePaths.lead}/list`,
       //overlay: leadReportMenu,
       icon: userIcon,
-      visible: access.canAccessAllMenuDSD,
+      // visible: access.canAccessAllMenuDSD,
+      visible: access.canAccessSaleLead,
     },
     {
       id: 'daily',
@@ -246,7 +251,7 @@ export default () => {
       description: 'Daily report',
       link: `${SalePaths.daily}/list`,
       icon: dailyReportIcon,
-      visible: access.canAccessARMenuItem,
+      visible: access.canAccessSaleDailyReport,
     },
     {
       id: 'dsdReport',
@@ -365,20 +370,21 @@ export default () => {
   const mpuMenuItems = [
     {
       id: 'rsm_request',
-      name: 'RSM Request',
-      description: '',
+      // name: 'RSM Request',
+      name: 'Purchase Request',
+      description: 'Order Items',
       link: `${MPUPath.rsmRequest}/list`,
       icon: agreementIcon,
       visible: access.canAccessViewMpu,
     },
-    {
-      id: 'mpu_po',
-      name: 'MPU Purchase Order',
-      description: '',
-      link: `${MPUPath.mpuPurchaseOrder}/list`,
-      icon: purchaseOrderIcon,
-      visible: access.canAccessViewMpu,
-    },
+    // {
+    //   id: 'mpu_po',
+    //   name: 'MPU Purchase Order',
+    //   description: '',
+    //   link: `${MPUPath.mpuPurchaseOrder}/list`,
+    //   icon: purchaseOrderIcon,
+    //   visible: access.canAccessViewMpu,
+    // },
     {
       id: 'mpu_stock',
       name: 'MPU Stock',

@@ -1,6 +1,7 @@
 import CrudWrapper from '@/components/DataCrud/CrudWrapper';
 import { MPUPath } from '..';
 import MpuStockListView from './MpuStockListView';
+import MpuStockDetail from './MpuStockDetail';
 
 export default () => {
   // const access = useAccess();
@@ -8,7 +9,8 @@ export default () => {
     <CrudWrapper baseURL={MPUPath.rsmRequest}>
       {(view, id, navigate) => {
         return (
-          view === 'list' && <MpuStockListView /> //||
+          view === 'list' && <MpuStockListView /> 
+          || view ==='detail' && <MpuStockDetail/>
           //     <CustomerPricingList
           //       onAdd={() => navigate?.goToCreate?.()}
           //       // eslint-disable-next-line @typescript-eslint/no-shadow

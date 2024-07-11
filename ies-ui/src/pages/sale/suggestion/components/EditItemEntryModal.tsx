@@ -217,13 +217,190 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
       <Card size="small" title="Stock Detail" style={{ marginBottom: 10 }}>
         <DescriptionDisplay data={generalInfo} />
       </Card>
+  {/* <EditableProTable<EditableStockItem>
+
+        recordCreatorProps={false}
+        value={dataSource}
+        actionRef={actionRef}
+        size='small'
+        rowKey={"key"}
+        editable={{
+          onlyAddOneLineAlertMessage: 'Please save the new record, before add a new record.',
+          onlyOneLineEditorAlertMessage: 'Please save the editing record, before start edit a new record.',
+          type: 'single',
+          editableKeys: dataSource?.map((p) => p.key),
+          onChange: (e) => {
+          },
+          // editableKeys,
+          // onSave: async (_, record: EditableStockItem, originRow: EditableStockItem) => {
+          //   // console.log(originRow);
+          //   const batchDate = record.batchNo;
+          //   record.expiredDate = moment(batchDate).add(6, 'M');
+          //   // await waitTime(100);
+          // },
+          // onChange: setEditableRowKeys,
+          // actionRender: (_row, _config, dom) => [dom.save, dom.cancel],
+          actionRender: (row, config, dom) => [
+            <Button icon={<CopyOutlined />} size='small' type='link'
+              onClick={() => {
+                // const key = (Math.random() * 1000000).toFixed(0);
+                // const first: EditableStockItem = {
+                //   id: record.id,
+                //   beginningQty: record.beginningQty,
+                //   itemCode: record.itemCode,
+                //   itemName: record.itemName,
+                //   quantity: record.quantity,
+                //   uom: record.uom,
+                //   batchNo: moment(),
+                //   isSplit: true,
+                //   status: record.status,
+                //   stockCategoryId: record.stockCategoryId,
+                //   key: key,
+                // };
+                // console.log(record);
+
+                setDataSource(dataSource.map(p => ({
+                  ...p,
+                  row
+                })))
+              }}
+            />,
+            <Button icon={<DeleteOutlined />} size='small' type='link' danger onClick={() => { config.onDelete?.(config.recordKey, row) }} />
+          ]
+
+        }}
+
+        columns={[
+          {
+            key: 'batchNo',
+            title: 'Batch #',
+            dataIndex: 'batchNo',
+            valueType: 'date',
+            // width: 140,
+            formItemProps: {
+              rules: [
+                {
+                  // whitespace: false,
+                  required: true,
+                  message: 'Please Enter',
+                },
+              ],
+            },
+            render: (_text, r) => {
+              return formatDate(r.batchNo, formatStringDate);
+            },
+          },
+          {
+            title: 'Expired Date',
+            dataIndex: 'expiredDate',
+            valueType: 'date',
+            readonly: true,
+            renderFormItem: (_, r) => {
+              const expire = moment(r.record?.batchNo).add(6, 'M');
+              return <>{r.record?.batchNo ? formatDate(expire, formatStringDate) : "-"}</>
+            },
+            // render: (_, r) => {
+            //   return formatDate(r.expiredDate, formatStringDate);
+            // },
+          },
+          {
+            title: 'Item Code',
+            dataIndex: 'itemCode',
+            readonly: true,
+            // width: 90,
+          },
+          {
+            title: 'Item Name',
+            dataIndex: 'itemName',
+            readonly: true,
+            // width: 180,
+          },
+          {
+            title: 'UoM',
+            dataIndex: 'uom',
+            readonly: true,
+            align: 'center',
+            width: 60,
+          },
+          {
+            title: 'Begin Qty',
+            align: 'right',
+            dataIndex: 'beginningQty',
+            readonly: true,
+            width: 90,
+          },
+          {
+            title: 'Request Qty',
+            align: 'right',
+            dataIndex: 'quantity',
+            valueType: 'digit',
+            width: 100,
+            formItemProps: {
+              validateStatus: isError ? 'error' : 'success',
+              rules: [
+                {
+                  validator: (_, value) => {
+                    return value === 0
+                      ? Promise.reject('Quantity sould be greater than 0.')
+                      : Promise.resolve(undefined);
+                  },
+                  whitespace: false,
+                },
+              ],
+            },
+          },
+          {
+            valueType: "option",
+            width: 100
+          }
+          // {
+          //   title: "Action",
+          //   width: 100,
+          //   render: (_text, record, _, action) => {
+          //     return (
+          //       <>
+          //         <Button icon={<EditOutlined />} size='small' type='link'
+
+          //         />
+          //         <Button icon={<CopyOutlined />} size='small' type='link'
+          //           onClick={() => {
+          //             const key = (Math.random() * 1000000).toFixed(0);
+          //             const first: EditableStockItem = {
+          //               id: record.id,
+          //               beginningQty: record.beginningQty,
+          //               itemCode: record.itemCode,
+          //               itemName: record.itemName,
+          //               quantity: record.quantity,
+          //               uom: record.uom,
+          //               batchNo: moment(),
+          //               isSplit: true,
+          //               status: record.status,
+          //               stockCategoryId: record.stockCategoryId,
+          //               key: key,
+          //             };
+          //             // console.log(record);
+
+
+          //             setDataSource(dataSource.map(p=>({
+          //               ...p,
+
+          //             })).concat(first))
+          //           }}
+          //         />
+          //         <Button icon={<DeleteOutlined />} size='small' type='link' danger />
+          //       </>
+          //     )
+          //   }
+          // }
+        ]}
+      /> */}
       <EditableProTable<EditableStockItem>
         title={() => <Text>Stock Items</Text>}
         rowKey={(r) => {
           return r.key;
         }}
         actionRef={actionRef}
-        //key={`EditableProTable-${data?.id}`}
+        key={`EditableProTable-${data?.id}`}
         recordCreatorProps={false}
         value={dataSource}
         onValuesChange={setDataSource}
@@ -233,11 +410,10 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
             'Please save the editing record, before start edit a new record.',
           type: 'single',
           editableKeys,
-
           onSave: async (_, record: EditableStockItem, originRow: EditableStockItem) => {
-            console.log(originRow);
+            // console.log(record);
             const batchDate = record.batchNo;
-            record.expiredDate = moment(batchDate).add(6, 'M');
+            record.expiredDate = moment(batchDate).add(6, 'M');   
             await waitTime(100);
           },
           onChange: setEditableRowKeys,
@@ -259,9 +435,9 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
                 },
               ],
             },
-            render: (_text, r) => {
-              return formatDate(r.batchNo, formatStringDate);
-            },
+            // render: (_text, r) => {
+            //   return formatDate(r.batchNo,formatStringDate)
+            // },
           },
           {
             title: 'Expired Date',
@@ -360,7 +536,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
                           itemName: record.itemName,
                           quantity: record.quantity,
                           uom: record.uom,
-                          batchNo: moment(),
+                          // batchNo: moment(),
                           isSplit: true,
                           status: record.status,
                           stockCategoryId: record.stockCategoryId,

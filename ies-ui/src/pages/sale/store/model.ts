@@ -220,10 +220,10 @@ export const Model = (id?: number) => {
   };
   const fetchLastStockControl = async (salespersonCode: string) => {
     try {
-      const result = await saleServices.fetchLastStockControl({ id: salespersonCode });
+      // const result = await saleServices.fetchLastStockControl({ id: salespersonCode });
       dispatch({
         type: 'fetchLastStockControl',
-        payload: result,
+        // payload: result,
       });
     } catch (err: any) {
       dispatch({

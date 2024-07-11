@@ -373,7 +373,8 @@ export default [
     name: 'store',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessAllMenuDSD',
+    // access: 'canAccessAllMenuDSD',
+    access: 'canAccessSaleStore',
     component: './sale/store',
   },
   {
@@ -405,7 +406,8 @@ export default [
     name: 'lead',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessAllMenuDSD',
+    // access: 'canAccessAllMenuDSD',
+    access: 'canAccessSaleLead',
     component: './sale/lead',
   },
   {
@@ -421,7 +423,8 @@ export default [
     name: 'sales-visit',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessAllMenuDSD',
+    // access: 'canAccessAllMenuDSD',
+    access: 'canAccessSaleVisit',
     component: './sale/visit',
   },
   {

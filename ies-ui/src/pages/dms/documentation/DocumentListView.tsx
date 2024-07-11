@@ -358,32 +358,33 @@ export default ({ paramSearch, libraryId, folderId }: Props) => {
                                 ...criteria,
                                 advanceSearch: {
                                     ...advanceSearchParams,
-                                    library: libraryId
+                                    library: libraryId,
+                                    folderId:folderId,
                                 },
                                 sort,
                             },
                             pagination,
                         }),
-                    // onFirstLoad: () =>
-                    //     cacheList.fetchDataList('dms-document').then((v) => {
-                    //         if (v) {
-                    //             setAdvanceSearchParams({
-                    //                 ...v.creteria?.criteria,
-                    //                 status: v.creteria?.criteria?.advanceSearch?.status ?? "All",
-                    //             });
-                    //             return v.dataList;
-                    //         } else {
-                    //             return onRequestHandler({
-                    //                 criteria: {
-                    //                     advanceSearch: {
-                    //                         ...advanceSearchParams,
-                    //                         library: libraryId,
-                    //                         folderType: "LIBRARY"
-                    //                     }
-                    //                 },
-                    //             });
-                    //         }
-                    //     }) as Promise<Paging<DocumentationDTO>>,
+                    onFirstLoad: () =>
+                        cacheList.fetchDataList('dms-document').then((v) => {
+                            if (v) {
+                                setAdvanceSearchParams({
+                                    ...v.creteria?.criteria,
+                                    status: v.creteria?.criteria?.advanceSearch?.status ?? "All",
+                                });
+                                return v.dataList;
+                            } else {
+                                return onRequestHandler({
+                                    criteria: {
+                                        advanceSearch: {
+                                            ...advanceSearchParams,
+                                            library: libraryId,
+                                            folderType: "LIBRARY"
+                                        }
+                                    },
+                                });
+                            }
+                        }) as Promise<Paging<DocumentationDTO>>,
                 }}
                 columns={[
                     {

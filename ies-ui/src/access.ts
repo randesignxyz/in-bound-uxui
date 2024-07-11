@@ -122,6 +122,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           'ROLE_CASHIER',
           'ROLE_WAREHOUSE',
           'ROLE_AR',
+          'ROLE_SALE_INDIVIDUAL',
         ].some((it) => it === item),
       ) || false,
 
@@ -596,7 +597,32 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canCreateEditStockControl: true,
 
     /** Start Stock Control */
+    // new by reach modified 
+    canAccessSaleTaskList: currentUser?.authorities.some((items) =>
+      ['ROLE_CASHIER', 'ROLE_WAREHOUSE', 'ROLE_DSD_ADMIN','ROLE_ADMIN'].some((it) => it === items)
+    ) || false,
 
+    canAccessSaleStore: currentUser?.authorities.some((items) =>
+      ['ROLE_AR', 'ROLE_WAREHOUSE', 'ROLE_DSD_ADMIN','ROLE_SALE_INDIVIDUAL','ROLE_ADMIN'].some((it) => it === items)
+    ) || false,
+  
+    canAccessSaleCash: currentUser?.authorities.some((items) =>
+      ['ROLE_CASHIER', 'ROLE_DSD_ADMIN','ROLE_ADMIN'].some((it) => it === items)
+    ) || false,
+
+    canAccessSaleDailyReport: currentUser?.authorities.some((items) =>
+      ['ROLE_AR','ROLE_ADMIN'].some((it) => it === items)
+    ) || false,
+    
+    canAccessSaleVisit: currentUser?.authorities.some((items) =>
+      ['ROLE_DSD_ADMIN','ROLE_SALE_INDIVIDUAL','ROLE_ADMIN'].some((it) => it === items)
+    ) || false,
+
+    canAccessSaleLead: currentUser?.authorities.some((items) =>
+      ['ROLE_DSD_ADMIN','ROLE_ADMIN','ROLE_SALE_INDIVIDUAL'].some((it) => it === items)
+    ) || false,
+    // ==== END reach ====
+    
     canAccessAllMenuDSD:
       currentUser?.authorities.some((item) =>
         ['ROLE_DSD_ADMIN', 'ROLE_ADMIN'].some((it) => it === item),
@@ -614,7 +640,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
 
     canAccessARMenuItem:
       currentUser?.authorities.some((item) =>
-        ['ROLE_AR', 'ROLE_DSD_ADMIN', 'ROLE_ADMIN'].some((it) => it === item),
+        ['ROLE_AR', 'ROLE_DSD_ADMIN', 'ROLE_ADMIN', 'ROLE_SALE_INDIVIDUAL'].some((it) => it === item),
       ) || false,
 
     canAccessTabWarehouse:

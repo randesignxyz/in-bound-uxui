@@ -120,6 +120,9 @@ export type PoRequestSavePayload = {
     paymentTermId?: number;
     paymentTerm?: string;
 
+    ownerFunctionId?: number;
+    ownerFunction?: string;
+
     totalAmount: number;
     discountPercentage?: number;
     discountAmount?: number;

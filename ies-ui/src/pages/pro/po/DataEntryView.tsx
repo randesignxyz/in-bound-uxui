@@ -74,7 +74,7 @@ type DataFormType = {
   taxPercentage?: number;
   taxAmount?: number;
   paymentDue: number;
-  ownerFunction?: number;
+  ownerFunctionId?: number;
   remarks?: string;
 };
 
@@ -298,6 +298,7 @@ export default ({
         paymentTerm: vendor.paymentGroup,
         totalAmount: dataForm.totalAmount,
         isService: isService,
+        ownerFunctionId: dataForm.ownerFunctionId,
         discountPercentage: dataForm.discountPercentage,
         discountAmount: dataForm.discountAmount,
         tax: dataForm.taxPercentage,
@@ -354,7 +355,7 @@ export default ({
   const fetchDepartment = async () => {
     const list = items.flatMap(it => it.relatedObjects.map(it1 => it1.deptId || 0)).filter(it => it > 0)
     if (list.length == 0) {
-      form.resetFields(['ownerFunction'])
+      form.resetFields(['ownerFunctionId'])
       setOwnerFunctions([])
     } else {
       const listDepartments = await EmployeeServices.listDepartmentByIds(_.uniq(list)).query()
@@ -386,7 +387,6 @@ export default ({
     const discountAmount = totalAmount == 0 ? 0 : form.getFieldValue('discountAmount') || 0;
     const tax = form.getFieldValue('taxPercentage') || 0;
     const totalAfterDiscount = totalAmount - discountAmount;
-
     const taxAmount = totalAmount == 0 ? 0 : round((totalAfterDiscount * tax) / 100, 2) || 0;
 
     form.setFieldsValue({
@@ -848,7 +848,7 @@ export default ({
             <Flex justify='flex-start' vertical >
               <ProFormSelect labelCol={{ span: 6 }}
                 wrapperCol={{ span: 18 }}
-                name={"ownerFunction"}
+                name={"ownerFunctionId"}
                 options={ownerFunctions.map(it => ({ label: it.name, value: it.id }))}
                 label="Owner Function" />
               <ProFormTextArea

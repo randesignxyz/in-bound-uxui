@@ -1,7 +1,6 @@
 ﻿import type { RequestConfig, RequestOptions } from '@umijs/max';
-import { notification } from 'antd';
+import { message, notification } from 'antd';
 import { offlineToken } from '../src/pages/utils';
-import { message } from 'antd/lib';
 
 enum ErrorShowType {
   SILENT = 0,

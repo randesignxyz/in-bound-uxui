@@ -7,6 +7,9 @@ import { createPoService } from './services';
 import { RelatedObj } from '../services';
 import { CaretRightOutlined } from '@ant-design/icons';
 import Link from 'antd/es/typography/Link';
+import { openQC } from '../price-comparison/MainPage';
+import { openPQ } from '../quotation/MainPage';
+import { openPR } from '../requisition/MainPage';
 
 export default ({
   instanceId,
@@ -53,7 +56,16 @@ export default ({
             render: (_, r) => r.type,
           },
           subTitle: {
-            render: (_, r) => <Link >{r.code}</Link>
+            render: (_, r) => <Link onClick={() => {
+              console.log(r);
+
+              if (r.type == 'QC')
+                r.instanceId && openQC(r.instanceId)
+              else if (r.type == 'PQ')
+                openPQ(r.id)
+              else if (r.type == 'PR')
+                r.instanceId && openPR(r.instanceId)
+            }} >{r.code}</Link>
           },
           content: {
             render: (_, r) => <>{r.items.map(it => <Flex vertical key={`%${record}-${it.id}-${r.type}-${r.id}`}>
@@ -207,7 +219,7 @@ export default ({
             <Flex>
               <ProDescriptions<PoRequestDetail>
                 column={1}
-                columns={[{ title: 'Remarks', dataIndex: 'remarks' }]}
+                columns={[{ title: 'Owner Function', dataIndex: 'ownerFunction' }, { title: 'Remarks', dataIndex: 'remarks' }]}
               />
             </Flex>
             <Flex>

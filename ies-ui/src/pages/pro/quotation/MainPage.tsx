@@ -19,6 +19,8 @@ import DataDetailView from "./DataDetailView";
 import DataEntryView from "./DataEntryView";
 import { uniqueId } from "lodash";
 
+export const openPQ = (id: number) => window.open(`/external${ProPaths.quotation}/detail/${id} `, '_blank')?.focus()
+
 export default () => {
 
     const srv = createQuotationService();
@@ -163,7 +165,7 @@ export default () => {
                     {
                         tooltip: 'View data in new browser tab',
                         type: 'link', size: 'small', icon: <ExportOutlined />,
-                        onClick: () => window.open(`/external${ProPaths.quotation}/detail/${item.id} `, '_blank')?.focus()
+                        onClick: () => { openPQ(item.id) }
                     },
                     {
                         tooltip: 'Copy', type: 'link', size: 'small', icon: <CopyFilled />,

@@ -47,6 +47,7 @@ import { getRelatedItms, RelatedObj } from '../services';
 import Link from 'antd/es/typography/Link';
 import { EmployeeServices } from '@/pages/hrm/services';
 import { Department } from '@/pages/hrm/data';
+import { openQC } from '../price-comparison/MainPage';
 
 type DataFormType = {
   vendorId: number;
@@ -180,7 +181,13 @@ export default ({
             render: (_, r) => r.type,
           },
           subTitle: {
-            render: (_, r) => <Link>{r.code}</Link>
+            render: (_, r) => <Link onClick={() => {
+              console.log(r);
+
+              if (r.type == 'QC')
+                r.processInstId && openQC(r.processInstId)
+
+            }}>{r.code}</Link>
           },
           content: {
             render: (_, r) => <>{r.items.map(it => <Flex vertical key={`%${record}-${it.id}-${r.type}-${r.id}`}>

@@ -15,6 +15,9 @@ import { formatDateTime } from "@/pages/utils"
 import Form from "@/pages/process-flow/form"
 import DataEntryView from "./DataEntryView"
 
+
+export const openQC = (processInstId: string) => window.open(`/external/data-form/${PriceComparisonFormNames.processDefKey}/${processInstId}`)?.focus()
+
 export default () => {
 
     const srv = createPriceComparisonService();
@@ -118,7 +121,7 @@ export default () => {
                                     type: 'link',
                                     icon: <ExportOutlined />,
                                     size: 'small',
-                                    onClick: () => window.open(`/external/data-form/${PriceComparisonFormNames.processDefKey}/${item.processInstId}`)?.focus()
+                                    onClick: () => openQC(item.processInstId)
                                 }
                             ]
                         }),

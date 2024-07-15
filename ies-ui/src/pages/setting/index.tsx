@@ -1,7 +1,9 @@
 import React from 'react'
 import ListMenuComp from '@/components/ListMenu'
 import workflowIcon from '@/assets/algorithm.png'
+import settingIcon from '@/assets/gear-two.png'
 import { PageContainer } from '@ant-design/pro-components';
+
 // import accountIcon  from '@/assets/account.png'
 
 export const SettingPaths = {
@@ -21,7 +23,7 @@ const processDefList = [
         id: 'pro-setting',
         name: 'Pro',
         description: 'Setting for Pro module',
-        icon: workflowIcon,
+        icon: settingIcon,
         link: `${SettingPaths.pro}`,
     },
 ];

@@ -210,6 +210,7 @@ export type PoRequestDetail = {
     status?: string;
     items: PoRequestItemDetail[];
     deliveredDate?: Moment;
+    ownerFunction?: string;
     integratedStatus?: string;
     files?: string[];
 }

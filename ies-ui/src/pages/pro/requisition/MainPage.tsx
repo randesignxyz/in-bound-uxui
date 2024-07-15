@@ -20,6 +20,8 @@ import DataEntryView from "./DataEntryView"
 import { uniqueId } from "lodash"
 import { ActionType } from "@ant-design/pro-components"
 
+export const openPR = (instanceId: string) => window.open(`/external/data-form/requisition_request_process/${instanceId}`, '_blank')?.focus()
+
 export default () => {
     const services = RequisitionServiceAPI();
     const [viewDetail, setViewDetail] = useState<{
@@ -144,7 +146,7 @@ export default () => {
                         {
                             tooltip: 'View data in new browser tab', type: 'link',
                             disabled: item.processStatus == 'DRAFT', size: 'small', icon: <ExportOutlined />,
-                            onClick: () => window.open(`/external/data-form/requisition_request_process/${item.instanceId}`, '_blank')?.focus()
+                            onClick: () => item.instanceId && openPR(item.instanceId)
                         },
                         { tooltip: 'Quick view', type: 'link', size: 'small', icon: <EyeFilled />, onClick: () => onDetailhandler(item) },
                         {

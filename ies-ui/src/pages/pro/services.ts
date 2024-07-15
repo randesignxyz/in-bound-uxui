@@ -10,6 +10,7 @@ export type RelatedObj = {
     description: string;
     deptId?: number;
     requester: string;
+    instanceId?: string;
     items: RelatedItem[]
 }
 

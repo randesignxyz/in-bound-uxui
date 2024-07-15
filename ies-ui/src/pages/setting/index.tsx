@@ -6,15 +6,23 @@ import { PageContainer } from '@ant-design/pro-components';
 
 export const SettingPaths = {
     workflow: '/setting/process-def',
+    pro: '/pro/setting'
 }
 
 const processDefList = [
     {
         id: 'workflow',
         name: 'Set up workflow',
-        description: 'Associated groups, Associated users, Assignee ',
+        description: 'Workflow configuration',
         icon: workflowIcon,
         link: `${SettingPaths.workflow}/list`,
+    },
+    {
+        id: 'pro-setting',
+        name: 'Pro',
+        description: 'Setting for Pro module',
+        icon: workflowIcon,
+        link: `${SettingPaths.pro}`,
     },
 ];
 

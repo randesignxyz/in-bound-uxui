@@ -299,6 +299,7 @@ export default ({
         totalAmount: dataForm.totalAmount,
         isService: isService,
         ownerFunctionId: dataForm.ownerFunctionId,
+        ownerFunction: ownerFunctions.find(it => it.id == data.ownerFunctionId)?.name,
         discountPercentage: dataForm.discountPercentage,
         discountAmount: dataForm.discountAmount,
         tax: dataForm.taxPercentage,

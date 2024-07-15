@@ -11,13 +11,14 @@ import {
 } from "@ant-design/icons"
 import { useQuery } from "@umijs/max"
 import { Button, Flex, Modal, Spin, Typography, message } from "antd"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import Form from "@/pages/process-flow/form"
 import DataDetailView from "./DataDetailView"
 import AdvanceSearch from "./components/AdvanceSearch"
 import Flow from "../flow"
 import DataEntryView from "./DataEntryView"
 import { uniqueId } from "lodash"
+import { ActionType } from "@ant-design/pro-components"
 
 export default () => {
     const services = RequisitionServiceAPI();
@@ -35,6 +36,8 @@ export default () => {
     const { data, isFetching, refetch } = useQuery(['fetch-customer-list', filter], () => services.list(filter), {
         refetchOnWindowFocus: false
     })
+
+    const actionRef = useRef<ActionType>();
 
     const onDetailhandler = async (data: RequisitionListItem) => {
         try {
@@ -93,6 +96,7 @@ export default () => {
                 }],
                 type: 'Table',
                 title: "PR List",
+
                 onOpenAdvanceSearch: async () => {
                     await listDepts();
                     setAdvanceSearch({ visible: true });
@@ -135,6 +139,7 @@ export default () => {
                     pagination: { total: data?.total },
                     loading: isFetching,
                     bordered: true,
+                    actionRef: actionRef,
                     actionButtonsColumnRender: (item) => ([
                         {
                             tooltip: 'View data in new browser tab', type: 'link',
@@ -295,19 +300,43 @@ export default () => {
             title="Advance Search"
             closable
             open={advanceSearch?.visible}
-            // onVisibleChange = {v => setAdvanceSearch({visible: v})}
             initData={filter.criteria?.advanceSearch}
             onClose={() => {
                 console.log('advance search in pro visible ', advanceSearch);
                 setAdvanceSearch({ visible: false });
             }}
             onReset={() => {
-                // setAdvanceSearchParams({ status: 'ALL' });
-                // actionRef.current?.reloadAndRest?.();
+                setFilter(v => ({
+                    ...v,
+                    pagination: undefined,
+                    criteria: {
+                        ...v.criteria,
+                        sort: undefined,
+                        advanceSearch: {
+                            status: v.criteria?.advanceSearch?.status || 'ALL',
+                        }
+
+                    }
+                }));
             }}
             onSearch={(data) => {
-                // setAdvanceSearchParams((v) => ({ ...v, ...data, status: v.status }));
-                // actionRef.current?.reloadAndRest?.();
+                setFilter(v => ({
+                    ...v,
+                    pagination: undefined,
+                    criteria: {
+                        ...v.criteria,
+                        sort: undefined,
+                        advanceSearch: {
+                            status: v.criteria?.advanceSearch?.status || 'ALL',
+                            deptIds: data.deptIds,
+                            service: data.service,
+                            requestedDate: data.requestedDate,
+                            acquiredDate: data.acquiredDate
+                        }
+
+                    }
+                }));
+
             }}
             listDepts={listDepartment}
         />

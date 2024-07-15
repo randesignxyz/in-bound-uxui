@@ -1,9 +1,12 @@
 import { formatDate, formatter, formatterPercentage, formatterQty } from '@/pages/utils';
-import { ProCard, ProDescriptions, ProTable } from '@ant-design/pro-components';
+import { ProCard, ProDescriptions, ProList, ProTable } from '@ant-design/pro-components';
 import { Checkbox, Flex, Space } from 'antd';
 import { useEffect, useState } from 'react';
-import { PoLinkedItem, PoRequestDetail, PoRequestItemDetail } from './data';
+import { PoRequestDetail, PoRequestItemDetail } from './data';
 import { createPoService } from './services';
+import { RelatedObj } from '../services';
+import { CaretRightOutlined } from '@ant-design/icons';
+import Link from 'antd/es/typography/Link';
 
 export default ({
   instanceId,
@@ -34,27 +37,57 @@ export default ({
       init();
   }, [forceReload]);
 
-  const linkedObject = (item: PoRequestItemDetail) => {
+  const linkedObject = (record: PoRequestItemDetail) => {
     return (
-      <ProTable<PoLinkedItem & { key: string }>
-        dataSource={item.linkedItems?.map((it) => ({ ...it, key: `${it.type}-${it.id}` }))}
-        rowKey={'key'}
-        pagination={false}
-        options={false}
-        size="small"
-        search={false}
-        columns={[
-          { title: 'Type', dataIndex: 'type' },
-          { title: 'Code', dataIndex: 'code' },
-          { title: 'Qty', hideInTable: data?.isService, dataIndex: 'qty' },
-          { title: 'UoM', hideInTable: data?.isService, dataIndex: 'uomName' },
-          { title: 'Price', dataIndex: 'price', renderText: (_, r) => formatter.format(r.price) },
-          {
-            title: 'amount',
-            dataIndex: 'amount',
-            renderText: (_, r) => formatter.format(r.amount),
+      <ProList<RelatedObj>
+        // dataSource={[...(record.item.relatedTo || []), ...(record.combineWith?.flatMap(it => it.relatedTo || []) || [])]}
+        dataSource={record.relatedObjects}
+        ghost={true}
+        grid={{ gutter: 16, column: 4 }}
+        itemCardProps={{
+          size: 'small',
+          ghost: true
+        }}
+        metas={{
+          title: {
+            render: (_, r) => r.type,
           },
-        ]}
+          subTitle: {
+            render: (_, r) => <Link >{r.code}</Link>
+          },
+          content: {
+            render: (_, r) => <>{r.items.map(it => <Flex vertical key={`%${record}-${it.id}-${r.type}-${r.id}`}>
+
+              <Flex gap={5}>
+                <Flex> <CaretRightOutlined /> </Flex>
+                <Flex> Item: </Flex>
+                <Flex> {`${it.itemCode} - ${it.itemName}`} </Flex>
+              </Flex>
+              <Flex gap={5}>
+                <Flex> <CaretRightOutlined /> </Flex>
+                <Flex> Desc: </Flex>
+                <Flex> {it.itemDescription} </Flex>
+              </Flex>
+              <Flex gap={5}>
+                <Flex> <CaretRightOutlined /> </Flex>
+                <Flex> Qty: </Flex>
+                <Flex> {it.qty} </Flex>
+                {r.type == 'PR' && <Flex>,Ordered: </Flex>}
+                {r.type == 'PR' && <Flex> {it.orderedQty || 0} </Flex>}
+                {r.type == 'PR' && <Flex>,Purchased: </Flex>}
+                {r.type == 'PR' && <Flex> {it.purchasedQty || 0} </Flex>}
+                {r.type == 'PR' && <Flex>,Available: </Flex>}
+                {r.type == 'PR' && <Flex> {it.availableQty || 0} </Flex>}
+              </Flex>
+              <Flex gap={5}>
+                <Flex> <CaretRightOutlined /></Flex>
+                <Flex> Price: </Flex>
+                <Flex> {formatter.format(it.price)} </Flex>
+              </Flex>
+            </Flex>)}</>
+          }
+        }}
+
       />
     );
   };

@@ -171,6 +171,7 @@ export type PoRequestItemDetail = {
     amountAfterDiscount: number;
     description: string;
     linkedItems?: PoLinkedItem[];
+    relatedObjects?: RelatedObj[];
     remarks: string;
 
 }

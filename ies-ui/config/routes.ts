@@ -1,4 +1,6 @@
-﻿/**
+﻿import icons from "@/.umi/plugin-layout/icons";
+
+/**
  *
  * @doc https://umijs.org/docs/guides/routes
  */
@@ -172,6 +174,15 @@ export default [
     access: 'canAccessProMenuItem',
     component: './pro',
 
+  },
+
+  {
+    path: '/pro/setting',
+    name: 'pro-setting',
+    icons: 'FormOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessProSettingMenuItem',
+    component: './pro/setting',
   },
 
   {

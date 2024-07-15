@@ -48,6 +48,8 @@ import Link from 'antd/es/typography/Link';
 import { EmployeeServices } from '@/pages/hrm/services';
 import { Department } from '@/pages/hrm/data';
 import { openQC } from '../price-comparison/MainPage';
+import { openPQ } from '../quotation/MainPage';
+import { openPR } from '../requisition/MainPage';
 
 type DataFormType = {
   vendorId: number;
@@ -182,10 +184,13 @@ export default ({
           },
           subTitle: {
             render: (_, r) => <Link onClick={() => {
-              console.log(r);
 
               if (r.type == 'QC')
-                r.processInstId && openQC(r.processInstId)
+                r.instanceId && openQC(r.instanceId)
+              else if (r.type == 'PQ')
+                openPQ(r.id)
+              else if (r.type == 'PR')
+                r.instanceId && openPR(r.instanceId)
 
             }}>{r.code}</Link>
           },

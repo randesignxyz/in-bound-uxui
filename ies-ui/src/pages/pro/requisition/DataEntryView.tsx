@@ -39,7 +39,6 @@ export default ({
   type,
   openInTab,
   onCloseTab,
-  onBack,
 }: {
   id?: number;
   type: 'CREATE' | 'EDIT';
@@ -360,11 +359,11 @@ export default ({
             },
             {
               title: 'Unit Price',
-              width: 135,
               dataIndex: 'unitPrice',
+              width: 130,
               fieldProps: { style: { width: 120 } },
               valueType: 'money',
-              formItemProps: { rules: [{ required: true }], style: { width: '300px' } },
+              formItemProps: { rules: [{ required: true }], style: { width: '130px' } },
             },
             {
               title: 'Amount',

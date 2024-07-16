@@ -35,19 +35,17 @@ export default ({ mainId, items }: { mainId: number; items: RelatedObj[] }) => {
             content: {
                 render: (_, r) => <>{r.items.map(it => <Flex vertical key={`%${mainId}-${it.id}-${r.type}-${r.id}`}>
 
-                    <Flex gap={5}>
-                        <Flex> <CaretRightOutlined /> </Flex>
-                        <Flex> Item: </Flex>
-                        <Flex> {`${it.itemCode} - ${it.itemName}`} </Flex>
+                    <Flex gap={5} align="flex-start" justify="flex-start">
+                        <Flex> <CaretRightOutlined /> Item: </Flex>
+                        {it.itemCode != 'SRV' && <Flex> {`${it.itemCode} - ${it.itemName}`} </Flex>}
+                        {it.itemCode == 'SRV' && <Flex> {it.itemName} </Flex>}
                     </Flex>
-                    <Flex gap={5}>
-                        <Flex> <CaretRightOutlined /> </Flex>
-                        <Flex> Desc: </Flex>
+                    <Flex gap={5} align="flex-start" justify="flex-start">
+                        <Flex> <CaretRightOutlined /> Desc: </Flex>
                         <Flex> {it.itemDescription} </Flex>
                     </Flex>
-                    <Flex gap={5}>
-                        <Flex> <CaretRightOutlined /> </Flex>
-                        <Flex> Qty: </Flex>
+                    {it.itemCode != 'SRV' && <Flex gap={5}>
+                        <Flex> <CaretRightOutlined /> Qty: </Flex>
                         <Flex> {it.qty} </Flex>
                         {r.type == 'PR' && <Flex>,Ordered: </Flex>}
                         {r.type == 'PR' && <Flex> {it.orderedQty || 0} </Flex>}
@@ -55,10 +53,9 @@ export default ({ mainId, items }: { mainId: number; items: RelatedObj[] }) => {
                         {r.type == 'PR' && <Flex> {it.purchasedQty || 0} </Flex>}
                         {r.type == 'PR' && <Flex>,Available: </Flex>}
                         {r.type == 'PR' && <Flex> {it.availableQty || 0} </Flex>}
-                    </Flex>
+                    </Flex>}
                     <Flex gap={5}>
-                        <Flex> <CaretRightOutlined /></Flex>
-                        <Flex> Price: </Flex>
+                        <Flex> <CaretRightOutlined /> Price: </Flex>
                         <Flex> {formatter.format(it.price)} </Flex>
                     </Flex>
                 </Flex>)}</>

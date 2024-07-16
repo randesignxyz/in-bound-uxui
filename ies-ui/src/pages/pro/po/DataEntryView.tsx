@@ -248,7 +248,7 @@ export default ({
         totalAmount: dataForm.totalAmount,
         isService: isService,
         ownerFunctionId: dataForm.ownerFunctionId,
-        ownerFunction: ownerFunctions.find(it => it.id == data.ownerFunctionId)?.name,
+        ownerFunction: ownerFunctions.find(it => it.id == dataForm.ownerFunctionId)?.name,
         discountPercentage: dataForm.discountPercentage,
         discountAmount: dataForm.discountAmount,
         tax: dataForm.taxPercentage,
@@ -798,6 +798,7 @@ export default ({
             <Flex justify='flex-start' vertical >
               <ProFormSelect labelCol={{ span: 6 }}
                 wrapperCol={{ span: 18 }}
+                rules={[{ required: true }]}
                 name={"ownerFunctionId"}
                 options={ownerFunctions.map(it => ({ label: it.name, value: it.id }))}
                 label="Owner Function" />

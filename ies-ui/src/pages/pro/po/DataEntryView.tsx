@@ -50,6 +50,7 @@ import { Department } from '@/pages/hrm/data';
 import { openQC } from '../price-comparison/MainPage';
 import { openPQ } from '../quotation/MainPage';
 import { openPR } from '../requisition/MainPage';
+import RelatedObjectItems from '../components/RelatedObjectItems';
 
 type DataFormType = {
   vendorId: number;
@@ -165,70 +166,6 @@ export default ({
       shipToAddress: shippedAddress?.address,
     });
     setCompanyAddress(rs);
-  };
-
-  const linkObject = (record: SavePoItem) => {
-    return (
-      <ProList<RelatedObj>
-        // dataSource={[...(record.item.relatedTo || []), ...(record.combineWith?.flatMap(it => it.relatedTo || []) || [])]}
-        dataSource={record.relatedObjects}
-        ghost={true}
-        grid={{ gutter: 16, column: 4 }}
-        itemCardProps={{
-          size: 'small',
-          ghost: true
-        }}
-        metas={{
-          title: {
-            render: (_, r) => r.type,
-          },
-          subTitle: {
-            render: (_, r) => <Link onClick={() => {
-
-              if (r.type == 'QC')
-                r.instanceId && openQC(r.instanceId)
-              else if (r.type == 'PQ')
-                openPQ(r.id)
-              else if (r.type == 'PR')
-                r.instanceId && openPR(r.instanceId)
-
-            }}>{r.code}</Link>
-          },
-          content: {
-            render: (_, r) => <>{r.items.map(it => <Flex vertical key={`%${record}-${it.id}-${r.type}-${r.id}`}>
-
-              <Flex gap={5}>
-                <Flex> <CaretRightOutlined /> </Flex>
-                <Flex> Item: </Flex>
-                <Flex> {`${it.itemCode} - ${it.itemName}`} </Flex>
-              </Flex>
-              <Flex gap={5}>
-                <Flex> <CaretRightOutlined /> </Flex>
-                <Flex> Desc: </Flex>
-                <Flex> {it.itemDescription} </Flex>
-              </Flex>
-              <Flex gap={5}>
-                <Flex> <CaretRightOutlined /> </Flex>
-                <Flex> Qty: </Flex>
-                <Flex> {it.qty} </Flex>
-                {r.type == 'PR' && <Flex>,Ordered: </Flex>}
-                {r.type == 'PR' && <Flex> {it.orderedQty || 0} </Flex>}
-                {r.type == 'PR' && <Flex>,Purchased: </Flex>}
-                {r.type == 'PR' && <Flex> {it.purchasedQty || 0} </Flex>}
-                {r.type == 'PR' && <Flex>,Available: </Flex>}
-                {r.type == 'PR' && <Flex> {it.availableQty || 0} </Flex>}
-              </Flex>
-              <Flex gap={5}>
-                <Flex> <CaretRightOutlined /></Flex>
-                <Flex> Price: </Flex>
-                <Flex> {formatter.format(it.price)} </Flex>
-              </Flex>
-            </Flex>)}</>
-          }
-        }}
-
-      />
-    );
   };
 
   const dataValidation = async () => {
@@ -562,8 +499,8 @@ export default ({
           >
             <EditableProTable<SavePoItem>
               expandable={{
-                expandedRowRender: linkObject,
-                rowExpandable: (record) => (record.item.relatedTo?.length || 0) > 0,
+                expandedRowRender: record => record.relatedObjects.length > 0 && <RelatedObjectItems mainId={record.id || 0} items={record.relatedObjects} />,
+                rowExpandable: (record) => (record.relatedObjects?.length || 0) > 0,
               }}
               size="small"
               recordCreatorProps={{
@@ -991,6 +928,7 @@ export default ({
             form.setFieldsValue({ vendorId: vendorFromItem.id });
           }
           const itemList = (await Promise.all(data.map(it => getRelatedItms(it.refId, it.refType, isService).query().then(items => ({ itemId: it.refId, type: it.refType, items: items }))))).flatMap(it => it)
+
           const newItems = data.map((it, index) => ({
             ...it,
             baseItemId: it.item.baseItemId,

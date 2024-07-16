@@ -10,9 +10,7 @@ import ChangeVendorForm from './ChangeVendorForm';
 import { PrItem, QuotationDetail, QuotationItemtDetail } from './data';
 import { createQuotationService } from './services';
 import Flow from '../flow';
-import { downloadReport } from '@/services/apiGateway';
-import moment from 'moment';
-import { simpleRequestActions } from '@/services/model';
+import RelatedObjectItems from '../components/RelatedObjectItems';
 
 export default ({
   id,
@@ -284,8 +282,10 @@ export default ({
         rowKey={'id'}
         pagination={false}
         expandable={{
-          expandedRowRender: linkPR,
-          rowExpandable: (record) => record.prLinked.length > 0,
+          expandedRowRender: record => {
+            return <RelatedObjectItems mainId={record.id} items={record.relatedObjects || []} />
+          },
+          rowExpandable: (record) => (record.relatedObjects?.length || 0) > 0,
         }}
         size="small"
         columns={

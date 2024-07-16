@@ -10,6 +10,7 @@ import Link from 'antd/es/typography/Link';
 import { openQC } from '../price-comparison/MainPage';
 import { openPQ } from '../quotation/MainPage';
 import { openPR } from '../requisition/MainPage';
+import RelatedObjectItems from '../components/RelatedObjectItems';
 
 export default ({
   instanceId,
@@ -39,70 +40,6 @@ export default ({
     if ((forceReload || 0) > 0)
       init();
   }, [forceReload]);
-
-  const linkedObject = (record: PoRequestItemDetail) => {
-    return (
-      <ProList<RelatedObj>
-        // dataSource={[...(record.item.relatedTo || []), ...(record.combineWith?.flatMap(it => it.relatedTo || []) || [])]}
-        dataSource={record.relatedObjects}
-        ghost={true}
-        grid={{ gutter: 16, column: 4 }}
-        itemCardProps={{
-          size: 'small',
-          ghost: true
-        }}
-        metas={{
-          title: {
-            render: (_, r) => r.type,
-          },
-          subTitle: {
-            render: (_, r) => <Link onClick={() => {
-              console.log(r);
-
-              if (r.type == 'QC')
-                r.instanceId && openQC(r.instanceId)
-              else if (r.type == 'PQ')
-                openPQ(r.id)
-              else if (r.type == 'PR')
-                r.instanceId && openPR(r.instanceId)
-            }} >{r.code}</Link>
-          },
-          content: {
-            render: (_, r) => <>{r.items.map(it => <Flex vertical key={`%${record}-${it.id}-${r.type}-${r.id}`}>
-
-              <Flex gap={5}>
-                <Flex> <CaretRightOutlined /> </Flex>
-                <Flex> Item: </Flex>
-                <Flex> {`${it.itemCode} - ${it.itemName}`} </Flex>
-              </Flex>
-              <Flex gap={5}>
-                <Flex> <CaretRightOutlined /> </Flex>
-                <Flex> Desc: </Flex>
-                <Flex> {it.itemDescription} </Flex>
-              </Flex>
-              <Flex gap={5}>
-                <Flex> <CaretRightOutlined /> </Flex>
-                <Flex> Qty: </Flex>
-                <Flex> {it.qty} </Flex>
-                {r.type == 'PR' && <Flex>,Ordered: </Flex>}
-                {r.type == 'PR' && <Flex> {it.orderedQty || 0} </Flex>}
-                {r.type == 'PR' && <Flex>,Purchased: </Flex>}
-                {r.type == 'PR' && <Flex> {it.purchasedQty || 0} </Flex>}
-                {r.type == 'PR' && <Flex>,Available: </Flex>}
-                {r.type == 'PR' && <Flex> {it.availableQty || 0} </Flex>}
-              </Flex>
-              <Flex gap={5}>
-                <Flex> <CaretRightOutlined /></Flex>
-                <Flex> Price: </Flex>
-                <Flex> {formatter.format(it.price)} </Flex>
-              </Flex>
-            </Flex>)}</>
-          }
-        }}
-
-      />
-    );
-  };
 
   return (
     <Flex vertical>
@@ -162,8 +99,8 @@ export default ({
             pagination={false}
             dataSource={data?.items}
             expandable={{
-              expandedRowRender: linkedObject,
-              rowExpandable: (record) => (record.linkedItems?.length || 0) > 0,
+              expandedRowRender: (record) => record.relatedObjects && <RelatedObjectItems mainId={record.id} items={record.relatedObjects} />,
+              rowExpandable: (record) => (record.relatedObjects?.length || 0) > 0,
             }}
             options={{
               setting: false,

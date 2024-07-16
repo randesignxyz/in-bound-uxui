@@ -1,8 +1,5 @@
 import { fetchDataListService } from "@/services/apiGateway";
 
-
-
-
 export type RelatedObj = {
     id: number;
     type: string;

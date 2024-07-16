@@ -31,20 +31,22 @@ import {
   ProFormTextArea,
 } from '@ant-design/pro-components';
 import { history } from '@umijs/max';
-import { Button, Flex, FloatButton, message, Modal, Popconfirm, Space, Spin, Table } from 'antd';
+import { Button, message, Modal, Popconfirm, Space, Spin } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { round, uniqueId } from 'lodash';
 import { Moment } from 'moment';
 import React, { useEffect, useRef, useState } from 'react';
 import { createVendorService } from '../vendor/services';
 import AddService from './AddService';
-import { PrItem, QuotationDetail, QuotationListItem, QuotationSavePayload, SaveQuotationItem } from './data';
+import { QuotationDetail, QuotationListItem, QuotationSavePayload, SaveQuotationItem } from './data';
 
 import _ from 'lodash';
 import { VendorDetail } from '../vendor/vendor';
 import QuotationItemFinder from './QuotationItemFinder';
 import { createQuotationService } from './services';
 import { useInView } from 'react-intersection-observer';
+import RelatedObjectItems from '../components/RelatedObjectItems';
+import { getRelatedItms } from '../services';
 
 type DataFormType = {
   vendorId?: number;
@@ -142,34 +144,6 @@ export default ({
       label: it.name,
       value: it.id,
     }));
-  };
-
-  const linkPR = (records: SaveQuotationItem) => {
-    return (
-      <Table<PrItem>
-        size="small"
-        rowKey={'id'}
-        pagination={false}
-        dataSource={records?.item?.prItems?.filter((it) =>
-          records.prLinked.some((i) => i == it.id),
-        )}
-        columns={
-          isService
-            ? [
-              { title: 'Form No', render: (_, r) => <Space>{r.formNo}</Space> },
-              { title: 'Doc No', render: (_, r) => r.docNo },
-              { title: 'Requested By', render: (_, r) => r.requestedBy },
-            ]
-            : [
-              { title: 'Form No', render: (_, r) => <Space>{r.formNo}</Space> },
-              { title: 'Doc No', render: (_, r) => r.docNo },
-              { title: 'Requested By', render: (_, r) => r.requestedBy },
-              { title: 'Qty', align: 'right', render: (_, r) => r.qty },
-              { title: 'uom', render: (_, r) => r.uom },
-            ]
-        }
-      />
-    );
   };
 
   const getVendorId = (dataForm: DataFormType) => {
@@ -372,7 +346,7 @@ export default ({
     }
   };
 
-  const onSaveHandler = (data: SaveQuotationItem) => {
+  const onSaveHandler = async (data: SaveQuotationItem) => {
     const isNew = !items.some((it) => it.key == data.key);
     if (isNew) {
       if (isService) {
@@ -833,8 +807,29 @@ export default ({
             },
           }}
           expandable={{
-            expandedRowRender: linkPR,
-            rowExpandable: (record) => record.prLinked.length > 0,
+            expandedRowRender: record => record.item?.prItems && <RelatedObjectItems mainId={record.id || 0} items={record.item?.prItems.map(it => ({
+              id: it.prId,
+              code: it.formNo,
+              type: 'PR',
+              instanceId: it.processInstId,
+              requester: '',
+              description: it.description,
+              items: [{
+                id: it.id,
+                itemCode: it.itemCode,
+                itemName: it.itemName,
+                itemId: it.id,
+                itemDescription: it.description,
+                price: it.unitPrice,
+                qty: it.qty,
+                orderedQty: it.orderdQty,
+                purchasedQty: it.purchaseQty,
+                availableQty: it.availableQty,
+                uom: it.uom,
+              }]
+
+            }))} />,
+            rowExpandable: (record) => (record.item?.prItems?.length || 0) > 0,
           }}
           columns={[
             {
@@ -978,8 +973,8 @@ export default ({
           editableFormRef={editableFormRef}
           controlled
           expandable={{
-            expandedRowRender: linkPR,
-            rowExpandable: (record) => record.prLinked.length > 0,
+            expandedRowRender: record => record.relatedObjects && <RelatedObjectItems mainId={record.id || 0} items={record.relatedObjects} />,
+            rowExpandable: (record) => (record.relatedObjects?.length || 0) > 0,
           }}
           editable={{
             type: 'multiple',
@@ -1282,7 +1277,11 @@ export default ({
           return items.find((it) => it.itemId == id);
         }
       }}
-      onSave={(record, isService) => {
+      onSave={async (record, isService) => {
+
+
+        // const itemList = (await Promise.all(data.map(it => getRelatedItms(it.refId, it.refType, isService).query().then(items => ({ itemId: it.refId, type: it.refType, items: items }))))).flatMap(it => it)
+
         if (isService) {
           setServices((v) => [...v, record].map((it, index) => ({ ...it, no: index + 1 })));
         } else {

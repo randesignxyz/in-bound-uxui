@@ -188,7 +188,7 @@ export type PrItem = {
     qty: number;
     orderdQty?: number;
     purchaseQty?: number;
-    availableQty?: number;
+    availableQty?: number
     uom: string;
     unitPrice: number;
     amount: number;

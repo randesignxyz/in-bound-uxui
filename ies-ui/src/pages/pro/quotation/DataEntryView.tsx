@@ -446,6 +446,29 @@ export default ({
     )
   )
 
+  const relatedObjectRender = (record: SaveQuotationItem) => <RelatedObjectItems mainId={record.id || 0} items={(record.item?.prItems || []).map(it => ({
+    id: it.prId,
+    code: it.formNo,
+    type: 'PR',
+    instanceId: it.processInstId,
+    requester: '',
+    description: it.description,
+    items: [{
+      id: it.id,
+      itemCode: it.itemCode,
+      itemName: it.itemName,
+      itemId: it.id,
+      itemDescription: it.description,
+      price: it.unitPrice,
+      qty: it.qty,
+      orderedQty: it.orderdQty,
+      purchasedQty: it.purchaseQty,
+      availableQty: it.availableQty,
+      uom: it.uom,
+    }]
+
+  }))} />
+
 
 
   const content = <Space ref={ref} direction="vertical" style={{ width: '100%' }}>
@@ -807,28 +830,7 @@ export default ({
             },
           }}
           expandable={{
-            expandedRowRender: record => record.item?.prItems && <RelatedObjectItems mainId={record.id || 0} items={record.item?.prItems.map(it => ({
-              id: it.prId,
-              code: it.formNo,
-              type: 'PR',
-              instanceId: it.processInstId,
-              requester: '',
-              description: it.description,
-              items: [{
-                id: it.id,
-                itemCode: it.itemCode,
-                itemName: it.itemName,
-                itemId: it.id,
-                itemDescription: it.description,
-                price: it.unitPrice,
-                qty: it.qty,
-                orderedQty: it.orderdQty,
-                purchasedQty: it.purchaseQty,
-                availableQty: it.availableQty,
-                uom: it.uom,
-              }]
-
-            }))} />,
+            expandedRowRender: relatedObjectRender,
             rowExpandable: (record) => (record.item?.prItems?.length || 0) > 0,
           }}
           columns={[
@@ -973,8 +975,8 @@ export default ({
           editableFormRef={editableFormRef}
           controlled
           expandable={{
-            expandedRowRender: record => record.relatedObjects && <RelatedObjectItems mainId={record.id || 0} items={record.relatedObjects} />,
-            rowExpandable: (record) => (record.relatedObjects?.length || 0) > 0,
+            expandedRowRender: relatedObjectRender,
+            rowExpandable: (record) => (record.item?.prItems?.length || 0) > 0,
           }}
           editable={{
             type: 'multiple',

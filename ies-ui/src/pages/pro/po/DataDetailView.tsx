@@ -156,6 +156,7 @@ export default ({
             <Flex>
               <ProDescriptions<PoRequestDetail>
                 column={1}
+                dataSource={data}
                 columns={[{ title: 'Owner Function', dataIndex: 'ownerFunction' }, { title: 'Remarks', dataIndex: 'remarks' }]}
               />
             </Flex>

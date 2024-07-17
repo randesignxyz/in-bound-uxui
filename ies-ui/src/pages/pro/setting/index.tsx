@@ -1,10 +1,7 @@
-import { GridContent, ProCard } from "@ant-design/pro-components";
-import { Flex, Layout, Menu, MenuProps, theme } from "antd"
+import { Flex, Menu, MenuProps, theme } from "antd"
 import { useState } from "react";
-import styles from './styles.less';
 import Sider from "antd/es/layout/Sider";
 import { Content } from "antd/lib/layout/layout";
-
 
 type MenuItem = Required<MenuProps>['items'][number];
 const items: MenuItem[] = [
@@ -14,6 +11,13 @@ const items: MenuItem[] = [
         children: [
             { label: "Item", key: "pr-item" }
         ]
+    },
+    {
+        label: "Purchase Order",
+        type: 'group',
+        children: [
+            { label: "Setting", key: "po-setting" }
+        ]
     }
 ]
 export default () => {
@@ -21,12 +25,11 @@ export default () => {
     const [setting, setSetting] = useState<string>()
 
     const {
-        token: { colorBgContainer, borderRadiusLG },
+        token: { colorBgContainer },
     } = theme.useToken();
 
     const onClick: MenuProps['onClick'] = (e) => {
         setSetting(e.key)
-        console.log('click ', e);
     };
 
     return <Flex>

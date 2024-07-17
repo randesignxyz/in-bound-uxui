@@ -223,6 +223,11 @@ export default ({
       );
       const shipToAddress = companyAddress?.find((it) => it.id == dataForm.shipToAddressId);
 
+      if (dataForm.totalAmount <= 0) {
+        message.error("Total must be geater than 0.")
+        return
+      }
+
       const data: PoRequestSavePayload = {
         buId: buId,
         requestor: requestor.id,
@@ -255,7 +260,6 @@ export default ({
         tax: dataForm.taxPercentage,
         taxAmount: dataForm.taxAmount,
         paymentDue: dataForm.paymentDue,
-
         remarks: dataForm.remarks,
         items: items.map((it) => ({
           itemId: it.itemId,
@@ -812,6 +816,7 @@ export default ({
               <ProFormSelect labelCol={{ span: 6 }}
                 wrapperCol={{ span: 18 }}
                 rules={[{ required: true }]}
+                showSearch
                 name={"ownerFunctionId"}
                 options={ownerFunctions.length > 0 ? ownerFunctions.map(it => ({ label: it.name, value: it.id })) : allFunctions?.map(it => ({ label: it.name, value: it.id }))}
                 label="Owner Function" />

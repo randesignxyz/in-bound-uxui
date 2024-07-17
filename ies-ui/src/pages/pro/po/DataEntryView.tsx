@@ -107,6 +107,7 @@ export default ({
   const [addItemVisible, setAddItemVisible] = useState(false);
   const [isService, setIsService] = useState(false);
   const [ownerFunctions, setOwnerFunctions] = useState<Department[]>([])
+  const [allFunctions, setAllFunctions] = useState<Department[]>()
 
   const { ref, inView } = useInView({});
 
@@ -248,7 +249,7 @@ export default ({
         totalAmount: dataForm.totalAmount,
         isService: isService,
         ownerFunctionId: dataForm.ownerFunctionId,
-        ownerFunction: ownerFunctions.find(it => it.id == dataForm.ownerFunctionId)?.name,
+        ownerFunction: (ownerFunctions.length > 0 ? ownerFunctions : allFunctions)?.find(it => it.id == dataForm.ownerFunctionId)?.name,
         discountPercentage: dataForm.discountPercentage,
         discountAmount: dataForm.discountAmount,
         tax: dataForm.taxPercentage,
@@ -305,10 +306,12 @@ export default ({
   const fetchDepartment = async () => {
     const list = items.flatMap(it => it.relatedObjects.map(it1 => it1.deptId || 0)).filter(it => it > 0)
     if (list.length == 0) {
-      form.resetFields(['ownerFunctionId'])
       setOwnerFunctions([])
     } else {
       const listDepartments = await EmployeeServices.listDepartmentByIds(_.uniq(list)).query()
+      if (!listDepartments.some(it => it.id == form.getFieldValue('ownerFunctionId'))) {
+        form.resetFields(['ownerFunctionId'])
+      }
       setOwnerFunctions(listDepartments)
     }
   }
@@ -331,6 +334,16 @@ export default ({
 
     billingAddressId && setBillingAddress(billingAddressId);
   }, [vendor]);
+
+  const loadFunction = async () => {
+    const functionList = await EmployeeServices.listDepartment.query()
+    setAllFunctions(functionList)
+
+  }
+
+  useEffect(() => {
+    loadFunction()
+  }, [])
 
   useEffect(() => {
     const totalAmount = _.sum(items.map((it) => it.amountAfterDiscount)) || 0;
@@ -800,7 +813,7 @@ export default ({
                 wrapperCol={{ span: 18 }}
                 rules={[{ required: true }]}
                 name={"ownerFunctionId"}
-                options={ownerFunctions.map(it => ({ label: it.name, value: it.id }))}
+                options={ownerFunctions.length > 0 ? ownerFunctions.map(it => ({ label: it.name, value: it.id })) : allFunctions?.map(it => ({ label: it.name, value: it.id }))}
                 label="Owner Function" />
               <ProFormTextArea
                 labelCol={{ span: 6 }}

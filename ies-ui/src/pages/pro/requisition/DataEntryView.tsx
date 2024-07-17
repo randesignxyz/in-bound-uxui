@@ -25,7 +25,11 @@ import ProForm, {
   ProFormSwitch,
   ProFormTextArea,
 } from '@ant-design/pro-form';
-import { Button, Card, Col, Divider, Form, message, Modal, Row, Space, Spin } from 'antd';
+import {
+  Button, Card, Col,
+  Divider, Form, message,
+  Modal, Row, Space, Spin
+} from 'antd';
 import { uniqueId } from 'lodash';
 import moment, { Moment } from 'moment';
 import { useEffect, useRef, useState } from 'react';

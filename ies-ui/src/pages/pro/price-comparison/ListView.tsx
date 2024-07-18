@@ -65,7 +65,7 @@ export default ({ onAdd }: Props) => {
               sorter: "formNo",
               render: (_, r) => {
                 const sapVendorRequired =
-                  r.quotations.map((it) => it.vendorCode && it.selected).filter((it) => it).length == 0 &&
+                  r.quotations?.map((it) => it.vendorCode && it.selected).filter((it) => it).length == 0 &&
                   r.workflowStatus == 'APPROVED';
                 return (
                   <Space>
@@ -112,7 +112,7 @@ export default ({ onAdd }: Props) => {
             {
               title: 'Selected Vendor',
               render: (_, r) => {
-                return uniq(r.quotations.filter(it => it.selected).map((it) => it.vendorCode || 'N/A')).join(', ');
+                return uniq(r.quotations?.filter(it => it.selected).map((it) => it.vendorCode || 'N/A')).join(', ');
               },
             },
             { title: 'Requested By', sorter: 'requestedBy', dataIndex: 'requestedBy' },
@@ -129,7 +129,7 @@ export default ({ onAdd }: Props) => {
               render: (_, r) => (
                 <Flex>
                   <Button type="link" title='View Flow' onClick={() => setOpenFlow(r)} icon={<PartitionOutlined />} />
-                  {r.workflowStatus == 'APPROVED' && r.quotations.some(it => (it.integratedStatus || 'FAILED') == 'FAILED') && <Button
+                  {r.workflowStatus == 'APPROVED' && r.quotations?.some(it => (it.integratedStatus || 'FAILED') == 'FAILED') && <Button
                     title='Post all quotations to to SAP' type="link"
                     danger onClick={() => { onPosting(r) }} icon={<UploadOutlined />} />}
                 </Flex>
@@ -151,7 +151,7 @@ export default ({ onAdd }: Props) => {
             options: [
               { label: 'All', value: 'ALL' },
               { label: 'Pending', value: 'REQUESTED' },
-              { label: 'In Process', value: 'IN_PROGRESS' },
+              { label: 'In Progress', value: 'IN_PROGRESS' },
               { label: 'Approved', value: 'APPROVED' },
               { label: 'Rejected', value: 'REJECTED' },
             ],

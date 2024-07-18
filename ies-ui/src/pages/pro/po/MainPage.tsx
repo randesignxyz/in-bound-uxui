@@ -92,7 +92,7 @@ export default () => {
                         ]
                     },
                     { option: { label: 'Pending', value: 'REQUESTED' } },
-                    { option: { label: 'In Process', value: 'IN_PROGRESS' } },
+                    { option: { label: 'In Progress', value: 'IN_PROGRESS' } },
                     {
                         option: { label: 'Approved', value: 'APPROVED' }, subOptions: [
                             { label: 'All', value: 'ALL', default: true },

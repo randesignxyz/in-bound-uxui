@@ -83,7 +83,7 @@ let option = {
     maximumFractionDigits: 2,
 };
 
-export const formatterPercentage = new Intl.NumberFormat('en-US', option);
+export const formatterPercentage = new Intl.NumberFormat('en-US');
 
 export const formatConfig = {
     date: 'YYYY-MM-DD',
@@ -241,7 +241,7 @@ const readableWords = [
     { HOLD: 'Hold' },
     { CANCELED: 'Canceled' },
     { DELIVERED: 'Delivered' },
-    { IN_PROGRESS: 'In Process' },
+    { IN_PROGRESS: 'In Progress' },
     { DELIVERY: 'Delivery' },
     { PICKING: 'Picking' },
     { QUEUE: 'Queue' },

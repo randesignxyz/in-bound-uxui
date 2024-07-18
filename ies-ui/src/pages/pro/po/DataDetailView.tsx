@@ -1,15 +1,9 @@
 import { formatDate, formatter, formatterPercentage, formatterQty } from '@/pages/utils';
-import { ProCard, ProDescriptions, ProList, ProTable } from '@ant-design/pro-components';
+import { ProCard, ProDescriptions, ProTable } from '@ant-design/pro-components';
 import { Checkbox, Flex, Space } from 'antd';
 import { useEffect, useState } from 'react';
 import { PoRequestDetail, PoRequestItemDetail } from './data';
 import { createPoService } from './services';
-import { RelatedObj } from '../services';
-import { CaretRightOutlined } from '@ant-design/icons';
-import Link from 'antd/es/typography/Link';
-import { openQC } from '../price-comparison/MainPage';
-import { openPQ } from '../quotation/MainPage';
-import { openPR } from '../requisition/MainPage';
 import RelatedObjectItems from '../components/RelatedObjectItems';
 
 export default ({

@@ -96,7 +96,7 @@ export default () => {
             statuses: [
                 { option: { label: 'All', value: 'ALL', default: true } },
                 { option: { label: 'Pending', value: 'REQUESTED' } },
-                { option: { label: 'In Process', value: 'IN_PROGRESS' } },
+                { option: { label: 'In Progress', value: 'IN_PROGRESS' } },
                 { option: { label: 'Approved', value: 'APPROVED' } },
                 { option: { label: 'Rejected', value: 'REJECTED' } },
             ],

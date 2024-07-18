@@ -70,7 +70,7 @@ export default ({ onAdd }: Props) => {
             options: [
               { label: 'All', value: 'ALL' },
               { label: 'Pending', value: 'PENDING' },
-              { label: 'In Process', value: 'IN_PROGRESS' },
+              { label: 'In Progress', value: 'IN_PROGRESS' },
               { label: 'Selected', value: 'SELECTED' },
               { label: 'Rejected', value: 'REJECTED' },
               { label: 'Expired', value: 'EXPIRED' },

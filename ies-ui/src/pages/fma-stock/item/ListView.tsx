@@ -17,10 +17,6 @@ interface Props {
     onEdit?: (id: number) => void;
     forceRefresh?: number
 }
-// type LightFilterProp = {
-//     status: string,
-//     groupIds?: number[]
-// }
 export default ({ onAdd, onEdit, forceRefresh }: Props) => {
     const cacheList = useModel('dataList');
     const actionRef = useRef<ActionType>();
@@ -93,21 +89,7 @@ export default ({ onAdd, onEdit, forceRefresh }: Props) => {
                         {it.itemGroupName}
                         </CheckableTag>
                     ))}
-                </ProFormCheckbox.Group>        
-                 {/*<LightFilter<LightFilterProp> 
-                    onValuesChange={(_, values) => {
-                        const groupIds = values.groupIds;                       
-                        setAdvanceSearchParams(v => { return {...v,groupIds: groupIds}})
-                        actionRef.current?.reloadAndRest?.();
-                    }}
-                >
-                    <ProFormSelect 
-                        name="groupIds"
-                        label="Group"
-                        mode="multiple"
-                        options={itemGroups.map((it) => {return { label: it.itemGroupName, value: it.id }})}                        
-                    />
-                </LightFilter> */}
+                </ProFormCheckbox.Group>   
             </Space>
             }
             actionHandlers={{
@@ -129,17 +111,6 @@ export default ({ onAdd, onEdit, forceRefresh }: Props) => {
                     sorter: 'itemCode',
                     dataIndex: 'itemCode',
                     width: 120,
-                    // render: (_, rd) => <Space>
-                    //     <Button
-                    //         type="link"
-                    //         icon={<EyeOutlined />}
-                    //         onClick={async () => {
-                    //             onEdit?.(rd.id)
-                    //         }}
-                    //     />
-                    //     {rd.itemCode}
-                    //     {/* <a onClick={() => { history.push(`${InhouseStockPaths.item}/detail/${rd.id}`) }} >{rd.itemCode}</a> */}
-                    // </Space>
                 },
                 {
                     title:'Abr.',
@@ -156,7 +127,7 @@ export default ({ onAdd, onEdit, forceRefresh }: Props) => {
                 },
                 {
                     title: 'Group',
-                    render: (_, rd)=> rd.itemGroup.itemGroupName
+                    render: (_, rd)=> rd?.itemGroup?.itemGroupName
                 },                
                 {
                     title:'Description',

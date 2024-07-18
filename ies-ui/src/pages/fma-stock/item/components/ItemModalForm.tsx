@@ -8,7 +8,7 @@ import {
   } from '@ant-design/pro-components';
 import { useForm } from 'antd/lib/form/Form';
 import { SaveItemData, UoM } from "../data.types";
-import { Checkbox, Modal, Spin, message } from "antd";
+import { Modal, Spin, message } from "antd";
 import { simpleRequestActions } from "@/services/model";
 import { createService } from "../services";
 import { createService as createSrv } from "../../request/services";
@@ -29,7 +29,7 @@ export default ({type, itemId, onRefresh,...rest}: ModalFormProps<SaveItemData> 
         type=='EDIT'?services.fetchItem(itemId||0).then(rs=> {
             setTitle(type=='EDIT'?'Edit - ' + rs.itemCode:'New Item')
             form.setFieldsValue(rs)
-            form.setFieldValue('groupId',rs.itemGroup.id)
+            form.setFieldValue('groupId',rs?.itemGroup?.id)
         }):form.setFieldValue('isActiveY',true)
         srv.listAllItemGroup().then(rs=>{
             setGroup(rs)

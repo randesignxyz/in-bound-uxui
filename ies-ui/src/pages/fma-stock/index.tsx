@@ -1,31 +1,30 @@
 import ListMenuComp, { ListMenuItem } from "@/components/ListMenu"
 import { PageContainer } from "@ant-design/pro-components"
 
-export const InhouseStockPaths = {
-    request: '/stock/request',
-    item: '/stock/item',
+export const WHMPaths = {
+    request: '/whm/issue/request',
+    item: '/whm/inventory/item',
+    transter:'/whm/transfer/request'
 }
 const items: ListMenuItem[] = [
     {
-      id: 'inhouse_stock_request',
-      name: 'NCM Stock Request',
-      description: 'NCM Stock Request Management',
-      link: `${InhouseStockPaths.request}/list`,
-    //   icon: ContactIcon,
-    //   visible: access.canAccessContact,
-    // isMenu: true,
-    // overlay: contactMenu
+      id: 'whm_issue_request',
+      name: 'NCM Request',
+      description: 'NCM Request Management',
+      link: `${WHMPaths.request}/list`
     },
     {
-        id: 'inhouse_stock_item',
-        name: 'NCM Item',
-        description: 'NCM Item Management',
-        link: `${InhouseStockPaths.item}/list`,
-      //   icon: ContactIcon,
-      //   visible: access.canAccessContact,
-      // isMenu: true,
-      // overlay: contactMenu
-      },
+        id: 'whm_transfer_request',
+        name: 'Transfer Request',
+        description: 'Transfer Request Management',
+        link: `${WHMPaths.transter}/list`
+    },
+    {
+        id: 'whm_inventory_item',
+        name: 'Inventory Item',
+        description: 'Inventory Item Management',
+        link: `${WHMPaths.item}/list`
+    },
 ]
 export default () => {
     return <PageContainer contentWidth='Fluid'  title={false}>

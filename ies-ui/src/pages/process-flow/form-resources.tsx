@@ -13,6 +13,7 @@ import { ActionDataFormProps, DataForm, DataViewProps } from './data';
 import { getAppraisalRequestForms } from '../hrm/appraisal-request/config';
 import { getGratisSettlementRequestForms } from '../crm/gratis/request/config';
 import {getFmaStockRequestForms} from '../fma-stock/request/process-flow/config'
+import { getInventoryTransferRequestForms } from '../fma-stock/transfer/process-flow/config';
 
 const dataFormResources: DataForm[] = [
   // ...CashAdvanceForms,
@@ -39,7 +40,8 @@ const dataFormResources: DataForm[] = [
   ...getPoRequestForms(),
   ...getAppraisalRequestForms(),
   ...getGratisSettlementRequestForms(),
-  ...getFmaStockRequestForms()
+  ...getFmaStockRequestForms(),
+  ...getInventoryTransferRequestForms()
 ];
 
 export const getActionForm = (props: ActionDataFormProps) =>

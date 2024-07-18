@@ -1,7 +1,7 @@
 import { ActionDataFormProps } from '@/pages/process-flow/data';
 import ActionFormWrapper from '@/pages/process-flow/components/forms/ActionFormWrapper';
 import { ActionType, EditableProTable, ProForm, ProFormTextArea } from '@ant-design/pro-components';
-import { StockRequestDetailResponse, StockRequestItemDetailResponse } from '../data.types';
+import { StockRequestItemDetailResponse } from '../data.types';
 import { simpleRequestActions } from '@/services/model';
 import { createService } from '../services';
 import { useEffect, useRef, useState } from 'react';
@@ -9,6 +9,7 @@ import { Card, Modal, UploadFile, message } from 'antd';
 import { uniqueId } from 'lodash';
 import { useForm } from 'antd/es/form/Form';
 import { TaskActionDataParam } from '@/services/process-workflow/params';
+import { formatDate } from '@/pages/utils';
 
 
 export default (props: ActionDataFormProps) => {
@@ -36,9 +37,9 @@ export default (props: ActionDataFormProps) => {
 
     return (
         <ActionFormWrapper
-           title="Stock Review"
+           title="Request Review"
             {...props}
-            width={'1250px'}
+            width={'1350px'}
             actionHandlers= {{...props.actionHandlers,
                 onCompleted: async ()=> {
                     if(!props.activityData?.taskId) {
@@ -56,7 +57,7 @@ export default (props: ActionDataFormProps) => {
                     } as TaskActionDataParam<{items:{id: number, stockRemarks?: string}[]}>
                     console.log('save data: ', data)
                     Modal.confirm({
-                        title: 'Stock Review',
+                        title: 'Request Review',
                         content: 'Are you sure?',
                         onOk: async() => {
                           try {
@@ -103,17 +104,33 @@ export default (props: ActionDataFormProps) => {
                             { title: 'Item Code', width: 100, editable: false, dataIndex: 'itemCode' },
                             { title: 'Item Name', editable: false, dataIndex: 'itemName' },
                             {
-                                title:'Qty',
+                                title: 'Quantity Requested',
                                 width: 100,
                                 editable: false,
+                                align: 'right',
                                 dataIndex:'qty'
                     
                             },
                             {
                                 title:'UoM',
-                                width: 130,
+                                width: 80,
                                 editable: false,
                                 dataIndex:'uom'
+                    
+                            },
+                            {
+                                title: 'To be Returned in Full or Partial (F/P)',
+                                width: 110,
+                                editable: false,
+                                dataIndex:'returnType'
+                    
+                            },
+                            {
+                                title: 'Expected Return Date',
+                                width: 110,
+                                editable: false,
+                                dataIndex:'returnDate',
+                                render: (_, r) => formatDate(r?.returnDate)
                     
                             },
                             {

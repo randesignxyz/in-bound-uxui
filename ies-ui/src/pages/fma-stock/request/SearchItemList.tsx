@@ -89,21 +89,6 @@ export default ({ addedItems, onAddItem, selectedGroupId, ...rest }: Props) => {
                 ))}
             </ProFormCheckbox.Group>
             <Row>
-                {/* <Col>
-                    <ProFormRadio.Group
-                    radioType="button"
-                    fieldProps={{
-                        buttonStyle: 'solid',
-                    }}
-                    initialValue={'ALL'}
-                    name={'itemType'}
-                    options={[
-                        { label: 'All', value: 'ALL' },
-                        { label: 'Product', value: 'PRODUCT' },
-                        { label: 'Service', value: 'SERVICE' },
-                    ]}
-                    />
-                </Col> */}
                 <Col flex={'Auto'}>
                     <Input.Search
                     allowClear
@@ -116,7 +101,6 @@ export default ({ addedItems, onAddItem, selectedGroupId, ...rest }: Props) => {
             </Row>
             <Divider/>
             <ProList<ItemListItem>
-                // showActions="hover"
                 actionRef={actionRef}
                 key="id"
                 pagination={{
@@ -159,7 +143,6 @@ export default ({ addedItems, onAddItem, selectedGroupId, ...rest }: Props) => {
                     onRequestHandler({
                       criteria: {
                         searchValue,
-                        // advanceSearch: searchParams,
                       },
                       sort,
                       pagination,

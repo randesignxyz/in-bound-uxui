@@ -1,7 +1,5 @@
 import { DrawerForm, DrawerFormProps } from "@ant-design/pro-components";
-import { StockRequestDetailResponse } from "./data.types";
 import ViewData from "./components/ViewData";
-import { useState } from "react";
 
 interface Props extends DrawerFormProps {
     instId?: string;
@@ -14,7 +12,7 @@ export default ({ instId, forceRefresh, onEdit, onAdd, reload, ...rest }: Props)
    
     return(
         <DrawerForm
-            title="Stock Request Detail"
+            title="NCM Request Detail"
             {...rest}
             resize={{
             maxWidth: window.innerWidth * 0.9,

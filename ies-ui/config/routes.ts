@@ -1142,29 +1142,44 @@ export default [
   //  ================= END Prod =================
   //  ================= START In-house Stock ==============
   {
-    path: '/stock/request/:view/*',
-    name: 'inhouse-stock-request',
+    path: '/whm',
+    name: 'whm',
+    icon: 'ReconciliationOutlined',
+    access: 'canAccessWHMMenuItem',
+    component: './fma-stock',
+  },
+  {
+    path: '/whm/issue/request/:view/*',
+    name: 'whm_issue_request',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessCrmMenuItem',
+    access: 'canAccessWHMMenuItem',
     component: './fma-stock/request',
   },
   {
-    path: '/stock/item/:view/*',
-    name: 'inhouse-stock-item',
+    path: '/whm/inventory/item/:view/*',
+    name: 'whm_inventory_item',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessCrmMenuItem',
+    access: 'canAccessWHMMenuItem',
     component: './fma-stock/item',
   },
   {
-    path: '/external/stock/item/:view/*',
-    name: 'inhouse-stock-item',
+    path: '/external/whm/inventory/item/:view/*',
+    name: 'whm_inventory_item',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
     layout: false,
-    access: 'canAccessCrmMenuItem',
+    access: 'canAccessWHMMenuItem',
     component: './fma-stock/item',
+  },
+  {
+    path: '/whm/transfer/request/:view/*',
+    name: 'whm-transter-request',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessWHMMenuItem',
+    component: './fma-stock/transfer',
   },
   //  ================= END In-house Stock ================
   //  ================= Setting =================

@@ -1,4 +1,3 @@
-import BaseCrud from "@/components/base-crud"
 import { formatDate } from "@/pages/utils";
 import { simpleRequestActions } from "@/services/model"
 import { ExportOutlined, EyeFilled } from "@ant-design/icons";
@@ -67,7 +66,7 @@ export default ({ onAdd, onEdit }: Props) => {
     }
   };
 
-  return  <PageContainer onBack={history.back} title="NCM Stock Request">
+  return  <PageContainer onBack={history.back} title="NCM Request">
       <TableView<StockRequestListItem, SearchParams>
         cache
         bordered

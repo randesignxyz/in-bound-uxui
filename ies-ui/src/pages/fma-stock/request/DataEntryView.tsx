@@ -54,23 +54,25 @@ export default ({
     };
     const getDataForm = async () => {
       const dataForm = await form.validateFields();
+      console.log('dataForm',dataForm)
       await editableFormRef.current?.validateFields();
       if ((addedItems.length || 0) == 0) {
         message.error('Please add some request items.');
         return Promise.reject();
       }
+      console.log('addedItems: ',addedItems.map(it => (it.returnDate)))
       return {
         ...dataForm,
         id: type == 'EDIT' ? id : undefined,
         groupId: groupId,       
         fileIds: fileIds,
-        items: addedItems.map((v, index) => ({ ...v, seqNo: index + 1 })),
+        items: addedItems.map((v, index) => ({ ...v, returnDate: (v?.returnDate!= undefined? moment(v?.returnDate, 'YYYY-MM-DD').toDate(): v?.returnDate), seqNo: index + 1 })),
         // services: addedServices.map((v, index) => ({ ...v, seqNo: index + 1 })),
-      };
+      } as StockRequest;
     };
 
     return  <Spin spinning={requestActions.request?.loading || false}>
-      <PageContainer title="NCM Stock Request Form" onBack={() => history.back()}>
+      <PageContainer title="NCM Request Form" onBack={() => history.back()}>
         <ProForm
           form={form}
           submitter={{
@@ -127,7 +129,7 @@ export default ({
                   hasFeedback={false}
                   help={<span />}
                   rules={[{ required: true, whitespace: true }]}
-                  label="Reason"
+                  label="Requesting Purpose"
                   name={'reason'}
                 />
               </Col>
@@ -225,7 +227,7 @@ export default ({
               { title: 'Item Code', width: 100, editable: false, dataIndex: 'itemCode' },
               { title: 'Item Name', editable: false, dataIndex: 'itemName' },            
               {
-                title: 'Qty',
+                title: 'Quantity Requested',
                 width: 100,
                 dataIndex: 'qty',
                 fieldProps: { style: { width: 80 }, min: 1},
@@ -237,9 +239,36 @@ export default ({
                 width: 130,
                 dataIndex: 'uom',
                 valueType: 'select',
-                formItemProps: { rules: [{ required: true }] },
+                formItemProps: { rules: [{ required: false }] },
                 valueEnum: (r) => itemUomList.filter(it => it.itemCode == r.itemCode).reduce((acc, cur) => ({ ...acc, [cur.uom]: cur.uom }), {})                
+              },{
+                title: 'To be Returned in Full or Partial (F/P)',
+                valueType: 'select',
+                width: 110,
+                dataIndex: 'returnType',
+                fieldProps: { rows: 1, maxLength: 110 },
+                valueEnum: (r) => ['F','P'].reduce((acc, cur) => ({ ...acc, [cur]: cur }), {})    
               },
+              {
+                title: 'Expected Return Date',
+                width: 110,
+                dataIndex: 'returnDate',
+                fieldProps: { style: { width: 110 }},
+                valueType: 'date',                
+                formItemProps: {rules:[
+                  {
+                    required: false,
+                    // validator: (rules, value) => {
+                    //   if ((value as Moment).startOf('day').isBefore(moment().startOf('day'))) {
+                    //     return Promise.reject('Return date cannot be back date.');
+                    //   } else {
+                    //     message.warning('Hello')
+                    //     return Promise.resolve();
+                    //   }
+                    // },
+                  },
+                ]},
+              },             
               {
                 title: 'Remarks',
                 valueType: 'textarea',

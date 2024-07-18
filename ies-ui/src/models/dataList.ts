@@ -50,6 +50,7 @@ import { Term } from '@/pages/crm/term/types';
 import { TransferRequest } from '@/pages/prod/inventory-transfer-request/data';
 import { StockRequestLess, StockRequestListItem } from '@/pages/fma-stock/request/data.types';
 import { ItemList } from '@/pages/fma-stock/item/data.types';
+import { TransferRequestListItem } from '@/pages/fma-stock/transfer/data.types';
 
 type DataList =
   | {
@@ -297,6 +298,10 @@ type DataList =
     type: 'fma-item-list';
     criteria?: any;
     data?: Paging<ItemList>;
+  }| {
+    type: 'whh-inventory-transfer-request';
+    criteria?: any;
+    data?: Paging<TransferRequestListItem>;
   };
 
 type MomainType =
@@ -346,7 +351,8 @@ type MomainType =
   | 'dms-document'
   | 'term'
   | 'transfer-request-list'
-  | 'fma-stock-request';
+  | 'fma-stock-request'
+  | 'whh-inventory-transfer-request';
 
 export default () => {
   const [cacheData, seCacheData] = useState<DataList>();

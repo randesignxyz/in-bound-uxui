@@ -18,6 +18,7 @@ export const FLEET_API = '/services/fleet/api'
 export const SAP_SOURCE_API = '/services/sap/api'
 export const PROD_API = '/services/prod/api'
 export const DMS_API = '/services/dms/api'
+export const FMA_API = '/services/fma/api'
 
 export const getServiceUrl = (service: Endpoint) => {
     switch (service) {
@@ -39,6 +40,7 @@ export const getServiceUrl = (service: Endpoint) => {
         case 'DLV_EXPENSE': return SAP_API
         case 'PROD': return PROD_API
         case 'DMS': return DMS_API
+        case 'FMA': return FMA_API
         default: throw Error(`${service} cannot be found`)
     }
 }

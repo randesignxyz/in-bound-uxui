@@ -22,6 +22,7 @@ import { Button, Input, message, Select, Space, Tag } from 'antd';
 import { useEffect, useState } from 'react';
 import { history } from "@umijs/max";
 import { ProcessRequestItem } from './data.type';
+import { StockRequestFormNames } from '@/pages/fma-stock/request/process-flow';
 
 export default () => {
   const [data, setData] = useState<ProcessRequestItem[]>([]);
@@ -52,7 +53,8 @@ export default () => {
     if (key == IncidentFormNames.processDefKey && access.canCreateIncidentTicket) return true;
     if (key == 'requisition_request_process' && access.canCreatePR) return true;
     if (key == PriceComparisonFormNames.processDefKey && access.canAccessProQCMenuItem) return true;
-    if (key == PoRequestFormNames.processDefKey && access.canAccessProPOMenuItem) return true;
+    if (key == PoRequestFormNames.processDefKey && access.canAccessProPOMenuItem) return true;   
+    if (key == StockRequestFormNames.processDefKey && access.canCreateNCMRequest) return true;
 
     return false;
   };

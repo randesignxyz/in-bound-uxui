@@ -10,6 +10,10 @@ export const SettingPaths = {
     workflow: '/setting/process-def',
     pro: '/pro/setting'
 }
+export const NCMStockPaths = {
+    request: '/stock/request',
+    item: '/stock/item',
+}
 
 const processDefList = [
     {
@@ -25,6 +29,13 @@ const processDefList = [
         description: 'Setting for Pro module',
         icon: settingIcon,
         link: `${SettingPaths.pro}`,
+    },
+    {
+        id: 'inhouse_stock_item',
+        name: 'NCM Item List',
+        description: 'NCM Item Management',
+        link: `${NCMStockPaths.item}/list`,
+
     },
 ];
 

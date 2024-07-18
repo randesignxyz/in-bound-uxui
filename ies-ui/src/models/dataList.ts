@@ -48,6 +48,8 @@ import { DocumentationDTO } from '@/pages/dms/documentation/data';
 import { ShareDTO } from '@/pages/dms/share/data';
 import { Term } from '@/pages/crm/term/types';
 import { TransferRequest } from '@/pages/prod/inventory-transfer-request/data';
+import { StockRequestLess, StockRequestListItem } from '@/pages/fma-stock/request/data.types';
+import { ItemList } from '@/pages/fma-stock/item/data.types';
 
 type DataList =
   | {
@@ -283,11 +285,18 @@ type DataList =
     type: 'term';
     criteria?: any;
     data: Paging<Term>;
-  }
-  | {
+  }| {
     type: 'transfer-request-list';
     criteria?: any;
     data: Paging<TransferRequest>;
+  }| {
+    type: 'fma-stock-request';
+    criteria?: any;
+    data?: Paging<StockRequestListItem>;
+  }| {
+    type: 'fma-item-list';
+    criteria?: any;
+    data?: Paging<ItemList>;
   };
 
 type MomainType =
@@ -336,7 +345,8 @@ type MomainType =
   | 'dms-share'
   | 'dms-document'
   | 'term'
-  | 'transfer-request-list';
+  | 'transfer-request-list'
+  | 'fma-stock-request';
 
 export default () => {
   const [cacheData, seCacheData] = useState<DataList>();

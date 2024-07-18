@@ -162,4 +162,7 @@ export default {
   'menu.term': 'Term',
   'menu.fleet_accessory': 'Fleet Accessory',
 
+  'menu.inhouse-stock': 'NCM',
+  'menu.inhouse_stock_request': 'Stock Request',
+  'menu.inhouse_stock_item': 'Item',
 };

@@ -153,8 +153,12 @@ export interface TransferRequestDetailResponse {
   lastModifiedDate?: Moment;
   lastModifiedBy?: string;
   fileIds?: string[];
+  postedDate?: Moment;
+  sapDocEntry?: number;
+  sapDocNo?: string;
   warehouseTo?:string;
   warehouseFrom?:string;
+  integratedStatus?:string;
 }
 export interface EmpWarehouseList {
   id: number;

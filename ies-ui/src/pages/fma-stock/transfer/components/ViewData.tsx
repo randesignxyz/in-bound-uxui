@@ -6,6 +6,7 @@ import { useForm } from "antd/es/form/Form";
 import { useEffect, useRef, useState } from "react";
 import { simpleRequestActions } from "@/services/model";
 import { createService } from "../services";
+import Status from "@/components/Status";
 
 interface Props {
     title?:string; 
@@ -82,25 +83,30 @@ export default ({title,instId, forceRefresh }: Props) => {
             <Descriptions.Item label="From No" style={{ fontWeight: 'bolder' }}>
                 {stockRequest?.formNo}
             </Descriptions.Item>
-            <Descriptions.Item label="Expected Date">
-                {stockRequest?.requestedDate && formatDate(stockRequest?.requestedDate)}
-            </Descriptions.Item>
+            <Descriptions.Item label="Created By">{stockRequest?.createdBy}</Descriptions.Item>
+           
             <Descriptions.Item label="Created Date">
                 {stockRequest?.createdDate && formatDateTime(stockRequest?.createdDate)}
             </Descriptions.Item>
+           
             <Descriptions.Item style={{ fontWeight: 'bolder' }} label="Group">
                 {stockRequest?.groupName}{' '}
             </Descriptions.Item>  
             
-            <Descriptions.Item style={{ fontWeight: 'bolder' }} label="Reason" span={2}>{stockRequest?.reason} </Descriptions.Item>  
             <Descriptions.Item style={{ fontWeight: 'bolder' }} label="From Warehouse">
                 {stockRequest?.warehouseFrom}{' '}
-            </Descriptions.Item>    
+            </Descriptions.Item>  
+            <Descriptions.Item label="Posted Date">{stockRequest?.postedDate && formatDate(stockRequest?.postedDate)}</Descriptions.Item>
+
+            <Descriptions.Item label="Expected Date">
+                {stockRequest?.requestedDate && formatDate(stockRequest?.requestedDate)}
+            </Descriptions.Item>
             <Descriptions.Item style={{ fontWeight: 'bolder' }} label="To Warehouse">
                 {stockRequest?.warehouseTo}{' '}
             </Descriptions.Item>          
-            <Descriptions.Item label="Created By">{stockRequest?.createdBy}</Descriptions.Item>
-            <Descriptions.Item label="Remark">{stockRequest?.remarks}</Descriptions.Item>                
+            <Descriptions.Item label="SAP Doc Num">{stockRequest?.sapDocNo}</Descriptions.Item>        
+            <Descriptions.Item label="Reason" span={2}>{stockRequest?.reason}</Descriptions.Item>   
+            <Descriptions.Item label="SAP Transfer Status">{stockRequest?.integratedStatus &&<Status text={stockRequest?.integratedStatus} />}</Descriptions.Item>              
             {stockRequest?.lastModifiedDate && (
                 <Descriptions.Item label="Last Modified Date">
                 {formatDateTime(stockRequest?.lastModifiedDate)}

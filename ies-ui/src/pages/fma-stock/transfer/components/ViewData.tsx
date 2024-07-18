@@ -78,7 +78,7 @@ export default ({title,instId, forceRefresh }: Props) => {
     ]
     
     return <>
-        <ProCard title='Request Info'>
+        <ProCard title='Request Info' collapsible={true}>
             <Descriptions>
             <Descriptions.Item label="From No" style={{ fontWeight: 'bolder' }}>
                 {stockRequest?.formNo}

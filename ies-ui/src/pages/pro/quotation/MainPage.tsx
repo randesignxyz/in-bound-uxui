@@ -224,9 +224,9 @@ export default () => {
                 },
                 {
                     title: 'SAP Info',
-                    hideInTable: !['ALL', 'SELECTED', 'REJECTED'].some((it) => it == filter?.criteria?.advanceSearch?.status),
+                    hideInTable: !['ALL', 'SELECTED', 'REJECTED'].some((it) => it == filter?.criteria?.advanceSearch?.status || 'ALL'),
                     children: [
-                        { title: 'Doc #', dataIndex: 'integratedDoc' },
+                        { title: 'Doc#', dataIndex: 'integratedDoc' },
                         { title: 'Posted Date', sorter: 'postedDate', dataIndex: 'postedDate' },
                         { title: 'Status', render: (_, r) => r.integratedStatus && <Status text={r.integratedStatus} /> }],
                 },

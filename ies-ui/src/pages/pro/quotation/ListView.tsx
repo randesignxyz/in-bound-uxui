@@ -79,6 +79,7 @@ export default ({ onAdd }: Props) => {
           },
 
           subStatusProps: (status) => {
+
             status && setSelectedStatus(status);
 
             return status == 'SELECTED'
@@ -160,7 +161,7 @@ export default ({ onAdd }: Props) => {
 
             {
               title: 'SAP Info',
-              hideInTable: !['ALL', 'SELECTED', 'REJECTED'].some((it) => it == selectedStatus),
+              hideInTable: ['ALL', 'SELECTED', 'REJECTED'].some((it) => it == selectedStatus),
               children: [
                 { title: 'Doc #', dataIndex: 'integratedDoc' },
                 { title: 'Posted Date', sorter: 'postedDate', dataIndex: 'postedDate' },

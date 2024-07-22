@@ -57,14 +57,15 @@ export default ({
   const onSelectHandler = async (remarks: string) => {
     try {
       await srv.select(data?.id!!, remarks);
-      initData();
+
       try {
         await srv.postPQ(data?.id!!)
       } catch (error: any) {
         message.error(error.message || 'Failed to post to SAP.');
+        initData();
         return false;
       }
-
+      initData();
       message.success("Successfully selected.")
       return true;
     } catch (error: any) {

@@ -217,6 +217,7 @@ export default ({
         amountAfterDiscount: it.amount || 0,
         item: it,
         linkObject: [],
+        relatedObjects: []
       }));
     onSave(savedData);
   };

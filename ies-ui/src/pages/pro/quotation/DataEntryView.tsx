@@ -461,8 +461,8 @@ export default ({
       itemDescription: it.description,
       price: it.unitPrice,
       qty: it.qty,
-      orderedQty: it.orderdQty,
-      purchasedQty: it.purchaseQty,
+      orderedQty: it.orderedQty,
+      purchasedQty: it.purchasedQty,
       availableQty: it.availableQty,
       uom: it.uom,
     }]

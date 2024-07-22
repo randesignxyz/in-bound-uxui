@@ -3,7 +3,7 @@ import { PoRequestFormNames, PoRequestListItem, PoRequestSearchParams } from "./
 import { CheckOutlined, ExportOutlined, PartitionOutlined, PlusCircleFilled, UploadOutlined } from "@ant-design/icons"
 import Status from "@/components/Status"
 import { formatDate, formatDateTime, formatter } from "@/pages/utils"
-import { Badge, Button, Flex, Modal, Typography, message } from "antd"
+import { Button, Flex, Modal, message } from "antd"
 import { useState } from "react"
 import Flow from "../flow"
 import { createPoService } from "./services"
@@ -159,10 +159,10 @@ export default () => {
 
                         {
                             title: 'SAP Information',
-                            hideInTable: !['ALL', 'APPROVED'].some((it) => it == filter.criteria?.advanceSearch?.workflowStatus),
+                            hideInTable: !['ALL', 'APPROVED'].some((it) => it == filter.criteria?.advanceSearch?.workflowStatus || 'ALL'),
                             children: [
+                                { title: 'Doc#', render: (_, r) => r.sapDocNo },
                                 { title: 'Posted Date', sorter: "postedDate", align: 'right', render: (_, r) => r.postedDate && formatDate(r.postedDate) },
-                                { title: 'Doc Num', render: (_, r) => r.sapDocNo },
                                 { title: 'Status', render: (_, r) => r.integratedStatus && <Status text={r.integratedStatus} /> },
                             ],
                         },

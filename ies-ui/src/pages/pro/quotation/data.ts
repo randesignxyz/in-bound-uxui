@@ -186,8 +186,8 @@ export type PrItem = {
     requestedBy: string;
     docNo: string;
     qty: number;
-    orderdQty?: number;
-    purchaseQty?: number;
+    orderedQty?: number;
+    purchasedQty?: number;
     availableQty?: number
     uom: string;
     unitPrice: number;

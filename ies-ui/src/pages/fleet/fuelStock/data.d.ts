@@ -84,9 +84,9 @@ interface TankMonthlyEndingDTO {
     status?: string,
     remark?: string,
     endingDate?: moment.Moment,
-    createdBy?:string;
-    createdDate?:moment.Moment;
-    monthlyTransaction:TankTransactionDTO[];
+    createdBy?: string;
+    createdDate?: moment.Moment;
+    monthlyTransaction: TankTransactionDTO[];
 }
 
 
@@ -98,7 +98,7 @@ interface MonthlyEndingTankDTO {
     status?: string,
     remark?: string,
     closingDate: moment.Moment;
-    createdBy?: string?,
+    createdBy?: string,
     createdDate?: moment.Moment,
 }
 
@@ -121,9 +121,9 @@ interface TankTransactionDTO {
     createdDate?: moment.Moment,
     lastModifiedBy?: string,
     lastModifiedDate?: moment.Moment,
-    beforeBalance?:number;
-    afterBalance?:number;
-    beginningBalance:number;
+    beforeBalance?: number;
+    afterBalance?: number;
+    beginningBalance: number;
 }
 interface FuelTransactionSearch {
     searcheValue?: string;
@@ -131,11 +131,11 @@ interface FuelTransactionSearch {
     status?: string;
     date?: moment.Moment;
     sort?: Record<string, SortOrder>
-    endingDate?:moment.Moment
+    endingDate?: moment.Moment
 }
 
 interface TankTransactionCreate {
-    id: number?,
+    id?: number,
     tankId: number,
     quantity: number,
     dateRefill: moment.Moment,

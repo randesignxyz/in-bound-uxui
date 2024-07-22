@@ -24,6 +24,6 @@ export interface SettlementLess {
   cashierName: string;
   exchangeRate: number;
   settlementDate: moment.Moment;
-  bankAmount?: number = 0.0;
+  bankAmount?: number;
   invoices?: SalesInvoiceAR[];
 }

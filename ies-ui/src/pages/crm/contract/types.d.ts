@@ -88,7 +88,7 @@ export interface ContractViewData {
   effectiveDate: moment.Moment;
   expireDate: moment.Moment;
   status: string;
-  terms: LookupDataItem?,
+  terms?: LookupDataItem,
   remarks?: string;
   posmItems?: POSMView[],
   customerAddressList: number[]

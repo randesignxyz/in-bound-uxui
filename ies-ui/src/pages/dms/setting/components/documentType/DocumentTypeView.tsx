@@ -10,7 +10,6 @@ import { Modal, message } from "antd/lib";
 interface Props {
     actionKey?: string
 }
-
 export default ({ actionKey }: Props) => {
     const actionRef = useRef<ActionType>();
     const requestAction = simpleRequestActions();
@@ -29,7 +28,6 @@ export default ({ actionKey }: Props) => {
             <ProList<DocumentTypeDTO>
                 actionRef={actionRef}
                 search={{
-                    
                     optionRender: (e) => {
                         return [
                             <Button
@@ -41,7 +39,6 @@ export default ({ actionKey }: Props) => {
                                 onClick={() => actionRef.current?.reload?.()}
                                 icon={<ReloadOutlined />}
                             />
-
                         ]
                     }
                 }}
@@ -58,7 +55,6 @@ export default ({ actionKey }: Props) => {
                             pageSize: param.pageSize
                         }
                     });
-
                     return Promise.resolve({
                         data: data.items,
                         success: true,

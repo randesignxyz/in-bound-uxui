@@ -1,7 +1,6 @@
 import { Moment } from "moment"
 import { Attachment,  DocumentationDTO } from "../documentation/data";
 
-
 interface ShareDTO{
      id:number,
      recipient:string,

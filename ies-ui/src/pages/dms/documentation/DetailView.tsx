@@ -3,7 +3,7 @@ import { ActionType, PageContainer } from "@ant-design/pro-components";
 import { simpleRequestActions } from "@/services/model";
 import { DocumentServiceAPI } from "./service";
 import React, { useEffect, useRef, useState } from "react";
-import { Alert, Modal, Spin } from "antd/lib";
+import { Alert, Modal } from "antd/lib";
 import HistoryTableView from "../history/HistoryTableView";
 import { BellOutlined, EditOutlined, ShareAltOutlined, UploadOutlined } from "@ant-design/icons";
 import AttachmentView from "../attachment/AttachmentView";
@@ -19,18 +19,15 @@ import ReminderListView from "../reminder/ReminderListView";
 import { DocumentationCreate, DocumentationDTO, UploadAttachmentFile } from "./data";
 import { Moment } from "moment";
 import DocFileUploadModal from "../attachment/DocFileUploadModal";
-import { history } from "@umijs/max";
 import DocumentDetail from "./DocumentDetail";
 import ContractViewDetail from "../contract/ContractViewDetail";
 import ShareListView from "../share/ShareListView";
-
+import { ExternalLayout } from "../dms";
 interface Props {
     id: number;
     share?: ShareDTO;
 }
-
 const alertMessage = (date: Moment, period?: number) => {
-
     if (expriationStatus(date) > 0) {
         return <Alert
             message={`document was expired `}
@@ -49,12 +46,11 @@ const alertMessage = (date: Moment, period?: number) => {
     }
 }
 const DocumentationDetail: React.FC<Props> = ({ id, share }) => {
-
     const requestAction = simpleRequestActions();
     const service = DocumentServiceAPI(requestAction);
     const [detail, setDetail] = useState<DocumentationDTO>();
     const actionRef = useRef<ActionType>();
-    const [tabState, setTabState] = useState<string>("2");
+    const [tabState, setTabState] = useState<string>("1");
     const [uploadFileState, setUploadFileState] = useState<{
         visible?: {
             name: "MODAL";
@@ -89,77 +85,73 @@ const DocumentationDetail: React.FC<Props> = ({ id, share }) => {
     useEffect(() => {
         loadData();
     }, [id]);
-
     return (<>
-        <Spin spinning={requestAction.request?.loading}>
-            <PageContainer
-                onBack={history.back}
-                title="Documentation"
-                breadcrumb={undefined}
-                subTitle={`# ${detail?.documentation?.docName}`}
-                extra={[
-                    <Button type="default" onClick={() => setState({ visible: { name: "MODAL", type: "EDIT", payload: detail } })} icon={<EditOutlined />} disabled={share?.accessible == "viewer"} >Edit</Button>,
-                    <Button type="default" onClick={() => setShareState({ visible: { name: "MODAL", type: "ADD" } })} icon={<ShareAltOutlined />} >Shared</Button>,
-                    <Button type="default" onClick={() => setReminderState({ visible: { name: "MODAL", type: "ADD" } })} icon={<BellOutlined />} >Reminder</Button>,
-                    <Button type="default" onClick={() => setUploadFileState({ visible: { name: "MODAL", type: "ADD" } })} icon={<UploadOutlined />} disabled={share?.accessible == "viewer"} >Upload</Button>,
-                ]}
-            >
-                {alertMessage(detail?.term.expiryDate)}
-                {detail && (<>
+        <PageContainer
+            onBack={!ExternalLayout.isExternal("dms/document/") ? ExternalLayout.handleBackHandler : undefined}
+            title="Documentation"
+            breadcrumb={undefined}
+            loading={requestAction.request?.loading}
+            subTitle={`# ${detail?.documentation?.docName}`}
+            extra={[
+                <Button type="default" onClick={() => setState({ visible: { name: "MODAL", type: "EDIT", payload: detail } })} icon={<EditOutlined />} disabled={share?.accessible == "viewer"} >Edit</Button>,
+                <Button type="default" onClick={() => setShareState({ visible: { name: "MODAL", type: "ADD" } })} icon={<ShareAltOutlined />} >Shared</Button>,
+                <Button type="default" onClick={() => setReminderState({ visible: { name: "MODAL", type: "ADD" } })} icon={<BellOutlined />} >Reminder</Button>,
+                <Button type="default" onClick={() => setUploadFileState({ visible: { name: "MODAL", type: "ADD" } })} icon={<UploadOutlined />} disabled={share?.accessible == "viewer"} >Upload</Button>,
+            ]}
+        >
+            {alertMessage(detail?.term.expiryDate)}
+            {detail && (<>
+                {
+                    detail?.division == "DOC" && (
+                        <DocumentDetail
+                            document={detail}
+                            actionRef={actionRef}
+                        />
+                    ) ||
+                    (
+                        <ContractViewDetail
+                            document={detail}
+                            actionRef={actionRef}
+                        />
+                    )
+                }
+            </>)}
+            <Tabs
+                defaultActiveKey={tabState}
+                items={[
                     {
-                        detail?.division == "DOC" && (
-                            <DocumentDetail
-                                document={detail}
-                                actionRef={actionRef}
-                            />
-                        ) ||
-                        (
-                            <ContractViewDetail
-                                document={detail}
-                                actionRef={actionRef}
-                            />
-                        )
-                    }
-                </>)}
-
-                <Tabs
-                    defaultActiveKey={tabState}
-                    items={[
-                        {
-                            key: "2",
-                            label: "Shared",
-                            children: <ShareListView docId={detail?.id} />
-                        },
-                        {
-                            key: "3",
-                            label: "Reminder",
-                            children: <ReminderListView documentId={detail?.id} />
-                        },
-                        {
-                            key: "4",
-                            label: "Attachments",
-                            children: <AttachmentView
-                                docId={detail?.id}
-                                tabState={tabState || Math.random().toString()}
-                                accessKey={share?.accessible}
-                            />
-                        },
-                        {
-                            key: "5",
-                            label: "Activities",
-                            children: <HistoryTableView intantId={id} source="DOCUMENTATION" />
-                        },
-                    ]}
-                />
-
-            </PageContainer>
-        </Spin>
+                        key: "1",
+                        label: "Attachments",
+                        children: <AttachmentView
+                            docId={detail?.id}
+                            tabState={tabState || Math.random().toString()}
+                            accessKey={share?.accessible}
+                        />
+                    },
+                    {
+                        key: "2",
+                        label: "Shareds",
+                        children: <ShareListView docId={detail?.id} />
+                    },
+                    {
+                        key: "3",
+                        label: "Reminders",
+                        children: <ReminderListView documentId={detail?.id} />
+                    },
+                    {
+                        key: "4",
+                        label: "Activities",
+                        children: <HistoryTableView intantId={id} source="DOCUMENTATION" />
+                    },
+                ]}
+            />
+        </PageContainer>
         <ShareDrawerForm
             open={shareState?.visible?.name === "MODAL"}
             onCancel={() => setShareState((v) => ({ visible: undefined }))}
             docId={id}
             onSave={async (data: ShareCreate) => {
-                const response = await ShareServiceAPI(requestAction).save(data) as ({
+                await ShareServiceAPI(requestAction).save(data) as ({
                     data?: string;
                     message?: string
                 });
@@ -174,14 +166,14 @@ const DocumentationDetail: React.FC<Props> = ({ id, share }) => {
                 Modal.confirm({
                     title: "Update Document",
                     content: "do you want update information this document?",
-                    onOk: () => {
-                        service.save(data);
+                    onOk: async () => {
+                        await service.save(data);
+                        actionRef.current?.reloadAndRest?.();
+                        loadData();
                         setState((v) => ({ visible: undefined }));
                         message.success("Success!");
-                        actionRef.current?.reload?.();
                     }
                 });
-
             }}
             division={state?.visible?.payload?.division}
             onCancel={() => setState((v) => ({ visible: undefined }))}
@@ -210,5 +202,4 @@ const DocumentationDetail: React.FC<Props> = ({ id, share }) => {
         />
     </>)
 }
-
 export default DocumentationDetail

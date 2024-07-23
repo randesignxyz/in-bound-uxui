@@ -1,7 +1,6 @@
-import { history, useAccess } from 'umi';
-import { SalePaths } from '@/pages/sale';
+import { useAccess } from 'umi';
 import { CheckOutlined, CloudUploadOutlined, EditOutlined, StopOutlined } from '@ant-design/icons';
-import { Button, message, Modal, Spin } from 'antd';
+import { Button, Flex, Form, message, Modal, Spin } from 'antd';
 import React, { useEffect } from 'react';
 import { Model } from '../../model';
 import CancelSo from './CancelSo';
@@ -9,17 +8,20 @@ import SapPosting from './SapPosting';
 import SoFormView from './SoFormView';
 import CloseSo from './CloseSo';
 import { CloseIndirectSoParams } from '@/services/sale/data';
-import { PageContainer } from '@ant-design/pro-components';
-// import access from "@/access";
+import { PageContainer, ProForm } from '@ant-design/pro-components';
+import OrderFormView from './OrderFormView';
+
 
 interface Props {
   id?: number;
+  openInTab?: true;
   actionHandlers?: {
     onBack?: () => void;
+    onEdit?: () => void;
   };
 }
 
-const SoDetailView: React.FC<Props> = ({ id, actionHandlers }) => {
+const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
   const { state, actions, modals } = Model();
   const access = useAccess();
   useEffect(() => {
@@ -28,7 +30,7 @@ const SoDetailView: React.FC<Props> = ({ id, actionHandlers }) => {
     } catch {
       message.error('Failed to load so.');
     }
-  }, []);
+  }, [id]);
 
   const onSapPostingHandler = (comment?: string) => {
     if (!id) {
@@ -97,84 +99,88 @@ const SoDetailView: React.FC<Props> = ({ id, actionHandlers }) => {
     });
   };
 
-  return (
-    <PageContainer
-      breadcrumb={undefined}
-      title="PO#"
-      subTitle={state.data?.soDetail?.docEntryNum}
-      onBack={actionHandlers?.onBack}
-      extra={
-        access.canCreateEditSo &&
-        ['Pending', 'Failed'].some((it) => it === state.data?.soDetail?.status) && [
-          <Button
-            type="link"
-            htmlType="button"
-            icon={<EditOutlined />}
-            onClick={() => history.push(`${SalePaths.so}/edit/${id}`)}
-            key="edit"
-          >
-            Edit
-          </Button>,
-
-          <Button
-            type="link"
-            icon={<StopOutlined />}
-            key="cancel"
-            onClick={() => modals.showModal('cancel-so')}
-          >
-            Cancel
-          </Button>,
-
-          state.data?.soDetail?.invoiceType === 121 && (
-            // state.data?.soDetail?.associatedTo.customer.code?.startsWith('C') && (
-            <Button
-              type="link"
-              htmlType="button"
-              onClick={() => modals.showModal('sap-posting')}
-              key="sapPosting"
-            >
-              <CloudUploadOutlined /> SAP Posting
-            </Button>
-          ),
-
-          // !state.data?.soDetail?.associatedTo.customer.code?.startsWith('C') && (
-          state.data?.soDetail?.invoiceType === 122 && (
-            <Button
-              type="link"
-              htmlType="button"
-              onClick={() => modals.showModal('close-so')}
-              key="close"
-            >
-              <CheckOutlined /> Close
-            </Button>
-          ),
-        ]
-      }
+  const buttons = [
+    <Button
+      type="link"
+      icon={<StopOutlined />}
+      key="cancel"
+      onClick={() => modals.showModal('cancel-so')}
     >
-      <Spin spinning={state.loading}>
-        {id && <SoFormView data={state.data?.soDetail} />}
-        <SapPosting
-          open={modals.isVisible('sap-posting')}
-          onCancel={() => modals.hideModal('sap-posting')}
-          onPosting={onSapPostingHandler}
-        />
-        <CancelSo
-          open={modals.isVisible('cancel-so')}
-          onCancel={() => modals.hideModal('cancel-so')}
-          onCacelSo={onCancelSoHandlers}
-        />
+      Cancel
+    </Button>,
+    <Button
+      type="link"
+      htmlType="button"
+      icon={<EditOutlined />}
+      onClick={() => actionHandlers?.onEdit?.()}
+      key="edit"
+    >
+      Edit
+    </Button>,
+    state.data?.soDetail?.invoiceType === 121 && (
+      <Button
+        type="link"
+        htmlType="button"
+        onClick={() => modals.showModal('sap-posting')}
+        key="sapPosting"
+      >
+        <CloudUploadOutlined /> SAP Posting
+      </Button>
+    ),
+    state.data?.soDetail?.invoiceType === 122 && (
+      <Button
+        type="link"
+        htmlType="button"
+        onClick={() => modals.showModal('close-so')}
+        key="close"
+      >
+        <CheckOutlined /> Close
+      </Button>
+    ),
+  ]
 
-        <CloseSo
-          data={{
-            distributorId: state.data?.soDetail?.distributor?.id,
-          }}
-          itemList={state.data?.soDetail?.deliveries || []}
-          open={modals.isVisible('close-so')}
-          onCancel={() => modals.hideModal('close-so')}
-          onCloseSo={onCloseSoHandler}
-        />
-      </Spin>
-    </PageContainer>
+  return (
+    <Spin spinning={state.loading}>
+
+      {openInTab ? <>
+        <OrderFormView actionButtons={buttons} soDetail={state.data?.soDetail} />
+        <SoFormView data={state.data?.soDetail} />
+      </> : <PageContainer
+        breadcrumb={undefined}
+        title={!openInTab && "PO#"}
+        subTitle={!openInTab && state.data?.soDetail?.docEntryNum}
+        content={<OrderFormView soDetail={state.data?.soDetail} />}
+        extra={
+          access.canCreateEditSo && !openInTab &&
+          ['Pending', 'Failed'].some((it) => it === state.data?.soDetail?.status) && buttons
+        }
+      >
+        <SoFormView data={state.data?.soDetail} />
+
+      </PageContainer>}
+
+
+      <SapPosting
+        open={modals.isVisible('sap-posting')}
+        onCancel={() => modals.hideModal('sap-posting')}
+        onPosting={onSapPostingHandler}
+      />
+      <CancelSo
+        open={modals.isVisible('cancel-so')}
+        onCancel={() => modals.hideModal('cancel-so')}
+        onCacelSo={onCancelSoHandlers}
+      />
+
+      <CloseSo
+        data={{
+          distributorId: state.data?.soDetail?.distributor?.id,
+        }}
+        itemList={state.data?.soDetail?.deliveries || []}
+        open={modals.isVisible('close-so')}
+        onCancel={() => modals.hideModal('close-so')}
+        onCloseSo={onCloseSoHandler}
+      />
+    </Spin>
   );
 };
 

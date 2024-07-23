@@ -5,21 +5,22 @@ import { SalePaths } from '..';
 import Create from './Create';
 import StockStoreDetail from './Detail';
 import Edit from './Edit';
-import StoreListView from './List';
+import StoreMainPage from './MainPage';
 
 export default () => {
   const access = useAccess();
   return (
-    <CrudWrapper baseURL={SalePaths.store}>
+    <CrudWrapper baseURL={SalePaths.store} disablePageContainer>
       {(view, id, navigate) => {
         return (
           (view === 'list' && (
-            <StoreListView
-              actionHandlers={{
-                onAdd: navigate?.goToCreate,
-                onDetail: navigate?.goToDetail,
-              }}
-            />
+            <StoreMainPage/>
+            // <StoreListView
+            //   actionHandlers={{
+            //     onAdd: navigate?.goToCreate,
+            //     onDetail: navigate?.goToDetail,
+            //   }}
+            // />
           )) ||
           (view === 'detail' && (
             <StockStoreDetail

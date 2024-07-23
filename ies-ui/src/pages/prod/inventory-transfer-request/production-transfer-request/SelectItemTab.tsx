@@ -3,6 +3,7 @@ import { Tabs } from 'antd';
 import { Item } from '../data';
 import BOMItemList from './BOMItemList';
 import SearchItemList from './SearchItemList';
+import { useEffect } from 'react';
 
 interface Props extends ModalFormProps {
   onAdd?: (data: Item[]) => void;
@@ -12,6 +13,7 @@ interface Props extends ModalFormProps {
 }
 
 export default ({ onAdd, add, tenden, qty, ...rest }: Props) => {
+
   return (
     <ModalForm {...rest} submitter={false}>
       <Tabs

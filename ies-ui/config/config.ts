@@ -3,8 +3,11 @@ import { defineConfig } from '@umijs/max';
 import defaultSettings from './defaultSettings';
 import proxy from './proxy';
 import routes from './routes';
+// import routes from './routesDelivery';
 
 const { REACT_APP_ENV = 'dev' } = process.env;
+
+const API_SERVER = '/path/to/api/server';
 
 export default defineConfig({
   /**
@@ -122,6 +125,19 @@ export default defineConfig({
   ],
   mfsu: {
     strategy: 'normal',
+  },
+  plugins: [],
+  reactQuery: {
+    devtool: {
+      initialIsOpen: true,
+    },
+    queryClient: {
+      defaultOptions: {
+        queries: {
+
+        }
+      }
+    }
   },
   esbuildMinifyIIFE: true,
   requestRecord: {},

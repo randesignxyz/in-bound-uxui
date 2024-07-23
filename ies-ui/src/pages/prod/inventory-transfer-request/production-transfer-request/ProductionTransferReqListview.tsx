@@ -2,20 +2,20 @@ import TableView, { TableViewSearchParams } from '@/components/DataCrud/TableVie
 import { Paging } from '@/services/API';
 import { downloadReport } from '@/services/apiGateway';
 import { simpleRequestActions } from '@/services/model';
-import { FileExcelOutlined, PlusOutlined } from '@ant-design/icons';
+import { EyeFilled, FileExcelOutlined, PlusOutlined } from '@ant-design/icons';
 import { ActionType } from '@ant-design/pro-components';
 import { useAccess, useModel } from '@umijs/max';
-import { Button, Modal, Radio, Select, Space, Tag, message } from 'antd';
+import { Button, Modal, Radio, Select, Space, Tag, Tooltip, message } from 'antd';
 import Omit from 'omit.js';
 import { useEffect, useRef, useState } from 'react';
 import ApproveRemarkFormModal from '../../ApproveRemarkFormModal';
 import ExportExcel from '../../ExportExcel';
 import RemarkFormModal from '../../RemarkFormModal';
-import DetailView from '../DetailView';
+import DetailView from './DetailView';
 import { TransferRequest, TransferRequestAdvanceParams, TransferRequestCreate } from '../data';
 import { TransferRequestServiceAPI } from '../service';
 import TransferRequestModelForm from './TransferRequestModelForm';
-// import InventoryModelForm from "./InventoryModelForm";
+import { history } from 'umi'
 
 interface Props {
   onDetail?: (id: string) => void;
@@ -55,6 +55,7 @@ export default ({ onAdd }: Props) => {
     visible: boolean;
     id?: string;
     transfer_id?: string;
+    data?: any
   }>({
     visible: false,
     id: undefined,
@@ -230,22 +231,39 @@ export default ({ onAdd }: Props) => {
                 icon={<PlusOutlined />}
                 onClick={() => onAddHandler()}
               />,
-              <Button
-                key="click-export"
-                type="link"
-                icon={<FileExcelOutlined />}
-                onClick={() => setExportModal({ visible: true })}
-              />,
+              // <Button
+              //   key="click-export"
+              //   type="link"
+              //   icon={<FileExcelOutlined />}
+              //   onClick={() => setExportModal({ visible: true })}
+              // />,
             ],
           },
         }}
         columns={[
           {
+            title: '',
+            width: 10,
+            render: (_, r) => (
+              <Space size={1}>
+
+                <Tooltip title="View Data">
+                  <Button
+                    size="small"
+                    type="link"
+                    icon={<EyeFilled />}
+                    onClick={() => onDetailhandler(r)}
+                  />
+                </Tooltip>
+              </Space>
+            ),
+          },
+          {
             key: 'id',
             title: 'ID',
             dataIndex: 'id',
             render: (_, r) => (
-              <a onClick={() => onDetailhandler(r)}>PDR-{String(r.id).padStart(6, '0')}</a>
+              <a onClick={() => history.push(`/prod/inventory-transfer-request/view/${r.id}`, { id: r.id })}>PDR-{String(r.id).padStart(6, '0')}</a>
             ),
           },
           {
@@ -325,7 +343,7 @@ export default ({ onAdd }: Props) => {
                     <Button
                       style={{ width: '30%' }}
                       onClick={() => {
-                        setApproveModal({ visible: true, id: r.id, transfer_id: r.transfer_id });
+                        setApproveModal({ visible: true, id: r.id, transfer_id: r.transfer_id, data: r });
                       }}
                     >
                       Approve
@@ -421,25 +439,55 @@ export default ({ onAdd }: Props) => {
         onCancel={() => {
           setApproveModal({ visible: false, id: undefined });
         }}
-        onSave={async (id, remark, transfer_id) => {
-          const response: { data: string; message: string } = (await services.status_change({
+        onSave={async (id, remark, transfer_id, data) => {
+          const entity = {
             id: id,
-            remark: remark,
+            vendorCode: '',
+            vendorName: '',
+            fromWarehouse: data.from_warehouse.map((i: any) => (i.whsCode)).toString(),
+            toWarehouse: data.to_warehouse.map((i: any) => (i.whsCode)).toString(),
+            apiReferenceNo: '',
+            comments: data.line + ', ' + data.shift,
+            transferRequestDetails: data.item.map((v: any) => ({
+              ...v,
+              itemCode: v.item_code,
+              itemName: v.item_name,
+              fromWarehouse: data.from_warehouse.map((i: any) => (i.whsCode)).toString(),
+              toWarehouse: data.to_warehouse.map((i: any) => (i.whsCode)).toString(),
+              remark: v.remark === null ? '' : v.remark === undefined ? '' : v.remark,
+            })),
             statusChange: 'request-production-approve',
             state: 'in-progress',
-          })) as { data: string; message: string };
-          await services.save_activites({
             activities_name: 'Production Approval',
             action: 'Approved',
-            remark: remark,
             transfer_request: transfer_id,
-          });
+            postingDate: new Date(data.posting_date).toISOString(),
+            docDueDate: new Date(data.due_date).toISOString(),
+            taxDate: new Date(data.posting_date).toISOString(),
+          }
+          await services.save_to_sap(entity)
           setApproveModal({ visible: false, id: undefined });
-          message.info(response.message);
+          message.success("Success");
           actionRef.current?.reload();
+          // const response: { data: string; message: string } = (await services.status_change({
+          //   id: id,
+          //   remark: remark,
+          //   statusChange: 'request-production-approve',
+          //   state: 'in-progress',
+          // })) as { data: string; message: string };
+          // await services.save_activites({
+          //   activities_name: 'Production Approval',
+          //   action: 'Approved',
+          //   remark: remark,
+          //   transfer_request: transfer_id,
+          // });
+          // setApproveModal({ visible: false, id: undefined });
+          // message.info(response.message);
+          // actionRef.current?.reload();
         }}
         id={approveModel.id ?? ''}
         transfer_id={approveModel.transfer_id ?? ''}
+        data={approveModel.data ?? {}}
       />
 
       <ExportExcel

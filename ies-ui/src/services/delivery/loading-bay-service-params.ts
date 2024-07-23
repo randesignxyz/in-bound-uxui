@@ -6,6 +6,7 @@ import { LoadingBay, PickingSlipItem } from './data';
 import { SaveLoadingDockParams } from './queue-params';
 import { ChangeRequestParam } from './req-params';
 import { activity } from './instance.types';
+import { LoadingBayDataForm } from '@/pages/queue/loading-bay/entry-form';
 
 export type LoadedChangeRequest = {
   loadingId: number;
@@ -182,7 +183,7 @@ export const LoadingServiceParams = {
     payload: { id },
   }),
 
-  saveLoadingBay: (data: LoadingBay): ServiceApiType<LoadingBay> => ({
+  saveLoadingBay: (data: LoadingBayDataForm): ServiceApiType<LoadingBayDataForm> => ({
     type: 'EXEC',
     endpoint: 'DELIVERY',
     actionName: 'save-loading-bay',

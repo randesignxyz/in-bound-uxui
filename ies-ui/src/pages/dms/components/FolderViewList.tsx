@@ -1,29 +1,25 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Dropdown, Flex, MenuProps, Space, TreeDataNode, message } from 'antd';
+import { Button, Dropdown, Flex, MenuProps, Space, message } from 'antd';
 import { FolderServiceAPI } from '../folder/service';
 import { simpleRequestActions } from '@/services/model';
-import { BankOutlined, DeleteOutlined, EditOutlined, EllipsisOutlined, FolderAddOutlined, FolderOutlined } from '@ant-design/icons';
+import { BankOutlined, DeleteOutlined, EditOutlined, EllipsisOutlined, FileTextOutlined, FolderAddOutlined, FolderOutlined, UserOutlined } from '@ant-design/icons';
 import { ActionType } from '@ant-design/pro-components';
-import { history, useAccess, useParams } from '@umijs/max';
+import { useAccess, useParams } from '@umijs/max';
 import { Modal, Spin } from 'antd/lib';
 import FolderEntryForm from '../folder/EntryForm';
 import { DataNode, FolderCreate } from '../folder/data';
-import { LibraryServiceAPI } from '../setting/components/library/service';
-import { LibraryDTO } from '../setting/components/library/data';
 import DocumentModalForm from '../documentation/EntryForm';
 import { DocumentServiceAPI } from '../documentation/service';
-import { DMSPaths } from '..';
 import { DocumentationAdvanceSearch, DocumentationCreate } from '../documentation/data';
 import DirectoryTree from 'antd/es/tree/DirectoryTree';
-import ContractFormEntry from '../contract/ContractFormEntry';
-
-
 interface Props {
     onSearch: (param: DocumentationAdvanceSearch) => void,
     activeKey?: boolean;
     moveDoc?: boolean;
     onMove?: () => void;
-    setLibrary:(libraryId?:number) => void;
+    setFolder: (libraryId?: number) => void;
+    onFolderSelected: () => void
+
 }
 const updateTreeData = (list: DataNode[], key: React.Key, children: DataNode[]): DataNode[] => list.map((node) => {
     if (node.key === key) {
@@ -47,18 +43,15 @@ const makeTree = (items: any[], key = 0, link = 'parentId'): any => {
     }).map(item => ({
         ...item,
         children: makeTree(items, item.id)
-    }))
+    }));
 }
-
-
-
-export default ({ onSearch, activeKey, moveDoc, onMove,setLibrary , ...props }: Props) => {
-
+export default ({ onSearch, activeKey, moveDoc, onMove, setFolder: setFolderId, onFolderSelected, ...props }: Props) => {
     const requestAction = simpleRequestActions();
-    const [folder, setFolder] = useState<LibraryDTO>();
     const actionRef = useRef<ActionType>();
-    const params = useParams();
-
+    const access = useAccess();
+    const param = useParams();
+    const view = param["view"];
+    const [folderSelected, setFolderSelected] = useState<string>();
     const [documentModalState, setDocumentState] = useState<{
         visible?: {
             name: "MODAL";
@@ -70,71 +63,27 @@ export default ({ onSearch, activeKey, moveDoc, onMove,setLibrary , ...props }: 
         }
     }>();
 
-    const [treeData, setTreeData] = useState<DataNode[]>([
-        {
-            title: "Document",
-            key: "000",
-            isLeaf: false
-        }
-    ]);
-
     const [treeFolderList, setTreeFolderList] = useState<DataNode[]>([]);
-    const testGetFolder = async () => {
+    const loadFolder = async () => {
         const folder = await FolderServiceAPI(requestAction).list({
             searchValue: "",
             advanceSearch: {
-
             }
         })
-
-        const dd = makeTree(folder.map(o => ({ key: o.id.toString(), id: o.id, title: o.name, parentId: o.parentId, code: o.code, libraryId:o.code=="LIBRARY"?o.id:o.libraryId })));
+        const dd = makeTree(folder.map(o => ({
+            key: o.id.toString(),
+            id: o.id,
+            title: o.name,
+            parentId: o.parentId,
+            code: o.code,
+            libraryId: o.code == "LIBRARY" ? o.id : o.libraryId,
+            type: o.type
+        })));
         setTreeFolderList(dd);
-        setLibrary(folder[0]?.id);
-        history.push(`${DMSPaths.workspace}/library/${folder[0]?.id}`)
+        setFolderId(folder[0]?.id);
+        setFolderSelected(folder[0]?.id.toString());
     }
 
-
-    const onExpand = async (node: TreeDataNode & DataNode) => {
-        const data = node?.code == "LIBRARY" ? 1 : 0
-        const ss = await FolderServiceAPI(requestAction).page({
-            criteria: {
-                searchValue: "",
-                advanceSearch: {
-                    parentId: data == 1 ? 0 : parseInt(node.key.toString()),
-                    libraryId: data == 1 ? parseInt(node.key.toString()) : undefined,
-                }
-            }
-        });
-        setTreeData((origin) =>
-            updateTreeData(origin, node?.key,
-                ss.items?.map((it, index) => {
-                    return ({
-                        key: it.id.toString(),
-                        title: it.name,
-                        isLeaf: it.totalFolder > 0 ? false : true,
-                        libraryId: node.libraryId
-                    })
-                })
-            ),
-        );
-    };
-    const loadData = async () => {
-        const data = await LibraryServiceAPI(requestAction).list({
-
-        });
-        setFolder(data?.filter(it => it.type == "own")[0]);
-        setTreeData(
-            data.map(it => ({
-                key: it.id?.toString(),
-                title: it.name,
-                isLeaf: it.totalFolder > 0 ? false : true,
-                type: it.type,
-                code: "LIBRARY",
-                libraryId: it.id
-            }))
-        )
-
-    }
     const [folderState, setFolderState] = useState<{
         visible?: {
             name: "MODAL";
@@ -145,22 +94,10 @@ export default ({ onSearch, activeKey, moveDoc, onMove,setLibrary , ...props }: 
 
         }
     }>();
-    const [contractState, setContractState] = useState<{
-        visible?: {
-            name: "MODAL";
-            type?: "ADD" | "EDIT";
-            folderId: number;
-            payload?: DocumentationCreate;
-            libraryId?: number;
-        }
-    }>();
 
     useEffect(() => {
-        testGetFolder();
-       
+        loadFolder();
     }, [actionRef]);
-
-
     const itemsAction = (recrd?: DataNode): MenuProps["items"] => {
         return [
             {
@@ -174,7 +111,7 @@ export default ({ onSearch, activeKey, moveDoc, onMove,setLibrary , ...props }: 
                             type: 'ADD',
                             code: "FOLDER",
                             data: recrd,
-                            libraryId:recrd?.code=="LIBRARY"?recrd?.key:recrd?.libraryId?.toString() 
+                            libraryId: recrd?.code == "LIBRARY" ? recrd?.key : recrd?.libraryId?.toString()
                         }
                     })
                 }
@@ -184,7 +121,6 @@ export default ({ onSearch, activeKey, moveDoc, onMove,setLibrary , ...props }: 
                 label: "Rename Folder",
                 icon: <EditOutlined />,
                 onClick: () => {
-                    
                     setFolderState({
                         visible: {
                             name: 'MODAL',
@@ -208,9 +144,12 @@ export default ({ onSearch, activeKey, moveDoc, onMove,setLibrary , ...props }: 
                     Modal.confirm({
                         title: "Delete Folder",
                         content: `This will permanently delete the ${recrd?.title} folder.`,
-                        onOk: async () => {
-                            FolderServiceAPI(requestAction).delete(parseInt(recrd?.key || ""));
-                            actionRef.current?.reloadAndRest?.();
+                        onOk: () => {
+                            FolderServiceAPI(requestAction).delete(parseInt(recrd?.key || "")).then(o => {
+                                message.success("Success!");
+                                loadFolder()
+                                actionRef.current?.reloadAndRest?.();
+                            });
                         }
                     })
                 }
@@ -221,18 +160,29 @@ export default ({ onSearch, activeKey, moveDoc, onMove,setLibrary , ...props }: 
     return (
         <>
             <Spin spinning={requestAction.request?.loading}>
-             
+                {access.canAccessDMSAdminMenu && <Button
+                    onClick={() => {
+                        onFolderSelected?.();
+                        setFolderId(0)
+                        setFolderSelected("")
+                        onSearch({
+                            library: 0,
+                            folderId: 0,
+                            folderType: ""
+                        })
+                    }}
+                    type={folderSelected ? "default" : "primary"}
+                    style={{ width: "100%", margin: "10px 0" }} icon={<FileTextOutlined />}>All Documents</Button>}
                 {treeFolderList.length &&
                     <DirectoryTree
-                        blockNode
                         key={"doprdown-1"}
                         defaultExpandAll
-                        selectedKeys={[parseInt(params["*"] || "").toString()]}
+                        selectedKeys={view != "library" ? [] : [(folderSelected || "")]}
                         expandAction={"doubleClick"}
                         onSelect={(e, { selectedNodes }) => {
-                            setLibrary(selectedNodes[0].libraryId);
-                            history.push(`${DMSPaths.workspace}/library/${e[0]}`)
-
+                            setFolderId(selectedNodes[0].libraryId);
+                            setFolderSelected(`${e[0]}`);
+                            onFolderSelected?.();
                             onSearch({
                                 library: selectedNodes[0]?.libraryId,
                                 folderId: parseInt(selectedNodes[0]?.key),
@@ -250,19 +200,21 @@ export default ({ onSearch, activeKey, moveDoc, onMove,setLibrary , ...props }: 
                                 code: info.node.code || ""
                             });
                             actionRef.current?.reload();
-                            loadData()
                         }}
                         showLine
                         icon={<></>}
+                        blockNode
                         titleRender={(items: DataNode) => {
                             return (
                                 <Flex
                                     gap={12}
                                     justify='space-between'
+                                    align='baseline'
                                 >
-                                    <Space size={12} style={{ whiteSpace: "nowrap" }}>
+                                    <Space size={12} style={{ whiteSpace: "nowrap", }}>
                                         {
-                                            (items.code == "LIBRARY" && <BankOutlined />) ||
+                                            (items.type == "department") && <BankOutlined /> ||
+                                            (items.type == "personal" && <UserOutlined />) ||
                                             <FolderOutlined />
                                         }
                                         <span>{items.title?.toString()}
@@ -296,14 +248,12 @@ export default ({ onSearch, activeKey, moveDoc, onMove,setLibrary , ...props }: 
                 type={documentModalState?.visible?.type}
                 libraryId={documentModalState?.visible?.libraryId}
                 onCancel={() => setDocumentState(v => ({ ...v, visible: undefined }))}
-                folderId={documentModalState?.visible?.folderId}
                 division={documentModalState?.visible?.division}
                 onSave={async (data: DocumentationCreate) => {
                     const response = await DocumentServiceAPI(requestAction).save(data) as unknown as ({
                         data: DocumentationCreate;
                         message: string
                     });
-                    history.push(`${DMSPaths.document}/detail/${response.data?.id}`)
                 }}
             />
             < FolderEntryForm
@@ -313,23 +263,22 @@ export default ({ onSearch, activeKey, moveDoc, onMove,setLibrary , ...props }: 
                 data={folderState?.visible?.data}
                 libraryId={folderState?.visible?.libraryId}
                 type={folderState?.visible?.type}
-                onSave={async (data: FolderCreate) => {
-                    const response = await FolderServiceAPI(requestAction).save(data) as ({
-                        data: string;
-                        message: string
+                onSave={(data: FolderCreate) => {
+                    Modal.confirm({
+                        title: "Save Folder",
+                        content: "are you sure? this input is corrected!",
+                        onOk: async () => {
+                            await FolderServiceAPI(requestAction).save(data) as ({
+                                data: string;
+                                message: string
+                            });
+                            message.success("Success");
+                            setFolderState((v) => ({ visible: undefined }));
+                            loadFolder()
+                            actionRef.current?.reloadAndRest?.();
+                        }
                     });
-                    message.success("Success");
-                    setFolderState((v) => ({ visible: undefined }));
-                    testGetFolder()
-                    actionRef.current?.reloadAndRest?.();
                 }}
-            />
-
-            <ContractFormEntry
-                open={contractState?.visible?.name == "MODAL"}
-                onSave={() => {
-                }}
-                onCancel={() => setContractState({ visible: undefined })}
             />
         </>
     );

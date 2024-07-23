@@ -1,16 +1,15 @@
 import { LookupData, LookupDataItem } from '@/services/data';
 import { SoAdvanceSearchParams } from '@/services/sale/data';
-import { ProFormDependency } from '@ant-design/pro-components';
+import { DrawerForm, DrawerFormProps, ProFormDependency } from '@ant-design/pro-components';
 import ProForm, {
   ProFormCheckbox,
   ProFormDateRangePicker,
   ProFormSelect,
 } from '@ant-design/pro-form';
-import { Drawer, DrawerProps } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { useEffect } from 'react';
 
-export interface AdvanceSearchProps extends DrawerProps {
+export interface AdvanceSearchProps extends DrawerFormProps {
   initData?: SoAdvanceSearchParams;
   salespersons?: LookupDataItem[];
   lookDataList?: LookupData[];
@@ -34,7 +33,10 @@ const AdvanceSarch: React.FC<AdvanceSearchProps> = ({
   }, [props.open]);
 
   return (
-    <Drawer {...props}>
+    <DrawerForm {...props} resize={{
+      maxWidth: window.innerWidth * 0.8,
+      minWidth: 5000
+    }} submitter={false}>
       <ProForm
         form={form}
         onReset={() => onReset()}
@@ -77,7 +79,7 @@ const AdvanceSarch: React.FC<AdvanceSearchProps> = ({
           }}
         </ProFormDependency>
       </ProForm>
-    </Drawer>
+    </DrawerForm>
   );
 };
 

@@ -4,11 +4,10 @@ import dashboard from '@/assets/dashboard.png';
 import fleet from '@/assets/fleet.png';
 import fuelStation from '@/assets/gas-station.png';
 import fuelStock from '@/assets/oil-tank.png';
-import taskList from '@/assets/task-list.png';
 import vehicletool from '@/assets/vehicle-tools.png';
 import maintenancePlan from '@/assets/web-maintenance.png';
 import ListMenuComp from '@/components/ListMenu';
-import report from '@/assets/report.png';
+import { useId } from 'react';
 
 export const FleetPaths = {
   fleet: '/fleet',
@@ -18,14 +17,13 @@ export const FleetPaths = {
   inspection: '/fleet/inspection',
   serviceTasks: '/fleet/service-tasks',
 };
-
 export default () => {
   const items = [
     {
       id: 'vehicle',
       name: 'Vehicle',
       description: 'Vehicle List',
-      link: `${FleetPaths.vehicle}/list`,
+      link: `${FleetPaths.vehicle}/list/${useId()}`,
       icon: fleet,
     },
     {
@@ -70,43 +68,41 @@ export default () => {
       icon: dashboard,
       isMenu: true,
     },
-    {
-      id: 'servicetasks',
-      name: 'Service Tasks',
-      description: 'Create and View Tasks',
-      link: `/fleet/service-tasks/list`,
-      icon: taskList,
-      isMenu: true,
-    },
+    // {
+    //   id: 'servicetasks',
+    //   name: 'Service Tasks',
+    //   description: 'Create and View Tasks',
+    //   link: `/fleet/service-tasks/list`,
+    //   icon: taskList,
+    //   isMenu: true,
+    // },
     {
       id: 'stock',
-      name: 'Stock',
+      name: 'Fuel & Energy',
       description: 'Diesel and Lubricant',
       link: `/fleet/stock/list`,
       icon: fuelStock,
       isMenu: true,
     },
+    // {
+    //   id: 'accessory',
+    //   name: 'Accessory Stock',
+    //   description: 'Track spare auto parts inventory',
+    //   link: `/fleet/accessory/list`,
+    //   icon: inventory,
+    //   isMenu: true,
+    // },
     {
-      id: 'add_on',
-      name: 'Set up',
-      description: 'Modules to Other Component',
-      link: `/fleet/add-on/list`,
+      id: 'setting',
+      name: 'Setting',
+      description: 'Modules set up ',
+      link: `/fleet/setting/driver`,
       icon: addon,
       isMenu: true,
     },
-    // {
-    //   id: 'report',
-    //   name: 'Reports',
-    //   description: 'export as document',
-    //   link: `/fleet/report/list`,
-    //   icon: report,
-    //   isMenu: true,
-    // },
   ];
 
   return (
-    <>
       <ListMenuComp items={items} />
-    </>
   );
 };

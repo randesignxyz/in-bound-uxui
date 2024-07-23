@@ -6,13 +6,11 @@ import { useState } from "react";
 import { UploadAttachmentFile } from "../documentation/data";
 import { getFileTypeviaExtension } from "../core";
 import { useForm } from "antd/es/form/Form";
-
 interface Props extends FormModalProps{
     onSave:(data:UploadAttachmentFile)=>void;
     documentId?:number;
     documentTypeId?:number;
 }
-
 const DocFileUploadModal:React.FC <Props> = ({ onSave, documentId, documentTypeId,...props }) =>{
     const [fileUpload, setFileUpload] = useState<UploadFile[]>();
     const [form] = useForm<UploadAttachmentFile>();

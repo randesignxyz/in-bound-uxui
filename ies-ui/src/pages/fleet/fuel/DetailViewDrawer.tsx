@@ -8,13 +8,11 @@ import { FuelDTO } from './data';
 interface Props extends DrawerProps {
   data?: FuelDTO;
 }
-
 export default ({ data, ...props }: Props) => {
   const actionType = useRef<ActionType>();
   useEffect(() => {
     props.open;
   }, [props.open]);
-
   return (
     <>
       <Drawer {...props} width={800}
@@ -89,13 +87,11 @@ export default ({ data, ...props }: Props) => {
                 title: 'Usage Rate',
                 render: (_, r) => (r.numberKilometer && (r.quantity / r.numberKilometer) * 100)?.toFixed(2)
               },
-
               {
                 key: 'km',
                 title: 'Previous Rate',
                 render: (_, r) => (r?.previousRate?.usageRate)?.toFixed(2)
               },
-
               {
                 key: 'km',
                 title: 'Over Rate',
@@ -104,8 +100,6 @@ export default ({ data, ...props }: Props) => {
                   r.numberKilometer && ((r.numberKilometer && (r.quantity / r.numberKilometer) * 100) - r.previousRate?.usageRate)?.toFixed(2)
                 )
               },
-
-
               {
                 key: 'status',
                 title: 'Alert',

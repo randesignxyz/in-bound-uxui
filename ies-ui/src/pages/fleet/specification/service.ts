@@ -1,12 +1,12 @@
 
 import { ServiceApiType, RequestActions, singleRequest } from "@/services/apiGateway";
-import { BatteryVehicleCreate, BatteryVehicleDTO, NormFuelConsumptionCreate, NormFuelConsumptionDTO, TireVehicleDTO, TireVehicleCreate } from "./data.d";
+import { BatteryVehicleCreate, BatteryVehicleDTO, NormFuelConsumptionCreate, NormFuelConsumptionDTO, TireVehicleDTO, TireAssignCreate, TireAssignParam } from "./data.d";
 
 
 const SpecificationAction = {
 
 
-  saveVehicleTire: (data: TireVehicleCreate): ServiceApiType<TireVehicleCreate> => ({
+  saveVehicleTire: (data: TireAssignCreate): ServiceApiType<TireAssignCreate> => ({
     type: "EXEC",
     actionName: 'save-vehicle-tire',
     endpoint: 'FLEET',
@@ -14,11 +14,11 @@ const SpecificationAction = {
 
   }),
 
-  listVehicleTire: (id?: string): ServiceApiType<{ id?: string }> => ({
+  listVehicleTire: (params:TireAssignParam): ServiceApiType<TireAssignParam> => ({
     type: "LIST_QUERY",
     actionName: "list-vehicle-tire",
     endpoint: "FLEET",
-    payload: { id }
+    payload: params
   }),
 
   saveBattery: (data: BatteryVehicleCreate): ServiceApiType<BatteryVehicleCreate> => ({
@@ -67,39 +67,14 @@ const SpecificationAction = {
 
 export const SpecificationServiceAPI = (requestActions: RequestActions) => {
   return {
-
-
-    listVehicleTire: (id: string) => singleRequest<TireVehicleDTO>(SpecificationAction.listVehicleTire(id))(requestActions) as Promise<TireVehicleDTO[]>,
-
-
-    saveVehicleTire: (params: TireVehicleCreate) =>
-      singleRequest<{ data: string; message: string }>(SpecificationAction.saveVehicleTire(params))(
-        requestActions,
-      ),
-
+    listVehicleTire: (params:TireAssignParam) => singleRequest<TireVehicleDTO>(SpecificationAction.listVehicleTire(params))(requestActions) as Promise<TireVehicleDTO[]>,
+    saveVehicleTire: (params: TireAssignCreate) =>singleRequest<{ data: string; message: string }>(SpecificationAction.saveVehicleTire(params))(requestActions),
     // ============================== battery ==============================
-    saveBattery: (params: BatteryVehicleCreate) =>
-      singleRequest<{ data: string; message: string }>(SpecificationAction.saveBattery(params))(
-        requestActions,
-      ),
-    fetchBattery: (id: string) =>
-      singleRequest<BatteryVehicleDTO>(SpecificationAction.fetchBattery(id))(
-        requestActions,
-      ) as Promise<BatteryVehicleDTO>,
-
+    saveBattery: (params: BatteryVehicleCreate) =>singleRequest<{ data: string; message: string }>(SpecificationAction.saveBattery(params))(requestActions),
+    fetchBattery: (id: string) =>singleRequest<BatteryVehicleDTO>(SpecificationAction.fetchBattery(id))(requestActions) as Promise<BatteryVehicleDTO>,
     listBattery: (id: string) => singleRequest<BatteryVehicleDTO>(SpecificationAction.listBattery(id))(requestActions) as Promise<BatteryVehicleDTO[]>,
-
-   
-    
     // ======= norm fuel consumtion =======
-    saveNormFuelConsumption: (params: NormFuelConsumptionCreate) =>
-      singleRequest<{ data: NormFuelConsumptionCreate; message: string }>(SpecificationAction.saveNormFuelConsumption(params))(
-        requestActions,
-    ),
-
-    fetchNormFuelConsumption: (id: string) =>
-      singleRequest<NormFuelConsumptionDTO>(SpecificationAction.fetchNormFuelConsumption(id))(
-        requestActions,
-      ) as Promise<NormFuelConsumptionDTO>,
+    saveNormFuelConsumption: (params: NormFuelConsumptionCreate) =>singleRequest<{ data: NormFuelConsumptionCreate; message: string }>(SpecificationAction.saveNormFuelConsumption(params))(requestActions),
+    fetchNormFuelConsumption: (id: string) =>singleRequest<NormFuelConsumptionDTO>(SpecificationAction.fetchNormFuelConsumption(id))(requestActions) as Promise<NormFuelConsumptionDTO>,
   }
 };

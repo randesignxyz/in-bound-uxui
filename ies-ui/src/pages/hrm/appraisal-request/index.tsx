@@ -1,5 +1,5 @@
 import BaseCrud from "@/components/base-crud"
-import { history } from 'umi';
+import { history } from "@umijs/max";
 import { SavePayLoad, SearchParams, AppraisalRequestDetail, AppraisalRequestFormNames, AppraisalRequestListItem } from "./data.types"
 import { createService } from "./services"
 import { simpleRequestActions } from "@/services/model"
@@ -38,9 +38,9 @@ export default () => {
         listView={{
             columns: () => [
                 {
-                    title: 'Form #', 
-                    width:'140px',
-                    sorter: 'formNo', 
+                    title: 'Form #',
+                    width: '140px',
+                    sorter: 'formNo',
                     render(_, entity) {
                         return <Space size={1}>
                             <Button

@@ -10,11 +10,11 @@ import VisitListView from './VisitListView';
 export default () => {
   const access = useAccess();
   return (
-    <CrudWrapper baseURL={SalePaths.visit}>
+    <CrudWrapper baseURL={SalePaths.visit} disablePageContainer>
       {(view, id, navigate) => {
         return (
           (view === 'list' && (
-            <Access accessible={access.canAccessAllMenuDSD}>
+            <Access accessible={access.canAccessSaleVisit}>
               <VisitListView
                 onDetail={(id) => {
                   navigate?.goToDetail?.({ id: id });
@@ -23,7 +23,7 @@ export default () => {
             </Access>
           )) ||
           (view === 'detail' && (
-            <Access accessible={access.canAccessAllMenuDSD}>
+            <Access accessible={access.canAccessSaleVisit}>
               <VisitDetailView id={id as number} />
             </Access>
           ))

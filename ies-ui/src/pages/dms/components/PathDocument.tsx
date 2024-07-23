@@ -1,13 +1,10 @@
 import { ProDescriptions } from "@ant-design/pro-components";
 import { Breadcrumb, Card, Drawer, DrawerProps, Space } from "antd";
 import { DocumentationDTO } from "../documentation/data";
-
 interface Props extends DrawerProps {
     data?: DocumentationDTO
 }
-
 export default ({ data, ...props }: Props) => {
-
     return (
         <Drawer
             {...props}
@@ -42,7 +39,6 @@ export default ({ data, ...props }: Props) => {
                     <ProDescriptions
                         dataSource={data}
                         column={2}
-
                         columns={[
                             {
                                 title: "Path",

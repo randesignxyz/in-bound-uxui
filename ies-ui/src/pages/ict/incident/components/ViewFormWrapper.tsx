@@ -12,7 +12,7 @@ import { PageContainer } from '@ant-design/pro-components';
 import { message, Modal, Spin } from 'antd';
 import moment from 'moment';
 import { useState } from 'react';
-import { history } from 'umi';
+import { history } from "@umijs/max";
 import { ActionBtn } from './ActionBtn';
 
 interface Props<T> {

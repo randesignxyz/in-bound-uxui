@@ -70,7 +70,6 @@ export default ({
     const nodes = rs.nodes.map((it) => {
       const hasLeft = rs.edges.some((it1) => it1.target == it.id);
       const hasRight = rs.edges.some((it1) => it1.source == it.id);
-      console.log(rs.edges, it, hasLeft, hasRight);
 
       return {
         id: it.id,
@@ -188,8 +187,8 @@ export default ({
             nodes={nodes}
             edges={edges}
             onNodesChange={onNodesChange}
-            // onEdgesChange={onEdgesChange}
-            //   onConnect={onConnect}
+          // onEdgesChange={onEdgesChange}
+          //   onConnect={onConnect}
           >
             <Background />
             <MiniMap />

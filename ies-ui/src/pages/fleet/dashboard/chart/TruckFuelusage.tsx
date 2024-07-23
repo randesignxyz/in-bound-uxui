@@ -4,9 +4,10 @@ import { ProForm, ProFormDatePicker, ProFormSelect } from '@ant-design/pro-compo
 import { Card, Spin } from 'antd';
 import { useForm } from 'antd/es/form/Form';
 import { useEffect, useState } from 'react';
-import { LookupDataServiceAPI } from '../../lookupData/service';
 import { TruckFuelUsageDTO, TruckFuelUsageParam } from '../data';
 import { DashboardServiceAPI } from '../service';
+import { formatter, formatterQty } from '@/pages/utils';
+import { FleetServiceAPI } from '../../service';
 
 const TruckFuelUsage = () => {
   const [data, setData] = useState<TruckFuelUsageDTO[]>([]);
@@ -43,7 +44,7 @@ const TruckFuelUsage = () => {
             name={'gasType'}
             initialValue={1060}
             request={async () => {
-              const lookup = await LookupDataServiceAPI(requestActions).lookupData({
+              const lookup = await FleetServiceAPI(requestActions).lookupData({
                 type: 'VEHICLE',
               });
               return lookup
@@ -64,6 +65,12 @@ const TruckFuelUsage = () => {
           label:{
             autoRotate:true
           },
+        }}
+        label={{
+          text: (r: { quantity: any; }) => {
+            return formatterQty.format(r.quantity)
+          },
+          textBaseline: 'bottom',
         }}
         slider={{
           start:0,

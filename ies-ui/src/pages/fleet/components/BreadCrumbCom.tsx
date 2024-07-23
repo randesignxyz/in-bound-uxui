@@ -6,12 +6,10 @@ type RouteParam = {
   label: string;
   path: string;
 };
-
 interface Props {
   separator: '/' | '>';
   routes: RouteParam[];
 }
-
 export default ({ separator, routes }: Props) => {
   const { Text } = Typography;
   return (

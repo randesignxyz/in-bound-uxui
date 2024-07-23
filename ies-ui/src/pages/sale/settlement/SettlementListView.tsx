@@ -76,7 +76,7 @@ export default ({}: Props) => {
               title: 'Settled Amount KHM',
               align: 'right',
               render: (_, r) => {
-                return `${parent.settledExchangeRate.target_symbol} ${numeral(r.amountKH).format(
+                return `${parent.settledExchangeRate?.target_symbol} ${numeral(r.amountKH).format(
                   '0,0',
                 )}`;
               },
@@ -85,7 +85,7 @@ export default ({}: Props) => {
               title: 'Exchange Rate KHM',
               align: 'right',
               render: (_, r) => {
-                return `${parent.settledExchangeRate.target_symbol} ${numeral(
+                return `${parent.settledExchangeRate?.target_symbol} ${numeral(
                   r.exchangeRate,
                 ).format('0,0')}`;
               },
@@ -95,7 +95,7 @@ export default ({}: Props) => {
               align: 'right',
               render: (_, r) => {
                 const total = r.amountKH + (r.amount + (r.bankAmount || 0.0)) * r.exchangeRate;
-                return `${parent.settledExchangeRate.target_symbol} ${numeral(total).format(
+                return `${parent.settledExchangeRate?.target_symbol} ${numeral(total).format(
                   '0,0',
                 )}`;
               },
@@ -105,8 +105,8 @@ export default ({}: Props) => {
               title: 'Total Sold Amount KHM',
               align: 'right',
               render: (_, r) => {
-                const total = r.soldAmount * (parent.soldExchangeRate.target_amount || 0.0);
-                return `${parent.settledExchangeRate.target_symbol} ${numeral(total).format(
+                const total = r.soldAmount * (parent.soldExchangeRate?.target_amount || 0.0);
+                return `${parent.settledExchangeRate?.target_symbol} ${numeral(total).format(
                   '0,0',
                 )}`;
               },
@@ -127,7 +127,7 @@ export default ({}: Props) => {
             }, 0);
 
             const soldAmount = data.reduce(function (acc, it) {
-              return acc + it.soldAmount * (parent.soldExchangeRate.target_amount || 0.0);
+              return acc + it.soldAmount * (parent.soldExchangeRate?.target_amount || 0.0);
             }, 0);
             return (
               <>
@@ -143,19 +143,19 @@ export default ({}: Props) => {
                   </Table.Summary.Cell>
                   <Table.Summary.Cell index={3} align="right">
                     <Text type="success">
-                      {parent.soldExchangeRate.target_symbol} {numeral(totalAmountKH).format('0,0')}
+                      {parent.soldExchangeRate?.target_symbol} {numeral(totalAmountKH).format('0,0')}
                     </Text>
                   </Table.Summary.Cell>
                   <Table.Summary.Cell index={4} align="right" />
 
                   <Table.Summary.Cell index={5} align="right">
                     <Text type="success">
-                      {parent.soldExchangeRate.target_symbol} {numeral(settledAmount).format('0,0')}
+                      {parent.soldExchangeRate?.target_symbol} {numeral(settledAmount).format('0,0')}
                     </Text>
                   </Table.Summary.Cell>
                   <Table.Summary.Cell index={6} align="right">
                     <Text type="success">
-                      {parent.soldExchangeRate.target_symbol} {numeral(soldAmount).format('0,0')}
+                      {parent.soldExchangeRate?.target_symbol} {numeral(soldAmount).format('0,0')}
                     </Text>
                   </Table.Summary.Cell>
                 </Table.Summary.Row>
@@ -231,16 +231,16 @@ export default ({}: Props) => {
             title: 'Settled Amount KHM',
             align: 'right',
             render: (_, r) => {
-              const total = (r.soldExchangeRate.target_amount || 0.0) * r.totalSoldAmount;
-              return `${r.settledExchangeRate.target_symbol} ${numeral(total).format('0,0')}`;
+              const total = (r.soldExchangeRate?.target_amount || 0.0) * r.totalSoldAmount;
+              return `${r.settledExchangeRate?.target_symbol} ${numeral(total).format('0,0')}`;
             },
           },
           {
             title: 'Sold Amount KHM',
             align: 'right',
             render: (_, r) => {
-              const total = (r.soldExchangeRate.target_amount || 0.0) * r.totalSoldAmount;
-              return `${r.settledExchangeRate.target_symbol} ${numeral(total).format('0,0')}`;
+              const total = (r.soldExchangeRate?.target_amount || 0.0) * r.totalSoldAmount;
+              return r.soldExchangeRate? `${r.settledExchangeRate?.target_symbol} ${numeral(total).format('0,0')}`:0;
             },
           },
         ]}

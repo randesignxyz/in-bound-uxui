@@ -7,9 +7,10 @@ import { useEffect } from 'react';
 interface Props extends FormModalProps {
   id: string;
   transfer_id: string;
-  onSave: (id: string, remarks: string, transfer_id: string) => void;
+  sapDocEntry?:number
+  onSave: (id: string, remarks: string, transfer_id: string,sapDocEntry?:number) => void;
 }
-export default ({ id, transfer_id, onSave, ...props }: Props) => {
+export default ({ id, transfer_id, sapDocEntry,onSave, ...props }: Props) => {
   const [form] = useForm<{ remarks: string }>();
 
   useEffect(() => {
@@ -23,7 +24,7 @@ export default ({ id, transfer_id, onSave, ...props }: Props) => {
       onResetForm={() => form.resetFields()}
       onSubmit={async () => {
         const dataForm = await form.validateFields();
-        onSave(id, dataForm.remarks, transfer_id);
+        onSave(id, dataForm.remarks, transfer_id,sapDocEntry);
       }}
     >
       <Card>

@@ -1,7 +1,7 @@
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { Paging } from "@/services/API";
 import { RequestActions, ServiceApiType, singleRequest } from "@/services/apiGateway";
-import { AccidentCreate, AccidentDTO, SearchAccidentParam } from "./data";
+import { AccidentAdvanceSearch, AccidentCreate, AccidentDTO } from "./data";
 
 
 const AccidentAction = {
@@ -14,7 +14,7 @@ const AccidentAction = {
     }),
 
     page: (
-        params: TableViewSearchParams<SearchAccidentParam>,
+        params: TableViewSearchParams<AccidentAdvanceSearch>,
       ): ServiceApiType<{ searchValue?: string }> => ({
         type: "PAGING_QUERY",
         actionName: "page-accident",
@@ -32,9 +32,7 @@ const AccidentAction = {
 
 export const AccidentServiceAPI = (requestActions: RequestActions) => {
     return {
-      page : (params: TableViewSearchParams<SearchAccidentParam>)=>
-       singleRequest<AccidentDTO>(AccidentAction.page(params))(requestActions) as Promise<Paging<AccidentDTO>> ,
-
+      page : (params: TableViewSearchParams<AccidentAdvanceSearch>)=>singleRequest<AccidentDTO>(AccidentAction.page(params))(requestActions) as Promise<Paging<AccidentDTO>> ,
       save: (data: AccidentCreate) =>singleRequest<{data:string, message:string}>(AccidentAction.save(data))(requestActions),
       
     }

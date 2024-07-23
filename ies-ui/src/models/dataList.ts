@@ -46,7 +46,8 @@ import { AppraisalEmp } from '@/pages/hrm/appraisal-submit/data.types';
 import { CategoryDTO } from '@/pages/dms/setting/components/category/data';
 import { DocumentationDTO } from '@/pages/dms/documentation/data';
 import { ShareDTO } from '@/pages/dms/share/data';
-import { Term } from '@/pages/crm/term/model';
+import { Term } from '@/pages/crm/term/types';
+import { TransferRequest } from '@/pages/prod/inventory-transfer-request/data';
 
 type DataList =
   | {
@@ -282,6 +283,11 @@ type DataList =
     type: 'term';
     criteria?: any;
     data: Paging<Term>;
+  }
+  | {
+    type: 'transfer-request-list';
+    criteria?: any;
+    data: Paging<TransferRequest>;
   };
 
 type MomainType =
@@ -329,7 +335,8 @@ type MomainType =
   | 'dms-department'
   | 'dms-share'
   | 'dms-document'
-  | 'term';;
+  | 'term'
+  | 'transfer-request-list';
 
 export default () => {
   const [cacheData, seCacheData] = useState<DataList>();

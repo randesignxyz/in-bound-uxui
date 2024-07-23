@@ -1,7 +1,7 @@
 import { kc } from "@/auth"
 import { getServiceUrl } from "@/services/ApiUrl"
 import { DataResponse } from "@/services/shared/data"
-import { ImportOutlined } from "@ant-design/icons"
+import { ImportOutlined, UploadOutlined } from "@ant-design/icons"
 import { Button, Upload, UploadProps, message } from "antd"
 import { UploadChangeParam, UploadFile } from "antd/lib/upload"
 import { useState } from "react"
@@ -51,7 +51,7 @@ export default <T extends { id: number }>({ onHandleChange, onDataResponse, impo
     onChange={handleChange}
     action={uploadUrl()}
     showUploadList={false}>
-    <Button type="link" icon={<ImportOutlined />}>
+    <Button type="link" icon={<UploadOutlined />}>
       {label || 'Import'}
     </Button>
   </Upload>

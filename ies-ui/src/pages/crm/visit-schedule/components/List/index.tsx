@@ -66,6 +66,8 @@ const VisitScheduleListView: React.FC<ListProps> = ({ onDetail }) => {
       });
     })();
   }, []);
+
+
   useEffect(() => {
     actionRef.current?.reload();
     actions.initialData();
@@ -162,12 +164,8 @@ const VisitScheduleListView: React.FC<ListProps> = ({ onDetail }) => {
                 <LightFilter<LightFilterProp>
                   onValuesChange={(_, values) => {
                     const hasAttachment =
-                      'hasAttachment' in values
-                        ? values['hasAttachment'] === 'yes'
-                          ? true
-                          : values['hasAttachment'] === 'null'
-                            ? undefined
-                            : false
+                      'hasAttachment' in values ? values['hasAttachment'] === 'yes' ? true
+                        : values['hasAttachment'] === 'null' ? undefined : false
                         : undefined;
 
                     setAdvanceSearchParams((v) => ({
@@ -213,9 +211,7 @@ const VisitScheduleListView: React.FC<ListProps> = ({ onDetail }) => {
                       { label: 'No', value: 'no' },
                     ]}
                   />
-
                   <ProFormDatePicker.Month name={'month'} label="Month" />
-
                   <ProFormSelect
                     label="Division"
                     name="divisionIds"
@@ -362,12 +358,6 @@ const VisitScheduleListView: React.FC<ListProps> = ({ onDetail }) => {
               </Space>
             ),
           },
-          // {
-          //   title: 'Status',
-          //   width: 110,
-          //   hideInTable: advanceSearchParams.status != 'COMPLETED',
-          //   render: (_, r) => <Status text={r.status}/>,
-          // },
         ]}
       />
 

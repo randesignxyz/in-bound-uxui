@@ -40,6 +40,7 @@ export type QuotationSearchParams = {
     isService?: boolean;
     vendorId?: number;
     status?: string;
+    subStatus?: string;
 }
 
 export type TemporaryVendor = {
@@ -166,6 +167,7 @@ export type QuotationDetail = {
     integratedStatus?: string;
     status?: string;
     voidReason?: string;
+    selectRemarks?: string;
 
 }
 

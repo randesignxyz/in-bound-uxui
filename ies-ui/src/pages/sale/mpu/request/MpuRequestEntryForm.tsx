@@ -4,270 +4,433 @@ import {
   EditableFormInstance,
   EditableProTable,
   FooterToolbar,
+  ProDescriptions,
   ProForm,
+  ProFormDatePicker,
   ProFormSelect,
+  ProFormTextArea,
 } from '@ant-design/pro-components';
-import { history } from '@umijs/max';
-import { Button, Card, Col, Row, Spin } from 'antd';
 import { useForm } from 'antd/es/form/Form';
-import { useEffect, useRef } from 'react';
-import { MPUPath } from '..';
-import { SalePaths } from '../..';
-import BreadCrumbCom from '../../retailer/components/BreadCrumbCom';
-// import BreadCrumbCom from '../components/BreadCrumbCom';
-// import { ProductDto } from '../product/data';
-// import { ProductServiceAPI } from '../product/services';
-// import { CustomerPricingParam } from './data';
-// import { CustomerPricingServiceAPI } from './services';
-
+import React, { useEffect, useRef, useState } from 'react';
+import { Button, Card, Col, Flex, message, Modal, Row, Spin } from 'antd';
+import { PurChaseRequestAPIService } from './service';
+import { ProductItemsServiceAPI } from '../../product/services';
+import { CrmServiceAPI } from '@/services/crm/services';
+import { uniqueId } from 'lodash';
+import { DeleteOutlined } from '@ant-design/icons';
+import { formatter } from '@/pages/utils';
+import { DistributorCreate, PurchaseRequestCreate, PurchaseRequestDTO, PurchaseRequestItemCreate } from './data';
 interface Props {
-  type: 'new' | 'edit';
-  //   id?: string;
+  id?: number;
+  openInTab?: true;
+  tabKey?: string;
+  type: 'CREATE' | 'EDIT';
+  onView?: (added: PurchaseRequestCreate) => void;
+  onBack: () => void;
+}
+interface Amount {
+  grantAmount?: number;
+  discountAmount?: number;
+  totalAmount?: number
 }
 
-const layout = {
-  labelCol: { span: 10 },
-  wrapperCol: { span: 14 },
-};
-
-export default ({ type }: Props) => {
+const MpuRequestEntryForm: React.FC<Props> = ({ type, id, onBack, onView,openInTab,tabKey, ...props }) => {
   const requestActions = simpleRequestActions();
-  //   const productServices = ProductServiceAPI(requestActions);
-  //   const services = CustomerPricingServiceAPI(requestActions);
-  // const customerServices = CustomerServiceAPI(requestActions);
-
-  // const [customers, setCustomers] = useState<CustomerDto[]>([]);
-  //   const [products, setProducts] = useState<ProductDto[]>([]);
-  //   const [items, setItems] = useState<CustomerPricingParam[]>([]);
-  //   const [pricings, setPricings] = useState<ItemsPricing[]>([]);
-
+  const [form] = useForm<PurchaseRequestCreate>();
+  const services = PurChaseRequestAPIService(requestActions);
   const editableFormRef = useRef<EditableFormInstance>();
+  const [dataSourceItems, setDataSourceItems] = useState<PurchaseRequestItemCreate[]>();
+  const [distributor, setDistributor] = useState<DistributorCreate>();
+  const [saleperson, setSaleperson] = useState<{ assignedTo: string; assignedToCode?: string }>();
   const actionRef = useRef<ActionType>();
-
-  const [form] = useForm<{
-    customerId: string;
-  }>();
-
-  const routes = [
-    {
-      path: MPUPath.rsmRequest,
-      label: 'MPU Request',
-    },
-    {
-      path: `${MPUPath.rsmRequest}/create`,
-      label: type === 'new' ? 'Create' : 'Edit',
-    },
-  ];
-
-  const resetForm = () => {
-    // setItems(
-    //   products.map((it) => ({
-    //     productName: it.name,
-    //     productNameEn: it.nameEn,
-    //     productCode: it.code,
-    //     pricing: 0.0,
-    //     remark: null,
-    //     id: it.id,
-    //     key: it.code,
-    //     productId: it.id,
-    //   })),
-    // );
-    // form.resetFields();
-  };
-
-  const onFormvalueChanged = async (changedValues: any) => {
-    // const { customerId } = changedValues;
-    // if (customerId !== undefined) {
-    //   const pricingList = await services.listPricingByCustomer(customerId);
-    //   //   setPricings(pricingList);
-    //   const itemsList = products.map((it) => {
-    //     const pricing = pricingList.find((e) => e.productCode === it.code);
-    //     return {
-    //       productName: it.name,
-    //       productNameEn: it.nameEn,
-    //       productCode: it.code,
-    //       pricing: pricing?.unitPrice ?? 0.0,
-    //       remark: null,
-    //       id: it.id,
-    //       key: it.code,
-    //       productId: it.id,
-    //     };
-    //   });
-    //   setItems(itemsList);
-    // }
-  };
-
-  const onSaveActionHandler = async () => {
-    // const value = await form.validateFields();
-    // if (value.customerId === undefined) {
-    //   message.error('Customer is required');
-    //   return;
-    // }
-    // try {
-    //   const result = await services.savePricing({
-    //     customerId: value.customerId,
-    //     listPricing: items.map((it) => ({
-    //       pricing: it.pricing,
-    //       productCode: it.productCode,
-    //     })),
-    //   });
-    //   message.info(result.message);
-    //   resetForm();
-    // } catch (e: any) {
-    //   message.error(e);
-    // }
-  };
-
+  const [amount, setAmount] = useState<Amount>({
+    discountAmount: 0,
+    grantAmount: 0,
+    totalAmount: 0
+  });
+  const onTotalAmoun = async () => {
+    const result = dataSourceItems
+      ?.map((o) => ({
+        totalAmoun: (o.pricing * o.quantity) || 0
+      }))
+      .reduce((p, c) => ({ totalAmoun: (p.totalAmoun + c.totalAmoun) || 0 }));
+    result ? setAmount((t => ({
+      ...t,
+      totalAmount: result.totalAmoun,
+      grantAmount: result.totalAmoun,
+      discountAmount: 0
+    }))
+    ) : { totalAmount: 0, discountAmount: 0, grantAmount: 0 }
+  }
+  const loadData = async () => {
+    await services.fetchData(id).then(o => {
+      form.setFieldsValue({
+        ...o,
+        assignedTo: o.assignedTo,
+      });
+      setDistributor({
+        id: o.distributorId,
+        code: o.distributorCode,
+        latitude: o.latitude,
+        longitude: o.longitude,
+        name: o.distributorName,
+        phone: o.distributorPhone
+      });
+      setSaleperson({
+        assignedTo: o.assignedTo,
+        assignedToCode: o.assignedToCode
+      })
+      setDataSourceItems(o?.items.map((r, index) => ({
+        ...r,
+        total: (r.quantity * r.pricing),
+        key: uniqueId().toString() + index
+      })))
+    });
+  }
   useEffect(() => {
-    (async () => {
-      //   const productList = await productServices.listProducts({});
-      //   // const customerList = await services.listCustomer();
-      //   // setCustomers(customerList);
-      //   setProducts(productList);
-      //   // const customerList = await customerServices.listCustomer({
-      //   //   criteria: { searchValue: undefined },
-      //   // });
-      //   // setCustomers(customerList.items);
-      //   setItems(
-      //     productList.map((it) => ({
-      //       productName: it.name,
-      //       productNameEn: it.nameEn,
-      //       productCode: it.code,
-      //       pricing: 0.0,
-      //       remark: null,
-      //       id: it.id,
-      //       key: `${it.sequence}`,
-      //       productId: it.id,
-      //     })),
-      //   );
-    })();
+    id && loadData();
   }, []);
+  useEffect(() => {
+    dataSourceItems?.length && onTotalAmoun?.()
+  }, [dataSourceItems]);
   return (
-    <Spin spinning={requestActions.request?.loading}>
-      <ProForm
-        form={form}
-        {...layout}
-        layout="horizontal"
-        onValuesChange={onFormvalueChanged}
-        submitter={{
-          render: () => {
-            return (
-              <FooterToolbar>
-                <Button onClick={() => history.push(SalePaths.retailer)}>Cancel</Button>
-                {type === 'new' && <Button onClick={() => form.resetFields()}>Clear</Button>}
-
-                <Button type="primary" onClick={() => onSaveActionHandler()}>
-                  {type === 'new' ? 'Save' : 'Edit'}
-                </Button>
-              </FooterToolbar>
-            );
-          },
-        }}
-      >
-        <BreadCrumbCom separator=">" routes={routes} />
-        <Card
-          title={
-            'General Info'
-            // <TitleCard
-            //   title="Pricing Rule"
-            //   tagLable={type === 'new' ? 'New' : 'Edit'}
-            //   color={type === 'new' ? 'blue' : 'warning'}
-            // />
-          }
-          size="small"
-          style={{ marginTop: 10, marginBottom: 20 }}
+    // <PageContainer
+    //   title={"Purchase Order Form"}
+    //   onBack={() => history.push("/sale/mpu/list")}
+    // >
+      <Spin spinning={requestActions.request?.loading}>
+        <ProForm
+          layout='horizontal'
+          labelCol={{md:8}}
+          labelAlign='left'
+          form={form}
+          submitter={{
+            render: () => {
+              return (
+                <FooterToolbar portalDom={false}>
+                  <Button onClick={onBack}>Cancel</Button>
+                  {type === 'CREATE' && <Button onClick={() => form.resetFields()}>Clear</Button>}
+                  <Button type="primary"
+                    disabled={dataSourceItems?.length?false:true}
+                    onClick={async () => {
+                      await form.validateFields();
+                      await editableFormRef.current?.validateFields();
+                      Modal.confirm({
+                        title: "Save Data into Database",
+                        content: "Are you sure ?",
+                        onOk: async () => {
+                          const entry = {
+                            id: id,
+                            ...saleperson,
+                            items: dataSourceItems || [],
+                            distributor: distributor,
+                            ...amount
+                          }
+                          const response = await services.save(entry).then(o=>{
+                            onView?.(o.data);
+                          })
+                          
+                        }
+                      });
+                    }}
+                  >
+                    {type === 'CREATE' ? 'Save' : 'Update'}
+                  </Button>
+                </FooterToolbar>
+              );
+            },
+          }}
         >
-          <Row gutter={50}>
-            <Col span={12}>
-              <ProFormSelect
-                label="Customer"
-                name="customerId"
-                fieldProps={{
-                  filterOption: false,
-                }}
-                request={async ({ keyWords }) => {
-                  console.log(keyWords);
-                  return [];
-                  //   const data = await services.listCustomer(keyWords);
-                  //   console.log(data);
-                  //   return data.map((o) => ({
-                  //     label: o.firstName,
-                  //     value: o.id,
-                  //   }));
-                }}
-                showSearch
-                rules={[{ required: true }]}
-              />
-            </Col>
-          </Row>
-          <Row gutter={50}>
-            <Col>
-              <EditableProTable<{}>
-                // value={items}
-                value={[]}
-                editableFormRef={editableFormRef}
-                rowKey="key"
-                size="small"
-                recordCreatorProps={false}
-                controlled
-                actionRef={actionRef}
-                editable={{
-                  type: 'multiple',
-                  //   editableKeys: items?.map((it) => it.key),
-                  // onChange: setEditableRowKeys,
-
-                  onValuesChange: (_, d) => {
-                    // setItems(d);
+          <Flex vertical gap={12}>
+            <Card
+              size='small'
+              title="General Infomation"
+            >
+              <Row gutter={24}>
+                <Col span={10}>
+                  <ProFormSelect
+                    name={"assignedTo"}
+                    label={"Saleperson"}
+                    debounceTime={500}
+                    rules={[
+                      { required: true }
+                    ]}
+                    showSearch
+                    onChange={(e: string) => {
+                      const assigned = e.split(",");
+                      setSaleperson({
+                        assignedTo: assigned[1],
+                        assignedToCode: assigned[0]
+                      })
+                    }}
+                    request={async (k: { keyWords: string }) => {
+                      const data = await services.salespersonList({
+                        searchValue: k.keyWords
+                      });
+                      return data.filter(t => t.isRequester === true).map(p => ({ value: [p.salespersonCode, p.salespersonName].join(","), label: p.salespersonName }))
+                    }}
+                  />
+                  <ProFormSelect
+                    showSearch
+                    debounceTime={500}
+                    name={"distributorId"}
+                    rules={[
+                      { required: true }
+                    ]}
+                    onChange={async (s: number) => {
+                      const y = await CrmServiceAPI(requestActions).findDetailCustomer({ id: s });
+                      setDistributor({
+                        code: y.code,
+                        id: y.id,
+                        name: y.name,
+                        phone: y.contacts?.[0].phone1,
+                        latitude: y?.addressList?.[0]?.latitude,
+                        longitude: y?.addressList?.[0]?.longitude
+                      });
+                    }}
+                    label={"Distributor"}
+                    request={async (k: { keyWords: string }) => {
+                      const data = await CrmServiceAPI(requestActions).findAllCustomer({
+                        searchValue: k.keyWords
+                      });
+                      return data.items.map(p => ({ value: p.id, label: p.name }));
+                    }}
+                  />
+                  <ProFormDatePicker
+                    name={"purchaseDate"}
+                    label="Purchase Order Date"
+                    width={"md"}
+                    rules={[{required:true}]}
+                  />
+                </Col>
+                <Col span={14}>
+                    <ProFormTextArea
+                      placeholder={"remark"}
+                      name={"remark"}
+                    />
+                </Col>
+              </Row>
+            </Card>
+            <EditableProTable<PurchaseRequestItemCreate & { key: string } >
+              headerTitle={"Items"}
+              editableFormRef={editableFormRef}
+              rowKey="key"
+              size="small"
+              actionRef={actionRef}
+              onValuesChange={(e) => {
+                setDataSourceItems(e);
+              }}
+              value={dataSourceItems}
+              recordCreatorProps={{
+                newRecordType: 'dataSource',
+                record: (index) => ({ key: uniqueId().toString() + index } as any),
+                creatorButtonText: "New Item",
+              }}
+              controlled
+              editable={{
+                type: 'multiple',
+                editableKeys: dataSourceItems?.map((t) => t.key),
+                onlyAddOneLineAlertMessage: "",
+                actionRender: (row, config) => [
+                  <Button
+                    icon={<DeleteOutlined />}
+                    type='link'
+                    danger
+                    onClick={() => {
+                      config.onDelete?.(config.recordKey, row)
+                    }}
+                  />
+                ]
+              }}
+              columns={[
+                {
+                  title: "Product Name",
+                  dataIndex: "itemId",
+                  width: 350,
+                  fieldProps: (_, config) => {
+                    return {
+                      onChange:(e:number)=>{
+                        if(dataSourceItems?.filter(o=>o.itemId ===e).length){
+                          message.error("This Item was ready added!");
+                          console.log(config.entity.itemId==undefined)
+                          
+                        }
+                      },
+                      showSearch: true,
+                      debounceTime: 500,
+                      allowClear:true,
+                      ...config,
+                    }
                   },
-                }}
-                columns={[
-                  {
-                    title: 'No',
-                    width: 50,
-                    editable: false,
-                    render: (_, __, i) => i + 1,
+                  valueType: "select",
+                  formItemProps: {
+                    rules: [{
+                      required: true
+                    }],
                   },
-                  {
-                    title: 'Product Code',
-                    dataIndex: 'productCode',
-                    readonly: true,
+                  request: async (k: { keywords: string }) => {
+                    const data = await ProductItemsServiceAPI(requestActions).pageProducts({
+                      criteria: {
+                        searchValue: k.keywords
+                      }
+                    });
+                    return data.items.map(p => ({
+                      value: p.id,
+                      label: p.name,
+                      disabled: dataSourceItems?.some(ot => ot.itemId == p.id)
+                    }));
+                  }
+                },
+                {
+                  title: 'Category',
+                  dataIndex: 'stockCategoryId',
+                  fieldProps: {
+                    showSearch: true,
+                    debounceTime: 500,
                   },
-                  {
-                    title: 'Product Name (EN)',
-                    dataIndex: 'productNameEn',
-                    readonly: true,
+                  formItemProps: {
+                    rules: [{
+                      required: true,
+                    }],
                   },
-                  {
-                    title: 'Product Name',
-                    dataIndex: 'productName',
-                    readonly: true,
+                  request: async () => {
+                    const data = await services.stockCategory();
+                    return data.map(p => ({ value: p.id, label: p.name }));
+                  }
+                },
+                {
+                  title: 'UOM',
+                  dataIndex: 'uom',
+                  initialValue: "CASE",
+                  fieldProps: {
+                    showSearch: true,
+                    debounceTime: 500,
                   },
-                  {
-                    title: 'Pricing',
-                    dataIndex: 'pricing',
-                    valueType: 'money',
-                    formItemProps: {
-                      rules: [
-                        {
-                          validator: (_, value) => {
-                            // console.log(record, value, callback);
-                            return value < 0
-                              ? Promise.reject('Pricing sould be positive number.')
-                              : Promise.resolve(undefined);
-                          },
-                          required: true,
-                          message: 'Please Enter Pricing',
-                          whitespace: false,
-                        },
-                      ],
+                  formItemProps: {
+                    rules: [{
+                      required: true,
+                    }],
+                  },
+                  request: async () => {
+                    const data = await services.uom();
+                    return data.map(p => ({ value: p.name, label: p.name }));
+                  }
+                },
+                {
+                  title: 'Quantity',
+                  dataIndex: 'quantity',
+                  valueType: "digit",
+                  initialValue: 1,
+                  ellipsis: true,
+                  fieldProps: {
+                    allowClear: true,
+                  },
+                  formItemProps: {
+                    rules: [
+                      {
+                        required: true,
+                      },
+                    ]
+                  }
+                },
+                {
+                  title: 'Unit Price ',
+                  dataIndex: 'pricing',
+                  valueType: "digit",
+                  initialValue: 0,
+                  ellipsis: true,
+                  formItemProps: {
+                    rules: [{
+                      required: true,
                     },
+                    ]
                   },
-                ]}
-              />
-            </Col>
-          </Row>
-        </Card>
-      </ProForm>
-    </Spin>
+                },
+                {
+                  title: 'Total',
+                  dataIndex: 'total',
+                  valueType: "money",
+                  initialValue: 0,
+                  ellipsis: true,
+                  readonly: true,
+                  renderFormItem: (_, r) => {
+                    const total = r.record ? r.record?.pricing * r.record?.quantity : 0;
+                    r.value = total
+                    return <>{formatter.format(total)}</>
+                  },
+                  formItemProps: {
+                    rules: [{
+                      required: true,
+                    }]
+                  },
+                },
+                {
+                  width: 50,
+                  valueType: "option"
+                }
+              ]}
+            />
+            <Card size='small'>
+              <Flex
+                justify='space-between'
+              >
+                <div></div>
+                <ProDescriptions<Amount>
+                  column={1}
+                  editable={{
+                    onSave: (_, record, originRow, __) => {
+                      const total = (originRow.grantAmount as number - (originRow.grantAmount as number * (record.discountAmount || 0) / 100))
+                      setAmount((c) => ({
+                        ...c,
+                        ...record,
+                        discountAmount: record.discountAmount,
+                        totalAmount: total,
+                      }))
+                      return Promise.resolve({
+                        data: record,
+                        sucess: true
+                      })
+                    },
+                  }}
+                  style={{
+                    width: "300px",
+                  }}
+                  labelStyle={{
+                    width: 150
+                  }}
+                  contentStyle={{
+                    fontWeight: "bold"
+                  }}
+                  dataSource={amount}
+                  columns={[
+                    {
+                      title: "Grand Amount",
+                      dataIndex: "grandAmount",
+                      valueType: "money",
+                      editable: false,
+                      render: (_, r) => r.grantAmount ? formatter.format(r.grantAmount) : "$0.00"
+                    },
+                    {
+                      title: "Discount Amount",
+                      dataIndex: "discountAmount",
+                      valueType: "percent",
+                    },
+                    {
+                      title: "Total Amount",
+                      dataIndex: "totalAmount",
+                      valueType: "money",
+                      editable: false,
+                      render: (_, r) => r.totalAmount ? formatter.format(r.totalAmount) : "$0.00"
+                    },
+                  ]}
+                />
+              </Flex>
+            </Card>
+          </Flex>
+        </ProForm>
+      </Spin>
+    // </PageContainer>
   );
 };
+
+export default MpuRequestEntryForm

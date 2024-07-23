@@ -8,7 +8,7 @@ import { simpleRequestActions } from '@/services/model';
 import { ActionType } from '@ant-design/pro-table';
 import { message, Modal, Rate, Spin } from 'antd';
 import { useRef, useState } from 'react';
-import LoadingBayEntryModal from './entry-form';
+import LoadingBayEntryModal, { LoadingBayDataForm } from './entry-form';
 import { PageContainer } from '@ant-design/pro-components';
 
 export default () => {
@@ -38,7 +38,7 @@ export default () => {
     }
   };
 
-  const onSaveHandler = (data: LoadingBay) => {
+  const onSaveHandler = (data: LoadingBayDataForm) => {
     Modal.confirm({
       title: 'Save Loading Bay.',
       content: 'Are you sure?',

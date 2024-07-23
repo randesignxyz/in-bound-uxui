@@ -160,7 +160,7 @@ const SoHeader: React.FC<Props> = ({ data }) => {
               allowClear={false}
               fieldProps={{
                 defaultActiveFirstOption: true,
-                popupMatchSelectWidth: 40,
+                popupMatchSelectWidth: 500,
                 filterOption: (input, option) =>
                   (option?.label?.toString() || '').toLowerCase().indexOf(input.toLowerCase()) >= 0,
               }}

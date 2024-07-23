@@ -10,13 +10,10 @@ interface Props extends DrawerFormProps {
     onCancel: () => void;
     data?: ShareDTO
 }
-
 const ShareDetailDrawer: React.FC<Props> = ({ onCancel, data, ...props }: Props) => {
     const [fileurl, setFileUrl] = useState<string>();
     useEffect(() => {
         setFileUrl(undefined)
-        //    props.open && (data?.attachment?.fileType=="image/png"  || data?.attachment?.fileType=="application/pdf")  && getUploadFileObjectUrlV2()(data?.attachment?.fileId || "").then(setFileUrl)
-        //    props.open && getUploadFileObjectUrlV2()(data?.attachment?.fileId || "").then(setFileUrl)
     }, [props.open]);
     return (
         <DrawerForm
@@ -28,7 +25,6 @@ const ShareDetailDrawer: React.FC<Props> = ({ onCancel, data, ...props }: Props)
             title={`#${data?.document?.documentation?.docName}`}
             drawerProps={{
                 onClose: onCancel,
-                
                 className:"ant-pro-layout-content"
             }}
             submitter={false}
@@ -53,7 +49,6 @@ const ShareDetailDrawer: React.FC<Props> = ({ onCancel, data, ...props }: Props)
                                 <span><span style={{ color: "gray" }}>Updated:</span> {formatDateTime(data?.lastModifiedDate)}</span>
                             </Flex>
                         </Space>
-
                     </Flex>
                 </Card>
                 <Card
@@ -95,5 +90,4 @@ const ShareDetailDrawer: React.FC<Props> = ({ onCancel, data, ...props }: Props)
         </DrawerForm>
     )
 }
-
 export default ShareDetailDrawer

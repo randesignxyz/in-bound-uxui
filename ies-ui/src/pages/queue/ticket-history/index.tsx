@@ -11,7 +11,7 @@ import { PageContainer } from '@ant-design/pro-components';
 import { ActionType } from '@ant-design/pro-table';
 import { Button, message, Rate, Segmented, Space, Tooltip } from 'antd';
 import { useEffect, useRef, useState } from 'react';
-import { history } from 'umi';
+import { history } from "@umijs/max";
 import TicketDetailView from '../ticket/ticket-detail-view';
 import AdvanceSearch from './advance-search';
 

@@ -57,24 +57,6 @@ export default () =>{
                actionRef.current?.reload?.();
             }
         },
-        
-        // {
-        //     type: "divider"
-        // },
-        // {
-        //     key: "5",
-        //     label: "Delete",
-        //     danger:true,
-        //     itemIcon: <DeleteOutlined />,
-        //     onClick: async () => {
-        //         // await downloadUploadFileV2()(record.attachment?.fileId || "", record?.document?.title);
-        //     }
-        // },
-        // {
-        //     key: "6",
-        //     label: "History",
-        //     itemIcon: <HistoryOutlined />,
-        // },
        
     ]
     return (
@@ -102,14 +84,14 @@ export default () =>{
                                 type="link"
                                 onClick={() => history.push(`${DMSPaths.document}/detail/${r.id}`)}
                             >
-                                {
+                                {/* {
                                     formateFileType(r?.attachment?.fileType) == "EXCEL" && <FileExcelOutlined /> ||
                                     formateFileType(r?.attachment?.fileType) == "JPG" && <FileJpgOutlined /> ||
                                     formateFileType(r?.attachment?.fileType) == "PDF" && <FilePdfOutlined /> ||
                                     formateFileType(r?.attachment?.fileType) == "PNG" && <FileJpgOutlined /> ||
                                     formateFileType(r?.attachment?.fileType) == "WORD" && <FileWordOutlined />
                                 }
-                                {r.title}
+                                {r.title} */}
                             </Button>)
                     },
                     {

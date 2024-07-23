@@ -7,12 +7,12 @@ import { SummaryTypes } from "./DataEntryView";
 export type PriceComparisonListItem = {
     id: number;
     requisition: LookupDataItem;
-    processInstId: number;
+    processInstId: string;
     formNo: string;
     remarks: string;
     priceOfferedTime: number;
     justifications?: string;
-    quotations: PriceComparisonItemQuotation[],
+    quotations?: PriceComparisonItemQuotation[],
     vendorCode: string;
     vendorName: string;
     requestedDate: moment.Moment;
@@ -29,6 +29,7 @@ export type PriceComparisonSearchParams = {
     quotationIds?: number[];
     type?: string;
     status?: string,
+    searchValue?: string;
     workflowStatus?: string;
 }
 
@@ -88,6 +89,8 @@ export type PriceComparisonSavePayload = {
     otherCostItems: PriceComparisonOtherCost[];
     files: string[];
     acceptedBy: string;
+    acceptedFunctionId: number;
+    acceptedFunction: string;
 }
 
 

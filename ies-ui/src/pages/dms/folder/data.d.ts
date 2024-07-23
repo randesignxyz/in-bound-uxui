@@ -1,4 +1,6 @@
 import { TreeDataNode } from "antd";
+import { List } from "lodash";
+import moment from "moment";
 
 interface FolderDTO{
     id:number;
@@ -12,6 +14,7 @@ interface FolderDTO{
     code?:string;
     libraryId?:number;
     department?:DepartmentDTO;
+    collaborator?:number
 }
 
 interface FolderCreate{
@@ -62,4 +65,18 @@ interface FolderMoveParam{
     moveId:number;
     moveToId:number;
     code?:string;
+}
+
+interface CollaboratorCreate{
+    id?:number;
+    people:List<string>,
+    folder?:number
+}
+
+interface CollaboratorDTO{
+    id:number;
+    folder:number;
+    createdBy:string;
+    createdDate:moment;
+    people:UserDataDTO
 }

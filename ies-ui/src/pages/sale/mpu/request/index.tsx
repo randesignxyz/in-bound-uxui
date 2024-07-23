@@ -2,43 +2,34 @@ import CrudWrapper from '@/components/DataCrud/CrudWrapper';
 import { MPUPath } from '..';
 import MpuRequestEntryForm from './MpuRequestEntryForm';
 import MpuRequestListView from './MpuRequestListView';
-// import CustomerPricingEntryForm from './CustomerPricingEntryForm';
+import MpuRequestDetail from './MpuRequestDetail';
+import MpuRequestMainPage from './MpuMainPage';
 
 export default () => {
-  // const access = useAccess();
   return (
-    <CrudWrapper baseURL={MPUPath.rsmRequest}>
+    <CrudWrapper baseURL={MPUPath.rsmRequest} disablePageContainer>
       {(view, id, navigate) => {
         return (
-          (view === 'list' && <MpuRequestListView />) ||
-          //     <CustomerPricingList
-          //       onAdd={() => navigate?.goToCreate?.()}
-          //       // eslint-disable-next-line @typescript-eslint/no-shadow
-          //       onDetail={(id) => {
-          //         navigate?.goToDetail?.({ id: id });
-          //       }}
-          //       // eslint-disable-next-line @typescript-eslint/no-shadow
-          //       onEdit={(id) => {
-          //         navigate?.gotoEdit?.({ id: id });
-          //       }}
-          //     />
-          //   )
-          //     ||
-          //   (view === 'detail' && (
-          //     <CustomerDetailView
-          //       id={id as string}
-          //       // eslint-disable-next-line @typescript-eslint/no-shadow
-          //       onEdit={(id) => {
-          //         navigate?.gotoEdit?.({ id: id });
-          //       }}
-          //     />
-          //   )) ||
-          //   (view === 'edit' && <CustomerEntryFormView type="edit" id={id as string} />) ||
-          (view === 'create' && <MpuRequestEntryForm type="new" />)
+          // (view === 'list' && <MpuRequestListView
+          //   onAdd={() => navigate?.goToCreate?.()}
+          //   onDetail={(id) => {
+          //     navigate?.goToDetail?.({ id: id });
+          //   }}
+          //   onEdit={(id) => {
+          //     navigate?.gotoEdit?.({ id: id });
+          //   }}
+          // />) ||
+          (view ==="list" && <MpuRequestMainPage/>)||
+
+          (view === 'create' && <MpuRequestEntryForm type="new" />) ||
+          (view === "detail" && <MpuRequestDetail
+            id={id as number}
+            onEdit={(id: number) => {
+              navigate?.gotoEdit?.({ id: id });
+            }}
+          />) ||
+          (view === 'edit' && <MpuRequestEntryForm type="new" id={id as number} />)
         );
-        //  ||
-        //    view === 'create' && <Access accessible = {access.canCreateEditSo} fallback={<div>Unauthorized</div>}> <Create/> </Access> ||
-        //    view === 'edit' && <Access accessible = {access.canCreateEditSo} fallback={<div>Unauthorized</div>}> <Edit id = {id as number}/> </Access>
       }}
     </CrudWrapper>
   );

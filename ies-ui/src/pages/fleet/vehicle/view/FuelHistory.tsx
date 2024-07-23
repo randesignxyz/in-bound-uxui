@@ -17,11 +17,9 @@ export type Member = {
   fuelType: string;
   driver: string;
 };
-
 interface Props {
   id: string;
 }
-
 
 export default ({ id }: Props) => {
   const requestActions = simpleRequestActions();
@@ -33,17 +31,14 @@ export default ({ id }: Props) => {
 
   const onLoadData = useCallback(async () => {
     setFuel(await FuelServiceAPI(requestActions).list(id))
-  }, [id])
-
+  }, [id]);
   useEffect(() => {
     onLoadData()
   }, [id])
 
   const cacheList = useModel('dataList');
-
   const onRequestHandler = async (params: TableViewSearchParams<FuelAvanceSearchParam>) => {
     try {
-
       return FuelServiceAPI(requestActions).page({
               ...params.criteria, 
               criteria:{
@@ -59,9 +54,6 @@ export default ({ id }: Props) => {
           data: it,
         });
       }) as Promise<Paging<FuelDTO>>;
-
-
-      ;
     } catch (error: any) {
       message.error(error.message);
       return Promise.reject();
@@ -70,7 +62,6 @@ export default ({ id }: Props) => {
 
   return (
       <TableView
-
         hasCriteria={Object.values(Omit(advanceSearchParams, ['status'])).some((v) => v)}
         displayOnly
         cache
@@ -82,15 +73,12 @@ export default ({ id }: Props) => {
             dataIndex: "refilledDate",
             sorter: "refilledDate",
           },
-         
           {
             key: "driverName",
             title: "Driver",
             sorter: "driverName",
             dataIndex: "driverName"
           },
-
-
           {
             key: "pumpBy",
             title: "Pump By",
@@ -130,11 +118,8 @@ export default ({ id }: Props) => {
             title: "Consumption Rate",
             dataIndex: "status",
             render: (_, r) => <div style={{ color: r.status != "Normal" ? "#f1c822" : "" }}>{r.status}</div>
-
           },
-       
         ]}
-        
         tableProps={{
           actionRef: actionRef,
         }}
@@ -166,10 +151,7 @@ export default ({ id }: Props) => {
               }
             }) as Promise<Paging<FuelDTO>>,
         }}
-
-
       />
-
   );
 };
 

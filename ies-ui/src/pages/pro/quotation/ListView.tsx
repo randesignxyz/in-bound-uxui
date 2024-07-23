@@ -15,7 +15,6 @@ import {
 } from './data';
 import { createQuotationService } from './services';
 import { Flex } from 'antd/lib';
-import { ActionType } from '@ant-design/pro-components';
 
 const { Link } = Typography;
 

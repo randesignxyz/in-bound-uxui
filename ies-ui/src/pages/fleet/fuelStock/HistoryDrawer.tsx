@@ -33,7 +33,6 @@ interface Props extends DrawerProps {
   onClose: () => void;
   data?: TankDTO;
 }
-
 export default ({ data, ...props }: Props) => {
   const requestActions = simpleRequestActions();
   const services = TankFuelServiceAPI(requestActions);
@@ -43,9 +42,7 @@ export default ({ data, ...props }: Props) => {
   const [quantityState, setQuantityState] = useState<{
     withdraw?: number | 0;
     plus?: number | 0;
-    // usageTotal: number|0;
   }>();
-
   useEffect(() => {
     props.open && actionRef.current?.reload?.();
   }, [props.open]);
@@ -56,7 +53,6 @@ export default ({ data, ...props }: Props) => {
     tankId: 0,
     date: undefined,
   });
-
   const onRequestHandler = async (params: TableViewSearchParams<FuelTransactionSearch>) => {
     try {
       return services
@@ -90,7 +86,6 @@ export default ({ data, ...props }: Props) => {
               { quantity: 0 },
             );
           setQuantityState((v) => ({ ...v, withdraw: withdraw.quantity, plus: enter.quantity }));
-
           return cacheList.cacheDataList({
             type: 'fleet-fuel-transaction',
             criteria: params,
@@ -102,7 +97,6 @@ export default ({ data, ...props }: Props) => {
       return Promise.reject();
     }
   };
-
   const items = (row: TankTransactionDTO): MenuProps['items'] => {
     return [
       {
@@ -145,7 +139,6 @@ export default ({ data, ...props }: Props) => {
       },
     ];
   };
-
   const expandedRowRender = (e?: any) => {
     return (
       <ProTable<TankTransactionDTO>
@@ -157,7 +150,6 @@ export default ({ data, ...props }: Props) => {
             valueType: 'date',
             key: 'dateRefill',
           },
-
           {
             title: 'Before Balance',
             dataIndex: 'beforeBalance',
@@ -166,7 +158,6 @@ export default ({ data, ...props }: Props) => {
             valueType: "digit",
             render: (_, r) => r.beforeBalance?.toFixed(2)
           },
-
           {
             title: 'Quantity',
             dataIndex: 'quantity',
@@ -194,7 +185,6 @@ export default ({ data, ...props }: Props) => {
             sorter: 'beginningBalance',
             render: (_, r) => r.beginningBalance?.toFixed(2)
           },
-
           {
             title: 'Transaction Name',
             dataIndex: 'transactionName',
@@ -287,14 +277,12 @@ export default ({ data, ...props }: Props) => {
             <ProFormDatePicker.Month name={'date'} />
           </Space>
         </ProForm>
-
         <Row gutter={12} style={{ padding: '0 20px' }}>
           <Col span={6}>
             <Statistic
               title={'Current Balance'}
               value={data?.currentInventory?.toFixed(2)}
               style={{ backgroundColor: '#e8e2bd', borderRadius: 5, padding: 5 }}
-              // precision={2}
               valueStyle={{ color: '#3f8600' }}
             />
           </Col>
@@ -324,7 +312,6 @@ export default ({ data, ...props }: Props) => {
             />
           </Col>
         </Row>
-
         {statusState != 'MONTHLY' ? (
           <TableView<TankTransactionDTO, { searchValue?: string }>
             hasCriteria={Object.values(Omit(advanceSearchParams, ['status'])).some((v) => v)}
@@ -340,14 +327,12 @@ export default ({ data, ...props }: Props) => {
                 sorter: 'dateRefill',
                 valueType: 'date',
               },
-
               {
                 title: 'Before Balance',
                 dataIndex: 'beforeBalance',
                 sorter: 'beforeBalance',
                 render: (_, r) => r.beforeBalance?.toFixed(2)
               },
-
               {
                 title: 'Quantity',
                 dataIndex: 'quantity',
@@ -372,7 +357,6 @@ export default ({ data, ...props }: Props) => {
                 sorter: 'beginningBalance',
                 render: (_, r) => r.beginningBalance?.toFixed(2)
               },
-
               {
                 title: 'Transaction Name',
                 dataIndex: 'transactionName',
@@ -419,7 +403,6 @@ export default ({ data, ...props }: Props) => {
                   criteria: {
                     ...criteria,
                     advanceSearch: advanceSearchParams,
-
                     sort,
                   },
                   pagination,

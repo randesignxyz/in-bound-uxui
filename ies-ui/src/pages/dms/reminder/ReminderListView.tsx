@@ -13,7 +13,6 @@ import moment from "moment";
 interface Props{
     documentId?:number;
 }
-
 export default ({ documentId}:Props) =>{
     const requestAction = simpleRequestActions();
     const actionRef =  useRef<ActionType>();
@@ -25,7 +24,6 @@ export default ({ documentId}:Props) =>{
             payloads?:ReminderDTO;
         }
     }>();
-    
     return (
         <>
             <ProList<ReminderDTO>

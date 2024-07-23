@@ -1,7 +1,7 @@
 ﻿import type { RequestConfig, RequestOptions } from '@umijs/max';
-import { message, notification } from 'antd';
+import { notification } from 'antd';
 import { offlineToken } from '../src/pages/utils';
-import { kc } from '@/auth';
+import { message } from 'antd/lib';
 
 enum ErrorShowType {
   SILENT = 0,
@@ -58,10 +58,12 @@ export const errorConfig: RequestConfig = {
               // do nothing
               break;
             case ErrorShowType.WARN_MESSAGE:
-              message.warning(errorMessage);
+              // message.warning(errorMessage);
+              notification.warning({ message: errorMessage })
               break;
             case ErrorShowType.ERROR_MESSAGE:
-              message.error(errorMessage);
+              notification.warning({ message: errorMessage })
+              // message.error(errorMessage);
               break;
             case ErrorShowType.NOTIFICATION:
               notification.open({
@@ -73,30 +75,34 @@ export const errorConfig: RequestConfig = {
               // TODO: redirect
               break;
             default:
-              message.error(errorMessage);
+              notification.error({ message: errorMessage })
+            // message.error(errorMessage);
           }
         }
       } else if (error.response) {
         const { response: { status, data } } = error;
+        const { response: { data: { message } } } = error;
+        const errorMessage = message || error.response.message
         if (status === 500 || data?.status === 550 || status === 505) {
-          const { response: { data: { message } } } = error;
-          const errorMessage = message || error.response.message
           throw { error, message: errorMessage }
         } else if (status == 404) {
-          message.error("Services not responding.");
+          // message.error("Services not responding.");
+          notification.error({ message: 'Services not responding.', key: "404", description: errorMessage.error, role: 'alert' })
           return
         }
-        message.error(` Response status:${error.response.status}`);
+        notification.error({ message: ` Response status:${error.response.status}` });
       } else if (error.request) {
-        message.error('None response! Please retry.');
+        // message.error('None response! Please retry.');
+        notification.error({ message: 'None response! Please retry.' })
       } else {
-        message.error('Request error, please retry.');
+        // message.error('Request error, please retry.');
+        notification.error({ message: 'Request error, please retry.' })
       }
     },
   },
   requestInterceptors: [
     async (config: RequestOptions) => {
-      const url = config?.url?.concat('?token = 123');
+      const url = config?.url
       const matchs = ['/api/', '/services/']
       const requiredToken = matchs.some(it => config.url?.startsWith(it))
 
@@ -109,7 +115,8 @@ export const errorConfig: RequestConfig = {
     (response) => {
       const { data } = response as unknown as ResponseStructure;
       if (data?.success === false) {
-        message.error('Failed to request.');
+        notification.error({ message: 'Failed to request.' })
+
       }
       return response;
     },

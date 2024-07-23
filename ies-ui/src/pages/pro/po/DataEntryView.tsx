@@ -3,9 +3,14 @@ import { ProcessFlowModalWrapper } from '@/pages/process-flow/components/Process
 import { formatter } from '@/pages/utils';
 import { UserResult } from '@/services/process-workflow/data';
 import {
+  CaretRightOutlined,
   CheckCircleOutlined,
   ClearOutlined,
   DeleteOutlined,
+  DollarOutlined,
+  DotChartOutlined,
+  EyeFilled,
+  MenuOutlined,
   MergeCellsOutlined,
   MinusCircleOutlined,
   QuestionCircleOutlined,
@@ -17,6 +22,7 @@ import {
   FooterToolbar,
   PageContainer,
   ProCard,
+  ProDescriptions,
   ProForm,
   ProFormDatePicker,
   ProFormDigit,
@@ -26,6 +32,7 @@ import {
   ProFormSwitch,
   ProFormText,
   ProFormTextArea,
+  ProList,
   ProTable,
 } from '@ant-design/pro-components';
 import { history } from '@umijs/max';
@@ -45,6 +52,12 @@ import {
 import PoItemFinder from './PoItemFinder';
 import { createPoService } from './services';
 import { Moment } from 'moment';
+import { useInView } from 'react-intersection-observer';
+import { LookupDataItem3 } from '@/services/data';
+import { getRelatedItms, RelatedObj } from '../services';
+import Icon from '@ant-design/icons/lib/components/Icon';
+import Link from 'antd/es/typography/Link';
+import { Divider } from 'rc-menu';
 
 type DataFormType = {
   vendorId: number;
@@ -76,13 +89,13 @@ type DataFormType = {
 };
 
 export default ({
-  id,
-  type,
+  onView,
   onBack,
 }: {
   id?: number;
   type: 'CREATE' | 'EDIT';
   onBack: () => void;
+  onView?: (processInstId: string, fornNo: string) => void;
 }) => {
   const [form] = useForm<DataFormType>();
   const vendorSrv = createVendorService();
@@ -99,6 +112,8 @@ export default ({
   const [requestVisible, setRequestVisible] = useState(false);
   const [addItemVisible, setAddItemVisible] = useState(false);
   const [isService, setIsService] = useState(false);
+
+  const { ref, inView } = useInView({});
 
   const onFindVendorHandler = async ({ keyWords }: { keyWords?: string }) => {
     const rs = await vendorSrv.fetchPaging({
@@ -141,9 +156,7 @@ export default ({
   const onSelectVendor = async (vendorId: number) => {
     try {
       if (vendorId < 0) return;
-
       const rs = await vendorSrv.fetchItem(vendorId);
-
       setVendor(rs);
     } catch (error: any) {
       message.error(error.message || 'Failed to fetch date.');
@@ -162,37 +175,57 @@ export default ({
 
   const linkObject = (record: SavePoItem) => {
     return (
-      <ProTable<PoItemSearch>
-        size="small"
-        rowKey={'id'}
-        search={false}
-        options={false}
-        pagination={false}
-        dataSource={[record.item, ...(record.combineWith || [])]}
-        columns={[
-          { title: 'Liked To', render: (_, r) => r.refType },
-          {
-            title: 'Doc No',
-            render: (_, r) =>
-              r.relatedTo
-                ?.filter((it) => it.type == r.refType)
-                .map((it) => it.code)
-                .join(', '),
+      <ProList<RelatedObj>
+        // dataSource={[...(record.item.relatedTo || []), ...(record.combineWith?.flatMap(it => it.relatedTo || []) || [])]}
+        dataSource={record.relatedObjects}
+        ghost={true}
+        grid={{ gutter: 16, column: 4 }}
+        itemCardProps={{
+          size: 'small',
+          ghost: true
+        }}
+        metas={{
+          title: {
+            render: (_, r) => r.type,
           },
-          { title: 'Qty', hideInTable: isService, align: 'right', render: (_, r) => r.qty },
-          { title: 'UoM', hideInTable: isService, render: (_, r) => r.uomName },
-          {
-            title: 'Price',
-            align: 'right',
-            hideInTable: isService,
-            render: (_, r) => r.price && formatter.format(r.price),
+          subTitle: {
+            render: (_, r) => <Link>{r.code}</Link>
           },
-          {
-            title: 'Amount',
-            align: 'right',
-            render: (_, r) => formatter.format((r.price || 0) * (r.qty || 1)),
-          },
-        ]}
+          content: {
+            render: (_, r) => <>{r.items.map(it => <Flex vertical key={`${it.id}-${r.type}-${r.id}`}>
+
+              <Flex gap={5}>
+                <Flex> <CaretRightOutlined /> </Flex>
+                <Flex> Item: </Flex>
+                <Flex> {`${it.itemCode} - ${it.itemName}`} </Flex>
+              </Flex>
+              <Flex gap={5}>
+                <Flex> <CaretRightOutlined /> </Flex>
+                <Flex> Desc: </Flex>
+                <Flex> {it.itemDescription} </Flex>
+              </Flex>
+              <Flex gap={5}>
+                <Flex> <CaretRightOutlined /> </Flex>
+                <Flex> Qty: </Flex>
+                <Flex> {it.qty} </Flex>
+                {r.type == 'PR' && <Flex> Ordered: </Flex>}
+                {r.type == 'PR' && <Flex> {it.orderedQty || 0} </Flex>}
+
+                {r.type == 'PR' && <Flex> Purchased: </Flex>}
+                {r.type == 'PR' && <Flex> {it.purchasedQty || 0} </Flex>}
+                {r.type == 'PR' && <Flex> Available: </Flex>}
+                {r.type == 'PR' && <Flex> {it.availableQty || 0} </Flex>}
+              </Flex>
+              <Flex gap={5}>
+                <Flex> <CaretRightOutlined /></Flex>
+                <Flex> Price: </Flex>
+                <Flex> {formatter.format(it.price)} </Flex>
+
+              </Flex>
+            </Flex>)}</>
+          }
+        }}
+
       />
     );
   };
@@ -309,10 +342,10 @@ export default ({
         files: uploadFiles,
       };
       const rs = await srv.saveItem(data);
-
       const { processInstId, formNo } = rs;
+      onView?.(processInstId, formNo)
       message.success(`Your request is submitted. Please track the request with form no ${formNo}`);
-      history.push(`/data-form/${PoRequestFormNames.processDefKey}/${processInstId}`);
+      // history.push(`/data-form/${PoRequestFormNames.processDefKey}/${processInstId}`);
     } catch (error: any) {
       message.error(error.message || 'Failed to submit.');
     }
@@ -365,12 +398,12 @@ export default ({
   }, [items, forceUpdate]);
 
   return (
-    <PageContainer onBack={history.back} title="New Po Request">
+    <div ref={ref}>
       <ProForm
         form={form}
         submitter={{
           render: () => (
-            <FooterToolbar>
+            inView ? <FooterToolbar>
               <Button style={{ marginRight: 10 }} onClick={onBack}>
                 Cancel
               </Button>
@@ -387,7 +420,7 @@ export default ({
               >
                 Request
               </Button>
-            </FooterToolbar>
+            </FooterToolbar> : <></>
           ),
         }}
       >
@@ -638,13 +671,6 @@ export default ({
                     </Flex>
                   ),
                 },
-                // {
-                //   title: isService ? 'Service Name' : 'Item Name',
-
-                //   readonly: true,
-                //   responsive: ['xs', 'sm'],
-                //   dataIndex: 'itemName',
-                // },
                 {
                   title: 'Description',
                   valueType: 'textarea',
@@ -926,7 +952,7 @@ export default ({
         open={addItemVisible}
         isService={isService}
         onOpenChange={(visible) => !visible && setAddItemVisible(false)}
-        onSave={(data) => {
+        onSave={async (data) => {
           if (
             vendor &&
             data.some((it) =>
@@ -949,10 +975,21 @@ export default ({
             form.setFieldsValue({ vendorId: vendorFromItem.id });
           }
 
-          setItems((v) => [...v, ...data].map((it, index) => ({ ...it, baseItemId: it.item.baseItemId, baseType: it.item.baseType, seq: index + 1 })));
+          const itemList = (await Promise.all(data.map(it => getRelatedItms(it.refId, it.refType).query().then(items => ({ itemId: it.refId, type: it.refType, items: items }))))).flatMap(it => it)
+
+          setItems((v) => [...v, ...data].map((it, index) => ({
+            ...it,
+            baseItemId: it.item.baseItemId,
+            relatedObjects: itemList.find(i => i.itemId == it.refId && i.type == it.refType)?.items || [],
+            baseType: it.item.baseType,
+            seq: index + 1
+          })));
+
+
+
         }}
         vendor={vendor}
       />
-    </PageContainer>
+    </ div >
   );
 };

@@ -2,7 +2,7 @@ import { Moment } from 'moment';
 
 export interface RequisitionListItem {
   id: number;
-  formNo?: String;
+  formNo?: string;
   acquisitionDate: Moment;
   budgetCodeRequired: boolean;
   service: string;

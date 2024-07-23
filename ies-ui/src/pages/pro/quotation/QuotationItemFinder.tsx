@@ -62,10 +62,11 @@ export default ({
 
   const actionRef = useRef<ActionType>();
 
-  const onSearchPR = async ({ keywords }: { keywords?: string }) => {
+  const onSearchPR = async ({ keyWords }: { keyWords?: string }) => {
     const rs = await srv.list({
       criteria: {
-        searchValue: keywords,
+        searchValue: keyWords,
+
         advanceSearch: {
           service: isService,
           integratedStatus: 'POSTED',
@@ -87,7 +88,7 @@ export default ({
         : quotationSrv.listItemByPr(ids, keywords));
       return rs;
     } catch (error: any) {
-      message.error(error.message || 'Failed to fetch data');
+      // message.error(error.message || 'Failed to fetch data');
       return [];
     }
   };
@@ -97,7 +98,7 @@ export default ({
       const rs = await quotationSrv.listItemByKeywords(criteria?.keywords, criteria?.fromPrOnly);
       return rs.items;
     } catch (error: any) {
-      message.error(error.message || 'Failed to fetch data');
+      // message.error(error.message || 'Failed to fetch data');
       return [];
     }
   };
@@ -114,11 +115,11 @@ export default ({
       return {
         data: rs.map(
           (it) =>
-            ({
-              ...it,
-              refType: 'PR',
-              mainId: it.prItems?.find((it) => it)?.id!!,
-            } as Item & { mainId: number }),
+          ({
+            ...it,
+            refType: 'PR',
+            mainId: it.prItems?.find((it) => it)?.id!!,
+          } as Item & { mainId: number }),
         ),
       };
     }
@@ -148,7 +149,7 @@ export default ({
   };
 
   const onSaveHandler = (addedItems: Item[]) => {
-  
+
     onSaveMulti(
       addedItems.map((item) => {
         const it = item.prItems?.find((it) => it);
@@ -246,8 +247,8 @@ export default ({
                 isService
                   ? 'Service name, description'
                   : searchBy == 'PR'
-                  ? 'PR form no, PR code'
-                  : 'Item code, name, PR form no, PR code'
+                    ? 'PR form no, PR code'
+                    : 'Item code, name, PR form no, PR code'
               }
               onSearch={(value) => {
                 setCriteria((v) => ({ ...v, keywords: value }));
@@ -266,27 +267,27 @@ export default ({
           toolBarRender={() => {
             return multiSelect
               ? [
-                  <Button
-                    onClick={() => {
-                      setMultiSelect(true);
-                      setSelectedItems(items);
-                      setSelectedRowKeys(items.map((it) => it.mainId));
-                    }}
-                    disabled={
-                      items.filter(
-                        (it) =>
-                          !addedItems.some(
-                            (t) =>
-                              t.refType == t.refType &&
-                              t.item?.prItems?.some((i) => i.id == it.mainId),
-                          ),
-                      ).length == 0
-                    }
-                    type="link"
-                  >
-                    Select All
-                  </Button>,
-                ]
+                <Button
+                  onClick={() => {
+                    setMultiSelect(true);
+                    setSelectedItems(items);
+                    setSelectedRowKeys(items.map((it) => it.mainId));
+                  }}
+                  disabled={
+                    items.filter(
+                      (it) =>
+                        !addedItems.some(
+                          (t) =>
+                            t.refType == t.refType &&
+                            t.item?.prItems?.some((i) => i.id == it.mainId),
+                        ),
+                    ).length == 0
+                  }
+                  type="link"
+                >
+                  Select All
+                </Button>,
+              ]
               : [];
           }}
           showActions="hover"
@@ -296,10 +297,10 @@ export default ({
               getCheckboxProps: (record) =>
                 searchBy != 'ITEM'
                   ? {
-                      disabled: addedItems?.some((it) =>
-                        it.item?.prItems?.some((i) => i.id == record.mainId),
-                      ),
-                    }
+                    disabled: addedItems?.some((it) =>
+                      it.item?.prItems?.some((i) => i.id == record.mainId),
+                    ),
+                  }
                   : {},
               selectedRowKeys,
 
@@ -365,12 +366,12 @@ export default ({
                         { label: 'Amount', render: (_, r) => formatter.format(r.amount) },
                         {
                           label: 'Ordered Qty',
-                          hideInDescriptions: !item?.orderdQty,
+                          hideInDescriptions: !item?.orderdQty || isService,
                           render: (_, r) => r.orderdQty && formatterQty.format(r.orderdQty),
                         },
                         {
                           label: 'Purchased Qty',
-                          hideInDescriptions: !item?.purchaseQty,
+                          hideInDescriptions: !item?.purchaseQty || isService,
                           render: (_, r) => r.purchaseQty && formatterQty.format(r.purchaseQty),
                         },
                       ]}

@@ -84,14 +84,12 @@ const SettlementFormModal: React.FC<Props> = ({
 
   const onSettlementActionHandle = async () => {
     const dataForm = await formSettlement.validateFields();
-
     const item: SettlementLess = {
       ...dataForm,
       stockDetails: dataSource.map((it) => ({ ...it, isSettle: dataForm.isKeepForwarding })),
       salespersonCode: data.salespersonCode,
       stockControlId: data.id,
     };
-    console.log(item);
     actionHandlers?.onSettlementAction(item);
   };
 
@@ -318,10 +316,10 @@ const SettlementFormModal: React.FC<Props> = ({
             label="Stock balance is to be carried Forward"
             initialValue={true}
 
-            // initialValue={
-            //   data.settlementDetail === null ? true : data.settlementDetail?.isKeepForwarding
-            // }
-            // disabled={data.settlementDetail !== null}
+          // initialValue={
+          //   data.settlementDetail === null ? true : data.settlementDetail?.isKeepForwarding
+          // }
+          // disabled={data.settlementDetail !== null}
           />
         </Card>
 
@@ -341,7 +339,7 @@ const SettlementFormModal: React.FC<Props> = ({
                 label="Settlement Date"
                 placeholder=""
               />
-              <ProFormMoney
+              <ProFormDigit
                 rules={[{ required: true }]}
                 initialValue={4000}
                 min={3900}
@@ -355,12 +353,12 @@ const SettlementFormModal: React.FC<Props> = ({
                   },
                 }}
               />
-              <ProFormMoney
+              <ProFormDigit
                 // initialValue={data.soldAmount}
                 name="soldAmount"
                 label="System Amount USD"
                 readonly
-                locale="en-US"
+              // locale="en-US"
               />
             </Col>
             <Col flex="auto">
@@ -370,7 +368,12 @@ const SettlementFormModal: React.FC<Props> = ({
                 name="cashierName"
                 placeholder=""
               />
-              <ProFormMoney name="amount" label="Actual Amount USD" placeholder="" min={0} />
+              <ProFormDigit
+                name="amount"
+                label="Actual Amount USD"
+                placeholder=""
+                min={0}
+              />
               <ProFormDigit
                 fieldProps={{
                   formatter: (value) => {
@@ -382,7 +385,12 @@ const SettlementFormModal: React.FC<Props> = ({
                 placeholder=""
                 min={0}
               />
-              <ProFormMoney name="bankAmount" label="Bank Transfer Amount" placeholder="" min={0} />
+              <ProFormDigit
+                name="bankAmount"
+                label="Bank Transfer Amount"
+                placeholder=""
+                min={0}
+              />
               <ProFormTextArea label="Remark" name="remark" placeholder="" />
             </Col>
           </Row>

@@ -2,12 +2,12 @@ import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { execDataService, execDataService0, fetchDataItemService, fetchDataListService, fetchDataPagingService } from "@/services/apiGateway";
 import { ContractLess } from "@/services/crm/contract";
 // import { LookupDataItem, LookupDataItem3 } from "@/services/data";
-import { AdjustItem, AdjustInfoOn, CreateSettlemenDate, GratisContract, GratisContractViewData, GratisVerifyItem, HistoryItem, IncentiveSettlement, LookupDataItem,  SaveChangeStatusData,  SaveGratisContractCheckListData, SearchCriteria, SettlementCycle, SettlementCycleActivity, SettlementCycleAdvanceSearchParams, SettlementSearchDate, VerifyGratisContact, ItemSAP, GratisVerifySchedule, ApprovalRequestPayload, GratisSuggestedCustomer, GratisSuggestedCustomerVisit, GratisVisitScheduleParams } from "./types";
+import { AdjustItem, AdjustInfoOn, CreateSettlemenDate, GratisContract, GratisContractViewData, GratisVerifyItem, HistoryItem, IncentiveSettlement, LookupDataItem,  SaveChangeStatusData,  SaveGratisContractCheckListData, SearchCriteria, SettlementCycle, SettlementCycleActivity, SettlementCycleAdvanceSearchParams, SettlementSearchDate, VerifyGratisContact, ItemSAP, GratisVerifySchedule, ApprovalRequestPayload, GratisSuggestedCustomer, GratisSuggestedCustomerVisit, GratisVisitScheduleParams, GratisAdvanceSearchParams } from "./types";
 import moment from "moment";
 
 export const GratisServices = {
 
-    gratisContractCheckList: (params: TableViewSearchParams<SettlementCycleAdvanceSearchParams>) => fetchDataPagingService<IncentiveSettlement, any>({
+    gratisContractCheckList: (params: TableViewSearchParams<GratisAdvanceSearchParams>) => fetchDataPagingService<IncentiveSettlement, any>({
         actionName: 'list-incentive-settlement',
         endpoint: 'CRM',
         payload: {
@@ -186,10 +186,10 @@ export const GratisServices = {
         endpoint: 'CRM',
         payload: {currentVerifyId,customerCode,docNum,dataSource,startedDate,endedDate}
     }),
-    getListSuggestionItemAdjustment: (incentiveSettlementId: number,gVerifyId?: number,searchValue?: string) => fetchDataListService<ItemSAP, any>({
+    getListSuggestionItemAdjustment: (incentiveSettlementId: number,gVerifyId?: number,gratisSettlementConfigId?:number) => fetchDataListService<ItemSAP, any>({
         actionName: 'list-gratis-suggested-item-adjustment',
         endpoint: 'CRM',
-        payload: {incentiveSettlementId,gVerifyId,searchValue}
+        payload: {incentiveSettlementId,gVerifyId,gratisSettlementConfigId}
     }),
     adjustContractVerifyTrans: (id:number,adjItems: AdjustItem[]) => execDataService0<{contractVerifyId:number,items: AdjustItem[]}>({
         actionName: 'adjust-contract-verify-trans',

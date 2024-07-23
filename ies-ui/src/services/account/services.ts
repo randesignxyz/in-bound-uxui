@@ -1,6 +1,6 @@
 import { ServiceType } from "../API"
 import { execDataService0, fetchDataItemService, fetchDataListService, fetchDataPagingService, findAllService, findService, RequestActions } from "../apiGateway"
-import { UserResult } from "../process-workflow/data"
+import { Delegation, DelegationSaveParams, UserResult } from "../process-workflow/data"
 import { AccountType, SearchAccount } from "./data"
 
 export type AccountServiceName = 'list-user-group' | 'list-users' | 'list-available-candidate'
@@ -26,6 +26,28 @@ export const AccountServiceAPI = (actions?: RequestActions) => ({
     endpoint: 'WORK_FLOW',
     payload: { id: userId }
   }),
+
+})
+
+export const WorkFlowServiceAPI = (actions?: RequestActions) => ({
+  save: (data: DelegationSaveParams) => execDataService0({
+    actionName: 'save-task-delegation',
+    endpoint: 'WORK_FLOW',
+    payload: data
+  })(actions),
+
+
+  delete: (id: number) => execDataService0({
+    actionName: 'delete-task-delegation',
+    endpoint: 'WORK_FLOW',
+    payload: { id }
+  })(actions),
+
+  list: (taskId: string) => fetchDataListService<Delegation, { id: string }>({
+    actionName: 'list-task-delegation',
+    endpoint: 'WORK_FLOW',
+    payload: { id: taskId }
+  }).query(actions)
 
 })
 

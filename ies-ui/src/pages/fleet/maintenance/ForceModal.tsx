@@ -9,7 +9,6 @@ interface Props extends ModalFormProps {
 
 export default ({ onSave, data, ...props }: Props) => {
   const [form] = useForm<MaintenanceStatus>();
-
   return (
     <ModalForm
       form={form}

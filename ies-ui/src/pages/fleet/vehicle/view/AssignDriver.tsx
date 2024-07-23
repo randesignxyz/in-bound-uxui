@@ -9,22 +9,21 @@ import { VehicleDriverDTO } from '../../driver/data';
 import { DriverServiceAPI } from '../../driver/service';
 
 interface Props {
-  id: string;
+  vehicleId: string;
 }
 
-export default ({ id }: Props) => {
+export default ({ vehicleId }: Props) => {
   const requestActions = simpleRequestActions();
   const [driverList, setDriverList] = useState<VehicleDriverDTO[]>([]);
-
   const onLoadData = async () => {
-    const data = DriverServiceAPI(requestActions).listVehicleDriver({ id: id, status: 'active' });
+    const data = DriverServiceAPI(requestActions).listVehicleDriver({ id: vehicleId, status: 'active' });
     setDriverList(await data);
     return data;
   };
 
   useEffect(() => {
     onLoadData();
-  }, [id]);
+  }, [vehicleId]);
 
   return (
     <>

@@ -15,7 +15,7 @@ import { ActionType } from '@ant-design/pro-table';
 import { Button, FloatButton, message, Segmented, Space, Spin, Tooltip } from 'antd';
 import moment from 'moment';
 import { useEffect, useRef, useState } from 'react';
-import { history } from 'umi';
+import { history } from "@umijs/max";
 import Detail from '../board/detail';
 import { ViewController } from '../board/view-controller';
 import AdvanceSearch from './advance-search';

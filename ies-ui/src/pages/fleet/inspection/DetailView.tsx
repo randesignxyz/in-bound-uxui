@@ -2,53 +2,36 @@ import { simpleRequestActions } from '@/services/model';
 import { PageContainer, ProDescriptions, ProTable } from '@ant-design/pro-components';
 import { Card, Space, Spin, Tag } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
-import { FleetPaths } from '..';
-import BreadCrumbCom from '../components/BreadCrumbCom';
 import { InspectionDTO, InspectionItemCreate } from './data';
 import { InspectionServiceAPI } from './service';
-import { history } from '@umijs/max';
+import { ExternalLayout } from '../fleet';
 
 interface Props {
   id: string;
 }
-
 export default ({ id }: Props) => {
   const requestActions = simpleRequestActions();
   const service = InspectionServiceAPI(requestActions);
   const [inspectionData, setInspectionData] = useState<InspectionDTO>();
-
   const initData = useCallback(async () => {
     setInspectionData(await service.detail(id));
   }, []);
 
-  const routes = [
-    {
-      path: FleetPaths.fleet,
-      label: 'Fleet',
-    },
-    {
-      path: FleetPaths.inspection + '/list',
-      label: 'Inspection',
-    },
-    {
-      path: '',
-      label: 'Detail',
-    },
-  ];
-
   useEffect(() => {
     initData();
   }, []);
-
   return (
     <>
       <PageContainer
-        onBack={()=>history.push(`${FleetPaths.inspection}/list`)}
+        onBack={!ExternalLayout.isExternal("fleet/inspection") ? ExternalLayout.handleBackHandler : undefined}
         title="Inspection"
         subTitle={`#${inspectionData?.plateNumber}`}
-      >
+        fixedHeader
+        style={{
+          margin:"-30px -40px 0",
+        }}
+      />
         <Spin spinning={requestActions.request?.loading}>
-          {/* <BreadCrumbCom separator=">" routes={routes} /> */}
           <Space size={12} direction="vertical">
             <Card key={'inspection'} size={'small'}>
               <ProDescriptions<InspectionDTO>
@@ -156,7 +139,6 @@ export default ({ id }: Props) => {
             </Card>
           </Space>
         </Spin>
-      </PageContainer>
     </>
   );
 };

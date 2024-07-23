@@ -1,19 +1,20 @@
 import CrudWrapper from '@/components/DataCrud/CrudWrapper';
 import { ProPaths } from '..';
 import DataEntryView from './DataEntryView';
-import ListView from './ListView';
+import MainPage from './MainPage';
 
 export default () => {
   return (
-    <CrudWrapper baseURL={ProPaths.priceComparison}>
+    <CrudWrapper disablePageContainer baseURL={ProPaths.priceComparison}>
       {(view, id, navigate) => {
         switch (view) {
           case 'list':
             return (
-              <ListView
-                onAdd={(id) => navigate?.goToCreate?.({ id })}
-                onEdit={(id) => navigate?.gotoEdit?.({ id })}
-              />
+              // <ListView
+              //   onAdd={(id) => navigate?.goToCreate?.({ id })}
+              //   onEdit={(id) => navigate?.gotoEdit?.({ id })}
+              // />
+              <MainPage />
             );
           case 'create':
             return (

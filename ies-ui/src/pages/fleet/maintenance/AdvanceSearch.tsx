@@ -6,18 +6,15 @@ import { MaintenaceAdvanceSearch } from './data';
 
 export interface AdvanceSearchProps extends DrawerProps {
   initData?: MaintenaceAdvanceSearch;
-
   onSearch: (params: MaintenaceAdvanceSearch) => void;
   onReset: () => void;
 }
-
 const AdvanceSearch: React.FC<AdvanceSearchProps> = ({ initData, onReset, onSearch, ...props }) => {
   const [form] = useForm<MaintenaceAdvanceSearch>();
   useEffect(() => {
     if (!props.open) return;
     form.setFieldsValue({ ...initData });
   }, [props.open]);
-
   return (
     <Drawer {...props}>
       <ProForm

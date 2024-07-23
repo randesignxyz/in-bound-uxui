@@ -1,4 +1,4 @@
-import { ProForm, ProFormSelect } from "@ant-design/pro-components"
+import { ProForm } from "@ant-design/pro-components"
 import { Button, UploadFile, message } from "antd"
 import React, { useEffect, useState } from "react";
 import { DocumentationCreate, DocumentationDTO } from "./data";
@@ -8,22 +8,16 @@ import DocFileUploader from "../attachment/DocFileUploader";
 import { getFileTypeviaExtension } from "../core";
 import DocumentationEntry from "./DocumentationEntry";
 import ContractEntry from "../contract/ContractEntry";
-import ContractPurchase from "../contract/ContractPurchase";
-
-
 interface Props extends FormModalProps {
   type?: 'ADD' | 'EDIT';
-  folderId?: number;
   onSave: (data: DocumentationCreate) => void;
   data?: DocumentationDTO;
   libraryId?: number;
   division?: string;
 }
-
-const DocumentModalForm: React.FC<Props> = ({ type, onSave, division, folderId, data, libraryId, ...props }: Props) => {
+const DocumentModalForm: React.FC<Props> = ({ type, onSave, division, data, libraryId, ...props }: Props) => {
   const [fileUpload, setFileUpload] = useState<{ file?: UploadFile[], required?: boolean }>();
   const [form] = useForm<DocumentationCreate>();
-
 
   useEffect(() => {
     props.open && data && form.setFieldsValue({
@@ -33,11 +27,8 @@ const DocumentModalForm: React.FC<Props> = ({ type, onSave, division, folderId, 
       ...data.accountant,
       ...data.term
     });
-
     props.open && !data && form.resetFields();
-
   }, [props.open]);
-
   return (<>
     <FormModalComp
       {...props}
@@ -51,7 +42,6 @@ const DocumentModalForm: React.FC<Props> = ({ type, onSave, division, folderId, 
             const entry: DocumentationCreate = {
               id: data?.id,
               libraryId: libraryId,
-              folderId: folderId,
               division: division,
               category:dataForm.category,
               buId: dataForm.buId,
@@ -77,15 +67,12 @@ const DocumentModalForm: React.FC<Props> = ({ type, onSave, division, folderId, 
                 onSave(entry);
               }
               else{
-                console.log("no submit");
                 message.warning("Please upload file to attach contract!")
               }
             }
             else{
               onSave(entry);
             }
-           
-            
           }}>Submit</Button>
         </>
       }
@@ -94,15 +81,11 @@ const DocumentModalForm: React.FC<Props> = ({ type, onSave, division, folderId, 
         form={form}
         submitter={false}
       >
-        
-
         {
           (division == "DOC") && 
           <DocumentationEntry data={data}/> ||
           <ContractEntry data={data} />
-          // <ContractPurchase/>
         }
-
         {!data && (
           <DocFileUploader
             service="FILE"
@@ -118,6 +101,4 @@ const DocumentModalForm: React.FC<Props> = ({ type, onSave, division, folderId, 
     </FormModalComp>
   </>)
 }
-
-
 export default DocumentModalForm

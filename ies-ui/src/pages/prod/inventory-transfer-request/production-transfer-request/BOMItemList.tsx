@@ -6,10 +6,11 @@ import {
   ProFormText,
 } from '@ant-design/pro-components';
 import { ActionType } from '@ant-design/pro-table';
-import { Col, Row } from 'antd';
+import { Button, Col, Row } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { BomItemSearch, Item } from '../data';
 import { ItemServiceAPI } from '../service';
+import { Footer } from 'antd/es/layout/layout';
 
 interface Props {
   onAddItem?: (data: Item[]) => void;
@@ -87,12 +88,12 @@ export default ({ onAddItem, updateQuantity, tendency }: Props) => {
                 updateQuantity?.(data.target.value);
                 setQty(data.target.value);
               },
-              onBlur: async (data) => {
-                console.log(data.target.value);
-                updateQuantity?.(data.target.value);
-                getList();
-                // updateQuantity?.(data.target.value);
-              },
+              // onBlur: async (data) => {
+              //   console.log(data.target.value);
+              //   updateQuantity?.(data.target.value);
+              //   getList();
+              //   // updateQuantity?.(data.target.value);
+              // },
             }}
           />
         </Col>
@@ -127,9 +128,12 @@ export default ({ onAddItem, updateQuantity, tendency }: Props) => {
             editable: false,
           },
           { title: 'UoM', dataIndex: 'inventoryUoM', editable: false, width: 60 },
-          { title: 'Remark', dataIndex: 'remark' },
+          // { title: 'Remark', dataIndex: 'remark' },
         ]}
       />
+      <Footer style={{backgroundColor:'#fff',padding: '0px',display: 'flex', justifyContent: 'flex-end' }}>
+        <Button type='primary' onClick={()=>(getList(),setChildItem([]),setFatherID(''),setQty(''))}>Add</Button>
+      </Footer>
     </>
   );
 };

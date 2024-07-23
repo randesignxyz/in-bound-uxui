@@ -53,23 +53,29 @@ const MonthlyAvgTruckRepair = () => {
                     position:"bottom"
                 }}
                 label={{
-                    formatter:(r)=>{
-                        return `${formatter.format(r.value)} `
+                    text: (r: { value: any; }) => {
+                      return formatter.format(r.value)
                     },
-                    position: 'top',
-                    layout: [
-                        {
-                            type: 'interval-adjust-position',
-                        },  
-                        {
-                            type: 'interval-hide-overlap',
-                        }, 
-                        {
-                            type: 'adjust-color',
-                        },
+                    textBaseline: 'bottom',
+                  }}
+                // label={{
+                //     formatter:(r)=>{
+                //         return `${formatter.format(r.value)} `
+                //     },
+                //     position: 'top',
+                //     layout: [
+                //         {
+                //             type: 'interval-adjust-position',
+                //         },  
+                //         {
+                //             type: 'interval-hide-overlap',
+                //         }, 
+                //         {
+                //             type: 'adjust-color',
+                //         },
                     
-                    ],
-                }}
+                //     ],
+                // }}
             /></Spin>
     </Card>
 };

@@ -60,26 +60,11 @@ const LeadActions = {
 
 export const LeadServiceAPI = (requestActions: RequestActions) => {
   return {
-    listLead: (params: TableViewSearchParams<LeadAdvanceSearchParams>) =>
-      singleRequest<LeadDetail>(LeadActions.list(params))(requestActions) as Promise<
-        Paging<LeadDetail>
-      >,
-    detailLead: (id: number) =>
-      singleRequest<LeadDetail>(LeadActions.detail(id))(requestActions) as Promise<LeadDetail>,
-    save: (params: LeadDetail) =>
-      singleRequest<{ data: number; message: string }>(LeadActions.save(params))(requestActions),
-    location: (type: string, parentId?: number) =>
-      singleRequest<Locations[]>(LeadActions.loadRegion({ type: type, parentId: parentId }))(
-        requestActions,
-      ) as Promise<Locations[]>,
-    locations: (ids: number[]) =>
-      singleRequest<Locations[]>(LeadActions.loadLocations({ ids: ids }))(
-        requestActions,
-      ) as Promise<Locations[]>,
-
-    outletTypes: () =>
-      singleRequest<LookupData[]>(LeadActions.outletTypes({ id: -1 }))(requestActions) as Promise<
-        LookupData[]
-      >,
+    listLead: (params: TableViewSearchParams<LeadAdvanceSearchParams>) => singleRequest<LeadDetail>(LeadActions.list(params))(requestActions) as Promise< Paging<LeadDetail>>,
+    detailLead: (id: number) =>singleRequest<LeadDetail>(LeadActions.detail(id))(requestActions) as Promise<LeadDetail>,
+    save: (params: LeadLess) =>singleRequest<{ data: number; message: string }>(LeadActions.save(params))(requestActions),
+    location: (type: string, parentId?: number) => singleRequest<Locations[]>(LeadActions.loadRegion({ type: type, parentId: parentId }))(requestActions) as Promise<Locations[]>,
+    locations: (ids: number[]) =>singleRequest<Locations[]>(LeadActions.loadLocations({ ids: ids }))(requestActions) as Promise<Locations[]>,
+    outletTypes: () =>singleRequest<LookupData[]>(LeadActions.outletTypes({ id: -1 }))(requestActions) as Promise<LookupData[]>,
   };
 };

@@ -1,11 +1,12 @@
 import { toReadable } from '@/pages/utils';
+import { BadgeProps } from 'antd';
 import Badge from 'antd/lib/badge';
 
-export default ({ text, value }: { text: string; value?: string }) => {
+export default ({ text, value, ...rest }: { text: string; value?: string } & BadgeProps) => {
   const getColor = () => {
     const status = (value || text).toUpperCase();
 
-    if (['ACTIVE', 'APPROVED', 'POSTED', 'COMPLETED', 'SELECTED', 'DONE', 'ISSUED','ACHIEVED'].some((it) => it == status))
+    if (['ACTIVE', 'APPROVED', 'POSTED', 'COMPLETED', 'SELECTED', 'DONE', 'ISSUED', 'ACHIEVED'].some((it) => it == status))
       return 'success';
 
     if (
@@ -37,7 +38,7 @@ export default ({ text, value }: { text: string; value?: string }) => {
         'NEW',
         'IN_ACTIVE',
         'EXPIRED',
-        'ON_HOLD'       
+        'ON_HOLD'
       ].some((it) => it == status)
     )
       return 'warning';
@@ -50,5 +51,5 @@ export default ({ text, value }: { text: string; value?: string }) => {
     return 'default';
   };
 
-  return <Badge status={getColor()} text={toReadable(text)} />;
+  return <Badge {...rest} status={getColor()} text={toReadable(text)} />;
 };

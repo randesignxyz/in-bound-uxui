@@ -99,7 +99,7 @@ export default () => {
                 onClick={() => {
                   window
                     .open(
-                      `/external//data-form/staff_requisition_request_process/${r.instanceId}`,
+                      `/external/data-form/staff_requisition_request_process/${r.instanceId}`,
                     )
                     ?.focus();
                 }}

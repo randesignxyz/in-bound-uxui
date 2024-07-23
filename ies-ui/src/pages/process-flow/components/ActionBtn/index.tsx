@@ -1,3 +1,4 @@
+import React from 'react';
 import { ActionDataType, UserTask } from '@/services/process-workflow/data';
 import {
   CheckCircleOutlined,
@@ -10,10 +11,11 @@ import {
   StopOutlined,
   UserSwitchOutlined,
 } from '@ant-design/icons';
-import { Button, Dropdown, Flex, Menu, Space } from 'antd';
-import React from 'react';
+import { Button, Space } from 'antd';
 
-const ActionIcons = { flow: <PartitionOutlined style={{ fontSize: '16px', color: '#08c' }} /> };
+const ActionIcons = {
+  flow: <PartitionOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+};
 
 export interface MoreAction {
   icon: JSX.Element;
@@ -23,108 +25,126 @@ export interface MoreAction {
   hidden?: boolean;
   action: () => void;
 }
-export const ActionBtn: React.FC<{
+
+interface ActionBtnProps {
   item?: UserTask;
-  taskActions?: Boolean;
+  taskActions?: boolean;
   hideExport?: boolean;
-  moreActions?: (MoreAction | undefined)[];
-  onValidate?: (action: String, task?: UserTask) => boolean;
+  moreActions?: MoreAction[];
+  onValidate?: (action: string, task?: UserTask) => boolean;
   actionHandler: (key: string, item?: UserTask) => void;
-}> = ({ item, hideExport, taskActions, moreActions, onValidate, actionHandler }) => {
+}
+
+const getIcon = (action?: string) => {
+  const iconMap: Record<string, JSX.Element> = {
+    Approved: <CheckOutlined />,
+    Completed: <CheckOutlined />,
+    Rejected: <StopOutlined />,
+    Reassigned: <UserSwitchOutlined />,
+    OnHold: <HolderOutlined />,
+    Closed: <IssuesCloseOutlined />,
+  };
+  return iconMap[action || ''] || <SelectOutlined />;
+};
+
+const ActionButton: React.FC<{
+  action: ActionDataType | undefined;
+  item?: UserTask;
+  actionHandler: (key: string, item?: UserTask) => void;
+}> = ({ action, item, actionHandler }) => (
+  <Button
+    icon={getIcon(action?.value)}
+    onClick={() => actionHandler(action?.value || '', item)}
+    danger={action?.value === 'Rejected'}
+    size="middle"
+    type={action?.value !== 'Rejected' ? 'primary' : undefined}
+    key={action?.value}
+  >
+    {action?.name}
+  </Button>
+);
+
+const MoreActionsButtons: React.FC<{
+  moreActions?: MoreAction[];
+}> = ({ moreActions }) => (
+  <>
+    {moreActions?.filter(action => !action?.hidden).map(action => (
+      <Button
+        danger={action.danger}
+        icon={action.icon}
+        key={action.key}
+        onClick={action.action}
+      >
+        {action.name}
+      </Button>
+    ))}
+  </>
+);
+
+const TaskActionButtons: React.FC<{
+  item?: UserTask;
+  taskActions?: boolean;
+  actionHandler: (key: string, item?: UserTask) => void;
+}> = ({ item, taskActions, actionHandler }) => (
+  <>
+    {item && taskActions && !item.completed && (
+      <Button size="middle" onClick={() => actionHandler(item.claimed ? 'unclaimed' : 'claimed', item)}>
+        {item.claimed ? (
+          <>
+            <StopOutlined /> Unclaim
+          </>
+        ) : (
+          <>
+            <CheckCircleOutlined /> Claim
+          </>
+        )}
+      </Button>
+    )}
+  </>
+);
+
+export const ActionBtn: React.FC<ActionBtnProps> = ({
+  item,
+  hideExport,
+  taskActions,
+  moreActions,
+  actionHandler,
+}) => {
   const actionList: (ActionDataType | undefined)[] = [
-    // { value: 'flow', name: 'View Flow', groupName: '' },
-    item?.createSubTask
-      ? { value: 'createSubTask', name: 'Create Sub Task', groupName: '' }
-      : undefined,
+    item?.createSubTask ? { value: 'createSubTask', name: 'Create Sub Task', groupName: '' } : undefined,
     ...(item && taskActions ? item.actions : []),
   ];
 
-  const onActionClick = () => {
-    if (item?.completed) return;
-    item && actionHandler(item?.claimed ? 'unclaimed' : 'claimed', item);
-  };
-
-  const getIcon = (action?: string) => {
-    if (['Approved', 'Completed'].some((it) => it == action)) {
-      return <CheckOutlined />;
-    } else if (action == 'Rejected') {
-      return <StopOutlined />;
-    } else if (action == 'Reassigned') {
-      return <UserSwitchOutlined />;
-    } else if (action == 'OnHold') {
-      return <HolderOutlined />;
-    } else if (action == 'Closed') {
-      return <IssuesCloseOutlined />;
-    } else {
-      return <SelectOutlined />;
-    }
-  };
-
   return (
-    <Space size={'large'}>
-      <Flex gap={5}>
-        {moreActions?.filter(it => !it?.hidden)?.map(it => (<Button danger={it?.danger} icon={it?.icon} key={it?.key} onClick={it?.action}>
-          {it?.name}
-        </Button>))}
-        {actionList
-          .filter((it) => it)
-          .map((it) => (
-            <Button
-              icon={getIcon(it?.value)}
-              onClick={() => actionHandler(it?.value || '', item)}
-              danger={it?.value == 'Rejected'}
-              size="middle"
-              type={it?.value != 'Rejected' ? "primary" : undefined}
-              key={it?.value}
-            >
-              {it?.name}
-            </Button>
-          ))}
-      </Flex>
-      <Flex gap={5}>
+    <Space size="large">
+      <Space>
+        <MoreActionsButtons moreActions={moreActions} />
+        {actionList.filter(action => action).map(action => (
+          <ActionButton key={action?.value} action={action} item={item} actionHandler={actionHandler} />
+        ))}
+      </Space>
+      <Space>
         <Button onClick={() => actionHandler('flow', item)} icon={<PartitionOutlined />}>
           Diagram
         </Button>
-        {!hideExport && <Button onClick={() => actionHandler('export', item)} icon={<FilePdfOutlined />}>
-          Export
-        </Button>}
-
-        {taskActions && !item?.completed && (
-          <Button
-            size="middle"
-            onClick={onActionClick}
-          >
-            {item?.claimed ? (
-              <>
-                <StopOutlined /> Unclaim
-              </>
-            ) : (
-              <>
-                <CheckCircleOutlined /> Claim
-              </>
-            )}
+        {!hideExport && (
+          <Button onClick={() => actionHandler('export', item)} icon={<FilePdfOutlined />}>
+            Export
           </Button>
         )}
-
-
-      </Flex>
+        <TaskActionButtons item={item} taskActions={taskActions} actionHandler={actionHandler} />
+      </Space>
     </Space>
   );
 };
 
-export const ActionIconText = ({
-  icon,
-  text,
-  action,
-  item,
-  actionHandler,
-}: {
+export const ActionIconText: React.FC<{
   icon: any;
   text: string;
   action: string;
   item: UserTask;
   actionHandler: (key: string, item: UserTask) => void;
-}) => (
+}> = ({ icon, text, action, item, actionHandler }) => (
   <span onClick={() => actionHandler(action, item)}>
     {React.createElement(icon, { style: { marginRight: 8 } })}
     {text}

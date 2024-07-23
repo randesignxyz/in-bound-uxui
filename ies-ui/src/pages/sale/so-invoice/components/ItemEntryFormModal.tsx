@@ -146,22 +146,22 @@ const ItemEntryFormModal: React.FC<Props> = ({ data, actionHandlers, ...props })
             min={1}
             width="md"
           />
-          <ProFormMoney
-            // fieldProps={{
-            //   formatter: (value) => {
-            //     return numeral(value).format('$ 0,0.00');
-            //   },
-            // }}
+          <ProFormDigit
+            fieldProps={{
+              formatter: (value) => {
+                return numeral(value).format('$ 0,0.00');
+              },
+            }}
             rules={[{ required: itemType === 'STD' }]}
             placeholder=""
             name="unitPrice"
             label="Sale Price"
             min={itemType === 'STD' ? 1 : 0}
             width="md"
-            locale="en-US"
+            // locale="en-US"
             disabled={itemType !== 'STD'}
           />
-          <ProFormMoney
+          <ProFormDigit
             fieldProps={{
               formatter: (value) => {
                 return numeral(value).format('$ 0,0.00');

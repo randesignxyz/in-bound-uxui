@@ -55,19 +55,12 @@ const MaintenenceAction  =  {
 
 export const MaintenanceServiceAPI = (requestActions: RequestActions) => {
     return {
-       page : (params: TableViewSearchParams<MaintenaceAdvanceSearch>)=>
-       singleRequest<MaintenneceDTO>(MaintenenceAction.page(params))(requestActions) as Promise<Paging<MaintenneceDTO>> ,
-
+       page : (params: TableViewSearchParams<MaintenaceAdvanceSearch>)=>singleRequest<MaintenneceDTO>(MaintenenceAction.page(params))(requestActions) as Promise<Paging<MaintenneceDTO>> ,
        summary: (data: MaintenaceAdvanceSearch)=>singleRequest<MaintenanceSummary>(MaintenenceAction.summary(data))(requestActions) as Promise<MaintenanceSummary[]>,
-
        save: (data: MaintenanceCreate) =>singleRequest<{data:string, message:string}>(MaintenenceAction.save(data))(requestActions),
        delete: (params:{vehicleId:string, date?:moment.Moment}) =>singleRequest<{data:string, message:string}>(MaintenenceAction.delete(params))(requestActions),
-
        status: (data: MaintenanceStatus) =>singleRequest<{data:string, message:string}>(MaintenenceAction.status(data))(requestActions),
-
-       detail:(id:string)=>singleRequest<MaintenneceDetailDTO>(
-            MaintenenceAction.detail(id)
-       )(requestActions) as Promise<MaintenneceDetailDTO>
+       detail:(id:string)=>singleRequest<MaintenneceDetailDTO>(MaintenenceAction.detail(id))(requestActions) as Promise<MaintenneceDetailDTO>
     }
 };
   

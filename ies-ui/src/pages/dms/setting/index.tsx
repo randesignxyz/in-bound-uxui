@@ -7,7 +7,6 @@ import LibraryViewList from "./components/library/LibraryViewList";
 import UserGroupList from "./teams/TeamsViewList";
 import DocumentTypeView from "./components/documentType/DocumentTypeView";
 import { PageContainer } from "@ant-design/pro-components";
-import OtherView from "./other/OtherView";
 
 interface Props {
 }
@@ -41,19 +40,15 @@ export default ({ }: Props) => {
       label: "Libraries",
       children: <LibraryViewList actionKey={view} />
     },
-    // {
-    //   key: "other",
-    //   label: "Others",
-    //   children: <OtherView actionKey={view} />
-    // }
+   
   ];
 
   return (
     <>
-
       <PageContainer
         onBack={() => history.push(`${DMSPaths.dms}`)}
         title="Setting"
+        fixedHeader
       >
         <Tabs
           onChange={(e) => {

@@ -7,7 +7,7 @@ import StockListView from './List';
 export default () => {
   // const access = useAccess();
   return (
-    <CrudWrapper baseURL={SalePaths.stock}>
+    <CrudWrapper baseURL={SalePaths.stock} disablePageContainer>
       {(view, id, navigate) => {
         return (
           (view === 'list' && (

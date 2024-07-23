@@ -15,7 +15,7 @@ import ProTable from '@ant-design/pro-table';
 import { Button, Card, Checkbox, Descriptions, Image, Space, Table, Tabs, Tag } from 'antd';
 import moment from 'moment';
 import { useState } from 'react';
-import { history } from 'umi';
+import { history } from "@umijs/max";
 import ContractDetail from '../ContractDetail';
 import PosmCheckedView from '../PosmCheckedView';
 
@@ -310,7 +310,7 @@ export default ({ detail, orderList, onRefresh, ...rest }: Props) => {
     return [
       detail?.status == 'COMPLETED' && { label: "Visit Info", disabled: detail?.status !== 'COMPLETED', key: "visitInfo", children: visitView },
       { label: "Schedule Info", key: "scheduleInfo", children: scheduleInfoView },
-      (detail?.contracts?.length || 0) > 0 && { label: 'Contracts', key: "contract", disabled: (detail?.contracts?.length || 0) == 0, children: <ContractDetail refresh={onRefresh}  detail={detail} /> },
+      (detail?.contracts?.length || 0) > 0 && { label: 'Contracts', key: "contract", disabled: (detail?.contracts?.length || 0) == 0, children: <ContractDetail refresh={onRefresh} detail={detail} /> },
       (detail?.posmCheckedList?.length || 0) > 0 && { label: 'POSM Checked', key: 'posmChecked', children: <PosmCheckedView items={detail?.posmCheckedList || []} /> }
     ].filter(it => it) as any
   }

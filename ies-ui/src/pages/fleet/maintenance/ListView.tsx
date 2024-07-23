@@ -2,16 +2,14 @@ import TableView, { TableViewSearchParams } from '@/components/DataCrud/TableVie
 import { formatDate, formatter } from '@/pages/utils';
 import { Paging } from '@/services/API';
 import { simpleRequestActions } from '@/services/model';
-import { CopyOutlined, DashOutlined, DeleteOutlined, IssuesCloseOutlined, StopOutlined } from '@ant-design/icons';
+import { CopyOutlined, DashOutlined, ExportOutlined, IssuesCloseOutlined, StopOutlined } from '@ant-design/icons';
 import { ActionType, PageContainer } from '@ant-design/pro-components';
 import { history, useModel } from '@umijs/max';
-import { Badge, Button, Dropdown, MenuProps, message, Modal, Radio, Space, Tag, Tooltip } from 'antd';
+import { Badge, Button, Dropdown, MenuProps, message, Radio, Space, Tag, Tooltip } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import moment from 'moment';
 import Omit from 'omit.js';
 import { useRef, useState } from 'react';
-import { FleetPaths } from '..';
-import BreadCrumbCom from '../components/BreadCrumbCom';
 import { FuelAvanceSearchParam } from '../fuel/data';
 import AdvanceSearch from './AdvanceSearch';
 import { MaintenaceAdvanceSearch, MaintenanceStatus, MaintenneceDTO } from './data';
@@ -44,22 +42,7 @@ export default ({ onDetail }: Props) => {
   });
 
   const actionRef = useRef<ActionType>();
-
-  const routes = [
-    {
-      path: FleetPaths.fleet,
-      label: 'Fleet',
-    },
-    {
-      path: '',
-      label: 'Maintenance',
-    },
-  ];
-
   const cacheList = useModel('dataList');
-
-
-
   const onRequestHandler = async (params: TableViewSearchParams<MaintenaceAdvanceSearch>) => {
     try {
       return services.page(params).then((it) => {
@@ -74,15 +57,13 @@ export default ({ onDetail }: Props) => {
       return Promise.reject();
     }
   };
-
   const onAddHandler = async () => {
     setSate((v) => ({
       ...v,
       visible: { name: 'modal', type: 'ADD' },
     }));
   };
-
-  const getMenuItems = (item: MaintenneceDTO):MenuProps["items"] => {
+  const getMenuItems = (item: MaintenneceDTO): MenuProps["items"] => {
     return [
       {
         key: '1',
@@ -97,47 +78,24 @@ export default ({ onDetail }: Props) => {
         },
       },
       {
-        type:"divider"
+        type: "divider"
       },
       {
         label: item.status === 'Void' ? 'Unvoid' : 'Void',
         key: '3',
-        danger:item.status === 'Void' ? false : true,
-        style: { color:  item.status === 'Void' ? 'green' : 'red' },
+        danger: item.status === 'Void' ? false : true,
+        style: { color: item.status === 'Void' ? 'green' : 'red' },
         itemIcon: item.status === 'Void' ? <IssuesCloseOutlined /> : <StopOutlined />,
         onClick: () => {
           setForcCompleteState({ visible: { name: 'modal', type: 'ADD', payload: item } });
-        
         },
       },
-      // {
-      //   type:"divider",
-      // },
-      // {
-      //   label: "Delete",
-      //   key: '4',
-      //   style: { color: 'red' },
-      //   itemIcon: <DeleteOutlined/>,
-      //   onClick: () => {
-      //     Modal.confirm({
-      //       title:"Confirm Maintenance Entry Deletion",
-      //       content:"Are you sure you want to delete this Maintenance Entry? All data will be lost forever.",
-      //       onOk:async()=>{
-      //         await services.delete({vehicleId:item.id, date: item.meterHistory?.createdDate});
-      //         message.success("delete record was success");
-      //         actionRef.current?.reloadAndRest?.();
-      //       }
-      //     })
-      //   },
-      // },
     ];
   };
-
   const durationDate = (r: MaintenneceDTO) => {
     if (r.formDate && r.toDate !== null) {
       const start = moment(r.formDate);
       const end = moment(r.toDate);
-
       return moment.duration(start.diff(end)).humanize();
     }
     return '';
@@ -145,13 +103,15 @@ export default ({ onDetail }: Props) => {
 
   return (
     <>
-      {/* <BreadCrumbCom separator=">" routes={routes} /> */}
-
-     <PageContainer
-      onBack={()=>history.push(FleetPaths.fleet)}
-      title={"Maintenances"}
-     >
-     <TableView<MaintenneceDTO, { searchValue?: string }>
+      <PageContainer
+        title={"Maintenances"}
+        onBack={() => history.push("/fleet")}
+        style={{
+          margin: "-30px -40px 0",
+        }}
+        fixedHeader
+      />
+      <TableView<MaintenneceDTO, { searchValue?: string }>
         hasCriteria={Object.values(Omit(advanceSearchParams, ['status'])).some((v) => v)}
         cache
         extraFilter={
@@ -163,14 +123,12 @@ export default ({ onDetail }: Props) => {
                   ...v,
                   status: e.target.value,
                 }));
-
                 actionRef.current?.reloadAndRest?.();
               }}
             >
               <Radio.Button value="ALL" style={{ borderRadius: 5 }}>
                 All
               </Radio.Button>
-
               <Badge size="small" offset={[-20, 0]} count={0}>
                 <Radio.Button value="Void">Void</Radio.Button>
               </Badge>
@@ -186,6 +144,7 @@ export default ({ onDetail }: Props) => {
             valueType: 'date',
             render: (_, r) => (
               <>
+                <Button icon={<ExportOutlined />} size='small' type='link' onClick={() => window.open(`/external/fleet/maintenance/detail/${r.id}`)?.focus()} />
                 <Button
                   type="link"
                   onClick={() => {
@@ -211,8 +170,8 @@ export default ({ onDetail }: Props) => {
               <Tooltip
                 title={
                   <>
-                  <span>{moment(r.formDate).format('YYYY-MM-DD HH:mm:ss')}</span><br/>
-                  <span>{moment(r.toDate).format('YYYY-MM-DD HH:mm:ss')}</span>
+                    <span>{moment(r.formDate).format('YYYY-MM-DD HH:mm:ss')}</span><br />
+                    <span>{moment(r.toDate).format('YYYY-MM-DD HH:mm:ss')}</span>
                   </>
                 }
                 color={'blue'}
@@ -314,8 +273,6 @@ export default ({ onDetail }: Props) => {
             }) as Promise<Paging<MaintenneceDTO>>,
         }}
       />
-     </PageContainer>
-
       <AdvanceSearch
         title="Advance Search"
         closable
@@ -331,16 +288,13 @@ export default ({ onDetail }: Props) => {
           actionRef.current?.reloadAndRest?.();
         }}
       />
-
-       <MaintenanceModalForm
+      <MaintenanceModalForm
         open={state.visible?.name === 'modal'}
         onCancel={() => setSate((v) => ({ ...v, visible: undefined }))}
         dataEntry={state.visible?.payload?.vehicle}
       />
-
       <ForceModal
         open={forcCompleteState.visible?.name === 'modal'}
-       
         onSave={async (data: MaintenanceStatus) => {
           const res = (await services.status(data)) as {
             data: string;

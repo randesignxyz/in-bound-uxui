@@ -2,7 +2,7 @@ import { ContractDetail, SettlementPlan } from "@/services/crm/data"
 import ProDescriptions from "@ant-design/pro-descriptions"
 import { Card, Table, Tabs } from "antd"
 import React from "react"
-import { history } from 'umi'
+import { history } from "@umijs/max";
 import TextArea from "antd/lib/input/TextArea"
 import { LayoutConfig } from "../model"
 import TermDataView from "./TermDataView"
@@ -22,7 +22,7 @@ export const ContractDataView: React.FC<ViewProps> = ({ layoutConfig, data }) =>
                 size="small"
                 style={{ marginBottom: '10px' }}>
                 <ProDescriptions contentStyle={{ fontWeight: 'bold' }}  >
-                <ProDescriptions.Item label="No">
+                    <ProDescriptions.Item label="No">
                         {data?.contractNo || "Not Assigned"}
                     </ProDescriptions.Item>
                     <ProDescriptions.Item label="Type">
@@ -34,7 +34,7 @@ export const ContractDataView: React.FC<ViewProps> = ({ layoutConfig, data }) =>
                     <ProDescriptions.Item label="Budget Code">
                         {data?.subContractType.budgetCode}
                     </ProDescriptions.Item>
-                    
+
                     <ProDescriptions.Item label="Date">
                         {formatDate(data?.contractDate)}
                     </ProDescriptions.Item>
@@ -46,7 +46,7 @@ export const ContractDataView: React.FC<ViewProps> = ({ layoutConfig, data }) =>
                         {duration(moment(data?.effectiveDate), moment(data?.expireDate))}
                     </ProDescriptions.Item>
                     <ProDescriptions.Item label="Days Left">
-                        {duration(moment().isBefore(moment(data?.effectiveDate))?moment(data?.effectiveDate): moment() , moment(data?.expireDate))}
+                        {duration(moment().isBefore(moment(data?.effectiveDate)) ? moment(data?.effectiveDate) : moment(), moment(data?.expireDate))}
                     </ProDescriptions.Item>
                     <ProDescriptions.Item label="Customer">
                         <a onClick={() => history.push(`/crm/customer/detail/${data?.customer.id}`)}>{
@@ -65,7 +65,7 @@ export const ContractDataView: React.FC<ViewProps> = ({ layoutConfig, data }) =>
 
                     <Tabs.TabPane key="term" tab="Terms">
                         <TermDataView data={data} layoutConfig={layoutConfig} />
-            
+
                     </Tabs.TabPane>
 
                     {data?.remarks && <Tabs.TabPane key='remarks' tab="Remarks">

@@ -1,146 +1,148 @@
-import { TableViewSearchParams } from '@/components/DataCrud/TableView';
+import TableView, { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { Paging } from '@/services/API';
 import { simpleRequestActions } from '@/services/model';
-import { ProductItem } from '@/services/sale/data';
+import { ArrowRightOutlined, CheckCircleOutlined, CloseCircleOutlined, DeleteOutlined, EditOutlined, EllipsisOutlined, ExclamationCircleOutlined, SyncOutlined } from '@ant-design/icons';
 import type { ActionType } from '@ant-design/pro-table';
 
 import { useModel } from '@umijs/max';
-import { message, Typography } from 'antd';
-import { useRef, useState } from 'react';
-// import ProductItemEditModal from './components/ProductItemEditModal';
-// import { ProductItemsServiceAPI } from './services';
+import { Button, Dropdown, MenuProps, message, Modal, Tag } from 'antd';
+import { useRef } from 'react';
+import { PurChaseRequestAPIService } from './service';
+import { PurchaseRequestDTO, PurchaseReqeustAdvanceSearch } from './data';
 
-// interface Props {
-// onAdd?: () => void;
-// onEdit?: (id: string) => void;
-// onDetail?: (id: number) => void;
-// }
+interface Props {
+  onAdd?: () => void;
+  onEdit?: (id: number) => void;
+  onDetail?: (id: number) => void;
+}
 
-export default ({}) => {
+export default ({ onAdd, onDetail, onEdit }: Props) => {
   const requestActions = simpleRequestActions();
-  //   const services = ProductItemsServiceAPI(requestActions);
-  // const ProductItemListView: React.FC<TableViewProps<ProductItem>> = ({ actionHandlers }) => {
-  // const access = useAccess();
+  const services = PurChaseRequestAPIService(requestActions);
   const actionRef = useRef<ActionType>();
-  const [module, setModule] = useState<{
-    visible?: boolean;
-    item?: ProductItem;
-  }>({});
-  const { Text } = Typography;
   const cacheList = useModel('dataList');
-  // const [force, setForce] = useSetState<{ update: number }>({ update: 0 });
-  // const [advanceSearchParams, setAdvanceSearchParams] = useState<StockAdvanceSearchParams>();
-
-  const onRequestHandler = async (params: TableViewSearchParams<null>) => {
+  const onRequestHandler = async (params: TableViewSearchParams<PurchaseReqeustAdvanceSearch>) => {
     try {
-      //   return services.pageProducts(params).then((it) => {
-      //     return cacheList.cacheDataList({
-      //       type: 'sales-product-item',
-      //       criteria: params,
-      //       data: it,
-      //     });
-      //   }) as Promise<Paging<ProductItem>>;
-      return Promise<Paging<ProductItem>>;
+      return services.page(params) as Promise<Paging<PurchaseRequestDTO>>;
     } catch (error: any) {
       message.error(error.message);
       return Promise.reject();
     }
   };
 
+  const items = (items: PurchaseRequestDTO): MenuProps["items"] => [
+    {
+      key: "view",
+      label: "View",
+      itemIcon: <ArrowRightOutlined />,
+      onClick: () => onDetail?.(items.id)
+    },
+    {
+      key: "edit",
+      label: "Edit",
+      itemIcon: <EditOutlined />,
+      onClick: () => onEdit?.(items.id)
+    },
+    {
+      type:"divider"
+    },  
+    {
+      key: "delete",
+      label: "Delete",
+      danger:true,
+      disabled:items.status !="pending",
+      itemIcon: <DeleteOutlined />,
+      onClick: () => {
+        Modal.confirm({
+          title:"Delete Purchase Request",
+          content:"are you sure?",
+          onOk:async()=>{
+            await services.delete(items.id);
+            actionRef.current?.reload?.();
+          }
+        })
+      },
+
+    },
+  ];
   return (
     <>
-      <Text>Hello world</Text>
-      {/* <TableView<ProductItem, { searchValue?: string }>
-        //hasCriteria={Object.values(Omit(advanceSearchParams, ['status'])).some((v) => v)}
+      <TableView<PurchaseRequestDTO, { searchValue?: string }>
         cache
-        displayOnly
+        hasCriteria
         columns={[
           {
             title: 'No',
-            render: (_, r, index) => {
-              const rowIndex =
-                actionRef.current?.pageInfo &&
-                (actionRef.current?.pageInfo?.current - 1) * actionRef.current?.pageInfo?.pageSize +
-                  (index + 1);
-              return <Text type="secondary">{rowIndex}</Text>;
-            },
+            dataIndex: "purchaseRequestNo",
+            render: (_, r) => <Button type='link' onClick={() => onDetail?.(r.id)}>{r.purchaseRequestNo}</Button>
           },
           {
-            title: 'Product Name',
-            // dataIndex: 'name',
-            render: (_, r) => {
-              return (
-                <Button
-                  type="link"
-                  onClick={() => {
-                    setModule({ visible: true, item: r });
-                  }}
-                >
-                  {r.name}
-                </Button>
-              );
-            },
+            title: 'Requester',
+            dataIndex: "requestedBy"
           },
           {
-            title: 'Product Code',
-            dataIndex: 'code',
+            title: 'Distributor Name',
+            dataIndex: 'distributorName',
           },
           {
-            title: 'Description',
-            dataIndex: 'description',
+            title: 'Assigned To',
+            dataIndex: 'assignedTo',
           },
           {
-            title: 'Active in Mobile',
-            align: 'center',
-            render: (_, r) => {
-              return (
-                <Tag color={r.isActiveMobileSales ? 'green' : 'red'}>
-                  {r.isActiveMobileSales ? 'Active' : 'Inactive'}
-                </Tag>
-              );
-              // return `${r.category?.code} - ${r.category?.name}`;
-            },
+            title: 'Status',
+            dataIndex: 'status',
+            render: (_, r) => <Tag
+              icon={
+                r.status == "pending" ? <SyncOutlined spin />
+                  : r.status == "closed" ? <CheckCircleOutlined />
+                    : r.status == "rejected" ? <CloseCircleOutlined />
+                      : <ExclamationCircleOutlined />
+              }
+              bordered={false}
+              color={
+                r.status == "pending"
+                  ? "processing"
+                  : r.status == "closed" ? "success"
+                    : r.status == "rejected" ? "error"
+                      : "warning"
+              }>{r.status.toUpperCase()}</Tag>
           },
           {
-            title: 'Active in Web',
-            align: 'center',
-            render: (_, r) => {
-              return (
-                <Tag color={r.isWebEnabled ? 'green' : 'red'}>
-                  {r.isWebEnabled ? 'Active' : 'Inactive'}
-                </Tag>
-              );
-              // return `${r.category?.code} - ${r.category?.name}`;
-            },
+            title: 'GrantAmount',
+            dataIndex: 'grantAmount',
+            valueType:"money",
           },
           {
-            title: 'Allow Count Stock',
-            align: 'center',
-            render: (_, r) => {
-              return (
-                <Tag color={r.isStockCountEnabled ? 'green' : 'red'}>
-                  {r.isStockCountEnabled ? 'Active' : 'Inactive'}
-                </Tag>
-              );
-              // return `${r.category?.code} - ${r.category?.name}`;
-            },
+            title: 'Total Amount',
+            dataIndex: "totalAmount",
+            valueType: "money"
+          },
+          {
+            title: 'Requested Date',
+            dataIndex: "requestedDate",
+            valueType: "date"
           },
           {
             title: 'Action',
-            align: 'center',
+            align: "center",
             render: (_, r) => {
               return (
-                <EditOutlined
-                  style={{ color: '#448DF7' }}
-                  onClick={() => {
-                    setModule({ visible: true, item: r });
+                <Dropdown
+                  menu={{
+                    items: items(r),
+                    style: {
+                      width: 200
+                    }
                   }}
-                />
+                >
+                  <a><EllipsisOutlined /></a>
+                </Dropdown>
               );
             },
           },
         ]}
         actionHandlers={{
+          onAdd: onAdd,
           onRequest: (criteria, pagination, sort) =>
             onRequestHandler({
               criteria: {
@@ -165,14 +167,12 @@ export default ({}) => {
                   },
                 });
               }
-            }) as Promise<Paging<ProductItem>>,
+            }) as Promise<Paging<PurchaseRequestDTO>>,
         }}
         tableProps={{
           actionRef: actionRef,
         }}
-      /> */}
+      />
     </>
   );
 };
-
-// export default ProductItemListView;

@@ -3,21 +3,21 @@ import { useState } from "react"
 import { CrmPaths } from ".."
 import ContractModal from "./components/ContractModal"
 import ContactDetailView from "./components/Detail"
-import ContractListView from "./components/List"
+import MainPage from "./MainPage"
 
 export default () => {
 
-    const [modalVisible, setModalVisible] = useState<{ type: 'ADD', id?: number , cb?: undefined} | {type: 'EDIT', id?: number, cb?:() => void  }>()
+    const [modalVisible, setModalVisible] = useState<{ type: 'ADD', id?: number, cb?: undefined } | { type: 'EDIT', id?: number, cb?: () => void }>()
 
-    const onEditHandler =  (id: number, cb?: () => void) => {
-        setModalVisible({type: 'EDIT', id: id, cb: cb})
+    const onEditHandler = (id: number, cb?: () => void) => {
+        setModalVisible({ type: 'EDIT', id: id, cb: cb })
     }
     return (<>
-        <CrudWrapper baseURL={CrmPaths.contract}>
+        <CrudWrapper baseURL={CrmPaths.contract} disablePageContainer>
             {
-                (view, id, navigate) => {
+                (view, id) => {
                     switch (view) {
-                        case 'list': return <ContractListView onDetail={r => navigate?.goToDetail?.({ id: r.id })} onAdd = {() => setModalVisible({type: 'ADD'})} />
+                        case 'list': return <MainPage />
                         case 'detail': return <ContactDetailView onEdit={onEditHandler} id={id as number || 0} />
                         default: throw new Error('Not supported')
                     }
@@ -25,7 +25,7 @@ export default () => {
             }
 
         </CrudWrapper>
-        {modalVisible?.type  &&  <ContractModal onRefresh={modalVisible.cb} contractId={ modalVisible.id} open = {true} onOpenChange = {visible => !visible && setModalVisible(undefined)}/>}
+        {modalVisible?.type && <ContractModal onRefresh={modalVisible.cb} contractId={modalVisible.id} open={true} onOpenChange={visible => !visible && setModalVisible(undefined)} />}
     </>
     )
 }

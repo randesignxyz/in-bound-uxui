@@ -10,7 +10,7 @@ import moment from "moment"
 export default ({ trigger, type }: { trigger?: JSX.Element, type: 'WAREHOUSE' | 'DELIVERY' }) => {
     const requestActions = simpleRequestActions()
     const [data, setData] = useState<OperatorCheckInInfo>()
-  
+
     const initData = async () => {
         try {
             const rs = await fetchDataItemService<OperatorCheckInInfo, { type: 'WAREHOUSE' | 'DELIVERY' }>({
@@ -18,21 +18,24 @@ export default ({ trigger, type }: { trigger?: JSX.Element, type: 'WAREHOUSE' | 
                 endpoint: 'DELIVERY',
                 payload: { type }
             }).query(requestActions)
-            setData(rs)    
+            setData(rs)
         } catch (error: any) {
             message.error(error.message || 'Failed to fetch check in info.')
         }
-        
+
     }
-    return <ModalForm onInit={()=> {
+    return <ModalForm onInit={() => {
         initData()
-    }} modalProps={{destroyOnClose: true}} title={"Check In info"} trigger={trigger} submitter={false}>
-        <ProDescriptions column={2} loading = {requestActions.request?.loading || false}>
+    }} modalProps={{ destroyOnClose: true }} title={"Check In info"} trigger={trigger} submitter={false}>
+        <ProDescriptions column={2} loading={requestActions.request?.loading || false}>
             <ProDescriptions.Item label="Check In Datetime">
                 {formatDateTime(data?.checkedInDate)}
             </ProDescriptions.Item>
             <ProDescriptions.Item label="Duration">
-                { data?.checkedInDate && moment(data.checkedInDate).toNow()}
+                {data?.checkedInDate && moment(data.checkedInDate).toNow()}
+            </ProDescriptions.Item>
+            <ProDescriptions.Item span={2} label="QR Codes">
+                {data?.qrCodes?.map(it => it.name).join(", ")}
             </ProDescriptions.Item>
             {type == 'DELIVERY' && <ProDescriptions.Item span={2} label="Transport source">
                 {data?.transportSources?.map(it => it.name).join(", ")}
@@ -43,7 +46,7 @@ export default ({ trigger, type }: { trigger?: JSX.Element, type: 'WAREHOUSE' | 
             {type == 'WAREHOUSE' && <ProDescriptions.Item span={2} label="Loading dock">
                 {data?.loadingDocks?.map(it => it.name).join(", ")}
             </ProDescriptions.Item>}
-            <ProDescriptions.Item span={2} label = "Remarks"> {data?.checkInRemarks} </ProDescriptions.Item>
+            <ProDescriptions.Item span={2} label="Remarks"> {data?.checkInRemarks} </ProDescriptions.Item>
         </ProDescriptions>
     </ModalForm>
 }

@@ -36,6 +36,7 @@ import {
   message,
   Modal,
   Space,
+  Spin,
   Tabs,
   Tag,
   Tooltip,
@@ -56,7 +57,7 @@ import StockControlFormModal from '../components/StockControlFormModal';
 import { Model } from '../model';
 
 type Props = {
-  id: number;
+  id?: number;
   actionHandlers?: {
     onBack?: () => void;
   };
@@ -122,8 +123,8 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
   const calculateTotalAmount = (settlement: SettlementLessDto | undefined): number => {
     return settlement
       ? settlement.amountKH +
-          settlement.amount * settlement.exchangeRate +
-          settlement.bankAmount * settlement.exchangeRate
+      settlement.amount * settlement.exchangeRate +
+      settlement.bankAmount * settlement.exchangeRate
       : 0;
     // return numeral(total).format('$ 0,0.00');
   };
@@ -150,7 +151,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
       label: 'Invoices Amount',
       value: `${dsdExchangeRate?.target_symbol} ${numeral(
         (state.data?.detail?.stockControl?.soldAmount || 0.0) *
-          (dsdExchangeRate?.target_amount || 0.0),
+        (dsdExchangeRate?.target_amount || 0.0),
       ).format('0,0')}`,
     },
 
@@ -191,7 +192,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
         (state.data?.detail?.stockControl?.settlement?.adjustMentItems?.reduce(
           (acc, it) => acc + (it.originQuantity - it.adjustQuantity) * (it.unitPrice || 0.0),
           (state.data?.detail?.stockControl?.settlement?.bankAmount || 0) +
-            (state.data?.detail?.stockControl?.soldAmount || 0),
+          (state.data?.detail?.stockControl?.soldAmount || 0),
         ) || 0) * (dsdExchangeRate?.target_amount || 0.0),
       ).format('0,0')}`,
     },
@@ -274,13 +275,16 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
   };
 
   return (
-    <PageContainer
-      title="Store Info"
-      breadcrumb={undefined}
-      onBack={actionHandlers?.onBack}
-      extra={
-        access.canCreateEditStockControl && [
-          state.data?.detail?.isInitialize &&
+    < Spin
+      spinning={requestActions.request?.loading}
+    >
+      <Card
+        size="small"
+        title="General Info"
+        style={{ marginBottom: 10 }}
+        extra={
+          access.canCreateEditStockControl && [
+            state.data?.detail?.isInitialize &&
             state.data?.detail?.stockControl?.status === 'closed' && (
               <Button
                 type="link"
@@ -294,56 +298,57 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
                 Initial New Stock Request
               </Button>
             ),
-          state.data?.detail?.stockControl && state.data.detail.stockControl.status === 'closed' && (
-            <Button
-              type="link"
-              htmlType="button"
-              icon={<ShopOutlined />}
-              onClick={() => {
-                setAddNewModal({ visible: true });
-              }}
-              key="createNewStockRequest"
-            >
-              Create New Stock Request
-            </Button>
-          ),
-          state.data?.detail?.stockControl && state.data.detail.stockControl.status === 'open' && (
-            <>
+            state.data?.detail?.stockControl && state.data.detail.stockControl.status === 'closed' && (
               <Button
                 type="link"
                 htmlType="button"
-                icon={<SolutionOutlined />}
-                onClick={() => setSaleInvoiceModal({ visible: true, record: undefined })}
-                key="createNewInvoice"
+                icon={<ShopOutlined />}
+                onClick={() => {
+                  setAddNewModal({ visible: true });
+                }}
+                key="createNewStockRequest"
               >
-                Create New Invoice
+                Create New Stock Request
               </Button>
-              {access.canAccessSettlement && (
+            ),
+            state.data?.detail?.stockControl && state.data.detail.stockControl.status === 'open' && (
+              <>
                 <Button
                   type="link"
                   htmlType="button"
-                  icon={<FileDoneOutlined />}
-                  onClick={() => setAddSettlement({ visible: true })}
-                  key="settlementButton"
+                  icon={<SolutionOutlined />}
+                  onClick={() => setSaleInvoiceModal({ visible: true, record: undefined })}
+                  key="createNewInvoice"
                 >
-                  Settlement
+                  Create New Invoice
                 </Button>
-              )}
-            </>
-          ),
-          <Button
-            type="link"
-            htmlType="button"
-            icon={<EditOutlined />}
-            onClick={() => history.push(`${SalePaths.store}/edit/${id}`)}
-            key="edit"
-          >
-            Edit
-          </Button>,
-        ]
-      }
-    >
-      <Card size="small" title="General Info" style={{ marginBottom: 10 }}>
+                {
+                // access.canAccessSettlement &&
+                 (
+                  <Button
+                    type="link"
+                    htmlType="button"
+                    icon={<FileDoneOutlined />}
+                    onClick={() => setAddSettlement({ visible: true })}
+                    key="settlementButton"
+                  >
+                    Settlement
+                  </Button>
+                )}
+              </>
+            ),
+            <Button
+              type="link"
+              htmlType="button"
+              icon={<EditOutlined />}
+              onClick={() => history.push(`${SalePaths.store}/edit/${id}`)}
+              key="edit"
+            >
+              Edit
+            </Button>,
+          ]
+        }
+      >
         <DescriptionDisplay data={displayItems} />
       </Card>
       {/* defaultActiveKey="stockControl" */}
@@ -436,118 +441,118 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
                           toolBarRender={() => {
                             return state.data?.detail?.stockControl?.status === 'Open'
                               ? [
-                                  <Button
-                                    key={`button - ${state.data?.detail?.stockControl?.id}`}
-                                    size="small"
-                                    type="link"
-                                    htmlType="button"
-                                    disabled={state.loading}
-                                    onClick={() =>
-                                      setRequestStockControl({
-                                        visible: true,
-                                        stockCategoryId: it.id,
-                                        captionName: `Request ${it.name} Stock`,
-                                      })
-                                    }
-                                    icon={<PlusOutlined />}
-                                  >
-                                    {`Request ${it.name} Stock`}
-                                  </Button>,
-                                ]
+                                <Button
+                                  key={`button - ${state.data?.detail?.stockControl?.id}`}
+                                  size="small"
+                                  type="link"
+                                  htmlType="button"
+                                  disabled={state.loading}
+                                  onClick={() =>
+                                    setRequestStockControl({
+                                      visible: true,
+                                      stockCategoryId: it.id,
+                                      captionName: `Request ${it.name} Stock`,
+                                    })
+                                  }
+                                  icon={<PlusOutlined />}
+                                >
+                                  {`Request ${it.name} Stock`}
+                                </Button>,
+                              ]
                               : [];
                           }}
                           dataSource={items}
                           columns={
                             it.id === 132
                               ? [
-                                  {
-                                    title: 'Batch #',
-                                    dataIndex: 'batchNo',
+                                {
+                                  title: 'Batch #',
+                                  dataIndex: 'batchNo',
+                                },
+                                // {
+                                //   title: 'Code',
+                                //   dataIndex: 'itemCode',
+                                // },
+                                {
+                                  title: 'Description',
+                                  // dataIndex: 'itemName',
+                                  key: 'itemId',
+                                  render: (_, r) => {
+                                    return `${r.itemCode} - ${r.itemName}`;
                                   },
-                                  // {
-                                  //   title: 'Code',
-                                  //   dataIndex: 'itemCode',
-                                  // },
-                                  {
-                                    title: 'Description',
-                                    // dataIndex: 'itemName',
-                                    key: 'itemId',
-                                    render: (_, r) => {
-                                      return `${r.itemCode} - ${r.itemName}`;
-                                    },
-                                  },
+                                },
 
-                                  { title: 'SKU', dataIndex: 'description' },
-                                  { title: 'UOM', dataIndex: 'uom' },
-                                  {
-                                    title: (
-                                      <Space>
-                                        {'Total Quantity'}
-                                        <Tooltip title="Begin Quantity + Request Quantity">
-                                          <QuestionCircleOutlined color={'processing'} />
-                                        </Tooltip>
-                                      </Space>
-                                    ),
-                                    align: 'right',
-                                    render: (_, r) => {
-                                      return r.beginningQty + r.quantity;
-                                    },
-                                    //dataIndex: 'quantity'
+                                { title: 'SKU', dataIndex: 'description' },
+                                { title: 'UOM', dataIndex: 'uom' },
+                                {
+                                  title: (
+                                    <Space>
+                                      {'Total Quantity'}
+                                      <Tooltip title="Begin Quantity + Request Quantity">
+                                        <QuestionCircleOutlined color={'processing'} />
+                                      </Tooltip>
+                                    </Space>
+                                  ),
+                                  align: 'right',
+                                  render: (_, r) => {
+                                    return r.beginningQty + r.quantity;
                                   },
-                                  {
-                                    title: 'Sold Quantity',
-                                    align: 'right',
-                                    render: (_, r) => {
-                                      return r.soldQty;
-                                    },
+                                  //dataIndex: 'quantity'
+                                },
+                                {
+                                  title: 'Sold Quantity',
+                                  align: 'right',
+                                  render: (_, r) => {
+                                    return r.soldQty;
                                   },
-                                  {
-                                    title: 'Current Quantity',
-                                    align: 'right',
-                                    render: (_, r) => {
-                                      return r.beginningQty + r.quantity - r.soldQty;
-                                    },
+                                },
+                                {
+                                  title: 'Current Quantity',
+                                  align: 'right',
+                                  render: (_, r) => {
+                                    return r.beginningQty + r.quantity - r.soldQty;
                                   },
-                                  {
-                                    title: 'Actural Quantity',
-                                    align: 'right',
-                                    dataIndex: 'actualQty',
+                                },
+                                {
+                                  title: 'Actural Quantity',
+                                  align: 'right',
+                                  dataIndex: 'actualQty',
+                                },
+                                {
+                                  title: 'Expired Date',
+                                  render: (_, r) => {
+                                    return r.expiredDate ? formatDate(r.expiredDate) : '-';
                                   },
-                                  {
-                                    title: 'Expired Date',
-                                    render: (_, r) => {
-                                      return r.expiredDate ? formatDate(r.expiredDate) : '-';
-                                    },
-                                  },
-                                ]
+                                },
+                              ]
                               : [
-                                  {
-                                    title: 'Code',
-                                    dataIndex: 'itemCode',
-                                  },
-                                  {
-                                    title: 'Description',
-                                    dataIndex: 'itemName',
-                                    key: 'itemId',
-                                  },
+                                {
+                                  title: 'Code',
+                                  dataIndex: 'itemCode',
+                                },
+                                {
+                                  title: 'Description',
+                                  dataIndex: 'itemName',
+                                  key: 'itemId',
+                                },
 
-                                  { title: 'SKU', dataIndex: 'description' },
-                                  {
-                                    title: 'Quantity',
-                                    align: 'right',
-                                    render: (_, r) => {
-                                      return r.beginningQty + r.quantity;
-                                    },
+                                { title: 'SKU', dataIndex: 'description' },
+                                {
+                                  title: 'Quantity',
+                                  align: 'right',
+                                  render: (_, r) => {
+                                    return r.beginningQty + r.quantity;
                                   },
-                                  {
-                                    title: 'Sold Quantity',
-                                    align: 'right',
-                                    render: (_, r) => {
-                                      return r.soldQty;
-                                    },
+                                },
+                                {
+                                  title: 'Sold Quantity',
+                                  align: 'right',
+                                  render: (_, r) => {
+                                    return r.soldQty;
                                   },
-                                  { title: 'UOM', dataIndex: 'uom' },
-                                ]
+                                },
+                                { title: 'UOM', dataIndex: 'uom' },
+                              ]
                           }
                         />
                       </Tabs.TabPane>
@@ -573,7 +578,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
         >
           <SaleInvoiceTabItem
             data={{
-              stockStoreId: id,
+              stockStoreId: id || 0,
               stockControlId: state.data?.detail?.stockControl?.id,
               exchangeRate: dsdExchangeRate,
             }}
@@ -649,7 +654,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
           key="historyTabItem"
         >
           <HistoryTabItem
-            data={{ id: id, forceUpdate: forceHistoryUpdate, dsdExchangeRate: dsdExchangeRate }}
+            data={{ id: id || 0, forceUpdate: forceHistoryUpdate, dsdExchangeRate: dsdExchangeRate }}
           />
         </Tabs.TabPane>
       </Tabs>
@@ -704,7 +709,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
               message.info(result.message);
               setForceUpdate(forceUpdate + 1);
               // reload dashboard
-              actions.detail(id);
+              actions.detail(id || 0);
             }
           },
 
@@ -712,10 +717,10 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
             await actions.loadLocations(type, parentId, isNotClearChild);
           },
         }}
-        // actionHandlers={{
-        //   onAddItem: onSaveSaleItemEvent,
+      // actionHandlers={{
+      //   onAddItem: onSaveSaleItemEvent,
 
-        // }}
+      // }}
       />
       <RequestStockControlModal
         title={requestStockControl.captionName}
@@ -735,7 +740,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
         }}
         isLoading={state.loading || false}
         actionHandlers={{
-          onLoadInitData: () => {},
+          onLoadInitData: () => { },
         }}
       />
 
@@ -756,7 +761,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
         }}
         isLoading={state.loading || false}
         actionHandlers={{
-          onLoadInitData: () => {},
+          onLoadInitData: () => { },
           onSave: onSaveAddNewStoreActionHandler,
         }}
       />
@@ -776,7 +781,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
         }}
         onCancel={() => setInitNewModal({ visible: false })}
         actionHandlers={{
-          onLoadInitData: () => {},
+          onLoadInitData: () => { },
           onSave: onSaveInitStockControlActionHandler,
           onSaveVehicle: actions.saveVehicle,
         }}
@@ -817,7 +822,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
             }) || [],
         }}
       />
-    </PageContainer>
+    </Spin>
   );
 };
 

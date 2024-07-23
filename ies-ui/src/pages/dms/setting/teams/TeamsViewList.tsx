@@ -12,15 +12,12 @@ interface Props {
     actionKey?: string;
     isCurrentUser?:boolean;
 }
-
 export default ({ actionKey, isCurrentUser }: Props) => {
     const requestAction = simpleRequestActions();
     const services = TeamsServiceAPI(requestAction);
     const actionRef = useRef<ActionType>();
     useEffect(() => {
-
     }, [actionKey]);
-
     const [state, setState] = useState<{
         visible?: {
             name: "MODAL";
@@ -35,8 +32,6 @@ export default ({ actionKey, isCurrentUser }: Props) => {
             payload?: TeamsDTO;
         }
     }>();
-
-
     return (
         <>
             <ProList<TeamsDTO>
@@ -52,7 +47,6 @@ export default ({ actionKey, isCurrentUser }: Props) => {
                         icon={<ReloadOutlined />}
                     />
                 ]}
-            
                 pagination={{
                     pageSize: 20
                 }}
@@ -77,7 +71,6 @@ export default ({ actionKey, isCurrentUser }: Props) => {
                     });
                 }}
                 actionRef={actionRef}
-
             metas={{
                 title: {
                     dataIndex: "name"
@@ -95,18 +88,15 @@ export default ({ actionKey, isCurrentUser }: Props) => {
                     render: (_, r) => {
                         return (
                             <Flex vertical>
-
                                 <p>{r.description}</p>
                                 <Flex  wrap="wrap" gap={"small"}>
 
                                     {r.memberList?.map(it => (<Tag color="gold">{it.userName}</Tag>))}
                                 </Flex>
-
                             </Flex>
                         )
                     }
                 },
-
                 actions: {
                     search:false,
                     render: (_, r) => [
@@ -115,7 +105,6 @@ export default ({ actionKey, isCurrentUser }: Props) => {
                             icon={<EditOutlined />}
                             onClick={() => setState({ visible: { name: "MODAL", type: "EDIT", payload: r } })}
                         />,
-
                         <Button
                             type="link"
                             danger
@@ -136,7 +125,6 @@ export default ({ actionKey, isCurrentUser }: Props) => {
                 },
             }}
             />
-
             <UserGroupEntryModal
                 open={state?.visible?.name === "MODAL"}
                 onCancel={() => setState({ visible: undefined })}
@@ -148,7 +136,6 @@ export default ({ actionKey, isCurrentUser }: Props) => {
                     message.success("Success!")
                 }}
             />
-
             <TeamsDetail
                 open={detailState?.visible?.name === "MODAL"}
                 onClose={() => setDetailState((v) => ({ ...v, visible: undefined }))}

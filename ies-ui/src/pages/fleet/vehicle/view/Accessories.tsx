@@ -75,15 +75,11 @@ export default ({ id }: Props) => {
           rowKey="id"
           actionRef={actionRef}
           request={() => onRequest()}
-
           metas={{
             title: {
               render: (_, r) => {
                 return `${r.name}`;
               },
-            },
-            subTitle: {
-              render: (_, r) => { },
             },
             description: {
               dataIndex: 'description',
@@ -95,13 +91,10 @@ export default ({ id }: Props) => {
                 );
               },
             },
-            actions: {
-              render: (_, r) => { },
-            },
+           
           }}
         />
       </Spin>
-
       <AccessoriesModalForm
         id={id}
         onSave={onSave}

@@ -4,7 +4,7 @@ import { formatDate, formatDateTime, formatter } from '@/pages/utils';
 import { ExportOutlined, PartitionOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
 import { history, useAccess } from '@umijs/max';
 import { Button, Checkbox, Flex, Modal, Space, message } from 'antd';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import Flow from '../flow';
 import {
   PoRequestDetail,
@@ -14,14 +14,13 @@ import {
   PoRequestSearchParams,
 } from './data';
 import { createPoService } from './services';
-import { ActionType } from '@ant-design/pro-components';
 
 interface Props {
   onAdd?: (id?: number) => void;
   onEdit?: (id: number) => void;
 }
 
-export default ({ onAdd, onEdit }: Props) => {
+export default ({ onAdd }: Props) => {
   const srv = createPoService();
   const access = useAccess();
   const [openFlow, setOpenFlow] = useState<PoRequestListItem>();
@@ -50,8 +49,10 @@ export default ({ onAdd, onEdit }: Props) => {
       <BaseCrud<PoRequestListItem, PoRequestDetail, PoRequestSearchParams, PoRequestSavePayload>
         services={srv}
         listView={{
+
           bordered: true,
           forceReload: forceReload,
+
           columns: () => [
             {
               title: 'Requested Info',

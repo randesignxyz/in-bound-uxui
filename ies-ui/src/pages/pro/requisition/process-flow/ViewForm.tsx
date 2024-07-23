@@ -33,6 +33,8 @@ export default (props: DataViewProps) => {
     }
   };
 
+
+
   const refreshData = async () => {
     try {
       await workflowModel.actions.loadInstanceData(props.id, props.type || 'task');
@@ -86,7 +88,7 @@ export default (props: DataViewProps) => {
       }}
     >
 
-      {(data) => {
+      {(_) => {
         return (<Spin spinning={requestActions.request?.loading}>
           <Card title='Requisition' size='small' style={{ marginTop: 10 }}>
             <ViewData data={requisition} />

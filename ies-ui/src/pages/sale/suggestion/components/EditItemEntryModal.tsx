@@ -217,13 +217,14 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
       <Card size="small" title="Stock Detail" style={{ marginBottom: 10 }}>
         <DescriptionDisplay data={generalInfo} />
       </Card>
+ 
       <EditableProTable<EditableStockItem>
         title={() => <Text>Stock Items</Text>}
         rowKey={(r) => {
           return r.key;
         }}
         actionRef={actionRef}
-        //key={`EditableProTable-${data?.id}`}
+        key={`EditableProTable-${data?.id}`}
         recordCreatorProps={false}
         value={dataSource}
         onValuesChange={setDataSource}
@@ -233,11 +234,10 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
             'Please save the editing record, before start edit a new record.',
           type: 'single',
           editableKeys,
-
           onSave: async (_, record: EditableStockItem, originRow: EditableStockItem) => {
-            console.log(originRow);
+            // console.log(record);
             const batchDate = record.batchNo;
-            record.expiredDate = moment(batchDate).add(6, 'M');
+            record.expiredDate = moment(batchDate).add(6, 'M');   
             await waitTime(100);
           },
           onChange: setEditableRowKeys,
@@ -259,9 +259,9 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
                 },
               ],
             },
-            render: (_text, r) => {
-              return formatDate(r.batchNo, formatStringDate);
-            },
+            // render: (_text, r) => {
+            //   return formatDate(r.batchNo,formatStringDate)
+            // },
           },
           {
             title: 'Expired Date',
@@ -360,7 +360,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
                           itemName: record.itemName,
                           quantity: record.quantity,
                           uom: record.uom,
-                          batchNo: moment(),
+                          // batchNo: moment(),
                           isSplit: true,
                           status: record.status,
                           stockCategoryId: record.stockCategoryId,

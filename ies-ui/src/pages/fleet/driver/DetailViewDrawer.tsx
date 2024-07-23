@@ -6,7 +6,6 @@ import { formatDate } from '@/pages/utils';
 interface Props extends DrawerProps {
   data?: DriverDTO;
 }
-
 export default ({ data, ...props }: Props) => {
   return (
     <>
@@ -17,7 +16,6 @@ export default ({ data, ...props }: Props) => {
             padding: 20, margin: 0, backgroundColor: '#fafafa'
           }
         }}
-
       >
         <Space size="large" direction='vertical'>
           <Card
@@ -88,7 +86,6 @@ export default ({ data, ...props }: Props) => {
               ]}
             />
           </Card>
-
           <Card
             bordered={false}
             title="Operation"

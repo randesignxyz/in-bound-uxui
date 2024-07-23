@@ -194,16 +194,16 @@ export default ({ id }: Props) => {
                 onClick={
                   r.address.latitude !== undefined && r.address.longitude !== undefined
                     ? () => {
-                        setGoogleModal({
-                          visible: true,
-                          id: r.id,
-                          lat: parseFloat(r.address.latitude) ?? -1,
-                          lng: parseFloat(r.address.longitude) ?? -1,
-                          name: r.address.address,
-                          internalName: '',
-                          phone: `Contact Phone: ${r.phone}`,
-                        });
-                      }
+                      setGoogleModal({
+                        visible: true,
+                        id: r.id,
+                        lat: parseFloat(r.address.latitude) ?? -1,
+                        lng: parseFloat(r.address.longitude) ?? -1,
+                        name: r.address.address,
+                        internalName: '',
+                        phone: `Contact Phone: ${r.phone}`,
+                      });
+                    }
                     : undefined
                 }
               >

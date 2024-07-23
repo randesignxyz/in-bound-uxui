@@ -4,7 +4,7 @@
 // }
 
 import { SortOrder } from 'antd/es/table/interface';
-import moment from 'moment';
+import moment, { Moment } from 'moment';
 
 // export type TransferRequestSearchParams = {
 //     keyword?: string,
@@ -52,6 +52,8 @@ export interface TransferRequest {
   shift: string;
   activities: ActivitiesItem[];
   state: string;
+  sapDocNo: string;
+  sapDocEntry?: number;
 }
 
 export interface TransferRequestItem {
@@ -70,6 +72,7 @@ export interface TransferRequestItem {
   is_receive: string;
   transfer_request: string;
   supplier: string;
+  oldtotal: string;
 }
 export type TransferRequestAdvanceParams = {
   searchValue?: string;
@@ -80,32 +83,31 @@ export type TransferRequestAdvanceParams = {
 
 export interface TransferRequestCreate {
   items: TransferRequestItem[];
-  taxDate: moment.Moment;
   transfer_type: string;
   business_unit: string;
-  fromWarehouse: string;
-  toWarehouse: string;
-  vendorCode: string;
-  vendorName: string;
-  productionOfficer: string;
-  apiReferenceNo: string;
   key: string;
   item_count: number;
   activities: ActivitiesItem[];
 }
 
 export interface SAPTransferRequest {
-  postingDate?: moment.Moment;
-  docDueDate?: moment.Moment;
-  taxDate?: moment.Moment;
+  postingDate?: string;
+  docDueDate?: string;
+  taxDate?: string;
   vendorCode: string;
   vendorName: string;
-  productionOfficer: string;
+  // productionOfficer: string;
   fromWarehouse: string;
   toWarehouse: string;
   apiReferenceNo: string;
   comments: string;
   transferRequestDetails: SAPTransferRequestDetail[];
+  statusChange: string;
+  state: string;
+  activities_name: string;
+  action: string;
+  transfer_request: string;
+  id: string
 }
 
 export interface SAPTransferRequestDetail {
@@ -125,7 +127,24 @@ export interface TransferRequestStatusChange {
 }
 
 export interface Provided {
-  provided_item: ProvidedItem[];
+  item: ProvidedItem[];
+  transfer_request_id: string,
+  status: string,
+  transfer_request?:string,
+  activities_name?:string,
+  action?: string,
+  remark?: string
+}
+
+export interface ProvidedList {
+  id: number;
+  transfer_request_id: number,
+  provided: string,
+  status: string,
+  createdBy: string,
+  createdDate: string,
+  lastModifiedBy: string,
+  lastModifiedDate: string
 }
 
 export interface ProvidedItem {
@@ -134,8 +153,11 @@ export interface ProvidedItem {
   uom: string;
   quantity: string;
   remark: string;
-  received: string;
-  transfer_request: string;
+  itemReceive: string;
+  is_receive: string;
+  total: string;
+  supplier: string;
+  received:string
 }
 export interface ActivitiesItem {
   transfer_request?: string;
@@ -143,7 +165,7 @@ export interface ActivitiesItem {
   action: string;
   remark?: string;
   actionBy?: string;
-  actionDate?: string;
+  actionDate?: Moment;
   id?: number;
 }
 
@@ -240,4 +262,28 @@ export interface AddSupplierParams {
   supplier: string;
   item_code: string;
   transfer_request: string;
+}
+
+export interface TotalProvideParams {
+  transfer_request_id?: string;
+  item_code: string;
+}
+
+export interface closeParams{
+  docEntry: number,
+  id:string,
+  statusChange:string,
+  state:string,
+  remark:string,
+  transfer_request?: string;
+  activities_name: string;
+  action: string;
+  actionBy?: string;
+  actionDate?: Moment;
+}
+
+export interface ProductionLine{
+  id?:number,
+  prdcode: string,
+  prdname: string
 }

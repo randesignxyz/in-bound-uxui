@@ -15,7 +15,7 @@ import { ProdPaths } from '..';
 import DetailView from './DetailView';
 import ModelForm from './ModelForm';
 import { TransferServiceAPI } from './service';
-// import ReceiveForm from "./ReceiveForm";
+import { history } from 'umi'
 
 interface Props {
   onDetail?: (id: string) => void;
@@ -151,7 +151,8 @@ export default ({}: Props) => {
                 key="add-button"
                 type="link"
                 icon={<PlusOutlined />}
-                onClick={() => onAddHandler()}
+                // onClick={() => onAddHandler()}
+                onClick={()=>history.push(`/prod/inventory-transfer/create`)}
               />,
             ],
           },
@@ -346,7 +347,7 @@ export default ({}: Props) => {
         open={state.visible?.name === 'modal'}
         onCancel={() => setSate((v) => ({ ...v, visible: undefined }))}
         onSave={onSaveActionHandler}
-        close={() => setSate((v) => ({ ...v, visible: undefined }))}
+        close={() => {setSate((v) => ({ ...v, visible: undefined })),actionRef.current?.reloadAndRest?.();}}
       />
       <DetailView
         open={viewDetail.visible}

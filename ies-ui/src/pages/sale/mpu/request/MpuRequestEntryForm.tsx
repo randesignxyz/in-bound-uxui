@@ -4,29 +4,29 @@ import {
   EditableFormInstance,
   EditableProTable,
   FooterToolbar,
-  PageContainer,
   ProDescriptions,
   ProForm,
   ProFormDatePicker,
-  ProFormDependency,
   ProFormSelect,
   ProFormTextArea,
 } from '@ant-design/pro-components';
 import { useForm } from 'antd/es/form/Form';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Button, Card, Col, Flex, message, Modal, Row, Spin } from 'antd';
+import { Button, Card, Col, Flex, message, Modal, Row, Spin } from 'antd';
 import { PurChaseRequestAPIService } from './service';
 import { ProductItemsServiceAPI } from '../../product/services';
 import { CrmServiceAPI } from '@/services/crm/services';
 import { uniqueId } from 'lodash';
 import { DeleteOutlined } from '@ant-design/icons';
-import { history } from '@umijs/max';
-import { MPUPath } from '..';
 import { formatter } from '@/pages/utils';
-import { DistributorCreate, PurchaseRequestCreate, PurchaseRequestItemCreate } from './data';
+import { DistributorCreate, PurchaseRequestCreate, PurchaseRequestDTO, PurchaseRequestItemCreate } from './data';
 interface Props {
-  type?: string;
   id?: number;
+  openInTab?: true;
+  tabKey?: string;
+  type: 'CREATE' | 'EDIT';
+  onView?: (added: PurchaseRequestCreate) => void;
+  onBack: () => void;
 }
 interface Amount {
   grantAmount?: number;
@@ -34,7 +34,7 @@ interface Amount {
   totalAmount?: number
 }
 
-const MpuRequestEntryForm: React.FC<Props> = ({ type, id, ...props }) => {
+const MpuRequestEntryForm: React.FC<Props> = ({ type, id, onBack, onView,openInTab,tabKey, ...props }) => {
   const requestActions = simpleRequestActions();
   const [form] = useForm<PurchaseRequestCreate>();
   const services = PurChaseRequestAPIService(requestActions);
@@ -94,10 +94,10 @@ const MpuRequestEntryForm: React.FC<Props> = ({ type, id, ...props }) => {
     dataSourceItems?.length && onTotalAmoun?.()
   }, [dataSourceItems]);
   return (
-    <PageContainer
-      title={"Purchase Order Form"}
-      onBack={() => history.push("/sale/mpu/list")}
-    >
+    // <PageContainer
+    //   title={"Purchase Order Form"}
+    //   onBack={() => history.push("/sale/mpu/list")}
+    // >
       <Spin spinning={requestActions.request?.loading}>
         <ProForm
           layout='horizontal'
@@ -107,9 +107,9 @@ const MpuRequestEntryForm: React.FC<Props> = ({ type, id, ...props }) => {
           submitter={{
             render: () => {
               return (
-                <FooterToolbar>
-                  <Button onClick={() => history.push(`${MPUPath.rsmRequest}/list`)}>Cancel</Button>
-                  {type === 'new' && <Button onClick={() => form.resetFields()}>Clear</Button>}
+                <FooterToolbar portalDom={false}>
+                  <Button onClick={onBack}>Cancel</Button>
+                  {type === 'CREATE' && <Button onClick={() => form.resetFields()}>Clear</Button>}
                   <Button type="primary"
                     disabled={dataSourceItems?.length?false:true}
                     onClick={async () => {
@@ -126,13 +126,15 @@ const MpuRequestEntryForm: React.FC<Props> = ({ type, id, ...props }) => {
                             distributor: distributor,
                             ...amount
                           }
-                          const response = await services.save(entry) as { data?: PurchaseRequestCreate, message?: string };
-                          history.push(`/sale/mpu/detail/${response.data?.id}`)
+                          const response = await services.save(entry).then(o=>{
+                            onView?.(o.data);
+                          })
+                          
                         }
                       });
                     }}
                   >
-                    {type === 'new' ? 'Save' : 'Edit'}
+                    {type === 'CREATE' ? 'Save' : 'Update'}
                   </Button>
                 </FooterToolbar>
               );
@@ -427,7 +429,7 @@ const MpuRequestEntryForm: React.FC<Props> = ({ type, id, ...props }) => {
           </Flex>
         </ProForm>
       </Spin>
-    </PageContainer>
+    // </PageContainer>
   );
 };
 

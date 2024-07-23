@@ -2,7 +2,7 @@ import { RequestActions, ServiceApiType, singleRequest } from "@/services/apiGat
 import { SalesTeamWorkLess, UoM } from "@/services/sale/data";
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { Page } from "@/services/shared/data";
-import { CustomerInfo, PurchaseReqeustAdvanceSearch, PurchaseRequestCreate, PurchaseRequestDTO } from "./data";
+import { CustomerInfo, PurchaseReqeustAdvanceSearch, PurchaseRequestCreate, PurchaseRequestDTO, PurchaseRequestUpdateParam } from "./data";
 
 const PurchaseRequestAction = {
     page: (params: TableViewSearchParams<PurchaseReqeustAdvanceSearch>): ServiceApiType<{ searchValue?: string }> => ({
@@ -45,6 +45,12 @@ const PurchaseRequestAction = {
         type:"EXEC",
         payload:data
     }),
+    updateStatus:(data:PurchaseRequestUpdateParam):ServiceApiType<PurchaseRequestUpdateParam> =>({
+        actionName:"update-status-purchase-request",
+        endpoint:"SALE",
+        type:"EXEC",
+        payload:data
+    }),
     uom:():ServiceApiType<{}> =>({
         actionName:"list-uom",
         endpoint:"SALE",
@@ -71,7 +77,8 @@ export const PurChaseRequestAPIService = (requestActions: RequestActions) => {
         customerDistributor:(params:TableViewSearchParams<PurchaseReqeustAdvanceSearch>)=>singleRequest(PurchaseRequestAction.customerDistributor(params))(requestActions) as Promise<Page<CustomerInfo>>,
         salespersonList: (params:{searchValue?:string}) => singleRequest(PurchaseRequestAction.salespersonList(params))(requestActions) as Promise<SalesTeamWorkLess[]>,
         stockCategory: () => singleRequest(PurchaseRequestAction.stockCategory())(requestActions) as Promise<LookupDataDTO[]>,
-        save:(data:PurchaseRequestCreate)=>singleRequest(PurchaseRequestAction.save(data))(requestActions) as Promise<PurchaseRequestCreate>,
+        save:(data:PurchaseRequestCreate)=>singleRequest(PurchaseRequestAction.save(data))(requestActions) as Promise<{message:string, data:PurchaseRequestCreate}>,
+        updateStatus:(data:PurchaseRequestUpdateParam)=>singleRequest(PurchaseRequestAction.updateStatus(data))(requestActions) as Promise<{message:string, data:PurchaseRequestCreate}>,
         uom:()=>singleRequest(PurchaseRequestAction.uom())(requestActions) as Promise<UoM[]>,
         fetchData:(id?:number)=>singleRequest(PurchaseRequestAction.fetchData(id))(requestActions) as Promise<PurchaseRequestDTO>,
         delete:(id?:number)=>singleRequest(PurchaseRequestAction.delte(id))(requestActions) as Promise<{message:string}>

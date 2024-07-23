@@ -21,7 +21,7 @@ export interface ItemSalesLinePrice {
 }
 
 export interface ItemSalesLinePriceDto {
-  id: number? = 0;
+  id: number;
   productId: number;
   productCode: string;
   productName: string;
@@ -38,6 +38,12 @@ export interface ItemSalesLinePriceDto {
   isActive: boolean;
 }
 
+interface PricingUpdateParam{
+  id:number[];
+  unitPrice:number;
+  unitPriceAfterDiscount:number;
+}
+
 export interface ItemSalesLinePriceParam {
   id: number;
   productId: number;
@@ -49,6 +55,7 @@ export interface ItemSalesLinePriceParam {
 }
 
 export interface PricingAdvanceSearchParam {
-  searchValue: string | undefined;
-  type: 'ALL' | 'ACT-GROUP' | 'DSD-GROUP';
+  searchValue?: string | undefined;
+  // status: 'ALL' | 'ACT-GROUP' | 'DSD-GROUP';
+  status:string;
 }

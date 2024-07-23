@@ -172,7 +172,6 @@ export default () => {
                                 panel: (_) => <CustomerDetailView getMenuItems={() => []} id={item?.customer.id} openInTab={true} />,
                                 tabLabel: <Badge dot><Typography.Text>{item?.customer.code}</Typography.Text>  </Badge>,
                             })
-
                         },
                         {
                             title: 'Business Name',

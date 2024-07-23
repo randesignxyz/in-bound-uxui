@@ -19,6 +19,8 @@ import purchaseOrderIcon from '@/assets/order-items.png';
 import saleIcon from '@/assets/shopping.png';
 import stockIcon from '@/assets/stock.png';
 import storeIcon from '@/assets/store.png';
+import stockCountId from '@/assets/stock-count.png';
+
 import type { ListMenuItem } from '@/components/ListMenu';
 import ListMenuComp from '@/components/ListMenu';
 import {
@@ -308,6 +310,22 @@ export default () => {
       visible: access.canAccessAllMenuDSD,
       link: `${SalePaths.pricing}/list`,
     },
+    {
+      id: 'settlement',
+      name: 'Settlement',
+      description: '',
+      icon: settlementIcon,
+      // visible: access.canAccessAllMenuDSD,
+      link: `${MPUPath.mpuSettlement}/list`,
+    },
+    {
+      id: 'stock-count',
+      name: 'Stock Counts',
+      description: '',
+      icon: stockCountId,
+      // visible: access.canAccessAllMenuDSD,
+      link: `${MPUPath.mpuCountStock}/list`,
+    }, 
   ];
 
   const items: ListMenuItem[] = [
@@ -377,14 +395,14 @@ export default () => {
       icon: agreementIcon,
       visible: access.canAccessViewMpu,
     },
-    // {
-    //   id: 'mpu_po',
-    //   name: 'MPU Purchase Order',
-    //   description: '',
-    //   link: `${MPUPath.mpuPurchaseOrder}/list`,
-    //   icon: purchaseOrderIcon,
-    //   visible: access.canAccessViewMpu,
-    // },
+    {
+      id: 'mpu_po',
+      name: 'Purchase Order',
+      description: '',
+      link: `${MPUPath.mpuPurchaseOrder}/list`,
+      icon: purchaseOrderIcon,
+      visible: access.canAccessViewMpu,
+    },
     {
       id: 'mpu_stock',
       name: 'MPU Stock',

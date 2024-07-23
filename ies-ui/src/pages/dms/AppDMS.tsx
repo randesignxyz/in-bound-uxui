@@ -10,6 +10,8 @@ import { Access, history, useAccess, useParams } from "@umijs/max";
 import TeamsViewList from "./setting/teams/TeamsViewList";
 import { Tabs } from "antd/lib";
 import ReminderListView from "./reminder/ReminderListView";
+import PageWrapper from "@/components/PageWrapper";
+import DocumentMainPage from "./documentation/MainPage";
 
 const APPDMS: React.FC = () => {
     const param = useParams();
@@ -65,6 +67,7 @@ const APPDMS: React.FC = () => {
                             transition: "all 0.5s",
                         }}
             >
+                {/* <DocumentMainPage/> */}
                 <Tabs
                     activeKey={folderId ? "library" : view}
                     onChange={onTableSelectd}

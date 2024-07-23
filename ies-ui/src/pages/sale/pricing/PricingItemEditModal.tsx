@@ -1,93 +1,139 @@
 import FormModalComp, { FormModalProps } from '@/components/FormModal';
-import { ProFormField } from '@ant-design/pro-components';
+
 import ProForm from '@ant-design/pro-form';
-import { Button } from 'antd';
+import { Col, Row } from 'antd';
 import { useForm } from 'antd/es/form/Form';
-import { useEffect } from 'react';
-import { ItemSalesLinePriceDto, ItemSalesLinePriceParam } from './data';
+import { ItemSalesLinePriceDto, PricingUpdateParam } from './data';
+import { PricingServiceAPI } from './services';
+import { simpleRequestActions } from '@/services/model';
+import { ProFormDependency, ProFormDigit, ProFormRadio, ProFormSelect } from '@ant-design/pro-components';
+import { useEffect, useState } from 'react';
 
 export interface PricingItemEditProps extends FormModalProps {
   item?: ItemSalesLinePriceDto;
-  actionHandlers?: {
-    onSave: (actions: ItemSalesLinePriceParam | undefined) => void;
-  };
+  formEditType?: "SINGLE" | "MULTI"
+  onSave: (actions: PricingUpdateParam) => void;
 }
-
-const layout = {
-  labelCol: { span: 9 },
-  wrapperCol: { span: 14 },
-};
-
 const PricingItemEditModal: React.FC<PricingItemEditProps> = ({
-  actionHandlers,
+  onSave,
   item,
+  formEditType,
   ...rest
 }) => {
-  const [form] = useForm<ItemSalesLinePriceParam>();
-
+  const [form] = useForm<PricingUpdateParam>();
+  const requestActions = simpleRequestActions();
   useEffect(() => {
     if (!rest.open) return;
+    rest.open && form.resetFields();
+    rest.open && item && form.setFieldsValue({
+      unitPrice: item.unitPrice,
+      unitPriceAfterDiscount: item.unitPriceAfterDiscount
+    });
     if (item !== undefined) {
-      form.setFieldsValue({
-        id: item.id ?? 0,
-        productCode: item.productCode,
-        productId: item.productId,
-        productName: item.productName,
-        unitPrice: item.unitPrice,
-        unitPriceAfterDiscount: item.unitPriceAfterDiscount,
-        currency: item.currencyCode ?? '',
-      });
+      // form.setFieldsValue({
+      //   id: item.id ?? 0,
+      //   productCode: item.productCode,
+      //   productId: item.productId,
+      //   productName: item.productName,
+      //   unitPrice: item.unitPrice,
+      //   unitPriceAfterDiscount: item.unitPriceAfterDiscount,
+      //   currency: item.currencyCode ?? '',
+      // });
     }
-
-    // return () => {
-    //   form.resetFields();
-    // };
-    //form.setFieldsValue({ empNo: seCode });
   }, [rest.open]);
+
+  const [forceState, setForceState] = useState<{action:string|"ALL"}>();
+
   return (
     <FormModalComp
       {...rest}
-      title={item?.productName}
-      width="600px"
-      footer={[
-        <Button key="reset" onClick={() => rest.onCancel && rest.onCancel()}>
-          Cancel
-        </Button>,
-        <Button
-          loading={rest.confirmLoading}
-          disabled={rest.disabled}
-          key="submit"
-          type="primary"
-          onClick={async () => {
-            const values = await form.validateFields();
-            actionHandlers?.onSave(values);
-          }}
-        >
-          Update
-        </Button>,
-      ]}
+      title={formEditType == "MULTI" ? "Edit Multi Pricing" : item?.productName}
+      width={formEditType === "MULTI" ? "800px" : "600px"}
+      onSubmit={async () => {
+        const dataForm = await form.validateFields();
+        const entry = {
+          ...dataForm,
+          id: formEditType === "MULTI" ? dataForm.id : [item?.id || 0]
+        }
+        onSave(entry);
+      }}
     >
-      <ProForm form={form} submitter={false} autoFocusFirstInput {...layout} layout="horizontal">
-        <ProFormField
-          name="unitPrice"
-          label="Unit Price"
-          width={'lg'}
-          required
-          valueType={{
-            type: 'money',
-            locale: 'en-US',
-          }}
-        />
-        <ProFormField
-          name="unitPriceAfterDiscount"
-          label="Unit Price After Discount"
-          required
-          width={'lg'}
-          valueType={{
-            type: 'money',
-            locale: 'en-US',
-          }}
-        />
+      <ProForm
+        form={form}
+        submitter={false}
+      >
+        <Row gutter={12}>
+          <Col span={24}>
+            {formEditType == "MULTI" && (<>
+              <ProFormRadio.Group
+                radioType='button'
+                name={"Pricetype"}
+                addonBefore={"Pricing Type"}
+                initialValue={"ALL"}
+                fieldProps={{
+                  onChange: (e) => {
+
+                  }
+                }}
+                options={[
+                  {
+                    value: "ALL",
+                    label: "All"
+                  },
+                  {
+                    value: "ACT-GROUP",
+                    label: "Activation"
+                  },
+                  {
+                    value: "DSD-GROUP",
+                    label: "Van Sale"
+                  },
+                ]}
+              />
+              <ProFormDependency dependencies={["Pricetype"]} name={["Pricetype"]}>
+                {({ Pricetype }) => {
+                  return (
+                   Math.random().toString() && <ProFormSelect
+                      name={"id"}
+                      label="Pricing"
+                      showSearch
+                      debounceTime={500}
+                      mode='multiple'
+                      colSize={24}
+                      rules={[{ required: true }]}
+                      request={async ({ keyWords }) => {
+                        const data = await PricingServiceAPI(requestActions).page({
+                          criteria: {
+                            searchValue: keyWords,
+                            advanceSearch: { status: Pricetype }
+                          }
+                        });
+                        return data.items.map(o => ({ label: o.productName, value: o.id }))
+                      }}
+                    />
+                  )
+                }}
+              </ProFormDependency>
+            </>)}
+          </Col>
+          <Col span={12}>
+            <ProFormDigit
+              name="unitPrice"
+              label="Unit Price"
+              width={'lg'}
+              rules={[{ required: true }]}
+            />
+          </Col>
+          <Col span={12}>
+            <ProFormDigit
+              name="unitPriceAfterDiscount"
+              label="Unit Price After Discount"
+              rules={[{ required: true }]}
+              min={0}
+              width={'lg'}
+            />
+          </Col>
+        </Row>
       </ProForm>
     </FormModalComp>
   );

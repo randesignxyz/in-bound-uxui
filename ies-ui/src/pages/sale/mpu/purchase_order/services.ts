@@ -37,10 +37,9 @@ const PurchaseOrderAction ={
     })
 }
 
-
 export const PurchaseOrderServiceAPI = (requestActions:RequestActions) =>{
     return {
-        save:(data:PurchaseOrderCreate)=>singleRequest(PurchaseOrderAction.save(data))(requestActions),
+        save:(data:PurchaseOrderCreate)=>singleRequest(PurchaseOrderAction.save(data))(requestActions) as Promise<{message:string; data:PurchaseOrderCreate}>,
         detail:(id?:number) =>singleRequest(PurchaseOrderAction.detail(id))(requestActions) as Promise<PurchaseOrderDTO>,
         page:(params:TableViewSearchParams<PurchaseOrderAdvanceSearch>)=>singleRequest(PurchaseOrderAction.page(params))(requestActions) as Promise<Page<PurchaseOrderDTO>>,
         findOrderItem:(id:number) =>singleRequest(PurchaseOrderAction.finOrderItem(id))(requestActions) as Promise<PurchaseOrderItem[]>

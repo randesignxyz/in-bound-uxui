@@ -52,7 +52,6 @@ export default () => {
         searchValue?: string;
         status?: string; subStatus?: string
     }, {}>
-
         tabRender={(item) => [
             {
                 action: 'add',

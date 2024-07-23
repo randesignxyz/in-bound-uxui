@@ -228,6 +228,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
         }])
     }, [])
     return <PageContainer title={false}
+        breadcrumbRender={false}
         tabProps={{
             type: 'editable-card',
             defaultActiveKey: 'list',

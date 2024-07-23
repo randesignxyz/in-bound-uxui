@@ -36,11 +36,11 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                     <Button
                         type="link"
                         icon={<CheckCircleOutlined />}
-                        onClick={()=>{
+                        onClick={() => {
                             Modal.confirm({
-                                title:"Confirm Settlements ",
-                                content:'Please review thes details and confirm that everything is in order.',
-                                onOk:async()=>{
+                                title: "Confirm Settlements ",
+                                content: 'Please review thes details and confirm that everything is in order.',
+                                onOk: async () => {
                                     services.confirm(dataSource?.id)
                                 }
                             })
@@ -72,7 +72,7 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                         {
                             title: "Cashier Name",
                             dataIndex: "cashierName",
-                            span:3
+                            span: 3
                         },
                         // {
                         //     title: "Keep Forwarding",
@@ -86,12 +86,12 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                         {
                             title: "Exchange Rate",
                             dataIndex: "exchangeRate",
-                            render:(_,r)=>formatCurrency(r.exchangeRate, '៛')
+                            render: (_, r) => formatCurrency(r.exchangeRate, '៛')
                         },
                         {
                             title: "Amount KH",
                             dataIndex: "amountKH",
-                            render:(_,r)=>formatCurrency(r.amountKH, '៛')
+                            render: (_, r) => formatCurrency(r.amountKH, '៛')
                         },
                     ]}
                 />
@@ -129,6 +129,15 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                         },
                     ]}
                 />
+            </Card>
+            <Card size="small" >
+                <Flex wrap gap="small">
+                    {
+                        dataSource?.attachments?.map(p => {
+                            return (<ImagePreview fileId={p} />)
+                        })
+                    }
+                </Flex>
             </Card>
         </Flex>
     )

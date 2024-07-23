@@ -16,6 +16,7 @@ interface StockCountDto{
     soldAmount: number,
     exchangeRete: number,
     remark?: string,
+    status:"Pending"|"Rejected"|"Approved"|string;
     items?: StockCountItemDto[]
 }
 

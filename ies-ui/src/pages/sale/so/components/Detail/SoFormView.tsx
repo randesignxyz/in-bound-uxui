@@ -44,7 +44,7 @@ const SoFormView: React.FC<Props> = ({ data }) => {
           </Space>
         }
         key="attachments"
-      >
+      > 
         <AttachmentsView attachments={data?.associatedTo.attachments || []} />
       </Tabs.TabPane>
     </Tabs>

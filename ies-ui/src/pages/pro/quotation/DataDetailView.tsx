@@ -90,44 +90,6 @@ export default ({
     })
   }
 
-  const linkPR = (records: QuotationItemtDetail) => {
-    return (
-      <Table<PrItem>
-        size="small"
-        rowKey={'id'}
-        pagination={false}
-        dataSource={records?.item?.prItems?.filter((it) =>
-          records.prLinked.some((i) => i == it.id),
-        )}
-        columns={[
-          {
-            title: 'Form No',
-            render: (_, r) => (
-              <a
-                onClick={() => {
-                  window
-                    .open(
-                      `./../../../data-form/requisition_request_process/${r?.processInstId}`,
-                      '_blank',
-                    )
-                    ?.focus();
-                }}
-              >
-                {r.formNo}
-              </a>
-            ),
-          },
-          { title: 'Doc No', render: (_, r) => r.docNo },
-          { title: 'Requested By', render: (_, r) => r.requestedBy },
-
-          { title: 'Qty', align: 'right', render: (_, r) => r.qty },
-          { title: 'uom', render: (_, r) => r.uom },
-        ]}
-      />
-    );
-  };
-
-
   const actionButtons = <Space>
     {data?.status == 'PENDING' && (
       <RemarkModalV2

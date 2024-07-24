@@ -46,7 +46,6 @@ import QuotationItemFinder from './QuotationItemFinder';
 import { createQuotationService } from './services';
 import { useInView } from 'react-intersection-observer';
 import RelatedObjectItems from '../components/RelatedObjectItems';
-import { getRelatedItms } from '../services';
 
 type DataFormType = {
   vendorId?: number;
@@ -366,7 +365,6 @@ export default ({
         setItems(newItems);
       }
     }
-
     setForceUpdate((v) => v + 1);
   };
 
@@ -395,7 +393,6 @@ export default ({
             : it,
         ),
     );
-
     setMergeItemEnabled(undefined);
     setMergeItems([]);
     setForceUpdate((v) => v + 1);

@@ -398,7 +398,7 @@ export default () => {
     {
       id: 'mpu_po',
       name: 'Purchase Order',
-      description: '',
+      description: 'make po for request stock',
       link: `${MPUPath.mpuPurchaseOrder}/list`,
       icon: purchaseOrderIcon,
       visible: access.canAccessViewMpu,

@@ -31,7 +31,7 @@ const PricingMainPage: React.FC<Props> = () => {
             }
         }
     });
-    const { data, isFetching, refetch } = useQuery(['fetch-customer-list', filter], () => service.page(filter), {
+    const { data, isFetching, refetch } = useQuery(['fetch-pricing-list', filter], () => service.page(filter), {
         refetchOnWindowFocus: false
     });
 

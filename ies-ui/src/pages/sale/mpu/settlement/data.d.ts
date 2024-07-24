@@ -15,6 +15,7 @@ interface SettlementMethodDetailDTO{
     stockCountId:number;
     items?:SettlementMethodDto[];
     attachments?:string[];
+    status:string;
 }
 
 interface SettlementMethodDto{
@@ -29,4 +30,6 @@ interface SettlementMethodDto{
 interface SettlementMethodAdvanceSearch{
     searchValue?:string;
     status?:string;
+    startDate?:moment.Moment;
+    endDate?:moment.Moment;
 }

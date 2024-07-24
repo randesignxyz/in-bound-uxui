@@ -256,7 +256,7 @@ export interface LeadInfo extends LeadLess {
 }
 
 export interface LeadDetail {
-  id?: number;
+  id: number;
   lastName?: string;
   firstName?: string;
   internalName?: string;
@@ -1253,6 +1253,7 @@ export interface SoAdvanceSearchParams {
 
 export interface StockStoreAdvanceSearchParams {
   status?: string;
+  searchValue?:string;
 }
 
 export interface StockAdvanceSearchParams {

@@ -4,7 +4,7 @@
 
 import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { RequestActions, ServiceApiType, exec, find, findPaging } from '@/services/apiGateway';
-import { ItemSalesLinePriceDto, PricingAdvanceSearchParam } from './data';
+import { ItemSalesLinePriceDto, PricingAdvanceSearchParam, PricingUpdateParam } from './data';
 
 const PricingAction = {
   page: (
@@ -13,7 +13,7 @@ const PricingAction = {
     type: 'PAGING_QUERY',
     endpoint: 'SALE',
     actionName: 'page-pricing',
-    payload: { ...params.criteria, type: params.criteria?.advanceSearch?.type },
+    payload: { ...params.criteria, type: params.criteria?.advanceSearch?.status },
     pagination: {
       pageSize: params.pagination?.pageSize,
       page: params.pagination?.current,
@@ -25,11 +25,7 @@ const PricingAction = {
     actionName: 'detail-pricing',
     payload: { id },
   }),
-  update: (data: {
-    id: number;
-    unitPrice: number;
-    unitPriceAfterDiscount: number;
-  }): ServiceApiType<{ id: number; unitPrice: number; unitPriceAfterDiscount: number }> => ({
+  update: (data: PricingUpdateParam): ServiceApiType<PricingUpdateParam> => ({
     type: 'EXEC',
     endpoint: 'SALE',
     actionName: 'update-item-pricing',
@@ -43,7 +39,7 @@ export const PricingServiceAPI = (requestActions: RequestActions) => {
       findPaging<ItemSalesLinePriceDto>(PricingAction.page(params))(requestActions),
     detail: (id?: number) => find<ItemSalesLinePriceDto>(PricingAction.detail(id))(requestActions), //as Promise<ItemSalesLinePriceDto>,
 
-    update: (data: { id: number; unitPrice: number; unitPriceAfterDiscount: number }) =>
+    update: (data: PricingUpdateParam) =>
       exec<{ id: number; message: string }>(PricingAction.update(data))(requestActions),
   };
 };

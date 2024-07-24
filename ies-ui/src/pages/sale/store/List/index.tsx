@@ -26,7 +26,6 @@ const StoreListView: React.FC<TableViewProps<StockStoreLess>> = ({ actionHandler
   const actionRef = useRef<ActionType>();
   const access = useAccess();
   const cacheList = useModel('dataList');
-
   const onRequestHandler = (
     criteria?: { searchValue?: string; advanceSearch?: StockStoreAdvanceSearchParams },
     pagination?: {

@@ -2,6 +2,7 @@ import CrudWrapper from '@/components/DataCrud/CrudWrapper';
 import { Access, useAccess } from '@umijs/max';
 import { SalePaths } from '..';
 import PricingListView from './PricingListView';
+import PricingMainPage from './MainPage';
 
 // import { RetailerPath } from '..';
 // import OrderDetailView from './components/OrderDetailView';
@@ -10,12 +11,13 @@ import PricingListView from './PricingListView';
 export default () => {
   const access = useAccess();
   return (
-    <CrudWrapper baseURL={SalePaths.visit}>
+    <CrudWrapper baseURL={SalePaths.visit} disablePageContainer>
       {(view, id, navigate) => {
         return (
           view === 'list' && (
             <Access accessible={access.canAccessAllMenuDSD}>
-              <PricingListView onAdd={() => navigate?.goToCreate?.()} />
+              {/* <PricingListView onAdd={() => navigate?.goToCreate?.()} /> */}
+              <PricingMainPage/>
             </Access>
           )
           //   ||

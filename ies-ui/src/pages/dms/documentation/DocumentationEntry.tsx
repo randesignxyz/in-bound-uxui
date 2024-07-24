@@ -22,7 +22,6 @@ export default ({ data }:Props) => {
       useEffect(()=>{
          onLookupData();
       },[]);
-
     return (<>
         <Col span={24}>
             <ProFormSelect

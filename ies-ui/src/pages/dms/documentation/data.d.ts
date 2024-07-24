@@ -54,6 +54,7 @@ interface DocumentationAdvanceSearch{
     library?:number;
     folderType?:string;
     division?:string;
+    searchValue?:string;
 }
 
 interface DocumentationSearchByFolder{

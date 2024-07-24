@@ -36,6 +36,7 @@ import {
   message,
   Modal,
   Space,
+  Spin,
   Tabs,
   Tag,
   Tooltip,
@@ -56,7 +57,7 @@ import StockControlFormModal from '../components/StockControlFormModal';
 import { Model } from '../model';
 
 type Props = {
-  id: number;
+  id?: number;
   actionHandlers?: {
     onBack?: () => void;
   };
@@ -274,76 +275,80 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
   };
 
   return (
-    <PageContainer
-      title="Store Info"
-      breadcrumb={undefined}
-      onBack={actionHandlers?.onBack}
-      extra={
-        access.canCreateEditStockControl && [
-          state.data?.detail?.isInitialize &&
-          state.data?.detail?.stockControl?.status === 'closed' && (
-            <Button
-              type="link"
-              htmlType="button"
-              icon={<ShopOutlined />}
-              onClick={() => {
-                setInitNewModal({ visible: true });
-              }}
-              key="initStockRequest"
-            >
-              Initial New Stock Request
-            </Button>
-          ),
-          state.data?.detail?.stockControl && state.data.detail.stockControl.status === 'closed' && (
-            <Button
-              type="link"
-              htmlType="button"
-              icon={<ShopOutlined />}
-              onClick={() => {
-                setAddNewModal({ visible: true });
-              }}
-              key="createNewStockRequest"
-            >
-              Create New Stock Request
-            </Button>
-          ),
-          state.data?.detail?.stockControl && state.data.detail.stockControl.status === 'open' && (
-            <>
+    < Spin
+      spinning={requestActions.request?.loading}
+    >
+      <Card
+        size="small"
+        title="General Info"
+        style={{ marginBottom: 10 }}
+        extra={
+          access.canCreateEditStockControl && [
+            state.data?.detail?.isInitialize &&
+            state.data?.detail?.stockControl?.status === 'closed' && (
               <Button
                 type="link"
                 htmlType="button"
-                icon={<SolutionOutlined />}
-                onClick={() => setSaleInvoiceModal({ visible: true, record: undefined })}
-                key="createNewInvoice"
+                icon={<ShopOutlined />}
+                onClick={() => {
+                  setInitNewModal({ visible: true });
+                }}
+                key="initStockRequest"
               >
-                Create New Invoice
+                Initial New Stock Request
               </Button>
-              {access.canAccessSettlement && (
+            ),
+            state.data?.detail?.stockControl && state.data.detail.stockControl.status === 'closed' && (
+              <Button
+                type="link"
+                htmlType="button"
+                icon={<ShopOutlined />}
+                onClick={() => {
+                  setAddNewModal({ visible: true });
+                }}
+                key="createNewStockRequest"
+              >
+                Create New Stock Request
+              </Button>
+            ),
+            state.data?.detail?.stockControl && state.data.detail.stockControl.status === 'open' && (
+              <>
                 <Button
                   type="link"
                   htmlType="button"
-                  icon={<FileDoneOutlined />}
-                  onClick={() => setAddSettlement({ visible: true })}
-                  key="settlementButton"
+                  icon={<SolutionOutlined />}
+                  onClick={() => setSaleInvoiceModal({ visible: true, record: undefined })}
+                  key="createNewInvoice"
                 >
-                  Settlement
+                  Create New Invoice
                 </Button>
-              )}
-            </>
-          ),
-          <Button
-            type="link"
-            htmlType="button"
-            icon={<EditOutlined />}
-            onClick={() => history.push(`${SalePaths.store}/edit/${id}`)}
-            key="edit"
-          >
-            Edit
-          </Button>,
-        ]
-      }
-    >
-      <Card size="small" title="General Info" style={{ marginBottom: 10 }}>
+                {
+                // access.canAccessSettlement &&
+                 (
+                  <Button
+                    type="link"
+                    htmlType="button"
+                    icon={<FileDoneOutlined />}
+                    onClick={() => setAddSettlement({ visible: true })}
+                    key="settlementButton"
+                  >
+                    Settlement
+                  </Button>
+                )}
+              </>
+            ),
+            <Button
+              type="link"
+              htmlType="button"
+              icon={<EditOutlined />}
+              onClick={() => history.push(`${SalePaths.store}/edit/${id}`)}
+              key="edit"
+            >
+              Edit
+            </Button>,
+          ]
+        }
+      >
         <DescriptionDisplay data={displayItems} />
       </Card>
       {/* defaultActiveKey="stockControl" */}
@@ -573,7 +578,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
         >
           <SaleInvoiceTabItem
             data={{
-              stockStoreId: id,
+              stockStoreId: id || 0,
               stockControlId: state.data?.detail?.stockControl?.id,
               exchangeRate: dsdExchangeRate,
             }}
@@ -649,7 +654,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
           key="historyTabItem"
         >
           <HistoryTabItem
-            data={{ id: id, forceUpdate: forceHistoryUpdate, dsdExchangeRate: dsdExchangeRate }}
+            data={{ id: id || 0, forceUpdate: forceHistoryUpdate, dsdExchangeRate: dsdExchangeRate }}
           />
         </Tabs.TabPane>
       </Tabs>
@@ -704,7 +709,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
               message.info(result.message);
               setForceUpdate(forceUpdate + 1);
               // reload dashboard
-              actions.detail(id);
+              actions.detail(id || 0);
             }
           },
 
@@ -817,7 +822,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
             }) || [],
         }}
       />
-    </PageContainer>
+    </Spin>
   );
 };
 

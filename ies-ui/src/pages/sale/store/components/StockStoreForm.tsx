@@ -3,7 +3,7 @@ import { CrownOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { FooterToolbar, ProForm, ProFormCheckbox, ProFormSelect, ProFormText, ProFormTextArea } from '@ant-design/pro-components';
 import ProTable, { ActionType } from '@ant-design/pro-table';
 import { useSetState } from 'ahooks';
-import { Button, Card, Col, message, Modal, Row, Space, Tooltip } from 'antd';
+import { Button, Card, Col, message, Modal, Row, Select, Space, Tooltip } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { useEffect, useRef, useState } from 'react';
 import { history } from "@umijs/max";
@@ -105,7 +105,7 @@ const StockStoreForm: React.FC<Props> = ({ id, type }) => {
       onValuesChange={onValuesChange}
       form={form}
       style={{ fontWeight: 'bolder' }}
-      layout="horizontal"
+      // layout="horizontal"
       {...layout}
       submitter={{
         render: () => {
@@ -163,23 +163,23 @@ const StockStoreForm: React.FC<Props> = ({ id, type }) => {
       }}
     >
       <Card size="small" title="General Info" style={{ marginBottom: 10 }}>
-        <Row gutter={50}>
-          <Col flex="1">
+        <Row gutter={12}>
+          <Col span={12}>
             <ProFormText
               label="Store Name"
               name="name"
               rules={[{ required: true }]}
-              help={<span />}
             />
             <ProFormTextArea help={<span />} label="Description" name="description" />
           </Col>
 
-          <Col flex="500px">
+          <Col span={12}>
             <ProFormSelect
               rules={[{ required: true }]}
               name="vehicleId"
               label="Plate Number"
               showSearch
+              width={'md'}
               debounceTime={300}
               addonAfter={
                 <Tooltip placement="topLeft" title="Add Vehicle">
@@ -202,64 +202,22 @@ const StockStoreForm: React.FC<Props> = ({ id, type }) => {
               }}
               placeholder="Please select plate number"
             />
-            <ProFormCheckbox label="Initialize Stock" name="isInitialize" />
+            <ProFormCheckbox  name="isInitialize"  addonAfter={"Initialize Stock"} />
           </Col>
-          <Col flex="Auto" />
         </Row>
-        {/* stockStoreId isActive memberIds?: string[]; vehicleIds?: number[]; */}
       </Card>
-      <Card size="small" style={{ marginBottom: 10 }} title="Members">
-        <ProTable<SalesTeamWorkLess>
-          actionRef={actionRefMembers}
-          size="small"
-          rowKey="id"
-          pagination={false}
-          bordered={false}
-          search={false}
-          dataSource={state.data?.members}
-          toolBarRender={() => [
+      <Card
+        // size="small"
+        style={{ marginBottom: 10 }}
+        title="Members"
+        extra={<>
+          <Space align='baseline' >
             <ProFormSelect
               key={"salesteamwork"}
-              width="sm"
+              width="md"
               name="memberShip"
-              //label="Select member"
-
+              noStyle
               showSearch
-              addonAfter={
-                <Tooltip placement="topLeft" title="Add Member">
-                  <Button
-                    size="small"
-                    icon={<PlusOutlined />}
-                    type="primary"
-                    disabled={memberShip === undefined}
-                    onClick={() => {
-                      if (memberShip) {
-                        const existing = state.data?.members?.find(
-                          (it) => it.salespersonCode === memberShip.salespersonCode,
-                        );
-                        if (!existing && memberShip) {
-                          const requestersInList =
-                            state.data?.members?.some((it) => it.isRequester) &&
-                            memberShip.isRequester;
-                          if (requestersInList) {
-                            // todo
-                            message.warning('There are a requester in list.');
-                          } else {
-                            actions.addMember(memberShip);
-                            //setSelectedMembers([...selectedMembers, memberShip]);
-                            form.setFieldsValue({ memberShip: undefined });
-                            setMemberShip(undefined);
-                          }
-                        } else if (existing) {
-                          message.warning(
-                            `${existing.salespersonCode} - ${existing.salespersonName} is added already.`,
-                          );
-                        }
-                      }
-                    }}
-                  />
-                </Tooltip>
-              }
               options={state.data?.initData?.salespersonList
                 ?.filter((it) => !it.isApprover)
                 .map((item) => {
@@ -274,7 +232,54 @@ const StockStoreForm: React.FC<Props> = ({ id, type }) => {
                   };
                 })}
               placeholder="Please Select member"
-            />,
+            />
+            <Tooltip placement="topLeft" title="Add Member">
+              <Button
+                size="small"
+                icon={<PlusOutlined />}
+                type="primary"
+                disabled={memberShip === undefined}
+                onClick={() => {
+                  if (memberShip) {
+                    const existing = state.data?.members?.find(
+                      (it) => it.salespersonCode === memberShip.salespersonCode,
+                    );
+                    if (!existing && memberShip) {
+                      const requestersInList =
+                        state.data?.members?.some((it) => it.isRequester) &&
+                        memberShip.isRequester;
+                      if (requestersInList) {
+                        // todo
+                        message.warning('There are a requester in list.');
+                      } else {
+                        actions.addMember(memberShip);
+                        //setSelectedMembers([...selectedMembers, memberShip]);
+                        form.setFieldsValue({ memberShip: undefined });
+                        setMemberShip(undefined);
+                      }
+                    } else if (existing) {
+                      message.warning(
+                        `${existing.salespersonCode} - ${existing.salespersonName} is added already.`,
+                      );
+                    }
+                  }
+                }}
+              />
+            </Tooltip>
+          </Space>
+        </>}
+      >
+        <ProTable<SalesTeamWorkLess>
+          actionRef={actionRefMembers}
+          size="small"
+          rowKey="id"
+          pagination={false}
+          bordered={false}
+          search={false}
+          dataSource={state.data?.members}
+          toolBarRender={() => [
+
+
           ]}
           options={{
             setting: false,

@@ -41,7 +41,7 @@ const SoFormView = ({ data }: { data?: SoDetail; }) => {
           </Space>
         }
         key="attachments"
-      >
+      > 
         <AttachmentsView attachments={data?.associatedTo.attachments || []} />
       </Tabs.TabPane>
     </Tabs>

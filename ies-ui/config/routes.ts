@@ -389,6 +389,15 @@ export default [
     component: './sale/store',
   },
   {
+    path: 'external/sale/store/:view/*',
+    name: 'store',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    layout: false,
+    access: 'canAccessSaleStore',
+    component: './sale/store',
+  },
+  {
     path: '/sale/transaction/:view/*',
     name: 'transaction',
     icon: 'UnorderedListOutlined',
@@ -446,6 +455,14 @@ export default [
     access: 'canAccessAllMenuDSD',
     component: './sale/pricing',
   },
+  {
+    path: '/sale/mpu_settlement/:view/*',
+    name: 'item-sales-line-price',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    // access: 'canAccessAllMenuDSD',
+    component: './sale/mpu/settlement',
+  },
 
   /******************* MPU *******************/
 
@@ -495,7 +512,7 @@ export default [
     name: 'sale_mpu_count_stock',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessViewMpu',
+    // access: 'canAccessViewMpu',
     component: './sale/mpu/count_stock',
   },
 

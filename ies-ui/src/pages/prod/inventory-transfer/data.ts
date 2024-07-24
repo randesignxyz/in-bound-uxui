@@ -69,9 +69,14 @@ export interface Transfer {
   shift: string;
   activities: ActivitiesItem[];
   transfer_id: string;
+  sapDocNo?: number;
   sapDocEntry?: number;
+  transferRequests?:[]
 }
 
+export interface TransferRequestSAP{
+  transferRequestDetails:[]
+}
 export interface ActivitiesItem {
   transfer_request?: string;
   activities_name: string;
@@ -139,7 +144,7 @@ export interface ReceivedItem {
 }
 
 export interface ReceiveStatusChange {
-  transfer_request: string;
+  transfer_request?: string;
 }
 
 export interface GetReceive {
@@ -165,4 +170,22 @@ export interface SAPCloseDoc {
   shift: string;
   statusChange: string;
   state: string;
+  activities_name?: string,
+  action?: string,
+  remark?: string,
+}
+
+export interface updateProvidedParams {
+  status: string,
+  remark?: string,
+  provided: string
+  transfer_request?: string,
+  activities_name?: string,
+  action?: string,
+}
+
+export interface getItemforCloseParams {
+  status?: string,
+  transfer_request_id?: number,
+  item_code?: string
 }

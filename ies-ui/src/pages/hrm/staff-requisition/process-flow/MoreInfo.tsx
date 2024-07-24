@@ -1,4 +1,4 @@
-import { Descriptions, Spin } from "antd"
+import { Descriptions, Spin, Typography } from "antd"
 import { useEffect, useState } from "react"
 import { EmployeeServices } from "../../services";
 import { simpleRequestActions } from "@/services/model";
@@ -20,13 +20,21 @@ export default ({ instanceInfo, owner }: UserTask) => {
         })()
     }, [instanceInfo?.processInstanceId])
     return (
-        <Spin spinning = {requestActions.request?.loading || false}>
+        <Spin spinning={requestActions.request?.loading || false}>
             <Descriptions column={1} size="small">
                 <Descriptions.Item label="Hired Posistion">
                     {detail?.positionHired.name} / {detail?.department.name} / {detail?.bu.name}
                 </Descriptions.Item>
                 <Descriptions.Item label="Hired Reason">
-                    {detail?.hiredReason || (detail?.replacedEmp ? "Replacement" : '')}
+                    <Typography.Paragraph ellipsis={{
+                        expandable: true,
+                        defaultExpanded: false,
+                        rows: 3,
+                        symbol: 'more'
+                    }}>
+                        {detail?.hiredReason || (detail?.replacedEmp ? "Replacement" : '')}
+                    </Typography.Paragraph>
+
                 </Descriptions.Item>
                 <Descriptions.Item label="Requestor">{owner}</Descriptions.Item>
                 <Descriptions.Item label="Requested Date">{formatDate(instanceInfo.submittedDate)}</Descriptions.Item>

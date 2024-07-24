@@ -2,14 +2,14 @@ import DescriptionDisplay from '@/components/Descriptions';
 import { simpleRequestActions } from '@/services/model';
 import type { LeadDetail } from '@/services/sale/data';
 import { ProForm } from '@ant-design/pro-components';
-import { Button, Card, Divider, Row, Space } from 'antd';
+import { Button, Card, Divider, Row, Space, Spin } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { LeadServiceAPI } from './services';
+import { EditOutlined } from '@ant-design/icons';
 
 interface Props {
-  onEdit: (id?: number) => void;
-  // onAdd?: () => void;
+  onEdit: (data?:LeadDetail) => void;
   id?: number;
 }
 
@@ -18,13 +18,10 @@ const layout = {
   wrapperCol: { span: 16 },
 };
 
-export default ({ id, onEdit }: Props) => {
+const LeadDetailView:React.FC<Props> = ({ id, onEdit }) => {
   const requestActions = simpleRequestActions();
   const services = LeadServiceAPI(requestActions);
-  //const [pricing, setPricing] = useState<PricingDto>();
-
   const [lead, setLead] = useState<LeadDetail>();
-
   const [form] = useForm<LeadDetail>();
 
   useEffect(() => {
@@ -69,24 +66,31 @@ export default ({ id, onEdit }: Props) => {
   ];
 
   return (
-    <>
+    <Spin spinning={requestActions.request?.loading}>
       <ProForm form={form} {...layout} layout="horizontal" submitter={false}>
         <Row justify="end">
           <Space>
             {/* <Button type="default" onClick={() => onAdd?.()}>
               New
             </Button> */}
-            <Button type="primary" onClick={() => onEdit?.(id)}>
-              Edit
-            </Button>
+
           </Space>
         </Row>
-        <Card title={'Customer Info'} size="small" style={{ marginTop: 10, marginBottom: 20 }}>
+        <Card
+          title={'Customer Info'}
+          size="small"
+          extra={[
+            <Button type="link" onClick={() => onEdit?.(lead)} icon={<EditOutlined/>}>
+              Edit
+            </Button>
+          ]}>
           <DescriptionDisplay data={displaySalesperson} column={2} />
           <Divider />
           <DescriptionDisplay data={displayItems} column={3} />
         </Card>
       </ProForm>
-    </>
+    </Spin>
   );
 };
+
+export default LeadDetailView

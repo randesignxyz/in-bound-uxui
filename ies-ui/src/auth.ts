@@ -35,8 +35,9 @@ export const endpoint = (): {
 } => {
   return {
     url: keycloakUri(),
-    redirectUri: `${protocal}//${host}:${port}/`,
+    redirectUri: port == '80' || port.trim().length == 0 ? `${protocal}//${host}/` : `${protocal}//${host}:${port}/`,
   };
+
 };
 
 export const Auth = {
@@ -48,16 +49,26 @@ export const kc = new Keycloak({
   realm: Auth.realm,
   clientId: Auth.clientId,
   url: Auth.url,
-});
+
+})
+
 export const keycloak = async (sso?: boolean) => {
-  if (isOffline()) return undefined;
-  kc.onTokenExpired = () => {
-    message.error('Session expired');
-  };
-  await kc.init({
-    checkLoginIframe: true,
-    onLoad: 'login-required',
-  });
-  kc.token && localStorage.setItem('accessToken', kc.token);
-  return kc;
-};
+
+  try {
+    if (isOffline()) return undefined
+    kc.onTokenExpired = () => {
+      message.error("Session expired")
+    }
+    await kc.init({
+      checkLoginIframe: true,
+      onLoad: 'login-required',
+    });
+
+    kc.token && localStorage.setItem('accessToken', kc.token);
+    return kc
+  } catch (error) {
+    // message.error("Failed to make authentcation.")
+    console.error(error)
+  }
+
+}

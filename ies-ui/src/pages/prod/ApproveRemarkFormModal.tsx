@@ -7,9 +7,10 @@ import { useEffect } from 'react';
 interface Props extends FormModalProps {
   id: string;
   transfer_id: string;
-  onSave: (id: string, remarks: string, transfer_id: string) => void;
+  data:any
+  onSave: (id: string, remarks: string, transfer_id: string,data:any) => void;
 }
-export default ({ id, transfer_id, onSave, ...props }: Props) => {
+export default ({ id, transfer_id, onSave,data, ...props }: Props) => {
   const [form] = useForm<{ remarks: string }>();
   useEffect(() => {
     if (props.open) form.resetFields();
@@ -22,7 +23,7 @@ export default ({ id, transfer_id, onSave, ...props }: Props) => {
       onResetForm={() => form.resetFields()}
       onSubmit={async () => {
         const dataForm = await form.validateFields();
-        onSave(id, dataForm.remarks, transfer_id);
+        onSave(id, dataForm.remarks, transfer_id,data);
       }}
     >
       <Card>

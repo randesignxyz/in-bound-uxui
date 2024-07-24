@@ -3,14 +3,18 @@ import { CrmPaths } from "@/pages/crm";
 import { formatDate, formatDateTime, formatter } from "@/pages/utils";
 import { SoDetail } from "@/services/sale/data";
 import { Card, Drawer, DrawerProps } from "antd";
-import { history } from 'umi'
+import { history } from "@umijs/max";
+import { DrawerForm, DrawerFormProps } from "@ant-design/pro-components";
 
-interface Props extends DrawerProps {
+interface Props extends DrawerFormProps {
     soDetail?: SoDetail,
 }
 
 const QuickView: React.FC<Props> = ({ soDetail, ...props }) => {
-    return <Drawer {...props}>
+    return <DrawerForm {...props} submitter={false} resize={{
+        minWidth: 800,
+        maxWidth: window.innerWidth * 0.8
+    }}>
         <Card size="small" title="General">
             <DescriptionDisplay
                 column={2}
@@ -61,8 +65,9 @@ const QuickView: React.FC<Props> = ({ soDetail, ...props }) => {
                 data={[
                     { label: 'Delivery Method', value: soDetail?.associatedTo.deliveryMethod?.name, },
                     { label: 'Delivery Date', value: formatDate(soDetail?.deliveryDate) },
-                    { label: 'Shipping Address Code',value: soDetail?.associatedTo.shippingAddress.address, },
-                    { label: 'Shipping Address',
+                    { label: 'Shipping Address Code', value: soDetail?.associatedTo.shippingAddress.address, },
+                    {
+                        label: 'Shipping Address',
                         value: [
                             { name: 'Street', value: soDetail?.associatedTo.shippingAddress.streetNo, },
                             { name: 'House#', value: soDetail?.associatedTo.shippingAddress.houseNo, },
@@ -75,25 +80,22 @@ const QuickView: React.FC<Props> = ({ soDetail, ...props }) => {
                             .map((it) => `${it.name} ${it.value}`)
                             .join(', '),
                     },
-
-                    // { label: 'Ship to Name', value: soDetail?.shipToName },
-                    // { label: 'Shipp to phone number', value: soDetail?.shipPhoneNumber }
                 ]}
             />
         </Card>
         <Card style={{ marginTop: '10px' }} size="small" title="Order Amount">
-            <DescriptionDisplay column= {1} data={[
-                {label: 'Amount', value: formatter.format(soDetail?.amount || 0)},
-                {label: 'Discount Amount', value:  formatter.format(soDetail?.discountAmount|| 0)},
-                {label: 'VAT Amount', value:  formatter.format(soDetail?.vatAmount ||0 )},
-                {label: 'Total Amount', value:  formatter.format(soDetail?.totalAmount ||0 )},
+            <DescriptionDisplay column={1} data={[
+                { label: 'Amount', value: formatter.format(soDetail?.amount || 0) },
+                { label: 'Discount Amount', value: formatter.format(soDetail?.discountAmount || 0) },
+                { label: 'VAT Amount', value: formatter.format(soDetail?.vatAmount || 0) },
+                { label: 'Total Amount', value: formatter.format(soDetail?.totalAmount || 0) },
 
-            ]}/>
+            ]} />
         </Card>
         <Card style={{ marginTop: '10px' }} size="small" title="Attachment">
-            
+
         </Card>
-    </Drawer>
+    </DrawerForm>
 }
 
 export default QuickView

@@ -10,9 +10,9 @@ import {
   ProFormTextArea,
 } from '@ant-design/pro-components';
 import { history } from '@umijs/max';
-import { Button, Card, Col, message, Modal, Row } from 'antd';
+import { Button, Card, Col, message, Modal, Row, Spin } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { SalePaths } from '..';
 import { LeadServiceAPI } from './services';
 
@@ -24,10 +24,11 @@ const layout = {
 interface Props {
   type: 'new' | 'edit';
   id?: number;
+  onView: (id?:number) => void;
+  onBack: () => void;
+  title:string;
 }
-
 const width = 215;
-
 interface InitData {
   regionList?: Locations[];
   locations?: {
@@ -39,21 +40,19 @@ interface InitData {
   outletTypes?: LookupData[];
 }
 
-export default ({ id, type }: Props) => {
+const LeadEntryFormView:React.FC<Props>= ({ id, type, title, onBack, onView }) => {
   const requestActions = simpleRequestActions();
   const services = LeadServiceAPI(requestActions);
   const [form] = useForm<LeadLess>();
-
   const [initData, setInitData] = useState<InitData>();
   const [remarkRequired, setRemarkRequired] = useState(false);
-
+  const [lead, setLead] = useState<LeadLess>();
   useEffect(() => {
     (async () => {
       if (id) {
         const lead = await services.detailLead(id);
         if (lead) {
-          // setLead(lead);
-
+          setLead(lead);
           const region = await services.location('DIVISION');
           const ids = [
             lead.region?.id ?? -1,
@@ -75,12 +74,10 @@ export default ({ id, type }: Props) => {
             },
             outletTypes: outletTypes,
           });
-
           setRemarkRequired(
             form.getFieldValue('outletTypeId') ===
-              initData?.outletTypes?.find((e) => e.name.toLowerCase() === 'others')?.id,
+            initData?.outletTypes?.find((e) => e.name.toLowerCase() === 'others')?.id,
           );
-
           form.setFieldsValue({
             ...lead,
             villageId: lead.village?.id,
@@ -119,6 +116,7 @@ export default ({ id, type }: Props) => {
             form.resetFields();
             history.push(`${SalePaths.lead}/create`);
           } else history.push(`${SalePaths.lead}/detail/${result.data}`);
+          onView(result.data)
         },
       });
     } catch (e: any) {
@@ -128,7 +126,6 @@ export default ({ id, type }: Props) => {
 
   const onValuesChangeHandler = async (changedValues: any, values: LeadLess) => {
     const { regionId, provinceId, districtId, communeId, outletTypeId } = changedValues;
-
     if (regionId && 'regionId' in changedValues) {
       const provinces = await services.location('PROVINCE', values.regionId);
       setInitData({
@@ -199,74 +196,78 @@ export default ({ id, type }: Props) => {
       console.log(values.outletTypeId);
       setRemarkRequired(
         values.outletTypeId ===
-          initData?.outletTypes?.find((e) => e.name.toLowerCase() === 'others')?.id,
+        initData?.outletTypes?.find((e) => e.name.toLowerCase() === 'others')?.id,
       );
     }
   };
 
   return (
-    <ProForm
-      form={form}
-      {...layout}
-      layout="horizontal"
-      onValuesChange={onValuesChangeHandler}
-      submitter={{
-        render: () => {
-          return (
-            <FooterToolbar>
-              {type === 'new' && (
-                <Button
-                  onClick={() => {
-                    form.resetFields();
-                  }}
-                >
-                  Clear
-                </Button>
-              )}
+    // <Spin spinning={requestActions.request?.loading}>
+      <ProForm
+        form={form}
+        {...layout}
+        layout="horizontal"
+        onValuesChange={onValuesChangeHandler}
+        submitter={{
+          render: () => {
+            return (
+              <FooterToolbar
+                portalDom={false}
+              >
+                {type === 'new' && (
+                  <Button
+                    onClick={() => {
+                      form.resetFields();
+                    }}
+                  >
+                    Clear
+                  </Button>
+                )}
 
-              {type === 'edit' && (
-                <Button
-                  onClick={() => {
-                    history.push(`${SalePaths.lead}/detail/${id}`);
-                  }}
-                >
-                  Cancel
-                </Button>
-              )}
-              {type === 'edit' && (
-                <Button
-                  onClick={() => {
-                    form.resetFields();
-                  }}
-                >
-                  Reset
-                </Button>
-              )}
-              {type === 'new' && (
+                {type === 'edit' && (
+                  <Button
+                    onClick={() => {
+                      form.resetFields();
+                      onView?.(lead?.id)
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                )}
+                {type === 'edit' && (
+                  <Button
+                    onClick={() => {
+                      form.resetFields();
+                    }}
+                  >
+                    Reset
+                  </Button>
+                )}
+                {type === 'new' && (
+                  <Button
+                    type="primary"
+                    onClick={() => {
+                      onSaveActionHandler(true);
+                    }}
+                  >
+                    Save & Add New
+                  </Button>
+                )}
                 <Button
                   type="primary"
                   onClick={() => {
-                    onSaveActionHandler(true);
+                    onSaveActionHandler();
                   }}
                 >
-                  Save & Add New
+                  {type === 'new' ? 'Save & View' : 'Update'}
                 </Button>
-              )}
-              <Button
-                type="primary"
-                onClick={() => {
-                  onSaveActionHandler();
-                }}
-              >
-                {type === 'new' ? 'Save & View' : 'Edit'}
-              </Button>
-            </FooterToolbar>
-          );
-        },
-      }}
-    >
-      <Card title={'Lead'} size="small" style={{ marginTop: 10, marginBottom: 20 }}>
-        {/* <ProFormSelect
+              </FooterToolbar>
+            );
+          },
+        }}
+      >
+        <Card title={title} size="small" style={{ marginTop: 10, marginBottom: 20 }}>
+          {/* <ProFormSelect
           label="Type"
           name="typeId"
           width="md"
@@ -277,127 +278,131 @@ export default ({ id, type }: Props) => {
             initData?.lookupDataList?.filter((it) => it.type === 'ADDRESS_TYPE'),
           )}
         /> */}
-        <Row gutter={80}>
-          <Col>
-            <ProFormText
-              width={width}
-              help={<span />}
-              label="Shop Name"
-              name="internalName"
-              rules={[{ required: true }]}
-            />
-            <ProFormText
-              width={width}
-              help={<span />}
-              label="Phone Number"
-              name="phone"
-              rules={[{ required: true }]}
-            />
-            <ProFormText width={width} help={<span />} label="House No" name="houseNo" />
-            <ProFormSelect
-              label="Region"
-              name="regionId"
-              showSearch
-              style={{ width: width }}
-              options={initData?.regionList?.map((it) => ({
-                label: it.name,
-                value: it.id,
-                key: it.id,
-              }))}
-            />
-            <ProFormSelect
-              label="Commune"
-              name="communeId"
-              showSearch
-              style={{ width: width }}
-              options={initData?.locations?.communeList?.map((it) => ({
-                label: `${it.internalName} - ${it.name}`,
-                value: it.id,
-                key: it.id,
-              }))}
-            />
+          <Row gutter={80}>
+            <Col>
+              <ProFormText
+                width={width}
+                help={<span />}
+                label="Shop Name"
+                name="internalName"
+                rules={[{ required: true }]}
+              />
+              <ProFormText
+                width={width}
+                help={<span />}
+                label="Phone Number"
+                name="phone"
+                rules={[{ required: true }]}
+              />
+              <ProFormText width={width} help={<span />} label="House No" name="houseNo" />
+              <ProFormSelect
+                label="Region"
+                name="regionId"
+                showSearch
+                style={{ width: width }}
+                options={initData?.regionList?.map((it) => ({
+                  label: it.name,
+                  value: it.id,
+                  key: it.id,
+                }))}
+              />
+              <ProFormSelect
+                label="Commune"
+                name="communeId"
+                showSearch
+                style={{ width: width }}
+                options={initData?.locations?.communeList?.map((it) => ({
+                  label: `${it.internalName} - ${it.name}`,
+                  value: it.id,
+                  key: it.id,
+                }))}
+              />
 
-            <ProFormText
-              help={<span />}
-              width={width}
-              name="latitude"
-              // rules={[{ required: true }]}
-              label="Latitude"
-            />
-          </Col>
+              <ProFormText
+                help={<span />}
+                width={width}
+                name="latitude"
+                // rules={[{ required: true }]}
+                label="Latitude"
+              />
+            </Col>
 
-          <Col>
-            <ProFormText width={width} help={<span />} label="First Name" name="firstName" />
-            <ProFormText width={width} help={<span />} label="Phone 1" name="phone1" />
-            <ProFormText width={width} help={<span />} label="Street Name" name="streetName" />
-            <ProFormSelect
-              label="Province"
-              name="provinceId"
-              showSearch
-              options={initData?.locations?.provinceList?.map((it) => ({
-                label: `${it.internalName} - ${it.name}`,
-                value: it.id,
-                key: it.id,
-              }))}
-              style={{ width: width }}
-            />
+            <Col>
+              <ProFormText width={width} help={<span />} label="First Name" name="firstName" />
+              <ProFormText width={width} help={<span />} label="Phone 1" name="phone1" />
+              <ProFormText width={width} help={<span />} label="Street Name" name="streetName" />
+              <ProFormSelect
+                label="Province"
+                name="provinceId"
+                showSearch
+                options={initData?.locations?.provinceList?.map((it) => ({
+                  label: `${it.internalName} - ${it.name}`,
+                  value: it.id,
+                  key: it.id,
+                }))}
+                style={{ width: width }}
+              />
 
-            <ProFormSelect
-              label="Village"
-              name="villageId"
-              showSearch
-              style={{ width: width }}
-              options={initData?.locations?.villageList?.map((it) => ({
-                label: `${it.internalName} - ${it.name}`,
-                value: it.id,
-                key: it.id,
-              }))}
-            />
-            <ProFormText
-              help={<span />}
-              width={width}
-              name="longitude"
-              // rules={[{ required: true }]}
-              label="Longitude"
-            />
-          </Col>
-          <Col>
-            <ProFormText width={width} help={<span />} label="Last Name" name="lastName" />
-            <ProFormText width={width} help={<span />} label="Phone 2" name="phone2" />
-            <ProFormText width={width} help={<span />} label="Street No" name="streetNo" />
-            <ProFormSelect
-              label="District"
-              name="districtId"
-              showSearch
-              style={{ width: width }}
-              options={initData?.locations?.districtList?.map((it) => ({
-                label: `${it.internalName} - ${it.name}`,
-                value: it.id,
-                key: it.id,
-              }))}
-            />
-            <ProFormSelect
-              label="Outlet Type"
-              name="outletTypeId"
-              showSearch
-              allowClear={false}
-              style={{ width: width }}
-              options={initData?.outletTypes?.map((it) => ({
-                label: `${it.name}`,
-                value: it.id,
-                key: it.id,
-              }))}
-            />
-            <ProFormTextArea
-              width={width}
-              help={<span />}
-              label="remark"
-              name="remark"
-              required={remarkRequired}
-            />
-          </Col>
-        </Row>
-      </Card>
-    </ProForm>
+              <ProFormSelect
+                label="Village"
+                name="villageId"
+                showSearch
+                style={{ width: width }}
+                options={initData?.locations?.villageList?.map((it) => ({
+                  label: `${it.internalName} - ${it.name}`,
+                  value: it.id,
+                  key: it.id,
+                }))}
+              />
+              <ProFormText
+                help={<span />}
+                width={width}
+                name="longitude"
+                // rules={[{ required: true }]}
+                label="Longitude"
+              />
+            </Col>
+            <Col>
+              <ProFormText width={width} help={<span />} label="Last Name" name="lastName" />
+              <ProFormText width={width} help={<span />} label="Phone 2" name="phone2" />
+              <ProFormText width={width} help={<span />} label="Street No" name="streetNo" />
+              <ProFormSelect
+                label="District"
+                name="districtId"
+                showSearch
+                style={{ width: width }}
+                options={initData?.locations?.districtList?.map((it) => ({
+                  label: `${it.internalName} - ${it.name}`,
+                  value: it.id,
+                  key: it.id,
+                }))}
+              />
+              <ProFormSelect
+                label="Outlet Type"
+                name="outletTypeId"
+                showSearch
+                allowClear={false}
+                style={{ width: width }}
+                options={initData?.outletTypes?.map((it) => ({
+                  label: `${it.name}`,
+                  value: it.id,
+                  key: it.id,
+                }))}
+              />
+              <ProFormTextArea
+                width={width}
+                help={<span />}
+                label="remark"
+                name="remark"
+                required={remarkRequired}
+              />
+            </Col>
+          </Row>
+        </Card>
+      </ProForm>
+    // </Spin>
   );
 };
+
+
+export default LeadEntryFormView

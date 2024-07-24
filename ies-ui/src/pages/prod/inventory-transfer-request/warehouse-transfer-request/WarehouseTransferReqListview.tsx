@@ -3,15 +3,18 @@ import { Paging } from '@/services/API';
 import { simpleRequestActions } from '@/services/model';
 import { ActionType } from '@ant-design/pro-components';
 import { useAccess, useModel } from '@umijs/max';
-import { Button, Modal, Radio, Select, Space, Tag, message } from 'antd';
+import { Button, Modal, Radio, Select, Space, Tag, Tooltip, message } from 'antd';
 import Omit from 'omit.js';
 import { useEffect, useRef, useState } from 'react';
 import ApproveRemarkFormModal from '../../ApproveRemarkFormModal';
 import RemarkFormModal from '../../RemarkFormModal';
-import DetailView from '../DetailView';
+import DetailView from './DetailView';
+import { history } from 'umi'
 import { AddSupplierParams, TransferRequest, TransferRequestAdvanceParams } from '../data';
 import { ItemServiceAPI, TransferRequestServiceAPI } from '../service';
 import FormModal from './FormModal';
+import { TransferServiceAPI } from '../../inventory-transfer/service';
+import { EyeFilled } from '@ant-design/icons';
 // import InventoryModelForm from "./InventoryModelForm";
 
 interface Props {
@@ -35,6 +38,7 @@ export default ({ onAdd }: Props) => {
     visible: boolean;
     id?: string;
     transfer_id?: string;
+    sapDocEntry?: number
   }>({
     visible: false,
     id: undefined,
@@ -126,6 +130,37 @@ export default ({ onAdd }: Props) => {
     }
   }, []);
 
+  const getSap = async (docEntry: number, id: string, transfer_id: string) => {
+    try {
+      const detail_sap = await TransferServiceAPI(requestActions).detail_sap(docEntry);
+      const detail = await services.detail(id);
+
+      if (detail_sap?.transferRequests[0].transferRequestDetails && detail?.item) {
+        // Convert the second list to a map for easy lookup
+        const detailMap = new Map(detail.item.map(item => [item.item_code, item]));
+
+        for (const sapItem of detail_sap?.transferRequests[0].transferRequestDetails) {
+          const detailItem = detailMap.get(sapItem.itemCode);
+          if (detailItem) {
+            // Compare quantity
+            if (sapItem.quantity !== parseInt(detailItem.quantity)) {
+              message.error(`Mismatch found for item code ${sapItem.itemCode} in IES ${detailItem.quantity} in SAP ${sapItem.quantity}!`);
+              return
+            }
+            setApproveModal({ visible: true, id: id, transfer_id: transfer_id })
+          } else {
+            message.error(`Item code ${sapItem.itemCode} not found in the sap list!`);
+          }
+        }
+      } else {
+        console.error("One of the lists is undefined or empty.");
+      }
+    } catch (error) {
+      console.error('An error occurred:', error);
+      message.error('Error');
+    }
+  }
+
   return (
     <>
       <TableView
@@ -176,11 +211,31 @@ export default ({ onAdd }: Props) => {
         }}
         columns={[
           {
+            title: '',
+            width: 10,
+            render: (_, r) => (
+              <Space size={1}>
+
+                <Tooltip title="View Data">
+                  <Button
+                    size="small"
+                    type="link"
+                    icon={<EyeFilled />}
+                    onClick={() => onDetailhandler(r)}
+                  />
+                </Tooltip>
+              </Space>
+            ),
+          },
+          {
             key: 'id',
             title: 'ID',
             dataIndex: 'id',
             render: (_, r) => (
-              <a onClick={() => onDetailhandler(r)}>PDR-{String(r.id).padStart(6, '0')}</a>
+              // <a onClick={() => onDetailhandler(r)}>PDR-{String(r.id).padStart(6, '0')}</a>
+              <a onClick={() => history.push(`/prod/inventory-transfer-request/detail/${r.id}`, { id: r.id })}>PDR-{String(r.id).padStart(6, '0')}</a>
+
+
             ),
           },
           {
@@ -260,8 +315,9 @@ export default ({ onAdd }: Props) => {
                     <Button
                       style={{ width: '30%' }}
                       onClick={() => {
-                        // setApproveModal({ visible: true, id: r.id, transfer_id: r.transfer_id });
-                        setModal({ visible: true, id: r.id, transfer_id: r.transfer_id, data: r });
+                        // setApproveModal({ visible: true, id: r.id, transfer_id: r.transfer_id })
+                        getSap(r.sapDocEntry || 0, r.id, r.transfer_id)
+                        // setModal({ visible: true, id: r.id, transfer_id: r.transfer_id, data: r });
                       }}
                     >
                       Approve
@@ -269,7 +325,7 @@ export default ({ onAdd }: Props) => {
                     <Button
                       style={{ width: '30%', marginLeft: 10, marginRight: 10 }}
                       onClick={() => {
-                        setCommentModal({ visible: true, id: r.id, transfer_id: r.transfer_id });
+                        setCommentModal({ visible: true, id: r.id, transfer_id: r.transfer_id, sapDocEntry: r.sapDocEntry });
                       }}
                     >
                       Reject
@@ -323,27 +379,42 @@ export default ({ onAdd }: Props) => {
         title="Reject Form"
         open={commentModal.visible}
         onCancel={() => {
-          setCommentModal({ visible: false, id: undefined });
+          setCommentModal({ visible: false, id: undefined, transfer_id: undefined, sapDocEntry: undefined });
         }}
-        onSave={async (id, remark, transfer_id) => {
-          const response: { data: string; message: string } = (await services.status_change({
-            id: id,
-            remark: remark,
-            statusChange: 'transfer-request-warehouse-reject',
-            state: 'rejected',
-          })) as { data: string; message: string };
-          await services.save_activites({
-            activities_name: 'Warehouse Approval',
-            action: 'Rejected',
-            remark: remark,
-            transfer_request: transfer_id,
-          });
-          setCommentModal({ visible: false, id: undefined });
+        onSave={async (id, remark, transfer_id, sapDocEntry) => {
+          // const response: { data: string; message: string } = (
+          //   await services.status_change({
+          //   id: id,
+          //   remark: remark,
+          //   statusChange: 'transfer-request-warehouse-reject',
+          //   state: 'rejected',
+          // })) as { data: string; message: string };
+          const response: { data: string; message: string; } =
+            (await services.close_transfer(
+              {
+                docEntry: sapDocEntry || 0,
+                id: id,
+                remark: remark,
+                statusChange: 'transfer-request-warehouse-reject',
+                state: 'rejected',
+                activities_name: 'Warehouse Approval',
+                action: 'Rejected',
+                transfer_request: transfer_id,
+              })
+            ) as { data: string; message: string; }
+          // await services.save_activites({
+          //   activities_name: 'Warehouse Approval',
+          //   action: 'Rejected',
+          //   remark: remark,
+          //   transfer_request: transfer_id,
+          // });
+          setCommentModal({ visible: false, id: undefined, transfer_id: undefined, sapDocEntry: undefined });
           message.info(response.message);
           actionRef.current?.reload();
         }}
         id={commentModal.id ?? ''}
         transfer_id={commentModal.transfer_id ?? ''}
+        sapDocEntry={commentModal.sapDocEntry ?? 0}
       />
       <ApproveRemarkFormModal
         title="Approve Form"
@@ -352,12 +423,12 @@ export default ({ onAdd }: Props) => {
           setApproveModal({ visible: false, id: undefined });
         }}
         onSave={async (id, remark, transfer_id) => {
-          const response: { data: string; message: string } = (await services.status_change({
+          const response: { data: string; message: string; } = (await services.status_change({
             id: id,
             remark: remark,
             statusChange: 'request-warehouse-approve',
             state: 'in-progress',
-          })) as { data: string; message: string };
+          })) as { data: string; message: string; };
           await services.save_activites({
             activities_name: 'Warehouse Approval',
             action: 'Approved',
@@ -369,9 +440,8 @@ export default ({ onAdd }: Props) => {
           actionRef.current?.reload();
         }}
         id={approveModel.id ?? ''}
-        transfer_id={approveModel.transfer_id ?? ''}
-      />
-      <FormModal
+        transfer_id={approveModel.transfer_id ?? ''} data={undefined} />
+      {/* <FormModal
         title="Approve Form"
         open={Model.visible}
         onCancel={() => {
@@ -426,7 +496,7 @@ export default ({ onAdd }: Props) => {
         id={Model.id ?? ''}
         transfer_id={Model.transfer_id ?? ''}
         data={Model.data ?? undefined}
-      />
+      /> */}
     </>
   );
 };

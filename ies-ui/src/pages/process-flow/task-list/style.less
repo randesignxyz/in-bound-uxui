@@ -1,5 +1,4 @@
-// @import '~antd/es/style/themes/default.less';
-
+// Modal dialog styling
 .modalDialog {
   max-width: 100%;
   margin: 0;
@@ -11,50 +10,55 @@
   display: flex;
 }
 
-.test {  
+.test {
   align-items: flex-start;
 }
-//100vh
 
+// Standard list styling
 .standardList {
   :global {
     .ant-card-head {
       border-bottom: none;
     }
-    .ant-card-head-title {
+
+    .ant-card-head-title,
+    .ant-card-extra {
       padding: 24px 0;
       line-height: 32px;
     }
-    .ant-card-extra {
-      padding: 24px 0;
-    }
+
     .ant-list-pagination {
       margin-top: 24px;
       text-align: right;
     }
+
     .ant-avatar-lg {
       width: 48px;
       height: 48px;
       line-height: 48px;
     }
   }
+
   .headerInfo {
     position: relative;
     text-align: center;
-    & > span {
+
+    span {
       display: inline-block;
       margin-bottom: 4px;
       color: @text-color-secondary;
       font-size: @font-size-base;
       line-height: 22px;
     }
-    & > p {
+
+    p {
       margin: 0;
       color: @heading-color;
       font-size: 24px;
       line-height: 32px;
     }
-    & > em {
+
+    em {
       position: absolute;
       top: 0;
       right: 0;
@@ -63,53 +67,55 @@
       background-color: @border-color-split;
     }
   }
+
   .listContent {
     font-size: 0;
+
     .listContentItem {
       display: inline-block;
       margin-left: 40px;
       color: @text-color-secondary;
       font-size: @font-size-base;
       vertical-align: middle;
-      > span {
+
+      span {
         line-height: 20px;
       }
-      > p {
-        margin-top: 4px;
-        margin-bottom: 0;
+
+      p {
+        margin: 4px 0 0 0;
         line-height: 22px;
       }
     }
   }
+
   .extraContentSearch {
     width: 272px;
     margin-left: 16px;
   }
 }
 
+// Media queries
 @media screen and (max-width: @screen-xs) {
   .standardList {
     :global {
       .ant-list-item-content {
         display: block;
-        flex: none;
         width: 100%;
       }
-      // .ant-list-item-action {
-      //   margin-left: 0;
-      // }
     }
+
     .listContent {
       margin-left: 0;
-      & > div {
+
+      div {
         margin-left: 0;
       }
     }
-    .listCard {
-      :global {
-        .ant-card-head-title {
-          overflow: visible;
-        }
+
+    .listCard :global {
+      .ant-card-head-title {
+        overflow: visible;
       }
     }
   }
@@ -121,9 +127,11 @@
       width: 100%;
       margin-left: 0;
     }
+
     .headerInfo {
       margin-bottom: 16px;
-      & > em {
+
+      em {
         display: none;
       }
     }
@@ -133,17 +141,17 @@
 @media screen and (max-width: @screen-md) {
   .standardList {
     .listContent {
-      & > div {
+      div {
         display: block;
       }
-      & > div:last-child {
+
+      div:last-child {
         top: 0;
         width: 100%;
       }
     }
-  }
-  .listCard {
-    :global {
+
+    .listCard :global {
       .ant-radio-group {
         display: block;
         margin-bottom: 8px;
@@ -153,57 +161,56 @@
 }
 
 @media screen and (max-width: @screen-lg) and (min-width: @screen-md) {
-  .standardList {
-    .listContent {
-      & > div {
-        display: block;
-      }
-      & > div:last-child {
-        top: 0;
-        width: 100%;
-      }
+  .standardList .listContent {
+    div {
+      display: block;
+    }
+
+    div:last-child {
+      top: 0;
+      width: 100%;
     }
   }
 }
 
 @media screen and (max-width: @screen-xl) {
-  .standardList {
-    .listContent {
-      & > div {
-        margin-left: 24px;
-      }
-      & > div:last-child {
-        top: 0;
-      }
+  .standardList .listContent {
+    div {
+      margin-left: 24px;
+    }
+
+    div:last-child {
+      top: 0;
     }
   }
 }
 
 @media screen and (max-width: 1400px) {
-  .standardList {
-    .listContent {
-      text-align: right;
-      & > div:last-child {
-        top: 0;
-      }
+  .standardList .listContent {
+    text-align: right;
+
+    div:last-child {
+      top: 0;
     }
   }
 }
 
-.standardListForm {
-  :global {
-    .ant-form-item {
-      margin-bottom: 12px;
-      &:last-child {
-        margin-bottom: 32px;
-        padding-top: 4px;
-      }
+// Standard list form styling
+.standardListForm :global {
+  .ant-form-item {
+    margin-bottom: 12px;
+
+    &:last-child {
+      margin-bottom: 32px;
+      padding-top: 4px;
     }
   }
 }
 
+// Form result styling
 .formResult {
   width: 100%;
+
   [class^='title'] {
     margin-bottom: 8px;
   }

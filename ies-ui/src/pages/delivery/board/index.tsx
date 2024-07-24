@@ -13,6 +13,7 @@ import { FloatButton, message, Modal, Spin } from "antd";
 import { useEffect, useRef, useState } from "react";
 import AssignedDocModal from "./assigned-docs";
 import Detail from "./detail";
+import { history } from "@umijs/max";
 import ListView from "./list-view";
 import { ModalName, UiType, ViewController } from "./view-controller";
 import { ActionData } from "@/pages/type";
@@ -20,6 +21,7 @@ import { PickingSlipToPrint } from "./picking-print";
 import { useReactToPrint } from 'react-to-print';
 import styles from './style.less';
 import IssueDNModal from "./issue-dn";
+import PickingSlip from "../loading/picking-slip-modal";
 
 const StatusTitle = [
   {
@@ -49,6 +51,7 @@ export const getStatus = (item?: InstanceBasic) => {
     claimed: !!item?.claimedBy,
     picking: item?.loading?.status === 'PENDING',
     isLoading: item?.loading?.status === 'LOADING',
+    isLoadingStarted: item?.loading?.status === 'LOADING_STARTED',
     pendingDelivery: item?.delivery?.status === 'PENDING' && !item?.delivery?.assignedDocDate,
     delivering: item?.delivery?.status === 'PENDING' && !!item?.delivery?.assignedDocDate,
   }
@@ -67,6 +70,7 @@ export default () => {
       { type: 'DETAIL' } |
       { type: undefined } |
       { type: 'PICKING-SLIP' } |
+      { type: 'CHANGE_PICKING_SLIP' } |
       { type: 'CANCEL_PICKING'; payload: LoadingListItem } |
       { type: 'CANCEL_DELIVERY'; deliveryId: number } |
       { type: 'REMARKS', required?: boolean, cb: (remarks: string) => void; } |
@@ -103,6 +107,8 @@ export default () => {
       setViewDetail(true)
     } else if (modalName === 'picking-slip') {
       setModal({ type: 'PICKING-SLIP', from: from })
+    } else if (modalName === 'change-picking-slip') {
+      setModal({ type: 'CHANGE_PICKING_SLIP', from: from })
     }
 
   }
@@ -248,16 +254,29 @@ export default () => {
           }
           actionRef.current?.reloadAndRest?.()
         })
-      }, visible: !claimed && (statuses.delivering || item?.changeRequest || item?.delivery?.status == 'DELIVERED')
+      }, visible: !claimed && (
+        statuses.delivering
+        || statuses.isLoading
+        || statuses.isLoadingStarted
+        || item?.changeRequest
+        || item?.delivery?.status == 'DELIVERED')
     },
     // { key: 'issueDN', label: 'Issue DN', type: 'Primary', visible: picking, main: claimed, icon: <FileDoneOutlined />, onClick: issueDNHandler },
     { key: 'issueDN', label: 'Issue DN', type: 'Primary', visible: picking, main: claimed, icon: <FileDoneOutlined />, onClick: () => onOpenModalHandler(from, 'picking-slip', item?.id, true) },
 
+    {
+      key: 'pickingChangeRequest', label: "Change Picking Request", visible: claimed && item?.isOwner && !item?.changeRequest && (statuses.isLoading || statuses.isLoadingStarted), type: 'Primary', main: true, icon: <SwapOutlined />,
+      onClick: async () => onOpenModalHandler(from, 'change-picking-slip', item?.id, true)
+    },
     { key: 'assignDoc', label: 'Assign Doc', type: 'Primary', visible: pendingDelivery, main: claimed, icon: <FileDoneOutlined />, onClick: () => onOpenModalHandler(from, 'assign-doc', item?.id, true) },
     { key: 'reassignDoc', label: 'Reassign Doc', visible: delivering, icon: <SwapOutlined />, onClick: async () => await onOpenModalHandler(from, 'assign-doc', item?.id, true) },
 
     {
-      key: 'cancelChangeRequest', label: 'Cancel Change Request', type: 'Danger', icon: <StopOutlined />, visible: item?.claimedBy !== null && item?.changeRequest, onClick: () => {
+      key: 'cancelChangeRequest',
+      label: 'Cancel Change Request',
+      type: 'Danger',
+      icon: <StopOutlined />,
+      visible: item?.isOwner && item?.changeRequest, onClick: () => {
         setModal({
           type: 'REMARKS', required: true, from: from, cb: (remarks) => {
             onCancelChangeRequestHandler(selected.loading.id, remarks, () => {
@@ -271,7 +290,7 @@ export default () => {
       }
     },
     {
-      key: 'hold', label: 'Hold', visible: claimed && !item?.changeRequest && item?.delivery?.status != 'DELIVERED', main: false, icon: <PauseOutlined />, onClick: () => {
+      key: 'hold', label: 'Hold', visible: claimed && !item?.changeRequest && !statuses.isLoadingStarted && item?.delivery?.status != 'DELIVERED', main: false, icon: <PauseOutlined />, onClick: () => {
         setModal({
           type: 'REMARKS', required: true, from: from, cb: (remarks) => {
             onHoldHandler(selected.id, remarks, () => {
@@ -386,7 +405,7 @@ export default () => {
   return <PageContainer breadcrumb={undefined}
     title={'Delivery Board'}
 
-    onBack={() => history.back()}>
+    onBack={() => history.push('/delivery')}>
 
     {/* List view */}
     <ListView {...vc} />
@@ -413,6 +432,14 @@ export default () => {
         }
         actionRef.current?.reloadAndRest?.()
       }}
+      open={true}
+      onCancel={onCloseModalHandler}
+    />}
+
+    {modal.type === 'CHANGE_PICKING_SLIP' && <PickingSlip
+      requestActions={requestActions}
+      itemDetail={vc.data.itemDetail}
+      // cb={modal.cb}
       open={true}
       onCancel={onCloseModalHandler}
     />}

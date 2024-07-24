@@ -9,7 +9,7 @@ import type { SortOrder } from 'antd/lib/table/interface';
 import type { MutableRefObject } from 'react';
 import React, { useEffect, useRef, useState } from 'react';
 
-export type FetchPagingParams<T extends { keyword?: string }> = {
+export type FetchPagingParams<T> = {
   keywords?: string;
   criteria?: T;
   sort?: Record<string, SortOrder>;

@@ -10,7 +10,6 @@ import { SAPServiceType } from '@/services/API'
 import { domain } from '@/services/del-expense/data'
 import { PageContainer } from '@ant-design/pro-components'
 import ImportFileButton from '@/components/ImportFileButton'
-import { ImportedVisitPlan } from '@/pages/crm/visit-plan/data'
 import ImportPrice from './components/ImportPrice'
 import { ImportedPriceRate } from '../data.type'
 import { DataResponse } from '@/services/shared/data'
@@ -29,7 +28,6 @@ const DeliveryPriceList: React.FC<{}> = ({ }) => {
     const productTypeLookupData = useLookupData({ name: 'SAP', action: 'product_type' } as SAPServiceType)
 
     const {
-
         outsourceData,
         outsourcePriceList,
         pricePlaceList,
@@ -144,7 +142,7 @@ const DeliveryPriceList: React.FC<{}> = ({ }) => {
     }
 
     return <PageContainer onBack={() => history.back()} breadcrumb={undefined} title="Price List" >
-        <Spin spinning = {uploading}>
+        <Spin spinning={uploading}>
             <Card size='small' title="Outsource Info" extra={[<ImportFileButton<ImportedPriceRate>
                 importedKey={'IMPORT_DELIVERY_PRICE_RATE'}
                 onDataResponse={data => {

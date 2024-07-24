@@ -1,7 +1,7 @@
-import { Space, Spin, Tag, message, Button, Alert } from 'antd';
+import { Space, Spin, Tag, message, Button } from 'antd';
 import { useEffect, useState } from 'react';
-import { history } from 'umi';
-import { EditFilled, EditTwoTone, StopOutlined } from '@ant-design/icons';
+import { history } from "@umijs/max";
+import { EditFilled, StopOutlined } from '@ant-design/icons';
 import { CrmPaths } from '@/pages/crm';
 import { PageContainer, ProCard, ProDescriptions } from '@ant-design/pro-components';
 import { simpleRequestActions } from '@/services/model';
@@ -14,11 +14,16 @@ import PosmView from '@/pages/crm/components/PosmView';
 import ActivityLog from '@/components/ActivityLog';
 import { useAccess } from '@umijs/max';
 import RemarkModalV2 from '@/components/remark-modal-v2';
-import ListView from '@/pages/pro/requisition/ListView';
 import Address from './Address';
 import { AddressInfo } from '@/services/crm/data';
+import Status from '@/components/Status';
 
-const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: (id: number, cb?: () => void) => void }> = ({ id, onEdit }) => {
+const ContactDetailView: React.FC<{
+  id: number,
+  openInTab?: boolean;
+  onRefresh?: () => void,
+  onEdit: (id: number, cb?: () => void) => void
+}> = ({ id, openInTab, onEdit }) => {
   const requestActions = simpleRequestActions()
   const [data, setData] = useSafeState<ContractViewData>()
   const access = useAccess()
@@ -42,20 +47,11 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
 
   const [activeTab, setActiveTab] = useState<string>('term')
 
-  const handleBackHandler = () => {
-    history.push(`${CrmPaths.contract}/list`);
-  };
-
-  // const fetchAddressInfo = async () => {
-  //   const rs = await ContractServices.listShippingAddressByCustomerId(data!.customer.id).query(requestActions)
-  //   return rs
-  // }
-
   const onApplyLocation = async (ids: number[]) => {
     try {
       if (!!data) {
         await ContractServices.applyLocationToContract(data?.id, ids)(requestActions)
-        setData({...data, customerAddressList: ids})
+        setData({ ...data, customerAddressList: ids })
       }
       return true
     } catch (error: any) {
@@ -68,27 +64,23 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
     <Spin spinning={requestActions.request?.loading || false}>
       <PageContainer
         breadcrumb={undefined}
-        onBack={handleBackHandler}
         title={
           <Space>
-            <div>{`Contract No: ${data?.contractNo || 'n/a'}`}</div>
-            {data?.status && (
-              <Tag color={getColorStatus(data?.status)}>
-                {data?.status}
-              </Tag>
-            )}
+            <div>{`Contract #`}</div>
           </Space>
         }
 
+        subTitle={data?.contractNo || 'n/a'}
+
         extra={access.crmAdmin && <Space>
-          {data?.status != "TERMINATED" && <Button type='primary' onClick={() => {
+          {data?.status != "TERMINATED" && <Button type='link' onClick={() => {
             data && onEdit(data.id, () => {
               loadData()
             })
           }} icon={<EditFilled />} >Edit</Button>
           }
-          {data?.status != "TERMINATED"  && data && <RemarkModalV2<ContractViewData> required confirm title='Terminate Contracdt'
-            trigger={<Button danger icon={<StopOutlined />}>Termimate</Button>} item={data} onSave={async (item, remarks) => {
+          {data?.status != "TERMINATED" && data && <RemarkModalV2<ContractViewData> required confirm title='Terminate Contracdt'
+            trigger={<Button danger type='link' icon={<StopOutlined />}>Termimate</Button>} item={data} onSave={async (item, remarks) => {
               try {
                 await ContractServices.terminateContract(item.id, remarks!!)(requestActions)
                 loadData()
@@ -100,11 +92,10 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
               return false
             }} />}
         </Space>
-
         }
         content={<ProCard>
           {data && <ProDescriptions dataSource={data} columns={[
-            // { label: "Contract No", dataIndex: "contractNo", },
+            { label: "Status", render: (_, r) => <Status text={r.status} />, },
             { label: "Contract Type", render: (_, r) => r.contractType.name },
             { label: "Brand", render: (_, r) => r.brand.name },
             { label: "Budget Code", render: (_, r) => r.budgetCode },
@@ -120,7 +111,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
         tabList={[
           { tab: "Terms", key: 'term', tabKey: 'term', },
           { tab: "POSM", key: "posm", tabKey: "posm" },
-          { tab: "Shipping Address", key: "shppingAddress", tabKey: "shppingAddress"},
+          { tab: "Shipping Address", key: "shppingAddress", tabKey: "shppingAddress" },
           { tab: "Activity Log", key: "activityLog", tabKey: "activityLog", }
         ]}
         onTabChange={(key) => {
@@ -131,7 +122,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
 
         {(() => {
           if (activeTab == 'term') {
-            const term = data?.terms?.name?  (data?.terms?.code+' - '+data?.terms?.name):''
+            const term = data?.terms?.name ? (data?.terms?.code + ' - ' + data?.terms?.name) : ''
             return <Term data={{ terms: term }} />
           }
           if (activeTab == "posm") {
@@ -156,7 +147,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
         })()}
 
       </PageContainer>
-    </Spin>
+    </Spin >
   );
 };
 

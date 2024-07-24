@@ -1,13 +1,16 @@
 import { AttachmentModal } from "@/components/Attachment/AttachmentModal"
 import CrudWrapper from "@/components/DataCrud/CrudWrapper"
 import Remarks from "@/components/remarks"
-import { CustomerServiceAPI } from "@/pages/sale/retailer/customer/services"
 import { BasicData, CustomerItemBase } from "@/services/crm/data"
 import { simpleRequestActions } from "@/services/model"
-import { CloseCircleOutlined, EditOutlined, HistoryOutlined, PaperClipOutlined, PlayCircleOutlined, ScheduleOutlined, SwapOutlined, UpCircleFilled, UpOutlined } from "@ant-design/icons"
+import {
+    CloseCircleOutlined, EditOutlined,
+    HistoryOutlined, PaperClipOutlined,
+    PlayCircleOutlined, ScheduleOutlined,
+    SwapOutlined, UpOutlined
+} from "@ant-design/icons"
 import { useAccess } from "@umijs/max"
 import { message, Modal, Spin } from "antd"
-import { ItemType } from "rc-menu/lib/interface"
 import { useState } from "react"
 import { CrmPaths } from ".."
 import BasicEntryModal from "./components/basic/BasicEntryModal"
@@ -16,13 +19,15 @@ import UpgradeCustomer from "./components/basic/UpgradeCustomer"
 import CreateCustomer from "./components/Create"
 import CustomerDetailView from "./components/Detail"
 import Transfer from "./components/Detail/Transfer"
-import { CustomerListView } from "./components/List"
 import VisitSchduleGeneratedModal from "./components/VisitSchduleGeneratedModal"
 import { model } from "./model"
 import { CustomerServices } from "./services"
+import React from "react"
+import MainPage from "./MainPage"
+import { ActionBarType } from "@/components/ActionBar"
 
 export type CustomerActionController = {
-    getMenuItems: (item: CustomerItemBase, type: 'List' | 'Detail', cb?: () => void) => (ItemType & { display?: boolean })[]
+    getMenuItems: (item: CustomerItemBase, type: 'List' | 'Detail', cb?: () => void) => ActionBarType[]
 }
 
 export default () => {
@@ -89,13 +94,13 @@ export default () => {
         });
     }
 
-    const onUpdateCustomerCodeHisHandler = (customerId: number, l9?: string, l0?: string, m0?: string, remarks?: string) => {
+    const onUpdateCustomerCodeHisHandler = (customerId: number, l9?: string, l0?: string, m0?: string, c0?: string, remarks?: string) => {
         Modal.confirm({
             title: "Upldate customer code tracking",
             content: "Are you sure?",
             onOk: async () => {
                 try {
-                    await CustomerServices.updateCustomerCodeHis(customerId, l9, l0, m0, remarks)(requestAction)
+                    await CustomerServices.updateCustomerCodeHis(customerId, l9, l0, m0, c0, remarks)(requestAction)
                     forceReload?.cb?.()
                     modals.hideModal('code-tracking')
                 } catch (error) {
@@ -106,61 +111,60 @@ export default () => {
         })
     }
 
-    const getMenuItems = (item: CustomerItemBase, type: 'List' | 'Detail', forceReloadCb?: () => void): (ItemType & { display?: boolean })[] => {
-
+    const getMenuItems = (item: CustomerItemBase, type: 'List' | 'Detail', forceReloadCb?: () => void): ActionBarType[] => {
         const isDiabled = item?.status == 'Inactive'
-
         return [
             {
-                key: 'editBasicInfo', label: 'Edit Customer', itemIcon: <EditOutlined />, disabled: !(item?.source !== 'SAP') || (!access.canEditCustomerBasicInfo) || isDiabled, onClick: async () => {
+                key: 'editBasicInfo', label: 'Edit Customer', icon: <EditOutlined />, disabled: !(item?.source !== 'SAP') || (!access.canEditCustomerBasicInfo) || isDiabled, onClick: async () => {
                     await initData()
                     await ops.detail(item.id, true)
                     setForceReload({ cb: forceReloadCb })
                     modals.showModal('editBasicInfo')
-                }, display: true
+                }, visible: true
             },
-            { type: 'divider', display: true },
+            { type: 'divider', visible: true },
             {
-                key: 'promote-customer', label: 'Promote Customer', disabled: isDiabled || item.type.id != 102 || !item.code?.startsWith("L9"), itemIcon: <UpOutlined />, onClick: async () => {
+                key: 'promote-customer', label: 'Promote Customer', disabled: isDiabled || item.type.id != 102 || !item.code?.startsWith("L9"), icon: <UpOutlined />, onClick: async () => {
                     await ops.detail(item.id, true)
                     setForceReload({ cb: forceReloadCb })
                     modals.showModal('promote-customer')
-                }, display: true
+                }, visible: true
             },
             {
-                key: 'customer_code_tracking', label: "Customer Code tracking", itemIcon: <HistoryOutlined />, onClick: async () => {
+                key: 'customer_code_tracking', label: "Customer Code tracking", icon: <HistoryOutlined />, onClick: async () => {
                     await ops.detail(item.id, true)
                     setForceReload({ cb: forceReloadCb })
                     modals.showModal('code-tracking')
-                }, display: true
+                }, visible: true
             },
             {
-                key: 'transfer-customer', label: 'Transfer Salesperson', disabled: !access.canTransferSe || isDiabled || item?.type?.id != 102, itemIcon: <SwapOutlined />, onClick: async () => {
+                key: 'transfer-customer', label: 'Transfer Salesperson', disabled: !access.canTransferSe || isDiabled || item?.type?.id != 102, icon: <SwapOutlined />, onClick: async () => {
                     await initData()
                     await ops.detail(item.id, true)
                     setForceReload({ cb: forceReloadCb })
                     modals.showModal('transfer-customer')
-                }, display: true
+                }, visible: true
             },
-            { type: 'divider', display: true },
+            { type: 'divider', visible: true },
             {
-                key: 'attachments', label: 'Attach Files', itemIcon: <PaperClipOutlined />, display: type == 'Detail', onClick: async () => {
+                key: 'attachments', label: 'Attach Files', icon: <PaperClipOutlined />, visible: type == 'Detail', onClick: async () => {
                     await ops.detail(item.id, true)
                     setForceReload({ cb: forceReloadCb })
                     modals.showModal('attachments')
                 }
             },
             {
-                key: 'visitScheduleGen', label: 'Generate Schedule', disabled: !access.canVisitScheduleGen || isDiabled, itemIcon: <ScheduleOutlined />, display: type == 'Detail', onClick: async () => {
+                key: 'visitScheduleGen', label: 'Generate Schedule', disabled: !access.canVisitScheduleGen || isDiabled, icon: <ScheduleOutlined />, visible: type == 'Detail', onClick: async () => {
                     await ops.detail(item.id, true)
                     setForceReload({ cb: forceReloadCb })
                     modals.showModal('visitScheduleGen')
                 }
             },
 
-            { type: 'divider', display: true },
+            { type: 'divider' },
+
             {
-                key: 'disabled', label: 'Disabled', disabled: item?.type?.id != 102 || !access.canActiveInactiveCustomer, itemIcon: <CloseCircleOutlined />, display: !isDiabled, onClick: async () => {
+                key: 'disabled', label: 'Disabled', disabled: item?.type?.id != 102 || !access.canActiveInactiveCustomer, icon: <CloseCircleOutlined />, visible: !isDiabled, onClick: async () => {
                     setForceReload({ cb: forceReloadCb })
                     setModal({
                         type: 'remarks', required: true, cb: remarks => {
@@ -183,7 +187,7 @@ export default () => {
                 }
             },
             {
-                key: 'activate', label: 'Activate', disabled: item?.type?.id != 102 || !access.canActiveInactiveCustomer, itemIcon: <PlayCircleOutlined />, display: isDiabled, onClick: async () => {
+                key: 'activate', label: 'Activate', disabled: item?.type?.id != 102 || !access.canActiveInactiveCustomer, icon: <PlayCircleOutlined />, visible: isDiabled, onClick: async () => {
                     setForceReload({ cb: forceReloadCb })
                     setModal({
                         type: 'remarks', required: true, cb: remarks => {
@@ -208,21 +212,23 @@ export default () => {
         ]
     }
 
+
     const actl: CustomerActionController = {
         getMenuItems: getMenuItems
     }
 
     return <Spin spinning={state.loading || false}>
-        <CrudWrapper baseURL={CrmPaths.customer} >
+        <CrudWrapper baseURL={CrmPaths.customer} disablePageContainer >
 
             {(view, id, navigate) => {
 
                 switch (view) {
                     case 'list':
-                        return <CustomerListView actl={actl} actionHandlers={{
-                            onAdd: navigate?.goToCreate,
-                            onDetail: navigate?.goToDetail
-                        }} />
+                        return <MainPage getMenuItems={getMenuItems} />
+                    // return <CustomerListView actl={actl} actionHandlers={{
+                    //     onAdd: navigate?.goToCreate,
+                    //     onDetail: navigate?.goToDetail
+                    // }} />
                     case 'create':
                         return <CreateCustomer />
                     case 'detail':
@@ -230,11 +236,12 @@ export default () => {
                             onBack: navigate?.gotToListHandler
                         }} />
                     default:
-                        throw Error('Not supporte')
+                        throw Error('Not supported')
                 }
             }}
 
         </CrudWrapper>
+
         <BasicEntryModal
             layoutConfig={{
                 supplySource:

@@ -10,7 +10,7 @@ import SuggestionListView from './List';
 export default () => {
   //   const access = useAccess();
   return (
-    <CrudWrapper baseURL={SalePaths.store}>
+    <CrudWrapper baseURL={SalePaths.store} disablePageContainer>
       {(view, id, navigate) => {
         return (
           view === 'list' && (

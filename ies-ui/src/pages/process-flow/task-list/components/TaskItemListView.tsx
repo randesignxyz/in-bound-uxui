@@ -13,7 +13,6 @@ import {
   EyeOutlined,
   PartitionOutlined,
   SendOutlined,
-  StarOutlined,
   StarTwoTone,
   StopOutlined,
   TeamOutlined,

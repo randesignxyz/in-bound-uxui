@@ -86,7 +86,7 @@ export default ({ processInstaceId }: { processInstaceId: string }) => {
                 setting: false,
                 reload: false
             }}
-            dataSource={dataDetail?.items.filter(it => it.category == 'FMA_UNIFORM')}
+            dataSource={dataDetail?.items.filter(it => it.category == 'FMA_ACCESSORY')}
             columns={[
                 { dataIndex: 'checked', width: 50, render: (_, r) => <Checkbox checked={r.checked} /> },
                 { dataIndex: "itemName", width: 300 },

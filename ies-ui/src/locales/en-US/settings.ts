@@ -57,5 +57,5 @@ export default {
     'The to-do list will be notified in the form of a letter from the station',
   'app.settings.open': 'Open',
   'app.settings.close': 'Close',
-  'app.copyright.produced': ''
+  'app.copyright.produced': 'Copyright'
 };

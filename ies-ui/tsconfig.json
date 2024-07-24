@@ -29,5 +29,5 @@
     "./**/*.d.ts",
     "./**/*.ts",
     "./**/*.tsx"
-  ]
+, "src/pages/crm/customer/index.tsx.old"  ]
 }

@@ -6,7 +6,7 @@ import ProTable, { ActionType } from '@ant-design/pro-table';
 import { useSetState } from 'ahooks';
 import { Button, Card, Col, Form, message, Modal, Row, Space, Tooltip } from 'antd';
 import { useEffect, useRef, useState } from 'react';
-import { history } from 'umi';
+import { history } from "@umijs/max";
 import { SalePaths } from '../..';
 import VehicleFormModal from '../../stock-control/VehicleFormModal';
 import { Model } from '../model';

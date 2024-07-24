@@ -70,6 +70,14 @@ export default [
     access: 'canAccessCrmMenuItem',
     component: './crm/customer',
   },
+  // {
+  //   path: '/crm/customer/new',
+  //   name: 'customers',
+  //   icon: 'UnorderedListOutlined',
+  //   hideInMenu: 'true',
+  //   access: 'canAccessCrmMenuItem',
+  //   component: './crm/customer/CustomerNew',
+  // },
   {
     path: '/external/crm/customer/:view/*',
     name: 'view-customer',
@@ -163,6 +171,7 @@ export default [
     icon: 'FormOutlined',
     access: 'canAccessProMenuItem',
     component: './pro',
+
   },
 
   {
@@ -309,6 +318,16 @@ export default [
   },
 
   {
+    path: 'external/sale/so/:view/*',
+    name: 'so',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    layout: false,
+    access: 'canAccessSaleMenuItems',
+    component: './sale/so',
+  },
+
+  {
     path: '/sale/delivery/:view/*',
     name: 'delivery',
     icon: 'UnorderedListOutlined',
@@ -355,6 +374,15 @@ export default [
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
     // access: 'canAccessAllMenuDSD',
+    access: 'canAccessSaleStore',
+    component: './sale/store',
+  },
+  {
+    path: 'external/sale/store/:view/*',
+    name: 'store',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    layout: false,
     access: 'canAccessSaleStore',
     component: './sale/store',
   },
@@ -416,6 +444,14 @@ export default [
     access: 'canAccessAllMenuDSD',
     component: './sale/pricing',
   },
+  {
+    path: '/sale/mpu_settlement/:view/*',
+    name: 'item-sales-line-price',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    // access: 'canAccessAllMenuDSD',
+    component: './sale/mpu/settlement',
+  },
 
   /******************* MPU *******************/
 
@@ -465,7 +501,7 @@ export default [
     name: 'sale_mpu_count_stock',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessViewMpu',
+    // access: 'canAccessViewMpu',
     component: './sale/mpu/count_stock',
   },
 
@@ -948,8 +984,8 @@ export default [
   },
   {
     path: '/external/fleet/vehicle/:view/*',
-    layout:false,
-    name:"fleet",
+    layout: false,
+    name: "fleet",
     component: './fleet/vehicle/',
     access: 'canAccessFleetMenu',
     hideInMenu: 'true',
@@ -965,7 +1001,7 @@ export default [
   {
     path: '/external/fleet/maintenance/:view/*',
     name: 'fleet_maintenence',
-    layout:false,
+    layout: false,
     hideInMenu: 'true',
     access: 'canAccessFleetMenu',
     component: './fleet/maintenance/',
@@ -980,7 +1016,7 @@ export default [
   {
     path: '/external/fleet/inspection/:view/*',
     name: 'inspection',
-    layout:false,
+    layout: false,
     hideInMenu: 'true',
     access: 'canAccessFleetMenu',
     component: './fleet/inspection/',
@@ -1069,66 +1105,66 @@ export default [
     hideInMenu: 'true',
   },
 
-{
-  path:"/dms/workspace/:view",
-  name:"dms",
-  icon:"FileSearchOutlined",
-  component:"./dms",
-  access:"canAccessDMSMenu",
-  hideInMenu: 'true',
-},
+  {
+    path: "/dms/workspace/:view",
+    name: "dms",
+    icon: "FileSearchOutlined",
+    component: "./dms",
+    access: "canAccessDMSMenu",
+    hideInMenu: 'true',
+  },
 
-{
-  path:"/dms/setting/:view/*",
-  name:"dms",
-  component:"./dms/setting",
-  access:"canAccessDMSMenu",
-  hideInMenu: 'true',
-},
-{
-  path:"/dms/folder/:view/*",
-  name:"dms",
-  component:"./dms/folder",
-  access:"canAccessDMSMenu",
-  hideInMenu: 'true',
-},
-{
-  path:"/dms/document/:view/*",
-  name:"dms",
-  component:"./dms/documentation",
-  access:"canAccessDMSMenu",
-  hideInMenu: 'true',
-},
-{
-  path: '/external/dms/document/:view/*',
-  layout:false,
-  name:"dms",
-  component:"./dms/documentation",
-  access:"canAccessDMSMenu",
-  hideInMenu: 'true',
-},
-{
-  path:"/dms/contracts/:view/*",
-  name:"dms",
-  component:"./dms/contract",
-  access:"canAccessDMSMenu",
-  hideInMenu: 'true',
-},
-{
-  path:"/dms/share/:view/:id",
-  name:"dms",
-  component:"./dms/share",
-  access:"canAccessDMSMenu",
-  hideInMenu: 'true',
-},
-{
-  path:"/dms/company/:view/*",
-  name:"dms",
-  component:"./dms/contract/company",
-  access:"canAccessDMSMenu",
-  hideInMenu: 'true',
-},
-// ==================== END DMS ================
+  {
+    path: "/dms/setting/:view/*",
+    name: "dms",
+    component: "./dms/setting",
+    access: "canAccessDMSMenu",
+    hideInMenu: 'true',
+  },
+  {
+    path: "/dms/folder/:view/*",
+    name: "dms",
+    component: "./dms/folder",
+    access: "canAccessDMSMenu",
+    hideInMenu: 'true',
+  },
+  {
+    path: "/dms/document/:view/*",
+    name: "dms",
+    component: "./dms/documentation",
+    access: "canAccessDMSMenu",
+    hideInMenu: 'true',
+  },
+  {
+    path: '/external/dms/document/:view/*',
+    layout: false,
+    name: "dms",
+    component: "./dms/documentation",
+    access: "canAccessDMSMenu",
+    hideInMenu: 'true',
+  },
+  {
+    path: "/dms/contracts/:view/*",
+    name: "dms",
+    component: "./dms/contract",
+    access: "canAccessDMSMenu",
+    hideInMenu: 'true',
+  },
+  {
+    path: "/dms/share/:view/:id",
+    name: "dms",
+    component: "./dms/share",
+    access: "canAccessDMSMenu",
+    hideInMenu: 'true',
+  },
+  {
+    path: "/dms/company/:view/*",
+    name: "dms",
+    component: "./dms/contract/company",
+    access: "canAccessDMSMenu",
+    hideInMenu: 'true',
+  },
+  // ==================== END DMS ================
 
   //  =================Begin Prod =================
   {
@@ -1154,6 +1190,28 @@ export default [
     component: './prod/inventory-transfer/',
   },
 
+  {
+    path: '/prod/daily-water-treatment/:view/*',
+    name: 'dailyWaterTreatment',
+    hideInMenu: 'true',
+    access: 'canAccessDailyWaterTreatmentMenuItem',
+    component: './prod/daily-water-treatment/',
+  },
+  {
+    path: '/prod/daily-pre-water-treatment/:view/*',
+    name: 'dailyPreWaterTreatment',
+    hideInMenu: 'true',
+    access: 'canAccessDailyPreWaterTreatmentMenuItem',
+    component: './prod/daily-pre-water-treatment/',
+  },
+  {
+    path: '/prod/daily-haccp-monitoring/:view/*',
+    name: 'dailyHACCPMonitoring',
+    hideInMenu: 'true',
+    access: 'canAccessDailyHACCPMonitoringMenuItem',
+    component: './prod/daily-haccp-monitoring/',
+  },
+
   //  ================= END Prod =================
   //  ================= Setting =================
 
@@ -1168,7 +1226,7 @@ export default [
     path: '/',
     component: 'initial-page',
     // redirect: '/user/auth',
-    redirect: '/task-list',
+    // redirect: '/task-list',
     // redirect: '/expense/delivery',
   },
   {

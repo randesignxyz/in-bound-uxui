@@ -54,6 +54,7 @@ interface PurchaseRequestItemCreate {
 
 interface PurchaseReqeustAdvanceSearch {
     status?: string;
+    searchValue?:string
 }
 
 interface CustomerInfo {
@@ -82,4 +83,10 @@ interface PurchaseRequestItemCreate {
     uom: string?,
     name: string,
     stockCategoryName: string,
+}
+
+interface PurchaseRequestUpdateParam{
+    id:number; 
+    status:"pending"|"rejected"|"closed"|"partial" |string;
+    remark?:string
 }

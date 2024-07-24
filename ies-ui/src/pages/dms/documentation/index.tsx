@@ -2,10 +2,12 @@
 import CrudWrapper from '@/components/DataCrud/CrudWrapper';
 import { DMSPaths } from '..';
 import DocumentationDetail from './DetailView';
+import DocumentMainPage from './MainPage';
 
 export default () => {
-  return (
-    <CrudWrapper baseURL={DMSPaths.document}>
+  return ( 
+    //  <DocumentMainPage/>
+    <CrudWrapper baseURL={DMSPaths.document} disablePageContainer>
       {(view, id, navigate) => {
         return (
           view == 'detail' && (

@@ -12,7 +12,7 @@ import {
   ProFormTextArea,
 } from '@ant-design/pro-components';
 import { useAccess } from '@umijs/max';
-import { Button, Card, Col, Row } from 'antd';
+import { Button, Card, Col, Row, message } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { uniqueId } from 'lodash';
 import moment, { Moment } from 'moment';
@@ -26,7 +26,7 @@ import {
   Warehouse,
   WarehouseAdvanceParams,
 } from '../data';
-import { WarehouseServiceAPI } from '../service';
+import { TransferRequestServiceAPI, WarehouseServiceAPI } from '../service';
 import SelectItemTab from './SelectItemTab';
 
 interface Props extends FormModalProps {
@@ -51,9 +51,10 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
   const [getToWarehouse, setGetToWarehouse] = useState('');
   const [itemTabVisible, setItemTabVisible] = useState(false);
   const [getqty, setGetQty] = useState<string>('');
+ const [postingDate, setPostingDate] = useState(moment());
   const [getRemark, setGetRmark] = useState<string | undefined>(undefined);
   const [advanceSearchParams, setAdvanceSearchParams] = useState<WarehouseAdvanceParams>({
-    tendency: 'ALL',
+    tendency: 'NVC',
   });
   const [act, setAct] = useState<ActivitiesItem[]>([
     {
@@ -90,22 +91,23 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
     setGetRmark(undefined);
     setGetTendency('');
     setGetQty('');
-    if (access.canAccessNVCItem) {
-      setAdvanceSearchParams((v: any) => ({ ...v, tendency: 'NVC' }));
-      actionRef.current?.reloadAndRest?.();
-    } else if (access.canAccessOFLItem) {
-      setAdvanceSearchParams((v: any) => ({ ...v, tendency: 'OFL' }));
-      actionRef.current?.reloadAndRest?.();
-    } else if (access.canAccessOMMItem) {
-      setAdvanceSearchParams((v: any) => ({ ...v, tendency: 'OMM' }));
-      actionRef.current?.reloadAndRest?.();
-    } else if (access.canAccessItem) {
-      setAdvanceSearchParams((v: any) => ({ ...v, tendency: 'ALL' }));
-      actionRef.current?.reloadAndRest?.();
-    } else {
-      setAdvanceSearchParams((v: any) => ({ ...v, tendency: 'none' }));
-      actionRef.current?.reloadAndRest?.();
-    }
+    setPostingDate(moment())
+    // if (access.canAccessNVCItem) {
+    //   setAdvanceSearchParams((v: any) => ({ ...v, tendency: 'NVC' }));
+    //   actionRef.current?.reloadAndRest?.();
+    // } else if (access.canAccessOFLItem) {
+    //   setAdvanceSearchParams((v: any) => ({ ...v, tendency: 'OFL' }));
+    //   actionRef.current?.reloadAndRest?.();
+    // } else if (access.canAccessOMMItem) {
+    //   setAdvanceSearchParams((v: any) => ({ ...v, tendency: 'OMM' }));
+    //   actionRef.current?.reloadAndRest?.();
+    // } else if (access.canAccessItem) {
+    //   setAdvanceSearchParams((v: any) => ({ ...v, tendency: 'ALL' }));
+    //   actionRef.current?.reloadAndRest?.();
+    // } else {
+    //   setAdvanceSearchParams((v: any) => ({ ...v, tendency: 'none' }));
+    //   actionRef.current?.reloadAndRest?.();
+    // }
   }, [props.open]);
 
   useEffect(() => {
@@ -120,28 +122,32 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
       // width={"400px"}
       onSubmit={async () => {
         const dataForm = await form.validateFields();
-
+        if (items.map(v=>v.quantity).some(quantity => parseFloat(quantity) === 0)) {
+          message.error("Quantity can't be 0");
+          return;
+        }
         const entity = {
           ...dataForm,
           id: data?.id,
           items: items.map((v) => ({ ...v })),
           item_count: items.length,
           activities: act,
-          fromWarehouse: getFromWarehouse,
-          toWarehouse: getToWarehouse,
-          apiReferenceNo: '20240223-12ddbb1',
-          vendorCode: '',
-          vendorName: '',
-          productionOfficer: 'Test 00e7',
-          comments: getRemark ? getRemark : '',
-          transferRequestDetails: items.map((v) => ({
-            ...v,
-            fromWarehouse: getFromWarehouse,
-            toWarehouse: getToWarehouse,
-            remark: v.remark === null ? '' : v.remark === undefined ? '' : v.remark,
-          })),
+          taxDate:postingDate
+          // fromWarehouse: getFromWarehouse,
+          // toWarehouse: getToWarehouse,
+          // apiReferenceNo: '20240223-12ddbb1',
+          // vendorCode: '',
+          // vendorName: '',
+          // productionOfficer: 'Test 00e7',
+          // comments: getRemark ? getRemark : '',
+          // transferRequestDetails: items.map((v) => ({
+          //   ...v,
+          //   fromWarehouse: getFromWarehouse,
+          //   toWarehouse: getToWarehouse,
+          //   remark: v.remark === null ? '' : v.remark === undefined ? '' : v.remark,
+          // })),
         };
-        console.log(entity);
+
         // const act={
         //   ...dataForm,
         //   transfer_request: data?.id,
@@ -150,6 +156,7 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
         //   // remark:''
         // }
         onSave(entity);
+        // console.log(entity)
       }}
       onResetForm={() => {
         form.resetFields();
@@ -178,32 +185,39 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
             </Col>
             <Col span={8}>
               <ProFormSelect
-                options={[
-                  {
-                    value: 'Line 1',
-                    label: 'Line 1',
-                  },
-                  {
-                    value: 'Line 2',
-                    label: 'Line 2',
-                  },
-                  {
-                    value: 'Line 3',
-                    label: 'Line 3',
-                  },
-                  {
-                    value: 'Line 4',
-                    label: 'Line 4',
-                  },
-                  {
-                    value: 'Line 5',
-                    label: 'Line 5',
-                  },
-                  {
-                    value: 'Line 6',
-                    label: 'Line 6',
-                  },
-                ]}
+                // options={[
+                //   {
+                //     value: 'Line 1',
+                //     label: 'Line 1',
+                //   },
+                //   {
+                //     value: 'Line 2',
+                //     label: 'Line 2',
+                //   },
+                //   {
+                //     value: 'Line 3',
+                //     label: 'Line 3',
+                //   },
+                //   {
+                //     value: 'Line 4',
+                //     label: 'Line 4',
+                //   },
+                //   {
+                //     value: 'Line 5',
+                //     label: 'Line 5',
+                //   },
+                //   {
+                //     value: 'Line 6',
+                //     label: 'Line 6',
+                //   },
+                // ]}
+                request={async()=>{
+                  const line = await TransferRequestServiceAPI(requestActions).get_line()
+                  return line.map((obj)=>({
+                    value: obj.prdname,
+                    label :obj.prdname
+                  }))
+                }}
                 // initialValue="PM/RM"
                 name="line"
                 label="Line"
@@ -239,7 +253,7 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
                 request={async ({ keyWords }) => {
                   const data = await WarehouseServiceAPI(requestActions).page({
                     criteria: { searchValue: keyWords, advanceSearch: advanceSearchParams },
-                    pagination: { pageSize: 10 },
+                    pagination: { pageSize: 100 },
                   });
 
                   return data.items.map((obj) => ({
@@ -293,7 +307,7 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
             </Col>
             <Col span={4}>
               <ProFormDatePicker
-                initialValue={moment()}
+                initialValue={postingDate}
                 rules={[
                   {
                     required: true,
@@ -308,9 +322,12 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
                 ]}
                 label="Posting Date"
                 name={'postingDate'}
+                fieldProps={{
+                  onChange: ((e,date)=>{setPostingDate(moment(date))}) // Capture selected date
+              }}
               />
             </Col>
-            <Col span={4} style={{ display: 'none' }}>
+            {/* <Col span={4} style={{ display: 'none' }}>
               <ProFormDatePicker
                 initialValue={moment()}
                 rules={[
@@ -328,21 +345,23 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
                 label="Tax Date"
                 name={'taxDate'}
               />
-            </Col>
+            </Col> */}
             <Col span={4}>
               <ProFormDatePicker
+              initialValue={moment(postingDate)}
                 rules={[
                   {
                     required: true,
-                    validator: (rules, value) => {
-                      if ((value as Moment).startOf('day').isBefore(moment().startOf('day'))) {
-                        return Promise.reject('Due date cannot be back date.');
-                      } else {
-                        return Promise.resolve();
+                   
+                    validator: async (rule, value) => {
+                      if ((value as Moment).startOf('day').isBefore(moment(postingDate).startOf('day'))) {
+                          return Promise.reject('Due date cannot be before posting date.');
                       }
-                    },
+                      return Promise.resolve();
+                  },
                   },
                 ]}
+                
                 label="Due Date"
                 name={'docDueDate'}
               />

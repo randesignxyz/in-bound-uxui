@@ -3,7 +3,7 @@ import { ProFormDateTimeRangePicker, ProFormSelect } from '@ant-design/pro-compo
 import ProForm from '@ant-design/pro-form';
 import { Card, Col, Row } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 interface Props extends FormModalProps {
   // id: string;
@@ -12,8 +12,14 @@ interface Props extends FormModalProps {
 }
 export default ({ onSave, ...props }: Props) => {
   const [form] = useForm<{ line: string; duration: any; shift: string }>();
+  const [shift, setShift] = useState('')
+  const [line, setLine] = useState('')
   useEffect(() => {
-    if (props.open) form.resetFields();
+    if (props.open){
+      form.resetFields();
+      setLine('')
+      setShift('')
+    } 
   }, [props.open]);
 
   return (
@@ -23,7 +29,7 @@ export default ({ onSave, ...props }: Props) => {
       onResetForm={() => form.resetFields()}
       onSubmit={async () => {
         const dataForm = await form.validateFields();
-        onSave(dataForm.duration, dataForm.line, dataForm.shift);
+        onSave(dataForm.duration, line, shift);
       }}
     >
       <Card>
@@ -59,7 +65,13 @@ export default ({ onSave, ...props }: Props) => {
                 ]}
                 name="line"
                 label="Line"
-                rules={[{ required: true }]}
+                mode="multiple"
+                fieldProps={{
+                  onChange: (value:any) => {
+                      const lineString = value.join(',');
+                      const finalValues = { ...value, line: lineString };
+                      setLine(finalValues.line)},
+                }}
               />
             </Col>
             <Col span={11}>
@@ -76,7 +88,13 @@ export default ({ onSave, ...props }: Props) => {
                 ]}
                 name="shift"
                 label="Shift"
-                rules={[{ required: true }]}
+                mode="multiple"
+                fieldProps={{
+                  onChange: (value:any) => {
+                      const shiftString = value.join(',');
+                      const finalValues = { ...value, shift: shiftString };
+                      setShift(finalValues.shift)},
+                }}
               />
             </Col>
           </Row>

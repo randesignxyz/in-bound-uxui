@@ -1,6 +1,6 @@
 import { ContractCheckedDataView, ContractViewData, POSMView } from '@/pages/crm/contract/types';
 import moment, { Moment } from 'moment';
-import { LookupData, LookupDataItem, LookupDataType } from '../data';
+import { CustomerLess, LookupData, LookupDataItem, LookupDataType } from '../data';
 import { CustomerSaleInfo, ProductItem } from '../sale/data';
 import { ContactData, ContactListItem } from './contact';
 import { ContractLess, SubContractType } from './contract';
@@ -36,6 +36,9 @@ export interface CustomerItemLess extends CustomerItemBase {
   district: string;
   commune: string;
   address: string;
+  region?: string;
+  channel?: string;
+  outletType?: string;
   sale: string;
 }
 
@@ -100,7 +103,7 @@ export interface AddressData {
   longitude: string;
   provinceId: number;
   districtId: number;
-  communeId: number;
+  communeId?: number;
   villageId?: number;
   hotspot?: string;
   direction?: string;
@@ -184,16 +187,16 @@ export interface ContractTermInfo {
   lineItem: number;
   term: string;
   type:
-    | 'BIZ_NAME'
-    | 'OWNER_NAME'
-    | 'PHONE_LIST'
-    | 'PARTY_A'
-    | 'PARTY_B'
-    | 'COTRACT_DRUATION'
-    | 'EFFECTIVE_DATE'
-    | 'EXPIRY_DATE'
-    | 'ADDRESS'
-    | 'DURATION';
+  | 'BIZ_NAME'
+  | 'OWNER_NAME'
+  | 'PHONE_LIST'
+  | 'PARTY_A'
+  | 'PARTY_B'
+  | 'COTRACT_DRUATION'
+  | 'EFFECTIVE_DATE'
+  | 'EXPIRY_DATE'
+  | 'ADDRESS'
+  | 'DURATION';
 }
 
 export interface TermText {
@@ -372,11 +375,13 @@ export interface VisitScheduleAdvanceSearchParams {
   hasContractOnly?: boolean;
   hasPosmCheckedOnly?: boolean;
   contractTypeIds?: number[];
-  devisionIds?: number[];
+  divisionIds?: number[];
   month?: Moment;
   contractVerified?: boolean;
   posmVerified?: boolean;
   hasAttachment?: boolean;
+  hasErrorAttachment?: boolean;
+  uploadFailed?: boolean;
   // hasErrorAttachment?: boolean;
 }
 
@@ -607,7 +612,7 @@ export interface PosmReview {
 
 export interface VisitScheduleItem {
   id: number;
-  customer: LookupDataItem;
+  customer: CustomerLess;
   salesperson: LookupDataItem;
   address: LookupDataItem;
   customerAddressId: number;

@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
-import { history } from 'umi';
-import { Affix, Dropdown, Button, Menu, Spin, Card } from 'antd'
-import { DownOutlined, PlusCircleOutlined } from '@ant-design/icons'
+import { history } from "@umijs/max";
+import { Menu, Spin, Card } from 'antd'
+import { PlusCircleOutlined } from '@ant-design/icons'
 import styles from './style.less';
 import { processDefType, ProcessInstance, ProcessInstanceDef } from '@/services/process-workflow/data';
 import DefaultFilterComp from '@/components/DefaultFilter';
@@ -30,7 +30,7 @@ export default () => {
         history.push(`/data-form/${item.procDefKey}/${item.procInstId}`);
     }, [])
 
-    const onSearchHandler = (data?: {isGlobal?: boolean, status?: string, searchValue?: string}) => {
+    const onSearchHandler = (data?: { isGlobal?: boolean, status?: string, searchValue?: string }) => {
 
         actions.loadInstanceList({
             criteria: {
@@ -47,22 +47,23 @@ export default () => {
         onSearch={onSearchHandler} />
 
     return (<PageContainer
-        extra={
-            <Affix offsetTop={50}>
-                <Dropdown overlay={menu} trigger={['click']}>
-                    <Button
-                        type='primary'
-                        style={{ width: '100%', marginBottom: 8 }}>
-                        Start Process <DownOutlined />
-                    </Button>
-                </Dropdown>
-            </Affix>
-        }>
+    // extra={
+    //     <Affix offsetTop={50}>
+    //         <Dropdown  overlay={menu} trigger={['click']}>
+    //             <Button
+    //                 type='primary'
+    //                 style={{ width: '100%', marginBottom: 8 }}>
+    //                 Start Process <DownOutlined />
+    //             </Button>
+    //         </Dropdown>
+    //     </Affix>
+    // }
+    >
 
         <Spin spinning={state.loading}>
 
-            <Card 
-            // bodyStyle={{ backgroundColor: '#fafafa' }}
+            <Card
+                // bodyStyle={{ backgroundColor: '#fafafa' }}
                 className={styles.listCard}
                 bordered={false}
                 extra={filterComp}>
@@ -88,7 +89,7 @@ export default () => {
                 onSelected={item => console.log(item)}
 
             />
-            <ProcessFlowModalMngt workflowModel = {model}/>
+            <ProcessFlowModalMngt workflowModel={model} />
         </Spin>
     </PageContainer>)
 }

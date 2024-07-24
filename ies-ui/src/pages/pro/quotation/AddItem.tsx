@@ -116,6 +116,7 @@ export default ({
         <ProCard size="small" bordered title="Product Info">
           <ProDescriptions<Item>
             dataSource={item}
+            size='small'
             columns={[
               { title: 'Item Code', dataIndex: 'itemCode' },
               { title: 'Item Name', dataIndex: 'itemName' },

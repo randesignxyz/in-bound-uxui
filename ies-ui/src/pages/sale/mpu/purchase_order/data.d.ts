@@ -12,6 +12,7 @@ interface PurchaseOrderCreate{
     grantAmount:number;
     discountAmount:number;
     totalAmount:number;
+    
 }
 
 
@@ -33,8 +34,8 @@ interface PurchaseOrderDTO{
 
 
 interface PurchaseOrderItem extends PurchaseRequestItemCreate{
-    purchaseOrderId:number;
-    map(arg0: (r: any, index: any) => any): import("react").SetStateAction<PurchaseRequestItemCreate[] | undefined>;
+    // purchaseOrderId:number;
+    // map(arg0: (r: any, index: any) => any): import("react").SetStateAction<PurchaseRequestItemCreate[] | undefined>;
 }
     // id:number;
     // itemId:number;
@@ -50,4 +51,5 @@ interface PurchaseOrderItem extends PurchaseRequestItemCreate{
 
 interface PurchaseOrderAdvanceSearch{
     status?:string;
+    searchValue?:string;
 }

@@ -10,7 +10,7 @@ import VisitListView from './VisitListView';
 export default () => {
   const access = useAccess();
   return (
-    <CrudWrapper baseURL={SalePaths.visit}>
+    <CrudWrapper baseURL={SalePaths.visit} disablePageContainer>
       {(view, id, navigate) => {
         return (
           (view === 'list' && (

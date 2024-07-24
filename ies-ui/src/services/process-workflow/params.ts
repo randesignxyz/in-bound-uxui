@@ -1,8 +1,8 @@
 
 export interface StartWorkFlowParam<T> {
-    processDef: string, 
-    formKey: string, 
-    buId: number, 
+    processDef: string,
+    formKey: string,
+    buId: number,
     requestor: string;
     payload: T
     comment?: string,
@@ -28,6 +28,7 @@ export interface TaskActionDataParam<T> {
 export type TaskListAdvanceSearchParams = {
     isGlobal: boolean;
     status: string;
-    searchValue?: string; 
-   
-  };
+    latest: boolean;
+    searchValue?: string;
+
+};

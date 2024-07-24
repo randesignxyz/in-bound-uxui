@@ -125,7 +125,7 @@ export const RequisitionParams = {
 };
 
 
-export const RequisitionServiceAPI = (requestActions: RequestActions) => {
+export const RequisitionServiceAPI = (requestActions?: RequestActions) => {
   return {
     list: (params: TableViewSearchParams<RequisitionAdvanceSearchParams>) => singleRequest<RequisitionListItem>(RequisitionParams.list(params))(requestActions) as Promise<Paging<RequisitionListItem>>,
     save: (params: Requistion) => singleRequest(RequisitionParams.save(params))(requestActions),

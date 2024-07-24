@@ -1,7 +1,7 @@
 import { MultiRequest } from "@/services/apiGateway"
 import { LookupData, LookupDataItem } from "@/services/data"
 import { simpleRequestActions } from "@/services/model"
-import { DrawerForm, ProForm, ProFormDatePicker, ProFormDateRangePicker, ProFormGroup, ProFormSelect } from "@ant-design/pro-components"
+import { DrawerForm, ProForm, ProFormDateRangePicker, ProFormSelect } from "@ant-design/pro-components"
 import { useForm } from "antd/lib/form/Form"
 import { useEffect, useState } from "react"
 import { ContractServices } from "../services"
@@ -17,15 +17,17 @@ type DataFormType = {
     endedDateRange?: moment.Moment[]
 }
 
-export default ({ trigger, onSearch }: { trigger?: JSX.Element, onSearch?: (
-    brandId?: number[],
-    contractTypeId?: number[],
-    termId?: number[],
-    startedDateFrom?: moment.Moment,
-    startedDateTo?: moment.Moment,
-    endedDateFrom?: moment.Moment,
-    endedDateTo?: moment.Moment
-) => Promise<void> }) => {
+export default ({ trigger, onSearch }: {
+    trigger?: JSX.Element, onSearch?: (
+        brandId?: number[],
+        contractTypeId?: number[],
+        termId?: number[],
+        startedDateFrom?: moment.Moment,
+        startedDateTo?: moment.Moment,
+        endedDateFrom?: moment.Moment,
+        endedDateTo?: moment.Moment
+    ) => Promise<void>
+}) => {
     const [form] = useForm<DataFormType>()
     const requestActions = simpleRequestActions()
 
@@ -34,7 +36,7 @@ export default ({ trigger, onSearch }: { trigger?: JSX.Element, onSearch?: (
         terms?: LookupData[],
         brandList?: LookupDataItem[]
     }>()
-    
+
     useEffect(() => {
         (async () => {
             const rs = await MultiRequest<{
@@ -43,10 +45,9 @@ export default ({ trigger, onSearch }: { trigger?: JSX.Element, onSearch?: (
                 brandList: LookupDataItem[]
             }>(
                 [
-                    ContractServices.listContractType().queryParams, 
+                    ContractServices.listContractType().queryParams,
                     ContractServices.listTerms().queryParams,
                     CustomerServices.listBrand.queryParams
-
                 ]
             )(requestActions)
             setLookupData(rs)
@@ -56,43 +57,58 @@ export default ({ trigger, onSearch }: { trigger?: JSX.Element, onSearch?: (
 
     return <DrawerForm
         trigger={trigger}
-        // form={form}
         title="Contract Advance Search"
-        onFinish={async (values) => {
-            
+        onReset={() => onSearch?.()}
+        onFinish={async () => {
             try {
-                var dataForm = await form.validateFields()
-                var startedDateFrom = (dataForm?.startedDateRange||[undefined,undefined])[0]
-                var startedDateTo = (dataForm?.startedDateRange||[undefined,undefined])[1]
-                var endedDateFrom = (dataForm?.endedDateRange||[undefined,undefined])[0]
-                var endedDateTo = (dataForm?.endedDateRange||[undefined,undefined])[1]
-                await onSearch?.(dataForm.brandId, dataForm.contractTypeId, dataForm.termId,startedDateFrom,startedDateTo,endedDateFrom,endedDateTo)
-                return true
+                const dataForm = await form.validateFields()
+                const startedDateFrom = (dataForm?.startedDateRange || [undefined, undefined])[0]
+                const startedDateTo = (dataForm?.startedDateRange || [undefined, undefined])[1]
+                const endedDateFrom = (dataForm?.endedDateRange || [undefined, undefined])[0]
+                const endedDateTo = (dataForm?.endedDateRange || [undefined, undefined])[1]
+                await onSearch?.(
+                    dataForm.brandId,
+                    dataForm.contractTypeId,
+                    dataForm.termId,
+                    startedDateFrom,
+                    startedDateTo,
+                    endedDateFrom,
+                    endedDateTo
+                )
+
             } catch (error: any) {
                 message.error(error.message || 'Failed to search')
-                return false
+                // return false
             }
             // await onDowloadReportHandler()
         }}
-        submitter = {{
+        submitter={{
             render(props, doms) {
-                
+
                 return [
                     doms[0],
-                    <Button onClick={()=> {form?.resetFields() }}>Reset</Button>,
+                    <Button onClick={() => { form?.resetFields() }}>Reset</Button>,
                     doms[1]
                 ]
             },
         }}
     >
-        <Spin spinning = {requestActions.request?.loading || false}>     
-        <ProForm<DataFormType> form={form} submitter={false}>     
-            <ProFormSelect showSearch allowClear mode="multiple" name={"brandId"} label = "Brand" options={lookupData?.brandList?.map(it => ({label: it.name, value: it.id}))}/>
-            <ProFormSelect showSearch allowClear mode="multiple" name={"contractTypeId"} label = "Contract Tyoe" options={lookupData?.contractTypes?.map(it =>({label: it.name, value: it.id}))}/>
-            <ProFormSelect showSearch allowClear mode="multiple" name = "termId" label ="Terms" options={lookupData?.terms?.map(it => ({label: it.name, value: it.id}))}/>        
-            <ProFormDateRangePicker  name={"startedDateRange"} label={"Start Date"} />
-            <ProFormDateRangePicker name={"endedDateRange"} label={"End Date"}  />      
-        </ProForm>  
+        <Spin spinning={requestActions.request?.loading || false}>
+            <ProForm<DataFormType> form={form} submitter={false}>
+                <ProFormSelect showSearch allowClear
+                    mode="multiple" name={"brandId"}
+                    label="Brand"
+                    options={lookupData?.brandList?.map(it => ({ label: it.name, value: it.id }))} />
+                <ProFormSelect showSearch allowClear mode="multiple"
+                    name={"contractTypeId"} label="Contract Tyoe"
+                    options={lookupData?.contractTypes?.map(it => ({ label: it.name, value: it.id }))} />
+                <ProFormSelect showSearch
+                    allowClear mode="multiple"
+                    name="termId" label="Terms"
+                    options={lookupData?.terms?.map(it => ({ label: it.name, value: it.id }))} />
+                <ProFormDateRangePicker name={"startedDateRange"} label={"Start Date"} />
+                <ProFormDateRangePicker name={"endedDateRange"} label={"End Date"} />
+            </ProForm>
         </Spin>
     </DrawerForm>
 }

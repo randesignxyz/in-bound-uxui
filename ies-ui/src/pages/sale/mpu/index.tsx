@@ -6,6 +6,7 @@ export const MPUPath = {
   mpuPurchaseOrder: '/sale/mpu_purchase_order',
   mpuReport: '/sale/mpu_report',
   mpuCountStock: '/sale/mpu_count_stock',
+  mpuSettlement: '/sale/mpu_settlement',
   //   productItem: '/retailer/products',
   //   customer: '/retailer/customers',
   //   customergroup: '/retailer/group/customer',

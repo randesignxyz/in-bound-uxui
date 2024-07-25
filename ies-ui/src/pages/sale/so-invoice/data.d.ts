@@ -11,7 +11,8 @@ export interface SalesInvoiceLess {
   createdDate: moment.Moment;
   salesperson: SalesTeamWorkLess;
   customer?: LeadLess;
-  discount: number;
+  discount: number = 0.0;
+  beginningQty?: number = 0.0;
   items: SalesInvoiceItemLess[];
 }
 

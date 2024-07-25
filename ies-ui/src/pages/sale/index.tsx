@@ -398,7 +398,7 @@ export default () => {
     {
       id: 'mpu_po',
       name: 'Purchase Order',
-      description: '',
+      description: 'make po for request stock',
       link: `${MPUPath.mpuPurchaseOrder}/list`,
       icon: purchaseOrderIcon,
       visible: access.canAccessViewMpu,
@@ -466,13 +466,13 @@ export default () => {
         access.canAccessSettlementMenuItem ||
         access.canAccessARMenuItem) && (
           <>
-            <Divider />
+            <Divider/>
             <ListMenuComp items={stockMenuItems} />
           </>
         )}
-      {access.canAccessRetailer && (
+      {access.canAccessViewMpu && (
         <>
-          <Divider />
+          <Divider plain orientation='left' >MPU</Divider>
           <ListMenuComp items={mpuMenuItems} />
         </>
       )}

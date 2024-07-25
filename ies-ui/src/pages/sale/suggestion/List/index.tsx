@@ -474,10 +474,10 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({}) => {
             );
           } else if ('beginningQty' in item) {
             const beginningQty = data.reduce(function (acc, it) {
-              return acc + it.beginningQty;
+              return acc + it.beginningQty ||0;
             }, 0);
             const requestQty = data.reduce(function (acc, it) {
-              return acc + it.quantity;
+              return acc + it.quantity||0;
             }, 0);
 
             return (

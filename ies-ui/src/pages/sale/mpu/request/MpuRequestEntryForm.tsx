@@ -190,9 +190,14 @@ const MpuRequestEntryForm: React.FC<Props> = ({ type, id, onBack, onView,openInT
                     }}
                     label={"Distributor"}
                     request={async (k: { keyWords: string }) => {
-                      const data = await CrmServiceAPI(requestActions).findAllCustomer({
-                        searchValue: k.keyWords
-                      });
+                      // const data = await CrmServiceAPI(requestActions).findAllCustomer({
+                      //   searchValue: k.keyWords
+                      // });
+                      const data = await services.customerDistributor({
+                        criteria:{
+                          searchValue:""
+                        }
+                      })
                       return data.items.map(p => ({ value: p.id, label: p.name }));
                     }}
                   />

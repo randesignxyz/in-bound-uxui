@@ -20,8 +20,9 @@ const CountStockMainPage: React.FC<Props> = () => {
   const [filter, setFilter] = useState<TableViewSearchParams<CountStockAdvanceSearch>>({
     criteria: { advanceSearch: { status: 'ALL' } }
   });
-  const { data, isFetching, refetch } = useQuery(['fetch-customer-list', filter], () => services.page(filter), {
-    refetchOnWindowFocus: false,
+  const { data, isFetching, refetch } = useQuery(['fetch-stock-count-list',filter], () => services.page(filter), {
+    refetchOnWindowFocus: true,
+    retry:false,
   });
   return (
     <PageWrapper<StockCountDto, CountStockAdvanceSearch, {}>

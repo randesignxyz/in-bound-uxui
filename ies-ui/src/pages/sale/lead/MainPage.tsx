@@ -22,7 +22,7 @@ const LeadMainPage: React.FC<Props> = () => {
     const [filter, setFilter] = useState<TableViewSearchParams<LeadAdvanceSearchParams>>({
         criteria: { advanceSearch: { status: 'ALL' } }
     });
-    const { data, isFetching, refetch } = useQuery(['fetch-customer-list', filter], () => services.listLead(filter), {
+    const { data, isFetching, refetch } = useQuery(['fetch-lead-list', filter], () => services.listLead(filter), {
         refetchOnWindowFocus: false
     });
     return (

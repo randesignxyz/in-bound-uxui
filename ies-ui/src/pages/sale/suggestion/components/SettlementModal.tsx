@@ -175,7 +175,7 @@ const SettlementModal: React.FC<Props> = ({
               label="Settlement Date"
               placeholder=""
             />
-            <ProFormMoney
+            <ProFormDigit
               rules={[{ required: true }]}
               initialValue={exchangeRate?.target_amount}
               min={3900}
@@ -191,7 +191,7 @@ const SettlementModal: React.FC<Props> = ({
             />
             {data?.adjustmentItems && data?.adjustmentItems.length > 0 && (
               <>
-                <ProFormMoney
+                <ProFormDigit
                   name="invoicesAmount"
                   label="Invoices Amount"
                   readonly
@@ -207,7 +207,7 @@ const SettlementModal: React.FC<Props> = ({
                   }}
                   // locale="en-US"
                 />
-                <ProFormMoney
+                <ProFormDigit
                   name="lostAmount"
                   label="Lost Amount"
                   readonly
@@ -226,7 +226,7 @@ const SettlementModal: React.FC<Props> = ({
               </>
             )}
 
-            <ProFormMoney
+            <ProFormDigit
               // initialValue={getSystemAmount()}
               name="systemAmount"
               label={`System Amount ${dsdExchangeRate?.target_currency}`}
@@ -242,7 +242,7 @@ const SettlementModal: React.FC<Props> = ({
             />
           </Col>
           <Col flex="auto">
-            <ProFormMoney
+            <ProFormDigit
               name="actualAmount"
               label="Actual Amount USD"
               placeholder="$ 0.00"
@@ -259,9 +259,9 @@ const SettlementModal: React.FC<Props> = ({
               placeholder=""
               min={0}
             />
-            <ProFormMoney name="bankAmount" label="Bank Transfer Amount" placeholder="" min={0} />
+            <ProFormDigit name="bankAmount" label="Bank Transfer Amount" placeholder="" min={0} />
             <ProFormTextArea label="Remark" name="remark" placeholder="" />
-            <ProFormMoney
+            <ProFormDigit
               // initialValue={getSystemAmount()}
               name="actualTotalAmount"
               label="Actual Total Amount"

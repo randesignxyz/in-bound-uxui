@@ -189,7 +189,6 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
         internalId: it.internalId,
       };
     });
-    console.log(items);
     const item: ApprovalStockControlDto = {
       stockControlId: data?.id || -1,
       description: data?.description,
@@ -203,6 +202,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
     // }
   };
 
+  
   return (
     <FormModalComp
       key={`FormModalComp-${data?.id}`}
@@ -364,6 +364,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
                           isSplit: true,
                           status: record.status,
                           stockCategoryId: record.stockCategoryId,
+                          internalId:record.internalId,
                           key: key,
                         };
                         actionRef.current?.addEditRecord?.(first);

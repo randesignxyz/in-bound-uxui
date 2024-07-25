@@ -1,6 +1,6 @@
 import { ActionType, EditableFormInstance, EditableProTable, FooterToolbar, ProDescriptions, ProForm, ProFormDatePicker, ProFormSelect, ProFormTextArea } from "@ant-design/pro-components";
 import { PurchaseOrderCreate, PurchaseOrderItem } from "./data";
-import { Button, Card, Col, Flex, message, Modal, Row } from "antd";
+import { Button, Card, Col, Flex, message, Modal, Row, Space } from "antd";
 import { DistributorCreate } from "../request/data";
 import { formatter } from "@/pages/utils";
 import { CrmServiceAPI } from "@/services/crm/services";
@@ -32,7 +32,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
   const editableFormRef = useRef<EditableFormInstance>();
   const [dataSourceItems, setDataSourceItems] = useState<PurchaseOrderItem[]>();
   const [distributor, setDistributor] = useState<DistributorCreate>();
-  const [saleperson, setSaleperson] = useState<{ assignedTo: string; assignedToCode?: string }>();
+  const [saleperson, setSaleperson] = useState<{ assignedTo?: string; assignedToCode?: string }>();
   const actionRef = useRef<ActionType>();
   const [amount, setAmount] = useState<Amount>({
     discountAmount: 0,
@@ -55,10 +55,10 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
   }
   const loadData = async () => {
     await services.fetchData(id).then(o => {
-      form.setFieldsValue({
-        ...o,
-        assignedTo: o.assignedTo || undefined,
-      });
+      // form.setFieldsValue({
+      //   ...o,
+      //   assignedTo: o.assignedTo,
+      // });
       setDistributor({
         id: o.distributorId,
         code: o.distributorCode,
@@ -87,7 +87,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
   return (
     <ProForm
       layout='horizontal'
-      labelCol={{ md: 8 }}
+      labelCol={{ sm: 8, md: 8 }}
       labelAlign='left'
       form={form}
       submitter={{
@@ -99,7 +99,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
               <Button type="primary"
                 disabled={dataSourceItems?.length ? false : true}
                 onClick={async () => {
-                  await form.validateFields();
+                  const dataForm = await form.validateFields();
                   await editableFormRef.current?.validateFields();
                   Modal.confirm({
                     title: "Save Data into Database",
@@ -107,6 +107,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
                     onOk: async () => {
                       const entry = {
                         id: id,
+                        ...dataForm,
                         ...saleperson,
                         items: dataSourceItems || [],
                         distributor: distributor,
@@ -132,7 +133,81 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
           size='small'
           title="General Infomation"
         >
-          <Row gutter={24}>
+          <Space size={"large"} align="start" wrap>
+            <ProForm.Group
+              labelLayout="twoLine"
+              size={"small"}
+              direction="vertical"
+
+            >
+              <ProFormSelect
+                name={"assignedTo"}
+                label={"Saleperson"}
+                debounceTime={500}
+                width={"md"}
+                rules={[
+                  { required: true }
+                ]}
+                showSearch
+                onChange={(e: string) => {
+                  const assigned = e.split(",");
+                  setSaleperson({
+                    assignedTo: assigned[1],
+                    assignedToCode: assigned[0]
+                  })
+                }}
+                request={async (k: { keyWords: string }) => {
+                  const data = await services.salespersonList({
+                    searchValue: k.keyWords
+                  });
+                  return data.filter(t => t.isRequester === true).map(p => ({ value: [p.salespersonCode, p.salespersonName].join(","), label: p.salespersonName }))
+                }}
+              />
+              <ProFormSelect
+                showSearch
+                debounceTime={500}
+                name={"distributorId"}
+                width={"md"}
+                rules={[
+                  { required: true }
+                ]}
+                onChange={async (s: number) => {
+                  const y = await CrmServiceAPI(requestActions).findDetailCustomer({ id: s });
+                  setDistributor({
+                    code: y.code,
+                    id: y.id,
+                    name: y.name,
+                    phone: y.contacts?.[0].phone1,
+                    latitude: y?.addressList?.[0]?.latitude,
+                    longitude: y?.addressList?.[0]?.longitude
+                  });
+                }}
+                label={"Distributor"}
+                request={async (k: { keyWords: string }) => {
+                  const data = await CrmServiceAPI(requestActions).findAllCustomer({
+                    searchValue: k.keyWords
+                  });
+                  return data.items.map(p => ({ value: p.id, label: p.name }));
+                }}
+              />
+              <ProFormDatePicker
+                name={"purchaseOrderDate"}
+                label="Purchase Order Date"
+                width={"md"}
+                rules={[{ required: true }]}
+              />
+            </ProForm.Group>
+            <ProForm.Group
+            >
+              <ProFormTextArea
+                placeholder={"remark"}
+                name={"remark"}
+                width={"md"}
+              />
+            </ProForm.Group>
+          </Space>
+
+          {/* <Row gutter={24}>
             <Col span={10}>
               <ProFormSelect
                 name={"assignedTo"}
@@ -195,7 +270,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
                 name={"remark"}
               />
             </Col>
-          </Row>
+          </Row> */}
         </Card>
         <EditableProTable<PurchaseOrderItem & { key: string } >
           headerTitle={"Items"}

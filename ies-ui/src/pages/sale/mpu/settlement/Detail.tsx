@@ -3,11 +3,12 @@ import { ProDescriptions, ProTable } from "@ant-design/pro-components";
 import { Button, Card, Flex, Modal, Tag } from "antd";
 import { useEffect, useState } from "react";
 import { SettlementMethodServicAPI } from "./service";
-import { formatterKh } from "@/pages/utils";
+import { formatterKh, formatterQty } from "@/pages/utils";
 import AttachmentView from "@/pages/dms/attachment/AttachmentView";
-import { CheckCircleOutlined } from "@ant-design/icons";
+import { CheckCircleOutlined, CloseCircleOutlined, SyncOutlined } from "@ant-design/icons";
 import ImagePreview from "@/components/ImagePreview";
 import { formatCurrency } from "../../sale";
+import { FormattedNumber } from "@umijs/max";
 
 
 interface Props {
@@ -72,7 +73,23 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                         {
                             title: "Cashier Name",
                             dataIndex: "cashierName",
-                            span: 3
+                        },
+                        {
+                            title: "Satus",
+                            render: (_, r) => <Tag
+                                bordered={false}
+                                icon={
+                                    r.status == "Pending" ? <SyncOutlined spin />
+                                        : r.status == "Completed" ? <CheckCircleOutlined />
+                                            : <CloseCircleOutlined />
+                                }
+                                color={
+                                    r.status == "Pending" ? "processing"
+                                        : r.status == "Completed" ? "success"
+                                            : "error"
+                                }
+
+                            >{r.status}</Tag>
                         },
                         // {
                         //     title: "Keep Forwarding",
@@ -102,6 +119,14 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                     options={false}
                     search={false}
                     dataSource={dataSource?.items}
+                    // dataSource={[
+                    //     {
+                    //         referenceNo: 1,
+                    //         settlementMethod: "4",
+                    //         exchangeRate: 1,
+                    //         amount: 0
+                    //     }
+                    // ]}
                     columns={[
                         {
                             title: "Reference No",
@@ -117,20 +142,24 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                         },
                         {
                             title: "Currency",
-                            dataIndex: "currency"
+                            dataIndex: "currency",
+
                         },
                         {
                             title: "Amount",
-                            dataIndex: "amount"
+                            dataIndex: "amount",
+                            align: "right",
+                            render: (_, r) => formatterQty.format(r.amount)
                         },
                         {
                             title: "Exchange Rate",
-                            dataIndex: "exchangeRate"
+                            dataIndex: "exchangeRate",
+                            render: (_, r) => r.exchangeRate == 1 ? "-" : r.exchangeRate
                         },
                     ]}
                 />
             </Card>
-            <Card size="small" >
+            <Card size="small" hidden={dataSource?.attachments?.length ? false : true}>
                 <Flex wrap gap="small">
                     {
                         dataSource?.attachments?.map(p => {

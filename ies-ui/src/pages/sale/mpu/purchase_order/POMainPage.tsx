@@ -5,7 +5,7 @@ import { IssuesCloseOutlined, DeleteOutlined, PlusOutlined, AlignCenterOutlined,
 import { ActionType } from "@ant-design/pro-components";
 import { useQuery } from "@umijs/max";
 import { MenuProps, Modal, Tag, Dropdown } from "antd";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import MpuRequestEntryForm from "../request/MpuRequestEntryForm";
 import { PurChaseRequestAPIService } from "../request/service";
 import { PurchaseOrderAdvanceSearch, PurchaseOrderDTO } from "./data";
@@ -31,8 +31,9 @@ const POMainPage: React.FC<Props> = () => {
     const [filter, setFilter] = useState<TableViewSearchParams<PurchaseOrderAdvanceSearch>>({
         criteria: { advanceSearch: { status: 'ALL' } }
     })
-    const { data, isFetching, refetch } = useQuery(['fetch-customer-list', filter], () => services.page(filter), {
-        refetchOnWindowFocus: false
+    const { data, isFetching, refetch } = useQuery(['fetch-po-list', filter], () => services.page(filter), {
+        refetchOnWindowFocus: false,
+        keepPreviousData:false
     });
     const items = (items: PurchaseOrderDTO): MenuProps["items"] => [
         {
@@ -67,6 +68,9 @@ const POMainPage: React.FC<Props> = () => {
             },
         },
     ];
+    useEffect(()=>{
+
+    },[data]);
     return <>
         <PageWrapper<PurchaseOrderDTO, PurchaseOrderAdvanceSearch, {}>
             tabRender={items => [
@@ -79,7 +83,6 @@ const POMainPage: React.FC<Props> = () => {
                         onView={(items) => onUpdateTab("view", items, undefined, key)}        
                         />,
                     tabLabel: "Add New",
-                    tabIcon: <PlusOutlined />,
                 },
                 {
                     action: "view",
@@ -90,7 +93,6 @@ const POMainPage: React.FC<Props> = () => {
                         onAdd={() => onAddTab?.('add', undefined, key)}
                     />,
                     tabLabel:`${ items?.purchaseRequestNo}`,
-                    tabIcon: <AlignCenterOutlined />
                 },
                 {
                     action: "edit",
@@ -105,7 +107,6 @@ const POMainPage: React.FC<Props> = () => {
                         id={items?.id}
                     />,
                     tabLabel: `Edit ${items?.purchaseRequestNo}`,
-                    tabIcon: <EditOutlined />,
                 },
             ]}
             listView={{
@@ -141,6 +142,7 @@ const POMainPage: React.FC<Props> = () => {
                     dataSource: data?.items,
                     actionRef: actionRef,
                     loading:isFetching,
+
                     columns: [
                         {
                             title: 'No',

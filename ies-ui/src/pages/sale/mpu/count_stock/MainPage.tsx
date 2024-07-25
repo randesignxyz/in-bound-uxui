@@ -21,9 +21,8 @@ const CountStockMainPage: React.FC<Props> = () => {
     criteria: { advanceSearch: { status: 'ALL' } }
   });
   const { data, isFetching, refetch } = useQuery(['fetch-stock-count-list',filter], () => services.page(filter), {
-    refetchOnWindowFocus: false,
-    cacheTime:9,
-    keepPreviousData:false
+    refetchOnWindowFocus: true,
+    retry:false,
   });
   return (
     <PageWrapper<StockCountDto, CountStockAdvanceSearch, {}>

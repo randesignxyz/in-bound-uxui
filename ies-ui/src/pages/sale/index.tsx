@@ -386,15 +386,15 @@ export default () => {
   ];
 
   const mpuMenuItems = [
-    // {
-    //   id: 'rsm_request',
-    //   // name: 'RSM Request',
-    //   name: 'Purchase Request',
-    //   description: 'Order Items',
-    //   link: `${MPUPath.rsmRequest}/list`,
-    //   icon: agreementIcon,
-    //   visible: access.canAccessViewMpu,
-    // },
+    {
+      id: 'rsm_request',
+      // name: 'RSM Request',
+      name: 'Purchase Request',
+      description: 'Order Items',
+      link: `${MPUPath.rsmRequest}/list`,
+      icon: agreementIcon,
+      visible: access.canAccessViewMpu,
+    },
     {
       id: 'mpu_po',
       name: 'Purchase Order',

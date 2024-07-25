@@ -212,7 +212,7 @@ export default ({
         price: it.price || 0,
         uomId: it.uomId,
         uomName: it.uomName,
-        qty: ((it.qty || 0) - (it.orderedQty || 0) - (it.purchasedQty || 0)),
+        qty: (it.availableQty || 0),
         amount: it.amount || 0,
         amountAfterDiscount: it.amount || 0,
         item: it,
@@ -400,7 +400,7 @@ export default ({
                         {
                           label: 'Available Qty',
                           hideInDescriptions: isService,
-                          render: (_, r) => formatterQty.format((r.qty || 0) - (r.purchasedQty || 0) - (r.orderedQty || 0)),
+                          render: (_, r) => formatterQty.format(r.availableQty || 0),
                         },
                         {
                           label: 'Amount',
@@ -435,7 +435,7 @@ export default ({
                                   (i) => i.refId == r.refId && i.refType == r.refType,
                                 ),
                             ) ||
-                            r.closed
+                            (r.availableQty || 0) == 0
                           }
                           onClick={() => {
                             onAddHandler([r]);

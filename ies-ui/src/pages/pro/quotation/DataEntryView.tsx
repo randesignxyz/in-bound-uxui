@@ -219,7 +219,7 @@ export default ({
                 discountAmount: it.amount - it.amountAfterDiscount,
                 amountAfterDiscount: it.amountAfterDiscount,
                 remarks: it.remarks,
-                prLinked: it.prLinked,
+                prLinked: it.relatedObjects?.flatMap(it1 => it1.items.map(it2 => it2.id)) || [],
               })),
               service: isService,
               totalAmount: dataForm.amount,
@@ -311,7 +311,7 @@ export default ({
         remarks: rs.remarks,
       });
       setIsService(rs.service);
-      const itemList = rs.items.map((it) => ({
+      const itemList: SaveQuotationItem[] = rs.items.map((it) => ({
         no: it.no,
         id: it.id,
         key: uniqueId('item'),
@@ -328,6 +328,7 @@ export default ({
         amount: it.amount,
         discount: it.discountPercentage,
         amountAfterDiscount: it.amountAfterDiscount,
+        relatedObjects: it.relatedObjects,
         item: it.item,
         prLinked: it.prLinked,
       }));
@@ -346,17 +347,43 @@ export default ({
   };
 
   const onSaveHandler = async (data: SaveQuotationItem) => {
-    const isNew = !items.some((it) => it.key == data.key);
+    const savedItem = {
+      ...data, relatedObjects: data.item?.prItems?.map(it => (
+        {
+          id: it.prId,
+          code: it.formNo,
+          type: 'PR',
+          instanceId: it.processInstId,
+          requester: '',
+          description: it.description,
+          items: [{
+            id: it.id,
+            itemCode: it.itemCode,
+            itemName: it.itemName,
+            itemId: it.id,
+            itemDescription: it.description,
+            price: it.unitPrice,
+            qty: it.qty,
+            orderedQty: it.orderedQty,
+            purchasedQty: it.purchasedQty,
+            availableQty: it.availableQty,
+            uom: it.uom,
+          }]
+        }
+      ))
+    }
+
+    const isNew = !items.some((it) => it.key == savedItem.key);
     if (isNew) {
       if (isService) {
-        setServices((v) => [...v, data].map((it, index) => ({ ...it, no: index + 1 })));
+        setServices((v) => [...v, savedItem].map((it, index) => ({ ...it, no: index + 1 })));
       } else {
-        setItems((v) => [...v, data].map((it, index) => ({ ...it, no: index + 1 })));
+        setItems((v) => [...v, savedItem].map((it, index) => ({ ...it, no: index + 1 })));
       }
     } else {
       const newItems = items.map((it) => {
-        if (it.key == data.key) {
-          return { ...it, ...data };
+        if (it.key == savedItem.key) {
+          return { ...it, ...savedItem };
         } else return it;
       });
       if (isService) {
@@ -388,6 +415,8 @@ export default ({
                   ...removeItems.flatMap((i1) => i1.item?.prItems || []),
                 ],
               },
+              relatedObjects: [],
+
               prLinked: [...it.prLinked, ...removeItems.flatMap((i1) => i1.prLinked)],
             }
             : it,
@@ -442,31 +471,6 @@ export default ({
       </Button>
     )
   )
-
-  const relatedObjectRender = (record: SaveQuotationItem) => <RelatedObjectItems mainId={record.id || 0} items={(record.item?.prItems || []).map(it => ({
-    id: it.prId,
-    code: it.formNo,
-    type: 'PR',
-    instanceId: it.processInstId,
-    requester: '',
-    description: it.description,
-    items: [{
-      id: it.id,
-      itemCode: it.itemCode,
-      itemName: it.itemName,
-      itemId: it.id,
-      itemDescription: it.description,
-      price: it.unitPrice,
-      qty: it.qty,
-      orderedQty: it.orderedQty,
-      purchasedQty: it.purchasedQty,
-      availableQty: it.availableQty,
-      uom: it.uom,
-    }]
-
-  }))} />
-
-
 
   const content = <Space ref={ref} direction="vertical" style={{ width: '100%' }}>
     <ProForm
@@ -827,8 +831,8 @@ export default ({
             },
           }}
           expandable={{
-            expandedRowRender: relatedObjectRender,
-            rowExpandable: (record) => (record.item?.prItems?.length || 0) > 0,
+            expandedRowRender: record => <RelatedObjectItems mainId={record.id || 0} items={record.relatedObjects || []} />, // relatedObjectRender,
+            rowExpandable: (record) => (record.relatedObjects?.length || 0) > 0,
           }}
           columns={[
             {
@@ -972,8 +976,8 @@ export default ({
           editableFormRef={editableFormRef}
           controlled
           expandable={{
-            expandedRowRender: relatedObjectRender,
-            rowExpandable: (record) => (record.item?.prItems?.length || 0) > 0,
+            expandedRowRender: record => <RelatedObjectItems mainId={record.id || 0} items={record.relatedObjects || []} />, // relatedObjectRender,
+            rowExpandable: (record) => (record.relatedObjects?.length || 0) > 0,
           }}
           editable={{
             type: 'multiple',

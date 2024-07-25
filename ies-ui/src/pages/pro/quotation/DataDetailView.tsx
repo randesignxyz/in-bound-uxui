@@ -7,7 +7,7 @@ import { PageContainer, ProCard, ProDescriptions } from '@ant-design/pro-compone
 import { Button, Checkbox, Flex, Form, Input, message, Modal, Space, Table } from 'antd';
 import { useEffect, useState } from 'react';
 import ChangeVendorForm from './ChangeVendorForm';
-import { PrItem, QuotationDetail, QuotationItemtDetail } from './data';
+import { QuotationDetail, QuotationItemtDetail } from './data';
 import { createQuotationService } from './services';
 import Flow from '../flow';
 import RelatedObjectItems from '../components/RelatedObjectItems';

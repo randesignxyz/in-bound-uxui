@@ -229,6 +229,7 @@ export type SaveQuotationItem = {
     amount: number;
     discount?: number;
     amountAfterDiscount: number;
+    relatedObjects?: RelatedObj[];
     item?: Item;
     prLinked: number[]
 }

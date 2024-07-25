@@ -1103,7 +1103,7 @@ export default ({
                       <Popconfirm
                         key={`${row.key}-split`}
                         title="Split item"
-                        description="Are you sure to delete?"
+                        description="Are you sure to split?"
                         onConfirm={() => {
                           const first = items.filter((it) => it.seq < row.seq);
                           const last = items.filter((it) => it.seq > row.seq);

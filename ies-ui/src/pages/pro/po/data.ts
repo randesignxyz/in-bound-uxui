@@ -241,6 +241,7 @@ export type PoItemSearch = {
     qty?: number;
     orderedQty?: number;
     purchasedQty?: number;
+    availableQty?: number;
     closed?: boolean;
     amount?: number;
     uomList: LookupDataItem[],

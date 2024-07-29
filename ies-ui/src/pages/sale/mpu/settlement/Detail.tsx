@@ -1,15 +1,13 @@
 import { simpleRequestActions } from "@/services/model";
 import { ProDescriptions, ProTable } from "@ant-design/pro-components";
-import { Button, Card, Flex, Modal, Tag } from "antd";
+import { Button, Card, Flex, Modal, Space, Spin, Tag, Typography } from "antd";
 import { useEffect, useState } from "react";
 import { SettlementMethodServicAPI } from "./service";
-import { formatterKh, formatterQty } from "@/pages/utils";
-import AttachmentView from "@/pages/dms/attachment/AttachmentView";
+import { formatterQty } from "@/pages/utils";
 import { CheckCircleOutlined, CloseCircleOutlined, SyncOutlined } from "@ant-design/icons";
 import ImagePreview from "@/components/ImagePreview";
 import { formatCurrency } from "../../sale";
-import { FormattedNumber } from "@umijs/max";
-
+const { Text, Link } = Typography;
 
 interface Props {
     id?: number;
@@ -29,6 +27,7 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
     }, [id]);
 
     return (
+        <Spin spinning={requestActions.request?.loading}>
         <Flex vertical gap={16}>
             <Card
                 size="small"
@@ -37,12 +36,14 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                     <Button
                         type="link"
                         icon={<CheckCircleOutlined />}
+                        disabled={dataSource?.status=="Pending"?false:true}
                         onClick={() => {
                             Modal.confirm({
                                 title: "Confirm Settlements ",
                                 content: 'Please review thes details and confirm that everything is in order.',
                                 onOk: async () => {
-                                    services.confirm(dataSource?.id)
+                                    services.confirm(dataSource?.id);
+                                    loadData();
                                 }
                             })
                         }}
@@ -101,15 +102,20 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                             valueType: "money"
                         },
                         {
-                            title: "Exchange Rate",
-                            dataIndex: "exchangeRate",
-                            render: (_, r) => formatCurrency(r.exchangeRate, '៛')
-                        },
-                        {
-                            title: "Amount KH",
+                            title: "Amount (KHR)",
                             dataIndex: "amountKH",
-                            render: (_, r) => formatCurrency(r.amountKH, '៛')
+                            render:(_,r)=>formatterQty.format(r.amountKH)
                         },
+                        // {
+                        //     title: "Exchange Rate",
+                        //     dataIndex: "exchangeRate",
+                        //     render: (_, r) => formatCurrency(r.exchangeRate, '៛')
+                        // },
+                        // {
+                        //     title: "Amount KH",
+                        //     dataIndex: "amountKH",
+                        //     render: (_, r) => formatCurrency(r.amountKH, '៛')
+                        // },
                     ]}
                 />
             </Card>
@@ -119,19 +125,26 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                     options={false}
                     search={false}
                     dataSource={dataSource?.items}
-                    // dataSource={[
-                    //     {
-                    //         referenceNo: 1,
-                    //         settlementMethod: "4",
-                    //         exchangeRate: 1,
-                    //         amount: 0
-                    //     }
-                    // ]}
+                    pagination={false}
+                    footer={item=>{
+                        let total =0;
+                        item.forEach((t)=>{
+                            if(t.currency !="USD"){
+                                total += (t.amount/t.exchangeRate)
+                            }
+                            else{
+                                total +=t.amount
+                            }
+                        });
+                        return <Flex justify="flex-end">
+                                <Space>
+                                    <Text>Total:</Text>
+                                    <Text  type="success" strong> {formatCurrency(total, "$")}</Text>
+                                </Space>
+                        </Flex>
+                    }}
                     columns={[
-                        {
-                            title: "Reference No",
-                            dataIndex: "referenceNo"
-                        },
+                        
                         {
                             title: "Settlement Method",
                             dataIndex: "settlementMethod"
@@ -141,20 +154,38 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                             dataIndex: "bankName"
                         },
                         {
+                            title: "Reference No",
+                            dataIndex: "referenceNo"
+                        },
+                        {
                             title: "Currency",
                             dataIndex: "currency",
 
                         },
                         {
-                            title: "Amount",
+                            title: "Amount (KHR)",
                             dataIndex: "amount",
                             align: "right",
-                            render: (_, r) => formatterQty.format(r.amount)
+                            render: (_, r) => r.currency === "KHR" ? formatterQty.format(r.amount) : "-"
+                        },
+                        {
+                            title: "Amount (USD)",
+                            dataIndex: "amount",
+                            align: "right",
+                            render: (_, r) =>  r.currency !== "KHR" ? formatCurrency(r.amount,"") : "-"
                         },
                         {
                             title: "Exchange Rate",
-                            dataIndex: "exchangeRate",
+                            align: "right",
                             render: (_, r) => r.exchangeRate == 1 ? "-" : r.exchangeRate
+                        },
+                        {
+                            title: "Amount",
+                            align: "right",
+                            render: (_, r) =>
+                                r.currency !== "USD"?
+                                formatCurrency((r.amount/r.exchangeRate), "$")
+                                :formatCurrency(r.amount,"$")
                         },
                     ]}
                 />
@@ -163,12 +194,13 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                 <Flex wrap gap="small">
                     {
                         dataSource?.attachments?.map(p => {
-                            return (<ImagePreview fileId={p} />)
+                            return (<ImagePreview fileId={p} width={150} version={1} />)
                         })
                     }
                 </Flex>
             </Card>
         </Flex>
+        </Spin>
     )
 }
 

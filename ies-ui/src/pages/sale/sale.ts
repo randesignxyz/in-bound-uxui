@@ -24,3 +24,11 @@ export function formatCurrency(
 
     return formattedWithCustomSymbol;
   }
+
+
+ export function formatQuantityIntl(quantity: number, decimalPlaces: number = 2): string {
+    return new Intl.NumberFormat('en-US', {
+        minimumFractionDigits: decimalPlaces,
+        maximumFractionDigits: decimalPlaces
+    }).format(quantity);
+}

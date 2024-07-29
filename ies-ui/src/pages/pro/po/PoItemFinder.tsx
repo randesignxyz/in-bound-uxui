@@ -30,16 +30,16 @@ import { message } from 'antd/lib';
 type RefType = 'QC' | 'PQ' | 'PR' | 'ITEM';
 
 const options = [
-  {
-    value: 'ITEM',
-    text: 'Items',
-    hint: '',
-    items: [
-      { value: 'hasRequisition', text: 'Has Requistion' },
-      { value: 'hasQuotation', text: 'Has Quotation' },
-      { value: 'hasQC', text: 'Has Quotation Comparison' },
-    ],
-  },
+  // {
+  //   value: 'ITEM',
+  //   text: 'Items',
+  //   hint: '',
+  //   items: [
+  //     { value: 'hasRequisition', text: 'Has Requistion' },
+  //     { value: 'hasQuotation', text: 'Has Quotation' },
+  //     { value: 'hasQC', text: 'Has Quotation Comparison' },
+  //   ],
+  // },
   {
     value: 'PR',
     text: 'Requisition',
@@ -331,7 +331,6 @@ export default ({
                         return
                       }
                       setMultiSelect(true);
-
                       setSelectedRows(items.filter((it) => !it.closed));
                       // setSelectedRowKeys(items.map((it) => it.mainId));
                     }}

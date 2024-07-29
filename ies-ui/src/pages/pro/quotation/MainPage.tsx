@@ -63,7 +63,7 @@ export default () => {
                         refetch()
                     }}
                     openInTab onBack={() => { onCloseTab?.() }} type="CREATE" />,
-                tabLabel: "New QP",
+                tabLabel: "New PQ",
             }, {
                 action: 'edit',
                 panel: ({ onUpdateTab, key }) => <DataEntryView

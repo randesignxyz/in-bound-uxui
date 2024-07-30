@@ -71,6 +71,7 @@ export type SaleServiceName =
   | 'fetch-last-stock-control'
   | 'save-vehicle'
   | 'find-vehicle-by-plate-number'
+  | 'page-vehicle-by-plate-number'
   | 'import-sales-stock-control'
   | 'is-initial-manual'
   | 'list-sales-team-work'
@@ -158,7 +159,7 @@ export interface StockDetail1Less extends StockDetailLess {
   status?: string;
   requestDate?: moment.Moment;
   approvalDate?: moment.Moment;
-  receiver?: SalesTeamWorkLess;
+  receivedBy?: SalesTeamWorkLess;
   approval?: SalesTeamWorkLess;
   isKeepForwarding?: boolean;
 }
@@ -178,6 +179,7 @@ export interface StockControlDetailDto {
   soldAmount: number;
   transactions: StockQuantity[];
   isKeepForwarding: boolean;
+  requestDate?:moment.Moment
 }
 
 export interface TeamWorkLess {

@@ -146,16 +146,14 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
             title: 'Sale Price',
             align: 'right',
             render: (_, r) => {
-              const unitPrice = r.unitPrice * exchangeRate();
-              return `${data.exchangeRate?.target_symbol} ${numeral(unitPrice).format('0,0.00')}`;
+              return `$ ${numeral(r.unitPrice).format('0,0.00')}`;
             },
           },
           {
             title: 'Amount',
             align: 'right',
             render: (_, r) => {
-              const amount = r.quantity * r.unitPrice * exchangeRate();
-              return `${data.exchangeRate?.target_symbol} ${numeral(amount).format('0,0.00')}`;
+              return `$ ${numeral(r.quantity * r.unitPrice ).format('0,0.00')}`;
             },
           },
           // {
@@ -249,11 +247,11 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
           },
           {
             title: 'Amount',
-            //dataIndex: 'invoiceNo'
+            dataIndex: 'amount',
             align: 'right',
+            valueType:"money",
             render: (_, r) => {
-              const amount = r.amount * exchangeRate();
-              return `${data.exchangeRate?.target_symbol} ${numeral(amount).format('0,0.00')}`;
+              return `$ ${numeral(r.amount).format('0,0.00')}`;
             },
           },
 
@@ -271,7 +269,10 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
                   : 'warning';
               return (
                 <span>
-                  <Tag color={color}>{r.status}</Tag>
+                  <Tag 
+                  color={color}
+                  
+                  >{r.status}</Tag>
                 </span>
               );
             },

@@ -30,7 +30,7 @@ const StoreMainPage: React.FC<Props> = () => {
     ), {
         refetchOnWindowFocus: false
     });
-    
+
     return <>
         <PageWrapper<StockStoreLess, StockStoreAdvanceSearchParams, {}>
             tabRender={item => [
@@ -38,53 +38,77 @@ const StoreMainPage: React.FC<Props> = () => {
                     action: "add",
                     tabIcon: <FileOutlined />,
                     tabLabel: 'New Stock',
-                    panel:(props) =><StockStoreForm type="new"/>
-                }, {
+                    panel: ({ onUpdateTab,onCloseTab, key }) => <StockStoreForm
+                        type="new"
+                        onView={(it) => onUpdateTab?.("view", it, undefined, key)}
+                        onBack={onCloseTab}
+                    />
+                },
+                {
                     action: 'copy',
                     tabLabel: item?.name ? `Copy (#${item.name})` : 'Copy',
                     tabKey: `copy-${item?.id}-${uniqueId('copy')}`,
-                }, {
+                },
+                {
                     action: 'view',
                     value: item?.name || "n/a",
                     tabLabel: item?.name || 'Draft',
-                    panel:(props) =><StockStoreDetail id={item?.id} />
+                    panel: ({ onUpdateTab,onAddTab, onCloseTab, key }) => <StockStoreDetail
+                        id={item?.id}
+                        onEdit={() => onUpdateTab?.('edit', undefined, undefined, key)}
+                        onAdd={() => onAddTab?.('add', undefined, key)}
+                    />
+                },
+                {
+                    action: 'edit',
+                    value: item?.name || "n/a",
+                    tabLabel: item?.name || 'Draft',
+                    panel: ({ onUpdateTab, onCloseTab, key }) => <StockStoreForm
+                        id={item?.id}
+                        type="edit"
+                        onView={(it) => onUpdateTab?.("view", it, undefined, key)}
+                        onBack={()=> {
+                            onUpdateTab?.("view", undefined, undefined, key)  
+                            refetch()
+                        }}
+                    />
                 }
             ]}
             listView={{
                 type: "Table",
-                title:"Store List",
-                onFilter:(params, page, sort)=> {
-                    setFilter(v=>({
-                            ...v,
-                            criteria:{
-                                searchValue:params?.searchValue,
-                                advanceSearch:{
-                                    status:params?.status ||"ALL"
-                                },
-                                sort:sort
+                title: "Store List",
+                onFilter: (params, page, sort) => {
+                    setFilter(v => ({
+                        ...v,
+                        criteria: {
+                            searchValue: params?.searchValue,
+                            advanceSearch: {
+                                status: params?.status || "ALL"
                             },
-                            pagination:{...page}
+                            sort: sort
+                        },
+                        pagination: { ...page }
                     }))
                 },
-                actionButtons:[
+                actionButtons: [
                     {
-                        icon:<PlusOutlined/>,
-                        type:"link",
-                        addNewTab:true
+                        icon: <PlusOutlined />,
+                        type: "link",
+                        addNewTab: true
                     }
                 ],
-                statuses:[
-                    {option:{label:"All", value:"ALL", default:true}},
-                    {option:{label:"Open", value:"open"}},
-                    {option:{label:"Closed", value:"closed"}},
+                statuses: [
+                    { option: { label: "All", value: "ALL", default: true } },
+                    { option: { label: "Open", value: "open" } },
+                    { option: { label: "Closed", value: "closed" } },
                 ],
-                onRefresh:refetch,
+                onRefresh: refetch,
                 props: {
-                    dataSource:data?.items,
-                    actionRef:actionRef,
-                    loading:isFetching,
-                    pagination:{
-                        total:data?.total,
+                    dataSource: data?.items,
+                    actionRef: actionRef,
+                    loading: isFetching,
+                    pagination: {
+                        total: data?.total,
                     },
                     columns: [
                         {
@@ -145,22 +169,22 @@ const StoreMainPage: React.FC<Props> = () => {
                             title: 'Description',
                             dataIndex: 'description',
                         },
-                        access.canOpenStore ? 
-                        {
-                            title: '',
-                            align: 'center',
-                            render: (_, r) => {
-                                return (
-                                    <Tooltip title="Edit" key="edit">       
-                                        <EditOutlined
-                                            style={{ color: '#448DF7' }}
-                                            onClick={() => history.push(`${SalePaths.store}/edit/${r.id}`)}
-                                        />
-                                    </Tooltip>
-                                );
-                                // return <Checkbox defaultChecked={r.isActive ? true : false} disabled />;
-                            },
-                        }
+                        access.canOpenStore ?
+                            {
+                                title: '',
+                                align: 'center',
+                                render: (_, r) => {
+                                    return (
+                                        <Tooltip title="Edit" key="edit">
+                                            <EditOutlined
+                                                style={{ color: '#448DF7' }}
+                                                onClick={() => history.push(`${SalePaths.store}/edit/${r.id}`)}
+                                            />
+                                        </Tooltip>
+                                    );
+                                    // return <Checkbox defaultChecked={r.isActive ? true : false} disabled />;
+                                },
+                            }
                             : {},
                     ]
                 }

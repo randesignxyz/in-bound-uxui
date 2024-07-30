@@ -9,10 +9,10 @@ import { Drawer } from 'antd';
 import type { SettlementLess } from './data';
 import numeral from 'numeral';
 import type { ExchangeRate } from '@/services/sale/data';
-import { ProTable } from '@ant-design/pro-components';
+import { DrawerForm, DrawerFormProps, ProTable } from '@ant-design/pro-components';
 import type { SalesInvoiceAR, SalesInvoiceItemAR } from '../daily_report/data';
 
-interface Prop extends DrawerProps {
+interface Prop extends DrawerFormProps {
   settlement?: SettlementLess;
   soldExchangeRate?: ExchangeRate;
 }
@@ -98,27 +98,19 @@ export default (props: Prop) => {
               title: 'Unit Price',
               align: 'right',
               render: (_, r) => {
-                return `${soldExchangeRate?.target_symbol} ${numeral(
-                  r.unitPrice * (soldExchangeRate?.target_amount || 0.0),
-                ).format('0,0')}`;
+                return `$ ${numeral(r.unitPrice).format('0,000.00')}`;
               },
             },
             {
               title: 'Amount',
               align: 'right',
               render: (_, r) => {
-                return `${soldExchangeRate?.target_symbol} ${numeral(
-                  r.unitPrice * (soldExchangeRate?.target_amount || 0.0) * r.quantity,
-                ).format('0,0')}`;
+                return `$ ${numeral(r.unitPrice  * r.quantity).format('0,000.00')}`;
               },
             },
           ]}
           summary={(data) => {
-            const totalAmount = data.reduce(
-              (acc, it) =>
-                acc + it.quantity * it.unitPrice * (soldExchangeRate?.target_amount || 0.0),
-              0,
-            );
+            const totalAmount = data.reduce((acc, it) =>( acc + (it.quantity *it.unitPrice)),0) ?? 0.00;
 
             return (
               <>
@@ -128,7 +120,7 @@ export default (props: Prop) => {
                   </Table.Summary.Cell>
                   <Table.Summary.Cell index={1} align="right" colSpan={2}>
                     <Text type="warning">
-                      {soldExchangeRate?.target_symbol} {numeral(totalAmount).format('0,0')}
+                      $ {numeral(totalAmount).format('0,000.00')}
                     </Text>
                   </Table.Summary.Cell>
                 </Table.Summary.Row>
@@ -149,7 +141,9 @@ export default (props: Prop) => {
   };
 
   return (
-    <Drawer {...props}>
+    <DrawerForm {...props}
+      resize
+    >
       <Card size="small" title="General">
         <DescriptionDisplay column={2} data={settlementInfo} />
       </Card>
@@ -185,14 +179,12 @@ export default (props: Prop) => {
             title: 'Amount',
             align: 'right',
             render: (_, r) => {
-              const total = (soldExchangeRate?.target_amount || 0.0) * r.amount;
-              return `${soldExchangeRate?.target_symbol} ${numeral(total).format('0,0')}`;
+              return `$ ${numeral(r.amount).format('0,000.00')}`;
             },
           },
         ]}
         summary={(data) => {
-          const total =
-            data.reduce((acc, it) => acc + it.amount, 0) * (soldExchangeRate?.target_amount || 0.0);
+          const total =data?.reduce((acc, it) =>( acc + it.amount),0) ?? 0;
           return (
             <>
               <Table.Summary.Row>
@@ -201,7 +193,7 @@ export default (props: Prop) => {
                 </Table.Summary.Cell>
                 <Table.Summary.Cell index={1} align="right">
                   <Text type="success">
-                    {soldExchangeRate?.target_symbol} {numeral(total).format('0,0')}
+                    $ {numeral(total).format('0,000.00')}
                   </Text>
                 </Table.Summary.Cell>
               </Table.Summary.Row>
@@ -209,6 +201,6 @@ export default (props: Prop) => {
           );
         }}
       />
-    </Drawer>
+    </DrawerForm>
   );
 };

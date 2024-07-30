@@ -3,12 +3,13 @@ import type { Paging } from '@/services/API';
 import type { ExchangeRate, StockControlDetailDto } from '@/services/sale/data';
 import type { ActionType } from '@ant-design/pro-table';
 import ProTable from '@ant-design/pro-table';
-import { Card } from 'antd';
+import { Card, Typography } from 'antd';
 import { useEffect, useRef } from 'react';
 import { history } from "@umijs/max";
 import { SalePaths } from '../..';
 import { Model } from '../model';
 import numeral from 'numeral';
+const {Text } = Typography
 
 type Props = {
   data: {
@@ -66,7 +67,7 @@ const HistoryTabItem: React.FC<Props> = ({ data }) => {
             render: (_, r) => {
               return (
                 <a onClick={() => history.push(`${SalePaths.stock}/detail/${r.id}`)}>
-                  {formatDate(r.requestedDate, 'DD-MM-YYYY')}
+                  {formatDate(r.requestDate, 'DD-MM-YYYY')}
                 </a>
               );
             },
@@ -105,7 +106,7 @@ const HistoryTabItem: React.FC<Props> = ({ data }) => {
               const it = r.transactions[0];
               const soldQty = it !== null ? it?.soldQty || 0 : 0;
               // return `${numeral(soldQty).format('0,0')} CASE${soldQty > 1 ? 'S' : ''}`;
-              return numeral(soldQty).format('0,0');
+              return <Text type='danger'>({numeral(soldQty).format('0,0')})</Text>
             },
           },
           {
@@ -126,8 +127,8 @@ const HistoryTabItem: React.FC<Props> = ({ data }) => {
             title: 'Sold Amount',
             align: 'right',
             render: (_, r) => {
-              const total = r.soldAmount * (data.dsdExchangeRate?.target_amount || 0);
-              return `${data?.dsdExchangeRate?.target_symbol} ${numeral(total).format('0,0')}`;
+              // const total = r.soldAmount * (data.dsdExchangeRate?.target_amount || 0);
+              return <Text type='success' >{`$ ${numeral(r.soldAmount).format('0,000.00')}`}</Text>
             },
           },
           { title: 'Status', dataIndex: 'status', align: 'center' },

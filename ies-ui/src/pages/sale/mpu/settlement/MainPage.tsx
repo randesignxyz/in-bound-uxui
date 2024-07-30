@@ -24,6 +24,7 @@ const SettlementMianPage: React.FC<Props> = () => {
     const { data, isFetching, refetch } = useQuery(['fetch-settlement-list', filter], () => services.page(filter), {
         refetchOnWindowFocus: false,
         cacheTime:5, 
+        refetchInterval:5000
     });
     return (<>
 

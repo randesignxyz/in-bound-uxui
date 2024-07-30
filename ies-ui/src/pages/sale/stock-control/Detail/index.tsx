@@ -123,11 +123,8 @@ const StockControlDetail: React.FC<Props> = ({ id, actionHandlers }) => {
   return (
     <>
       <PageContainer
-        title={`${state.data?.detail?.stockName}${
-          state.data?.detail?.serialNumber !== null ? ` - ${state.data?.detail?.serialNumber}` : ''
-        }`}
+        title={[state.data?.detail?.stockName, state.data?.detail?.serialNumber,state.data?.detail?.serialNumber].filter(o=>o).join("-")}
         breadcrumb={undefined}
-        // subTitle={formatDate(state.data?.detail?.scheduleDate)}
         onBack={actionHandlers?.onBack}
         // extra={
         //   access.canCreateEditSo &&
@@ -164,6 +161,7 @@ const StockControlDetail: React.FC<Props> = ({ id, actionHandlers }) => {
         //     </Button>,
         //   ]
         // }
+        
       >
         <Tabs defaultActiveKey="stockControl">
           <Tabs.TabPane

@@ -1,9 +1,10 @@
 import { simpleRequestActions } from "@/services/model";
 import { ProDescriptions, ProTable } from "@ant-design/pro-components";
-import { Card, Flex, Spin } from "antd";
+import { Card, Flex, Spin, Typography } from "antd";
 import { useEffect, useState } from "react";
 import { CountStockServiceAPI } from "./service";
 
+const { Text } = Typography 
 
 interface Props {
     id?: number;
@@ -123,21 +124,25 @@ const CountStockDetail: React.FC<Props> = ({ id }) => {
                                 
                             },
                             {
-                                title: "System Quantity",
-                                dataIndex: "systemQuantity"
-                            },
-                            {
-                                title: "System Quantity",
-                                dataIndex: "systemQuantity"
-                            },
-                            {
                                 title: "Request Quantity",
                                 dataIndex: "requestQuantity",
                             },
                             {
                                 title: "Sole Volume",
-                                dataIndex: "soldQuantity"
+                                dataIndex: "soldQuantity",
+                                render:(_,r)=><Text  type="danger">({r.soldQuantity})</Text>
                             },
+                            {
+                                title: "System Quantity",
+                                dataIndex: "systemQuantity"
+                            },
+                            {
+                                title: "Actual  Quantity",
+                                dataIndex: "actualQuantity",
+                                render:(_,r)=><Text  type="success">{r.actualQuantity}</Text>
+                            },
+                           
+                            
                         ]}
                     />
                 </Card>

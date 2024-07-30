@@ -450,6 +450,8 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({}) => {
         columns={invoicesColumns}
         summary={(data) => {
           const item = data[0];
+          console.log(data);
+          
           if (parent.status === 'settled' && data.length === 0) {
             return (
               <Table.Summary.Row>
@@ -472,51 +474,53 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({}) => {
                 </Table.Summary.Cell>
               </Table.Summary.Row>
             );
-          } else if ('beginningQty' in item) {
-            const beginningQty = data.reduce(function (acc, it) {
-              return acc + it.beginningQty ||0;
-            }, 0);
-            const requestQty = data.reduce(function (acc, it) {
-              return acc + it.quantity||0;
-            }, 0);
+          }
+          //  else if ('beginningQty' in item) {
+          //   const beginningQty = data.reduce(function (acc, it) {
+          //     return acc + (it?.beginningQty ||0);
+          //   }, 0);
+          //   const requestQty = data.reduce(function (acc, it) {
+          //     return acc + (it?.quantity||0);
+          //   }, 0);
 
-            return (
-              <>
-                <Table.Summary.Row>
-                  <Table.Summary.Cell index={0} align="right" colSpan={5}>
-                    <Text type="success">Total</Text>
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={1} align="right">
-                    <Text type="success">{beginningQty}</Text>
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={2} align="right">
-                    <Text type="success">{requestQty}</Text>
-                  </Table.Summary.Cell>
-                </Table.Summary.Row>
-                {parent.status === 'pending' && (
-                  <Table.Summary.Row>
-                    <Table.Summary.Cell index={0} align="right" colSpan={7}>
-                      <Button
-                        type="primary"
-                        onClick={async () => {
-                          Modal.confirm({
-                            title: 'Accept Suggestion.',
-                            content: 'Are you sure?',
-                            onOk: async () => {
-                              await actions.acceptRequest(parent);
-                              setForce({ update: force.update + 1 });
-                            },
-                          });
-                        }}
-                      >
-                        Approve
-                      </Button>
-                    </Table.Summary.Cell>
-                  </Table.Summary.Row>
-                )}
-              </>
-            );
-          } else {
+          //   return (
+          //     <>
+          //       <Table.Summary.Row>
+          //         <Table.Summary.Cell index={0} align="right" colSpan={5}>
+          //           <Text type="success">Total</Text>
+          //         </Table.Summary.Cell>
+          //         <Table.Summary.Cell index={1} align="right">
+          //           <Text type="success">{beginningQty}</Text>
+          //         </Table.Summary.Cell>   
+          //         <Table.Summary.Cell index={2} align="right">
+          //           <Text type="success">{requestQty}</Text>
+          //         </Table.Summary.Cell>
+          //       </Table.Summary.Row>
+          //       {parent.status === 'pending' && (
+          //         <Table.Summary.Row>
+          //           <Table.Summary.Cell index={0} align="right" colSpan={7}>
+          //             <Button
+          //               type="primary"
+          //               onClick={async () => {
+          //                 Modal.confirm({
+          //                   title: 'Accept Suggestion.',     
+          //                   content: 'Are you sure?',
+          //                   onOk: async () => {
+          //                     await actions.acceptRequest(parent);
+          //                     setForce({ update: force.update + 1 });
+          //                   },
+          //                 });
+          //               }}
+          //             >
+          //               Approve
+          //             </Button>
+          //           </Table.Summary.Cell>
+          //         </Table.Summary.Row>
+          //       )}
+          //     </>
+          //   );
+          // }
+           else {
             const total =
               data.reduce(function (acc, it) {
                 return acc + it.amount;

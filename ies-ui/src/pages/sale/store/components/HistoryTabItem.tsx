@@ -81,7 +81,7 @@ const HistoryTabItem: React.FC<Props> = ({ data }) => {
             align: 'right',
             render: (_, r) => {
               const it = r.transactions[0];
-              const beginQty = it !== null ? it.beginningQty || 0 : 0;
+              const beginQty = it !== null ? it?.beginningQty || 0 : 0;
               // return `${numeral(beginQty).format('0,0')} CASE${beginQty > 1 ? 'S' : ''}`;
               return numeral(beginQty).format('0,0');
             },
@@ -92,7 +92,7 @@ const HistoryTabItem: React.FC<Props> = ({ data }) => {
             align: 'right',
             render: (_, r) => {
               const it = r.transactions[0];
-              const reqQty = it !== null ? it.quantity : 0;
+              const reqQty = it !== null ? it?.quantity : 0;
               // return `${numeral(reqQty).format('0,0')} CASE${reqQty > 1 ? 'S' : ''}`;
               return numeral(reqQty).format('0,0');
             },
@@ -103,7 +103,7 @@ const HistoryTabItem: React.FC<Props> = ({ data }) => {
             align: 'right',
             render: (_, r) => {
               const it = r.transactions[0];
-              const soldQty = it !== null ? it.soldQty || 0 : 0;
+              const soldQty = it !== null ? it?.soldQty || 0 : 0;
               // return `${numeral(soldQty).format('0,0')} CASE${soldQty > 1 ? 'S' : ''}`;
               return numeral(soldQty).format('0,0');
             },
@@ -113,10 +113,10 @@ const HistoryTabItem: React.FC<Props> = ({ data }) => {
             align: 'right',
             render: (_, r) => {
               const it = r.transactions[0];
-              const beginQty = it !== null ? it.beginningQty || 0 : 0;
-              const reqQty = it !== null ? it.quantity : 0;
-              const soldQty = it !== null ? it.soldQty || 0 : 0;
-              const endQty = beginQty + reqQty - soldQty;
+              const beginQty = it !== null ? it?.beginningQty || 0 : 0;
+              const reqQty = it !== null ? it?.quantity : 0;
+              const soldQty = it !== null ? it?.soldQty || 0 : 0;
+              const endQty = (beginQty + reqQty - soldQty);
               // return `${numeral(endQty).format('0,0')} CASE${endQty > 1 ? 'S' : ''}`;
               return numeral(endQty).format('0,0');
             },

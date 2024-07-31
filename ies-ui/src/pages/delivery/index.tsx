@@ -174,7 +174,17 @@ export default () => {
       description: 'Cash collection list',
       link: `${DeliveryPaths.cashCollection}`,
       icon: cashCollectionIcon,
-      visible: access.canAccessDeliveryCashSettlementMenuItem
+      visible: access.canAccessDeliveryCashSettlementMenuItem,
+      menu: {
+        items: [{
+          label: 'Cash collection Report',
+          icon: <AreaChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+          key: 'cash-collection-report',
+          onClick: () => setModal({
+            type: 'CASH_COLLECTION_REPORT'
+          }),
+        }]
+      }
     },
     {
       id: 'reviewer',

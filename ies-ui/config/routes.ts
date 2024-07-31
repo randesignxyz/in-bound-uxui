@@ -1145,7 +1145,7 @@ export default [
     path: '/whm',
     name: 'whm',
     icon: 'ReconciliationOutlined',
-    access: 'canAccessWHMMenuItem',
+    access: 'canAccessWhmMenut',
     component: './fma-stock',
   },
   {
@@ -1153,7 +1153,7 @@ export default [
     name: 'whm_issue_request',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessWHMMenuItem',
+    access: 'canAccessNcmIssueRequest',
     component: './fma-stock/request',
   },
   {
@@ -1161,7 +1161,7 @@ export default [
     name: 'whm_inventory_item',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessWHMMenuItem',
+    access: 'canAccessWhmItemMenu',
     component: './fma-stock/item',
   },
   {
@@ -1170,7 +1170,7 @@ export default [
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
     layout: false,
-    access: 'canAccessWHMMenuItem',
+    access: 'canAccessWhmItemMenu',
     component: './fma-stock/item',
   },
   {
@@ -1178,7 +1178,7 @@ export default [
     name: 'whm-transter-request',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessWHMMenuItem',
+    access: 'canAccessWhmInventoryTransferRequestMenu',
     component: './fma-stock/transfer',
   },
   {
@@ -1186,7 +1186,7 @@ export default [
     name: 'whm_inventory_empwhs',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessWHMMenuItem',
+    access: 'canAccessWhmEmpMappingMenu',
     component: './fma-stock/emp-whs',
   },
   {
@@ -1195,7 +1195,7 @@ export default [
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
     layout: false,
-    access: 'canAccessWHMMenuItem',
+    access: 'canAccessWhmEmpMappingMenu',
     component: './fma-stock/emp-whs',
   },
   

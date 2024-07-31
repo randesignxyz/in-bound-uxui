@@ -749,19 +749,48 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           'ROLE_HR_APPRAISAL_REQUEST_MANAGEMENT',
           'ROLE_HR_APPRAISAL_REQUEST_SM_EXECTIVE'].some((it) => it === item),
       ) || false,
-    canAccessWHMMenuItem:
+    canAccessWhmMenut:
       currentUser?.authorities.some((item) =>
         [         
           'ROLE_ADMIN',
-          'ROLE_NCM_STOCK_REQUEST_APPROVAL'
+          'ROLE_NCM_WHM',
+        ].some((it) => it === item),
+      ) || false,    
+    canAccessNcmIssueRequest:
+      currentUser?.authorities.some((item) =>
+        [         
+          'ROLE_ADMIN',
+          'ROLE_NCM_STOCK_REQUEST_APPROVAL',
+        ].some((it) => it === item),
+      ) || false,  
+    canAccessWhmItemMenu:
+      currentUser?.authorities.some((item) =>
+        [         
+          'ROLE_ADMIN',
+          'ROLE_NCM_INVENTORY_TRANSFER_SUPPORT',
+          'ROLE_NCM_STOCK_REQUEST_SUPPORT',
+          'ROLE_NCM_STOCK_REQUEST_ADMIN'
         ].some((it) => it === item),
       ) || false,
-  
+    canAccessWhmEmpMappingMenu:
+      currentUser?.authorities.some((item) =>
+        [         
+          'ROLE_ADMIN',
+          'ROLE_NCM_INVENTORY_TRANSFER_SUPPORT',
+        ].some((it) => it === item),
+      ) || false,  
+    canAccessWhmInventoryTransferRequestMenu:
+      currentUser?.authorities.some((item) =>
+        [         
+          'ROLE_ADMIN',
+          'ROLE_NCM_INVENTORY_TRANSFER_REQUEST',
+        ].some((it) => it === item),
+      ) || false, 
     canCreateNCMRequest:
       currentUser?.authorities.some((item) => ['ROLE_ADMIN','ROLE_NCM_STOCK_REQUEST_APPROVAL'].some((it) => it === item)) ||
       false,  
     canCreateInventoryTransferRequest:
-      currentUser?.authorities.some((item) => ['ROLE_ADMIN','ROLE_INVENTORY_TRANSFER_REQUEST'].some((it) => it === item)) ||
+      currentUser?.authorities.some((item) => ['ROLE_ADMIN','ROLE_NCM_INVENTORY_TRANSFER_REQUEST'].some((it) => it === item)) ||
       false,   
     canPostedInventoryTransferSAP:
       currentUser?.authorities.some((item) => ['ROLE_NCM_INVENTORY_TRANSFER_SUPPORT'].some((it) => it === item)) ||

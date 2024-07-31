@@ -8,7 +8,7 @@ import type {
   StockAdvanceSearchParams,
   StockControlLess,
 } from '@/services/sale/data';
-import { EditOutlined, PlusOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, CloseCircleOutlined, EditOutlined, ExclamationCircleOutlined, PlusOutlined, SyncOutlined } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
 import type { ActionType } from '@ant-design/pro-table';
 import { useSetState } from 'ahooks';
@@ -281,16 +281,24 @@ const StockListView: React.FC<TableViewProps<StockControlLess>> = ({ actionHandl
             render: (_, r) => {
               const color =
                 r.status === 'pending'
-                  ? 'default'
-                  : //: r.status === 'approved'
-                  r.status === 'open'
+                  ? 'processing'
+                  : r.status === 'open'
                   ? 'success'
                   : r.status === 'canceled' || r.status === 'closed'
                   ? 'magenta'
                   : 'warning';
               return (
                 <span>
-                  <Tag color={color}>{r.status}</Tag>
+                  <Tag color={color}
+                  bordered={false}
+                  icon={
+                    r.status === "pending"?<SyncOutlined spin />
+                    :r.status === "open"?<CheckCircleOutlined />
+                    :r.status === "canceled" ?<CloseCircleOutlined />
+                    :r.status =="closed"?<CheckCircleOutlined />
+                    :<ExclamationCircleOutlined />
+                  }
+                  >{r.status}</Tag>
                 </span>
               );
             },

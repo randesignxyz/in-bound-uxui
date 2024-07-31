@@ -271,6 +271,11 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
     actions,
   ),
 
+  pageVehicleByPlateNumber: findAllService<{ id: string }, VehicleLess>(
+    SaleService('page-vehicle-by-plate-number'),
+    actions,
+  ),
+
   onSaveLead: execService<LeadLess, { data: any; message: string }>(
     SaleService('save-lead'),
     actions,

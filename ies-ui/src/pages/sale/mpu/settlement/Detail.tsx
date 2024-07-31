@@ -1,7 +1,7 @@
 import { simpleRequestActions } from "@/services/model";
-import { ProDescriptions, ProTable } from "@ant-design/pro-components";
+import { ActionType, ProDescriptions, ProTable } from "@ant-design/pro-components";
 import { Button, Card, Flex, Modal, Space, Spin, Tag, Typography } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SettlementMethodServicAPI } from "./service";
 import { formatterQty } from "@/pages/utils";
 import { CheckCircleOutlined, CloseCircleOutlined, SyncOutlined } from "@ant-design/icons";
@@ -16,6 +16,7 @@ interface Props {
 const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
     const requestActions = simpleRequestActions();
     const [dataSource, setDataSource] = useState<SettlementMethodDetailDTO>();
+    const actionRef = useRef<ActionType>();
     const services = SettlementMethodServicAPI(requestActions);
     const loadData = async () => {
         setDataSource(
@@ -36,7 +37,7 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                     <Button
                         type="link"
                         icon={<CheckCircleOutlined />}
-                        disabled={dataSource?.status=="Pending"?false:true}
+                        disabled={dataSource?.status=="Completed"?true:false}
                         onClick={() => {
                             Modal.confirm({
                                 title: "Confirm Settlements ",
@@ -66,6 +67,7 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
             >
                 <ProDescriptions
                     dataSource={dataSource}
+                    actionRef={actionRef}
                     columns={[
                         {
                             title: "Salesperson Code",
@@ -99,12 +101,13 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                         {
                             title: "Amount",
                             dataIndex: "amount",
-                            valueType: "money"
+                            valueType: "money",
+                            render:(_,r)=><Text type="success">{formatCurrency(r.amount,"$")}</Text> 
                         },
                         {
                             title: "Amount (KHR)",
                             dataIndex: "amountKH",
-                            render:(_,r)=>formatterQty.format(r.amountKH)
+                            render:(_,r)=><Text type="success">{formatterQty.format(r.amountKH)}</Text>
                         },
                         // {
                         //     title: "Exchange Rate",
@@ -182,10 +185,12 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                         {
                             title: "Amount",
                             align: "right",
-                            render: (_, r) =>
+                            render: (_, r) =><Text type="success">{
                                 r.currency !== "USD"?
                                 formatCurrency((r.amount/r.exchangeRate), "$")
                                 :formatCurrency(r.amount,"$")
+                                }</Text>
+                                
                         },
                     ]}
                 />

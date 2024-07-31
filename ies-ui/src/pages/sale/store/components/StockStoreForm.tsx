@@ -1,4 +1,4 @@
-import { SalesTeamWorkLess, SaveStockStore, VehicleLess } from '@/services/sale/data';
+import { SalesTeamWorkLess, SaveStockStore, StockStoreLess, VehicleLess } from '@/services/sale/data';
 import { CrownOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { FooterToolbar, ProForm, ProFormCheckbox, ProFormSelect, ProFormText, ProFormTextArea } from '@ant-design/pro-components';
 import ProTable, { ActionType } from '@ant-design/pro-table';
@@ -14,6 +14,8 @@ import { Model } from '../model';
 type Props = {
   type: 'new' | 'edit';
   id?: number;
+  onView?: (added: StockStoreLess) => void;
+  onBack: () => void;
 };
 
 const layout = {
@@ -21,7 +23,7 @@ const layout = {
   wrapperCol: { span: 16 },
 };
 
-const StockStoreForm: React.FC<Props> = ({ id, type }) => {
+const StockStoreForm: React.FC<Props> = ({ id, type, onBack, onView }) => {
   const { state, actions } = Model();
   const [form] = useForm<{
     name: string;
@@ -179,7 +181,7 @@ const StockStoreForm: React.FC<Props> = ({ id, type }) => {
               name="vehicleId"
               label="Plate Number"
               showSearch
-              width={'md'}
+              width={'sm'}
               debounceTime={300}
               addonAfter={
                 <Tooltip placement="topLeft" title="Add Vehicle">
@@ -194,7 +196,7 @@ const StockStoreForm: React.FC<Props> = ({ id, type }) => {
                 </Tooltip>
               }
               request={async ({ keyWords }) => {
-                const result = keyWords && (await actions.searchVehicleByPlateNumber(keyWords));
+                const result =  (await actions.searchVehicleByPlateNumber(keyWords));
                 return result.map((it: { plateNumber: string }) => ({
                   label: it.plateNumber,
                   value: it.plateNumber,

@@ -12,7 +12,6 @@ export interface SalesInvoiceLess {
   salesperson: SalesTeamWorkLess;
   customer?: LeadLess;
   discount: number = 0.0;
-  beginningQty?: number = 0.0;
   items: SalesInvoiceItemLess[];
 }
 

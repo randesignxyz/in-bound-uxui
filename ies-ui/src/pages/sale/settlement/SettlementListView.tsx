@@ -248,14 +248,15 @@ export default ({}: Props) => {
       <QuickViewDetail
         title={'Settlement View'}
         width={700}
-        destroyOnClose
-        placement={'right'}
+        drawerProps={{
+          onClose:()=>setQuickView({ visible: false, settlement: undefined, soldExchangeRate: undefined })
+        }}
         open={quickView?.visible}
         soldExchangeRate={quickView?.soldExchangeRate}
         settlement={quickView?.settlement}
-        onClose={() =>
-          setQuickView({ visible: false, settlement: undefined, soldExchangeRate: undefined })
-        }
+        // onClose={() =>
+        //   setQuickView({ visible: false, settlement: undefined, soldExchangeRate: undefined })
+        // }
       />
     </>
   );

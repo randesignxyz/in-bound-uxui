@@ -16,7 +16,7 @@ import type { ActionType } from '@ant-design/pro-table';
 import ProTable from '@ant-design/pro-table';
 import { history, useAccess, useModel } from '@umijs/max';
 import { useSetState } from 'ahooks';
-import { Button, Input, Modal, Space, Table, Tag, Tooltip, Typography, message } from 'antd';
+import { Button, Flex, Input, Modal, Space, Table, Tag, Tooltip, Typography, message } from 'antd';
 import type { SortOrder } from 'antd/lib/table/interface';
 import numeral from 'numeral';
 import { useEffect, useRef, useState } from 'react';
@@ -27,7 +27,7 @@ import SettlementModal from '../components/SettlementModal';
 import { Model } from '../model';
 import { SuggestionServiceAPI } from '../services';
 
-const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({}) => {
+const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({ }) => {
   const cacheList = useModel('dataList');
   const actionRef = useRef<ActionType>();
   const access = useAccess();
@@ -98,10 +98,10 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({}) => {
     const role = access.canAccessAllMenuDSD
       ? 'sale_admin'
       : access.canAccessTabWarehouse
-      ? 'warehouse'
-      : access.canAccessTabCashier
-      ? 'cashier'
-      : 'admin';
+        ? 'warehouse'
+        : access.canAccessTabCashier
+          ? 'cashier'
+          : 'admin';
     return actions.loadListItem?.({ role: role, ...criteria }, pagination, sort).then((it) => {
       return cacheList.cacheDataList({
         type: 'stock',
@@ -133,80 +133,80 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({}) => {
   const invoicesColumns: ProColumns<SalesInvoiceLess | StockDetailItemLess>[] =
     access.canAccessTabCashier
       ? [
-          {
-            title: 'Invoice #',
-            dataIndex: 'invoiceNo',
+        {
+          title: 'Invoice #',
+          dataIndex: 'invoiceNo',
+        },
+        {
+          title: 'Reference #',
+          dataIndex: 'referenceNo',
+        },
+        {
+          title: 'Invoice Date',
+          //dataIndex: 'invoiceNo'
+          render: (_, r) => {
+            if ('invoiceDate' in r) {
+              return formatDate(r.invoiceDate);
+            } else return '-';
           },
-          {
-            title: 'Reference #',
-            dataIndex: 'referenceNo',
+        },
+        {
+          title: 'Salesperson',
+          render: (_, r) => {
+            if ('invoiceDate' in r) {
+              return `${r.salesperson.salespersonCode} - ${r.salesperson.salespersonName}`;
+            } else return '-';
           },
-          {
-            title: 'Invoice Date',
-            //dataIndex: 'invoiceNo'
-            render: (_, r) => {
-              if ('invoiceDate' in r) {
-                return formatDate(r.invoiceDate);
-              } else return '-';
-            },
+        },
+        {
+          title: 'Amount',
+          align: 'right',
+          render: (_, r) => {
+            if ('invoiceDate' in r) {
+              // const amount = (dsdExchangeRate?.target_amount ?? 0) * r.amount;
+              return `$ ${numeral(r.amount).format('0,000.00')}`;
+            } else return '-';
           },
-          {
-            title: 'Salesperson',
-            render: (_, r) => {
-              if ('invoiceDate' in r) {
-                return `${r.salesperson.salespersonCode} - ${r.salesperson.salespersonName}`;
-              } else return '-';
-            },
-          },
-          {
-            title: 'Amount',
-            align: 'right',
-            render: (_, r) => {
-              if ('invoiceDate' in r) {
-                const amount = (dsdExchangeRate?.target_amount ?? 0) * r.amount;
-                return `${dsdExchangeRate?.target_symbol} ${numeral(amount).format('0,0.00')}`;
-              } else return '-';
-            },
-          },
-        ]
+        },
+      ]
       : [
-          {
-            title: 'Batch No',
-            dataIndex: 'batchNo',
-            // hideInTable: access.canAccessAllMenuDSD,
+        {
+          title: 'Batch No',
+          dataIndex: 'batchNo',
+          // hideInTable: access.canAccessAllMenuDSD,
+        },
+        {
+          title: 'Expired Date',
+          render: (_, r) => {
+            if ('expiredDate' in r) {
+              return r.expiredDate || r.batchNo ? formatDate(r.expiredDate) : '-';
+            } else return '-';
           },
-          {
-            title: 'Expired Date',
-            render: (_, r) => {
-              if ('expiredDate' in r) {
-                return r.expiredDate || r.batchNo ? formatDate(r.expiredDate) : '-';
-              } else return '-';
-            },
+        },
+        {
+          title: 'Description',
+          render: (_, r) => {
+            if ('expiredDate' in r) {
+              return `${r.itemCode} - ${r.itemName} (${r.description})`;
+            } else return '-';
           },
-          {
-            title: 'Description',
-            render: (_, r) => {
-              if ('expiredDate' in r) {
-                return `${r.itemCode} - ${r.itemName} (${r.description})`;
-              } else return '-';
-            },
-          },
-          { title: 'UOM', dataIndex: 'uom' },
-          {
-            title: 'Type',
-            render: (_, r) => {
-              if ('expiredDate' in r) {
-                return r.itemType === 131
-                  ? 'Vital'
-                  : r.itemType === 132
+        },
+        { title: 'UOM', dataIndex: 'uom' },
+        {
+          title: 'Type',
+          render: (_, r) => {
+            if ('expiredDate' in r) {
+              return r.itemType === 131
+                ? 'Vital'
+                : r.itemType === 132
                   ? 'Mee Chiet'
                   : 'Merchandise';
-              } else return '-';
-            },
+            } else return '-';
           },
-          { title: 'Beginning Qty', align: 'right', dataIndex: 'beginningQty' },
-          { title: 'Request Qty', align: 'right', dataIndex: 'quantity' },
-        ];
+        },
+        { title: 'Beginning Qty', align: 'right', dataIndex: 'beginningQty' },
+        { title: 'Request Qty', align: 'right', dataIndex: 'quantity' },
+      ];
 
   const colsApprove: ProColumns<StockDetailItemLess>[] = [
     {
@@ -429,6 +429,7 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({}) => {
 
   const expandedRowRender = (parent: StockControlLess) => {
     // const isCountStock = parent.status === 'count stock';
+    
     return (parent.items && parent.items.length > 0) ||
       (parent.invoices && parent.invoices.length > 0) ? (
       <ProTable<StockDetailItemLess | SalesInvoiceLess>
@@ -448,9 +449,9 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({}) => {
         //   }
         // }}
         columns={invoicesColumns}
+
         summary={(data) => {
           const item = data[0];
-          console.log(data);
           
           if (parent.status === 'settled' && data.length === 0) {
             return (
@@ -475,55 +476,55 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({}) => {
               </Table.Summary.Row>
             );
           }
-          //  else if ('beginningQty' in item) {
-          //   const beginningQty = data.reduce(function (acc, it) {
-          //     return acc + (it?.beginningQty ||0);
-          //   }, 0);
-          //   const requestQty = data.reduce(function (acc, it) {
-          //     return acc + (it?.quantity||0);
-          //   }, 0);
+           else if ("beginningQty" in item) {
+            const beginningQty = data.reduce(function (acc, it) {
+              return acc + (it?.beginningQty ||0);
+            }, 0);
+            const requestQty = data.reduce(function (acc, it) {
+              return acc + (it?.quantity||0);
+            }, 0);
 
-          //   return (
-          //     <>
-          //       <Table.Summary.Row>
-          //         <Table.Summary.Cell index={0} align="right" colSpan={5}>
-          //           <Text type="success">Total</Text>
-          //         </Table.Summary.Cell>
-          //         <Table.Summary.Cell index={1} align="right">
-          //           <Text type="success">{beginningQty}</Text>
-          //         </Table.Summary.Cell>   
-          //         <Table.Summary.Cell index={2} align="right">
-          //           <Text type="success">{requestQty}</Text>
-          //         </Table.Summary.Cell>
-          //       </Table.Summary.Row>
-          //       {parent.status === 'pending' && (
-          //         <Table.Summary.Row>
-          //           <Table.Summary.Cell index={0} align="right" colSpan={7}>
-          //             <Button
-          //               type="primary"
-          //               onClick={async () => {
-          //                 Modal.confirm({
-          //                   title: 'Accept Suggestion.',     
-          //                   content: 'Are you sure?',
-          //                   onOk: async () => {
-          //                     await actions.acceptRequest(parent);
-          //                     setForce({ update: force.update + 1 });
-          //                   },
-          //                 });
-          //               }}
-          //             >
-          //               Approve
-          //             </Button>
-          //           </Table.Summary.Cell>
-          //         </Table.Summary.Row>
-          //       )}
-          //     </>
-          //   );
-          // }
+            return (
+              <>
+                <Table.Summary.Row>
+                  <Table.Summary.Cell index={0} align="right" colSpan={5}>
+                    <Text type="success">Total</Text>
+                  </Table.Summary.Cell>
+                  <Table.Summary.Cell index={1} align="right">
+                    <Text type="success">{beginningQty}</Text>
+                  </Table.Summary.Cell>   
+                  <Table.Summary.Cell index={2} align="right">
+                    <Text type="success">{requestQty}</Text>
+                  </Table.Summary.Cell>
+                </Table.Summary.Row>
+                {parent.status === 'pending' && (
+                  <Table.Summary.Row>
+                    <Table.Summary.Cell index={0} align="right" colSpan={7}>
+                      <Button
+                        type="primary"
+                        onClick={async () => {
+                          Modal.confirm({
+                            title: 'Accept Suggestion.',     
+                            content: 'Are you sure?',
+                            onOk: async () => {
+                              await actions.acceptRequest(parent);
+                              setForce({ update: force.update + 1 });
+                            },
+                          });
+                        }}
+                      >
+                        Approve
+                      </Button>
+                    </Table.Summary.Cell>
+                  </Table.Summary.Row>
+                )}
+              </>
+            );
+          }
            else {
             const total =
               data.reduce(function (acc, it) {
-                return acc + it.amount;
+                return (acc + it.amount);
               }, 0) * (dsdExchangeRate?.target_amount ?? 0);
             // const disabled = data.some((it) => !it.batchNo || !it.expiredDate);
             return (
@@ -866,6 +867,7 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({}) => {
           };
         }}
         expandable={{ expandedRowRender }}
+       
         columns={[
           {
             title: 'Store Name',
@@ -921,30 +923,30 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({}) => {
             title: 'Approved Date',
             align: 'right',
             render: (_, r) => {
-              return r.approvedDate ? formatDate(r.approvedDate) : 'YYYY-MM-DD';
+              return r.approvedDate ? formatDate(r.approvedDate) : '-';
             },
           },
           access.canAccessTabWarehouse
             ? {
-                render: (_, r) => {
-                  return (
-                    ['approved', 'count stock'].includes(r.status) && (
-                      <Tooltip title="Edit" key="edit">
-                        <EditOutlined
-                          style={{ color: '#448DF7' }}
-                          onClick={() => {
-                            if (r.status === 'count stock') {
-                              setCountModal({ open: true, record: r });
-                            } else {
-                              setAddNewModal({ open: true, record: r });
-                            }
-                          }}
-                        />
-                      </Tooltip>
-                    )
-                  );
-                },
-              }
+              render: (_, r) => {
+                return (
+                  ['approved', 'count stock'].includes(r.status) && (
+                    <Tooltip title="Edit" key="edit">
+                      <EditOutlined
+                        style={{ color: '#448DF7' }}
+                        onClick={() => {
+                          if (r.status === 'count stock') {
+                            setCountModal({ open: true, record: r });
+                          } else {
+                            setAddNewModal({ open: true, record: r });
+                          }
+                        }}
+                      />
+                    </Tooltip>
+                  )
+                );
+              },
+            }
             : {},
         ]}
       />

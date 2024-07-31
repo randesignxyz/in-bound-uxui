@@ -56,7 +56,11 @@ const StockControlTabItem: React.FC<Props> = ({ data, forceUpdate }) => {
       label: 'Number Plate',
       value: data.details?.plateNumber,
     },
-    { label: 'Status', value: data.details?.status },
+    { 
+      label: 'Status', 
+      value: data.details?.status ,
+      
+    },
 
     // {
     //   label: 'Cash on hand',

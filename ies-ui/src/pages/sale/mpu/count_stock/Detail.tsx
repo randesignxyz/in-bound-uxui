@@ -3,6 +3,7 @@ import { ProDescriptions, ProTable } from "@ant-design/pro-components";
 import { Card, Flex, Spin, Typography } from "antd";
 import { useEffect, useState } from "react";
 import { CountStockServiceAPI } from "./service";
+import numeral from 'numeral'
 
 const { Text } = Typography 
 
@@ -72,23 +73,29 @@ const CountStockDetail: React.FC<Props> = ({ id }) => {
                 <Card size="small" title="Sold Volume">
                     <ProDescriptions
                         dataSource={dataSource}
+                        contentStyle={{
+                            fontWeight:500
+                        }}
                         columns={[
                             {
                                 title: "Quantity",
-                                dataIndex: "soldQuantity"
+                                dataIndex: "soldQuantity",
+                                render:(_,r)=><Text type="danger">({numeral(r.soldQuantity).format("0,000")})</Text>
                             },
+                            // {
+                            //     title: "Useless Quantity",
+                            //     dataIndex: "uselessQuantity",
+                            // },
                             {
-                                title: "Useless Quantity",
-                                dataIndex: "uselessQuantity",
-                            },
-                            {
-                                title: "Total",
+                                title: "Total Quantity",
                                 dataIndex: "totalQuantity",
+                                render:(_,r)=><Text type="success">{[r.totalQuantity, "CASE"].filter(o=>o).join(" ")}</Text>
                             },
                             {
                                 title: "Solae Amount",
                                 dataIndex: "soldAmount",
-                                valueType: "money"
+                                valueType: "money",
+                                render:(_,r)=><Text type="success">$ {numeral(r.soldAmount).format("0,000.00")}</Text>
                             },
                             // {
                             //     title: "Exchange Rete",
@@ -118,31 +125,37 @@ const CountStockDetail: React.FC<Props> = ({ id }) => {
                                 dataIndex: "itemName",
                             },
                             {
+                                title: "Item Type",
+                                dataIndex: "itemType",
+                            },
+                            {
                                 title: "Begin Quantity",
                                 dataIndex: "beginQuantity",
                                 valueType:"digit",
-                                
+                                align:"right"
                             },
                             {
                                 title: "Request Quantity",
                                 dataIndex: "requestQuantity",
+                                align:"right"
                             },
                             {
                                 title: "Sole Volume",
                                 dataIndex: "soldQuantity",
-                                render:(_,r)=><Text  type="danger">({r.soldQuantity})</Text>
+                                render:(_,r)=><Text  type="danger">({r.soldQuantity})</Text>,
+                                align:"right"
                             },
                             {
                                 title: "System Quantity",
-                                dataIndex: "systemQuantity"
+                                dataIndex: "systemQuantity",
+                                align:"right"
                             },
                             {
                                 title: "Actual  Quantity",
                                 dataIndex: "actualQuantity",
-                                render:(_,r)=><Text  type="success">{r.actualQuantity}</Text>
+                                render:(_,r)=><Text  type="success">{r.actualQuantity}</Text>,
+                                align:"right"
                             },
-                           
-                            
                         ]}
                     />
                 </Card>

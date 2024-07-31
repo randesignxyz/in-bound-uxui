@@ -25,7 +25,7 @@ import {
   TeamOutlined,
   UserOutlined,
 } from '@ant-design/icons';
-import { PageContainer } from '@ant-design/pro-components';
+import { PageContainer, ProDescriptions } from '@ant-design/pro-components';
 import ProTable from '@ant-design/pro-table';
 import { useSetState } from 'ahooks';
 import {
@@ -323,18 +323,18 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
                   Create New Invoice
                 </Button>
                 {
-                // access.canAccessSettlement &&
-                 (
-                  <Button
-                    type="link"
-                    htmlType="button"
-                    icon={<FileDoneOutlined />}
-                    onClick={() => setAddSettlement({ visible: true })}
-                    key="settlementButton"
-                  >
-                    Settlement
-                  </Button>
-                )}
+                  // access.canAccessSettlement &&
+                  (
+                    <Button
+                      type="link"
+                      htmlType="button"
+                      icon={<FileDoneOutlined />}
+                      onClick={() => setAddSettlement({ visible: true })}
+                      key="settlementButton"
+                    >
+                      Settlement
+                    </Button>
+                  )}
               </>
             ),
             <Button
@@ -349,7 +349,42 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
           ]
         }
       >
-        <DescriptionDisplay data={displayItems} />
+        <ProDescriptions
+          column={3}
+          dataSource={state.data?.detail}
+          contentStyle={{
+            fontWeight: 500
+          }}
+          columns={[
+            {
+              title: "Store Name",
+              dataIndex: "name",
+            },
+            {
+              title: "Plate Number",
+              dataIndex: "name",
+              render: (_, r) => r.vehicle?.plateNumber
+            },
+            {
+              title: "Initialize Stock",
+              dataIndex: "name",
+              render: (_, r) => <Text
+                type={r.isInitialize ? "success" : "danger"}
+              >{r.isInitialize ? "Yes" : "No"}</Text>
+            },
+            {
+              title: "Created Date",
+              dataIndex: "createdDate",
+              valueType: "date"
+            },
+            {
+              title: "Description",
+              dataIndex: "description",
+              span: 2
+            },
+          ]}
+        />
+        {/* <DescriptionDisplay data={displayItems} /> */}
       </Card>
       {/* defaultActiveKey="stockControl" */}
       <Tabs>

@@ -4,7 +4,8 @@ import { PageContainer } from "@ant-design/pro-components"
 export const WHMPaths = {
     request: '/whm/issue/request',
     item: '/whm/inventory/item',
-    transter:'/whm/transfer/request'
+    transter:'/whm/transfer/request',
+    empWhs: '/whm/inventory/empwhs',
 }
 const items: ListMenuItem[] = [
     {
@@ -24,6 +25,12 @@ const items: ListMenuItem[] = [
         name: 'Inventory Item',
         description: 'Inventory Item Management',
         link: `${WHMPaths.item}/list`
+    },
+    {
+        id: 'whm_inventory_empwhs',
+        name: 'Employe Warehouse',
+        description: 'Employe Warehouse Mapping',
+        link: `${WHMPaths.empWhs}/list`
     },
 ]
 export default () => {

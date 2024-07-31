@@ -166,4 +166,5 @@ export default {
   'menu.whm_transfer_request': 'Transfer Request',
   'menu.whm_issue_request': 'NCM Request',
   'menu.whm_inventory_item': 'Item',
+  'menu.whm_inventory_empwhs': 'EMployee Warehouse',
 };

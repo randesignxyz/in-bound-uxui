@@ -1181,6 +1181,24 @@ export default [
     access: 'canAccessWHMMenuItem',
     component: './fma-stock/transfer',
   },
+  {
+    path: '/whm/inventory/empwhs/:view/*',
+    name: 'whm_inventory_empwhs',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessWHMMenuItem',
+    component: './fma-stock/emp-whs',
+  },
+  {
+    path: '/external/whm/inventory/empwhs/:view/*',
+    name: 'whm_inventory_empwhs',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    layout: false,
+    access: 'canAccessWHMMenuItem',
+    component: './fma-stock/emp-whs',
+  },
+  
   //  ================= END In-house Stock ================
   //  ================= Setting =================
 

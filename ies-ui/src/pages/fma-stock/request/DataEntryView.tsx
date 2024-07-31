@@ -1,11 +1,11 @@
 import { simpleRequestActions } from "@/services/model";
-import { EditableFormInstance, EditableProTable, FooterToolbar, PageContainer, ProForm, ProFormCheckbox, ProFormDatePicker, ProFormSwitch, ProFormTextArea } from "@ant-design/pro-components";
-import { Button, Card, Col, Form, Modal, Row, Space, Spin, message } from "antd";
+import { EditableFormInstance, EditableProTable, FooterToolbar, PageContainer, ProForm, ProFormDatePicker, ProFormTextArea } from "@ant-design/pro-components";
+import { Button, Card, Col, Form, Row, Space, Spin, message } from "antd";
 import { history } from 'umi';
 import { StockRequest, StockRequestItem } from "./data.types";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import SearchItemList from "./SearchItemList";
-import { min, uniqueId } from "lodash";
+import { uniqueId } from "lodash";
 import { ClearOutlined, MinusCircleOutlined } from "@ant-design/icons";
 import FileUploader from "@/components/Attachment/FileUploader";
 import { ProcessFlowModalWrapper } from "@/pages/process-flow/components/ProcessFlowModalWrapper";
@@ -35,22 +35,13 @@ export default ({
     const [fileIds, setFileIds] = useState<string[]>([]);
     const [startFormVisible, setStartFormVisible] = useState(false);
     const [groupId, setGroupId] = useState<number>(-1);
-
-    // useEffect(()=>{
-    //   services.listAllIUoMtem().then(rs=>{
-    //     setItemUomList(rs)
-    //   })
-    // },[])
     const clear = () => {
       form.resetFields();
       setAddedItems([]);
-      // setAddedServices([]);
-      // setInitFileIds([]);
       setFileIds([]);
       setForceClearUpload((v) => v + 1);
       setItemUomList([])
       setGroupId(-1)
-      // setIsService(false);
     };
     const getDataForm = async () => {
       const dataForm = await form.validateFields();
@@ -67,7 +58,6 @@ export default ({
         groupId: groupId,       
         fileIds: fileIds,
         items: addedItems.map((v, index) => ({ ...v, returnDate: (v?.returnDate!= undefined? moment(v?.returnDate, 'YYYY-MM-DD').toDate(): v?.returnDate), seqNo: index + 1 })),
-        // services: addedServices.map((v, index) => ({ ...v, seqNo: index + 1 })),
       } as StockRequest;
     };
 
@@ -87,27 +77,7 @@ export default ({
                   }}
                 >
                   Clear
-                </Button>
-                {/* <Button
-                  onClick={async () => {
-                    // const dataForm = await getDataForm();
-                    Modal.confirm({
-                      title: 'Save Requisition',
-                      content: 'Are you sure?',
-                      onOk: async () => {
-                        try {
-                          // await services.save(dataForm);
-                          message.success('Save successfully.');
-                          // clear();
-                        } catch (error: any) {
-                          message.error(error.message || 'Failed to save requisition.');
-                        }
-                      },
-                    });
-                  }}
-                >
-                  Save Draft
-                </Button> */}
+                </Button>                
                 <Button
                   type="primary"
                   onClick={async () => {
@@ -151,22 +121,7 @@ export default ({
                   name={'requestDate'}
                 />               
               </Col>             
-            </Row>
-            {/* <Row gutter={20}>
-              <Col flex={'500px'}>
-                <ProFormTextArea
-                  hasFeedback={false}
-                  // help={<span />}
-                  rules={[{ required: true, whitespace: true }]}
-                  label="Reason"
-                  name={'reason'}
-                />
-              </Col>
-              // {/* <Col flex={'400px'}>
-              //   <ProFormTextArea label="Remarks" name={'remarks'} />
-              // </Col>
-              // <Col flex={'Auto'} /> 
-            </Row> */}
+            </Row>           
           </Card>
           <Card
             title="Line Items"
@@ -257,15 +212,7 @@ export default ({
                 valueType: 'date',                
                 formItemProps: {rules:[
                   {
-                    required: false,
-                    // validator: (rules, value) => {
-                    //   if ((value as Moment).startOf('day').isBefore(moment().startOf('day'))) {
-                    //     return Promise.reject('Return date cannot be back date.');
-                    //   } else {
-                    //     message.warning('Hello')
-                    //     return Promise.resolve();
-                    //   }
-                    // },
+                    required: false
                   },
                 ]},
               },             

@@ -9,7 +9,7 @@ export default () => {
     const [modalVisible, setModalVisible] = useState<{ type: 'ADD', id?: number , cb?: () => void } | {type: 'EDIT', id?: number, cb?:() => void  }>()
     const [forceRefresh, setForceRefresh] = useState<number>(0)
 
-    return <><CrudWrapper baseURL={WHMPaths.empWhs} >
+    return <><CrudWrapper disablePageContainer baseURL={WHMPaths.empWhs} >
     {(view, id , navigate) => {
         switch (view) {
             case 'list':

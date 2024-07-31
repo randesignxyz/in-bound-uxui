@@ -753,7 +753,8 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         [         
           'ROLE_ADMIN',
-          'ROLE_NCM_WHM',
+          'ROLE_NCM_INVENTORY_TRANSFER_SUPPORT',
+          'ROLE_NCM_STOCK_REQUEST_SUPPORT',
         ].some((it) => it === item),
       ) || false,    
     canAccessNcmIssueRequest:

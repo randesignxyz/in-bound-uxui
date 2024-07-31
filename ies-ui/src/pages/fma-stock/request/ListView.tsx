@@ -5,7 +5,7 @@ import { SearchParams, StockRequestAdvanceSearchParams,StockRequestDetailRespons
 import { createService } from "./services";
 import { history, useModel } from 'umi';
 import Status from "@/components/Status";
-import { Badge, Button, Flex, Radio, Space, Tooltip, message } from "antd";
+import { Badge, Button, Flex, Radio, Space, Spin, Tooltip, message } from "antd";
 import { ActionType, PageContainer } from "@ant-design/pro-components";
 import TableView, { FetchPagingParams } from "@/components/DataCrud/TableView";
 import { Paging } from '@/services/API';
@@ -67,6 +67,7 @@ export default ({ onAdd, onEdit }: Props) => {
   };
 
   return  <PageContainer onBack={history.back} title="NCM Request">
+    <Spin spinning={false}>
       <TableView<StockRequestListItem, SearchParams>
         cache
         bordered
@@ -198,8 +199,9 @@ export default ({ onAdd, onEdit }: Props) => {
                   });
                 }
               }) as Promise<Paging<StockRequestListItem>>,
-      }}           
-    />
+        }}           
+      />
+    </Spin>
     <DataDetailView
       open={viewDetail.visible}     
       instId= {viewDetail.instId}

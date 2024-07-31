@@ -6,7 +6,7 @@ import ListView from "./ListView"
 
 export default () => {
 
-    return <CrudWrapper baseURL={WHMPaths.request} >
+    return <CrudWrapper disablePageContainer baseURL={WHMPaths.request} >
         {(view, id , navigate) => {
             switch (view) {
                 case 'list':

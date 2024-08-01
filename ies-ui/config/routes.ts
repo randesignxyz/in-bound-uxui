@@ -687,7 +687,7 @@ export default [
     component: './delivery/loading',
   },
   {
-    path: '/delivery/tracking',
+    path: '/delivery/tracking1',
     name: 'delivery-tracking',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
@@ -769,6 +769,14 @@ export default [
     hideInMenu: 'true',
     access: 'canAccessDeliveryTruck',
     component: './delivery/truck',
+  },
+  {
+    path: '/delivery/tracking',
+    name: 'location-tracking',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessDeliveryTruck',
+    component: './delivery/location-tracking',
   },
 
   /************************ Queque  ******************/

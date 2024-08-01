@@ -37,6 +37,7 @@ export const DeliveryPaths = {
   review: '/delivery/review',
   reviewer: '/delivery/reviewer',
   history: '/delivery/history',
+  locationTracking: '/delivery/tracking',
   loadingHistory: '/delivery/loading-history',
   deliveryHistory: '/delivery/list-instances-delivery'
 };
@@ -149,23 +150,30 @@ export default () => {
       // overlay: deliveryMenu,
       visible: access.canAccessDeliveryMenuItem,
       menu: {
-        items: [{
-          label: 'Delivery History',
-          icon: <HistoryOutlined style={{ fontSize: '16px', color: '#08c' }} />,
-          key: 'delivery-list',
-          onClick: () => history.push(DeliveryPaths.history),
-        },
-        {
-          type: 'divider'
-        },
-        {
-          label: 'Delivery Time Report',
-          icon: <AreaChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
-          key: 'delivery-time-report',
-          onClick: () => setModal({
-            type: 'DELIVERY_TIME'
-          }),
-        }]
+        items: [
+          {
+            label: 'Location Tracking',
+            icon: <HistoryOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+            key: 'location-tracking',
+            onClick: () => history.push(DeliveryPaths.locationTracking)
+          },
+          {
+            label: 'Delivery History',
+            icon: <HistoryOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+            key: 'delivery-list',
+            onClick: () => history.push(DeliveryPaths.history),
+          },
+          {
+            type: 'divider'
+          },
+          {
+            label: 'Delivery Time Report',
+            icon: <AreaChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+            key: 'delivery-time-report',
+            onClick: () => setModal({
+              type: 'DELIVERY_TIME'
+            }),
+          }]
       }
     },
     {

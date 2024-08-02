@@ -23,6 +23,7 @@ import { useEffect, useState } from 'react';
 import { history } from "@umijs/max";
 import { ProcessRequestItem } from './data.type';
 import { StockRequestFormNames } from '@/pages/fma-stock/request/process-flow';
+import { TransferRequestFormNames } from '@/pages/fma-stock/transfer/process-flow';
 
 export default () => {
   const [data, setData] = useState<ProcessRequestItem[]>([]);
@@ -55,6 +56,7 @@ export default () => {
     if (key == PriceComparisonFormNames.processDefKey && access.canAccessProQCMenuItem) return true;
     if (key == PoRequestFormNames.processDefKey && access.canAccessProPOMenuItem) return true;   
     if (key == StockRequestFormNames.processDefKey && access.canCreateNCMRequest) return true;
+    if (key == TransferRequestFormNames.processDefKey && access.canCreateInventoryTransferRequest) return true;
 
     return false;
   };

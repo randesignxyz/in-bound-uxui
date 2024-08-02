@@ -162,7 +162,9 @@ export default {
   'menu.term': 'Term',
   'menu.fleet_accessory': 'Fleet Accessory',
 
-  'menu.inhouse-stock': 'NCM',
-  'menu.inhouse_stock_request': 'Stock Request',
-  'menu.inhouse_stock_item': 'Item',
+  'menu.whm': 'WHM',
+  'menu.whm_transfer_request': 'Transfer Request',
+  'menu.whm_issue_request': 'NCM Request',
+  'menu.whm_inventory_item': 'Item',
+  'menu.whm_inventory_empwhs': 'EMployee Warehouse',
 };

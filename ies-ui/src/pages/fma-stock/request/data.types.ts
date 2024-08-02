@@ -1,4 +1,4 @@
-import { Moment } from "moment";
+import moment, { Moment } from "moment";
 
 export type SavePayLoad = {}
 export type SearchParams = {
@@ -24,6 +24,8 @@ export interface StockRequestListItem {
   createdDate?: Moment
   workflowStatus?: string
   status?: string
+  returnDate?: Moment
+  returnType?: string
 } 
 export interface StockRequestLess {
   id: number;
@@ -58,6 +60,9 @@ export interface StockRequestItem {
   qty: number;
   uom: string;
   remarks?: string;
+  returnType?:string;
+  returnDate?: Moment;
+
 }
 export interface StockRequest {
   id?: number;
@@ -120,6 +125,8 @@ export interface StockRequestItemDetailResponse {
   remarks?: string;
   stockRemarks?: string;
   seqNo: number;
+  returnDate?: Moment;
+  returnType?: string;
 }
 export interface StockRequestDetailResponse {
   id: number;  

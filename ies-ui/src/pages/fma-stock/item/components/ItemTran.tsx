@@ -19,7 +19,6 @@ export default({}:Props) => {
     const cacheList = useModel('dataList');
     const requestActions = simpleRequestActions();
     const services = createService(requestActions);
-    // const src = Srv(requestActions);
     const onRequestHandler = async (params: FetchPagingParams<SearchItemParams&{keyword?:string}>)=>{
         try {
             return services.fetchPaging(params).then((it) => {
@@ -44,15 +43,12 @@ export default({}:Props) => {
             <LightFilter<LightFilterProp> 
                 onValuesChange={(_, values) => {
                     const groupIds = values.groupIds;
-                    // setAdanceSearch(v => { return {...v,requestStatus: requestStatus}})
-                    // setAdvanceSearchParams(v => { return {...v,groupIds: groupIds}})
                 }}
             >
                 <ProFormSelect 
                     name="groupIds"
                     label="For the compnay"
-                    mode="multiple"
-                    // options={itemGroups.map((it) => {return { label: it.itemGroupName, value: it.id }})}                        
+                    mode="multiple"                  
                 />
             </LightFilter>
         </Space>
@@ -83,7 +79,6 @@ export default({}:Props) => {
                             window.open(`/external/stock/item/detail/${rd.id}`, '_blank')?.focus();
                         }}
                     />
-                    {/* <a onClick={() => { history.push(`${InhouseStockPaths.item}/detail/${rd.id}`) }} >{rd.itemCode}</a> */}
                 </Space>
             },
             {

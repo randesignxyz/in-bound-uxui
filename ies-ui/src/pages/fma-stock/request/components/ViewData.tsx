@@ -1,10 +1,8 @@
-import { ActionType, ProCard, ProColumns, ProForm, ProFormTextArea, ProTable } from "@ant-design/pro-components";
+import { ActionType, ProCard, ProColumns, ProTable } from "@ant-design/pro-components";
 import { StockRequestDetailResponse, StockRequestItemDetailResponse } from "../data.types";
-import { Button, Checkbox, Descriptions, Divider, message } from "antd";
+import { Descriptions } from "antd";
 import { formatDate, formatDateTime } from "@/pages/utils";
 import { useForm } from "antd/es/form/Form";
-import PopconfirmMe from "@/pages/expense/delivery/components/PopconfirmMe";
-import { CommentOutlined } from "@ant-design/icons";
 import { useEffect, useRef, useState } from "react";
 import { simpleRequestActions } from "@/services/model";
 import { createService } from "../services";
@@ -42,13 +40,28 @@ export default ({title,instId, forceRefresh }: Props) => {
 
         },
         {
-            title:'Qty',
+            title: 'Quantity Requested',
+            width: 100,
+            align: 'right',
             dataIndex:'qty'
 
         },
         {
             title:'UoM',
             dataIndex:'uom'
+
+        },
+        {
+            title: 'To be Returned in Full or Partial (F/P)',
+            width: 110,
+            dataIndex:'returnType'
+
+        },
+        {
+            title: 'Expected Return Date',
+            width: 110,
+            dataIndex:'returnDate',
+            render: (_, r) => formatDate(r?.returnDate)
 
         },
         {
@@ -70,7 +83,7 @@ export default ({title,instId, forceRefresh }: Props) => {
                 {stockRequest?.formNo}
             </Descriptions.Item>
             <Descriptions.Item label="Expected Date">
-                {stockRequest?.requestedDate && formatDateTime(stockRequest?.requestedDate)}
+                {stockRequest?.requestedDate && formatDate(stockRequest?.requestedDate)}
             </Descriptions.Item>
             <Descriptions.Item label="Created Date">
                 {stockRequest?.createdDate && formatDateTime(stockRequest?.createdDate)}

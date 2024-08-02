@@ -27,7 +27,7 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
           const data = await services.detailByProcessFlow(instId);
           setStockRequest({ ...data });
       } catch (error: any) {
-          message.error(error.message || 'Failed to load stock request.');
+          message.error(error.message || 'Failed to load request.');
       }
     };
 

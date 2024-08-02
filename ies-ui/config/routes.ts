@@ -1234,30 +1234,63 @@ export default [
   //  ================= END Prod =================
   //  ================= START In-house Stock ==============
   {
-    path: '/stock/request/:view/*',
-    name: 'inhouse-stock-request',
+    path: '/whm',
+    name: 'whm',
+    icon: 'ReconciliationOutlined',
+    access: 'canAccessWhmMenut',
+    component: './fma-stock',
+  },
+  {
+    path: '/whm/issue/request/:view/*',
+    name: 'whm_issue_request',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessCrmMenuItem',
+    access: 'canAccessNcmIssueRequest',
     component: './fma-stock/request',
   },
   {
-    path: '/stock/item/:view/*',
-    name: 'inhouse-stock-item',
+    path: '/whm/inventory/item/:view/*',
+    name: 'whm_inventory_item',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessCrmMenuItem',
+    access: 'canAccessWhmItemMenu',
     component: './fma-stock/item',
   },
   {
-    path: '/external/stock/item/:view/*',
-    name: 'inhouse-stock-item',
+    path: '/external/whm/inventory/item/:view/*',
+    name: 'whm_inventory_item',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
     layout: false,
-    access: 'canAccessCrmMenuItem',
+    access: 'canAccessWhmItemMenu',
     component: './fma-stock/item',
   },
+  {
+    path: '/whm/transfer/request/:view/*',
+    name: 'whm-transter-request',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessWhmInventoryTransferRequestMenu',
+    component: './fma-stock/transfer',
+  },
+  {
+    path: '/whm/inventory/empwhs/:view/*',
+    name: 'whm_inventory_empwhs',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessWhmEmpMappingMenu',
+    component: './fma-stock/emp-whs',
+  },
+  {
+    path: '/external/whm/inventory/empwhs/:view/*',
+    name: 'whm_inventory_empwhs',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    layout: false,
+    access: 'canAccessWhmEmpMappingMenu',
+    component: './fma-stock/emp-whs',
+  },
+  
   //  ================= END In-house Stock ================
   //  ================= Setting =================
 

@@ -3,7 +3,6 @@ import { execDataService, fetchDataItemService, fetchDataListService, fetchDataP
 import { SimpleRequestActions } from "@/services/model";
 import { ItemDetail, ItemGroupListItem, ItemListItem,  SearchParams,  StockRequest, StockRequestDetailResponse, StockRequestListItem, StockRequestResponse, UoMItemList } from "./data.types";
 import { StartWorkFlowParam, TaskActionDataParam } from "@/services/process-workflow/params";
-import detail from "@/pages/fma/new-staff/detail";
 
 export const createService = (request: SimpleRequestActions) => {
     return {       

@@ -151,12 +151,12 @@ export default () => {
       visible: access.canAccessDeliveryMenuItem,
       menu: {
         items: [
-          {
-            label: 'Location Tracking',
-            icon: <HistoryOutlined style={{ fontSize: '16px', color: '#08c' }} />,
-            key: 'location-tracking',
-            onClick: () => history.push(DeliveryPaths.locationTracking)
-          },
+          // {
+          //   label: 'Location Tracking',
+          //   icon: <HistoryOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+          //   key: 'location-tracking',
+          //   onClick: () => history.push(DeliveryPaths.locationTracking)
+          // },
           {
             label: 'Delivery History',
             icon: <HistoryOutlined style={{ fontSize: '16px', color: '#08c' }} />,

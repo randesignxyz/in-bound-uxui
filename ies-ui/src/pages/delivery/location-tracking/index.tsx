@@ -1,36 +1,62 @@
-import { EnvironmentOutlined } from "@ant-design/icons";
-import { PageContainer, ProList } from "@ant-design/pro-components"
-import { GoogleMap, LoadScript } from "@react-google-maps/api"
-import truckIcon from '@/assets/truck.png';
-import { Button, Drawer, Flex, Input } from "antd";
-import { useState } from "react";
+import { ProDescriptions, ProList } from "@ant-design/pro-components"
+import { GoogleMap, useGoogleMap, useLoadScript, } from "@react-google-maps/api"
+import { Button, DatePicker, Drawer, Flex, FloatButton, Input, Space } from "antd";
+import { useRef, useState } from "react";
+import MapComp from "./MapComp";
+import { useQuery } from "@umijs/max";
+import { fetchDataListService } from "@/services/apiGateway";
+import { Moment } from "moment";
+import { simpleRequestActions } from "@/services/model";
+import dayjs from "dayjs";
 
-const containerStyle = {
-    width: '100vw',
-    height: '88vh'
-};
 
-const center = {
-    lat: 11.58181155360925,
-    lng: 104.91810050044207
-};
-
+import { LocationTracking } from "./data.type";
+import Icon from "@ant-design/icons/lib/components/Icon";
+import { formatDateTime } from "@/pages/utils";
+import { AimOutlined, ArrowLeftOutlined, RightCircleOutlined, TruckOutlined } from "@ant-design/icons";
+import DeliveryList from "./DeliveryList";
+import DeliveryView from "./DeliveryView";
+const dateFormat = 'YYYY/MM/DD';
 
 export default () => {
 
     const [visible, setVisible] = useState(false)
-    return <Flex>
-        <LoadScript googleMapsApiKey={"AIzaSyA0Ifgai8ryDULDIqNOZmX8L7XZlzu4_D8"}>
-            <GoogleMap mapContainerStyle={containerStyle}
-                center={center}
-                zoom={14}   >
-                <Flex justify="flex-end"> <Button style={{ top: 60, marginRight: 10 }} size="large" icon={<EnvironmentOutlined />} onClick={() => setVisible(true)} /></Flex>
+    const { isLoaded } = useLoadScript({
+        googleMapsApiKey: 'AIzaSyA0Ifgai8ryDULDIqNOZmX8L7XZlzu4_D8'
+    });
+    const [criteria, setCriteria] = useState<{ deliveryDate?: Moment }>()
+    const [selectItem, setSelectItem] = useState<LocationTracking>()
+    const [zoomTo, setZoomto] = useState<LocationTracking>()
+    const requestActions = simpleRequestActions()
+    const { data, refetch } = useQuery([criteria], () => fetchList(), {
+        refetchOnWindowFocus: false
+    })
 
-            </GoogleMap>
-        </LoadScript>
-        <Drawer title="Trucks" onClose={() => setVisible(false)} open={visible} >
-            <Flex><Input.Search /></Flex>
-            <ProList />
+    const fetchList = (deliveryDate?: Moment) => fetchDataListService<LocationTracking, { deliveryDate?: Moment }>({
+        actionName: 'list-location-tracking',
+        endpoint: 'DELIVERY',
+        payload: { deliveryDate }
+    }).query(requestActions)
+
+
+    return <Flex>
+
+        {isLoaded && <MapComp onView={(item) => {
+            setSelectItem(item)
+            setVisible(true)
+        }} onZoomChanged={() => setZoomto(undefined)} zoomTo={zoomTo} data={data || []} onFilter={data => setCriteria({ deliveryDate: data })} onOpen={() => setVisible(true)} >
+
+        </MapComp>}
+
+        <Drawer extra={selectItem && <Button type="link" onClick={() => setSelectItem(undefined)} icon={<ArrowLeftOutlined />} />} width={600}
+            title={selectItem ? selectItem.licensePlane : 'Location Tracking '} onClose={() => {
+                setVisible(false)
+                setZoomto(undefined)
+
+            }} open={visible} >
+
+            {!selectItem && <DeliveryList data={data || []} onZoom={setZoomto} onView={setSelectItem} />}
+            {selectItem && <DeliveryView />}
         </Drawer>
     </Flex>
 

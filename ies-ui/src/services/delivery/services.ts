@@ -142,5 +142,6 @@ export const DeliveryServiceAPI = (requestActions: RequestActions) => {
         listReviewItem: (id: number) => singleRequest(ReqSurveyParams.listReviewItem(id))(requestActions) as Promise<ReviewItem[]>,
 
         assignCustomerToReviewer: (id: number, customerCode: string) => singleRequest(ReqSurveyParams.assignCustomerToReviewer(id, customerCode))(requestActions),
+
     }
 }

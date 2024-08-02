@@ -54,7 +54,7 @@ export default () => {
         <PageWrapper<SoItemLess, FilterType, {}>
             // onNewRender={(key) => access.canCreateEditSo && <ViewWrapper openInTab addNew tabKey={key} />}
             tabRender={item => [
-                // { action: 'add', tabIcon: <FileOutlined />, panel: ({ key }) => <ViewWrapper addNew openInTab tabKey={key.toString()} />, tabLabel: 'New SO' },
+                { action: 'add', tabIcon: <FileOutlined />, panel: ({ key }) => <ViewWrapper addNew openInTab tabKey={key.toString()} />, tabLabel: 'New SO' },
                 {
                     action: 'view', value: item?.poNo,
                     panel: () => <ViewWrapper openInTab id={item?.id} />,
@@ -68,7 +68,7 @@ export default () => {
             ]}
             listView={{
                 type: 'Table',
-                title: 'Task List',
+                title: 'SO List',
                 actionButtons: [{
                     icon: <PlusCircleOutlined />,
                     type: 'link',

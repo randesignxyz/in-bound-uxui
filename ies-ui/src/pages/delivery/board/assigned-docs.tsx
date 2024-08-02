@@ -11,11 +11,11 @@ import {
 } from '@/services/delivery/data';
 import { DeliveryParams } from '@/services/delivery/delivery-params';
 import { DeliveryServiceAPI } from '@/services/delivery/services';
-import { CheckOutlined, CloseOutlined, ReloadOutlined, SearchOutlined, SendOutlined } from '@ant-design/icons';
+import { CheckOutlined, CloseOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons';
 import { ProCard, ProFormCheckbox, ProFormDatePicker, ProFormGroup, ProFormSelect, ProFormText } from '@ant-design/pro-components';
 import { ModalForm, ModalFormProps } from '@ant-design/pro-form';
 import ProTable from '@ant-design/pro-table';
-import { Alert, Button, Card, Checkbox, Col, message, Modal, Row, Space, Spin, Switch, Tooltip, Typography } from 'antd';
+import { Alert, Button, Checkbox, Col, message, Modal, Row, Space, Spin, Switch, Tooltip, Typography } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import _ from 'lodash';
 import { Moment } from 'moment';
@@ -26,7 +26,6 @@ import { shiftList } from './issue-dn';
 export interface CollectedInvoice extends InvoiceItem {
   included: boolean;
   remarks?: string;
-
 }
 
 interface Props extends ModalFormProps, ViewController {
@@ -46,10 +45,8 @@ interface Props extends ModalFormProps, ViewController {
   // onRequestChange: (driverId: number, licensePlate: string, deliveryNotes: number[], items: DeliveryNoteItem[], remarks?: string) => void;
 }
 
-
-
 const errorMessage = 'Quantity mismatched. Please revise delivery note or ask warehouse team to acknowledge the changed quantity'
-const errorMessageSameQty = "Item quantities are the same. Reasigning is not possible"
+// const errorMessageSameQty = "Item quantities are the same. Reasigning is not possible"
 
 const AssignedDocModal: React.FC<Props> = ({
   from,

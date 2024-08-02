@@ -13,7 +13,7 @@ import settingIcon from '@/assets/settings.png';
 import qrCodeIcon from '@/assets/qr-code.png';
 import forkLift from '@/assets/fork-lift.png';
 import { Divider, Menu } from 'antd';
-import { AreaChartOutlined, HistoryOutlined, PlusCircleOutlined } from '@ant-design/icons';
+import { AreaChartOutlined, EnvironmentOutlined, HistoryOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import { useAccess, history } from "@umijs/max";
 import { PageContainer } from '@ant-design/pro-components';
 import ModalMngt, { modalType } from './modal-mngt';
@@ -151,12 +151,12 @@ export default () => {
       visible: access.canAccessDeliveryMenuItem,
       menu: {
         items: [
-          // {
-          //   label: 'Location Tracking',
-          //   icon: <HistoryOutlined style={{ fontSize: '16px', color: '#08c' }} />,
-          //   key: 'location-tracking',
-          //   onClick: () => history.push(DeliveryPaths.locationTracking)
-          // },
+          {
+            label: 'Location Tracking',
+            icon: <EnvironmentOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+            key: 'location-tracking',
+            onClick: () => history.push(DeliveryPaths.locationTracking)
+          },
           {
             label: 'Delivery History',
             icon: <HistoryOutlined style={{ fontSize: '16px', color: '#08c' }} />,

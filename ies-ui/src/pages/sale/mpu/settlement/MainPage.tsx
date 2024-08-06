@@ -6,10 +6,11 @@ import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { useQuery } from "@umijs/max";
 import { ActionType } from "@ant-design/pro-components";
 import { formatDate } from "@/pages/utils";
-import SettlementMethodDetail from "./Detail";
+import SettlementMethodDetail from "./Detail";  
 import { formatCurrency } from "../../sale";
 import { Tag } from "antd";
 import { SyncOutlined, CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
+import { SettlementMethodAdvanceSearch, SettlementMethodDetailDTO } from "./data";
 interface Props {
 
 }
@@ -23,8 +24,6 @@ const SettlementMianPage: React.FC<Props> = () => {
     });
     const { data, isFetching, refetch } = useQuery(['fetch-settlement-list', filter], () => services.page(filter), {
         refetchOnWindowFocus: false,
-        cacheTime:5, 
-        refetchInterval:5000
     });
     return (<>
 
@@ -33,7 +32,7 @@ const SettlementMianPage: React.FC<Props> = () => {
                 {
                     tabLabel: `${formatDate(items?.settlementDate)}-${items?.salespersonCode}`,
                     action: "view",
-                    tabKey: `${formatDate(items?.settlementDate)}-${items?.salespersonCode}`,
+                    tabKey: `${items?.id}`,
                     panel: ({ onUpdateTab, onAddTab, onCloseTab, key }) => <SettlementMethodDetail id={items?.id} />
                 }
             ]}
@@ -46,7 +45,6 @@ const SettlementMianPage: React.FC<Props> = () => {
                     { option: { label: "Completed", value: "Completed" } },
                     { option: { label: "Rejected", value: "Rejected" } },
                 ],
-                // advanceSearchButton:<Button icon={<FileSearchOutlined />} onClick={()=>{}} />,
                 onRefresh: refetch,
                 onFilter: (params, page, sort) => {
                     setFilter(v => ({
@@ -101,23 +99,19 @@ const SettlementMianPage: React.FC<Props> = () => {
                                     :r.status =="Completed"?"success"
                                     :"error"
                                 }
-
                             >{r.status}</Tag>
                         },
                         {
                             title: "Amount",
                             dataIndex: "amount",
-                            valueType: "money"
+                            valueType: "money",
+                            align:"right",
                         },
                         {
                             title: "Exchange Rate",
                             dataIndex: "exchangeRate",
+                            align:"right",
                             render: (_, r) => formatCurrency(r.exchangeRate, '៛'),
-                        },
-                        {
-                            title: "Amount (KH)",
-                            dataIndex: "amountKH",
-                            render: (_, r) => formatCurrency(r.amountKH, '៛')
                         },
                     ]
                 }
@@ -125,6 +119,5 @@ const SettlementMianPage: React.FC<Props> = () => {
         />
     </>)
 }
-
 
 export default SettlementMianPage

@@ -16,6 +16,12 @@ const SuggestionActions = {
     actionName: 'exchange-rate',
     payload: {},
   }),
+  reject :(id:number):ServiceApiType<{id:number}> =>({
+    type:"EXEC",
+    actionName:"reject-request-stock",
+    endpoint:"SALE",
+    payload:{id}
+  })
   // list: (
   //   params: TableViewSearchParams<CustomerAdvanceSearchParams>,
   // ): ServiceApiType<{ searchValue?: string }> => ({
@@ -45,14 +51,9 @@ const SuggestionActions = {
 
 export const SuggestionServiceAPI = (requestActions: RequestActions) => {
   return {
-    dsdExchangeRage: () =>
-      singleRequest<ExchangeRate>(SuggestionActions.dsdExchangeRage())(
-        requestActions,
-      ) as Promise<ExchangeRate>,
-    exchangeRage: () =>
-      singleRequest<ExchangeRate>(SuggestionActions.exchangeRage())(
-        requestActions,
-      ) as Promise<ExchangeRate>,
+    dsdExchangeRage: () =>singleRequest<ExchangeRate>(SuggestionActions.dsdExchangeRage())(requestActions) as Promise<ExchangeRate>,
+    exchangeRage: () =>singleRequest<ExchangeRate>(SuggestionActions.exchangeRage())(requestActions) as Promise<ExchangeRate>,
+    reject :(id:number) =>singleRequest(SuggestionActions.reject(id))(requestActions)
     // listCustomer: (params: TableViewSearchParams<CustomerAdvanceSearchParams>) =>
     //   singleRequest<CustomerDto>(CustomerActions.list(params))(requestActions) as Promise<
     //     Paging<CustomerDto>

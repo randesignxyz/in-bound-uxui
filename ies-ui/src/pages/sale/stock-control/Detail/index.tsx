@@ -229,14 +229,15 @@ const StockControlDetail: React.FC<Props> = ({ id, actionHandlers }) => {
                 <SaleInvoiceTabItem
                   forceUpdate={forceUpdate}
                   data={{
-                    listStockDetailItem: state.data?.listStockDetailItem,
+                    listStockDetailItem: state.data?.detail?.items,
                     typeProductItems: state.data?.initData?.typeProductItems,
                     id: id,
                     // saleTypes: state.data?.initData?.lookDataList?.filter(
                     //   (it) => it.type === 'SALE_TYPE',
                     // ),
+                    owner: state.data?.detail?.owner,
                     exchangeRate: dsdExchangeRate,
-
+                  
                     isOpen: isOpenStock(),
                     //salespersonCode: state.data?.detail?.owner.salespersonCode,
                     salespersonList: state.data?.initData?.salespersonList,

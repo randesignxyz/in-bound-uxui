@@ -9,6 +9,7 @@ import type {
   SaleInvoiceLess,
   SaleItem,
   SalesTeamWorkLess,
+  StockControlDetail,
   StockDetailLess,
 } from '@/services/sale/data';
 import { EditOutlined, PlusOutlined } from '@ant-design/icons';
@@ -32,6 +33,7 @@ type Props = {
     // saleTypes?: LookupData[];
     typeProductItems?: { type: number; value: LookupDataItem[] }[];
     //salespersonCode?: string;
+    owner?:SalesTeamWorkLess;
     exchangeRate?: ExchangeRate;
     salespersonList?: SalesTeamWorkLess[];
     loading: boolean;
@@ -81,38 +83,42 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
   };
 
   const getProductItems = () => {
-    const result =
-      data.listStockDetailItem?.flatMap((it) => {
+    const result =data.listStockDetailItem?.flatMap((it) => {
         if (it.typeId !== 133) {
           return it.items
-            ?.filter((it1) => it1.beginningQty + it1.quantity > it1.soldQty)
+            // ?.filter((it1) => it1.beginningQty + it1.quantity > it1.soldQty)
             .flatMap((it1) => ({
               id: it1.itemId,
               name: it1.itemName,
               code: it1.itemCode,
               qty: it1.quantity,
               price: 3.75,
+              batchNo:it1.batchNo
             }));
         } else return [];
       }) || [];
 
-    const items: SaleItem[] = [];
+      
+    // const items: SaleItem[] = [];
 
-    result.reduce((res, value) => {
-      if (value && !res[value.id]) {
-        res[value.id] = { ...value, qty: 0 };
-        items.push(res[value.id]);
-      }
-      value && (res[value.id].qty += value?.qty);
-      return res;
-    }, {});
+    // result.reduce((res, value) => {
+    //   if (value && !res[value.id]) {
+    //     res[value.id] = { ...value, qty: 0 };
+    //     items.push(res[value.id]);
+    //   }
+    //   value && (res[value.id].qty += value?.qty);
+    //   return res;
+    // }, {});
 
-    return items.sort((a, b) => {
-      if (a.code < b.code) return -1;
-      if (a.code > b.code) return 1;
-      return 0;
-    });
+    // return items.sort((a, b) => {
+    //   if (a.code < b.code) return -1;
+    //   if (a.code > b.code) return 1;
+    //   return 0;
+    // });
+
+    return result
   };
+
 
   const getTypes = () => {
     return data.typeProductItems?.flatMap((it) => {
@@ -205,6 +211,8 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
     return `${name} - ( ${it?.phone} )`;
   };
 
+  console.log(data);
+  
   return (
     <>
       <ProTable<SaleInvoiceLess, { stockControlId: number; searchValue?: string }>
@@ -355,6 +363,7 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
           salespersonList: data.salespersonList,
           regionList: data.regionList,
           locations: data.locations,
+          owner:data.owner,
           saleItems: getProductItems(),
           typeProductItems: getTypes(),
           detail: saleInvoiceModal.record,

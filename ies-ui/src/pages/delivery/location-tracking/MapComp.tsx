@@ -7,7 +7,6 @@ import { useEffect } from "react";
 import { LocationTracking } from "./data.type";
 import MarkerComp from "./MarkerComp";
 import BarComp from "./BarComp";
-import locationTracking from ".";
 const containerStyle = {
     width: '100vw',
     height: '88vh'
@@ -18,10 +17,10 @@ const center = {
     lng: 104.91810050044207
 };
 
-export default ({ data, onFilter, onOpen, onView, zoomTo, ...rest }: GoogleMapProps & {
+export default ({ data, onOpen, reload, onView, zoomTo, ...rest }: GoogleMapProps & {
     zoomTo?: LocationTracking;
     data: LocationTracking[];
-    onFilter: (deliveryDate?: Moment) => void;
+    reload: () => void
     onOpen: () => void;
     onView: (item?: LocationTracking) => void;
 }) => {
@@ -30,6 +29,7 @@ export default ({ data, onFilter, onOpen, onView, zoomTo, ...rest }: GoogleMapPr
     return <GoogleMap mapContainerStyle={containerStyle}
         center={center}
         zoom={14}
+
         options={{
             styles: [
                 // {
@@ -80,11 +80,15 @@ export default ({ data, onFilter, onOpen, onView, zoomTo, ...rest }: GoogleMapPr
         }}
 
     >
-        <BarComp locationTracking={zoomTo} onOpen={onOpen} />
+        <BarComp locationTracking={zoomTo} onOpen={onOpen} reload={reload} />
 
         <MarkerClusterer imageSizes={[50, 50, 50, 50]}>
             {(clusterer) => <div>
-                {data.map(it => <MarkerComp onView={onView} onClick={() => onView(it)} locationTracking={it} zoomTo={zoomTo} clusterer={clusterer} />)}
+                {data.map(it => <MarkerComp
+                    onView={onView} onClick={() => onView(it)}
+                    locationTracking={it}
+                    zoomTo={zoomTo}
+                    clusterer={clusterer} />)}
             </div>}
         </MarkerClusterer>
 

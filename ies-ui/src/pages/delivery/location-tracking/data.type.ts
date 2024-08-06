@@ -3,6 +3,7 @@ import { Moment } from "moment";
 export type LocationTracking = {
     processInstanceId: number;
     deliveryId: number;
+    deliveryItemId: number;
     deliveryDate: Moment;
     finishedDate: Moment;
     shift: string;

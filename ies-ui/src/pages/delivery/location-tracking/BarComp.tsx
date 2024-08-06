@@ -1,13 +1,16 @@
-import { EnvironmentOutlined } from "@ant-design/icons"
+import { EnvironmentOutlined, ReloadOutlined } from "@ant-design/icons"
 import { useGoogleMap } from "@react-google-maps/api"
-import { Button, Flex } from "antd"
+import { Button, Flex, Space } from "antd"
 import { LocationTracking } from "./data.type"
 import { useEffect } from "react"
 
-export default ({ locationTracking, onOpen }: { locationTracking?: LocationTracking, onOpen: () => void }) => {
+export default ({ locationTracking, onOpen, reload }: {
+    locationTracking?: LocationTracking
+    onOpen: () => void
+    reload: () => void
+}) => {
 
     const map = useGoogleMap()
-
 
     useEffect(() => {
         if (locationTracking) {
@@ -23,7 +26,12 @@ export default ({ locationTracking, onOpen }: { locationTracking?: LocationTrack
     }, [locationTracking])
 
     return <Flex justify="flex-end">
-        <Button style={{ top: 60, marginRight: 10 }} size="large" icon={<EnvironmentOutlined />}
-            onClick={onOpen} />
+        <Space size={'small'} direction="vertical" style={{ marginTop: 60, marginRight: 10 }}>
+            <Button type="primary" size="large" icon={<EnvironmentOutlined />}
+                onClick={onOpen} />
+            <Button type="primary" size="large" icon={<ReloadOutlined />}
+                onClick={reload} />
+
+        </Space>
     </Flex>
 }

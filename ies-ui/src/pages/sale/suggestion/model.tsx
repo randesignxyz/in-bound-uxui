@@ -95,6 +95,15 @@ export const Model = (id?: number) => {
     }
   };
 
+  const reject = async (param:StatusActionForm) => {
+    try {
+      const rs = await saleServices.onRejectStockRequest(param);
+      message.info(rs.message);
+    } catch (error: any) {
+      message.error(error.message);
+    }
+  };
+
   const approvalRequest = async (item: ApprovalStockControlDto) => {
     try {
       const rs = await saleServices.onApprovalStockRequest(item);
@@ -146,6 +155,7 @@ export const Model = (id?: number) => {
       loadListItem,
       acceptRequest,
       approvalRequest,
+      reject,
       countStock,
       initData,
       onSaveSettlementModel,

@@ -98,7 +98,8 @@ export type SaleServiceName =
   | 'create-stock-control'
   | 'close-stock-request'
   | 'settle-stock-request'
-  | 'exchange-rate-dsd';
+  | 'exchange-rate-dsd'
+  | 'reject-request-stock';
 
 /** Stock */
 // export interface StockControl {
@@ -346,6 +347,8 @@ export interface SaleInvoiceLess {
   createdDate: moment.Moment;
   salesperson: SalesTeamWorkLess;
   salespersonCode: string;
+  internalId:string;
+  storeId?:number;
   customer?: LeadLess;
   customerId?: string;
   discount: number = 0.0;
@@ -359,6 +362,7 @@ export interface SaleItem {
   code: string;
   qty: number;
   price: number;
+  batchNo?:string;
 }
 
 export interface SaleInvoiceItemLess {
@@ -374,6 +378,7 @@ export interface SaleInvoiceItemLess {
   unitPrice: number;
   amount: number;
   stockCategoryId?: number;
+  batchNo?:string
 }
 
 export interface TopupLess {
@@ -413,7 +418,7 @@ export interface StockControlDetail {
   stockName: string;
   description?: string;
   isActive: number;
-  status: string;
+  status: string |"pending"|"canceled"|"open"|"approved"|"closed"|"settled"|"count stock";
   owner: SalesTeamWorkLess;
   approvedBy?: SalesTeamWorkLess;
   receivedBy?: SalesTeamWorkLess;
@@ -516,6 +521,7 @@ export interface StockControlLess {
   items?: StockDetailItemLess[];
   invoices?: SaleInvoiceLess[];
   adjustmentItems?: StockAdjustmentDto[] = [];
+  beginningQty:number
 }
 
 export interface StockAdjustmentDto {

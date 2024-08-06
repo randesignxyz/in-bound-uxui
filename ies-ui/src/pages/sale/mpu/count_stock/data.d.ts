@@ -1,3 +1,4 @@
+import { Moment } from "moment";
 
 interface StockCountDto{
     id: number,
@@ -17,7 +18,8 @@ interface StockCountDto{
     exchangeRete: number,
     remark?: string,
     status:"Pending"|"Rejected"|"Approved"|string;
-    items?: StockCountItemDto[]
+    items?: StockCountItemDto[];
+    comment?:comments[];
 }
 
 interface StockCountItemDto{
@@ -44,4 +46,15 @@ interface StockCountItemDto{
 interface CountStockAdvanceSearch{
     status:string;
     searchValue?:string
+}
+
+interface Comment {
+    id?:number;
+    referentId?:number;
+    referentStringId?:string;
+    source?:string;
+    description:string;
+    type?:string;
+    createdBy?: string;
+    createdDate?: Moment.moment
 }

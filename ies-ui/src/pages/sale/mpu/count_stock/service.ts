@@ -4,7 +4,12 @@ import { CountStockDto } from "@/services/sale/data";
 import { Page } from "@/services/shared/data";
 
 const CountStockAction = {
-
+    reject:(param:StatusActionForm):ServiceApiType<StatusActionForm>=>({
+        actionName:"reject-stock-count",
+        endpoint:"SALE",
+        type:"EXEC",
+        payload:param
+    }),
     page :(param:TableViewSearchParams<CountStockAdvanceSearch>):ServiceApiType<{searchValue?:string}> =>({
         actionName:"page-for-stock-count",
         endpoint:"SALE",
@@ -30,6 +35,7 @@ const CountStockAction = {
 export const CountStockServiceAPI = (requestAction:RequestActions) =>{
     return {
         page :(param:TableViewSearchParams<CountStockAdvanceSearch>)=>singleRequest(CountStockAction.page(param))(requestAction) as Promise<Page<StockCountDto>>,
-        detail:(id?:number) =>singleRequest(CountStockAction.detail(id))(requestAction) as Promise<StockCountDto>
+        detail:(id?:number) =>singleRequest(CountStockAction.detail(id))(requestAction) as Promise<StockCountDto>,
+        reject:(param:StatusActionForm)=>singleRequest(CountStockAction.reject(param))(requestAction)
     }
 }

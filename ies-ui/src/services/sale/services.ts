@@ -290,6 +290,10 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
     SaleService('accept-stock-request'),
     actions,
   ),
+  onRejectStockRequest: execService<StatusActionForm, { data: any; message: string }>(
+    SaleService('reject-request-stock'),
+    actions,
+  ),
 
   onApprovalStockRequest: execService<ApprovalStockControlDto, { data: any; message: string }>(
     SaleService('approve-stock-request'),

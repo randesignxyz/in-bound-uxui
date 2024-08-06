@@ -1,14 +1,21 @@
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { RequestActions, ServiceApiType, singleRequest } from "@/services/apiGateway";
 import { Page } from "@/services/shared/data";
+import { StatusActionForm, SettlementMethodAdvanceSearch, SettlementMethodDetailDTO } from "./data";
 
 
 const SettlementMethodAction = {
-    confirm :(id?:number):ServiceApiType<{id?:number}> =>({
+    confirm :(param:StatusActionForm):ServiceApiType<StatusActionForm> =>({
         actionName:"confirm_settlement_method",
         endpoint:"SALE",
         type:"EXEC",
-        payload:{id}
+        payload:param
+    }),
+    reject :(param:StatusActionForm):ServiceApiType<StatusActionForm> =>({
+        actionName:"reject_settlement_method",
+        endpoint:"SALE",
+        type:"EXEC",
+        payload:param
     }),
     detail:(id?:number):ServiceApiType<{id?:number}> =>({
         actionName:"detail_settlement_method",
@@ -28,10 +35,10 @@ const SettlementMethodAction = {
     })
 }
 
-
 export const SettlementMethodServicAPI = (requestActions: RequestActions) =>{
     return {
-        confirm:(id?:number)=>singleRequest(SettlementMethodAction.confirm(id))(requestActions),
+        confirm:(param:StatusActionForm)=>singleRequest(SettlementMethodAction.confirm(param))(requestActions),
+        reject:(param:StatusActionForm)=>singleRequest(SettlementMethodAction.reject(param))(requestActions),
         detail:(id?:number)=> singleRequest(SettlementMethodAction.detail(id))(requestActions) as Promise<SettlementMethodDetailDTO>,
         page:(param:TableViewSearchParams<SettlementMethodAdvanceSearch>)=>singleRequest(SettlementMethodAction.page(param))(requestActions) as Promise<Page<SettlementMethodDetailDTO>>,
 

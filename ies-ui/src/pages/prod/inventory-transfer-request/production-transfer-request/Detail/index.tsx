@@ -28,6 +28,8 @@ export default ({ id, ...rest }: Props) => {
   const actionRef = useRef<ActionType>();
   const requestActions = simpleRequestActions();
   const services = TransferRequestServiceAPI(requestActions);
+  const [loading, setLoading] = useState(false)
+  const [rejectLoading, setRejectLoading] = useState(false)
   const routes = [
     {
       path: ProdPaths.prod,
@@ -143,7 +145,7 @@ export default ({ id, ...rest }: Props) => {
             </Descriptions.Item>
           )}
           <Descriptions.Item label="Status" style={{ fontWeight: 'bolder' }}>
-            {data?.state == 'in-progress' ? <Badge status={'processing'} text={'In Progress'} /> : data?.state == 'rejected' ? <Badge status={'error'} text={'Rejected'} />: data?.state == 'completed' ? <Badge status={'success'} text={'Completed'} />: ''}
+            {data?.state == 'in-progress' ? <Badge status={'processing'} text={'In Progress'} /> : data?.state == 'rejected' ? <Badge status={'error'} text={'Rejected'} /> : data?.state == 'completed' ? <Badge status={'success'} text={'Completed'} /> : ''}
           </Descriptions.Item>
         </Descriptions>
 
@@ -202,26 +204,34 @@ export default ({ id, ...rest }: Props) => {
       <RemarkFormModal
         title="Reject Form"
         open={commentModal.visible}
+        loading={rejectLoading}
         onCancel={() => {
           setCommentModal({ visible: false, id: undefined });
         }}
         onSave={async (id, remark, transfer_id) => {
-          const response: { data: string; message: string } = (await services.status_change({
-            id: id,
-            remark: remark,
-            statusChange: 'transfer-request-reject',
-            state: 'rejected',
-          })) as { data: string; message: string };
-          await services.save_activites({
-            activities_name: 'Production Approval',
-            action: 'Rejected',
-            remark: remark,
-            transfer_request: transfer_id,
-          });
-          setCommentModal({ visible: false, id: undefined });
-          setOnRefresh(true)
-          message.info(response.message);
-          actionRef.current?.reload();
+          setRejectLoading(true)
+          try {
+            const response: { data: string; message: string } = (await services.status_change({
+              id: id,
+              remark: remark,
+              statusChange: 'transfer-request-reject',
+              state: 'rejected',
+            })) as { data: string; message: string };
+            await services.save_activites({
+              activities_name: 'Production Approval',
+              action: 'Rejected',
+              remark: remark,
+              transfer_request: transfer_id,
+            });
+            setCommentModal({ visible: false, id: undefined });
+            setOnRefresh(true)
+            message.info(response.message);
+            actionRef.current?.reload();
+          } catch (e) {
+            message.error('Error');
+          } finally {
+            setRejectLoading(false);
+          }
         }}
         id={commentModal.id ?? ''}
         transfer_id={commentModal.transfer_id ?? ''}
@@ -230,54 +240,47 @@ export default ({ id, ...rest }: Props) => {
       <ApproveRemarkFormModal
         title="Approve Form"
         open={approveModel.visible}
+        loading={loading}
         onCancel={() => {
           setApproveModal({ visible: false, id: undefined });
         }}
         onSave={async (id, remark, transfer_id, data) => {
-          await services.save_to_sap({
-            id: id,
-            vendorCode: '',
-            vendorName: '',
-            fromWarehouse: data.from_warehouse.map((i: any) => (i.whsCode)).toString(),
-            toWarehouse: data.to_warehouse.map((i: any) => (i.whsCode)).toString(),
-            apiReferenceNo: '',
-            comments: remark === null ? '' : remark === undefined ? '' : remark,
-            transferRequestDetails: data.item.map((v: any) => ({
-              ...v,
-              itemCode: v.item_code,
-              itemName: v.item_name,
+          try {
+            setLoading(true)
+            await services.save_to_sap({
+              id: id,
+              vendorCode: '',
+              vendorName: '',
               fromWarehouse: data.from_warehouse.map((i: any) => (i.whsCode)).toString(),
               toWarehouse: data.to_warehouse.map((i: any) => (i.whsCode)).toString(),
-              remark: v.remark === null ? '' : v.remark === undefined ? '' : v.remark,
-            })),
-            statusChange: 'request-production-approve',
-            state: 'in-progress',
-            activities_name: 'Production Approval',
-            action: 'Approved',
-            transfer_request: transfer_id,
-            postingDate: new Date(data.posting_date).toISOString(),
-            docDueDate: new Date(data.due_date).toISOString(),
-            taxDate: new Date(data.posting_date).toISOString(),
-          })
-          setApproveModal({ visible: false, id: undefined });
-          setOnRefresh(true)
-          message.success("Success");
-          actionRef.current?.reload();
-          // const response: { data: string; message: string } = (await services.status_change({
-          //   id: id,
-          //   remark: remark,
-          //   statusChange: 'request-production-approve',
-          //   state: 'in-progress',
-          // })) as { data: string; message: string };
-          // await services.save_activites({
-          //   activities_name: 'Production Approval',
-          //   action: 'Approved',
-          //   remark: remark,
-          //   transfer_request: transfer_id,
-          // });
-          // setApproveModal({ visible: false, id: undefined });
-          // message.info(response.message);
-          // actionRef.current?.reload();
+              apiReferenceNo: '',
+              comments: remark === null ? '' : remark === undefined ? '' : remark,
+              transferRequestDetails: data.item.map((v: any) => ({
+                ...v,
+                itemCode: v.item_code,
+                itemName: v.item_name,
+                fromWarehouse: data.from_warehouse.map((i: any) => (i.whsCode)).toString(),
+                toWarehouse: data.to_warehouse.map((i: any) => (i.whsCode)).toString(),
+                remark: v.remark === null ? '' : v.remark === undefined ? '' : v.remark,
+              })),
+              statusChange: 'request-production-approve',
+              state: 'in-progress',
+              activities_name: 'Production Approval',
+              action: 'Approved',
+              transfer_request: transfer_id,
+              postingDate: new Date(data.posting_date).toISOString(),
+              docDueDate: new Date(data.due_date).toISOString(),
+              taxDate: new Date(data.posting_date).toISOString(),
+            })
+            setApproveModal({ visible: false, id: undefined });
+            setOnRefresh(true)
+            message.success("Success");
+            actionRef.current?.reload();
+          } catch (e) {
+            message.error('Error');
+          } finally {
+            setLoading(false);
+          }
         }}
         id={approveModel.id ?? ''}
         transfer_id={approveModel.transfer_id ?? ''}

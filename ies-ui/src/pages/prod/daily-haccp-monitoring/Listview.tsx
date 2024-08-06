@@ -35,9 +35,9 @@ export default () => {
   ];
 
   const line = [
-    {
-      name: 'Line 1'
-    },
+    // {
+    //   name: 'Line 1'
+    // },
     {
       name: 'Line 2'
     },

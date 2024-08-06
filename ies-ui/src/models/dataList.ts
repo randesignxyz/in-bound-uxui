@@ -277,6 +277,11 @@ type DataList =
     type: 'transfer-request-list';
     criteria?: any;
     data: Paging<TransferRequest>;
+  }
+  | {
+    type: 'transfer-request-final-list';
+    criteria?: any;
+    data: Paging<TransferRequest>;
   };
 
 type MomainType =
@@ -323,7 +328,8 @@ type MomainType =
   | 'dms-category'
   | 'dms-department'
   | 'dms-document'
-  | 'transfer-request-list';
+  | 'transfer-request-list'
+  | 'transfer-request-final-list';
 
 export default () => {
   const [cacheData, seCacheData] = useState<DataList>();

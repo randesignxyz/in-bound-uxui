@@ -16,6 +16,10 @@ import { TransferRequest, TransferRequestAdvanceParams, TransferRequestCreate } 
 import { TransferRequestServiceAPI } from '../service';
 import TransferRequestModelForm from './TransferRequestModelForm';
 import { history } from 'umi'
+import moment from 'moment';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 
 interface Props {
   onDetail?: (id: string) => void;
@@ -25,16 +29,22 @@ interface Props {
 }
 
 export default ({ onAdd }: Props) => {
+  dayjs.extend(utc);
+  dayjs.extend(timezone);
   const [stateOpen, setStateOpen] = useState<{
     visible?: { name: 'modal'; type: 'ADD' | 'Edit'; payload?: { data: TransferRequest } };
   }>({});
   const access = useAccess();
   const requestActions = simpleRequestActions();
   const services = TransferRequestServiceAPI(requestActions);
+  const [loading, setLoading] = useState(false)
+  const [rejectLoading, setRejectLoading] = useState(false)
+  const [excelLoading, setExcelLoading] = useState(false)
   // const [advanceSearch, setAdvanceSearch] = useState<{ visible: boolean }>();
   const [advanceSearchParams, setAdvanceSearchParams] = useState<TransferRequestAdvanceParams>({
     business_unit: 'ALL',
     state: 'in-progress',
+    transfer_type: 'ALL'
   });
   const actionRef = useRef<ActionType>();
   const [viewDetail, setViewDetail] = useState<{
@@ -171,7 +181,7 @@ export default ({ onAdd }: Props) => {
         cache
         extraFilter={
           <Space size="large">
-            {access.canAccessItem ? (
+            {/* {access.canAccessItem ? (
               <Radio.Group
                 value={advanceSearchParams.business_unit}
                 onChange={(e) => {
@@ -189,7 +199,21 @@ export default ({ onAdd }: Props) => {
               </Radio.Group>
             ) : (
               ''
-            )}
+            )} */}
+            <Radio.Group
+              value={advanceSearchParams.transfer_type}
+              onChange={(e) => {
+                setAdvanceSearchParams((v) => ({
+                  ...v,
+                  transfer_type: e.target.value,
+                }));
+                actionRef.current?.reloadAndRest?.();
+              }}
+            >
+              <Radio.Button value="ALL">All</Radio.Button>
+              <Radio.Button value="PM/RM">PM/RM</Radio.Button>
+              <Radio.Button value="FG">FG</Radio.Button>
+            </Radio.Group>
             <Select
               defaultValue="in-progress"
               style={{ width: 120 }}
@@ -225,18 +249,18 @@ export default ({ onAdd }: Props) => {
           actionRef: actionRef,
           toolbar: {
             actions: [
-              <Button
-                key="click-add"
-                type="link"
-                icon={<PlusOutlined />}
-                onClick={() => onAddHandler()}
-              />,
-              // <Button
-              //   key="click-export"
-              //   type="link"
-              //   icon={<FileExcelOutlined />}
-              //   onClick={() => setExportModal({ visible: true })}
-              // />,
+              <>
+                <Tooltip title="Add New Request">
+                  <Button
+                    key="click-add"
+                    type="link"
+                    icon={<PlusOutlined />}
+                    onClick={() => onAddHandler()}
+                  />
+                </Tooltip>
+
+                <Tooltip title="Dowload Excel File"><Button type="link" icon={<FileExcelOutlined />} onClick={() => setExportModal({ visible: true })} /></Tooltip>
+              </>
             ],
           },
         }}
@@ -272,7 +296,7 @@ export default ({ onAdd }: Props) => {
             dataIndex: 'transfer_type',
           },
           {
-            width: 80,
+            width: 150,
             key: 'line',
             title: 'Line',
             dataIndex: 'line',
@@ -298,8 +322,9 @@ export default ({ onAdd }: Props) => {
             render: (_, r) => r.to_warehouse.map((w) => w.whsCode),
           },
           {
+            width: 80,
             key: 'tendency',
-            title: 'Business Unit',
+            title: 'BU',
             dataIndex: 'tendency',
             render: (_, r) => r.business_unit,
           },
@@ -409,26 +434,34 @@ export default ({ onAdd }: Props) => {
       />
       <RemarkFormModal
         title="Reject Form"
+        loading={rejectLoading}
         open={commentModal.visible}
         onCancel={() => {
           setCommentModal({ visible: false, id: undefined });
         }}
         onSave={async (id, remark, transfer_id) => {
-          const response: { data: string; message: string } = (await services.status_change({
-            id: id,
-            remark: remark,
-            statusChange: 'transfer-request-reject',
-            state: 'rejected',
-          })) as { data: string; message: string };
-          await services.save_activites({
-            activities_name: 'Production Approval',
-            action: 'Rejected',
-            remark: remark,
-            transfer_request: transfer_id,
-          });
-          setCommentModal({ visible: false, id: undefined });
-          message.info(response.message);
-          actionRef.current?.reload();
+          try {
+            setRejectLoading(true)
+            const response: { data: string; message: string } = (await services.status_change({
+              id: id,
+              remark: remark,
+              statusChange: 'transfer-request-reject',
+              state: 'rejected',
+            })) as { data: string; message: string };
+            await services.save_activites({
+              activities_name: 'Production Approval',
+              action: 'Rejected',
+              remark: remark,
+              transfer_request: transfer_id,
+            });
+            setCommentModal({ visible: false, id: undefined });
+            message.info(response.message);
+            actionRef.current?.reload();
+          } catch (e) {
+            message.error('Error');
+          } finally {
+            setRejectLoading(false);
+          }
         }}
         id={commentModal.id ?? ''}
         transfer_id={commentModal.transfer_id ?? ''}
@@ -436,54 +469,47 @@ export default ({ onAdd }: Props) => {
       <ApproveRemarkFormModal
         title="Approve Form"
         open={approveModel.visible}
+        loading={loading}
         onCancel={() => {
           setApproveModal({ visible: false, id: undefined });
         }}
         onSave={async (id, remark, transfer_id, data) => {
-          const entity = {
-            id: id,
-            vendorCode: '',
-            vendorName: '',
-            fromWarehouse: data.from_warehouse.map((i: any) => (i.whsCode)).toString(),
-            toWarehouse: data.to_warehouse.map((i: any) => (i.whsCode)).toString(),
-            apiReferenceNo: '',
-            comments: data.line + ', ' + data.shift,
-            transferRequestDetails: data.item.map((v: any) => ({
-              ...v,
-              itemCode: v.item_code,
-              itemName: v.item_name,
+          try {
+            setLoading(true)
+            const entity = {
+              id: id,
+              vendorCode: '',
+              vendorName: '',
               fromWarehouse: data.from_warehouse.map((i: any) => (i.whsCode)).toString(),
               toWarehouse: data.to_warehouse.map((i: any) => (i.whsCode)).toString(),
-              remark: v.remark === null ? '' : v.remark === undefined ? '' : v.remark,
-            })),
-            statusChange: 'request-production-approve',
-            state: 'in-progress',
-            activities_name: 'Production Approval',
-            action: 'Approved',
-            transfer_request: transfer_id,
-            postingDate: new Date(data.posting_date).toISOString(),
-            docDueDate: new Date(data.due_date).toISOString(),
-            taxDate: new Date(data.posting_date).toISOString(),
+              apiReferenceNo: '',
+              comments: data.line + ', ' + data.shift,
+              transferRequestDetails: data.item.map((v: any) => ({
+                ...v,
+                itemCode: v.item_code,
+                itemName: v.item_name,
+                fromWarehouse: data.from_warehouse.map((i: any) => (i.whsCode)).toString(),
+                toWarehouse: data.to_warehouse.map((i: any) => (i.whsCode)).toString(),
+                remark: v.remark === null ? '' : v.remark === undefined ? '' : v.remark,
+              })),
+              statusChange: 'request-production-approve',
+              state: 'in-progress',
+              activities_name: 'Production Approval',
+              action: 'Approved',
+              transfer_request: transfer_id,
+              postingDate: new Date(data.posting_date).toISOString(),
+              docDueDate: new Date(data.due_date).toISOString(),
+              taxDate: new Date(data.posting_date).toISOString(),
+            }
+            await services.save_to_sap(entity)
+            setApproveModal({ visible: false, id: undefined });
+            message.success("Success");
+            actionRef.current?.reload();
+          } catch (e) {
+            message.error('Error');
+          } finally {
+            setLoading(false);
           }
-          await services.save_to_sap(entity)
-          setApproveModal({ visible: false, id: undefined });
-          message.success("Success");
-          actionRef.current?.reload();
-          // const response: { data: string; message: string } = (await services.status_change({
-          //   id: id,
-          //   remark: remark,
-          //   statusChange: 'request-production-approve',
-          //   state: 'in-progress',
-          // })) as { data: string; message: string };
-          // await services.save_activites({
-          //   activities_name: 'Production Approval',
-          //   action: 'Approved',
-          //   remark: remark,
-          //   transfer_request: transfer_id,
-          // });
-          // setApproveModal({ visible: false, id: undefined });
-          // message.info(response.message);
-          // actionRef.current?.reload();
         }}
         id={approveModel.id ?? ''}
         transfer_id={approveModel.transfer_id ?? ''}
@@ -491,18 +517,25 @@ export default ({ onAdd }: Props) => {
       />
 
       <ExportExcel
+        title="Export Excel"
         open={exportModel.visible}
+        loading={excelLoading}
+        type = 'request'
         onCancel={() => setExportModal({ visible: false })}
-        onSave={async (duration, line, shift) => {
+        onSave={async (duration, line, shift, state, request_type) => {
           const result = {
             line: line,
             shift: shift,
-            startDate: duration[0],
-            endDate: duration[1],
+            startDate: dayjs(duration[0]).format('YYYY-MM-DD'),
+            endDate: dayjs(duration[1]).format('YYYY-MM-DD'),
+            state: state,
+            type: 'production',
+            request_type: request_type || ''
           };
           try {
+            setExcelLoading(true)
             await downloadReport(requestActions)({
-              fileName: 'test',
+              fileName: `invantory-transfer-request-production-report-${moment().toDate().toDateString()}`,
               reportName: 'prod-transfer-request-report',
               data: result,
               type: 'EXCEL',
@@ -510,6 +543,8 @@ export default ({ onAdd }: Props) => {
             });
           } catch (error) {
             message.error('Failed to download.');
+          } finally {
+            setExcelLoading(false)
           }
           setExportModal({ visible: false });
         }}

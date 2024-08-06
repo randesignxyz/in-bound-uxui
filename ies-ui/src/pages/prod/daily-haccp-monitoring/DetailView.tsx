@@ -15,6 +15,8 @@ import { EditFilled, PlusCircleFilled } from '@ant-design/icons';
 import { useAccess } from '@umijs/max';
 import ItemTab from './ItemTab';
 import ActivitiesTab from './ActivitiesTab';
+import Line2Line3Model from './Line2Line3Model';
+import Line4Line5Line6Model from './Line4Line5Line6Model';
 
 interface Props extends DrawerFormProps {
     id: string;
@@ -28,7 +30,8 @@ export default ({ id, ...rest }: Props) => {
     const access = useAccess();
     const requestActions = simpleRequestActions();
     const services = DailyHACCPMonitoringServiceAPI(requestActions);
-    const [pressureModelOpen, setPressureModelOpen] = useState<{ visible: boolean, data?: any }>({ visible: false })
+    const [line2Line3ModelOpen, setLine2Line3ModelOpen] = useState<{ visible: boolean, data?: any }>({ visible: false })
+    const [line4Line5Line6ModelOpen, setLine4Line5Line6ModelOpen] = useState<{ visible: boolean, data?: any }>({ visible: false })
     const [onRefresh, setOnRefresh] = useState(false)
     const part = id.split("/");
     const [data, setData] = useState<HACCPMonitoring>()
@@ -57,11 +60,28 @@ export default ({ id, ...rest }: Props) => {
             const list = await services.get_haccp_by_date_and_line(part[0], part[1], part[2])
             setSubData(list[0].haccplist)
             setData(list[0])
-            console.log(list[0])
         }
         data()
         setOnRefresh(false)
     }, [id, onRefresh == true])
+
+    const onSubmitHandaler = async (data: HACCPMonitoringList) => {
+        Modal.confirm({
+            title: "Submit",
+            content: 'are you sure',
+            onOk: async () => {
+                try {
+                    await services.post_haccp_monitoring_list(data)
+                    setLine2Line3ModelOpen({ visible: false,data:undefined })
+                    setLine4Line5Line6ModelOpen({ visible: false,data:undefined })
+                    setOnRefresh(true)
+                    message.success('Success');
+                } catch (e) {
+                    message.error('Error');
+                }
+            }
+        })
+    }
 
     return (
         <>
@@ -71,7 +91,7 @@ export default ({ id, ...rest }: Props) => {
                     <>
                         {data?.assign_to?.split(" ").includes(access.currentUser?.login || '') || access.canAssignItemPre ?
                             <Button
-                                // onClick={() => onAdd?.()}
+                                onClick={() => (data?.line == 'Line 2' || data?.line == 'Line 3') ? setLine2Line3ModelOpen({ visible: true,data:data }) : (data?.line == 'Line 4' || data?.line == 'Line 5' || data?.line == 'Line 6') ? setLine4Line5Line6ModelOpen({ visible: true,data:data }) : ''}
                                 type="primary"
                                 icon={<PlusCircleFilled />}
                             >
@@ -231,6 +251,24 @@ export default ({ id, ...rest }: Props) => {
                     ]}
                 />
             </Card>
+            <Line2Line3Model
+                open={line2Line3ModelOpen.visible}
+                title={(('Monitoring ' + data?.line))}
+                onSave={onSubmitHandaler}
+                data={line2Line3ModelOpen.data ?? {}}
+                onCancel={() => {
+                    setLine2Line3ModelOpen({ visible: false, data: undefined });
+                }}
+            />
+            <Line4Line5Line6Model
+                open={line4Line5Line6ModelOpen.visible}
+                title={(('Monitoring ' + data?.line))}
+                onSave={onSubmitHandaler}
+                data={line4Line5Line6ModelOpen.data ?? {}}
+                onCancel={() => {
+                    setLine4Line5Line6ModelOpen({ visible: false, data: undefined });
+                }}
+            />
         </>
     );
 };

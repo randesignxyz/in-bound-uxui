@@ -6,6 +6,7 @@ import { formatDateTime } from "@/pages/utils";
 import { useAccess } from "@umijs/max";
 import { DailyHACCPMonitoringServiceAPI } from "./service";
 import { HACCPMonitoring, HACCPMonitoringList } from "./data";
+import { CheckCircleOutlined, CheckOutlined, CloseCircleOutlined } from "@ant-design/icons";
 
 interface Props extends DrawerFormProps {
     data?: HACCPMonitoringList[];
@@ -55,14 +56,17 @@ export default ({ data, refresh, type, ...rest }: Props) => {
                     ...(hasSideWall ? [{
                         title: 'Side Wall',
                         dataIndex: 'side_wall',
+                        render: (_: any, r: any) => r.side_wall + ` %`
                     }] : []),
                     ...(hasAirPressure ? [{
                         title: 'Air Pressure',
                         dataIndex: 'air_pressure',
+                        render: (_: any, r: any) => r.air_pressure + ` bar`
                     }] : []),
                     ...(hasTemperaturePreform ? [{
                         title: 'Temperature Preform',
                         dataIndex: 'temperature_preform',
+                        render: (_: any, r: any) => r.temperature_preform + ` °C`
                     }] : []),
                     ...(hasTreatedWaterPressure ? [{
                         title: 'Treated Water Pressure',
@@ -71,24 +75,39 @@ export default ({ data, refresh, type, ...rest }: Props) => {
                     ...(hasWaterPressure ? [{
                         title: 'Water Pressure',
                         dataIndex: 'water_pressure',
+                        render: (_: any, r: any) => r.water_pressure + ` bar`
                     }] : []),
                     ...(hasNozzlesRinser ? [{
                         title: 'Nozzles Rinser',
                         dataIndex: 'nozzles_rinser',
+                        render: (_: any, r: any) => r.nozzles_rinser == 1 ? <CheckCircleOutlined style={{ color: 'green', justifySelf: 'center' }} /> : r.nozzles_rinser == 0 ? <CloseCircleOutlined style={{ color: 'red' }} /> : 'N/A'
                     }] : []),
                     {
                         title: 'FG',
                         dataIndex: 'fg',
+                        render: (_: any, r: any) => r.fg + ` ppm`
                     },
                     ...(hasSmell ? [{
                         title: 'Smell',
                         dataIndex: 'smell',
-                        render: (_: any, r: any) => r.smell == 1 ? "Yes" : r.smell == 0 ? "No" : 'N/A'
+                        render: (_: any, r: any) => r.smell == 1 ? <CheckCircleOutlined style={{ color: 'green' }} /> : r.smell == 0 ? <CloseCircleOutlined style={{ color: 'red' }} /> : 'N/A'
                     }] : []),
                     {
                         title: 'Activities Control',
                         dataIndex: 'activity_control',
-                        render: (_: any, r: any) => r.activity_control == 1 ? "Under Control" : r.activity_control == 0 ? "Over Control" : 'N/A'
+                        render: (_: any, r: any) => {
+                            if (r.activity_control == 1) {
+                                return (
+                                    <>
+                                        Under Control  <CheckCircleOutlined style={{ color: 'green' }} />
+                                    </>
+                                );
+                            } else if (r.activity_control == 0) {
+                                return (<>Over Control <CloseCircleOutlined style={{ color: 'red' }} /></>)
+                            } else {
+                                return 'N/A';
+                            }
+                        }
                     },
                     {
                         title: 'Take Action',

@@ -79,6 +79,7 @@ export type TransferRequestAdvanceParams = {
   business_unit: string;
   state: string;
   count?: number;
+  transfer_type: string
 };
 
 export interface TransferRequestCreate {

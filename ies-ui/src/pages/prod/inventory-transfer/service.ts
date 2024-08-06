@@ -78,6 +78,19 @@ const TransferAction = {
     },
   }),
 
+  pageFinal: (
+    params: TableViewSearchParams<TransferSearch>,
+  ): ServiceApiType<{ searchValue?: string }> => ({
+    type: 'PAGING_QUERY',
+    endpoint: 'PROD',
+    actionName: 'fetch-paging-transfer-final',
+    payload: { ...params.criteria },
+    pagination: {
+      pageSize: params.pagination?.pageSize,
+      page: params.pagination?.current,
+    },
+  }),
+
   pageFG: (
     params: TableViewSearchParams<TransferSearch>,
   ): ServiceApiType<{ searchValue?: string }> => ({
@@ -162,6 +175,10 @@ export const TransferServiceAPI = (requestAction: RequestActions) => {
   return {
     page: (params: TableViewSearchParams<TransferSearch>) =>
       singleRequest<Transfer>(TransferAction.page(params))(requestAction) as Promise<
+        Paging<Transfer>
+      >,
+    pageFianl: (params: TableViewSearchParams<TransferSearch>) =>
+      singleRequest<Transfer>(TransferAction.pageFinal(params))(requestAction) as Promise<
         Paging<Transfer>
       >,
     pageFG: (params: TableViewSearchParams<TransferSearch>) =>

@@ -283,30 +283,35 @@ type DataList =
     type: 'appraisal-submit';
     criteria?: any;
     data: Paging<AppraisalEmp>;
-  }| {
+  } | {
     type: 'term';
     criteria?: any;
     data: Paging<Term>;
-  }| {
+  } | {
     type: 'transfer-request-list';
     criteria?: any;
     data: Paging<TransferRequest>;
-  }| {
+  } | {
     type: 'fma-stock-request';
     criteria?: any;
     data?: Paging<StockRequestListItem>;
-  }| {
+  } | {
     type: 'fma-item-list';
     criteria?: any;
     data?: Paging<ItemList>;
-  }| {
+  } | {
     type: 'whh-inventory-transfer-request';
     criteria?: any;
     data?: Paging<TransferRequestListItem>;
-  }| {
+  } | {
     type: 'fma-emp-whs-mapping-list';
     criteria?: any;
     data?: Paging<EmpWhsMappingList>;
+  }
+  | {
+    type: 'transfer-request-final-list';
+    criteria?: any;
+    data: Paging<TransferRequest>;
   };
 
 type MomainType =
@@ -358,7 +363,8 @@ type MomainType =
   | 'transfer-request-list'
   | 'fma-stock-request'
   | 'whh-inventory-transfer-request'
-  | 'fma-emp-whs-mapping-list';
+  | 'fma-emp-whs-mapping-list'
+  | 'transfer-request-final-list';
 
 export default () => {
   const [cacheData, seCacheData] = useState<DataList>();

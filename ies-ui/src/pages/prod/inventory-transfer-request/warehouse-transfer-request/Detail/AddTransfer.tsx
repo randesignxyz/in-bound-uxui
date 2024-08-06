@@ -98,7 +98,7 @@ export default ({ transfer_request_id, data,onSave,...props }: Props) => {
                       is_receive = 'False';
                     }
                   }
-                  return { ...it, oldtotal, is_receive, total };
+                  return { ...it, oldtotal, is_receive, total,itemReceive:received };
             })
             // onSave(updatedItems)
             setItems(updatedItems);
@@ -153,29 +153,6 @@ export default ({ transfer_request_id, data,onSave,...props }: Props) => {
             },
           },
           { title: 'Remark', dataIndex: 'remark' },
-          // {
-          //   title: 'Dropdown Column',
-          //   dataIndex: 'dropdownValue',
-          //   valueType: 'select',
-          //   width: 200,
-          //   render: () => (
-          //     <Select
-          //       showSearch
-          //       style={{ width: 150 }}
-          //       placeholder="Select"
-          //       optionFilterProp="children"
-          //       filterOption={(input, option: any) =>
-          //         option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-          //       }
-          //       onChange={handleSelectChange} // Assign the handler function to onChange
-          //       value={selectedValue} // Assign the selected value from state
-          //     >
-          //       <Option value="option1">Option 1</Option>
-          //       <Option value="option2">Option 2</Option>
-          //       <Option value="option3">Option 3</Option>
-          //     </Select>
-          //   ),
-          // },
         ]}
       />
       </FormModalComp>

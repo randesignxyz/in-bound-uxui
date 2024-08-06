@@ -17,9 +17,9 @@ export type HACCPMonitoring = {
 
 export type HACCPMonitoringList = {
     id: number,
-    haccp_id: string,
+    haccp_id?: string,
     other: string,
-    warning_count: string,
+    warning_count: number,
     time: string,
     status: string,
     water_pressure: string,

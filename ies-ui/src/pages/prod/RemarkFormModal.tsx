@@ -7,10 +7,11 @@ import { useEffect } from 'react';
 interface Props extends FormModalProps {
   id: string;
   transfer_id: string;
-  sapDocEntry?:number
+  sapDocEntry?:number,
+  loading:boolean
   onSave: (id: string, remarks: string, transfer_id: string,sapDocEntry?:number) => void;
 }
-export default ({ id, transfer_id, sapDocEntry,onSave, ...props }: Props) => {
+export default ({ id, transfer_id, sapDocEntry,onSave,loading, ...props }: Props) => {
   const [form] = useForm<{ remarks: string }>();
 
   useEffect(() => {
@@ -21,6 +22,7 @@ export default ({ id, transfer_id, sapDocEntry,onSave, ...props }: Props) => {
     <FormModalComp
       width="600px"
       {...props}
+      confirmLoading={loading}
       onResetForm={() => form.resetFields()}
       onSubmit={async () => {
         const dataForm = await form.validateFields();

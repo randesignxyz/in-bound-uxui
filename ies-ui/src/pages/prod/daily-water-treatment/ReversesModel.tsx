@@ -40,11 +40,11 @@ export default ({ data, onSave, ...props }: Props) => {
                 let updatedWarningCount = 0;
                 let status = 'normal'
                 if (odor == null) {
-                    message.error('Please select an Odor!')
+                    message.error('Please select Odor!')
                     return
                 }
                 if (taste == null) {
-                    message.error('Please select an Taste!')
+                    message.error('Please select Taste!')
                     return
                 }
                 if (parseFloat(dataForm.tds) > 10) {

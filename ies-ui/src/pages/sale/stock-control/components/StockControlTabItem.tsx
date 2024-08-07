@@ -50,7 +50,7 @@ const StockControlTabItem: React.FC<Props> = ({ data, forceUpdate }) => {
       //   onClick: () => {
       //     history.push(`${CrmPaths.customer}/detail/${soDetail?.associatedTo.customer.id}`);
       //   },
-      value: `${data.details?.owner.salespersonCode} - ${data.details?.owner.salespersonName}`,
+      value: `${data.details?.owner?.salespersonCode} - ${data.details?.owner?.salespersonName}`,
     },
     { label: 'Description', value: data.details?.description },
     { label: 'Serial #', value: data.details?.serialNumber },

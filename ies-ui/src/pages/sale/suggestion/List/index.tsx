@@ -459,7 +459,6 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({ }) => 
 
         summary={(data) => {
           const item = data[0];
-
           if (parent.status === 'settled' && data.length === 0) {
             return (
               <Table.Summary.Row>
@@ -939,7 +938,6 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({ }) => 
               );
             },
           },
-
           {
             title: 'Approved By',
             render: (_, r) => {
@@ -1053,7 +1051,6 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({ }) => 
           },
         }}
       />
-
       <RemarkModalForm
         open={remarkState?.visible?.open}
         showAlertInfo
@@ -1067,7 +1064,6 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({ }) => 
             actionRef.current?.reload?.();
         }}
       />
-      
     </PageContainer>
   );
 };

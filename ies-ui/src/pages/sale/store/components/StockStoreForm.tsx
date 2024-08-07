@@ -1,20 +1,18 @@
-import { SalesTeamWorkLess, SaveStockStore, StockStoreLess, VehicleLess } from '@/services/sale/data';
+import { SalesTeamWorkLess, SaveStockStore, VehicleLess } from '@/services/sale/data';
 import { CrownOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { FooterToolbar, ProForm, ProFormCheckbox, ProFormSelect, ProFormText, ProFormTextArea } from '@ant-design/pro-components';
 import ProTable, { ActionType } from '@ant-design/pro-table';
 import { useSetState } from 'ahooks';
-import { Button, Card, Col, message, Modal, Row, Select, Space, Tooltip } from 'antd';
+import { Button, Card, Col, message, Modal, Row, Space, Tooltip } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { useEffect, useRef, useState } from 'react';
-import { history } from "@umijs/max";
-import { SalePaths } from '../..';
 import VehicleFormModal from '../../stock-control/VehicleFormModal';
 import { Model } from '../model';
 
 type Props = {
   type: 'new' | 'edit';
   id?: number;
-  onView?: (added: StockStoreLess) => void;
+  onView: (added?: SaveStockStore) => void;
   onBack: () => void;
 };
 
@@ -74,14 +72,16 @@ const StockStoreForm: React.FC<Props> = ({ id, type, onBack, onView }) => {
               memberIds: state.data?.members?.map((it) => it.salespersonCode),
               isInitialize: dataFrom.isInitialize,
             };
-            console.log(item);
             const so = await actions.saveData(item);
             if (isNew) {
               actions.clearMember();
               form.resetFields();
             } else {
-              if (so) history.push(`${SalePaths.store}/detail/${so?.data.id}`);
+              // if (so) history.push(`${SalePaths.store}/detail/${so?.data.id}`);
+              onView(so.data);
+              message.success("Article successfully saved")
             }
+
           } catch (error: any) {
             message.error(error.message);
           }
@@ -104,20 +104,24 @@ const StockStoreForm: React.FC<Props> = ({ id, type, onBack, onView }) => {
 
   return (
     <ProForm
+      {...layout}
       onValuesChange={onValuesChange}
       form={form}
       style={{ fontWeight: 'bolder' }}
-      // layout="horizontal"
-      {...layout}
+      loading={true}
+
       submitter={{
         render: () => {
           return (
-            <FooterToolbar>
+            <FooterToolbar
+              portalDom={false}
+            >
               <Button
-                onClick={() => {
-                  if (type === 'edit') history.push(`${SalePaths.store}/detail/${id}`);
-                  else history.push(`${SalePaths.store}/list`);
-                }}
+                // onClick={() => {
+                //   if (type === 'edit') history.push(`${SalePaths.store}/detail/${id}`);
+                //   else history.push(`${SalePaths.store}/list`);
+                // }}
+                onClick={() => onBack()}
               >
                 Cancel
               </Button>
@@ -196,7 +200,7 @@ const StockStoreForm: React.FC<Props> = ({ id, type, onBack, onView }) => {
                 </Tooltip>
               }
               request={async ({ keyWords }) => {
-                const result =  (await actions.searchVehicleByPlateNumber(keyWords));
+                const result = (await actions.searchVehicleByPlateNumber(keyWords));
                 return result.map((it: { plateNumber: string }) => ({
                   label: it.plateNumber,
                   value: it.plateNumber,
@@ -204,7 +208,7 @@ const StockStoreForm: React.FC<Props> = ({ id, type, onBack, onView }) => {
               }}
               placeholder="Please select plate number"
             />
-            <ProFormCheckbox  name="isInitialize"  addonAfter={"Initialize Stock"} />
+            <ProFormCheckbox name="isInitialize" addonAfter={"Initialize Stock"} />
           </Col>
         </Row>
       </Card>
@@ -278,6 +282,7 @@ const StockStoreForm: React.FC<Props> = ({ id, type, onBack, onView }) => {
           pagination={false}
           bordered={false}
           search={false}
+          loading={state.data?.members ? false : true}
           dataSource={state.data?.members}
           toolBarRender={() => [
 

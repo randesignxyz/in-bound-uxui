@@ -16,6 +16,7 @@ import slipIcon from '@/assets/packing-list.png';
 import shippingIcon from '@/assets/shipping.png';
 import {
     CheckCircleOutlined, ClockCircleOutlined,
+    EnvironmentOutlined,
     ExclamationCircleOutlined,
     HistoryOutlined, HourglassOutlined, InfoCircleOutlined, LoginOutlined,
     LogoutOutlined, PauseCircleOutlined, PlayCircleOutlined,
@@ -377,6 +378,7 @@ export default ({
                         >
                             Transanction
                         </Button>
+                        <Button onClick={() => history.push(DeliveryPaths.locationTracking)} icon={<EnvironmentOutlined />} >Tracking</Button>
                         <Button
                             type="link"
                             onClick={() => actionRef.current?.reloadAndRest?.()}

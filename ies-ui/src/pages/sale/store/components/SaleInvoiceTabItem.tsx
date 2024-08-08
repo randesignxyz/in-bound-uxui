@@ -158,22 +158,24 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
               return `${r.itemCode} - ${r.itemName}`;
             },
           },
-          { title: 'Quantity', dataIndex: 'quantity' },
+          { title: 'Quantity', dataIndex: 'quantity',align:"right" },
           { title: 'UOM', dataIndex: 'uom' },
           {
             title: 'Sale Price',
             align: 'right',
             render: (_, r) => {
-              const unitPrice = r.unitPrice * exchangeRate();
-              return `${data.exchangeRate?.target_symbol} ${numeral(unitPrice).format('0,0.00')}`;
+              // const unitPrice = r.unitPrice * exchangeRate();
+              // return `${data.exchangeRate?.target_symbol} ${numeral(unitPrice).format('0,0.00')}`;
+               return `$ ${numeral( r.unitPrice).format("0,000.00")}`
             },
           },
           {
             title: 'Amount',
             align: 'right',
             render: (_, r) => {
-              const amount = r.quantity * r.unitPrice * exchangeRate();
-              return `${data.exchangeRate?.target_symbol} ${numeral(amount).format('0,0.00')}`;
+              // const amount = r.quantity * r.unitPrice * exchangeRate();
+              // return `${data.exchangeRate?.target_symbol} ${numeral(amount).format('0,0.00')}`;
+              return `$ ${numeral(r.quantity * r.unitPrice).format("0,000.00")}`
             },
           },
           // {
@@ -284,9 +286,10 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
             {
               title: 'Amount',
               //dataIndex: 'invoiceNo'
+              align:"right",
               render: (_, r) => {
-                const amount = r.amount * exchangeRate();
-                return `${data.exchangeRate?.target_symbol} ${numeral(amount).format('0,0.00')}`;
+                // const amount = r.amount * exchangeRate();
+                return `$ ${numeral(r.amount).format('0,0.00')}`;
               },
             },
             access.canAccessSettlement

@@ -163,6 +163,7 @@ export interface StockDetail1Less extends StockDetailLess {
   receivedBy?: SalesTeamWorkLess;
   approval?: SalesTeamWorkLess;
   isKeepForwarding?: boolean;
+  approvedBy?:SalesTeamWorkLess;
 }
 
 export interface StockStoreDetail extends StockStoreLess {

@@ -348,7 +348,7 @@ const StockControlDetail: React.FC<Props> = ({ id, actionHandlers }) => {
         title={addStockModal.title}
         open={addStockModal.visible}
         data={{
-          selectedSE: state.data?.detail?.owner.salespersonCode,
+          selectedSE: state.data?.detail?.owner?.salespersonCode,
           typeId: addStockModal.typeId,
           seList: state.data?.initData?.salespersonList,
           stockCategory: state.data?.initData?.types,

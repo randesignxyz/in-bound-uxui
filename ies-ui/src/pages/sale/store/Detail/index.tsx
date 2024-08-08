@@ -14,14 +14,18 @@ import type {
   StockDetailItemLess,
 } from '@/services/sale/data';
 import {
+  CheckCircleOutlined,
+  CloseCircleOutlined,
   CrownOutlined,
   EditOutlined,
+  ExclamationCircleOutlined,
   FileDoneOutlined,
   HistoryOutlined,
   PlusOutlined,
   QuestionCircleOutlined,
   ShopOutlined,
   SolutionOutlined,
+  SyncOutlined,
   TeamOutlined,
   UserOutlined,
 } from '@ant-design/icons';
@@ -32,6 +36,7 @@ import {
   Button,
   Card,
   Empty,
+  Flex,
   Image,
   message,
   Modal,
@@ -58,12 +63,14 @@ import { Model } from '../model';
 
 type Props = {
   id?: number;
+  onEdit: (id?: number) => void;
+  onAdd: () => void;
   actionHandlers?: {
     onBack?: () => void;
   };
 };
 
-const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
+const StockStoreDetail: React.FC<Props> = ({ id, onEdit, onAdd, actionHandlers }) => {
   const { state, actions } = Model();
   const [forceUpdate, setForceUpdate] = useState<number>(0);
   const [forceHistoryUpdate, setForceHistoryUpdate] = useState<number>(0);
@@ -107,18 +114,18 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
     })();
   }, []);
 
-  const displayItems: (DescriptionDisplayDataItem | undefined)[] = [
-    { label: 'Store Name', value: state.data?.detail?.name },
-    {
-      label: 'Description',
-      value: `${state.data?.detail?.description ? state.data?.detail?.description : '-'}`,
-    },
-    // { label: 'Team Name', value: state.data?.detail?.teamWork?.teamName },
-    { label: 'Plate Number', value: state.data?.detail?.vehicle?.plateNumber },
-    { label: 'Created Date', value: formatDate(state.data?.detail?.createdDate) },
-    // { label: 'Status', value: state.data?.detail?.status },
-    { label: 'Initialize Stock', value: state.data?.detail?.isInitialize ? 'TRUE' : 'FALSE' },
-  ];
+  // const displayItems: (DescriptionDisplayDataItem | undefined)[] = [
+  //   { label: 'Store Name', value: state.data?.detail?.name },
+  //   {
+  //     label: 'Description',
+  //     value: `${state.data?.detail?.description ? state.data?.detail?.description : '-'}`,
+  //   },
+  //   // { label: 'Team Name', value: state.data?.detail?.teamWork?.teamName },
+  //   { label: 'Plate Number', value: state.data?.detail?.vehicle?.plateNumber },
+  //   { label: 'Created Date', value: formatDate(state.data?.detail?.createdDate) },
+  //   // { label: 'Status', value: state.data?.detail?.status },
+  //   { label: 'Initialize Stock', value: state.data?.detail?.isInitialize ? 'TRUE' : 'FALSE' },
+  // ];
 
   const calculateTotalAmount = (settlement: SettlementLessDto | undefined): number => {
     return settlement
@@ -212,8 +219,8 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
     { label: 'Requested Date', value: formatDate(state.data?.detail?.stockControl?.requestDate) },
     {
       label: 'Received By',
-      value: state.data?.detail?.stockControl?.receiver
-        ? `${state.data?.detail?.stockControl?.receiver.salespersonCode} - ${state.data?.detail?.stockControl?.receiver.salespersonName}`
+      value: state.data?.detail?.stockControl?.receivedBy
+        ? `${state.data?.detail?.stockControl?.receivedBy.salespersonCode} - ${state.data?.detail?.stockControl?.receivedBy.salespersonName}`
         : 'N/A',
     },
     { label: 'Status', value: state.data?.detail?.stockControl?.status },
@@ -275,9 +282,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
   };
 
   return (
-    < Spin
-      spinning={requestActions.request?.loading}
-    >
+    <>
       <Card
         size="small"
         title="General Info"
@@ -341,7 +346,8 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
               type="link"
               htmlType="button"
               icon={<EditOutlined />}
-              onClick={() => history.push(`${SalePaths.store}/edit/${id}`)}
+              // onClick={() => history.push(`${SalePaths.store}/edit/${id}`)}
+              onClick={()=>onEdit(id)}
               key="edit"
             >
               Edit
@@ -352,6 +358,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
         <ProDescriptions
           column={3}
           dataSource={state.data?.detail}
+          loading={state.data?.detail ? false : true}
           contentStyle={{
             fontWeight: 500
           }}
@@ -386,6 +393,167 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
         />
         {/* <DescriptionDisplay data={displayItems} /> */}
       </Card>
+      <Tabs
+        items={[
+          {
+            key: "stock",
+            label: "Stock Control",
+            icon: <ShopOutlined />,
+            children:
+              <Flex gap={16} vertical>
+                <Card>
+                  {state.data?.detail?.stockControl === null && (
+                    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={<span>No Data</span>}>
+                      <Button type="primary" onClick={() => setAddNewModal({ visible: true })}>
+                        Create New Stock Request
+                      </Button>
+                    </Empty>
+                  )}
+                  {state.data?.detail?.stockControl !== null && (
+                    <ProDescriptions
+                      dataSource={state.data?.detail?.stockControl}
+                      loading={state.data?.detail?.stockControl ? false : true}
+                      contentStyle={{
+                        fontWeight: 500
+                      }}
+                      columns={[
+                        {
+                          title: "Serial Number",
+                          dataIndex: "referenceNo"
+                        },
+                        {
+                          title: "Requested Date",
+                          dataIndex: "requestDate",
+                          valueType: "date"
+                        },
+                        {
+                          title: "Received By",
+                          dataIndex: "",
+                          render: (_, r) => [r.receivedBy?.salespersonCode, r.receivedBy?.salespersonName].filter(p => p).join(" - ")
+                        },
+                        {
+                          title: "Approved Date",
+                          dataIndex: "approvedDate",
+                          valueType: "date",
+                        },
+                        {
+                          title: "Approved By",
+                          dataIndex: "serial",
+                          render: (_, r) => [r.approvedBy?.salespersonCode, r.approvedBy?.salespersonName].filter(p => p).join(" - "),
+                          span: 2
+                        },
+                        {
+                          title: "Status",
+                          dataIndex: "serial",
+                          render: (_, r) => {
+                            const color =
+                              r.status === 'pending'
+                                ? 'processing'
+                                : r.status === 'open'
+                                  ? 'success'
+                                  : r.status === 'canceled' || r.status === 'closed'
+                                    ? 'magenta'
+                                    : 'warning';
+                            return (
+                              <span>
+                                <Tag color={color}
+                                  bordered={false}
+                                  icon={
+                                    r.status === "pending" ? <SyncOutlined spin />
+                                      : r.status === "open" ? <CheckCircleOutlined />
+                                        : r.status === "canceled" ? <CloseCircleOutlined />
+                                          : r.status == "closed" ? <CheckCircleOutlined />
+                                            : <ExclamationCircleOutlined />
+                                  }
+                                >{r.status}</Tag>
+                              </span>
+                            )
+                          }
+                        },
+                        {
+                          title: "Stock balance is to be carried Forward",
+                          dataIndex: "serial",
+                          render: (_, r) => <Text
+                            type={r.isKeepForwarding ? "success" : "danger"}
+                          >{r.isKeepForwarding ? "Yes" : "No"}</Text>
+                        },
+                      ]}
+                    />
+                  )}
+                </Card>
+                {state.data?.detail?.stockControl?.settlement && (
+                  <Card title="Settlement" size="small" key="settlementInfo">
+                    <DescriptionDisplay data={settlementInfo} column={3} />
+                  </Card>
+                )}
+              </Flex>
+          },
+          {
+            key: "invoice",
+            label: "Sale Invoice",
+            icon: <SolutionOutlined />,
+            children: <SaleInvoiceTabItem
+              data={{
+                stockStoreId: id || 0,
+                stockControlId: state.data?.detail?.stockControl?.id,
+                exchangeRate: dsdExchangeRate,
+              }}
+              forceUpdate={forceUpdate}
+              actionHandlers={{
+                onEditSaleInvoice: (item) => {
+                  setSaleInvoiceModal({ visible: true, record: item });
+                },
+              }}
+            />
+          },
+          {
+            key: "member",
+            label: "Member",
+            icon: <TeamOutlined />,
+            children: <ProTable<SalesTeamWorkLess>
+              size="small"
+              rowKey="id"
+              key="salespersonCode"
+              pagination={false}
+              bordered={false}
+              search={false}
+              dataSource={state.data?.detail?.members}
+              options={{
+                setting: false,
+                density: false,
+                fullScreen: false,
+                reload: false,
+              }}
+              columns={[
+                { title: 'Code', dataIndex: 'salespersonCode' },
+                { title: 'Full Name', dataIndex: 'salespersonName' },
+                { title: 'Phone Number', dataIndex: 'phoneNumber' },
+                { title: 'Role', dataIndex: 'role' },
+                {
+                  title: '',
+                  render: (_, r) => {
+                    return r.isRequester ? (
+                      <Tooltip title="Owner">
+                        <CrownOutlined style={{ color: 'blue' }} />
+                      </Tooltip>
+                    ) : (
+                      <UserOutlined />
+                    );
+                  },
+                },
+              ]}
+            />
+          },
+          {
+            key:"history",
+            label:"Stock Control History",
+            icon:<HistoryOutlined/>,
+            children:<HistoryTabItem
+            data={{ id: id || 0, forceUpdate: forceHistoryUpdate, dsdExchangeRate: dsdExchangeRate }}
+          />
+          }
+        ]}
+      />
       {/* defaultActiveKey="stockControl" */}
       <Tabs>
         {/* <Tabs.TabPane
@@ -397,7 +565,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
           key="dashboardTabItem"
         ></Tabs.TabPane> */}
 
-        <Tabs.TabPane
+        {/* <Tabs.TabPane
           tab={
             <Space size={0}>
               <ShopOutlined />
@@ -405,23 +573,23 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
             </Space>
           }
           key="stockControlTabItem"
-        >
-          <Card
+        > */}
+          {/* <Card
             size="small"
             title={state.data?.detail?.stockControl === null ? 'Stock Detail' : 'Detail'}
             style={{ marginBottom: 10 }}
-          >
-            {state.data?.detail?.stockControl === null && (
+          > */}
+            {/* {state.data?.detail?.stockControl === null && (
               <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={<span>No Data</span>}>
                 <Button type="primary" onClick={() => setAddNewModal({ visible: true })}>
                   Create New Stock Request
                 </Button>
               </Empty>
-            )}
-            {state.data?.detail?.stockControl !== null && (
+            )} */}
+            {/* {state.data?.detail?.stockControl !== null && (
               <DescriptionDisplay data={stockControlInfo} column={3} />
             )}
-            <Tabs
+            {/* <Tabs
             // onTabClick={(activeKey) => {
             //   const id = activeKey.split('-').pop();
             //   if (id) setStockCategory(parseInt(id));
@@ -594,16 +762,16 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
                     )
                   );
                 })}
-            </Tabs>
-          </Card>
-          {state.data?.detail?.stockControl?.settlement && (
+            </Tabs> */} 
+          {/* </Card> */}
+          {/* {state.data?.detail?.stockControl?.settlement && (
             <Card title="Settlement" size="small" key="settlementInfo">
               <DescriptionDisplay data={settlementInfo} column={3} />
             </Card>
-          )}
-        </Tabs.TabPane>
+          )} */}
+        {/* </Tabs.TabPane> */}
 
-        <Tabs.TabPane
+        {/* <Tabs.TabPane
           tab={
             <Space size={0}>
               <SolutionOutlined /> <span>Sale Invoice</span>
@@ -624,7 +792,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
               },
             }}
           />
-        </Tabs.TabPane>
+        </Tabs.TabPane> */}
 
         {/* <Tabs.TabPane
           tab={
@@ -635,7 +803,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
           key="settlementTab"
         ></Tabs.TabPane> */}
 
-        <Tabs.TabPane
+        {/* <Tabs.TabPane
           tab={
             <Space size={0}>
               <TeamOutlined /> <span>Member</span>
@@ -678,9 +846,9 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
               ]}
             />
           </Card>
-        </Tabs.TabPane>
+        </Tabs.TabPane> */}
 
-        <Tabs.TabPane
+        {/* <Tabs.TabPane
           tab={
             <Space size={0}>
               <HistoryOutlined /> <span>Stock Control History</span>
@@ -691,7 +859,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
           <HistoryTabItem
             data={{ id: id || 0, forceUpdate: forceHistoryUpdate, dsdExchangeRate: dsdExchangeRate }}
           />
-        </Tabs.TabPane>
+        </Tabs.TabPane> */}
       </Tabs>
 
       <SaleInvoiceFormModal
@@ -857,7 +1025,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
             }) || [],
         }}
       />
-    </Spin>
+    </>
   );
 };
 

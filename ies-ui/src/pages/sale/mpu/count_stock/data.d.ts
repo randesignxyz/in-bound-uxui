@@ -19,7 +19,7 @@ interface StockCountDto{
     remark?: string,
     status:"Pending"|"Rejected"|"Approved"|string;
     items?: StockCountItemDto[];
-    comment?:comments[];
+    comment?:Comment[];
 }
 
 interface StockCountItemDto{

@@ -38,6 +38,7 @@ const StoreMainPage: React.FC<Props> = () => {
                     action: "add",
                     tabIcon: <FileOutlined />,
                     tabLabel: 'New Stock',
+                    tabKey:item?.id,
                     panel: ({ onUpdateTab,onCloseTab, key }) => <StockStoreForm
                         type="new"
                         onView={(it) => onUpdateTab?.("view", it, undefined, key)}
@@ -53,6 +54,7 @@ const StoreMainPage: React.FC<Props> = () => {
                     action: 'view',
                     value: item?.name || "n/a",
                     tabLabel: item?.name || 'Draft',
+                    tabKey:item?.id,
                     panel: ({ onUpdateTab,onAddTab, onCloseTab, key }) => <StockStoreDetail
                         id={item?.id}
                         onEdit={() => onUpdateTab?.('edit', undefined, undefined, key)}
@@ -63,6 +65,7 @@ const StoreMainPage: React.FC<Props> = () => {
                     action: 'edit',
                     value: item?.name || "n/a",
                     tabLabel: item?.name || 'Draft',
+                    tabKey:item?.id,
                     panel: ({ onUpdateTab, onCloseTab, key }) => <StockStoreForm
                         id={item?.id}
                         type="edit"
@@ -113,7 +116,7 @@ const StoreMainPage: React.FC<Props> = () => {
                     columns: [
                         {
                             title: 'Store Name',
-                            key: 'name',
+                            dataIndex: 'name',
                             actionProps: (item) => ({
                                 type: 'view',
                                 label: item.name || 'n/a',
@@ -169,23 +172,23 @@ const StoreMainPage: React.FC<Props> = () => {
                             title: 'Description',
                             dataIndex: 'description',
                         },
-                        access.canOpenStore ?
-                            {
-                                title: '',
-                                align: 'center',
-                                render: (_, r) => {
-                                    return (
-                                        <Tooltip title="Edit" key="edit">
-                                            <EditOutlined
-                                                style={{ color: '#448DF7' }}
-                                                onClick={() => history.push(`${SalePaths.store}/edit/${r.id}`)}
-                                            />
-                                        </Tooltip>
-                                    );
-                                    // return <Checkbox defaultChecked={r.isActive ? true : false} disabled />;
-                                },
-                            }
-                            : {},
+                        // access.canOpenStore ?
+                        //     {
+                        //         title: '',
+                        //         align: 'center',
+                        //         render: (_, r) => {
+                        //             return (
+                        //                 <Tooltip title="Edit" key="edit">
+                        //                     <EditOutlined
+                        //                         style={{ color: '#448DF7' }}
+                        //                         onClick={() => history.push(`${SalePaths.store}/edit/${r.id}`)}
+                        //                     />
+                        //                 </Tooltip>
+                        //             );
+                        //             // return <Checkbox defaultChecked={r.isActive ? true : false} disabled />;
+                        //         },
+                        //     }
+                        //     : {},
                     ]
                 }
             }}

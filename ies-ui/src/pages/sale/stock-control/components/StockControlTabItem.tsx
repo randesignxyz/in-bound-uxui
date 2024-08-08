@@ -50,7 +50,7 @@ const StockControlTabItem: React.FC<Props> = ({ data, forceUpdate }) => {
       //   onClick: () => {
       //     history.push(`${CrmPaths.customer}/detail/${soDetail?.associatedTo.customer.id}`);
       //   },
-      value: `${data.details?.owner.salespersonCode} - ${data.details?.owner.salespersonName}`,
+      value: `${data.details?.owner?.salespersonCode} - ${data.details?.owner?.salespersonName}`,
     },
     { label: 'Description', value: data.details?.description },
     { label: 'Serial #', value: data.details?.serialNumber },
@@ -159,6 +159,7 @@ const StockControlTabItem: React.FC<Props> = ({ data, forceUpdate }) => {
               title: "Approved Date",
               render: (_, r) => <a>{formatDateTime(r.approvedDate)}</a>
             },
+            
             {
               title: "Keep Forwarding",
               render: (_, r) => <Typography.Text type={r.isKeepForwarding ? "success" : "warning"}>{r.isKeepForwarding ? "YES" : "NO"}</Typography.Text>
@@ -323,7 +324,7 @@ const StockControlTabItem: React.FC<Props> = ({ data, forceUpdate }) => {
                                   //dataIndex: 'quantity'
                                 },
                                 {
-                                  title: 'Offer Quantity',
+                                  title: 'Sold Quantity',
                                   align: 'right',
                                   render: (_, r) => {
                                     return r.soldQty;

@@ -75,9 +75,7 @@ export default ({}: Props) => {
               title: 'Settled Amount KHM',
               align: 'right',
               render: (_, r) => {
-                return `${parent.settledExchangeRate?.target_symbol} ${numeral(r.amountKH).format(
-                  '0,0',
-                )}`;
+                return ` ${numeral(r.amountKH).format()}`;
               },
             },
             {

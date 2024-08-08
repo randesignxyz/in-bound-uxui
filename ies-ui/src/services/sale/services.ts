@@ -60,6 +60,7 @@ import type {
   VehicleLess,
   initProductParamsType,
 } from './data';
+import { StatusActionForm } from '@/pages/sale/mpu/settlement/data';
 
 export const SaleService = (serviceName?: SaleServiceName): ServiceType => {
   return {
@@ -441,7 +442,7 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
     actions,
   ),
   findExchangeRate: findService<{}, ExchangeRate>(SaleService('exchange-rate'), actions),
-  findDSDExchangeRate: findService<{}, ExchangeRate>(SaleService('exchange-rate-dsd'), actions),
+  findDSDExchangeRate: findService<{}, ExchangeRate>(SaleService('exchange-rate-dsd-only'), actions),
 
   pageLead: findPagingService<{ id?: string; sort?: Record<string, SortOrder> }, LeadDetail>(
     SaleService('page-lead'),

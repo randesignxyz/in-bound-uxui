@@ -98,7 +98,7 @@ export type SaleServiceName =
   | 'create-stock-control'
   | 'close-stock-request'
   | 'settle-stock-request'
-  | 'exchange-rate-dsd'
+  | 'exchange-rate-dsd-only'
   | 'reject-request-stock';
 
 /** Stock */

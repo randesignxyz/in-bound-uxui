@@ -12,6 +12,7 @@ import type { SortOrder } from 'antd/lib/table/interface';
 import { useReducer } from 'react';
 import type { State } from './reducer';
 import { reducer } from './reducer';
+import { StatusActionForm } from '../mpu/settlement/data';
 
 export const Model = (id?: number) => {
   const initState: State = {

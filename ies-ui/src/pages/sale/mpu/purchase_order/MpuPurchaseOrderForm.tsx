@@ -75,6 +75,12 @@ const MpuPurchaseOrderForm: React.FC<Props> = ({ onSave, ...props }) => {
                 submitter={false}
                 labelAlign="right"
             >
+                <ProForm.Group grid>
+                    <ProFormSelect
+                        name={"SA"}
+                        label="SA"
+                    />
+                </ProForm.Group>
                 <Flex vertical gap={12}>
                     <ProFormSelect
                         label="Purchase Request"

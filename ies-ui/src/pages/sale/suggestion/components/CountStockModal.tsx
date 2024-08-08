@@ -58,7 +58,7 @@ const CountStockModal: React.FC<Props> = ({ data, actionHandlers, ...props }) =>
       actionRef.current?.reload();
     };
     onResetActionHandler();
-    return () => {};
+    return () => { };
   }, [data, props.open]);
 
   return (
@@ -97,18 +97,14 @@ const CountStockModal: React.FC<Props> = ({ data, actionHandlers, ...props }) =>
         return Promise.resolve(true);
       }}
       open={props.open}
-      //visible={props.visible}
     >
       <EditableProTable<StockDetailItemSettle>
         rowKey="id"
-        // scroll={{
-        //   x: 960,
-        // }}
         recordCreatorProps={false}
         value={dataSource}
-        // onChange={setDataSource}
+        tableLayout='auto'
+        size='small'
         onValuesChange={setDataSource}
-        // onDataSourceChange={setDataSource}
         editable={{
           onlyOneLineEditorAlertMessage:
             'Please save the editing record, before start edit a new record.',
@@ -130,78 +126,66 @@ const CountStockModal: React.FC<Props> = ({ data, actionHandlers, ...props }) =>
           actionRender: (_row, _config, dom) => [dom.save, dom.cancel],
         }}
         columns={[
-          // {
-          //   title: 'Expired Date',
-          //   readonly: true,
-          //   valueType: 'date',
-          //   dataIndex: 'expiredDate',
-          //   width: 120,
-          // },
           {
             title: 'Batch #',
             readonly: true,
-            //valueType: 'date',
             dataIndex: 'batchNo',
-            width: 120,
+            width: 90,
+            render: (_, r) => <Typography.Text italic type='warning'>{r.batchNo}</Typography.Text>
+            // width: 120,
           },
           {
             title: 'Product Name',
             dataIndex: 'itemName',
             readonly: true,
+            fixed: true
           },
-          //   {
-          //     title: 'UoM',
-          //     dataIndex: 'uom',
-          //     readonly: true,
-          //     align: 'center',
-          //     width: 60,
-          //   },
           {
-            title: 'Beginning Stock',
+            title: 'Beginning',
             align: 'right',
             dataIndex: 'beginningQty',
             readonly: true,
-            width: 130,
+            width: 100,
           },
           {
-            title: 'Request Stock',
+            title: 'Request',
             align: 'right',
             dataIndex: 'quantity',
             readonly: true,
-            width: 130,
+            width: 70,
           },
           {
-            title: 'Total Stock',
+            title: 'Total',
             align: 'right',
             dataIndex: 'totalQty',
             readonly: true,
-            width: 130,
+            width: 60,
           },
           {
             title: 'Stock Used',
             align: 'right',
             dataIndex: 'soldQty',
             readonly: true,
-            width: 130,
+            width: 100,
           },
           {
             title: 'End Stock',
             align: 'right',
             dataIndex: 'endQty',
             readonly: true,
-            width: 100,
+            width: 80,
           },
           {
             title: 'Actual Balance',
-            align: 'right',
             dataIndex: 'actualQty',
             valueType: 'digit',
+            width: 110,
+            fixed: true,
+            align: "right",
             formItemProps: {
-              //validateStatus: isRemarkRequired ? 'error' : 'success',
               rules: [
                 {
                   validator: (_, value) => {
-                    // console.log(record, value, callback);
                     return value < 0
                       ? Promise.reject('Quantity sould be positive number.')
                       : Promise.resolve(undefined);
@@ -209,19 +193,30 @@ const CountStockModal: React.FC<Props> = ({ data, actionHandlers, ...props }) =>
                   required: true,
                   message: 'Please Enter',
                   whitespace: false,
-                  //   transform: (value) => {
-                  //     console.log('transform', value);
-                  //   },
                 },
               ],
             },
-            width: 130,
           },
+          // {
+          //   title: "Charge QTY",
+          //   dataIndex: 'actualQty',
+          //   width: 100,
+          //   valueType: "digit",
+          //   align: "right"
+          // },
+          // {
+          //   title: "No Charge QTY",
+          //   dataIndex: "charge",
+          //   width: 120,
+          //   valueType: "digit",
+          //   initialValue: 0,
+          //   align: "right"
+          // },
           {
             title: 'Remark',
             dataIndex: 'remark',
             valueType: 'text',
-            // ellipsis: true,
+            width: 150,
             formItemProps: {
               rules: [
                 {
@@ -235,7 +230,7 @@ const CountStockModal: React.FC<Props> = ({ data, actionHandlers, ...props }) =>
           {
             valueType: 'option',
             align: 'right',
-            width: 120,
+            width: 50,
             render: (_text, record, _, action) => [
               <Tooltip title="Edit" key={`editable-${record.id}`}>
                 <Button

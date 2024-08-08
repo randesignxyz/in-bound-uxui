@@ -213,6 +213,7 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({ }) => 
         },
         { title: 'Beginning Qty', align: 'right', dataIndex: 'beginningQty' },
         { title: 'Request Qty', align: 'right', dataIndex: 'quantity' },
+        { title: 'Sold Qty', align: 'right', dataIndex: 'soldQty' },
       ];
 
   const colsApprove: ProColumns<StockDetailItemLess>[] = [

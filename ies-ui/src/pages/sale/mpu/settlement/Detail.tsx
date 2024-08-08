@@ -1,6 +1,6 @@
 import { simpleRequestActions } from "@/services/model";
 import { ActionType, ProDescriptions, ProTable } from "@ant-design/pro-components";
-import { Button, Card, Col, Flex, message, Row, Space, Spin, Tag, Typography } from "antd";
+import { Button, Card, Col, Flex, message, Modal, Row, Space, Spin, Tag, Timeline, Typography } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { SettlementMethodServicAPI } from "./service";
 import { formatDate, formatterQty } from "@/pages/utils";
@@ -37,8 +37,8 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
     return (
         <Spin spinning={requestActions.request?.loading}>
             <Flex vertical gap={16}>
-                <Row gutter={[16, 16]}>
-                    <Col sm={24} lg={18}>
+                {/* <Row gutter={[16, 16]}>
+                    <Col sm={24} lg={18}> */}
                         <Card
                             size="small"
                             title={"General Infomation"}
@@ -47,8 +47,18 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                                     type="link"
                                     icon={<CheckCircleOutlined />}
                                     onClick={() => {
-                                        setActionState({
-                                            visible: { open: true, status: "Completed", carryData: dataSource }
+                                        Modal.confirm({
+                                            title:"Confirm Message",
+                                            content:"This is a message inform warning; be careful before clicking OK. You really want to confirm the request?",
+                                            onOk:async()=>{
+                                                services.confirm({
+                                                    id:dataSource.id
+                                                }).then(() => {
+                                                    actionRef.current?.reload?.()
+                                                    loadData?.();
+                                                    message.success("Your confirmation request was a success!");
+                                                });
+                                            }
                                         });
                                     }}
                                 >Confirm</Button>,
@@ -112,24 +122,6 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                                 ]}
                             />
                         </Card>
-                    </Col>
-                    <Col sm={24} xs={24} lg={6}>
-                        <Card size="small" style={{ height: "100%" }}>
-                            {
-                                dataSource?.comment?.length ? dataSource?.comment?.map(p => {
-                                    return <Typography.Paragraph>
-                                        <Flex vertical>
-                                            <Space><Text type="success">{p.createdBy}</Text>
-                                                <Text italic>{formatDate(p.createdDate)}</Text></Space>
-                                            <Space><Text type="secondary">remark:</Text><Text>{p.description}</Text></Space>
-                                        </Flex>
-                                    </Typography.Paragraph>
-                                })
-                                    : <Flex justify="center"><Text type="secondary">no remark</Text></Flex>
-                            }
-                        </Card>
-                    </Col>
-                </Row>
                 <Card size="small">
                     <ProTable
                         size="small"
@@ -208,6 +200,27 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                             })
                         }
                     </Flex>
+                </Card>
+                <Card size="small" style={{ height: "100%" }}>
+                    {
+                        dataSource?.comment?.length ?  (<>
+                            <Timeline
+                                mode="left"
+                                items={dataSource.comment.map(p=>({
+                                    label:<Space><Typography.Text type="warning">{p.createdBy}</Typography.Text><Typography.Text italic>{formatDate(p.createdDate)}</Typography.Text></Space>, 
+                                    children:<Flex vertical justify="space-around">
+                                        <Typography.Text type="danger">{p.type}</Typography.Text>
+                                        <Space>
+                                            <Typography.Text type="secondary">remark:</Typography.Text>
+                                            <Typography.Text >{p.description}</Typography.Text>
+                                        </Space>
+                                        
+                                    </Flex>
+                                }))}
+                            />
+                        </>)
+                         :<Flex justify="center"><Text type="secondary">no remark</Text></Flex>
+                    }
                 </Card>
             </Flex>
             <RemarkModalForm

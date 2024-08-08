@@ -1,6 +1,6 @@
-import { ActionType, EditableFormInstance, EditableProTable, FooterToolbar, ProDescriptions, ProForm, ProFormDatePicker, ProFormSelect, ProFormTextArea } from "@ant-design/pro-components";
+import { ActionType, EditableFormInstance, EditableProTable, FooterToolbar, ProDescriptions, ProForm, ProFormDatePicker, ProFormGroup, ProFormSelect, ProFormTextArea } from "@ant-design/pro-components";
 import { PurchaseOrderCreate, PurchaseOrderItem } from "./data";
-import { Button, Card, Col, Flex, message, Modal, Row, Space } from "antd";
+import { Button, Card, Col, Divider, Flex, message, Modal, Row, Space } from "antd";
 import { DistributorCreate } from "../request/data";
 import { formatter } from "@/pages/utils";
 import { CrmServiceAPI } from "@/services/crm/services";
@@ -12,7 +12,7 @@ import { useRef, useState, useEffect } from "react";
 import { ProductItemsServiceAPI } from "../../product/services";
 import { PurChaseRequestAPIService } from "../request/service";
 import { PurchaseOrderServiceAPI } from "./services";
-
+import numeral from "numeral";
 
 interface Props {
   id?: number;
@@ -128,6 +128,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
         },
       }}
     >
+
       <Flex vertical gap={12}>
         <Card
           size='small'
@@ -207,70 +208,6 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
             </ProForm.Group>
           </Space>
 
-          {/* <Row gutter={24}>
-            <Col span={10}>
-              <ProFormSelect
-                name={"assignedTo"}
-                label={"Saleperson"}
-                debounceTime={500}
-                rules={[
-                  { required: true }
-                ]}
-                showSearch
-                onChange={(e: string) => {
-                  const assigned = e.split(",");
-                  setSaleperson({
-                    assignedTo: assigned[1],
-                    assignedToCode: assigned[0]
-                  })
-                }}
-                request={async (k: { keyWords: string }) => {
-                  const data = await services.salespersonList({
-                    searchValue: k.keyWords
-                  });
-                  return data.filter(t => t.isRequester === true).map(p => ({ value: [p.salespersonCode, p.salespersonName].join(","), label: p.salespersonName }))
-                }}
-              />
-              <ProFormSelect
-                showSearch
-                debounceTime={500}
-                name={"distributorId"}
-                rules={[
-                  { required: true }
-                ]}
-                onChange={async (s: number) => {
-                  const y = await CrmServiceAPI(requestActions).findDetailCustomer({ id: s });
-                  setDistributor({
-                    code: y.code,
-                    id: y.id,
-                    name: y.name,
-                    phone: y.contacts?.[0].phone1,
-                    latitude: y?.addressList?.[0]?.latitude,
-                    longitude: y?.addressList?.[0]?.longitude
-                  });
-                }}
-                label={"Distributor"}
-                request={async (k: { keyWords: string }) => {
-                  const data = await CrmServiceAPI(requestActions).findAllCustomer({
-                    searchValue: k.keyWords
-                  });
-                  return data.items.map(p => ({ value: p.id, label: p.name }));
-                }}
-              />
-              <ProFormDatePicker
-                name={"purchaseDate"}
-                label="Purchase Order Date"
-                width={"md"}
-                rules={[{ required: true }]}
-              />
-            </Col>
-            <Col span={14}>
-              <ProFormTextArea
-                placeholder={"remark"}
-                name={"remark"}
-              />
-            </Col>
-          </Row> */}
         </Card>
         <EditableProTable<PurchaseOrderItem & { key: string } >
           headerTitle={"Items"}
@@ -459,7 +396,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
                 width: 150
               }}
               contentStyle={{
-                fontWeight: "bold"
+                fontWeight: "bold",
               }}
               dataSource={amount}
               columns={[
@@ -468,7 +405,8 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
                   dataIndex: "grandAmount",
                   valueType: "money",
                   editable: false,
-                  render: (_, r) => r.grantAmount ? formatter.format(r.grantAmount) : "$0.00"
+                  // render: (_, r) => r.grantAmount ? formatter.format(r.grantAmount) : "$0.00"
+                  render: (_, r) => `$ ${numeral(r.grantAmount).format("0,000.00")}`
                 },
                 {
                   title: "Discount Amount",
@@ -480,7 +418,8 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
                   dataIndex: "totalAmount",
                   valueType: "money",
                   editable: false,
-                  render: (_, r) => r.totalAmount ? formatter.format(r.totalAmount) : "$0.00"
+                  render: (_, r) => `$ ${numeral(r.totalAmount).format("0,000.00")}`
+                  // render: (_, r) => r.totalAmount ? formatter.format(r.totalAmount) : "$0.00"
                 },
               ]}
             />

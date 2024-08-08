@@ -28,7 +28,7 @@ const VisitMainPage: React.FC<Props> = () => {
     const [filter, setFilter] = useState<TableViewSearchParams<VisitAvanceSearchParam>>({
         criteria: { advanceSearch: { status: 'ALL' } }
     });
-    const { data, isFetching, refetch } = useQuery(['fetch-customer-list', filter], () => services.page(filter),
+    const { data, isFetching, refetch } = useQuery(['fetch-visit', filter], () => services.page(filter),
         {
             refetchOnWindowFocus: false
         });
@@ -107,17 +107,6 @@ const VisitMainPage: React.FC<Props> = () => {
                                     type: 'view',
                                     label: formatDate(item.visitDate) || 'n/a',
                                 }),
-
-                                //   render: (_, r) => (
-                                //     <Button
-                                //       type="link"
-                                //       onClick={() => {
-                                //         if (onDetail !== undefined) onDetail(r.id);
-                                //       }}
-                                //     >
-                                //       {formatDate(r.checkInDateTime)}
-                                //     </Button>
-                                //   ),
                             },
                             {
                                 title: 'Duration',
@@ -134,14 +123,13 @@ const VisitMainPage: React.FC<Props> = () => {
                             },
                             {
                                 title: 'Checked In Location',
-                                // dataIndex: 'customerAddress',
                                 render: (_, r) => (
                                     <Button
                                         type="link"
                                         onClick={() =>
                                             setGoogleModal({
                                                 visible: true,
-                                                id: r.id,
+                                                id: `${r.id}`,
                                                 lat: parseFloat(r.checkInLatitude) ?? -1,
                                                 lng: parseFloat(r.checkInLongitude) ?? -1,
                                                 name: r.customerName,

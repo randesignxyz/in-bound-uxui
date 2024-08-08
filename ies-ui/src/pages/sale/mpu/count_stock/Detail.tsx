@@ -38,111 +38,85 @@ const CountStockDetail: React.FC<Props> = ({ id }) => {
         id && loadData();
     }, [id]);
 
-
-
     return (
         <Spin
             spinning={requestActions.request?.loading}
         >
             <Flex gap={16} vertical>
-                <Row gutter={[ 16, 16 ]}>
-                    <Col sm={24} lg={18}>
-                        <Card
-                            size="small"
-                            title="General Information"
-                            extra={[
-                                dataSource?.status == "Pending" && <Button
-                                    type="link"
-                                    danger
-                                    icon={<CloseCircleOutlined />}
-                                    onClick={() => {
-                                        setActionState({
-                                            visible: { open: true, status: "Rejected" }
-                                        });
-                                    }}
-                                >Reject</Button>,
-                            ]}
-                        >
-                            <ProDescriptions
-                                dataSource={dataSource}
-                                loading={requestActions.request?.loading}
-                                actionRef={actionRef}
-                                contentStyle={{
-                                    fontWeight: 500
-                                }}
-                                columns={[
-                                    {
-                                        title: "Counted No",
-                                        dataIndex: "countedNo"
-                                    },
-                                    {
-                                        title: "Date Counted",
-                                        dataIndex: "countedDate",
-                                        valueType: "date"
-                                    },
-                                    {
-                                        title: "Counted Invoices",
-                                        dataIndex: "countedInvoices",
-                                    },
-                                    {
-                                        title: "Salesperson Code",
-                                        dataIndex: "salespersonCode"
-                                    },
-                                    {
-                                        title: "Salesperson Name",
-                                        dataIndex: "salespersonName"
-                                    },
-                                    {
-                                        title: "Store Code",
-                                        dataIndex: "storeCode"
-                                    },
-                                    {
-                                        title: "Status",
-                                        render: (_, r) => <Tag
-                                            bordered={false}
-                                            icon={
-                                                r.status == "Pending" ? <SyncOutlined spin />
-                                                    : r.status == "Rejected" ? <CloseCircleOutlined />
-                                                        : <CheckCircleOutlined />
-                                            }
-                                            color={
-                                                r.status == "Pending" ? "processing"
-                                                    : r.status == "Rejected" ? "error"
-                                                        : "success"
-                                            }
-                                        >{r.status}</Tag>
-                                    },
-                                    {
-                                        title: "remark",
-                                        dataIndex: "remark",
-                                        span: 3,
-                                        valueType: "text"
-                                    },
-                                ]}
-                            />
-                        </Card>
-                    </Col>
-                    <Col sm={24} xs={24} lg={6}>
-                        <Card size="small" style={{height:"100%"}}>
+                <Card
+                    size="small"
+                    title="General Information"
+                    extra={[
+                        dataSource?.status == "Pending" && <Button
+                            type="link"
+                            danger
+                            icon={<CloseCircleOutlined />}
+                            onClick={() => {
+                                setActionState({
+                                    visible: { open: true, status: "Rejected" }
+                                });
+                            }}
+                        >Reject</Button>,
+                    ]}
+                >
+                    <ProDescriptions
+                        dataSource={dataSource}
+                        loading={requestActions.request?.loading}
+                        actionRef={actionRef}
+                        contentStyle={{
+                            fontWeight: 500
+                        }}
+                        columns={[
                             {
-                               dataSource?.comment?.length? dataSource?.comment?.map(p=>{
-                                    return <Typography.Paragraph >
-                                        <Flex vertical>
-                                        <Space><Text type="success">{p.createdBy}</Text>
-                                        <Text italic>{formatDate(p.createdDate)}</Text>
-                                        <Tag bordered={false} color="error" icon={<CloseCircleOutlined/>}>{p.type}</Tag>
-                                        </Space>
-                                        <Space><Text type="secondary">remark:</Text><Text>{p.description}</Text></Space>
-                                        </Flex>
-                                    </Typography.Paragraph>
-                                })
-                                :<Flex justify="center"><Text type="secondary">no remark</Text></Flex>
-                            }
-                        </Card>
-                    </Col>
-
-                </Row>
-
+                                title: "Counted No",
+                                dataIndex: "countedNo"
+                            },
+                            {
+                                title: "Date Counted",
+                                dataIndex: "countedDate",
+                                valueType: "date"
+                            },
+                            {
+                                title: "Counted Invoices",
+                                dataIndex: "countedInvoices",
+                            },
+                            {
+                                title: "Salesperson Code",
+                                dataIndex: "salespersonCode"
+                            },
+                            {
+                                title: "Salesperson Name",
+                                dataIndex: "salespersonName"
+                            },
+                            {
+                                title: "Store Code",
+                                dataIndex: "storeCode"
+                            },
+                            {
+                                title: "Status",
+                                render: (_, r) => <Tag
+                                    bordered={false}
+                                    icon={
+                                        r.status == "Pending" ? <SyncOutlined spin />
+                                            : r.status == "Rejected" ? <CloseCircleOutlined />
+                                                : <CheckCircleOutlined />
+                                    }
+                                    color={
+                                        r.status == "Pending" ? "processing"
+                                            : r.status == "Rejected" ? "error"
+                                                : "success"
+                                    }
+                                >{r.status}</Tag>
+                            },
+                            {
+                                title: "remark",
+                                dataIndex: "remark",
+                                span: 3,
+                                valueType: "text"
+                            },
+                        ]}
+                    />
+                </Card>
                 <Card size="small"
                 >
                     <ProDescriptions
@@ -219,6 +193,27 @@ const CountStockDetail: React.FC<Props> = ({ id }) => {
                             },
                         ]}
                     />
+                </Card>
+                <Card size="small" style={{ height: "100%" }}>
+                    {
+                        dataSource?.comment?.length ?  (<>
+                            <Timeline
+                                mode="left"
+                                items={dataSource.comment.map(p=>({
+                                    label:<Space><Typography.Text type="warning">{p.createdBy}</Typography.Text><Typography.Text italic>{formatDate(p.createdDate)}</Typography.Text></Space>, 
+                                    children:<Flex vertical justify="space-around">
+                                        <Typography.Text type="danger">{p.type}</Typography.Text>
+                                        <Space>
+                                            <Typography.Text type="secondary">remark:</Typography.Text>
+                                            <Typography.Text >{p.description}</Typography.Text>
+                                        </Space>
+                                        
+                                    </Flex>
+                                }))}
+                            />
+                        </>)
+                         :<Flex justify="center"><Text type="secondary">no remark</Text></Flex>
+                    }
                 </Card>
             </Flex>
 

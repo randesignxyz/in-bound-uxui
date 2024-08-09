@@ -39,10 +39,10 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({ }) => 
   const requestActions = simpleRequestActions();
   const suggestionService = SuggestionServiceAPI(requestActions);
 
-  const [exchangeRate, setExchangeRate] = useState<ExchangeRate>();
-  const [dsdExchangeRate, setDsdExchangeRate] = useState<ExchangeRate>();
+  // const [exchangeRate, setExchangeRate] = useState<ExchangeRate>();
+  // const [dsdExchangeRate, setDsdExchangeRate] = useState<ExchangeRate>();
   const [remarkState, setRemarkState] = useState<{
-    visible?:{
+    visible?:{ 
       open:boolean;
       carryData?:StockControlLess;
     }
@@ -74,10 +74,10 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({ }) => 
 
   useEffect(() => {
     (async () => {
-      const rs = await suggestionService.exchangeRage();
-      setExchangeRate(rs);
-      const rs1 = await suggestionService.dsdExchangeRage();
-      setDsdExchangeRate(rs1);
+      // const rs = await suggestionService.exchangeRage();
+      // setExchangeRate(rs);
+      // const rs1 = await suggestionService.dsdExchangeRage();
+      // setDsdExchangeRate(rs1);
     })();
   }, []);
 
@@ -554,7 +554,7 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({ }) => 
             const total =
               data.reduce(function (acc, it) {
                 return (acc + it.amount);
-              }, 0) * (dsdExchangeRate?.target_amount ?? 0);
+              }, 0);
             // const disabled = data.some((it) => !it.batchNo || !it.expiredDate);
             return (
               <>
@@ -564,7 +564,7 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({ }) => 
                   </Table.Summary.Cell>
                   <Table.Summary.Cell index={1} align="right">
                     <Text type="success">
-                      {dsdExchangeRate?.target_symbol} {numeral(total).format('0,0.00')}
+                      $ {numeral(total).format('0,0.00')}
                     </Text>
                   </Table.Summary.Cell>
                 </Table.Summary.Row>
@@ -707,7 +707,7 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({ }) => 
           dataSource={parent.items}
           pagination={false}
         />
-      ) : parent.invoices && parent.invoices.length > 0 ? (
+      ) : parent.invoices && parent.invoices.length < 0 ? (
         <ProTable<SaleInvoiceLess>
           size={'small'}
           style={{ backgroundColor: '#EEE' }}
@@ -741,16 +741,15 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({ }) => 
               title: 'Amount',
               align: 'right',
               render: (_, r) => {
-                const amount = (dsdExchangeRate?.target_amount ?? 0) * r.amount;
-                return `${dsdExchangeRate?.target_symbol} ${numeral(amount).format('0,0.00')}`;
+                // const amount = (dsdExchangeRate?.target_amount ?? 0) * r.amount;
+                return `$ ${numeral(r.amount).format('0,0.00')}`;
               },
             },
           ]}
           summary={(data) => {
-            const total =
-              data.reduce(function (acc, it) {
+            const total =data.reduce(function (acc, it) {
                 return acc + it.amount;
-              }, 0) * (dsdExchangeRate?.target_amount ?? 0);
+              }, 0);
             // const disabled = data.some((it) => !it.batchNo || !it.expiredDate);
             return (
               <>
@@ -760,7 +759,7 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({ }) => 
                   </Table.Summary.Cell>
                   <Table.Summary.Cell index={1} align="right">
                     <Text type="success">
-                      {dsdExchangeRate?.target_symbol} {numeral(total).format('0,0.00')}
+                      $ {numeral(total).format('0,0.00')}
                     </Text>
                   </Table.Summary.Cell>
                 </Table.Summary.Row>
@@ -1039,8 +1038,8 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({ }) => 
         key={`SettlementModal`}
         open={settleModal.open}
         data={settleModal.record}
-        exchangeRate={exchangeRate}
-        dsdExchangeRate={dsdExchangeRate}
+        // exchangeRate={exchangeRate}
+        // dsdExchangeRate={dsdExchangeRate}
         actionHandlers={{
           onCancel: () => setSettleModal({ open: false, record: undefined }),
           onAddItem: async (item) => {

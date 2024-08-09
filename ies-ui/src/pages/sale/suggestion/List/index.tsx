@@ -40,7 +40,7 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({ }) => 
   const suggestionService = SuggestionServiceAPI(requestActions);
 
   // const [exchangeRate, setExchangeRate] = useState<ExchangeRate>();
-  // const [dsdExchangeRate, setDsdExchangeRate] = useState<ExchangeRate>();
+  const [dsdExchangeRate, setDsdExchangeRate] = useState<ExchangeRate>();
   const [remarkState, setRemarkState] = useState<{
     visible?:{ 
       open:boolean;
@@ -76,8 +76,8 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({ }) => 
     (async () => {
       // const rs = await suggestionService.exchangeRage();
       // setExchangeRate(rs);
-      // const rs1 = await suggestionService.dsdExchangeRage();
-      // setDsdExchangeRate(rs1);
+      const rs1 = await suggestionService.dsdExchangeRage();
+      setDsdExchangeRate(rs1);
     })();
   }, []);
 
@@ -707,7 +707,7 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({ }) => 
           dataSource={parent.items}
           pagination={false}
         />
-      ) : parent.invoices && parent.invoices.length < 0 ? (
+      ) : parent.invoices && parent.invoices.length > 0 ? (
         <ProTable<SaleInvoiceLess>
           size={'small'}
           style={{ backgroundColor: '#EEE' }}
@@ -759,7 +759,7 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({ }) => 
                   </Table.Summary.Cell>
                   <Table.Summary.Cell index={1} align="right">
                     <Text type="success">
-                      $ {numeral(total).format('0,0.00')}
+                      {`${numeral(total).format('0,0.00')}`}
                     </Text>
                   </Table.Summary.Cell>
                 </Table.Summary.Row>
@@ -1039,7 +1039,7 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({ }) => 
         open={settleModal.open}
         data={settleModal.record}
         // exchangeRate={exchangeRate}
-        // dsdExchangeRate={dsdExchangeRate}
+        dsdExchangeRate={dsdExchangeRate}
         actionHandlers={{
           onCancel: () => setSettleModal({ open: false, record: undefined }),
           onAddItem: async (item) => {

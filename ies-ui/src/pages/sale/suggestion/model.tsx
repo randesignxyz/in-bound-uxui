@@ -42,18 +42,18 @@ export const Model = (id?: number) => {
     // await saleServices.initSuggestionData(params);
 
     const result = await Promise.all([
-      saleServices.findDSDExchangeRate({}),
-      saleServices.findExchangeRate({}),
+      // saleServices.findDSDExchangeRate({}),
+      // saleServices.findExchangeRate({}),
     ]);
 
-    dispatch({
-      type: 'dsdExchangeRage',
-      payload: result[0],
-    });
-    dispatch({
-      type: 'exchangeRate',
-      payload: result[1],
-    });
+    // dispatch({
+    //   type: 'dsdExchangeRage',
+    //   payload: result[0],
+    // });
+    // dispatch({
+    //   type: 'exchangeRate',
+    //   payload: result[1],
+    // });
 
     // const rs1 = await saleServices.findDSDExchangeRate({});
     // dispatch({

@@ -53,6 +53,7 @@ export default (props: ActionDataFormProps) => {
                         message.error("Task Id is not found")
                         return
                     }
+                    console.log('props: ',props)
                     const dataForm = await form.validateFields()
                     const saveItems = items?.map(v => ({id:v.id,stockRemarks: v.stockRemarks}))     
                     console.log('taskId',props.activityData?.procInstId)              
@@ -98,7 +99,7 @@ export default (props: ActionDataFormProps) => {
                         <Col flex={'250px'}  style={{paddingRight: 25}}>
                             <ProFormSelect                               
                                 options={warehouse.map(i=>({label:i.warehouseCode, value: i.warehouseCode}))}
-                                rules={[{ required: true, whitespace: true }]}
+                                rules={[{ required: !(props.activityData?.action=='Rejected'), whitespace: true }]}
                                 label="From Warehouse"
                                 name={'warehouseFrom'}
                             />           

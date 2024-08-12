@@ -1198,6 +1198,14 @@ export default [
     access: 'canAccessWhmEmpMappingMenu',
     component: './fma-stock/emp-whs',
   },
+  {
+    path: '/whm/adj/request/:view/*',
+    name: 'whm-adj-request',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessWhmInventoryTransferRequestMenu',
+    component: './fma-stock/adjustment',
+  },
   
   //  ================= END In-house Stock ================
   //  ================= Setting =================

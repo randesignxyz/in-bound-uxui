@@ -52,6 +52,7 @@ import { StockRequestLess, StockRequestListItem } from '@/pages/fma-stock/reques
 import { ItemList } from '@/pages/fma-stock/item/data.types';
 import { TransferRequestListItem } from '@/pages/fma-stock/transfer/data.types';
 import { EmpWhsMappingList } from '@/pages/fma-stock/emp-whs/data.types';
+import { AdjRequestListItem } from '@/pages/fma-stock/adjustment/data.types';
 
 type DataList =
   | {
@@ -307,6 +308,10 @@ type DataList =
     type: 'fma-emp-whs-mapping-list';
     criteria?: any;
     data?: Paging<EmpWhsMappingList>;
+  }| {
+    type: 'whh-inventory-adjustment-request';
+    criteria?: any;
+    data?: Paging<AdjRequestListItem>;
   };
 
 type MomainType =
@@ -358,7 +363,8 @@ type MomainType =
   | 'transfer-request-list'
   | 'fma-stock-request'
   | 'whh-inventory-transfer-request'
-  | 'fma-emp-whs-mapping-list';
+  | 'fma-emp-whs-mapping-list'
+  | 'whh-inventory-adjustment-request';
 
 export default () => {
   const [cacheData, seCacheData] = useState<DataList>();

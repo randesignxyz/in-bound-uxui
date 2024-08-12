@@ -794,7 +794,10 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) => ['ROLE_ADMIN','ROLE_NCM_INVENTORY_TRANSFER_REQUEST'].some((it) => it === item)) ||
       false,   
     canPostedInventoryTransferSAP:
-      currentUser?.authorities.some((item) => ['ROLE_NCM_INVENTORY_TRANSFER_SUPPORT'].some((it) => it === item)) ||
+      currentUser?.authorities.some((item) => ['ROLE_ADMIN','ROLE_NCM_INVENTORY_TRANSFER_SUPPORT'].some((it) => it === item)) ||
       false,     
+    canCreateInventoryAdjRequest:
+      currentUser?.authorities.some((item) => ['ROLE_NCM_INVENTORY_ADJUSTMENT_REQUEST'].some((it) => it === item)) ||
+      false,       
   };
 }

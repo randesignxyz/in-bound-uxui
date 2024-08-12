@@ -24,6 +24,7 @@ import { history } from "@umijs/max";
 import { ProcessRequestItem } from './data.type';
 import { StockRequestFormNames } from '@/pages/fma-stock/request/process-flow';
 import { TransferRequestFormNames } from '@/pages/fma-stock/transfer/process-flow';
+import { AdjustmentRequestFormNames } from '@/pages/fma-stock/adjustment/process-flow';
 
 export default () => {
   const [data, setData] = useState<ProcessRequestItem[]>([]);
@@ -57,6 +58,7 @@ export default () => {
     if (key == PoRequestFormNames.processDefKey && access.canAccessProPOMenuItem) return true;   
     if (key == StockRequestFormNames.processDefKey && access.canCreateNCMRequest) return true;
     if (key == TransferRequestFormNames.processDefKey && access.canCreateInventoryTransferRequest) return true;
+    if (key == AdjustmentRequestFormNames.processDefKey && access.canCreateInventoryAdjRequest) return true;
 
     return false;
   };

@@ -133,7 +133,7 @@ export interface EmergencyData {
 export interface EssProfileData {
   id?             : number; 
   empId           : number;
-  name_kh         : string; 
+  name_kh?        : string; 
   name_en         : string;  
   gender_id       : number; 
   date_birth      : string;  

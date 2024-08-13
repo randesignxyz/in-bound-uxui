@@ -63,12 +63,12 @@ export default ({ open, onOpenModalChange, refreshTable }: Props) => {
         <ProCard size="small" bordered headerBordered>
           <Space direction="vertical" style={{ width: '100%' }}>
             <ProFormText name = "title_name" /*fieldProps={{ style: { height:'50px',fontSize:'24px' }}} */label = {<div><strong>Title</strong></div>} /> 
-            <ProFormSelect
+            {/* <ProFormSelect
               rules={[{ required: true }]} 
               label="Department" 
               name={'department'}
               // options={lookupList.filter(it => it.type == 'CONTACT_TYPE').map(it => ({ label: it.name, value: it.id }))}
-            />
+            /> */}
             <Space direction="horizontal" style={{ width: '100%' }}>
               <ProFormDatePicker name = "start_date" /*fieldProps={{ style: { height:'50px',fontSize:'24px' }}}*/ label = {<div><strong>Started Date</strong></div>} />            
               <ProFormDatePicker name = "end_date" /*fieldProps={{ style: { height:'50px',fontSize:'24px' }}}*/ label = {<div><strong>Ended Date</strong></div>} /> 

@@ -355,6 +355,7 @@ export interface SaleInvoiceLess {
   discount: number = 0.0;
   stockControlId?: number;
   items: SaleInvoiceItemLess[];
+  exchangeRate:number;
 }
 
 export interface SaleItem {

@@ -86,7 +86,7 @@ const SettlementModal: React.FC<Props> = ({
         }, 0) || 0,
       systemAmount: systemAmount,
       remark: '',
-      actualTotalAmount: systemAmount * (dsdExchangeRate?.source_amount || 0.0),
+      actualTotalAmount: systemAmount,
     });
   }, [
     data?.adjustmentItems,
@@ -105,10 +105,11 @@ const SettlementModal: React.FC<Props> = ({
 
   const onSubmitActionHandler = async () => {
     const form = await formModal.validateFields();
-    const amountKH = form.actualAmountKH || 0;
-    const amount = form.actualAmount || 0;
-    const systemAmountKH = form.systemAmount * (dsdExchangeRate?.source_amount ?? 0);
-    if (systemAmountKH > calculateActualAmount(form)) {
+    const formData = formModal.getFieldsValue();
+    const amountKH = formData.actualAmountKH || 0;
+    const amount = formData.actualAmount || 0;
+    // const systemAmountKH = form.systemAmount * (dsdExchangeRate?.source_amount ?? 0);
+    if (form.systemAmount > calculateActualAmount(formData)) {
       message.error('Settle amount is not correct.');
       return Promise.reject(false);
     } else {
@@ -131,8 +132,9 @@ const SettlementModal: React.FC<Props> = ({
 
   const _onChange = (changedValues: any, values: ModelModalForm) => {
     const fields = ['exchangeRate', 'actualAmount', 'actualAmountKH', 'bankAmount'];
-    if (fields.some((it) => it in changedValues)) {
-      const totalAmount = calculateActualAmount(values);
+    
+    if (fields.some((it) => it in changedValues) || changedValues) {
+      const totalAmount = calculateActualAmount(formModal.getFieldsValue());
       formModal.setFieldsValue({ actualTotalAmount: totalAmount });
     }
   };
@@ -141,9 +143,10 @@ const SettlementModal: React.FC<Props> = ({
     // const amount = (model.actualAmountKH || 0) / model.exchangeRate;
     // const actualAmount = model.actualAmount || 0;
     // const backAmount = model.bankAmount || 0;
-    const amount = model.actualAmountKH ?? 0;
-    const actualAmount = (model.actualAmount ?? 0) * model.exchangeRate;
-    const backAmount = (model.bankAmount ?? 0) * model.exchangeRate;
+    
+    const amount = (model.actualAmountKH || 0) / model.exchangeRate;
+    const actualAmount = (model.actualAmount || 0) ;
+    const backAmount = (model.bankAmount || 0) ;
     return actualAmount + amount + backAmount;
   }
 
@@ -225,7 +228,6 @@ const SettlementModal: React.FC<Props> = ({
                 />
               </>
             )}
-
             <ProFormDigit
               // initialValue={getSystemAmount()}
               name="systemAmount"
@@ -251,7 +253,7 @@ const SettlementModal: React.FC<Props> = ({
             <ProFormDigit
               fieldProps={{
                 formatter: (value) => {
-                  return numeral(value).format('0,0##');
+                  return numeral(value).format('0,#00');
                 },
               }}
               name="actualAmountKH"
@@ -270,7 +272,8 @@ const SettlementModal: React.FC<Props> = ({
               proFieldProps={{
                 render: () => {
                   const amount = formModal.getFieldValue('actualTotalAmount');
-                  return `${dsdExchangeRate?.source_symbol} ${numeral(amount).format('0,0')}`;
+                  return `${dsdExchangeRate?.target_symbol} ${numeral(amount).format('0,00.00')}`;
+                  // return `${dsdExchangeRate?.target_symbol} ${numeral(t).format('0,00.00')}`;
                 },
               }}
               min={0}

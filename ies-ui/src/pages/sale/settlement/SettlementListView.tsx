@@ -99,7 +99,7 @@ export default ({}: Props) => {
               },
             },
             {
-              title: 'Total Settled Amoun',
+              title: 'Total Settled Amount',
               align: 'right',
               render: (_, r) => {
                 // const total = r.amountKH + (r.amount + (r.bankAmount || 0.0)) * r.exchangeRate;

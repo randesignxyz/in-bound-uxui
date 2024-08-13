@@ -24,7 +24,6 @@ import { HistoryServiceAPI } from "../history/service"
 import HistoryDoc from "./HistoryDoc"
 import MoveDocumentModal from "./MoveDocument"
 import { StatusColor, expriationStatus } from "../core"
-import { StatusColor, expriationStatus } from "../core"
 import { FavoriteServiceAPI } from "../favorite/service"
 import DocumentModalForm from "./EntryForm"
 
@@ -125,13 +124,6 @@ export default ({ paramSearch, libraryId, folderId }: Props) => {
             itemIcon: <SwapOutlined />,
             disabled: record.status == "Inactive" ? true : false,
             onClick: () => {
-                setMoveState({
-                    visible: {
-                        name: "MODAL", moveDoc: {
-                            docId: record.id,
-                        }
-                    }
-                })
                 setMoveState({
                     visible: {
                         name: "MODAL", moveDoc: {
@@ -291,7 +283,6 @@ export default ({ paramSearch, libraryId, folderId }: Props) => {
                                         }));
                                     }
                                     else {
-                                    else {
                                         setAdvanceSearchParams((v) => ({
                                             ...v,
                                             status: e.toString(),
@@ -345,8 +336,6 @@ export default ({ paramSearch, libraryId, folderId }: Props) => {
                             <Dropdown
                                 menu={{
                                     items: itemCreateNew(),
-                                    style: {
-                                        width: 200
                                     style: {
                                         width: 200
                                     }
@@ -420,13 +409,10 @@ export default ({ paramSearch, libraryId, folderId }: Props) => {
                         sorter: "name",
                         width:400,
                         render:(_,r)=>r.documentation?.docName,
-                        width:400,
-                        render:(_,r)=>r.documentation?.docName,
                     },
                     {
                         title: "Expiry Date",
                         sorter: "expiryDate",
-                        fixed: true,
                         fixed: true,
                         render: (_, r) => <span style={{ color: expriationStatus(r.term?.expiryDate) > 0 ? "red" : "" }}>{formatDate(r.term.expiryDate)}</span>
                     },
@@ -436,14 +422,11 @@ export default ({ paramSearch, libraryId, folderId }: Props) => {
                         dataIndex: "createdDate",
                         valueType: "date",
                         fixed: true,
-                        fixed: true,
                     },
                     {
                         title: "Updated",
                         sorter: "lastModifiedDate",
                         dataIndex: "lastModifiedDate",
-                        valueType: "date",
-                        fixed: true,
                         valueType: "date",
                         fixed: true,
                     },
@@ -456,16 +439,12 @@ export default ({ paramSearch, libraryId, folderId }: Props) => {
                         sorter: "status",
                         fixed: true,
                         render: (_, r) => <Badge text={r.status} status={StatusColor.getColorStatus(r.status)} />
-                        fixed: true,
-                        render: (_, r) => <Badge text={r.status} status={StatusColor.getColorStatus(r.status)} />
                     },
                     {
                         title: "Shared",
                         align: "center",
-                        align: "center",
                         render: (_, r) => {
                             if (r.share > 0) {
-                                return <Button size="small" icon={<ShareAltOutlined />} type="link" onClick={() => setQuickViewDrawerState({ visible: { name: "DRAWER", docId: r.id } })} />
                                 return <Button size="small" icon={<ShareAltOutlined />} type="link" onClick={() => setQuickViewDrawerState({ visible: { name: "DRAWER", docId: r.id } })} />
                             }
                             else {
@@ -494,7 +473,6 @@ export default ({ paramSearch, libraryId, folderId }: Props) => {
                 onClose={() => setAdvanceSearch({ visible: false })}
                 onReset={() => {
                     setAdvanceSearchParams({})
-                    setAdvanceSearchParams({})
                     actionRef.current?.reloadAndRest?.();
                 }}
                 onSearch={(data) => {
@@ -510,8 +488,6 @@ export default ({ paramSearch, libraryId, folderId }: Props) => {
                 onSave={(data: ShareCreate) => {
                     ShareServiceAPI(requestAction).save(data);
                     message.success("Success"),
-                        setShareDrawerState(() => ({ visible: undefined }));
-                    actionRef.current?.reloadAndRest?.();
                         setShareDrawerState(() => ({ visible: undefined }));
                     actionRef.current?.reloadAndRest?.();
                 }}
@@ -542,11 +518,9 @@ export default ({ paramSearch, libraryId, folderId }: Props) => {
                 onCancel={() => setMoveState({ visible: undefined })}
                 data={moveState?.visible?.moveDoc}
                 onSave={(data: MoveDocParams) => {
-                onSave={(data: MoveDocParams) => {
                     services.moveDoc(data);
                     actionRef.current?.reload?.();
                     message.success("Success!");
-                    setMoveState({ visible: undefined });
                     setMoveState({ visible: undefined });
                 }}
             />

@@ -1,5 +1,4 @@
 import { ProForm } from "@ant-design/pro-components"
-import { ProForm } from "@ant-design/pro-components"
 import { Button, UploadFile, message } from "antd"
 import React, { useEffect, useState } from "react";
 import { DocumentationCreate, DocumentationDTO } from "./data";

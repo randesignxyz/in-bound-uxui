@@ -1,4 +1,4 @@
-import { simpleRequestActions } from "@/services/model"
+import { simpleRequestActions } from "@/services/model";
 import { ProFormSelect, ProFormDependency } from "@ant-design/pro-components";
 import { Col } from "antd";
 import { CoreServiceAPI } from "../service";

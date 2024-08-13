@@ -109,13 +109,6 @@ const VehicleAction = {
     endpoint:"FLEET",
     payload:param
   })
-
-  changeOdometer: (param:{vId?:String; odometer:number; reason?:string}):ServiceApiType<{odometer:number; reason?:string}> =>({
-    type:"EXEC",
-    actionName:"change-odometer",
-    endpoint:"FLEET",
-    payload:param
-  })
 };
 
 export const VehicleServiceAPI = (requestActions: RequestActions) => {
@@ -128,26 +121,12 @@ export const VehicleServiceAPI = (requestActions: RequestActions) => {
     profilePicture: (param: AttachmentFilesCreate) =>singleRequest<{ data: string; message: string }>(VehicleAction.profilePicture(param))(requestActions),
 
     // extra attribute
-    pageMeterHistory: (params: TableViewSearchParams<MeterHistorySearchParam>) =>
-      singleRequest<MeterHistoryDTO>(VehicleAction.meterhistory(params))(requestActions) as Promise<
-        Paging<MeterHistoryDTO>
-      >,
-    updateMeterHistory: (params: MeterHistoryDTO) =>
-      singleRequest<{ data: string; message: string }>(VehicleAction.updateMeterHistory(params))(
-        requestActions,
-      ),
-    deleteMeterHistory: (params: MeterHistoryDTO) =>
-      singleRequest<{ data: string; message: string }>(VehicleAction.deleteMeterHistory(params))(
-        requestActions,
-      ),
-    fetchMeterHistory: (param: MeterFetchParam) =>
-      singleRequest<MeterHistoryDTO>(VehicleAction.fetchMeterHistory(param))(
-        requestActions,
-      ) as Promise<MeterHistoryDTO>,
-    findMeterHistory: (param: MeterTypeParam) =>
-      singleRequest<MeterHistoryDTO>(VehicleAction.findMeterHistory(param))(
-        requestActions,
-      ) as Promise<MeterHistoryDTO>,
+    pageMeterHistory: (params: TableViewSearchParams<MeterHistorySearchParam>) =>singleRequest<MeterHistoryDTO>(VehicleAction.meterhistory(params))(requestActions) as Promise<Paging<MeterHistoryDTO>>,
+    updateMeterHistory: (params: MeterHistoryDTO) =>singleRequest<{ data: string; message: string }>(VehicleAction.updateMeterHistory(params))(requestActions),
+    deleteMeterHistory: (params: MeterHistoryDTO) =>singleRequest<{ data: string; message: string }>(VehicleAction.deleteMeterHistory(params))(requestActions),
+    fetchMeterHistory: (param: MeterFetchParam) =>singleRequest<MeterHistoryDTO>(VehicleAction.fetchMeterHistory(param))(requestActions) as Promise<MeterHistoryDTO>,
+    findMeterHistory: (param: MeterTypeParam) =>singleRequest<MeterHistoryDTO>(VehicleAction.findMeterHistory(param))(requestActions) as Promise<MeterHistoryDTO>,
+    changeOdometer: (params:{vId?:string; odometer:number; reason?:string})=>singleRequest<{vId?:String;odometer:number; reason?:string}>(VehicleAction.changeOdometer(params))(requestActions)
 
   };
 };

@@ -29,7 +29,6 @@ export default () => {
       {/* <BreadCrumbCom separator=">" routes={routes} /> */}
       <PageContainer
         // onBack={()=>history.push(FleetPaths.fleet)}
-        // onBack={()=>history.push(FleetPaths.fleet)}
         title="Set-up"
       >
         <Tabs

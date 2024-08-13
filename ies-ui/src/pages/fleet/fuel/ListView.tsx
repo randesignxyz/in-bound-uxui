@@ -219,7 +219,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
                 </Radio.Button>
                 <Radio.Button value="void" >
                   Void
-                  Void
                 </Radio.Button>
                 <Badge offset={[-20, 0]} count={0}></Badge>
               </Radio.Group>

@@ -1,6 +1,7 @@
 import moment from "moment"
 import { Moment } from "moment"
 import { Attachment } from "./documentation/data"
+import { BadgeProps } from "antd/lib"
 
 export const formateBytes = (bytes: number, decimals: number) => {
     if (!+bytes) return '0 Bytes'
@@ -123,8 +124,6 @@ export const status = (date?: Moment): { status: "processing" | "warning"|"error
     const days = moment(date).diff(moment(), "hours");
     // console.log(moment().diff(moment(date),"days"));
     // console.log(days);
-    
-    
     if (date) {
         if (days > 2) {
             return {
@@ -149,6 +148,17 @@ export const status = (date?: Moment): { status: "processing" | "warning"|"error
         return {
             status: "processing",
             title: "no Expire"
+        }
+    }
+}
+
+export class StatusColor  {
+    static getColorStatus(status?:string) :BadgeProps["status"]{
+        if(status=="Active"){
+            return "processing"
+        }
+        else{
+           return "error"
         }
     }
 }

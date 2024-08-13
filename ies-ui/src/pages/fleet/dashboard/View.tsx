@@ -82,7 +82,7 @@ export default () => {
     return (
         <>
             <PageContainer
-                onBack={() => history.push(FleetPaths.fleet)}
+                // onBack={() => history.push(FleetPaths.fleet)}
                 title="Dashboard"
                 extra={[
                     <Space size={20}>

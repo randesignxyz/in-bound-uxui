@@ -126,7 +126,7 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
     <>
       {/* <BreadCrumbCom separator=">" routes={routes} /> */}
      <PageContainer
-      onBack={()=>history.push(FleetPaths.fleet)}
+      // onBack={()=>history.push(FleetPaths.fleet)}
       title="Service Tasks "
      >
      <TableView<ServiceTasksDTO, { searchValue?: string }>

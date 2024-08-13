@@ -10,14 +10,11 @@ interface Props extends FormModalProps {
 }
 
 const CategoryEntryFormModal :React.FC<Props> =({ onSave, data ,...props}:Props)=>{
-    
     const [form]  =useForm<CategoryCreate>();
-
     useEffect(()=>{
         props.open && form.setFieldsValue({...data});
         !data && form.resetFields();
-    }, [props.open])
-
+    }, [props.open]);
     return (
         <FormModalComp
             {...props}
@@ -29,9 +26,7 @@ const CategoryEntryFormModal :React.FC<Props> =({ onSave, data ,...props}:Props)
                     ...dataForm,
                     id:data?.id,
                     status:"active"
-                    
                 }
-                
                onSave(entry);
             }}
             width="400px"
@@ -50,10 +45,7 @@ const CategoryEntryFormModal :React.FC<Props> =({ onSave, data ,...props}:Props)
                     name="description"
                     label="Description"
                 />
-                
             </ProForm>
-
-
         </FormModalComp>
     );
 }

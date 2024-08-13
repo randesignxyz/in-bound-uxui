@@ -11,6 +11,7 @@ import BreadCrumbCom from '../components/BreadCrumbCom';
 import { MaintenanceHistory, MaintenanceItem, MaintenneceDTO, MaintenneceDetailDTO } from './data';
 import { MaintenanceServiceAPI } from './service';
 import { history } from '@umijs/max';
+import { ExternalLayout } from '../fleet';
 
 interface Props {
   onEdit: (id: string) => void;
@@ -59,7 +60,7 @@ export default ({ id, onEdit }: Props) => {
   return (
     <>
      <PageContainer 
-      onBack={()=>history.push(`${FleetPaths.mantenence}/list`)}
+      onBack={!ExternalLayout.isExternal("fleet/maintenance") ? ExternalLayout.handleBackHandler : undefined}
       title={"Maintenance"}
       subTitle={`#${maintenanceData?.vehicle?.plateNumber}`}
      >

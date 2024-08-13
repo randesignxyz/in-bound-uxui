@@ -10,12 +10,10 @@ interface Props extends FormModalProps {
     onSave: (data:MoveDocParams) => void,
     data?:MoveDocParams
 }
-
 const MoveDocumentModal: React.FC<Props> = ({ onSave,data, ...props }) => {
     const requestAction = simpleRequestActions();
     const [form] = useForm<MoveDocParams>()
     const nest = (items:any[], id = 0, link = 'parentId'):any => {
-        
         return items.filter(item =>{
             return  item[link] === id
         }).map(item=>({
@@ -25,13 +23,11 @@ const MoveDocumentModal: React.FC<Props> = ({ onSave,data, ...props }) => {
       }
       const [value, setValue] = useState<string>();
       const onChange = (newValue: string) => {
-        setValue(newValue);
-        
+        setValue(newValue);       
       };
       useEffect(()=>{
         form.resetFields();
       } ,[props.open]);
-      
     return (
         <>
             <FormModalComp

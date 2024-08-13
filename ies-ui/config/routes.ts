@@ -236,8 +236,7 @@ export default [
     icon: 'FormOutlined',
     access: 'canAccessHrMenu',
     component: './hrm',
-  },
-
+  }, 
   {
     path: '/hrm/employee/:view/*',
     name: 'employee',
@@ -521,7 +520,7 @@ export default [
   /******************* Developer *******************/
 
   {
-    path: '/profile',
+    path: '/profile/:is_admin/:id',
     name: 'account',
     // icon: 'DeliveredProcedureOutlined',
     // access: 'canAccesDeliveyMenu',
@@ -890,11 +889,26 @@ export default [
     access: 'canAccessFleetMenu',
     component: './fleet/vehicle/',
   },
-
+  {
+    path: '/external/fleet/vehicle/:view/*',
+    layout:false,
+    name:"fleet",
+    component: './fleet/vehicle/',
+    access: 'canAccessFleetMenu',
+    hideInMenu: 'true',
+  },
 
   {
     path: '/fleet/maintenance/:view/*',
     name: 'fleet_maintenence',
+    hideInMenu: 'true',
+    access: 'canAccessFleetMenu',
+    component: './fleet/maintenance/',
+  },
+  {
+    path: '/external/fleet/maintenance/:view/*',
+    name: 'fleet_maintenence',
+    layout:false,
     hideInMenu: 'true',
     access: 'canAccessFleetMenu',
     component: './fleet/maintenance/',
@@ -906,6 +920,15 @@ export default [
     access: 'canAccessFleetMenu',
     component: './fleet/inspection/',
   },
+  {
+    path: '/external/fleet/inspection/:view/*',
+    name: 'inspection',
+    layout:false,
+    hideInMenu: 'true',
+    access: 'canAccessFleetMenu',
+    component: './fleet/inspection/',
+  },
+
   {
     path: '/fleet/accident/:view/*',
     name: 'fleet_accident',
@@ -968,6 +991,13 @@ export default [
     hideInMenu: 'true',
     access: 'canAccessFleetMenu',
     component: './fleet/fuelStock/',
+  },
+  {
+    path: '/fleet/accessory/:view/*',
+    name: 'fleet_accessory',
+    hideInMenu: 'true',
+    access: 'canAccessFleetMenu',
+    component: './fleet/accessory/',
   },
   //  ================= END FLEET =================
 
@@ -1069,6 +1099,57 @@ export default [
 
   //  ================= END Prod =================
   //  ================= Setting =================
+  /**
+   * ESS Management
+   */
+  // {
+  //   path: '/ess/em/list',
+  //   name: 'inventoryTransfer',
+  //   icon: 'SettingOutlined',
+  //   hideInMenu: 'true',
+  //   access: 'canAccessInventoryTranferMenuItem',
+  //   component: './prod/inventory-transfer'
+  // },
+  {
+    path: '/ess',
+    name: 'ess',
+    icon: 'TeamOutlined', 
+    component: './ess'
+  },{
+    path: '/ess/:view/*',
+    name: 'ess',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessHrEmployeeMenuItem',
+    component: './ess/ess-announce',
+  },
+  
+  {
+    path: '/ess/details/:id',
+    name: 'Ess Annountment Details',
+    // icon: 'DeliveredProcedureOutlined',
+    // access: 'canAccesDeliveyMenu',
+    hideInMenu: 'true',
+    component: './ess/ess-announce/Details',
+  },
+  {
+    path: '/feedback',
+    name: 'feedback',
+    icon: 'TeamOutlined', 
+    hideInMenu: 'true',
+    component: './ess'
+  },
+  {
+    path: '/booking_car',
+    name: 'bookingcar',
+    icon: 'TeamOutlined', 
+    hideInMenu: 'true',
+    component: './ess'
+  },
+  /**
+   * End ESS Management
+   */
+
 
   {
     path: '/setting',

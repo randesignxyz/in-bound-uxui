@@ -1,13 +1,11 @@
 import { EditFilled, PlusCircleFilled } from "@ant-design/icons";
 import { ActionType, PageContainer } from "@ant-design/pro-components";
-import { Button, Row, Space, Spin, Tabs } from "antd";
+import { Button, Spin, Tabs } from "antd";
 import { useState, useCallback, useEffect, useRef } from "react"
 import { simpleRequestActions } from "@/services/model";
 import { VehicleListItem } from "./data";
 import BasicInfo from "../components/BasicInfo";
-import BreadCrumbCom from "@/pages/sale/retailer/components/BreadCrumbCom";
 import { VehicleServiceAPI } from "./service";
-import { FleetPaths } from "..";
 import AssignDriver from "./view/AssignDriver";
 import MeterHistory from "./view/MeterHistory";
 import Specifications from "./view/Specifications";
@@ -17,7 +15,8 @@ import ServiceReminder from "./view/ServiceReminder";
 import Meintennece from "./view/Meintennece";
 import Accident from "./view/Accident";
 import Accessories from "./view/Accessories";
-import { history } from "@umijs/max";
+import { ExternalLayout } from "../fleet";
+import ActivityLogListView from "../components/ActivityLogListView";
 
 interface Props {
     id: string;
@@ -39,8 +38,6 @@ export default ({ id, onAdd, onEdit }: Props) => {
     const initData = useCallback(async () => {
         const initData = await service.fetchVehicle(id)
         setVehicleBasicInfo(initData);
-
-
     }, [id]);
 
     useEffect(() => {
@@ -56,8 +53,6 @@ export default ({ id, onAdd, onEdit }: Props) => {
 
 
 
-
-
     const tabItem = [
         {
             label: "General Info",
@@ -66,10 +61,7 @@ export default ({ id, onAdd, onEdit }: Props) => {
                 <>
                     <BasicInfo
                         data={vehicleBasicinfo}
-
                     />
-
-
                 </>
             )
         },
@@ -122,31 +114,23 @@ export default ({ id, onAdd, onEdit }: Props) => {
             key: '7',
             children: <MeterHistory id={id} />
         },
-
+        {
+            label: `Log`,
+            key: 'log',
+            children: <ActivityLogListView referenceStringId={id} logParam={{source:"VEHICLE"}} />
+        },
     ]
 
-
-    const routes = [
-        {
-            path: FleetPaths.fleet,
-            label: 'Fleet',
-        },
-        {
-            path: FleetPaths.vehicle + "/list",
-            label: 'Vehicle',
-        },
-        {
-            path: '',
-            label: 'Detail',
-        },
-    ];
     return (
         <>
             <Spin spinning={requestActions.request?.loading}>
                 <PageContainer
-                    onBack={() => history.push(`${FleetPaths.vehicle}/list`)}
+                    onBack={!ExternalLayout.isExternal("fleet/vehicle") ? ExternalLayout.handleBackHandler : undefined}
                     title="Details"
                     subTitle={`#${vehicleBasicinfo?.plateNumber}`}
+                    tabProps={{
+                        size:"small"
+                    }}
                     extra={[
                         <Button
                             icon={<EditFilled />}
@@ -162,26 +146,14 @@ export default ({ id, onAdd, onEdit }: Props) => {
                             New
                         </Button>
                     ]}
+                    tabList={tabItem}
                 >
-                    <Tabs
+                    {/* <Tabs
                         defaultActiveKey="1"
                         items={tabItem}
-                    />
+                    /> */}
                 </PageContainer>
-
-
-                {/* <Row justify="space-between">
-                    <BreadCrumbCom separator=">" routes={routes} />
-                    <Space>
-
-                    </Space>
-                </Row> */}
-
-
-
             </Spin>
-
-
         </>
     )
 }

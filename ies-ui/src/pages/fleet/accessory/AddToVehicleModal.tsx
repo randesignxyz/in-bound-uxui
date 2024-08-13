@@ -1,6 +1,5 @@
 import { simpleRequestActions } from '@/services/model';
 import { ProForm } from '@ant-design/pro-components';
-
 import FormModalComp, { FormModalProps } from '@/components/FormModal';
 import { CarOutlined } from '@ant-design/icons';
 import { useGetState } from 'ahooks';
@@ -9,14 +8,12 @@ import { useForm } from 'antd/es/form/Form';
 import { useEffect } from 'react';
 import { VehicleServiceAPI } from '../vehicle/service';
 import { AccessoriesCreate, AccessoriesDTO } from './data';
-
 interface Props extends FormModalProps {
   data?: AccessoriesDTO;
   onSave: (data: AccessoriesCreate) => void;
   actionType?: String;
   id?: string;
 }
-
 const AddToVehicleModal: React.FC<Props> = ({ onSave, data, actionType, id, ...props }) => {
   const [form] = useForm<AccessoriesCreate>();
   const requestActions = simpleRequestActions();
@@ -26,14 +23,12 @@ const AddToVehicleModal: React.FC<Props> = ({ onSave, data, actionType, id, ...p
     props.open && initFormData();
     props.open && truckLoadData();
   }, [props.open]);
-  
-
   const truckLoadData = async (value?: string) => {
     const response = await VehicleServiceAPI(requestActions).pageVehicle({
       criteria: { searchValue: value },
       pagination: { pageSize: 20 },
     });
-    const data = response.items.map((obj) => ({
+     response.items.map((obj) => ({
       value: obj.id,
       label: (
         <>
@@ -47,7 +42,6 @@ const AddToVehicleModal: React.FC<Props> = ({ onSave, data, actionType, id, ...p
       key: Math.random().toString(),
     }));
   };
-
   const initFormData = () => {
     form.setFieldsValue({
         name:data?.name,
@@ -55,12 +49,10 @@ const AddToVehicleModal: React.FC<Props> = ({ onSave, data, actionType, id, ...p
         description: data?.description
     });
   };
-
   return (
     <FormModalComp
       title="Create Service Task"
       {...props}
-      //   width={"600px"}
       onSubmit={async () => {
         const dataForm = await form.validateFields();
         const entity = {

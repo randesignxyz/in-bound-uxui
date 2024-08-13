@@ -124,7 +124,7 @@ export default defineConfig({
     strategy: 'normal',
   },
   esbuildMinifyIIFE: true,
-  requestRecord: {},
+  requestRecord: {}, 
   /*
   qiankun: {
     master: {

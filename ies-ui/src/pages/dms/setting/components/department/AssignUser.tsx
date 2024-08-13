@@ -9,9 +9,7 @@ interface Props extends FormModalProps {
     department?: DepartmentDTO;
 }
 
-
 const AsseignUserModalForm: React.FC<Props> = ({ onSave, department, ...props }) => {
-
     const [form] = useForm();
     const requestAction = simpleRequestActions();
     return (
@@ -25,7 +23,6 @@ const AsseignUserModalForm: React.FC<Props> = ({ onSave, department, ...props })
                         department:department?.id,
                         departmentName:department?.name
                     }
-
                     onSave(entry)
                 }}
                 title="Assign Fun"
@@ -34,7 +31,6 @@ const AsseignUserModalForm: React.FC<Props> = ({ onSave, department, ...props })
                     submitter={false}
                     form={form}
                 >
-
                     <ProFormSelect
                         name={"userId"}
                         label="Users"
@@ -50,17 +46,14 @@ const AsseignUserModalForm: React.FC<Props> = ({ onSave, department, ...props })
                                     searchValue: k?.keyWords || ""
                                 }
                             });
-
                             return data.items?.map((it) => ({
                                 label: it.fullName,
                                 value: it.id
-                            }))
+                            }));
                         }}
                     />
-
                 </ProForm>
             </FormModalComp>
-
         </>
     )
 }

@@ -12,19 +12,14 @@ interface Props extends FormModalProps {
     data?: TeamsDTO
 }
 
-
 const UserGroupEntryModal: React.FC<Props> = ({ onSave, data, ...props }: Props) => {
-
     const [form] = useForm<TeamsCreate>();
     const requestActions = simpleRequestActions();
-
-
     useEffect(() => {
         props.open && data && form.setFieldsValue({ ...data, memberList: data?.memberList.map(it => it.userName) });
         props.open && !data && form.resetFields();
     }, [props.open])
 
-   
     return (
         <FormModalComp
             {...props}
@@ -47,6 +42,7 @@ const UserGroupEntryModal: React.FC<Props> = ({ onSave, data, ...props }: Props)
                 <ProFormText
                     name="name"
                     label="Name"
+                    rules={[{required:true}]}
                 />
                
                <ProFormSelect
@@ -77,15 +73,22 @@ const UserGroupEntryModal: React.FC<Props> = ({ onSave, data, ...props }: Props)
                             showSearch
                             request={async(k?:{keyWords:string})=>{
                                 const data = await CoreServiceAPI(requestActions).page({
-                                    criteria: {
+                                    criteria: {    
                                         searchValue: k?.keyWords || ""
                                     }
                                 });
-        
-                                return data.items?.filter(it=>it.department ==department).map((it) => ({
-                                    label: it.fullName,
-                                    value: it.userName
-                                }))
+                                if(department != null){
+                                    return data.items?.filter(it=>it.department = department).map((it) => ({
+                                        label: it.fullName,
+                                        value: it.userName
+                                    }));
+                                }
+                                else{
+                                    return data.items?.map((it) => ({
+                                        label: it.fullName,
+                                        value: it.userName  
+                                    }));
+                                }
                             }}
                         />)
                     }}

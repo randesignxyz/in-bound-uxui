@@ -12,11 +12,9 @@ interface Props extends FormModalProps {
 }
 const ReminderModalForm: React.FC<Props> = ({ onSave, documentId, data, ...props }) => {
     const [form] = useForm<ReminderCreate>();
-
     useEffect(() => {
         props.open && form.resetFields();
         props.open && data && form.setFieldsValue({ ...data });
-
     }, [props.open])
     return (<>
         <FormModalComp
@@ -124,5 +122,4 @@ const ReminderModalForm: React.FC<Props> = ({ onSave, documentId, data, ...props
         </FormModalComp>
     </>)
 }
-
 export default ReminderModalForm

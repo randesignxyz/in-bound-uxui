@@ -5,7 +5,6 @@ import { simpleRequestActions } from "@/services/model"
 import { useEffect } from "react"
 import { FolderCreate, DataNode, FolderDTO } from "./data"
 import { DepartmentServiceAPI } from "../setting/components/department/service"
-
 interface Props extends FormModalProps {
     onSave: (data: FolderCreate) => void;
     data?: DataNode;
@@ -14,7 +13,6 @@ interface Props extends FormModalProps {
     libraryId?: string;
     libraryData?: FolderDTO
 }
-
 const FolderEntryForm: React.FC<Props> = ({ code, libraryId, libraryData, data, onSave, type, ...props }: Props) => {
     const [form] = useForm<FolderCreate>();
     const requestAction = simpleRequestActions();
@@ -136,10 +134,8 @@ const FolderEntryForm: React.FC<Props> = ({ code, libraryId, libraryData, data, 
                         </>
                     )
                 }
-
             </ProForm>
         </FormModalComp>
     )
 }
-
 export default FolderEntryForm

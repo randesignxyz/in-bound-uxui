@@ -31,7 +31,7 @@ const QuickViewDetail: React.FC<Prop> = ({ settlement, soldExchangeRate, ...prop
     { label: 'Cashier Name', value: settlement?.cashierName },
     {
       label: 'Exchange Rate',
-      value: ` ${soldExchangeRate?.target_amount}`,
+      value: ` ${settlement?.exchangeRate}`,
     },
     {
       label: 'Bank Amount USD',
@@ -51,8 +51,7 @@ const QuickViewDetail: React.FC<Prop> = ({ settlement, soldExchangeRate, ...prop
     },
     {
       label: 'Sold Amount',
-      value: `$ ${(settlement?.soldAmount || 0.0)
-        }`,
+      value: `$ ${numeral(settlement?.soldAmount || 0.0).format("0,000.00")}`
     },
   ];
 

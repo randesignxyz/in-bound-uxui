@@ -102,6 +102,8 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({ }) => 
     //   : access.canAccessSettlement
     //   ? ['settled']
     //   : [''];
+    console.log(access);
+    
     const role = access.canAccessAllMenuDSD
       ? 'sale_admin'
       : access.canAccessTabWarehouse
@@ -1058,7 +1060,10 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({ }) => 
         onCancel={()=>setRemarkState({visible:undefined})}
         status='reject'
         onSave={async (data)=>{
-            actions.reject(data).then(o=>{
+            actions.reject({
+              id:remarkState?.visible?.carryData?.id,    
+              ...data
+            }).then(o=>{
               message.success("Your rejection request was a success!")
             });
             setRemarkState({visible:undefined});

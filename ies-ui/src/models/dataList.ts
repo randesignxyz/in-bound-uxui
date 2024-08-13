@@ -52,6 +52,7 @@ import { StockRequestLess, StockRequestListItem } from '@/pages/fma-stock/reques
 import { ItemList } from '@/pages/fma-stock/item/data.types';
 import { TransferRequestListItem } from '@/pages/fma-stock/transfer/data.types';
 import { EmpWhsMappingList } from '@/pages/fma-stock/emp-whs/data.types';
+import { AdjRequestListItem } from '@/pages/fma-stock/adjustment/data.types';
 
 type DataList =
   | {

@@ -24,6 +24,7 @@ export default ({ id }: Props) => {
     <>
       <PageContainer
         onBack={!ExternalLayout.isExternal("fleet/inspection") ? ExternalLayout.handleBackHandler : undefined}
+        onBack={!ExternalLayout.isExternal("fleet/inspection") ? ExternalLayout.handleBackHandler : undefined}
         title="Inspection"
         subTitle={`#${inspectionData?.plateNumber}`}
         fixedHeader

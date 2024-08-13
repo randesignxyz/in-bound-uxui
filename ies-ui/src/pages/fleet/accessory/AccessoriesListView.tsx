@@ -1,4 +1,5 @@
 import { ActionType, PageContainer } from '@ant-design/pro-components';
+import { ActionType, PageContainer } from '@ant-design/pro-components';
 import { AccessoriesCreate, AccessoriesDTO, AccessoriesSearchParam } from "./data"
 import { AccessoryServiceAPI } from "./service"
 import { simpleRequestActions } from "@/services/model"
@@ -9,6 +10,7 @@ import { Button, message, Modal, Space, Tag } from 'antd';
 import { useModel } from '@umijs/max';
 import EntryModalForm from './EntiryFormModal';
 import { useState } from 'react';
+import { ArrowRightOutlined, DashOutlined, DeleteOutlined, EditOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import { ArrowRightOutlined, DashOutlined, DeleteOutlined, EditOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import AddToVehicleModal from './AddToVehicleModal';
 import Dropdown from 'antd/lib/dropdown/dropdown';
@@ -67,7 +69,15 @@ export default () => {
                 actionRef.current?.reloadAndRest?.();
             }
         });
+        });
     }
+    const getItem = (r: AccessoriesDTO): MenuProps["items"] => [
+        {
+            key: 2,
+            label: "View",
+            itemIcon: <ArrowRightOutlined />,
+            onClick: () => setDetailState({ visible: { name: "DRAWER", payload: r } })
+        },
     const getItem = (r: AccessoriesDTO): MenuProps["items"] => [
         {
             key: 2,
@@ -79,6 +89,7 @@ export default () => {
             key: 1,
             label: "Edit",
             itemIcon: <EditOutlined />,
+            onClick: () => setState({ visible: { name: "modal", type: "Edit", payload: { vehicle: r } } })
             onClick: () => setState({ visible: { name: "modal", type: "Edit", payload: { vehicle: r } } })
         },
         {
@@ -95,6 +106,7 @@ export default () => {
             label: "Delete",
             itemIcon: <DeleteOutlined />,
             danger: true,
+            onClick: () => onDelete(r)
             onClick: () => onDelete(r)
         },
     ];

@@ -23,6 +23,7 @@ import DocumentDetail from "./DocumentDetail";
 import ContractViewDetail from "../contract/ContractViewDetail";
 import ShareListView from "../share/ShareListView";
 import { ExternalLayout } from "../dms";
+import { ExternalLayout } from "../dms";
 interface Props {
     id: number;
     share?: ShareDTO;
@@ -50,6 +51,7 @@ const DocumentationDetail: React.FC<Props> = ({ id, share }) => {
     const service = DocumentServiceAPI(requestAction);
     const [detail, setDetail] = useState<DocumentationDTO>();
     const actionRef = useRef<ActionType>();
+    const [tabState, setTabState] = useState<string>("1");
     const [tabState, setTabState] = useState<string>("1");
     const [uploadFileState, setUploadFileState] = useState<{
         visible?: {

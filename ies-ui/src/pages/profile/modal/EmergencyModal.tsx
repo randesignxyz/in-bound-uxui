@@ -1,0 +1,215 @@
+import { LookupDataItem2 } from "@/services/data"
+import { ModalForm, ModalFormProps, ProCard, ProFormSelect, ProFormText } from "@ant-design/pro-components"
+import { useForm } from "antd/lib/form/Form"
+import { EmergencyData,SaveEmergency,LocationData, FilesData } from "../data.ess"
+import { Spin,message,Image,List,Typography, Space, Button, Modal } from 'antd';
+import { useEffect,useState } from 'react';  
+import { simpleRequestActions } from '@/services/model';
+import { ProfileServicesEss } from '../service_ess'; 
+import FileUploader , { UploadType } from '@/components/Attachment/FileUploader';
+import ImagePreview from "@/components/ImagePreview";
+import { ProfileData } from "../data";
+
+interface Props extends ModalFormProps<SaveEmergency> { 
+    profile: ProfileData;
+    data?: SaveEmergency;
+    locations?:LocationData[];
+    type:string; 
+    isAdmin:number;
+    empId:number;
+    cb: { //used callback function to parent form
+        onLoadMenu: (tid:UploadType[]) => void;  
+        onReload:()=>void;
+    };
+}
+
+export default ({ profile,data,locations,type,isAdmin,empId, cb, ...rest }: Props) => {
+    const requestActions = simpleRequestActions(); 
+
+    const [district, setDistrict] = useState<LocationData[]>();
+    const [commune, setCommune] = useState<LocationData[]>();
+    const [isLoading,setLoading] = useState(false); 
+    const [imageList, setImageList] = useState<FilesData[]>([]);
+    const [form] = useForm<SaveEmergency>();
+    const [createFileOther, selectedFileOther] = useState<any>();  
+    // 
+    useEffect(() => {
+        initData();
+    }, [profile,data]);
+    // 
+    const initData = async () => { 
+        const list = await ProfileServicesEss.listImageProfile(profile.id,2,type=="ADD"?2:1,data?.id!!||-1).query(requestActions);
+        setImageList(list); 
+        if(!!data){
+            districtList(data!!.province_id);
+            communeList(data!!.district_id);
+        }
+        
+        // 
+        if(!!data){
+            form.setFieldsValue(data!!);
+        }
+        else{
+            form.resetFields();
+        }
+    };
+    // 
+    const districtList = async(val:number)=>{
+        try {
+            const list = await ProfileServicesEss.listLocation(val).query(requestActions);
+            setDistrict(list); 
+            setLoading(false);
+        } catch (error: any) {
+            setLoading(false);
+            message.error(error.message || 'Failed to load data.');
+        } 
+    }
+    // 
+    const communeList = async(val:number)=>{
+        try {
+            const list = await ProfileServicesEss.listLocation(val).query(requestActions);
+            setCommune(list); 
+            setLoading(false);
+        } catch (error: any) {
+            setLoading(false);
+            message.error(error.message || 'Failed to load data.');
+        }  
+    }
+    //    
+    const setUpladFileHandle=(ploadFiles: UploadType[])=>{ 
+        selectedFileOther(ploadFiles);
+        cb.onLoadMenu(ploadFiles);
+    }
+    // 
+    const onAdminSubmit = async ()=>{
+        const bmForm = await form.validateFields(); 
+        Modal.confirm({
+            title: 'Save Emergency',
+            content: 'Are you sure?',
+            onOk: async () => {
+              try { 
+                bmForm.other_file = createFileOther;  
+                bmForm.id = (!!data!!?data!!.id:0);
+                bmForm.empId = empId;
+                bmForm.status=true;
+                await ProfileServicesEss.saveEmergencyAdmin(bmForm)(requestActions); 
+                // call back fun
+                cb.onReload(); 
+              } catch (error: any) {
+                message.error(error.message || 'Failed to save.');
+              }
+            },
+        });
+    }
+    // 
+    return <ModalForm  {...rest} form={form} width={'30%'} title={!!data?"Edit Emergency":"Add Emergency"}  
+            submitter={isAdmin==2&&empId>0?
+                {
+                    render: () => { 
+                    return <><Button onClick={()=>{onAdminSubmit();}}>Submit</Button></>
+                    }
+                }
+                :{
+                    searchConfig: {
+                        submitText: 'Submit',
+                        resetText: 'Cancel',
+                    }
+                }
+            } 
+        >
+        <Spin spinning = {isLoading}> 
+            <ProCard bordered> 
+                <ProFormText label="Emergency Name" name={'emergency_name'} /> 
+                <ProFormSelect 
+                    label="Emergency Contact Relation"
+                    width={'md'} 
+                    name={'emergency_contact_relation'}
+                    options={[
+                        { value: 1, label: "Spouse" },
+                        { value: 2, label: "Parent"},
+                        { value: 3, label: "Parent in law"},
+                        { value: 4, label: "Brother"},
+                        { value: 5, label: "Sister"},
+                        { value: 6, label: "Cousin"} 
+                    ]}    
+                />   
+                <ProFormText label="Emergency Phone" name={'emergency_phone'} /> 
+            </ProCard> 
+            <div style={{marginTop:'10px'}}><Typography.Title level={5}>Emergency Address</Typography.Title></div>
+            <ProCard bordered> 
+                <ProFormSelect 
+                    label="City/ Province" 
+                    name={'province_id'}
+                    options={locations?.map((it) => {
+                        return { value: it.id, label: it.internal_name };
+                    })}
+                    fieldProps={{
+                        onChange: (val) => {
+                            setLoading(true);
+                            districtList(val); 
+                        }, 
+                    }}
+                />         
+                {/*  */}
+                <ProFormSelect 
+                    label="Khan/ District" 
+                    name={'district_id'}
+                    options={district?.map((it) => {
+                        return { value: it.id, label: it.internal_name };
+                    })}
+                    fieldProps={{
+                        onChange: (val) => {
+                            setLoading(true);
+                            communeList(val); 
+                        }, 
+                    }}
+                />         
+                {/*  */}
+                <ProFormSelect 
+                    label="Sangkhat/ Commune" 
+                    name={'commune_id'}
+                    options={commune?.map((it) => {
+                        return { value: it.id, label: it.internal_name };
+                    })}
+                />
+                {/*  */}
+                <ProFormText label="House No" name={'home_no'} />  
+                <ProFormText label="Street" name={'street'} /> 
+                <ProFormText label="Group/Village" name={'village_id'} /> 
+            </ProCard>
+            
+            {/* Attachment files  */} 
+            <div style={{marginTop:'10px'}}>
+                <Space direction="horizontal">
+                    <Typography.Title level={5}>Attachments </Typography.Title><Typography.Title level={5} style={{color:'red'}}> (Required*)</Typography.Title>
+                </Space>
+            </div> 
+            <ProCard size="small" bordered>   
+                <FileUploader   
+                    required={false}  
+                    service="FILE" onSetFiles={f=>setUpladFileHandle?.(f)}
+                    showUploadList={true} 
+                />
+                <Image.PreviewGroup>
+                    <List style={{display:imageList.length>0?'':'none'}}
+                        grid={{ gutter: 5 }}
+                        dataSource={imageList.filter((it) => it) || []}
+                        renderItem={(it) => {
+                        return (
+                            <List.Item>
+                                <ImagePreview
+                                    version={2}
+                                    width={'200px'}
+                                    key={it.id}
+                                    fileId={it.id || ''}
+                                    fileName={it.file_name}
+                                />
+                            </List.Item>
+                        );
+                        }}
+                    />
+                </Image.PreviewGroup>
+            </ProCard>
+        </Spin>
+    </ModalForm>
+}

@@ -9,9 +9,10 @@ export async function queryAdvancedProfile() {
 
 
 export const ProfileServices = {
-  fetchProfile: fetchDataItemService<ProfileData>({
+  fetchProfile: (id: number) =>fetchDataItemService<ProfileData, { id: number }>({
     actionName: 'fetch-profile-by-user',
-    endpoint: 'HR'
+    endpoint: 'HR',
+    payload: { id: id }
   }),
 
   listLookupData: (list: string[]) => fetchDataListService<LookupDataItem2, { list: string[] }>({

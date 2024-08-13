@@ -51,6 +51,7 @@ export default ({
     <>
       <Space direction="vertical" align="center">
         <Image style={style} src={imageUrl ? imageUrl : defualtImage} width={200} height={150} />
+        <Image style={style} src={imageUrl ? imageUrl : defualtImage} width={200} height={150} />
         {displayOnly ? (
           ''
         ) : (

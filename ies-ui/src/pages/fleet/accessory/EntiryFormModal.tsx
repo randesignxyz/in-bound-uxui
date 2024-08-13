@@ -10,6 +10,7 @@ import UploadImagePreview from "../components/UploadImagePreview";
 import { AccessoriesCreate, AccessoriesDTO } from "./data";
 import { useGetState } from 'ahooks';
 import { AccessoryServiceAPI } from "./service";
+import { AccessoryServiceAPI } from "./service";
 
 interface Props extends FormModalProps {
     data?: AccessoriesDTO;
@@ -22,6 +23,8 @@ const EntryModalForm: React.FC<Props> = ({ onSave, data, actionType, ...props })
     const [imageId, setImageId] = useGetState("");
     useEffect(() => {
         props.open && initFormData();
+        props.open && truckLoadData();
+        props.open && !data && form.resetFields();
         props.open && truckLoadData();
         props.open && !data && form.resetFields();
     }, [props.open]);
@@ -48,10 +51,13 @@ const EntryModalForm: React.FC<Props> = ({ onSave, data, actionType, ...props })
         form.setFieldsValue({
             ...data,
             category:data?.category?.id
+            ...data,
+            category:data?.category?.id
         });
     };
     return (
         <FormModalComp
+            title="Create Accessory "
             title="Create Accessory "
             {...props}
             onSubmit={async () => {
@@ -61,6 +67,7 @@ const EntryModalForm: React.FC<Props> = ({ onSave, data, actionType, ...props })
                     id: data?.id,
                     imageId: imageId
                 }
+                onSave(entity);
                 onSave(entity);
             }}
         >
@@ -177,15 +184,22 @@ const EntryModalForm: React.FC<Props> = ({ onSave, data, actionType, ...props })
                                 <ProFormText
                                     name={"warehouse"}
                                     label="Warehouse"
+                                    name={"warehouse"}
+                                    label="Warehouse"
                                 />
                             </Col>
                             <Col span={8}>
                                 <ProFormText
                                     name={"vendor"}
                                     label="Vendor"
+                                    name={"vendor"}
+                                    label="Vendor"
                                 />
                             </Col>
                             <Col span={8}>
+                                <ProFormText
+                                    name={"manufacturer"}
+                                    label="Manufacturer"
                                 <ProFormText
                                     name={"manufacturer"}
                                     label="Manufacturer"

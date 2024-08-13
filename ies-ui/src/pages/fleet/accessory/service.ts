@@ -7,7 +7,10 @@ import {
   AccessoriesSearchParam,
   AddVehicleAccessory,
   CategoryDTO,
+  CategoryDTO,
 } from './data';
+import { ActivityLogAdvanceSearchParam, ActivityLogDTO } from '../data';
+import { Page } from '@/services/shared/data';
 import { ActivityLogAdvanceSearchParam, ActivityLogDTO } from '../data';
 import { Page } from '@/services/shared/data';
 
@@ -25,9 +28,17 @@ const AccessoryAction = {
     },
   }),
   
+  
 
   save: (data: AccessoriesCreate): ServiceApiType<AccessoriesCreate> => ({
     actionName: 'save-accessory',
+    endpoint: 'FLEET',
+    type: 'EXEC',
+    payload: data,
+  }),
+
+  deductAccessoryQTY: (data: AccessoriesCreate): ServiceApiType<AccessoriesCreate> => ({
+    actionName: 'deduct-accessory-qty',
     endpoint: 'FLEET',
     type: 'EXEC',
     payload: data,
@@ -60,6 +71,29 @@ const AccessoryAction = {
     type: 'EXEC',
     payload: { id },
   }),
+
+  pageCategory: (
+    params: TableViewSearchParams<AccessoriesSearchParam>,
+  ): ServiceApiType<{ searchValue?: string }> => ({
+    type: 'PAGING_QUERY',
+    actionName: 'page-category',
+    endpoint: 'FLEET',
+    payload: { ...params.criteria },
+    pagination: {
+      pageSize: params.pagination?.pageSize,
+      page: params.pagination?.current,
+    },
+  }),
+  pageActivityLog:(params:TableViewSearchParams<ActivityLogAdvanceSearchParam>):ServiceApiType<{searchValue?:string}> =>({
+    actionName:"page-activity-log",
+    endpoint:"FLEET",
+    type:"PAGING_QUERY",
+    payload:{...params.criteria},
+    pagination:{
+      pageSize:params.pagination?.pageSize,
+      page:params.pagination?.current
+    }
+  })
 
   pageCategory: (
     params: TableViewSearchParams<AccessoriesSearchParam>,

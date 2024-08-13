@@ -150,6 +150,7 @@ export default {
   'menu.report': 'Report',
   'menu.dms': 'DMS',
   'menu.prod': 'PROD',
+  'menu.ess': 'Self-Service',
   'menu.inventoryTransferRequest': 'Inventory Transfer Request',
   'menu.inventoryTransfer': 'Inventory Transfer',
   'menu.appraisal-request': 'Appraisal Request',

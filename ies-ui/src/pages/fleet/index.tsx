@@ -79,6 +79,7 @@ export default () => {
     {
       id: 'stock',
       name: 'Fuel & Energy',
+      name: 'Fuel & Energy',
       description: 'Diesel and Lubricant',
       link: `/fleet/stock/list`,
       icon: fuelStock,

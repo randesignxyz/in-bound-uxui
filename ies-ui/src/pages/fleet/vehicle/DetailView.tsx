@@ -126,124 +126,66 @@ export default ({ id, onAdd, onEdit }: Props) => {
             key: 'meter',
             children: <MeterHistory id={id} />
         },
+
+    ]
+
+
+    const routes = [
         {
-            label: `Log`,
-            key: 'log',
-            children: <ActivityLogListView referenceStringId={id} logParam={{ source: "VEHICLE" }} />
+            path: FleetPaths.fleet,
+            label: 'Fleet',
+        },
+        {
+            path: FleetPaths.vehicle + "/list",
+            label: 'Vehicle',
+        },
+        {
+            path: '',
+            label: 'Detail',
         },
     ];
-
-    const items: MenuProps["items"] = [
-        {
-            key: "vehicle",
-            label: "Add Vehicle",
-            itemIcon: <CarOutlined />,
-            onClick: () => onAdd?.()
-        },
-        {
-            key: "operator",
-            label: "Assign Operator",
-            itemIcon: <FileProtectOutlined />,
-            onClick: () => setAssignState({ visible: { name: 'modal', type: 'ADD', vehicleId: vehicleBasicinfo, driver: vehicleBasicinfo?.driver, vehicleDriver: vehicleBasicinfo?.vehicleDriver } })
-        },
-        {
-            key: "odometer",
-            label: "Change Odometer",
-            itemIcon: <DashboardOutlined />,
-            onClick: () => setOdometerIssue({ visible: { name: 'MODAL', type: 'EDIT', payload: vehicleBasicinfo } })
-        },
-        {
-            key: "tire",
-            label: "Assign Tire",
-            itemIcon: <AimOutlined />,
-            onClick: () => setTireState({ visible: { name: "MODAL", type: "ADD", payload: vehicleBasicinfo } })
-        },
-    ];
-
     return (
         <>
-            <PageContainer
-                onBack={!ExternalLayout.isExternal("fleet/vehicle") ? ExternalLayout.handleBackHandler : undefined}
-                title="Details"
-                subTitle={`#${vehicleBasicinfo?.plateNumber}`}      
-                style={{
-                    margin: "-30px -40px 0",
-                }}
-                tabProps={{
-                    size: "small",
-                    accessKey:tab,  
-                }}
-                extra={[
-                    <Button
-                        icon={<EditFilled />}
-                        onClick={() => onEdit?.(id)}
-                    >
-                        Edit
-                    </Button>,
-                    <Dropdown.Button
-                        icon={<PlusCircleOutlined />}
-                        type="primary"
-                        menu={{ items, style: { width: 200 } }}
-                    >Add </Dropdown.Button>,
-                ]}
-                tabList={tabItem}
-            />
-            <OdometerIssue
-                open={odometerIssue?.visible?.name === "MODAL"}
-                onCancel={() => setOdometerIssue({ visible: undefined })}
-                data={odometerIssue?.visible?.payload}
-                onSave={(data: { vId?: string; odometer: number; reason?: string }) => {
-                    Modal.confirm({
-                        title: "Change Odometer",
-                        content: "are you sure? This odometer will be set as current meter!",
-                        onOk: async () => {
-                            await service.changeOdometer(data);
-                            actionRef.current?.reload?.();
-                            setOdometerIssue({ visible: undefined });
-                        }
-                    })
-                }}
-            />
+            <Spin spinning={requestActions.request?.loading}>
+                <PageContainer
+                    onBack={() => history.push(`${FleetPaths.vehicle}/list`)}
+                    title="Details"
+                    subTitle={`#${vehicleBasicinfo?.plateNumber}`}
+                    extra={[
+                        <Button
+                            icon={<EditFilled />}
+                            onClick={() => onEdit?.(id)}
+                        >
+                            Edit Info
+                        </Button>,
+                        <Button
+                            onClick={() => onAdd?.()}
+                            type="primary"
+                            icon={<PlusCircleFilled />}
+                        >
+                            New
+                        </Button>
+                    ]}
+                >
+                    <Tabs
+                        defaultActiveKey="1"
+                        items={tabItem}
+                    />
+                </PageContainer>
 
-            <TireAssigntoVehicleModal
-                open={tireState?.visible?.name === "MODAL"}
-                onCancel={() => setTireState((v) => ({ ...v, visible: undefined }))}
-                vehicleId={tireState?.visible?.payload?.id}
-                onSave={(data: TireAssignCreate) => {
-                    Modal.confirm({
-                        title: "Save tire for vehicle",
-                        content: "are your sure record your enter is correct?",
-                        onOk: async () => {
-                            SpecificationServiceAPI(requestActions).saveVehicleTire(data);
-                            setTireState({ visible: undefined });
-                        }
-                    })
-                }}
-            />
-            <AssignDriverFormModal
-                open={assignState.visible?.name === 'modal'}
-                vehicleId={assignState.visible?.vehicleId}
-                vehicleDriver={assignState.visible?.vehicleDriver}
-                modalProps={{
-                    onCancel: () => setAssignState((v) => ({ ...v, visible: undefined })),
-                    okText: 'Submit',
-                }}
-                onSave={(data: VehicleDriverCreate) => {
-                    Modal.confirm({
-                        title: `Assign Operator to Vehicle`,
-                        content: 'are you sure?',
-                        onOk: async () => {
-                            const response = (await service.saveVehicleDriver(data)) as {
-                                data: string;
-                                message: string;
-                            };
-                            setAssignState((v) => ({ ...v, visible: undefined }));
-                            actionRef.current?.reloadAndRest?.();
-                            message.success('SUCCESS SAVED');
-                        },
-                    });
-                }}
-            />
+
+                {/* <Row justify="space-between">
+                    <BreadCrumbCom separator=">" routes={routes} />
+                    <Space>
+
+                    </Space>
+                </Row> */}
+
+
+
+            </Spin>
+
+
         </>
     )
 }

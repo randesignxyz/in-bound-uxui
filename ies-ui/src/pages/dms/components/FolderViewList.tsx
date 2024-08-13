@@ -36,13 +36,13 @@ const updateTreeData = (list: DataNode[], key: React.Key, children: DataNode[]):
     }
     return node;
 });
-
 const makeTree = (items: any[], key = 0, link = 'parentId'): any => {
     return items.filter(item => {
         return item[link] === key
     }).map(item => ({
         ...item,
         children: makeTree(items, item.id)
+    }));
     }));
 }
 export default ({ onSearch, activeKey, moveDoc, onMove, setFolder: setFolderId, onFolderSelected, ...props }: Props) => {
@@ -94,9 +94,19 @@ export default ({ onSearch, activeKey, moveDoc, onMove, setFolder: setFolderId, 
 
         }
     }>();
+    const [contractState, setContractState] = useState<{
+        visible?: {
+            name: "MODAL";
+            type?: "ADD" | "EDIT";
+            folderId: number;
+            payload?: DocumentationCreate;
+            libraryId?: number;
+        }
+    }>();
 
     useEffect(() => {
-        loadFolder();
+        testGetFolder();
+       
     }, [actionRef]);
     const itemsAction = (recrd?: DataNode): MenuProps["items"] => {
         return [
@@ -121,6 +131,7 @@ export default ({ onSearch, activeKey, moveDoc, onMove, setFolder: setFolderId, 
                 label: "Rename Folder",
                 icon: <EditOutlined />,
                 onClick: () => {
+                    
                     setFolderState({
                         visible: {
                             name: 'MODAL',
@@ -144,35 +155,19 @@ export default ({ onSearch, activeKey, moveDoc, onMove, setFolder: setFolderId, 
                     Modal.confirm({
                         title: "Delete Folder",
                         content: `This will permanently delete the ${recrd?.title} folder.`,
-                        onOk: () => {
-                            FolderServiceAPI(requestAction).delete(parseInt(recrd?.key || "")).then(o => {
-                                message.success("Success!");
-                                loadFolder()
-                                actionRef.current?.reloadAndRest?.();
-                            });
+                        onOk: async () => {
+                            FolderServiceAPI(requestAction).delete(parseInt(recrd?.key || ""));
+                            actionRef.current?.reloadAndRest?.();
                         }
                     })
                 }
             },
         ];
     }
-
     return (
         <>
             <Spin spinning={requestAction.request?.loading}>
-                {access.canAccessDMSAdminMenu && <Button
-                    onClick={() => {
-                        onFolderSelected?.();
-                        setFolderId(0)
-                        setFolderSelected("")
-                        onSearch({
-                            library: 0,
-                            folderId: 0,
-                            folderType: ""
-                        })
-                    }}
-                    type={folderSelected ? "default" : "primary"}
-                    style={{ width: "100%", margin: "10px 0" }} icon={<FileTextOutlined />}>All Documents</Button>}
+             
                 {treeFolderList.length &&
                     <DirectoryTree
                         key={"doprdown-1"}
@@ -180,9 +175,9 @@ export default ({ onSearch, activeKey, moveDoc, onMove, setFolder: setFolderId, 
                         selectedKeys={view != "library" ? [] : [(folderSelected || "")]}
                         expandAction={"doubleClick"}
                         onSelect={(e, { selectedNodes }) => {
-                            setFolderId(selectedNodes[0].libraryId);
-                            setFolderSelected(`${e[0]}`);
-                            onFolderSelected?.();
+                            setLibrary(selectedNodes[0].libraryId);
+                            history.push(`${DMSPaths.workspace}/library/${e[0]}`)
+
                             onSearch({
                                 library: selectedNodes[0]?.libraryId,
                                 folderId: parseInt(selectedNodes[0]?.key),
@@ -200,6 +195,7 @@ export default ({ onSearch, activeKey, moveDoc, onMove, setFolder: setFolderId, 
                                 code: info.node.code || ""
                             });
                             actionRef.current?.reload();
+                            loadData()
                         }}
                         showLine
                         icon={<></>}
@@ -263,21 +259,21 @@ export default ({ onSearch, activeKey, moveDoc, onMove, setFolder: setFolderId, 
                 data={folderState?.visible?.data}
                 libraryId={folderState?.visible?.libraryId}
                 type={folderState?.visible?.type}
-                onSave={(data: FolderCreate) => {
-                    Modal.confirm({
-                        title: "Save Folder",
-                        content: "are you sure? this input is corrected!",
-                        onOk: async () => {
-                            await FolderServiceAPI(requestAction).save(data) as ({
-                                data: string;
-                                message: string
-                            });
-                            message.success("Success");
-                            setFolderState((v) => ({ visible: undefined }));
-                            loadFolder()
-                            actionRef.current?.reloadAndRest?.();
-                        }
+                onSave={async (data: FolderCreate) => {
+                    const response = await FolderServiceAPI(requestAction).save(data) as ({
+                        data: string;
+                        message: string
                     });
+                    message.success("Success");
+                    setFolderState((v) => ({ visible: undefined }));
+                    testGetFolder()
+                    actionRef.current?.reloadAndRest?.();
+                }}
+            />
+
+            <ContractFormEntry
+                open={contractState?.visible?.name == "MODAL"}
+                onSave={() => {
                 }}
             />
         </>

@@ -8,7 +8,9 @@ import {
   CloseCircleOutlined,
   DashOutlined,
   DashboardOutlined,
+  DashboardOutlined,
   EditOutlined,
+  ExportOutlined,
   ExportOutlined,
   SafetyCertificateOutlined,
   StrikethroughOutlined,
@@ -31,6 +33,8 @@ import TireAssigntoVehicleModal from '../tires/AssignTireVehicle';
 import { TireAssignCreate } from '../specification/data';
 import { SpecificationServiceAPI } from '../specification/service';
 import { PageContainer } from '@ant-design/pro-components';
+import { Flex } from 'antd/lib';
+import OdometerIssue from './OdometerIssue';
 
 interface Props {
   onDetail?: (id: string) => void;

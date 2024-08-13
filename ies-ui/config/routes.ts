@@ -256,8 +256,7 @@ export default [
     icon: 'FormOutlined',
     access: 'canAccessHrMenu',
     component: './hrm',
-  },
-
+  }, 
   {
     path: '/hrm/employee/:view/*',
     name: 'employee',
@@ -626,7 +625,7 @@ export default [
   /******************* Developer *******************/
 
   {
-    path: '/profile',
+    path: '/profile/:is_admin/:id',
     name: 'account',
     // icon: 'DeliveredProcedureOutlined',
     // access: 'canAccesDeliveyMenu',
@@ -1035,6 +1034,15 @@ export default [
   {
     path: '/external/fleet/inspection/:view/*',
     name: 'inspection',
+    layout:false,
+    hideInMenu: 'true',
+    access: 'canAccessFleetMenu',
+    component: './fleet/inspection/',
+  },
+
+  {
+    path: '/external/fleet/inspection/:view/*',
+    name: 'inspection',
     layout: false,
     hideInMenu: 'true',
     access: 'canAccessFleetMenu',
@@ -1095,6 +1103,13 @@ export default [
     hideInMenu: 'true',
     access: 'canAccessFleetMenu',
     component: './fleet/fuelStock/',
+  },
+  {
+    path: '/fleet/accessory/:view/*',
+    name: 'fleet_accessory',
+    hideInMenu: 'true',
+    access: 'canAccessFleetMenu',
+    component: './fleet/accessory/',
   },
   {
     path: '/fleet/accessory/:view/*',
@@ -1301,6 +1316,57 @@ export default [
   
   //  ================= END In-house Stock ================
   //  ================= Setting =================
+  /**
+   * ESS Management
+   */
+  // {
+  //   path: '/ess/em/list',
+  //   name: 'inventoryTransfer',
+  //   icon: 'SettingOutlined',
+  //   hideInMenu: 'true',
+  //   access: 'canAccessInventoryTranferMenuItem',
+  //   component: './prod/inventory-transfer'
+  // },
+  {
+    path: '/ess',
+    name: 'ess',
+    icon: 'TeamOutlined', 
+    component: './ess'
+  },{
+    path: '/ess/:view/*',
+    name: 'ess',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessHrEmployeeMenuItem',
+    component: './ess/ess-announce',
+  },
+  
+  {
+    path: '/ess/details/:id',
+    name: 'Ess Annountment Details',
+    // icon: 'DeliveredProcedureOutlined',
+    // access: 'canAccesDeliveyMenu',
+    hideInMenu: 'true',
+    component: './ess/ess-announce/Details',
+  },
+  {
+    path: '/feedback',
+    name: 'feedback',
+    icon: 'TeamOutlined', 
+    hideInMenu: 'true',
+    component: './ess'
+  },
+  {
+    path: '/booking_car',
+    name: 'bookingcar',
+    icon: 'TeamOutlined', 
+    hideInMenu: 'true',
+    component: './ess'
+  },
+  /**
+   * End ESS Management
+   */
+
 
   {
     path: '/setting',

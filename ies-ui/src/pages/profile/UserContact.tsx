@@ -1,18 +1,20 @@
 import { LookupDataItem2 } from '@/services/data';
 import { simpleRequestActions } from '@/services/model';
-import { DeleteOutlined, EditOutlined, PlusCircleFilled, StarTwoTone } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, EyeOutlined, PlusCircleFilled, StarTwoTone } from '@ant-design/icons';
 import { ProList } from '@ant-design/pro-components';
 import { Button, message, Modal, Space, Typography } from 'antd';
 import { useEffect, useState } from 'react';
-import ContactModal from './ContactModal';
+import ContactModal from './modal/ContactModal';
 import { ContactData, ProfileData, SaveContract } from './data';
 import { ProfileServices } from './service';
 
 interface Props {
   profile: ProfileData;
+  step: any;
+  is_admin:number;
 }
 
-export default ({ profile }: Props) => {
+export default ({ profile,step,is_admin}: Props) => {
   const requestActions = simpleRequestActions();
   const [modalVisible, setModalVisible] = useState<
     { type: 'ADD'; payload: undefined } | { type: 'EDIT'; payload: ContactData }
@@ -45,10 +47,10 @@ export default ({ profile }: Props) => {
       title: item.type.name,
       subTitle: item.isMain && <StarTwoTone />,
       actions: [
-        <a key="edit" onClick={() => onEditHandler(item)}>
+        <a key="edit" onClick={() => onEditHandler(item)} style={{display: step==2?'':'none'}}>
           <EditOutlined />
         </a>,
-        <a key="delete" onClick={() => deleteContractHandler(item)}>
+        <a style={{display: step==2?'':'none'}} key="delete" onClick={() => deleteContractHandler(item)}>
           <DeleteOutlined />
         </a>,
       ],
@@ -101,7 +103,7 @@ export default ({ profile }: Props) => {
   const saveContactHandler = async (data: SaveContract) => {
     Modal.confirm({
       title: 'Save contact',
-      content: 'Are you soure?',
+      content: 'Are you sure?',
       onOk: async () => {
         try {
           await ProfileServices.saveContact(data)(requestActions);
@@ -120,7 +122,18 @@ export default ({ profile }: Props) => {
       <ProList<any>
         toolBarRender={() => {
           return [
-            <Button
+            // <Button danger onClick={() => setModalVisible({ type: 'VIEW', payload: undefined})} 
+            //     style={{display:step>=2?'':'none'}}><EyeOutlined/> View edit</Button>, 
+
+            <Button style={{display: (step==2||step==7||step==5)&&is_admin==0?'':'none'}}
+              onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}
+              icon={<PlusCircleFilled />}
+              key=" 3 "
+              type="primary"
+            >
+              Add
+            </Button>,
+            <Button style={{display: is_admin==2?'':'none'}}
               onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}
               icon={<PlusCircleFilled />}
               key=" 3 "

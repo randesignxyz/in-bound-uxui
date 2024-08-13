@@ -30,15 +30,11 @@ export default (props: Prop) => {
     { label: 'Is to be carried forward', value: stockControl?.isKeepForwarding ? 'True' : 'False' },
     {
       label: 'Settled Amount',
-      value: `${soldExchangeRate?.target_symbol} ${numeral(stockControl?.totalSettledAmount).format(
-        '0,0',
-      )}`,
+      value: `$ ${numeral(stockControl?.totalSettledAmount).format('0,0.00')}`,
     },
     {
       label: 'Sold Amount',
-      value: `${soldExchangeRate?.target_symbol} ${numeral(
-        (stockControl?.totalSoldAmount || 0) * (soldExchangeRate?.target_amount || 0),
-      ).format('0,0')}`,
+      value: `$ ${numeral((stockControl?.totalSoldAmount || 0) ).format('0,0.00')}`,
     },
   ];
 
@@ -74,8 +70,8 @@ export default (props: Prop) => {
               title: 'Unit Price',
               align: 'right',
               render: (_, r) => {
-                return `${soldExchangeRate?.target_symbol} ${numeral(
-                  r.unitPrice * (soldExchangeRate?.target_amount || 0.0),
+                return `$ ${numeral(
+                  r.unitPrice ,
                 ).format('0,0')}`;
               },
             },
@@ -83,8 +79,8 @@ export default (props: Prop) => {
               title: 'Amount',
               align: 'right',
               render: (_, r) => {
-                return `${soldExchangeRate?.target_symbol} ${numeral(
-                  r.unitPrice * (soldExchangeRate?.target_amount || 0.0) * r.quantity,
+                return `$ ${numeral(
+                  r.unitPrice * r.quantity,
                 ).format('0,0')}`;
               },
             },
@@ -92,7 +88,7 @@ export default (props: Prop) => {
           summary={(data) => {
             const totalAmount = data.reduce(
               (acc, it) =>
-                acc + it.quantity * it.unitPrice * (soldExchangeRate?.target_amount || 0.0),
+                acc + it.quantity * it.unitPrice ,
               0,
             );
 
@@ -104,7 +100,7 @@ export default (props: Prop) => {
                   </Table.Summary.Cell>
                   <Table.Summary.Cell index={1} align="right" colSpan={2}>
                     <Text type="warning">
-                      {soldExchangeRate?.target_symbol} {numeral(totalAmount).format('0,0')}
+                      $ {numeral(totalAmount).format('0,0')}
                     </Text>
                   </Table.Summary.Cell>
                 </Table.Summary.Row>
@@ -236,7 +232,7 @@ export default (props: Prop) => {
             align: 'right',
             render: (_, r) => {
               const total = (soldExchangeRate?.target_amount || 0.0) * r.amount;
-              return `${soldExchangeRate?.target_symbol} ${numeral(total).format('0,0')}`;
+              return `$ ${numeral(total).format('0,0.00')}`;
             },
           },
         ]}
@@ -251,7 +247,7 @@ export default (props: Prop) => {
                 </Table.Summary.Cell>
                 <Table.Summary.Cell index={1} align="right" colSpan={2}>
                   <Text type="success">
-                    {soldExchangeRate?.target_symbol} {numeral(total).format('0,0')}
+                    $ {numeral(total).format('0,0.00')}
                   </Text>
                 </Table.Summary.Cell>
               </Table.Summary.Row>

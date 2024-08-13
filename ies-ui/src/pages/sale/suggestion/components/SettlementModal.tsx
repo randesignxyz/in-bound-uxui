@@ -27,7 +27,7 @@ const layout = {
 
 interface Props extends FormModalProps {
   data?: StockControlLess;
-  exchangeRate?: ExchangeRate;
+  // exchangeRate?: ExchangeRate;
   dsdExchangeRate?: ExchangeRate;
   actionHandlers: {
     onAddItem?: (item: SettlementModel) => void;
@@ -51,7 +51,7 @@ interface ModelModalForm {
 const SettlementModal: React.FC<Props> = ({
   data,
   actionHandlers,
-  exchangeRate,
+  // exchangeRate,
   loading,
   dsdExchangeRate,
   ...props
@@ -73,9 +73,9 @@ const SettlementModal: React.FC<Props> = ({
     formModal.setFieldsValue({
       actualAmount: 0,
       settlementDate: moment(),
-      actualAmountKH: systemAmount * (dsdExchangeRate?.target_amount || 0.0),
+      actualAmountKH: systemAmount * (dsdExchangeRate?.source_amount || 0.0),
       bankAmount: 0,
-      exchangeRate: exchangeRate?.target_amount,
+      exchangeRate: dsdExchangeRate?.source_amount,
       invoicesAmount:
         data?.invoices?.reduce(function (acc, it) {
           return acc + it.amount;
@@ -86,13 +86,13 @@ const SettlementModal: React.FC<Props> = ({
         }, 0) || 0,
       systemAmount: systemAmount,
       remark: '',
-      actualTotalAmount: systemAmount * (dsdExchangeRate?.target_amount || 0.0),
+      actualTotalAmount: systemAmount * (dsdExchangeRate?.source_amount || 0.0),
     });
   }, [
     data?.adjustmentItems,
     data?.invoices,
-    dsdExchangeRate?.target_amount,
-    exchangeRate?.target_amount,
+    dsdExchangeRate?.source_amount,
+    // exchangeRate?.target_amount,
   ]);
 
   useEffect(() => {
@@ -107,7 +107,7 @@ const SettlementModal: React.FC<Props> = ({
     const form = await formModal.validateFields();
     const amountKH = form.actualAmountKH || 0;
     const amount = form.actualAmount || 0;
-    const systemAmountKH = form.systemAmount * (dsdExchangeRate?.target_amount ?? 0);
+    const systemAmountKH = form.systemAmount * (dsdExchangeRate?.source_amount ?? 0);
     if (systemAmountKH > calculateActualAmount(form)) {
       message.error('Settle amount is not correct.');
       return Promise.reject(false);
@@ -177,7 +177,7 @@ const SettlementModal: React.FC<Props> = ({
             />
             <ProFormDigit
               rules={[{ required: true }]}
-              initialValue={exchangeRate?.target_amount}
+              initialValue={dsdExchangeRate?.target_amount}
               min={3900}
               max={4200}
               name="exchangeRate"
@@ -251,7 +251,7 @@ const SettlementModal: React.FC<Props> = ({
             <ProFormDigit
               fieldProps={{
                 formatter: (value) => {
-                  return numeral(value).format('0,0');
+                  return numeral(value).format('0,0##');
                 },
               }}
               name="actualAmountKH"
@@ -270,7 +270,7 @@ const SettlementModal: React.FC<Props> = ({
               proFieldProps={{
                 render: () => {
                   const amount = formModal.getFieldValue('actualTotalAmount');
-                  return `${exchangeRate?.target_symbol} ${numeral(amount).format('0,0.00')}`;
+                  return `${dsdExchangeRate?.source_symbol} ${numeral(amount).format('0,0')}`;
                 },
               }}
               min={0}
@@ -303,9 +303,7 @@ const SettlementModal: React.FC<Props> = ({
                   <Text type="danger">Total</Text>
                 </Table.Summary.Cell>
                 <Table.Summary.Cell index={1} align="right">
-                  <Text type="danger">{`${dsdExchangeRate?.target_symbol} ${numeral(tatalKh).format(
-                    '0,0.00',
-                  )}`}</Text>
+                  <Text type="danger">{`$ ${numeral(tatalKh).format( '0,0.00' )}`}</Text>
                 </Table.Summary.Cell>
               </Table.Summary.Row>
             );

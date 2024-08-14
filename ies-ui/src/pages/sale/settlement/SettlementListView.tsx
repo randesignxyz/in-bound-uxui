@@ -57,13 +57,13 @@ export default ({}: Props) => {
                 return `${r.salesperson.salespersonCode} - ${r.salesperson.salespersonName}`;
               },
             },
-            // {
-            //   title: 'Settled Bank Amount USD',
-            //   align: 'right',
-            //   render: (_, r) => {
-            //     return numeral(r.bankAmount).format('$ 0,0.00');
-            //   },
-            // },
+            {
+              title: 'Settled Bank Amount USD',
+              align: 'right',
+              render: (_, r) => {
+                return numeral(r.bankAmount).format('$ 0,0.00');
+              },
+            },
             {
               title: 'Settled Amount USD',
               align: 'right',
@@ -75,16 +75,16 @@ export default ({}: Props) => {
               title: 'Settled Amount KHM',
               align: 'right',
               render: (_, r) => {
-                return ` ${numeral(r.amountKH).format()}`;
+                return ` ${numeral(r.amountKH).format(" 0,#00")} ៛`;
               },
             },
             {
               title: 'Exchange Rate',
               align: 'right',
               render: (_, r) => {
-                return `៛ ${numeral(
+                return ` ${numeral(
                   r.exchangeRate,
-                ).format('0,0')}`;
+                ).format('0,0')} ៛`;
               },
             },
             {
@@ -106,7 +106,7 @@ export default ({}: Props) => {
                 // return `${parent.settledExchangeRate?.target_symbol} ${numeral(total).format(
                 //   '0,0',
                 // )}`;
-                const total = r.amount + (r.amountKH/r.exchangeRate)
+                const total = r.amount + (r.amountKH/r.exchangeRate) + (r.bankAmount||0)
                 return <Typography.Text type='warning'>$ {numeral(total).format("0,000.00")}</Typography.Text>
               },
             },
@@ -117,10 +117,10 @@ export default ({}: Props) => {
               return acc + it.amountKH;
             }, 0);
             const bankAmount = data.reduce(function (acc, it) {
-              return acc + (it.bankAmount || 0.0) * it.exchangeRate;
+              return acc + (it.bankAmount?? 0.0);
             }, 0);
             const settledAmount = data.reduce(function (acc, it) {
-              return acc + (it.bankAmount || 0.0 + it.amount) ;
+              return acc + ((it.bankAmount?? 0.0) + it.amount + (it.amountKH/it.exchangeRate)) ;
             }, 0);
 
             const soldAmount = data.reduce(function (acc, it) {
@@ -132,9 +132,9 @@ export default ({}: Props) => {
                   <Table.Summary.Cell index={0} align="right" colSpan={2}>
                     <Text type="success">Total</Text>
                   </Table.Summary.Cell>
-                  {/* <Table.Summary.Cell index={1} align="right">
+                  <Table.Summary.Cell index={1} align="right">
                     <Text type="success">{numeral(bankAmount).format('$ 0,0.00')}</Text>
-                  </Table.Summary.Cell> */}
+                  </Table.Summary.Cell>
                   <Table.Summary.Cell index={1} align="right">
                     <Text type="success">{numeral(totalAmount).format('$ 0,0.00')}</Text>
                   </Table.Summary.Cell>

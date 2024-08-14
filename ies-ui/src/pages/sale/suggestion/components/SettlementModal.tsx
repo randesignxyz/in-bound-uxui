@@ -6,6 +6,7 @@ import type {
   StockAdjustmentDto,
   StockControlLess,
 } from '@/services/sale/data';
+import { EditableProTable, ProDescriptions, ProFormCheckbox, ProFormGroup, ProFormList } from '@ant-design/pro-components';
 import {
   ModalForm,
   ProFormDateTimePicker,
@@ -14,7 +15,7 @@ import {
   ProFormTextArea,
 } from '@ant-design/pro-form';
 import ProTable from '@ant-design/pro-table';
-import { Card, Col, message, Row, Table, Typography } from 'antd';
+import { Alert, Card, Col, Flex, message, Row, Table, Typography } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import moment from 'moment';
 import numeral from 'numeral';
@@ -132,7 +133,7 @@ const SettlementModal: React.FC<Props> = ({
 
   const _onChange = (changedValues: any, values: ModelModalForm) => {
     const fields = ['exchangeRate', 'actualAmount', 'actualAmountKH', 'bankAmount'];
-    
+
     if (fields.some((it) => it in changedValues) || changedValues) {
       const totalAmount = calculateActualAmount(formModal.getFieldsValue());
       formModal.setFieldsValue({ actualTotalAmount: totalAmount });
@@ -143,10 +144,10 @@ const SettlementModal: React.FC<Props> = ({
     // const amount = (model.actualAmountKH || 0) / model.exchangeRate;
     // const actualAmount = model.actualAmount || 0;
     // const backAmount = model.bankAmount || 0;
-    
+
     const amount = (model.actualAmountKH || 0) / model.exchangeRate;
-    const actualAmount = (model.actualAmount || 0) ;
-    const backAmount = (model.bankAmount || 0) ;
+    const actualAmount = (model.actualAmount || 0);
+    const backAmount = (model.bankAmount || 0);
     return actualAmount + amount + backAmount;
   }
 
@@ -155,7 +156,7 @@ const SettlementModal: React.FC<Props> = ({
       key={`SettlementModal`}
       width="1024px"
       layout={'horizontal'}
-      {...layout}
+      // {...layout}
       form={formModal}
       onValuesChange={_onChange}
       autoFocusFirstInput
@@ -166,10 +167,114 @@ const SettlementModal: React.FC<Props> = ({
         onCancel: () => actionHandlers.onCancel && actionHandlers.onCancel(),
         okText: <Text style={{ color: 'white' }}>Submit</Text>,
       }}
+      title="Settlement"
       onFinish={onSubmitActionHandler}
     >
-      <Card size="small" title={'Settlement'}>
+      {/* <Flex vertical gap={12}>
+        <Alert
+          description={
+            <ProDescriptions<StockControlLess>
+              dataSource={data}
+              contentStyle={{
+                fontWeight: 500,
+              }}
+              columns={[
+                {
+                  title: "Store Name",
+                  dataIndex: "stockName"
+                },
+                {
+                  title: "Owner",
+                  dataIndex: "owner"
+                },
+                {
+                  title: "Invoice Count",
+                  render: (_, r) => <Typography.Text type='success'>{r.invoices?.length}</Typography.Text>
+                },
+                {
+                  title: "Items Count",
+                  render: (_, r) => <Typography.Text type='warning'>{r.items?.length}</Typography.Text>
+                },
+                {
+                  title: "System Amount USD",
+                  render: (_, r) => {
+                    const invoiceAmount = data?.invoices?.reduce((acc, it) => acc + it.amount, 0) || 0;
+                    const lostAmount = data?.adjustmentItems?.reduce((acc, it) => (acc + (it.originQuantity - it.adjustQuantity) * it.unitPrice!!), 0) || 0;
+                    const systemAmount = invoiceAmount + lostAmount;
+                    return <Typography.Text type='success'>{numeral(systemAmount).format("$ 0,000.00")}</Typography.Text>
+                  }
+                },
+              ]}
+            />}
+        />
+
+        <Card size='small' >
+          <ProFormGroup>
+            <ProFormDateTimePicker
+              label="Settlement Date"
+              name={"settlementDate"}
+              rules={[{ required: true }]}
+              initialValue={moment()}
+            />
+            <ProFormDigit
+              label="Exchange Rate"
+              name={"exchangeRate"}
+              rules={[{ required: true }]}
+              initialValue={dsdExchangeRate?.target_amount}
+              fieldProps={{
+                formatter: (value) => {
+                  return numeral(value).format('0,0');
+                },
+              }}
+            />
+          </ProFormGroup>
+          <EditableProTable
+            headerTitle={"Payment Method"}
+            size='small'
+            dataSource={[
+              {
+                settlement_method:"cash",
+                currency:"USD",
+                amount:343
+              }
+            ]}
+            value={[
+              {
+              settlement_method:"cash",
+              currency:"USD",
+              amount:343
+            },
+            {
+              settlement_method:"bank",
+              currency:"USD",
+              amount:343
+            },
+          ]}
+            columns={[
+              {
+                title:"Method Type",
+                dataIndex:"settlement_method"
+              },
+              {
+                title:"Currency",
+                dataIndex:"currency"
+              },
+              {
+                title:"amount",
+                dataIndex:"amount",
+              },
+              {
+                title:"Bank Name",
+                dataIndex:"bank_name"
+              }
+            ]}
+          />
+
+        </Card>
+      </Flex> */}
+      <Card size="small" >
         <Row>
+
           <Col flex="auto">
             <ProFormDateTimePicker
               initialValue={moment()}
@@ -208,7 +313,7 @@ const SettlementModal: React.FC<Props> = ({
                       )}`;
                     },
                   }}
-                  // locale="en-US"
+                // locale="en-US"
                 />
                 <ProFormDigit
                   name="lostAmount"
@@ -224,7 +329,7 @@ const SettlementModal: React.FC<Props> = ({
                       )}`;
                     },
                   }}
-                  //locale="en-US"
+                //locale="en-US"
                 />
               </>
             )}
@@ -240,7 +345,7 @@ const SettlementModal: React.FC<Props> = ({
                   return `${dsdExchangeRate?.target_symbol} ${numeral(amount).format('0,0.00')}`;
                 },
               }}
-              //locale="en-US"
+            //locale="en-US"
             />
           </Col>
           <Col flex="auto">
@@ -306,7 +411,7 @@ const SettlementModal: React.FC<Props> = ({
                   <Text type="danger">Total</Text>
                 </Table.Summary.Cell>
                 <Table.Summary.Cell index={1} align="right">
-                  <Text type="danger">{`$ ${numeral(tatalKh).format( '0,0.00' )}`}</Text>
+                  <Text type="danger">{`$ ${numeral(tatalKh).format('0,0.00')}`}</Text>
                 </Table.Summary.Cell>
               </Table.Summary.Row>
             );

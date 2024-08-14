@@ -51,13 +51,13 @@ export default ({
         message.error('Please add some request items.');
         return Promise.reject();
       }
-      console.log('addedItems: ',addedItems.map(it => (it.returnDate)))
+      // console.log('addedItems: ',addedItems.map(it => (it.returnDate)))
       return {
         ...dataForm,
         id: type == 'EDIT' ? id : undefined,
         groupId: groupId,       
         fileIds: fileIds,
-        items: addedItems.map((v, index) => ({ ...v, returnDate: (v?.returnDate!= undefined? moment(v?.returnDate, 'YYYY-MM-DD').toDate(): v?.returnDate), seqNo: index + 1 })),
+        items: addedItems.map((v, index) => ({ ...v, seqNo: index + 1 })),
       } as StockRequest;
     };
 
@@ -103,7 +103,7 @@ export default ({
                   name={'reason'}
                 />
               </Col>
-              <Col flex={'200px'}>
+              {/* <Col flex={'200px'}>
                 <ProFormDatePicker
                   rules={[
                     {
@@ -120,7 +120,7 @@ export default ({
                   label=" Expected date"
                   name={'requestDate'}
                 />               
-              </Col>             
+              </Col>              */}
             </Row>           
           </Card>
           <Card
@@ -196,7 +196,7 @@ export default ({
                 valueType: 'select',
                 formItemProps: { rules: [{ required: false }] },
                 valueEnum: (r) => itemUomList.filter(it => it.itemCode == r.itemCode).reduce((acc, cur) => ({ ...acc, [cur.uom]: cur.uom }), {})                
-              },{
+              },/*{
                 title: 'To be Returned in Full or Partial (F/P)',
                 valueType: 'select',
                 width: 110,
@@ -215,7 +215,7 @@ export default ({
                     required: false
                   },
                 ]},
-              },             
+              }, */           
               {
                 title: 'Remarks',
                 valueType: 'textarea',

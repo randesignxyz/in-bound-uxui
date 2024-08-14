@@ -51,7 +51,7 @@ export default ({title,instId, forceRefresh }: Props) => {
             dataIndex:'uom'
 
         },
-        {
+        /*{
             title: 'To be Returned in Full or Partial (F/P)',
             width: 110,
             dataIndex:'returnType'
@@ -63,7 +63,7 @@ export default ({title,instId, forceRefresh }: Props) => {
             dataIndex:'returnDate',
             render: (_, r) => formatDate(r?.returnDate)
 
-        },
+        },*/
         {
             title:'Remarks',
             dataIndex:'remarks'

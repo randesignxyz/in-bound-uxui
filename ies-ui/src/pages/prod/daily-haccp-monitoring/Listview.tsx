@@ -6,14 +6,21 @@ import { Moment } from 'moment';
 import moment from 'moment';
 import { simpleRequestActions } from '@/services/model';
 import { ActionType, ProForm, ProFormSelect, ProTable } from '@ant-design/pro-components';
-import { Badge, Button, Card, Col, DatePicker, Flex, Modal, Progress, Row, Space, Tag, Typography, message } from 'antd';
-import { ArrowRightOutlined, EditOutlined, EllipsisOutlined, PlusOutlined, RedoOutlined, SettingOutlined } from '@ant-design/icons';
+import { Badge, Button, Card, Col, DatePicker, Flex, Modal, Progress, Row, Space, Tag, Tooltip, Typography, message } from 'antd';
+import { ArrowRightOutlined, EditOutlined, EllipsisOutlined, FileExcelOutlined, PlusOutlined, RedoOutlined, SettingOutlined } from '@ant-design/icons';
 import { DailyHACCPMonitoringServiceAPI } from './service';
 import { HACCPMonitoring } from './data';
 import FormModal from './FormModal';
 import { history } from 'umi'
+import ExportExcel from './ExportExcel';
+import { downloadReport } from '@/services/apiGateway';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 
 export default () => {
+  dayjs.extend(utc);
+  dayjs.extend(timezone);
   const access = useAccess();
   const [date, setDate] = useState<Moment>(moment());
   const [modalOpen, setModalOpen] = useState(false)
@@ -23,6 +30,10 @@ export default () => {
   const actionRef = useRef<ActionType>();
   const [data, setData] = useState<HACCPMonitoring[]>([])
   const { Text } = Typography;
+  const [excelLoading, setExcelLoading] = useState(false)
+  const [exportModel, setExportModal] = useState<{ visible: boolean }>({
+    visible: false,
+  });
   const routes = [
     {
       path: ProdPaths.prod,
@@ -74,19 +85,24 @@ export default () => {
           </ProForm>
           <DatePicker onChange={(v => setDate(v))} value={date} style={{ marginTop: 7 }} />
           {access.canAssignItem ?
-            <Button
-              key="click-add"
-              type="link"
-              icon={<PlusOutlined />}
-              onClick={() => setModalOpen(true)}
-            />
+            <Tooltip title="Assign Task">
+              <Button
+                key="click-add"
+                type="link"
+                icon={<PlusOutlined />}
+                onClick={() => setModalOpen(true)}
+              />
+            </Tooltip>
             : <></>}
-          <Button
-            key="refresh"
-            type="link"
-            icon={<RedoOutlined />}
-            onClick={() => setOnRefresh(true)}
-          />
+          <Tooltip title="Dowload Excel File"><Button type="link" icon={<FileExcelOutlined />} onClick={() => setExportModal({ visible: true })} /></Tooltip>
+          <Tooltip title="Refresh">
+            <Button
+              key="refresh"
+              type="link"
+              icon={<RedoOutlined />}
+              onClick={() => setOnRefresh(true)}
+            />
+          </Tooltip>
         </Space>
       </Card>
       <Card>
@@ -169,6 +185,35 @@ export default () => {
               }
             }
           })
+        }}
+      />
+      <ExportExcel
+        title="Export Excel"
+        open={exportModel.visible}
+        loading={excelLoading}
+        onCancel={() => setExportModal({ visible: false })}
+        onSave={async (duration, line) => {
+          const result = {
+            line: line,
+            startDate: dayjs(duration[0]).format('YYYY-MM-DD'),
+            endDate: dayjs(duration[1]).format('YYYY-MM-DD'),
+            pre: 'haccp'
+          };
+          try {
+            setExcelLoading(true)
+            await downloadReport(requestActions)({
+              fileName: `daily-haccp-monitoring-report-${moment().toDate().toDateString()}`,
+              reportName: 'prod-daily-water-treatment-report',
+              data: result,
+              type: 'EXCEL',
+              // target: '_blank'
+            });
+          } catch (error) {
+            message.error('Failed to download.');
+          } finally {
+            setExcelLoading(false)
+          }
+          setExportModal({ visible: false });
         }}
       />
     </>

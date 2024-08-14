@@ -263,6 +263,7 @@ export default () => {
             shift: shift,
             startDate: dayjs(duration[0]).format('YYYY-MM-DD'),
             endDate: dayjs(duration[1]).format('YYYY-MM-DD'),
+            pre:'treatment'
           };
           try {
             setExcelLoading(true)

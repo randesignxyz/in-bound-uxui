@@ -31,7 +31,7 @@ export default ({ profile ,step,is_admin}: Props) => {
             message.error(error.message || 'Failed to load data.');
         }
     }; 
-    const _stag = ["Cancel Updated","Start","Started Modified","Reviewing","Rejected with Revoke","Revoke","Approval","Cancelled Submitted"]; 
+    const _stag = ["Cancel Updated","Start","Started Modified","Reviewing","Rejected with Revoke","Revoke","Approval","Cancelled Submitted","Activity"]; 
     return <div>
         <Card>
             <Space direction={"vertical"} style={{width:'100%'}}> 

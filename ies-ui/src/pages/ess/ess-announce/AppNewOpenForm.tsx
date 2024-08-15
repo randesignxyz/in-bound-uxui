@@ -73,7 +73,7 @@ export default ({ open, onOpenModalChange, refreshTable,data}: Props) => {
                   onSaveHandler('SUBMITTING');
                 }}
               >
-                Save Draft
+                Create Announce 
               </Button>
             ), 
           ];

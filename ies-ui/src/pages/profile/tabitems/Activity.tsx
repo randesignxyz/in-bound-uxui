@@ -51,7 +51,7 @@ export default ({ profile ,step,is_admin}: Props) => {
                             title: "Description",  
                             dataIndex: "description" 
                         },{
-                            title: "Created Date", render: (_, r) => <>{formatDateTime(r.created_date)}</>  
+                            title: "Created Date", render: (_, r) => <>{formatDateTime(r.createdDate)}</>  
                         },{
                             title: "Remark", dataIndex: "remark"
                         },
@@ -66,7 +66,7 @@ export default ({ profile ,step,is_admin}: Props) => {
                                 return <><Tag color={color}>{_stag[r.step]}</Tag></>
                             }
                         },{
-                            title: "Created By", dataIndex: "created_by"
+                            title: "Created By", dataIndex: "createdBy"
                         }
                     ]}
                 />

@@ -68,7 +68,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
           content: 'Are you sure?',
           onOk: async () => {
             try {
-                data.other_file = createFileOther;
+                data.otherFile = createFileOther;
                 await ProfileServicesEss.saveExperience(data)(requestActions);
             //   const list = await ProfileServicesEss.listExperience(data.empId).query(requestActions);
             //   setExperienceList(list);
@@ -120,17 +120,17 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                     }}
                     columns={[
                         {
-                            title: "Company Name", dataIndex: "company_name"
+                            title: "Company Name", dataIndex: "companyName"
                         },{
                             title: "Location", dataIndex: "location"
                         }, {
-                            title: "Started Position", dataIndex: 'start_position'
+                            title: "Started Position", dataIndex: 'startPosition'
                         },{
-                            title: "Ended Position", dataIndex: 'end_position'
+                            title: "Ended Position", dataIndex: 'endPosition'
                         },{
-                            title: "Started Date", dataIndex: 'start_date'
+                            title: "Started Date", dataIndex: 'startDate'
                         },{
-                            title: "Ended Date", dataIndex: 'end_date'
+                            title: "Ended Date", dataIndex: 'endDate'
                         },
                         {   width: 100,
                             render: (dom, r) => {
@@ -180,7 +180,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
             );
             }}
             onFinish={(data) => {
-                return saveExperienceHandler({ ...data, id: modalVisible?.type=='EDIT'?modalVisible?.payload?.experience_id:(modalVisible?.payload?.id||0), empId: profile.id,status:true,type: modalVisible?.type});
+                return saveExperienceHandler({ ...data, id: modalVisible?.type=='EDIT'?modalVisible?.payload?.experienceId:(modalVisible?.payload?.id||0), empId: profile.id,status:true,type: modalVisible?.type});
             }}
         />
         

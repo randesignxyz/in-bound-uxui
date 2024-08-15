@@ -1,12 +1,12 @@
  
 export interface OpenEssDataItem {
   id?: number;  
-  emp_id : number; 
-  open_ess_name : string; 
-  start_date    : string;  
-  end_date      : string; 
-  created_date  : string; 
-  created_by    : string; 
+  empId : number;  
+  openTitle : string; 
+  startDate    : string;  
+  endDate      : string; 
+  createdDate  : string; 
+  createdBy    : string; 
   description   : string;  
   status        : Boolean;
 }

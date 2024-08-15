@@ -1,4 +1,4 @@
-import { fetchDataPagingService,fetchDataListService} from '@/services/apiGateway'; 
+import { fetchDataPagingService,fetchDataListService, execDataService0} from '@/services/apiGateway'; 
 import { request } from 'umi';
 import { OpenEssDataItem,OpenAdvanceSearchParams } from './data_ess';
 import { TableViewSearchParams } from '@/components/DataCrud/TableView';
@@ -26,6 +26,12 @@ export const ServicesEss = {
       pageSize: params.pagination?.pageSize,
       page: params.pagination?.current,
     },
+  }), 
+  
+  saveOpenAnnounce: (data: OpenEssDataItem) => execDataService0<OpenEssDataItem>({
+    actionName: 'save-create-announce-open',
+    endpoint: 'HR',
+    payload: { ...data }
   }), 
 
 }

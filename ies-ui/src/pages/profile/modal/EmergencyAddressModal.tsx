@@ -37,7 +37,7 @@ export default ({ data, ...rest }: Props) => {
         <ProCard bordered>
             <ProFormSelect 
                 label="City/ Province" 
-                name={'province_id'}
+                name={'provinceId'}
                 options={[
                     { value: 1, label: "Male" },
                     { value: 2, label: "Female"}  
@@ -46,7 +46,7 @@ export default ({ data, ...rest }: Props) => {
             {/*  */}
             <ProFormSelect 
                 label="Khan/ District" 
-                name={'district_id'}
+                name={'districtId'}
                 options={[
                     { value: 1, label: "Male" },
                     { value: 2, label: "Female"}  
@@ -55,16 +55,16 @@ export default ({ data, ...rest }: Props) => {
             {/*  */}
             <ProFormSelect 
                 label="Sangkhat/ Commune" 
-                name={'commune_id'}
+                name={'communeId'}
                 options={[
                     { value: 1, label: "Male" },
                     { value: 2, label: "Female"}  
                 ]}   
             />
             {/*  */}
-            <ProFormText label="House No" name={'home_no'} />  
+            <ProFormText label="House No" name={'homeNo'} />  
             <ProFormText label="Street" name={'street'} /> 
-            <ProFormText label="Group/Village" name={'group_village'} />
+            <ProFormText label="Group/Village" name={'groupVillage'} />
         </ProCard>
 
     </ModalForm>

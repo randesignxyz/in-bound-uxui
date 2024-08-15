@@ -57,7 +57,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
             content: 'Are you sure?',
             onOk: async () => {
               try { 
-                bmForm.other_file = createFileOther;  
+                bmForm.otherFile = createFileOther;  
                 bmForm.id = (!!data!!?data!!.id:0);
                 bmForm.empId = empId;
                 bmForm.status=true;
@@ -76,7 +76,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
     //     //     if(visible) {
     //     //         form.setFieldsValue({
     //     //             id: data?.id,
-    //     //             language_id: data?.language_id,
+    //     //             languageId: data?.languageId,
     //     //             level_name: data?.level_name,
     //     //             description: data?.description
     //     //         })
@@ -102,7 +102,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
         >  
         <ProCard bordered>
             <ProFormSelect rules={[{ required: false }]} allowClear={true}  
-                name="language_id" label = "Languages" placeholder="Languages"  
+                name="languageId" label = "Languages" placeholder="Languages"  
                 showSearch 
                 mode="single" 
                 options={
@@ -117,7 +117,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
                     ]
                 }  
             /> 
-            <ProFormText label="Level" name='level_name' />  
+            <ProFormText label="Level" name='levelName' />  
             <ProFormTextArea label="Description" name='description' /> 
         </ProCard>
         
@@ -145,7 +145,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
                                 width={'200px'}
                                 key={it.id}
                                 fileId={it.id || ''}
-                                fileName={it.file_name}
+                                fileName={it.fileName}
                             />
                         </List.Item>
                     );

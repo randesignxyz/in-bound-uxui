@@ -39,9 +39,9 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
             }}
             columns={[
                 {
-                    title: "Languages", render: (dom, r) => {return lng[r.language_id]}
+                    title: "Languages", render: (dom, r) => {return lng[r.languageId]}
                 },{
-                    title: "Level", dataIndex: "level_name"
+                    title: "Level", dataIndex: "levelName"
                 },{
                     title: "Description", dataIndex: "description"
                 },{   width: '70px',
@@ -72,9 +72,9 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
             }}
             columns={[
                 {
-                    title: "Languages", render: (dom, r) => {return lng[r.language_id]}
+                    title: "Languages", render: (dom, r) => {return lng[r.languageId]}
                 },{
-                    title: "Level", dataIndex: "level_name"
+                    title: "Level", dataIndex: "levelName"
                 },{
                     title: "Description", dataIndex: "description"
                 },{   width: '70px',

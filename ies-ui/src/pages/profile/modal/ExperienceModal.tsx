@@ -57,7 +57,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
             content: 'Are you sure?',
             onOk: async () => {
               try { 
-                bmForm.other_file = createFileOther;  
+                bmForm.otherFile = createFileOther;  
                 bmForm.id = (!!data!!?data!!.id:0);
                 bmForm.empId = empId;
                 bmForm.status=true;
@@ -90,13 +90,13 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
             } 
         > 
         <ProCard bordered> 
-            <ProFormText label="Company Name" name={'company_name'} />
+            <ProFormText label="Company Name" name={'companyName'} />
             <ProFormText label="Location" name={'location'} />  
-            <ProFormText label="Started Position" name={'start_position'} />  
-            <ProFormText label="Ended Position" name={'end_position'} />  
+            <ProFormText label="Started Position" name={'startPosition'} />  
+            <ProFormText label="Ended Position" name={'endPosition'} />  
             <Space direction="horizontal" style={{width:'100%'}}>
-                <ProFormDatePicker label="Started Date" name={'start_date'} />  
-                <ProFormDatePicker label="Ended Date" name={'end_date'} />  
+                <ProFormDatePicker label="Started Date" name={'startDate'} />  
+                <ProFormDatePicker label="Ended Date" name={'endDate'} />  
             </Space>
             <ProFormTextArea label="Description" name={'description'} /> 
         </ProCard>
@@ -125,7 +125,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
                                 width={'200px'}
                                 key={it.id}
                                 fileId={it.id || ''}
-                                fileName={it.file_name}
+                                fileName={it.fileName}
                             />
                         </List.Item>
                     );

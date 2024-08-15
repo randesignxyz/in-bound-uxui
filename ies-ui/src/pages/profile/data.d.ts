@@ -57,7 +57,7 @@ export interface ProfileData {
   email       : string;
   dateJoined? : moment.Moment;
   gender?     : string;
-  step_id     : number=0;
+  stepId     : number=0;
   bod?        : moment.Moment;
   jobs        : JobData[];
   roles       : string[];
@@ -75,12 +75,12 @@ export interface ProfileData {
 }
 export interface EssOpenData{  
   id?: number;  
-  emp_id : number; 
-  open_ess_name : string; 
-  start_date    : string;  
-  end_date      : string; 
-  created_date  : string; 
-  created_by    : string; 
+  empId : number; 
+  openEssName : string; 
+  startDate    : string;  
+  endDate      : string; 
+  createdIate  : string; 
+  createdBy    : string; 
   description   : string;  
   status        : Boolean;
 }
@@ -124,43 +124,43 @@ export interface JobData {
 export interface EmergencyData {
   id?: number; 
   empId:number;
-  emergency_name: string; 
-  emergency_contact_relation: string; 
-  emergency_phone: string; 
-  emergency_address: string; 
+  emergencyName: string; 
+  emergencyContactRelation: string; 
+  emergencyPhone: string; 
+  emergencyAddress: string; 
   status:Boolean;
 }
 export interface EssProfileData {
   id?             : number; 
   empId           : number;
-  name_kh?        : string; 
-  name_en         : string;  
-  gender_id       : number; 
-  date_birth      : string;  
-  place_birth     : string;  
-  marital_status_id   : number;  
-  permanent_address   : string;  
-  religion_id         : number;  
-  current_address     : string;  
-  national_id         : string;  
-  department_id         : number;  
-  passport_number     : string;   
-  relationship_id       : number;     
-  occupation_id       : number;     
-  depend_date_of_birth       : string;  
-  street_cr       : string;  
+  nameKh?        : string; 
+  nameEn         : string;  
+  genderId       : number; 
+  dateBirth      : string;  
+  placeBirth     : string;  
+  maritalStatusId   : number;  
+  permanentAddress   : string;  
+  religionId         : number;  
+  currentAddress     : string;  
+  nationalId         : string;  
+  departmentId         : number;  
+  passportNumber     : string;   
+  relationshipId       : number;     
+  occupationId       : number;     
+  dependIateOfBirth       : string;  
+  streetCr       : string;  
   status              : Boolean; 
   step              : number?=0;
   remark       : string;  
 }
 export interface EssProfileAdrData {
   id?                     : number; 
-  province_name           : string; 
-  district_name           : string; 
-  commune_name            : string; 
-  home_no                 : string; 
+  provinceName           : string; 
+  districtName           : string; 
+  communeName            : string; 
+  homeNo                 : string; 
   street                  : string; 
-  village_id              : string; 
+  villageId              : string; 
   remark                  : string; 
 }
 export interface SaveProfileImage {
@@ -173,11 +173,11 @@ export interface SaveProfileImage {
 //   fileName: string;  
 // }
 export interface ProfileTab {
-  contact_information?: number;  
-  personal_information:number;
-  emergency_contact: number;  
+  contactInformation?: number;  
+  personalInformation:number;
+  emergencyContact: number;  
   education: number;  
   languages: number;  
   training: number;  
-  work_experiences: number;   
+  workExperiences: number;   
 }

@@ -56,7 +56,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
             content: 'Are you sure?',
             onOk: async () => {
               try { 
-                bmForm.other_file = createFileOther;  
+                bmForm.otherFile = createFileOther;  
                 bmForm.id = (!!data!!?data!!.id:0);
                 bmForm.empId = empId;
                 bmForm.status=true;
@@ -91,7 +91,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
                 } 
         > 
         <ProCard bordered> 
-            <ProFormText label="Training Courses" name={'training_course'} />
+            <ProFormText label="Training Courses" name={'trainingCourse'} />
             <ProFormDatePicker picker="year" label="Year" name={'year'} />  
             <ProFormTextArea label="Description" name={'description'} /> 
         </ProCard>
@@ -120,7 +120,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
                                 width={'200px'}
                                 key={it.id}
                                 fileId={it.id || ''}
-                                fileName={it.file_name}
+                                fileName={it.fileName}
                             />
                         </List.Item>
                     );

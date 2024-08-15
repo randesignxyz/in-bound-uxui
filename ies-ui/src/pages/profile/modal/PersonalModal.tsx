@@ -42,14 +42,14 @@ export default ({ data,profile_draft,locations,files,isAdmin,empId,cb, ...rest }
         form.setFieldsValue(data!!);
         if(!!data){
             //place of birth
-            districtList(data!!.province_pb_id,1);
-            communeList(data!!.district_pb_id,1);
+            districtList(data!!.provincePbId,1);
+            communeList(data!!.districtPbId,1);
             //permenance address
-            districtList(data!!.province_pa_id,2);
-            communeList(data!!.district_pa_id,2);
+            districtList(data!!.provincePaId,2);
+            communeList(data!!.districtPaId,2);
             //current address
-            districtList(data!!.province_cr_id,3);
-            communeList(data!!.district_cr_id,3);
+            districtList(data!!.provinceCrId,3);
+            communeList(data!!.districtCrId,3);
         }
          
     };  
@@ -104,7 +104,7 @@ export default ({ data,profile_draft,locations,files,isAdmin,empId,cb, ...rest }
             content: 'Are you sure?',
             onOk: async () => {
               try { 
-                bmForm.other_file = createFileOther;  
+                bmForm.otherFile = createFileOther;  
                 bmForm.id = (!!data!!?data!!.id:0);
                 bmForm.empId = empId;
                 bmForm.status=true;
@@ -140,17 +140,17 @@ export default ({ data,profile_draft,locations,files,isAdmin,empId,cb, ...rest }
             > 
             <Spin spinning = {isLoading}> 
                 <ProCard bordered>
-                    <ProFormText label="Name KH" name={'name_kh'} />
-                    <ProFormText label="Name EN" name={'name_en'} />
+                    <ProFormText label="Name KH" name={'nameKh'} />
+                    <ProFormText label="Name EN" name={'nameEn'} />
                     <Row>
                         <Col span={12}>
-                            <ProFormDatePicker label="Date of Birth" name={'date_birth'} />
+                            <ProFormDatePicker label="Date of Birth" name={'dateBirth'} />
                         </Col>                
                         <Col span={12}>
                             <ProFormSelect 
                                 label="Gender"
                                 // disabled = {!!data}
-                                name={'gender_id'}
+                                name={'genderId'}
                                 mode="single" 
                                 options={[
                                         { value: 1, label: "Male" },
@@ -164,7 +164,7 @@ export default ({ data,profile_draft,locations,files,isAdmin,empId,cb, ...rest }
                         <Col span={12} style={{padding:'3px'}}>
                             <ProFormSelect 
                                 label="Marital Status"
-                                name={'marital_status_id'}
+                                name={'maritalStatusId'}
                                 options={[
                                     { value: 1, label: "Single" },
                                     { value: 2, label: "Married"},
@@ -177,7 +177,7 @@ export default ({ data,profile_draft,locations,files,isAdmin,empId,cb, ...rest }
                         <Col span={12} style={{padding:'3px'}}>     
                             <ProFormSelect 
                                 label="Religion"
-                                name={'religion_id'}
+                                name={'religionId'}
                                 options={[
                                     { value: 1, label: "Buddhism" },
                                     { value: 2, label: "Islam"}   
@@ -189,10 +189,10 @@ export default ({ data,profile_draft,locations,files,isAdmin,empId,cb, ...rest }
                     
                     <Row>
                         <Col span={12} style={{padding:'3px'}}>
-                            <ProFormText label="National ID" name={'national_id'} rules={[{max: 16,message: "Value should be less than 17 character"}]}/>
+                            <ProFormText label="National ID" name={'nationalId'} rules={[{max: 16,message: "Value should be less than 17 character"}]}/>
                         </Col>                
                         <Col span={12} style={{padding:'3px'}}>  
-                            <ProFormText label="Passport Number" name={'passport_number'} rules={[{max: 16,message: "Value should be less than 17 character"}]} />
+                            <ProFormText label="Passport Number" name={'passportNumber'} rules={[{max: 16,message: "Value should be less than 17 character"}]} />
                         </Col>                
                     </Row>
                     {/* <ProFormText label="Current Address" name={'current_address'} />
@@ -206,7 +206,7 @@ export default ({ data,profile_draft,locations,files,isAdmin,empId,cb, ...rest }
                             <ProFormSelect 
                                 label="Relationship"
                                 // disabled = {!!data}
-                                name={'relationship_id'}
+                                name={'relationshipId'}
                                 options={[
                                     { value: 1, label: "Hushand" },
                                     { value: 2, label: "Wife"},
@@ -220,7 +220,7 @@ export default ({ data,profile_draft,locations,files,isAdmin,empId,cb, ...rest }
                         <Col span={8} style={{padding:'3px'}}>       
                             <ProFormSelect 
                                 label="Occupation"
-                                name={'occupation_id'}
+                                name={'occupationId'}
                                 options={[
                                     { value: 1, label: "Housewife" },
                                     { value: 2, label: "Student"},
@@ -233,7 +233,7 @@ export default ({ data,profile_draft,locations,files,isAdmin,empId,cb, ...rest }
                         <Col span={8} style={{padding:'3px'}}>       
                             <ProFormDatePicker 
                                 label="Date of Birth"
-                                name={'depend_date_of_birth'}/>
+                                name={'dependDateOfBirth'}/>
                         </Col> 
                     </Row>
 
@@ -245,9 +245,9 @@ export default ({ data,profile_draft,locations,files,isAdmin,empId,cb, ...rest }
                     <Flex vertical={false} gap="middle" style={{width:'100%'}}>
                     <ProFormSelect 
                         label="City/ Province" 
-                        name={'province_pb_id'}
+                        name={'provincePbId'}
                         options={locations?.map((it) => {
-                            return { value: it.id, label: it.internal_name };
+                            return { value: it.id, label: it.internalName };
                         })}
                         fieldProps={{
                             onChange: (val) => {
@@ -259,9 +259,9 @@ export default ({ data,profile_draft,locations,files,isAdmin,empId,cb, ...rest }
                     {/*  */}
                     <ProFormSelect 
                         label="Khan/ District" 
-                        name={'district_pb_id'}
+                        name={'districtPbId'}
                         options={districtPB?.map((it) => {
-                            return { value: it.id, label: it.internal_name };
+                            return { value: it.id, label: it.internalName };
                         })}
                         fieldProps={{
                             onChange: (val) => {
@@ -273,9 +273,9 @@ export default ({ data,profile_draft,locations,files,isAdmin,empId,cb, ...rest }
                     {/*  */}
                     <ProFormSelect 
                         label="Sangkhat/ Commune" 
-                        name={'commune_pb_id'}
+                        name={'communePbId'}
                         options={communePB?.map((it) => {
-                            return { value: it.id, label: it.internal_name };
+                            return { value: it.id, label: it.internalName };
                         })}
                     />
                     </Flex>
@@ -287,9 +287,9 @@ export default ({ data,profile_draft,locations,files,isAdmin,empId,cb, ...rest }
                     <Flex vertical={false} gap="middle"  justify="flex-start">
                     <ProFormSelect 
                         label="City/ Province" 
-                        name={'province_pa_id'}
+                        name={'provincePaId'}
                         options={locations?.map((it) => {
-                            return { value: it.id, label: it.internal_name };
+                            return { value: it.id, label: it.internalName };
                         })}
                         fieldProps={{
                             onChange: (val) => {
@@ -301,9 +301,9 @@ export default ({ data,profile_draft,locations,files,isAdmin,empId,cb, ...rest }
                     {/*  */}
                     <ProFormSelect 
                         label="Khan/ District" 
-                        name={'district_pa_id'}
+                        name={'districtPaId'}
                         options={districtPA?.map((it) => {
-                            return { value: it.id, label: it.internal_name };
+                            return { value: it.id, label: it.internalName };
                         })}
                         fieldProps={{
                             onChange: (val) => {
@@ -315,22 +315,22 @@ export default ({ data,profile_draft,locations,files,isAdmin,empId,cb, ...rest }
                     {/*  */}
                     <ProFormSelect 
                         label="Sangkhat/ Commune" 
-                        name={'commune_pa_id'}
+                        name={'communePaId'}
                         options={communePA?.map((it) => {
-                            return { value: it.id, label: it.internal_name };
+                            return { value: it.id, label: it.internalName };
                         })}
                     />
                     </Flex>
                     
                     <Flex vertical={false} gap="middle" style={{width:'100%'}}>
                     {/*  */}
-                    <ProFormText label="House No" name={'home_pa_no'} />  
-                    {/* <ProFormText hidden={profile_draft==null?true:false} allowClear={false} fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.home_pa_no!!}`}}  />   */}
-                    <ProFormText label="Street" name={'street_pa'} /> 
-                    {/* <ProFormText hidden={profile_draft==null?true:false} allowClear={false} fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.street_pa}`}}  />   */}
-                    <ProFormText label="Group/Village" name={'village_pa_id'} />
-                    {/* <ProFormText hidden={profile_draft==null?true:false} allowClear={false} fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.village_pa_id}`}}  />   */}
-                    {/* <ProFormTextArea name={'remark_pa'} label='Remark'/> */}
+                    <ProFormText label="House No" name={'homePaNo'} />  
+                    {/* <ProFormText hidden={profile_draft==null?true:false} allowClear={false} fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.homePa_no!!}`}}  />   */}
+                    <ProFormText label="Street" name={'streetPa'} /> 
+                    {/* <ProFormText hidden={profile_draft==null?true:false} allowClear={false} fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.streetPa}`}}  />   */}
+                    <ProFormText label="Group/Village" name={'villagePaId'} />
+                    {/* <ProFormText hidden={profile_draft==null?true:false} allowClear={false} fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.villagePaId}`}}  />   */}
+                    {/* <ProFormTextArea name={'remarkPa'} label='Remark'/> */}
                     </Flex>
                 </ProCard>
 
@@ -340,9 +340,9 @@ export default ({ data,profile_draft,locations,files,isAdmin,empId,cb, ...rest }
                 <Flex vertical={false} gap="middle" style={{width:'100%'}}>
                     <ProFormSelect 
                         label="City/ Province" 
-                        name={'province_cr_id'}
+                        name={'provinceCrId'}
                         options={locations?.map((it) => {
-                            return { value: it.id, label: it.internal_name };
+                            return { value: it.id, label: it.internalName };
                         })}
                         fieldProps={{
                             onChange: (val) => {
@@ -354,9 +354,9 @@ export default ({ data,profile_draft,locations,files,isAdmin,empId,cb, ...rest }
                     {/*  */}
                     <ProFormSelect 
                         label="Khan/ District" 
-                        name={'district_cr_id'}
+                        name={'districtCrId'}
                         options={districtCA?.map((it) => {
-                            return { value: it.id, label: it.internal_name };
+                            return { value: it.id, label: it.internalName };
                         })}
                         fieldProps={{
                             onChange: (val) => {
@@ -368,22 +368,22 @@ export default ({ data,profile_draft,locations,files,isAdmin,empId,cb, ...rest }
                     {/*  */}
                     <ProFormSelect 
                         label="Sangkhat/ Commune" 
-                        name={'commune_cr_id'}
+                        name={'communeCrId'}
                         options={communeCA?.map((it) => {
-                            return { value: it.id, label: it.internal_name };
+                            return { value: it.id, label: it.internalName };
                         })}
                     />
                     </Flex>
                     
                     <Flex vertical={false} gap="middle" style={{width:'100%'}}>
                     {/*  */}
-                    <ProFormText label="House No" name={'home_cr_no'} />  
-                    {/* <ProFormText hidden={profile_draft==null?true:false} allowClear={false} fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.home_cr_no!!}`}}  />  */}
-                    <ProFormText label="Street" name={'street_cr'} /> 
-                    {/* <ProFormText hidden={profile_draft==null?true:false} allowClear={false} fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.street_cr}`}}  />  */}
-                    <ProFormText label="Group/Village" name={'village_cr_id'} />
-                    {/* <ProFormText hidden={profile_draft==null?true:false} allowClear={false} fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.village_cr_id}`}}  />    */}
-                    {/* <ProFormTextArea name={'remark_ca'} label='Remark'/> */}
+                    <ProFormText label="House No" name={'homeCrNo'} />  
+                    {/* <ProFormText hidden={profile_draft==null?true:false} allowClear={false} fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.homeCr_no!!}`}}  />  */}
+                    <ProFormText label="Street" name={'streetCr'} /> 
+                    {/* <ProFormText hidden={profile_draft==null?true:false} allowClear={false} fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.streetCr}`}}  />  */}
+                    <ProFormText label="Group/Village" name={'villageCrId'} />
+                    {/* <ProFormText hidden={profile_draft==null?true:false} allowClear={false} fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.villageCrId}`}}  />    */}
+                    {/* <ProFormTextArea name={'remarkCa'} label='Remark'/> */}
                     </Flex>
                 </ProCard>
                  {/* Attachment files  */} 
@@ -410,7 +410,7 @@ export default ({ data,profile_draft,locations,files,isAdmin,empId,cb, ...rest }
                                         width={'200px'}
                                         key={it.id}
                                         fileId={it.id || ''}
-                                        fileName={it.file_name}
+                                        fileName={it.fileName}
                                     />
                                 </List.Item>
                             );

@@ -41,8 +41,8 @@ export default ({ profile,data,locations,type,isAdmin,empId, cb, ...rest }: Prop
         const list = await ProfileServicesEss.listImageProfile(profile.id,2,type=="ADD"?2:1,data?.id!!||-1).query(requestActions);
         setImageList(list); 
         if(!!data){
-            districtList(data!!.province_id);
-            communeList(data!!.district_id);
+            districtList(data!!.provinceId);
+            communeList(data!!.districtId);
         }
         
         // 
@@ -88,7 +88,7 @@ export default ({ profile,data,locations,type,isAdmin,empId, cb, ...rest }: Prop
             content: 'Are you sure?',
             onOk: async () => {
               try { 
-                bmForm.other_file = createFileOther;  
+                bmForm.otherFile = createFileOther;  
                 bmForm.id = (!!data!!?data!!.id:0);
                 bmForm.empId = empId;
                 bmForm.status=true;
@@ -119,7 +119,7 @@ export default ({ profile,data,locations,type,isAdmin,empId, cb, ...rest }: Prop
         >
         <Spin spinning = {isLoading}> 
             <ProCard bordered> 
-                <ProFormText label="Emergency Name" name={'emergency_name'} /> 
+                <ProFormText label="Emergency Name" name={'emergencyName'} /> 
                 <ProFormSelect 
                     label="Emergency Contact Relation"
                     width={'md'} 
@@ -133,15 +133,15 @@ export default ({ profile,data,locations,type,isAdmin,empId, cb, ...rest }: Prop
                         { value: 6, label: "Cousin"} 
                     ]}    
                 />   
-                <ProFormText label="Emergency Phone" name={'emergency_phone'} /> 
+                <ProFormText label="Emergency Phone" name={'emergencyPhone'} /> 
             </ProCard> 
             <div style={{marginTop:'10px'}}><Typography.Title level={5}>Emergency Address</Typography.Title></div>
             <ProCard bordered> 
                 <ProFormSelect 
                     label="City/ Province" 
-                    name={'province_id'}
+                    name={'provinceId'}
                     options={locations?.map((it) => {
-                        return { value: it.id, label: it.internal_name };
+                        return { value: it.id, label: it.internalName };
                     })}
                     fieldProps={{
                         onChange: (val) => {
@@ -153,9 +153,9 @@ export default ({ profile,data,locations,type,isAdmin,empId, cb, ...rest }: Prop
                 {/*  */}
                 <ProFormSelect 
                     label="Khan/ District" 
-                    name={'district_id'}
+                    name={'districtId'}
                     options={district?.map((it) => {
-                        return { value: it.id, label: it.internal_name };
+                        return { value: it.id, label: it.internalName };
                     })}
                     fieldProps={{
                         onChange: (val) => {
@@ -167,15 +167,15 @@ export default ({ profile,data,locations,type,isAdmin,empId, cb, ...rest }: Prop
                 {/*  */}
                 <ProFormSelect 
                     label="Sangkhat/ Commune" 
-                    name={'commune_id'}
+                    name={'communeId'}
                     options={commune?.map((it) => {
-                        return { value: it.id, label: it.internal_name };
+                        return { value: it.id, label: it.internalName };
                     })}
                 />
                 {/*  */}
-                <ProFormText label="House No" name={'home_no'} />  
+                <ProFormText label="House No" name={'homeNo'} />  
                 <ProFormText label="Street" name={'street'} /> 
-                <ProFormText label="Group/Village" name={'village_id'} /> 
+                <ProFormText label="Group/Village" name={'villageId'} /> 
             </ProCard>
             
             {/* Attachment files  */} 
@@ -202,7 +202,7 @@ export default ({ profile,data,locations,type,isAdmin,empId, cb, ...rest }: Prop
                                     width={'200px'}
                                     key={it.id}
                                     fileId={it.id || ''}
-                                    fileName={it.file_name}
+                                    fileName={it.fileName}
                                 />
                             </List.Item>
                         );

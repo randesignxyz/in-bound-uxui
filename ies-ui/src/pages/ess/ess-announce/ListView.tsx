@@ -30,6 +30,7 @@ export default ({ onAdd, onEdit }: Props) => {
     const [status, setStatus] = useState('1');  
     const [statusItem, setStatusItem] = useState('1');  
     const [openEssItemList, setOpenEssItemList] = useState<OpenEssDataItem[]>([]);
+    const [openEssItem, setOpenEssItem] = useState<OpenEssDataItem>();
 
     // useEffect(() => { 
     // }, [forceChange])
@@ -62,8 +63,8 @@ export default ({ onAdd, onEdit }: Props) => {
         }
     }
 
-    const onOpenESS  = () => {
-
+    const onOpenESS  = (data:OpenEssDataItem) => { 
+        setOpenEssItem(data);
         modals.showModal('CreateNewOpenForm');
     }
     const setAdanceSearchItem = (id:number)=>{
@@ -149,25 +150,26 @@ export default ({ onAdd, onEdit }: Props) => {
         <TableView<OpenEssDataItem, { searchValue?: string; }>
             tableProps={{
                 actionRef: actionRef,
-                toolbar: {
-                    actions: [
-                     <Tooltip placement="top" title="Import">
-                        <ImportFileButton<{id: number}> importedKey="EMPLOYEE"
-                        // onDataResponse={(data) => {
-                        //     console.log("------",data);
+                toolbar: false 
+                // { 
+                //     actions: [
+                //      <Tooltip placement="top" title="Import">
+                //         <ImportFileButton<{id: number}> importedKey="EMPLOYEE"
+                //         // onDataResponse={(data) => {
+                //         //     console.log("------",data);
                             
-                        // }}
-                        onHandleChange={status => {
-                            setLoading(status == 'uploading')
+                //         // }}
+                //         onHandleChange={status => {
+                //             setLoading(status == 'uploading')
                             
-                            if(status == 'done') {
-                                message.info("upload completed.")
-                            }    
-                        }}/>
-                      </Tooltip>,
+                //             if(status == 'done') {
+                //                 message.info("upload completed.")
+                //             }    
+                //         }}/>
+                //       </Tooltip>,
         
-                    ],
-                  },
+                //     ],
+                //   },
             }} 
             extraRightFilter={<Tooltip placement="bottom" title="Create new open ess"><Button icon={<SoundOutlined />} onClick={onOpenESS}>Open ESS</Button></Tooltip>}
             actionHandlers={{ 
@@ -196,7 +198,7 @@ export default ({ onAdd, onEdit }: Props) => {
             }  
             columns={[
                 {title: 'ID', dataIndex: 'id', sorter: 'id',width:'5%'},
-                {title: 'Open Title', dataIndex: 'open_title',
+                {title: 'Open Title', dataIndex: 'openTitle',
                 render(_, entity) {
                     return <Flex gap={5}><Button
                         size="small"
@@ -210,22 +212,22 @@ export default ({ onAdd, onEdit }: Props) => {
                                 )
                                 ?.focus();
                         }}
-                    /> <a onClick={() => { history.push(`/ess/details/${entity.id}`) }}>{entity.open_title}</a>
+                    /> <a onClick={() => { history.push(`/ess/details/${entity.id}`) }}>{entity.openTitle}</a>
                     </Flex>
                 },
                 },
-                {title: 'Started Date', dataIndex: 'start_date', render    : (_, r) => moment(r.start_date).format("DD-MMM-YYYY"),width:'7%'},
-                {title: 'End Date', dataIndex: 'end_date', render    : (_, r) => moment(r.end_date).format("DD-MMM-YYYY"), width:'7%'},
+                {title: 'Started Date', dataIndex: 'start_date', render    : (_, r) => moment(r.startDate).format("DD-MMM-YYYY"),width:'7%'},
+                {title: 'End Date', dataIndex: 'end_date', render    : (_, r) => moment(r.endDate).format("DD-MMM-YYYY"), width:'7%'},
                 {title: 'Description', dataIndex:  'description', },
-                {title: 'Created Date', dataIndex: 'created_date', render    : (_, r) => moment(r.created_date).format("DD-MMM-YYYY"), width:'7%'},
-                {title: 'Created By', dataIndex: 'created_by', width:'7%'},
+                {title: 'Created Date', dataIndex: 'created_date', render    : (_, r) => moment(r.createdDate).format("DD-MMM-YYYY"), width:'7%'},
+                {title: 'Created By', dataIndex: 'createdBy', width:'7%'},
                 {title: 'Status',width: 120, render:(_,r) =>{
                         var _status = 'PENDING';
-                        if (r.step_id=='1'){
+                        if (r.stepId=='1'){
                             _status = "OPEN";
-                        } else if (r.step_id=='2'){
+                        } else if (r.stepId=='2'){
                             _status = "CLOSED";
-                        } else if (r.step_id=='3'){
+                        } else if (r.stepId=='3'){
                             _status = "DELETED";
                         }
                         return <idv><Status text={_status}/></idv>;
@@ -250,6 +252,7 @@ export default ({ onAdd, onEdit }: Props) => {
             open={modals.isVisible('CreateNewOpenForm')}
             onOpenModalChange={(v: any) => !v && modals.hideModal('CreateNewOpenForm')}
             refreshTable={refeshTable}
+            data={openEssItem!!} 
         />}
            
     </Spin>

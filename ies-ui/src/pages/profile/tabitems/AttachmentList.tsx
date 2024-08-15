@@ -76,20 +76,20 @@ export default ({ profile ,step,is_admin}: Props) => {
                             }
                         },
                         {
-                            title: "File Name", dataIndex: "file_name"
+                            title: "File Name", dataIndex: "fileName"
                         },{
-                            title: "Type", dataIndex: "file_type"
+                            title: "Type", dataIndex: "fileType"
                         },{
-                            title: "Created Date", render: (_, r) => <>{formatDateTime(r.created_date)}</>  
+                            title: "Created Date", render: (_, r) => <>{formatDateTime(r.createdDate)}</>  
                         },{
                             render: (_, r) =>{ 
                                 // 
-                                if(r.file_type=="text/csv"||r.file_type=="application/pdf"||r.file_type=="application/vnd.ms-excel"||r.file_type=="application/vnd.openxmlformats-officedocument.wordprocessingml.document"){  
+                                if(r.fileType=="text/csv"||r.fileType=="application/pdf"||r.fileType=="application/vnd.ms-excel"||r.fileType=="application/vnd.openxmlformats-officedocument.wordprocessingml.document"){  
                                     return(
                                         <Button
                                             icon={<DownloadOutlined />}
                                             type="link"
-                                            onClick={async () => {  downloadUploadFileV2()(r?.id || "", r.file_name || ""); }}
+                                            onClick={async () => {  downloadUploadFileV2()(r?.id || "", r.fileType || ""); }}
                                         />
                                     )
                                 }

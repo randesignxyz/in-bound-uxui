@@ -37,7 +37,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                     }}
                     columns={[
                         {
-                            title: "Training Courses", dataIndex: "training_course"
+                            title: "Training Courses", dataIndex: "trainingCourse"
                         },{
                             title: "Year", dataIndex: "year"
                         },{
@@ -73,7 +73,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                     }}
                     columns={[
                         {
-                            title: "Training Courses", dataIndex: "training_course"
+                            title: "Training Courses", dataIndex: "trainingCourse"
                         },{
                             title: "Year", dataIndex: "year"
                         },{

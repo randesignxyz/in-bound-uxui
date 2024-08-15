@@ -68,7 +68,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
           content: 'Are you sure?',
           onOk: async () => {
             try {
-                data.other_file = createFileOther;
+                data.otherFile = createFileOther;
                 await ProfileServicesEss.saveLanguage(data)(requestActions);
             //   const list = await ProfileServicesEss.listLanguage(data.empId).query(requestActions);
             //   setLanguageList(list);
@@ -121,9 +121,9 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                     }}
                     columns={[
                         {
-                            title: "Languages", render: (dom, r) => {return lng[r.language_id]}
+                            title: "Languages", render: (dom, r) => {return lng[r.languageId]}
                         },{
-                            title: "Level", dataIndex: "level_name"
+                            title: "Level", dataIndex: "levelName"
                         },{
                             title: "Description", dataIndex: "description"
                         },
@@ -174,7 +174,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
             );
             }}
             onFinish={(data) => {
-                return saveLanguageHandler({ ...data, id: modalVisible?.type=='EDIT'?modalVisible?.payload?.ref_id:(modalVisible?.payload?.id||0), empId: profile.id,status:true,type:modalVisible?.type });
+                return saveLanguageHandler({ ...data, id: modalVisible?.type=='EDIT'?modalVisible?.payload?.refId:(modalVisible?.payload?.id||0), empId: profile.id,status:true,type:modalVisible?.type });
             }}
         />
         

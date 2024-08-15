@@ -69,7 +69,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
           content: 'Are you sure?',
           onOk: async () => {
             try {
-                data.other_file = createFileOther;
+                data.otherFile = createFileOther;
                 await ProfileServicesEss.saveEducation(data)(requestActions); 
                 // call back fun
                 cb.onLoadData();
@@ -122,15 +122,15 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
  
                     columns={[
                         {
-                            title: "Degree", dataIndex: "degree_id",render: (dom, r) => {return lng[r.degree_id]}
+                            title: "Degree", dataIndex: "degreeId",render: (dom, r) => {return lng[r.degreeId]}
                         },{
-                            title: "Major/Subject", dataIndex: "marjor_subject"
+                            title: "Major/Subject", dataIndex: "marjorSubject"
                         },{
-                            title: "Education Center", dataIndex: "education_center"
+                            title: "Education Center", dataIndex: "educationCenter"
                         },{
-                            title: "Country of Education Center", dataIndex: "country_education_center",render: (dom, r) => {return lng[r.country_education_center]}
+                            title: "Country of Education Center", dataIndex: "countryEducationCenter",render: (dom, r) => {return lng[r.countryEducationCenter]}
                         },{
-                            title: "Status", dataIndex: "status_id",render: (dom, r) => {return lng[r.status_id]}
+                            title: "Status", dataIndex: "statusId",render: (dom, r) => {return lng[r.statusId]}
                         },
                         {   width: 100,
                             render: (dom, r) => {
@@ -179,7 +179,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
             );
             }}
             onFinish={(data) => {
-                return saveEducationHandler({ ...data, id: modalVisible?.type=='EDIT'?modalVisible?.payload?.education_id:(modalVisible?.payload?.id||0), empId: profile.id,type:modalVisible?.type });
+                return saveEducationHandler({ ...data, id: modalVisible?.type=='EDIT'?modalVisible?.payload?.educationId:(modalVisible?.payload?.id||0), empId: profile.id,type:modalVisible?.type });
             }}
         />
         {/*  */}

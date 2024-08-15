@@ -2,31 +2,54 @@ import {
   ProCard,
   ProFormText,
   ProFormDatePicker,
-  ProFormTextArea, 
-  ProFormSelect, 
-  ModalForm,
-  ProFormDigit, 
+  ProFormTextArea,  
+  ModalForm, 
 } from '@ant-design/pro-components';
-import { Button, message, Modal, Radio, RadioChangeEvent, Space, Table } from 'antd';
+import { Button, message, Modal,  Space  } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
-import { BookOutlined, CloseOutlined, CopyrightOutlined, DollarOutlined, PoundOutlined, PrinterOutlined, TransactionOutlined } from '@ant-design/icons';
-
-type DataFormType = {
-  requestorId: string;
-  requestorBuId: number;
-};
+import { simpleRequestActions } from '@/services/model'; 
+import { OpenEssDataItem} from '../data_ess';
+import { ServicesEss } from '../service_ess_tran';  
+import { useEffect } from 'react';
+ 
 interface Props {
   open?: boolean;
   onOpenModalChange: (v: boolean) => void;
   refreshTable: () => void;
+  data:OpenEssDataItem;
 }
 
-export default ({ open, onOpenModalChange, refreshTable }: Props) => {
-  const [formSubmittor] = useForm<DataFormType>();
+export default ({ open, onOpenModalChange, refreshTable,data}: Props) => {
+  const requestActions = simpleRequestActions();
+  const [formSubmittor] = useForm<OpenEssDataItem>();
   const onSaveHandler = async (status: string) => {
-    onOpenModalChange?.(false);
-    refreshTable();
+    try {
+      const formData = await formSubmittor.validateFields();    
+      const dataV = {id:data.id||-1,...formData} as OpenEssDataItem 
+      Modal.confirm({
+        title:'New Open',
+        content:'Are you to create new open?',
+        onOk: async () => {
+          await ServicesEss.saveOpenAnnounce(dataV)(requestActions).then(it=>{
+            message.success('create successfully.');
+            onOpenModalChange?.(false); 
+            refreshTable();
+          }) 
+        }
+      })         
+      
+    }catch(error: any){
+      message.error(error.message || 'Failed to save')
+      refreshTable();
+    }
   };
+ 
+  useEffect(() => {
+      initData()
+  }, [data])
+  const initData = async () => {
+    formSubmittor.setFieldsValue(data);
+  }
   return (
     <ModalForm
       modalProps={{
@@ -62,7 +85,7 @@ export default ({ open, onOpenModalChange, refreshTable }: Props) => {
       <Space direction="vertical" style={{ width: '100%' }}>
         <ProCard size="small" bordered headerBordered>
           <Space direction="vertical" style={{ width: '100%' }}>
-            <ProFormText name = "title_name" /*fieldProps={{ style: { height:'50px',fontSize:'24px' }}} */label = {<div><strong>Title</strong></div>} /> 
+            <ProFormText name = "openTitle" /*fieldProps={{ style: { height:'50px',fontSize:'24px' }}} */label = {<div><strong>Title</strong></div>} /> 
             {/* <ProFormSelect
               rules={[{ required: true }]} 
               label="Department" 
@@ -70,8 +93,8 @@ export default ({ open, onOpenModalChange, refreshTable }: Props) => {
               // options={lookupList.filter(it => it.type == 'CONTACT_TYPE').map(it => ({ label: it.name, value: it.id }))}
             /> */}
             <Space direction="horizontal" style={{ width: '100%' }}>
-              <ProFormDatePicker name = "start_date" /*fieldProps={{ style: { height:'50px',fontSize:'24px' }}}*/ label = {<div><strong>Started Date</strong></div>} />            
-              <ProFormDatePicker name = "end_date" /*fieldProps={{ style: { height:'50px',fontSize:'24px' }}}*/ label = {<div><strong>Ended Date</strong></div>} /> 
+              <ProFormDatePicker name = "startDate" /*fieldProps={{ style: { height:'50px',fontSize:'24px' }}}*/ label = {<div><strong>Started Date</strong></div>} />            
+              <ProFormDatePicker name = "endDate" /*fieldProps={{ style: { height:'50px',fontSize:'24px' }}}*/ label = {<div><strong>Ended Date</strong></div>} /> 
             </Space> 
             <ProFormTextArea name = "description" /*fieldProps={{ style: { height:'50px',fontSize:'24px' }}}*/ label = {<div><strong>Description</strong></div>} />  
           </Space>

@@ -67,9 +67,9 @@ export default ({ data,locations, ...rest }: Props) => {
             <ProCard bordered> 
                 <ProFormSelect 
                     label="City/ Province" 
-                    name={'province_id'}
+                    name={'provinceId'}
                     options={locations?.map((it) => {
-                        return { value: it.id, label: it.internal_name };
+                        return { value: it.id, label: it.internalName };
                     })}
                     fieldProps={{
                         onChange: (val) => {
@@ -81,9 +81,9 @@ export default ({ data,locations, ...rest }: Props) => {
                 {/*  */}
                 <ProFormSelect 
                     label="Khan/ District" 
-                    name={'district_id'}
+                    name={'districtId'}
                     options={district?.map((it) => {
-                        return { value: it.id, label: it.internal_name };
+                        return { value: it.id, label: it.internalName };
                     })}
                     fieldProps={{
                         onChange: (val) => {
@@ -95,15 +95,15 @@ export default ({ data,locations, ...rest }: Props) => {
                 {/*  */}
                 <ProFormSelect 
                     label="Sangkhat/ Commune" 
-                    name={'commune_id'}
+                    name={'communeId'}
                     options={commune?.map((it) => {
-                        return { value: it.id, label: it.internal_name };
+                        return { value: it.id, label: it.internalName };
                     })}
                 />
                 {/*  */}
-                <ProFormText label="House No" name={'home_no'} />  
+                <ProFormText label="House No" name={'homeNo'} />  
                 <ProFormText label="Street" name={'street'} /> 
-                <ProFormText label="Group/Village" name={'village_id'} />
+                <ProFormText label="Group/Village" name={'villageId'} />
                 <ProFormTextArea name={'remark'} label='Remark'/>
             </ProCard>
         </Spin>

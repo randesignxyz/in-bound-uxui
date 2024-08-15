@@ -40,15 +40,15 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
 
             columns={[
                 {
-                    title: "Degree", dataIndex: "degree_id",render: (dom, r) => {return lng[r.degree_id]}
+                    title: "Degree", dataIndex: "degreeId",render: (dom, r) => {return lng[r.degreeId]}
                 },{
-                    title: "Major/Subject", dataIndex: "marjor_subject"
+                    title: "Major/Subject", dataIndex: "marjorSubject"
                 },{
-                    title: "Education Center", dataIndex: "education_center"
+                    title: "Education Center", dataIndex: "educationCenter"
                 },{
-                    title: "Country of Education Center", dataIndex: "country_education_center",render: (dom, r) => {return lng[r.country_education_center]}
+                    title: "Country of Education Center", dataIndex: "countryEducationCenter",render: (dom, r) => {return lng[r.countryEducationCenter]}
                 },{
-                    title: "Status", dataIndex: "status_id",render: (dom, r) => {return lng[r.status_id]}
+                    title: "Status", dataIndex: "statusId",render: (dom, r) => {return lng[r.statusId]}
                 },{   width: '70px',
                     render: (dom, r) => {
                         return ( <Flex vertical={false} justify='space-between'>
@@ -79,15 +79,15 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
 
             columns={[
                 {
-                    title: "Degree", dataIndex: "degree_id",render: (dom, r) => {return lng[r.degree_id]}
+                    title: "Degree", dataIndex: "degreeId",render: (dom, r) => {return lng[r.degreeId]}
                 },{
-                    title: "Major/Subject", dataIndex: "marjor_subject"
+                    title: "Major/Subject", dataIndex: "marjorSubject"
                 },{
-                    title: "Education Center", dataIndex: "education_center"
+                    title: "Education Center", dataIndex: "educationCenter"
                 },{
-                    title: "Country of Education Center", dataIndex: "country_education_center",render: (dom, r) => {return lng[r.country_education_center]}
+                    title: "Country of Education Center", dataIndex: "countryEducationCenter",render: (dom, r) => {return lng[r.countryEducationCenter]}
                 },{
-                    title: "Status", dataIndex: "status_id",render: (dom, r) => {return lng[r.status_id]}
+                    title: "Status", dataIndex: "statusId",render: (dom, r) => {return lng[r.statusId]}
                 },{   width: '70px',
                     render: (dom, r) => {
                         return ( <Flex vertical={false} justify='space-between'>

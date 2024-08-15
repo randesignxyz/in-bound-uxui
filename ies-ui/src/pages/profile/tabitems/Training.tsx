@@ -67,7 +67,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
           content: 'Are you sure?',
           onOk: async () => {
             try {
-                data.other_file = createFileOther;
+                data.otherFile = createFileOther;
                 await ProfileServicesEss.saveTraining(data)(requestActions);
                 // const list = await ProfileServicesEss.listTraining(data.empId).query(requestActions);
                 // setTrainingList(list);
@@ -119,7 +119,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                     }}
                     columns={[
                         {
-                            title: "Training Courses", dataIndex: "training_course"
+                            title: "Training Courses", dataIndex: "trainingCourse"
                         },{
                             title: "Year", dataIndex: "year"
                         },{
@@ -173,7 +173,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
             );
             }}
             onFinish={(data) => { 
-                return saveTrainingHandler({ ...data, id: modalVisible?.type=='EDIT'?modalVisible?.payload?.training_id:(modalVisible?.payload?.id||0), empId: profile.id,status:true,type:modalVisible?.type });
+                return saveTrainingHandler({ ...data, id: modalVisible?.type=='EDIT'?modalVisible?.payload?.trainingId:(modalVisible?.payload?.id||0), empId: profile.id,status:true,type:modalVisible?.type });
             }}
         /> 
         {/*  */}

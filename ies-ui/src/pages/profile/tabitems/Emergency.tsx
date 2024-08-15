@@ -71,7 +71,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
           content: 'Are you sure?',
           onOk: async () => {
             try { 
-                data.other_file = createFileOther;
+                data.otherFile = createFileOther;
                 await ProfileServicesEss.saveEmergency(data)(requestActions); 
                 // call back fun
                 cb.onLoadData();
@@ -123,13 +123,13 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
 
                 columns={[ 
                     {
-                        title: "Emergency Name", dataIndex: "emergency_name"
+                        title: "Emergency Name", dataIndex: "emergencyName"
                     },{
-                        title: "Emergency Contact Relation", render: (dom, r) => {return lng[r.emergency_contact_relation]} 
+                        title: "Emergency Contact Relation", render: (dom, r) => {return lng[r.emergencyContactRelation]} 
                     },{
-                        title: "Emergency Phone", dataIndex: "emergency_phone"
+                        title: "Emergency Phone", dataIndex: "emergencyPhone"
                     },{
-                        title: "Emergency Address", dataIndex: "emergency_phone",render: (dom, r) => {return r.home_no+" "+r.street+" "+r.village_id}
+                        title: "Emergency Address", dataIndex: "emergencyPhone",render: (dom, r) => {return r.homeNo+" "+r.street+" "+r.villageId}
                     }, 
                     {   width: '70px',
                         render: (dom, r) => {
@@ -179,7 +179,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
             );
             }}
             onFinish={(data) => {
-                return saveEmergencyHandler({ ...data, id: modalVisible?.type=='EDIT'?modalVisible?.payload?.emergecy_id:(modalVisible?.payload?.id||0), empId: profile.id,status:true, type: modalVisible?.type });
+                return saveEmergencyHandler({ ...data, id: modalVisible?.type=='EDIT'?modalVisible?.payload?.emergecyId:(modalVisible?.payload?.id||0), empId: profile.id,status:true, type: modalVisible?.type });
             }}
         />
         

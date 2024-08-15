@@ -52,7 +52,7 @@ function Profile() {
       content: 'Do you want to start modify data?',
       onOk: async () => {
         try {  
-          await ProfileServicesEss.saveEssProfile({...profile?.profile_draft,id: profile?.id, empId: profile?.id,step:step_id,open_ess_id:profile?.ess.id,other_file:[],remark:'',status:true})(requestActions);  
+          await ProfileServicesEss.saveEssProfile({...profile?.profile_draft,id: profile?.id, empId: profile?.id,step:step_id,openEssId:profile?.ess.id,otherFile:[],remark:'',status:true})(requestActions);  
           initData();  
         } catch (error: any) {
           message.error(error.message || 'Failed to created.');
@@ -67,7 +67,7 @@ function Profile() {
       content: <div><ProFormTextArea name={"comment"} fieldProps={{onChange: (e) => {onTextChange(e.currentTarget.value);}}} placeholder={"Entry Message"} /></div>,
       onOk: async () => {
         try {
-          await ProfileServicesEss.approvalEssProfile({...profile?.profile_draft,id: profile?.id, empId: profile?.id,step:step_id,open_ess_id:profile?.ess.id,other_file:[],remark:_valueText,status:true})(requestActions);  
+          await ProfileServicesEss.approvalEssProfile({...profile?.profile_draft,id: profile?.id, empId: profile?.id,step:step_id,openEssId:profile?.ess.id,otherFile:[],remark:_valueText,status:true})(requestActions);  
           initData();  
         } catch (error: any) {
           message.error(error.message || 'Failed to created.');
@@ -82,7 +82,7 @@ function Profile() {
       content: 'Do you want to resubmit data?',
       onOk: async () => {
         try { 
-          await ProfileServicesEss.saveEssProfile({...profile?.profile_draft,id: profile?.id, empId: profile?.id,step:step_id,open_ess_id:profile?.ess.id,other_file:[],remark:'',status:true})(requestActions);  
+          await ProfileServicesEss.saveEssProfile({...profile?.profile_draft,id: profile?.id, empId: profile?.id,step:step_id,openEssId:profile?.ess.id,otherFile:[],remark:'',status:true})(requestActions);  
           initData();  
         } catch (error: any) {
           message.error(error.message || 'Failed to created.');
@@ -98,7 +98,7 @@ function Profile() {
       onOk: async () => {
         try { 
           // approval
-          await ProfileServicesEss.approvalEssProfile({...profile?.profile_draft,id: profile?.id, empId: profile?.id,step:step_id,open_ess_id:profile?.ess.id,other_file:[],remark:'',status:true})(requestActions);  
+          await ProfileServicesEss.approvalEssProfile({...profile?.profile_draft,id: profile?.id, empId: profile?.id,step:step_id,openEssId:profile?.ess.id,otherFile:[],remark:'',status:true})(requestActions);  
           // set 
           setStep(step_id);
           // reload
@@ -163,15 +163,15 @@ function Profile() {
   const operationTabList = [
     { 
       key: 'contact',
-      tab: <div style={{color: profile?.profileTab==null?'':profile?.profileTab.contact_information==0?'':'red'}}><PhoneOutlined /> Contact Information</div>,
+      tab: <div style={{color: profile?.profileTab==null?'':profile?.profileTab.contactInformation==0?'':'red'}}><PhoneOutlined /> Contact Information</div>,
     },
     {
       key: 'personal',
-      tab: <div style={{color: profile?.profileTab==null?'':profile?.profileTab.personal_information==0?'':'red'}}><UserOutlined/> Personal Information</div>, 
+      tab: <div style={{color: profile?.profileTab==null?'':profile?.profileTab.personalInformation==0?'':'red'}}><UserOutlined/> Personal Information</div>, 
     },
     {
       key: 'emergency',
-      tab: <div style={{color: profile?.profileTab==null?'':profile?.profileTab.emergency_contact==0?'':'red'}}><ThunderboltOutlined /> Emergency Contact</div>,  
+      tab: <div style={{color: profile?.profileTab==null?'':profile?.profileTab.emergencyContact==0?'':'red'}}><ThunderboltOutlined /> Emergency Contact</div>,  
     },
     {
       key: 'education',
@@ -187,7 +187,7 @@ function Profile() {
     },
     {
       key: 'experience',
-      tab: <div style={{color: profile?.profileTab==null?'':profile?.profileTab.work_experiences==0?'':'red'}}><SisternodeOutlined /> Work Experiences</div>,   
+      tab: <div style={{color: profile?.profileTab==null?'':profile?.profileTab.workExperiences==0?'':'red'}}><SisternodeOutlined /> Work Experiences</div>,   
     },
     {
       key: 'attachmentfiles',

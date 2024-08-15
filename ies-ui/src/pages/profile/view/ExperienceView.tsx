@@ -38,17 +38,17 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
             }}
             columns={[
                 {
-                    title: "Company Name", dataIndex: "company_name"
+                    title: "Company Name", dataIndex: "companyName"
                 },{
                     title: "Location", dataIndex: "location"
                 }, {
-                    title: "Started Position", dataIndex: 'start_position'
+                    title: "Started Position", dataIndex: 'startPosition'
                 },{
-                    title: "Ended Position", dataIndex: 'end_position'
+                    title: "Ended Position", dataIndex: 'endPosition'
                 },{
-                    title: "Started Date", dataIndex: 'start_date'
+                    title: "Started Date", dataIndex: 'startDate'
                 },{
-                    title: "Ended Date", dataIndex: 'end_date'
+                    title: "Ended Date", dataIndex: 'endDate'
                 },{   width: '70px',
                     render: (dom, r) => {
                         return ( <Flex vertical={false} justify='space-between'>
@@ -77,17 +77,17 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
             }}
             columns={[
                 {
-                    title: "Company Name", dataIndex: "company_name"
+                    title: "Company Name", dataIndex: "companyName"
                 },{
                     title: "Location", dataIndex: "location"
                 }, {
-                    title: "Started Position", dataIndex: 'start_position'
+                    title: "Started Position", dataIndex: 'startPosition'
                 },{
-                    title: "Ended Position", dataIndex: 'end_position'
+                    title: "Ended Position", dataIndex: 'endPosition'
                 },{
-                    title: "Started Date", dataIndex: 'start_date'
+                    title: "Started Date", dataIndex: 'startDate'
                 },{
-                    title: "Ended Date", dataIndex: 'end_date'
+                    title: "Ended Date", dataIndex: 'endDate'
                 },{   width: '70px',
                     render: (dom, r) => {
                         return ( <Flex vertical={false} justify='space-between'>

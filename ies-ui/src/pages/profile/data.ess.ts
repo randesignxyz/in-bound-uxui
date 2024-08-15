@@ -1,44 +1,44 @@
 
 export interface SaveEssProfile {
   id?: number; 
-  ess_prof_id?: number; 
+  essProfId?: number; 
   empId:number;
-  name_kh: string; 
-  name_en: string; 
-  gender_id   : number; 
-  date_birth  : string;  
-  place_birth : string;  
-  marital_status_id    : number;  
-  province_pb_id    : number;  
-  district_pb_id    : number;   
-  commune_pb_id    : number;  
+  nameKh: string; 
+  nameEn: string; 
+  genderId   : number; 
+  dateBirth  : string;  
+  placeBirth : string;  
+  maritalStatusId    : number;  
+  provincePbId    : number;  
+  districtPbId    : number;   
+  communePbId    : number;  
   
-  province_pa_id    : number;  
-  district_pa_id    : number;   
-  commune_pa_id    : number;  
-  home_pa_no : string;  
-  street_pa : string;  
-  village_pa_id : string;  
+  provincePaId    : number;  
+  districtPaId    : number;   
+  communePaId    : number;  
+  homePaNo : string;  
+  streetPa : string;  
+  villagePaId : string;  
 
-  province_cr_id    : number;  
-  district_cr_id    : number;   
-  commune_cr_id    : number;  
-  home_cr_no : string;  
-  street_cr : string;  
-  village_cr_id : string;  
+  provinceCrId    : number;  
+  districtCrId    : number;   
+  communeCrId    : number;  
+  homeCrNo : string;  
+  streetCr : string;  
+  villageCrId : string;  
 
-  permanent_address : string;  
-  religion_id    : number;  
-  step_id    : number;  
-  current_address   : string;  
-  national_id : string;  
-  passport_number   : string;   
-  department_id     : number;  
+  permanentAddress : string;  
+  religionId    : number;  
+  stepId    : number;  
+  currentAddress   : string;  
+  nationalId : string;  
+  passportNumber   : string;   
+  departmentId     : number;  
   status      : Boolean;
   step      : number; 
   remark:string;
   attacheFile: AttachmentFile[];
-  other_file  :AttachmentFile[];
+  otherFile  :AttachmentFile[];
 }
 export interface AttachmentFile {
   uri: any;
@@ -53,53 +53,53 @@ export interface AttachmentFile {
 export interface EssProfileData {
   id?   : number; 
   empId :number;
-  name_kh : string; 
-  name_en : string;  
-  gender_id   : number; 
-  date_birth  : string;  
-  place_birth : string;  
-  marital_status_id    : number;  
-  permanent_address : string;  
-  religion_id    : number;  
-  current_address   : string;  
-  national_id : string;    
-  passport_number   : string;   
-  department_id     : number;  
+  nameKh : string; 
+  nameEn : string;  
+  genderId   : number; 
+  dateBirth  : string;  
+  placeBirth : string;  
+  maritalStatusId    : number;  
+  permanentAddress : string;  
+  religionId    : number;  
+  currentAddress   : string;  
+  nationalId : string;    
+  passportNumber   : string;   
+  departmentId     : number;  
   status      : Boolean; 
-  other_file  :FilesData[];
+  otherFile  :FilesData[];
 }  
 export interface SaveEmergency {
   id?: number; 
   empId:number;
-  emergency_name: string; 
-  emergency_contact_relation: string; 
-  emergency_phone: string;  
+  emergencyName: string; 
+  emergencyContactRelation: string; 
+  emergencyPhone: string;  
   
-  province_id: number;
-  district_id: number;
-  commune_id: number;
+  provinceId: number;
+  districtId: number;
+  communeId: number;
 
-  home_no: number;
+  homeNo: number;
   street: number;
-  village_id: number;
+  villageId: number;
 
   status:Boolean;
   type:string;
-  other_file  :AttachmentFile[];
+  otherFile  :AttachmentFile[];
 }  
 export interface EmergencyData {
   id?: number; 
   empId:number;
-  emergency_name: string; 
-  emergency_contact_relation: string; 
-  emergency_phone: string; 
-  emergency_address: string; 
+  emergencyName: string; 
+  emergencyContactRelation: string; 
+  emergencyPhone: string; 
+  emergencyAddress: string; 
   status:Boolean;
-  province_id: number;
-  district_id: number;
-  commune_id : number;
-  emergecy_id : number;
-  other_file  :AttachmentFile[];
+  provinceId: number;
+  districtId: number;
+  communeId : number;
+  emergecyId : number;
+  otherFile  :AttachmentFile[];
 }
 // 
 export interface ProfileEmergencyData { 
@@ -114,23 +114,23 @@ export interface ProfileEmergencyData {
 export interface SaveLanguage {
   id?: number; 
   empId:number;
-  language_id: number; 
-  level_name: string; 
+  languageId: number; 
+  levelName: string; 
   description: string;  
   status:Boolean;
   type:string;
-  other_file  :AttachmentFile[];
+  otherFile  :AttachmentFile[];
 }  
 export interface LanguageData {
   id?: number; 
   empId:number;
-  ref_id:number;
-  language_id: number; 
-  language_name: number; 
-  level_name: string; 
+  refId:number;
+  languageId: number; 
+  languageName: number; 
+  levelName: string; 
   description: string;  
   status:Boolean; 
-  other_file  :AttachmentFile[];
+  otherFile  :AttachmentFile[];
 }
 export interface ProfileLanguageData { 
   data     : LanguageData[];  
@@ -139,28 +139,28 @@ export interface ProfileLanguageData {
   fileOldData     : FilesData[];  
   fileNewData     : FilesData[];   
   fileAllData     : FilesData[];   
-  other_file  :AttachmentFile[];
+  otherFile  :AttachmentFile[];
 }   
 
 export interface SaveTraining {
   id?: number;   
   empId:number;
-  training_course: string; 
+  trainingCourse: string; 
   year: string; 
   description: string;  
   status:Boolean;
   type:string;
-  other_file  :AttachmentFile[];
+  otherFile  :AttachmentFile[];
 }  
 export interface TrainingData {
   id?: number; 
-  training_id?: number; 
+  trainingId?: number; 
   empId:number;
-  training_course: string; 
+  trainingCourse: string; 
   year: string; 
   description: string;  
   status:Boolean;
-  other_file  :AttachmentFile[];
+  otherFile  :AttachmentFile[];
 }
 export interface ProfileTrainingData { 
   data     : TrainingData[];  
@@ -174,30 +174,30 @@ export interface ProfileTrainingData {
 export interface SaveExperience {
   id?: number;   
   empId:number;
-  company_name: string; 
+  companyName: string; 
   location: string; 
-  start_position: string; 
-  end_position: string; 
-  start_date: string; 
-  end_date: string; 
+  startPosition: string; 
+  endPosition: string; 
+  startDate: string; 
+  endDate: string; 
   description: string;  
   status:Boolean;
   type:string;
-  other_file  :AttachmentFile[];
+  otherFile  :AttachmentFile[];
 }  
 export interface ExperienceData {
   id?: number; 
-  experience_id:number;
+  experienceId:number;
   empId:number;
-  company_name: string; 
+  companyName: string; 
   location: string; 
-  start_position: string; 
-  end_position: string; 
-  start_date: string; 
-  end_date: string; 
+  startPosition: string; 
+  endPosition: string; 
+  startDate: string; 
+  endDate: string; 
   description: string;  
   status:Boolean;
-  other_file  :AttachmentFile[];
+  otherFile  :AttachmentFile[];
 }
 export interface ProfileExperienceData { 
   data     : ExperienceData[];  
@@ -210,17 +210,17 @@ export interface ProfileExperienceData {
 // education
 export interface EducationData {
   id?: number; 
-  education_id:number;
-  ref_id:number;
+  educationId:number;
+  refId:number;
   empId:number;
-  country_education_center: number; 
-  degree_id: number; 
-  status_id:number;
-  education_center: string; 
-  marjor_subject: string;  
+  countryEducationCenter: number; 
+  degreeId: number; 
+  statusId:number;
+  educationCenter: string; 
+  marjorSubject: string;  
   type: string; 
   status:boolean;
-  other_file  :AttachmentFile[];
+  otherFile  :AttachmentFile[];
 }
 export interface ProfileEducationData { 
   data     : EducationData[];  
@@ -235,17 +235,17 @@ export interface LocationData {
   id?: number; 
   empId:number;
   code:string;
-  internal_name: string; 
+  internalName: string; 
   parent: number; 
   type: string; 
   
-  province_id:number;
-  district_id:number;
-  commune_id:number;
-  home_no: string;
+  provinceId:number;
+  districtId:number;
+  communeId:number;
+  homeNo: string;
   street:string;
-  village_id:string;
-  type_id:number;
+  villageId:string;
+  typeId:number;
   status:number;
   remark :string;
 }
@@ -254,10 +254,10 @@ export interface FilesData {
   id?: string;  
   path:string;
   description: string;  
-  file_name: string;  
-  file_type: string;  
+  fileName: string;  
+  fileType: string;  
   title: string;  
-  created_date: moment.Moment;
+  createdDate: moment.Moment;
 } 
 
 export interface ActivityData {
@@ -265,6 +265,6 @@ export interface ActivityData {
   description: string;  
   step: number;  
   remark: string;   
-  created_date: moment.Moment;
-  created_by:string;
+  createdDate: moment.Moment;
+  createdBy:string;
 } 

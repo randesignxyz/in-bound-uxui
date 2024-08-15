@@ -37,14 +37,14 @@ export default ({ data,profile_draft,locations,files, ...rest }: Props) => {
         form.setFieldsValue(data!!);
         if(!!data){
             //place of birth
-            districtList(data!!.province_pb_id,1);
-            communeList(data!!.district_pb_id,1);
+            districtList(data!!.provincePbId,1);
+            communeList(data!!.districtPbId,1);
             //permenance address
-            districtList(data!!.province_pa_id,2);
-            communeList(data!!.district_pa_id,2);
+            districtList(data!!.provincePaId,2);
+            communeList(data!!.districtPaId,2);
             //current address
-            districtList(data!!.province_cr_id,3);
-            communeList(data!!.district_cr_id,3);
+            districtList(data!!.provinceCrId,3);
+            communeList(data!!.districtCrId,3);
         }  
     };  
     // 
@@ -109,23 +109,23 @@ export default ({ data,profile_draft,locations,files, ...rest }: Props) => {
             > 
             <Spin spinning = {isLoading}> 
                 <ProCard bordered>
-                    <ProFormText label="Name KH" name={'name_kh'} />
+                    <ProFormText label="Name KH" name={'nameKh'} />
                     <ProFormText hidden={profile_draft==null?true:false} allowClear={false} 
-                        fieldProps={{ style: { color:'red',marginTop:'-10px' },value:`${profile_draft==null?'':profile_draft!!.name_kh!!}`}}  />  
-                    <ProFormText label="Name EN" name={'name_en'} />
+                        fieldProps={{ style: { color:'red',marginTop:'-10px' },value:`${profile_draft==null?'':profile_draft!!.nameKh!!}`}}  />  
+                    <ProFormText label="Name EN" name={'nameEn'} />
                     <ProFormText hidden={profile_draft==null?true:false} allowClear={false} 
-                        fieldProps={{ style: { color:'red',marginTop:'-10px' },value:`${profile_draft==null?'':profile_draft!!.name_en!!}`}}  />  
+                        fieldProps={{ style: { color:'red',marginTop:'-10px' },value:`${profile_draft==null?'':profile_draft!!.nameEn!!}`}}  />  
                     <Row>
                         <Col span={12}>
                             <ProFormDatePicker label="Date of Birth" name={'date_birth'} />
                             <ProFormText hidden={profile_draft==null?true:false} allowClear={false} 
-                                fieldProps={{ style: { color:'red',marginTop:'-10px' },value:`${profile_draft==null?'':profile_draft!!.date_birth!!}`}}  />  
+                                fieldProps={{ style: { color:'red',marginTop:'-10px' },value:`${profile_draft==null?'':profile_draft!!.dateBirth!!}`}}  />  
                         </Col>                
                         <Col span={12}>
                             <ProFormSelect 
                                 label="Gender"
                                 // disabled = {!!data}
-                                name={'gender_id'}
+                                name={'genderId'}
                                 mode="single" 
                                 options={[
                                         { value: 1, label: "Male" },
@@ -133,7 +133,7 @@ export default ({ data,profile_draft,locations,files, ...rest }: Props) => {
                                     ]}  
                             />
                             <ProFormText hidden={profile_draft==null?true:false} allowClear={false} 
-                                fieldProps={{ style: { color:'red',marginTop:'-10px' },value:`${profile_draft==null?'':MF[profile_draft!!.gender_id!!]}`}}  />  
+                                fieldProps={{ style: { color:'red',marginTop:'-10px' },value:`${profile_draft==null?'':MF[profile_draft!!.genderId!!]}`}}  />  
                         </Col>
                     </Row> 
                     {/* <ProFormText label="Place of Birth" name={'place_birth'} />  */}
@@ -141,7 +141,7 @@ export default ({ data,profile_draft,locations,files, ...rest }: Props) => {
                         <Col span={12} style={{padding:'3px'}}>
                             <ProFormSelect 
                                 label="Marital Status"
-                                name={'marital_status_id'}
+                                name={'maritalStatusId'}
                                 options={[
                                     { value: 1, label: "Single" },
                                     { value: 2, label: "Married"},
@@ -151,12 +151,12 @@ export default ({ data,profile_draft,locations,files, ...rest }: Props) => {
                                 // options={lookupList.filter(it => it.type == 'CONTACT_TYPE').map(it => ({ label: it.name, value: it.id }))}
                             />
                             <ProFormText hidden={profile_draft==null?true:false} allowClear={false} 
-                                fieldProps={{ style: { color:'red',marginTop:'-10px' },value:`${profile_draft==null?'':MarriedStatus[profile_draft!!.marital_status_id!!]}`}}  />  
+                                fieldProps={{ style: { color:'red',marginTop:'-10px' },value:`${profile_draft==null?'':MarriedStatus[profile_draft!!.maritalStatusId!!]}`}}  />  
                         </Col>                
                         <Col span={12} style={{padding:'3px'}}>     
                             <ProFormSelect 
                                 label="Religion"
-                                name={'religion_id'}
+                                name={'religionId'}
                                 options={[
                                     { value: 1, label: "Buddhism" },
                                     { value: 2, label: "Islam"}   
@@ -164,20 +164,20 @@ export default ({ data,profile_draft,locations,files, ...rest }: Props) => {
                                 // options={lookupList.filter(it => it.type == 'CONTACT_TYPE').map(it => ({ label: it.name, value: it.id }))}
                             />
                             <ProFormText hidden={profile_draft==null?true:false} allowClear={false} 
-                                fieldProps={{ style: { color:'red',marginTop:'-10px' },value:`${profile_draft==null?'':Rg[profile_draft!!.religion_id!!]}`}}  />  
+                                fieldProps={{ style: { color:'red',marginTop:'-10px' },value:`${profile_draft==null?'':Rg[profile_draft!!.religionId!!]}`}}  />  
                         </Col>       
                     </Row>
                     
                     <Row>
                         <Col span={12} style={{padding:'3px'}}>
-                            <ProFormText label="National ID" name={'national_id'} rules={[{max: 16,message: "Value should be less than 17 character"}]}/>
+                            <ProFormText label="National ID" name={'nationalId'} rules={[{max: 16,message: "Value should be less than 17 character"}]}/>
                             <ProFormText hidden={profile_draft==null?true:false} allowClear={false} 
-                                fieldProps={{ style: { color:'red',marginTop:'-10px' },value:`${profile_draft==null?'':profile_draft!!.national_id!!}`}}  />  
+                                fieldProps={{ style: { color:'red',marginTop:'-10px' },value:`${profile_draft==null?'':profile_draft!!.nationalId!!}`}}  />  
                         </Col>                
                         <Col span={12} style={{padding:'3px'}}>  
-                            <ProFormText label="Passport Number" name={'passport_number'} rules={[{max: 16,message: "Value should be less than 17 character"}]} />
+                            <ProFormText label="Passport Number" name={'passportNumber'} rules={[{max: 16,message: "Value should be less than 17 character"}]} />
                             <ProFormText hidden={profile_draft==null?true:false} allowClear={false} 
-                                fieldProps={{ style: { color:'red',marginTop:'-10px' },value:`${profile_draft==null?'':profile_draft!!.passport_number!!}`}}  />  
+                                fieldProps={{ style: { color:'red',marginTop:'-10px' },value:`${profile_draft==null?'':profile_draft!!.passportNumber!!}`}}  />  
                         </Col>                
                     </Row>
                     {/* <ProFormText label="Current Address" name={'current_address'} />
@@ -191,7 +191,7 @@ export default ({ data,profile_draft,locations,files, ...rest }: Props) => {
                             <ProFormSelect 
                                 label="Relationship"
                                 // disabled = {!!data}
-                                name={'relationship_id'}
+                                name={'relationshipId'}
                                 options={[
                                     { value: 1, label: "Hushand" },
                                     { value: 2, label: "Wife"},
@@ -202,12 +202,12 @@ export default ({ data,profile_draft,locations,files, ...rest }: Props) => {
                                 // options={lookupList.filter(it => it.type == 'CONTACT_TYPE').map(it => ({ label: it.name, value: it.id }))}
                             />
                             <ProFormText hidden={profile_draft==null?true:false} allowClear={false} 
-                                fieldProps={{ style: { color:'red',marginTop:'-10px' },value:`${profile_draft==null?'':relship[profile_draft!!.relationship_id!!]}`}}  />  
+                                fieldProps={{ style: { color:'red',marginTop:'-10px' },value:`${profile_draft==null?'':relship[profile_draft!!.relationshipId!!]}`}}  />  
                         </Col>                
                         <Col span={8} style={{padding:'3px'}}>       
                             <ProFormSelect 
                                 label="Occupation"
-                                name={'occupation_id'}
+                                name={'occupationId'}
                                 options={[
                                     { value: 1, label: "Housewife" },
                                     { value: 2, label: "Student"},
@@ -217,14 +217,14 @@ export default ({ data,profile_draft,locations,files, ...rest }: Props) => {
                                 // options={lookupList.filter(it => it.type == 'CONTACT_TYPE').map(it => ({ label: it.name, value: it.id }))}
                             />
                             <ProFormText hidden={profile_draft==null?true:false} allowClear={false} 
-                                fieldProps={{ style: { color:'red',marginTop:'-10px' },value:`${profile_draft==null?'':oc[profile_draft!!.occupation_id!!]}`}}  />  
+                                fieldProps={{ style: { color:'red',marginTop:'-10px' },value:`${profile_draft==null?'':oc[profile_draft!!.occupationId!!]}`}}  />  
                         </Col>                 
                         <Col span={8} style={{padding:'3px'}}>       
                             <ProFormDatePicker 
                                 label="Date of Birth"
                                 name={'depend_date_of_birth'}/>
                             <ProFormText hidden={profile_draft==null?true:false} allowClear={false} 
-                                fieldProps={{ style: { color:'red',marginTop:'-10px' },value:`${profile_draft==null?'':profile_draft!!.depend_date_of_birth!!}`}}  />  
+                                fieldProps={{ style: { color:'red',marginTop:'-10px' },value:`${profile_draft==null?'':profile_draft!!.dependDateOfBirth!!}`}}  />  
                         </Col> 
                     </Row>
 
@@ -235,9 +235,9 @@ export default ({ data,profile_draft,locations,files, ...rest }: Props) => {
                 <ProCard bordered>
                     <ProFormSelect 
                         label="City/ Province" 
-                        name={'province_pb_id'}
+                        name={'provincePbId'}
                         options={locations?.map((it) => {
-                            return { value: it.id, label: it.internal_name };
+                            return { value: it.id, label: it.internalName };
                         })}
                         fieldProps={{
                             onChange: (val) => {
@@ -246,18 +246,18 @@ export default ({ data,profile_draft,locations,files, ...rest }: Props) => {
                             }, 
                         }}
                     />    
-                    <Select defaultValue={profile_draft==null?'':profile_draft!!.province_pb_id} style={{width:'100%',marginTop:'-20px',marginBottom:'15px',color:'red!important;'}}
+                    <Select defaultValue={profile_draft==null?'':profile_draft!!.provincePbId} style={{width:'100%',marginTop:'-20px',marginBottom:'15px',color:'red!important;'}}
                         options={locations?.map((it) => {
-                            return { value: it.id, label: it.internal_name };
+                            return { value: it.id, label: it.internalName };
                         })}
                     />
  
                     {/*  */}
                     <ProFormSelect 
                         label="Khan/ District" 
-                        name={'district_pb_id'}
+                        name={'districtPbId'}
                         options={districtPB?.map((it) => {
-                            return { value: it.id, label: it.internal_name };
+                            return { value: it.id, label: it.internalName };
                         })}
                         fieldProps={{
                             onChange: (val) => {
@@ -266,22 +266,22 @@ export default ({ data,profile_draft,locations,files, ...rest }: Props) => {
                             }, 
                         }}
                     />         
-                    <Select defaultValue={profile_draft==null?'':profile_draft!!.district_pb_id} style={{width:'100%',marginTop:'-20px',marginBottom:'15px',color:'red!important;'}}
+                    <Select defaultValue={profile_draft==null?'':profile_draft!!.districtPbId} style={{width:'100%',marginTop:'-20px',marginBottom:'15px',color:'red!important;'}}
                         options={districtPB?.map((it) => {
-                            return { value: it.id, label: it.internal_name };
+                            return { value: it.id, label: it.internalName };
                         })}
                     />
                     {/*  */}
                     <ProFormSelect 
                         label="Sangkhat/ Commune" 
-                        name={'commune_pb_id'}
+                        name={'communePbId'}
                         options={communePB?.map((it) => {
-                            return { value: it.id, label: it.internal_name };
+                            return { value: it.id, label: it.internalName };
                         })}
                     />
-                    <Select defaultValue={profile_draft==null?'':profile_draft!!.commune_pb_id} style={{width:'100%',marginTop:'-20px',marginBottom:'15px',color:'red!important;'}}
+                    <Select defaultValue={profile_draft==null?'':profile_draft!!.communePbId} style={{width:'100%',marginTop:'-20px',marginBottom:'15px',color:'red!important;'}}
                         options={communePB?.map((it) => {
-                            return { value: it.id, label: it.internal_name };
+                            return { value: it.id, label: it.internalName };
                         })}
                     />
                 </ProCard>
@@ -291,9 +291,9 @@ export default ({ data,profile_draft,locations,files, ...rest }: Props) => {
                 <ProCard bordered>
                     <ProFormSelect 
                         label="City/ Province" 
-                        name={'province_pa_id'}
+                        name={'provincePaId'}
                         options={locations?.map((it) => {
-                            return { value: it.id, label: it.internal_name };
+                            return { value: it.id, label: it.internalName };
                         })}
                         fieldProps={{
                             onChange: (val) => {
@@ -302,17 +302,17 @@ export default ({ data,profile_draft,locations,files, ...rest }: Props) => {
                             }, 
                         }}
                     />         
-                    <Select defaultValue={profile_draft==null?'':profile_draft!!.province_pa_id} style={{width:'100%',marginTop:'-20px',marginBottom:'15px',color:'red!important;'}}
+                    <Select defaultValue={profile_draft==null?'':profile_draft!!.provincePaId} style={{width:'100%',marginTop:'-20px',marginBottom:'15px',color:'red!important;'}}
                         options={locations?.map((it) => {
-                            return { value: it.id, label: it.internal_name };
+                            return { value: it.id, label: it.internalName };
                         })}
                     />
                     {/*  */}
                     <ProFormSelect 
                         label="Khan/ District" 
-                        name={'district_pa_id'}
+                        name={'districtPaId'}
                         options={districtPA?.map((it) => {
-                            return { value: it.id, label: it.internal_name };
+                            return { value: it.id, label: it.internalName };
                         })}
                         fieldProps={{
                             onChange: (val) => {
@@ -321,35 +321,35 @@ export default ({ data,profile_draft,locations,files, ...rest }: Props) => {
                             }, 
                         }}
                     />      
-                    <Select defaultValue={profile_draft==null?'':profile_draft!!.district_pa_id} style={{width:'100%',marginTop:'-20px',marginBottom:'15px',color:'red!important;'}}
+                    <Select defaultValue={profile_draft==null?'':profile_draft!!.districtPaId} style={{width:'100%',marginTop:'-20px',marginBottom:'15px',color:'red!important;'}}
                         options={districtPA?.map((it) => {
-                            return { value: it.id, label: it.internal_name };
+                            return { value: it.id, label: it.internalName };
                         })}
                     />   
                     {/*  */}
                     <ProFormSelect 
                         label="Sangkhat/ Commune" 
-                        name={'commune_pa_id'}
+                        name={'communePaId'}
                         options={communePA?.map((it) => {
-                            return { value: it.id, label: it.internal_name };
+                            return { value: it.id, label: it.internalName };
                         })}
                     />
-                    <Select defaultValue={profile_draft==null?'':profile_draft!!.commune_pa_id} style={{width:'100%',marginTop:'-20px',marginBottom:'15px',color:'red!important;'}}
+                    <Select defaultValue={profile_draft==null?'':profile_draft!!.communePaId} style={{width:'100%',marginTop:'-20px',marginBottom:'15px',color:'red!important;'}}
                         options={communePA?.map((it) => {
-                            return { value: it.id, label: it.internal_name };
+                            return { value: it.id, label: it.internalName };
                         })}
                     />
                     {/*  */}
-                    <ProFormText label="House No" name={'home_pa_no'} />  
+                    <ProFormText label="House No" name={'homePaNo'} />  
                     <ProFormText hidden={profile_draft==null?true:false} allowClear={false} 
-                        fieldProps={{ style: { color:'red',marginTop:'-10px' },value:`${profile_draft==null?'':profile_draft!!.home_pa_no!!}`}}  />  
-                    <ProFormText label="Street" name={'street_pa'} /> 
+                        fieldProps={{ style: { color:'red',marginTop:'-10px' },value:`${profile_draft==null?'':profile_draft!!.homePaNo!!}`}}  />  
+                    <ProFormText label="Street" name={'streetPa'} /> 
                     <ProFormText hidden={profile_draft==null?true:false} allowClear={false} 
-                        fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.street_pa}`}}  />  
-                    <ProFormText label="Group/Village" name={'village_pa_id'} />
+                        fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.streetPa}`}}  />  
+                    <ProFormText label="Group/Village" name={'villagePaId'} />
                     <ProFormText hidden={profile_draft==null?true:false} allowClear={false} 
-                        fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.village_pa_id}`}}  />  
-                    {/* <ProFormTextArea name={'remark_pa'} label='Remark'/> */}
+                        fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.villagePaId}`}}  />  
+                    {/* <ProFormTextArea name={'remarkPa'} label='Remark'/> */}
                 </ProCard>
 
                 {/* current address  */}
@@ -357,9 +357,9 @@ export default ({ data,profile_draft,locations,files, ...rest }: Props) => {
                 <ProCard bordered>
                     <ProFormSelect 
                         label="City/ Province" 
-                        name={'province_cr_id'}
+                        name={'provinceCrId'}
                         options={locations?.map((it) => {
-                            return { value: it.id, label: it.internal_name };
+                            return { value: it.id, label: it.internalName };
                         })}
                         fieldProps={{
                             onChange: (val) => {
@@ -368,17 +368,17 @@ export default ({ data,profile_draft,locations,files, ...rest }: Props) => {
                             }, 
                         }}
                     />     
-                    <Select defaultValue={profile_draft==null?'':profile_draft!!.province_cr_id} style={{width:'100%',marginTop:'-20px',marginBottom:'15px',color:'red!important;'}}
+                    <Select defaultValue={profile_draft==null?'':profile_draft!!.provinceCrId} style={{width:'100%',marginTop:'-20px',marginBottom:'15px',color:'red!important;'}}
                         options={locations?.map((it) => {
-                            return { value: it.id, label: it.internal_name };
+                            return { value: it.id, label: it.internalName };
                         })}
                     />    
                     {/*  */}
                     <ProFormSelect 
                         label="Khan/ District" 
-                        name={'district_cr_id'}
+                        name={'districtCrId'}
                         options={districtCA?.map((it) => {
-                            return { value: it.id, label: it.internal_name };
+                            return { value: it.id, label: it.internalName };
                         })}
                         fieldProps={{
                             onChange: (val) => {
@@ -387,32 +387,32 @@ export default ({ data,profile_draft,locations,files, ...rest }: Props) => {
                             }, 
                         }}
                     />    
-                    <Select defaultValue={profile_draft==null?'':profile_draft!!.district_cr_id} style={{width:'100%',marginTop:'-20px',marginBottom:'15px',color:'red!important;'}}
+                    <Select defaultValue={profile_draft==null?'':profile_draft!!.districtCrId} style={{width:'100%',marginTop:'-20px',marginBottom:'15px',color:'red!important;'}}
                         options={districtCA?.map((it) => {
-                            return { value: it.id, label: it.internal_name };
+                            return { value: it.id, label: it.internalName };
                         })}
                     />     
                     {/*  */}
                     <ProFormSelect 
                         label="Sangkhat/ Commune" 
-                        name={'commune_cr_id'}
+                        name={'communeCrId'}
                         options={communeCA?.map((it) => {
-                            return { value: it.id, label: it.internal_name };
+                            return { value: it.id, label: it.internalName };
                         })}
                     />
-                    <Select defaultValue={profile_draft==null?'':profile_draft!!.commune_cr_id} style={{width:'100%',marginTop:'-20px',marginBottom:'15px',color:'red!important;'}}
+                    <Select defaultValue={profile_draft==null?'':profile_draft!!.communeCrId} style={{width:'100%',marginTop:'-20px',marginBottom:'15px',color:'red!important;'}}
                         options={communeCA?.map((it) => {
-                            return { value: it.id, label: it.internal_name };
+                            return { value: it.id, label: it.internalName };
                         })}
                     />
                     {/*  */}
-                    <ProFormText label="House No" name={'home_cr_no'} />  
-                    <ProFormText hidden={profile_draft==null?true:false} allowClear={false} fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.home_cr_no!!}`}}  /> 
-                    <ProFormText label="Street" name={'street_cr'} /> 
-                    <ProFormText hidden={profile_draft==null?true:false} allowClear={false} fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.street_cr}`}}  /> 
-                    <ProFormText label="Group/Village" name={'village_cr_id'} />
-                    <ProFormText hidden={profile_draft==null?true:false} allowClear={false} fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.village_cr_id}`}}  />   
-                    {/* <ProFormTextArea name={'remark_ca'} label='Remark'/> */}
+                    <ProFormText label="House No" name={'homeCrNo'} />  
+                    <ProFormText hidden={profile_draft==null?true:false} allowClear={false} fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.homeCrNo!!}`}}  /> 
+                    <ProFormText label="Street" name={'streetCr'} /> 
+                    <ProFormText hidden={profile_draft==null?true:false} allowClear={false} fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.streetCr}`}}  /> 
+                    <ProFormText label="Group/Village" name={'villageCrId'} />
+                    <ProFormText hidden={profile_draft==null?true:false} allowClear={false} fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.villageCrId}`}}  />   
+                    {/* <ProFormTextArea name={'remarkCa'} label='Remark'/> */}
                 </ProCard> 
                 {/* Attachment files  */} 
                 <div style={{marginTop:'10px'}}>

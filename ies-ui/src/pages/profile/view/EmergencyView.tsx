@@ -40,13 +40,13 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
 
             columns={[
                 {
-                    title: "Emergency Name", dataIndex: "emergency_name"
+                    title: "Emergency Name", dataIndex: "emergencyName"
                 },{
-                    title: "Emergency Contact Relation", render: (dom, r) => {return lng[r.emergency_contact_relation]} 
+                    title: "Emergency Contact Relation", render: (dom, r) => {return lng[r.emergencyContactRelation]} 
                 },{
-                    title: "Emergency Phone", dataIndex: "emergency_phone"
+                    title: "Emergency Phone", dataIndex: "emergencyPhone"
                 },{
-                    title: "Emergency Address", dataIndex: "emergency_phone",render: (dom, r) => {return r.home_no+" "+r.street+" "+r.village_id}
+                    title: "Emergency Address", dataIndex: "emergencyPhone",render: (dom, r) => {return r.homeNo+" "+r.street+" "+r.villageId}
                 },{   width: '70px',
                     render: (dom, r) => {
                         return ( <Flex vertical={false} justify='space-between'>
@@ -76,13 +76,13 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
 
             columns={[ 
                 {
-                    title: "Emergency Name", dataIndex: "emergency_name"
+                    title: "Emergency Name", dataIndex: "emergencyName"
                 },{
-                    title: "Emergency Contact Relation", render: (dom, r) => {return lng[r.emergency_contact_relation]} 
+                    title: "Emergency Contact Relation", render: (dom, r) => {return lng[r.emergencyContactRelation]} 
                 },{
-                    title: "Emergency Phone", dataIndex: "emergency_phone"
+                    title: "Emergency Phone", dataIndex: "emergencyPhone"
                 },{
-                    title: "Emergency Address", dataIndex: "emergency_phone",render: (dom, r) => {return r.home_no+" "+r.street+" "+r.village_id}
+                    title: "Emergency Address", dataIndex: "emergencyPhone",render: (dom, r) => {return r.homeNo+" "+r.street+" "+r.villageId}
                 },{   width: '70px',
                     render: (dom, r) => {
                         return ( <Flex vertical={false} justify='space-between'>

@@ -57,7 +57,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
             content: 'Are you sure?',
             onOk: async () => {
               try { 
-                bmForm.other_file = createFileOther;  
+                bmForm.otherFile = createFileOther;  
                 bmForm.id = (!!data!!?data!!.id:0);
                 bmForm.empId = empId;
                 bmForm.status=true;
@@ -75,11 +75,11 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
         //     form.resetFields(); 
         //     form.setFieldsValue({
         //         id: data?.id,
-        //         degree_id: data?.degree_id,
-        //         status_id: data?.status_id,
-        //         country_education_center: data?.country_education_center,
-        //         education_center: data?.education_center,
-        //         marjor_subject: data?.marjor_subject,
+        //         degreeId: data?.degreeId,
+        //         statusId: data?.statusId,
+        //         countryEducationCenter: data?.countryEducationCenter,
+        //         educationCenter: data?.educationCenter,
+        //         marjorSubject: data?.marjorSubject,
         //     }); 
 
         //     rest.onOpenChange?.(visible)
@@ -100,12 +100,12 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
             } 
         >
         <ProCard bordered>
-            <ProFormText label="Education Center" name={'education_center'} /> 
-            <ProFormText label="Major/Subject" name={'marjor_subject'} /> 
+            <ProFormText label="Education Center" name={'educationCenter'} /> 
+            <ProFormText label="Major/Subject" name={'marjorSubject'} /> 
             <Row>
                 <Col span={12}>
                     <ProFormSelect rules={[{ required: false }]} allowClear={true} width="sm" 
-                        name="degree_id" label = "Degree" placeholder="Degree"  
+                        name="degreeId" label = "Degree" placeholder="Degree"  
                         showSearch 
                         mode="single" 
                         options={
@@ -122,7 +122,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
                 </Col>
                 <Col span={12}>
                     <ProFormSelect rules={[{ required: false }]} allowClear={true}  width="sm" 
-                        name="status_id" label = "Status" placeholder="Status"  
+                        name="statusId" label = "Status" placeholder="Status"  
                         showSearch 
                         mode="single" 
                         options={
@@ -136,7 +136,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
                 </Col>
             </Row>  
             <ProFormSelect rules={[{ required: false }]} allowClear={true}  
-                name="country_education_center" label = "Country Education Center" placeholder="Country Education Center"  
+                name="countryEducationCenter" label = "Country Education Center" placeholder="Country Education Center"  
                 showSearch 
                 mode="single" 
                 options={
@@ -176,7 +176,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
                                 width={'200px'}
                                 key={it.id}
                                 fileId={it.id || ''}
-                                fileName={it.file_name}
+                                fileName={it.fileName}
                             />
                         </List.Item>
                     );

@@ -56,33 +56,33 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
     var relship = ["" ,"Hushand","Wife","Son","Daughter"]; 
     var oc = ["" ,"Housewife","Student","Work","Farmer"];
     //
-    var pb = profile.profile_adr_pb?(profile.profile_adr_pb.province_name+" "+profile.profile_adr_pb.district_name+" "+profile.profile_adr_pb.commune_name):'N/A';
-    var ct = profile.profile_adr_ct?(profile.profile_adr_ct.province_name+" "+profile.profile_adr_ct.district_name+" "+profile.profile_adr_ct.commune_name+" "+
-            profile.profile_adr_ct.village_id+" "+profile.profile_adr_ct.home_no+" "+profile.profile_adr_ct.street+" "+profile.profile_adr_ct.remark):'';
-    var pm = profile.profile_adr_pm?(profile.profile_adr_pm.province_name+" "+profile.profile_adr_pm.district_name+" "+profile.profile_adr_pm.commune_name+" "+
-            profile.profile_adr_pm.village_id+" "+profile.profile_adr_pm.home_no+" "+profile.profile_adr_pm.street+" "+profile.profile_adr_pm.remark):''; 
+    var pb = profile.profile_adr_pb?(profile.profile_adr_pb.provinceName+" "+profile.profile_adr_pb.districtName+" "+profile.profile_adr_pb.communeName):'N/A';
+    var ct = profile.profile_adr_ct?(profile.profile_adr_ct.provinceName+" "+profile.profile_adr_ct.districtName+" "+profile.profile_adr_ct.communeName+" "+
+            profile.profile_adr_ct.villageId+" "+profile.profile_adr_ct.homeNo+" "+profile.profile_adr_ct.street+" "+profile.profile_adr_ct.remark):'';
+    var pm = profile.profile_adr_pm?(profile.profile_adr_pm.provinceName+" "+profile.profile_adr_pm.districtName+" "+profile.profile_adr_pm.communeName+" "+
+            profile.profile_adr_pm.villageId+" "+profile.profile_adr_pm.homeNo+" "+profile.profile_adr_pm.street+" "+profile.profile_adr_pm.remark):''; 
 
     //
     const items: DescriptionsProps['items'] = [
         {
             key     : '1',
             label   : 'Name KH',
-            children: <Flex vertical={'vertical'}><div>{profile.profile.name_kh}</div><div style={{color:'red',display:'none'}}>{"testing"}</div></Flex>,
+            children: <Flex vertical={'vertical'}><div>{profile.profile.nameKh}</div><div style={{color:'red',display:'none'}}>{"testing"}</div></Flex>,
         },
         {
             key     : '2',
             label   : 'Name EN',
-            children: <Flex vertical={'vertical'}><div>{profile.profile.name_en}</div><div style={{color:'red',display:'none'}}>{"testing"}</div></Flex>,
+            children: <Flex vertical={'vertical'}><div>{profile.profile.nameEn}</div><div style={{color:'red',display:'none'}}>{"testing"}</div></Flex>,
         },
         {
             key     : '3',
             label   : 'Gender',
-            children: MF[profile.profile.gender_id],
+            children: MF[profile.profile.genderId],
         },
         {
             key     : '4',
             label   : 'Date of Birth',
-            children: profile.profile.date_birth,
+            children: profile.profile.dateBirth,
         },
         {
             key     : '5',
@@ -96,7 +96,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
         {
             key     : '6',
             label   : 'Marital Status',
-            children: MarriedStatus[profile.profile.marital_status_id],
+            children: MarriedStatus[profile.profile.maritalStatusId],
         },
         {
             key     : '7',
@@ -110,7 +110,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
         {
             key     : '8',
             label   : 'Religion',
-            children: Rg[profile.profile.religion_id],
+            children: Rg[profile.profile.religionId],
         },
         {
             key     : '9',
@@ -127,17 +127,17 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
         {
             key     : '10',
             label   : 'National ID',
-            children: profile.profile.national_id,
+            children: profile.profile.nationalId,
         },
         {
             key     : '11',
             label   : 'Passport Number',
-            children: profile.profile.passport_number,
+            children: profile.profile.passportNumber,
         },
         {
             key     : '12',
             label   : 'Dependent',
-            children: <div>{relship[profile.profile.relationship_id]+", "}  {profile.profile.depend_date_of_birth+", "}  {oc[profile.profile.occupation_id]} </div>,
+            children: <div>{relship[profile.profile.relationshipId]+", "}  {profile.profile.dependDateOfBirth+", "}  {oc[profile.profile.occupationId]} </div>,
         }
     ];
     //
@@ -147,7 +147,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
           content: 'Are you sure?',
           onOk: async () => {
             try {
-                data.other_file = createFileOther;
+                data.otherFile = createFileOther;
                 await ProfileServicesEss.saveEssProfile(data)(requestActions); 
                 // call back fun
                 cb.onLoadData();
@@ -168,14 +168,14 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
             try {
                 await ProfileServicesEss.saveEssProfileAdr(data)(requestActions); 
                 // place of birth
-                if(data.type_id == 1){
-                    hidePlaceBirthModal();
+                if(data.typeId == 1){
+                    // hidePlaceBirthModal();
                 } else
-                if(data.type_id == 2){
-                    hidePermanentAddressModal();
+                if(data.typeId == 2){
+                    // hidePermanentAddressModal();
                 } else
-                if(data.type_id == 3){
-                    hideCurrentAddressModal();
+                if(data.typeId == 3){
+                    // hideCurrentAddressModal();
                 }
             } catch (error: any) {
               message.error(error.message || 'Failed to Save Profile Address.');
@@ -229,15 +229,15 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
                         {
                             key     : '1',
                             label   : 'City/Province',
-                            children: profile.profile.name_kh,
+                            children: profile.profile.nameKh,
                         },{
                             key     : '2',
                             label   : 'Khan/District',
-                            children: profile.profile.name_kh,
+                            children: profile.profile.nameKh,
                         },{
                             key     : '3',
                             label   : 'Sangkan/Commune',
-                            children: profile.profile.name_kh,
+                            children: profile.profile.nameKh,
                         } 
                     ]}
                 />            
@@ -257,31 +257,31 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
                         {
                             key     : '1',
                             label   : 'City/Province',
-                            children: profile.profile.name_kh,
+                            children: profile.profile.nameKh,
                         },{
                             key     : '2',
                             label   : 'Khan/District',
-                            children: profile.profile.name_kh,
+                            children: profile.profile.nameKh,
                         },{
                             key     : '3',
                             label   : 'Sangkan/Commune',
-                            children: profile.profile.name_kh,
+                            children: profile.profile.nameKh,
                         },{
                             key     : '4',
                             label   : 'Home No',
-                            children: profile.profile.name_kh,
+                            children: profile.profile.nameKh,
                         },{
                             key     : '5',
                             label   : 'Street No',
-                            children: profile.profile.name_kh,
+                            children: profile.profile.nameKh,
                         },{
                             key     : '6',
                             label   : 'Group',
-                            children: profile.profile.name_kh,
+                            children: profile.profile.nameKh,
                         },{
                             key     : '7',
                             label   : 'Village',
-                            children: profile.profile.name_kh,
+                            children: profile.profile.nameKh,
                         } 
                     ]}
                 />            
@@ -301,31 +301,31 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
                         {
                             key     : '1',
                             label   : 'City/Province',
-                            children: profile.profile.name_kh,
+                            children: profile.profile.nameKh,
                         },{
                             key     : '2',
                             label   : 'Khan/District',
-                            children: profile.profile.name_kh,
+                            children: profile.profile.nameKh,
                         },{
                             key     : '3',
                             label   : 'Sangkan/Commune',
-                            children: profile.profile.name_kh,
+                            children: profile.profile.nameKh,
                         },{
                             key     : '4',
                             label   : 'Home No',
-                            children: profile.profile.name_kh,
+                            children: profile.profile.nameKh,
                         },{
                             key     : '5',
                             label   : 'Street No',
-                            children: profile.profile.name_kh,
+                            children: profile.profile.nameKh,
                         },{
                             key     : '6',
                             label   : 'Group',
-                            children: profile.profile.name_kh,
+                            children: profile.profile.nameKh,
                         },{
                             key     : '7',
                             label   : 'Village',
-                            children: profile.profile.name_kh,
+                            children: profile.profile.nameKh,
                         } 
                     ]}
                 />             
@@ -360,7 +360,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
             );
             }}
             onFinish={(data) => {
-                return saveEssProfileHandler({ ...data, ess_prof_id: modalVisible?.payload?.id, empId: profile.id,status:true,step:22,remark:'' });
+                return saveEssProfileHandler({ ...data, essProfId: modalVisible?.payload?.id, empId: profile.id,status:true,step:22,remark:'' });
             }}
         /> 
         {/* PersonalViewEditModal */}        

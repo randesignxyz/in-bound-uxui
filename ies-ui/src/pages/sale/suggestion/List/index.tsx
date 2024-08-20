@@ -102,7 +102,6 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({ }) => 
     //   : access.canAccessSettlement
     //   ? ['settled']
     //   : [''];
-    console.log(access);
     
     const role = access.canAccessAllMenuDSD
       ? 'sale_admin'

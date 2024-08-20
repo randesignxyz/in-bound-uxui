@@ -6,7 +6,8 @@ import type {
   StockAdjustmentDto,
   StockControlLess,
 } from '@/services/sale/data';
-import { EditableProTable, ProDescriptions, ProFormCheckbox, ProFormGroup, ProFormList } from '@ant-design/pro-components';
+import { DeleteOutlined } from '@ant-design/icons';
+import { EditableProTable, ProDescriptions, ProFormCheckbox, ProFormDependency, ProFormGroup, ProFormList, ProFormRadio, ProFormSelect } from '@ant-design/pro-components';
 import {
   ModalForm,
   ProFormDateTimePicker,
@@ -15,11 +16,12 @@ import {
   ProFormTextArea,
 } from '@ant-design/pro-form';
 import ProTable from '@ant-design/pro-table';
-import { Alert, Card, Col, Flex, message, Row, Table, Typography } from 'antd';
+import { Alert, Button, Card, Col, Divider, Flex, message, Row, Segmented, Space, Table, Typography } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
+import { uniqueId } from 'lodash';
 import moment from 'moment';
 import numeral from 'numeral';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 const layout = {
   labelCol: { span: 10 },
@@ -150,6 +152,9 @@ const SettlementModal: React.FC<Props> = ({
     const backAmount = (model.bankAmount || 0);
     return actualAmount + amount + backAmount;
   }
+  const [settlemetData, setSettlementData] = useState<SettleMethod[]>();
+
+
 
   return (
     <ModalForm<ModelModalForm>
@@ -170,7 +175,8 @@ const SettlementModal: React.FC<Props> = ({
       title="Settlement"
       onFinish={onSubmitActionHandler}
     >
-      {/* <Flex vertical gap={12}>
+      
+      {/* <Space direction='vertical' size={12}>
         <Alert
           description={
             <ProDescriptions<StockControlLess>
@@ -228,50 +234,127 @@ const SettlementModal: React.FC<Props> = ({
               }}
             />
           </ProFormGroup>
-          <EditableProTable
-            headerTitle={"Payment Method"}
+        </Card>
+        <Card size='small' styles={{ body: { margin: 0, padding: 0 } }} title="Payment Method">
+          <EditableProTable<SettleMethod>
             size='small'
-            dataSource={[
-              {
-                settlement_method:"cash",
-                currency:"USD",
-                amount:343
-              }
-            ]}
-            value={[
-              {
-              settlement_method:"cash",
-              currency:"USD",
-              amount:343
-            },
-            {
-              settlement_method:"bank",
-              currency:"USD",
-              amount:343
-            },
-          ]}
+            rowKey={"key"}
+            value={settlemetData}
+            onValuesChange={(v, r) => {
+              console.log(v, r);
+            }}
+            recordCreatorProps={{
+              record: () => ({ key: (Math.random() * 1000000).toFixed(0) }),
+              newRecordType: "dataSource",
+              creatorButtonText: "New"
+            }}
+            editable={{
+              type: "multiple",
+              editableKeys: settlemetData?.map(o => o.key),
+              actionRender: (s, d) => [
+                <Button
+                  icon={<DeleteOutlined />}
+                  type='link'
+                  danger
+                  onClick={() => d.onDelete?.(s.key, s)}
+                />
+              ]
+            }}
             columns={[
               {
-                title:"Method Type",
-                dataIndex:"settlement_method"
+                title: "Method Type",
+                dataIndex: "settlementMethod",
+                valueType: "select",
+                initialValue: "Cash",
+                fieldProps: {
+                  required: true,
+                  options: [
+                    {
+                      label: 'Cash',
+                      value: 'Cash',
+                    },
+                    {
+                      label: 'Bank',
+                      value: 'Bank',
+                    }
+                  ],
+                  placeholder: '',
+                },
               },
               {
-                title:"Currency",
-                dataIndex:"currency"
+                title: "Bank Name",
+                dataIndex: "bank_name",
+                valueType: "text",
               },
               {
-                title:"amount",
-                dataIndex:"amount",
+                title: "Currency",
+                dataIndex: "currency",
+                valueType: "select",
+                initialValue: "USD",
+                fieldProps: {
+                  options: [
+                    {
+                      label: 'USD',
+                      value: 'USD',
+
+                    },
+                    {
+                      label: 'KHR',
+                      value: 'KHR',
+                    }
+                  ],
+                  placeholder: '',
+                },
               },
               {
-                title:"Bank Name",
-                dataIndex:"bank_name"
+                title: "Amount",
+                dataIndex: "amount",
+                valueType: "digit",
+                initialValue: 0,
+                formItemProps: (form, config) => {
+                  return numeral(config.entity.amount).format("$ 0,000.00")
+                },
+                render: (_, r) => numeral(r.amount).format("$ 0,000.00"),
+                fieldProps: {
+                  placeholder: ""
+
+                }
+              },
+              {
+                title: "Reference No",
+                dataIndex: "reference_no"
+              },
+              {
+                valueType: "option"
               }
             ]}
           />
-
         </Card>
-      </Flex> */}
+        <Flex justify='flex-end' align='flex-end'>
+          <Card size='small' style={{ width: "30%" }}>
+            <ProDescriptions
+              column={1}
+              size='small'
+              contentStyle={{
+                fontWeight:500
+              }}
+              columns={[
+                {
+                  title: "Actual Amount Total (USD)",
+                  render: (_, r) => <Text type='warning'>{numeral(4355).format("$ 0,000.000")}</Text>
+                },
+                {
+                  title: "Actual Amount Total (KHR)",
+                  render: (_, r) => <Text type='warning'>៛ {numeral(6005).format(" 0,#00")}</Text>
+                },
+              ]}
+            />
+          </Card>
+        </Flex>
+      </Space> */}
+
+
+
       <Card size="small" >
         <Row>
 
@@ -464,6 +547,7 @@ const SettlementModal: React.FC<Props> = ({
           ]}
         />
       )}
+      <Divider/>
     </ModalForm>
   );
 };

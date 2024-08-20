@@ -6,10 +6,10 @@ import RemarkModal from '@/components/remark-modal';
 import { formatDate } from '@/pages/utils';
 import type { ApprovalStockControlDto, StockControlLess } from '@/services/sale/data';
 import { CopyOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
+import { ProDescriptions } from '@ant-design/pro-components';
 import type { ActionType } from '@ant-design/pro-table';
 import { EditableProTable } from '@ant-design/pro-table';
-import { Button, Card, Tooltip, Typography, message } from 'antd';
-// import { groupBy, map } from 'lodash';
+import { Button, Card, Flex, Tooltip, Typography, message } from 'antd';
 import moment from 'moment';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -214,6 +214,20 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
       okText={'Update'}
       title="Issue Stock"
     >
+      <Flex vertical gap={12}>
+        <Card size={"small"}>
+          <ProDescriptions<StockControlLess>
+              dataSource ={data}
+              columns={[
+                {
+                  title:"Store Name",
+                  render:(_,r)=><Typography.Text type='success'>{r.stockName}</Typography.Text>
+                }
+              ]}
+          />
+        </Card>
+        
+      </Flex>
       <Card size="small" title="Stock Detail" style={{ marginBottom: 10 }}>
         <DescriptionDisplay data={generalInfo} />
       </Card>

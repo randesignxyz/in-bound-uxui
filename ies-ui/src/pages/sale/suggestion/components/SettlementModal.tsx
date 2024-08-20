@@ -6,6 +6,8 @@ import type {
   StockAdjustmentDto,
   StockControlLess,
 } from '@/services/sale/data';
+import { DeleteOutlined } from '@ant-design/icons';
+import { EditableProTable, ProDescriptions, ProFormCheckbox, ProFormDependency, ProFormGroup, ProFormList, ProFormRadio, ProFormSelect } from '@ant-design/pro-components';
 import {
   ModalForm,
   ProFormDateTimePicker,
@@ -14,11 +16,12 @@ import {
   ProFormTextArea,
 } from '@ant-design/pro-form';
 import ProTable from '@ant-design/pro-table';
-import { Card, Col, message, Row, Table, Typography } from 'antd';
+import { Alert, Button, Card, Col, Divider, Flex, message, Row, Segmented, Space, Table, Typography } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
+import { uniqueId } from 'lodash';
 import moment from 'moment';
 import numeral from 'numeral';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 const layout = {
   labelCol: { span: 10 },
@@ -27,7 +30,7 @@ const layout = {
 
 interface Props extends FormModalProps {
   data?: StockControlLess;
-  exchangeRate?: ExchangeRate;
+  // exchangeRate?: ExchangeRate;
   dsdExchangeRate?: ExchangeRate;
   actionHandlers: {
     onAddItem?: (item: SettlementModel) => void;
@@ -51,7 +54,7 @@ interface ModelModalForm {
 const SettlementModal: React.FC<Props> = ({
   data,
   actionHandlers,
-  exchangeRate,
+  // exchangeRate,
   loading,
   dsdExchangeRate,
   ...props
@@ -73,9 +76,9 @@ const SettlementModal: React.FC<Props> = ({
     formModal.setFieldsValue({
       actualAmount: 0,
       settlementDate: moment(),
-      actualAmountKH: systemAmount * (dsdExchangeRate?.target_amount || 0.0),
+      actualAmountKH: systemAmount * (dsdExchangeRate?.source_amount || 0.0),
       bankAmount: 0,
-      exchangeRate: exchangeRate?.target_amount,
+      exchangeRate: dsdExchangeRate?.source_amount,
       invoicesAmount:
         data?.invoices?.reduce(function (acc, it) {
           return acc + it.amount;
@@ -86,13 +89,13 @@ const SettlementModal: React.FC<Props> = ({
         }, 0) || 0,
       systemAmount: systemAmount,
       remark: '',
-      actualTotalAmount: systemAmount * (dsdExchangeRate?.target_amount || 0.0),
+      actualTotalAmount: systemAmount,
     });
   }, [
     data?.adjustmentItems,
     data?.invoices,
-    dsdExchangeRate?.target_amount,
-    exchangeRate?.target_amount,
+    dsdExchangeRate?.source_amount,
+    // exchangeRate?.target_amount,
   ]);
 
   useEffect(() => {
@@ -105,10 +108,11 @@ const SettlementModal: React.FC<Props> = ({
 
   const onSubmitActionHandler = async () => {
     const form = await formModal.validateFields();
-    const amountKH = form.actualAmountKH || 0;
-    const amount = form.actualAmount || 0;
-    const systemAmountKH = form.systemAmount * (dsdExchangeRate?.target_amount ?? 0);
-    if (systemAmountKH > calculateActualAmount(form)) {
+    const formData = formModal.getFieldsValue();
+    const amountKH = formData.actualAmountKH || 0;
+    const amount = formData.actualAmount || 0;
+    // const systemAmountKH = form.systemAmount * (dsdExchangeRate?.source_amount ?? 0);
+    if (form.systemAmount > calculateActualAmount(formData)) {
       message.error('Settle amount is not correct.');
       return Promise.reject(false);
     } else {
@@ -131,8 +135,9 @@ const SettlementModal: React.FC<Props> = ({
 
   const _onChange = (changedValues: any, values: ModelModalForm) => {
     const fields = ['exchangeRate', 'actualAmount', 'actualAmountKH', 'bankAmount'];
-    if (fields.some((it) => it in changedValues)) {
-      const totalAmount = calculateActualAmount(values);
+
+    if (fields.some((it) => it in changedValues) || changedValues) {
+      const totalAmount = calculateActualAmount(formModal.getFieldsValue());
       formModal.setFieldsValue({ actualTotalAmount: totalAmount });
     }
   };
@@ -141,18 +146,22 @@ const SettlementModal: React.FC<Props> = ({
     // const amount = (model.actualAmountKH || 0) / model.exchangeRate;
     // const actualAmount = model.actualAmount || 0;
     // const backAmount = model.bankAmount || 0;
-    const amount = model.actualAmountKH ?? 0;
-    const actualAmount = (model.actualAmount ?? 0) * model.exchangeRate;
-    const backAmount = (model.bankAmount ?? 0) * model.exchangeRate;
+
+    const amount = (model.actualAmountKH || 0) / model.exchangeRate;
+    const actualAmount = (model.actualAmount || 0);
+    const backAmount = (model.bankAmount || 0);
     return actualAmount + amount + backAmount;
   }
+  const [settlemetData, setSettlementData] = useState<SettleMethod[]>();
+
+
 
   return (
     <ModalForm<ModelModalForm>
       key={`SettlementModal`}
       width="1024px"
       layout={'horizontal'}
-      {...layout}
+      // {...layout}
       form={formModal}
       onValuesChange={_onChange}
       autoFocusFirstInput
@@ -163,10 +172,192 @@ const SettlementModal: React.FC<Props> = ({
         onCancel: () => actionHandlers.onCancel && actionHandlers.onCancel(),
         okText: <Text style={{ color: 'white' }}>Submit</Text>,
       }}
+      title="Settlement"
       onFinish={onSubmitActionHandler}
     >
-      <Card size="small" title={'Settlement'}>
+      
+      {/* <Space direction='vertical' size={12}>
+        <Alert
+          description={
+            <ProDescriptions<StockControlLess>
+              dataSource={data}
+              contentStyle={{
+                fontWeight: 500,
+              }}
+              columns={[
+                {
+                  title: "Store Name",
+                  dataIndex: "stockName"
+                },
+                {
+                  title: "Owner",
+                  dataIndex: "owner"
+                },
+                {
+                  title: "Invoice Count",
+                  render: (_, r) => <Typography.Text type='success'>{r.invoices?.length}</Typography.Text>
+                },
+                {
+                  title: "Items Count",
+                  render: (_, r) => <Typography.Text type='warning'>{r.items?.length}</Typography.Text>
+                },
+                {
+                  title: "System Amount USD",
+                  render: (_, r) => {
+                    const invoiceAmount = data?.invoices?.reduce((acc, it) => acc + it.amount, 0) || 0;
+                    const lostAmount = data?.adjustmentItems?.reduce((acc, it) => (acc + (it.originQuantity - it.adjustQuantity) * it.unitPrice!!), 0) || 0;
+                    const systemAmount = invoiceAmount + lostAmount;
+                    return <Typography.Text type='success'>{numeral(systemAmount).format("$ 0,000.00")}</Typography.Text>
+                  }
+                },
+              ]}
+            />}
+        />
+
+        <Card size='small' >
+          <ProFormGroup>
+            <ProFormDateTimePicker
+              label="Settlement Date"
+              name={"settlementDate"}
+              rules={[{ required: true }]}
+              initialValue={moment()}
+            />
+            <ProFormDigit
+              label="Exchange Rate"
+              name={"exchangeRate"}
+              rules={[{ required: true }]}
+              initialValue={dsdExchangeRate?.target_amount}
+              fieldProps={{
+                formatter: (value) => {
+                  return numeral(value).format('0,0');
+                },
+              }}
+            />
+          </ProFormGroup>
+        </Card>
+        <Card size='small' styles={{ body: { margin: 0, padding: 0 } }} title="Payment Method">
+          <EditableProTable<SettleMethod>
+            size='small'
+            rowKey={"key"}
+            value={settlemetData}
+            onValuesChange={(v, r) => {
+              console.log(v, r);
+            }}
+            recordCreatorProps={{
+              record: () => ({ key: (Math.random() * 1000000).toFixed(0) }),
+              newRecordType: "dataSource",
+              creatorButtonText: "New"
+            }}
+            editable={{
+              type: "multiple",
+              editableKeys: settlemetData?.map(o => o.key),
+              actionRender: (s, d) => [
+                <Button
+                  icon={<DeleteOutlined />}
+                  type='link'
+                  danger
+                  onClick={() => d.onDelete?.(s.key, s)}
+                />
+              ]
+            }}
+            columns={[
+              {
+                title: "Method Type",
+                dataIndex: "settlementMethod",
+                valueType: "select",
+                initialValue: "Cash",
+                fieldProps: {
+                  required: true,
+                  options: [
+                    {
+                      label: 'Cash',
+                      value: 'Cash',
+                    },
+                    {
+                      label: 'Bank',
+                      value: 'Bank',
+                    }
+                  ],
+                  placeholder: '',
+                },
+              },
+              {
+                title: "Bank Name",
+                dataIndex: "bank_name",
+                valueType: "text",
+              },
+              {
+                title: "Currency",
+                dataIndex: "currency",
+                valueType: "select",
+                initialValue: "USD",
+                fieldProps: {
+                  options: [
+                    {
+                      label: 'USD',
+                      value: 'USD',
+
+                    },
+                    {
+                      label: 'KHR',
+                      value: 'KHR',
+                    }
+                  ],
+                  placeholder: '',
+                },
+              },
+              {
+                title: "Amount",
+                dataIndex: "amount",
+                valueType: "digit",
+                initialValue: 0,
+                formItemProps: (form, config) => {
+                  return numeral(config.entity.amount).format("$ 0,000.00")
+                },
+                render: (_, r) => numeral(r.amount).format("$ 0,000.00"),
+                fieldProps: {
+                  placeholder: ""
+
+                }
+              },
+              {
+                title: "Reference No",
+                dataIndex: "reference_no"
+              },
+              {
+                valueType: "option"
+              }
+            ]}
+          />
+        </Card>
+        <Flex justify='flex-end' align='flex-end'>
+          <Card size='small' style={{ width: "30%" }}>
+            <ProDescriptions
+              column={1}
+              size='small'
+              contentStyle={{
+                fontWeight:500
+              }}
+              columns={[
+                {
+                  title: "Actual Amount Total (USD)",
+                  render: (_, r) => <Text type='warning'>{numeral(4355).format("$ 0,000.000")}</Text>
+                },
+                {
+                  title: "Actual Amount Total (KHR)",
+                  render: (_, r) => <Text type='warning'>៛ {numeral(6005).format(" 0,#00")}</Text>
+                },
+              ]}
+            />
+          </Card>
+        </Flex>
+      </Space> */}
+
+
+
+      <Card size="small" >
         <Row>
+
           <Col flex="auto">
             <ProFormDateTimePicker
               initialValue={moment()}
@@ -177,7 +368,7 @@ const SettlementModal: React.FC<Props> = ({
             />
             <ProFormDigit
               rules={[{ required: true }]}
-              initialValue={exchangeRate?.target_amount}
+              initialValue={dsdExchangeRate?.target_amount}
               min={3900}
               max={4200}
               name="exchangeRate"
@@ -205,7 +396,7 @@ const SettlementModal: React.FC<Props> = ({
                       )}`;
                     },
                   }}
-                  // locale="en-US"
+                // locale="en-US"
                 />
                 <ProFormDigit
                   name="lostAmount"
@@ -221,11 +412,10 @@ const SettlementModal: React.FC<Props> = ({
                       )}`;
                     },
                   }}
-                  //locale="en-US"
+                //locale="en-US"
                 />
               </>
             )}
-
             <ProFormDigit
               // initialValue={getSystemAmount()}
               name="systemAmount"
@@ -238,7 +428,7 @@ const SettlementModal: React.FC<Props> = ({
                   return `${dsdExchangeRate?.target_symbol} ${numeral(amount).format('0,0.00')}`;
                 },
               }}
-              //locale="en-US"
+            //locale="en-US"
             />
           </Col>
           <Col flex="auto">
@@ -251,7 +441,7 @@ const SettlementModal: React.FC<Props> = ({
             <ProFormDigit
               fieldProps={{
                 formatter: (value) => {
-                  return numeral(value).format('0,0');
+                  return numeral(value).format('0,#00');
                 },
               }}
               name="actualAmountKH"
@@ -270,7 +460,8 @@ const SettlementModal: React.FC<Props> = ({
               proFieldProps={{
                 render: () => {
                   const amount = formModal.getFieldValue('actualTotalAmount');
-                  return `${exchangeRate?.target_symbol} ${numeral(amount).format('0,0.00')}`;
+                  return `${dsdExchangeRate?.target_symbol} ${numeral(amount).format('0,00.00')}`;
+                  // return `${dsdExchangeRate?.target_symbol} ${numeral(t).format('0,00.00')}`;
                 },
               }}
               min={0}
@@ -303,9 +494,7 @@ const SettlementModal: React.FC<Props> = ({
                   <Text type="danger">Total</Text>
                 </Table.Summary.Cell>
                 <Table.Summary.Cell index={1} align="right">
-                  <Text type="danger">{`${dsdExchangeRate?.target_symbol} ${numeral(tatalKh).format(
-                    '0,0.00',
-                  )}`}</Text>
+                  <Text type="danger">{`$ ${numeral(tatalKh).format('0,0.00')}`}</Text>
                 </Table.Summary.Cell>
               </Table.Summary.Row>
             );
@@ -358,6 +547,7 @@ const SettlementModal: React.FC<Props> = ({
           ]}
         />
       )}
+      <Divider/>
     </ModalForm>
   );
 };

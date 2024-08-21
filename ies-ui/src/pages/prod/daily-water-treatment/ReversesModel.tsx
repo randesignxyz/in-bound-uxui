@@ -5,6 +5,7 @@ import { DailyWaterTreatmentItem } from './data';
 import { useForm } from 'antd/lib/form/Form';
 import { Card, Col, Radio, Row, Typography, message } from 'antd';
 import { useAccess } from '@umijs/max';
+import { ExclamationCircleOutlined } from '@ant-design/icons';
 
 interface Props extends FormModalProps {
     data?: DailyWaterTreatmentItem
@@ -117,29 +118,71 @@ export default ({ data, onSave, ...props }: Props) => {
                         <Col span={12}>
                             <ProFormText
                                 hasFeedback={false}
-                                rules={[{ required: true, message: 'Please Enter TDS'  }]}
+                                rules={[{ required: true, message: 'Please Enter TDS'  },{ pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
                                 label={
-                                    <div>
-                                        TDS
-                                        <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px', }}>(≤10 ppm)</span>
-                                    </div>
+                                    <ProForm.Item
+                                        noStyle
+                                        shouldUpdate={(prevValues, currentValues) => prevValues.tds !== currentValues.tds}
+                                    >
+                                        {({ getFieldValue }) => {
+                                            const tdsValue = getFieldValue('tds');
+                                            return (
+                                                <div>
+                                                    TDS
+                                                    <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px' }}>
+                                                    (≤10 ppm)
+                                                    </span>
+                                                    {Number(tdsValue) > 10 && tdsValue !== '' && tdsValue !== null && (
+                                                        <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} />
+                                                    )}
+                                                </div>
+                                            );
+                                        }}
+                                    </ProForm.Item>
                                 }
+                                fieldProps={{
+                                    type: 'number', // Restrict input type to number
+                                    step: 'any'     // Allow any number, including decimals
+                                  }}
                                 name={'tds'}
                                 initialValue={data?.tds}
+                                fieldProps={{
+                                    type: 'number',
+                                    step: 'any'
+                                  }}
                             />
                         </Col>
                         <Col span={12}>
                             <ProFormText
                                 hasFeedback={false}
-                                rules={[{ required: true, message: 'Please Enter PH'  }]}
+                                rules={[{ required: true, message: 'Please Enter PH'  },{ pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
                                 label={
-                                    <div>
-                                        PH
-                                        <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px', }}>6.5-8.5</span>
-                                    </div>
+                                    <ProForm.Item
+                                        noStyle
+                                        shouldUpdate={(prevValues, currentValues) => prevValues.ph !== currentValues.ph}
+                                    >
+                                        {({ getFieldValue }) => {
+                                            const pHValue = getFieldValue('ph');
+                                            return (
+                                                <div>
+                                                    PH
+                                                    <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px' }}>
+                                                        (6.5-8.5)
+                                                    </span>
+                                                    {(Number(pHValue) < 6.5 || Number(pHValue) > 8.5) && pHValue !== '' && pHValue !== null && (
+                                                        <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} />
+                                                    )}
+                                                </div>
+                                            );
+                                        }}
+                                    </ProForm.Item>
                                 }
                                 name={'ph'}
                                 initialValue={data?.ph}
+                                fieldProps={{
+                                    type: 'number',
+                                    step: 'any'
+                                  }}
                             />
                         </Col>
                     </Row>
@@ -147,29 +190,67 @@ export default ({ data, onSave, ...props }: Props) => {
                         <Col span={12}>
                             <ProFormText
                                 hasFeedback={false}
-                                rules={[{ required: true, message: 'Please Enter Press-inlet'  }]}
+                                rules={[{ required: true, message: 'Please Enter Press-inlet'  },{ pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
                                 label={
-                                    <div>
-                                        Press-inlet
-                                        <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px', }}>0.01-0.3 Mpa</span>
-                                    </div>
+                                    <ProForm.Item
+                                        noStyle
+                                        shouldUpdate={(prevValues, currentValues) => prevValues.press_inlet !== currentValues.press_inlet}
+                                    >
+                                        {({ getFieldValue }) => {
+                                            const pressInletValue = getFieldValue('press_inlet');
+                                            return (
+                                                <div>
+                                                    Press-inlet
+                                                    <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px' }}>
+                                                        (0.01-0.3 Mpa)
+                                                    </span>
+                                                    {(Number(pressInletValue) < 0.01 || Number(pressInletValue) > 0.3) && pressInletValue !== '' && pressInletValue !== null && (
+                                                        <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} />
+                                                    )}
+                                                </div>
+                                            );
+                                        }}
+                                    </ProForm.Item>
                                 }
                                 name={'press_inlet'}
                                 initialValue={data?.press_inlet}
+                                fieldProps={{
+                                    type: 'number',
+                                    step: 'any'
+                                  }}
                             />
                         </Col>
                         <Col span={12}>
                             <ProFormText
                                 hasFeedback={false}
-                                rules={[{ required: true, message: 'Please Enter Press-Treat'  }]}
+                                rules={[{ required: true, message: 'Please Enter Press-Treat'  },{ pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
                                 label={
-                                    <div>
-                                        Press-Treat
-                                        <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px', }}>0.01-1.5 Mpa</span>
-                                    </div>
+                                    <ProForm.Item
+                                        noStyle
+                                        shouldUpdate={(prevValues, currentValues) => prevValues.press_treat !== currentValues.press_treat}
+                                    >
+                                        {({ getFieldValue }) => {
+                                            const pressTreatValue = getFieldValue('press_treat');
+                                            return (
+                                                <div>
+                                                    Press-Treat
+                                                    <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px' }}>
+                                                        (0.01-1.5 Mpa)
+                                                    </span>
+                                                    {(Number(pressTreatValue) < 0.01 || Number(pressTreatValue) > 1.5) && pressTreatValue !== '' && pressTreatValue !== null && (
+                                                        <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} />
+                                                    )}
+                                                </div>
+                                            );
+                                        }}
+                                    </ProForm.Item>
                                 }
                                 name={'press_treat'}
                                 initialValue={data?.press_treat}
+                                fieldProps={{
+                                    type: 'number',
+                                    step: 'any'
+                                  }}
                             />
                         </Col>
                     </Row>
@@ -177,15 +258,34 @@ export default ({ data, onSave, ...props }: Props) => {
                         <Col span={12}>
                             <ProFormText
                                 hasFeedback={false}
-                                rules={[{ required: true, message: 'Please Enter Press-Drain'  }]}
+                                rules={[{ required: true, message: 'Please Enter Press-Drain'  },{ pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
                                 label={
-                                    <div>
-                                        Press-Drain
-                                        <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px', }}>0.01-1.5 Mpa</span>
-                                    </div>
+                                    <ProForm.Item
+                                        noStyle
+                                        shouldUpdate={(prevValues, currentValues) => prevValues.press_drain !== currentValues.press_drain}
+                                    >
+                                        {({ getFieldValue }) => {
+                                            const pressDrainValue = getFieldValue('press_drain');
+                                            return (
+                                                <div>
+                                                    Press-Drain
+                                                    <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px' }}>
+                                                        (0.01-1.5 Mpa)
+                                                    </span>
+                                                    {(Number(pressDrainValue) < 0.01 || Number(pressDrainValue) > 1.5) && pressDrainValue !== '' && pressDrainValue !== null && (
+                                                        <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} />
+                                                    )}
+                                                </div>
+                                            );
+                                        }}
+                                    </ProForm.Item>
                                 }
                                 name={'press_drain'}
                                 initialValue={data?.press_drain}
+                                fieldProps={{
+                                    type: 'number',
+                                    step: 'any'
+                                  }}
                             />
                         </Col>
 
@@ -193,6 +293,7 @@ export default ({ data, onSave, ...props }: Props) => {
                             <div style={{ flexDirection: 'row' }}>
                                 <Text style={{ color: 'red', fontSize: 20 }}>*</Text>
                                 <Text style={{ marginBottom: 10 }}>Odor</Text>
+                                {(odor == 0 || data?.odor == 0) ? <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} /> : <></>}
                             </div>
                             <Radio.Group
                                 defaultValue={data?.odor == 1 ? '1' : data?.odor == 0 ? '0' : ''}
@@ -207,6 +308,7 @@ export default ({ data, onSave, ...props }: Props) => {
                             <div style={{ flexDirection: 'row' }}>
                                 <Text style={{ color: 'red', fontSize: 20 }}>*</Text>
                                 <Text style={{ marginBottom: 10 }}>Taste</Text>
+                                {(taste == 0 || data?.taste == 0) ? <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} /> : <></>}
                             </div>
                             <Radio.Group
                                 defaultValue={data?.taste == 1 ? '1' : data?.taste == 0 ? '0' : ''}

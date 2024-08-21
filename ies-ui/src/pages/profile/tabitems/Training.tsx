@@ -8,6 +8,7 @@ import { TrainingData,  SaveTraining, FilesData } from "../data.ess";
 import { simpleRequestActions } from '@/services/model';
 import { ProfileServicesEss } from '../service_ess'; 
 import TrainingView from "../view/TrainingView";
+import { formatYear } from "@/pages/utils";
 
 
 interface Props {
@@ -95,15 +96,16 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                         <Button style={{display:(is_admin==2&&empId>0)?'':'none'}} onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}><PlusOutlined/> Add</Button>
                     
                         <Button danger onClick={() => setModalEducationViewVisible({ type: 'VIEW', payload: null})} 
-                            style={{display:(step>=2&&is_admin==0)?'':'none'}}><EyeOutlined/> View edit</Button> 
+                            style={{display:(step>=2&&is_admin!=2)?'':'none'}}><EyeOutlined/> View edit</Button> 
                             
-                        <Button style={{display: (step==2||step==7||step==5)&&is_admin==0?'':'none'}}
-                            onClick={() => setModalVisible({ type: 'ADD', payload: null })}
-                            icon={<PlusOutlined />}
-                            key="1"
-                            type="primary">
-                            Add
-                        </Button>
+                        {profile!!.ess==null?'':<Button style={{display: (step==2||step==7||step==5)&&is_admin==0?'':'none'}}
+                                onClick={() => setModalVisible({ type: 'ADD', payload: null })}
+                                icon={<PlusOutlined />}
+                                key="1"
+                                type="primary">
+                                Add
+                            </Button>
+                        }
                     </Space>
                 </div>
                 <ProTable<TrainingData>
@@ -121,18 +123,21 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                         {
                             title: "Training Courses", dataIndex: "trainingCourse"
                         },{
-                            title: "Year", dataIndex: "year"
+                            title: "Year", dataIndex: "year",
+                            render:(dom, r) => {
+                                return formatYear(r.year)
+                            }
                         },{
                             title: "description", dataIndex: "description"
                         },
                         {   width: 100,
                             render: (dom, r) => {
                                 return (<>
-                                  <a style={{display: (is_admin==0&&empId==0)?'':'none'}}
+                                  {profile!!.ess==null?'':<a style={{display: (is_admin==0&&empId==0)?'':'none'}}
                                     onClick={() => setModalVisible({ type: 'EDIT', payload: r })} 
                                   >
                                     <EditOutlined/>
-                                  </a> 
+                                  </a>} 
                                     <a style={{display: (is_admin==2&&empId>0)?'':'none'}} 
                                         onClick={() => setModalVisible({ type: 'EDIT', payload: r })}>
                                         <EditOutlined />

@@ -19,7 +19,7 @@ import { ProfileServices } from './service';
 import { ProfileServicesEss } from './service_ess'; 
 import styles from './style.less';
 import UserContact from './UserContact'; 
-import { EditOutlined,HistoryOutlined, EyeOutlined, UserOutlined, PhoneOutlined, ThunderboltOutlined, ReadOutlined, TagOutlined, SisternodeOutlined, ScheduleOutlined, LinkOutlined, FieldTimeOutlined } from "@ant-design/icons";  
+import { EditOutlined,HistoryOutlined, ExclamationCircleOutlined, UserOutlined, PhoneOutlined, ThunderboltOutlined, ReadOutlined, TagOutlined, SisternodeOutlined, ScheduleOutlined, LinkOutlined, FieldTimeOutlined } from "@ant-design/icons";  
 import PersonalViewDetailModal from './modal/PersonalViewDetailModal';
 import AttachmentList from './tabitems/AttachmentList';
 import Message from './Message';
@@ -118,10 +118,11 @@ function Profile() {
   // init
   const initData = async () => {
     try {
-      const rs = await ProfileServices.fetchProfile(id).query(requestActions);
+      const rs = await ProfileServices.fetchProfile(Number(id)).query(requestActions);
       // 
-      if(rs?.profile_draft==null){ 
-        setStep(0);
+      if(rs?.profile_draft==null){  
+        var _step = rs?.ess==null?0:1; 
+        setStep(_step);
       }
       else { 
         setStep(rs?.profile_draft.step!!);
@@ -264,7 +265,7 @@ function Profile() {
   }
 
   // stage
-  const _info = "ចាប់ពីថ្ងៃ  "+ formatDateTime(profile?.dateJoined)+" ​ដល់  "+ formatDateTime(profile?.dateJoined)+"";
+  const _info = "ចាប់ពីថ្ងៃ  "+(profile?.ess==null?'':formatDateTime(profile?.ess.startDate))+" ​ដល់  "+(profile?.ess==null?'':formatDateTime(profile?.ess.endDate))+"";
   const _stag = ["Cancel Updated","Start","Started Modified","Reviewing","Rejected with Revoke","Revoke","Approval","Cancelled Submitted"];
   const _stag_message = [
     /*0*/"Cancel Updated",
@@ -279,20 +280,24 @@ function Profile() {
   //
   return (
     <Spin spinning = {requestActions.request?.loading}> 
-      {/*  */}  
-      <Message visible={(step==6&&Number(id)==0)?true:false}
-        message={_stag[step]}
-        description={_stag_message[step]}
-        type={step==4?"error":"info"}
-        step={step}
-        data={profile?.profile_draft}
-        is_admin={Number(is_admin)==2||Number(is_admin)==1?true:false}
-        cb={{
-          onStartModify: (stepId) => { 
-            onStartModify(stepId);
-          },
-        }}
-      /> 
+      {/*  
+        checking open announcement expiry
+      */}  
+      {profile?.ess==null?'': profile?.ess.empClosed==2?'':
+            <Message visible={(step==6&&Number(id)==0)?true:false}
+              message={_stag[step]}
+              description={_stag_message[step]}
+              type={step==4?"error":"info"}
+              step={step}
+              data={profile?.profile_draft}
+              is_admin={Number(is_admin)==2||Number(is_admin)==1?true:false}
+              cb={{
+                onStartModify: (stepId) => { 
+                  onStartModify(stepId);
+                },
+              }}
+            /> 
+      }
       {/*  */}
       {profile && <PageContainer
         title={`Employee No: ${profile?.empNo}`}
@@ -302,14 +307,14 @@ function Profile() {
         onTabChange={onOperationTabChange}
         tabList={operationTabList} 
         footer={[ 
-          <Button style={{display:(step==2&&Number(id)==0)?'':'none',color: 'red'}} onClick={()=>onStartModify(0)}><EditOutlined/> Cancel Update</Button>,
-          <Button type="primary" style={{display:(step==2||step==7||step==5)&&Number(id)==0?'':'none'}} onClick={()=>onStartModify(3)}><EditOutlined/> Submit Update</Button>,
-          <Button style={{display:(step==3&&Number(id)==0)==true?'':'none',color: 'red'}} onClick={()=>onStartModify(7)}><HistoryOutlined/> Cancel Submitted</Button>,
-          <Button style={{display:(step==4&&Number(id)==0)==true?'':'none',color: 'red'}} onClick={()=>onStartResubmit(5)}><HistoryOutlined/> Revoke</Button>,
+          profile!!.ess==null?'':<Button style={{display:(step==2&&Number(id)==0)?'':'none',color: 'red'}} onClick={()=>onStartModify(0)}><ExclamationCircleOutlined /> Cancel Update</Button>,          
+          profile!!.ess==null?'':<Button type="primary" style={{display:(step==2||step==7||step==5)&&Number(id)==0?'':'none'}} onClick={()=>onStartModify(3)}><EditOutlined/> Submit Update</Button>,
+          profile!!.ess==null?'':<Button style={{display:(step==3&&Number(id)==0)==true?'':'none',color: 'red'}} onClick={()=>onStartModify(7)}><HistoryOutlined/> Cancel Submitted</Button>,
+          profile!!.ess==null?'':<Button style={{display:(step==4&&Number(id)==0)==true?'':'none',color: 'red'}} onClick={()=>onStartResubmit(5)}><HistoryOutlined/> Revoke</Button>, 
 
+          profile!!.ess==null?'':<Button style={{color: 'red',display:(step==3&&Number(id)>0)==true?'':'none'}} onClick={()=>onRejected(4)}><EditOutlined/> Rejected</Button>,
           
-          <Button style={{color: 'red',display:(step==3&&Number(id)>0)==true?'':'none'}} onClick={()=>onRejected(4)}><EditOutlined/> Rejected</Button>,
-          <Button type="primary" style={{display:(step==3)==true?'':'none'}} onClick={()=>onViewProfileData()}><EyeOutlined/> View edit</Button>,
+          // <Button type="primary" style={{display:(step==3)==true?'':'none'}} onClick={()=>onViewProfileData()}><EyeOutlined/> View edit</Button>,
           <Button type="primary" style={{display:(step==3&&Number(id)>0)==true?'':'none'}} onClick={()=>onStartAproval(6)}><EditOutlined/> Approval</Button>, 
 
         ]}

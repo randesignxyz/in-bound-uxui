@@ -2,42 +2,45 @@ import TableView, { TableViewSearchParams } from "@/components/DataCrud/TableVie
 import { simpleRequestActions } from '@/services/model';
 import { ProDescriptions } from '@ant-design/pro-components';
 import { PageContainer, RouteContext } from '@ant-design/pro-components';
-import {  Alert,   message, Spin, } from 'antd';
+import { message, Spin, } from 'antd';
 import { useEffect,useState } from 'react';  
-import { OpenEssDataItem,OpenAdvanceSearchParams } from "../data_ess"; 
+import { OpenEssDataItem } from "../data_ess"; 
 import { ServicesEss } from '../service_ess_tran'; 
 
 import ListViewEss from './ListViewEss';
+import { useParams } from "@umijs/max";
+import { formatDateTime } from "@/pages/utils";
+ 
 
-interface Props {
-    profile: OpenEssDataItem;
-}
+export default () =>{
+  const params = useParams();
+  const {id} = params
+  const requestActions = simpleRequestActions();
 
-export default ({ profiles }: Props) =>{
 
   const [tabStatus, seTabStatus] = useState<AdvancedState>({
     operationKey: 'ListViewEss',
     tabActiveKey: 'ListViewEss',
   });
 
-  const [profile, setProfile] = useState<OpenEssDataItem>()
+  const [profile, setProfile] = useState<OpenEssDataItem>();
+
 
   useEffect(()=> {
-    initData()
+    initData();
   }, [])
 
   const initData = async () => {
-    try { 
-    //   const rs = await ServicesEss.listEssOpen({criteria.searchValue:1}).query(requestActions);
-    //   setProfile(rs)
+    try {   
+      const rs = await ServicesEss.essOpenDetail(Number(id)).query(requestActions);
+      setProfile(rs);
     } catch (error: any) {
       message.error(error.message || 'Failed to load data.')
     }
   }
 
-  const contentList = () => ({
-    
-    ListViewEss: <ListViewEss />, 
+  const contentList = () => ({ 
+    ListViewEss: <ListViewEss profile={profile!!} />, 
   });
 
   const onOperationTabChange = (key: string) => {
@@ -45,17 +48,17 @@ export default ({ profiles }: Props) =>{
   };
 
   
-const description = (data?: OpenEssDataItem) => (
+const description = (data: OpenEssDataItem) => ( 
     <RouteContext.Consumer>
-      {({ isMobile }) => (
+      {({ isMobile }) => ( 
         <ProDescriptions  size="small" column={isMobile ? 1 : 3}>
-          <ProDescriptions.Item label="Start date">10/06/2024</ProDescriptions.Item>
-          <ProDescriptions.Item label="End date">10/06/2024</ProDescriptions.Item>
-          <ProDescriptions.Item label="Description">The compiler bundled to Kotlin plugin (IDE) must be greater or equal than external compiler (project) used for building modules. So update Intellij IDEA to be compatible with the most up-to-date plugins.</ProDescriptions.Item>   
+           <ProDescriptions.Item label="Start date">{formatDateTime(data.startDate)}</ProDescriptions.Item>
+          <ProDescriptions.Item label="End date">{formatDateTime(data.endDate)}</ProDescriptions.Item>
+          <ProDescriptions.Item label="Description">{data.description}</ProDescriptions.Item>     
   
-        </ProDescriptions>
+          </ProDescriptions>
       )}
-    </RouteContext.Consumer>
+    </RouteContext.Consumer>  
   );
   
   const operationTabList = [
@@ -82,18 +85,18 @@ const description = (data?: OpenEssDataItem) => (
   };
  
   return (
-    // <Spin spinning = {requestActions.request?.loading}>
-    <PageContainer 
-      title={`Open ess testing testing`}
-      content={description(profile)}
-    //   extra={extra}
-      onTabChange={onOperationTabChange}
-      tabList={operationTabList}     
-    >
-      { contentList()[tabStatus.operationKey as  keyof {}]}
-    
-    </PageContainer> 
-    // </Spin>
+    <Spin spinning = {requestActions.request?.loading}>
+      {profile && <PageContainer 
+        title={`${profile?.openTitle}`}
+        content={description(profile)} 
+        onTabChange={onOperationTabChange}
+        tabList={operationTabList}     
+      >
+        { contentList()[tabStatus.operationKey as  keyof {}]}
+      
+      </PageContainer> 
+    }
+    </Spin>
   );
 }
 

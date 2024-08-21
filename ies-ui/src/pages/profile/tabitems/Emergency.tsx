@@ -98,15 +98,16 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
                     <Button style={{display:(is_admin==2&&empId>0)?'':'none'}} onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}><PlusCircleFilled/> Add</Button>
 
                     <Button danger onClick={() => setModalEducationViewVisible({ type: 'VIEW', payload: profile.emergency})} 
-                        style={{display:(step>=2&&is_admin==0)?'':'none'}}><EyeOutlined/> View edit</Button>
+                        style={{display:(step>=2&&is_admin!=2)?'':'none'}}><EyeOutlined/> View edit</Button>
 
-                    <Button style={{display: (step==2||step==7||step==5)&&is_admin==0?'':'none'}}
-                        onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}
-                        icon={<PlusOutlined />}
-                        key="1"
-                        type="primary">
-                        Add
-                    </Button>
+                    {profile!!.ess==null?'':<Button style={{display: (step==2||step==7||step==5)&&is_admin==0?'':'none'}}
+                            onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}
+                            icon={<PlusOutlined />}
+                            key="1"
+                            type="primary">
+                            Add
+                        </Button>
+                    }
                 </Space>
             </div>
             <ProTable<EmergencyData>
@@ -134,10 +135,10 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
                     {   width: '70px',
                         render: (dom, r) => {
                             return ( <Flex vertical={false} justify='space-between'>
-                                    <a style={{display: (is_admin==0&&empId==0)?'':'none'}} 
+                                    {profile!!.ess==null?'':<a style={{display: (is_admin==0&&empId==0)?'':'none'}} 
                                         onClick={() => setModalVisible({ type: 'EDIT', payload: r })}>
                                         <EditOutlined />
-                                    </a>  
+                                    </a> }
                                     <a style={{display: (is_admin==2&&empId>0)?'':'none'}} 
                                         onClick={() => setModalVisible({ type: 'EDIT', payload: r })}>
                                         <EditOutlined />

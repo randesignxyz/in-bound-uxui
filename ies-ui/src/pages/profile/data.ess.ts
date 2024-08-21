@@ -1,12 +1,13 @@
+import moment, { Moment } from "moment";
 
 export interface SaveEssProfile {
   id?: number; 
-  essProfId?: number; 
+  openEssId?: number; 
   empId:number;
   nameKh: string; 
   nameEn: string; 
   genderId   : number; 
-  dateBirth  : string;  
+  dateBirth  : moment.Moment;
   placeBirth : string;  
   maritalStatusId    : number;  
   provincePbId    : number;  
@@ -56,7 +57,7 @@ export interface EssProfileData {
   nameKh : string; 
   nameEn : string;  
   genderId   : number; 
-  dateBirth  : string;  
+  dateBirth  : moment.Moment; 
   placeBirth : string;  
   maritalStatusId    : number;  
   permanentAddress : string;  
@@ -91,9 +92,12 @@ export interface EmergencyData {
   id?: number; 
   empId:number;
   emergencyName: string; 
-  emergencyContactRelation: string; 
+  emergencyContactRelation: number; 
   emergencyPhone: string; 
   emergencyAddress: string; 
+  homeNo: string; 
+  street: string; 
+  villageId: string; 
   status:Boolean;
   provinceId: number;
   districtId: number;
@@ -157,7 +161,7 @@ export interface TrainingData {
   trainingId?: number; 
   empId:number;
   trainingCourse: string; 
-  year: string; 
+  year: moment.Moment;
   description: string;  
   status:Boolean;
   otherFile  :AttachmentFile[];
@@ -178,8 +182,8 @@ export interface SaveExperience {
   location: string; 
   startPosition: string; 
   endPosition: string; 
-  startDate: string; 
-  endDate: string; 
+  startDate: moment.Moment;
+  endDate: moment.Moment;
   description: string;  
   status:Boolean;
   type:string;
@@ -193,8 +197,8 @@ export interface ExperienceData {
   location: string; 
   startPosition: string; 
   endPosition: string; 
-  startDate: string; 
-  endDate: string; 
+  startDate: moment.Moment;
+  endDate: moment.Moment;
   description: string;  
   status:Boolean;
   otherFile  :AttachmentFile[];

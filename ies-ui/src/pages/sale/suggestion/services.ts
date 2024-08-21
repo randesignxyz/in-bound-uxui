@@ -7,7 +7,7 @@ const SuggestionActions = {
   dsdExchangeRage: (): ServiceApiType<{}> => ({
     type: 'FETCH_QUERY',
     endpoint: 'SALE',
-    actionName: 'exchange-rate-dsd',
+    actionName: 'exchange-rate-dsd-only',
     payload: {},
   }),
   exchangeRage: (): ServiceApiType<{}> => ({

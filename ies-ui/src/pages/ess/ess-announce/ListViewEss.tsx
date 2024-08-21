@@ -1,18 +1,17 @@
-import TableView, { TableViewSearchParams } from "@/components/DataCrud/TableView";
-import ImportFileButton from "@/components/ImportFileButton";
+import TableView, { TableViewSearchParams } from "@/components/DataCrud/TableView"; 
 import { simpleRequestActions } from "@/services/model";
 import { ActionType } from "@ant-design/pro-table";
 import { useSafeState } from "ahooks"; 
-import { message, Radio, Space, Spin, Tooltip,Flex,Button } from "antd";
-import { useRef,useState } from "react";
+import { message, Radio, Space, Spin, Tooltip,Flex,Button, Dropdown, Modal } from "antd";
+import { useEffect, useRef,useState } from "react";
 import { OpenEssDataItem,OpenAdvanceSearchParams } from "../data_ess"; 
 import { ServicesEss } from '../service_ess_tran';  
-import { Model } from "../model";
-import AppNewOpenForm from "./AppNewOpenForm"; 
-import moment from 'moment'; 
-import { DiffOutlined, SoundOutlined, ExportOutlined,EditOutlined } from "@ant-design/icons";
+import { Model } from "../model"; 
+import { EyeOutlined, ExclamationCircleOutlined, CheckOutlined, CloseCircleOutlined, HeartOutlined, EllipsisOutlined } from "@ant-design/icons";
 import Status from "@/components/Status";
 import { history } from 'umi';
+import { MenuProps } from "rc-menu";
+import { ProfileServicesEss } from "@/pages/profile/service_ess";
 
 
 interface Props {
@@ -20,20 +19,26 @@ interface Props {
 }
 
  
-export default ({ profiles }: Props) =>{
+export default ({ profile }: Props) =>{
     const { data, modals } = Model();
     const requestActions = simpleRequestActions()
     const [loading, setLoading] = useSafeState(false)
     const actionRef = useRef<ActionType>()
     const actionRefItem = useRef<ActionType>()
-    const [status, setStatus] = useState('3');  
-    const [statusItem, setStatusItem] = useState('3');  
-    const [openEssItemList, setOpenEssItemList] = useState<OpenEssDataItem[]>([]);
+    const [status, setStatus] = useState(3);  
+    const [statusItem, setStatusItem] = useState(3);
+    
+    useEffect(()=> {
+        initData();
+      }, [profile])
+    
+      const initData = async () => {
+        // console.log(profile);
+      }
   
     const onRequestHandler = async (params: TableViewSearchParams<OpenAdvanceSearchParams>) => {
-        try {  
-            params.criteria.searchValue= status;
-            return await ServicesEss.listEssOpen(params).query(requestActions)
+        try {   
+            return await ServicesEss.listEssOpen(params,status).query(requestActions)
 
         } catch (error: any) {
             message.error(error.message)
@@ -42,9 +47,8 @@ export default ({ profiles }: Props) =>{
     }
 
     const onRequestItemHandler = async (params: TableViewSearchParams<OpenAdvanceSearchParams>) => {
-        try {  
-            params.criteria.searchValue= statusItem;
-            return await ServicesEss.listEssOpenItem(params).query(requestActions)
+        try {    
+            return await ServicesEss.listEssOpenItem(params,profile.id,statusItem).query(requestActions)
 
         } catch (error: any) {
             message.error(error.message)
@@ -61,32 +65,108 @@ export default ({ profiles }: Props) =>{
         setStatus(id);
         actionRef?.current?.reloadAndRest?.();
     } 
+    const actionItem =(record:OpenEssDataItem):MenuProps["items"] =>[
+        {
+            key: "1",
+            label: "View Info",
+            itemIcon: <EyeOutlined />,
+            onClick: async () => {
+                window.open(`/profile/1/${record.empId}`,)?.focus();
+            }
+        },
+        {
+            key: "2",
+            label: "Force Approval",
+            itemIcon: <CheckOutlined />,
+            disabled:(record.stepId==6||record.stepId==4|| record.stepId==2)?true:false,
+            onClick: async () => { 
+                Modal.confirm({
+                    title: 'Force Approval',
+                    content: 'Do you want to force approval?',
+                    onOk: async () => {
+                      try {  
+                        const rs = await ServicesEss.essInfoDetail(record.empId,profile.id).query(requestActions);  
+                        await ProfileServicesEss.approvalEssProfile({...rs?.profile_draft,id: record.empId, empId: record.empId,step:6,openEssId:profile.id,otherFile:[],remark:'',status:true})(requestActions);
+                        actionRefItem?.current?.reloadAndRest?.();
+                      } catch (error: any) {
+                        message.error(error.message || 'Failed to created.');
+                      }
+                    },
+                  });  
+            }
+        },
+        {
+            key: "3",
+            label: "Force Rejected",
+            itemIcon: <ExclamationCircleOutlined />,
+            style:{color:'red'},
+            disabled:(record.stepId==6||record.stepId==4 || record.stepId==2)?true:false,
+            onClick: async () => {
+                Modal.confirm({
+                title: 'Force Rejected',
+                content: 'Do you want to force Rejected?',
+                onOk: async () => {
+                  try {  
+                    const rs = await ServicesEss.essInfoDetail(record.empId,profile.id).query(requestActions);  
+                    await ProfileServicesEss.saveEssProfile({...rs?.profile_draft,id: record.empId, empId: record.empId,step:4,openEssId:profile.id,otherFile:[],remark:'',status:true})(requestActions);
+                    actionRefItem?.current?.reloadAndRest?.();
+                  } catch (error: any) {
+                    message.error(error.message || 'Failed to created.');
+                  }
+                },
+              });  
+            }
+        },
+        {
+            key: "4",
+            label: "Force Cancel Update",
+            itemIcon: <CloseCircleOutlined />,
+            disabled:(record.stepId==6)?true:false,
+            style:{color:'red'},
+            onClick: async () => {
+                Modal.confirm({
+                    title: 'Force Cancel Update',
+                    content: 'Do you want to force cancel update?',
+                    onOk: async () => {
+                      try {  
+                        const rs = await ServicesEss.essInfoDetail(record.empId,profile.id).query(requestActions);  
+                        await ProfileServicesEss.saveEssProfile({...rs?.profile_draft,id: record.empId, empId: record.empId,step:0,openEssId:profile.id!!,otherFile:[],remark:'',status:true})(requestActions);
+                        actionRefItem?.current?.reloadAndRest?.();
+                      } catch (error: any) {
+                        message.error(error.message || 'Failed to created.');
+                      }
+                    },
+                  });  
+            }
+        } 
+       
+    ]
     return <Spin spinning = {loading}>
         <TableView<OpenEssDataItem, { searchValue?: string; }>
                 extraFilter={
                     <Space > 
-                        <Radio.Group optionType="button" defaultValue={"3"}
-                            options={[
-                                { label: "All", value: "0" },
-                                { label: "Review", value: "3" },
-                                { label: "Rejected", value: "4" },
-                                // { label: "Verified", value: "3" },
-                                { label: "Approval", value: "6" }
-                            ]}
-                            onChange={(e) => {setAdanceSearchItem(e.target.value);}}
-                        />
+                    <Radio.Group optionType="button" defaultValue={"3"}
+                        options={[
+                            { label: "All", value: "0" },
+                            { label: "Review", value: "3" },
+                            { label: "Rejected", value: "4" },
+                            // { label: "Verified", value: "3" },
+                            { label: "Approval", value: "6" }
+                        ]}
+                        onChange={(e) => {setAdanceSearchItem(e.target.value);}}
+                    />
                     </Space>
                 } 
                 tableProps={{
                     actionRef: actionRefItem,
                     toolbar: {
-                        actions: false,
+                        actions: [false],
                     },
-                }}  
+                }} 
                 columns={[
                 { width   :'5%',
                     title   : "Emp No", 
-                    dataIndex : 'emp_no',
+                    dataIndex : 'empNo',
                     sorter    : false,
                     hideInForm: false, 
                 }, 
@@ -99,21 +179,32 @@ export default ({ profiles }: Props) =>{
                 { width:'12%',title: "BU",dataIndex: 'buName' },
                 {title: 'Status',width: 120, render:(_,r) =>{
                         var _status = 'PENDING';
-                        if (r.step_id=='1'){
+                        if (r.stepId==1){
                             _status = "STARTED";
-                        } else if (r.step_id=='4'){
+                        } else if (r.stepId==4){
                             _status = "REJECTED";
-                        } else if (r.step_id=='3'){
+                        } else if (r.stepId==3){
                             _status = "REVIEW";
-                        } else if (r.step_id=='6'){
+                        } else if (r.stepId==6){
                             _status = "APPROVAL";
                         }
-                        return <idv><Status text={_status}/></idv>;
+                        return <div><Status text={_status}/></div>;
                     }
                 },                 
-                {width: 50,align:'center',
+                {   width: 50,align:'center', 
                     render: (dom, r) => {  
-                        return (<a onClick={() => { window.open(`/profile/1/${r.emp_id}`,)?.focus(); }}><EditOutlined/></a>);
+                        return (
+                            <Dropdown
+                                menu={{
+                                    items:actionItem(r),
+                                    style:{
+                                        width:200
+                                    }
+                                }}
+                                ><EllipsisOutlined />
+                                </Dropdown>
+                                // <a onClick={() => { window.open(`/profile/1/${r.empId}`,)?.focus(); }}><EditOutlined/></a>
+                            );
                         },
                     }
                 ]} 

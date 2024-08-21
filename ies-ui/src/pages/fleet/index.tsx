@@ -25,6 +25,12 @@ export default () => {
       description: 'Vehicle List',
       link: `${FleetPaths.vehicle}/list/${useId()}`,
       icon: fleet,
+    },{
+      id: 'bookingcar',
+      name: 'bookingcar',
+      description: 'Booking Car List',
+      link: `${FleetPaths.fleet}/carbooking`,
+      icon: fleet,
     },
     {
       id: 'maintenance',

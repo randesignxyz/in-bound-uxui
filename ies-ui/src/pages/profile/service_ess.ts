@@ -147,10 +147,10 @@ export const ProfileServicesEss = {
     payload: { ...data }
   }),
   // image list
-  listImageProfile: (id: number,type: number,is_new: number,ref_id: number) => fetchDataListService<FilesData, { id: number,type: number,is_new: number,ref_id: number }>({
+  listImageProfile: (id: number,type: number,isNew: number,refId: number) => fetchDataListService<FilesData, { id: number,type: number,isNew: number,refId: number }>({
     actionName: 'list-profile-image',
     endpoint: 'HR',
-    payload: { id,type,is_new,ref_id }
+    payload: { id,type,isNew,refId }
   }),  
   // activity list
   listActivityProfile: (id: number) => fetchDataListService<ActivityData, { id: number }>({

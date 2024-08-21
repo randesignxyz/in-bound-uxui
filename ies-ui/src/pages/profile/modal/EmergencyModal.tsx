@@ -123,7 +123,7 @@ export default ({ profile,data,locations,type,isAdmin,empId, cb, ...rest }: Prop
                 <ProFormSelect 
                     label="Emergency Contact Relation"
                     width={'md'} 
-                    name={'emergency_contact_relation'}
+                    name={'emergencyContactRelation'}
                     options={[
                         { value: 1, label: "Spouse" },
                         { value: 2, label: "Parent"},

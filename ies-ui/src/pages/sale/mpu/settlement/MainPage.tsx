@@ -11,6 +11,7 @@ import { formatCurrency } from "../../sale";
 import { Tag } from "antd";
 import { SyncOutlined, CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
 import { SettlementMethodAdvanceSearch, SettlementMethodDetailDTO } from "./data";
+import numeral from "numeral";
 interface Props {
 
 }
@@ -106,6 +107,10 @@ const SettlementMianPage: React.FC<Props> = () => {
                             dataIndex: "amount",
                             valueType: "money",
                             align:"right",
+                            render:(_,r)=>{
+                                const total = r.amount + (r.amountKH/r.exchangeRate);
+                                return `$ ${numeral(total).format("0,000.00")}`
+                            }
                         },
                         {
                             title: "Exchange Rate",

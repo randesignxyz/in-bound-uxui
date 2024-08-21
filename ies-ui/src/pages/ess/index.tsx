@@ -23,7 +23,7 @@ export default () => {
             name: 'Employee List',
             description: 'Employee-List',
             link: `${HrmPaths.employee}/list`,
-            // visible: access.canAccessHrEmployeeMenuItem,
+            visible: access.canAccessHrEmployeeMenuItem,
             icon: essIcon,
           },
           {
@@ -31,8 +31,8 @@ export default () => {
             name: 'Announcement',
             description: 'Announcement',
             link: `${HrmPaths.ess}/list`, 
-            icon: essAnnIcon,
-            visible: true
+            visible: access.canAccessHrEmployeeMenuItem,
+            icon: essAnnIcon
           },
           {
             id: 'ess_profile',

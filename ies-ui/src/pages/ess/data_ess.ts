@@ -1,14 +1,22 @@
+import moment from "moment";
+import { SaveEssProfile } from "../profile/data.ess";
+import { EssOpenData } from "../profile/data";
+
  
 export interface OpenEssDataItem {
-  id?: number;  
+  id: number;  
   empId : number;  
+  stepId : number;  
   openTitle : string; 
-  startDate    : string;  
-  endDate      : string; 
+  startDate    : moment.Moment;  
+  endDate      : moment.Moment;  
   createdDate  : string; 
   createdBy    : string; 
   description   : string;  
   status        : Boolean;
+  
+  profile_draft     : SaveEssProfile;   
+  ess         : EssOpenData; 
 }
 
 

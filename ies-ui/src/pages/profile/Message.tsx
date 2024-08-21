@@ -29,19 +29,19 @@ export default ({visible,message,description,type,step,cb,data,is_admin,...rest}
         initData();
     }, [data]);
     const initData = async () => { 
-        if(data==null){ 
+        // if(data==null){ 
+        //     setDisplay(true);
+        // }
+        // else{ 
+        if(step==0){
             setDisplay(true);
+        }else{
+            setDisplay(visible!!);
         }
-        else{ 
-            if(step==0){
-                setDisplay(true);
-            }else{
-                setDisplay(visible);
-            }
-        }
+        // }
         if(is_admin){
             setDisplay(true); 
-        }
+        } 
     };
 
     return <>

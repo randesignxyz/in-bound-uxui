@@ -25,7 +25,7 @@ interface Props {
 export default ({ profile,step,is_admin,empId,cb}: Props) => {
     // 
     const [modalVisible, setModalVisible] = useState< { type: 'ADD'; payload: undefined } | { type: 'EDIT'; payload: EssProfileData } >();
-    const [modalViewVisible, setModalViewVisible] = useState< { type: 'ADD'; payload: undefined } | { type: 'EDIT'; payload: EssProfileData } >();
+    const [modalViewVisible, setModalViewVisible] = useState< { type: 'ADD'; payload: undefined } | { type: 'EDIT'; payload: EssProfileData }| { type: 'VIEW'; payload: EssProfileData } >();
     // const [placeBirthModalVisible, setPlaceBirthModalVisible] = useState< { type: 'ADD'; payload: undefined } | { type: 'EDIT'; payload: EssProfileData } >();
     // const [permanentAddressModalVisible, setPermanentAddressModalVisible] = useState< { type: 'ADD'; payload: undefined } | { type: 'EDIT'; payload: EssProfileData } >();
     // const [currentAddressModalVisible, setCurrentAddressModalVisible] = useState< { type: 'ADD'; payload: undefined } | { type: 'EDIT'; payload: EssProfileData } >();
@@ -184,9 +184,12 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
         });
     };
     // 
-    const editFormEssProfileHandler = async () => {
-        setModalVisible({ type: 'EDIT', payload: profile.profile});
-        hideViewModal(false);
+    const editFormEssProfileHandler = async () => { 
+        profile!!.ess==null?'':setModalVisible({ type: 'EDIT', payload: profile.profile});
+        profile!!.ess==null?'':hideViewModal(false);
+        if(profile!!.ess==null){
+            message.error('Expired period allowed to edit data profiles.Please contact HR  for helping.');
+        }
     }
 
     return <div>
@@ -199,15 +202,16 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
                         <Button onClick={() => setModalVisible({ type: 'EDIT', payload: profile.profile})} style={{display:(is_admin==2&&empId>0)?'':'none'}}><EditOutlined/> EDIT</Button>, 
 
                         <Button danger onClick={() => setModalViewVisible({ type: 'VIEW', payload: profile.profile!!})} 
-                                style={{display:(stepId>=2&&is_admin==0)?'':'none'}}><EyeOutlined/> View edit</Button>
-
-                        <Button style={{display: (step==2||step==7||step==5)&&is_admin==0?'':'none'}}
-                            onClick={() => setModalVisible({ type: 'EDIT', payload: profile.profile_draft==null?profile.profile:profile.profile_draft })}
-                            icon={<EditOutlined />}
-                            key="1"
-                            type="primary">
-                            Edit
-                        </Button>
+                                style={{display:(stepId>=2&&is_admin!=2)?'':'none'}}><EyeOutlined/> View edit</Button>
+                        {/* checking open announce is null */}
+                        {profile!!.ess==null?'':<Button style={{display: (step==2||step==7||step==5)&&is_admin==0?'':'none'}}
+                                onClick={() => setModalVisible({ type: 'EDIT', payload: profile.profile_draft==null?profile.profile:profile.profile_draft })}
+                                icon={<EditOutlined />}
+                                key="1"
+                                type="primary">
+                                Edit
+                            </Button>
+                        }
                     </Space>
                 </div>
 

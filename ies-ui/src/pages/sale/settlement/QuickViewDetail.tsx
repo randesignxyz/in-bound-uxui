@@ -1,15 +1,13 @@
 import type { DescriptionDisplayDataItem } from '@/components/Descriptions';
 import DescriptionDisplay from '@/components/Descriptions';
 import { formatDate, formatDateTime } from '@/pages/utils';
-import type { DrawerProps } from 'antd';
 import { Flex, Table } from 'antd';
 import { Typography } from 'antd';
 import { Card } from 'antd';
-import { Drawer } from 'antd';
 import type { SettlementLess } from './data';
 import numeral from 'numeral';
 import type { ExchangeRate } from '@/services/sale/data';
-import { DrawerForm, DrawerFormProps, ProDescriptions, ProTable } from '@ant-design/pro-components';
+import { DrawerForm, DrawerFormProps, ProTable } from '@ant-design/pro-components';
 import type { SalesInvoiceAR, SalesInvoiceItemAR } from '../daily_report/data';
 import React from 'react';
 
@@ -31,7 +29,7 @@ const QuickViewDetail: React.FC<Prop> = ({ settlement, soldExchangeRate, ...prop
     { label: 'Cashier Name', value: settlement?.cashierName },
     {
       label: 'Exchange Rate',
-      value: ` ${soldExchangeRate?.target_amount}`,
+      value: ` ${settlement?.exchangeRate}`,
     },
     {
       label: 'Bank Amount USD',
@@ -51,8 +49,7 @@ const QuickViewDetail: React.FC<Prop> = ({ settlement, soldExchangeRate, ...prop
     },
     {
       label: 'Sold Amount',
-      value: `$ ${(settlement?.soldAmount || 0.0)
-        }`,
+      value: `$ ${numeral(settlement?.soldAmount || 0.0).format("0,000.00")}`
     },
   ];
 

@@ -68,7 +68,7 @@ export interface ProfileData {
   profile_adr_pm     : EssProfileAdrData;  
   profile_adr_ct     : EssProfileAdrData;   
   contacts    : ContactData[];  
-  ess         : EssOpenData[]; 
+  ess         : EssOpenData; 
   essLocation    : LocationData[];  
   essAttachFill: FilesData[];
   profileTab: ProfileTab;
@@ -77,15 +77,16 @@ export interface EssOpenData{
   id?: number;  
   empId : number; 
   openEssName : string; 
-  startDate    : string;  
-  endDate      : string; 
-  createdIate  : string; 
+  startDate    : Moment;  
+  endDate      : Moment; 
+  createdDate  : Moment; 
   createdBy    : string; 
-  description   : string;  
-  status        : Boolean;
-}
- 
-
+  description  : string;  
+  status       : Boolean;
+  empClosed  : number?=0;
+  opening      : number;
+  stag      : number;
+} 
 
 export interface BasicContactData {
   id: number;
@@ -146,8 +147,8 @@ export interface EssProfileData {
   departmentId         : number;  
   passportNumber     : string;   
   relationshipId       : number;     
-  occupationId       : number;     
-  dependIateOfBirth       : string;  
+  occupationId       : number;      
+  dependDateOfBirth       : string;  
   streetCr       : string;  
   status              : Boolean; 
   step              : number?=0;

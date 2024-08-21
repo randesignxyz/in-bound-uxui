@@ -1357,11 +1357,11 @@ export default [
     component: './ess'
   },
   {
-    path: '/booking_car',
+    path: 'fleet/carbooking',
     name: 'bookingcar',
     icon: 'TeamOutlined', 
     hideInMenu: 'true',
-    component: './ess'
+    component: './fleet/carbooking'
   },
   /**
    * End ESS Management

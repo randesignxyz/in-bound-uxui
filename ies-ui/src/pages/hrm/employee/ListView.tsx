@@ -94,8 +94,8 @@ export default ({ onAdd, onEdit }: Props) => {
                         defaultValue={"ACTIVE"}
                         options={[
                             { label: "All", value: "ALL" },
-                            { label: "Employee Requested", value: "REQUESTED" },
-                            { label: "HR Requested", value: "REVIEWED" }
+                            // { label: "Employee Requested", value: "REQUESTED" },
+                            // { label: "HR Requested", value: "REVIEWED" }
                         ]} 
                     />
                 </Space>

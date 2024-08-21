@@ -5,6 +5,7 @@ import { DailyWaterTreatmentItem } from './data';
 import { useForm } from 'antd/lib/form/Form';
 import { Card, Col, Row } from 'antd';
 import { useAccess } from '@umijs/max';
+import { ExclamationCircleOutlined } from '@ant-design/icons';
 
 interface Props extends FormModalProps {
     data?: DailyWaterTreatmentItem
@@ -14,6 +15,7 @@ export default ({ data, onSave, ...props }: Props) => {
     const access = useAccess();
     const [form] = useForm<DailyWaterTreatmentItem>();
     const [initData, setInitData] = useState<DailyWaterTreatmentItem>()
+    const [tdsValue, setTdsValue] = useState(data?.tds || '');
 
     useEffect(() => {
         if (props.open) {
@@ -27,7 +29,7 @@ export default ({ data, onSave, ...props }: Props) => {
             title="Inventory Transfer"
             {...props}
             width={'600px'}
-            readOnly={!(data?.assign_to_user?.split(" ").includes(access.currentUser?.login || '') || access.canAssignItem)}            
+            readOnly={!(data?.assign_to_user?.split(" ").includes(access.currentUser?.login || '') || access.canAssignItem)}
             okText={data?.status !== 'pending' ? 'Update' : 'Submit'}
             onSubmit={async () => {
                 const dataForm = await form.validateFields();
@@ -47,32 +49,32 @@ export default ({ data, onSave, ...props }: Props) => {
                 }
                 let entity
                 if (initData?.status == 'pending') {
-                entity = {
-                    ...dataForm,
-                    id: data?.id,
-                    warning_count: updatedWarningCount,
-                    status: status,
-                    action:"Add Treatment",
-                    treatment_id:data?.treatment_id
-                }
-            }else{
-                const changes = [
-                    initData?.tds != dataForm.tds ? `TDS from ${initData?.tds} to ${dataForm.tds}` : '',
-                    initData?.ph != dataForm.ph ? `PH from ${initData?.ph} to ${dataForm.ph}` : '',
-                    initData?.temperature != dataForm.temperature ? `Temperature from ${initData?.temperature} to ${dataForm.temperature}` : '',
-                    initData?.other != dataForm.other ? `Other from ${initData?.other == null ? '' : initData?.other} to ${dataForm.other}` : '',
-                ];
-                const actionString = changes.filter(change => change !== '').join(', ');
+                    entity = {
+                        ...dataForm,
+                        id: data?.id,
+                        warning_count: updatedWarningCount,
+                        status: status,
+                        action: "Add Treatment",
+                        treatment_id: data?.treatment_id
+                    }
+                } else {
+                    const changes = [
+                        initData?.tds != dataForm.tds ? `TDS from ${initData?.tds} to ${dataForm.tds}` : '',
+                        initData?.ph != dataForm.ph ? `PH from ${initData?.ph} to ${dataForm.ph}` : '',
+                        initData?.temperature != dataForm.temperature ? `Temperature from ${initData?.temperature} to ${dataForm.temperature}` : '',
+                        initData?.other != dataForm.other ? `Other from ${initData?.other == null ? '' : initData?.other} to ${dataForm.other}` : '',
+                    ];
+                    const actionString = changes.filter(change => change !== '').join(', ');
 
-                entity = {
-                    ...dataForm,
-                    id: data?.id,
-                    warning_count: updatedWarningCount,
-                    status: status,
-                    action: `has modified ${actionString}`,
-                    treatment_id:data?.treatment_id
+                    entity = {
+                        ...dataForm,
+                        id: data?.id,
+                        warning_count: updatedWarningCount,
+                        status: status,
+                        action: `has modified ${actionString}`,
+                        treatment_id: data?.treatment_id
+                    }
                 }
-            }
                 onSave(entity)
             }}
         >
@@ -82,29 +84,67 @@ export default ({ data, onSave, ...props }: Props) => {
                         <Col span={12}>
                             <ProFormText
                                 hasFeedback={false}
-                                rules={[{ required: true, message: 'Please Enter TDS' }]}
+                                rules={[{ required: true, message: 'Please Enter TDS' },{ pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
                                 label={
-                                    <div>
-                                        TDS
-                                        <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px', }}>(≤300 ppm)</span>
-                                    </div>
+                                    <ProForm.Item
+                                        noStyle
+                                        shouldUpdate={(prevValues, currentValues) => prevValues.tds !== currentValues.tds}
+                                    >
+                                        {({ getFieldValue }) => {
+                                            const tdsValue = getFieldValue('tds');
+                                            return (
+                                                <div>
+                                                    TDS
+                                                    <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px' }}>
+                                                        (≤300 ppm)
+                                                    </span>
+                                                    {Number(tdsValue) > 300 && tdsValue !== '' && tdsValue !== null && (
+                                                        <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} />
+                                                    )}
+                                                </div>
+                                            );
+                                        }}
+                                    </ProForm.Item>
                                 }
                                 name={'tds'}
                                 initialValue={data?.tds}
+                                fieldProps={{
+                                    type: 'number',
+                                    step: 'any'
+                                  }}
                             />
                         </Col>
                         <Col span={12}>
                             <ProFormText
                                 hasFeedback={false}
-                                rules={[{ required: true, message: 'Please Enter PH' }]}
+                                rules={[{ required: true, message: 'Please Enter PH' },{ pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
                                 label={
-                                    <div>
-                                        PH
-                                        <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px', }}>6.5-8.5</span>
-                                    </div>
+                                    <ProForm.Item
+                                        noStyle
+                                        shouldUpdate={(prevValues, currentValues) => prevValues.ph !== currentValues.ph}
+                                    >
+                                        {({ getFieldValue }) => {
+                                            const pHValue = getFieldValue('ph');
+                                            return (
+                                                <div>
+                                                    PH
+                                                    <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px' }}>
+                                                        (6.5-8.5)
+                                                    </span>
+                                                    {(Number(pHValue) < 6.5 || Number(pHValue) > 8.5) && pHValue !== '' && pHValue !== null && (
+                                                        <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} />
+                                                    )}
+                                                </div>
+                                            );
+                                        }}
+                                    </ProForm.Item>
                                 }
                                 name={'ph'}
                                 initialValue={data?.ph}
+                                fieldProps={{
+                                    type: 'number',
+                                    step: 'any'
+                                  }}
                             />
                         </Col>
                     </Row>
@@ -112,15 +152,34 @@ export default ({ data, onSave, ...props }: Props) => {
                         <Col span={12}>
                             <ProFormText
                                 hasFeedback={false}
-                                rules={[{ required: true, message: 'Please Enter Temperature' }]}
+                                rules={[{ required: true, message: 'Please Enter Temperature' },{ pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
                                 label={
-                                    <div>
-                                        Temperature
-                                        <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px', }}>(25-35)°C</span>
-                                    </div>
+                                    <ProForm.Item
+                                        noStyle
+                                        shouldUpdate={(prevValues, currentValues) => prevValues.temperature !== currentValues.temperature}
+                                    >
+                                        {({ getFieldValue }) => {
+                                            const temperatureValue = getFieldValue('temperature');
+                                            return (
+                                                <div>
+                                                    Temperature
+                                                    <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px' }}>
+                                                        (25-35)°C
+                                                    </span>
+                                                    {(Number(temperatureValue) < 25 || Number(temperatureValue) > 35) && temperatureValue !== '' && temperatureValue !== null && (
+                                                        <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} />
+                                                    )}
+                                                </div>
+                                            );
+                                        }}
+                                    </ProForm.Item>
                                 }
                                 name={'temperature'}
                                 initialValue={data?.temperature}
+                                fieldProps={{
+                                    type: 'number',
+                                    step: 'any'
+                                  }}
                             />
                         </Col>
                         <Col span={12}>

@@ -6,6 +6,7 @@ import { useForm } from 'antd/lib/form/Form';
 import { Card, Col, Divider, message, Radio, Row, Typography } from 'antd';
 import { useAccess } from '@umijs/max';
 import { HACCPMonitoring, HACCPMonitoringList } from './data';
+import { ExclamationCircleOutlined } from '@ant-design/icons';
 
 interface Props extends FormModalProps {
     data?: HACCPMonitoring
@@ -99,14 +100,33 @@ export default ({ data, onSave, type, ...props }: Props) => {
                         <Col span={12}>
                             <ProFormText
                                 hasFeedback={false}
-                                rules={[{ required: true, message: 'Please Enter Water pressure' }]}
+                                rules={[{ required: true, message: 'Please Enter Water pressure' },{ pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
                                 label={
-                                    <div>
-                                        Water pressure
-                                        <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px', }}>(&gt; 1.0 bar)</span>
-                                    </div>
+                                    <ProForm.Item
+                                        noStyle
+                                        shouldUpdate={(prevValues, currentValues) => prevValues.water_pressure !== currentValues.water_pressure}
+                                    >
+                                        {({ getFieldValue }) => {
+                                            const waterPressureValue = getFieldValue('water_pressure');
+                                            return (
+                                                <div>
+                                                   Water pressure
+                                                    <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px' }}>
+                                                    (&gt; 1.0 bar)
+                                                    </span>
+                                                    {Number(waterPressureValue) > 1.0 && waterPressureValue !== '' && waterPressureValue !== null && (
+                                                        <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} />
+                                                    )}
+                                                </div>
+                                            );
+                                        }}
+                                    </ProForm.Item>
                                 }
                                 name={'water_pressure'}
+                                fieldProps={{
+                                    type: 'number',
+                                    step: 'any'
+                                  }}
                             // initialValue={data?.raw_water}
                             />
                         </Col>
@@ -115,6 +135,8 @@ export default ({ data, onSave, type, ...props }: Props) => {
                                 <Text style={{ color: 'red', fontSize: 20 }}>*</Text>
                                 <Text style={{ marginBottom: 10 }}>Nozzles rainser</Text>
                                 <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px', }}>(No one clog of 32/40)</span>
+                                {nozzlesRinser == 0  ? <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} /> : <></>}
+
                             </div>
                             <Radio.Group
                                 onChange={(e) => (setNozzlesRinser(e.target.value))}
@@ -136,14 +158,33 @@ export default ({ data, onSave, type, ...props }: Props) => {
                         <Col span={12}>
                             <ProFormText
                                 hasFeedback={false}
-                                rules={[{ required: true, message: 'Please Enter FG' }]}
+                                rules={[{ required: true, message: 'Please Enter FG' },{ pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
                                 label={
-                                    <div>
-                                        FG [O₃]
-                                        <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px', }}>(0.05-0.4 ppm)</span>
-                                    </div>
+                                    <ProForm.Item
+                                        noStyle
+                                        shouldUpdate={(prevValues, currentValues) => prevValues.fg !== currentValues.fg}
+                                    >
+                                        {({ getFieldValue }) => {
+                                            const fgValue = getFieldValue('fg');
+                                            return (
+                                                <div>
+                                                   FG [O₃]
+                                                    <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px' }}>
+                                                    (0.05-0.4 ppm)
+                                                    </span>
+                                                    {(Number(fgValue) < 0.05 || Number(fgValue) > 0.4) && fgValue !== '' && fgValue !== null && (
+                                                        <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} />
+                                                    )}
+                                                </div>
+                                            );
+                                        }}
+                                    </ProForm.Item>
                                 }
                                 name={'fg'}
+                                fieldProps={{
+                                    type: 'number',
+                                    step: 'any'
+                                  }}
                             // initialValue={data?.acf}
                             />
                         </Col>
@@ -151,6 +192,7 @@ export default ({ data, onSave, type, ...props }: Props) => {
                             <div style={{ flexDirection: 'row' }}>
                                 <Text style={{ color: 'red', fontSize: 20 }}>*</Text>
                                 <Text style={{ marginBottom: 10 }}>Smell</Text>
+                                {smell == 0  ? <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} /> : <></>}
                             </div>
                             <Radio.Group
                                 onChange={(e) => (setSmell(e.target.value))}
@@ -171,6 +213,7 @@ export default ({ data, onSave, type, ...props }: Props) => {
                             <div style={{ flexDirection: 'row' }}>
                                 <Text style={{ color: 'red', fontSize: 20 }}>*</Text>
                                 <Text style={{ marginBottom: 10 }}>Control</Text>
+                                {activityControl == 0  ? <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} /> : <></>}
                             </div>
                             <Radio.Group
                                 onChange={(e) => (setActivityControl(e.target.value))}

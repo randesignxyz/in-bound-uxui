@@ -5,6 +5,7 @@ import { DailyPreWaterTreatmentList } from './data';
 import { useForm } from 'antd/lib/form/Form';
 import { Card, Col, Row } from 'antd';
 import { useAccess } from '@umijs/max';
+import { ExclamationCircleOutlined } from '@ant-design/icons';
 
 interface Props extends FormModalProps {
     data?: DailyPreWaterTreatmentList
@@ -105,19 +106,61 @@ export default ({ data, onSave, type, ...props }: Props) => {
                         <Col span={12}>
                             <ProFormText
                                 hasFeedback={false}
-                                rules={[{ required: true, message: 'Please Enter Raw Water' }]}
-                                label='Raw Water'
+                                rules={[{ required: true, message: 'Please Enter Raw Water' },{ pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
+                                label={
+                                    <ProForm.Item
+                                        noStyle
+                                        shouldUpdate={(prevValues, currentValues) => prevValues.raw_water !== currentValues.raw_water}
+                                    >
+                                        {({ getFieldValue }) => {
+                                            const rawWaterValue = getFieldValue('raw_water');
+                                            return (
+                                                <div>
+                                                    Raw Water
+                                                    {(Number(rawWaterValue) < 6.5 || Number(rawWaterValue) > 8.5) && rawWaterValue !== '' && rawWaterValue !== null && (
+                                                        <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} />
+                                                    )}
+                                                </div>
+                                            );
+                                        }}
+                                    </ProForm.Item>
+                                }
                                 name={'raw_water'}
                                 initialValue={data?.raw_water}
+                                fieldProps={{
+                                    type: 'number',
+                                    step: 'any'
+                                  }}
                             />
                         </Col>
                         <Col span={12}>
                             <ProFormText
                                 hasFeedback={false}
-                                rules={[{ required: true, message: 'Please Enter SF 1' }]}
-                                label='SF 1'
+                                rules={[{ required: true, message: 'Please Enter SF 1' },{ pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
+                                label={
+                                    <ProForm.Item
+                                        noStyle
+                                        shouldUpdate={(prevValues, currentValues) => prevValues.sf1 !== currentValues.sf1}
+                                    >
+                                        {({ getFieldValue }) => {
+                                            const sf1Value = getFieldValue('sf1');
+                                            return (
+                                                <div>
+                                                    SF 1
+                                                    {(Number(sf1Value) < 6.5 || Number(sf1Value) > 8.5) && sf1Value !== '' && sf1Value !== null && (
+                                                        <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} />
+                                                    )}
+                                                </div>
+                                            );
+                                        }}
+                                    </ProForm.Item>
+                                }
                                 name={'sf1'}
                                 initialValue={data?.sf1}
+                                fieldProps={{
+                                    type: 'number',
+                                    step: 'any'
+                                  }}
                             />
                         </Col>
                     </Row>
@@ -125,19 +168,61 @@ export default ({ data, onSave, type, ...props }: Props) => {
                         <Col span={12}>
                             <ProFormText
                                 hasFeedback={false}
-                                rules={[{ required: true, message: 'Please Enter SF 2' }]}
-                                label='SF 2'
+                                rules={[{ required: true, message: 'Please Enter SF 2' },{ pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
+                                label={
+                                    <ProForm.Item
+                                        noStyle
+                                        shouldUpdate={(prevValues, currentValues) => prevValues.sf2 !== currentValues.sf2}
+                                    >
+                                        {({ getFieldValue }) => {
+                                            const sf2Value = getFieldValue('sf2');
+                                            return (
+                                                <div>
+                                                    SF 2
+                                                    {(Number(sf2Value) < 6.5 || Number(sf2Value) > 8.5) && sf2Value !== '' && sf2Value !== null && (
+                                                        <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} />
+                                                    )}
+                                                </div>
+                                            );
+                                        }}
+                                    </ProForm.Item>
+                                }
                                 name={'sf2'}
                                 initialValue={data?.sf2}
+                                fieldProps={{
+                                    type: 'number',
+                                    step: 'any'
+                                  }}
                             />
                         </Col>
                         <Col span={12}>
                             <ProFormText
                                 hasFeedback={false}
-                                rules={[{ required: true, message: 'Please Enter ACF1' }]}
-                                label='ACF1'
+                                rules={[{ required: true, message: 'Please Enter ACF1' },{ pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
+                                label={
+                                    <ProForm.Item
+                                        noStyle
+                                        shouldUpdate={(prevValues, currentValues) => prevValues.acf1 !== currentValues.acf1}
+                                    >
+                                        {({ getFieldValue }) => {
+                                            const acf1Value = getFieldValue('acf1');
+                                            return (
+                                                <div>
+                                                    ACF1
+                                                    {(Number(acf1Value) < 6.5 || Number(acf1Value) > 8.5) && acf1Value !== '' && acf1Value !== null && (
+                                                        <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} />
+                                                    )}
+                                                </div>
+                                            );
+                                        }}
+                                    </ProForm.Item>
+                                }
                                 name={'acf1'}
                                 initialValue={data?.acf1}
+                                fieldProps={{
+                                    type: 'number',
+                                    step: 'any'
+                                  }}
                             />
                         </Col>
                     </Row>
@@ -145,19 +230,61 @@ export default ({ data, onSave, type, ...props }: Props) => {
                         <Col span={12}>
                             <ProFormText
                                 hasFeedback={false}
-                                rules={[{ required: true, message: 'Please Enter ACF2' }]}
-                                label='ACF2'
+                                rules={[{ required: true, message: 'Please Enter ACF2' },{ pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
+                                label={
+                                    <ProForm.Item
+                                        noStyle
+                                        shouldUpdate={(prevValues, currentValues) => prevValues.acf2 !== currentValues.acf2}
+                                    >
+                                        {({ getFieldValue }) => {
+                                            const acf2Value = getFieldValue('acf2');
+                                            return (
+                                                <div>
+                                                    ACF2
+                                                    {(Number(acf2Value) < 6.5 || Number(acf2Value) > 8.5) && acf2Value !== '' && acf2Value !== null && (
+                                                        <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} />
+                                                    )}
+                                                </div>
+                                            );
+                                        }}
+                                    </ProForm.Item>
+                                }
                                 name={'acf2'}
                                 initialValue={data?.acf2}
+                                fieldProps={{
+                                    type: 'number',
+                                    step: 'any'
+                                  }}
                             />
                         </Col>
                         <Col span={12}>
                             <ProFormText
                                 hasFeedback={false}
-                                rules={[{ required: true, message: 'Please Enter 10µm 1' }]}
-                                label='10µm 1'
+                                rules={[{ required: true, message: 'Please Enter 10µm 1' },{ pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
+                                label={
+                                    <ProForm.Item
+                                        noStyle
+                                        shouldUpdate={(prevValues, currentValues) => prevValues.um101 !== currentValues.um101}
+                                    >
+                                        {({ getFieldValue }) => {
+                                            const um101Value = getFieldValue('um101');
+                                            return (
+                                                <div>
+                                                    10µm 1
+                                                    {(Number(um101Value) < 6.5 || Number(um101Value) > 8.5) && um101Value !== '' && um101Value !== null && (
+                                                        <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} />
+                                                    )}
+                                                </div>
+                                            );
+                                        }}
+                                    </ProForm.Item>
+                                }
                                 name={'um101'}
                                 initialValue={data?.um101}
+                                fieldProps={{
+                                    type: 'number',
+                                    step: 'any'
+                                  }}
                             />
                         </Col>
                     </Row>
@@ -165,19 +292,61 @@ export default ({ data, onSave, type, ...props }: Props) => {
                         <Col span={12}>
                             <ProFormText
                                 hasFeedback={false}
-                                rules={[{ required: true, message: 'Please Enter 10µm 2' }]}
-                                label='10µm 2'
+                                rules={[{ required: true, message: 'Please Enter 10µm 2' },{ pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
+                                label={
+                                    <ProForm.Item
+                                        noStyle
+                                        shouldUpdate={(prevValues, currentValues) => prevValues.um102 !== currentValues.um102}
+                                    >
+                                        {({ getFieldValue }) => {
+                                            const um102Value = getFieldValue('um102');
+                                            return (
+                                                <div>
+                                                    10µm 2
+                                                    {(Number(um102Value) < 6.5 || Number(um102Value) > 8.5) && um102Value !== '' && um102Value !== null && (
+                                                        <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} />
+                                                    )}
+                                                </div>
+                                            );
+                                        }}
+                                    </ProForm.Item>
+                                }
                                 name={'um102'}
                                 initialValue={data?.um102}
+                                fieldProps={{
+                                    type: 'number',
+                                    step: 'any'
+                                  }}
                             />
                         </Col>
                         <Col span={12}>
                             <ProFormText
                                 hasFeedback={false}
-                                rules={[{ required: true, message: 'Please Enter Buffer ST002' }]}
-                                label='Buffer ST002'
+                                rules={[{ required: true, message: 'Please Enter Buffer ST002' },{ pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
+                                label={
+                                    <ProForm.Item
+                                        noStyle
+                                        shouldUpdate={(prevValues, currentValues) => prevValues.buffer_st002 !== currentValues.buffer_st002}
+                                    >
+                                        {({ getFieldValue }) => {
+                                            const bufferSt002Value = getFieldValue('buffer_st002');
+                                            return (
+                                                <div>
+                                                    Buffer ST002
+                                                    {(Number(bufferSt002Value) < 6.5 || Number(bufferSt002Value) > 8.5) && bufferSt002Value !== '' && bufferSt002Value !== null && (
+                                                        <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} />
+                                                    )}
+                                                </div>
+                                            );
+                                        }}
+                                    </ProForm.Item>
+                                }
                                 name={'buffer_st002'}
                                 initialValue={data?.buffer_st002}
+                                fieldProps={{
+                                    type: 'number',
+                                    step: 'any'
+                                  }}
                             />
                         </Col>
 

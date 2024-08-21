@@ -127,7 +127,10 @@ export default () => {
                     }>
                     <ArrowRightOutlined />
                   </a>}
-                  style={{ marginTop: 40, borderWidth: '2px', borderStyle: 'solid', }}
+                  style={{ marginTop: 40, borderWidth: '2px', borderStyle: 'solid',
+                    borderColor: filteredData[0] !== undefined ? 'rgba(216, 204, 120, 0.5)' : 'rgba(128, 128, 128, 0.1)',
+                      
+                    }}
                   actions={[
                     <Badge status={'success'} text={`Total: ${total}`} />,
                     <Badge status={'error'} text={`Warning: ${warningStatus}`} />,

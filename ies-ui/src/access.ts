@@ -397,13 +397,17 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         [
           'ROLE_ADMIN',
-          'ROLE_PROD_DWT_USER'
+          'ROLE_PROD_DWT_USER',
+          'ROLE_PROD_PRO_ADMIN',
+          'ROLE_PROD_ADMIN'
         ].some((it) => it === item),
       ) || false,
     canAssignItem:
       currentUser?.authorities.some((item) =>
         [
-          'ROLE_ADMIN'
+          'ROLE_ADMIN',
+          'ROLE_PROD_PRO_ADMIN',
+          'ROLE_PROD_ADMIN'
         ].some((it) => it === item),
       ) || false,
 
@@ -417,20 +421,26 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         [
           'ROLE_ADMIN',
-          'ROLE_PROD_PWT_USER'
+          'ROLE_PROD_PWT_USER',
+          'ROLE_PROD_PRO_ADMIN',
+          'ROLE_PROD_ADMIN'
         ].some((it) => it === item),
       ) || false,
     canAssignItemPre:
       currentUser?.authorities.some((item) =>
         [
-          'ROLE_ADMIN'
+          'ROLE_ADMIN',
+          'ROLE_PROD_PRO_ADMIN',
+          'ROLE_PROD_ADMIN'
         ].some((it) => it === item),
       ) || false,
     canAccessDailyHACCPMonitoringMenuItem:
       currentUser?.authorities.some((item) =>
         [
           'ROLE_ADMIN',
-          'ROLE_PROD_HACCP_USER'
+          'ROLE_PROD_HACCP_USER',
+          'ROLE_PROD_PRO_ADMIN',
+          'ROLE_PROD_ADMIN'
         ].some((it) => it === item),
       ) || false,
 

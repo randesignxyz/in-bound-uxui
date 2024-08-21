@@ -5,6 +5,7 @@ import { DailyWaterTreatmentItem } from './data';
 import { useForm } from 'antd/lib/form/Form';
 import { Card, Col, Row } from 'antd';
 import { useAccess } from '@umijs/max';
+import { ExclamationCircleOutlined } from '@ant-design/icons';
 
 interface Props extends FormModalProps {
     data?: DailyWaterTreatmentItem
@@ -88,29 +89,67 @@ export default ({ data, onSave, ...props }: Props) => {
                         <Col span={12}>
                             <ProFormText
                                 hasFeedback={false}
-                                rules={[{ required: true, message: 'Please Enter TDS' }]}
+                                rules={[{ required: true, message: 'Please Enter TDS' },{ pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
                                 label={
-                                    <div>
-                                        TDS
-                                        <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px', }}>(≤300 ppm)</span>
-                                    </div>
+                                    <ProForm.Item
+                                        noStyle
+                                        shouldUpdate={(prevValues, currentValues) => prevValues.tds !== currentValues.tds}
+                                    >
+                                        {({ getFieldValue }) => {
+                                            const tdsValue = getFieldValue('tds');
+                                            return (
+                                                <div>
+                                                    TDS
+                                                    <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px' }}>
+                                                        (≤300 ppm)
+                                                    </span>
+                                                    {Number(tdsValue) > 300 && tdsValue !== '' && tdsValue !== null && (
+                                                        <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} />
+                                                    )}
+                                                </div>
+                                            );
+                                        }}
+                                    </ProForm.Item>
                                 }
                                 name={'tds'}
                                 initialValue={data?.tds}
+                                fieldProps={{
+                                    type: 'number',
+                                    step: 'any'
+                                  }}
                             />
                         </Col>
                         <Col span={12}>
                             <ProFormText
                                 hasFeedback={false}
-                                rules={[{ required: true, message: 'Please Enter PH' }]}
+                                rules={[{ required: true, message: 'Please Enter PH' },{ pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
                                 label={
-                                    <div>
-                                        PH
-                                        <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px', }}>6.5-8.5</span>
-                                    </div>
+                                    <ProForm.Item
+                                        noStyle
+                                        shouldUpdate={(prevValues, currentValues) => prevValues.ph !== currentValues.ph}
+                                    >
+                                        {({ getFieldValue }) => {
+                                            const pHValue = getFieldValue('ph');
+                                            return (
+                                                <div>
+                                                    PH
+                                                    <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px' }}>
+                                                        (6.5-8.5)
+                                                    </span>
+                                                    {(Number(pHValue) < 6.5 || Number(pHValue) > 8.5) && pHValue !== '' && pHValue !== null && (
+                                                        <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} />
+                                                    )}
+                                                </div>
+                                            );
+                                        }}
+                                    </ProForm.Item>
                                 }
                                 name={'ph'}
                                 initialValue={data?.ph}
+                                fieldProps={{
+                                    type: 'number',
+                                    step: 'any'
+                                  }}
                             />
                         </Col>
                     </Row>
@@ -118,29 +157,67 @@ export default ({ data, onSave, ...props }: Props) => {
                         <Col span={12}>
                             <ProFormText
                                 hasFeedback={false}
-                                rules={[{ required: true, message: 'Please Enter Pressure' }]}
+                                rules={[{ required: true, message: 'Please Enter Pressure' },{ pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
                                 label={
-                                    <div>
-                                        Pressure
-                                        <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px', }}>0.1-0.3 Mpa</span>
-                                    </div>
+                                    <ProForm.Item
+                                        noStyle
+                                        shouldUpdate={(prevValues, currentValues) => prevValues.pressure !== currentValues.pressure}
+                                    >
+                                        {({ getFieldValue }) => {
+                                            const pressureValue = getFieldValue('pressure');
+                                            return (
+                                                <div>
+                                                    Pressure
+                                                    <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px' }}>
+                                                        (0.1-0.3 Mpa)
+                                                    </span>
+                                                    {(Number(pressureValue) < 0.1 || Number(pressureValue) > 0.3) && pressureValue !== '' && pressureValue !== null && (
+                                                        <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} />
+                                                    )}
+                                                </div>
+                                            );
+                                        }}
+                                    </ProForm.Item>
                                 }
                                 name={'pressure'}
                                 initialValue={data?.pressure}
+                                fieldProps={{
+                                    type: 'number',
+                                    step: 'any'
+                                  }}
                             />
                         </Col>
                         <Col span={12}>
                             <ProFormText
                                 hasFeedback={false}
-                                rules={[{ required: true, message: 'Please Enter Temperature' }]}
+                                rules={[{ required: true, message: 'Please Enter Temperature' },{ pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
                                 label={
-                                    <div>
-                                        Temperature
-                                        <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px', }}>(25-35)°C</span>
-                                    </div>
+                                    <ProForm.Item
+                                        noStyle
+                                        shouldUpdate={(prevValues, currentValues) => prevValues.temperature !== currentValues.temperature}
+                                    >
+                                        {({ getFieldValue }) => {
+                                            const temperatureValue = getFieldValue('temperature');
+                                            return (
+                                                <div>
+                                                    Temperature
+                                                    <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px' }}>
+                                                        (25-35)°C
+                                                    </span>
+                                                    {(Number(temperatureValue) < 25 || Number(temperatureValue) > 35) && temperatureValue !== '' && temperatureValue !== null && (
+                                                        <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} />
+                                                    )}
+                                                </div>
+                                            );
+                                        }}
+                                    </ProForm.Item>
                                 }
                                 name={'temperature'}
                                 initialValue={data?.temperature}
+                                fieldProps={{
+                                    type: 'number',
+                                    step: 'any'
+                                  }}
                             />
                         </Col>
 

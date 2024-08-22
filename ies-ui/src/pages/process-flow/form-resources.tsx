@@ -12,8 +12,9 @@ import { getPriceComparisonForms } from '../pro/price-comparison/process-flow/co
 import { ActionDataFormProps, DataForm, DataViewProps } from './data';
 import { getAppraisalRequestForms } from '../hrm/appraisal-request/config';
 import { getGratisSettlementRequestForms } from '../crm/gratis/request/config';
-import {getFmaStockRequestForms} from '../fma-stock/request/process-flow/config'
+import { getFmaStockRequestForms } from '../fma-stock/request/process-flow/config'
 import { getInventoryTransferRequestForms } from '../fma-stock/transfer/process-flow/config';
+import { getSaleStockTransferRequestRequestForms } from '../sale/stock-control/stock-transfer-request/process-flow/config';
 
 const dataFormResources: DataForm[] = [
   // ...CashAdvanceForms,
@@ -41,7 +42,8 @@ const dataFormResources: DataForm[] = [
   ...getAppraisalRequestForms(),
   ...getGratisSettlementRequestForms(),
   ...getFmaStockRequestForms(),
-  ...getInventoryTransferRequestForms()
+  ...getInventoryTransferRequestForms(),
+  ...getSaleStockTransferRequestRequestForms()
 ];
 
 export const getActionForm = (props: ActionDataFormProps) =>

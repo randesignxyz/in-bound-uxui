@@ -1,11 +1,7 @@
-import { Descriptions, Flex, message, Modal, ModalProps, Space, Typography } from "antd"
-import { BasicContactData } from "../data"
-import { ModalForm, ModalFormProps,ProCard,ProDescriptions, ProTable } from "@ant-design/pro-components"
-import { TrainingData } from "../data.ess"
-import { useEffect, useState } from "react"
-import { ProfileServicesEss } from "../service_ess"
-import { simpleRequestActions } from "@/services/model"
-import { EditOutlined } from "@ant-design/icons"
+import { Flex, ModalProps, Space, Typography } from "antd" 
+import { ModalForm, ProTable } from "@ant-design/pro-components"
+import { TrainingData } from "../data.ess" 
+import { EditOutlined,DeleteOutlined } from "@ant-design/icons"
 
 interface Props extends ModalProps {
     // data: BasicContactData;
@@ -15,6 +11,7 @@ interface Props extends ModalProps {
     isAdmin:number;
     cb:{ //used callback function to parent form
         onOpenEditForm: (data:TrainingData,type:string) => void;  
+        onDelete: (data:TrainingData) => void;  
     };
 }
 
@@ -84,10 +81,13 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                                     <a style={{display: isAdmin==0?'':'none'}} 
                                         onClick={() => {
                                             cb.onOpenEditForm(r,"ADD");
-                                            console.log(r);
                                         }
                                     }>
                                         <EditOutlined />
+                                    </a>   
+                                    <a style={{display: isAdmin==0?'':'none'}} 
+                                        onClick={() => cb.onDelete(r)}>
+                                        <DeleteOutlined />
                                     </a>  
                                 </Flex>
                                 );

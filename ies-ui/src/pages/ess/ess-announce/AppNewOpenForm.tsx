@@ -58,7 +58,7 @@ export default ({ open, onOpenModalChange, refreshTable,data}: Props) => {
       form={formSubmittor}
       open={open}
       width={'30%'}
-      title={<div>New Announment ESS</div>}
+      title={data!=null?<div>Edit Announment ESS</div>:<div>New Announment ESS</div>}
       submitter={{
         searchConfig: {
           submitText: 'Submit',

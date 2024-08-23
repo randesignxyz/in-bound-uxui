@@ -78,6 +78,7 @@ export interface EssProfileData {
 export interface SaveEmergency {
   id?: number; 
   empId:number;
+  isDelete:number;
   emergencyName: string; 
   emergencyContactRelation: string; 
   emergencyPhone: string;  
@@ -124,6 +125,7 @@ export interface ProfileEmergencyData {
 export interface SaveLanguage {
   id?: number; 
   empId:number;
+  isDelete:number;
   languageId: number; 
   levelName: string; 
   description: string;  
@@ -154,7 +156,8 @@ export interface ProfileLanguageData {
 
 export interface SaveTraining {
   id?: number;   
-  empId:number;
+  empId:number;  
+  isDelete:number;
   trainingCourse: string; 
   year: string; 
   description: string;  
@@ -199,6 +202,7 @@ export interface ExperienceData {
   id?: number; 
   experienceId:number;
   empId:number;
+  isDelete:number;
   companyName: string; 
   location: string; 
   startPosition: string; 
@@ -225,7 +229,8 @@ export interface EducationData {
   empId:number;
   countryEducationCenter: number; 
   degreeId: number; 
-  statusId:number;
+  statusId:number; 
+  isDelete:number;
   educationCenter: string; 
   marjorSubject: string;  
   type: string; 

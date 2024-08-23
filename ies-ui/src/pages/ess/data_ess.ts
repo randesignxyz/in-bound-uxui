@@ -7,6 +7,7 @@ export interface OpenEssDataItem {
   id: number;  
   empId : number;  
   stepId : number;  
+  empClosed : number;  
   openTitle : string; 
   startDate    : string;  
   endDate      : string;  

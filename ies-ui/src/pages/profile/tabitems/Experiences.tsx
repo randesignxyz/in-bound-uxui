@@ -70,6 +70,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
           onOk: async () => {
             try {
                 data.otherFile = createFileOther;
+                data.isDelete = 0;
                 await ProfileServicesEss.saveExperience(data)(requestActions);
             //   const list = await ProfileServicesEss.listExperience(data.empId).query(requestActions);
             //   setExperienceList(list);
@@ -79,6 +80,27 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                 hideModal();
             } catch (error: any) {
               message.error(error.message || 'Failed to Experience.');
+            }
+          },
+        });
+    };
+    const onDelete = async (data: ExperienceData) => {
+        Modal.confirm({
+          title: 'Delete eduction',
+          content: 'Are you sure you want to delete?',
+          onOk: async () => {
+            try {
+                data.otherFile = [];
+                data.isDelete = 1;
+                data.type = "ADD";
+                data.empId= profile.id;
+                await ProfileServicesEss.saveExperience(data)(requestActions); 
+                // call back fun
+                cb.onLoadData();
+                initData();
+                hideModal();
+            } catch (error: any) {
+              message.error(error.message || 'Failed to created.');
             }
           },
         });
@@ -188,7 +210,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
             );
             }}
             onFinish={(data) => {
-                return saveExperienceHandler({ ...data, id: modalVisible?.type=='EDIT'?modalVisible?.payload?.experienceId:(modalVisible?.payload?.id||0), empId: profile.id,status:true,type: modalVisible?.type});
+                return saveExperienceHandler({ ...data, id: modalVisible?.type=='EDIT'?modalVisible?.payload?.experienceId==null?modalVisible?.payload?.id: modalVisible?.payload?.experienceId :(modalVisible?.payload?.id||0), empId: profile.id,status:true,type: modalVisible?.type});
             }}
         />
         
@@ -205,6 +227,9 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                 onOpenEditForm: (id,type) => { 
                     onOpenForm(id,type);
                 },
+                onDelete:(data)=>{
+                    onDelete(data);
+                }
             }}
             isAdmin={is_admin}
             onFinishFailed={(error) => {

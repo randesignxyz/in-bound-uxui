@@ -65,12 +65,12 @@ export default ({ onAdd, onEdit }: Props) => {
         actionRef?.current?.reloadAndRest?.();
     }
     
-    const actionItem1 =(record:OpenEssDataItem):MenuProps["items"] =>[
+    const actionItem1 =(record:OpenEssDataItem,isExp:number):MenuProps["items"] =>[
         {
             key: "1",
-            label: "Edit",
+            label: "Edit or Extent",
             itemIcon: <EditOutlined />,
-            disabled:record.stepId==1?false:true,
+            disabled:record.empClosed==0?false:true,
             onClick: async () => {
                 onOpenESS(record);
             }
@@ -173,35 +173,43 @@ export default ({ onAdd, onEdit }: Props) => {
                     </Flex>
                 },
                 },
-                {title: 'Started Date', dataIndex: 'start_date', render    : (_, r) => moment(r.startDate).format("DD-MMM-YYYY"),width:'7%'},
-                {title: 'End Date', dataIndex: 'end_date', render    : (_, r) => moment(r.endDate).format("DD-MMM-YYYY"), width:'7%'},
+                {title: 'Started Date', dataIndex: 'startDate', render    : (_, r) => moment(r.startDate).format("DD-MMM-YYYY"),width:'7%'},
+                {title: 'End Date', dataIndex: 'endDate', render    : (_, r) => moment(r.endDate).format("DD-MMM-YYYY"), width:'7%'},
                 {title: 'Description', dataIndex:  'description', },
-                {title: 'Created Date', dataIndex: 'created_date', render    : (_, r) => moment(r.createdDate).format("DD-MMM-YYYY"), width:'7%'},
+                {title: 'Created Date', dataIndex: 'createdDate', render    : (_, r) => moment(r.createdDate).format("DD-MMM-YYYY"), width:'7%'},
                 {title: 'Created By', dataIndex: 'createdBy', width:'7%'},
                 {title: 'Status',width: 120, render:(_,r) =>{
                         var currentTime = new Date(); 
                         
                         var _status = 'PENDING';
-                        if (r.stepId==1){
-                            _status = "OPEN";
-                        } else if (r.stepId==2){
-                            _status = "CLOSED";
-                        } else if (r.stepId==3){
-                            _status = "DELETED";
-                        }
-                        //
-                        if(moment(currentTime).format("DD-MMM-YYYY")>moment(r.createdDate).format("DD-MMM-YYYY")){
+                        
+                        //checking expiry
+                        if(moment(currentTime).format("DDMYYYY")>moment(r.endDate).format("DDMYYYY")&&r.empClosed==0){
                             _status = "Expired";
-                        }
+                        }else{
+                            if (r.stepId==1){
+                                _status = "OPEN";
+                            } else if (r.stepId==2){
+                                _status = "CLOSED";
+                            } else if (r.stepId==3){
+                                _status = "DELETED";
+                            }
+
+                        } 
                         return <div><Status text={_status}/></div>;
                     }
                 },
                 {   width: 50,align:'center',
                     render: (dom, r) => {   
+                        var _val=0;
+                        var currentTime = new Date(); 
+                        if(moment(currentTime).format("DDmmYYYY")>moment(r.endDate).format("DDmmYYYY")&&r.empClosed==0){
+                            _val = 1;
+                        } 
                         return (<>
                                 <Dropdown
                                         menu={{
-                                            items:actionItem1(r),
+                                            items:actionItem1(r,_val),
                                             style:{
                                                 width:200
                                             }

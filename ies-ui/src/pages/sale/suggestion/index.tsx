@@ -4,6 +4,7 @@ import { SalePaths } from '..';
 //import Create from './Create';
 // import StockStoreDetail from './Detail';
 import SuggestionListView from './List';
+import TaskListMainPage from './MainPage';
 //import Edit from './Edit';
 //import StoreListView from './List';
 
@@ -21,6 +22,7 @@ export default () => {
               }}
             />
           )
+          // view =="list" && ( <TaskListMainPage/>)
           //   ||
           //   (view === 'detail' && (
           //     <StockStoreDetail

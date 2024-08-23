@@ -1,0 +1,302 @@
+import FormModalComp, { FormModalProps } from "@/components/FormModal";
+import { simpleRequestActions } from "@/services/model";
+import { ActionType, ProForm, ProFormSelect, ProTable } from "@ant-design/pro-components";
+import { Card, Flex, Input, Table } from "antd";
+import { LeadServiceAPI } from "./services";
+import { useEffect, useRef, useState } from "react";
+import { LeadDetail } from "@/services/sale/data";
+import { useForm } from "antd/es/form/Form";
+import { UpdateCustomerOwnerEntry } from "./data";
+
+interface Props extends FormModalProps {
+    onSave: (data: UpdateCustomerOwnerEntry) => void
+}
+
+const ChangeSalepersonForm: React.FC<Props> = ({ onSave, ...props }) => {
+    const requestActions = simpleRequestActions();
+    const services = LeadServiceAPI(requestActions);
+    const [form] = useForm<{ customer?: number, saleperson: string }>();
+    const [dataSource, setDataSource] = useState<LeadDetail[]>([]);
+    const [keySelected, setKeySelected] = useState<number[]>([]);
+    const actionRef = useRef<ActionType>();
+    const [param, setParam] = useState<{
+        empNo?: string
+    }>();
+    useEffect(() => {
+        props.open && form.resetFields();
+        props.open && setDataSource([]);
+        props.open && setKeySelected([]);
+    }, [props.open]);
+
+    // console.log(keySelected);
+    
+    return (
+        <FormModalComp
+            {...props}
+            width="800px"
+            title="Change Saleperson"
+            // disabled={dataSource.length ? false : true}
+            onSubmit={async () => {
+                const dataForm = await form.validateFields(['saleperson']);
+                const entry = {
+                    salePersonId: dataForm.saleperson,
+                    // customerList: dataSource.map(p => p.id)
+                    customerList: keySelected
+                }
+                onSave(entry);
+            }}
+        >
+            <ProForm submitter={false} form={form}>
+                <Flex vertical gap={12}>
+                    <Card size="small">
+                        <Flex justify="space-between" gap={23}>
+                            <ProFormSelect
+                                showSearch
+                                // name={"saleperson"}
+                                label="Saleperson"
+                                noStyle
+                                placeholder={"Please Selecte Saleperson"}
+                                width={"md"}
+                                onChange={(e: string) => {
+                                    setParam({ empNo: e });
+                                    actionRef.current?.reload();
+                                }}
+                                rules={[
+                                    { required: true }
+                                ]}
+                                params={param}
+                                request={async ({ keyWords }) => {
+                                    const data = await services.saleperson()
+                                    return data.map(p => ({
+                                        label: [p.salespersonCode, p.salespersonName].filter(o => o).join("  "),
+                                        value: p.salespersonCode
+                                    }))
+                                }}
+                            />
+
+                            <Input.Search
+                                placeholder={"Please input lead code to filter"}
+                                onSearch={(e) => {
+                                    setParam({ empNo: e });
+                                    actionRef.current?.reload?.();
+                                }}
+                            />
+                        </Flex>
+                    </Card>
+
+                    <Card
+                        size="small"
+                        styles={{
+                            body: { padding: "10px 0" }
+                        }}
+                    >
+                        <ProTable<LeadDetail>
+                            search={false}
+                            size="small"
+                            options={false}
+                            rowSelection={{
+                                selectedRowKeys: keySelected,
+                                selections: [Table.SELECTION_ALL, Table.SELECTION_INVERT],
+                                onSelectMultiple:(selected, selectedRows, changeRows) =>{
+                                    console.log(selected, selectedRows, changeRows);
+                                    
+                                },
+                                onSelect(item, selected) {
+                                    if (selected) {
+                                        setKeySelected(v => ([...(v || []), item.id]))
+                                    } else {
+                                        setKeySelected(v => v?.filter(it => it != item.id))
+                                    }
+                                },
+                                onChange(_, selectedRows, {type}) {
+                                    // console.log(type);
+                                    
+                                    if (type !== 'single') {
+                                        setKeySelected(selectedRows.map(it => it.id))
+                                    }
+                                    // else if (type === 'all') {
+                                    //     setKeySelected(p => {
+                                    //         const s= [...p, ...selectedRows.map(o=>o.id)];
+                                    //         return Array.from(new Set(s))
+                                    //     });
+                                    // }
+                                    // else if(type =='none'){
+                                    //     setKeySelected(selectedRows.map(o=>o.id));
+                                    // }
+                                    // else if (type =="invert"){
+                                    //     setKeySelected([])
+                                    // }
+                                    // else if
+                                },
+                            }}
+                            rowKey={"id"}
+                            actionRef={actionRef}
+                            request={async ({ keyword, pageSize, current }) => {
+                                const data = await LeadServiceAPI(requestActions).listLead({
+                                    criteria: {
+                                        searchValue: keyword || param?.empNo,
+                                    },
+                                    pagination: {
+                                        current: current,
+                                        pageSize: pageSize
+                                    }
+                                });
+                                return Promise.resolve({
+                                    data: data.items,
+                                    sucess: true,
+                                    total: data.total
+                                })
+                            }}
+                            columns={[
+                                {
+                                    title: "Lead Name",
+                                    render: (_, r) => [r.firstName, r.lastName || r.internalName]
+                                },
+                                {
+                                    title: "Phone",
+                                    render: (_, r) => [r.phone].join(" ")
+                                },
+                                {
+                                    title: "region",
+                                    render: (_, r) => r.region?.name
+                                },
+                                {
+                                    title: "Current Salperson",
+                                    render: (_, r) => [r.salesperson?.salespersonCode, r.salesperson?.salespersonName].filter(p => p).join("  ")
+                                },
+                            ]}
+                        />
+
+                    </Card>
+                    <Card
+                        size="small"
+                    >
+                        <ProFormSelect
+                            showSearch
+                            name={"saleperson"}
+                            label="Transfer To Saleperson"
+                            width={"md"}
+                            rules={[
+                                { required: true }
+                            ]}
+                            request={async ({ keyWords }) => {
+                                const data = await services.saleperson()
+                                return data.map(p => ({
+                                    label: [p.salespersonCode, p.salespersonName].filter(o => o).join("  "),
+                                    value: p.salespersonCode
+                                }))
+                            }}
+                        />
+                    </Card>
+                    {/* 
+                    <Card size="small"
+                        title={"Customer Transfer"}
+                        styles={{
+                            body: { padding: 0 }
+                        }}
+                        extra={[
+                            <Space size={12}>
+                                <ProFormSelect
+                                    width={400}
+                                    placeholder={"customer"}
+                                    noStyle
+                                    showSearch
+                                    name={"customer"}
+                                    label="Customer"
+                                    rules={[
+                                        { required: true }
+                                    ]}
+                                    debounceTime={500}
+                                    request={async ({ keyWords }) => {
+                                        const data = await services.listLead({
+                                            criteria: {
+                                                searchValue: keyWords,
+
+                                            }
+                                        })
+                                        return data.items?.map(p => ({
+                                            label: [p.firstName || p.lastName || p.internalName].filter(o => o).join("  "),
+                                            value: p.id
+                                        }))
+                                    }}
+                                />
+                                <Button
+                                    icon={<PlusOutlined />}
+                                    type="primary"
+                                    onClick={async () => {
+                                        const dataForm = await form.validateFields(["customer"]);
+                                        form.resetFields(["customer"])
+                                        const data = await services.detailLead(dataForm.customer).then(o => {
+                                            setDataSource(p => {
+                                                const updatedArray = [...p, o];
+                                                p.some(t => t.id == o.id) && message.warning("Already have customers!")
+                                                return updatedArray.filter((item, index, self) =>
+                                                    index === self.findIndex((t) => (
+                                                        t.id === item.id
+                                                    ))
+                                                );
+                                            });
+                                        }).catch(error => {
+                                            message.error(error.message);
+                                        });
+
+                                    }}
+                                />
+                            </Space>
+                        ]}
+                    >
+                        <ProList<LeadDetail>
+                            size="small"
+                            dataSource={dataSource}
+
+                            metas={{
+                                title: {
+                                    render: (_, r) => <Typography.Text type="success">{[r.firstName, r.lastName || r.internalName]}</Typography.Text>
+                                },
+                                subTitle: {
+                                    dataIndex: "phone"
+                                },
+                                content: {
+                                    render: (_, r) => {
+                                        return <ProDescriptions
+                                            size="small"
+                                            column={1}
+                                            columns={[
+                                                {
+                                                    title: "outletType",
+                                                    render: (_, __) => r.outletType?.name
+                                                },
+                                                {
+                                                    title: "region",
+                                                    render: (_, __) => r.region?.name
+                                                },
+                                                {
+                                                    title: "Current Salperson",
+                                                    render: (_, __) => [r.salesperson?.salespersonCode, r.salesperson?.salespersonName].filter(p => p).join("  ")
+                                                },
+                                            ]}
+                                        />
+                                    }
+                                },
+                                actions: {
+                                    render: (text, row, index, action) => [
+                                        <Button
+                                            danger
+                                            type="link"
+                                            icon={<DeleteOutlined />}
+                                            onClick={() => {
+                                                setDataSource(p => p.filter(o => o != row))
+                                            }} />
+                                    ]
+                                }
+                            }}
+                        />
+                    </Card> */}
+
+                </Flex>
+            </ProForm>
+        </FormModalComp>
+    )
+}
+
+export default ChangeSalepersonForm

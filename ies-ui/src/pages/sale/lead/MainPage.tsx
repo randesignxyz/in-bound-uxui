@@ -1,5 +1,5 @@
 import PageWrapper from "@/components/PageWrapper"
-import { Tag } from "antd";
+import { Button, message, Modal, Tag } from "antd";
 import { LeadAdvanceSearchParams } from "./data";
 import { LeadDetail } from "@/services/sale/data";
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
@@ -9,7 +9,8 @@ import { simpleRequestActions } from "@/services/model";
 import { LeadServiceAPI } from "./services";
 import LeadEntryFormView from "./LeadEntryFormView";
 import LeadDetailView from "./LeadDetailView";
-import { PlusOutlined } from "@ant-design/icons";
+import { EditOutlined, PlusOutlined, SwapOutlined } from "@ant-design/icons";
+import ChangeSalepersonForm from "./ChangeSalepersonForm";
 
 
 interface Props {
@@ -25,6 +26,12 @@ const LeadMainPage: React.FC<Props> = () => {
     const { data, isFetching, refetch } = useQuery(['fetch-lead-list', filter], () => services.listLead(filter), {
         refetchOnWindowFocus: false
     });
+    const [ changeSalepersonState, setChangeSalepersonState] = useState<{
+        visible?:{
+            name:"MODAL",
+            payloads?:any
+        }
+    }>();
     return (
         <>
             <PageWrapper<LeadDetail, LeadAdvanceSearchParams, {}>
@@ -77,7 +84,8 @@ const LeadMainPage: React.FC<Props> = () => {
                             icon:<PlusOutlined/>,
                             type:"link",
                             addNewTab:true
-                        }
+                        },
+                        <Button icon={<SwapOutlined />} type="link" onClick={()=>setChangeSalepersonState({visible:{name:"MODAL"}})}  >Tranfer Lead</Button>
                     ],
                     onRefresh: refetch,
                     onFilter: (param, page, sort) => {
@@ -103,7 +111,7 @@ const LeadMainPage: React.FC<Props> = () => {
                                 actionProps: (items) => ({
                                     label: `${items.internalName
                                             ? items.internalName
-                                            : [items.firstName, items.lastName].join(" ")
+                                            : [items.firstName, items.lastName].filter(p=>p).join(" ")
                                         }`,
                                     type: "view",
                                 })
@@ -123,7 +131,8 @@ const LeadMainPage: React.FC<Props> = () => {
                             {
                                 title: 'Salesperson',
                                 render: (_, r) => {
-                                    return `${r.salesperson?.salespersonCode} - ${r.salesperson?.salespersonName}`;
+                                    return [r.salesperson?.salespersonCode, r.salesperson?.salespersonName].filter(p=>p).join(" - ")
+                                    // return `${r.salesperson?.salespersonCode} - ${r.salesperson?.salespersonName}`;
                                 },
                             },
                             {
@@ -161,6 +170,26 @@ const LeadMainPage: React.FC<Props> = () => {
                     }
                 }}
 
+            />
+
+            <ChangeSalepersonForm
+                open={changeSalepersonState?.visible?.name=="MODAL"}
+                onCancel={()=>setChangeSalepersonState({visible:undefined})}
+                onSave={(data)=>{
+                    Modal.confirm({
+                        title:`Update customers to other salesperson`,
+                        content:"are you sure?",
+                        onOk:async()=>{
+                            services.updateCustomerOwner(data).then(()=>{
+                                message.success("Sucess!");
+                                setChangeSalepersonState({
+                                    visible:undefined
+                                });
+                                refetch(); 
+                            }).catch(error=>message.error(error.message))
+                        }
+                    })
+                }}  
             />
         </>
     )

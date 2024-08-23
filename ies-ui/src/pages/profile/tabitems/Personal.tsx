@@ -67,12 +67,12 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
         {
             key     : '1',
             label   : 'Name KH',
-            children: <Flex vertical={'vertical'}><div>{profile.profile.nameKh}</div><div style={{color:'red',display:'none'}}>{"testing"}</div></Flex>,
+            children: <Flex vertical={'vertical'}><div>{profile.profile.nameKh}</div><div style={{color:'red',display:'none'}}>{""}</div></Flex>,
         },
         {
             key     : '2',
             label   : 'Name EN',
-            children: <Flex vertical={'vertical'}><div>{profile.profile.nameEn}</div><div style={{color:'red',display:'none'}}>{"testing"}</div></Flex>,
+            children: <Flex vertical={'vertical'}><div>{profile.profile.nameEn}</div><div style={{color:'red',display:'none'}}>{""}</div></Flex>,
         },
         {
             key     : '3',
@@ -88,7 +88,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
             key     : '5',
             label   : 'Place of Birth',
             children: <div>
-                            <Flex vertical={'vertical'}><div>{pb}</div><div style={{color:'red',display:'none'}}>{"testing"}</div></Flex>  
+                            <Flex vertical={'vertical'}><div>{pb}</div><div style={{color:'red',display:'none'}}>{""}</div></Flex>  
                         {/* {<a style={{display: step==2?'':'none'}} type="primary" onClick={() => setPlaceBirthModalVisible({ type: 'EDIT', payload: profile.profile })}> <EditOutlined /> </a>} */}
                     </div>,
             span    : 2,
@@ -102,7 +102,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
             key     : '7',
             label   : 'Permanent Address',
             children: <div>
-                            <Flex vertical={'vertical'}><div>{pm}</div><div style={{color:'red',display:'none'}}>{"testing"}</div></Flex> 
+                            <Flex vertical={'vertical'}><div>{pm}</div><div style={{color:'red',display:'none'}}>{""}</div></Flex> 
                             {/* {<a style={{display: step==2?'':'none'}} type="primary" onClick={() => setPermanentAddressModalVisible({ type: 'EDIT', payload: profile.profile })}> <EditOutlined /> </a>} */}
                         </div>,
             span    : 2,
@@ -146,7 +146,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
           title: 'Save Profile',
           content: 'Are you sure?',
           onOk: async () => {
-            try {
+            try { 
                 data.otherFile = createFileOther;
                 await ProfileServicesEss.saveEssProfile(data)(requestActions); 
                 // call back fun
@@ -185,9 +185,9 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
     };
     // 
     const editFormEssProfileHandler = async () => { 
-        profile!!.ess==null?'':setModalVisible({ type: 'EDIT', payload: profile.profile});
-        profile!!.ess==null?'':hideViewModal(false);
-        if(profile!!.ess==null){
+        profile!!.ess.id!!<=0?'':setModalVisible({ type: 'EDIT', payload: profile.profile_draft});
+        profile!!.ess.id!!<=0?'':hideViewModal(false);
+        if(profile!!.ess.id!!){
             message.error('Expired period allowed to edit data profiles.Please contact HR  for helping.');
         }
     }
@@ -199,13 +199,13 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
             <ProCard bordered> 
                 <div style={{width:'100%',textAlign:'right'}}>
                     <Space direction='horizontal'>
-                        <Button onClick={() => setModalVisible({ type: 'EDIT', payload: profile.profile})} style={{display:(is_admin==2&&empId>0)?'':'none'}}><EditOutlined/> EDIT</Button>, 
+                        <Button onClick={() => setModalVisible({ type: 'EDIT', payload: profile.profile!!})} style={{display:(is_admin==2&&empId>0)?'':'none'}}><EditOutlined/> EDIT</Button>, 
 
                         <Button danger onClick={() => setModalViewVisible({ type: 'VIEW', payload: profile.profile!!})} 
                                 style={{display:(stepId>=2&&is_admin!=2)?'':'none'}}><EyeOutlined/> View edit</Button>
                         {/* checking open announce is null */}
-                        {profile!!.ess==null?'':<Button style={{display: (step==2||step==7||step==5)&&is_admin==0?'':'none'}}
-                                onClick={() => setModalVisible({ type: 'EDIT', payload: profile.profile_draft==null?profile.profile:profile.profile_draft })}
+                        {profile!!.ess.id!!<=0?'':<Button style={{display: ([7,5,2].find((element) => element == profile!!.ess.stepId))&&is_admin==0?'':'none'}}
+                                onClick={() => setModalVisible({ type: 'EDIT', payload: (profile.profile_draft==null?profile.profile:profile.profile_draft) })}
                                 icon={<EditOutlined />}
                                 key="1"
                                 type="primary">
@@ -222,7 +222,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
             <ProCard style={{display:'none'}} title={<div><DribbbleOutlined /> Place of Birth</div>} bordered>  
                 <div style={{width:'100%',textAlign:'right'}}>
                     <Button
-                        onClick={() => setModalVisible({ type: 'EDIT', payload: profile.profile })}
+                        onClick={() => setModalVisible({ type: 'EDIT', payload: profile.profile_draft })}
                         icon={<EditOutlined />}
                         key="1"
                         type="primary">
@@ -364,7 +364,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
             );
             }}
             onFinish={(data) => {
-                return saveEssProfileHandler({ ...data, essProfId: modalVisible?.payload?.id, empId: profile.id,status:true,step:22,remark:'' });
+                return saveEssProfileHandler({ ...data, essProfId: modalVisible?.payload?.id,openEssId:profile.ess.id, empId: profile.id,status:true,step:22,remark:'' });
             }}
         /> 
         {/* PersonalViewEditModal */}        

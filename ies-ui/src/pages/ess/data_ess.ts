@@ -8,8 +8,8 @@ export interface OpenEssDataItem {
   empId : number;  
   stepId : number;  
   openTitle : string; 
-  startDate    : moment.Moment;  
-  endDate      : moment.Moment;  
+  startDate    : string;  
+  endDate      : string;  
   createdDate  : string; 
   createdBy    : string; 
   description   : string;  

@@ -44,7 +44,7 @@ function Profile() {
       // setRemarks({valueText:val});
       _valueText = val;
   } 
-  // start
+  // start modified on profiles 
   const onStartModify = (step_id : number)=>{ 
     //
     Modal.confirm({
@@ -52,7 +52,7 @@ function Profile() {
       content: 'Do you want to start modify data?',
       onOk: async () => {
         try {  
-          await ProfileServicesEss.saveEssProfile({...profile?.profile_draft,id: profile?.id, empId: profile?.id,step:step_id,openEssId:profile?.ess.id,otherFile:[],remark:'',status:true})(requestActions);  
+          await ProfileServicesEss.saveEssProfile({...profile?.profile, empId: profile?.id,step:step_id,openEssId:profile?.ess.id,otherFile:[],remark:'',status:true})(requestActions);  
           initData();  
         } catch (error: any) {
           message.error(error.message || 'Failed to created.');
@@ -121,7 +121,7 @@ function Profile() {
       const rs = await ProfileServices.fetchProfile(Number(id)).query(requestActions);
       // 
       if(rs?.profile_draft==null){  
-        var _step = rs?.ess==null?0:1; 
+        var _step = (rs?.ess.id!!<=0)?0:1; 
         setStep(_step);
       }
       else { 
@@ -265,7 +265,7 @@ function Profile() {
   }
 
   // stage
-  const _info = "ចាប់ពីថ្ងៃ  "+(profile?.ess==null?'':formatDateTime(profile?.ess.startDate))+" ​ដល់  "+(profile?.ess==null?'':formatDateTime(profile?.ess.endDate))+"";
+  const _info = "ចាប់ពីថ្ងៃ  "+(profile?.ess.id!!<=0?'':formatDateTime(profile?.ess.startDate))+" ​ដល់  "+(profile?.ess.id!!<=0?'':formatDateTime(profile?.ess.endDate))+"";
   const _stag = ["Cancel Updated","Start","Started Modified","Reviewing","Rejected with Revoke","Revoke","Approval","Cancelled Submitted"];
   const _stag_message = [
     /*0*/"Cancel Updated",
@@ -283,14 +283,14 @@ function Profile() {
       {/*  
         checking open announcement expiry
       */}  
-      {profile?.ess==null?'': profile?.ess.empClosed==2?'':
+      {profile?.ess.id!!<=0?'': profile?.ess.empClosed==2?'':
             <Message visible={(step==6&&Number(id)==0)?true:false}
               message={_stag[step]}
               description={_stag_message[step]}
-              type={step==4?"error":"info"}
+              type={[4,5].find((element) => element == step)?"error":"info"}
               step={step}
               data={profile?.profile_draft}
-              is_admin={Number(is_admin)==2||Number(is_admin)==1?true:false}
+              is_admin={[1,2].find((element) => element == Number(is_admin))?true:false}
               cb={{
                 onStartModify: (stepId) => { 
                   onStartModify(stepId);
@@ -307,12 +307,12 @@ function Profile() {
         onTabChange={onOperationTabChange}
         tabList={operationTabList} 
         footer={[ 
-          profile!!.ess==null?'':<Button style={{display:(step==2&&Number(id)==0)?'':'none',color: 'red'}} onClick={()=>onStartModify(0)}><ExclamationCircleOutlined /> Cancel Update</Button>,          
-          profile!!.ess==null?'':<Button type="primary" style={{display:(step==2||step==7||step==5)&&Number(id)==0?'':'none'}} onClick={()=>onStartModify(3)}><EditOutlined/> Submit Update</Button>,
-          profile!!.ess==null?'':<Button style={{display:(step==3&&Number(id)==0)==true?'':'none',color: 'red'}} onClick={()=>onStartModify(7)}><HistoryOutlined/> Cancel Submitted</Button>,
-          profile!!.ess==null?'':<Button style={{display:(step==4&&Number(id)==0)==true?'':'none',color: 'red'}} onClick={()=>onStartResubmit(5)}><HistoryOutlined/> Revoke</Button>, 
+          profile!!.ess.id!!<=0?'':<Button style={{display:(step==2&&Number(id)==0)?'':'none',color: 'red'}} onClick={()=>onStartModify(0)}><ExclamationCircleOutlined /> Cancel Update</Button>,          
+          profile!!.ess.id!!<=0?'':<Button type="primary" style={{display:([7,5,2].find((element) => element == step))&&Number(id)==0?'':'none'}} onClick={()=>onStartModify(3)}><EditOutlined/> Submit Update</Button>,
+          profile!!.ess.id!!<=0?'':<Button style={{display:(step==3&&Number(id)==0)==true?'':'none',color: 'red'}} onClick={()=>onStartModify(7)}><HistoryOutlined/> Cancel Submitted</Button>,
+          profile!!.ess.id!!<=0?'':<Button style={{display:(step==4&&Number(id)==0)==true?'':'none',color: 'red'}} onClick={()=>onStartResubmit(5)}><HistoryOutlined/> Revoke</Button>, 
 
-          profile!!.ess==null?'':<Button style={{color: 'red',display:(step==3&&Number(id)>0)==true?'':'none'}} onClick={()=>onRejected(4)}><EditOutlined/> Rejected</Button>,
+          profile!!.ess.id!!<=0?'':<Button style={{color: 'red',display:(step==3&&Number(id)>0)==true?'':'none'}} onClick={()=>onRejected(4)}><EditOutlined/> Rejected</Button>,
           
           // <Button type="primary" style={{display:(step==3)==true?'':'none'}} onClick={()=>onViewProfileData()}><EyeOutlined/> View edit</Button>,
           <Button type="primary" style={{display:(step==3&&Number(id)>0)==true?'':'none'}} onClick={()=>onStartAproval(6)}><EditOutlined/> Approval</Button>, 

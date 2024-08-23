@@ -76,6 +76,7 @@ export interface ProfileData {
 export interface EssOpenData{  
   id?: number;  
   empId : number; 
+  stepId : number; 
   openEssName : string; 
   startDate    : Moment;  
   endDate      : Moment; 

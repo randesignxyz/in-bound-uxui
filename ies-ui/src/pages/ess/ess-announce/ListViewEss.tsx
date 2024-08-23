@@ -12,6 +12,7 @@ import Status from "@/components/Status";
 import { history } from 'umi';
 import { MenuProps } from "rc-menu";
 import { ProfileServicesEss } from "@/pages/profile/service_ess";
+import { ProFormTextArea } from "@ant-design/pro-components";
 
 
 interface Props {
@@ -28,6 +29,7 @@ export default ({ profile }: Props) =>{
     const [status, setStatus] = useState(3);  
     const [statusItem, setStatusItem] = useState(3);
     
+    var _valueText = "";
     useEffect(()=> {
         initData();
       }, [profile])
@@ -65,6 +67,10 @@ export default ({ profile }: Props) =>{
         setStatus(id);
         actionRef?.current?.reloadAndRest?.();
     } 
+    const onTextChange = (val:string)=>{ 
+        // setRemarks({valueText:val});
+        _valueText = val;
+    } 
     const actionItem =(record:OpenEssDataItem):MenuProps["items"] =>[
         {
             key: "1",
@@ -78,7 +84,7 @@ export default ({ profile }: Props) =>{
             key: "2",
             label: "Force Approval",
             itemIcon: <CheckOutlined />,
-            disabled:(record.stepId==6||record.stepId==4|| record.stepId==2)?true:false,
+            disabled:([6,4,3].find((element) => element == record.stepId))?false:true,
             onClick: async () => { 
                 Modal.confirm({
                     title: 'Force Approval',
@@ -99,16 +105,16 @@ export default ({ profile }: Props) =>{
             key: "3",
             label: "Force Rejected",
             itemIcon: <ExclamationCircleOutlined />,
-            style:{color:'red'},
-            disabled:(record.stepId==6||record.stepId==4 || record.stepId==2)?true:false,
+            style:{color:[3].find((element) => element == record.stepId)?'red':''},
+            disabled:([3].find((element) => element == record.stepId))?false:true,
             onClick: async () => {
                 Modal.confirm({
-                title: 'Force Rejected',
-                content: 'Do you want to force Rejected?',
+                title: 'Force Rejected', 
+                content: <div><ProFormTextArea name={"comment"} fieldProps={{onChange: (e) => {onTextChange(e.currentTarget.value);}}} placeholder={"Entry Message"} /></div>,
                 onOk: async () => {
                   try {  
                     const rs = await ServicesEss.essInfoDetail(record.empId,profile.id).query(requestActions);  
-                    await ProfileServicesEss.saveEssProfile({...rs?.profile_draft,id: record.empId, empId: record.empId,step:4,openEssId:profile.id,otherFile:[],remark:'',status:true})(requestActions);
+                    await ProfileServicesEss.approvalEssProfile({...rs?.profile_draft,id: record.empId, empId: record.empId,step:4,openEssId:profile.id,otherFile:[],remark:_valueText,status:true})(requestActions);
                     actionRefItem?.current?.reloadAndRest?.();
                   } catch (error: any) {
                     message.error(error.message || 'Failed to created.');
@@ -121,8 +127,8 @@ export default ({ profile }: Props) =>{
             key: "4",
             label: "Force Cancel Update",
             itemIcon: <CloseCircleOutlined />,
-            disabled:(record.stepId==6)?true:false,
-            style:{color:'red'},
+            disabled:record.stepId<3?false:true,
+            style:{color:record.stepId<3?'red':''},
             onClick: async () => {
                 Modal.confirm({
                     title: 'Force Cancel Update',
@@ -179,7 +185,7 @@ export default ({ profile }: Props) =>{
                 { width:'12%',title: "BU",dataIndex: 'buName' },
                 {title: 'Status',width: 120, render:(_,r) =>{
                         var _status = 'PENDING';
-                        if (r.stepId==1){
+                        if (r.stepId==2){
                             _status = "STARTED";
                         } else if (r.stepId==4){
                             _status = "REJECTED";

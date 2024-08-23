@@ -105,8 +105,8 @@ export default ({ onAdd, onEdit }: Props) => {
                     content: 'Do you want to Force to Close?',
                     onOk: async () => {
                       try {         
-                        record.stepId = 2;
-                        await ServicesEss.closeAnnounce({...record})(requestActions).then(it=>{
+                            record.stepId = 2;
+                            await ServicesEss.closeAnnounce({...record})(requestActions).then(it=>{
                             message.success('create successfully.'); 
                             actionRef?.current?.reloadAndRest?.();
                         }) 
@@ -179,6 +179,8 @@ export default ({ onAdd, onEdit }: Props) => {
                 {title: 'Created Date', dataIndex: 'created_date', render    : (_, r) => moment(r.createdDate).format("DD-MMM-YYYY"), width:'7%'},
                 {title: 'Created By', dataIndex: 'createdBy', width:'7%'},
                 {title: 'Status',width: 120, render:(_,r) =>{
+                        var currentTime = new Date(); 
+                        
                         var _status = 'PENDING';
                         if (r.stepId==1){
                             _status = "OPEN";
@@ -186,6 +188,10 @@ export default ({ onAdd, onEdit }: Props) => {
                             _status = "CLOSED";
                         } else if (r.stepId==3){
                             _status = "DELETED";
+                        }
+                        //
+                        if(moment(currentTime).format("DD-MMM-YYYY")>moment(r.createdDate).format("DD-MMM-YYYY")){
+                            _status = "Expired";
                         }
                         return <div><Status text={_status}/></div>;
                     }

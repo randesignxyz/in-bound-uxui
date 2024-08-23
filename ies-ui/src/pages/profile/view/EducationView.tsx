@@ -1,11 +1,8 @@
 import { Descriptions, Flex, message, Modal, ModalProps, Space, Typography } from "antd"
 import { BasicContactData } from "../data"
 import { ModalForm, ProTable } from "@ant-design/pro-components"
-import { EducationData } from "../data.ess"
-import { useEffect, useState } from "react"
-import { ProfileServicesEss } from "../service_ess"
-import { simpleRequestActions } from "@/services/model"
-import { EditOutlined } from "@ant-design/icons"
+import { EducationData } from "../data.ess" 
+import { EditOutlined,ExclamationCircleOutlined } from "@ant-design/icons"
 
 interface Props extends ModalProps {
     // data: BasicContactData;
@@ -55,6 +52,10 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                             <a style={{display: isAdmin==0?'':'none'}} 
                                 onClick={() => cb.onOpenEditForm(r,"EDIT")}>
                                 <EditOutlined />
+                            </a>  
+                            <a style={{display: isAdmin==0?'':'none'}} 
+                                onClick={() => cb.onOpenEditForm(r,"EDIT")}>
+                                <ExclamationCircleOutlined />
                             </a>  
                         </Flex>
                         );

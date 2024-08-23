@@ -40,10 +40,10 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
     
     const [createFileOther, selectedFileOther] = useState<any>();  
     useEffect(() => {
-        initData();
+        initData(); 
     }, [profile]);
     //
-    const initData = async () => {
+    const initData = async () => { 
         try {
             // 
             const list = await ProfileServicesEss.listEducation(profile.id).query(requestActions);
@@ -99,7 +99,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                         <Button danger onClick={() => setModalEducationViewVisible({ type: 'VIEW', payload: null})} 
                             style={{display:step>=2&&is_admin!=2?'':'none'}}><EyeOutlined/> View edit</Button> 
 
-                        {profile!!.ess==null?'':<Button style={{display: (step==2||step==7||step==5)&&is_admin==0?'':'none'}}
+                        {profile!!.ess.id!!<=0?'':<Button style={{display: ([7,5,2].find((element) => element == step))&&is_admin==0?'':'none'}}
                                 onClick={() => setModalVisible({ type: 'ADD', payload: null })}
                                 icon={<PlusOutlined />}
                                 key="1"
@@ -136,13 +136,13 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                         {   width: 100,
                             render: (dom, r) => {
                                 return (<>
-                                  {profile!!.ess==null?'':<a style={{display: (is_admin==0&&empId==0)?'':'none'}} 
+                                  {profile!!.ess.id!!<=0?'':<a style={{display: (is_admin==0&&empId==0&&[7,5,2].find((element) => element == profile!!.ess.stepId))?'':'none'}} 
                                   onClick={() => setModalVisible({ type: 'EDIT', payload: r })}>
                                     <EditOutlined />
                                   </a>}
                                   <a style={{display: (is_admin==2&&empId>0)?'':'none'}} 
                                   onClick={() => setModalVisible({ type: 'EDIT', payload: r })}>
-                                    <EditOutlined />
+                                    <EditOutlined /> {empId} {is_admin}
                                   </a></>
                                 );
                               },

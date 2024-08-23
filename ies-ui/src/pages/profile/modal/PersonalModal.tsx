@@ -8,6 +8,7 @@ import { simpleRequestActions } from '@/services/model';
 import { ProfileServicesEss } from '../service_ess';  
 import FileUploader , { UploadType } from '@/components/Attachment/FileUploader';
 import ImagePreview from "@/components/ImagePreview";
+import { ProfileData } from "../data";
 
 interface Props extends ModalFormProps<SaveEssProfile> { 
     data?: EssProfileData;
@@ -42,14 +43,14 @@ export default ({ data,profile_draft,locations,files,isAdmin,empId,cb, ...rest }
         form.setFieldsValue(data!!);
         if(!!data){
             //place of birth
-            districtList(data!!.provincePbId,1);
-            communeList(data!!.districtPbId,1);
+            districtList(data!!.provincePbId!!,1);
+            communeList(data!!.districtPbId!!,1);
             //permenance address
-            districtList(data!!.provincePaId,2);
-            communeList(data!!.districtPaId,2);
+            districtList(data!!.provincePaId!!,2);
+            communeList(data!!.districtPaId!!,2);
             //current address
-            districtList(data!!.provinceCrId,3);
-            communeList(data!!.districtCrId,3);
+            districtList(data!!.provinceCrId!!,3);
+            communeList(data!!.districtCrId!!,3);
         }
          
     };  
@@ -325,12 +326,8 @@ export default ({ data,profile_draft,locations,files,isAdmin,empId,cb, ...rest }
                     <Flex vertical={false} gap="middle" style={{width:'100%'}}>
                     {/*  */}
                     <ProFormText label="House No" name={'homePaNo'} />  
-                    {/* <ProFormText hidden={profile_draft==null?true:false} allowClear={false} fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.homePa_no!!}`}}  />   */}
                     <ProFormText label="Street" name={'streetPa'} /> 
-                    {/* <ProFormText hidden={profile_draft==null?true:false} allowClear={false} fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.streetPa}`}}  />   */}
                     <ProFormText label="Group/Village" name={'villagePaId'} />
-                    {/* <ProFormText hidden={profile_draft==null?true:false} allowClear={false} fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.villagePaId}`}}  />   */}
-                    {/* <ProFormTextArea name={'remarkPa'} label='Remark'/> */}
                     </Flex>
                 </ProCard>
 
@@ -378,12 +375,8 @@ export default ({ data,profile_draft,locations,files,isAdmin,empId,cb, ...rest }
                     <Flex vertical={false} gap="middle" style={{width:'100%'}}>
                     {/*  */}
                     <ProFormText label="House No" name={'homeCrNo'} />  
-                    {/* <ProFormText hidden={profile_draft==null?true:false} allowClear={false} fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.homeCr_no!!}`}}  />  */}
                     <ProFormText label="Street" name={'streetCr'} /> 
-                    {/* <ProFormText hidden={profile_draft==null?true:false} allowClear={false} fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.streetCr}`}}  />  */}
                     <ProFormText label="Group/Village" name={'villageCrId'} />
-                    {/* <ProFormText hidden={profile_draft==null?true:false} allowClear={false} fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.villageCrId}`}}  />    */}
-                    {/* <ProFormTextArea name={'remarkCa'} label='Remark'/> */}
                     </Flex>
                 </ProCard>
                  {/* Attachment files  */} 

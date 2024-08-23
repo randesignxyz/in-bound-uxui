@@ -53,21 +53,27 @@ export interface AttachmentFile {
 } 
 export interface EssProfileData {
   id?   : number; 
-  empId :number;
-  nameKh : string; 
-  nameEn : string;  
-  genderId   : number; 
-  dateBirth  : moment.Moment; 
-  placeBirth : string;  
-  maritalStatusId    : number;  
-  permanentAddress : string;  
-  religionId    : number;  
-  currentAddress   : string;  
-  nationalId : string;    
-  passportNumber   : string;   
-  departmentId     : number;  
-  status      : Boolean; 
-  otherFile  :FilesData[];
+  provincePbId?   : number; 
+  districtPbId?   : number; 
+  provincePaId?   : number; 
+  districtPaId?   : number; 
+  provinceCrId?   : number; 
+  districtCrId?   : number; 
+  empId           : number;
+  nameKh          : string; 
+  nameEn          : string;  
+  genderId        : number; 
+  dateBirth       : moment.Moment; 
+  placeBirth      : string;  
+  maritalStatusId : number;  
+  permanentAddress  : string;  
+  religionId        : number;  
+  currentAddress    : string;  
+  nationalId        : string;    
+  passportNumber    : string;   
+  departmentId      : number;  
+  status            : Boolean; 
+  otherFile         : FilesData[];
 }  
 export interface SaveEmergency {
   id?: number; 

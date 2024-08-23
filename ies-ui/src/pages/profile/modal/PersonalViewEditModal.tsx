@@ -9,7 +9,7 @@ import { ProfileServicesEss } from '../service_ess';
 import ImagePreview from "@/components/ImagePreview";
 
 interface Props extends ModalFormProps<SaveEssProfile> { 
-    data?: SaveEssProfile, 
+    data?: EssProfileData, 
     profile_draft?: EssProfileData, 
     locations?:LocationData[],
     files: FilesData[];

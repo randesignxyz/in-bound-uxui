@@ -257,6 +257,7 @@ const CountStockModal: React.FC<Props> = ({ data, actionHandlers, ...props }) =>
             size='small'
             options={false}
             dataSource={data?.stockAdjusts?.items}
+            pagination={false}
             headerTitle={"Free Of Charge"}
             columns={[
               {

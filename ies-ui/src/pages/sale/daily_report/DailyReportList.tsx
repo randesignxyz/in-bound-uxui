@@ -72,18 +72,18 @@ export default ({}: Props) => {
               },
             },
             {
-              title: 'Settled Amount KHM',
+              title: 'Settled Amount ',
               align: 'right',
               render: (_, r) => {
-                return `$ ${numeral( r.totalSettledAmount).format('0,0')}`;
+                return `$ ${numeral( r.totalSettledAmount).format('0,000.00')}`;
               },
             },
             {
-              title: 'Sold Amount KHM',
+              title: 'Sold Amount ',
               align: 'right',
               render: (_, r) => {
-                const amountKH = r.totalSoldAmount * (parent.soldExchangeRate.target_amount || 0.0);
-                return `$ ${numeral(amountKH).format('0,0',)}`;
+                const amountKH = r.totalSoldAmount ;
+                return `$ ${numeral(amountKH).format('0,000.00')}`;
               },
             },
           ]}
@@ -160,11 +160,11 @@ export default ({}: Props) => {
             },
           },
           {
-            title: 'Total Sold Amount KHM',
+            title: 'Total Sold Amount ',
             align: 'right',
             render: (_, r) => {
               return `$ ${numeral(r.totalSoldAmount).format(
-                '0,0',
+                '0,000.00',
               )}`;
             },
           },

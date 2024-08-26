@@ -11,7 +11,7 @@ interface Props {
     data?: StockControlLess;
     source: "ADMIN" | "WAREHHOUSE" | "CASHIER";
     actionButton?: boolean;
-    onReload: () => void;
+    onReload?: () => void;
     onSettlement:(data?:StockControlLess)=>void;
 }
 
@@ -58,7 +58,7 @@ const ExpendableTable: React.FC<Props> = ({ data, source, onReload, onSettlement
                                                     onOk: async () => {
                                                         services.reject(data?.id).then(p => {
                                                             message.success("The stock request was rejected.");
-                                                            onReload();
+                                                            onReload?.();
                                                         }).catch(p => {
                                                             message.error(p.message)
                                                         });
@@ -82,7 +82,7 @@ const ExpendableTable: React.FC<Props> = ({ data, source, onReload, onSettlement
                                                         message.error(p.message)
                                                     });
 
-                                                    onReload();
+                                                    onReload?.();
                                                 },
                                             });
                                         }}
@@ -170,7 +170,7 @@ const ExpendableTable: React.FC<Props> = ({ data, source, onReload, onSettlement
                                     content: 'Are you sure?',
                                     onOk: async () => {
                                       await services.onClosedRequest(data.id);
-                                      onReload();
+                                      onReload?.();
                                     },
                                   });
                             }} type="primary">Submit</Button>}
@@ -236,7 +236,7 @@ const ExpendableTable: React.FC<Props> = ({ data, source, onReload, onSettlement
                             return data?.comments?.length && <Card size="small">
                                 {
                                     data?.comments?.map(p => {
-                                        return <Typography.Text type="secondary">{p.description}</Typography.Text>
+                                        return <Typography.Text type="secondary">{p?.description}</Typography.Text>
                                     })
                                 }
                             </Card>

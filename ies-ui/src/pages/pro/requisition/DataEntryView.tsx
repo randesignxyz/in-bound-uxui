@@ -13,6 +13,7 @@ import { RequisitionServiceAPI } from '@/services/pro/services';
 import { StartWorkFlowParam } from '@/services/process-workflow/params';
 import { ClearOutlined, MinusCircleOutlined } from '@ant-design/icons';
 import {
+  CheckCard,
   EditableFormInstance,
   EditableProTable,
   FooterToolbar,
@@ -33,10 +34,16 @@ import {
 import { uniqueId } from 'lodash';
 import moment, { Moment } from 'moment';
 import { useEffect, useRef, useState } from 'react';
-import { history } from "@umijs/max";
+import { history, useAccess } from "@umijs/max";
 import SearchItemList from './components/SearchItemList';
 import { AcquisitionFormNames } from './process-flow';
 import { useInView } from 'react-intersection-observer';
+
+type BU = {
+  id: number;
+  name: string;
+  description?: string;
+}
 
 export default ({
   id,
@@ -64,9 +71,12 @@ export default ({
   const [requiredBudgetCode, setRequiredBudgetCode] = useState<boolean>(false);
   const [budgetCodeList, setBudgetCodesList] = useState<BudgetCodeListItem[]>([]);
   const [itemUomList, setItemUomList] = useState<{ itemCode: string; uom: string }[]>([]);
+  const access = useAccess()
 
   const [forceClearUpload, setForceClearUpload] = useState(0);
   const [fileIds, setFileIds] = useState<string[]>([]);
+  const [bu, setBu] = useState<BU[]>([])
+  const [selectedBu, setSelectedBu] = useState(1)
 
   const { ref, inView } = useInView({});
 
@@ -74,7 +84,6 @@ export default ({
     form.resetFields();
     setAddedItems([]);
     setAddedServices([]);
-    // setInitFileIds([]);
     setFileIds([]);
     setForceClearUpload((v) => v + 1);
     setIsService(false);
@@ -82,7 +91,7 @@ export default ({
 
 
   const initData = async () => {
-    services.listBudgetCode().then(budgetCodes => setBudgetCodesList(budgetCodes));
+    services.listBudgetCode(selectedBu).then(budgetCodes => setBudgetCodesList(budgetCodes));
 
     if (id && id > 0) {
       const data = await services.detail(id);
@@ -92,7 +101,24 @@ export default ({
 
   useEffect(() => {
     initData();
+
+    const buList = [
+      access.hasProOflAccess && { id: 1, name: 'OFL', description: 'Onefraternity' },
+      access.hasProNvcAccess && { id: 2, name: 'NVC', description: 'Vital' },
+      access.hasProOmmAccess && { id: 3, name: 'OMM', description: 'OMM' }
+    ].filter(it => it) as BU[]
+
+    if (buList.length > 0) {
+      setSelectedBu(buList.find(it => it)?.id || 1)
+    }
+
+    setBu(buList)
+
   }, [id]);
+
+  useEffect(() => {
+    services.listBudgetCode(selectedBu).then(budgetCodes => setBudgetCodesList(budgetCodes));
+  }, [selectedBu])
 
 
   const initFormData = (data: RequisitionDetailResponse) => {
@@ -224,6 +250,14 @@ export default ({
     }}
   >
     <Card title="General" size="small">
+      <Row gutter={20}>
+        <Col flex={1}>
+          {bu.length > 0 && <CheckCard.Group onChange={v => setSelectedBu(v?.valueOf() as number)} defaultValue={selectedBu} size='small' >
+            {bu.map(it => (<CheckCard key={`bu-${it.id}`} size='small' title={it.name} description={it.description} value={it.id} />))}
+
+          </CheckCard.Group>}
+        </Col>
+      </Row>
       <Row gutter={20}>
         <Col flex={'400px'}>
           <ProFormDatePicker
@@ -519,6 +553,7 @@ export default ({
         {layout}
       </PageContainer>}
       <SearchItemList
+        buId={selectedBu}
         width={1000}
         open={searchVisible}
         onOpenChange={setSearcVisible}

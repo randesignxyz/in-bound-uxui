@@ -112,6 +112,21 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
         ['ROLE_ADMIN', 'ROLE_PRO_SUPPORT', 'ROLE_PRO_ADMIN'].some((it) => it === item),
       ) || false,
 
+    hasProOflAccess:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_PRO_ADMIN', 'ROLE_PRO_OFL_ACCESS'].some((it) => it === item),
+      ) || false,
+
+    hasProNvcAccess:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_PRO_ADMIN', 'ROLE_PRO_NVC_ACCESS'].some((it) => it === item),
+      ) || false,
+
+    hasProOmmAccess:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_PRO_ADMIN', 'ROLE_PRO_OMM_ACCESS'].some((it) => it === item),
+      ) || false,
+
     canAccessSaleMenuItem:
       currentUser?.authorities.some((item) =>
         [
@@ -784,22 +799,22 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       ) || false,
     canAccessWhmMenut:
       currentUser?.authorities.some((item) =>
-        [         
+        [
           'ROLE_ADMIN',
           'ROLE_NCM_INVENTORY_TRANSFER_SUPPORT',
           'ROLE_NCM_STOCK_REQUEST_SUPPORT',
         ].some((it) => it === item),
-      ) || false,    
+      ) || false,
     canAccessNcmIssueRequest:
       currentUser?.authorities.some((item) =>
-        [         
+        [
           'ROLE_ADMIN',
           'ROLE_NCM_STOCK_REQUEST_APPROVAL',
         ].some((it) => it === item),
-      ) || false,  
+      ) || false,
     canAccessWhmItemMenu:
       currentUser?.authorities.some((item) =>
-        [         
+        [
           'ROLE_ADMIN',
           'ROLE_NCM_INVENTORY_TRANSFER_SUPPORT',
           'ROLE_NCM_STOCK_REQUEST_SUPPORT',
@@ -808,26 +823,26 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       ) || false,
     canAccessWhmEmpMappingMenu:
       currentUser?.authorities.some((item) =>
-        [         
+        [
           'ROLE_ADMIN',
           'ROLE_NCM_INVENTORY_TRANSFER_SUPPORT',
         ].some((it) => it === item),
-      ) || false,  
+      ) || false,
     canAccessWhmInventoryTransferRequestMenu:
       currentUser?.authorities.some((item) =>
-        [         
+        [
           'ROLE_ADMIN',
           'ROLE_NCM_INVENTORY_TRANSFER_REQUEST',
         ].some((it) => it === item),
-      ) || false, 
+      ) || false,
     canCreateNCMRequest:
-      currentUser?.authorities.some((item) => ['ROLE_ADMIN','ROLE_NCM_STOCK_REQUEST_APPROVAL'].some((it) => it === item)) ||
-      false,  
+      currentUser?.authorities.some((item) => ['ROLE_ADMIN', 'ROLE_NCM_STOCK_REQUEST_APPROVAL'].some((it) => it === item)) ||
+      false,
     canCreateInventoryTransferRequest:
-      currentUser?.authorities.some((item) => ['ROLE_ADMIN','ROLE_NCM_INVENTORY_TRANSFER_REQUEST'].some((it) => it === item)) ||
-      false,   
+      currentUser?.authorities.some((item) => ['ROLE_ADMIN', 'ROLE_NCM_INVENTORY_TRANSFER_REQUEST'].some((it) => it === item)) ||
+      false,
     canPostedInventoryTransferSAP:
       currentUser?.authorities.some((item) => ['ROLE_NCM_INVENTORY_TRANSFER_SUPPORT'].some((it) => it === item)) ||
-      false,     
+      false,
   };
 }

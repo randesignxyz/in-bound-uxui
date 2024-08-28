@@ -29,6 +29,7 @@ export interface ItemListItem {
   itemCode: string;
   itemName: string;
   buyUoM?: string;
+  buId?: number;
   lastPurchasePrice?: number;
   lastPurchaseCurr?: string;
   itemGroup: {

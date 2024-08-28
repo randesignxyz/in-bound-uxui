@@ -47,6 +47,7 @@ export interface ItemGroupListItem {
 
 export interface Requistion {
   id?: number;
+  buid: number;
   acquisitionDate: Moment;
   budgetCodeRequired: boolean;
   reason: string;
@@ -98,6 +99,7 @@ export interface RequisitionDetailResponse {
   service: boolan;
   remarks?: string;
   processStatus: string;
+  buId: number;
   deptId: number;
   createdDate: Moment;
   createdBy: string;

@@ -59,12 +59,10 @@ export default ({
 }) => {
   const [form] = Form.useForm<Requistion>();
   const editableFormRef = useRef<EditableFormInstance>();
-
   const [searchVisible, setSearcVisible] = useState(false);
   const [startFormVisible, setStartFormVisible] = useState(false);
   const [addedItems, setAddedItems] = useState<RequisitionItem[]>([]);
   const [addedServices, setAddedServices] = useState<RequisitionService[]>([]);
-
   const requestActions = simpleRequestActions();
   const services = RequisitionServiceAPI(requestActions);
   const [isService, setIsService] = useState<boolean>(false);
@@ -72,12 +70,10 @@ export default ({
   const [budgetCodeList, setBudgetCodesList] = useState<BudgetCodeListItem[]>([]);
   const [itemUomList, setItemUomList] = useState<{ itemCode: string; uom: string }[]>([]);
   const access = useAccess()
-
   const [forceClearUpload, setForceClearUpload] = useState(0);
   const [fileIds, setFileIds] = useState<string[]>([]);
   const [bu, setBu] = useState<BU[]>([])
   const [selectedBu, setSelectedBu] = useState(1)
-
   const { ref, inView } = useInView({});
 
   const clear = () => {
@@ -89,31 +85,28 @@ export default ({
     setIsService(false);
   };
 
-
   const initData = async () => {
-    services.listBudgetCode(selectedBu).then(budgetCodes => setBudgetCodesList(budgetCodes));
-
-    if (id && id > 0) {
-      const data = await services.detail(id);
-      initFormData(data);
-    }
-  };
-
-  useEffect(() => {
-    initData();
-
     const buList = [
       access.hasProOflAccess && { id: 1, name: 'OFL', description: 'Onefraternity' },
       access.hasProNvcAccess && { id: 2, name: 'NVC', description: 'Vital' },
       access.hasProOmmAccess && { id: 3, name: 'OMM', description: 'OMM' }
     ].filter(it => it) as BU[]
-
-    if (buList.length > 0) {
-      setSelectedBu(buList.find(it => it)?.id || 1)
-    }
-
     setBu(buList)
+    if (id && id > 0) {
+      const data = await services.detail(id);
+      services.listBudgetCode(data.buId).then(budgetCodes => setBudgetCodesList(budgetCodes));
+      setSelectedBu(data.buId)
+      initFormData(data);
+    } else {
+      services.listBudgetCode(selectedBu).then(budgetCodes => setBudgetCodesList(budgetCodes));
+      if (buList.length > 0) {
+        setSelectedBu(buList.find(it => it)?.id || 1)
+      }
+    }
+  };
 
+  useEffect(() => {
+    initData();
   }, [id]);
 
   useEffect(() => {
@@ -128,6 +121,7 @@ export default ({
       budgetCodeRequired: data.budgetCodeRequired,
       totalAmount: data.totalAmount,
       reason: data.reason,
+      buid: selectedBu,
       remarks: data.remarks,
       service: data.service,
       fileIds: data.fileIds || [],
@@ -222,7 +216,7 @@ export default ({
                 content: 'Are you sure?',
                 onOk: async () => {
                   try {
-                    await services.save(dataForm);
+                    await services.save({ ...dataForm, buid: selectedBu });
                     message.success('Save successfully.');
 
                     !openInTab && clear();
@@ -592,12 +586,12 @@ export default ({
         // payload={{ from: 'Requisition', id: id }}
         visible={startFormVisible}
         actionHandlers={{
-          onStartWorkflow: async (processDef, formKey, buId, requestor, comment) => {
+          onStartWorkflow: async (processDef, formKey, _, requestor, comment) => {
             const dataForm = await getDataForm();
             const data: StartWorkFlowParam<Requistion> = {
               processDef: processDef,
               formKey: formKey,
-              buId: buId,
+              buId: selectedBu,
               requestor: requestor.id,
               comment: comment,
               payload: dataForm,

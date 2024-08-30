@@ -117,6 +117,13 @@ export default (props: ActionDataFormProps) => {
                                 editable: false,
                                 dataIndex:'uom'
                     
+                            },
+                            {
+                                title:'BudgetCode',
+                                editable: false,
+                                dataIndex:'budgetCode',
+                                width: 100,
+                    
                             },/*
                             {
                                 title: 'To be Returned in Full or Partial (F/P)',

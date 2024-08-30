@@ -41,6 +41,12 @@ export default ({title,instId, forceRefresh }: Props) => {
 
         },
         {
+            title: 'Request Type',
+            width: 150,
+            dataIndex:'requestType'
+
+        },
+        {
             title: 'Quantity Requested',
             width: 100,
             align: 'right',
@@ -54,11 +60,11 @@ export default ({title,instId, forceRefresh }: Props) => {
 
         },
         {
-            title: 'Request Type',
-            width: 150,
-            dataIndex:'requestType'
+            title:'BudgetCode',
+            dataIndex:'budgetCode'
 
         },
+        
         /*{
             title: 'Expected Return Date',
             width: 110,

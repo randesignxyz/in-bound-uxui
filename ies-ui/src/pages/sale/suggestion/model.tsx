@@ -12,6 +12,7 @@ import type { SortOrder } from 'antd/lib/table/interface';
 import { useReducer } from 'react';
 import type { State } from './reducer';
 import { reducer } from './reducer';
+import { StatusActionForm } from '../mpu/settlement/data';
 
 export const Model = (id?: number) => {
   const initState: State = {
@@ -41,18 +42,18 @@ export const Model = (id?: number) => {
     // await saleServices.initSuggestionData(params);
 
     const result = await Promise.all([
-      saleServices.findDSDExchangeRate({}),
-      saleServices.findExchangeRate({}),
+      // saleServices.findDSDExchangeRate({}),
+      // saleServices.findExchangeRate({}),
     ]);
 
-    dispatch({
-      type: 'dsdExchangeRage',
-      payload: result[0],
-    });
-    dispatch({
-      type: 'exchangeRate',
-      payload: result[1],
-    });
+    // dispatch({
+    //   type: 'dsdExchangeRage',
+    //   payload: result[0],
+    // });
+    // dispatch({
+    //   type: 'exchangeRate',
+    //   payload: result[1],
+    // });
 
     // const rs1 = await saleServices.findDSDExchangeRate({});
     // dispatch({
@@ -89,6 +90,15 @@ export const Model = (id?: number) => {
   const acceptRequest = async (item: StockControlLess) => {
     try {
       const rs = await saleServices.onAcceptStockRequest({ id: item.id });
+      message.info(rs.message);
+    } catch (error: any) {
+      message.error(error.message);
+    }
+  };
+
+  const reject = async (param:StatusActionForm) => {
+    try {
+      const rs = await saleServices.onRejectStockRequest(param);
       message.info(rs.message);
     } catch (error: any) {
       message.error(error.message);
@@ -146,6 +156,7 @@ export const Model = (id?: number) => {
       loadListItem,
       acceptRequest,
       approvalRequest,
+      reject,
       countStock,
       initData,
       onSaveSettlementModel,

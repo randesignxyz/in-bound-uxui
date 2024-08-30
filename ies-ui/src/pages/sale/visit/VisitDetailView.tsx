@@ -41,11 +41,11 @@ export default ({ id }: Props) => {
   //   },
   // ];
   return (
-    <PageContainer
-      breadcrumb={undefined}
-      title={`${visit?.customerName} - ${formatDate(visit?.visitDate)}`}
-      onBack={history.back}
-    >
+    // <PageContainer
+    //   breadcrumb={undefined}
+    //   title={`${visit?.customerName} - ${formatDate(visit?.visitDate)}`}
+    //   onBack={history.back}
+    // >
       <Spin spinning={requestActions.request?.loading}>
         {/* <Row justify="space-between">
           <BreadCrumbCom separator=">" routes={routes} />
@@ -57,7 +57,7 @@ export default ({ id }: Props) => {
             dataSource={visit}
             key="general-info"
             column={3}
-            //contentStyle={{ fontWeight: 'bold' }}
+            contentStyle={{ fontWeight: 500 }}
             columns={[
               {
                 title: 'Visit Date',
@@ -252,6 +252,6 @@ export default ({ id }: Props) => {
           </Card>
         )}
       </Spin>
-    </PageContainer>
+    // </PageContainer>
   );
 };

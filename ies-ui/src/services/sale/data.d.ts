@@ -71,6 +71,7 @@ export type SaleServiceName =
   | 'fetch-last-stock-control'
   | 'save-vehicle'
   | 'find-vehicle-by-plate-number'
+  | 'page-vehicle-by-plate-number'
   | 'import-sales-stock-control'
   | 'is-initial-manual'
   | 'list-sales-team-work'
@@ -97,7 +98,8 @@ export type SaleServiceName =
   | 'create-stock-control'
   | 'close-stock-request'
   | 'settle-stock-request'
-  | 'exchange-rate-dsd';
+  | 'exchange-rate-dsd-only'
+  | 'reject-request-stock';
 
 /** Stock */
 // export interface StockControl {
@@ -158,9 +160,10 @@ export interface StockDetail1Less extends StockDetailLess {
   status?: string;
   requestDate?: moment.Moment;
   approvalDate?: moment.Moment;
-  receiver?: SalesTeamWorkLess;
+  receivedBy?: SalesTeamWorkLess;
   approval?: SalesTeamWorkLess;
   isKeepForwarding?: boolean;
+  approvedBy?:SalesTeamWorkLess;
 }
 
 export interface StockStoreDetail extends StockStoreLess {
@@ -178,6 +181,7 @@ export interface StockControlDetailDto {
   soldAmount: number;
   transactions: StockQuantity[];
   isKeepForwarding: boolean;
+  requestDate?:moment.Moment
 }
 
 export interface TeamWorkLess {
@@ -344,11 +348,14 @@ export interface SaleInvoiceLess {
   createdDate: moment.Moment;
   salesperson: SalesTeamWorkLess;
   salespersonCode: string;
+  internalId:string;
+  storeId?:number;
   customer?: LeadLess;
   customerId?: string;
   discount: number = 0.0;
   stockControlId?: number;
   items: SaleInvoiceItemLess[];
+  exchangeRate:number;
 }
 
 export interface SaleItem {
@@ -357,6 +364,7 @@ export interface SaleItem {
   code: string;
   qty: number;
   price: number;
+  batchNo?:string;
 }
 
 export interface SaleInvoiceItemLess {
@@ -372,6 +380,7 @@ export interface SaleInvoiceItemLess {
   unitPrice: number;
   amount: number;
   stockCategoryId?: number;
+  batchNo?:string
 }
 
 export interface TopupLess {
@@ -411,7 +420,7 @@ export interface StockControlDetail {
   stockName: string;
   description?: string;
   isActive: number;
-  status: string;
+  status: string |"pending"|"canceled"|"open"|"approved"|"closed"|"settled"|"count stock";
   owner: SalesTeamWorkLess;
   approvedBy?: SalesTeamWorkLess;
   receivedBy?: SalesTeamWorkLess;
@@ -514,6 +523,35 @@ export interface StockControlLess {
   items?: StockDetailItemLess[];
   invoices?: SaleInvoiceLess[];
   adjustmentItems?: StockAdjustmentDto[] = [];
+  beginningQty:number;
+  comments?:Comment[];
+  stockAdjusts?:StockAjust;
+  stockCountId?:number;
+  isKeepForwarding?:boolean;
+  storeId?:number;
+}
+
+interface StockAjust{
+  adjustBy:string;
+  adjustDate:moment.Moment;
+  approvedBy?:string;
+  approvedDate?:moment.Moment;
+  remark?:string;
+  status:string;
+  stockControlId:number;
+  stockStoreId:number;
+  items:StockAdjustmentItem[];
+}
+interface StockAdjustmentItem{
+  batchNo:string;
+  itemCode:string;
+  itemId:number;
+  itemName:stirng;
+  quantity:number;
+  remark:string;
+  sequence:number;
+  status:string;
+  uom:string
 }
 
 export interface StockAdjustmentDto {
@@ -1254,6 +1292,7 @@ export interface SoAdvanceSearchParams {
 export interface StockStoreAdvanceSearchParams {
   status?: string;
   searchValue?:string;
+  role?:string;
 }
 
 export interface StockAdvanceSearchParams {

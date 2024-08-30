@@ -10,6 +10,8 @@ import type {
   StockDetailItemLess,
   StockDetailLess,
 } from '@/services/sale/data';
+import { SyncOutlined, CheckCircleOutlined, ExclamationCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
+import { ProDescriptions } from '@ant-design/pro-components';
 import type { ActionType } from '@ant-design/pro-table';
 import ProTable from '@ant-design/pro-table';
 import { Card, Image, Space, Tabs, Tag, Typography } from 'antd';
@@ -48,7 +50,7 @@ const StockControlTabItem: React.FC<Props> = ({ data, forceUpdate }) => {
       //   onClick: () => {
       //     history.push(`${CrmPaths.customer}/detail/${soDetail?.associatedTo.customer.id}`);
       //   },
-      value: `${data.details?.owner.salespersonCode} - ${data.details?.owner.salespersonName}`,
+      value: `${data.details?.owner?.salespersonCode} - ${data.details?.owner?.salespersonName}`,
     },
     { label: 'Description', value: data.details?.description },
     { label: 'Serial #', value: data.details?.serialNumber },
@@ -56,7 +58,11 @@ const StockControlTabItem: React.FC<Props> = ({ data, forceUpdate }) => {
       label: 'Number Plate',
       value: data.details?.plateNumber,
     },
-    { label: 'Status', value: data.details?.status },
+    {
+      label: 'Status',
+      value: data.details?.status,
+
+    },
 
     // {
     //   label: 'Cash on hand',
@@ -89,7 +95,77 @@ const StockControlTabItem: React.FC<Props> = ({ data, forceUpdate }) => {
   return (
     <>
       <Card size="small" title="General" style={{ marginBottom: 10 }}>
-        <DescriptionDisplay data={generalInfo} />
+        {/* <DescriptionDisplay data={generalInfo} /> */}
+        <ProDescriptions<StockControlDetail>
+          column={3}
+          dataSource={data.details}
+          loading={data ? false : true}
+          contentStyle={{
+            fontWeight: 500
+          }}
+          columns={[
+            {
+              title: "Store Name",
+              dataIndex: "stockName"
+            },
+            {
+              title: "Owner",
+              dataIndex: "stockName",
+              render: (_, r) => [r.owner?.salespersonCode, r.owner?.salespersonName].filter(o => o).join(" - ")
+            },
+            {
+              title: "Description",
+              dataIndex: "description",
+            },
+            {
+              title: "Serial",
+              dataIndex: "serialNumber",
+            },
+
+            {
+              title: "PlateNumber",
+              dataIndex: "plateNumber",
+            },
+            {
+              title: "Status",
+              dataIndex: "Status",
+              render: (_, r) => <Tag
+                color={
+                  r.status == "pending" ? "processing"
+                    : r.status == "open" || r.status == "approved" ? "success"
+                      : r.status == "settled" || r.status == "count stock" ? "magenta"
+                        : "error"
+                }
+                icon={
+                  r.status === "pending" ? <SyncOutlined spin />
+                    : r.status === "open" ? <CheckCircleOutlined />
+                      : r.status === "canceled" ? <CloseCircleOutlined />
+                        : r.status == "closed" ? <CheckCircleOutlined />
+                          : <ExclamationCircleOutlined />
+                }
+              >{r.status}</Tag>
+            },
+            {
+              title: "Received By",
+              dataIndex: "",
+              render: (_, r) => [r.receivedBy?.salespersonCode, r.receivedBy?.salespersonName].filter(o => o).join(" - ")
+            },
+            {
+              title: "Approved By",
+              dataIndex: "",
+              render: (_, r) => [r.approvedBy?.salespersonCode, r.approvedBy?.salespersonName].filter(o => o).join(" - ")
+            },
+            {
+              title: "Approved Date",
+              render: (_, r) => <a>{formatDateTime(r.approvedDate)}</a>
+            },
+            
+            {
+              title: "Keep Forwarding",
+              render: (_, r) => <Typography.Text type={r.isKeepForwarding ? "success" : "warning"}>{r.isKeepForwarding ? "YES" : "NO"}</Typography.Text>
+            }
+          ]}
+        />
       </Card>
 
       {data?.listStockDetailItem && data?.listStockDetailItem.length > 0 && (
@@ -168,96 +244,96 @@ const StockControlTabItem: React.FC<Props> = ({ data, forceUpdate }) => {
                           columns={
                             it.typeId === 132
                               ? [
-                                  {
-                                    title: 'Batch #',
-                                    dataIndex: 'batchNo',
-                                  },
-                                  {
-                                    title: 'Description',
-                                    render: (_, r) => join([r.itemCode, r.itemName], ' - '),
-                                    key: 'itemId',
-                                  },
+                                {
+                                  title: 'Batch #',
+                                  dataIndex: 'batchNo',
+                                },
+                                {
+                                  title: 'Description',
+                                  render: (_, r) => join([r.itemCode, r.itemName], ' - '),
+                                  key: 'itemId',
+                                },
 
-                                  { title: 'SKU', dataIndex: 'description', width: 80 },
+                                { title: 'SKU', dataIndex: 'description', width: 80 },
 
-                                  {
-                                    title: 'Begin',
-                                    align: 'right',
-                                    dataIndex: 'beginningQty',
-                                    width: 100,
+                                {
+                                  title: 'Begin',
+                                  align: 'right',
+                                  dataIndex: 'beginningQty',
+                                  width: 100,
+                                },
+                                {
+                                  title: 'Request',
+                                  align: 'right',
+                                  dataIndex: 'quantity',
+                                  width: 100,
+                                },
+                                {
+                                  title: 'Current',
+                                  align: 'right',
+                                  render: (_, r) => {
+                                    return r.beginningQty + r.quantity;
                                   },
-                                  {
-                                    title: 'Request',
-                                    align: 'right',
-                                    dataIndex: 'quantity',
-                                    width: 100,
+                                  width: 100,
+                                },
+                                {
+                                  title: 'Sold',
+                                  align: 'right',
+                                  render: (_, r) => {
+                                    return <Text type="danger">{`( ${r.soldQty} )`}</Text>;
                                   },
-                                  {
-                                    title: 'Current',
-                                    align: 'right',
-                                    render: (_, r) => {
-                                      return r.beginningQty + r.quantity;
-                                    },
-                                    width: 100,
+                                  width: 100,
+                                },
+                                {
+                                  title: 'End',
+                                  align: 'right',
+                                  render: (_, r) => {
+                                    return r.beginningQty + r.quantity - r.soldQty;
                                   },
-                                  {
-                                    title: 'Sold',
-                                    align: 'right',
-                                    render: (_, r) => {
-                                      return <Text type="danger">{`( ${r.soldQty} )`}</Text>;
-                                    },
-                                    width: 100,
-                                  },
-                                  {
-                                    title: 'End',
-                                    align: 'right',
-                                    render: (_, r) => {
-                                      return r.beginningQty + r.quantity - r.soldQty;
-                                    },
-                                    width: 100,
-                                  },
+                                  width: 100,
+                                },
 
-                                  { title: 'UOM', dataIndex: 'uom', align: 'center' },
-                                  {
-                                    title: 'Expired Date',
-                                    align: 'right',
-                                    render: (_, r) => {
-                                      return r.expiredDate ? formatDate(r.expiredDate) : '-';
-                                    },
+                                { title: 'UOM', dataIndex: 'uom', align: 'center' },
+                                {
+                                  title: 'Expired Date',
+                                  align: 'right',
+                                  render: (_, r) => {
+                                    return r.expiredDate ? formatDate(r.expiredDate) : '-';
                                   },
-                                ]
+                                },
+                              ]
                               : [
-                                  {
-                                    title: 'Code',
-                                    dataIndex: 'itemCode',
-                                  },
-                                  {
-                                    title: 'Description',
-                                    dataIndex: 'itemName',
-                                    key: 'itemId',
-                                  },
+                                {
+                                  title: 'Code',
+                                  dataIndex: 'itemCode',
+                                },
+                                {
+                                  title: 'Description',
+                                  dataIndex: 'itemName',
+                                  key: 'itemId',
+                                },
 
-                                  { title: 'SKU', dataIndex: 'description' },
-                                  {
-                                    title: 'Quantity',
-                                    align: 'right',
-                                    render: (_, r) => {
-                                      //return (r.beginningQty + r.quantity) - r.soldQty
-                                      return r.beginningQty + r.quantity;
-                                    },
-                                    //dataIndex: 'quantity'
+                                { title: 'SKU', dataIndex: 'description' },
+                                {
+                                  title: 'Quantity',
+                                  align: 'right',
+                                  render: (_, r) => {
+                                    //return (r.beginningQty + r.quantity) - r.soldQty
+                                    return r.beginningQty + r.quantity;
                                   },
-                                  {
-                                    title: 'Offer Quantity',
-                                    align: 'right',
-                                    render: (_, r) => {
-                                      return r.soldQty;
-                                    },
+                                  //dataIndex: 'quantity'
+                                },
+                                {
+                                  title: 'Sold Quantity',
+                                  align: 'right',
+                                  render: (_, r) => {
+                                    return r.soldQty;
                                   },
-                                  { title: 'UOM', dataIndex: 'uom' },
-                                  // { title: 'Pending Qty', align: 'right', dataIndex: 'pendingQty' },
-                                  // { title: 'Quantity', align: 'right', dataIndex: 'quantity' },
-                                ]
+                                },
+                                { title: 'UOM', dataIndex: 'uom' },
+                                // { title: 'Pending Qty', align: 'right', dataIndex: 'pendingQty' },
+                                // { title: 'Quantity', align: 'right', dataIndex: 'quantity' },
+                              ]
                           }
                         />
                       </Tabs.TabPane>

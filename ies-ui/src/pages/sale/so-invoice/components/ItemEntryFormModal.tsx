@@ -1,7 +1,7 @@
 import FormModalComp, { FormModalProps } from '@/components/FormModal';
 import { SaleInvoiceItemLess, SaleItem } from '@/services/sale/data';
 import ProForm, { ProFormDigit, ProFormMoney, ProFormSelect } from '@ant-design/pro-form';
-import { Card } from 'antd';
+import { Card, Space, Typography } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { useEffect, useState } from 'react';
 import numeral from 'numeral';
@@ -27,32 +27,35 @@ const ItemEntryFormModal: React.FC<Props> = ({ data, actionHandlers, ...props })
   const [formItem] = useForm<SaleInvoiceItemLess>();
 
   const [itemType, setItemType] = useState<string>();
-
   const onSubmitActionHandler = async () => {
     const dataForm = await formItem.validateFields();
-    const saleItem = data?.productItems?.find((it) => it.id === dataForm.itemId);
-    const type = data?.typeProductItems?.find((it) => it.itemId === dataForm.itemId);
+    const batchNo = `${dataForm.itemId}`.split(",")
+    const saleItem = data?.productItems?.find((it) => it.batchNo === `${batchNo[1]}`);
+    const type = data?.typeProductItems?.find((it) => it.itemId === parseInt(batchNo[0]));
     const item: SaleInvoiceItemLess = {
       ...dataForm,
       key: uniqueId('sale-invoice-item'),
+      itemId:saleItem?.id ||0,
       itemCode: saleItem?.code || '',
       itemName: saleItem?.name || '',
       uom: 'CASE',
       unitPrice: dataForm.itemType === 'STD' ? dataForm.unitPrice : 0,
       amount: dataForm.itemType === 'STD' ? dataForm.quantity * dataForm.unitPrice : 0,
+      batchNo:saleItem?.batchNo,
       // Todo
       // itemType: type?.itemType,
-
       stockCategoryId: type?.itemType,
     };
     actionHandlers.onAddItem?.(item);
   };
 
   const onValuesChange = (changedValues: any, values: SaleInvoiceItemLess) => {
-    const { itemId, quantity, unitPrice, itemType } = changedValues;
+    const { itemIds, quantity, unitPrice, itemType } = changedValues;
+    const itemId = `${values.itemId}`;
+    const itemsId = parseInt(itemId.split(",")[0]);
 
     if (itemId && 'itemId' in values) {
-      const saleItem = data?.productItems?.find((it) => it.id === values.itemId);
+      const saleItem = data?.productItems?.find((it) => it.id === itemsId);
       let price = 0.0;
       if (values.itemType === 'STD') {
         price = saleItem?.price || 0;
@@ -110,7 +113,7 @@ const ItemEntryFormModal: React.FC<Props> = ({ data, actionHandlers, ...props })
   return (
     <FormModalComp
       {...props}
-      width="450px"
+      width="500px"
       onResetForm={() => formItem.resetFields()}
       onSubmit={onSubmitActionHandler}
       okText={'Add'}
@@ -128,8 +131,18 @@ const ItemEntryFormModal: React.FC<Props> = ({ data, actionHandlers, ...props })
             name="itemId"
             allowClear={false}
             label="Item Name"
-            options={data?.productItems?.map((it) => ({ label: it.name, value: it.id }))}
-            width="md"
+            fieldProps={{
+              optionLabelProp: "label",
+              showArrow: true,
+            }}
+            options={data?.productItems?.map((it) => ({
+              label:
+                <Space size={"small"}>
+                  <Typography.Text>{it.name}</Typography.Text>
+                  <Typography.Text type='success'>( {it.batchNo} )</Typography.Text>
+                </Space>,
+              value: [it.id, it.batchNo].join(",")
+            }))}
           />
           <ProFormSelect
             rules={[{ required: true }]}

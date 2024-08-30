@@ -3,6 +3,7 @@ import { Access, useAccess } from '@umijs/max';
 import { SalePaths } from '..';
 import VisitDetailView from './VisitDetailView';
 import VisitListView from './VisitListView';
+import VisitMainPage from './MainPage';
 // import { RetailerPath } from '..';
 // import OrderDetailView from './components/OrderDetailView';
 // import OrderListView from './components/OrderListView';
@@ -10,26 +11,27 @@ import VisitListView from './VisitListView';
 export default () => {
   const access = useAccess();
   return (
-    <CrudWrapper baseURL={SalePaths.visit} disablePageContainer>
-      {(view, id, navigate) => {
-        return (
-          (view === 'list' && (
-            <Access accessible={access.canAccessSaleVisit}>
-              <VisitListView
-                onDetail={(id) => {
-                  navigate?.goToDetail?.({ id: id });
-                }}
-              />
-            </Access>
-          )) ||
-          (view === 'detail' && (
-            <Access accessible={access.canAccessSaleVisit}>
-              <VisitDetailView id={id as number} />
-            </Access>
-          ))
-          //   ||(view === 'created' && <Access></></Access>)
-        );
-      }}
-    </CrudWrapper>
+    <VisitMainPage/>
+    // <CrudWrapper baseURL={SalePaths.visit} disablePageContainer>
+    //   {(view, id, navigate) => {
+    //     return (
+    //       (view === 'list' && (
+    //         <Access accessible={access.canAccessSaleVisit}>
+    //           <VisitListView
+    //             onDetail={(id) => {
+    //               navigate?.goToDetail?.({ id: id });
+    //             }}
+    //           />
+    //         </Access>
+    //       )) ||
+    //       (view === 'detail' && (
+    //         <Access accessible={access.canAccessSaleVisit}>
+    //           <VisitDetailView id={id as number} />
+    //         </Access>
+    //       ))
+    //       //   ||(view === 'created' && <Access></></Access>)
+    //     );
+    //   }}
+    // </CrudWrapper>
   );
 };

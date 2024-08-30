@@ -60,6 +60,7 @@ import type {
   VehicleLess,
   initProductParamsType,
 } from './data';
+import { StatusActionForm } from '@/pages/sale/mpu/settlement/data';
 
 export const SaleService = (serviceName?: SaleServiceName): ServiceType => {
   return {
@@ -271,6 +272,11 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
     actions,
   ),
 
+  pageVehicleByPlateNumber: findAllService<{ id: string }, VehicleLess>(
+    SaleService('page-vehicle-by-plate-number'),
+    actions,
+  ),
+
   onSaveLead: execService<LeadLess, { data: any; message: string }>(
     SaleService('save-lead'),
     actions,
@@ -283,6 +289,10 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
 
   onAcceptStockRequest: execService<{ id: number }, { data: any; message: string }>(
     SaleService('accept-stock-request'),
+    actions,
+  ),
+  onRejectStockRequest: execService<StatusActionForm, { data: any; message: string }>(
+    SaleService('reject-request-stock'),
     actions,
   ),
 
@@ -432,7 +442,7 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
     actions,
   ),
   findExchangeRate: findService<{}, ExchangeRate>(SaleService('exchange-rate'), actions),
-  findDSDExchangeRate: findService<{}, ExchangeRate>(SaleService('exchange-rate-dsd'), actions),
+  findDSDExchangeRate: findService<{}, ExchangeRate>(SaleService('exchange-rate-dsd-only'), actions),
 
   pageLead: findPagingService<{ id?: string; sort?: Record<string, SortOrder> }, LeadDetail>(
     SaleService('page-lead'),

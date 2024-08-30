@@ -7,8 +7,10 @@ import { ActionType } from "@ant-design/pro-components";
 import { useQuery } from "@umijs/max";
 import { useRef, useState } from "react";
 import { formatterQty } from "@/pages/utils";
-import { Tag } from "antd";
+import { Tag, Typography } from "antd";
 import { CheckCircleOutlined, CloseCircleOutlined, SyncOutlined } from "@ant-design/icons";
+import { formatCurrency } from "../../sale";
+import { CountStockAdvanceSearch, StockCountDto } from "./data";
 
 interface Props {
 }
@@ -20,8 +22,9 @@ const CountStockMainPage: React.FC<Props> = () => {
   const [filter, setFilter] = useState<TableViewSearchParams<CountStockAdvanceSearch>>({
     criteria: { advanceSearch: { status: 'ALL' } }
   });
-  const { data, isFetching, refetch } = useQuery(['fetch-customer-list', filter], () => services.page(filter), {
+  const { data, isFetching, refetch } = useQuery(['fetch-stock-count-list',filter], () => services.page(filter), {
     refetchOnWindowFocus: false,
+    retry:false,
   });
   return (
     <PageWrapper<StockCountDto, CountStockAdvanceSearch, {}>
@@ -29,6 +32,7 @@ const CountStockMainPage: React.FC<Props> = () => {
         {
           tabLabel: `${items?.countedNo}`,
           action: "view",
+          tabKey:`sc-${items?.id}`,
           panel: ({ }) => <CountStockDetail id={items?.id} />
         }
       ]}
@@ -81,6 +85,28 @@ const CountStockMainPage: React.FC<Props> = () => {
               dataIndex: "storeCode"
             },
             {
+              title: "Sales Volume",
+              dataIndex: "soldQuantity",
+              align:"right",
+              render: (_, r) =><>( <Typography.Text type="warning">{r.soldQuantity} </Typography.Text>)</>
+            },
+            {
+              title: "Sales Amount",
+              dataIndex: "soldAmount",
+              align:"right",
+              valueType: "money",
+            },
+            {
+              title: "Counted Invoices",
+              dataIndex: "countedInvoices",
+              align:"right",
+            },
+            {
+              title: "Counted Date",
+              dataIndex: "countedDate",
+              valueType: "date"
+            },
+             {
               title: "Status",
               render: (_, r) => <Tag
                 bordered={false}
@@ -95,26 +121,6 @@ const CountStockMainPage: React.FC<Props> = () => {
                   :"success"
                 }
               >{r.status}</Tag>
-            },
-            {
-              title: "Sales Volume",
-              dataIndex: "soldQuantity",
-              render: (_, r) => formatterQty.format(r.soldQuantity)
-            },
-            {
-              title: "Sales Amount",
-              dataIndex: "soldAmount",
-              valueType: "money"
-            },
-            {
-              title: "Sales Amount",
-              dataIndex: "soldAmount",
-              valueType: "money"
-            },
-            {
-              title: "Counted Date",
-              dataIndex: "countedDate",
-              valueType: "date"
             },
           ]
         }

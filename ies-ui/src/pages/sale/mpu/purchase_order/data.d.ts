@@ -7,8 +7,6 @@ interface PurchaseOrderCreate{
     purchaseRequestNo:string;
     referenceNumber?:string;
     purchaseOrderDate:string;
-    ownerBy:string;
-    ownerCode:string;
     grantAmount:number;
     discountAmount:number;
     totalAmount:number;
@@ -22,8 +20,8 @@ interface PurchaseOrderDTO{
     purchaseRequestNo:string;
     referenceNumber?:string;
     purchaseOrderDate:string;
-    ownerBy:string;
-    ownerCode:string;
+    // ownerBy:string;
+    // ownerCode:string;
     grantAmount:number;
     discountAmount:number;
     totalAmount:number;

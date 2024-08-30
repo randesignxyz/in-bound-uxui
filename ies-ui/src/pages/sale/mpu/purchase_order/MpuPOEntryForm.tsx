@@ -1,6 +1,6 @@
-import { ActionType, EditableFormInstance, EditableProTable, FooterToolbar, ProDescriptions, ProForm, ProFormDatePicker, ProFormSelect, ProFormTextArea } from "@ant-design/pro-components";
+import { ActionType, EditableFormInstance, EditableProTable, FooterToolbar, ProDescriptions, ProForm, ProFormDatePicker, ProFormGroup, ProFormSelect, ProFormTextArea } from "@ant-design/pro-components";
 import { PurchaseOrderCreate, PurchaseOrderItem } from "./data";
-import { Button, Card, Col, Flex, message, Modal, Row } from "antd";
+import { Button, Card, Col, Divider, Flex, message, Modal, Row, Space } from "antd";
 import { DistributorCreate } from "../request/data";
 import { formatter } from "@/pages/utils";
 import { CrmServiceAPI } from "@/services/crm/services";
@@ -12,7 +12,7 @@ import { useRef, useState, useEffect } from "react";
 import { ProductItemsServiceAPI } from "../../product/services";
 import { PurChaseRequestAPIService } from "../request/service";
 import { PurchaseOrderServiceAPI } from "./services";
-
+import numeral from "numeral";
 
 interface Props {
   id?: number;
@@ -32,7 +32,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
   const editableFormRef = useRef<EditableFormInstance>();
   const [dataSourceItems, setDataSourceItems] = useState<PurchaseOrderItem[]>();
   const [distributor, setDistributor] = useState<DistributorCreate>();
-  const [saleperson, setSaleperson] = useState<{ assignedTo: string; assignedToCode?: string }>();
+  const [saleperson, setSaleperson] = useState<{ assignedTo?: string; assignedToCode?: string }>();
   const actionRef = useRef<ActionType>();
   const [amount, setAmount] = useState<Amount>({
     discountAmount: 0,
@@ -55,10 +55,10 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
   }
   const loadData = async () => {
     await services.fetchData(id).then(o => {
-      form.setFieldsValue({
-        ...o,
-        assignedTo: o.assignedTo || undefined,
-      });
+      // form.setFieldsValue({
+      //   ...o,
+      //   assignedTo: o.assignedTo,
+      // });
       setDistributor({
         id: o.distributorId,
         code: o.distributorCode,
@@ -87,7 +87,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
   return (
     <ProForm
       layout='horizontal'
-      labelCol={{ md: 8 }}
+      labelCol={{ sm: 8, md: 8 }}
       labelAlign='left'
       form={form}
       submitter={{
@@ -99,7 +99,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
               <Button type="primary"
                 disabled={dataSourceItems?.length ? false : true}
                 onClick={async () => {
-                  await form.validateFields();
+                  const dataForm = await form.validateFields();
                   await editableFormRef.current?.validateFields();
                   Modal.confirm({
                     title: "Save Data into Database",
@@ -107,6 +107,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
                     onOk: async () => {
                       const entry = {
                         id: id,
+                        ...dataForm,
                         ...saleperson,
                         items: dataSourceItems || [],
                         distributor: distributor,
@@ -127,17 +128,24 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
         },
       }}
     >
+
       <Flex vertical gap={12}>
         <Card
           size='small'
           title="General Infomation"
         >
-          <Row gutter={24}>
-            <Col span={10}>
+          <Space size={"large"} align="start" wrap>
+            <ProForm.Group
+              labelLayout="twoLine"
+              size={"small"}
+              direction="vertical"
+
+            >
               <ProFormSelect
                 name={"assignedTo"}
                 label={"Saleperson"}
                 debounceTime={500}
+                width={"md"}
                 rules={[
                   { required: true }
                 ]}
@@ -160,6 +168,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
                 showSearch
                 debounceTime={500}
                 name={"distributorId"}
+                width={"md"}
                 rules={[
                   { required: true }
                 ]}
@@ -183,19 +192,22 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
                 }}
               />
               <ProFormDatePicker
-                name={"purchaseDate"}
+                name={"purchaseOrderDate"}
                 label="Purchase Order Date"
                 width={"md"}
                 rules={[{ required: true }]}
               />
-            </Col>
-            <Col span={14}>
+            </ProForm.Group>
+            <ProForm.Group
+            >
               <ProFormTextArea
                 placeholder={"remark"}
                 name={"remark"}
+                width={"md"}
               />
-            </Col>
-          </Row>
+            </ProForm.Group>
+          </Space>
+
         </Card>
         <EditableProTable<PurchaseOrderItem & { key: string } >
           headerTitle={"Items"}
@@ -384,7 +396,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
                 width: 150
               }}
               contentStyle={{
-                fontWeight: "bold"
+                fontWeight: "bold",
               }}
               dataSource={amount}
               columns={[
@@ -393,7 +405,8 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
                   dataIndex: "grandAmount",
                   valueType: "money",
                   editable: false,
-                  render: (_, r) => r.grantAmount ? formatter.format(r.grantAmount) : "$0.00"
+                  // render: (_, r) => r.grantAmount ? formatter.format(r.grantAmount) : "$0.00"
+                  render: (_, r) => `$ ${numeral(r.grantAmount).format("0,000.00")}`
                 },
                 {
                   title: "Discount Amount",
@@ -405,7 +418,8 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
                   dataIndex: "totalAmount",
                   valueType: "money",
                   editable: false,
-                  render: (_, r) => r.totalAmount ? formatter.format(r.totalAmount) : "$0.00"
+                  render: (_, r) => `$ ${numeral(r.totalAmount).format("0,000.00")}`
+                  // render: (_, r) => r.totalAmount ? formatter.format(r.totalAmount) : "$0.00"
                 },
               ]}
             />

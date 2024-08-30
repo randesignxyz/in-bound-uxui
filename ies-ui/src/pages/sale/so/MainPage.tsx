@@ -1,9 +1,9 @@
 
 import '@/pages/index.less'
-import { Badge, Button, Space, Spin, Typography } from "antd"
+import { Badge, Spin, Typography } from "antd"
 import PageWrapper from "@/components/PageWrapper"
 import { SoAdvanceSearchParams, SoItemLess } from "@/services/sale/data"
-import { ExportOutlined, EyeOutlined, FileOutlined, PaperClipOutlined, PlusCircleOutlined, SelectOutlined } from "@ant-design/icons"
+import { ExportOutlined, EyeOutlined, FileOutlined, PaperClipOutlined, PlusCircleOutlined } from "@ant-design/icons"
 import { Model } from "./model"
 import { useEffect, useRef, useState } from "react"
 import { FetchPagingParams } from "@/components/DataCrud/TableView"
@@ -52,7 +52,7 @@ export default () => {
     }, [state.data?.soSummary])
     return <Spin spinning={false}>
         <PageWrapper<SoItemLess, FilterType, {}>
-            // onNewRender={(key) => access.canCreateEditSo && <ViewWrapper openInTab addNew tabKey={key} />}
+            onNewRender={(key) => access.canCreateEditSo && <ViewWrapper openInTab addNew tabKey={key} />}
             tabRender={item => [
                 { action: 'add', tabIcon: <FileOutlined />, panel: ({ key }) => <ViewWrapper addNew openInTab tabKey={key.toString()} />, tabLabel: 'New SO' },
                 {
@@ -68,7 +68,7 @@ export default () => {
             ]}
             listView={{
                 type: 'Table',
-                title: 'SO List',
+                title: 'Task List',
                 actionButtons: [{
                     icon: <PlusCircleOutlined />,
                     type: 'link',
@@ -140,7 +140,6 @@ export default () => {
                         sorter: 'poNo',
                         width: 140,
                         key: 'poNo',
-
                         actionProps: (item) => ({
                             type: 'view',
                             label: item.poNo || '',
@@ -171,7 +170,6 @@ export default () => {
                         title: 'Ship To',
                         render: (_, data) => data.shippingAddress,
                     },
-
                     {
                         title: 'Salesperson',
                         render: (_, data) => data.salespersonName,
@@ -258,6 +256,5 @@ export default () => {
                 actionRef.current?.reload?.(true);
             }}
         />
-
     </Spin>
 }

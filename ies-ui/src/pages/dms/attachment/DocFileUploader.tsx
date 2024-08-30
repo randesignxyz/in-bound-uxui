@@ -5,7 +5,6 @@ import { InboxOutlined } from "@ant-design/icons";
 import { getServiceUrl } from "@/services/ApiUrl";
 import Dragger from "antd/lib/upload/Dragger";
 import { UploadFile } from "antd/es/upload/interface";
-import { kc } from '@/auth';
 
 
 export type UploadType = UploadFile<string> & { title?: string; description?: string };
@@ -27,9 +26,7 @@ const DocFileUploader: React.FC<Props> = ({ required = false, onGetFile, multi, 
     const [fileList, setFileList] = useState<UploadType[]>([]);
     const [forceReload, setForceReload] = useState(1);
 
-
     useEffect(() => {
-
     }, [docTypeId]);
 
     useEffect(() => {

@@ -27,8 +27,11 @@ export default () => {
               id={id as number}
               actionHandlers={{
                 onBack: navigate?.gotToListHandler,
-              }}
-            />
+              }} onEdit={function (id?: number): void {
+                throw new Error('Function not implemented.');
+              } } onAdd={function (): void {
+                throw new Error('Function not implemented.');
+              } }            />
           )) ||
           (view === 'create' && (
             <Access

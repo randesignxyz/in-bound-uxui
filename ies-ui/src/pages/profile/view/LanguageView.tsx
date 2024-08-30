@@ -23,7 +23,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
         <Space direction={"vertical"} style={{width:'100%'}}>
         <Typography.Title level={5}>Existing data </Typography.Title> 
         {/* existing data */} 
-        <ProTable<LanguageData>
+        <ProTable<LanguageData> bordered
             dataSource={oldData}
             search={false}
             pagination={false}
@@ -44,7 +44,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                 },{   width: '70px',
                     render: (dom, r) => {
                         return ( <Flex vertical={false} justify='space-between'>
-                            <a style={{display: isAdmin==0?'':'none'}} 
+                            <a style={{display: isAdmin==0?'':'none'}}  title="Edit item" 
                                 onClick={() => cb.onOpenEditForm(r,"EDIT")}>
                                 <EditOutlined />
                             </a>  
@@ -56,7 +56,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
         />
          <Typography.Title level={5}>New records </Typography.Title> 
         {/* existing data */} 
-        <ProTable<LanguageData>
+        <ProTable<LanguageData> bordered
             dataSource={newData}
             search={false}
             pagination={false}
@@ -77,11 +77,11 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                 },{   width: '70px',
                     render: (dom, r) => {
                         return ( <Flex vertical={false} justify='space-between'>
-                            <a style={{display: isAdmin==0?'':'none'}} 
+                            <a style={{display: isAdmin==0?'':'none'}}  title="Edit item" 
                                 onClick={() => cb.onOpenEditForm(r,"ADD")}>
                                 <EditOutlined />
                             </a>   
-                            <a style={{display: isAdmin==0?'':'none'}} 
+                            <a style={{display: isAdmin==0?'':'none'}} title="Delete item" 
                                 onClick={() => cb.onDelete(r)}>
                                 <DeleteOutlined />
                             </a>  

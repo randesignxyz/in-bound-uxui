@@ -2,7 +2,7 @@ import { LookupDataItem2 } from "@/services/data"
 import { ModalForm, ModalFormProps, ProCard, ProFormSelect, ProFormText } from "@ant-design/pro-components"
 import { useForm } from "antd/lib/form/Form"
 import { EmergencyData,SaveEmergency,LocationData, FilesData } from "../data.ess"
-import { Spin,message,Image,List,Typography, Space, Button, Modal } from 'antd';
+import { Spin,message,Image,List,Typography, Space, Button, Modal, Row, Col } from 'antd';
 import { useEffect,useState } from 'react';  
 import { simpleRequestActions } from '@/services/model';
 import { ProfileServicesEss } from '../service_ess'; 
@@ -119,63 +119,74 @@ export default ({ profile,data,locations,type,isAdmin,empId, cb, ...rest }: Prop
         >
         <Spin spinning = {isLoading}> 
             <ProCard bordered> 
-                <ProFormText label="Emergency Name" name={'emergencyName'} /> 
+                <ProFormText label="Emergency Name" name={'emergencyName'} rules={[{ required: true }]}/> 
                 <ProFormSelect 
-                    label="Emergency Contact Relation"
+                    label="Emergency Contact Relation" rules={[{ required: true }]}
                     width={'md'} 
                     name={'emergencyContactRelation'}
-                    options={[
-                        { value: 1, label: "Spouse" },
-                        { value: 2, label: "Parent"},
-                        { value: 3, label: "Parent in law"},
-                        { value: 4, label: "Brother"},
-                        { value: 5, label: "Sister"},
-                        { value: 6, label: "Cousin"} 
-                    ]}    
+                    options={profile.relship?.map((it) => {
+                        return { value: it.id, label: it.titleName };
+                    })}  
                 />   
-                <ProFormText label="Emergency Phone" name={'emergencyPhone'} /> 
+                <ProFormText label="Emergency Phone" name={'emergencyPhone'} rules={[{ required: true }]}/> 
             </ProCard> 
             <div style={{marginTop:'10px'}}><Typography.Title level={5}>Emergency Address</Typography.Title></div>
             <ProCard bordered> 
-                <ProFormSelect 
-                    label="City/ Province" 
-                    name={'provinceId'}
-                    options={locations?.map((it) => {
-                        return { value: it.id, label: it.internalName };
-                    })}
-                    fieldProps={{
-                        onChange: (val) => {
-                            setLoading(true);
-                            districtList(val); 
-                        }, 
-                    }}
-                />         
+                <Row>
+                    <Col span={8} style={{padding:'3px'}}>
+                        <ProFormSelect 
+                            label="City/ Province" 
+                            name={'provinceId'}
+                            options={locations?.map((it) => {
+                                return { value: it.id, label: it.internalName };
+                            })}
+                            fieldProps={{
+                                onChange: (val) => {
+                                    setLoading(true);
+                                    districtList(val); 
+                                }, 
+                            }}
+                        />   
+                    </Col>   
+                    <Col span={8} style={{padding:'3px'}}>   
+                        {/*  */}
+                        <ProFormSelect 
+                            label="Khan/ District" 
+                            name={'districtId'}
+                            options={district?.map((it) => {
+                                return { value: it.id, label: it.internalName };
+                            })}
+                            fieldProps={{
+                                onChange: (val) => {
+                                    setLoading(true);
+                                    communeList(val); 
+                                }, 
+                            }}
+                        /> 
+                    </Col>   
+                    <Col span={8} style={{padding:'3px'}}>     
+                    {/*  */}
+                        <ProFormSelect 
+                            label="Sangkhat/ Commune" 
+                            name={'communeId'}
+                            options={commune?.map((it) => {
+                                return { value: it.id, label: it.internalName };
+                            })}
+                        />
+                    </Col>
+                </Row>
                 {/*  */}
-                <ProFormSelect 
-                    label="Khan/ District" 
-                    name={'districtId'}
-                    options={district?.map((it) => {
-                        return { value: it.id, label: it.internalName };
-                    })}
-                    fieldProps={{
-                        onChange: (val) => {
-                            setLoading(true);
-                            communeList(val); 
-                        }, 
-                    }}
-                />         
-                {/*  */}
-                <ProFormSelect 
-                    label="Sangkhat/ Commune" 
-                    name={'communeId'}
-                    options={commune?.map((it) => {
-                        return { value: it.id, label: it.internalName };
-                    })}
-                />
-                {/*  */}
-                <ProFormText label="House No" name={'homeNo'} />  
-                <ProFormText label="Street" name={'street'} /> 
-                <ProFormText label="Group/Village" name={'villageId'} /> 
+                <Row>
+                    <Col span={8} style={{padding:'3px'}}>   
+                        <ProFormText label="House No" name={'homeNo'} /> 
+                    </Col>
+                        <Col span={8} style={{padding:'3px'}}>    
+                        <ProFormText label="Street" name={'street'} /> 
+                    </Col>
+                    <Col span={8} style={{padding:'3px'}}>   
+                        <ProFormText label="Group/Village" name={'villageId'} /> 
+                    </Col>
+                </Row>
             </ProCard>
             
             {/* Attachment files  */} 

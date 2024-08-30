@@ -1,4 +1,4 @@
-import { ModalForm, ModalFormProps, ProFormDatePicker, ProFormSelect, ProFormText,ProCard, ProFormTextArea} from "@ant-design/pro-components"
+import { ModalForm, ModalFormProps, ProFormDatePicker, ProFormSelect, ProFormText,ProCard, ProFormTextArea, ProFormCheckbox, ProFormDigit} from "@ant-design/pro-components"
 import { useForm } from "antd/lib/form/Form"
 import { SaveEssProfile,LocationData, FilesData, EssProfileData } from "../data.ess"
 import { Image, Flex, Spin, List,message, Button, Modal} from 'antd';
@@ -9,9 +9,11 @@ import { ProfileServicesEss } from '../service_ess';
 import FileUploader , { UploadType } from '@/components/Attachment/FileUploader';
 import ImagePreview from "@/components/ImagePreview";
 import { ProfileData } from "../data";
+import { DeliveredProcedureOutlined } from "@ant-design/icons";
 
 interface Props extends ModalFormProps<SaveEssProfile> { 
     data?: EssProfileData;
+    profile:ProfileData;
     profile_draft?: SaveEssProfile; 
     locations?:LocationData[];
     files: FilesData[];
@@ -23,7 +25,7 @@ interface Props extends ModalFormProps<SaveEssProfile> {
     };
 }
 
-export default ({ data,profile_draft,locations,files,isAdmin,empId,cb, ...rest }: Props) => {
+export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, ...rest }: Props) => {
     const requestActions = simpleRequestActions(); 
 
     const [form] = useForm<SaveEssProfile>();
@@ -120,10 +122,10 @@ export default ({ data,profile_draft,locations,files,isAdmin,empId,cb, ...rest }
     }
     return <div>
         <ModalForm  {...rest} form={form} width={'40%'} title="Edit Personal Information"
-            onOpenChange={visible => {
-                form.resetFields() 
-                rest.onOpenChange?.(visible)
-            }}
+            // onOpenChange={visible => {
+            //     form.resetFields() 
+            //     rest.onOpenChange?.(visible)
+            // }}
 
             submitter={isAdmin==2&&empId>0?
                 {
@@ -140,7 +142,7 @@ export default ({ data,profile_draft,locations,files,isAdmin,empId,cb, ...rest }
             } 
             > 
             <Spin spinning = {isLoading}> 
-                <ProCard bordered>
+                <ProCard bordered style={{backgroundColor:'#f5f5f5'}}> 
                     <ProFormText label="Name KH" name={'nameKh'} />
                     <ProFormText label="Name EN" name={'nameEn'} />
                     <Row>
@@ -165,13 +167,16 @@ export default ({ data,profile_draft,locations,files,isAdmin,empId,cb, ...rest }
                         <Col span={12} style={{padding:'3px'}}>
                             <ProFormSelect 
                                 label="Marital Status"
-                                name={'maritalStatusId'}
-                                options={[
-                                    { value: 1, label: "Single" },
-                                    { value: 2, label: "Married"},
-                                    { value: 3, label: "Divorced"},
-                                    { value: 4, label: "Widowed"}    
-                                ]}  
+                                name={'maritalStatusId'} 
+                                options={profile.marriedStatus?.map((it) => {
+                                    return { value: it.id, label: it.titleName };
+                                })} 
+                                // options={[
+                                //     { value: 1, label: "Single" },
+                                //     { value: 2, label: "Married"},
+                                //     { value: 3, label: "Divorced"},
+                                //     { value: 4, label: "Widowed"}    
+                                // ]}  
                                 // options={lookupList.filter(it => it.type == 'CONTACT_TYPE').map(it => ({ label: it.name, value: it.id }))}
                             />
                         </Col>                
@@ -179,113 +184,117 @@ export default ({ data,profile_draft,locations,files,isAdmin,empId,cb, ...rest }
                             <ProFormSelect 
                                 label="Religion"
                                 name={'religionId'}
-                                options={[
-                                    { value: 1, label: "Buddhism" },
-                                    { value: 2, label: "Islam"}   
-                                ]}  
+                                options={profile.religion?.map((it) => {
+                                    return { value: it.id, label: it.titleName };
+                                })} 
+                                // options={[
+                                //     { value: 1, label: "Buddhism"},
+                                //     { value: 2, label: "Islam"},   
+                                //     { value: 3, label: "Christianity"},   
+                                //     { value: 4, label: "Hinduism"},   
+                                //     { value: 5, label: "Judaism"} 
+                                // ]}  
                                 // options={lookupList.filter(it => it.type == 'CONTACT_TYPE').map(it => ({ label: it.name, value: it.id }))}
                             />
                         </Col>       
                     </Row>
                     
-                    <Row>
-                        <Col span={12} style={{padding:'3px'}}>
-                            <ProFormText label="National ID" name={'nationalId'} rules={[{max: 16,message: "Value should be less than 17 character"}]}/>
-                        </Col>                
-                        <Col span={12} style={{padding:'3px'}}>  
-                            <ProFormText label="Passport Number" name={'passportNumber'} rules={[{max: 16,message: "Value should be less than 17 character"}]} />
-                        </Col>                
-                    </Row>
-                    {/* <ProFormText label="Current Address" name={'current_address'} />
-                    <ProFormText label="Permanent Address" name={'permanent_address'} /> */}
-                </ProCard>
-                {/* Dependent */}
-                <div style={{marginTop:'10px'}}><Typography.Title level={5}>Dependent</Typography.Title></div>
-                <ProCard bordered> 
+                    {/*  */}
                     <Row>
                         <Col span={8} style={{padding:'3px'}}>
-                            <ProFormSelect 
-                                label="Relationship"
-                                // disabled = {!!data}
-                                name={'relationshipId'}
-                                options={[
-                                    { value: 1, label: "Hushand" },
-                                    { value: 2, label: "Wife"},
-                                    { value: 3, label: "Son"}  ,
-                                    { value: 4, label: "Daughter"}  
-                                ]}    
-                                
-                                // options={lookupList.filter(it => it.type == 'CONTACT_TYPE').map(it => ({ label: it.name, value: it.id }))}
-                            />
-                        </Col>                
-                        <Col span={8} style={{padding:'3px'}}>       
-                            <ProFormSelect 
-                                label="Occupation"
-                                name={'occupationId'}
-                                options={[
-                                    { value: 1, label: "Housewife" },
-                                    { value: 2, label: "Student"},
-                                    { value: 3, label: "Work"},
-                                    { value: 4, label: "Farmer"}  
-                                ]}  
-                                // options={lookupList.filter(it => it.type == 'CONTACT_TYPE').map(it => ({ label: it.name, value: it.id }))}
-                            />
-                        </Col>                 
-                        <Col span={8} style={{padding:'3px'}}>       
-                            <ProFormDatePicker 
-                                label="Date of Birth"
-                                name={'dependDateOfBirth'}/>
-                        </Col> 
+                            <ProFormCheckbox label="Married to OML Staff" name={"marriedWith"} placeholder={"Married to OML Staff"}/>
+                        </Col>
+                        <Col span={12} style={{padding:'3px'}}>
+                            <ProFormDigit label="Spouse's OML Employee ID number" name={"spouseStaffId"} placeholder={"Spouse's OML Employee ID number"} />
+                        </Col>       
                     </Row>
 
+                     
+                </ProCard>  
+                {/* National ID */}
+                <div style={{marginTop:'10px'}}><Typography.Title level={5}>National Brief</Typography.Title></div>
+                <ProCard bordered style={{backgroundColor:'#f5f5f5'}}> 
+                    <Row>
+                        <Col span={8} style={{padding:'3px'}}>
+                            <ProFormText label="National ID" name={'nationalId'} rules={[{max: 16,message: "Value should be less than 17 character"}]}/>
+                        </Col>                       
+                        <Col span={8} style={{padding:'3px'}}>  
+                            <ProFormDatePicker label="Issued Date" name={'nationalIssuedDate'} />
+                        </Col>   
+                        <Col span={8} style={{padding:'3px'}}>
+                            <ProFormDatePicker label="Expiry Date" name={'nationalExpiryDate'}/>
+                        </Col>             
+                    </Row>
                 </ProCard>
+                {/* Passport Number */}
+                <div style={{marginTop:'10px'}}><Typography.Title level={5}>Passport Brief</Typography.Title></div>
+                <ProCard bordered style={{backgroundColor:'#f5f5f5'}}> 
+                    <Row>            
+                        <Col span={8} style={{padding:'3px'}}>  
+                            <ProFormText label="Passport Number" name={'passportNumber'} rules={[{max: 16,message: "Value should be less than 17 character"}]} />
+                        </Col>     
+                        <Col span={8} style={{padding:'3px'}}>
+                            <ProFormDatePicker label="Issued Date" name={'passportIssuedDate'} />
+                        </Col>         
+                        <Col span={8} style={{padding:'3px'}}>
+                            <ProFormDatePicker label="Expiry Date" name={'passportExpiryDate'} />
+                        </Col>               
+                    </Row>
+                </ProCard> 
 
                 {/* Place of birth  */}
                 <div style={{marginTop:'10px'}}><Typography.Title level={5}>Place of Birth</Typography.Title></div>
-                <ProCard bordered>
-                    <Flex vertical={false} gap="middle" style={{width:'100%'}}>
-                    <ProFormSelect 
-                        label="City/ Province" 
-                        name={'provincePbId'}
-                        options={locations?.map((it) => {
-                            return { value: it.id, label: it.internalName };
-                        })}
-                        fieldProps={{
-                            onChange: (val) => {
-                                setLoading(true);
-                                districtList(val,1); 
-                            }, 
-                        }}
-                    />         
-                    {/*  */}
-                    <ProFormSelect 
-                        label="Khan/ District" 
-                        name={'districtPbId'}
-                        options={districtPB?.map((it) => {
-                            return { value: it.id, label: it.internalName };
-                        })}
-                        fieldProps={{
-                            onChange: (val) => {
-                                setLoading(true);
-                                communeList(val,1); 
-                            }, 
-                        }}
-                    />         
-                    {/*  */}
-                    <ProFormSelect 
-                        label="Sangkhat/ Commune" 
-                        name={'communePbId'}
-                        options={communePB?.map((it) => {
-                            return { value: it.id, label: it.internalName };
-                        })}
-                    />
-                    </Flex>
+                <ProCard bordered style={{backgroundColor:'#f5f5f5'}}> 
+                    <Row>
+                        <Col span={8} style={{padding:'3px'}}>
+                            <ProFormSelect 
+                                label="City/ Province" 
+                                name={'provincePbId'}
+                                options={locations?.map((it) => {
+                                    return { value: it.id, label: it.internalName };
+                                })}
+                                fieldProps={{
+                                    onChange: (val) => {
+                                        setLoading(true);
+                                        districtList(val,1); 
+                                    }, 
+                                }}
+                            />
+                        </Col> 
+                        <Col span={8} style={{padding:'3px'}}>         
+                            {/*  */}
+                            <ProFormSelect 
+                                label="Khan/ District" 
+                                name={'districtPbId'}
+                                options={districtPB?.map((it) => {
+                                    return { value: it.id, label: it.internalName };
+                                })}
+                                fieldProps={{
+                                    onChange: (val) => {
+                                        setLoading(true);
+                                        communeList(val,1); 
+                                    }, 
+                                }}
+                            />  
+                        </Col> 
+                        <Col span={8} style={{padding:'3px'}}>      
+                            {/*  */}
+                            <ProFormSelect 
+                                label="Sangkhat/ Commune" 
+                                name={'communePbId'}
+                                options={communePB?.map((it) => {
+                                    return { value: it.id, label: it.internalName };
+                                })}
+                            />
+                        </Col>
+                    </Row>
                 </ProCard>
 
                 {/* Permenant address  */}
                 <div style={{marginTop:'10px'}}><Typography.Title level={5}>Permanent Address</Typography.Title></div>
-                <ProCard bordered>
-                    <Flex vertical={false} gap="middle"  justify="flex-start">
+                <ProCard bordered style={{backgroundColor:'#f5f5f5'}}> 
+                    <Row>
+                        <Col span={8} style={{padding:'3px'}}>
                     <ProFormSelect 
                         label="City/ Province" 
                         name={'provincePaId'}
@@ -298,7 +307,8 @@ export default ({ data,profile_draft,locations,files,isAdmin,empId,cb, ...rest }
                                 districtList(val,2); 
                             }, 
                         }}
-                    />         
+                    />     </Col> 
+                        <Col span={8} style={{padding:'3px'}}>   
                     {/*  */}
                     <ProFormSelect 
                         label="Khan/ District" 
@@ -312,70 +322,77 @@ export default ({ data,profile_draft,locations,files,isAdmin,empId,cb, ...rest }
                                 communeList(val,2); 
                             }, 
                         }}
-                    />         
+                    />         </Col> 
                     {/*  */}
+                        <Col span={8} style={{padding:'3px'}}>
                     <ProFormSelect 
                         label="Sangkhat/ Commune" 
                         name={'communePaId'}
                         options={communePA?.map((it) => {
                             return { value: it.id, label: it.internalName };
                         })}
-                    />
-                    </Flex>
+                    /></Col>
+                    </Row>
                     
                     <Flex vertical={false} gap="middle" style={{width:'100%'}}>
                     {/*  */}
-                    <ProFormText label="House No" name={'homePaNo'} />  
-                    <ProFormText label="Street" name={'streetPa'} /> 
+                    <ProFormText label="House No" name={'homePaNo'} rules={[{ required: true }]}/>  
+                    <ProFormText label="Street" name={'streetPa'} rules={[{ required: true }]}/> 
                     <ProFormText label="Group/Village" name={'villagePaId'} />
                     </Flex>
                 </ProCard>
 
                 {/* current address  */}
-                <div style={{marginTop:'10px'}}><Typography.Title level={5}>Current Address</Typography.Title></div> 
-                <ProCard bordered>
-                <Flex vertical={false} gap="middle" style={{width:'100%'}}>
-                    <ProFormSelect 
-                        label="City/ Province" 
-                        name={'provinceCrId'}
-                        options={locations?.map((it) => {
-                            return { value: it.id, label: it.internalName };
-                        })}
-                        fieldProps={{
-                            onChange: (val) => {
-                                setLoading(true);
-                                districtList(val,3); 
-                            }, 
-                        }}
-                    />         
+                <div style={{marginTop:'10px'}}><Typography.Title level={5}>Current Address</Typography.Title> <Button><DeliveredProcedureOutlined /> Clone Permanent Address</Button></div> 
+                <ProCard bordered style={{backgroundColor:'#f5f5f5'}}> 
+                    <Row>
+                        <Col span={8} style={{padding:'3px'}}>
+                            <ProFormSelect 
+                                label="City/ Province" 
+                                name={'provinceCrId'}
+                                options={locations?.map((it) => {
+                                    return { value: it.id, label: it.internalName };
+                                })}
+                                fieldProps={{
+                                    onChange: (val) => {
+                                        setLoading(true);
+                                        districtList(val,3); 
+                                    }, 
+                                }}
+                            />      
+                        </Col>  
+                        <Col span={8} style={{padding:'3px'}}>  
+                            {/*  */}
+                            <ProFormSelect 
+                                label="Khan/ District" 
+                                name={'districtCrId'}
+                                options={districtCA?.map((it) => {
+                                    return { value: it.id, label: it.internalName };
+                                })}
+                                fieldProps={{
+                                    onChange: (val) => {
+                                        setLoading(true);
+                                        communeList(val,3); 
+                                    }, 
+                                }}
+                            />  
+                        </Col>        
                     {/*  */}
-                    <ProFormSelect 
-                        label="Khan/ District" 
-                        name={'districtCrId'}
-                        options={districtCA?.map((it) => {
-                            return { value: it.id, label: it.internalName };
-                        })}
-                        fieldProps={{
-                            onChange: (val) => {
-                                setLoading(true);
-                                communeList(val,3); 
-                            }, 
-                        }}
-                    />         
-                    {/*  */}
-                    <ProFormSelect 
-                        label="Sangkhat/ Commune" 
-                        name={'communeCrId'}
-                        options={communeCA?.map((it) => {
-                            return { value: it.id, label: it.internalName };
-                        })}
-                    />
-                    </Flex>
+                        <Col span={8} style={{padding:'3px'}}>
+                            <ProFormSelect 
+                                label="Sangkhat/ Commune" 
+                                name={'communeCrId'}
+                                options={communeCA?.map((it) => {
+                                    return { value: it.id, label: it.internalName };
+                                })}
+                            />
+                        </Col> 
+                    </Row>
                     
                     <Flex vertical={false} gap="middle" style={{width:'100%'}}>
                     {/*  */}
-                    <ProFormText label="House No" name={'homeCrNo'} />  
-                    <ProFormText label="Street" name={'streetCr'} /> 
+                    <ProFormText label="House No" name={'homeCrNo'} rules={[{ required: true }]}/>  
+                    <ProFormText label="Street" name={'streetCr'} rules={[{ required: true }]}/> 
                     <ProFormText label="Group/Village" name={'villageCrId'} />
                     </Flex>
                 </ProCard>
@@ -389,7 +406,7 @@ export default ({ data,profile_draft,locations,files,isAdmin,empId,cb, ...rest }
                     <FileUploader   
                         required={false}  
                         service="FILE" onSetFiles={f=>setUpladFileHandle?.(f)}
-                        showUploadList={true} 
+                        showUploadList={true}
                     />
                     <Image.PreviewGroup>
                         <List

@@ -74,7 +74,7 @@ export default ({ profile }: Props) =>{
     const actionItem =(record:OpenEssDataItem):MenuProps["items"] =>[
         {
             key: "1",
-            label: "View Info",
+            label: "Review Updates",
             itemIcon: <EyeOutlined />,
             onClick: async () => {
                 window.open(`/profile/1/${record.empId}`,)?.focus();
@@ -82,13 +82,13 @@ export default ({ profile }: Props) =>{
         },
         {
             key: "2",
-            label: "Force Approval",
+            label: "Approve",
             itemIcon: <CheckOutlined />,
             disabled:([6,4,3].find((element) => element == record.stepId))?false:true,
             onClick: async () => { 
                 Modal.confirm({
-                    title: 'Force Approval',
-                    content: 'Do you want to force approval?',
+                    title: 'Approve',
+                    content: 'Do you want to approve?',
                     onOk: async () => {
                       try {  
                         const rs = await ServicesEss.essInfoDetail(record.empId,profile.id).query(requestActions);  
@@ -103,13 +103,13 @@ export default ({ profile }: Props) =>{
         },
         {
             key: "3",
-            label: "Force Rejected",
+            label: "ForReject",
             itemIcon: <ExclamationCircleOutlined />,
             style:{color:[3].find((element) => element == record.stepId)?'red':''},
             disabled:([3].find((element) => element == record.stepId))?false:true,
             onClick: async () => {
                 Modal.confirm({
-                title: 'Force Rejected', 
+                title: 'Reject', 
                 content: <div><ProFormTextArea name={"comment"} fieldProps={{onChange: (e) => {onTextChange(e.currentTarget.value);}}} placeholder={"Entry Message"} /></div>,
                 onOk: async () => {
                   try {  
@@ -125,14 +125,14 @@ export default ({ profile }: Props) =>{
         },
         {
             key: "4",
-            label: "Force Cancel Update",
+            label: "Cancel Update",
             itemIcon: <CloseCircleOutlined />,
             disabled:record.stepId<3?false:true,
             style:{color:record.stepId<3?'red':''},
             onClick: async () => {
                 Modal.confirm({
-                    title: 'Force Cancel Update',
-                    content: 'Do you want to force cancel update?',
+                    title: 'Cancel Update',
+                    content: 'Do you want to cancel update?',
                     onOk: async () => {
                       try {  
                         const rs = await ServicesEss.essInfoDetail(record.empId,profile.id).query(requestActions);  
@@ -170,29 +170,29 @@ export default ({ profile }: Props) =>{
                     },
                 }} 
                 columns={[
-                { width   :'5%',
-                    title   : "Emp No", 
+                { width   :'10%',
+                    title   : "Employee ID", 
                     dataIndex : 'empNo',
                     sorter    : false,
                     hideInForm: false, 
                 }, 
-                { title: "Local Name",dataIndex: 'internalName'},   
-                { width:'12%',title: "First Name",dataIndex:'firstName',search: false}, 
-                { width:'12%',title: "Last Name",dataIndex:'lastName',search: false}, 
-                { width:'7%',title: "Integrated ID",dataIndex:'integratedId',search: false}, 
-                { width:'12%',title: "Job Title",dataIndex:'jobTitle',search: false}, 
-                { width:'12%',title: "Department",dataIndex:'departmentName',search: false}, 
-                { width:'12%',title: "BU",dataIndex: 'buName' },
+                { title: "Full Name (KH)",dataIndex: 'internalName'},   
+                { width:'12%',title: "Full Name (EN)",dataIndex:'firstName',search: false,render:(_,r) =>{return(r.firstName+" "+r.lastName)}}, 
+                // { width:'12%',title: "Last Name",dataIndex:'lastName',search: false}, 
+                // { width:'7%',title: "Integrated ID",dataIndex:'integratedId',search: false}, 
+                { width:'12%',title: "Position",dataIndex:'jobTitle',search: false}, 
+                { width:'12%',title: "Function",dataIndex:'departmentName',search: false}, 
+                { width:'12%',title: "Company",dataIndex: 'buName' },
                 {title: 'Status',width: 120, render:(_,r) =>{
-                        var _status = 'PENDING';
+                        var _status = 'Pending';
                         if (r.stepId==2){
-                            _status = "STARTED";
+                            _status = "Started";
                         } else if (r.stepId==4){
-                            _status = "REJECTED";
+                            _status = "Rejected";
                         } else if (r.stepId==3){
-                            _status = "REVIEW";
+                            _status = "Reviewing";
                         } else if (r.stepId==6){
-                            _status = "APPROVAL";
+                            _status = "Approved";
                         }
                         return <div><Status text={_status}/></div>;
                     }

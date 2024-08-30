@@ -9,7 +9,7 @@ import { ExperienceData,  FilesData,  SaveExperience } from "../data.ess";
 import { ProfileServicesEss } from '../service_ess'; 
 import { simpleRequestActions } from '@/services/model';
 import ExperienceView from "../view/ExperienceView";
-import { formatDateTime } from "@/pages/utils";
+import { formatDate, formatDateTime } from "@/pages/utils";
 
 
 interface Props {
@@ -87,7 +87,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
     const onDelete = async (data: ExperienceData) => {
         Modal.confirm({
           title: 'Delete eduction',
-          content: 'Are you sure you want to delete?',
+          content: 'Are you sure you want to delete items?',
           onOk: async () => {
             try {
                 data.otherFile = [];
@@ -144,26 +144,26 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                     }}
                     columns={[
                         {
-                            title: "Company Name", dataIndex: "companyName"
+                            title: "Company Name", width: '250px',dataIndex: "companyName"
                         },{
-                            title: "Location", dataIndex: "location"
+                            title: "Location", render: (_, r) => {return ((r.countryName==null?"":r.countryName)+" "+(r.provinceName==null?"":r.provinceName)+" "+(r.locationRemark==null?"":r.locationRemark));}
                         }, {
-                            title: "Started Position", dataIndex: 'startPosition'
+                            title: "Started Position", width: '250px',dataIndex: 'startPosition'
                         },{
-                            title: "Ended Position", dataIndex: 'endPosition'
+                            title: "Ended Position", width: '250px',dataIndex: 'endPosition'
                         },{
-                            title: "Started Date", dataIndex: 'startDate',
-                            render:(dom, r) => {
-                                return formatDateTime(r.startDate)
+                            title: "Started Date", width: '150px',dataIndex: 'startDate',
+                            render:(_, r) => {
+                                return formatDate(r.startDate)
                             }
                         },{
-                            title: "Ended Date", dataIndex: 'endDate',
-                            render:(dom, r) => {
-                                return formatDateTime(r.endDate)
+                            title: "Ended Date", width: '150px',dataIndex: 'endDate',
+                            render:(_, r) => {
+                                return formatDate(r.endDate)
                             }
                         },
                         {   width: 100,
-                            render: (dom, r) => {
+                            render: (_, r) => {
                                 return (<>
                                   {profile!!.ess.id!!<=0?'':<a style={{display: (is_admin==0&&empId==0&&[7,5,2].find((element) => element == profile!!.ess.stepId))?'':'none'}}
                                     onClick={() => setModalVisible({ type: 'EDIT', payload: r })} 

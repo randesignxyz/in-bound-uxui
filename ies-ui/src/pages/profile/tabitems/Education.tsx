@@ -5,7 +5,7 @@ import EducationModal from '../modal/EducationModal';
 import { useEffect,useState } from 'react';
 
 import { ProfileData} from '../data';
-import { EducationData, FilesData} from "../data.ess"; 
+import { EducationData, EssLookupData, FilesData, MarjorData} from "../data.ess"; 
 import { ProfileServicesEss } from '../service_ess'; 
 import { simpleRequestActions } from '@/services/model';
 import EducationView from "../view/EducationView";
@@ -33,6 +33,10 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
     const [educationList, setEducationList] = useState<EducationData[]>([]);
     const [educationOldList, setEducationOldList] = useState<EducationData[]>([]);
     const [educationNewList, setEducationNewList] = useState<EducationData[]>([]);
+    const [marjorList, setMarjorList] = useState<MarjorData[]>([]);
+    // const [degreeList, setDegreeList] = useState<EssLookupData[]>([]);
+    // const [statusList, setStatusList] = useState<EssLookupData[]>([]);
+    // const [coeiList, setCoeiList] = useState<EssLookupData[]>([]); 
 
     const [educationOldImageList, setEducationOldImageList] = useState<FilesData[]>([]);
     const [educationNewImageList, setEducationNewImageList] = useState<FilesData[]>([]); 
@@ -47,6 +51,10 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
         try {
             // 
             const list = await ProfileServicesEss.listEducation(profile.id).query(requestActions);
+            setMarjorList(list.marjor);  
+            // setDegreeList(list.degree);  
+            // setStatusList(list.status);  
+            // setCoeiList(list.coei);  
             setEducationList(list.data);  
             // old records edit 
             setEducationOldList(list.oldData); 
@@ -85,7 +93,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
     const onDelete = async (data: EducationData) => {
         Modal.confirm({
           title: 'Delete eduction',
-          content: 'Are you sure you want to delete?',
+          content: 'Are you sure you want to delete items?',
           onOk: async () => {
             try {
                 data.otherFile = [];
@@ -105,7 +113,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
     };
 
     var lng = ["N/A","Khmer" ,"English","Chineses","Thai","Janpanese","Vietnamese"];  
- 
+    var dg = ["N/A","Primary school" ,"Secondary school","Higher school","Associate degree","Bachelor degree","Master degree","Phd"]; 
     // open form emergency
     const onOpenForm = async (data:EducationData,_type:string,)=>{
         setModalVisible({ type: _type, payload: data });
@@ -145,15 +153,15 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
  
                     columns={[
                         {
-                            title: "Degree", dataIndex: "degreeId",render: (dom, r) => {return lng[r.degreeId]}
+                            title: "Degree", dataIndex: "degreeName" 
                         },{
-                            title: "Major/Subject", dataIndex: "marjorSubject"
+                            title: "Major/Subject", dataIndex: "majorName"
                         },{
-                            title: "Education Center", dataIndex: "educationCenter"
+                            title: "Education Institution", dataIndex: "educationCenter"
                         },{
-                            title: "Country of Education Center", dataIndex: "countryEducationCenter",render: (dom, r) => {return lng[r.countryEducationCenter]}
+                            title: "Country of Education Institution", dataIndex: "countryEducationCenterName" 
                         },{
-                            title: "Status", dataIndex: "statusId",render: (dom, r) => {return lng[r.statusId]}
+                            title: "Status", dataIndex: "statstatusNameusId" 
                         },
                         {   width: 100,
                             render: (dom, r) => {
@@ -164,7 +172,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                                   </a>}
                                   <a style={{display: (is_admin==2&&empId>0)?'':'none'}} 
                                   onClick={() => setModalVisible({ type: 'EDIT', payload: r })}>
-                                    <EditOutlined /> {empId} {is_admin}
+                                    <EditOutlined />
                                   </a></>
                                 );
                               },
@@ -183,6 +191,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
             type={modalVisible?.type!!}
             isAdmin={is_admin}
             empId={empId}
+            marjor={marjorList} 
             cb={{
                 onLoadMenu: (tid) => { 
                     selectedFileOther(tid);

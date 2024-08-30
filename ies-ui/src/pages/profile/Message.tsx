@@ -1,4 +1,4 @@
-import { ModalFormProps} from "@ant-design/pro-components"
+import { ModalFormProps, ProCard} from "@ant-design/pro-components"
 import { useForm } from "antd/lib/form/Form"
 import { ContactData, SaveContract } from "./data"
 import { useEffect,useState } from 'react';
@@ -14,6 +14,7 @@ interface Props extends ModalFormProps {
     visible?:boolean,
     message?: String,
     description?:String,
+    opentitle:String,
     type?:String,
     step:number
     cb:{onStartModify: (tid:number) => void; },
@@ -21,7 +22,7 @@ interface Props extends ModalFormProps {
     is_admin:boolean
 }
 
-export default ({visible,message,description,type,step,cb,data,is_admin,...rest}: Props) => { 
+export default ({visible,message,description,opentitle,type,step,cb,data,is_admin,...rest}: Props) => { 
     
     const [display,setDisplay] = useState(false); 
 
@@ -45,13 +46,18 @@ export default ({visible,message,description,type,step,cb,data,is_admin,...rest}
     };
 
     return <>
-    <div style={{padding:'10px',display:display==true?'none':''}}>    
-        <Alert style={{width:'95%',margin:'auto'}}
+    <div style={{paddingTop:'10px',display:display==true?'none':''}}>    
+        <Alert style={{width:'95%',margin:'auto'}} {...rest}
             message={<Typography.Title level={5}>{message}</Typography.Title>}
-            description={<Space direction="vertical">
-            <Paragraph ellipsis={{rows: 2, expandable: true, symbol: 'more' }}>
-                {description} 
-            </Paragraph>
+            description={<Space direction="vertical" style={{width:'100%'}}>
+                <ProCard bordered title={"Announcement Title"}>
+                    {opentitle}
+                </ProCard> 
+                <ProCard bordered title={"Issued Info"}>
+                    <Paragraph ellipsis={{rows: 2, expandable: true, symbol: 'more' }}>
+                        {description} 
+                    </Paragraph>
+                </ProCard>
             </Space> }
             type={type||"info"} 
             closable

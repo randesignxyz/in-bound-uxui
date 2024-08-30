@@ -1,9 +1,9 @@
 import { LookupDataItem2 } from "@/services/data"
-import { ModalForm, ModalFormProps, ProFormTextArea, ProFormDatePicker, ProForm, ProFormText,ProCard } from "@ant-design/pro-components" 
+import { ModalForm, ModalFormProps, ProFormTextArea, ProFormDatePicker, ProForm, ProFormText,ProCard, ProFormSelect } from "@ant-design/pro-components" 
 import { TrainingData, SaveTraining, FilesData } from "../data.ess"
 import { useEffect,useState } from 'react';
 import FileUploader , { UploadType } from '@/components/Attachment/FileUploader';
-import { Space, Typography , Image,List, Modal, message, Button} from "antd";
+import { Space, Typography , Image,List, Modal, message, Button, Row, Col} from "antd";
 import ImagePreview from "@/components/ImagePreview";
 import { ProfileData } from "../data";
 import { simpleRequestActions } from "@/services/model";
@@ -70,7 +70,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
         });
     }
     // 
-    return <ModalForm  {...rest} form={form} width={'30%'} title={!!data?"Edit Training":"Add Training"}
+    return <ModalForm  {...rest} form={form} width={'30%'} title={!!data?"Edit Training/Certification":"Add Training/Certification"}
         // onOpenChange={visible => {
         //     form.resetFields()
         //     rest.onOpenChange?.(visible)
@@ -91,10 +91,30 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
                 } 
         > 
         <ProCard bordered> 
-            <ProFormText label="Training Courses" name={'trainingCourse'} />
-            <ProFormDatePicker picker="year" label="Year" name={'year'} />  
-            <ProFormTextArea label="Description" name={'description'} /> 
+            <ProFormText label="Courses" name={'trainingCourse'} rules={[{ required: true }]} placeholder={"courses"}/> 
+            <ProFormText label="Institution" name={'institution'} rules={[{ required: true }]} placeholder={"institution"}/> 
+            <Row>              
+                <Col span={12} style={{padding:'3px'}}>  
+                    <ProFormSelect rules={[{ required: true }]} placeholder={"Type"}
+                        label="Type" 
+                        name={'typeId'}
+                        mode="single" 
+                        options={[
+                                { value: 1, label: "Training" },
+                                { value: 2, label: "Certification"}  
+                            ]}  
+                    />
+                </Col>     
+                <Col span={12} style={{padding:'3px'}}>  
+                    <ProFormDatePicker picker="year" label="Year" name={'year'} rules={[{ required: true }]} placeholder={"in year"}/> 
+                </Col>            
+                <Col span={12} style={{padding:'3px'}}>  
+                    <ProFormText label="Duration" name={'duration'} placeholder={"duration"}/>
+                </Col>       
+            </Row> 
+            <ProFormTextArea label="Description" name={'description'} placeholder={"description"}/> 
         </ProCard>
+          
         
         {/* Attachment files  */} 
         <div style={{marginTop:'10px'}}>

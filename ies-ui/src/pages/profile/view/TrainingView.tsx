@@ -1,7 +1,8 @@
 import { Flex, ModalProps, Space, Typography } from "antd" 
-import { ModalForm, ProTable } from "@ant-design/pro-components"
+import { ModalForm, ProCard, ProTable } from "@ant-design/pro-components"
 import { TrainingData } from "../data.ess" 
 import { EditOutlined,DeleteOutlined } from "@ant-design/icons"
+import { formatYear } from "@/pages/utils";
 
 interface Props extends ModalProps {
     // data: BasicContactData;
@@ -16,12 +17,15 @@ interface Props extends ModalProps {
 }
 
 export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {   
+    
+    var type = ["" ,"Training","Certification"];
     return <>
       <ModalForm title = "View training edit" {...rest} width={'90%'} submitter={false} > 
         <Space direction={"vertical"} style={{width:'100%'}}>
-        <Typography.Title level={5}>Existing data </Typography.Title> 
-        {/* existing data */} 
-        <ProTable<TrainingData>
+            <ProCard bordered>
+                <Typography.Title level={5}>Existing data </Typography.Title> 
+                {/* existing data */} 
+                <ProTable<TrainingData> bordered
                     dataSource={oldData}
                     search={false}
                     pagination={false}
@@ -34,15 +38,28 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                     }}
                     columns={[
                         {
-                            title: "Training Courses", dataIndex: "trainingCourse"
+                            title: "Courses", dataIndex: "trainingCourse"
                         },{
-                            title: "Year", dataIndex: "year"
+                            title: "Institution", dataIndex: "institution"
                         },{
-                            title: "description", dataIndex: "description"
+                            title: "Year", 
+                            dataIndex: "year",
+                            render:(_, r) => {
+                                return formatYear(r.year)
+                            }
+                        },{
+                            title: "Duration", dataIndex: "duration"
+                        },{
+                            title: "Description", dataIndex: "description"
+                        },{
+                            title: "Type",  
+                            render:(_, r) => {
+                                return type[r.typeId]
+                            }
                         },{   width: '70px',
-                            render: (dom, r) => { 
+                            render: (_, r) => { 
                                 return ( <Flex vertical={false} justify='space-between'>
-                                    <a style={{display: isAdmin==0?'':'none'}} 
+                                    <a style={{display: isAdmin==0?'':'none'}} title="Edit item" 
                                         onClick={() => {
                                                 cb.onOpenEditForm(r,"EDIT"); 
                                             }
@@ -55,9 +72,11 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                         } 
                     ]}
                 />
-         <Typography.Title level={5}>New records </Typography.Title> 
-        {/* existing data */} 
-        <ProTable<TrainingData>
+            </ProCard>
+            <ProCard bordered>
+                <Typography.Title level={5}>New records </Typography.Title> 
+                {/* existing data */} 
+                <ProTable<TrainingData> bordered
                     dataSource={newData}
                     search={false}
                     pagination={false}
@@ -70,22 +89,35 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                     }}
                     columns={[
                         {
-                            title: "Training Courses", dataIndex: "trainingCourse"
+                            title: "Courses", dataIndex: "trainingCourse"
                         },{
-                            title: "Year", dataIndex: "year"
+                            title: "Institution", dataIndex: "institution"
                         },{
-                            title: "description", dataIndex: "description"
+                            title: "Year", 
+                            dataIndex: "year",
+                            render:(dom, r) => {
+                                return formatYear(r.year)
+                            }
+                        },{
+                            title: "Duration", dataIndex: "duration"
+                        },{
+                            title: "Description", dataIndex: "description"
+                        },{
+                            title: "Type",  
+                            render:(_, r) => {
+                                return type[r.typeId]
+                            }
                         },{   width: '70px',
-                            render: (dom, r) => {
+                            render: (_, r) => {
                                 return ( <Flex vertical={false} justify='space-between'>
-                                    <a style={{display: isAdmin==0?'':'none'}} 
+                                    <a style={{display: isAdmin==0?'':'none'}} title="Edit item" 
                                         onClick={() => {
                                             cb.onOpenEditForm(r,"ADD");
                                         }
                                     }>
                                         <EditOutlined />
                                     </a>   
-                                    <a style={{display: isAdmin==0?'':'none'}} 
+                                    <a style={{display: isAdmin==0?'':'none', color:'red'}} title="Delete item" 
                                         onClick={() => cb.onDelete(r)}>
                                         <DeleteOutlined />
                                     </a>  
@@ -95,6 +127,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                         } 
                     ]}
                 />
+            </ProCard>
       </Space>
     </ModalForm>
   </>

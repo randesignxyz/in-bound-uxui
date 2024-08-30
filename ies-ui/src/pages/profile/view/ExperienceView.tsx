@@ -2,6 +2,7 @@ import { Flex, ModalProps, Space, Typography } from "antd"
 import { ModalForm, ProTable } from "@ant-design/pro-components"
 import { ExperienceData } from "../data.ess" 
 import { EditOutlined,DeleteOutlined } from "@ant-design/icons"
+import { formatDate } from "@/pages/utils";
 
 interface Props extends ModalProps {
     // data: BasicContactData;
@@ -22,7 +23,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
         <Space direction={"vertical"} style={{width:'100%'}}>
         <Typography.Title level={5}>Existing data </Typography.Title> 
         {/* existing data */} 
-        <ProTable<ExperienceData>
+        <ProTable<ExperienceData> bordered
             dataSource={oldData}
             search={false}
             pagination={false}
@@ -35,21 +36,27 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
             }}
             columns={[
                 {
-                    title: "Company Name", dataIndex: "companyName"
+                    title: "Company Name", width: '250px',dataIndex: "companyName"
                 },{
-                    title: "Location", dataIndex: "location"
+                    title: "Location", render: (_, r) => {return ((r.countryName==null?"":r.countryName)+" "+(r.provinceName==null?"":r.provinceName)+" "+(r.locationRemark==null?"":r.locationRemark));}
                 }, {
-                    title: "Started Position", dataIndex: 'startPosition'
+                    title: "Started Position", width: '250px',dataIndex: 'startPosition'
                 },{
-                    title: "Ended Position", dataIndex: 'endPosition'
+                    title: "Ended Position", width: '250px',dataIndex: 'endPosition'
                 },{
-                    title: "Started Date", dataIndex: 'startDate'
+                    title: "Started Date", width: '150px',dataIndex: 'startDate',
+                    render:(_, r) => {
+                        return formatDate(r.startDate)
+                    }
                 },{
-                    title: "Ended Date", dataIndex: 'endDate'
+                    title: "Ended Date", width: '150px',dataIndex: 'endDate',
+                    render:(_, r) => {
+                        return formatDate(r.endDate)
+                    }
                 },{   width: '70px',
                     render: (dom, r) => {
                         return ( <Flex vertical={false} justify='space-between'>
-                            <a style={{display: isAdmin==0?'':'none'}} 
+                            <a style={{display: isAdmin==0?'':'none'}}  title="Edit item" 
                                 onClick={() => cb.onOpenEditForm(r,"EDIT")}>
                                 <EditOutlined />
                             </a>  
@@ -61,7 +68,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
         />
          <Typography.Title level={5}>New records </Typography.Title> 
         {/* existing data */} 
-        <ProTable<ExperienceData>
+        <ProTable<ExperienceData> bordered
             dataSource={newData}
             search={false}
             pagination={false}
@@ -74,25 +81,31 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
             }}
             columns={[
                 {
-                    title: "Company Name", dataIndex: "companyName"
+                    title: "Company Name", width: '250px',dataIndex: "companyName"
                 },{
-                    title: "Location", dataIndex: "location"
+                    title: "Location", render: (_, r) => {return ((r.countryName==null?"":r.countryName)+" "+(r.provinceName==null?"":r.provinceName)+" "+(r.locationRemark==null?"":r.locationRemark));}
                 }, {
-                    title: "Started Position", dataIndex: 'startPosition'
+                    title: "Started Position", width: '250px',dataIndex: 'startPosition'
                 },{
-                    title: "Ended Position", dataIndex: 'endPosition'
+                    title: "Ended Position", width: '250px',dataIndex: 'endPosition'
                 },{
-                    title: "Started Date", dataIndex: 'startDate'
+                    title: "Started Date", width: '150px',dataIndex: 'startDate',
+                    render:(_, r) => {
+                        return formatDate(r.startDate)
+                    }
                 },{
-                    title: "Ended Date", dataIndex: 'endDate'
+                    title: "Ended Date", width: '150px',dataIndex: 'endDate',
+                    render:(_, r) => {
+                        return formatDate(r.endDate)
+                    }
                 },{   width: '70px',
                     render: (dom, r) => {
                         return ( <Flex vertical={false} justify='space-between'>
-                            <a style={{display: isAdmin==0?'':'none'}} 
+                            <a style={{display: isAdmin==0?'':'none'}}  title="Edit item" 
                                 onClick={() => cb.onOpenEditForm(r,"ADD")}>
                                 <EditOutlined />
                             </a>   
-                            <a style={{display: isAdmin==0?'':'none'}} 
+                            <a style={{display: isAdmin==0?'':'none'}} title="Delete item" 
                                 onClick={() => cb.onDelete(r)}>
                                 <DeleteOutlined />
                             </a>  

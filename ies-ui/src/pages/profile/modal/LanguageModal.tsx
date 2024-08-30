@@ -101,23 +101,15 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
             } 
         >  
         <ProCard bordered>
-            <ProFormSelect rules={[{ required: false }]} allowClear={true}  
+            <ProFormSelect rules={[{ required: true }]} allowClear={true}  
                 name="languageId" label = "Languages" placeholder="Languages"  
                 showSearch 
                 mode="single" 
-                options={
-                    [
-                    { value: 1, label: "Khmer" },
-                    { value: 2, label: "English"} ,
-                    { value: 3, label: "Chineses"} ,
-                    { value: 4, label: "Thai"} ,
-                    { value: 5, label: "Janpanese"} ,
-                    { value: 6, label: "Vietnamese"} ,
-                    { value: 7, label: "Other, please specify"} 
-                    ]
-                }  
+                options={profile.language?.map((it) => {
+                    return { value: it.id, label: it.titleName };
+                })}  
             /> 
-            <ProFormText label="Level" name='levelName' />  
+            <ProFormText label="Level" name='levelName' rules={[{ required: true }]}/>  
             <ProFormTextArea label="Description" name='description' /> 
         </ProCard>
         

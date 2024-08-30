@@ -9,8 +9,10 @@ export interface OpenEssDataItem {
   stepId : number;  
   empClosed : number;  
   openTitle : string; 
-  startDate    : string;  
-  endDate      : string;  
+  firstName    : string;  
+  lastName    : string;  
+  startDate    : moment.Moment;  
+  endDate      : moment.Moment;  
   createdDate  : string; 
   createdBy    : string; 
   description   : string;  

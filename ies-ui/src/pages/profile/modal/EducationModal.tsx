@@ -1,7 +1,7 @@
 import { LookupDataItem2 } from "@/services/data"
 import { ModalForm, ModalFormProps, ProCard, ProFormSelect, ProFormText } from "@ant-design/pro-components"
 import { useForm } from "antd/lib/form/Form"
-import { EducationData, FilesData } from "../data.ess"
+import { EducationData, EssLookupData, FilesData, MarjorData } from "../data.ess"
 import { Flex, Space, Typography, Row, Col, Image,List, Modal, message, Button,} from 'antd';
 import { useEffect,useState } from 'react';
 import FileUploader , { UploadType } from '@/components/Attachment/FileUploader';
@@ -17,13 +17,14 @@ interface Props extends ModalFormProps<EducationData> {
     type:string; 
     isAdmin:number;
     empId:number;
+    marjor: MarjorData[];  
     cb: { //used callback function to parent form
         onLoadMenu: (tid:UploadType[]) => void;  
         onReload:()=>void;
     };
 }
 
-export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) => { 
+export default ({ profile,data,files,type,isAdmin,empId,marjor,cb, ...rest }: Props) => { 
     const [form] = useForm<EducationData>(); 
     const requestActions = simpleRequestActions();
     const [imageList, setImageList] = useState<FilesData[]>([]);
@@ -53,7 +54,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
     const onAdminSubmit = async ()=>{
         const bmForm = await form.validateFields(); 
         Modal.confirm({
-            title: 'Save Emergency',
+            title: 'Save Education',
             content: 'Are you sure?',
             onOk: async () => {
               try { 
@@ -100,63 +101,54 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
             } 
         >
         <ProCard bordered>
-            <ProFormText label="Education Center" name={'educationCenter'} /> 
-            <ProFormText label="Major/Subject" name={'marjorSubject'} /> 
+            <ProFormText label="Education Institution" name={'educationCenter'} rules={[{ required: true }]}/> 
+            <ProFormSelect rules={[{ required: true }]} allowClear={true}
+                name={'marjorSubject'} label = "Major/Subject"  
+                showSearch  
+                mode="single" 
+                options={marjor?.map((it) => {
+                    return { value: it.id, label: it.majorName };
+                })} 
+            />    
             <Row>
                 <Col span={12}>
-                    <ProFormSelect rules={[{ required: false }]} allowClear={true} width="sm" 
+                    <ProFormSelect rules={[{ required: true }]} allowClear={true} 
                         name="degreeId" label = "Degree" placeholder="Degree"  
                         showSearch 
                         mode="single" 
-                        options={
-                            [
-                            { value: 1, label: "Primary school" },
-                            { value: 2, label: "Secondary school"} ,
-                            { value: 3, label: "Higher school"} ,
-                            { value: 4, label: "Bachelor degree"} ,
-                            { value: 5, label: "Master degree"} ,
-                            { value: 6, label: "Phd"}  
-                            ]
-                        }  
-                    />  
+                        options={profile.degree?.map((it) => {
+                            return { value: it.id, label: it.titleName };
+                        })}  
+                    />   
                 </Col>
                 <Col span={12}>
-                    <ProFormSelect rules={[{ required: false }]} allowClear={true}  width="sm" 
+                    <ProFormSelect rules={[{ required: true }]} allowClear={true} 
                         name="statusId" label = "Status" placeholder="Status"  
                         showSearch 
                         mode="single" 
-                        options={
-                            [
-                            { value: 1, label: "Finished" },
-                            { value: 2, label: "Unfinished"} ,
-                            { value: 3, label: "On-going"}  
-                            ]
-                        }  
+                        // options={
+                        options={profile.status?.map((it) => {
+                            return { value: it.id, label: it.titleName };
+                        })}  
                     /> 
                 </Col>
             </Row>  
-            <ProFormSelect rules={[{ required: false }]} allowClear={true}  
-                name="countryEducationCenter" label = "Country Education Center" placeholder="Country Education Center"  
+            <ProFormSelect rules={[{ required: true }]} allowClear={true}  
+                name="countryEducationCenter" label = "Country of Education Institution" placeholder="Country of Education Institution"  
                 showSearch 
                 mode="single" 
-                options={
-                    [
-                        { value: 1, label: "Khmer" },
-                        { value: 2, label: "English"} ,
-                        { value: 3, label: "Chineses"} ,
-                        { value: 4, label: "Thai"} ,
-                        { value: 5, label: "Janpanese"} ,
-                        { value: 6, label: "Vietnamese"} ,
-                        // { value: 7, label: "Other, please specify"}  
-                    ]}
+                options={profile.coei?.map((it) => {
+                    return { value: it.id, label: it.titleName };
+                })}  
             /> 
         </ProCard>
         
         {/* Attachment files  */} 
         <div style={{marginTop:'10px'}}>
             <Space direction="horizontal">
-                <Typography.Title level={5}>Attachments </Typography.Title><Typography.Title level={5} style={{color:'red'}}> (Required*)</Typography.Title>
+                <Typography.Title level={5}>Education Document</Typography.Title><Typography.Title level={5} style={{color:'red'}}>(Required*)</Typography.Title>
             </Space>
+            <div style={{fontSize:'12px'}}>(Degree and transcript or other related documents)</div>
         </div> 
         <ProCard size="small" bordered>   
             <FileUploader   

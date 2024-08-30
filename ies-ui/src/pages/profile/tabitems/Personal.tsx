@@ -51,10 +51,9 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
     const requestActions = simpleRequestActions(); 
 
     var MF = ["" ,"Male","Female"];
-    var MarriedStatus = ["" ,"Single","Married","Divorced","Widowed"];
-    var Rg = ["" ,"Buddhism","Islam"]; 
-    var relship = ["" ,"Hushand","Wife","Son","Daughter"]; 
-    var oc = ["" ,"Housewife","Student","Work","Farmer"];
+    // var MarriedStatus = ["" ,"Single","Married","Divorced","Widowed"];
+    // var Rg = ["" ,"Buddhism","Islam"];  
+    
     //
     var pb = profile.profile_adr_pb?(profile.profile_adr_pb.provinceName+" "+profile.profile_adr_pb.districtName+" "+profile.profile_adr_pb.communeName):'N/A';
     var ct = profile.profile_adr_ct?(profile.profile_adr_ct.provinceName+" "+profile.profile_adr_ct.districtName+" "+profile.profile_adr_ct.communeName+" "+
@@ -96,7 +95,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
         {
             key     : '6',
             label   : 'Marital Status',
-            children: MarriedStatus[profile.profile.maritalStatusId],
+            children: profile.marriedStatusObj.titleName,
         },
         {
             key     : '7',
@@ -110,7 +109,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
         {
             key     : '8',
             label   : 'Religion',
-            children: Rg[profile.profile.religionId],
+            children: profile.religionObj.titleName,
         },
         {
             key     : '9',
@@ -134,11 +133,11 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
             label   : 'Passport Number',
             children: profile.profile.passportNumber,
         },
-        {
-            key     : '12',
-            label   : 'Dependent',
-            children: <div>{relship[profile.profile.relationshipId]+", "}  {profile.profile.dependDateOfBirth+", "}  {oc[profile.profile.occupationId]} </div>,
-        }
+        // {
+        //     key     : '12',
+        //     label   : 'Dependent',
+        //     children: <div>{relship[profile.profile.relationshipId]+", "}  {profile.profile.dependDateOfBirth+", "}  {oc[profile.profile.occupationId]} </div>,
+        // }
     ];
     //
     const saveEssProfileHandler = async (data: SaveEssProfile) => {
@@ -187,7 +186,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
     const editFormEssProfileHandler = async () => { 
         profile!!.ess.id!!<=0?'':setModalVisible({ type: 'EDIT', payload: profile.profile_draft});
         profile!!.ess.id!!<=0?'':hideViewModal(false);
-        if(profile!!.ess.id!!){
+        if(profile!!.ess.id!!<=0){
             message.error('Expired period allowed to edit data profiles.Please contact HR  for helping.');
         }
     }
@@ -341,6 +340,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
             locations={profile?.essLocation}
             onOpenChange={(visible) => hideModal(visible)}
             data={modalVisible?.payload}
+            profile={profile}
             profile_draft={profile.profile_draft}
             files={profile.essAttachFill}
             isAdmin={is_admin}
@@ -364,7 +364,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
             );
             }}
             onFinish={(data) => {
-                return saveEssProfileHandler({ ...data, essProfId: modalVisible?.payload?.id,openEssId:profile.ess.id, empId: profile.id,status:true,step:22,remark:'' });
+                return saveEssProfileHandler({ ...data, essProfId: modalVisible?.payload?.id!!,openEssId:profile.ess.id!!, empId: profile.id,status:true,step:22,remark:'' });
             }}
         /> 
         {/* PersonalViewEditModal */}        
@@ -374,6 +374,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
             onOpenChange={(visible) => hideViewModal(visible)}
             data={modalViewVisible?.payload}
             profile_draft={profile.profile_draft}
+            profile={profile}
             files={profile.essAttachFill}
             onFinishFailed={(error) => {
             message.error(

@@ -68,7 +68,7 @@ export default ({ onAdd, onEdit }: Props) => {
     const actionItem1 =(record:OpenEssDataItem,isExp:number):MenuProps["items"] =>[
         {
             key: "1",
-            label: "Edit or Extent",
+            label: "Edit",
             itemIcon: <EditOutlined />,
             disabled:record.empClosed==0?false:true,
             onClick: async () => {
@@ -95,14 +95,14 @@ export default ({ onAdd, onEdit }: Props) => {
         // },
         {
             key: "4",
-            label: <div title="Force to close announcement before expiry date!">Force to Close</div>,
+            label: <div title="Force to close announcement before expiry date!">Force Close</div>,
             itemIcon: <IssuesCloseOutlined />, 
             style:{color:'red'},
             disabled:record.stepId==1?false:true,
             onClick: async () => {   
                 Modal.confirm({
-                    title: 'Force to Close',
-                    content: 'Do you want to Force to Close?',
+                    title: 'Force Close',
+                    content: 'Do you want to Force Close?',
                     onOk: async () => {
                       try {         
                             record.stepId = 2;
@@ -147,7 +147,7 @@ export default ({ onAdd, onEdit }: Props) => {
                             { label: "All", value: "0" },
                             { label: "Opening", value: "1" },
                             { label: "Closed", value: "2" },
-                            { label: "Deleted", value: "3" }
+                            // { label: "Deleted", value: "3" }
                         ]}
                         onChange={(e) => {setAdanceSearch(e.target.value);}}
                     />
@@ -155,7 +155,7 @@ export default ({ onAdd, onEdit }: Props) => {
             }  
             columns={[
                 {title: 'ID', dataIndex: 'id', sorter: 'id',width:'5%'},
-                {title: 'Open Title', dataIndex: 'openTitle',
+                {title: 'Title', dataIndex: 'openTitle',
                 render(_, entity) {
                     return <Flex gap={5}><Button
                         size="small"
@@ -188,9 +188,9 @@ export default ({ onAdd, onEdit }: Props) => {
                             _status = "Expired";
                         }else{
                             if (r.stepId==1){
-                                _status = "OPEN";
+                                _status = "Open";
                             } else if (r.stepId==2){
-                                _status = "CLOSED";
+                                _status = "Closed";
                             } else if (r.stepId==3){
                                 _status = "DELETED";
                             }

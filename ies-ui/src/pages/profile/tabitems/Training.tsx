@@ -64,7 +64,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
     };
     const saveTrainingHandler = async (data: SaveTraining) => {
         Modal.confirm({
-          title: 'Save Training',
+          title: 'Save training',
           content: 'Are you sure?',
           onOk: async () => {
             try {
@@ -85,8 +85,8 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
     };
     const onDelete = async (data: SaveTraining) => {
         Modal.confirm({
-          title: 'Delete eduction',
-          content: 'Are you sure you want to delete?',
+          title: 'Delete training',
+          content: 'Are you sure you want to delete items?',
           onOk: async () => {
             try {
                 data.otherFile = [];
@@ -110,6 +110,8 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
         setModalVisible({ type: _type, payload: data });
         hideEducationViewModal(false);
     }
+     
+    var type = ["" ,"Training","Certification"];
     return <div>
         <Card>
             <Space direction={"vertical"} style={{width:'100%'}}>
@@ -143,14 +145,24 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                     }}
                     columns={[
                         {
-                            title: "Training Courses", dataIndex: "trainingCourse"
+                            title: "Courses", dataIndex: "trainingCourse"
                         },{
-                            title: "Year", dataIndex: "year",
+                            title: "Institution", dataIndex: "institution"
+                        },{
+                            title: "Year", 
+                            dataIndex: "year",
                             render:(dom, r) => {
                                 return formatYear(r.year)
                             }
                         },{
-                            title: "description", dataIndex: "description"
+                            title: "Duration", dataIndex: "duration"
+                        },{
+                            title: "Description", dataIndex: "description"
+                        },{
+                            title: "Type",  
+                            render:(dom, r) => {
+                                return type[r.typeId]
+                            }
                         },
                         {   width: 100,
                             render: (dom, r) => {

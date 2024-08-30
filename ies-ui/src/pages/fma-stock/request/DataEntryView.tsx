@@ -1,9 +1,9 @@
 import { simpleRequestActions } from "@/services/model";
-import { EditableFormInstance, EditableProTable, FooterToolbar, PageContainer, ProForm, ProFormDatePicker, ProFormTextArea } from "@ant-design/pro-components";
+import { EditableFormInstance, EditableProTable, FooterToolbar, PageContainer, ProForm, ProFormDatePicker, ProFormSelect, ProFormTextArea } from "@ant-design/pro-components";
 import { Button, Card, Col, Form, Row, Space, Spin, message } from "antd";
 import { history } from 'umi';
-import { StockRequest, StockRequestItem } from "./data.types";
-import { useRef, useState } from "react";
+import { StockRequest, StockRequestItem, WarehouseGroup } from "./data.types";
+import { useEffect, useRef, useState } from "react";
 import SearchItemList from "./SearchItemList";
 import { uniqueId } from "lodash";
 import { ClearOutlined, MinusCircleOutlined } from "@ant-design/icons";
@@ -12,8 +12,8 @@ import { ProcessFlowModalWrapper } from "@/pages/process-flow/components/Process
 import { StockRequestFormNames } from './process-flow';
 import { StartWorkFlowParam } from "@/services/process-workflow/params";
 import { createService } from "./services";
-import { Moment } from "moment";
-import moment from "moment";
+import { RequisitionServiceAPI } from "@/services/pro/services";
+import { BudgetCodeListItem } from "@/services/pro/data";
 
 export default ({
     id,
@@ -26,6 +26,7 @@ export default ({
   }) => {
     const requestActions = simpleRequestActions();
     const services = createService(requestActions);
+    const proServices = RequisitionServiceAPI(requestActions);
     const editableFormRef = useRef<EditableFormInstance>();
     const [form] = Form.useForm<StockRequest>();
     const [searchVisible, setSearcVisible] = useState(false);
@@ -35,6 +36,18 @@ export default ({
     const [fileIds, setFileIds] = useState<string[]>([]);
     const [startFormVisible, setStartFormVisible] = useState(false);
     const [groupId, setGroupId] = useState<number>(-1);
+    const [budgetCodeList, setBudgetCodesList] = useState<BudgetCodeListItem[]>([]);
+    const [warehouseGroupList, setWarehouseGroup] = useState<WarehouseGroup[]>([]);
+
+
+    const initData = async () => {
+      proServices.listBudgetCode().then(budgetCodes => setBudgetCodesList(budgetCodes)); 
+      services.listWarehouseGroup().then(whg => setWarehouseGroup(whg)); 
+     
+    };  
+    useEffect(() => {
+      initData();
+    }, [id]);
     const clear = () => {
       form.resetFields();
       setAddedItems([]);
@@ -45,7 +58,6 @@ export default ({
     };
     const getDataForm = async () => {
       const dataForm = await form.validateFields();
-      console.log('dataForm',dataForm)
       await editableFormRef.current?.validateFields();
       if ((addedItems.length || 0) == 0) {
         message.error('Please add some request items.');
@@ -103,6 +115,16 @@ export default ({
                   name={'reason'}
                 />
               </Col>
+              <Col flex={'200px'}>     
+                {warehouseGroupList&&
+                <ProFormSelect
+                  // initialValue={warehouse?warehouse?.warehouseCode:''}
+                  options={warehouseGroupList.map(i=>({label:i.name, value: i.code}))}
+                  rules={[{ required: true, whitespace: true }]}
+                  label="From Warehouse"
+                  name={'warehouseFrom'}
+                />}       
+              </Col>             
               {/* <Col flex={'200px'}>
                 <ProFormDatePicker
                   rules={[
@@ -196,6 +218,15 @@ export default ({
                 valueType: 'select',
                 formItemProps: { rules: [{ required: false }] },
                 valueEnum: (r) => itemUomList.filter(it => it.itemCode == r.itemCode).reduce((acc, cur) => ({ ...acc, [cur.uom]: cur.uom }), {})                
+              },{
+                title: 'Budget.Code',
+                width: 150,
+                dataIndex: 'budgetCode',
+                fieldProps: { showSearch: true },
+                valueType: 'select',
+                request: async (_, r: any) => {
+                  return budgetCodeList.map((it) => ({ label: it.name, value: it.code }));
+                },
               },/*{
                 title: 'To be Returned in Full or Partial (F/P)',
                 valueType: 'select',

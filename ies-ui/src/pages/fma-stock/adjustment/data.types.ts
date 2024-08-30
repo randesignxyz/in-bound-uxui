@@ -44,6 +44,7 @@ export interface AdjRequestItem {
   itemName: string;
   qty: number;
   uom: string;
+  budgetCode?: string;
   remarks?: string;
   requestType?:string;
 
@@ -148,6 +149,10 @@ export interface LookupData {
   id: number;
   code: string;
   name: string
+}
+export interface FieldsValidation {
+  field: string;
+  msg: string;
 }
 
   

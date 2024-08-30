@@ -2,7 +2,7 @@ import { simpleRequestActions } from "@/services/model";
 import { EditableFormInstance, EditableProTable, FooterToolbar, PageContainer, ProForm, ProFormTextArea } from "@ant-design/pro-components";
 import { Button, Card, Col, Form, Row, Space, Spin, message } from "antd";
 import { history } from 'umi';
-import { EmpWarehouseList, AdjRequest, AdjRequestItem, LookupData } from "./data.types";
+import { FieldsValidation, AdjRequest, AdjRequestItem, LookupData } from "./data.types";
 import { useEffect, useRef, useState } from "react";
 import SearchItemList from "./SearchItemList";
 import { uniqueId } from "lodash";
@@ -12,6 +12,9 @@ import { ProcessFlowModalWrapper } from "@/pages/process-flow/components/Process
 import { AdjustmentRequestFormNames } from './process-flow';
 import { StartWorkFlowParam } from "@/services/process-workflow/params";
 import { createService } from "./services";
+import { BudgetCodeListItem } from "@/services/pro/data";
+import { RequisitionServiceAPI } from "@/services/pro/services";
+
 
 export default ({
     id,
@@ -24,6 +27,7 @@ export default ({
   }) => {
     const requestActions = simpleRequestActions();
     const services = createService(requestActions);
+    const proServices = RequisitionServiceAPI(requestActions);
     const editableFormRef = useRef<EditableFormInstance>();
     const [form] = Form.useForm<AdjRequest>();
     const [searchVisible, setSearcVisible] = useState(false);
@@ -33,13 +37,11 @@ export default ({
     const [fileIds, setFileIds] = useState<string[]>([]);
     const [startFormVisible, setStartFormVisible] = useState(false);
     const [groupId, setGroupId] = useState<number>(-1);
-    // const [warehouse, setWarehouse] = useState<EmpWarehouseList[]>([]);
+    const [budgetCodeList, setBudgetCodesList] = useState<BudgetCodeListItem[]>([]);
     const [requestType,setRequestType] = useState<LookupData[]>([]);
 
     useEffect(()=>{
-      // services.listEmpWarehouse().then(rs=>{
-      //   setWarehouse(rs)
-      // })
+      proServices.listBudgetCode().then(budgetCodes => setBudgetCodesList(budgetCodes)); 
       services.listLookupData({type:'INVENTORY_ADJ_REQUEST_TYPE',searchValue:''}).then(rs=>{setRequestType(rs)})
     },[])
     const clear = () => {
@@ -53,10 +55,26 @@ export default ({
     const getDataForm = async () => {
       const dataForm = await form.validateFields();
       await editableFormRef.current?.validateFields();
+      const fieldsErr = Array<FieldsValidation>()
       if ((addedItems.length || 0) == 0) {
         message.error('Please add some request items.');
         return Promise.reject();
+      }else {
+        addedItems.forEach(r=>{
+          if(r.requestType=='Write-Off' && r.qty>=0){
+             fieldsErr.push({field: r.itemName ,msg: `Qty(${r.qty}) Write-Off is required less than zero.`})
+           }
+        })
       }
+      if(fieldsErr.length> 0) {        
+        message.error(<div>
+          {fieldsErr.map(r => {
+            return <div>{r.field}: {r.msg}</div>
+          })}
+        </div>);
+        return Promise.reject();
+      }
+      console.log('adj request',addedItems)
       return {
         ...dataForm,
         id: type == 'EDIT' ? id : undefined,
@@ -194,12 +212,21 @@ export default ({
             columns={[
               { title: 'No', width: 50, editable: false, render: (_, __, index) => index + 1 },
               { title: 'Item Code', width: 100, editable: false, dataIndex: 'itemCode' },
-              { title: 'Item Name', editable: false, dataIndex: 'itemName' },            
+              { title: 'Item Name', editable: false, dataIndex: 'itemName' },
+              {
+                title: 'Request Type',
+                valueType: 'select',
+                width: 150,
+                dataIndex: 'requestType',
+                fieldProps: { rows: 1, maxLength: 150 },
+                formItemProps: { rules: [{ required: true }] },
+                valueEnum: (r) => requestType?.reduce((acc, cur) => ({ ...acc, [cur.code]: cur.name }), {})    
+              },           
               {
                 title: 'Quantity Requested',
                 width: 100,
                 dataIndex: 'qty',
-                fieldProps: { style: { width: 80 }, min: 1},
+                fieldProps: { style: { width: 80}, min:-9999 },
                 valueType: 'digit',                
                 formItemProps: {rules: [{ required: true}] },
               },
@@ -211,13 +238,14 @@ export default ({
                 formItemProps: { rules: [{ required: false }] },
                 valueEnum: (r) => itemUomList.filter(it => it.itemCode == r.itemCode).reduce((acc, cur) => ({ ...acc, [cur.uom]: cur.uom }), {})                
               },{
-                title: 'Request Type',
-                valueType: 'select',
+                title: 'Budget.Code',
                 width: 150,
-                dataIndex: 'requestType',
-                fieldProps: { rows: 1, maxLength: 150 },
-                formItemProps: { rules: [{ required: true }] },
-                valueEnum: (r) => requestType?.reduce((acc, cur) => ({ ...acc, [cur.code]: cur.name }), {})    
+                dataIndex: 'budgetCode',
+                fieldProps: { showSearch: true },
+                valueType: 'select',
+                request: async (_, r: any) => {
+                  return budgetCodeList.map((it) => ({ label: it.code, value: it.code }));
+                },
               }/*,
               {
                 title: 'Expected Return Date',

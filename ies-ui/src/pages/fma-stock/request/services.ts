@@ -1,7 +1,7 @@
 import { FetchPagingParams } from "@/components/DataCrud/TableView";
 import { execDataService, fetchDataItemService, fetchDataListService, fetchDataPagingService } from "@/services/apiGateway";
 import { SimpleRequestActions } from "@/services/model";
-import { ItemDetail, ItemGroupListItem, ItemListItem,  SearchParams,  StockRequest, StockRequestDetailResponse, StockRequestListItem, StockRequestResponse, UoMItemList } from "./data.types";
+import { ItemDetail, ItemGroupListItem, ItemListItem,  SearchParams,  StockRequest, StockRequestDetailResponse, StockRequestListItem, StockRequestResponse, UoMItemList, WarehouseGroup } from "./data.types";
 import { StartWorkFlowParam, TaskActionDataParam } from "@/services/process-workflow/params";
 
 export const createService = (request: SimpleRequestActions) => {
@@ -62,5 +62,10 @@ export const createService = (request: SimpleRequestActions) => {
                 endpoint: 'FMA',
                 payload: params
             })(request),
+        listWarehouseGroup: async () => fetchDataListService<WarehouseGroup>({
+                actionName: 'fetch-warehouse-groups',
+                endpoint: 'FMA',
+    
+            }).query(request),    
     }
 }

@@ -72,10 +72,10 @@ export default ({}: Props) => {
               },
             },
             {
-              title: 'Settled Amount ',
+              title: 'Settled Amount KHM',
               align: 'right',
               render: (_, r) => {
-                return `$ ${numeral( r.totalSettledAmount).format('0,000.00')}`;
+                return `៛ ${numeral( r.totalSettledAmount).format('0,000')}`;
               },
             },
             {
@@ -156,7 +156,7 @@ export default ({}: Props) => {
             title: 'Total Settled Amount KHM',
             align: 'right',
             render: (_, r) => {
-              return `$  ${numeral(r.totalSettledAmount).format('0,0')}`;
+              return `៛  ${numeral(r.totalSettledAmount).format('0,0')}`;
             },
           },
           {

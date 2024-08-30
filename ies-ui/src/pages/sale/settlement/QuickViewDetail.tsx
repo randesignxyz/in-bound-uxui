@@ -20,7 +20,8 @@ const QuickViewDetail: React.FC<Prop> = ({ settlement, soldExchangeRate, ...prop
   const settlementInfo: (DescriptionDisplayDataItem | undefined)[] = [
     {
       label: 'Salesperson',
-      value: `${settlement?.salesperson.salespersonCode} - ${settlement?.salesperson.salespersonName}`,
+      value: [settlement?.salesperson?.salespersonCode, settlement?.salesperson?.salespersonName].filter(p => p).join("-")
+      // value: `${settlement?.salesperson.salespersonCode} - ${settlement?.salesperson.salespersonName}`,
     },
     { label: '', value: '' },
     { label: 'Settled Date', value: formatDate(settlement?.settlementDate) },
@@ -129,7 +130,11 @@ const QuickViewDetail: React.FC<Prop> = ({ settlement, soldExchangeRate, ...prop
 
   return (
     <DrawerForm {...props}
-      resize
+      resize={{
+        maxWidth: window.innerWidth * 0.8,
+        minWidth: 300,
+      }}
+
     >
       <Flex gap={10} vertical>
         <Card size="small" title="General">

@@ -177,7 +177,7 @@ const CountStockDetail: React.FC<Props> = ({ id }) => {
                             {
                                 title: "Sole Volume",
                                 dataIndex: "soldQuantity",
-                                render: (_, r) => <Text type="danger">( {r.soldQuantity} )</Text>,
+                                render: (_, r) => <>( <Text type="danger">{r.soldQuantity}</Text> )</>,
                                 align: "right"
                             },
                             {

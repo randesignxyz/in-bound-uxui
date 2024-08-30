@@ -50,7 +50,7 @@ const ChangeSalepersonForm: React.FC<Props> = ({ onSave, ...props }) => {
                                 showSearch
                                 label="Saleperson"
                                 noStyle
-                                placeholder={"Please Selecte Saleperson"}
+                                placeholder={"Search by Saleperson"}
                                 width={"md"}
                                 onChange={(e: string) => {
                                     setParam({ empNo: e });
@@ -65,7 +65,7 @@ const ChangeSalepersonForm: React.FC<Props> = ({ onSave, ...props }) => {
                                     return data.map(p => ({
                                         label: [p.salespersonCode, p.salespersonName].filter(o => o).join("  "),
                                         value: p.salespersonCode
-                                    }))
+                                    }));
                                 }}
                             />
                             <Input.Search
@@ -88,8 +88,7 @@ const ChangeSalepersonForm: React.FC<Props> = ({ onSave, ...props }) => {
                             size="small"
                             options={false}
                             rowSelection={{
-                                selectedRowKeys: keySelected,
-                                selections: [Table.SELECTION_ALL, Table.SELECTION_INVERT],
+                                selectedRowKeys: keySelected.filter((value, index, self) => self.indexOf(value) === index).filter(p=>p !=undefined) ,
                                 onSelect(item, selected) {
                                     if (selected) {
                                         setKeySelected(v => ([...(v || []), item.id]))
@@ -97,23 +96,22 @@ const ChangeSalepersonForm: React.FC<Props> = ({ onSave, ...props }) => {
                                         setKeySelected(v => v?.filter(it => it != item.id))
                                     }
                                 },
-                                onChange(_, selectedRows, {type}) {
-                                    if (type !== 'single') {
-                                        setKeySelected(selectedRows.map(it => it.id))
+                                onSelectAll:(select, row, changeRow)=>{
+                                    if(select){
+                                        setKeySelected((v)=>[...v, ...row.map(o=>o?.id)])
                                     }
-                                    // else if (type === 'all') {
-                                    //     setKeySelected(p => {
-                                    //         const s= [...p, ...selectedRows.map(o=>o.id)];
-                                    //         return Array.from(new Set(s))
-                                    //     });
-                                    // }
-                                    // else if(type =='none'){
-                                    //     setKeySelected(selectedRows.map(o=>o.id));
-                                    // }
-                                    // else if (type =="invert"){
-                                    //     setKeySelected([])
-                                    // }
-                                    // else if
+                                    else{
+                                        const toRemove = changeRow.map(o=>o.id);
+                                        setKeySelected((v)=>{
+                                            const d = v.filter(t=> ! toRemove.includes(t));
+                                            return d
+                                        })
+                                    }
+                                },
+                                onChange(_, selectedRows, {type},) {
+                                    if(type ==="none" ){
+                                        setKeySelected([])
+                                    }
                                 },
                             }}
                             rowKey={"id"}
@@ -132,7 +130,7 @@ const ChangeSalepersonForm: React.FC<Props> = ({ onSave, ...props }) => {
                                     data: data.items,
                                     sucess: true,
                                     total: data.total
-                                })
+                                });
                             }}
                             columns={[
                                 {

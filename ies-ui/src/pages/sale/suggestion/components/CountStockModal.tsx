@@ -133,7 +133,7 @@ const CountStockModal: React.FC<Props> = ({ data, actionHandlers, ...props }) =>
               readonly: true,
               dataIndex: 'batchNo',
               width: 90,
-              render: (_, r) => <Typography.Text italic type='warning'>{r.batchNo}</Typography.Text>
+              // render: (_, r) => <Typography.Text italic type='warning'>{r.batchNo}</Typography.Text>
               // width: 120,
             },
             {

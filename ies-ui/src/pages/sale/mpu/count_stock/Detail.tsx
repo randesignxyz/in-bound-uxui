@@ -136,7 +136,7 @@ const CountStockDetail: React.FC<Props> = ({ id }) => {
                                 render: (_, r) => <Text type="success">{[r.totalQuantity, "CASE"].filter(o => o).join(" ")}</Text>
                             },
                             {
-                                title: "Solae Amount",
+                                title: "Sold Amount",
                                 dataIndex: "soldAmount",
                                 valueType: "money",
                                 render: (_, r) => <Text type="success">$ {numeral(r.soldAmount).format("0,000.00")}</Text>
@@ -177,7 +177,7 @@ const CountStockDetail: React.FC<Props> = ({ id }) => {
                             {
                                 title: "Sole Volume",
                                 dataIndex: "soldQuantity",
-                                render: (_, r) => <Text type="danger">( {r.soldQuantity} )</Text>,
+                                render: (_, r) => <>( <Text type="danger">{r.soldQuantity}</Text> )</>,
                                 align: "right"
                             },
                             {
@@ -196,7 +196,7 @@ const CountStockDetail: React.FC<Props> = ({ id }) => {
                 </Card>
                 <Card size="small" style={{ height: "100%" }}>
                     {
-                        dataSource?.comment?.length ?  (<>
+                        dataSource?.comment?.length  ?  (<>
                             <Timeline
                                 mode="left"
                                 items={dataSource.comment.map(p=>({

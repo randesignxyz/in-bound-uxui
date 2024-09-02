@@ -14,15 +14,15 @@ export default () => {
     <CrudWrapper baseURL={SalePaths.store} disablePageContainer>
       {(view, id, navigate) => {
         return (
-          view === 'list' && (
-            <SuggestionListView
-              actionHandlers={{
-                onAdd: navigate?.goToCreate,
-                onDetail: navigate?.goToDetail,
-              }}
-            />
-          )
-          // view =="list" && ( <TaskListMainPage/>)
+          // view === 'list' && (
+          //   <SuggestionListView
+          //     actionHandlers={{
+          //       onAdd: navigate?.goToCreate,
+          //       onDetail: navigate?.goToDetail,
+          //     }}
+          //   />
+          // )
+          view =="list" && ( <TaskListMainPage/>)
           //   ||
           //   (view === 'detail' && (
           //     <StockStoreDetail

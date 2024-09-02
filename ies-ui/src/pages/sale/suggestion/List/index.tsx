@@ -42,9 +42,9 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({ }) => 
   // const [exchangeRate, setExchangeRate] = useState<ExchangeRate>();
   const [dsdExchangeRate, setDsdExchangeRate] = useState<ExchangeRate>();
   const [remarkState, setRemarkState] = useState<{
-    visible?:{ 
-      open:boolean;
-      carryData?:StockControlLess;
+    visible?: {
+      open: boolean;
+      carryData?: StockControlLess;
     }
   }>();
   // const [advanceSearchParams, setAdvanceSearchParams] = useState<StockStoreAdvanceSearchParams>({
@@ -102,7 +102,7 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({ }) => 
     //   : access.canAccessSettlement
     //   ? ['settled']
     //   : [''];
-    
+
     const role = access.canAccessAllMenuDSD
       ? 'sale_admin'
       : access.canAccessTabWarehouse
@@ -214,7 +214,7 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({ }) => 
         },
         { title: 'Beginning Qty', align: 'right', dataIndex: 'beginningQty' },
         { title: 'Request Qty', align: 'right', dataIndex: 'quantity' },
-        
+
         { title: 'Sold Qty', align: 'right', dataIndex: 'soldQty' },
       ];
 
@@ -512,22 +512,22 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({ }) => 
                       <Space>
                         {
                           // access.canAccessDMSAdminMenu &&
-                           <Button
-                          danger
-                          onClick={async () => {
-                            setRemarkState({visible:{open:true, carryData:parent}});
-                            // Modal.confirm({
-                            //   title: 'Reject Suggestion.',
-                            //   content: 'Are you sure?',
-                            //   onOk: async () => {
-                                // await actions.reject(parent.id);
-                            //     setForce({ update: force.update + 1 });
-                            //   },
-                            // });
-                          }}
-                        >
-                          Reject
-                        </Button>
+                          <Button
+                            danger
+                            onClick={async () => {
+                              setRemarkState({ visible: { open: true, carryData: parent } });
+                              // Modal.confirm({
+                              //   title: 'Reject Suggestion.',
+                              //   content: 'Are you sure?',
+                              //   onOk: async () => {
+                              // await actions.reject(parent.id);
+                              //     setForce({ update: force.update + 1 });
+                              //   },
+                              // });
+                            }}
+                          >
+                            Reject
+                          </Button>
                         }
                         <Button
                           type="primary"
@@ -621,8 +621,8 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({ }) => 
                 return r.itemType === 131
                   ? 'Vital'
                   : r.itemType === 132
-                  ? 'Mee Chiet'
-                  : 'Merchandise';
+                    ? 'Mee Chiet'
+                    : 'Merchandise';
               },
             },
             { title: 'Beginning Qty', align: 'right', dataIndex: 'beginningQty' },
@@ -748,9 +748,9 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({ }) => 
             },
           ]}
           summary={(data) => {
-            const total =data.reduce(function (acc, it) {
-                return acc + it.amount;
-              }, 0);
+            const total = data.reduce(function (acc, it) {
+              return acc + it.amount;
+            }, 0);
             // const disabled = data.some((it) => !it.batchNo || !it.expiredDate);
             return (
               <>
@@ -916,7 +916,6 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({ }) => 
             title: 'Serial Number',
             dataIndex: 'referenceNo',
           },
-
           {
             title: 'Number Plate',
             dataIndex: 'plateNumber',
@@ -929,10 +928,10 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({ }) => 
                 r.status === 'pending'
                   ? 'default'
                   : r.status === 'open'
-                  ? 'success'
-                  : r.status === 'canceled' || r.status === 'closed'
-                  ? 'magenta'
-                  : 'warning';
+                    ? 'success'
+                    : r.status === 'canceled' || r.status === 'closed'
+                      ? 'magenta'
+                      : 'warning';
               return (
                 <span>
                   <Tag color={color}>{r.status}</Tag>
@@ -1008,12 +1007,18 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({ }) => 
             setForce({ update: force.update + 1 });
           },
           onAddItem: async (item) => {
-            await actions.approvalRequest(item);
-            setAddNewModal({
-              open: false,
-              record: undefined,
+            Modal.confirm({
+              title: "Confiremation Stock Request.",
+              content: "are you sure?",
+              onOk: async () => {
+                await actions.approvalRequest(item);
+                setAddNewModal({
+                  open: false,
+                  record: undefined,
+                });
+                setForce({ update: force.update + 1 });
+              }
             });
-            setForce({ update: force.update + 1 });
           },
         }}
       />
@@ -1044,29 +1049,36 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({ }) => 
         actionHandlers={{
           onCancel: () => setSettleModal({ open: false, record: undefined }),
           onAddItem: async (item) => {
-            await actions.onSaveSettlementModel(item);
-            setSettleModal({
-              open: false,
-              record: undefined,
-            });
-            setForce({ update: force.update + 1 });
+            Modal.confirm({
+              title: "Confirmation of Settlement.",
+              content: "are you sure?",
+              onOk: async () => {
+                await actions.onSaveSettlementModel(item);
+                setSettleModal({
+                  open: false,
+                  record: undefined,
+                });
+                setForce({ update: force.update + 1 });
+              }
+            })
+
           },
         }}
       />
       <RemarkModalForm
         open={remarkState?.visible?.open}
         showAlertInfo
-        onCancel={()=>setRemarkState({visible:undefined})}
+        onCancel={() => setRemarkState({ visible: undefined })}
         status='reject'
-        onSave={async (data)=>{
-            actions.reject({
-              id:remarkState?.visible?.carryData?.id,    
-              ...data
-            }).then(o=>{
-              message.success("Your rejection request was a success!")
-            });
-            setRemarkState({visible:undefined});
-            actionRef.current?.reload?.();
+        onSave={async (data) => {
+          actions.reject({
+            id: remarkState?.visible?.carryData?.id,
+            ...data
+          }).then(o => {
+            message.success("Your rejection request was a success!")
+          });
+          setRemarkState({ visible: undefined });
+          actionRef.current?.reload?.();
         }}
       />
     </PageContainer>

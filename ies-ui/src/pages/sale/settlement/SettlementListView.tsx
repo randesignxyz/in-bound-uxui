@@ -53,9 +53,10 @@ export default ({}: Props) => {
             },
             {
               title: 'Salesperson Name',
-              render: (_, r) => {
-                return `${r.salesperson.salespersonCode} - ${r.salesperson.salespersonName}`;
-              },
+              render: (_, r) =>[r.salesperson?.salespersonCode, r.salesperson?.salespersonName].filter(p=>p).join("-")
+              //    {
+              //   return `${r.salesperson?.salespersonCode} - ${r.salesperson?.salespersonName}`;
+              // },
             },
             {
               title: 'Settled Bank Amount USD',

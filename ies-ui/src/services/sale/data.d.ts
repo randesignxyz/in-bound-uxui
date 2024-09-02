@@ -526,6 +526,9 @@ export interface StockControlLess {
   beginningQty:number;
   comments?:Comment[];
   stockAdjusts?:StockAjust;
+  stockCountId?:number;
+  isKeepForwarding?:boolean;
+  storeId?:number;
 }
 
 interface StockAjust{

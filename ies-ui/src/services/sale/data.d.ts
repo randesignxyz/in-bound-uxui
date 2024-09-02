@@ -529,6 +529,7 @@ export interface StockControlLess {
   stockCountId?:number;
   isKeepForwarding?:boolean;
   storeId?:number;
+  description?:string;
 }
 
 interface StockAjust{

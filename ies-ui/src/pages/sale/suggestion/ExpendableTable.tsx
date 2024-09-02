@@ -177,12 +177,11 @@ const ExpendableTable: React.FC<Props> = ({ data, source, onReload, onSettlement
                         </Flex>
                     }}
                     summary={(data) => {
-                        const total = data.reduce((p, c) => p = c.amount, 0);
+                        const total = data.reduce((p, c) => p + c.amount, 0);
                         return (
                             <Table.Summary.Row>
                                 <Table.Summary.Cell index={0} align="right" colSpan={4}><Typography.Text type="secondary">Total</Typography.Text></Table.Summary.Cell>
                                 <Table.Summary.Cell index={1} align="right" ><Typography.Text type="success"> {numeral(total).format("$ 0,000.00")} </Typography.Text></Table.Summary.Cell>
-                                {/* <Table.Summary.Cell index={1} align="right" ><Typography.Text type="success">( {requestQty} )</Typography.Text></Table.Summary.Cell> */}
                             </Table.Summary.Row>
                         )
                     }}

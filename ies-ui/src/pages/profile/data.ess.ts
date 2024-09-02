@@ -324,6 +324,7 @@ export interface LocationData {
   empId:number;
   code:string;
   internalName: string; 
+  name: string; 
   parent: number; 
   type: string; 
   

@@ -84,7 +84,7 @@ export default ({ profile }: Props) =>{
             key: "2",
             label: "Approve",
             itemIcon: <CheckOutlined />,
-            disabled:([6,4,3].find((element) => element == record.stepId))?false:true,
+            disabled:([7,4,3].find((element) => element == record.stepId))?false:true,
             onClick: async () => { 
                 Modal.confirm({
                     title: 'Approve',

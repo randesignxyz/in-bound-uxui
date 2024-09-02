@@ -128,7 +128,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                         {
                             title: "Relationship Name", dataIndex: "relationshipName"
                         },{
-                            title: "type_id", dataIndex: "typeName"
+                            title: "Type", dataIndex: "typeName"
                         },{
                             title: "Occupation", dataIndex: "occupationName"
                         },{

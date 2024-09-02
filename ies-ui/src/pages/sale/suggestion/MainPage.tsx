@@ -2,20 +2,20 @@ import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import PageWrapper from "@/components/PageWrapper"
 import { formatDate } from "@/pages/utils";
 import { simpleRequestActions } from "@/services/model";
-import { StockControlLess, StockStoreAdvanceSearchParams } from "@/services/sale/data";
+import { ExchangeRate, StockControlLess, StockStoreAdvanceSearchParams } from "@/services/sale/data";
 import { CheckCircleOutlined, CloseCircleOutlined, EditOutlined, ExclamationCircleOutlined, SyncOutlined } from "@ant-design/icons";
 import { useAccess, useQuery } from "@umijs/max"
 import { message, Modal, Spin, Tag, Tooltip } from "antd"
 import { uniqueId } from "lodash";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SuggestionServiceAPI } from "./services";
 import ExpendableTable from "./ExpendableTable";
 import { ActionType } from "@ant-design/pro-components";
 import RemarkModalForm from "../component/RemarkModal";
-import TaskListDetailView from "./DetailView";
 import EditItemEntryModal from "./components/EditItemEntryModal";
 import SettlementModal from "./components/SettlementModal";
 import CountStockModal from "./components/CountStockModal";
+import TaskListDetailView from "./DetailView";
 
 interface Props {
 
@@ -26,6 +26,8 @@ const TaskListMainPage: React.FC<Props> = () => {
     const requestActions = simpleRequestActions();
     const suggestionService = SuggestionServiceAPI(requestActions);
     const actionRef = useRef<ActionType>();
+    const [exchangeRate, setExchangeRate] = useState<ExchangeRate>();
+
     const role = access.canAccessAllMenuDSD
         ? 'sale_admin'
         : access.canAccessTabWarehouse
@@ -83,7 +85,13 @@ const TaskListMainPage: React.FC<Props> = () => {
             />
         )
     }
-
+    const onLoadDSDExchange= async () => {
+        const rs1 = await suggestionService.dsdExchangeRage();
+        setExchangeRate(rs1);
+    }
+    useEffect(() => {
+        onLoadDSDExchange()
+    },[]);
     return <Spin spinning={false}>
         <PageWrapper<StockControlLess, StockStoreAdvanceSearchParams, {}>
             tabRender={item => [
@@ -109,11 +117,6 @@ const TaskListMainPage: React.FC<Props> = () => {
             listView={{
                 type: "Table",
                 title: "Task List",
-                // statuses: [
-                //     { option: { value: "approved", label: "Approved" } },
-                //     { option: { value: "count stock", label: "Count Stock" } },
-                //     // {option:{ value:"Approved",label:"approved" }},
-                // ],
                 onFilter: (params, page, sort) => {
 
                 },
@@ -128,10 +131,10 @@ const TaskListMainPage: React.FC<Props> = () => {
                             render: (_, r) => {
                                 return r.stockName ? r.stockName : '-';
                             },
-                            actionProps: (item) => ({
-                                type: 'view',
-                                label: item.stockName || 'n/a',
-                            }),
+                            // actionProps: (item) => ({
+                            //     type: 'view',
+                            //     label: item.stockName || 'n/a',
+                            // }),
                         },
                         {
                             width: 120,
@@ -176,7 +179,6 @@ const TaskListMainPage: React.FC<Props> = () => {
                                 );
                             },
                         },
-
                         {
                             title: 'Approved By',
                             render: (_, r) => {
@@ -189,9 +191,6 @@ const TaskListMainPage: React.FC<Props> = () => {
                             align: 'right',
                             dataIndex: "approvedDate",
                             valueType: "date",
-                            // render: (_, r) => {
-                            //     return r.approvedDate ? formatDate(r.approvedDate) : 'YYYY-MM-DD';
-                            // },
                         },
                         access.canAccessTabWarehouse
                             ? {
@@ -224,7 +223,6 @@ const TaskListMainPage: React.FC<Props> = () => {
             key={`EditItemEntryModal`}
             open={addNewModal.open}
             onCancel={() => setAddNewModal({ open: false, record: undefined })}
-            // loading={loading}
             data={addNewModal.record}
             actionHandlers={{
                 onRejectItem: async (id: number, remark: string) => {
@@ -240,14 +238,12 @@ const TaskListMainPage: React.FC<Props> = () => {
                             record: undefined,
                         });
                     }
-                    // setForce({ update: force.update + 1 });
                 },
                 onReload: () => {
                     setAddNewModal({
                         open: false,
                         record: undefined,
                     });
-                    // setForce({ update: force.update + 1 });
                 },
                 onAddItem: async (item) => {
                     Modal.confirm({
@@ -262,16 +258,12 @@ const TaskListMainPage: React.FC<Props> = () => {
                                 });
                                 res && message.success("Data was recorded!")
                             }
-                            catch(error){
-                                message.error(error.message)
+                            catch (error) {
                             }
 
                             refetch();
                         }
-                    })
-
-
-                    // setForce({ update: force.update + 1 });
+                    });
                 },
             }}
         />
@@ -297,29 +289,25 @@ const TaskListMainPage: React.FC<Props> = () => {
             key={`SettlementModal`}
             open={settleModal.open}
             data={settleModal.record}
-            // exchangeRate={exchangeRate}
-            // dsdExchangeRate={dsdExchangeRate}
-            actionHandlers={{
-                onCancel: () => setSettleModal({ open: false, record: undefined }),
-                onAddItem: async (item) => {
-                    Modal.confirm({
-                        title: "Confirm settlement is valid data.",
-                        content: "are you sure?",
-                        onOk: async () => {
-                            await suggestionService.onSaveSettlementModel(item).then(() => {
-                                setSettleModal({
-                                    open: false,
-                                    record: undefined,
-                                });
-                                refetch();
-                                message.success("success!");
-                            }).catch(() => {
-                                message.error("Something went wrong!")
+            dsdExchangeRate={exchangeRate}
+            onCancel ={()=>setSettleModal({ open: false, record: undefined })}
+            onSave={ async( data)=>{
+                Modal.confirm({
+                    title: "Confirm settlement is valid data.",
+                    content: "are you sure?",
+                    onOk: async () => {
+                        await suggestionService.onSaveSettlementModel(data).then(() => {
+                            setSettleModal({
+                                open: false,
+                                record: undefined,
                             });
-                        }
-                    })
-
-                },
+                            refetch();
+                            message.success("success!");
+                        }).catch(() => {
+                            message.error("Something went wrong!")
+                        });
+                    }
+                })
             }}
         />
 
@@ -342,8 +330,7 @@ const TaskListMainPage: React.FC<Props> = () => {
                             refetch();
                             message.success("count stock was success!")
                         }
-                    })
-
+                    });
                 },
             }}
         />

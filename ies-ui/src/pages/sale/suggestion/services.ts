@@ -46,7 +46,7 @@ const SuggestionActions = {
     endpoint:"SALE",
     payload:param
   }),
-  onSaveSettlementModel:(param:SettlementModel):ServiceApiType<SettlementModel> =>({
+  onSaveSettlementModel:(param:SettlementEntry):ServiceApiType<SettlementEntry> =>({
     type:"EXEC",
     actionName:"save-settlement-model",
     endpoint:"SALE",
@@ -105,7 +105,7 @@ export const SuggestionServiceAPI = (requestActions: RequestActions) => {
     reject :(id?:number) =>singleRequest(SuggestionActions.reject(id))(requestActions),
     aceptRequestStock:(id?:number) =>singleRequest(SuggestionActions.aceptedRequest(id))(requestActions),
     approveStockRequest:(param:ApprovalStockControlDto) =>singleRequest(SuggestionActions.approveStockRequest(param))(requestActions),
-    onSaveSettlementModel:(param:SettlementModel) =>singleRequest(SuggestionActions.onSaveSettlementModel(param))(requestActions) as Promise<{data:string, message:string}>,
+    onSaveSettlementModel:(param:SettlementEntry) =>singleRequest(SuggestionActions.onSaveSettlementModel(param))(requestActions) as Promise<{data:string, message:string}>,
     countStock:(param:CountStockDto)=>singleRequest(SuggestionActions.countStock(param))(requestActions) as Promise<{data:string; message:string}>,
     onClosedRequest:(id?:number)=>singleRequest(SuggestionActions.onClosedRequest(id))(requestActions) as Promise<{data:string; message:string}>,
     onApprovalStockRequest:(param:ApprovalStockControlDto)=>singleRequest(SuggestionActions.onApprovalStockRequest(param))(requestActions) as Promise<{data:string; message:string}>,

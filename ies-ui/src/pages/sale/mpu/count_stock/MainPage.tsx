@@ -88,7 +88,7 @@ const CountStockMainPage: React.FC<Props> = () => {
               title: "Sales Volume",
               dataIndex: "soldQuantity",
               align:"right",
-              render: (_, r) => formatterQty.format(r.soldQuantity)
+              render: (_, r) =><>( <Typography.Text type="warning">{r.soldQuantity} </Typography.Text>)</>
             },
             {
               title: "Sales Amount",

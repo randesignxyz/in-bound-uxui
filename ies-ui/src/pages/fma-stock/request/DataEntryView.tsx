@@ -225,7 +225,7 @@ export default ({
                 fieldProps: { showSearch: true },
                 valueType: 'select',
                 request: async (_, r: any) => {
-                  return budgetCodeList.map((it) => ({ label: it.name, value: it.code }));
+                  return budgetCodeList.map((it) => ({ label: it.code, value: it.code }));
                 },
               },/*{
                 title: 'To be Returned in Full or Partial (F/P)',

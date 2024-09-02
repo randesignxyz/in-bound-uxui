@@ -2,12 +2,17 @@ import moment, { Moment } from "moment";
 
 export interface SaveEssProfile {
   id?: number; 
-  openEssId?: number; 
+  essProfId: number; 
+  openEssId: number; 
   empId:number;
   nameKh: string; 
   nameEn: string; 
   genderId   : number; 
   dateBirth  : moment.Moment;
+  
+  marriedWith   : boolean; 
+  spouseStaffId   : string; 
+  
   placeBirth : string;  
   maritalStatusId    : number;  
   provincePbId    : number;  
@@ -32,8 +37,15 @@ export interface SaveEssProfile {
   religionId    : number;  
   stepId    : number;  
   currentAddress   : string;  
-  nationalId : string;  
-  passportNumber   : string;   
+
+  nationalId                : string;  
+  nationalIssuedDate      : moment.Moment;
+  nationalExpiryDate      : moment.Moment;
+
+  passportNumber            : string;   
+  passportIssuedDate      : moment.Moment;
+  passportExpiryDate      : moment.Moment;
+
   departmentId     : number;  
   status      : Boolean;
   step      : number; 
@@ -53,12 +65,25 @@ export interface AttachmentFile {
 } 
 export interface EssProfileData {
   id?   : number; 
-  provincePbId?   : number; 
-  districtPbId?   : number; 
   provincePaId?   : number; 
-  districtPaId?   : number; 
+  provincePbId?   : number; 
   provinceCrId?   : number; 
+  districtPbId?   : number; 
+  districtPaId?   : number; 
   districtCrId?   : number; 
+  communePaId?   : number; 
+  communePbId?   : number; 
+  communeCrId?   : number; 
+
+  homePaNo?   : string; 
+  homePbNo?   : string; 
+  homeCrNo?   : string; 
+
+  streetPa?   : string; 
+  villagePaId?   : string; 
+  streetCr?   : string; 
+  villageCrId?   : string; 
+
   empId           : number;
   nameKh          : string; 
   nameEn          : string;  
@@ -69,8 +94,16 @@ export interface EssProfileData {
   permanentAddress  : string;  
   religionId        : number;  
   currentAddress    : string;  
-  nationalId        : string;    
+  marriedWith    : boolean; 
+  spouseStaffId    : string; 
+  
+  nationalId        : string;   
+  nationalIssuedDate    : string; 
+  nationalExpiryDate    : string;  
   passportNumber    : string;   
+  passportIssuedDate    : string; 
+  passportExpiryDate    : string; 
+
   departmentId      : number;  
   status            : Boolean; 
   otherFile         : FilesData[];
@@ -144,6 +177,25 @@ export interface LanguageData {
   status:Boolean; 
   otherFile  :AttachmentFile[];
 }
+export interface RelationshipData {
+  id?: number; 
+  empId:number;
+  relationshipId:number; 
+  typeId:number;
+  relationshipName: number; 
+  occupationId: string; 
+  dateOfBirth: string;  
+  status:Boolean;  
+  isDelete:number;
+  type:string; 
+}
+
+export interface ProfileRelationshipData { 
+  data     : RelationshipData[];  
+  oldData     : RelationshipData[];  
+  newData     : RelationshipData[]; 
+}   
+
 export interface ProfileLanguageData { 
   data     : LanguageData[];  
   oldData     : LanguageData[];  
@@ -158,6 +210,9 @@ export interface SaveTraining {
   id?: number;   
   empId:number;  
   isDelete:number;
+  typeId:number;
+  duration:string;
+  institution: string; 
   trainingCourse: string; 
   year: string; 
   description: string;  
@@ -166,14 +221,17 @@ export interface SaveTraining {
   otherFile  :AttachmentFile[];
 }  
 export interface TrainingData {
-  id?: number; 
-  trainingId?: number; 
-  empId:number;
+  id?         : number; 
+  empId       : number;
+  trainingId? : number; 
   trainingCourse: string; 
-  year: moment.Moment;
-  description: string;  
-  status:Boolean;
-  otherFile  :AttachmentFile[];
+  institution : string; 
+  typeId      : number;
+  year        : moment.Moment;
+  duration    : string;
+  description : string;  
+  status      : Boolean;
+  otherFile   : AttachmentFile[];
 }
 export interface ProfileTrainingData { 
   data     : TrainingData[];  
@@ -188,7 +246,8 @@ export interface SaveExperience {
   id?: number;   
   empId:number;
   companyName: string; 
-  location: string; 
+  countryId: number; 
+  provinceId: number; 
   startPosition: string; 
   endPosition: string; 
   startDate: moment.Moment;
@@ -204,13 +263,19 @@ export interface ExperienceData {
   empId:number;
   isDelete:number;
   companyName: string; 
-  location: string; 
+  countryId: number; 
+  provinceId: number; 
+  locationRemark: string; 
+  countryName: string; 
+  provinceName: string; 
+
   startPosition: string; 
   endPosition: string; 
   startDate: moment.Moment;
   endDate: moment.Moment;
   description: string;  
   status:Boolean;
+  type:string;
   otherFile  :AttachmentFile[];
 }
 export interface ProfileExperienceData { 
@@ -236,9 +301,17 @@ export interface EducationData {
   type: string; 
   status:boolean;
   otherFile  :AttachmentFile[];
+  degreeName: string; 
+  statusName: string; 
+  countryEducationCenterName: string; 
 }
 export interface ProfileEducationData { 
-  data     : EducationData[];  
+  data        : EducationData[];  
+  marjor      : MarjorData[];  
+  degree      : EssLookupData[];  
+  status      : EssLookupData[];  
+  language    : EssLookupData[];  
+  coei        : EssLookupData[];  
   oldData     : EducationData[];  
   newData     : EducationData[];  
   fileOldData     : FilesData[];  
@@ -273,6 +346,18 @@ export interface FilesData {
   fileType: string;  
   title: string;  
   createdDate: moment.Moment;
+} 
+export interface MarjorData {
+  id?: string;  
+  majorName:string;
+  description: string;   
+  status:number;
+} 
+export interface EssLookupData {
+  id?: string;  
+  titleName:string;
+  description: string;   
+  type:number;
 } 
 
 export interface ActivityData {

@@ -88,7 +88,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
     const onDelete = async (data: SaveEmergency) => {
         Modal.confirm({
           title: 'Delete eduction',
-          content: 'Are you sure you want to delete?',
+          content: 'Are you sure you want to delete items?',
           onOk: async () => {
             try {
                 data.otherFile = [];

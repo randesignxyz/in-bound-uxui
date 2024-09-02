@@ -10,6 +10,7 @@ import { formatDateTime } from '../utils';
 import { ProfileData } from './data';
 import { EssProfileData, SaveEssProfile } from "./data.ess"
 import Personal from './tabitems/Personal';
+import Relationship from './tabitems/Relationship';
 import Emergency from './tabitems/Emergency';
 import Education from './tabitems/Education';
 import Languages from './tabitems/Languages';
@@ -19,7 +20,8 @@ import { ProfileServices } from './service';
 import { ProfileServicesEss } from './service_ess'; 
 import styles from './style.less';
 import UserContact from './UserContact'; 
-import { EditOutlined,HistoryOutlined, ExclamationCircleOutlined, UserOutlined, PhoneOutlined, ThunderboltOutlined, ReadOutlined, TagOutlined, SisternodeOutlined, ScheduleOutlined, LinkOutlined, FieldTimeOutlined } from "@ant-design/icons";  
+import { EditOutlined,HistoryOutlined, ExclamationCircleOutlined, UserOutlined, PhoneOutlined, ThunderboltOutlined, ReadOutlined, TagOutlined, SisternodeOutlined, ScheduleOutlined, 
+  LinkOutlined, FieldTimeOutlined,UsergroupDeleteOutlined } from "@ant-design/icons";  
 import PersonalViewDetailModal from './modal/PersonalViewDetailModal';
 import AttachmentList from './tabitems/AttachmentList';
 import Message from './Message';
@@ -52,7 +54,7 @@ function Profile() {
       content: 'Do you want to start modify data?',
       onOk: async () => {
         try {  
-          await ProfileServicesEss.saveEssProfile({...profile?.profile, empId: profile?.id,step:step_id,openEssId:profile?.ess.id,otherFile:[],remark:'',status:true})(requestActions);  
+          await ProfileServicesEss.saveEssProfile({...profile?.profile_draft, empId: profile?.id,step:step_id,openEssId:profile?.ess.id,otherFile:[],remark:'',status:true})(requestActions);  
           initData();  
         } catch (error: any) {
           message.error(error.message || 'Failed to created.');
@@ -171,6 +173,10 @@ function Profile() {
       tab: <div style={{color: profile?.profileTab==null?'':profile?.profileTab.personalInformation==0?'':'red'}}><UserOutlined/> Personal Information</div>, 
     },
     {
+      key: 'relationship',
+      tab: <div style={{color: profile?.profileTab==null?'':profile?.profileTab.familyMember==0?'':'red'}}><UsergroupDeleteOutlined /> Family member</div>, 
+    },
+    {
       key: 'emergency',
       tab: <div style={{color: profile?.profileTab==null?'':profile?.profileTab.emergencyContact==0?'':'red'}}><ThunderboltOutlined /> Emergency Contact</div>,  
     },
@@ -184,7 +190,7 @@ function Profile() {
     },
     {
       key: 'training',
-      tab: <div style={{color: profile?.profileTab==null?'':profile?.profileTab.training==0?'':'red'}}><ReadOutlined /> Training</div>,  
+      tab: <div style={{color: profile?.profileTab==null?'':profile?.profileTab.training==0?'':'red'}}><ReadOutlined /> Training/Certification</div>,  
     },
     {
       key: 'experience',
@@ -228,6 +234,7 @@ function Profile() {
     // ),
     // job: <Job profile={data} />,
     personal: <Personal profile={data} step={step} is_admin={Number(is_admin)} empId={Number(id)} cb={{ onLoadData: () => {  reloadData(); }}} />,
+    relationship: <Relationship profile={data} step={step} is_admin={Number(is_admin)} empId={Number(id)} cb={{ onLoadData: () => {  reloadData(); }}} />,
     emergency: <Emergency profile={data} step={step} is_admin={Number(is_admin)} empId={Number(id)} cb={{ onLoadData: () => {  reloadData(); }}} />,
     education: <Education profile={data} step={step} is_admin={Number(is_admin)} empId={Number(id)} cb={{ onLoadData: () => {  reloadData(); }}} />,
     language: <Languages profile={data} step={step} is_admin={Number(is_admin)} empId={Number(id)} cb={{ onLoadData: () => {  reloadData(); }}} />,
@@ -287,6 +294,7 @@ function Profile() {
             <Message visible={(step==6&&Number(id)==0)?true:false}
               message={_stag[step]}
               description={_stag_message[step]}
+              opentitle = {profile?.ess.description!!}
               type={[4,5].find((element) => element == step)?"error":"info"}
               step={step}
               data={profile?.profile_draft}

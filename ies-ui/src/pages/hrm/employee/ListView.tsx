@@ -10,9 +10,10 @@ import { EmployeeServices } from "../services";
  
 import Status from "@/components/Status";
 import { ExportOutlined,EditOutlined } from "@ant-design/icons";
-import { history } from 'umi';
+// import { history } from 'umi';
 import { useState } from 'react';
-import EmployeeModal from './EmployeeModal';
+import EmployeeModal from './EmployeeModal'; 
+import { history, useAccess } from '@umijs/max';
 
 interface Props {
     onAdd?: (id?: number) => void;
@@ -20,6 +21,7 @@ interface Props {
   }
 
 export default ({ onAdd, onEdit }: Props) => {
+    const access = useAccess(); 
     const [modalVisible, setModalVisible] = useState< { type: 'ADD'; payload: EmployeeListItem } | { type: 'EDIT'; payload: EmployeeListItem } >();
     const hideModal = (visble?: boolean) => !visble && setModalVisible(undefined);
 
@@ -57,9 +59,8 @@ export default ({ onAdd, onEdit }: Props) => {
         <TableView<EmployeeListItem, { searchValue?: string; }> 
             tableProps={{
                 actionRef: actionRef,
-                toolbar: {
-                    actions: [
-                     <Tooltip placement="top" title="Import">
+                toolbar: {  
+                    actions: [access.canAdmin==true?<Tooltip placement="top" title="Import">
                         <ImportFileButton<{id: number}> importedKey="EMPLOYEE"
                         // onDataResponse={(data) => {
                         //     console.log("------",data);
@@ -72,7 +73,7 @@ export default ({ onAdd, onEdit }: Props) => {
                                 message.info("upload completed.")
                             }    
                         }}/>
-                      </Tooltip>,
+                      </Tooltip>:'',
         
                     ],
                   },
@@ -88,20 +89,20 @@ export default ({ onAdd, onEdit }: Props) => {
                     // sort
                 })
             }}
-            extraFilter={
-                <Space > 
-                    <Radio.Group optionType="button"
-                        defaultValue={"ACTIVE"}
-                        options={[
-                            { label: "All", value: "ALL" },
-                            // { label: "Employee Requested", value: "REQUESTED" },
-                            // { label: "HR Requested", value: "REVIEWED" }
-                        ]} 
-                    />
-                </Space>
-            }  
+            // extraFilter={
+            //     <Space > 
+            //         <Radio.Group optionType="button"
+            //             defaultValue={"ACTIVE"}
+            //             options={[
+            //                 // { label: "All", value: "ALL" },
+            //                 // { label: "Employee Requested", value: "REQUESTED" },
+            //                 // { label: "HR Requested", value: "REVIEWED" }
+            //             ]} 
+            //         />
+            //     </Space>
+            // }  
             columns={[
-                {title: 'Emp No', dataIndex: 'employeeCode', sorter: 'employeeCode',
+                {title: 'Employee ID', dataIndex: 'employeeCode', sorter: 'employeeCode',
                 render(_, entity) {
                     return <Flex gap={5}><Button
                         size="small"
@@ -119,15 +120,16 @@ export default ({ onAdd, onEdit }: Props) => {
                     </Flex>
                 },
                 },
-                {title: 'Local Name', dataIndex: 'employeeLocalName'},
-                {title: 'First Name', dataIndex: 'firstName', sorter: 'firstName'},
-                {title: 'Last Name', dataIndex: 'lastName', sorter: 'lastName'},
-                {title: 'SAP ID', dataIndex:  'sapId', sorter: 'sapId'},
-                {title: 'Job title', dataIndex: 'jobTitle', sorter: 'jobTitle'},
-                {title: 'Department', dataIndex: 'department', sorter: 'department'},
-                {title: 'BU', dataIndex: 'bu'},
+                {title: 'Full Name (KH)', dataIndex: 'employeeLocalName'},
+                {title: 'Full Name (EN)', dataIndex: 'firstName', sorter: 'firstName',render(_, entity) {return(entity.firstName+" "+entity.lastName)} },
+                // {title: 'Last Name', dataIndex: 'lastName', sorter: 'lastName'},
+                // {title: 'SAP ID', dataIndex:  'sapId', sorter: 'sapId'},
+                {title: 'Position', dataIndex: 'jobTitle', sorter: 'jobTitle'},
+                {title: 'Function', dataIndex: 'department', sorter: 'department'},
+                {title: 'Company', dataIndex: 'bu'},
                 {title: 'Status', render:(_,r) =><Status text={r.status}/>},
                 {width: 50,
+                hidden: !access.canAdmin,
                 render: (dom, r) => {  
                     return (<a onClick={() => setModalVisible({ type: 'EDIT', payload: r })}>
                                 <EditOutlined/>

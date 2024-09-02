@@ -1,6 +1,6 @@
 import { execDataService0,fetchDataItemService,fetchDataListService} from '@/services/apiGateway'; 
 import { request } from 'umi';
-import { SaveEssProfile,SaveEmergency,SaveLanguage,SaveTraining,SaveExperience,EmergencyData,LanguageData,TrainingData,ExperienceData,LocationData, EducationData, FilesData, ActivityData, ProfileEmergencyData, ProfileEducationData, ProfileLanguageData, ProfileTrainingData, ProfileExperienceData } from './data.ess';
+import { SaveEssProfile,SaveEmergency,SaveLanguage,SaveTraining,SaveExperience,EmergencyData,LanguageData,TrainingData,ExperienceData,LocationData, EducationData, FilesData, ActivityData, ProfileEmergencyData, ProfileEducationData, ProfileLanguageData, ProfileTrainingData, ProfileExperienceData, RelationshipData, ProfileRelationshipData } from './data.ess';
 import { AddressData } from '@/services/crm/data';
 
 export async function queryAdvancedProfile() {
@@ -43,6 +43,27 @@ export const ProfileServicesEss = {
   }),   
   listEmergencyModify: (id: number,type:number) => fetchDataListService<EmergencyData, { id: number,type: number }>({
     actionName: 'list-emergency-modify',
+    endpoint: 'HR',
+    payload: { id,type }
+  }),  
+  // Family Memeber
+  saveRelationshipAdmin: (data: RelationshipData) => execDataService0<RelationshipData>({
+    actionName: 'save-relationship-admin',
+    endpoint: 'HR',
+    payload: { ...data }
+  }), 
+  saveRelationship: (data: RelationshipData) => execDataService0<RelationshipData>({
+    actionName: 'save-relationship',
+    endpoint: 'HR',
+    payload: { ...data }
+  }), 
+  listRelationship: (id: number) => fetchDataItemService<ProfileRelationshipData, { id: number }>({
+    actionName: 'list-relationship',
+    endpoint: 'HR',
+    payload: { id }
+  }),
+  listRelationshipModify: (id: number,type:number) => fetchDataListService<RelationshipData, { id: number,type: number }>({
+    actionName: 'list-relationship-modify',
     endpoint: 'HR',
     payload: { id,type }
   }),  
@@ -93,12 +114,12 @@ export const ProfileServicesEss = {
   }),  
 
   // experience
-  saveExperienceAdmin: (data: SaveExperience) => execDataService0<SaveExperience>({
+  saveExperienceAdmin: (data: ExperienceData) => execDataService0<ExperienceData>({
     actionName: 'save-experience-admin',
     endpoint: 'HR',
     payload: { ...data }
   }),
-  saveExperience: (data: SaveExperience) => execDataService0<SaveExperience>({
+  saveExperience: (data: ExperienceData) => execDataService0<ExperienceData>({
     actionName: 'save-experience',
     endpoint: 'HR',
     payload: { ...data }

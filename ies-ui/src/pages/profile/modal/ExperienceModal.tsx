@@ -1,8 +1,8 @@
-import { ModalForm, ModalFormProps, ProFormTextArea, ProCard,ProForm, ProFormText,ProFormDatePicker } from "@ant-design/pro-components" 
-import { ExperienceData, FilesData, SaveExperience } from "../data.ess"
+import { ModalForm, ModalFormProps, ProFormTextArea, ProCard,ProForm, ProFormText,ProFormDatePicker, ProFormSelect } from "@ant-design/pro-components" 
+import { ExperienceData, FilesData, LocationData, SaveExperience } from "../data.ess"
 import { useEffect,useState } from 'react'; 
 import FileUploader , { UploadType } from '@/components/Attachment/FileUploader';
-import { Space, Typography, Image,List, Modal, message, Button } from "antd";
+import { Space, Typography, Image,List, Modal, message, Button, Row, Col } from "antd";
 import ImagePreview from "@/components/ImagePreview";
 import { ProfileData } from "../data";
 import { ProfileServicesEss } from "../service_ess";
@@ -24,7 +24,7 @@ interface Props extends ModalFormProps<ExperienceData> {
 export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) => { 
     const requestActions = simpleRequestActions();  
     
-    const [form] = ProForm.useForm<SaveExperience>(); 
+    const [form] = ProForm.useForm<ExperienceData>(); 
     const [imageList, setImageList] = useState<FilesData[]>([]);
     const [createFileOther, selectedFileOther] = useState<any>();  
     
@@ -53,7 +53,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
     const onAdminSubmit = async ()=>{
         const bmForm = await form.validateFields(); 
         Modal.confirm({
-            title: 'Save Emergency',
+            title: 'Save Experience',
             content: 'Are you sure?',
             onOk: async () => {
               try { 
@@ -71,10 +71,11 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
         });
     }
     return <ModalForm  {...rest} form={form} width={'30%'} title={!!data?"Edit Experience":"Add Experience"}
-        // onOpenChange={visible => {
-        //     form.resetFields() 
-        //     rest.onOpenChange?.(visible)
-        // }} 
+        onOpenChange={visible => {
+            // form.resetFields() 
+            rest.onOpenChange?.(visible)
+            console.log(visible);
+        }} 
             submitter={isAdmin==2&&empId>0?
                 {
                     render: () => { 
@@ -90,16 +91,58 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
             } 
         > 
         <ProCard bordered> 
-            <ProFormText label="Company Name" name={'companyName'} />
-            <ProFormText label="Location" name={'location'} />  
-            <ProFormText label="Started Position" name={'startPosition'} />  
-            <ProFormText label="Ended Position" name={'endPosition'} />  
-            <Space direction="horizontal" style={{width:'100%'}}>
-                <ProFormDatePicker label="Started Date" name={'startDate'} />  
-                <ProFormDatePicker label="Ended Date" name={'endDate'} />  
-            </Space>
-            <ProFormTextArea label="Description" name={'description'} /> 
+            <ProFormText label="Company Name" name={'companyName'} rules={[{ required: true }]}/>
+            {/*  */}
+            <Row>
+                <Col span={12} style={{padding:'3px'}}>
+                    <ProFormText label="Started Position" name={'startPosition'} rules={[{ required: true }]}/>  
+                </Col>
+                <Col span={12} style={{padding:'3px'}}>
+                    <ProFormText label="Ended Position" name={'endPosition'} rules={[{ required: true }]}/> 
+                </Col> 
+            </Row>
+            {/*  */}
+            <Row>
+                <Col span={12} style={{padding:'3px'}}>
+                    <ProFormDatePicker label="Started Date" name={'startDate'} rules={[{ required: true }]}/> 
+                </Col>
+                <Col span={12} style={{padding:'3px'}}> 
+                    <ProFormDatePicker label="Ended Date" name={'endDate'} rules={[{ required: true }]}/>  
+                </Col> 
+            </Row> 
         </ProCard>
+        {/* Location  */}
+        <div style={{marginTop:'10px'}}><Typography.Title level={5}>Location</Typography.Title></div>
+        <ProCard bordered style={{backgroundColor:'#f5f5f5'}}> 
+            <Row>
+                <Col span={12} style={{padding:'3px'}}>
+                    <ProFormSelect 
+                        label="Country" 
+                        name={'countryId'}
+                        showSearch
+                        options={profile.coei?.map((it) => {
+                            return { value: it.id, label: it.titleName };
+                        })} 
+                    />
+                </Col> 
+                <Col span={12} style={{padding:'3px'}}>     
+                    <ProFormSelect 
+                        showSearch
+                        label="City/ Province" 
+                        name={'provinceId'}
+                        options={profile.essLocation?.map((it) => {
+                            return { value: it.id, label: it.internalName };
+                        })} 
+                    />  
+                </Col>  
+            </Row>
+            <Row>
+                <Col span={24} style={{padding:'3px'}}> 
+                    <ProFormText label="Other, please specify" name={'locationRemark'} /> 
+                </Col>  
+            </Row>
+            </ProCard>
+            <ProFormTextArea label="Description" name={'description'} /> 
         
         {/* Attachment files  */} 
         <div style={{marginTop:'10px'}}>

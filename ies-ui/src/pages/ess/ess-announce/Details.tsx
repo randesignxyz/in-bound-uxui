@@ -9,7 +9,7 @@ import { ServicesEss } from '../service_ess_tran';
 
 import ListViewEss from './ListViewEss';
 import { useParams } from "@umijs/max";
-import { formatDateTime } from "@/pages/utils";
+import { formatDate, formatDateTime } from "@/pages/utils";
  
 
 export default () =>{
@@ -52,8 +52,8 @@ const description = (data: OpenEssDataItem) => (
     <RouteContext.Consumer>
       {({ isMobile }) => ( 
         <ProDescriptions  size="small" column={isMobile ? 1 : 3}>
-           <ProDescriptions.Item label="Start date">{formatDateTime(data.startDate)}</ProDescriptions.Item>
-          <ProDescriptions.Item label="End date">{formatDateTime(data.endDate)}</ProDescriptions.Item>
+           <ProDescriptions.Item label="Start date">{formatDate(data.startDate)}</ProDescriptions.Item>
+          <ProDescriptions.Item label="End date">{formatDate(data.endDate)}</ProDescriptions.Item>
           <ProDescriptions.Item label="Description">{data.description}</ProDescriptions.Item>     
   
           </ProDescriptions>

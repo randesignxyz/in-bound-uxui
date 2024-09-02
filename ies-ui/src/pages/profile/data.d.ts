@@ -1,6 +1,6 @@
 import { LookupDataItem2 } from "@/services/data";
 import moment from "moment";
-import { LocationData } from "./data.ess";
+import { EssLookupData, LocationData } from "./data.ess";
 
 export type AdvancedOperation1 = {
   key: string;
@@ -63,15 +63,27 @@ export interface ProfileData {
   roles       : string[];
   emergency   : EmergencyData[]; 
   profile     : EssProfileData;  
-  profile_draft     : SaveEssProfile;  
-  profile_adr_pb     : EssProfileAdrData;  
-  profile_adr_pm     : EssProfileAdrData;  
-  profile_adr_ct     : EssProfileAdrData;   
-  contacts    : ContactData[];  
-  ess         : EssOpenData; 
-  essLocation    : LocationData[];  
-  essAttachFill: FilesData[];
-  profileTab: ProfileTab;
+  profile_draft   : SaveEssProfile;  
+  profile_adr_pb  : EssProfileAdrData;  
+  profile_adr_pm  : EssProfileAdrData;  
+  profile_adr_ct  : EssProfileAdrData;   
+  contacts        : ContactData[];  
+  ess             : EssOpenData; 
+  essLocation     : LocationData[];  
+  essAttachFill   : FilesData[];
+  profileTab      : ProfileTab;
+
+  marriedStatusObj  : EssLookupData; 
+  religionObj     : EssLookupData; 
+
+  marriedStatus   : EssLookupData[]; 
+  religion        : EssLookupData[]; 
+  relship         : EssLookupData[]; 
+  oc              : EssLookupData[];   
+  degree          : EssLookupData[];   
+  status          : EssLookupData[];    
+  language        : EssLookupData[];    //language
+  coei            : EssLookupData[];    //Country of Education Institution
 }
 export interface EssOpenData{  
   id?: number;  
@@ -177,6 +189,7 @@ export interface SaveProfileImage {
 export interface ProfileTab {
   contactInformation?: number;  
   personalInformation:number;
+  familyMember:number;
   emergencyContact: number;  
   education: number;  
   languages: number;  

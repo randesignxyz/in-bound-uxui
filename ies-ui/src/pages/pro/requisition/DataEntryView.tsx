@@ -123,7 +123,7 @@ export default ({
       budgetCodeRequired: data.budgetCodeRequired,
       totalAmount: data.totalAmount,
       reason: data.reason,
-      buid: selectedBu,
+      buId: data.buId,
       remarks: data.remarks,
       service: data.service,
       fileIds: data.fileIds || [],
@@ -216,7 +216,7 @@ export default ({
                 content: 'Are you sure?',
                 onOk: async () => {
                   try {
-                    await services.save({ ...dataForm, buid: selectedBu });
+                    await services.save({ ...dataForm, buId: selectedBu });
                     message.success('Save successfully.');
 
                     !openInTab && clear();
@@ -246,7 +246,7 @@ export default ({
     <Card title="General" size="small">
       <Row gutter={20}>
         <Col flex={1}>
-          {bu.length > 0 && <CheckCard.Group disabled={addedItems.length > 0 || bu.length == 1} onChange={v => setSelectedBu(v?.valueOf() as number)} defaultValue={selectedBu} size='small' >
+          {bu.length > 0 && <CheckCard.Group key={`bu_${selectedBu}`} disabled={addedItems.length > 0 || bu.length == 1} onChange={v => setSelectedBu(v?.valueOf() as number)} defaultValue={selectedBu} size='small' >
             {bu.map(it => (<CheckCard key={`bu-${it.id}`} size='small' title={it.name} description={it.description} value={it.id} />))}
 
           </CheckCard.Group>}

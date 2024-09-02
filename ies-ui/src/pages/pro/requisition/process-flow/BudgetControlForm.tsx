@@ -35,7 +35,7 @@ export default (props: ActionDataFormProps) => {
   useEffect(() => {
     if (!props.visible) return;
     loadData();
-    return ()=> {
+    return () => {
       form.resetFields()
       setFiles([])
     }
@@ -43,15 +43,15 @@ export default (props: ActionDataFormProps) => {
 
   const loadData = async () => {
     try {
-      if (!props.activityData?.procInstId) return;  
+      if (!props.activityData?.procInstId) return;
       const data = await services.detailByProcessFlow(
         props.activityData?.procInstId,
       );
-      
-      const budgetList = await services.listBudgetCodeByDept(data.deptId)
+
+      const budgetList = await services.listBudgetCode(data.buId)
       setBudgetCodesList(budgetList)
       setRequisition(data);
-      
+
       const itemList = data.items.map((it) => ({
         id: it.id,
         key: uniqueId(),
@@ -91,11 +91,12 @@ export default (props: ActionDataFormProps) => {
       {...props}
       loading={requestActions.request?.loading}
       width={'1250px'}
-      actionHandlers= {{...props.actionHandlers, 
-        onCompleted: async ()=> {
+      actionHandlers={{
+        ...props.actionHandlers,
+        onCompleted: async () => {
 
-          if(!requisition) return
-          if(!props.activityData?.taskId) {
+          if (!requisition) return
+          if (!props.activityData?.taskId) {
             message.error("Task Id is not found")
             return
           }
@@ -105,7 +106,7 @@ export default (props: ActionDataFormProps) => {
           Modal.confirm({
             title: 'Budget Code Review',
             content: 'Are you sure?',
-            onOk: async() => {
+            onOk: async () => {
               try {
                 await services.saveBudgetCodeReviews({
                   taskId: props.activityData?.taskId || '',
@@ -116,7 +117,7 @@ export default (props: ActionDataFormProps) => {
                     items: items,
                     services: serviceItems
                   },
-                  fileIds: files.map(it=> it.response)
+                  fileIds: files.map(it => it.response)
                 })
                 props.actionHandlers?.onCancel?.(true)
               } catch (error: any) {
@@ -126,27 +127,27 @@ export default (props: ActionDataFormProps) => {
           })
 
         },
-        onSetFiles: file => setFiles(v=> (file)),
-        onRemoveFile: file => setFiles(v=> v.filter(it=> it.uid !== file.uid)),
-        onReset: ()=> {
+        onSetFiles: file => setFiles(v => (file)),
+        onRemoveFile: file => setFiles(v => v.filter(it => it.uid !== file.uid)),
+        onReset: () => {
           loadData()
           form.setFieldsValue({
-              comment: undefined
-            })
-            setFiles([])
+            comment: undefined
+          })
+          setFiles([])
         }
       }}
     >
       <ProForm form={form} submitter={false}>
         <Card>
 
-        { !requisition?.service && <EditableProTable<RequisitionItem>
-            
-            value  = {items}
-            editableFormRef = {editableFormRef} 
+          {!requisition?.service && <EditableProTable<RequisitionItem>
+
+            value={items}
+            editableFormRef={editableFormRef}
             rowKey="key"
             size='small'
-            recordCreatorProps = {false}
+            recordCreatorProps={false}
             editable={{
               type: 'multiple',
               editableKeys: items?.map(it => it.key),
@@ -155,31 +156,32 @@ export default (props: ActionDataFormProps) => {
               },
 
             }}
-            
-            columns = {[
-              {title: 'No', width: 50 , editable: false,  dataIndex: 'seqNo' },
-              {title: 'Item Code', width: 90 ,editable: false,  dataIndex: 'itemCode'},
-              {title: 'Item Name', editable: false, dataIndex: 'itemName'},
-              {title: 'Description',editable: false , valueType: 'textarea', fieldProps: {rows:1} , dataIndex: 'description'},
-              {title: 'Qty' , align: 'right', width: 50 , dataIndex: 'qty', editable: false ,  valueType: 'digit'  },
-              {title: 'UoM', width: 70 , dataIndex: 'uom' , editable: false  },
-              {title: 'Unit Price', align: 'right', width: 90 , dataIndex: 'unitPrice', editable: false , renderText: (_, record,) => formatter.format(record.unitPrice) },
-              {title: 'Amount', width: 100 , align: 'right',   editable: false, renderText: (_, record,) => formatter.format(record.amount)  },
-              {title: 'Budget.Code' , width: 150, fieldProps: {showSearch: true}, dataIndex: 'budgetCode', valueType: 'select', 
-                valueEnum : _ => budgetCodeList.reduce((acc, cur) =>  ({...acc, [cur.code]: cur.code }) , {}),
-                formItemProps: {  rules: [{required: true}],  } 
+
+            columns={[
+              { title: 'No', width: 50, editable: false, dataIndex: 'seqNo' },
+              { title: 'Item Code', width: 90, editable: false, dataIndex: 'itemCode' },
+              { title: 'Item Name', editable: false, dataIndex: 'itemName' },
+              { title: 'Description', editable: false, valueType: 'textarea', fieldProps: { rows: 1 }, dataIndex: 'description' },
+              { title: 'Qty', align: 'right', width: 50, dataIndex: 'qty', editable: false, valueType: 'digit' },
+              { title: 'UoM', width: 70, dataIndex: 'uom', editable: false },
+              { title: 'Unit Price', align: 'right', width: 90, dataIndex: 'unitPrice', editable: false, renderText: (_, record,) => formatter.format(record.unitPrice) },
+              { title: 'Amount', width: 100, align: 'right', editable: false, renderText: (_, record,) => formatter.format(record.amount) },
+              {
+                title: 'Budget.Code', width: 150, fieldProps: { showSearch: true }, dataIndex: 'budgetCode', valueType: 'select',
+                valueEnum: _ => budgetCodeList.reduce((acc, cur) => ({ ...acc, [cur.code]: cur.code }), {}),
+                formItemProps: { rules: [{ required: true }], }
               },
-              {title: 'Remarks', editable: false, valueType: 'textarea' , dataIndex: 'remarks', fieldProps: {rows:1}, width: 150 ,}
+              { title: 'Remarks', editable: false, valueType: 'textarea', dataIndex: 'remarks', fieldProps: { rows: 1 }, width: 150, }
             ]}
-            
+
           />}
 
-        {requisition?.service && <EditableProTable<RequisitionService>
-            value  = {serviceItems}
+          {requisition?.service && <EditableProTable<RequisitionService>
+            value={serviceItems}
             rowKey="key"
             size='small'
-            editableFormRef = {editableFormRef} 
-            recordCreatorProps = {false}
+            editableFormRef={editableFormRef}
+            recordCreatorProps={false}
             editable={{
               type: 'multiple',
               editableKeys: serviceItems?.map(it => it.key),
@@ -188,24 +190,25 @@ export default (props: ActionDataFormProps) => {
               },
 
             }}
-            
-            columns = {[
-              {title: 'No', width: 50 , editable: false, dataIndex: 'seqNo' },
-              {title: 'Service Name', editable: false, dataIndex: 'serviceName'},
-              {title: 'Description', editable: false, valueType: 'text' , dataIndex: 'description'},
-              {title: 'Amount', align: 'right', editable: false, renderText: (_, record,) => formatter.format(record.amount) , width: 155, fieldProps: { style: {width: 150}}  },
-              {title: 'Budget.Code', width: 150, fieldProps: {showSearch: true, size: 'small'} , dataIndex: 'budgetCode', valueType: 'select', 
-                valueEnum : _ => budgetCodeList.reduce((acc, cur) =>  ({...acc, [cur.code]: cur.code }) , {}),
-                formItemProps: {  rules: [{required: true}],  } 
+
+            columns={[
+              { title: 'No', width: 50, editable: false, dataIndex: 'seqNo' },
+              { title: 'Service Name', editable: false, dataIndex: 'serviceName' },
+              { title: 'Description', editable: false, valueType: 'text', dataIndex: 'description' },
+              { title: 'Amount', align: 'right', editable: false, renderText: (_, record,) => formatter.format(record.amount), width: 155, fieldProps: { style: { width: 150 } } },
+              {
+                title: 'Budget.Code', width: 150, fieldProps: { showSearch: true, size: 'small' }, dataIndex: 'budgetCode', valueType: 'select',
+                valueEnum: _ => budgetCodeList.reduce((acc, cur) => ({ ...acc, [cur.code]: cur.code }), {}),
+                formItemProps: { rules: [{ required: true }], }
               },
-              {title: 'Remarks', valueType: 'text', editable: false , dataIndex: 'remarks'},
+              { title: 'Remarks', valueType: 'text', editable: false, dataIndex: 'remarks' },
             ]}
-            
+
           />}
         </Card>
 
         <Card style={{ marginTop: 10, marginBottom: 10 }}>
-          <ProFormTextArea rules={[{required: props.action =='Rejected'}]} label="Comment" name="comment" />
+          <ProFormTextArea rules={[{ required: props.action == 'Rejected' }]} label="Comment" name="comment" />
         </Card>
       </ProForm>
     </ActionFormWrapper>

@@ -1385,27 +1385,27 @@ export default [
    * End ESS Management
    */
   /* request car */
-  {
-    path: 'fleet/booking/rqblist',
-    name: 'booking',
-    icon: 'TeamOutlined', 
-    hideInMenu: 'true',
-    component: './fleet/carbooking/bookinglist'
-  },
-  {
-    path: 'fleet/booking/ocplist',
-    name: 'booking',
-    icon: 'TeamOutlined', 
-    hideInMenu: 'true',
-    component: './fleet/carbooking/occupylist'
-  },
-  {
-    path: 'fleet/booking/bknew',
-    name: 'booking',
-    icon: 'TeamOutlined', 
-    hideInMenu: 'true',
-    component: './fleet/carbooking/occupylist'
-  },
+  // {
+  //   path: 'fleet/booking/rqblist',
+  //   name: 'booking',
+  //   icon: 'TeamOutlined', 
+  //   hideInMenu: 'true',
+  //   component: './fleet/carbooking/bookinglist'
+  // },
+  // {
+  //   path: 'fleet/booking/ocplist',
+  //   name: 'booking',
+  //   icon: 'TeamOutlined', 
+  //   hideInMenu: 'true',
+  //   component: './fleet/carbooking/occupylist'
+  // },
+  // {
+  //   path: 'fleet/booking/bknew',
+  //   name: 'booking',
+  //   icon: 'TeamOutlined', 
+  //   hideInMenu: 'true',
+  //   component: './fleet/carbooking/occupylist'
+  // },
 
   /* En request car */
 

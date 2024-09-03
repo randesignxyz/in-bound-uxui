@@ -289,7 +289,7 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                                 label="City/ Province" 
                                 name={'provincePbId'}
                                 options={locations?.map((it) => {
-                                    return { value: it.id, label: it.internalName };
+                                    return { value: it.id, label: it.name };
                                 })}
                                 fieldProps={{
                                     onChange: (val) => {
@@ -300,7 +300,7 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                             />   
                             <Select defaultValue={profile_draft==null?'':profile_draft!!.provincePbId} style={{width:'100%',marginTop:'-20px',marginBottom:'15px',color:'red!important;'}}
                                 options={locations?.map((it) => {
-                                    return { value: it.id, label: it.internalName };
+                                    return { value: it.id, label: it.name };
                                 })}
                             />
                         </Col>  
@@ -311,7 +311,7 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                                 label="Khan/ District" 
                                 name={'districtPbId'}
                                 options={districtPB?.map((it) => {
-                                    return { value: it.id, label: it.internalName };
+                                    return { value: it.id, label: it.name };
                                 })}
                                 fieldProps={{
                                     onChange: (val) => {
@@ -322,7 +322,7 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                             />         
                             <Select defaultValue={profile_draft==null?'':profile_draft!!.districtPbId} style={{width:'100%',marginTop:'-20px',marginBottom:'15px',color:'red!important;'}}
                                 options={districtPB?.map((it) => {
-                                    return { value: it.id, label: it.internalName };
+                                    return { value: it.id, label: it.name };
                                 })}
                             />
                         </Col>
@@ -332,12 +332,12 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                                 label="Sangkhat/ Commune" 
                                 name={'communePbId'}
                                 options={communePB?.map((it) => {
-                                    return { value: it.id, label: it.internalName };
+                                    return { value: it.id, label: it.name };
                                 })}
                             />
                             <Select defaultValue={profile_draft==null?'':profile_draft!!.communePbId} style={{width:'100%',marginTop:'-20px',marginBottom:'15px',color:'red!important;'}}
                                 options={communePB?.map((it) => {
-                                    return { value: it.id, label: it.internalName };
+                                    return { value: it.id, label: it.name };
                                 })}
                             />
                         </Col>
@@ -353,7 +353,7 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                                 label="City/ Province" 
                                 name={'provincePaId'}
                                 options={locations?.map((it) => {
-                                    return { value: it.id, label: it.internalName };
+                                    return { value: it.id, label: it.name };
                                 })}
                                 fieldProps={{
                                     onChange: (val) => {
@@ -364,7 +364,7 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                             />         
                             <Select defaultValue={profile_draft==null?'':profile_draft!!.provincePaId} style={{width:'100%',marginTop:'-20px',marginBottom:'15px',color:'red!important;'}}
                                 options={locations?.map((it) => {
-                                    return { value: it.id, label: it.internalName };
+                                    return { value: it.id, label: it.name };
                                 })}
                             />
                         </Col>
@@ -374,7 +374,7 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                                 label="Khan/ District" 
                                 name={'districtPaId'}
                                 options={districtPA?.map((it) => {
-                                    return { value: it.id, label: it.internalName };
+                                    return { value: it.id, label: it.name };
                                 })}
                                 fieldProps={{
                                     onChange: (val) => {
@@ -385,7 +385,7 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                             />      
                             <Select defaultValue={profile_draft==null?'':profile_draft!!.districtPaId} style={{width:'100%',marginTop:'-20px',marginBottom:'15px',color:'red!important;'}}
                                 options={districtPA?.map((it) => {
-                                    return { value: it.id, label: it.internalName };
+                                    return { value: it.id, label: it.name };
                                 })}
                             />
                         </Col>   
@@ -395,12 +395,12 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                                 label="Sangkhat/ Commune" 
                                 name={'communePaId'}
                                 options={communePA?.map((it) => {
-                                    return { value: it.id, label: it.internalName };
+                                    return { value: it.id, label: it.name };
                                 })}
                             />
                             <Select defaultValue={profile_draft==null?'':profile_draft!!.communePaId} style={{width:'100%',marginTop:'-20px',marginBottom:'15px',color:'red!important;'}}
                                 options={communePA?.map((it) => {
-                                    return { value: it.id, label: it.internalName };
+                                    return { value: it.id, label: it.name };
                                 })}
                             />
                         </Col>
@@ -435,7 +435,7 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                                 label="City/ Province" 
                                 name={'provinceCrId'}
                                 options={locations?.map((it) => {
-                                    return { value: it.id, label: it.internalName };
+                                    return { value: it.id, label: it.name };
                                 })}
                                 fieldProps={{
                                     onChange: (val) => {
@@ -446,7 +446,7 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                             />     
                             <Select defaultValue={profile_draft==null?'':profile_draft!!.provinceCrId} style={{width:'100%',marginTop:'-20px',marginBottom:'15px',color:'red!important;'}}
                                 options={locations?.map((it) => {
-                                    return { value: it.id, label: it.internalName };
+                                    return { value: it.id, label: it.name };
                                 })}
                             /> 
                         </Col>   
@@ -456,7 +456,7 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                                 label="Khan/ District" 
                                 name={'districtCrId'}
                                 options={districtCA?.map((it) => {
-                                    return { value: it.id, label: it.internalName };
+                                    return { value: it.id, label: it.name };
                                 })}
                                 fieldProps={{
                                     onChange: (val) => {
@@ -467,7 +467,7 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                             />    
                             <Select defaultValue={profile_draft==null?'':profile_draft!!.districtCrId} style={{width:'100%',marginTop:'-20px',marginBottom:'15px',color:'red!important;'}}
                                 options={districtCA?.map((it) => {
-                                    return { value: it.id, label: it.internalName };
+                                    return { value: it.id, label: it.name };
                                 })}
                             />
                         </Col>     
@@ -477,12 +477,12 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                                 label="Sangkhat/ Commune" 
                                 name={'communeCrId'}
                                 options={communeCA?.map((it) => {
-                                    return { value: it.id, label: it.internalName };
+                                    return { value: it.id, label: it.name };
                                 })}
                             />
                             <Select defaultValue={profile_draft==null?'':profile_draft!!.communeCrId} style={{width:'100%',marginTop:'-20px',marginBottom:'15px',color:'red!important;'}}
                                 options={communeCA?.map((it) => {
-                                    return { value: it.id, label: it.internalName };
+                                    return { value: it.id, label: it.name };
                                 })}
                             />
                         </Col>

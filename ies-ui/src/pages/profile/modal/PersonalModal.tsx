@@ -120,6 +120,21 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
             },
         });
     }
+    //
+    const onCloneAddress = async (nData:SaveEssProfile) => {  
+        // reload data
+        districtList(nData!!.provincePaId!!,3);
+        communeList(nData!!.districtPaId!!,3);
+        // bind data to current address
+        form.setFieldsValue({
+            provinceCrId:nData.provincePaId,
+            districtCrId:nData.districtPaId,
+            communeCrId:nData.communePaId,
+            homeCrNo:nData.homePaNo,
+            streetCr:nData.streetPa,
+            villageCrId:nData.villagePaId
+        }); 
+    }
     return <div>
         <ModalForm  {...rest} form={form} width={'40%'} title="Edit Personal Information"
             // onOpenChange={visible => {
@@ -251,7 +266,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                                 label="City/ Province" 
                                 name={'provincePbId'}
                                 options={locations?.map((it) => {
-                                    return { value: it.id, label: it.internalName };
+                                    return { value: it.id, label: it.name };
                                 })}
                                 fieldProps={{
                                     onChange: (val) => {
@@ -267,7 +282,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                                 label="Khan/ District" 
                                 name={'districtPbId'}
                                 options={districtPB?.map((it) => {
-                                    return { value: it.id, label: it.internalName };
+                                    return { value: it.id, label: it.name };
                                 })}
                                 fieldProps={{
                                     onChange: (val) => {
@@ -283,7 +298,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                                 label="Sangkhat/ Commune" 
                                 name={'communePbId'}
                                 options={communePB?.map((it) => {
-                                    return { value: it.id, label: it.internalName };
+                                    return { value: it.id, label: it.name };
                                 })}
                             />
                         </Col>
@@ -295,43 +310,46 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                 <ProCard bordered style={{backgroundColor:'#f5f5f5'}}> 
                     <Row>
                         <Col span={8} style={{padding:'3px'}}>
-                    <ProFormSelect 
-                        label="City/ Province" 
-                        name={'provincePaId'}
-                        options={locations?.map((it) => {
-                            return { value: it.id, label: it.internalName };
-                        })}
-                        fieldProps={{
-                            onChange: (val) => {
-                                setLoading(true);
-                                districtList(val,2); 
-                            }, 
-                        }}
-                    />     </Col> 
+                            <ProFormSelect 
+                                label="City/ Province" 
+                                name={'provincePaId'}
+                                options={locations?.map((it) => {
+                                    return { value: it.id, label: it.name };
+                                })}
+                                fieldProps={{
+                                    onChange: (val) => {
+                                        setLoading(true);
+                                        districtList(val,2); 
+                                    }, 
+                                }}
+                            />     
+                        </Col> 
                         <Col span={8} style={{padding:'3px'}}>   
-                    {/*  */}
-                    <ProFormSelect 
-                        label="Khan/ District" 
-                        name={'districtPaId'}
-                        options={districtPA?.map((it) => {
-                            return { value: it.id, label: it.internalName };
-                        })}
-                        fieldProps={{
-                            onChange: (val) => {
-                                setLoading(true);
-                                communeList(val,2); 
-                            }, 
-                        }}
-                    />         </Col> 
+                        {/*  */}
+                            <ProFormSelect 
+                                label="Khan/ District" 
+                                name={'districtPaId'}
+                                options={districtPA?.map((it) => {
+                                    return { value: it.id, label: it.name };
+                                })}
+                                fieldProps={{
+                                    onChange: (val) => {
+                                        setLoading(true);
+                                        communeList(val,2); 
+                                    }, 
+                                }}
+                            />         
+                        </Col> 
                     {/*  */}
                         <Col span={8} style={{padding:'3px'}}>
-                    <ProFormSelect 
-                        label="Sangkhat/ Commune" 
-                        name={'communePaId'}
-                        options={communePA?.map((it) => {
-                            return { value: it.id, label: it.internalName };
-                        })}
-                    /></Col>
+                            <ProFormSelect 
+                                label="Sangkhat/ Commune" 
+                                name={'communePaId'}
+                                options={communePA?.map((it) => {
+                                    return { value: it.id, label: it.name };
+                                })}
+                            />
+                        </Col>
                     </Row>
                     
                     <Flex vertical={false} gap="middle" style={{width:'100%'}}>
@@ -343,7 +361,9 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                 </ProCard>
 
                 {/* current address  */}
-                <div style={{marginTop:'10px'}}><Typography.Title level={5}>Current Address</Typography.Title> <Button><DeliveredProcedureOutlined /> Clone Permanent Address</Button></div> 
+                <div style={{marginTop:'10px'}}><Typography.Title level={5}>Current Address</Typography.Title> 
+                    <Button onClick={(e)=>onCloneAddress(form.getFieldsValue())}><DeliveredProcedureOutlined /> Clone Permanent Address</Button>
+                </div> 
                 <ProCard bordered style={{backgroundColor:'#f5f5f5'}}> 
                     <Row>
                         <Col span={8} style={{padding:'3px'}}>
@@ -351,7 +371,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                                 label="City/ Province" 
                                 name={'provinceCrId'}
                                 options={locations?.map((it) => {
-                                    return { value: it.id, label: it.internalName };
+                                    return { value: it.id, label: it.name };
                                 })}
                                 fieldProps={{
                                     onChange: (val) => {
@@ -367,7 +387,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                                 label="Khan/ District" 
                                 name={'districtCrId'}
                                 options={districtCA?.map((it) => {
-                                    return { value: it.id, label: it.internalName };
+                                    return { value: it.id, label: it.name };
                                 })}
                                 fieldProps={{
                                     onChange: (val) => {
@@ -383,7 +403,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                                 label="Sangkhat/ Commune" 
                                 name={'communeCrId'}
                                 options={communeCA?.map((it) => {
-                                    return { value: it.id, label: it.internalName };
+                                    return { value: it.id, label: it.name };
                                 })}
                             />
                         </Col> 

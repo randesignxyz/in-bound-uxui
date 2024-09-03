@@ -793,6 +793,12 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           'ROLE_HR_APPRAISAL_REQUEST_SM_EXECTIVE',
         ].some((it) => it === item),
       ) || false,
+      canAccessProbationEvaluation:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_HR_PROBATION_EVALUATION_SUBMIT', 'ROLE_HR_PROBATION_EVALUATION_SUPPORT'].some(
+          (it) => it === item,
+        ),
+      ) || false,
     canAccessWhmMenut:
       currentUser?.authorities.some((item) =>
         [         

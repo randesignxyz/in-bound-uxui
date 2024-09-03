@@ -1,0 +1,318 @@
+import { Button, Checkbox, Radio, Space, Spin, Tooltip, Typography } from "antd"
+import { AppraisalEmp, AppraisalEmpStatusTotal } from "../../data.types"
+import { useModel } from 'umi'
+import TableView from "@/components/DataCrud/TableView";
+import { SortOrder } from "antd/es/table/interface";
+import { simpleRequestActions } from "@/services/model";
+import { createService } from "../../services";
+import { Paging } from "@/services/API";
+import { formatDateTime } from "@/pages/utils";
+import Status from "@/components/Status";
+import { ExportOutlined, EyeOutlined, FileExcelOutlined } from "@ant-design/icons";
+import AppraisalFormQuickView from "../quick-view/index";
+import { useEffect, useRef, useState } from "react";
+import AppraisalRequestForm from "../../AppraisalSubmitForm";
+import { LightFilter, ProFormSelect } from "@ant-design/pro-components";
+import { ActionType } from '@ant-design/pro-table';
+import SubmitAllListModal from "./SubmitAllListModal";
+import { CheckboxChangeEvent } from "antd/es/checkbox";
+import { Model } from "../../model";
+import { DownloadData, downloadReport } from '@/services/apiGateway';
+import { replace } from "lodash";
+import moment from "moment";
+const { Link } = Typography;
+
+interface Props {
+    onDetail?: (data: AppraisalEmp) => void
+    forceRefresh: number
+}
+export interface AppraisalEmpAdvanceSearchParams {
+    status?: string
+    pendingFilter?: string[]
+    drafted?: boolean
+}
+interface LightFilterProp {
+    pendingFilter?: string[]
+}
+
+const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
+    const { data, modals } = Model();
+    const actionRef = useRef<ActionType>();
+    const cacheList = useModel('dataList');
+    const requestActions = simpleRequestActions();
+    const srv = createService({ request: requestActions })
+    const [appraisalEmp, setAppraisalEmp] = useState<AppraisalEmp>()
+    const [total, setTotal] = useState<AppraisalEmpStatusTotal>()
+    const [forceChange, setForceChange] = useState<number>(0)
+
+    const [advanceSearchParams, setAdvanceSearchParams] = useState<AppraisalEmpAdvanceSearchParams>({
+        status: 'ALL',
+    })
+    const [criteria, setCriteria] = useState<{ searchValue?: string; advanceSearch?: AppraisalEmpAdvanceSearchParams }>()
+    useEffect(() => {
+        srv.findAppraisalEmpStatusTotal().then((it: AppraisalEmpStatusTotal) => {
+            setTotal(it)
+        })
+    }, [forceChange])
+    useEffect(() => {
+        refeshTable()
+    }, [forceRefresh])
+
+    const onRequestHandler = (
+        criteria?: { searchValue?: string; advanceSearch?: AppraisalEmpAdvanceSearchParams },
+        pagination?: {
+            pageSize?: number;
+            current?: number;
+        },
+        sort?: Record<string, SortOrder>,
+    ) => {
+        var params = { ...criteria, keyword: criteria?.searchValue, advanceSearch: criteria?.advanceSearch || advanceSearchParams }
+        setCriteria(params)
+        return srv.fetchPaging({
+            criteria: params,
+            sort: sort,
+            pagination: pagination
+
+        }).then(it => {
+            return cacheList.cacheDataList({
+                type: 'appraisal-submit',
+                data: it
+            })
+        }) as Promise<Paging<AppraisalEmp>>
+    }
+    const quickViewHandler = (appEmp: AppraisalEmp) => {
+        modals.showModal('QuickViewAppraisalForm');
+        setAppraisalEmp(appEmp)
+    }
+    const refeshTable = () => {
+        setForceChange(v => v + 1)
+        actionRef?.current?.reload?.()
+    }
+    const createAppraisalFormHandler = () => {
+        modals.showModal('CreateAppraisalForm');
+    }
+
+    const submitAllHandler = () => {
+        modals.showModal('SubmitAllListView');
+    }
+    const onFilterStatusHandler = (values: LightFilterProp) => {
+        setAdvanceSearchParams((v) => ({
+            ...v,
+            pendingFilter: (values?.pendingFilter || []).length > 0 ? values?.pendingFilter : undefined
+        }))
+        actionRef?.current?.reload?.()
+    }
+    const onDraftedHandler = (e: CheckboxChangeEvent) => {
+        var value = e.target.checked
+        setAdvanceSearchParams((v) => ({
+            ...v,
+            drafted: value
+        }))
+        actionRef?.current?.reload?.()
+    }
+
+    const supTitle = (total: number) => {
+        return <sup
+            style={
+                {
+                    zIndex: 'auto',
+                    minWidth: '20px',
+                    height: '20px',
+                    padding: '0 6px',
+                    color: 'white',
+                    fontWeight: '400',
+                    fontSize: '12px',
+                    lineHeight: '20px',
+                    borderRadius: '10px',
+                    whiteSpace: 'nowrap',
+                    textAlign: 'center',
+                    backgroundColor: '#ff4d4f',
+                }
+            }>{total}</sup>
+    }
+
+
+    const dowloandData = (): DownloadData<{ searchValue?: string; advanceSearch?: AppraisalEmpAdvanceSearchParams }> => {
+        var direct = 'Direct'
+        var issued = 'Issued'
+        var reportName = replace('SettlementIncentive@@##Report', '@@', direct)
+        var params = { ...criteria, searchValue: criteria?.searchValue, advanceSearch: criteria?.advanceSearch || advanceSearchParams }
+        reportName = replace(reportName, '##', issued)
+        return {
+            reportName: 'performance-review-list-report',
+            fileName: `Performance-Review-List_${moment().toDate().toDateString()}`,
+            type: 'EXCEL',
+            data: params
+        }
+    }
+    const dowloandExcelHandler = () => {
+        return downloadReport<{ searchValue?: string; advanceSearch?: AppraisalEmpAdvanceSearchParams }>(requestActions)(dowloandData())
+    }
+    const cols = [
+        {
+            title: 'Employee No #',
+            sorter: 'empNo',
+            width: 140,
+            render: (_: any, r: any) => {
+                var vali = data.validationMsgList(r)
+                return (<Space size={1}>
+                    <Button
+                        type="link"
+                        size="small"
+                        icon={<EyeOutlined />}
+                        onClick={() => quickViewHandler(r)}
+                    />
+                    <Button
+                        size="small"
+                        type="link"
+                        icon={<ExportOutlined />}
+                        onClick={async () => {
+                            window.open(`/external/hrm/appraisal-submit/detail/${r.id}`, '_blank')?.focus();
+                        }}
+                    />
+                    <a onClick={() => { onDetail?.(r) }}>
+                        <Link type={(vali.length > 0) ? 'danger' : undefined}>
+                            <Tooltip
+                                title={(vali.length > 0) && vali.map(it => <div><b style={{ color: 'orange' }}>{it.title}: </b>{it.msg}</div>)}
+                                overlayStyle={{ maxWidth: '500px' }}
+                            >
+                                {r.empNo}
+                            </Tooltip>
+                        </Link>
+                    </a>
+                </Space>)
+            },
+        },
+        {
+            title: 'Employee Name',
+            // width: 180, 
+            dataIndex: 'empName', sorter: 'empName'
+        },
+        {
+            title: 'Employee(KH)', sorter: 'internalName', render(_: any, r: any) {
+                return r.internalName
+            },
+        },
+        { title: 'Business Unit', dataIndex: 'buName', sorter: 'buName' },
+        { title: 'Function', dataIndex: 'departmentName', sorter: 'function' },
+        { title: 'Job Title', dataIndex: 'jobTitle', sorter: 'jobTitle' },
+        { title: 'Self- Rating', dataIndex: 'rating1', sorter: 'rating1' },
+        {
+            title: 'FM Rating', dataIndex: 'rating2', sorter: 'rating2',
+            render: (_: any, r: any) => {
+                return (r?.rating2 == 0 ? '-' : r?.rating2 == -1.0 ? '-' : r.rating2)
+            }
+        },
+        {
+            title: 'Agreed Rating', dataIndex: 'rating5', sorter: 'rating5',
+            render: (_: any, r: any) => !r?.rating5 || r?.rating5 == 0 ? '-' : r?.rating5
+        },
+        { title: 'Modified By', sorter: 'modifiedBy', dataIndex: 'modifiedBy' },
+        {
+            title: 'Modified Date', sorter: 'modifiedDate', dataIndex: 'modifiedDate',
+            render(_: any, r: any) {
+                return r.modifiedDate && formatDateTime(r.modifiedDate)
+            }
+        },
+        {
+            title: 'Status', width: '100px', render: (_: any, r: any) => <><Status text={r.status} />
+                {r.actionStatus === 'DRAFTED' && r.currentDrafted ?
+                    <sup style={{
+                        zIndex: 'auto',
+                        minWidth: '20px',
+                        padding: '0px 6px 1px 6px',
+                        color: 'white',
+                        fontWeight: '400',
+                        fontSize: '10px',
+                        lineHeight: '20px',
+                        borderRadius: '10px',
+                        whiteSpace: 'nowrap',
+                        textAlign: 'center',
+                        backgroundColor: '#faad14fa',
+                    }}>Drafted</sup> : ''}
+            </>
+        }
+    ]
+    if (total?.accessRequest) {
+        cols.push({
+            title: 'Process Request Status', width: '120px',
+            render: (_: any, r: any) => <Status text={r.requestStatus || 'NA'} />
+        })
+    }
+    return <Spin spinning={requestActions.request?.loading}>
+        <TableView<AppraisalEmp, { searchValue?: string; advanceSearch?: AppraisalEmpAdvanceSearchParams }>
+            // advanceSearch            
+            cache
+            addButtonLabel={'New Probation Evaluation Form'}
+            tableProps={{
+                actionRef: actionRef,
+                options: { reload: false, density: false, fullScreen: false, setting: false }
+            }}
+            extraFilter={
+                <Space align="baseline" style={{ right: '12px' }}>
+                    <Radio.Group
+                        value={advanceSearchParams?.status || 'ALL'}
+                        onChange={(e) => {
+                            setAdvanceSearchParams((v) => ({
+                                ...v,
+                                status: e.target.value
+                            }))
+                            actionRef.current?.reloadAndRest?.()
+                        }}
+                    >
+                        <Radio.Button value="ALL">All</Radio.Button>
+                        <Radio.Button value="PENDING" style={{ paddingRight: '5px' }}>Pending {(total?.pending || 0 > 0) && supTitle(total?.pending || 0)}</Radio.Button>
+                        <Radio.Button value="COMPLETED">Completed</Radio.Button>
+                    </Radio.Group>
+                    {advanceSearchParams?.status === 'PENDING' &&
+                        <LightFilter<LightFilterProp>
+                            onValuesChange={(_, values) => {
+                                onFilterStatusHandler(values)
+
+                            }}
+                        >
+                            <ProFormSelect
+                                name="pendingFilter"
+                                width={280}
+                                label="Status"
+                                mode="multiple"
+                                initialValue={advanceSearchParams.pendingFilter}
+                                options={[
+                                    { label: 'Submitting', value: 'SUBMITTING' },
+                                    { label: 'Submitted', value: 'SUBMITTED' },
+                                    { label: 'Reviewed', value: 'REVIEWED' }
+                                ]}
+                            />
+
+                        </LightFilter>}
+                    {advanceSearchParams?.status === 'PENDING' && <Checkbox name="drafted" checked={advanceSearchParams?.drafted} onChange={onDraftedHandler}>Drafted{(total?.drafted || 0 > 0) && supTitle(total?.drafted || 0)}</Checkbox>}
+                    {(advanceSearchParams?.status === 'PENDING' && (total?.drafted || 0) > 1) && <Space>
+                        <Button type="primary" onClick={submitAllHandler}>Submit All</Button>
+                    </Space>}
+                </Space>
+
+            }
+            extraRightFilter={<Tooltip placement="bottom" title="Dowload Excel File"><Button icon={<FileExcelOutlined />} onClick={dowloandExcelHandler} /></Tooltip>}
+            actionHandlers={{
+                onAdd: createAppraisalFormHandler,
+                onFirstLoad: () => onRequestHandler(),
+                onRequest: onRequestHandler,
+            }}
+            columns={cols}
+        />
+        {appraisalEmp && modals.isVisible('QuickViewAppraisalForm') && <AppraisalFormQuickView refreshTable={refeshTable} appraisalEmp={appraisalEmp} open={modals.isVisible('QuickViewAppraisalForm')} onOpenModalChange={(v: any) => !v && modals.hideModal('QuickViewAppraisalForm')} />}
+        {modals.isVisible('CreateAppraisalForm') && <AppraisalRequestForm
+            open={modals.isVisible('CreateAppraisalForm')}
+            onOpenModalChange={(v: any) => !v && modals.hideModal('CreateAppraisalForm')}
+            refreshTable={refeshTable}
+        />}
+        {modals.isVisible('SubmitAllListView') && <SubmitAllListModal
+            open={modals.isVisible('SubmitAllListView')}
+            onOpenModalChange={(v: any) => !v && modals.hideModal('SubmitAllListView')}
+            refreshTable={refeshTable}
+        />
+        }
+    </Spin>
+}
+
+export default AppraisalList

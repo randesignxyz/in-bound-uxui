@@ -308,6 +308,23 @@ export default [
     access: 'canAccessAppraisalReaquest',
     component: './hrm/appraisal-request',
   },
+  {
+    path: '/hrm/probation-evaluation/:view/*',
+    name: 'probation-evaluation',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessProbationEvaluation',
+    component: './hrm/probation',
+  },
+  {
+    path: '/external/hrm/probation-evaluation/:view/*',
+    name: 'probation-evaluation',
+    icon: 'UnorderedListOutlined',
+    layout: false,
+    hideInMenu: 'true',
+    access: 'canAccessProbationEvaluation',
+    component: './hrm/probation',
+  },
   /**********HRM>>**************/
 
   /**********<<Sale**************/

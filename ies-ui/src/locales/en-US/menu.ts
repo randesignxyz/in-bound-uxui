@@ -168,4 +168,5 @@ export default {
   'menu.whm_issue_request': 'NCM Request',
   'menu.whm_inventory_item': 'Item',
   'menu.whm_inventory_empwhs': 'EMployee Warehouse',
+  'menu.probation_evaluation': 'Probation Evaluation',
 };

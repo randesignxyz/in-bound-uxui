@@ -149,13 +149,15 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
               remarks: it.remarks
             })) || [])}
             onSave={(itemId: number, qty: number, id?: number | undefined, remarks?: string | undefined) => {
+              if (!state.data?.detail?.id) {
+                throw Error("fetch to detect customer.")
+              }
               return CustomerServices.saveCustomerPOSM({
                 id: id,
                 itemId: itemId,
                 qty: qty,
                 remarks: remarks,
-                contractId: 0
-                // customerId: state.data?.detail?.id || 0
+                customerId: state.data?.detail?.id || 0
               })(requestActions)
             }}
             onDelete={(id) => CustomerServices.deleteCustomerPosm(id)(requestActions)}

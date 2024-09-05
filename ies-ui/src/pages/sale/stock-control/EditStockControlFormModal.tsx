@@ -122,8 +122,7 @@ const EditStockControlFormModal: React.FC<EditStockControlFormModalProps> = ({
                   optionLabelProp: 'label',
                   // dropdownMatchSelectWidth: 400,
                   filterOption: (input, option) =>
-                    (option?.label?.toString() || '').toLowerCase().indexOf(input.toLowerCase()) >=
-                    0,
+                    (option?.label?.toString() || '').toLowerCase().indexOf(input.toLowerCase()) >=0,
                 }}
                 options={data?.seList
                   ?.filter((it) => it.isRequester)

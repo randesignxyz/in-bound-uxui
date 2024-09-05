@@ -37,7 +37,6 @@ export const endpoint = (): {
     url: keycloakUri(),
     redirectUri: port == '80' || port.trim().length == 0 ? `${protocal}//${host}/` : `${protocal}//${host}:${port}/`,
   };
-
 };
 
 export const Auth = {

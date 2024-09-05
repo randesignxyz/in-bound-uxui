@@ -71,7 +71,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
           content: 'Are you sure?',
           onOk: async () => {
             try { 
-                data.otherFile = createFileOther;
+                data.otherFile = createFileOther||[];
                 data.isDelete = 0;
                 await ProfileServicesEss.saveEmergency(data)(requestActions); 
                 // call back fun
@@ -111,8 +111,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
         setModalVisible({ type: _type, payload: data });
         hideEducationViewModal(false);
     }
-    //  
-    var lng = ["","Spouse" ,"Parent","Parent in law","Brother","Sister","Cousin"];  
+    //   
     return <div>
         <Card> 
           <Space direction={"vertical"} style={{width:'100%'}}>
@@ -121,7 +120,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
                     <Button style={{display:(is_admin==2&&empId>0)?'':'none'}} onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}><PlusCircleFilled/> Add</Button>
 
                     <Button danger onClick={() => setModalEducationViewVisible({ type: 'VIEW', payload: profile.emergency})} 
-                        style={{display:(step>=2&&is_admin!=2)?'':'none'}}><EyeOutlined/> View edit</Button>
+                        style={{display:([7,5,4,3,2].find((element) => element == profile!!.ess.stepId))&&is_admin!=2?'':'none'}}><EyeOutlined/> View edit</Button>
 
                     {profile!!.ess.id!!<=0?'':<Button style={{display: ([7,5,2].find((element) => element == step))&&is_admin==0?'':'none'}}
                             onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}
@@ -149,7 +148,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
                     {
                         title: "Emergency Name", dataIndex: "emergencyName"
                     },{
-                        title: "Emergency Contact Relation", render: (dom, r) => {return lng[r.emergencyContactRelation]} 
+                        title: "Emergency Contact Relation", dataIndex: "emergencyContactRelationName" 
                     },{
                         title: "Emergency Phone", dataIndex: "emergencyPhone"
                     },{

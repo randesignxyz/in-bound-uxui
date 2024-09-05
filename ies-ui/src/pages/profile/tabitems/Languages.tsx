@@ -109,8 +109,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
     const onOpenForm = async (data:LanguageData,_type:string)=>{
         setModalVisible({ type: _type, payload: data });
         hideEducationViewModal(false);
-    }
-    var lng = ["","Khmer" ,"English","Chineses","Thai","Janpanese","Vietnamese","Other, please specify"];
+    } 
     return <div>
         <Card>
             <Space direction={"vertical"} style={{width:'100%'}}>
@@ -144,7 +143,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                     }}
                     columns={[
                         {
-                            title: "Languages", render: (dom, r) => {return lng[r.languageId]}
+                            title: "Languages", dataIndex: "languageName"
                         },{
                             title: "Level", dataIndex: "levelName"
                         },{

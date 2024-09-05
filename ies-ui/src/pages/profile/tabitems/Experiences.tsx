@@ -119,7 +119,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                         <Button style={{display:(is_admin==2&&empId>0)?'':'none'}} onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}><PlusOutlined/> Add</Button>
                     
                         <Button danger onClick={() => setModalEducationViewVisible({ type: 'VIEW', payload: null})} 
-                            style={{display:(step>=2&&is_admin!=2)?'':'none'}}><EyeOutlined/> View edit</Button>
+                            style={{display:([7,5,4,3,2].find((element) => element == profile!!.ess.stepId))&&is_admin!=2?'':'none'}}><EyeOutlined/> View edit</Button>
 
                         {profile!!.ess.id!!<=0?'':<Button style={{display: ([7,5,2].find((element) => element == step))&&is_admin==0?'':'none'}}
                                 onClick={() => setModalVisible({ type: 'ADD', payload: null })}

@@ -109,6 +109,7 @@ export default ({ onAdd, onEdit }: Props) => {
                             await ServicesEss.closeAnnounce({...record})(requestActions).then(it=>{
                             message.success('create successfully.'); 
                             actionRef?.current?.reloadAndRest?.();
+                            setActive(0);
                         }) 
                       } catch (error: any) {
                         message.error(error.message || 'Failed to created.');

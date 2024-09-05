@@ -6,7 +6,7 @@ import { Alert, message, Spin,Space, Modal,Button} from 'antd';
 import { history, useParams } from '@umijs/max';
 import { useEffect } from 'react';
 import { useState } from 'react';
-import { formatDateTime } from '../utils';
+import { formatDate, formatDateTime } from '../utils';
 import { ProfileData } from './data';
 import { EssProfileData, SaveEssProfile } from "./data.ess"
 import Personal from './tabitems/Personal';
@@ -54,7 +54,11 @@ function Profile() {
       content: 'Do you want to start modify data?',
       onOk: async () => {
         try {  
-          await ProfileServicesEss.saveEssProfile({...profile?.profile_draft, empId: profile?.id,step:step_id,openEssId:profile?.ess.id,otherFile:[],remark:'',status:true})(requestActions);  
+          if(step_id==2){ 
+            await ProfileServicesEss.saveEssProfile({...profile?.profile, empId: profile?.id,step:step_id,openEssId:profile?.ess.id,otherFile:[],remark:'',status:true})(requestActions); 
+          }else{ 
+            await ProfileServicesEss.saveEssProfile({...profile?.profile_draft, empId: profile?.id,step:step_id,openEssId:profile?.ess.id,otherFile:[],remark:'',status:true})(requestActions); 
+          }
           initData();  
         } catch (error: any) {
           message.error(error.message || 'Failed to created.');
@@ -123,8 +127,8 @@ function Profile() {
       const rs = await ProfileServices.fetchProfile(Number(id)).query(requestActions);
       // 
       if(rs?.profile_draft==null){  
-        var _step = (rs?.ess.id!!<=0)?0:1; 
-        setStep(_step);
+        // var _step = (rs?.ess.id!!<=0)?rs?.ess.stag:1; 
+        setStep(rs?.ess.stag);
       }
       else { 
         setStep(rs?.profile_draft.step!!);
@@ -146,18 +150,8 @@ function Profile() {
           <ProDescriptions.Item label="Location">{data?.location}</ProDescriptions.Item>
           <ProDescriptions.Item label="Function">{data?.functions}</ProDescriptions.Item>
           <ProDescriptions.Item label="Position">{data?.position}</ProDescriptions.Item>
-          <ProDescriptions.Item> </ProDescriptions.Item>
-          {/* <ProDescriptions.Item label="DOB">{data?.bod && formatDateTime(data.bod)}</ProDescriptions.Item> */}
-          {/* <ProDescriptions.Item label="Gender">{data?.gender}</ProDescriptions.Item> */}
-          <ProDescriptions.Item label="Start Date">{data?.dateJoined && formatDateTime(data.dateJoined)}</ProDescriptions.Item>
-          {/* <ProDescriptions.Item> </ProDescriptions.Item>
-          <ProDescriptions.Item style={{textAlign:'right',display:'initial'}}>
-            <Space style={{width: '100%'}} direction="horizontal">
-              ចាប់ពីថ្ងៃ {data?.dateJoined && formatDateTime(data.dateJoined)} ​ដល់ {data?.dateJoined && formatDateTime(data.dateJoined)}  
-              <Button style={{display:step==1?'':'none'}} onClick={()=>onStartModify(2)}><HistoryOutlined /> Start</Button>  
-            </Space>
-          </ProDescriptions.Item> */}
-
+          <ProDescriptions.Item> </ProDescriptions.Item> 
+          <ProDescriptions.Item label="Start Date">{data?.dateJoined && formatDateTime(data.dateJoined)}</ProDescriptions.Item> 
         </ProDescriptions>
       )}
     </RouteContext.Consumer>
@@ -272,7 +266,7 @@ function Profile() {
   }
 
   // stage
-  const _info = "ចាប់ពីថ្ងៃ  "+(profile?.ess.id!!<=0?'':formatDateTime(profile?.ess.startDate))+" ​ដល់  "+(profile?.ess.id!!<=0?'':formatDateTime(profile?.ess.endDate))+"";
+  const _info = "Period: From  "+(profile?.ess.id!!<=0?'':formatDate(profile?.ess.startDate))+" To  "+(profile?.ess.id!!<=0?'':formatDate(profile?.ess.endDate))+"";
   const _stag = ["Cancel Updated","Start","Started Modified","Reviewing","Rejected with Revoke","Revoke","Approval","Cancelled Submitted"];
   const _stag_message = [
     /*0*/"Cancel Updated",
@@ -290,7 +284,7 @@ function Profile() {
       {/*  
         checking open announcement expiry
       */}  
-      {profile?.ess.id!!<=0?'': profile?.ess.empClosed==2?'':
+      {profile?.ess.id!!<=0?'': profile?.ess.empClosed==2||profile?.ess.stag==8?'':
             <Message visible={(step==6&&Number(id)==0)?true:false}
               message={_stag[step]}
               description={_stag_message[step]}
@@ -315,10 +309,10 @@ function Profile() {
         onTabChange={onOperationTabChange}
         tabList={operationTabList} 
         footer={[ 
-          profile!!.ess.id!!<=0?'':<Button style={{display:(step==2&&Number(id)==0)?'':'none',color: 'red'}} onClick={()=>onStartModify(0)}><ExclamationCircleOutlined /> Cancel Update</Button>,          
+          profile!!.ess.id!!<=0?'':<Button style={{display:(step==2&&Number(id)==0)?'':'none',color: 'red'}} onClick={()=>onStartModify(8)}><ExclamationCircleOutlined /> Cancel Update</Button>,          
           profile!!.ess.id!!<=0?'':<Button type="primary" style={{display:([7,5,2].find((element) => element == step))&&Number(id)==0?'':'none'}} onClick={()=>onStartModify(3)}><EditOutlined/> Submit Update</Button>,
           profile!!.ess.id!!<=0?'':<Button style={{display:(step==3&&Number(id)==0)==true?'':'none',color: 'red'}} onClick={()=>onStartModify(7)}><HistoryOutlined/> Cancel Submitted</Button>,
-          profile!!.ess.id!!<=0?'':<Button style={{display:(step==4&&Number(id)==0)==true?'':'none',color: 'red'}} onClick={()=>onStartResubmit(5)}><HistoryOutlined/> Revoke</Button>, 
+          profile!!.ess.id!!<=0?'':<Button style={{display:(step==4&&Number(id)==0)==true?'':'none',color: 'red'}} onClick={()=>onStartResubmit(5)}><HistoryOutlined/> Re-Edit</Button>, 
 
           profile!!.ess.id!!<=0?'':<Button style={{color: 'red',display:(step==3&&Number(id)>0)==true?'':'none'}} onClick={()=>onRejected(4)}><EditOutlined/> Rejected</Button>,
           

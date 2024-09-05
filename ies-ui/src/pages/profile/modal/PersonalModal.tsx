@@ -420,7 +420,10 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                 <div style={{marginTop:'10px'}}>
                     <Space direction="horizontal">
                         <Typography.Title level={5}>Attachments </Typography.Title><Typography.Title level={5} style={{color:'red'}}> (Required*)</Typography.Title>
+                        
                     </Space>
+                    <div style={{fontSize:'12px'}}>- National ID attachment (Image File or PDF)</div>
+                    <div style={{fontSize:'12px'}}>- Passport attachment (Image File or PDF)</div> 
                 </div> 
                 <ProCard size="small" bordered>   
                     <FileUploader   

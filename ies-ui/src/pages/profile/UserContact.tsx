@@ -47,10 +47,10 @@ export default ({ profile,step,is_admin}: Props) => {
       title: item.type.name,
       subTitle: item.isMain && <StarTwoTone />,
       actions: [
-        <a key="edit" onClick={() => onEditHandler(item)} style={{display: step==2?'':'none'}}>
+        <a key="edit" onClick={() => onEditHandler(item)} style={{display: [7,5,4,3,2].find((element) => element == step)?'':'none'}}>
           <EditOutlined />
         </a>,
-        <a style={{display: step==2?'':'none'}} key="delete" onClick={() => deleteContractHandler(item)}>
+        <a style={{display: [7,5,4,3,2].find((element) => element == step)?'':'none'}} key="delete" onClick={() => deleteContractHandler(item)}>
           <DeleteOutlined />
         </a>,
       ],
@@ -91,6 +91,7 @@ export default ({ profile,step,is_admin}: Props) => {
       content: 'Are you sure?',
       onOk: async () => {
         try {
+          data.type = 'EDIT';
           await ProfileServices.deleteContact(contact.id)(requestActions);
           setContactList((v) => v.filter((it) => it.id !== contact.id));
         } catch (error: any) {
@@ -106,10 +107,12 @@ export default ({ profile,step,is_admin}: Props) => {
       content: 'Are you sure?',
       onOk: async () => {
         try {
+          data.type = modalVisible?.type||'';
           await ProfileServices.saveContact(data)(requestActions);
           const list = await ProfileServices.listContact(data.empId).query(requestActions);
           setContactList(list);
-          if (modalVisible?.type == 'EDIT') hideModal();
+          // if (modalVisible?.type == 'EDIT') 
+          hideModal();
         } catch (error: any) {
           message.error(error.message || 'Failed to save.');
         }
@@ -125,7 +128,7 @@ export default ({ profile,step,is_admin}: Props) => {
             // <Button danger onClick={() => setModalVisible({ type: 'VIEW', payload: undefined})} 
             //     style={{display:step>=2?'':'none'}}><EyeOutlined/> View edit</Button>, 
 
-            <Button style={{display: (step==2||step==7||step==5)&&is_admin==0?'':'none'}}
+            <Button style={{display: ([7,5,2].find((element) => element == step))&&is_admin==0?'':'none'}}
               onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}
               icon={<PlusCircleFilled />}
               key=" 3 "

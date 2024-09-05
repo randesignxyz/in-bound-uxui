@@ -50,23 +50,26 @@ export default ({visible,message,description,opentitle,type,step,cb,data,is_admi
         <Alert style={{width:'95%',margin:'auto'}} {...rest}
             message={<Typography.Title level={5}>{message}</Typography.Title>}
             description={<Space direction="vertical" style={{width:'100%'}}>
-                <ProCard bordered title={"Announcement Title"}>
+                {/*  */}
+                <ProCard bordered title={false} style={{display:step<2?'':'none'}}>
                     {opentitle}
                 </ProCard> 
-                <ProCard bordered title={"Issued Info"}>
+                {/*  */}
+                <ProCard bordered title={false}>
                     <Paragraph ellipsis={{rows: 2, expandable: true, symbol: 'more' }}>
                         {description} 
                     </Paragraph>
                 </ProCard>
+                {/*  */}
+                <Button danger size={'large'} style={{display:step==1?'':'none',width:"150px"}} onClick={()=>cb.onStartModify(2)}><HistoryOutlined /> Start</Button>  
             </Space> }
             type={type||"info"} 
             closable
             showIcon
-            action={
-                <Space direction="vertical"> 
-                  <Button danger style={{display:step==1?'':'none'}} onClick={()=>cb.onStartModify(2)}><HistoryOutlined /> Start</Button>  
-                </Space>
-              }
+            // action={
+            //     <Space direction="vertical"> 
+            //     </Space>
+            //   }
         /> 
     </div>
   </>

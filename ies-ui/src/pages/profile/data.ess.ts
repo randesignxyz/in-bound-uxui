@@ -65,6 +65,8 @@ export interface AttachmentFile {
 } 
 export interface EssProfileData {
   id?   : number; 
+  essProfId: number; 
+  openEssId: number; 
   provincePaId?   : number; 
   provincePbId?   : number; 
   provinceCrId?   : number; 
@@ -106,7 +108,10 @@ export interface EssProfileData {
 
   departmentId      : number;  
   status            : Boolean; 
-  otherFile         : FilesData[];
+  otherFile         : FilesData[]; 
+  step              : number; 
+  remark            : string;
+  attacheFile       : AttachmentFile[]; 
 }  
 export interface SaveEmergency {
   id?: number; 
@@ -133,6 +138,7 @@ export interface EmergencyData {
   empId:number;
   emergencyName: string; 
   emergencyContactRelation: number; 
+  emergencyContactRelationName: string; 
   emergencyPhone: string; 
   emergencyAddress: string; 
   homeNo: string; 
@@ -171,8 +177,9 @@ export interface LanguageData {
   empId:number;
   refId:number;
   languageId: number; 
-  languageName: number; 
+  languageName: string; 
   levelName: string; 
+  levelId: number; 
   description: string;  
   status:Boolean; 
   otherFile  :AttachmentFile[];
@@ -181,7 +188,7 @@ export interface RelationshipData {
   id?: number; 
   empId:number;
   relationshipId:number; 
-  typeId:number;
+  refId:number;
   relationshipName: number; 
   occupationId: string; 
   dateOfBirth: string;  
@@ -215,6 +222,7 @@ export interface SaveTraining {
   institution: string; 
   trainingCourse: string; 
   year: string; 
+  toYear: string; 
   description: string;  
   status:Boolean;
   type:string;
@@ -228,15 +236,19 @@ export interface TrainingData {
   institution : string; 
   typeId      : number;
   year        : moment.Moment;
+  toYear        : moment.Moment;
   duration    : string;
   description : string;  
   status      : Boolean;
   otherFile   : AttachmentFile[];
 }
 export interface ProfileTrainingData { 
-  data     : TrainingData[];  
-  oldData     : TrainingData[];  
-  newData     : TrainingData[];  
+  data            : TrainingData[];  
+  dataCert        : TrainingData[];  
+  oldData         : TrainingData[];  
+  newData         : TrainingData[];  
+  oldDataCert     : TrainingData[];  
+  newDataCert     : TrainingData[];  
   fileOldData     : FilesData[];  
   fileNewData     : FilesData[];   
   fileAllData     : FilesData[];   

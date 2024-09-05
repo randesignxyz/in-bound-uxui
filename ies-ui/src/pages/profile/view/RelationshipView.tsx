@@ -1,5 +1,5 @@
 import { Flex, ModalProps, Space, Typography } from "antd" 
-import { ModalForm, ProTable } from "@ant-design/pro-components"
+import { ModalForm, ProCard, ProTable } from "@ant-design/pro-components"
 import { RelationshipData } from "../data.ess" 
 import { EditOutlined,DeleteOutlined } from "@ant-design/icons"
 
@@ -15,12 +15,13 @@ interface Props extends ModalProps {
 }
 
 export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {  
-
-  var lng = ["N/A","Khmer" ,"English","Chineses","Thai","Janpanese","Vietnamese"];  
+ 
     return <>
-      <ModalForm title = "View Family Member Modified" {...rest} width={'90%'} submitter={false} > 
+      <ModalForm title = "View Family Member Modified" {...rest} width={'90%'} submitter={false} >  
         <Space direction={"vertical"} style={{width:'100%'}}>
-        <Typography.Title level={5}>Existing data </Typography.Title> 
+        {/* old  */}
+        <ProCard bordered> 
+        <Typography.Title level={5}>Existing Datas Modified </Typography.Title> 
         {/* existing data */} 
         <ProTable<RelationshipData> bordered
             dataSource={oldData}
@@ -35,9 +36,9 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
             }}
             columns={[
                 {
-                    title: "Relationship Name", dataIndex: "relationshipName"
+                    title: "Full Name (Family Name, Given Name)", dataIndex: "relationshipName"
                 },{
-                    title: "type_id", dataIndex: "typeName"
+                    title: "Relationship", dataIndex: "typeName"
                 },{
                     title: "Occupation", dataIndex: "occupationName"
                 },{
@@ -55,9 +56,12 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                         );
                     },
                 } 
-            ]}
+        ]}
         />
-         <Typography.Title level={5}>New records </Typography.Title> 
+        </ProCard>
+        {/* new records */}
+        <ProCard bordered>
+         <Typography.Title level={5}>New Records Added</Typography.Title> 
         {/* existing data */} 
         <ProTable<RelationshipData> bordered
             dataSource={newData}
@@ -72,9 +76,9 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
             }}
             columns={[
                 {
-                    title: "Relationship Name", dataIndex: "relationshipName"
+                    title: "Full Name (Family Name, Given Name)", dataIndex: "relationshipName"
                 },{
-                    title: "type_id", dataIndex: "typeName"
+                    title: "Relationship", dataIndex: "typeName"
                 },{
                     title: "Occupation", dataIndex: "occupationName"
                 },{
@@ -96,8 +100,9 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                         );
                     },
                 }  
-            ]}
+        ]}
         />
+        </ProCard>
       </Space>
     </ModalForm>
   </>

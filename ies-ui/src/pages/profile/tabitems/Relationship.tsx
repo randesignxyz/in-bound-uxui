@@ -91,8 +91,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
     const onOpenForm = async (data:RelationshipData,_type:string)=>{
         setModalVisible({ type: _type, payload: data });
         hideRelationshipViewModal(false);
-    }
-    var lng = ["","Khmer" ,"English","Chineses","Thai","Janpanese","Vietnamese","Other, please specify"];
+    } 
     return <div>
         <Card>
             <Space direction={"vertical"} style={{width:'100%'}}>
@@ -126,9 +125,9 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                     }}
                     columns={[
                         {
-                            title: "Relationship Name", dataIndex: "relationshipName"
+                            title: "Full Name (Family Name, Given Name)", dataIndex: "relationshipName"
                         },{
-                            title: "Type", dataIndex: "typeName"
+                            title: "Relationship", dataIndex: "typeName"
                         },{
                             title: "Occupation", dataIndex: "occupationName"
                         },{
@@ -179,7 +178,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
             );
             }}
             onFinish={(data) => {
-                return saveRelationshipHandler({ ...data, id: modalVisible?.type=='EDIT'?modalVisible?.payload?.relationshipId==null?modalVisible?.payload?.id: modalVisible?.payload?.relationshipId :(modalVisible?.payload?.id||0), empId: profile.id,status:true,type:modalVisible?.type });
+                return saveRelationshipHandler({ ...data, id: modalVisible?.type=='EDIT'?modalVisible?.payload?.refId==null?modalVisible?.payload?.id: modalVisible?.payload?.refId :(modalVisible?.payload?.id||0), empId: profile.id,status:true,type:modalVisible?.type });
             }}
         />
         

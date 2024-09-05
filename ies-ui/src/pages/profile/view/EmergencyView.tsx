@@ -16,14 +16,13 @@ interface Props extends ModalProps {
 }
 
 export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => { 
-
-    var lng = ["","Spouse" ,"Parent","Parent in law","Brother","Sister","Cousin"];  
+ 
     return <>
       <ModalForm title = "View emergency edit" {...rest} width={'90%'} submitter={false} > 
         <Space direction={"vertical"} style={{width:'100%'}}>
             
         <ProCard bordered>
-            <Typography.Title level={5}>Existing data </Typography.Title> 
+            <Typography.Title level={5}>Existing Datas Modified </Typography.Title> 
             {/* existing data */} 
             <ProTable<EmergencyData> 
                 dataSource={oldData}
@@ -41,7 +40,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                     {
                         title: "Emergency Name", dataIndex: "emergencyName"
                     },{
-                        title: "Emergency Contact Relation", render: (dom, r) => {return lng[r.emergencyContactRelation]} 
+                        title: "Emergency Contact Relation", dataIndex: "emergencyContactRelationName" 
                     },{
                         title: "Emergency Phone", dataIndex: "emergencyPhone"
                     },{
@@ -61,7 +60,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
             />
         </ProCard>
         <ProCard bordered>
-            <Typography.Title level={5}>New records </Typography.Title> 
+            <Typography.Title level={5}>New Records Added</Typography.Title> 
             {/* existing data */} 
             <ProTable<EmergencyData> bordered
                 dataSource={newData}
@@ -79,7 +78,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                     {
                         title: "Emergency Name", dataIndex: "emergencyName"
                     },{
-                        title: "Emergency Contact Relation", render: (dom, r) => {return lng[r.emergencyContactRelation]} 
+                        title: "Emergency Contact Relation", dataIndex: "emergencyContactRelationName" 
                     },{
                         title: "Emergency Phone", dataIndex: "emergencyPhone"
                     },{

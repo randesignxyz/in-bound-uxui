@@ -47,7 +47,7 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
             //current address
             districtList(data!!.provinceCrId!!,3);
             communeList(data!!.districtCrId!!,3);
-        }  
+        }   
     };  
     // 
     const districtList = async(val:number,typeId:number)=>{
@@ -90,10 +90,6 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
     }
     // 
     var MF = ["" ,"Male","Female"];
-    var MarriedStatus = ["" ,"Single","Married","Divorced","Widowed"];
-    var Rg = ["" ,"Buddhism","Islam"]; 
-    var relship = ["" ,"Hushand","Wife","Son","Daughter"]; 
-    var oc = ["" ,"Housewife","Student","Work","Farmer"]; 
     // 
     return <div>
         <ModalForm  {...rest} form={form} width={'40%'} title="View Edit Personal Information"
@@ -114,24 +110,24 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                     {/* short info */}
                     <Row> 
                         <Col span={12} style={{padding:'3px'}}>
-                            <ProFormText label="Name KH" name={'nameKh'} />
+                            <ProFormText label="Name KH" name={'nameKh'} allowClear={false} />
                             <ProFormText hidden={profile_draft==null?true:false} allowClear={false} 
                                 fieldProps={{ style: { color:'red',marginTop:'-10px' },value:`${profile_draft==null?'':profile_draft!!.nameKh!!}`}}  />  
                         </Col>
                         <Col span={12} style={{padding:'3px'}}>
-                            <ProFormText label="Name EN" name={'nameEn'} />
+                            <ProFormText label="Name EN" name={'nameEn'} allowClear={false} />
                             <ProFormText hidden={profile_draft==null?true:false} allowClear={false} 
                                 fieldProps={{ style: { color:'red',marginTop:'-10px' },value:`${profile_draft==null?'':profile_draft!!.nameEn!!}`}}  />
                         </Col> 
                     </Row>  
                     <Row>
                         <Col span={12}>
-                            <ProFormDatePicker label="Date of Birth" name={'date_birth'} />
+                            <ProFormDatePicker label="Date of Birth" name={'dateBirth'} allowClear={false} />
                             <ProFormText hidden={profile_draft==null?true:false} allowClear={false} 
                                 fieldProps={{ style: { color:'red',marginTop:'-10px' },value:`${profile_draft==null?'':profile_draft!!.dateBirth!!}`}}  />  
                         </Col>                
                         <Col span={12}>
-                            <ProFormSelect 
+                            <ProFormSelect allowClear={false} 
                                 label="Gender"
                                 // disabled = {!!data}
                                 name={'genderId'}
@@ -148,7 +144,7 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                     {/* <ProFormText label="Place of Birth" name={'place_birth'} />  */}
                     <Row>
                         <Col span={12} style={{padding:'3px'}}>
-                            <ProFormSelect 
+                            <ProFormSelect allowClear={false} 
                                 label="Marital Status"
                                 name={'maritalStatusId'}
                                 options={profile.marriedStatus?.map((it) => {
@@ -162,7 +158,7 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                             />
                         </Col>                
                         <Col span={12} style={{padding:'3px'}}>     
-                            <ProFormSelect 
+                            <ProFormSelect allowClear={false} 
                                 label="Religion"
                                 name={'religionId'}
                                 options={profile.religion?.map((it) => {
@@ -181,10 +177,10 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                     <Row>
                         <Col span={12} style={{padding:'3px'}}>
                             <ProFormCheckbox label="Married to OML Staff" name={"marriedWith"} />
-                            <Checkbox checked={profile_draft==null?'Uncheck':profile_draft!!.marriedWith==true?'Checked':'Uncheck'} />
+                            <Checkbox checked={profile_draft==null?false:profile_draft!!.marriedWith} />
                         </Col>
                         <Col span={12} style={{padding:'3px'}}>
-                            <ProFormDigit name={"spouseStaffId"} label="Spouse's OML Employee ID number"  />
+                            <ProFormDigit name={"spouseStaffId"} label="Spouse's OML Employee ID number"  allowClear={false} />
                             <ProFormText fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.spouseStaffId}`}} />
                         </Col>       
                     </Row>
@@ -248,15 +244,15 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                 <ProCard bordered style={{backgroundColor:'#f5f5f5'}}> 
                     <Row>
                         <Col span={8} style={{padding:'3px'}}>
-                            <ProFormText label="National ID" name={'nationalId'} />
+                            <ProFormText label="National ID" name={'nationalId'} allowClear={false} />
                             <ProFormText fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.nationalId}`}} />
                         </Col>                       
                         <Col span={8} style={{padding:'3px'}}>  
-                            <ProFormText label="Issued Date" name={'nationalIssuedDate'} />
+                            <ProFormText label="Issued Date" name={'nationalIssuedDate'} allowClear={false} />
                             <ProFormText fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.nationalIssuedDate}`}} />
                         </Col>   
                         <Col span={8} style={{padding:'3px'}}>
-                            <ProFormText label="Expiry Date" name={'nationalExpiryDate'}/>
+                            <ProFormText label="Expiry Date" name={'nationalExpiryDate'} allowClear={false} />
                             <ProFormText fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.nationalExpiryDate}`}} />
                         </Col>             
                     </Row>
@@ -266,15 +262,15 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                 <ProCard bordered style={{backgroundColor:'#f5f5f5'}}> 
                     <Row>            
                         <Col span={8} style={{padding:'3px'}}>  
-                            <ProFormText label="Passport Number" name={'passportNumber'}  />
+                            <ProFormText label="Passport Number" name={'passportNumber'} allowClear={false} />
                             <ProFormText fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.passportNumber}`}}  />
                         </Col>     
                         <Col span={8} style={{padding:'3px'}}>
-                            <ProFormDatePicker label="Issued Date" name={'passportIssuedDate'} />
+                            <ProFormDatePicker label="Issued Date" name={'passportIssuedDate'} allowClear={false} />
                             <ProFormText fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.passportIssuedDate}`}}  />
                         </Col>         
                         <Col span={8} style={{padding:'3px'}}>
-                            <ProFormDatePicker label="Expiry Date" name={'passportExpiryDate'} />
+                            <ProFormDatePicker label="Expiry Date" name={'passportExpiryDate'} allowClear={false} />
                             <ProFormText fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.passportExpiryDate}`}}  />
                         </Col>               
                     </Row>
@@ -285,7 +281,7 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                 <ProCard bordered style={{backgroundColor:'#f5f5f5'}}> 
                     <Row>
                         <Col span={8} style={{padding:'3px'}}>
-                            <ProFormSelect 
+                            <ProFormSelect allowClear={false} 
                                 label="City/ Province" 
                                 name={'provincePbId'}
                                 options={locations?.map((it) => {
@@ -308,7 +304,7 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                         {/*  */}
                         <Col span={8} style={{padding:'3px'}}>
                             <ProFormSelect 
-                                label="Khan/ District" 
+                                label="Khan/ District" allowClear={false} 
                                 name={'districtPbId'}
                                 options={districtPB?.map((it) => {
                                     return { value: it.id, label: it.name };
@@ -328,7 +324,7 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                         </Col>
                         {/*  */}
                         <Col span={8} style={{padding:'3px'}}>
-                            <ProFormSelect 
+                            <ProFormSelect allowClear={false} 
                                 label="Sangkhat/ Commune" 
                                 name={'communePbId'}
                                 options={communePB?.map((it) => {
@@ -349,7 +345,7 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                 <ProCard bordered style={{backgroundColor:'#f5f5f5'}}> 
                     <Row>
                         <Col span={8} style={{padding:'3px'}}>
-                            <ProFormSelect 
+                            <ProFormSelect allowClear={false} 
                                 label="City/ Province" 
                                 name={'provincePaId'}
                                 options={locations?.map((it) => {
@@ -370,7 +366,7 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                         </Col>
                             {/*  */}
                         <Col span={8} style={{padding:'3px'}}>
-                            <ProFormSelect 
+                            <ProFormSelect allowClear={false} 
                                 label="Khan/ District" 
                                 name={'districtPaId'}
                                 options={districtPA?.map((it) => {
@@ -391,7 +387,7 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                         </Col>   
                             {/*  */}
                         <Col span={8} style={{padding:'3px'}}>
-                            <ProFormSelect 
+                            <ProFormSelect allowClear={false} 
                                 label="Sangkhat/ Commune" 
                                 name={'communePaId'}
                                 options={communePA?.map((it) => {
@@ -408,17 +404,17 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                     {/*  */} 
                     <Row>
                         <Col span={8} style={{padding:'3px'}}>
-                            <ProFormText label="House No" name={'homePaNo'} />  
+                            <ProFormText label="House No" name={'homePaNo'} allowClear={false} />  
                             <ProFormText hidden={profile_draft==null?true:false} allowClear={false} 
                                 fieldProps={{ style: { color:'red',marginTop:'-10px' },value:`${profile_draft==null?'':profile_draft!!.homePaNo!!}`}}  />  
                         </Col>
                         <Col span={8} style={{padding:'3px'}}>
-                            <ProFormText label="Street" name={'streetPa'} /> 
+                            <ProFormText label="Street" name={'streetPa'} allowClear={false} /> 
                             <ProFormText hidden={profile_draft==null?true:false} allowClear={false} 
                                 fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.streetPa}`}}  />  
                         </Col>    
                             <Col span={8} style={{padding:'3px'}}>
-                            <ProFormText label="Group/Village" name={'villagePaId'} />
+                            <ProFormText label="Group/Village" name={'villagePaId'} allowClear={false} />
                             <ProFormText hidden={profile_draft==null?true:false} allowClear={false} 
                                 fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.villagePaId}`}}  />  
                         </Col> 
@@ -431,7 +427,7 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                 <ProCard bordered style={{backgroundColor:'#f5f5f5'}}>
                     <Row>
                         <Col span={8} style={{padding:'3px'}}>
-                            <ProFormSelect 
+                            <ProFormSelect allowClear={false} 
                                 label="City/ Province" 
                                 name={'provinceCrId'}
                                 options={locations?.map((it) => {
@@ -452,7 +448,7 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                         </Col>   
                         {/*  */}
                         <Col span={8} style={{padding:'3px'}}>
-                            <ProFormSelect 
+                            <ProFormSelect allowClear={false} 
                                 label="Khan/ District" 
                                 name={'districtCrId'}
                                 options={districtCA?.map((it) => {
@@ -473,7 +469,7 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                         </Col>     
                         {/*  */}
                         <Col span={8} style={{padding:'3px'}}>
-                            <ProFormSelect 
+                            <ProFormSelect allowClear={false} 
                                 label="Sangkhat/ Commune" 
                                 name={'communeCrId'}
                                 options={communeCA?.map((it) => {
@@ -490,15 +486,15 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                     {/*  */}  
                     <Row>
                         <Col span={8} style={{padding:'3px'}}>
-                            <ProFormText label="House No" name={'homeCrNo'} />  
+                            <ProFormText label="House No" name={'homeCrNo'} allowClear={false} />  
                             <ProFormText hidden={profile_draft==null?true:false} allowClear={false} fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.homeCrNo!!}`}}  /> 
                         </Col>
                         <Col span={8} style={{padding:'3px'}}>
-                            <ProFormText label="Street" name={'streetCr'} /> 
+                            <ProFormText label="Street" name={'streetCr'} allowClear={false} /> 
                             <ProFormText hidden={profile_draft==null?true:false} allowClear={false} fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.streetCr}`}}  /> 
                         </Col>
                         <Col span={8} style={{padding:'3px'}}>
-                            <ProFormText label="Group/Village" name={'villageCrId'} />
+                            <ProFormText label="Group/Village" name={'villageCrId'} allowClear={false} />
                             <ProFormText hidden={profile_draft==null?true:false} allowClear={false} fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.villageCrId}`}}  />   
                         </Col>
                     </Row>

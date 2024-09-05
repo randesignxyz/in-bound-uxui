@@ -21,7 +21,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
     return <>
       <ModalForm title = "View experience edit" {...rest} width={'90%'} submitter={false} > 
         <Space direction={"vertical"} style={{width:'100%'}}>
-        <Typography.Title level={5}>Existing data </Typography.Title> 
+        <Typography.Title level={5}>Existing Datas Modified </Typography.Title> 
         {/* existing data */} 
         <ProTable<ExperienceData> bordered
             dataSource={oldData}
@@ -66,7 +66,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                 }  
             ]}
         />
-         <Typography.Title level={5}>New records </Typography.Title> 
+         <Typography.Title level={5}>New Records Added </Typography.Title> 
         {/* existing data */} 
         <ProTable<ExperienceData> bordered
             dataSource={newData}

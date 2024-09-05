@@ -102,7 +102,7 @@ export default ({ profile,data,locations,type,isAdmin,empId, cb, ...rest }: Prop
         });
     }
     // 
-    return <ModalForm  {...rest} form={form} width={'30%'} title={!!data?"Edit Emergency":"Add Emergency"}  
+    return <ModalForm  {...rest} form={form} width={'35%'} title={!!data?"Edit Emergency":"Add Emergency"}  
             submitter={isAdmin==2&&empId>0?
                 {
                     render: () => { 
@@ -134,11 +134,11 @@ export default ({ profile,data,locations,type,isAdmin,empId, cb, ...rest }: Prop
             <ProCard bordered> 
                 <Row>
                     <Col span={8} style={{padding:'3px'}}>
-                        <ProFormSelect 
+                        <ProFormSelect rules={[{ required: true }]}
                             label="City/ Province" 
                             name={'provinceId'}
                             options={locations?.map((it) => {
-                                return { value: it.id, label: it.internalName };
+                                return { value: it.id, label: it.name };
                             })}
                             fieldProps={{
                                 onChange: (val) => {
@@ -150,11 +150,11 @@ export default ({ profile,data,locations,type,isAdmin,empId, cb, ...rest }: Prop
                     </Col>   
                     <Col span={8} style={{padding:'3px'}}>   
                         {/*  */}
-                        <ProFormSelect 
+                        <ProFormSelect rules={[{ required: true }]}
                             label="Khan/ District" 
                             name={'districtId'}
                             options={district?.map((it) => {
-                                return { value: it.id, label: it.internalName };
+                                return { value: it.id, label: it.name };
                             })}
                             fieldProps={{
                                 onChange: (val) => {
@@ -166,11 +166,11 @@ export default ({ profile,data,locations,type,isAdmin,empId, cb, ...rest }: Prop
                     </Col>   
                     <Col span={8} style={{padding:'3px'}}>     
                     {/*  */}
-                        <ProFormSelect 
+                        <ProFormSelect rules={[{ required: true }]}
                             label="Sangkhat/ Commune" 
                             name={'communeId'}
                             options={commune?.map((it) => {
-                                return { value: it.id, label: it.internalName };
+                                return { value: it.id, label: it.name };
                             })}
                         />
                     </Col>
@@ -178,24 +178,24 @@ export default ({ profile,data,locations,type,isAdmin,empId, cb, ...rest }: Prop
                 {/*  */}
                 <Row>
                     <Col span={8} style={{padding:'3px'}}>   
-                        <ProFormText label="House No" name={'homeNo'} /> 
+                        <ProFormText label="House No" name={'homeNo'} rules={[{ required: true }]}/> 
                     </Col>
                         <Col span={8} style={{padding:'3px'}}>    
-                        <ProFormText label="Street" name={'street'} /> 
+                        <ProFormText label="Street" name={'street'} rules={[{ required: true }]}/> 
                     </Col>
                     <Col span={8} style={{padding:'3px'}}>   
-                        <ProFormText label="Group/Village" name={'villageId'} /> 
+                        <ProFormText label="Group/Village" name={'villageId'} rules={[{ required: true }]}/> 
                     </Col>
                 </Row>
             </ProCard>
             
             {/* Attachment files  */} 
-            <div style={{marginTop:'10px'}}>
+            {/* <div style={{marginTop:'10px'}}>
                 <Space direction="horizontal">
                     <Typography.Title level={5}>Attachments </Typography.Title><Typography.Title level={5} style={{color:'red'}}> (Required*)</Typography.Title>
                 </Space>
-            </div> 
-            <ProCard size="small" bordered>   
+            </div>  */}
+            {/* <ProCard size="small" bordered>   
                 <FileUploader   
                     required={false}  
                     service="FILE" onSetFiles={f=>setUpladFileHandle?.(f)}
@@ -220,7 +220,7 @@ export default ({ profile,data,locations,type,isAdmin,empId, cb, ...rest }: Prop
                         }}
                     />
                 </Image.PreviewGroup>
-            </ProCard>
+            </ProCard> */}
         </Spin>
     </ModalForm>
 }

@@ -109,14 +109,22 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
                     return { value: it.id, label: it.titleName };
                 })}  
             /> 
-            <ProFormText label="Level" name='levelName' rules={[{ required: true }]}/>  
+            {/* <ProFormText label="Level" name='levelName' rules={[{ required: true }]}/>   */}
+            <ProFormSelect rules={[{ required: true }]} allowClear={true}  
+                name="levelId" label = "Level" placeholder="Level"  
+                showSearch 
+                mode="single" 
+                options={profile.level?.map((it) => {
+                    return { value: it.id, label: it.titleName };
+                })}  
+            /> 
             <ProFormTextArea label="Description" name='description' /> 
         </ProCard>
         
         {/* Attachment files  */} 
         <div style={{marginTop:'10px'}}>
             <Space direction="horizontal">
-                <Typography.Title level={5}>Attachments </Typography.Title><Typography.Title level={5} style={{color:'red'}}> (Required*)</Typography.Title>
+                <Typography.Title level={5}>Attachments </Typography.Title> 
             </Space>
         </div> 
         <ProCard size="small" bordered>   

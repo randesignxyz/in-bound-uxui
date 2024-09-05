@@ -16,12 +16,11 @@ interface Props extends ModalProps {
 }
 
 export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {  
-
-  var lng = ["N/A","Khmer" ,"English","Chineses","Thai","Janpanese","Vietnamese"];  
+ 
     return <>
       <ModalForm title = "View language edit" {...rest} width={'90%'} submitter={false} > 
         <Space direction={"vertical"} style={{width:'100%'}}>
-        <Typography.Title level={5}>Existing data </Typography.Title> 
+        <Typography.Title level={5}>Existing Datas Modified</Typography.Title> 
         {/* existing data */} 
         <ProTable<LanguageData> bordered
             dataSource={oldData}
@@ -36,7 +35,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
             }}
             columns={[
                 {
-                    title: "Languages", render: (dom, r) => {return lng[r.languageId]}
+                    title: "Languages", dataIndex: "languageName"
                 },{
                     title: "Level", dataIndex: "levelName"
                 },{
@@ -54,7 +53,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                 } 
             ]}
         />
-         <Typography.Title level={5}>New records </Typography.Title> 
+         <Typography.Title level={5}>New Records Added</Typography.Title> 
         {/* existing data */} 
         <ProTable<LanguageData> bordered
             dataSource={newData}
@@ -69,7 +68,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
             }}
             columns={[
                 {
-                    title: "Languages", render: (dom, r) => {return lng[r.languageId]}
+                    title: "Languages", dataIndex: "languageName"
                 },{
                     title: "Level", dataIndex: "levelName"
                 },{

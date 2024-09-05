@@ -146,7 +146,7 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb, ...rest }: Pr
         {/* Attachment files  */} 
         <div style={{marginTop:'10px'}}>
             <Space direction="horizontal">
-                <Typography.Title level={5}>Education Document</Typography.Title><Typography.Title level={5} style={{color:'red'}}>(Required*)</Typography.Title>
+                <Typography.Title level={5}>Education Document</Typography.Title>
             </Space>
             <div style={{fontSize:'12px'}}>(Degree and transcript or other related documents)</div>
         </div> 

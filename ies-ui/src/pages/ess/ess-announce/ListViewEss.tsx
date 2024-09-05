@@ -103,7 +103,7 @@ export default ({ profile }: Props) =>{
         },
         {
             key: "3",
-            label: "ForReject",
+            label: "Reject",
             itemIcon: <ExclamationCircleOutlined />,
             style:{color:[3].find((element) => element == record.stepId)?'red':''},
             disabled:([3].find((element) => element == record.stepId))?false:true,

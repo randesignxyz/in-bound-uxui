@@ -2,7 +2,7 @@ import { Flex, ModalProps, Space, Typography } from "antd"
 import { ModalForm, ProCard, ProTable } from "@ant-design/pro-components"
 import { TrainingData } from "../data.ess" 
 import { EditOutlined,DeleteOutlined } from "@ant-design/icons"
-import { formatYear } from "@/pages/utils";
+import { formatDate, formatYear } from "@/pages/utils";
 
 interface Props extends ModalProps {
     // data: BasicContactData;
@@ -17,13 +17,12 @@ interface Props extends ModalProps {
 }
 
 export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {   
-    
-    var type = ["" ,"Training","Certification"];
+     
     return <>
       <ModalForm title = "View training edit" {...rest} width={'90%'} submitter={false} > 
         <Space direction={"vertical"} style={{width:'100%'}}>
             <ProCard bordered>
-                <Typography.Title level={5}>Existing data </Typography.Title> 
+                <Typography.Title level={5}>Existing Datas Modified </Typography.Title> 
                 {/* existing data */} 
                 <ProTable<TrainingData> bordered
                     dataSource={oldData}
@@ -42,21 +41,17 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                         },{
                             title: "Institution", dataIndex: "institution"
                         },{
-                            title: "Year", 
+                            title: "Date", 
                             dataIndex: "year",
                             render:(_, r) => {
-                                return formatYear(r.year)
+                                return (formatDate(r.year) +" - "+ formatDate(r.toYear));
                             }
                         },{
                             title: "Duration", dataIndex: "duration"
                         },{
                             title: "Description", dataIndex: "description"
-                        },{
-                            title: "Type",  
-                            render:(_, r) => {
-                                return type[r.typeId]
-                            }
-                        },{   width: '70px',
+                        },{   
+                            width: '70px',
                             render: (_, r) => { 
                                 return ( <Flex vertical={false} justify='space-between'>
                                     <a style={{display: isAdmin==0?'':'none'}} title="Edit item" 
@@ -74,7 +69,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                 />
             </ProCard>
             <ProCard bordered>
-                <Typography.Title level={5}>New records </Typography.Title> 
+                <Typography.Title level={5}>New Records Added</Typography.Title> 
                 {/* existing data */} 
                 <ProTable<TrainingData> bordered
                     dataSource={newData}
@@ -93,21 +88,17 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                         },{
                             title: "Institution", dataIndex: "institution"
                         },{
-                            title: "Year", 
+                            title: "Date", 
                             dataIndex: "year",
                             render:(dom, r) => {
-                                return formatYear(r.year)
+                                return (formatDate(r.year) +" - "+ formatDate(r.toYear));
                             }
                         },{
                             title: "Duration", dataIndex: "duration"
                         },{
                             title: "Description", dataIndex: "description"
-                        },{
-                            title: "Type",  
-                            render:(_, r) => {
-                                return type[r.typeId]
-                            }
-                        },{   width: '70px',
+                        },{   
+                            width: '70px',
                             render: (_, r) => {
                                 return ( <Flex vertical={false} justify='space-between'>
                                     <a style={{display: isAdmin==0?'':'none'}} title="Edit item" 

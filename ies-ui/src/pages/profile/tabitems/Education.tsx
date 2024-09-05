@@ -73,7 +73,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
     };
     const saveEducationHandler = async (data: EducationData) => {
         Modal.confirm({
-          title: 'Created eduction',
+          title: 'Save eduction',
           content: 'Are you sure?',
           onOk: async () => {
             try {
@@ -111,9 +111,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
           },
         });
     };
-
-    var lng = ["N/A","Khmer" ,"English","Chineses","Thai","Janpanese","Vietnamese"];  
-    var dg = ["N/A","Primary school" ,"Secondary school","Higher school","Associate degree","Bachelor degree","Master degree","Phd"]; 
+ 
     // open form emergency
     const onOpenForm = async (data:EducationData,_type:string,)=>{
         setModalVisible({ type: _type, payload: data });
@@ -127,7 +125,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                         <Button style={{display:(is_admin==2&&empId>0)?'':'none'}} onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}><PlusCircleFilled/> Add</Button>
 
                         <Button danger onClick={() => setModalEducationViewVisible({ type: 'VIEW', payload: null})} 
-                            style={{display:step>=2&&is_admin!=2?'':'none'}}><EyeOutlined/> View edit</Button> 
+                            style={{display:([7,5,4,3,2].find((element) => element == profile!!.ess.stepId))&&is_admin!=2?'':'none'}}><EyeOutlined/> View edit</Button> 
 
                         {profile!!.ess.id!!<=0?'':<Button style={{display: ([7,5,2].find((element) => element == step))&&is_admin==0?'':'none'}}
                                 onClick={() => setModalVisible({ type: 'ADD', payload: null })}
@@ -161,7 +159,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                         },{
                             title: "Country of Education Institution", dataIndex: "countryEducationCenterName" 
                         },{
-                            title: "Status", dataIndex: "statstatusNameusId" 
+                            title: "Status", dataIndex: "statusName" 
                         },
                         {   width: 100,
                             render: (dom, r) => {

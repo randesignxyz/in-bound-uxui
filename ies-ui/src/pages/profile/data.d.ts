@@ -1,6 +1,6 @@
 import { LookupDataItem2 } from "@/services/data";
 import moment from "moment";
-import { EssLookupData, LocationData } from "./data.ess";
+import { EssLookupData, LocationData, SaveEssProfile } from "./data.ess";
 
 export type AdvancedOperation1 = {
   key: string;
@@ -62,7 +62,7 @@ export interface ProfileData {
   jobs        : JobData[];
   roles       : string[];
   emergency   : EmergencyData[]; 
-  profile     : EssProfileData;  
+  profile     : SaveEssProfile;  
   profile_draft   : SaveEssProfile;  
   profile_adr_pb  : EssProfileAdrData;  
   profile_adr_pm  : EssProfileAdrData;  
@@ -84,21 +84,22 @@ export interface ProfileData {
   status          : EssLookupData[];    
   language        : EssLookupData[];    //language
   coei            : EssLookupData[];    //Country of Education Institution
+  level           : EssLookupData[];    //language
 }
 export interface EssOpenData{  
-  id?: number;  
-  empId : number; 
-  stepId : number; 
-  openEssName : string; 
-  startDate    : Moment;  
-  endDate      : Moment; 
-  createdDate  : Moment; 
-  createdBy    : string; 
-  description  : string;  
-  status       : Boolean;
-  empClosed  : number?=0;
-  opening      : number;
-  stag      : number;
+  id?           : number;  
+  empId         : number; 
+  stepId        : number; 
+  openEssName   : string; 
+  startDate     : Moment;  
+  endDate       : Moment; 
+  createdDate   : Moment; 
+  createdBy     : string; 
+  description   : string;  
+  status        : Boolean;
+  empClosed     : number?=0;
+  opening       : number;
+  stag          : number;
 } 
 
 export interface BasicContactData {
@@ -117,6 +118,7 @@ export interface BasicContactData {
 export interface SaveContract {
   id?: number;
   typeId: number;
+  type: string;
   empId: number;
   contact: string;
   isMain?: boolean;

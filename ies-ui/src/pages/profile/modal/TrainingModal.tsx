@@ -1,5 +1,5 @@
 import { LookupDataItem2 } from "@/services/data"
-import { ModalForm, ModalFormProps, ProFormTextArea, ProFormDatePicker, ProForm, ProFormText,ProCard, ProFormSelect } from "@ant-design/pro-components" 
+import { ModalForm, ModalFormProps, ProFormTextArea, ProFormDatePicker, ProForm, ProFormText,ProCard, ProFormSelect, ProFormDateRangePicker, ProFormDigit } from "@ant-design/pro-components" 
 import { TrainingData, SaveTraining, FilesData } from "../data.ess"
 import { useEffect,useState } from 'react';
 import FileUploader , { UploadType } from '@/components/Attachment/FileUploader';
@@ -36,7 +36,10 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
         setImageList(list); 
         // 
         if(!!data){
-            form.setFieldsValue(data!!);
+
+                var dataRange= [data.year,data.toYear];
+
+            form.setFieldsValue({...data!!,year:dataRange});
         }
         else{
             form.resetFields();
@@ -52,7 +55,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
     const onAdminSubmit = async ()=>{
         const bmForm = await form.validateFields(); 
         Modal.confirm({
-            title: 'Save Emergency',
+            title: 'Save Training',
             content: 'Are you sure?',
             onOk: async () => {
               try { 
@@ -70,7 +73,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
         });
     }
     // 
-    return <ModalForm  {...rest} form={form} width={'30%'} title={!!data?"Edit Training/Certification":"Add Training/Certification"}
+    return <ModalForm  {...rest} form={form} width={'30%'} title={!!data?"Edit Training":"Add Training"}
         // onOpenChange={visible => {
         //     form.resetFields()
         //     rest.onOpenChange?.(visible)
@@ -91,25 +94,16 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
                 } 
         > 
         <ProCard bordered> 
-            <ProFormText label="Courses" name={'trainingCourse'} rules={[{ required: true }]} placeholder={"courses"}/> 
+            <ProFormText label="Training Courses" name={'trainingCourse'} rules={[{ required: true }]} placeholder={"courses"}/> 
             <ProFormText label="Institution" name={'institution'} rules={[{ required: true }]} placeholder={"institution"}/> 
             <Row>              
-                <Col span={12} style={{padding:'3px'}}>  
-                    <ProFormSelect rules={[{ required: true }]} placeholder={"Type"}
-                        label="Type" 
-                        name={'typeId'}
-                        mode="single" 
-                        options={[
-                                { value: 1, label: "Training" },
-                                { value: 2, label: "Certification"}  
-                            ]}  
-                    />
-                </Col>     
-                <Col span={12} style={{padding:'3px'}}>  
-                    <ProFormDatePicker picker="year" label="Year" name={'year'} rules={[{ required: true }]} placeholder={"in year"}/> 
-                </Col>            
-                <Col span={12} style={{padding:'3px'}}>  
-                    <ProFormText label="Duration" name={'duration'} placeholder={"duration"}/>
+                <Col span={24} style={{padding:'3px'}}>  
+                    <ProFormDateRangePicker label="Date" name={"year"} />
+                </Col>      
+            </Row> 
+            <Row>              
+                <Col span={24} style={{padding:'3px'}}>  
+                    <ProFormDigit label="Duration(Hours)" name={'duration'} placeholder={"duration"}/>
                 </Col>       
             </Row> 
             <ProFormTextArea label="Description" name={'description'} placeholder={"description"}/> 
@@ -119,7 +113,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
         {/* Attachment files  */} 
         <div style={{marginTop:'10px'}}>
             <Space direction="horizontal">
-                <Typography.Title level={5}>Attachments </Typography.Title><Typography.Title level={5} style={{color:'red'}}> (Required*)</Typography.Title>
+                <Typography.Title level={5}>Attachments</Typography.Title>
             </Space>
         </div> 
         <ProCard size="small" bordered>   

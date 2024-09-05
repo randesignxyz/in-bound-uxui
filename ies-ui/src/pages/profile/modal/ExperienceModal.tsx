@@ -27,6 +27,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
     const [form] = ProForm.useForm<ExperienceData>(); 
     const [imageList, setImageList] = useState<FilesData[]>([]);
     const [createFileOther, selectedFileOther] = useState<any>();  
+    const [isOther, setIsOtherVisible] = useState(true);
     
     useEffect(() => {
         initData();
@@ -40,6 +41,13 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
         }
         else{
             form.resetFields();
+        }
+        // 
+        if(data?.countryId==76){
+            setIsOtherVisible(false);
+        }
+        else{ 
+            setIsOtherVisible(true);
         }
     }; 
 
@@ -122,32 +130,39 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
                         showSearch
                         options={profile.coei?.map((it) => {
                             return { value: it.id, label: it.titleName };
-                        })} 
+                        })}
+                        fieldProps={{
+                            onChange: (val) => { 
+                                if(val==76){
+                                    setIsOtherVisible(false);
+                                }else{ 
+                                    setIsOtherVisible(true);
+                                }
+                            }, 
+                        }} 
                     />
                 </Col> 
-                <Col span={12} style={{padding:'3px'}}>     
+                <Col span={12} style={{padding:'3px'}} hidden={isOther}>     
                     <ProFormSelect 
                         showSearch
                         label="City/ Province" 
                         name={'provinceId'}
                         options={profile.essLocation?.map((it) => {
-                            return { value: it.id, label: it.internalName };
+                            return { value: it.id, label: it.name };
                         })} 
                     />  
                 </Col>  
-            </Row>
-            <Row>
-                <Col span={24} style={{padding:'3px'}}> 
-                    <ProFormText label="Other, please specify" name={'locationRemark'} /> 
+                <Col span={24} hidden={!isOther} > 
+                    <ProFormText label="City/ Province" name={'locationRemark'} /> 
                 </Col>  
-            </Row>
+            </Row> 
             </ProCard>
             <ProFormTextArea label="Description" name={'description'} /> 
         
         {/* Attachment files  */} 
         <div style={{marginTop:'10px'}}>
             <Space direction="horizontal">
-                <Typography.Title level={5}>Attachments </Typography.Title><Typography.Title level={5} style={{color:'red'}}> (Required*)</Typography.Title>
+                <Typography.Title level={5}>Attachments </Typography.Title> 
             </Space>
         </div> 
         <ProCard size="small" bordered>   

@@ -2,6 +2,7 @@ import addon from '@/assets/addon.png';
 import carcheck from '@/assets/car-check.png';
 import dashboard from '@/assets/dashboard.png';
 import fleet from '@/assets/fleet.png';
+import requestCar from '@/assets/bookingcar.png';
 import fuelStation from '@/assets/gas-station.png';
 import fuelStock from '@/assets/oil-tank.png';
 import vehicletool from '@/assets/vehicle-tools.png';
@@ -27,10 +28,10 @@ export default () => {
       icon: fleet,
     },{
       id: 'bookingcar',
-      name: 'bookingcar',
+      name: 'Request Car',
       description: 'Booking Car List',
       link: `${FleetPaths.fleet}/carbooking`,
-      icon: fleet,
+      icon: requestCar,
     },
     {
       id: 'maintenance',

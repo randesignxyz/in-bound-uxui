@@ -11,7 +11,7 @@ import Status from "@/components/Status";
 import { ExportOutlined, EyeOutlined, FileExcelOutlined } from "@ant-design/icons";
 import AppraisalFormQuickView from "../quick-view/index";
 import { useEffect, useRef, useState } from "react";
-import AppraisalRequestForm from "../../AppraisalSubmitForm";
+import ProbationEvaluationForm from "../../ProbationEvaluationForm";
 import { LightFilter, ProFormSelect } from "@ant-design/pro-components";
 import { ActionType } from '@ant-design/pro-table';
 import SubmitAllListModal from "./SubmitAllListModal";
@@ -300,8 +300,9 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
             }}
             columns={cols}
         />
-        {appraisalEmp && modals.isVisible('QuickViewAppraisalForm') && <AppraisalFormQuickView refreshTable={refeshTable} appraisalEmp={appraisalEmp} open={modals.isVisible('QuickViewAppraisalForm')} onOpenModalChange={(v: any) => !v && modals.hideModal('QuickViewAppraisalForm')} />}
-        {modals.isVisible('CreateAppraisalForm') && <AppraisalRequestForm
+        {/* {appraisalEmp && modals.isVisible('QuickViewAppraisalForm') &&  */}
+        <AppraisalFormQuickView refreshTable={refeshTable} appraisalEmp={appraisalEmp} open={modals.isVisible('QuickViewAppraisalForm')} onOpenModalChange={(v: any) => !v && modals.hideModal('QuickViewAppraisalForm')} />
+        {modals.isVisible('CreateAppraisalForm') && <ProbationEvaluationForm
             open={modals.isVisible('CreateAppraisalForm')}
             onOpenModalChange={(v: any) => !v && modals.hideModal('CreateAppraisalForm')}
             refreshTable={refeshTable}

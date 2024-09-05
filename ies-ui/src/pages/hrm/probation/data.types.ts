@@ -325,3 +325,17 @@ export type AppraisalDataLookup = {
     value: string
     value1?: string
 }
+
+
+export type ProbationEvaluation = {
+    id: number   
+    key: string
+    assessment?: string
+    target?: string
+    rating5?: number
+    rating4?: number
+    rating3?: number
+    rating2?: number
+    rating1?: number
+    remark?: string
+}

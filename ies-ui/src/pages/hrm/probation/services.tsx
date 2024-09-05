@@ -25,7 +25,7 @@ export const createService = ({ request }: { request: SimpleRequestActions; }): 
     findDraftedAppraisalEmpList:()=> Promise<AppraisalEmp[]>,
     submitAllAppraisalEmps:(ids?: AppraisalEmpSubmitAllPayload[])=> Promise<{ok:string}>,
     fetchAppraisalOveralRating:(id:number)=>Promise<AppraisalOverallPerformanceRating[]>,
-    fetchAppraisalList:(searchValue?:string)=>Promise<AppraisalMapping[]>,
+    fetchProbationEmpList:(searchValue?:string)=>Promise<AppraisalMapping[]>,
     fetchEmployeeInfo:(id:number)=> Promise<EmployeeInfResult>,
     fetchAppraisalIntructionList:(id:number)=> Promise<AppraisalInstructionItem[]>,
     fetchAppraisalDataLookupList:()=> Promise<AppraisalDataLookup[]>
@@ -70,9 +70,9 @@ export const createService = ({ request }: { request: SimpleRequestActions; }): 
                 payload: {id}
             }).query(request)
             ,
-        fetchAppraisalList: async (searchValue?: string) =>
+        fetchProbationEmpList: async (searchValue?: string) =>
             fetchDataListService<AppraisalMapping, {searchValue?:string}>({
-                actionName: 'fetch-appraisal-list',
+                actionName: 'fetch-probation-evaluation-emp-list',
                 endpoint: 'HR',
                 payload: {searchValue}
             }).query(request)

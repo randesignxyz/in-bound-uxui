@@ -56,8 +56,6 @@ export const EmployeeServices = {
       endpoint: 'HR',
       payload: { ids },
     }),
-
-
   list: (params: TableViewSearchParams<EmployeeAdvanceSearchParams>) =>
     fetchDataPagingService<EmployeeListItem, { searchValue?: string }>({
       actionName: 'list-employee',
@@ -68,7 +66,12 @@ export const EmployeeServices = {
         page: params.pagination?.current,
       },
     }),
-
+  EmployeeUpdate : (data: EmployeeListItem) =>
+    execDataService0<EmployeeListItem>({
+      actionName: 'update-employee-profile',
+      endpoint: 'HR',
+      payload: { ...data }
+    }), 
   requisitionRequest: (data: RequisitionData) =>
     execDataService<{ data: string }, RequisitionData>({
       actionName: 'staff-requisition-request',

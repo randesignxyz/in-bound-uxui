@@ -37,7 +37,10 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some(
         (item) => item === 'ROLE_WORKFLOW_ADMIN' || item === 'ROLE_ADMIN',
       ) || false,
-    canAdmin: currentUser?.access === 'admin',
+    canAdmin:
+      currentUser?.authorities.some(
+        (item) => item === 'ROLE_ADMIN',
+      ) || false,
 
     canConfirmDeliveryExpense:
       currentUser?.authorities.some((item) =>
@@ -138,6 +141,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           'ROLE_WAREHOUSE',
           'ROLE_AR',
           'ROLE_SALE_INDIVIDUAL',
+          'ROLE_DSD_REPORT',
         ].some((it) => it === item),
       ) || false,
 
@@ -412,13 +416,17 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         [
           'ROLE_ADMIN',
-          'ROLE_PROD_DWT_USER'
+          'ROLE_PROD_DWT_USER',
+          'ROLE_PROD_PRO_ADMIN',
+          'ROLE_PROD_ADMIN'
         ].some((it) => it === item),
       ) || false,
     canAssignItem:
       currentUser?.authorities.some((item) =>
         [
-          'ROLE_ADMIN'
+          'ROLE_ADMIN',
+          'ROLE_PROD_PRO_ADMIN',
+          'ROLE_PROD_ADMIN'
         ].some((it) => it === item),
       ) || false,
 
@@ -432,20 +440,26 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         [
           'ROLE_ADMIN',
-          'ROLE_PROD_PWT_USER'
+          'ROLE_PROD_PWT_USER',
+          'ROLE_PROD_PRO_ADMIN',
+          'ROLE_PROD_ADMIN'
         ].some((it) => it === item),
       ) || false,
     canAssignItemPre:
       currentUser?.authorities.some((item) =>
         [
-          'ROLE_ADMIN'
+          'ROLE_ADMIN',
+          'ROLE_PROD_PRO_ADMIN',
+          'ROLE_PROD_ADMIN'
         ].some((it) => it === item),
       ) || false,
     canAccessDailyHACCPMonitoringMenuItem:
       currentUser?.authorities.some((item) =>
         [
           'ROLE_ADMIN',
-          'ROLE_PROD_HACCP_USER'
+          'ROLE_PROD_HACCP_USER',
+          'ROLE_PROD_PRO_ADMIN',
+          'ROLE_PROD_ADMIN'
         ].some((it) => it === item),
       ) || false,
 
@@ -625,7 +639,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     ) || false,
 
     canAccessSaleStore: currentUser?.authorities.some((items) =>
-      ['ROLE_AR', 'ROLE_WAREHOUSE', 'ROLE_DSD_ADMIN', 'ROLE_SALE_INDIVIDUAL', 'ROLE_ADMIN'].some((it) => it === items)
+      ['ROLE_AR', 'ROLE_WAREHOUSE', 'ROLE_DSD_ADMIN', 'ROLE_SALE_INDIVIDUAL', 'ROLE_ADMIN', "ROLE_DSD_REPORT"].some((it) => it === items)
     ) || false,
 
     canAccessSaleCash: currentUser?.authorities.some((items) =>
@@ -652,7 +666,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
 
     canAcessStockControlMenuItem:
       currentUser?.authorities.some((item) =>
-        ['ROLE_DSD_ADMIN', 'ROLE_WAREHOUSE', 'ROLE_ADMIN'].some((it) => it === item),
+        ['ROLE_DSD_ADMIN', 'ROLE_WAREHOUSE', 'ROLE_ADMIN', "ROLE_DSD_REPORT"].some((it) => it === item),
       ) || false,
 
     canAccessSettlementMenuItem:
@@ -662,7 +676,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
 
     canAccessARMenuItem:
       currentUser?.authorities.some((item) =>
-        ['ROLE_AR', 'ROLE_DSD_ADMIN', 'ROLE_ADMIN', 'ROLE_SALE_INDIVIDUAL'].some((it) => it === item),
+        ['ROLE_AR', 'ROLE_DSD_ADMIN', 'ROLE_ADMIN', 'ROLE_SALE_INDIVIDUAL', "ROLE_DSD_REPORT"].some((it) => it === item),
       ) || false,
 
     canAccessTabWarehouse:
@@ -797,6 +811,12 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           'ROLE_HR_APPRAISAL_REQUEST_SM_EXECTIVE',
         ].some((it) => it === item),
       ) || false,
+    canAccessProbationEvaluation:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_HR_PROBATION_EVALUATION_SUBMIT', 'ROLE_HR_PROBATION_EVALUATION_SUPPORT'].some(
+          (it) => it === item,
+        ),
+      ) || false,
     canAccessWhmMenut:
       currentUser?.authorities.some((item) =>
         [
@@ -842,7 +862,10 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) => ['ROLE_ADMIN', 'ROLE_NCM_INVENTORY_TRANSFER_REQUEST'].some((it) => it === item)) ||
       false,
     canPostedInventoryTransferSAP:
-      currentUser?.authorities.some((item) => ['ROLE_NCM_INVENTORY_TRANSFER_SUPPORT'].some((it) => it === item)) ||
+      currentUser?.authorities.some((item) => ['ROLE_ADMIN', 'ROLE_NCM_INVENTORY_TRANSFER_SUPPORT'].some((it) => it === item)) ||
+      false,
+    canCreateInventoryAdjRequest:
+      currentUser?.authorities.some((item) => ['ROLE_NCM_INVENTORY_ADJUSTMENT_REQUEST'].some((it) => it === item)) ||
       false,
   };
 }

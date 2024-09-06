@@ -85,35 +85,35 @@ export default ({ onSave, ...props }: Props) => {
                     <Row gutter={6}>
                         <Col span={12}>
                             <ProFormSelect
-                                request={async ({ keyWords }) => {
-                                    const data = await EmployeeServices.list({
-                                        criteria: {
-                                            searchValue: keyWords,
-                                            advanceSearch: {
-                                                status: 'ACTIVE',
-                                            },
-                                        },pagination:{pageSize:2000}
-                                    }).query(requestActions);
-                                    const filteredData = data.items.filter((obj) => obj.department === 'ICT');
-                                    return filteredData.map((obj) => ({
-                                        value: obj.userId,
-                                        label: `${obj.firstName + ' ' + obj.lastName} `,
-                                    }));
-                                }}
-                                // options={[
-                                //     {
-                                //         value: 'prodadm',
-                                //         label: 'prodadm',
-                                //     },
-                                //     {
-                                //         value: 'prod1',
-                                //         label: 'prod1',
-                                //     },
-                                //     {
-                                //         value: 'prod2',
-                                //         label: 'prod2',
-                                //     }
-                                // ]}
+                                // request={async ({ keyWords }) => {
+                                //     const data = await EmployeeServices.list({
+                                //         criteria: {
+                                //             searchValue: keyWords,
+                                //             advanceSearch: {
+                                //                 status: 'ACTIVE',
+                                //             },
+                                //         },pagination:{pageSize:2000}
+                                //     }).query(requestActions);
+                                //     const filteredData = data.items.filter((obj) => obj.department === 'ICT');
+                                //     return filteredData.map((obj) => ({
+                                //         value: obj.userId,
+                                //         label: `${obj.firstName + ' ' + obj.lastName} `,
+                                //     }));
+                                // }}
+                                options={[
+                                    {
+                                        value: 'prodadm',
+                                        label: 'prodadm',
+                                    },
+                                    {
+                                        value: 'prod1',
+                                        label: 'prod1',
+                                    },
+                                    {
+                                        value: 'prod2',
+                                        label: 'prod2',
+                                    }
+                                ]}
                                 showSearch
                                 mode="multiple"
                                 name="assign_to"

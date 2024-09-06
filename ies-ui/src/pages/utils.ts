@@ -86,12 +86,21 @@ let option = {
 export const formatterPercentage = new Intl.NumberFormat('en-US');
 
 export const formatConfig = {
+    year: 'YYYY',
     date: 'YYYY-MM-DD',
     dateTime: 'YYYY-MM-DD HH:mm:ss',
     month: 'YYYY-MM',
     duration: 'HH:mm:ss', // 'HH:mm:ss.SSS',
 };
 
+export const formatYear = (date?: moment.Moment, format?: string): string | undefined => {
+    return (
+        date &&
+        moment(date)
+            // .utcOffset(0, true)
+            .format(format ?? formatConfig.year)
+    );
+};
 export const formatDate = (date?: moment.Moment, format?: string): string | undefined => {
     return (
         date &&

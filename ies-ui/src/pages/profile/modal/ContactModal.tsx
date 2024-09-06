@@ -1,7 +1,8 @@
 import { LookupDataItem2 } from "@/services/data"
 import { ModalForm, ModalFormProps, ProFormCheckbox, ProFormSelect, ProFormText } from "@ant-design/pro-components"
 import { useForm } from "antd/lib/form/Form"
-import { ContactData, SaveContract } from "./data"
+import { ContactData, SaveContract } from "../data"
+import { useEffect,useState } from 'react';
 
 interface Props extends ModalFormProps<SaveContract> {
     lookupList: LookupDataItem2[],
@@ -11,26 +12,28 @@ interface Props extends ModalFormProps<SaveContract> {
 export default ({ lookupList, data, ...rest }: Props) => {
 
     const [form] = useForm<SaveContract>()
+    
+    useEffect(() => {
+        initData();
+    }, [data]);
+    const initData = async () => { 
+        form.setFieldsValue({
+            id: data?.id,
+            typeId: data?.type.id,
+            contact: data?.value,
+            isMain: data?.isMain
+        })
+    };
 
     return <ModalForm  {...rest} form={form} width={500} title="Save Contact"
         onOpenChange={visible => {
-            !!visible && form.resetFields()
-            
-            if(visible) {
-                form.setFieldsValue({
-                    id: data?.id,
-                    typeId: data?.type.id,
-                    contact: data?.value,
-                    isMain: data?.isMain
-                })
-            }
-
+            form.resetFields()  
             rest.onOpenChange?.(visible)
         }}
 
         submitter={{
             searchConfig: {
-                submitText: 'Submit',
+                submitText: 'Save',
                 resetText: 'Cancel',
             },
         }} 

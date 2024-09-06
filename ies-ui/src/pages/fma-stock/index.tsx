@@ -6,6 +6,7 @@ export const WHMPaths = {
     item: '/whm/inventory/item',
     transter:'/whm/transfer/request',
     empWhs: '/whm/inventory/empwhs',
+    adjRequest:'/whm/adj/request',
 }
 const items: ListMenuItem[] = [
     {
@@ -31,6 +32,12 @@ const items: ListMenuItem[] = [
         name: 'Employe Warehouse',
         description: 'Employe Warehouse Mapping',
         link: `${WHMPaths.empWhs}/list`
+    },
+    {
+        id: 'whm-adj-request',
+        name: 'Adjustment Request',
+        description: 'Adjustment Request Management',
+        link: `${WHMPaths.adjRequest}/list`
     },
 ]
 export default () => {

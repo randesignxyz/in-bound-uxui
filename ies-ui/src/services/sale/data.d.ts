@@ -523,7 +523,36 @@ export interface StockControlLess {
   items?: StockDetailItemLess[];
   invoices?: SaleInvoiceLess[];
   adjustmentItems?: StockAdjustmentDto[] = [];
-  beginningQty:number
+  beginningQty:number;
+  comments?:Comment[];
+  stockAdjusts?:StockAjust;
+  stockCountId?:number;
+  isKeepForwarding?:boolean;
+  storeId?:number;
+  description?:string;
+}
+
+interface StockAjust{
+  adjustBy:string;
+  adjustDate:moment.Moment;
+  approvedBy?:string;
+  approvedDate?:moment.Moment;
+  remark?:string;
+  status:string;
+  stockControlId:number;
+  stockStoreId:number;
+  items:StockAdjustmentItem[];
+}
+interface StockAdjustmentItem{
+  batchNo:string;
+  itemCode:string;
+  itemId:number;
+  itemName:stirng;
+  quantity:number;
+  remark:string;
+  sequence:number;
+  status:string;
+  uom:string
 }
 
 export interface StockAdjustmentDto {
@@ -1264,6 +1293,7 @@ export interface SoAdvanceSearchParams {
 export interface StockStoreAdvanceSearchParams {
   status?: string;
   searchValue?:string;
+  role?:string;
 }
 
 export interface StockAdvanceSearchParams {

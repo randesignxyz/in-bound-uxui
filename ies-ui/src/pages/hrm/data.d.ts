@@ -12,9 +12,12 @@ export interface EmployeeListItem {
   status: string;
   sapId: string;
   jobTitle?: string;
+  job_id?:number;
   reportTo?: string;
   department?: string;
+  department_id?:number;
   bu?: string;
+  bu_id?:number;
   userId?: string;
 }
 

@@ -327,7 +327,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, onEdit, onAdd, actionHandlers }
                 >
                   Create New Invoice
                 </Button>
-                {
+                {/* {
                   // access.canAccessSettlement &&
                   (
                     <Button
@@ -339,7 +339,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, onEdit, onAdd, actionHandlers }
                     >
                       Settlement
                     </Button>
-                  )}
+                  )} */}
               </>
             ),
             <Button

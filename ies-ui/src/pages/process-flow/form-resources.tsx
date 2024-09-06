@@ -15,6 +15,7 @@ import { getGratisSettlementRequestForms } from '../crm/gratis/request/config';
 import { getFmaStockRequestForms } from '../fma-stock/request/process-flow/config'
 import { getInventoryTransferRequestForms } from '../fma-stock/transfer/process-flow/config';
 import { getSaleStockTransferRequestRequestForms } from '../sale/stock-control/stock-transfer-request/process-flow/config';
+import { getInventoryAdjustmentRequestForms } from '../fma-stock/adjustment/process-flow/config';
 
 const dataFormResources: DataForm[] = [
   // ...CashAdvanceForms,
@@ -43,7 +44,8 @@ const dataFormResources: DataForm[] = [
   ...getGratisSettlementRequestForms(),
   ...getFmaStockRequestForms(),
   ...getInventoryTransferRequestForms(),
-  ...getSaleStockTransferRequestRequestForms()
+  ...getSaleStockTransferRequestRequestForms(),
+  ...getInventoryAdjustmentRequestForms()
 ];
 
 export const getActionForm = (props: ActionDataFormProps) =>

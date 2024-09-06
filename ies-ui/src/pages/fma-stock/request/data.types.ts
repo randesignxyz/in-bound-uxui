@@ -59,6 +59,7 @@ export interface StockRequestItem {
   itemName: string;
   qty: number;
   uom: string;
+  budgetCode?: string;
   remarks?: string;
   returnType?:string;
   returnDate?: Moment;
@@ -122,6 +123,7 @@ export interface StockRequestItemDetailResponse {
   itemName: string;
   qty: number;
   uom: string;
+  budgetCode?: string;
   remarks?: string;
   stockRemarks?: string;
   seqNo: number;
@@ -140,6 +142,7 @@ export interface StockRequestDetailResponse {
   deptId: number;
   groupId: number;
   groupName: string;
+  warehouseFrom?: string;
   createdDate: Moment;
   createdBy: string;
   items: StockRequestItemDetailResponse[];
@@ -147,6 +150,11 @@ export interface StockRequestDetailResponse {
   lastModifiedBy?: string;
   fileIds?: string[];
 }
-  
+export interface WarehouseGroup {
+  id: string;
+  code: string;
+  name: string;
+}
+
   
 

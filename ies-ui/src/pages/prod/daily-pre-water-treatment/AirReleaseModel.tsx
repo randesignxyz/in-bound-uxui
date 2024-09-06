@@ -5,6 +5,7 @@ import { DailyPreWaterTreatmentList } from './data';
 import { useForm } from 'antd/lib/form/Form';
 import { Card, Col, Radio, Row, Typography, message } from 'antd';
 import { useAccess } from '@umijs/max';
+import { ExclamationCircleOutlined } from '@ant-design/icons';
 
 interface Props extends FormModalProps {
     data?: DailyPreWaterTreatmentList
@@ -111,6 +112,7 @@ export default ({ data, type, onSave, ...props }: Props) => {
                             <div style={{ flexDirection: 'row' }}>
                                 <Text style={{ color: 'red', fontSize: 20 }}>*</Text>
                                 <Text style={{ marginBottom: 10 }}>SF</Text>
+                                {(sf == '0' || data?.sf == '0') ? <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} /> : <></>}
                             </div>
                             <Radio.Group
                                 defaultValue={data?.sf == '1' ? '1' : data?.sf == '0' ? '0' : ''}
@@ -125,6 +127,7 @@ export default ({ data, type, onSave, ...props }: Props) => {
                             <div style={{ flexDirection: 'row' }}>
                                 <Text style={{ color: 'red', fontSize: 20 }}>*</Text>
                                 <Text style={{ marginBottom: 10 }}>ACF</Text>
+                                {(acf == '0' || data?.acf == '0') ? <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} /> : <></>}
                             </div>
                             <Radio.Group
                                 defaultValue={data?.acf == '1' ? '1' : data?.acf == '0' ? '0' : ''}
@@ -141,6 +144,7 @@ export default ({ data, type, onSave, ...props }: Props) => {
                             <div style={{ flexDirection: 'row' }}>
                                 <Text style={{ color: 'red', fontSize: 20 }}>*</Text>
                                 <Text style={{ marginBottom: 10 }}>Resin</Text>
+                                {(resin == '0' || data?.resin == '0') ? <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} /> : <></>}
                             </div>
                             <Radio.Group
                                 defaultValue={data?.resin == '1' ? '1' : data?.resin == '0' ? '0' : ''}

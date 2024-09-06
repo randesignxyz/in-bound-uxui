@@ -119,6 +119,13 @@ export default (props: ActionDataFormProps) => {
                     
                             },
                             {
+                                title:'BudgetCode',
+                                editable: false,
+                                dataIndex:'budgetCode',
+                                width: 100,
+                    
+                            },/*
+                            {
                                 title: 'To be Returned in Full or Partial (F/P)',
                                 width: 110,
                                 editable: false,
@@ -132,7 +139,7 @@ export default (props: ActionDataFormProps) => {
                                 dataIndex:'returnDate',
                                 render: (_, r) => formatDate(r?.returnDate)
                     
-                            },
+                            },*/
                             {
                                 title:'Remarks',
                                 editable: false,

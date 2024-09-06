@@ -150,6 +150,7 @@ export default {
   'menu.report': 'Report',
   'menu.dms': 'DMS',
   'menu.prod': 'PROD',
+  'menu.ess': 'Self-Service',
   'menu.inventoryTransferRequest': 'Inventory Transfer Request',
   'menu.inventoryTransfer': 'Inventory Transfer',
   'menu.appraisal-request': 'Appraisal Request',
@@ -167,4 +168,5 @@ export default {
   'menu.whm_issue_request': 'NCM Request',
   'menu.whm_inventory_item': 'Item',
   'menu.whm_inventory_empwhs': 'EMployee Warehouse',
+  'menu.probation_evaluation': 'Probation Evaluation',
 };

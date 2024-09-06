@@ -127,10 +127,6 @@ export default ({ onSave, ...props }: Props) => {
                             <ProFormSelect
                                 options={[
                                     {
-                                        value: 'Line 1',
-                                        label: 'Line 1',
-                                    },
-                                    {
                                         value: 'Line 2',
                                         label: 'Line 2',
                                     },

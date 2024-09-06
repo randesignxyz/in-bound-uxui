@@ -8,21 +8,26 @@
  * @doc https://umijs.org/docs/guides/proxy
  */
 export default {
-  dev: {
-    '/api/': {
-      target: 'http://[::1]:8080',
-      changeOrigin: true,
-      pathRewrite: { '^': '' },
-    },
-    '/services': {
-      target: 'http://[::1]:8080',
-      changeOrigin: true,
-      pathRewrite: { '^': '' },
-    },
-  },
-  test: {
+      dev: {
+            '/api/': {
+                  target: 'http://[::1]:8080',
+                  changeOrigin: true,
+                  pathRewrite: { '^': '' },
+            },
+            '/services': {
+                  target: 'http://[::1]:8080',
+                  changeOrigin: true,
+                  pathRewrite: { '^': '' },
+            },
+            '/event-emitter': {
+                  target: 'ws://localhost:8080',
+                  changeOrigin: true,
+                  pathRewrite: { '^': '' },
+            },
+      },
+      test: {
 
-  },
-  pre: {
-  },
+      },
+      pre: {
+      },
 };

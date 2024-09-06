@@ -52,6 +52,11 @@ export default ({title,instId, forceRefresh }: Props) => {
 
         },
         {
+            title:'BudgetCode',
+            dataIndex:'budgetCode'
+
+        },
+        /*{
             title: 'To be Returned in Full or Partial (F/P)',
             width: 110,
             dataIndex:'returnType'
@@ -63,7 +68,7 @@ export default ({title,instId, forceRefresh }: Props) => {
             dataIndex:'returnDate',
             render: (_, r) => formatDate(r?.returnDate)
 
-        },
+        },*/
         {
             title:'Remarks',
             dataIndex:'remarks'
@@ -90,9 +95,12 @@ export default ({title,instId, forceRefresh }: Props) => {
             </Descriptions.Item>
             <Descriptions.Item style={{ fontWeight: 'bolder' }} label="Group">
                 {stockRequest?.groupName}{' '}
-            </Descriptions.Item>    
-            <Descriptions.Item style={{ fontWeight: 'bolder' }} label="Reason">{stockRequest?.reason} </Descriptions.Item>       
-            <Descriptions.Item label="Created By">{stockRequest?.createdBy}</Descriptions.Item>
+            </Descriptions.Item>               
+            <Descriptions.Item style={{ fontWeight: 'bolder' }} label="Reason">{stockRequest?.reason} </Descriptions.Item> 
+            <Descriptions.Item label="Created By">{stockRequest?.createdBy}</Descriptions.Item> 
+            <Descriptions.Item style={{ fontWeight: 'bolder' }} label="From Warehouse">
+                {stockRequest?.warehouseFrom}{' '}
+            </Descriptions.Item> 
             <Descriptions.Item label="Remark">{stockRequest?.remarks}</Descriptions.Item>                
             {stockRequest?.lastModifiedDate && (
                 <Descriptions.Item label="Last Modified Date">

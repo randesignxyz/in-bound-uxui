@@ -27,3 +27,6 @@ interface SettlementEntry {
     stockCountId?: number,
     items?: SettleMethod[] 
 }
+
+
+

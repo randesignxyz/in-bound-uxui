@@ -12,7 +12,7 @@ import {
   ProFormTextArea,
   ProTable,
 } from '@ant-design/pro-components';
-import { Button, Input, message, Modal, Radio, RadioChangeEvent, Space, Table } from 'antd';
+import { Button, Checkbox, Input, message, Modal, Radio, RadioChangeEvent, Space, Table } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { round, uniqueId } from 'lodash';
 import { useEffect, useRef, useState } from 'react';
@@ -34,6 +34,7 @@ import { Model } from './model';
 import { createService } from './services';
 import { TransferRequestItem } from '@/pages/fma-stock/transfer/data.types';
 import { v4 as uuid} from "uuid"
+import Section2Card from './components/Section2Card';
 
 type DataFormType = {
   requestorId: string;
@@ -145,6 +146,7 @@ export default ({ open, onOpenModalChange, refreshTable }: Props) => {
   };
   const onSaveHandler = async (status: string) => {
     await formSubmittor.validateFields();
+    console.log('assessment list:  ',addedItems)
     var title = 'Appraisal Form';
     var contentMsg = 'Are you sure to save draft the form?';
     var validatorList = getValidation();
@@ -296,14 +298,19 @@ export default ({ open, onOpenModalChange, refreshTable }: Props) => {
 
   const editableFormRef1 = useRef<EditableFormInstance>();
   const [addedItems, setAddedItems] = useState<ProbationEvaluation[]>([]);
+  const [addedSection2, setAddedSection2] = useState<ProbationEvaluation[]>([]);
   const data = [{id:0,key:'dfsdf', assessment:'Learn about One More Group (OML) structures', target:'Learn about One More Group (OML) structures',
     rating5: 1
   }]
   useEffect(()=>{
-    if(!addedItems){
+    if(addedItems.length==0){
       setAddedItems(data)
     }
   },[addedItems])
+
+
+
+
   return (
     <ModalForm
       modalProps={{
@@ -311,7 +318,7 @@ export default ({ open, onOpenModalChange, refreshTable }: Props) => {
       }}
       form={formSubmittor}
       open={open}
-      width={'85%'}
+      width={'95%'}
       title={<div>New Probation Evaluation Form </div>}
       submitter={{
         searchConfig: {
@@ -353,178 +360,249 @@ export default ({ open, onOpenModalChange, refreshTable }: Props) => {
           onChangeLanglauge={onChangeLanglauge}
           appraisalPerformanceId={-1}
         />
-        <ProCard title="RATING SCALE" collapsible  size="small">
-        <EditableProTable<ProbationEvaluation>
-          editableFormRef={editableFormRef1}
-          rowKey="key"
-          editable={{
-            type: 'multiple',
-            editableKeys: data.map((it) => it.key),
-            actionRender: (row) => [
-              <Button
-                type="link"
-                danger
-                onClick={() => {
-                  setAddedItems((v) =>{
-                    // if(v.length==1){
-                    //   setGroupId(-1)
-                    // }
-                     return v.filter((it) => it.key != row.key)
-                  })
-                }}
-                size="small"
-                icon={<MinusCircleOutlined />}
-              />,
-            ],
-            onValuesChange: (_, recordList) => {  
-              // alert('sdfsdf11111111111111111')             
-              setAddedItems(
-                recordList.map((it) => ({
-                  ...it,                   
-                })),
-              );
-            },
-          }}
-          recordCreatorProps={{
-            creatorButtonText: 'Add Item ',
-            newRecordType: 'dataSource',
-            onClick: () => {
-              // setSearcVisible(true);
-              // alert(uuid().toString())
-              // setAddedItems(v=> [...v,{id:0,key: uuid().toString(),remark:''}])
-            },
-            record: (index) => ({key: uuid().toString()} as ProbationEvaluation),
-          }}
-          value={addedItems}
-           columns={[
-            { title: 'No', width: 20, editable: false, render: (_, __, index) => index + 1 },
-            { title: 'ASSESSMENT', editable: false, dataIndex: 'assessment' },
-            { title: 'TARGET', editable: false, dataIndex: 'target' },     
-            {
-              title: 'RATING SCORE',
-              children:[{
-                title: '5- Outstanding',                
-                editable: false,
-                dataIndex: 'rating5',
-                width: '10%',
-                render: (r) => {
-                  return (<Radio  checked={false}/>)
-                },
-              },{
-                title: '4- Exceeds Expectations',                
-                editable: false,
-                dataIndex: 'rating4',
-                width: '10%',
-                render: (r) => {
-                  return (<Radio  checked={false}/>)
-                },
-              },{
-                title: '3- Meets Expectations',                
-                editable: false,
-                dataIndex: 'rating3',
-                width: '10%',
-                render: (r) => {
-                  return (<Radio  checked={false}/>)
-                },
-              }]
-             
-            }, 
-            {
-              title: 'Remark',
-              valueType: 'textarea',
-              dataIndex: 'remark',
-              fieldProps: { rows: 1, maxLength: 200 },
-            },   
-          ]}
-
-        />
-
-        </ProCard>
-          <ProTable<AppraisalEmpSubmissionResult>
-              bordered
-              pagination={false}
-              cardProps={false}
-              search={false}
-              options={{
-                density: false,
-                search: false,
-                reload: false,
-                setting: false,
-                fullScreen: false,
-              }}
-              dataSource={appraisalDimension}
-              columns={[
-                {
-                  title: getLable('TBL_DIMENSION'),
-                  children: [{
-                    render: (r: any) => (r.title)
-                  }]
-                 
-                },
-                {
-                  title: getLable('TBL_DIMENSION'),
-                  children: [{
-                    title: '5- Outstanding',
-                    width: '10%',
-                    render: (r: any) => (
-                      <Radio
-                        value={r.behaviorRate}
-                        checked={r.behaviorRate === r.rating1 ? true : false}
-                        onChange={(e) => onChange1(e, r)}
-                      />
-                    ),
-                  },{
-                    title: '4- Outstanding',
-                    width: '10%',
-                    render: (r: any) => (
-                      <Radio
-                        value={r.behaviorRate}
-                        checked={r.behaviorRate === r.rating1 ? true : false}
-                        onChange={(e) => onChange1(e, r)}
-                      />
-                    ),
-                  },{
-                    title: '3- Exceeds Expectations',
-                    width: '10%',
-                    render: (r: any) => (
-                      <Radio
-                        value={r.behaviorRate}
-                        checked={r.behaviorRate === r.rating1 ? true : false}
-                        onChange={(e) => onChange1(e, r)}
-                      />
-                    ),
-                  },{
-                    title: '2- Meets Expectations', 
-                    
-                    width: '10%',
-                    render: (r: any) => (
-                      <Radio
-                        value={r.behaviorRate}
-                        checked={r.behaviorRate === r.rating1 ? true : false}
-                        onChange={(e) => onChange1(e, r)}
-                      />
-                    ),
-                  },{
-                    title: '1- Unsatisfactory',
-                    width: '10%',
-                    render: (r: any) => (
-                      <Radio
-                        value={r.behaviorRate}
-                        checked={r.behaviorRate === r.rating1 ? true : false}
-                        onChange={(e) => onChange1(e, r)}
-                      />
-                    ),
-                  }]
+        <ProCard title="EVALUATION" 
+          collapsible  
+          size="small"
+          bordered headerBordered 
+        >
+          <div>
+            <span>Please choose rating of each criterion that describes best of your employee’s performance compares to the job expectations and goals/work priorities.</span>
+            <div style={{paddingTop:5}}>
+              <div><b>SECTION I. PERFORMANCE (Weightage: 50%)</b></div>
+              <div>What employee is expected to do/achieved during probation period.</div>
+              <div><span style={{color:'red'}}>*</span> At least 3 items are required.</div>
+            </div>
+          </div>
+          <EditableProTable<ProbationEvaluation>
+            bordered
+            pagination={false}
+            cardProps={false}
+            editableFormRef={editableFormRef1}
+            rowKey="key"
+            editable={{
+              type: 'multiple',
+              editableKeys: addedItems.map((it) => it.key),
+              actionRender: (row) => [
+                <Button
+                  type="link"
+                  danger
+                  onClick={() => {
+                    setAddedItems((v) =>{
+                      // if(v.length==1){
+                      //   setGroupId(-1)
+                      // }
+                      return v.filter((it) => it.key != row.key)
+                    })
+                    console.log('assessment list',addedItems)
+                  }}
+                  size="small"
+                  icon={<MinusCircleOutlined />}
+                />,
+              ],
+              onValuesChange: (_, recordList) => {  
+                // alert('sdfsdf11111111111111111')             
+                setAddedItems(
+                  recordList.map((it) => ({
+                    ...it,                   
+                  })),
+                );
+              },
+            }}
+            recordCreatorProps={{
+              creatorButtonText: 'Add',
+              newRecordType: 'dataSource',
+              // onClick: () => {
+              //   // setSearcVisible(true);
+              //   // alert(uuid().toString())
+              //   setAddedItems(v=> [...v,{id:0,key: uuid().toString(),remark:'',assessment:'t',target:'test',rating3:1}])
+              // },
+              record: (index) => ({ key: uniqueId().toString() + index } as any),
+            }}
+            value={addedItems}
+            columns={[
+              { title: 'No', width: 20, editable: false, render: (_, __, index) => index + 1 },
+              { title: 'ASSESSMENT',  
+                // editable: false,
+                dataIndex: 'assessment',
+                valueType: 'textarea',
+                fieldProps: { rows: 1, maxLength: 200 },
+              },
+              { title: 'TARGET',  
+                // editable: false, 
+                dataIndex: 'target',
+                valueType: 'textarea',
+                fieldProps: { rows: 1, maxLength: 200 },
+              },     
+              {
+                title: 'RATING SCORE',
+                children:[{
+                  title: <span style={{fontSize:11}}>5- Outstanding</span>,
+                  dataIndex: 'rating5',
+                  width: 93,
+                  align:'center',
+                  valueType: 'radio',        
+                  renderFormItem(_, config, form,record) {
+                    return (<Radio  
+                      key={`checked-${config.record?.key}`}
+                      checked={(config.record?.rating5==1)}
+                      onChange={(e) => {                    
+                        form.setFieldValue(config.record?.key || '', {
+                          ...config.record,
+                          rating5: e.target.checked?1:0,
+                          rating4: 0,
+                          rating3: 0,
+                          rating2: 0,
+                          rating1: 0,
+                          checked: e.target.checked,
+                      });
+                    }}
+                    />)
+                  }
                 },{
-                  title: 'JUSTIFICATION',
-                  children: [{
-                    render: (r: any) => (
-                      <Input></Input>
-                    )
+                  title: <span style={{fontSize:11}}>4- Exceeds Expectations</span>,                
+                  dataIndex: 'rating4',
+                  width: 70,
+                  align:'center',
+                  valueType: 'radio',        
+                  renderFormItem(_, config, form) {
+                    return (<Radio  
+                      key={`checked-${config.record?.key}`}
+                      checked={(config.record?.rating4==1)}
+                      onChange={(e) => {                    
+                        form.setFieldValue(config.record?.key || '', {
+                          ...config.record,
+                          rating4: e.target.checked?1:0,
+                          rating5: 0,
+                          rating3: 0,
+                          rating2: 0,
+                          rating1: 0,
+                          checked: e.target.checked,
+                      });
+                    }}
+                    />)
+                  },
+                },{
+                  title: <span style={{fontSize:11}}>3- Meets Expectations</span>,    
+                  valueType: 'radio',            
+                  // editable: false,
+                  dataIndex: 'rating3',
+                  width: 70,
+                  align:'center',
+                  renderFormItem(_, config, form) {
+                    return (<Radio  
+                      key={`checked-${config.record?.key}`}
+                      checked={(config.record?.rating3==1)}
+                      onChange={(e) => {
+                        // if (
+                        //     e.target.checked &&
+                        //     !itemTaken.some((it) => it == config.record?.itemId)
+                        // ) {
+                        //     setItemTaken([...itemTaken, config.record?.itemId || 0]);
+                        // }
+                        // if (!e.target.checked) {
+                        //     setItemTaken(itemTaken.filter((it) => it != config.record?.itemId));
+                        // }
+                        // setAddedItems(r => r.map(it => {
+                        //   if(it.key== config.record?.key){
+                        //     return {...it,rating3: 1}
+                        //   }else {
+                        //     return it
+                        //   }
+                        // }))
+                        // console.log('config.record',config.record)
+
+                        form.setFieldValue(config.record?.key || '', {
+                            ...config.record,
+                            rating3: e.target.checked?1:0,
+                            rating5: 0,
+                            rating4: 0,
+                            rating2: 0,
+                            rating1: 0,
+                            checked: e.target.checked,
+                        });
+                    }}
+                    />)
+                  },
+                },{
+                  title: <span style={{fontSize:11}}>1- Needs Improvement</span>,                
+                  dataIndex: 'rating2',
+                  width: 70,
+                  align:'center',
+                  valueType: 'radio',        
+                  renderFormItem(_, config, form) {
+                    return (<Radio  
+                      key={`checked-${config.record?.key}`}
+                      checked={(config.record?.rating2==1)}
+                      onChange={(e) => {                    
+                        form.setFieldValue(config.record?.key || '', {
+                          ...config.record,
+                          rating2: e.target.checked?1:0,
+                          rating5: 0,
+                          rating4: 0,
+                          rating3: 0,
+                          rating1: 0,
+                          checked: e.target.checked,
+                      });
+                    }}
+                    />)
+                  },
+                },{
+                  title: <span style={{fontSize:11}}>1- Unsatisfactory</span>,                
+                  dataIndex: 'rating1',
+                  width: 102,
+                  align:'center',
+                  valueType: 'radio',        
+                  renderFormItem(_, config, form) {
+                    return (<Radio  
+                      key={`checked-${config.record?.key}`}
+                      checked={(config.record?.rating1==1)}
+                      onChange={(e) => {                    
+                        form.setFieldValue(config.record?.key || '', {
+                          ...config.record,
+                          rating1: e.target.checked?1:0,
+                          rating5: 0,
+                          rating4: 0,
+                          rating3: 0,
+                          rating2: 0,
+                          checked: e.target.checked,
+                      });
+                    }}
+                    />)
+                  },
                 }]
-                }
-              ]}
-            />
+              
+              }, 
+              {
+                title: 'JUSTIFICATION',
+                children:[{
+                  width: '10%',
+                  valueType: 'textarea',
+                  dataIndex: 'remark',
+                  fieldProps: { rows: 1, maxLength: 200 },
+                }]
+              
+              }, 
+              {
+                valueType: 'option',
+                width: 50,
+                render: () => {
+                  return null;
+                },
+              },  
+            ]}
+
+          />
+          {/*---------------------------- SECTION II. JOB KNOWLEDGE AND SKILLS (Weightage: 20%)----------------------------------*/}
+          <Section2Card addedItems={addedSection2} onSetAddedItems={setAddedSection2}/>
+          {/*---------------------------- SECTION III. BEHAVIOR (Weightage: 30%)-------------------------------------------------*/}
+          <div>
+            <div style={{paddingTop:5}}>
+              <div><b>SECTION III. BEHAVIOR (Weightage: 30%)</b></div>
+              <div>How employee is expected to behave in a proper manner.</div>
+            </div>
+          </div>
+
+        </ProCard>          
           <ProCard title="EVALUATION" collapsible  size="small">
             <ProTable<AppraisalEmpSubmissionResult>
               bordered

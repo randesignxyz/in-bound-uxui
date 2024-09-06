@@ -71,7 +71,7 @@ export default ({ profile,data,type,isAdmin,empId,cb, ...rest }: Props) => {
             } 
         >  
         <ProCard bordered>
-            <ProFormText label="Full Name (Family Name, Given Name)" name={'relationshipName'} rules={[{ required: true }]} /> 
+            <ProFormText label="Full Name" name={'relationshipName'} rules={[{ required: true }]} placeholder={"Family Name, Given Name"} /> 
             <ProFormSelect rules={[{ required: true }]} 
                 label="Relationship"
                 // disabled = {!!data}

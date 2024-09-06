@@ -154,6 +154,7 @@ export default ({ profile }: Props) =>{
                     <Radio.Group optionType="button" defaultValue={"3"}
                         options={[
                             { label: "All", value: "0" },
+                            { label: "Started", value: "2" },
                             { label: "Review", value: "3" },
                             { label: "Rejected", value: "4" },
                             // { label: "Verified", value: "3" },

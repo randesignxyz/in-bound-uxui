@@ -37,6 +37,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
     const [communeCA, setCommuneCA] = useState<LocationData[]>(); 
     const [isLoading,setLoading] = useState(false);  
     const [createFileOther, selectedFileOther] = useState<any>();  
+    const [isOther, setIsOtherVisible] = useState(true);
 
     useEffect(() => {
         initData();
@@ -53,6 +54,13 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
             //current address
             districtList(data!!.provinceCrId!!,3);
             communeList(data!!.districtCrId!!,3);
+        }
+        // 
+        if(data?.maritalStatusId==19){
+            setIsOtherVisible(false);
+        }
+        else{ 
+            setIsOtherVisible(true);
         }
          
     };  
@@ -158,8 +166,8 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
             > 
             <Spin spinning = {isLoading}> 
                 <ProCard bordered style={{backgroundColor:'#f5f5f5'}}> 
-                    <ProFormText label="Name KH" name={'nameKh'} />
-                    <ProFormText label="Name EN" name={'nameEn'} />
+                    <ProFormText label="Name KH" name={'nameKh'} placeholder={"គោត្តនាម និង នាម"}/>
+                    <ProFormText label="Name EN" name={'nameEn'} placeholder={"Family name, Given Name"}/>
                     <Row>
                         <Col span={12}>
                             <ProFormDatePicker label="Date of Birth" name={'dateBirth'} />
@@ -185,14 +193,17 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                                 name={'maritalStatusId'} 
                                 options={profile.marriedStatus?.map((it) => {
                                     return { value: it.id, label: it.titleName };
-                                })} 
-                                // options={[
-                                //     { value: 1, label: "Single" },
-                                //     { value: 2, label: "Married"},
-                                //     { value: 3, label: "Divorced"},
-                                //     { value: 4, label: "Widowed"}    
-                                // ]}  
-                                // options={lookupList.filter(it => it.type == 'CONTACT_TYPE').map(it => ({ label: it.name, value: it.id }))}
+                                })}  
+                                fieldProps={{
+                                    onChange: (val) => { 
+                                        if(val==19){
+                                            setIsOtherVisible(false);
+                                        }else{ 
+                                            setIsOtherVisible(true);
+                                        }
+                                    }, 
+                                }} 
+                                
                             />
                         </Col>                
                         <Col span={12} style={{padding:'3px'}}>     
@@ -201,33 +212,28 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                                 name={'religionId'}
                                 options={profile.religion?.map((it) => {
                                     return { value: it.id, label: it.titleName };
-                                })} 
-                                // options={[
-                                //     { value: 1, label: "Buddhism"},
-                                //     { value: 2, label: "Islam"},   
-                                //     { value: 3, label: "Christianity"},   
-                                //     { value: 4, label: "Hinduism"},   
-                                //     { value: 5, label: "Judaism"} 
-                                // ]}  
-                                // options={lookupList.filter(it => it.type == 'CONTACT_TYPE').map(it => ({ label: it.name, value: it.id }))}
+                                })}  
                             />
                         </Col>       
                     </Row>
                     
                     {/*  */}
-                    <Row>
+                    <Row hidden={isOther}>
                         <Col span={8} style={{padding:'3px'}}>
                             <ProFormCheckbox label="Married to OML Staff" name={"marriedWith"} placeholder={"Married to OML Staff"}/>
                         </Col>
                         <Col span={12} style={{padding:'3px'}}>
-                            <ProFormDigit label="Spouse's OML Employee ID number" name={"spouseStaffId"} placeholder={"Spouse's OML Employee ID number"} />
+                            <ProFormDigit label="Spouse's OML Employee ID number" name={"spouseStaffId"} placeholder={"000000"} rules={[{
+                                max: 6,
+                                message: "Value should be less than 50 character",
+                            }]}/>
                         </Col>       
                     </Row>
 
                      
                 </ProCard>  
                 {/* National ID */}
-                <div style={{marginTop:'10px'}}><Typography.Title level={5}>National Brief</Typography.Title></div>
+                <div style={{marginTop:'10px'}}><Typography.Title level={5}>National ID</Typography.Title></div>
                 <ProCard bordered style={{backgroundColor:'#f5f5f5'}}> 
                     <Row>
                         <Col span={8} style={{padding:'3px'}}>
@@ -242,7 +248,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                     </Row>
                 </ProCard>
                 {/* Passport Number */}
-                <div style={{marginTop:'10px'}}><Typography.Title level={5}>Passport Brief</Typography.Title></div>
+                <div style={{marginTop:'10px'}}><Typography.Title level={5}>Passport ID</Typography.Title></div>
                 <ProCard bordered style={{backgroundColor:'#f5f5f5'}}> 
                     <Row>            
                         <Col span={8} style={{padding:'3px'}}>  
@@ -310,7 +316,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                 <ProCard bordered style={{backgroundColor:'#f5f5f5'}}> 
                     <Row>
                         <Col span={8} style={{padding:'3px'}}>
-                            <ProFormSelect 
+                            <ProFormSelect rules={[{ required: true }]}
                                 label="City/ Province" 
                                 name={'provincePaId'}
                                 options={locations?.map((it) => {
@@ -326,7 +332,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                         </Col> 
                         <Col span={8} style={{padding:'3px'}}>   
                         {/*  */}
-                            <ProFormSelect 
+                            <ProFormSelect rules={[{ required: true }]}
                                 label="Khan/ District" 
                                 name={'districtPaId'}
                                 options={districtPA?.map((it) => {
@@ -342,7 +348,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                         </Col> 
                     {/*  */}
                         <Col span={8} style={{padding:'3px'}}>
-                            <ProFormSelect 
+                            <ProFormSelect rules={[{ required: true }]}
                                 label="Sangkhat/ Commune" 
                                 name={'communePaId'}
                                 options={communePA?.map((it) => {
@@ -367,7 +373,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                 <ProCard bordered style={{backgroundColor:'#f5f5f5'}}> 
                     <Row>
                         <Col span={8} style={{padding:'3px'}}>
-                            <ProFormSelect 
+                            <ProFormSelect rules={[{ required: true }]}
                                 label="City/ Province" 
                                 name={'provinceCrId'}
                                 options={locations?.map((it) => {
@@ -383,7 +389,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                         </Col>  
                         <Col span={8} style={{padding:'3px'}}>  
                             {/*  */}
-                            <ProFormSelect 
+                            <ProFormSelect rules={[{ required: true }]}
                                 label="Khan/ District" 
                                 name={'districtCrId'}
                                 options={districtCA?.map((it) => {
@@ -399,7 +405,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                         </Col>        
                     {/*  */}
                         <Col span={8} style={{padding:'3px'}}>
-                            <ProFormSelect 
+                            <ProFormSelect rules={[{ required: true }]}
                                 label="Sangkhat/ Commune" 
                                 name={'communeCrId'}
                                 options={communeCA?.map((it) => {
@@ -422,8 +428,9 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                         <Typography.Title level={5}>Attachments </Typography.Title><Typography.Title level={5} style={{color:'red'}}> (Required*)</Typography.Title>
                         
                     </Space>
-                    <div style={{fontSize:'12px'}}>- National ID attachment (Image File or PDF)</div>
-                    <div style={{fontSize:'12px'}}>- Passport attachment (Image File or PDF)</div> 
+                    <div style={{fontSize:'12px'}}>- National ID (Image File or PDF)</div>
+                    <div style={{fontSize:'12px'}}>- Passport (Image File or PDF)</div> 
+                    <div style={{fontSize:'12px'}}>- Married Certificate</div> 
                 </div> 
                 <ProCard size="small" bordered>   
                     <FileUploader   

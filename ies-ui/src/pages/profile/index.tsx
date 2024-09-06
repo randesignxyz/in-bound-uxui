@@ -267,14 +267,14 @@ function Profile() {
 
   // stage
   const _info = "Period: From  "+(profile?.ess.id!!<=0?'':formatDate(profile?.ess.startDate))+" To  "+(profile?.ess.id!!<=0?'':formatDate(profile?.ess.endDate))+"";
-  const _stag = ["Cancel Updated","Start","Started Modified","Reviewing","Rejected with Revoke","Revoke","Approval","Cancelled Submitted"];
+  const _stag = ["Cancel Updated","Start","Started Modified","Reviewing","Rejected","Re-Edit","Approval","Cancelled Submitted"];
   const _stag_message = [
     /*0*/"Cancel Updated",
     /*1*/_info,
     /*2*/"Employee Started modified profiles data",
     /*3*/"Your request update is under review",
     /*4*/ (profile?.profile_draft==null?'':profile?.profile_draft.remark),
-    /*5*/ "Revoke", 
+    /*5*/ (profile?.profile_draft==null?'':profile?.profile_draft.remark), 
     /*6*/ "Approval",
     /*7*/ "Cancelled Submitted"
   ];
@@ -284,7 +284,7 @@ function Profile() {
       {/*  
         checking open announcement expiry
       */}  
-      {profile?.ess.id!!<=0?'': profile?.ess.empClosed==2||profile?.ess.stag==8?'':
+      {profile?.ess.id!!<=0?'': profile?.ess.empClosed==2?'': profile?.ess.stag==8?'':
             <Message visible={(step==6&&Number(id)==0)?true:false}
               message={_stag[step]}
               description={_stag_message[step]}
@@ -312,7 +312,7 @@ function Profile() {
           profile!!.ess.id!!<=0?'':<Button style={{display:(step==2&&Number(id)==0)?'':'none',color: 'red'}} onClick={()=>onStartModify(8)}><ExclamationCircleOutlined /> Cancel Update</Button>,          
           profile!!.ess.id!!<=0?'':<Button type="primary" style={{display:([7,5,2].find((element) => element == step))&&Number(id)==0?'':'none'}} onClick={()=>onStartModify(3)}><EditOutlined/> Submit Update</Button>,
           profile!!.ess.id!!<=0?'':<Button style={{display:(step==3&&Number(id)==0)==true?'':'none',color: 'red'}} onClick={()=>onStartModify(7)}><HistoryOutlined/> Cancel Submitted</Button>,
-          profile!!.ess.id!!<=0?'':<Button style={{display:(step==4&&Number(id)==0)==true?'':'none',color: 'red'}} onClick={()=>onStartResubmit(5)}><HistoryOutlined/> Re-Edit</Button>, 
+          // profile!!.ess.id!!<=0?'':<Button style={{display:(step==4&&Number(id)==0)==true?'':'none',color: 'red'}} onClick={()=>onStartResubmit(5)}><HistoryOutlined/> Re-Edit</Button>, 
 
           profile!!.ess.id!!<=0?'':<Button style={{color: 'red',display:(step==3&&Number(id)>0)==true?'':'none'}} onClick={()=>onRejected(4)}><EditOutlined/> Rejected</Button>,
           

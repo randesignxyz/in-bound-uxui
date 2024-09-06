@@ -6,7 +6,7 @@ import { Alert, Button, Space, Switch } from "antd";
 import { HistoryOutlined } from "@ant-design/icons";
 
 import { Typography } from 'antd';
-import { EssProfileData } from "./data.ess";
+import { SaveEssProfile } from "./data.ess";
 
 const { Paragraph, Text } = Typography;
 
@@ -18,7 +18,7 @@ interface Props extends ModalFormProps {
     type?:String,
     step:number
     cb:{onStartModify: (tid:number) => void; },
-    data:EssProfileData,
+    data:SaveEssProfile,
     is_admin:boolean
 }
 
@@ -62,6 +62,7 @@ export default ({visible,message,description,opentitle,type,step,cb,data,is_admi
                 </ProCard>
                 {/*  */}
                 <Button danger size={'large'} style={{display:step==1?'':'none',width:"150px"}} onClick={()=>cb.onStartModify(2)}><HistoryOutlined /> Start</Button>  
+                <Button danger size={'large'} style={{display:step==4?'':'none',width:"150px"}} onClick={()=>cb.onStartModify(5)}><HistoryOutlined /> Re-Edit</Button>   
             </Space> }
             type={type||"info"} 
             closable

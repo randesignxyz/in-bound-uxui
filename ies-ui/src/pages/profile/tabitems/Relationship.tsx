@@ -125,16 +125,17 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                     }}
                     columns={[
                         {
-                            title: "Full Name (Family Name, Given Name)", dataIndex: "relationshipName"
+                            title: "Full Name", dataIndex: "relationshipName"
                         },{
                             title: "Relationship", dataIndex: "typeName"
                         },{
                             title: "Occupation", dataIndex: "occupationName"
                         },{
-                            title: "Date o Birth", dataIndex: "dateOfBirth"
-                        },{
-                            title: "Description", dataIndex: "description"
+                            title: "Date of Birth", dataIndex: "dateOfBirth"
                         },
+                        // {
+                        //     title: "Description", dataIndex: "description"
+                        // },
                         {   width: 100, 
                             render: (dom, r) => {
                                 return (<>

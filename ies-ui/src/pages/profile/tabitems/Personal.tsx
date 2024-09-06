@@ -232,15 +232,15 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
                         {
                             key     : '1',
                             label   : 'City/Province',
-                            children: profile.profile.nameKh,
+                            children: profile.profile.nameEn,
                         },{
                             key     : '2',
                             label   : 'Khan/District',
-                            children: profile.profile.nameKh,
+                            children: profile.profile.nameEn,
                         },{
                             key     : '3',
                             label   : 'Sangkan/Commune',
-                            children: profile.profile.nameKh,
+                            children: profile.profile.nameEn,
                         } 
                     ]}
                 />            

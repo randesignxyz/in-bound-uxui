@@ -21,7 +21,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
     return <>
       <ModalForm title = "View experience edit" {...rest} width={'90%'} submitter={false} > 
         <Space direction={"vertical"} style={{width:'100%'}}>
-        <Typography.Title level={5}>Existing Datas Modified </Typography.Title> 
+        <Typography.Title level={5}>Existing Data Modified </Typography.Title> 
         {/* existing data */} 
         <ProTable<ExperienceData> bordered
             dataSource={oldData}
@@ -38,7 +38,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                 {
                     title: "Company Name", width: '250px',dataIndex: "companyName"
                 },{
-                    title: "Location", render: (_, r) => {return ((r.countryName==null?"":r.countryName)+" "+(r.provinceName==null?"":r.provinceName)+" "+(r.locationRemark==null?"":r.locationRemark));}
+                    title: "Location", render: (_, r) => {return ((r.countryName==null?"":r.countryName)+", "+(r.provinceName==null?"":r.provinceName)+", "+(r.locationRemark==null?"":r.locationRemark));}
                 }, {
                     title: "Started Position", width: '250px',dataIndex: 'startPosition'
                 },{
@@ -83,7 +83,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                 {
                     title: "Company Name", width: '250px',dataIndex: "companyName"
                 },{
-                    title: "Location", render: (_, r) => {return ((r.countryName==null?"":r.countryName)+" "+(r.provinceName==null?"":r.provinceName)+" "+(r.locationRemark==null?"":r.locationRemark));}
+                    title: "Location", render: (_, r) => {return ((r.countryName==null?"":r.countryName)+", "+(r.provinceName==null?"":r.provinceName)+", "+(r.locationRemark==null?"":r.locationRemark));}
                 }, {
                     title: "Started Position", width: '250px',dataIndex: 'startPosition'
                 },{

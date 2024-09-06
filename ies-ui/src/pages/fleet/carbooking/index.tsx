@@ -7,7 +7,7 @@ import { PageContainer } from '@ant-design/pro-components';
 export const HrmPaths = {
     employee: '/hrm/employee',
     ess: '/ess', 
-    bkc: 'fleet/booking/', 
+    bkc: '/fleet/carbooking', 
     noPath: '', 
 }
 
@@ -27,7 +27,7 @@ export default () => {
             id: 'booking_car',
             name: 'Booking Car',
             description: 'Booking Car',
-            link: `${HrmPaths.bkc}/ocplist`, 
+            link: `${HrmPaths.bkc}/rqblist`, 
             icon: essAnnIcon,
             visible: true
           },           

@@ -22,7 +22,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
       <ModalForm title = "View training edit" {...rest} width={'90%'} submitter={false} > 
         <Space direction={"vertical"} style={{width:'100%'}}>
             <ProCard bordered>
-                <Typography.Title level={5}>Existing Datas Modified </Typography.Title> 
+                <Typography.Title level={5}>Existing Data Modified </Typography.Title> 
                 {/* existing data */} 
                 <ProTable<TrainingData> bordered
                     dataSource={oldData}

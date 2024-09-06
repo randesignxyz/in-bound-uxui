@@ -20,7 +20,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
     return <>
       <ModalForm title = "View language edit" {...rest} width={'90%'} submitter={false} > 
         <Space direction={"vertical"} style={{width:'100%'}}>
-        <Typography.Title level={5}>Existing Datas Modified</Typography.Title> 
+        <Typography.Title level={5}>Existing Data Modified</Typography.Title> 
         {/* existing data */} 
         <ProTable<LanguageData> bordered
             dataSource={oldData}

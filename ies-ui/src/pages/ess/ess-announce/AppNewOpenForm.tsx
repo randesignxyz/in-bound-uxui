@@ -85,7 +85,7 @@ export default ({ open, onOpenModalChange, refreshTable,data}: Props) => {
       <Space direction="vertical" style={{ width: '100%' }}>
         <ProCard size="small" bordered headerBordered>
           <Space direction="vertical" style={{ width: '100%' }}>
-            <ProFormText name = "openTitle" /*fieldProps={{ style: { height:'50px',fontSize:'24px' }}} */label = {<div><strong>Title</strong></div>} /> 
+            <ProFormText name = "openTitle" rules={[{ required: true }]} placeholder={"Title"} label = {<div><strong>Title</strong></div>} /> 
             {/* <ProFormSelect
               rules={[{ required: true }]} 
               label="Department" 

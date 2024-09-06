@@ -101,8 +101,9 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
         {/* Attachment files  */} 
         <div style={{marginTop:'10px'}}>
             <Space direction="horizontal">
-                <Typography.Title level={5}>Attachments</Typography.Title>
+                <Typography.Title level={5}>Attachments</Typography.Title><Typography.Title level={5} style={{color:'red'}}> (Required*)</Typography.Title>
             </Space>
+            <div style={{fontSize:'12px'}}>- Certificate (Image File or PDF)</div>
         </div> 
         <ProCard size="small" bordered>   
             <FileUploader   

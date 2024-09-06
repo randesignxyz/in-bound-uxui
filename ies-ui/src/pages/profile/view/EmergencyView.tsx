@@ -22,7 +22,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
         <Space direction={"vertical"} style={{width:'100%'}}>
             
         <ProCard bordered>
-            <Typography.Title level={5}>Existing Datas Modified </Typography.Title> 
+            <Typography.Title level={5}>Existing Data Modified </Typography.Title> 
             {/* existing data */} 
             <ProTable<EmergencyData> 
                 dataSource={oldData}
@@ -44,7 +44,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                     },{
                         title: "Emergency Phone", dataIndex: "emergencyPhone"
                     },{
-                        title: "Emergency Address", dataIndex: "emergencyPhone",render: (dom, r) => {return r.homeNo+" "+r.street+" "+r.villageId}
+                        title: "Emergency Address", render: (dom, r) => {return r.provinceName+", "+r.districtName+", "+r.communeName+", "+r.homeNo+", "+r.street+", "+r.villageId}
                     },{   width: '70px',
                         render: (dom, r) => {
                             return ( <Flex vertical={false} justify='space-between'>
@@ -82,7 +82,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                     },{
                         title: "Emergency Phone", dataIndex: "emergencyPhone"
                     },{
-                        title: "Emergency Address", dataIndex: "emergencyPhone",render: (dom, r) => {return r.homeNo+" "+r.street+" "+r.villageId}
+                        title: "Emergency Address", render: (dom, r) => {return r.provinceName+", "+r.districtName+", "+r.communeName+", "+r.homeNo+", "+r.street+", "+r.villageId}
                     },{   width: '70px',
                         render: (dom, r) => {
                             return ( <Flex vertical={false} justify='space-between'>

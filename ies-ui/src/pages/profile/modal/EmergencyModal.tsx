@@ -184,7 +184,7 @@ export default ({ profile,data,locations,type,isAdmin,empId, cb, ...rest }: Prop
                         <ProFormText label="Street" name={'street'} rules={[{ required: true }]}/> 
                     </Col>
                     <Col span={8} style={{padding:'3px'}}>   
-                        <ProFormText label="Group/Village" name={'villageId'} rules={[{ required: true }]}/> 
+                        <ProFormText label="Group/Village" name={'villageId'} rules={[{ required: false }]}/> 
                     </Col>
                 </Row>
             </ProCard>

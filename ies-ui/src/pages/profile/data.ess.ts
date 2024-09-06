@@ -141,6 +141,9 @@ export interface EmergencyData {
   emergencyContactRelationName: string; 
   emergencyPhone: string; 
   emergencyAddress: string; 
+  provinceName: string; 
+  districtName: string; 
+  communeName: string; 
   homeNo: string; 
   street: string; 
   villageId: string; 

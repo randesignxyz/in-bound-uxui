@@ -21,7 +21,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
         <Space direction={"vertical"} style={{width:'100%'}}>
         {/* old  */}
         <ProCard bordered> 
-        <Typography.Title level={5}>Existing Datas Modified </Typography.Title> 
+        <Typography.Title level={5}>Existing Data Modified </Typography.Title> 
         {/* existing data */} 
         <ProTable<RelationshipData> bordered
             dataSource={oldData}
@@ -36,16 +36,18 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
             }}
             columns={[
                 {
-                    title: "Full Name (Family Name, Given Name)", dataIndex: "relationshipName"
+                    title: "Full Name", dataIndex: "relationshipName"
                 },{
                     title: "Relationship", dataIndex: "typeName"
                 },{
                     title: "Occupation", dataIndex: "occupationName"
                 },{
-                    title: "Date o Birth", dataIndex: "dateOfBirth"
-                },{
-                    title: "Description", dataIndex: "description"
-                },{   width: '70px',
+                    title: "Date of Birth", dataIndex: "dateOfBirth"
+                },
+                // {
+                //     title: "Description", dataIndex: "description"
+                // },
+                {   width: '70px',
                     render: (dom, r) => {
                         return ( <Flex vertical={false} justify='space-between'>
                             <a style={{display: isAdmin==0?'':'none'}}  title="Edit item" 
@@ -76,16 +78,18 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
             }}
             columns={[
                 {
-                    title: "Full Name (Family Name, Given Name)", dataIndex: "relationshipName"
+                    title: "Full Name", dataIndex: "relationshipName"
                 },{
                     title: "Relationship", dataIndex: "typeName"
                 },{
                     title: "Occupation", dataIndex: "occupationName"
                 },{
-                    title: "Date o Birth", dataIndex: "dateOfBirth"
-                },{
-                    title: "Description", dataIndex: "description"
-                },{   width: '70px',
+                    title: "Date of Birth", dataIndex: "dateOfBirth"
+                },
+                // {
+                //     title: "Description", dataIndex: "description"
+                // },
+                {   width: '70px',
                     render: (dom, r) => {
                         return ( <Flex vertical={false} justify='space-between'>
                             <a style={{display: isAdmin==0?'':'none'}}  title="Edit item" 

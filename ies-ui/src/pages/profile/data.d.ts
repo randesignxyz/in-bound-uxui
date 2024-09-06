@@ -89,7 +89,7 @@ export interface ProfileData {
 export interface EssOpenData{  
   id?           : number;  
   empId         : number; 
-  stepId        : number; 
+  stepId        : number;  
   openEssName   : string; 
   startDate     : Moment;  
   endDate       : Moment; 
@@ -99,6 +99,7 @@ export interface EssOpenData{
   status        : Boolean;
   empClosed     : number?=0;
   opening       : number;
+  record          : number;
   stag          : number;
 } 
 

@@ -151,7 +151,7 @@ function Profile() {
           <ProDescriptions.Item label="Function">{data?.functions}</ProDescriptions.Item>
           <ProDescriptions.Item label="Position">{data?.position}</ProDescriptions.Item>
           <ProDescriptions.Item> </ProDescriptions.Item> 
-          <ProDescriptions.Item label="Start Date">{data?.dateJoined && formatDateTime(data.dateJoined)}</ProDescriptions.Item> 
+          <ProDescriptions.Item label="Start Date">{data?.dateJoined && formatDate(data.dateJoined)}</ProDescriptions.Item> 
         </ProDescriptions>
       )}
     </RouteContext.Consumer>

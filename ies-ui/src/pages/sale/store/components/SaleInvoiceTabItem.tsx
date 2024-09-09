@@ -4,7 +4,7 @@ import type { ExchangeRate, LeadLess, SaleInvoiceLess } from '@/services/sale/da
 import { EditOutlined } from '@ant-design/icons';
 import type { ActionType } from '@ant-design/pro-table';
 import ProTable from '@ant-design/pro-table';
-import { Card, Tag, Tooltip } from 'antd';
+import { Card, Tag, Tooltip, Typography } from 'antd';
 import type { SortOrder } from 'antd/lib/table/interface';
 import numeral from 'numeral';
 import { useEffect, useRef } from 'react';
@@ -45,26 +45,7 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
   const innerActionRef = useRef<ActionType>();
   const { actions } = Model();
   const access = useAccess();
-  // const [saleInvoiceModal, setSaleInvoiceModal] = useSetState<{
-  //   visible: boolean;
-  //   record?: SaleInvoiceLess;
-  // }>({
-  //   visible: false,
-  // });
-
-  //   const onSearchCriteria = (value: string | undefined) => {
-  //     return { salespersonCode: "", searchValue: value };
-  //   };
-
-  // const onSearchHandler = async (value: string) => {
-  //   setSearchValue(value);
-  //   await innerActionRef.current?.reloadAndRest?.();
-  // };
-
-  const exchangeRate = () => data.exchangeRate?.target_amount || 0;
-
   const onRequestHandler = (
-    // criteria?: { stockStoreId: number; searchValue?: string },
     criteria?: { stockControlId?: number; searchValue?: string },
     pagination?: {
       pageSize?: number;
@@ -77,52 +58,6 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
       return it;
     }) as Promise<Paging<SaleInvoiceLess>>;
   };
-
-  // const onLoadInitDataModal = async () => {
-  //   await actions.fetchInvoiceNo();
-  // };
-
-  //   const getProductItems = () => {
-  //     const result =
-  //       data.listStockDetailItem?.flatMap((it) => {
-  //         if (it.typeId !== 133) {
-  //           return it.items
-  //             ?.filter((it1) => it1.beginningQty + it1.quantity > it1.soldQty)
-  //             .flatMap((it1) => ({
-  //               id: it1.itemId,
-  //               name: it1.itemName,
-  //               code: it1.itemCode,
-  //               qty: it1.quantity,
-  //               price: 3.75,
-  //             }));
-  //         } else return [];
-  //       }) || [];
-
-  //     let items: SaleItem[] = [];
-
-  //     result.reduce((res, value) => {
-  //       if (value && !res[value.id]) {
-  //         res[value.id] = { ...value, qty: 0 };
-  //         items.push(res[value.id]);
-  //       }
-  //       value && (res[value.id].qty += value?.qty);
-  //       return res;
-  //     }, {});
-
-  //     return items.sort((a, b) => {
-  //       if (a.code < b.code) return -1;
-  //       if (a.code > b.code) return 1;
-  //       return 0;
-  //     });
-  //   };
-
-  //   const getTypes = () => {
-  //     return data.typeProductItems?.flatMap((it) => {
-  //       return it.value.flatMap((it1) => {
-  //         return { itemId: it1.id, itemType: it.type };
-  //       });
-  //     });
-  //   };
 
   const getCustomerName = (it?: LeadLess): string => {
     const name =
@@ -173,32 +108,9 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
             title: 'Amount',
             align: 'right',
             render: (_, r) => {
-              // const amount = r.quantity * r.unitPrice * exchangeRate();
-              // return `${data.exchangeRate?.target_symbol} ${numeral(amount).format('0,0.00')}`;
-              return `$ ${numeral(r.quantity * r.unitPrice).format("0,000.00")}`
+              return <Typography.Text type='success'>$ {numeral(r.quantity * r.unitPrice).format("0,000.00")}</Typography.Text>
             },
           },
-          // {
-          //   key: 'status',
-          //   title: 'Status',
-          //   dataIndex: 'status',
-          //   render: (_, r) => {
-          //     const color = r.status === 'approve' ? 'lime' : 'default';
-          //     const str = r.status === 'approve' ? 'Approve' : 'Pending';
-          //     return (
-          //       <span>
-          //         <Tag color={color}>{str}</Tag>
-          //       </span>
-          //     );
-          //   },
-          // },
-          // {
-          //   title: 'Action',
-          //   dataIndex: 'operation',
-          //   key: 'operation',
-          //   valueType: 'option',
-          //   render: () => [<a key="Pause">Pause</a>, <a key="Stop">Stop</a>],
-          // },
         ]}
         headerTitle={false}
         search={false}
@@ -215,18 +127,9 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
 
   return (
     <>
-      <Card
+      {/* <Card
         size="small"
-        // title={'List Sale Invoice'}
-        // actions={[
-        //   <PlusOutlined
-        //     key="addInvoice"
-        //     onClick={() => {
-        //       message.info('Make Sale Invoice (Not Implemented.)');
-        //     }}
-        //   />,
-        // ]}
-      >
+      > */}
         <ProTable<SaleInvoiceLess, { stockControlId: number; searchValue?: string }>
           actionRef={innerActionRef}
           key={'saleInvoice'}
@@ -367,7 +270,7 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
           }}
           // pagination={pagination}
         />
-      </Card>
+      {/* </Card> */}
       {/* <SaleInvoiceFormModal
         title="Sale Invoice"
         isLoading={data.loading || false}

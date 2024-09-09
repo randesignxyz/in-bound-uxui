@@ -33,6 +33,7 @@ export const StockControlServiceAPI = (requestActions: RequestActions) => {
       ) as Promise<Paging<StockControlLess>>,
 
 
+
     stockTransferAction: (data: TaskActionDataParam<StockTransfer>) => execDataService<{ data: string }, TaskActionDataParam<StockTransfer>>({
       actionName: 'stock-transfer',
       endpoint: 'SALE',

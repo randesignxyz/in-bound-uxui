@@ -330,20 +330,19 @@ const SettlementModal: React.FC<Props> = ({ data, onSave, dsdExchangeRate, ...pr
             columns={[
               {
                 title: "Actual Amount Total (USD)",
-
                 render: (_, r) => {
                   return <Text type='success'>{numeral(r.actionAmount).format("$ 0,000.00")}</Text>
                 }
               },
               {
                 title: "Actual Amount Total (KHR)",
-                render: (_, r) => <Text type='success'>៛​ {numeral(r.actionAmountKHR).format(" 0,#00")}</Text>
+                render: (_, r) => <Text type='success'>៛​ {numeral(r.actionAmountKHR||0).format(" 0,#00")}</Text>
               },
               {
                 title: "Actual Total",
                 render: (_, r) => {
                   const exch = form.getFieldValue("exchangeRate")
-                  const total = r.actionAmount + (r.actionAmountKHR / (exch || 0))
+                  const total = r.actionAmount + ((r.actionAmountKHR ||0) / (exch || 0));
                   return <Typography.Text type='warning'>{numeral(total).format("$ 0,000.00")}</Typography.Text>
                 }
               }

@@ -6,9 +6,9 @@ import { StockControlServiceAPI } from "../services";
 import { simpleRequestActions } from "@/services/model";
 import { useForm } from "antd/es/form/Form";
 import { ProForm, ProFormTextArea } from "@ant-design/pro-components";
-import { StockTransferRequest } from "./process-flow/data";
 import moment from "moment";
 import { formatDate } from "@/pages/utils";
+import { StockTransferRequest } from "./process-flow/data";
 
 export default (props: ActionDataFormProps) => {
 

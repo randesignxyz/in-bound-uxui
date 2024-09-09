@@ -43,58 +43,6 @@ const StockControlTabItem: React.FC<Props> = ({ data, forceUpdate }) => {
     if (forceUpdate) actionRef.current?.reloadAndRest?.();
   }, [forceUpdate]);
 
-  // const generalInfo: (DescriptionDisplayDataItem | undefined)[] = [
-  //   { label: 'Store Name', value: data.details?.stockName },
-
-  //   {
-  //     label: 'Owner',
-  //     //   onClick: () => {
-  //     //     history.push(`${CrmPaths.customer}/detail/${soDetail?.associatedTo.customer.id}`);
-  //     //   },
-  //     value: `${data.details?.owner?.salespersonCode} - ${data.details?.owner?.salespersonName}`,
-  //   },
-  //   { label: 'Description', value: data.details?.description },
-  //   { label: 'Serial #', value: data.details?.serialNumber },
-  //   {
-  //     label: 'Number Plate',
-  //     value: data.details?.plateNumber,
-  //   },
-  //   {
-  //     label: 'Status',
-  //     value: data.details?.status,
-
-  //   },
-
-  //   // {
-  //   //   label: 'Cash on hand',
-  //   //   value: numeral(data.details?.cashOnHand).format('$ 0,0.00'),
-  //   // },
-
-  //   // { label: 'Action', value: state.data?.detail?.isActive },
-  //   {
-  //     label: 'Received By',
-  //     value: data.details?.receivedBy
-  //       ? `${data.details?.receivedBy?.salespersonCode} - ${data.details?.receivedBy?.salespersonName}`
-  //       : 'N/A',
-  //   },
-  //   {
-  //     label: 'Approved By',
-  //     value: data.details?.approvedBy
-  //       ? `${data.details?.approvedBy?.salespersonCode} - ${data.details?.approvedBy?.salespersonName}`
-  //       : 'N/A',
-  //   },
-  //   {
-  //     label: 'Approved Date',
-  //     value: data.details?.approvedDate ? formatDateTime(data.details?.approvedDate) : 'N/A',
-  //   },
-  //   {
-  //     label: 'Is Keep Forwarding',
-  //     value: `${data.details?.isKeepForwarding ?? false}`,
-  //   },
-  // ];
-
-
-
   return (
     <>
       <Flex vertical gap={24} >
@@ -217,21 +165,6 @@ const StockControlTabItem: React.FC<Props> = ({ data, forceUpdate }) => {
                               fullScreen: false,
                               reload: false,
                             }}
-                            // toolBarRender={() => [
-                            //   data.isOpen && (
-                            //     <Button
-                            //       size="small"
-                            //       type="primary"
-                            //       disabled={data.loading}
-                            //       onClick={() => {
-                            //         actionHandlers &&
-                            //           actionHandlers.onAddItem &&
-                            //           actionHandlers.onAddItem(objType.id, objType.name);
-                            //       }}
-                            //       icon={<PlusOutlined />}
-                            //     />
-                            //   ),
-                            // ]}
                             dataSource={it.items}
                             columns={
                               it.typeId === 132
@@ -310,10 +243,8 @@ const StockControlTabItem: React.FC<Props> = ({ data, forceUpdate }) => {
                                     title: 'Quantity',
                                     align: 'right',
                                     render: (_, r) => {
-                                      //return (r.beginningQty + r.quantity) - r.soldQty
                                       return r.beginningQty + r.quantity;
                                     },
-                                    //dataIndex: 'quantity'
                                   },
                                   {
                                     title: 'Sold Quantity',
@@ -323,8 +254,6 @@ const StockControlTabItem: React.FC<Props> = ({ data, forceUpdate }) => {
                                     },
                                   },
                                   { title: 'UOM', dataIndex: 'uom' },
-                                  // { title: 'Pending Qty', align: 'right', dataIndex: 'pendingQty' },
-                                  // { title: 'Quantity', align: 'right', dataIndex: 'quantity' },
                                 ]
                             }
                           />
@@ -334,7 +263,6 @@ const StockControlTabItem: React.FC<Props> = ({ data, forceUpdate }) => {
                           data.details?.pendingItems?.length > 0 && (
                             <Tabs.TabPane tab={<Text>Pending Items</Text>} key={`pending-items`}>
                               <ProTable<StockDetailItemLess>
-                                // headerTitle="Line Items"
                                 size="small"
                                 sortDirections={['ascend']}
                                 showSorterTooltip={false}
@@ -351,21 +279,7 @@ const StockControlTabItem: React.FC<Props> = ({ data, forceUpdate }) => {
                                   fullScreen: false,
                                   reload: false,
                                 }}
-                                // toolBarRender={() => [
-                                //   data.isOpen && (
-                                //     <Button
-                                //       size="small"
-                                //       type="primary"
-                                //       disabled={data.loading}
-                                //       onClick={() => {
-                                //         actionHandlers &&
-                                //           actionHandlers.onAddItem &&
-                                //           actionHandlers.onAddItem(objType.id, objType.name);
-                                //       }}
-                                //       icon={<PlusOutlined />}
-                                //     />
-                                //   ),
-                                // ]}
+                               
                                 dataSource={data.details.pendingItems.flatMap((e) => e.items)}
                                 columns={[
                                   {
@@ -384,39 +298,9 @@ const StockControlTabItem: React.FC<Props> = ({ data, forceUpdate }) => {
                                     dataIndex: 'quantity',
                                     width: 100,
                                   },
-                                  // {
-                                  //   title: 'Current',
-                                  //   align: 'right',
-                                  //   render: (_, r) => {
-                                  //     return r.beginningQty + r.quantity;
-                                  //   },
-                                  //   width: 100,
-                                  // },
-                                  // {
-                                  //   title: 'Sold',
-                                  //   align: 'right',
-                                  //   render: (_, r) => {
-                                  //     return <Text type="danger">{`( ${r.soldQty} )`}</Text>;
-                                  //   },
-                                  //   width: 100,
-                                  // },
-                                  // {
-                                  //   title: 'End',
-                                  //   align: 'right',
-                                  //   render: (_, r) => {
-                                  //     return r.beginningQty + r.quantity - r.soldQty;
-                                  //   },
-                                  //   width: 100,
-                                  // },
-
+                               
                                   { title: 'UOM', dataIndex: 'uom', align: 'center' },
-                                  // {
-                                  //   title: 'Expired Date',
-                                  //   align: 'right',
-                                  //   render: (_, r) => {
-                                  //     return r.expiredDate ? formatDate(r.expiredDate) : '-';
-                                  //   },
-                                  // },
+                             
                                 ]}
                               />
                             </Tabs.TabPane>
@@ -430,6 +314,50 @@ const StockControlTabItem: React.FC<Props> = ({ data, forceUpdate }) => {
             </Tabs>
           </Card>
         )}
+          {( data.details?.pendingItems?.length ||0 >0) && (data.details?.items?.length <=0) && (
+            <Card title={"Pending Request"} size='small'>
+              <ProTable<StockDetailItemLess>
+                size="small"
+                sortDirections={['ascend']}
+                showSorterTooltip={false}
+                key="id"
+                actionRef={actionRef}
+                rowKey={(r) => {
+                  return [r.batchNo, r.itemId].filter(p => p).join(" - ");
+                }}
+                pagination={false}
+                search={false}
+                options={{
+                  setting: false,
+                  density: false,
+                  fullScreen: false,
+                  reload: false,
+                }}
+                dataSource={data?.details?.pendingItems.flatMap((e) => e.items)}
+                columns={[
+                  {
+                    title: 'Description',
+                    render: (_, r) => join([r.itemCode, r.itemName].filter(p => p), ' - '),
+                    key: 'itemId',
+                  },
+                  {
+                    title: 'SKU',
+                    dataIndex: 'description',
+                    width: 80
+                  },
+                  {
+                    title: 'Request',
+                    align: 'right',
+                    dataIndex: 'quantity',
+                    width: 100,
+                    render:(_,r)=><Typography.Text type='success'>{r.quantity}</Typography.Text>
+                  },
+                  { title: 'UOM', dataIndex: 'uom', align: 'center' },
+                ]}
+              />
+            </Card>
+          )
+        }
         {data.details?.settlement?.stockAdjusts && (
           <Card title={"Free of Charge"} size='small' styles={{body:{padding:0}}}>
             <ProTable<StockAdjustmentItem>

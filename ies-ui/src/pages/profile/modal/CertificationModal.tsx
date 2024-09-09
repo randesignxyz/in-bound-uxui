@@ -51,6 +51,12 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
     // 
     const onAdminSubmit = async ()=>{
         const bmForm = await form.validateFields(); 
+        // attachment files
+        if(createFileOther.length==0){  
+            message.error('Please do select attachment files.');
+            return false;
+        } 
+        // submit
         Modal.confirm({
             title: 'Save Certification',
             content: 'Are you sure?',

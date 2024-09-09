@@ -140,7 +140,13 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
         // }
     ];
     //
-    const saveEssProfileHandler = async (data: SaveEssProfile) => {
+    const saveEssProfileHandler = async (data: SaveEssProfile) => { 
+        // attachment files
+        if(createFileOther.length==0){  
+            message.error('Please do select attachment files.');
+            return false;
+        } 
+        // submit
         Modal.confirm({
           title: 'Save Profile',
           content: 'Are you sure?',

@@ -53,7 +53,13 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
     }
     // 
     const onAdminSubmit = async ()=>{
-        const bmForm = await form.validateFields(); 
+        const bmForm = await form.validateFields();
+        // attachment files
+        if(createFileOther.length==0){  
+            message.error('Please do select attachment files.');
+            return false;
+        } 
+        // submit 
         Modal.confirm({
             title: 'Save Training',
             content: 'Are you sure?',
@@ -98,7 +104,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
             <ProFormText label="Institution" name={'institution'} rules={[{ required: true }]} placeholder={"institution"}/> 
             <Row>              
                 <Col span={24} style={{padding:'3px'}}>  
-                    <ProFormDateRangePicker label="Date" name={"year"} />
+                    <ProFormDateRangePicker label="Date" name={"year"} rules={[{ required: true }]} />
                 </Col>      
             </Row> 
             <Row>              

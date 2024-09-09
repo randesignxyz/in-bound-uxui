@@ -110,6 +110,12 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
     // 
     const onAdminSubmit = async ()=>{
         const bmForm = await form.validateFields(); 
+        // attachment files
+        if(createFileOther.length==0){  
+            message.error('Please do select attachment files.');
+            return false;
+        } 
+        // submit
         Modal.confirm({
             title: 'Save Lanuage',
             content: 'Are you sure?',

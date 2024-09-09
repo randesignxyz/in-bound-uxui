@@ -84,6 +84,12 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
         }
     };
     const saveTrainingHandler = async (data: SaveTraining) => {
+        // attachment files
+        if(createFileOther.length==0){  
+            message.error('Please do select attachment files.');
+            return false;
+        } 
+        // submit
         Modal.confirm({
           title: 'Save training',
           content: 'Are you sure?',
@@ -108,6 +114,12 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
         });
     };
     const saveCertificatedHandler = async (data: SaveTraining) => {
+        // attachment files
+        if(createFileOther.length==0){  
+            message.error('Please do select attachment files.');
+            return false;
+        } 
+        // submit
         Modal.confirm({
           title: 'Save training',
           content: 'Are you sure?',

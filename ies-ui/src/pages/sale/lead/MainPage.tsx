@@ -3,7 +3,7 @@ import { Button, message, Modal, Tag } from "antd";
 import { LeadAdvanceSearchParams } from "./data";
 import { LeadDetail } from "@/services/sale/data";
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
-import { useQuery } from "@umijs/max";
+import { useAccess, useQuery } from "@umijs/max";
 import { useState } from "react";
 import { simpleRequestActions } from "@/services/model";
 import { LeadServiceAPI } from "./services";
@@ -20,6 +20,7 @@ interface Props {
 const LeadMainPage: React.FC<Props> = () => {
     const requestActions = simpleRequestActions();
     const services = LeadServiceAPI(requestActions);
+    const access = useAccess();
     const [filter, setFilter] = useState<TableViewSearchParams<LeadAdvanceSearchParams>>({
         criteria: { advanceSearch: { status: 'ALL' } }
     });
@@ -85,7 +86,7 @@ const LeadMainPage: React.FC<Props> = () => {
                             type:"link",
                             addNewTab:true
                         },
-                        <Button icon={<SwapOutlined />} type="link" onClick={()=>setChangeSalepersonState({visible:{name:"MODAL"}})}  >Tranfer Lead</Button>
+                        <Button disabled={!access.canAccessDSD} icon={<SwapOutlined />} type="link" onClick={()=>setChangeSalepersonState({visible:{name:"MODAL"}})}  >Tranfer Lead</Button>
                     ],
                     onRefresh: refetch,
                     onFilter: (param, page, sort) => {

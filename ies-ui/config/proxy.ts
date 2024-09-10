@@ -10,14 +10,14 @@
 export default {
   dev: {
     '/api/': {
-      // target: 'http://[::1]:8080',
-      target: 'http://10.0.12.247:85',
+      target: 'http://[::1]:8080',
+      // target: 'http://10.0.12.247:85',
       changeOrigin: true,
       pathRewrite: { '^': '' },
     },
     '/services': {
-      // target: 'http://[::1]:8080',
-      target: 'http://10.0.12.247:85',
+      target: 'http://[::1]:8080',
+      // target: 'http://10.0.12.247:85',
       changeOrigin: true,
       pathRewrite: { '^': '' },
     },

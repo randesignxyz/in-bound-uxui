@@ -80,11 +80,11 @@ export const RequisitionParams = {
     }
   }),
 
-  listBudgetCodeByDept: (deptId: number): ServiceApiType<{ id: number }> => ({
+  listBudgetCodeByDept: (deptId: number, buId?: number): ServiceApiType<{ deptId: number; buId?: number }> => ({
     type: 'LIST_QUERY',
     endpoint: 'PRO',
     actionName: 'list-budget-code-by-dept',
-    payload: { id: deptId }
+    payload: { deptId, buId }
   }),
 
   saveBudgetCodeReview: (data: TaskActionDataParam<RequisitionBudgetCodeReviewParams>): ServiceApiType<TaskActionDataParam<RequisitionBudgetCodeReviewParams>> => ({
@@ -162,7 +162,7 @@ export const RequisitionServiceAPI = (requestActions?: RequestActions) => {
     post: (id: number) => singleRequest(RequisitionParams.post(id))(requestActions) as Promise<RequisitionResponse>,
 
     listBudgetCode: (buId?: number) => singleRequest(RequisitionParams.listBudgetCode(buId))(requestActions) as Promise<BudgetCodeListItem[]>,
-    listBudgetCodeByDept: (deptId: number) => singleRequest(RequisitionParams.listBudgetCodeByDept(deptId))(requestActions) as Promise<BudgetCodeListItem[]>,
+    listBudgetCodeByDept: (deptId: number, buId?: number) => singleRequest(RequisitionParams.listBudgetCodeByDept(deptId))(requestActions) as Promise<BudgetCodeListItem[]>,
     saveBudgetCodeReviews: (data: TaskActionDataParam<RequisitionBudgetCodeReviewParams>) => singleRequest(RequisitionParams.saveBudgetCodeReview(data))(requestActions),
     listProEmplyee: () => singleRequest(RequisitionParams.listProEmployee())(requestActions) as Promise<ProEmployee[]>,
     saveProReview: (data: TaskActionDataParam<RequisitionProReviewparams>) => singleRequest(RequisitionParams.saveProReview(data))(requestActions),

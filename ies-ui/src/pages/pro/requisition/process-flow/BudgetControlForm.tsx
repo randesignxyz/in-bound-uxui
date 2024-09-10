@@ -48,7 +48,8 @@ export default (props: ActionDataFormProps) => {
         props.activityData?.procInstId,
       );
 
-      const budgetList = await services.listBudgetCode(data.buId)
+      // const budgetList = await services.listBudgetCode(data.buId)
+      const budgetList = await services.listBudgetCodeByDept(data.deptId, requisition?.buId)
       setBudgetCodesList(budgetList)
       setRequisition(data);
 

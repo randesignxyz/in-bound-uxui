@@ -183,7 +183,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
       return {
         id: it.id!,
         itemCode: it.itemCode,
-        batchNo: batchNumber || '',
+        batchNo: batchNumber || 'n/a',
         //it.expiredDate = '31-08-2022'
         expiredDate: it.expiredDate,
         isBeginning: isBeginning,

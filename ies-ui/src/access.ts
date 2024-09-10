@@ -52,9 +52,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       ) || false,
     canAccessDeliverySetupPriceList:
       currentUser?.authorities.some((item) =>
-        [
-          'ROLE_DELIVERY_EXPENSE_ADMIN', 'ROLE_DELIVERY_EXPENSE_USER'
-        ].some((it) => it === item),
+        ['ROLE_DELIVERY_EXPENSE_ADMIN', 'ROLE_DELIVERY_EXPENSE_USER'].some((it) => it === item),
       ) || false,
 
     canAccessDeliveryReports:
@@ -122,7 +120,6 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           'ROLE_CASHIER',
           'ROLE_WAREHOUSE',
           'ROLE_AR',
-          'ROLE_SALE_INDIVIDUAL',
           'ROLE_DSD_REPORT',
         ].some((it) => it === item),
       ) || false,
@@ -158,14 +155,16 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
 
     canAccessContact:
       currentUser?.authorities.some((item) =>
-        ['ROLE_CRM_ADMIN', 'ROLE_CRM_SALE_ADMIN', 'ROLE_ADMIN', 'ROLE_CONTACT_ACCESS',].some(
+        ['ROLE_CRM_ADMIN', 'ROLE_CRM_SALE_ADMIN', 'ROLE_ADMIN', 'ROLE_CONTACT_ACCESS'].some(
           (it) => it === item,
         ),
       ) || false,
 
     canCreateContract:
       currentUser?.authorities.some((item) =>
-        ['ROLE_CRM_ADMIN', 'ROLE_CRM_SALE_ADMIN', 'ROLE_ADMIN', 'ROLE_SALESPERSON'].some((it) => it === item),
+        ['ROLE_CRM_ADMIN', 'ROLE_CRM_SALE_ADMIN', 'ROLE_ADMIN', 'ROLE_SALESPERSON'].some(
+          (it) => it === item,
+        ),
       ) || false,
 
     canImportContract:
@@ -173,10 +172,10 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
         ['ROLE_CRM_ADMIN', 'ROLE_ADMIN'].some((it) => it === item),
       ) || false,
 
-    canAddEditContract: currentUser?.authorities.some((item) =>
-      ['ROLE_CRM_ADMIN', 'ROLE_ADMIN'].some((it) => it === item),
-    ) || false,
-
+    canAddEditContract:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_CRM_ADMIN', 'ROLE_ADMIN'].some((it) => it === item),
+      ) || false,
 
     canEditCustomerBasicInfo:
       currentUser?.authorities.some((item) =>
@@ -262,10 +261,10 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
         ['ROLE_ADMIN', 'ROLE_DELIVERY_SYS_ADMIN'].some((it) => it === item),
       ) || false,
 
-    canEditQueueLayoutDisplay: currentUser?.authorities.some((item) =>
-      ['ROLE_ADMIN', 'ROLE_EDIT_QUEUE_LAYOUT_DISPLAY_ADMIN'].some((it) => it === item),
-    ) || false,
-
+    canEditQueueLayoutDisplay:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_EDIT_QUEUE_LAYOUT_DISPLAY_ADMIN'].some((it) => it === item),
+      ) || false,
 
     canAccessDeliverySettingMenuItem:
       currentUser?.authorities.some((item) =>
@@ -355,10 +354,14 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
         ].some((it) => it === item),
       ) || false,
     canAccessAll:
-      currentUser?.authorities.some((item) => ['ROLE_ADMIN', 'ROLE_PROD_ADMIN'].some((it) => it === item)) || false,
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_PROD_ADMIN'].some((it) => it === item),
+      ) || false,
     canAccessItem:
       currentUser?.authorities.some((item) =>
-        ['ROLE_ADMIN', 'ROLE_PROD_ADMIN', 'ROLE_PROD_PRO_ADMIN', 'ROLE_PROD_WARE_ADMIN'].some((it) => it === item),
+        ['ROLE_ADMIN', 'ROLE_PROD_ADMIN', 'ROLE_PROD_PRO_ADMIN', 'ROLE_PROD_WARE_ADMIN'].some(
+          (it) => it === item,
+        ),
       ) || false,
     canAccessNVCItem:
       currentUser?.authorities.some((item) => ['ROLE_PROD_NVC_ADMIN'].some((it) => it === item)) ||
@@ -396,43 +399,23 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     currentUser,
     canAccessDailyWaterTreatmentMenuItem:
       currentUser?.authorities.some((item) =>
-        [
-          'ROLE_ADMIN',
-          'ROLE_PROD_DWT_USER'
-        ].some((it) => it === item),
+        ['ROLE_ADMIN', 'ROLE_PROD_DWT_USER'].some((it) => it === item),
       ) || false,
     canAssignItem:
-      currentUser?.authorities.some((item) =>
-        [
-          'ROLE_ADMIN'
-        ].some((it) => it === item),
-      ) || false,
+      currentUser?.authorities.some((item) => ['ROLE_ADMIN'].some((it) => it === item)) || false,
 
     canAccessDailyWaterTreatmentAssignItem:
-      currentUser?.authorities.some((item) =>
-        [
-          'ROLE_PROD_DWT_USER'
-        ].some((it) => it === item),
-      ) || false,
+      currentUser?.authorities.some((item) => ['ROLE_PROD_DWT_USER'].some((it) => it === item)) ||
+      false,
     canAccessDailyPreWaterTreatmentMenuItem:
       currentUser?.authorities.some((item) =>
-        [
-          'ROLE_ADMIN',
-          'ROLE_PROD_PWT_USER'
-        ].some((it) => it === item),
+        ['ROLE_ADMIN', 'ROLE_PROD_PWT_USER'].some((it) => it === item),
       ) || false,
-      canAssignItemPre:
+    canAssignItemPre:
+      currentUser?.authorities.some((item) => ['ROLE_ADMIN'].some((it) => it === item)) || false,
+    canAccessDailyHACCPMonitoringMenuItem:
       currentUser?.authorities.some((item) =>
-        [
-          'ROLE_ADMIN'
-        ].some((it) => it === item),
-      ) || false,
-      canAccessDailyHACCPMonitoringMenuItem:
-      currentUser?.authorities.some((item) =>
-        [
-          'ROLE_ADMIN',
-          'ROLE_PROD_HACCP_USER'
-        ].some((it) => it === item),
+        ['ROLE_ADMIN', 'ROLE_PROD_HACCP_USER'].some((it) => it === item),
       ) || false,
 
     /*****Queque */
@@ -560,8 +543,6 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
         ),
       ) || false,
 
-
-
     canAccessRetailer:
       currentUser?.authorities.some((item) =>
         ['ROLE_RETAILER_APP', 'ROLE_ADMIN'].some((it) => it === item),
@@ -598,32 +579,42 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canCreateEditStockControl: true,
 
     /** Start Stock Control */
-    // new by reach modified 
-    canAccessSaleTaskList: currentUser?.authorities.some((items) =>
-      ['ROLE_CASHIER', 'ROLE_WAREHOUSE', 'ROLE_DSD_ADMIN','ROLE_ADMIN'].some((it) => it === items)
-    ) || false,
+    // new by reach modified
+    canAccessSaleTaskList:
+      currentUser?.authorities.some((items) =>
+        ['ROLE_CASHIER', 'ROLE_WAREHOUSE', 'ROLE_DSD_ADMIN', 'ROLE_ADMIN'].some(
+          (it) => it === items,
+        ),
+      ) || false,
 
-    canAccessSaleStore: currentUser?.authorities.some((items) =>
-      ['ROLE_AR', 'ROLE_WAREHOUSE', 'ROLE_DSD_ADMIN','ROLE_SALE_INDIVIDUAL','ROLE_ADMIN', "ROLE_DSD_REPORT"].some((it) => it === items)
-    ) || false,
-  
-    canAccessSaleCash: currentUser?.authorities.some((items) =>
-      ['ROLE_CASHIER', 'ROLE_DSD_ADMIN','ROLE_ADMIN'].some((it) => it === items)
-    ) || false,
+    canAccessSaleStore:
+      currentUser?.authorities.some((items) =>
+        ['ROLE_AR', 'ROLE_WAREHOUSE', 'ROLE_DSD_ADMIN', 'ROLE_ADMIN', 'ROLE_DSD_REPORT'].some(
+          (it) => it === items,
+        ),
+      ) || false,
 
-    canAccessSaleDailyReport: currentUser?.authorities.some((items) =>
-      ['ROLE_AR','ROLE_ADMIN', "ROLE_DSD_REPORT"].some((it) => it === items)
-    ) || false,
-    
-    canAccessSaleVisit: currentUser?.authorities.some((items) =>
-      ['ROLE_DSD_ADMIN','ROLE_SALE_INDIVIDUAL','ROLE_ADMIN', "ROLE_DSD_REPORT"].some((it) => it === items)
-    ) || false,
+    canAccessSaleCash:
+      currentUser?.authorities.some((items) =>
+        ['ROLE_CASHIER', 'ROLE_DSD_ADMIN', 'ROLE_ADMIN'].some((it) => it === items),
+      ) || false,
 
-    canAccessSaleLead: currentUser?.authorities.some((items) =>
-      ['ROLE_DSD_ADMIN','ROLE_ADMIN','ROLE_SALE_INDIVIDUAL', "ROLE_DSD_REPORT"].some((it) => it === items)
-    ) || false,
+    canAccessSaleDailyReport:
+      currentUser?.authorities.some((items) =>
+        ['ROLE_AR', 'ROLE_ADMIN', 'ROLE_DSD_REPORT'].some((it) => it === items),
+      ) || false,
+
+    canAccessSaleVisit:
+      currentUser?.authorities.some((items) =>
+        ['ROLE_DSD_ADMIN', 'ROLE_ADMIN', 'ROLE_DSD_REPORT'].some((it) => it === items),
+      ) || false,
+
+    canAccessSaleLead:
+      currentUser?.authorities.some((items) =>
+        ['ROLE_DSD_ADMIN', 'ROLE_ADMIN', 'ROLE_DSD_REPORT'].some((it) => it === items),
+      ) || false,
     // ==== END reach ====
-    
+
     canAccessAllMenuDSD:
       currentUser?.authorities.some((item) =>
         ['ROLE_DSD_ADMIN', 'ROLE_ADMIN'].some((it) => it === item),
@@ -631,7 +622,9 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
 
     canAcessStockControlMenuItem:
       currentUser?.authorities.some((item) =>
-        ['ROLE_DSD_ADMIN', 'ROLE_WAREHOUSE', 'ROLE_ADMIN',"ROLE_DSD_REPORT"].some((it) => it === item),
+        ['ROLE_DSD_ADMIN', 'ROLE_WAREHOUSE', 'ROLE_ADMIN', 'ROLE_DSD_REPORT'].some(
+          (it) => it === item,
+        ),
       ) || false,
 
     canAccessSettlementMenuItem:
@@ -641,7 +634,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
 
     canAccessARMenuItem:
       currentUser?.authorities.some((item) =>
-        ['ROLE_AR', 'ROLE_DSD_ADMIN', 'ROLE_ADMIN', 'ROLE_SALE_INDIVIDUAL',"ROLE_DSD_REPORT"].some((it) => it === item),
+        ['ROLE_AR', 'ROLE_DSD_ADMIN', 'ROLE_ADMIN', 'ROLE_DSD_REPORT'].some((it) => it === item),
       ) || false,
 
     canAccessTabWarehouse:
@@ -737,7 +730,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
         ['ROLE_ADMIN', 'ROLE_ICT_WF_NEW_STAFF_REQUESTER'].some((it) => it === item),
       ) || false,
 
-    // Reach-2024-02-13 
+    // Reach-2024-02-13
     canAccessFleetMenu:
       currentUser?.authorities.some((item) =>
         ['ROLE_FLEET_ADMIN', 'ROLE_FLEET'].some((it) => it === item),

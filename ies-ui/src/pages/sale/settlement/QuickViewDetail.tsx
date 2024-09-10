@@ -6,8 +6,8 @@ import { Typography } from 'antd';
 import { Card } from 'antd';
 import type { SettlementLess } from './data';
 import numeral from 'numeral';
-import type { ExchangeRate } from '@/services/sale/data';
-import { DrawerForm, DrawerFormProps, ProTable } from '@ant-design/pro-components';
+import type { ExchangeRate, StockAdjustmentItem } from '@/services/sale/data';
+import { DrawerForm, DrawerFormProps, ProDescriptions, ProTable } from '@ant-design/pro-components';
 import type { SalesInvoiceAR, SalesInvoiceItemAR } from '../daily_report/data';
 import React from 'react';
 
@@ -20,7 +20,8 @@ const QuickViewDetail: React.FC<Prop> = ({ settlement, soldExchangeRate, ...prop
   const settlementInfo: (DescriptionDisplayDataItem | undefined)[] = [
     {
       label: 'Salesperson',
-      value: `${settlement?.salesperson.salespersonCode} - ${settlement?.salesperson.salespersonName}`,
+      value: [settlement?.salesperson?.salespersonCode, settlement?.salesperson?.salespersonName].filter(p => p).join("-")
+      // value: `${settlement?.salesperson.salespersonCode} - ${settlement?.salesperson.salespersonName}`,
     },
     { label: '', value: '' },
     { label: 'Settled Date', value: formatDate(settlement?.settlementDate) },
@@ -78,8 +79,16 @@ const QuickViewDetail: React.FC<Prop> = ({ settlement, soldExchangeRate, ...prop
             },
             {
               title: 'Quantity',
-              align: 'center',
+              align: 'right',
               dataIndex: 'quantity',
+            },
+            {
+              title: "FOC",
+              align: "right",
+              render:(_,r)=>{
+                const count = settlement?.stockAdjusts?.items.find(p=>p.itemCode == r.code)?.quantity;
+                return count
+              }
             },
             {
               title: 'Unit Price',
@@ -98,14 +107,13 @@ const QuickViewDetail: React.FC<Prop> = ({ settlement, soldExchangeRate, ...prop
           ]}
           summary={(data) => {
             const totalAmount = data.reduce((acc, it) => (acc + (it.quantity * it.unitPrice)), 0) ?? 0.00;
-
             return (
               <>
                 <Table.Summary.Row>
-                  <Table.Summary.Cell index={0} align="right" colSpan={2}>
+                  <Table.Summary.Cell index={0} align="right" colSpan={3}>
                     <Typography.Text type="warning">Total</Typography.Text>
                   </Table.Summary.Cell>
-                  <Table.Summary.Cell index={1} align="right" colSpan={2}>
+                  <Table.Summary.Cell index={1} align="right" colSpan={3}>
                     <Typography.Text type="warning">
                       $ {numeral(totalAmount).format('0,000.00')}
                     </Typography.Text>
@@ -129,12 +137,66 @@ const QuickViewDetail: React.FC<Prop> = ({ settlement, soldExchangeRate, ...prop
 
   return (
     <DrawerForm {...props}
-      resize
+      resize={{
+        maxWidth: window.innerWidth * 0.9,
+        minWidth: 500,
+      }}
     >
       <Flex gap={10} vertical>
-        <Card size="small" title="General">
-          <DescriptionDisplay column={2} data={settlementInfo} />
+        <Card size='small'>
+          <ProDescriptions
+            column={2}
+            dataSource={settlement}
+            contentStyle={{
+              fontWeight: "500"
+            }}
+            columns={[
+              {
+                title: "Salesperson",
+                render: (_, r) => [settlement?.salesperson?.salespersonCode, settlement?.salesperson?.salespersonName].filter(p => p).join("-")
+              },
+              {
+                title: "Settled Date",
+                dataIndex: "settlementDate",
+                valueType: "date"
+              },
+              {
+                title: "Cashier Name",
+                dataIndex: "cashierName"
+              },
+              {
+                title: "Exchange Rate",
+                dataIndex: "exchangeRate"
+              },
+              {
+                title: "Bank Amount USD",
+                render: (_, r) => <Typography.Text type='success'>$ {numeral(r.bankAmount).format("0,000.00")}</Typography.Text>
+              },
+              {
+                title: "Amount USD",
+                render: (_, r) => <Typography.Text type='success'>$ {numeral(r.amount).format("0,000.00")}</Typography.Text>
+              },
+              {
+                title: "Amount KHM",
+                render: (_, r) => <Typography.Text type='success'>៛ {numeral(r.amountKH).format("0,000")}</Typography.Text>
+              },
+              {
+                title: "Settled Amoun",
+                render: (_, r) => {
+                  const total = r.amount + (r.bankAmount || 0) + (r.amountKH / r.exchangeRate);
+                  return <Typography.Text type='warning'>$ {numeral(total).format("0,000.00")}</Typography.Text>
+                }
+              },
+              {
+                title: "Sold Amount",
+                render: (_, r) => <Typography.Text type='warning'>$ {numeral(settlement?.soldAmount).format("0,000.00")}</Typography.Text>
+              },
+            ]}
+          />
         </Card>
+        {/* <Card size="small" title="General">
+          <DescriptionDisplay column={2} data={settlementInfo} />
+        </Card> */}
         {/* <Card size='small' title="General">
           <ProDescriptions
             column={2}
@@ -228,6 +290,7 @@ const QuickViewDetail: React.FC<Prop> = ({ settlement, soldExchangeRate, ...prop
           }}
         />
 
+        
       </Flex>
 
     </DrawerForm>

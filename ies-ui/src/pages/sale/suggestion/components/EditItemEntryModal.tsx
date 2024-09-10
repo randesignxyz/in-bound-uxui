@@ -79,7 +79,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
             const itemEdit: EditableStockItem = {
               id: it.id,
               key: (Math.random() * 1000000).toFixed(0),
-              batchNo: it.batchNo === null || it.batchNo === '' ? undefined : batchNo,
+              batchNo: it.batchNo === null || it.batchNo === '' || it.batchNo =="n/a" ? undefined : batchNo,
               beginningQty: it.beginningQty,
               expiredDate: it.expiredDate,
               itemName: it.itemName,
@@ -142,7 +142,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
   // }, [dataSource]);
 
   const disabledButton = useCallback(() => {
-    return dataSource.some(o => ((o.itemType == 132) && o.batchNo == null));
+    return dataSource.some(o => ((o.itemType == 132) && o.batchNo == null ));
     // return dataSource
     //   .filter((it) => it.beginningQty === 0)
     //   .filter((it) => it.status !== 'rejected')
@@ -151,41 +151,21 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
   }, [dataSource]);
 
   const onSubmitActionHandler = async () => {
-    // const items = map(
-    //   groupBy(dataSource, (it) => `${it.batchNo}-${it.itemCode}`),
-    //   (value, key) => ({
-    //     key: key,
-    //     item: value.reduce((p, c) => ({ ...p, quantity: p.quantity + c.quantity })),
-    //   }),
-    // ).map((e) => {
-    //   const it = e.item;
-    //   const isBeginning = it.beginningQty > 0;
-    //   const batchNumber = formatDate(it.batchNo, formatStringDate);
-    //   return {
-    //     id: it.id!,
-    //     itemCode: it.itemCode,
-    //     batchNo: batchNumber || '',
-    //     //it.expiredDate = '31-08-2022'
-    //     expiredDate: it.expiredDate,
-    //     isBeginning: isBeginning,
-    //     quantity: isBeginning ? it.beginningQty : it.quantity,
-    //     isSplit: it.isSplit,
-    //     stockCategoryId: it.stockCategoryId,
-    //     status: it.status,
-    //     internalId: it.internalId,
-    //   };
-    // });
-
-    // console.log(items);
+   
     const items = dataSource.map((it) => {
       const isBeginning = it.beginningQty > 0;
       const batchNumber = formatDate(it.batchNo, formatStringDate);
       return {
         id: it.id!,
         itemCode: it.itemCode,
+<<<<<<< HEAD
         batchNo: batchNumber || 'n/a',
         //it.expiredDate = '31-08-2022'
         expiredDate: it.expiredDate,
+=======
+        batchNo: it.batchNo?formatDate(moment(it.batchNo), formatStringDate) : 'n/a',
+        expiredDate: it.batchNo?moment(it.batchNo).add(6,"M"):undefined,
+>>>>>>> 19dc88ec62b64c2beb54d440ad8c75d55ec4cf16
         isBeginning: isBeginning,
         quantity: isBeginning ? it.beginningQty : it.quantity,
         isSplit: it.isSplit,
@@ -219,10 +199,6 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
       title="Issue Stock"
     >
       <Flex vertical gap={12}>
-        {/* <Card size="small" title="Stock Detail" style={{ marginBottom: 10 }}>
-              <DescriptionDisplay data={generalInfo} />
-            </Card>
-        */}
         <Card size={"small"}>
           <ProDescriptions<StockControlLess>
             dataSource={data}
@@ -294,12 +270,11 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
               type: 'single',
               editableKeys,
               onSave: async (_, record: EditableStockItem, originRow: EditableStockItem) => {
-                // console.log(record);
-                const batchDate = record.batchNo;
-                if(batchDate){
-                  record.expiredDate = moment(batchDate).add(6, 'M');
+
+                if(record.batchNo){
+                  record.batchNo = moment(originRow.batchNo)
+                  record.expiredDate = moment(record.batchNo).add(6, 'M');
                 }
-               
                 await waitTime(100);
               },
               onChange: setEditableRowKeys,
@@ -331,9 +306,6 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
                 dataIndex: 'expiredDate',
                 valueType: 'date',
                 readonly: true,
-                render: (_, r) => {
-                  return formatDate(r.expiredDate, formatStringDate);
-                },
               },
               {
                 title: 'Item Code',
@@ -354,13 +326,6 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
                 align: 'center',
                 width: 60,
               },
-              // {
-              //   title: 'Status',
-              //   dataIndex: 'status',
-              //   readonly: true,
-              //   align: 'center',
-              //   width: 60,
-              // },
               {
                 title: 'Begin Qty',
                 align: 'right',
@@ -423,11 +388,11 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
                               itemName: record.itemName,
                               quantity: record.quantity,
                               uom: record.uom,
-                              // batchNo: moment(),
                               isSplit: true,
                               status: record.status,
                               stockCategoryId: record.stockCategoryId,
                               internalId: record.internalId,
+                              itemType:record.itemType,
                               key: key,
                             };
                             actionRef.current?.addEditRecord?.(first);
@@ -440,6 +405,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
                           danger
                           icon={<DeleteOutlined />}
                           onClick={() => {
+                            
                             if (record.internalId === undefined) {
                               const dataSourceItems = dataSource.filter(
                                 (it) => it.key !== record.key && it.internalId !== record.internalId,
@@ -447,7 +413,8 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
                               setDataSource(dataSourceItems);
                               actionRef.current?.reload();
                             } else {
-                              const isCopied = dataSource.some((e) => e.id === record.id && e.isSplit);
+                              const isCopied = dataSource.some((e) => (e.id === record.id) && !record.isSplit);
+                              console.log(dataSource)
                               if (isCopied) {
                                 message.error('Please remove copied item firstly.');
                               } else {
@@ -466,18 +433,16 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
         </Card>
       </Flex>
 
-
-
       <RemarkModal
         title="Delete the item"
         open={showRemark?.isOpen}
+        width='500px'
         onCancel={() => setShowRemark({ isOpen: false, record: undefined })}
         onSave={(id, remarks) => {
-          console.log(`${id} - ${remarks}`);
-
           if (showRemark !== undefined && showRemark.record !== undefined) {
             const dataSourceItems = dataSource.filter(
-              (it) => it.id !== showRemark.record?.id && it.key !== showRemark.record?.key,
+              // (it) => it.id !== showRemark.record?.id && it.key !== showRemark.record?.key,
+              (it) => it.key !== showRemark.record?.key
             );
             setDataSource(dataSourceItems);
             actionRef.current?.reload();

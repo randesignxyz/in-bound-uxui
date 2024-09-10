@@ -129,9 +129,9 @@ const StockStoreDetail: React.FC<Props> = ({ id, onEdit, onAdd, actionHandlers }
 
   const calculateTotalAmount = (settlement: SettlementLessDto | undefined): number => {
     return settlement
-      ? settlement.amountKH +
-      settlement.amount * settlement.exchangeRate +
-      settlement.bankAmount * settlement.exchangeRate
+      ? (settlement.amountKH / settlement.exchangeRate) +
+      settlement.amount +
+      settlement.bankAmount
       : 0;
     // return numeral(total).format('$ 0,0.00');
   };
@@ -327,7 +327,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, onEdit, onAdd, actionHandlers }
                 >
                   Create New Invoice
                 </Button>
-                {
+                {/* {
                   // access.canAccessSettlement &&
                   (
                     <Button
@@ -339,7 +339,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, onEdit, onAdd, actionHandlers }
                     >
                       Settlement
                     </Button>
-                  )}
+                  )} */}
               </>
             ),
             <Button
@@ -347,7 +347,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, onEdit, onAdd, actionHandlers }
               htmlType="button"
               icon={<EditOutlined />}
               // onClick={() => history.push(`${SalePaths.store}/edit/${id}`)}
-              onClick={()=>onEdit(id)}
+              onClick={() => onEdit(id)}
               key="edit"
             >
               Edit
@@ -483,10 +483,89 @@ const StockStoreDetail: React.FC<Props> = ({ id, onEdit, onAdd, actionHandlers }
                 </Card>
                 {state.data?.detail?.stockControl?.settlement && (
                   <Card title="Settlement" size="small" key="settlementInfo">
-                    <DescriptionDisplay data={settlementInfo} column={3} />
+                    <ProDescriptions<SettlementLessDto>
+                      dataSource={state.data.detail.stockControl.settlement}
+                      contentStyle={{
+                        fontWeight: "500"
+                      }}
+                      columns={[
+                        {
+                          title: "Cashier",
+                          dataIndex: "cashierName"
+                        },
+                        {
+                          title: "Exchange Rate",
+                          render: (_, r) => `៛ ${numeral(r.exchangeRate).format(" 0,00")}`
+                        },
+                        {
+                          title: "Actual Amount USD",
+                          render: (_, r) => <Typography.Text type='success'>{numeral(r.amount).format("$ 0,000.00")}</Typography.Text>
+                        },
+                        {
+                          title: "Settlement Date",
+                          dataIndex: "settlementDate",
+                          valueType: "dateTime"
+                        },
+                        {
+                          title: "Invoices Amount",
+                          render: (_, r) => {
+                            return < Typography.Text type='success' > {numeral(state.data?.detail?.stockControl?.soldAmount).format("$ 0,000.00")}</Typography.Text>
+
+                          }
+
+                        },
+                        {
+                          title: "Actual Amount KH",
+                          render: (_, r) => <Typography.Text type='success'>៛ {numeral(r.amountKH).format(" 000,000")}</Typography.Text>
+                        },
+                       {render:()=>""},
+                        {
+                          title: "Lost Amount",
+                          render: (_, r) => {
+                            const total = (state.data?.detail?.stockControl?.settlement?.adjustMentItems?.reduce(
+                              (acc, it) => acc + (it.originQuantity - it.adjustQuantity) * (it.unitPrice || 0.0),
+                              0,
+                            ) || 0.0)
+                            return <Typography.Text type='danger'> {numeral(total).format("$ 0,000.00")}</Typography.Text>
+                          }
+
+                        },
+                        {
+                          title: "Bank Transfer Amount",
+                          render: (_, r) => {
+                            return < Typography.Text type='success' > {numeral(r.bankAmount).format("$ 0,000.00")}</Typography.Text>
+                          }
+                        },
+                        {render:()=>""},
+                        {
+                          title: "System Amount KH",
+                          render: (_, r) => {
+                            const total = (state.data?.detail?.stockControl?.settlement?.adjustMentItems?.reduce(
+                              (acc, it) => acc + (it.originQuantity - it.adjustQuantity) * (it.unitPrice || 0.0),
+                              (state.data?.detail?.stockControl?.settlement?.bankAmount || 0) +
+                              (state.data?.detail?.stockControl?.soldAmount || 0),
+                            ) || 0)
+
+                            return < Typography.Text type='success' >៛ {numeral(total).format(" 000,000")}</Typography.Text>
+                          }
+                        },
+                        {
+                          title: "Actual Total Amount",
+                          render: (_, r) => {
+                            return < Typography.Text type='warning' >$ {numeral(calculateTotalAmount(state.data?.detail?.stockControl?.settlement)).format(" 000,000.00")}</Typography.Text>
+                          }
+                        },
+                        {
+                          title: "Remark",
+                          dataIndex: "remark",
+
+                        },
+                      ]}
+                    />
+                    {/* <DescriptionDisplay data={settlementInfo} column={3} /> */}
                   </Card>
                 )}
-              </Flex>
+              </Flex >
           },
           {
             key: "invoice",
@@ -545,12 +624,12 @@ const StockStoreDetail: React.FC<Props> = ({ id, onEdit, onAdd, actionHandlers }
             />
           },
           {
-            key:"history",
-            label:"Stock Control History",
-            icon:<HistoryOutlined/>,
-            children:<HistoryTabItem
-            data={{ id: id || 0, forceUpdate: forceHistoryUpdate, dsdExchangeRate: dsdExchangeRate }}
-          />
+            key: "history",
+            label: "Stock Control History",
+            icon: <HistoryOutlined />,
+            children: <HistoryTabItem
+              data={{ id: id || 0, forceUpdate: forceHistoryUpdate, dsdExchangeRate: dsdExchangeRate }}
+            />
           }
         ]}
       />
@@ -574,19 +653,19 @@ const StockStoreDetail: React.FC<Props> = ({ id, onEdit, onAdd, actionHandlers }
           }
           key="stockControlTabItem"
         > */}
-          {/* <Card
+        {/* <Card
             size="small"
             title={state.data?.detail?.stockControl === null ? 'Stock Detail' : 'Detail'}
             style={{ marginBottom: 10 }}
           > */}
-            {/* {state.data?.detail?.stockControl === null && (
+        {/* {state.data?.detail?.stockControl === null && (
               <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={<span>No Data</span>}>
                 <Button type="primary" onClick={() => setAddNewModal({ visible: true })}>
                   Create New Stock Request
                 </Button>
               </Empty>
             )} */}
-            {/* {state.data?.detail?.stockControl !== null && (
+        {/* {state.data?.detail?.stockControl !== null && (
               <DescriptionDisplay data={stockControlInfo} column={3} />
             )}
             {/* <Tabs
@@ -762,9 +841,9 @@ const StockStoreDetail: React.FC<Props> = ({ id, onEdit, onAdd, actionHandlers }
                     )
                   );
                 })}
-            </Tabs> */} 
-          {/* </Card> */}
-          {/* {state.data?.detail?.stockControl?.settlement && (
+            </Tabs> */}
+        {/* </Card> */}
+        {/* {state.data?.detail?.stockControl?.settlement && (
             <Card title="Settlement" size="small" key="settlementInfo">
               <DescriptionDisplay data={settlementInfo} column={3} />
             </Card>

@@ -11,7 +11,7 @@ interface Props {
     data?: StockControlLess;
     source: "ADMIN" | "WAREHHOUSE" | "CASHIER";
     actionButton?: boolean;
-    onReload: () => void;
+    onReload?: () => void;
     onSettlement:(data?:StockControlLess)=>void;
 }
 
@@ -58,7 +58,7 @@ const ExpendableTable: React.FC<Props> = ({ data, source, onReload, onSettlement
                                                     onOk: async () => {
                                                         services.reject(data?.id).then(p => {
                                                             message.success("The stock request was rejected.");
-                                                            onReload();
+                                                            onReload?.();
                                                         }).catch(p => {
                                                             message.error(p.message)
                                                         });
@@ -82,7 +82,7 @@ const ExpendableTable: React.FC<Props> = ({ data, source, onReload, onSettlement
                                                         message.error(p.message)
                                                     });
 
-                                                    onReload();
+                                                    onReload?.();
                                                 },
                                             });
                                         }}
@@ -102,8 +102,8 @@ const ExpendableTable: React.FC<Props> = ({ data, source, onReload, onSettlement
                             return (
                                 <Table.Summary.Row>
                                     <Table.Summary.Cell index={0} align="right" colSpan={5}><Typography.Text type="secondary">Total</Typography.Text></Table.Summary.Cell>
-                                    <Table.Summary.Cell index={1} align="right" ><Typography.Text type="success">( {beginningQty} )</Typography.Text></Table.Summary.Cell>
-                                    <Table.Summary.Cell index={1} align="right" ><Typography.Text type="success">( {requestQty} )</Typography.Text></Table.Summary.Cell>
+                                    <Table.Summary.Cell index={1} align="right" ><Typography.Text type="success"> {beginningQty} </Typography.Text></Table.Summary.Cell>
+                                    <Table.Summary.Cell index={1} align="right" ><Typography.Text type="success"> {requestQty} </Typography.Text></Table.Summary.Cell>
                                 </Table.Summary.Row>
                             )
                         }}
@@ -169,20 +169,19 @@ const ExpendableTable: React.FC<Props> = ({ data, source, onReload, onSettlement
                                     title: 'Settlement has no invoice.',
                                     content: 'Are you sure?',
                                     onOk: async () => {
-                                      await services.onClosedRequest(data.id);
-                                      onReload();
+                                      await services.onClosedRequest(data?.id);
+                                      onReload?.();
                                     },
                                   });
                             }} type="primary">Submit</Button>}
                         </Flex>
                     }}
                     summary={(data) => {
-                        const total = data.reduce((p, c) => p = c.amount, 0);
+                        const total = data.reduce((p, c) => p + c.amount, 0);
                         return (
                             <Table.Summary.Row>
                                 <Table.Summary.Cell index={0} align="right" colSpan={4}><Typography.Text type="secondary">Total</Typography.Text></Table.Summary.Cell>
-                                <Table.Summary.Cell index={1} align="right" ><Typography.Text type="success">( {numeral(total).format("$ 0,000.00")} )</Typography.Text></Table.Summary.Cell>
-                                {/* <Table.Summary.Cell index={1} align="right" ><Typography.Text type="success">( {requestQty} )</Typography.Text></Table.Summary.Cell> */}
+                                <Table.Summary.Cell index={1} align="right" ><Typography.Text type="success"> {numeral(total).format("$ 0,000.00")} </Typography.Text></Table.Summary.Cell>
                             </Table.Summary.Row>
                         )
                     }}
@@ -236,7 +235,7 @@ const ExpendableTable: React.FC<Props> = ({ data, source, onReload, onSettlement
                             return data?.comments?.length && <Card size="small">
                                 {
                                     data?.comments?.map(p => {
-                                        return <Typography.Text type="secondary">{p.description}</Typography.Text>
+                                        return <Typography.Text type="secondary">{p?.description}</Typography.Text>
                                     })
                                 }
                             </Card>
@@ -252,9 +251,9 @@ const ExpendableTable: React.FC<Props> = ({ data, source, onReload, onSettlement
                             return (
                                 <Table.Summary.Row>
                                     <Table.Summary.Cell index={0} align="right" colSpan={5}><Typography.Text type="secondary">Total :</Typography.Text></Table.Summary.Cell>
-                                    <Table.Summary.Cell index={1} align="right" ><Typography.Text type="success">( {beginningQty} )</Typography.Text></Table.Summary.Cell>
-                                    <Table.Summary.Cell index={1} align="right" ><Typography.Text type="success">( {requestQty} )</Typography.Text></Table.Summary.Cell>
-                                    {data?.status == "count stock" && <Table.Summary.Cell index={1} align="right" ><Typography.Text type="success">( {solQty} )</Typography.Text></Table.Summary.Cell>}
+                                    <Table.Summary.Cell index={1} align="right" ><Typography.Text type="success"> {beginningQty} </Typography.Text></Table.Summary.Cell>
+                                    <Table.Summary.Cell index={1} align="right" ><Typography.Text type="success">{requestQty} </Typography.Text></Table.Summary.Cell>
+                                    {/* {data?.status == "count stock" && <Table.Summary.Cell index={1} align="right" ><Typography.Text type="success">( {solQty} )</Typography.Text></Table.Summary.Cell>} */}
                                 </Table.Summary.Row>
                             )
                         }}
@@ -303,12 +302,12 @@ const ExpendableTable: React.FC<Props> = ({ data, source, onReload, onSettlement
                                     return <Typography.Text type="warning">{r.quantity}</Typography.Text>
                                 }
                             },
-                            data?.status == "count stock" ? {
-                                title: "sold Qty",
-                                dataIndex: "soldQty",
-                                align: "right",
-                            }
-                                : {},
+                            // data?.status == "count stock" ? {
+                            //     title: "sold Qty",
+                            //     dataIndex: "soldQty",
+                            //     align: "right",
+                            // }
+                            //     : {},
                         ]}
                     />
                 )

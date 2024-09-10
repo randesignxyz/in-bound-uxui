@@ -231,14 +231,14 @@ export default (props: Prop) => {
             title: 'Amount',
             align: 'right',
             render: (_, r) => {
-              const total = (soldExchangeRate?.target_amount || 0.0) * r.amount;
-              return `$ ${numeral(total).format('0,0.00')}`;
+              const total =  r.amount;
+              return `$ ${numeral(total).format('0,000.00')}`;
             },
           },
         ]}
         summary={(data) => {
           const total =
-            data.reduce((acc, it) => acc + it.amount, 0) * (soldExchangeRate?.target_amount || 0.0);
+            data.reduce((acc, it) => acc + it.amount, 0);
           return (
             <>
               <Table.Summary.Row>

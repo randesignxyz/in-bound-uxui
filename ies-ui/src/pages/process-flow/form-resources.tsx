@@ -37,7 +37,7 @@ const dataFormResources: DataForm[] = [
   ...getPriceComparisonForms(),
   ...getPoRequestForms(),
   ...getAppraisalRequestForms(),
-  ...getGratisSettlementRequestForms()
+  ...getGratisSettlementRequestForms(),
 ];
 
 export const getActionForm = (props: ActionDataFormProps) =>

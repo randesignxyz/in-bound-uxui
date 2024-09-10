@@ -13,7 +13,7 @@ import { SuggestionServiceAPI } from "./services"
 interface Props {
     data?: StockControlLess;
     onView: () => void;
-    onCountStock:(r?:StockControlLess)=>void
+    onCountStock: (r?: StockControlLess) => void
 }
 
 const TaskListDetailView: React.FC<Props> = ({ data, onView, onCountStock }) => {
@@ -34,10 +34,10 @@ const TaskListDetailView: React.FC<Props> = ({ data, onView, onCountStock }) => 
                     extra={[
                         <Space>
                             {
-                                access.canAccessTabWarehouse && data?.status !="count stock" &&  <Button onClick={() => setAddNewModal({ open: true, record: data })} type="primary" >Set Batch Number</Button>
+                                access.canAccessTabWarehouse && data?.status != "count stock" && <Button onClick={() => setAddNewModal({ open: true, record: data })} type="primary" >Set Batch Number</Button>
                             }
                             {
-                               access.canAccessTabWarehouse && data?.status =="count stock" && <Button onClick={() => onCountStock(data)} type="primary" >Approved Count Stock</Button>
+                                access.canAccessTabWarehouse && data?.status == "count stock" && <Button onClick={() => onCountStock(data)} type="primary" >Approved Count Stock</Button>
                             }
                         </Space>
                     ]}
@@ -49,7 +49,7 @@ const TaskListDetailView: React.FC<Props> = ({ data, onView, onCountStock }) => 
                             {
                                 title: "Stock Name",
                                 dataIndex: "stockName",
-                                render:(_,r)=><Typography.Text type="success">{r.stockName}</Typography.Text>
+                                render: (_, r) => <Typography.Text type="success">{r.stockName}</Typography.Text>
                             },
                             {
                                 title: "Referent No",
@@ -123,13 +123,13 @@ const TaskListDetailView: React.FC<Props> = ({ data, onView, onCountStock }) => 
 
                 <ExpendableTable
                     data={data}
-                    onReload={()=>onView()}
-                    source={
-                        access.canAccessTabCashier ? "CASHIER"
-                            : access.canAccessTabWarehouse ? "WAREHHOUSE"
-                                : "ADMIN"
-                    }
-                />
+                    onReload={() => onView()}
+                    source={access.canAccessTabCashier ? "CASHIER"
+                        : access.canAccessTabWarehouse ? "WAREHHOUSE"
+                            : "ADMIN"}
+                    onSettlement={function (data?: StockControlLess): void {
+                        throw new Error("Function not implemented.")
+                    }} />
             </Flex>
 
 

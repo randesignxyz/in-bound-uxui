@@ -468,6 +468,7 @@ export interface SettlementLessDto {
   isKeepForwarding: boolean;
   remark: string;
   adjustMentItems?: StockAdjustmentDto[] = [];
+  stockAdjusts?:StockAjust;
 }
 
 export interface StockQuantity {
@@ -526,6 +527,10 @@ export interface StockControlLess {
   beginningQty:number;
   comments?:Comment[];
   stockAdjusts?:StockAjust;
+  stockCountId?:number;
+  isKeepForwarding?:boolean;
+  storeId?:number;
+  description?:string;
 }
 
 interface StockAjust{

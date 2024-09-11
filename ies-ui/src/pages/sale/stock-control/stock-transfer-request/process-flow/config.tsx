@@ -16,7 +16,6 @@ export const getSaleStockTransferRequestRequestForms = (): DataForm[] => [
     {
         formKey: [
             SaleStockTranferRequestFormNames.supervisorApproval,
-
         ],
         dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,
         actionDataForm: (props: ActionDataFormProps) => <DefaultActionForm {...props} />,

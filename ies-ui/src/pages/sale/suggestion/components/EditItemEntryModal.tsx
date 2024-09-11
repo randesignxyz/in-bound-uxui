@@ -7,7 +7,7 @@ import { CopyOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { ProDescriptions } from '@ant-design/pro-components';
 import type { ActionType } from '@ant-design/pro-table';
 import { EditableProTable } from '@ant-design/pro-table';
-import { Button, Card, Flex, Tag, Tooltip, Typography, message } from 'antd';
+import { Button, Card, Flex, Tag, Tooltip, Typography } from 'antd';
 import moment from 'moment';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -231,6 +231,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
             rowKey={(r) => {
               return r.key;
             }}
+            size="small"
             actionRef={actionRef}
             key={`EditableProTable-${data?.id}`}
             recordCreatorProps={false}
@@ -383,15 +384,17 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
                               setDataSource(dataSourceItems);
                               actionRef.current?.reload();
                             } else {
-                              const isCopied = dataSource.some(
-                                (e) => e.id === record.id && !record.isSplit,
-                              );
-                              console.log(dataSource);
-                              if (isCopied) {
-                                message.error('Please remove copied item firstly.');
-                              } else {
-                                setShowRemark({ isOpen: true, record: record });
-                              }
+                              // const isCopied = dataSource.some((e) => {
+                              //   console.log((e.id === record.id) && record.isSplit);
+
+                              // });
+                              // console.log(isCopied)
+                              // if (isCopied) {
+                              //   message.error('Please remove copied item firstly.');
+                              // } else {
+                              // setShowRemark({ isOpen: true, record: record });
+                              // }
+                              setShowRemark({ isOpen: true, record: record });
                             }
                           }}
                         />

@@ -142,19 +142,13 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
         rowKey={'id'}
         columns={[
           { title: '#', dataIndex: 'index', key: 'key' },
-<<<<<<< HEAD
           {
             title: 'Batch No',
             render: (_, r) => {
               return r.batchNo === 'n/a' ? '-' : r.batchNo;
             },
           },
-=======
-          {  title: 'Batch No',
-            render: (_, r) => {
-              return r.batchNo === 'n/a' ? '-' : r.batchNo;
-            }, },
->>>>>>> 19dc88ec62b64c2beb54d440ad8c75d55ec4cf16
+
           { title: 'Code', dataIndex: 'itemCode' },
           { title: 'Description', dataIndex: 'itemName' },
           { title: 'Quantity', dataIndex: 'quantity' },

@@ -1,12 +1,11 @@
 import { formatDateTime } from "@/pages/utils";
-import { FileExcelOutlined, FileJpgOutlined, FilePdfOutlined, FileWordOutlined, ArrowRightOutlined, DownloadOutlined, HistoryOutlined, ShareAltOutlined, EditOutlined, DeleteOutlined, HeartOutlined, EllipsisOutlined } from "@ant-design/icons";
+import { FileExcelOutlined, FileJpgOutlined, FilePdfOutlined, FileWordOutlined, ArrowRightOutlined, DownloadOutlined, ShareAltOutlined, EditOutlined, HeartOutlined, EllipsisOutlined } from "@ant-design/icons";
 import { ActionType, ProTable } from "@ant-design/pro-components"
 import { Button, Dropdown, MenuProps } from "antd";
 import { formateFileType, formateBytes } from "../core";
 import { simpleRequestActions } from "@/services/model";
 import { FavoriteServiceAPI } from "./service";
-import { useRef, useState } from "react";
-import Detail from "./Detail";
+import { useRef } from "react";
 import { DocumentationDTO } from "../documentation/data";
 import { DMSPaths } from "..";
 import { history } from "@umijs/max";
@@ -15,12 +14,6 @@ import { history } from "@umijs/max";
 export default () =>{
 
     const requestAction = simpleRequestActions();
-    // const [detailState, setDetailState] = useState<{
-    //     visible?:{
-    //         name:"MODAL";
-    //         payload?:ShareDTO
-    //     }
-    // }>();
     const actionRef = useRef<ActionType>();
 
     const actionItem =(record:DocumentationDTO):MenuProps["items"] =>[
@@ -28,14 +21,12 @@ export default () =>{
             key: "1",
             label: "View",
             itemIcon: <ArrowRightOutlined />,
-            // onClick: ()=>setDetailState({visible:{name:"MODAL",payload:record}})
         },
         {
             key: "2",
             label: "Download",
             itemIcon: <DownloadOutlined />,
             onClick: async () => {
-                // await downloadUploadFileV2()(record.attachment.fileId || "", record?.document?.title);
             }
         },
         {
@@ -66,24 +57,6 @@ export default () =>{
                actionRef.current?.reload?.();
             }
         },
-        
-        // {
-        //     type: "divider"
-        // },
-        // {
-        //     key: "5",
-        //     label: "Delete",
-        //     danger:true,
-        //     itemIcon: <DeleteOutlined />,
-        //     onClick: async () => {
-        //         // await downloadUploadFileV2()(record.attachment?.fileId || "", record?.document?.title);
-        //     }
-        // },
-        // {
-        //     key: "6",
-        //     label: "History",
-        //     itemIcon: <HistoryOutlined />,
-        // },
        
     ]
     return (
@@ -111,14 +84,14 @@ export default () =>{
                                 type="link"
                                 onClick={() => history.push(`${DMSPaths.document}/detail/${r.id}`)}
                             >
-                                {
+                                {/* {
                                     formateFileType(r?.attachment?.fileType) == "EXCEL" && <FileExcelOutlined /> ||
                                     formateFileType(r?.attachment?.fileType) == "JPG" && <FileJpgOutlined /> ||
                                     formateFileType(r?.attachment?.fileType) == "PDF" && <FilePdfOutlined /> ||
                                     formateFileType(r?.attachment?.fileType) == "PNG" && <FileJpgOutlined /> ||
                                     formateFileType(r?.attachment?.fileType) == "WORD" && <FileWordOutlined />
                                 }
-                                {r.title}
+                                {r.title} */}
                             </Button>)
                     },
                     {

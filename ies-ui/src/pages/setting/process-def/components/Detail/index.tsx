@@ -70,7 +70,7 @@ const ProcessDefDetailView: React.FC<Props> = ({ id, actionHandlers }) => {
 
       const rs = await actions.fetchConfigEndEvent(businessObject.id);
       console.log(rs);
-      
+
       setData((v) => ({ ...v, endTask: rs, eventId: businessObject.id }));
       modals.showModal('end-task-setup');
 
@@ -118,7 +118,7 @@ const ProcessDefDetailView: React.FC<Props> = ({ id, actionHandlers }) => {
           onCancel={() => modals.hideModal('originator-setup')}
         />
 
-        <DestApproval
+        {modals.isVisible('destination-setup') && <DestApproval
           workflow={processFlowModel}
           title={data?.destination?.taskName}
           width={'1000px'}
@@ -126,7 +126,7 @@ const ProcessDefDetailView: React.FC<Props> = ({ id, actionHandlers }) => {
           destination={data?.destination}
           onSave={(data) => {
             Modal.confirm({
-              title: 'Save Descrtion',
+              title: 'Save Destination',
               content: 'Are you sure?',
               onOk: async () => {
                 try {
@@ -139,7 +139,7 @@ const ProcessDefDetailView: React.FC<Props> = ({ id, actionHandlers }) => {
             });
           }}
           onCancel={() => modals.hideModal('destination-setup')}
-        />
+        />}
 
         <EndTask
           workflow={processFlowModel}

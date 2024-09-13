@@ -1,15 +1,15 @@
 import { DrawerForm, DrawerFormProps, ProFormDatePicker, ProFormSelect, ProFormText, ProFormTextArea, ProList } from "@ant-design/pro-components";
 import { Avatar, Col, Divider, Row, Tag } from "antd";
 import { useForm } from "antd/es/form/Form";
-import { ShareCreate, ShareDTO } from "./data";
-import { ShareServiceAPI } from "./service";
 import { simpleRequestActions } from "@/services/model";
 import { TeamOutlined, UserOutlined } from "@ant-design/icons";
 import { formatDate } from "@/pages/utils";
 import dayjs from 'dayjs';
-import { GroupServiceAPI } from "../setting/usergroup/service";
+import { TeamsServiceAPI } from "../setting/teams/service";
 import { useEffect, useState } from "react";
 import { Flex, Space } from "antd/lib";
+import { ShareCreate, ShareDTO } from "../share/data";
+import { ShareServiceAPI } from "../share/service";
 
 interface Props extends DrawerFormProps {
     onSave: (data: ShareCreate) => void,
@@ -17,23 +17,17 @@ interface Props extends DrawerFormProps {
     docId?: number;
     type?: string
 }
-
 const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...props }: Props) => {
-
-
     const requestAction = simpleRequestActions();
     const [form] = useForm<ShareCreate>();
     const [recipeintState, setRecipeintState] = useState<{
         recipeint?:boolean;
         group?:boolean;
     }>();
-
     useEffect(()=>{
         form.resetFields();
         setRecipeintState({group:false, recipeint:false})
-    }, [props.open]);
-
-
+    }, [props.open]);      
     return (
         <DrawerForm
             width={500}
@@ -45,8 +39,7 @@ const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...pr
                 
             }}
             submitter={{
-                onSubmit:(as)=>{
-                    console.log(as);
+                onSubmit:()=>{
                 }
             }}
             onFinish={async () => {
@@ -57,7 +50,6 @@ const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...pr
                 }
                 onSave(entry)
             }}
-
         >
             {
                 type === "DETAIL" && (
@@ -108,12 +100,10 @@ const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...pr
                                 render:(_,r)=><Flex vertical><span>Accessible</span><Tag color="cyan" bordered={false}>{r.accessible}</Tag></Flex>
                             }
                         }}
-
                     />
                 ) ||
                 (
                     <>
-
                     <ProFormText
                         name={"recipient"}
                         label="Recipient"
@@ -130,9 +120,7 @@ const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...pr
                             }
                         }}
                     />
-                      
                         <p>OR</p>
-                    
                         <ProFormSelect
                             name={"groupId"}
                             label="User Group"
@@ -149,17 +137,18 @@ const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...pr
                                 }
                             }}
                             request={async () => {
-                                const data = await GroupServiceAPI(requestAction).page({ searchValue: "" });
+                                const data = await TeamsServiceAPI(requestAction).page({
+                                    criteria:{
+                                        searchValue:""
+                                    }
+                                });
                                 return data.items.map(v => ({
                                     value: v.id,
                                     label: v.name
                                 }))
                             }}
                         />
-
-
                         <Divider orientation="left">Setting</Divider>
-
                         <Row gutter={16}>
                             <Col span={12}>
                                 <ProFormDatePicker
@@ -215,13 +204,9 @@ const ShareDrawerForm: React.FC<Props> = ({ onSave, onCancel, docId, type, ...pr
                             name={"description"}
                             label="Description"
                         />
-
-
                     </>
-
                 )
             }
-
         </DrawerForm>
     )
 }

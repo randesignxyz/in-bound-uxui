@@ -30,16 +30,16 @@ import { message } from 'antd/lib';
 type RefType = 'QC' | 'PQ' | 'PR' | 'ITEM';
 
 const options = [
-  {
-    value: 'ITEM',
-    text: 'Items',
-    hint: '',
-    items: [
-      { value: 'hasRequisition', text: 'Has Requistion' },
-      { value: 'hasQuotation', text: 'Has Quotation' },
-      { value: 'hasQC', text: 'Has Quotation Comparison' },
-    ],
-  },
+  // {
+  //   value: 'ITEM',
+  //   text: 'Items',
+  //   hint: '',
+  //   items: [
+  //     { value: 'hasRequisition', text: 'Has Requistion' },
+  //     { value: 'hasQuotation', text: 'Has Quotation' },
+  //     { value: 'hasQC', text: 'Has Quotation Comparison' },
+  //   ],
+  // },
   {
     value: 'PR',
     text: 'Requisition',
@@ -124,13 +124,13 @@ export default ({
     };
   };
 
-  const onSearchHandler = async ({ keywords }: { keywords?: string }) => {
+  const onSearchHandler = async ({ keyWords }: { keyWords?: string }) => {
     try {
       if (searchBy == 'QC') {
         const rs = await qcSrv.fetchPaging({
-          keywords: keywords,
+          keywords: keyWords,
           criteria: {
-            keyword: keywords,
+            keyword: keyWords,
             isService: isService,
             workflowStatus: 'APPROVED',
             status: 'OPENED',
@@ -143,16 +143,17 @@ export default ({
         }));
       }
       if (searchBy == 'PQ') {
-        const rs = await pqSrv.fetchPaging({
-          keywords: keywords,
+        const rs = await pqSrv.fetchQuotationForPo({
+          keywords: keyWords,
           criteria: {
             isService: isService,
-            keyword: keywords,
-            status: 'SELECTED',
+            keyword: keyWords,
+            // status: 'SELECTED',
+
           },
         });
 
-        return rs.items.map((it) => ({
+        return rs.map((it) => ({
           label: it.code,
           value: it.id,
         }));
@@ -161,7 +162,7 @@ export default ({
       if (searchBy == 'PR') {
         const rs = await prSrv.list({
           criteria: {
-            searchValue: keywords,
+            searchValue: keyWords,
             advanceSearch: {
               service: isService,
               integratedStatus: 'POSTED',
@@ -211,11 +212,12 @@ export default ({
         price: it.price || 0,
         uomId: it.uomId,
         uomName: it.uomName,
-        qty: it.qty || 1,
+        qty: (it.availableQty || 0),
         amount: it.amount || 0,
         amountAfterDiscount: it.amount || 0,
         item: it,
         linkObject: [],
+        relatedObjects: []
       }));
     onSave(savedData);
   };
@@ -329,7 +331,6 @@ export default ({
                         return
                       }
                       setMultiSelect(true);
-
                       setSelectedRows(items.filter((it) => !it.closed));
                       // setSelectedRowKeys(items.map((it) => it.mainId));
                     }}
@@ -362,7 +363,9 @@ export default ({
                   r.refType != 'ITEM' && (
                     <ProDescriptions<PoItemSearch>
                       dataSource={r}
+                      size='small'
                       column={3}
+
                       columns={[
                         {
                           label: 'Ref #',
@@ -381,21 +384,26 @@ export default ({
                         {
                           label: 'Qty',
                           hideInDescriptions: isService,
-                          render: (_, r) => r.qty && formatterQty.format(r.qty),
+                          render: (_, r) => formatterQty.format(r.qty || 0),
                         },
                         {
                           label: 'Ordered Qty',
                           hideInDescriptions: isService,
-                          render: (_, r) => r.orderedQty && formatterQty.format(r.orderedQty),
+                          render: (_, r) => formatterQty.format(r.orderedQty || 0),
                         },
                         {
                           label: 'Purchased Qty',
                           hideInDescriptions: isService,
-                          render: (_, r) => r.purchasedQty && formatterQty.format(r.purchasedQty),
+                          render: (_, r) => formatterQty.format(r.purchasedQty || 0),
+                        },
+                        {
+                          label: 'Available Qty',
+                          hideInDescriptions: isService,
+                          render: (_, r) => formatterQty.format(r.availableQty || 0),
                         },
                         {
                           label: 'Amount',
-                          render: (_, r) => r.amount && formatter.format(r.amount),
+                          render: (_, r) => formatter.format(r.amount || 0),
                         },
                       ]}
                     />
@@ -426,7 +434,7 @@ export default ({
                                   (i) => i.refId == r.refId && i.refType == r.refType,
                                 ),
                             ) ||
-                            r.closed
+                            (r.availableQty || 0) == 0
                           }
                           onClick={() => {
                             onAddHandler([r]);

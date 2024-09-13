@@ -6,7 +6,7 @@ import { Button, Card, Col, message, Modal, Row, Spin } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { head, uniq } from 'lodash';
 import { useEffect, useState } from 'react';
-import { history } from 'umi';
+import { history } from "@umijs/max";
 import { model } from '../../model';
 import AddressListView from '../address/AddressListView';
 import BasicEntryForm from '../basic/BasicEntryForm';

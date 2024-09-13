@@ -125,7 +125,7 @@ export const Model = () => {
   };
 
   const loadListItem = async (
-    criteria?: { searchValue?: string },
+    criteria?: { advanceSearch?: any, searchValue?: string },
     pagination?: {
       pageSize?: number;
       current?: number;
@@ -387,10 +387,10 @@ export const Model = () => {
     const list = data.key
       ? state.data?.deliveryList?.map((it) => (it.key === data.key ? data : it))
       : state.data?.deliveryList?.concat({
-          ...data,
-          key: uniqueId('delivery'),
-          itemList: data.itemList.map((it) => ({ ...it, key: uniqueId('delivery') })),
-        });
+        ...data,
+        key: uniqueId('delivery'),
+        itemList: data.itemList.map((it) => ({ ...it, key: uniqueId('delivery') })),
+      });
     const soItems = getSoItems(state.data?.transportation || [], delivery);
     dispatch({
       type: 'setDeliveryList',
@@ -479,28 +479,28 @@ export const Model = () => {
     return (
       (delivery && delivery?.id === 5
         ? state.data?.soItems?.concat(
-            rs.flatMap((it, index) => {
-              return it.offerList.map((ti) => {
-                return {
-                  id: 0,
-                  seq: (lastElement?.seq || 0) + (index + 1) * 1000,
-                  key: uniqueId('traItem'),
-                  itemId: ti.itemItem.id,
-                  itemCode: ti.itemItem.code || '',
-                  description: ti.itemItem.description || '',
-                  uomId: 1,
-                  uom: 'EACH',
-                  qty: ti.qty,
-                  price: ti.price,
-                  amount: 0,
-                  discountAmount: 0,
-                  totalAmount: 0,
-                  type: ti.offerType,
-                  categoryId: 0,
-                };
-              });
-            }) || [],
-          )
+          rs.flatMap((it, index) => {
+            return it.offerList.map((ti) => {
+              return {
+                id: 0,
+                seq: (lastElement?.seq || 0) + (index + 1) * 1000,
+                key: uniqueId('traItem'),
+                itemId: ti.itemItem.id,
+                itemCode: ti.itemItem.code || '',
+                description: ti.itemItem.description || '',
+                uomId: 1,
+                uom: 'EACH',
+                qty: ti.qty,
+                price: ti.price,
+                amount: 0,
+                discountAmount: 0,
+                totalAmount: 0,
+                type: ti.offerType,
+                categoryId: 0,
+              };
+            });
+          }) || [],
+        )
         : state.data?.soItems) || []
     );
   };

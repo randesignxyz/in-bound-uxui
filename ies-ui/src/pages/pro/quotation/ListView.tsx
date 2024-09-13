@@ -15,7 +15,6 @@ import {
 } from './data';
 import { createQuotationService } from './services';
 import { Flex } from 'antd/lib';
-import { ActionType } from '@ant-design/pro-components';
 
 const { Link } = Typography;
 
@@ -71,7 +70,7 @@ export default ({ onAdd }: Props) => {
             options: [
               { label: 'All', value: 'ALL' },
               { label: 'Pending', value: 'PENDING' },
-              { label: 'In Process', value: 'IN_PROGRESS' },
+              { label: 'In Progress', value: 'IN_PROGRESS' },
               { label: 'Selected', value: 'SELECTED' },
               { label: 'Rejected', value: 'REJECTED' },
               { label: 'Expired', value: 'EXPIRED' },
@@ -80,6 +79,7 @@ export default ({ onAdd }: Props) => {
           },
 
           subStatusProps: (status) => {
+
             status && setSelectedStatus(status);
 
             return status == 'SELECTED'
@@ -161,7 +161,7 @@ export default ({ onAdd }: Props) => {
 
             {
               title: 'SAP Info',
-              hideInTable: !['ALL', 'SELECTED', 'REJECTED'].some((it) => it == selectedStatus),
+              hideInTable: ['ALL', 'SELECTED', 'REJECTED'].some((it) => it == selectedStatus),
               children: [
                 { title: 'Doc #', dataIndex: 'integratedDoc' },
                 { title: 'Posted Date', sorter: 'postedDate', dataIndex: 'postedDate' },

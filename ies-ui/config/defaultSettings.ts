@@ -13,6 +13,7 @@ const Settings: ProLayoutProps & {
   fixedHeader: true,
   fixSiderbar: true,
   colorWeak: false,
+  footerRender: undefined,
   title: 'IES',
   pwa: true,
   waterMarkProps: {
@@ -36,4 +37,6 @@ const Settings: ProLayoutProps & {
 };
 
 export default Settings;
+
+
 

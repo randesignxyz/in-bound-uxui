@@ -28,15 +28,11 @@ export default ({ defualtData, vehicleId,vehicleDriver, onSave, ...props }: Prop
   const [form] = useForm<VehicleDriverCreate>();
   const [vehicleData, setVehicleData] = useState<VehicleListItem[]>();
   const [driverData, setDriverData] = useState<DriverDTO[]>();
-
-console.log(defualtData);
-
   useEffect(() => {
     props.open && initailForm();
     props.open && onVehicleData();
     props.open && onDriverData();
   }, [props.open]);
-
   const initailForm = () => {
     form.setFieldsValue({
       ...defualtData?.vehicleDriver || vehicleDriver,
@@ -44,7 +40,6 @@ console.log(defualtData);
       driverId: defualtData?.id || vehicleId?.driver?.id,
     });
   };
-
   const onVehicleData = (keyWords?: string) => {
     VehicleServiceAPI(requestAction).pageVehicle({
       criteria: { searchValue: keyWords || defualtData?.vehicle?.id || vehicleId?.id },
@@ -52,7 +47,6 @@ console.log(defualtData);
       setVehicleData(it.items);
     });
   }
-
   const onDriverData = (keyWords?: string) => {
     DriverServiceAPI(requestAction).page({
       criteria: { searchValue: keyWords, advanceSearch: keyWords ? undefined : { id: defualtData?.id || vehicleId?.driver?.id } },
@@ -60,7 +54,6 @@ console.log(defualtData);
       setDriverData(it.items);
     });
   }
-
   return (
     <ModalForm
       {...props}
@@ -69,11 +62,9 @@ console.log(defualtData);
       form={form}
       onFinish={async () => {
         const dataForm = await form.validateFields();
-
         const entry = {
           ...dataForm,
         };
-
         onSave(entry);
       }}
     >
@@ -94,7 +85,6 @@ console.log(defualtData);
                 onVehicleData(e);
               }
             }}
-
           />
         </Col>
         <Col span={18}>
@@ -111,7 +101,6 @@ console.log(defualtData);
                 onDriverData(e);
               }
             }}
-
           />
         </Col>
         <Col span={6}>

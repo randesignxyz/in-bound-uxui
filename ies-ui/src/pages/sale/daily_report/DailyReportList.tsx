@@ -1,6 +1,6 @@
 import { simpleRequestActions } from '@/services/model';
 import { ProTable } from '@ant-design/pro-components';
-import { Button } from 'antd';
+import { Button, Typography } from 'antd';
 import type { StockControlARLess } from './data';
 import type { StockControlAR } from './data';
 import { DailyReportAPI } from './services';
@@ -75,19 +75,15 @@ export default ({}: Props) => {
               title: 'Settled Amount KHM',
               align: 'right',
               render: (_, r) => {
-                return `${parent.settledExchangeRate.target_symbol} ${numeral(
-                  r.totalSettledAmount,
-                ).format('0,0')}`;
+                return `៛ ${numeral( r.totalSettledAmount).format('0,000')}`;
               },
             },
             {
-              title: 'Sold Amount KHM',
+              title: 'Sold Amount ',
               align: 'right',
               render: (_, r) => {
-                const amountKH = r.totalSoldAmount * (parent.soldExchangeRate.target_amount || 0.0);
-                return `${parent.settledExchangeRate.target_symbol} ${numeral(amountKH).format(
-                  '0,0',
-                )}`;
+                const amountKH = r.totalSoldAmount ;
+                return <Typography.Text type='success'>$ {numeral(amountKH).format('0,000.00')} </Typography.Text>;
               },
             },
           ]}
@@ -160,17 +156,15 @@ export default ({}: Props) => {
             title: 'Total Settled Amount KHM',
             align: 'right',
             render: (_, r) => {
-              return `${r.soldExchangeRate.target_symbol}  ${numeral(r.totalSettledAmount).format(
-                '0,0',
-              )}`;
+              return `៛  ${numeral(r.totalSettledAmount).format('0,0')}`;
             },
           },
           {
-            title: 'Total Sold Amount KHM',
+            title: 'Total Sold Amount ',
             align: 'right',
             render: (_, r) => {
-              return `${r.soldExchangeRate.target_symbol} ${numeral(r.totalSoldAmount).format(
-                '0,0',
+              return `$ ${numeral(r.totalSoldAmount).format(
+                '0,000.00',
               )}`;
             },
           },

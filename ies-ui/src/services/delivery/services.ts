@@ -11,13 +11,13 @@ import {
     Queue,
     QueueListItem, SaveCompany, SaveDriver, SaveQueue,
     SaveTruck,
-    TransportSource, 
-    TransportSourceListItem, 
-    Truck, TruckListItem, 
-    QueueDisplayData, DeliveryListItem, 
-    LoadingItem, Loaded, CheckoutListItem, 
-    AssigningDocsResponse, DeliveryInfo, 
-    AssignDocParam, CashCollectionListItem, 
+    TransportSource,
+    TransportSourceListItem,
+    Truck, TruckListItem,
+    QueueDisplayData, DeliveryListItem,
+    LoadingItem, Loaded, CheckoutListItem,
+    AssigningDocsResponse, DeliveryInfo,
+    AssignDocParam, CashCollectionListItem,
     SettlementParams,
     LoadedInfo,
     LoadingSummaryStatus,
@@ -32,12 +32,12 @@ import {
 import { DeliveryParams } from "./delivery-params";
 import { LoadingParams } from "./loading-params";
 import { ReqQueuetParams } from "./queue-params";
-import { 
-    DeliveryAdvanceSearchParams, 
-    DeliveryCashCollectionParams, 
-    ReviewerParams, 
-    ReviewParams, 
-    SaveLoadedParam 
+import {
+    DeliveryAdvanceSearchParams,
+    DeliveryCashCollectionParams,
+    ReviewerParams,
+    ReviewParams,
+    SaveLoadedParam
 } from "./req-params";
 import { ReqSurveyParams } from "./survey-params";
 
@@ -52,15 +52,15 @@ export const DeliveryServiceAPI = (requestActions: RequestActions) => {
 
         deliverySummaryStatus: () => singleRequest(DeliveryParams.summary())(requestActions) as Promise<DeliverySummaryStatus>,
         listDelivery: (params: TableViewSearchParams<DeliveryAdvanceSearchParams>) => singleRequest<DeliveryListItem>(DeliveryParams.listDelivery(params))(requestActions) as Promise<Paging<DeliveryListItem>>,
-        
+
         settlementSummaryStatus: () => singleRequest(DeliveryParams.summarySettlement())(requestActions) as Promise<SettlementSummaryStatus>,
         listCashCollection: (params: TableViewSearchParams<DeliveryCashCollectionParams>) => singleRequest<CashCollectionListItem>(DeliveryParams.listCashCollection(params))(requestActions) as Promise<Paging<CashCollectionListItem>>,
-       
+
         fetchDeliveryInfo: (id: number) => singleRequest<DeliveryInfo>(DeliveryParams.fetchDeliveryInfo(id))(requestActions) as Promise<DeliveryInfo>,
         assignDocs: (params: AssignDocParam) => singleRequest(DeliveryParams.assignDocs(params))(requestActions),
 
         listCheckout: (deliveryId: number) => singleRequest<CheckoutListItem>(DeliveryParams.listCheckout(deliveryId))(requestActions) as Promise<CheckoutListItem[]>,
-        saveSettlement: (data: SettlementParams) =>  singleRequest(DeliveryParams.saveSettlement(data))(requestActions),
+        saveSettlement: (data: SettlementParams) => singleRequest(DeliveryParams.saveSettlement(data))(requestActions),
         fetchSettlementDetail: (id: number) => singleRequest(DeliveryParams.SettlementDetail(id))(requestActions) as Promise<SettlementDetail>,
 
         // listQueueTicket: (params: TableViewSearchParams<QueueTicketAdvanceSearchParams>, ) => singleRequest<QueueTicketListItem>(ReqQueuetParams.listQueueTicket(params))(requestActions) as Promise<Paging<QueueTicketListItem>>,
@@ -74,10 +74,10 @@ export const DeliveryServiceAPI = (requestActions: RequestActions) => {
         // cancelQueueTicket: (id: number, remarks: string) => singleRequest(ReqQueuetParams.cancelQueueTicket(id, remarks))(requestActions),
         assignedLoadingDock: (id: number, loadingDockId: number, remarks?: String) => singleRequest(ReqQueuetParams.assignedLoadingDock(id, loadingDockId, remarks))(requestActions),
         // setQeueTicketPriority: (id: number, priority: number) => singleRequest(ReqQueuetParams.setQeueTicketPriority(id, priority))(requestActions),
-        assignedPickingSlip: (id: number, shift: string,isModified?: boolean, remarks?: string) => singleRequest(ReqQueuetParams.assignedPickingSlip(id, shift, isModified, remarks))(requestActions),
+        assignedPickingSlip: (id: number, shift: string, isModified?: boolean, remarks?: string) => singleRequest(ReqQueuetParams.assignedPickingSlip(id, shift, isModified, remarks))(requestActions),
         finishLoading: (id: number) => singleRequest(ReqQueuetParams.loadingCompleted(id))(requestActions),
         assigneDeliveryDoc: (id: number, deliveryNoteIds: number[], invoiceIds: number[]) => singleRequest(ReqQueuetParams.assigneDeliveryDoc(id, deliveryNoteIds, invoiceIds))(requestActions),
-        fetchQueueDisplayData: () => singleRequest(ReqQueuetParams.fetchQueueDisplayData())(requestActions) as Promise<QueueDisplayData>,
+        fetchQueueDisplayData: (layoutId?: number) => singleRequest(ReqQueuetParams.fetchQueueDisplayData(layoutId))(requestActions) as Promise<QueueDisplayData>,
 
         listQRcode: (params: TableViewSearchParams<any>) => singleRequest<QRCodeListItem>(ReqQueuetParams.listQRCode(params))(requestActions) as Promise<Paging<QRCodeListItem>>,
         listAllQRCode: () => singleRequest(ReqQueuetParams.listAllQRCode())(requestActions) as Promise<QRCodeListItem[]>,
@@ -98,7 +98,7 @@ export const DeliveryServiceAPI = (requestActions: RequestActions) => {
         fetchQueue: (id: number) => singleRequest(ReqQueuetParams.fetchQueue(id))(requestActions) as Promise<Queue>,
 
         listTranSource: (params: TableViewSearchParams<any>) => singleRequest<TransportSourceListItem>(DeliveryParams.listTranSource(params))(requestActions) as Promise<Paging<TransportSourceListItem>>,
-        saveTranSource: (id: number, name: string,deliveryTracking?: boolean, description?: string) => singleRequest(DeliveryParams.saveTranSource(id, name,deliveryTracking, description))(requestActions),
+        saveTranSource: (id: number, name: string, deliveryTracking?: boolean, description?: string) => singleRequest(DeliveryParams.saveTranSource(id, name, deliveryTracking, description))(requestActions),
         fetchTranSource: (id: number) => singleRequest(DeliveryParams.fetchTranSource(id))(requestActions) as Promise<TransportSource>,
 
         listTruck: (params: TableViewSearchParams<any>) => singleRequest<TruckListItem>(DeliveryParams.listTruck(params))(requestActions) as Promise<Paging<TruckListItem>>,
@@ -110,7 +110,7 @@ export const DeliveryServiceAPI = (requestActions: RequestActions) => {
         fetchCompany: (id: number) => singleRequest(DeliveryParams.fetchCompany(id))(requestActions) as Promise<Company>,
 
         listDriver: (params: TableViewSearchParams<any>) => singleRequest<DriverListItem>(DeliveryParams.listDriver(params))(requestActions) as Promise<Paging<DriverListItem>>,
-        listAllDrivers: () =>  singleRequest<DriverListItem>(DeliveryParams.listAllDriver())(requestActions) as  Promise<Driver[]>,
+        listAllDrivers: () => singleRequest<DriverListItem>(DeliveryParams.listAllDriver())(requestActions) as Promise<Driver[]>,
         saveDriver: (data: SaveDriver) => singleRequest(DeliveryParams.saveDriver(data))(requestActions),
         fetchDriver: (id: number) => singleRequest(DeliveryParams.fetchDriver(id))(requestActions) as Promise<Driver>,
 
@@ -121,26 +121,27 @@ export const DeliveryServiceAPI = (requestActions: RequestActions) => {
         saveLoaded: (data: SaveLoadedParam) => singleRequest(LoadingParams.saveLoaded(data))(requestActions),
 
         fetchLoadedDetail: (
-            id: number, 
-            driverId?: number, 
-            licensePlate?: string, 
-            deliveryDate?: Moment, 
+            id: number,
+            driverId?: number,
+            licensePlate?: string,
+            deliveryDate?: Moment,
             shift?: string,
             remarks?: string
-        ) => singleRequest(LoadingParams.fetchLoadedDetail(id, driverId, licensePlate, deliveryDate, shift, remarks ))(requestActions)as Promise<AssigningDocsResponse>,
+        ) => singleRequest(LoadingParams.fetchLoadedDetail(id, driverId, licensePlate, deliveryDate, shift, remarks))(requestActions) as Promise<AssigningDocsResponse>,
 
         listReviewer: (params: TableViewSearchParams<ReviewerParams>) => singleRequest(ReqSurveyParams.listReviewer(params))(requestActions) as Promise<Paging<ReviewerListItem>>,
 
         listReview: (params: TableViewSearchParams<ReviewParams>) => singleRequest(ReqSurveyParams.listReview(params))(requestActions) as Promise<Paging<ReviewListItem>>,
-        
+
         listReviewByReviewerId: (id: number, pagination?: {
             pageSize?: number;
             current?: number;
-          }) => singleRequest(ReqSurveyParams.listReviewByReviwerId(id, pagination))(requestActions) as Promise<Paging<ReviewListItem>>,
+        }) => singleRequest(ReqSurveyParams.listReviewByReviwerId(id, pagination))(requestActions) as Promise<Paging<ReviewListItem>>,
 
 
         listReviewItem: (id: number) => singleRequest(ReqSurveyParams.listReviewItem(id))(requestActions) as Promise<ReviewItem[]>,
 
-        assignCustomerToReviewer: (id: number,customerCode: string) => singleRequest(ReqSurveyParams.assignCustomerToReviewer(id, customerCode))(requestActions),
+        assignCustomerToReviewer: (id: number, customerCode: string) => singleRequest(ReqSurveyParams.assignCustomerToReviewer(id, customerCode))(requestActions),
+
     }
 }

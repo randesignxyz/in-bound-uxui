@@ -10,27 +10,23 @@ import { InspectionAdvanceParams, InspectionDTO } from '../../inspection/data';
 import { InspectionServiceAPI } from '../../inspection/service';
 
 interface Props {
-  id: string;
+  vehicleId: string;
 }
 
-export default ({ id }: Props) => {
+export default ({ vehicleId }: Props) => {
   const requestActions = simpleRequestActions();
   const services = InspectionServiceAPI(requestActions);
-
   const [advanceSearchParams, setAdvanceSearchParams] = useState<InspectionAdvanceParams>({
     status: 'ALL',
   });
-
   const actionRef = useRef<ActionType>();
-
   const cacheList = useModel('dataList');
-
   const onRequestHandler = async (params: TableViewSearchParams<InspectionAdvanceParams>) => {
     try {
       return services
         .page({
           ...params.criteria,
-          criteria: { ...params.criteria, advanceSearch: { vehicleId: id } },
+          criteria: { ...params.criteria, advanceSearch: { vehicleId: vehicleId } },
           pagination: params.pagination,
         })
         .then((it) => {

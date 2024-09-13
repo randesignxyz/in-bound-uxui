@@ -275,13 +275,13 @@ export const DeliveryParams = {
         payload: { deliveryId, dnDate: moment(dnDate), shipToCode }
     }),
 
-    clearCancelDn: (freighId: number, remarks: string) => execDataService0<{id: number; remarks: string;}>({
+    clearCancelDn: (freighId: number, remarks: string) => execDataService0<{ id: number; remarks: string; }>({
         actionName: 'clear-canceled-dn',
         endpoint: 'DELIVERY',
         payload: { id: freighId, remarks }
     }),
 
-    clearChangedLocationDn: (freighId: number, remarks: string) => execDataService0<{id: number; remarks: string;}>({
+    clearChangedLocationDn: (freighId: number, remarks: string) => execDataService0<{ id: number; remarks: string; }>({
         actionName: 'clear-changed-location-dn',
         endpoint: 'DELIVERY',
         payload: { id: freighId, remarks }
@@ -330,7 +330,7 @@ export const DeliveryParams = {
         pickedDate?: Moment;
         shift?: string;
         remarks?: string;
-        
+
     }>({
         actionName: 'request-change-loading-items',
         endpoint: 'DELIVERY',

@@ -3,14 +3,17 @@ import { LinkOutlined } from '@ant-design/icons';
 import type { Settings as LayoutSettings } from '@ant-design/pro-components';
 import { PageLoading, SettingDrawer } from '@ant-design/pro-components';
 import type { RequestConfig, RunTimeLayoutConfig } from '@umijs/max';
-import { history, Link } from '@umijs/max';
+import { getLocale, history, Link, setLocale } from '@umijs/max';
 import defaultSettings from '../config/defaultSettings';
 import { errorConfig } from '../config/requestErrorConfig';
 import React from 'react';
 import { App } from 'antd';
+import moment from 'moment';
+import { endpoint, kc, keycloak } from './auth';
+import { queryCurrent } from './services/user';
+import { isOffline } from './pages/utils';
 const isDev = process.env.NODE_ENV === 'development';
 const loginPath = '/user/auth';
-
 /**
  * @see  https://umijs.org/zh-CN/plugins/plugin-initial-state
  * */
@@ -20,17 +23,52 @@ export async function getInitialState(): Promise<{
   logout?: () => void;
   loading?: boolean;
 }> {
+  moment.locale('en');
+  if (getLocale() !== 'en-US') {
+    setLocale('en-US');
+  }
 
-  return {
-    currentUser: undefined,
-    settings: defaultSettings as Partial<LayoutSettings>,
-  };
+  try {
+    if (isOffline()) {
+      return {};
+    }
+    const ckRs = await keycloak();
+    const currentUser = await queryCurrent();
+    //   if (currentUser)
+    //     setInitialState({
+    //       ...initialState,
+    //       currentUser: currentUser,
+    //       logout: () => {
+    //         ck?.clearToken();
+    //         ck?.logout({
+    //           redirectUri: endpoint().redirectUri,
+    //         });
+    //       },
+    //     });
+
+
+    return {
+      currentUser: currentUser,
+      settings: defaultSettings as Partial<LayoutSettings>,
+      logout: () => {
+        ckRs?.clearToken();
+        ckRs?.logout({
+          redirectUri: endpoint().redirectUri,
+        })
+      }
+    }
+  } catch (error) {
+    return {
+      currentUser: undefined,
+      settings: defaultSettings as Partial<LayoutSettings>,
+    };
+  }
 }
 
 export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) => {
+
   return {
     actionsRender: () => [
-      //<Question key="doc" />, <SelectLang key="SelectLang" />
     ],
     avatarProps: {
       src: initialState?.currentUser?.avatar,
@@ -43,13 +81,12 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
       content: "Dev"
     },
     footerRender: () => <Footer />,
-    onPageChange: async () => {
-      const { location } = history;
-
-      if (!initialState?.currentUser && location.pathname !== loginPath) {
-        history.push(`${loginPath}/?path=${location.pathname}`);
-      }
-    },
+    // onPageChange: async () => {
+    //   const { location } = history;
+    //   if (!initialState?.currentUser && location.pathname !== loginPath) {
+    //     history.push(`${loginPath}/?path=${location.pathname}`);
+    //   }
+    // },
     bgLayoutImgList: [
       {
         src: 'https://mdn.alipayobjects.com/yuyan_qk0oxh/afts/img/D2LWSqNny4sAAAAAAAAAAAAAFl94AQBr',
@@ -81,11 +118,11 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
     menuHeaderRender: undefined,
     childrenRender: (children) => {
       if (initialState?.loading) return <PageLoading />;
-      console.log(children);
-
       return (
         <>
-          <App>{children}</App>
+          <App>
+            {children}
+          </App>
           {isDev && (
             <SettingDrawer
               disableUrlParams
@@ -109,5 +146,3 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
 export const request: RequestConfig = {
   ...errorConfig,
 };
-
-

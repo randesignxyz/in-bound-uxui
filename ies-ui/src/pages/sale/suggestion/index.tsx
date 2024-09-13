@@ -4,23 +4,25 @@ import { SalePaths } from '..';
 //import Create from './Create';
 // import StockStoreDetail from './Detail';
 import SuggestionListView from './List';
+import TaskListMainPage from './MainPage';
 //import Edit from './Edit';
 //import StoreListView from './List';
 
 export default () => {
   //   const access = useAccess();
   return (
-    <CrudWrapper baseURL={SalePaths.store}>
+    <CrudWrapper baseURL={SalePaths.store} disablePageContainer>
       {(view, id, navigate) => {
         return (
-          view === 'list' && (
-            <SuggestionListView
-              actionHandlers={{
-                onAdd: navigate?.goToCreate,
-                onDetail: navigate?.goToDetail,
-              }}
-            />
-          )
+          // view === 'list' && (
+          //   <SuggestionListView
+          //     actionHandlers={{
+          //       onAdd: navigate?.goToCreate,
+          //       onDetail: navigate?.goToDetail,
+          //     }}
+          //   />
+          // )
+          view =="list" && ( <TaskListMainPage/>)
           //   ||
           //   (view === 'detail' && (
           //     <StockStoreDetail

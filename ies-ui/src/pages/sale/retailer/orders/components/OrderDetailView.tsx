@@ -26,7 +26,6 @@ import {
   Dropdown,
   Empty,
   MenuProps,
-  message,
   Modal,
   Row,
   Space,
@@ -36,6 +35,7 @@ import {
   Timeline,
   Tooltip,
   Typography,
+  message,
 } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { countBy, includes, uniqueId, upperFirst } from 'lodash';
@@ -46,6 +46,7 @@ import ReconnectingWebSocket from 'reconnecting-websocket';
 
 import type { OrderDto, OrderItems, OrderPayload, OrderStatusHistoryCreate } from '../data';
 
+import { useAccess } from '@umijs/max';
 import Col from 'antd/lib/grid/col';
 import numeral from 'numeral';
 import RemarkFormModal from '../../components/RemarkFormModal';
@@ -62,6 +63,8 @@ export default ({ id, sumDetail = true }: Props) => {
   const requestActions = simpleRequestActions();
   const services = OrderServiceAPI(requestActions);
   const [invoice, setInvoice] = useState<OrderDto>();
+
+  const access = useAccess();
 
   const [rejectForm] = useForm<OrderStatusHistoryCreate>();
   const [commentModal, setCommentModal] = useState<{ visible: boolean; id?: string; flag: string }>(
@@ -154,7 +157,7 @@ export default ({ id, sumDetail = true }: Props) => {
       key: '1',
       label: (
         <Button
-          type="link"
+          type="ghost"
           icon={<SendOutlined />}
           onClick={() => {
             if (invoice)
@@ -178,7 +181,7 @@ export default ({ id, sumDetail = true }: Props) => {
               : undefined
           }
         >
-          <Button type="link" icon={<CopyOutlined />} color="black">
+          <Button type="ghost" icon={<CopyOutlined />} color="black">
             Copy Link
           </Button>
         </CopyToClipboard>
@@ -200,140 +203,142 @@ export default ({ id, sumDetail = true }: Props) => {
       <Spin spinning={requestActions.request?.loading}>
         <Row justify="space-between">
           {!sumDetail && <BreadCrumbCom separator=">" routes={routes} />}
-          <Space style={{ float: 'right' }}>
-            {/* 'ontheway', */}
-            {invoice && !includes(['canceled', 'delivered'], invoice?.orderedStatus) ? (
-              <ModalForm
-                width={400}
-                trigger={
-                  <Button type="default" danger={true} icon={<StopOutlined />}>
-                    Cancel P.O
-                  </Button>
-                }
-                form={rejectForm}
-                onFinish={async () => {
-                  const entry = {
-                    id: id,
-                    status: 'canceled',
-                    remark: rejectForm.getFieldValue('remark'),
-                  };
-                  await services.updateStatus(entry);
-                  message.success('Purchase Order was canceled.');
-                  await initdata();
-                  actionRef.current?.reloadAndRest?.();
-                }}
-              >
-                <ProFormText
-                  rules={[{ required: true }]}
-                  label="Remark"
-                  placeholder={'remark'}
-                  name="remark"
-                />
-              </ModalForm>
-            ) : undefined}
-            {invoice?.orderedStatus === 'pending' ? (
-              <>
-                <Button
-                  type="primary"
-                  title="Approve"
-                  onClick={() => {
-                    Modal.confirm({
-                      title: 'Are you Sure?',
-                      content: 'Accept Order',
-                      onOk: async () => {
-                        const entry = {
-                          id: id,
-                          status: 'accepted',
-                        };
-                        await services.updateStatus(entry);
-                        await initdata();
-                        actionRef.current?.reloadAndRest?.();
-                      },
-                    });
+          {!access.canAccessRetailerSalesperons && (
+            <Space style={{ float: 'right' }}>
+              {/* 'ontheway', */}
+              {invoice && !includes(['canceled', 'delivered'], invoice?.orderedStatus) ? (
+                <ModalForm
+                  width={400}
+                  trigger={
+                    <Button type="default" danger={true} icon={<StopOutlined />}>
+                      Cancel P.O
+                    </Button>
+                  }
+                  form={rejectForm}
+                  onFinish={async () => {
+                    const entry = {
+                      id: id,
+                      status: 'canceled',
+                      remark: rejectForm.getFieldValue('remark'),
+                    };
+                    await services.updateStatus(entry);
+                    message.success('Purchase Order was canceled.');
+                    await initdata();
+                    actionRef.current?.reloadAndRest?.();
                   }}
                 >
-                  Accept
-                </Button>
-              </>
-            ) : includes(['accepted', 'rejected'], invoice?.orderedStatus) ? (
-              <>
-                <Button
-                  type="default"
-                  title={invoice?.orderedStatus === 'accepted' ? 'Assign' : 'Re-Assign Store'}
-                  onClick={async () => {
-                    // onHandleSearchCRM();
-                    // setSate((v) => ({
-                    //   ...v,
-                    //   visible: { name: 'modal', type: 'ADD' },
-                    // }));
+                  <ProFormText
+                    rules={[{ required: true }]}
+                    label="Remark"
+                    placeholder={'remark'}
+                    name="remark"
+                  />
+                </ModalForm>
+              ) : undefined}
+              {invoice?.orderedStatus === 'pending' ? (
+                <>
+                  <Button
+                    type="primary"
+                    title="Approve"
+                    onClick={() => {
+                      Modal.confirm({
+                        title: 'Are you Sure?',
+                        content: 'Accept Order',
+                        onOk: async () => {
+                          const entry = {
+                            id: id,
+                            status: 'accepted',
+                          };
+                          await services.updateStatus(entry);
+                          await initdata();
+                          actionRef.current?.reloadAndRest?.();
+                        },
+                      });
+                    }}
+                  >
+                    Accept
+                  </Button>
+                </>
+              ) : includes(['accepted', 'rejected'], invoice?.orderedStatus) ? (
+                <>
+                  <Button
+                    type="default"
+                    title={invoice?.orderedStatus === 'accepted' ? 'Assign' : 'Re-Assign Store'}
+                    onClick={async () => {
+                      // onHandleSearchCRM();
+                      // setSate((v) => ({
+                      //   ...v,
+                      //   visible: { name: 'modal', type: 'ADD' },
+                      // }));
 
-                    if (invoice?.orderedStatus === 'rejected' && invoice.delivery) {
-                      setAssignModal({
-                        visible: true,
-                        selectedId: invoice.delivery.id,
-                        selectedType: invoice.delivery.storeType,
-                        referenceCode: invoice.delivery.referenceCode,
-                        referencePhone: invoice.delivery.referencePhone,
-                        comment: invoice.delivery.comment,
-                      });
-                    } else {
-                      setAssignModal({
-                        visible: true,
-                        selectedId: undefined,
-                        selectedType: undefined,
-                        referenceCode: undefined,
-                        referencePhone: undefined,
-                        comment: undefined,
-                      });
-                    }
+                      if (invoice?.orderedStatus === 'rejected' && invoice.delivery) {
+                        setAssignModal({
+                          visible: true,
+                          selectedId: invoice.delivery.id,
+                          selectedType: invoice.delivery.storeType,
+                          referenceCode: invoice.delivery.referenceCode,
+                          referencePhone: invoice.delivery.referencePhone,
+                          comment: invoice.delivery.comment,
+                        });
+                      } else {
+                        setAssignModal({
+                          visible: true,
+                          selectedId: undefined,
+                          selectedType: undefined,
+                          referenceCode: undefined,
+                          referencePhone: undefined,
+                          comment: undefined,
+                        });
+                      }
+                    }}
+                  >
+                    {invoice?.orderedStatus === 'accepted' ? 'Assign' : 'Re-Assign Store'}
+                  </Button>
+                </>
+              ) : (
+                ''
+              )}
+              {includes(['accept_delivered', 'ontheway', 'rejected'], invoice?.orderedStatus) && (
+                <ModalForm
+                  width={400}
+                  trigger={
+                    <Button type="primary" title="Complete Delivery" icon={<CheckCircleOutlined />}>
+                      Complete Delivery
+                    </Button>
+                  }
+                  form={rejectForm}
+                  onFinish={async () => {
+                    const entry = {
+                      id: id,
+                      status: 'delivered',
+                      remark: rejectForm.getFieldValue('remark'),
+                    };
+                    await services.updateStatus(entry);
+                    message.success('Order is deliverd.');
+                    await initdata();
+                    actionRef.current?.reloadAndRest?.();
                   }}
                 >
-                  {invoice?.orderedStatus === 'accepted' ? 'Assign' : 'Re-Assign Store'}
-                </Button>
-              </>
-            ) : (
-              ''
-            )}
-            {includes(['accept_delivered', 'ontheway', 'rejected'], invoice?.orderedStatus) && (
-              <ModalForm
-                width={400}
-                trigger={
-                  <Button type="primary" title="Complete Delivery" icon={<CheckCircleOutlined />}>
-                    Complete Delivery
-                  </Button>
-                }
-                form={rejectForm}
-                onFinish={async () => {
-                  const entry = {
-                    id: id,
-                    status: 'delivered',
-                    remark: rejectForm.getFieldValue('remark'),
-                  };
-                  await services.updateStatus(entry);
-                  message.success('Order is deliverd.');
-                  await initdata();
-                  actionRef.current?.reloadAndRest?.();
-                }}
-              >
-                <ProFormText
-                  rules={[{ required: true }]}
-                  label="Remark"
-                  placeholder={'remark'}
-                  name="remark"
-                />
-              </ModalForm>
-            )}
+                  <ProFormText
+                    rules={[{ required: true }]}
+                    label="Remark"
+                    placeholder={'remark'}
+                    name="remark"
+                  />
+                </ModalForm>
+              )}
 
-            {invoice?.orderedStatus === 'assigned' && (
-              <>
-                <Dropdown menu={{ items }} placement="bottomRight" arrow>
-                  <Button icon={<ShareAltOutlined />} type="primary">
-                    Share To
-                  </Button>
-                </Dropdown>
-              </>
-            )}
-          </Space>
+              {invoice?.orderedStatus === 'assigned' && (
+                <>
+                  <Dropdown menu={{ items }} placement="bottomRight" arrow>
+                    <Button icon={<ShareAltOutlined />} type="primary">
+                      Share To
+                    </Button>
+                  </Dropdown>
+                </>
+              )}
+            </Space>
+          )}
         </Row>
 
         <Card style={{ marginTop: 10 }} size="small" title={<Text>Order Detail</Text>}>
@@ -372,12 +377,12 @@ export default ({ id, sumDetail = true }: Props) => {
                         {r.orderedStatus === 'ontheway'
                           ? 'On the way'
                           : r.orderedStatus === 'accept_delivered'
-                            ? 'Accept Delivery'
-                            : r.orderedStatus === 'rejected'
-                              ? 'Delivery Canceled'
-                              : r.orderedStatus === 'canceled'
-                                ? 'Canceled P.O'
-                                : upperFirst(r.orderedStatus)}
+                          ? 'Accept Delivery'
+                          : r.orderedStatus === 'rejected'
+                          ? 'Delivery Canceled'
+                          : r.orderedStatus === 'canceled'
+                          ? 'Canceled P.O'
+                          : upperFirst(r.orderedStatus)}
                       </Tag>
                       {/* {r.orderedStatus === 'canceled' && (
                         <Tooltip placement="top" title={`Canceled by ${r.delivery?.storeType}`}>
@@ -422,8 +427,8 @@ export default ({ id, sumDetail = true }: Props) => {
                         r.orderedStatus === 'canceled'
                           ? 'danger'
                           : r.orderedStatus === 'delivered'
-                            ? 'success'
-                            : 'secondary'
+                          ? 'success'
+                          : 'secondary'
                       }
                     >
                       {r.remark}
@@ -859,8 +864,8 @@ export default ({ id, sumDetail = true }: Props) => {
                             <Text type="success">
                               {numeral(
                                 (invoice?.totalAmount || 0) +
-                                (invoice?.vatAmount || 0) -
-                                (invoice?.discount || 0),
+                                  (invoice?.vatAmount || 0) -
+                                  (invoice?.discount || 0),
                               ).format('$ #,#.00')}
                             </Text>
                             {/* <Table.Summary.Cell index={2} align="right" /> */}
@@ -875,8 +880,8 @@ export default ({ id, sumDetail = true }: Props) => {
             <Col span={8}>
               <Card size="small" title="Activity">
                 {invoice !== undefined &&
-                  invoice.orderStatusHistory !== undefined &&
-                  invoice.orderStatusHistory.length > 0 ? (
+                invoice.orderStatusHistory !== undefined &&
+                invoice.orderStatusHistory.length > 0 ? (
                   <Timeline
                     style={{ marginTop: 10, marginLeft: 10 }}
                     key="activity"
@@ -897,12 +902,12 @@ export default ({ id, sumDetail = true }: Props) => {
                               {it.previousStatus === 'ontheway'
                                 ? 'On the way'
                                 : it.previousStatus === 'accept_delivered'
-                                  ? 'Accept Delivery'
-                                  : it.previousStatus === 'rejected'
-                                    ? 'Delivery Canceled'
-                                    : it.previousStatus === 'canceled'
-                                      ? 'Canceled P.O'
-                                      : upperFirst(it.previousStatus)}
+                                ? 'Accept Delivery'
+                                : it.previousStatus === 'rejected'
+                                ? 'Delivery Canceled'
+                                : it.previousStatus === 'canceled'
+                                ? 'Canceled P.O'
+                                : upperFirst(it.previousStatus)}
                             </Tag>
                             <ArrowRightOutlined
                               key={`arror ${index}`}
@@ -921,12 +926,12 @@ export default ({ id, sumDetail = true }: Props) => {
                               {it.currentStatus === 'ontheway'
                                 ? 'On the way'
                                 : it.currentStatus === 'accept_delivered'
-                                  ? 'Accept Delivery'
-                                  : it.currentStatus === 'rejected'
-                                    ? 'Delivery Canceled'
-                                    : it.currentStatus === 'canceled'
-                                      ? 'Canceled P.O'
-                                      : upperFirst(it.currentStatus)}
+                                ? 'Accept Delivery'
+                                : it.currentStatus === 'rejected'
+                                ? 'Delivery Canceled'
+                                : it.currentStatus === 'canceled'
+                                ? 'Canceled P.O'
+                                : upperFirst(it.currentStatus)}
                             </Tag>
                             <span style={{ marginLeft: 5, marginRight: 10 }}>
                               by {it.createdBy}
@@ -992,16 +997,16 @@ export default ({ id, sumDetail = true }: Props) => {
           const response =
             commentModal.flag === 'delivery'
               ? await services.deleteOrderDelivery({
-                id: objectId,
-                orderId: id,
-                status: 'accepted',
-                remark: remark,
-              })
+                  id: objectId,
+                  orderId: id,
+                  status: 'accepted',
+                  remark: remark,
+                })
               : await services.deleteOrderItem({
-                orderId: id,
-                orderItemId: objectId,
-                reason: remark,
-              });
+                  orderId: id,
+                  orderItemId: objectId,
+                  reason: remark,
+                });
 
           await initdata();
           actionRef.current?.reloadAndRest?.();

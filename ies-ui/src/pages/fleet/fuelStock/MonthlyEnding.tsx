@@ -1,13 +1,9 @@
-
-
 import { ProForm, ProFormDigit, ProFormTextArea, ProDescriptions, ProFormDatePicker, ProFormDependency } from '@ant-design/pro-components';
-
 import { Col, Row } from 'antd';
 import { useEffect } from "react";
 import FormModalComp, { FormModalProps } from "@/components/FormModal";
 import { useForm } from "antd/lib/form/Form";
 import { TankDTO , TankMonthlyEndingCreate } from "./data";
-
 interface Props extends FormModalProps {
     data?: TankDTO;
     onSave: (data: TankMonthlyEndingCreate) => void;
@@ -16,16 +12,11 @@ interface Props extends FormModalProps {
     type?: string | "ADDNEW" | "STOCKIN",
     title?: string;
 }
-
-
-
 const MonthlyEndingFormModal: React.FC<Props> = ({ onSave, data, title, actionType, type, id, ...props }) => {
     const [form] = useForm<TankMonthlyEndingCreate>();
-
     useEffect(() => {
         props.open && initFormData();
     }, [props.open]);
-
     const initFormData = () => {
         form.setFieldsValue({
             currentBalance:data?.currentInventory,
@@ -33,12 +24,7 @@ const MonthlyEndingFormModal: React.FC<Props> = ({ onSave, data, title, actionTy
             adjustment:undefined,
         });
     };
-
-
-
-
     return (
-
         <FormModalComp
             title={title}
             {...props}
@@ -49,16 +35,12 @@ const MonthlyEndingFormModal: React.FC<Props> = ({ onSave, data, title, actionTy
                     ...dataForm,
                     tankId:data?.id
                 }
-
                 onSave(entry);
-
             }}
             onResetForm={() => {
                 form.resetFields();
             }}
-
         >
-
             <ProDescriptions<TankDTO>
                 dataSource={data}
                 contentStyle={{ fontWeight: "bold" }}
@@ -93,7 +75,6 @@ const MonthlyEndingFormModal: React.FC<Props> = ({ onSave, data, title, actionTy
                                     name={"currentBalance"}
                                     label="Current Balance"
                                     rules={[{ required: true }]}
-
                                 />
                             </Col>
                             <Col span={6}>
@@ -103,7 +84,6 @@ const MonthlyEndingFormModal: React.FC<Props> = ({ onSave, data, title, actionTy
                                     rules={[{ required: true }]}
                                 />
                             </Col>
-                           
                             <ProFormDependency dependencies={['currentBalance', 'actualBalance']} name={["currentBalance", "actualBalance"]}>
                                 {({ currentBalance, actualBalance }) => {
                                     const require = currentBalance != actualBalance ? true : false;
@@ -119,7 +99,6 @@ const MonthlyEndingFormModal: React.FC<Props> = ({ onSave, data, title, actionTy
                                         />
                                     </Col>
                                 }}
-
                             </ProFormDependency>
                             <Col span={6}>
                                 <ProFormDatePicker
@@ -139,20 +118,11 @@ const MonthlyEndingFormModal: React.FC<Props> = ({ onSave, data, title, actionTy
                                             rules={[{ required: require }]}
                                         />)
                                     }}
-
                                 </ProFormDependency>
-
                             </Col>
                         </Row>
-
-                  
-
             </ProForm>
-
-
-
         </FormModalComp>
-
     );
 };
 

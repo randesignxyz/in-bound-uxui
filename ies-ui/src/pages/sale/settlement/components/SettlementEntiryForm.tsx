@@ -5,7 +5,7 @@ import { useForm } from 'antd/lib/form/Form';
 import moment from 'moment';
 import numeral from 'numeral';
 import { useEffect } from 'react';
-import { history } from 'umi';
+import { history } from "@umijs/max";
 import { SalePaths } from '../..';
 import { Model } from '../model';
 

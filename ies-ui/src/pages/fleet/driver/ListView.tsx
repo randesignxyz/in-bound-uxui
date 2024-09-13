@@ -5,12 +5,10 @@ import { simpleRequestActions } from '@/services/model';
 import { ArrowRightOutlined, DashOutlined, EditOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import { ActionType } from '@ant-design/pro-components';
 import { useModel } from '@umijs/max';
-import { Badge, Dropdown, message, Modal, Popover, Radio, Space, Spin, Tag } from 'antd';
+import { Badge, Button, Dropdown, message, Modal, Popover, Radio, Space, Spin, Tag } from 'antd';
 import moment from 'moment';
 import Omit from 'omit.js';
-import { ItemType } from 'rc-menu/lib/interface';
 import { useRef, useState } from 'react';
-import AdvanceFuelSearch from '../components/AdvanceFuelSearch';
 import { VehicleServiceAPI } from '../vehicle/service';
 import AssignDriverFormModal from './AssignDriverFormModal';
 import { DriverCreate, DriverDTO, DriverSearchParam, VehicleDriverCreate } from './data';
@@ -24,27 +22,22 @@ interface Props {
   onAdd?: () => void;
   onEdit?: (id: number) => void;
 }
-
 export default ({ onDetail, onAdd, onEdit }: Props) => {
   const requestActions = simpleRequestActions();
   const services = DriverServiceAPI(requestActions);
   const [detailOpen, setDetailOpen] = useState<{ open?: boolean; data?: DriverDTO }>({});
-
   const [state, setSate] = useState<{
     visible?: { name: 'modal'; type: 'ADD' | 'Edit'; payload?: { vehicle: DriverCreate } };
   }>({});
   const [assignState, setAssignState] = useState<{
     visible?: { name: 'modal'; type: 'ADD' | 'Edit'; payload?: { vehicle: DriverDTO } };
   }>({});
-
   const [advanceSearch, setAdvanceSearch] = useState<{ visible: boolean }>();
   const [advanceSearchParams, setAdvanceSearchParams] = useState<DriverSearchParam>({
     status: 'ALL',
   });
-
   const actionRef = useRef<ActionType>();
   const cacheList = useModel('dataList');
-
   const onRequestHandler = async (params: TableViewSearchParams<DriverSearchParam>) => {
     try {
       return services.page(params).then((it) => {
@@ -59,7 +52,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
       return Promise.reject();
     }
   };
-
   const onSaveActionHandler = (data: DriverCreate) => {
     Modal.confirm({
       title: 'Save Driver Record',
@@ -75,35 +67,32 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
       },
     });
   };
-
-  const items = (item: DriverDTO): MenuProps["items"] =>  [
-      {
-        key: '1',
-        label: 'View',
-        itemIcon: <ArrowRightOutlined />,
-        onClick:()=>setDetailOpen({open:true, data:item})
-      },
-      {
-        key: '2',
-        label: 'Assign To Vehicle',
-        disabled: item.status !="Active"?true:false,
-        itemIcon: <SafetyCertificateOutlined />,
-        onClick: async () =>
-          setAssignState({ visible: { name: 'modal', type: 'ADD', payload: { vehicle: item } } }),
-      },
-      {
-        key: '3',
-        label: 'Edit',
-        itemIcon: <EditOutlined />,
-        onClick: () =>
-          setSate((v) => ({
-            ...v,
-            visible: { name: 'modal', type: 'ADD', payload: { vehicle: item } },
-          })),
-      },
-    ]
-  
-
+  const items = (item: DriverDTO): MenuProps["items"] => [
+    {
+      key: '1',
+      label: 'View',
+      itemIcon: <ArrowRightOutlined />,
+      onClick: () => setDetailOpen({ open: true, data: item })
+    },
+    {
+      key: '2',
+      label: 'Assign To Vehicle',
+      disabled: item.status != "Active" ? true : false,
+      itemIcon: <SafetyCertificateOutlined />,
+      onClick: async () =>
+        setAssignState({ visible: { name: 'modal', type: 'ADD', payload: { vehicle: item } } }),
+    },
+    {
+      key: '3',
+      label: 'Edit',
+      itemIcon: <EditOutlined />,
+      onClick: () =>
+        setSate((v) => ({
+          ...v,
+          visible: { name: 'modal', type: 'ADD', payload: { vehicle: item } },
+        })),
+    },
+  ];
   const onAssignDriverSave = (data: VehicleDriverCreate) => {
     Modal.confirm({
       title: `Assign Driver to Vehicle`,
@@ -119,7 +108,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
       },
     });
   };
-
   return (
     <>
       <Spin spinning={requestActions.request?.loading}>
@@ -136,7 +124,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
                     ...v,
                     status: e.target.value,
                   }));
-
                   actionRef.current?.reloadAndRest?.();
                 }}
               >
@@ -154,6 +141,12 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
           }
           columns={[
             {
+              key: 'employeeNumber',
+              title: 'Employee Number',
+              dataIndex: 'employeeNumber',
+              render:(_,r)=><Button type='link' onClick={()=>setDetailOpen({ open: true, data: r })}>{r.employeeNumber}</Button>
+            },
+            {
               key: 'name',
               title: 'Full Name',
               render: (_, r) => [r.firstName, r.lastName].filter((it) => it).join(' '),
@@ -163,11 +156,7 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
               title: 'License Number',
               dataIndex: 'driverLicense',
             },
-            {
-              key: 'employeeNumber',
-              title: 'Employee Number',
-              dataIndex: 'employeeNumber',
-            },
+           
             {
               key: 'phone',
               title: 'Phone',
@@ -213,7 +202,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
                 </>
               ),
             },
-
             {
               key: 'createdBy',
               title: 'Created By',
@@ -236,7 +224,7 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
                 <>
                   <Dropdown
                     menu={{
-                      items:items(r),
+                      items: items(r),
                       style: { width: 200 },
                     }}
                   >
@@ -251,9 +239,7 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
           tableProps={{
             actionRef: actionRef,
           }}
-          // advanceSearch
           actionHandlers={{
-            // onAdd: () => onAddHandler(),
             onAdvanceSearchClicked: () => setAdvanceSearch({ visible: true }),
             onRequest: (criteria, pagination, sort) =>
               onRequestHandler({
@@ -283,37 +269,17 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
           }}
         />
       </Spin>
-
       <DriverModalForm
         open={state.visible?.name == 'modal'}
         onCancel={() => setSate((v) => ({ ...v, visible: undefined }))}
         onSave={onSaveActionHandler}
         data={state.visible?.payload?.vehicle}
       />
-
       <DetailViewDrawer
         onClose={() => setDetailOpen({ open: false })}
         open={detailOpen?.open}
         data={detailOpen.data}
       />
-
-      {/* <AdvanceFuelSearch
-        title="Advance Search"
-        closable
-        open={advanceSearch?.visible}
-        initData={advanceSearchParams}
-        onClose={() => {
-          setAdvanceSearch({ visible: false });
-        }}
-        onReset={() => {
-          actionRef.current?.reloadAndRest?.();
-        }}
-        onSearch={(data) => {
-          setAdvanceSearchParams((v) => ({ ...v, ...data, status: v.status }));
-          actionRef.current?.reloadAndRest?.();
-        }}
-      /> */}
-
       <AssignDriverFormModal
         defualtData={assignState.visible?.payload?.vehicle}
         open={assignState.visible?.name === 'modal'}

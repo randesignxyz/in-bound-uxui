@@ -5,8 +5,8 @@ import { Endpoint, ExportType, Pagination, Paging, ServiceType } from './API';
 import { groupBy, map } from 'lodash';
 import { SortOrder } from 'antd/lib/table/interface';
 import { DataResponse } from './shared/data';
-import printJS from 'print-js';
 import { blobToBase64 } from '@/pages/utils';
+import printJS from 'print-js';
 
 /** Services methods */
 
@@ -167,7 +167,6 @@ export const printPdf = <T>(actions?: RequestActions) =>
           data: params.data,
         },
       );
-
       const v = await blob;
       blobToBase64(v, base64 => {
         printJS({ base64: true, printable: base64, type: 'pdf', onPrintDialogClose: onPrintDialogClose })
@@ -177,7 +176,6 @@ export const printPdf = <T>(actions?: RequestActions) =>
     } finally {
       actions?.end?.('SUCCESS')
     }
-
   }
 
 export const downloadUploadFile =

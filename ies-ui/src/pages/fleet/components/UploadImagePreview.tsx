@@ -1,3 +1,4 @@
+import { kc } from '@/auth';
 import { getUploadFileObjectUrlV2 } from '@/services/apiGateway';
 import { getServiceUrl } from '@/services/ApiUrl';
 import { UploadOutlined } from '@ant-design/icons';
@@ -21,7 +22,8 @@ export default ({
   const [loading, setLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState<string>();
 
-  const token = localStorage.getItem('accessToken');
+  const token = kc.token
+  // const token = localStorage.getItem('accessToken');
   const uploadUrl = () => `${getServiceUrl('FILE')}/upload`;
 
   const getFileUrl = async (fileId: string) => {
@@ -48,7 +50,7 @@ export default ({
   return (
     <>
       <Space direction="vertical" align="center">
-        <Image style={style} src={imageUrl ? imageUrl : defualtImage} />
+        <Image style={style} src={imageUrl ? imageUrl : defualtImage} width={200} height={150} />
         {displayOnly ? (
           ''
         ) : (
@@ -56,8 +58,8 @@ export default ({
             headers={
               token
                 ? {
-                    Authorization: `Bearer ${token}`,
-                  }
+                  Authorization: `Bearer ${token}`,
+                }
                 : {}
             }
             className="avatar-uploader"

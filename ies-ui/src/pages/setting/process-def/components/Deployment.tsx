@@ -1,3 +1,4 @@
+import { kc } from '@/auth';
 import { getServiceUrl } from '@/services/ApiUrl';
 import { UploadOutlined } from '@ant-design/icons';
 import { Button, Card, Form, message, Modal, Upload } from 'antd';
@@ -51,8 +52,8 @@ const Deployment: React.FC<{
               headers={
                 token
                   ? {
-                      Authorization: `Bearer ${token}`,
-                    }
+                    Authorization: `Bearer ${token}`,
+                  }
                   : {}
               }
               multiple={false}

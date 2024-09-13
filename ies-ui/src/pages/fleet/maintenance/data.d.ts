@@ -53,7 +53,7 @@ export interface MaintenneceDetailDTO {
   status: string;
   odometer: number;
   history?: MaintenanceHistory[];
-  referentNumber: string?
+  referentNumber?: string
 }
 
 export interface MaintenanceCreate {
@@ -109,7 +109,7 @@ export interface MaintenanceStatus {
   id?: string;
   status: string;
   remark?: string;
-  vehicleId?:string;
+  vehicleId?: string;
 }
 
 export interface MaintenaceAdvanceSearch {

@@ -41,24 +41,9 @@ const ServiceTasksAction = {
 
 export const ServiceTasksServiceAPI = (requestActions: RequestActions) => {
   return {
-    page: (params: TableViewSearchParams<ServiceTasksSearch>) =>
-      singleRequest<ServiceTasksDTO>(ServiceTasksAction.page(params))(requestActions) as Promise<
-        Paging<ServiceTasksDTO>
-      >,
-
-    save: (params: ServiceTasksCreate) =>
-      singleRequest<{ data: string; message: string }>(ServiceTasksAction.save(params))(
-        requestActions,
-      ),
-
-      status: (params: {id:number, status:string}) =>
-      singleRequest<{ data: string; message: string }>(ServiceTasksAction.status(params))(
-        requestActions,
-      ),
-
-      fetch: (id: number) =>
-      singleRequest<ServiceTasksDTO>(ServiceTasksAction.fetch(id))(
-        requestActions,
-      ) as Promise<ServiceTasksDTO>,
+    page: (params: TableViewSearchParams<ServiceTasksSearch>) =>singleRequest<ServiceTasksDTO>(ServiceTasksAction.page(params))(requestActions) as Promise<Paging<ServiceTasksDTO>>,
+    save: (params: ServiceTasksCreate) =>singleRequest<{ data: string; message: string }>(ServiceTasksAction.save(params))(requestActions),
+    status: (params: {id:number, status:string}) =>singleRequest<{ data: string; message: string }>(ServiceTasksAction.status(params))(requestActions),
+    fetch: (id: number) =>singleRequest<ServiceTasksDTO>(ServiceTasksAction.fetch(id))(requestActions) as Promise<ServiceTasksDTO>,
   };
 };

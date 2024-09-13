@@ -152,6 +152,14 @@ export const Model = (id?: number) => {
     }
   };
 
+  const pageVehicleByPlateNumber = async (plateNumber: string) => {
+    try {
+      return await saleServices.pageVehicleByPlateNumber({ id: plateNumber });
+    } catch (err: any) {
+      message.error(err);
+      return [];
+    }
+  };
   const saveVehicle = async (item: VehicleLess) => {
     try {
       return await saleServices.onSaveVehicle(item);
@@ -220,10 +228,10 @@ export const Model = (id?: number) => {
   };
   const fetchLastStockControl = async (salespersonCode: string) => {
     try {
-      const result = await saleServices.fetchLastStockControl({ id: salespersonCode });
+      // const result = await saleServices.fetchLastStockControl({ id: salespersonCode });
       dispatch({
         type: 'fetchLastStockControl',
-        payload: result,
+        // payload: result,
       });
     } catch (err: any) {
       dispatch({
@@ -305,6 +313,7 @@ export const Model = (id?: number) => {
       clearMember,
       addMember,
       searchVehicleByPlateNumber,
+      pageVehicleByPlateNumber,
       saveVehicle,
       history,
       loadSaleInvoiceWithSalesperson,

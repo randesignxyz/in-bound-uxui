@@ -2,14 +2,16 @@ import { Moment } from "moment";
 import { RequisitionItem, RequisitionService } from "./data";
 
 export type RequisitionAdvanceSearchParams = {
-    status: 'ALL' | 'DRAFT' | 'PENDING'  | 'APPROVED' | 'REJECTED' | 'CANCELED';
-    // acquiredDate?: Moment;
-    // requestedDate?: Moment;
-    service?: boolean;
-    integratedStatus?: string;
-    deptIds?: number[];
-  };
-  
+  status: 'ALL' | 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELED';
+  acquiredDate?: Moment;
+  requestedDate?: Moment;
+  subStatus?: string;
+  searchValue?: string;
+  service?: boolean;
+  integratedStatus?: string;
+  deptIds?: number[];
+};
+
 export interface SaveRequisitionParams {
   id?: number;
   requestedBy: number;
@@ -18,7 +20,8 @@ export interface SaveRequisitionParams {
 
 export type ItemAdvanceSearchParams = {
   groupIds?: number[]
-  itemType?: 'ALL'| 'PRODUCT'| 'SERVICE';
+  itemType?: 'ALL' | 'PRODUCT' | 'SERVICE';
+  buId?: number;
 }
 
 export interface RequisitionBudgetCodeReviewParams {

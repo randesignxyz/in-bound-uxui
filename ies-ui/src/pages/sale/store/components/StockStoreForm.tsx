@@ -6,14 +6,14 @@ import { useSetState } from 'ahooks';
 import { Button, Card, Col, message, Modal, Row, Space, Tooltip } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { useEffect, useRef, useState } from 'react';
-import { history } from 'umi';
-import { SalePaths } from '../..';
 import VehicleFormModal from '../../stock-control/VehicleFormModal';
 import { Model } from '../model';
 
 type Props = {
   type: 'new' | 'edit';
   id?: number;
+  onView: (added?: SaveStockStore) => void;
+  onBack: () => void;
 };
 
 const layout = {
@@ -21,7 +21,7 @@ const layout = {
   wrapperCol: { span: 16 },
 };
 
-const StockStoreForm: React.FC<Props> = ({ id, type }) => {
+const StockStoreForm: React.FC<Props> = ({ id, type, onBack, onView }) => {
   const { state, actions } = Model();
   const [form] = useForm<{
     name: string;
@@ -72,14 +72,16 @@ const StockStoreForm: React.FC<Props> = ({ id, type }) => {
               memberIds: state.data?.members?.map((it) => it.salespersonCode),
               isInitialize: dataFrom.isInitialize,
             };
-            console.log(item);
             const so = await actions.saveData(item);
             if (isNew) {
               actions.clearMember();
               form.resetFields();
             } else {
-              if (so) history.push(`${SalePaths.store}/detail/${so?.data.id}`);
+              // if (so) history.push(`${SalePaths.store}/detail/${so?.data.id}`);
+              onView(so.data);
+              message.success("Article successfully saved")
             }
+
           } catch (error: any) {
             message.error(error.message);
           }
@@ -102,20 +104,24 @@ const StockStoreForm: React.FC<Props> = ({ id, type }) => {
 
   return (
     <ProForm
+      {...layout}
       onValuesChange={onValuesChange}
       form={form}
       style={{ fontWeight: 'bolder' }}
-      layout="horizontal"
-      {...layout}
+      loading={true}
+
       submitter={{
         render: () => {
           return (
-            <FooterToolbar>
+            <FooterToolbar
+              portalDom={false}
+            >
               <Button
-                onClick={() => {
-                  if (type === 'edit') history.push(`${SalePaths.store}/detail/${id}`);
-                  else history.push(`${SalePaths.store}/list`);
-                }}
+                // onClick={() => {
+                //   if (type === 'edit') history.push(`${SalePaths.store}/detail/${id}`);
+                //   else history.push(`${SalePaths.store}/list`);
+                // }}
+                onClick={() => onBack()}
               >
                 Cancel
               </Button>
@@ -163,23 +169,23 @@ const StockStoreForm: React.FC<Props> = ({ id, type }) => {
       }}
     >
       <Card size="small" title="General Info" style={{ marginBottom: 10 }}>
-        <Row gutter={50}>
-          <Col flex="1">
+        <Row gutter={12}>
+          <Col span={12}>
             <ProFormText
               label="Store Name"
               name="name"
               rules={[{ required: true }]}
-              help={<span />}
             />
             <ProFormTextArea help={<span />} label="Description" name="description" />
           </Col>
 
-          <Col flex="500px">
+          <Col span={12}>
             <ProFormSelect
               rules={[{ required: true }]}
               name="vehicleId"
               label="Plate Number"
               showSearch
+              width={'sm'}
               debounceTime={300}
               addonAfter={
                 <Tooltip placement="topLeft" title="Add Vehicle">
@@ -194,7 +200,7 @@ const StockStoreForm: React.FC<Props> = ({ id, type }) => {
                 </Tooltip>
               }
               request={async ({ keyWords }) => {
-                const result = keyWords && (await actions.searchVehicleByPlateNumber(keyWords));
+                const result = (await actions.searchVehicleByPlateNumber(keyWords));
                 return result.map((it: { plateNumber: string }) => ({
                   label: it.plateNumber,
                   value: it.plateNumber,
@@ -202,64 +208,22 @@ const StockStoreForm: React.FC<Props> = ({ id, type }) => {
               }}
               placeholder="Please select plate number"
             />
-            <ProFormCheckbox label="Initialize Stock" name="isInitialize" />
+            <ProFormCheckbox name="isInitialize" addonAfter={"Initialize Stock"} />
           </Col>
-          <Col flex="Auto" />
         </Row>
-        {/* stockStoreId isActive memberIds?: string[]; vehicleIds?: number[]; */}
       </Card>
-      <Card size="small" style={{ marginBottom: 10 }} title="Members">
-        <ProTable<SalesTeamWorkLess>
-          actionRef={actionRefMembers}
-          size="small"
-          rowKey="id"
-          pagination={false}
-          bordered={false}
-          search={false}
-          dataSource={state.data?.members}
-          toolBarRender={() => [
+      <Card
+        // size="small"
+        style={{ marginBottom: 10 }}
+        title="Members"
+        extra={<>
+          <Space align='baseline' >
             <ProFormSelect
-            key={"salesteamwork"}
-              width="sm"
+              key={"salesteamwork"}
+              width="md"
               name="memberShip"
-              //label="Select member"
-
+              noStyle
               showSearch
-              addonAfter={
-                <Tooltip placement="topLeft" title="Add Member">
-                  <Button
-                    size="small"
-                    icon={<PlusOutlined />}
-                    type="primary"
-                    disabled={memberShip === undefined}
-                    onClick={() => {
-                      if (memberShip) {
-                        const existing = state.data?.members?.find(
-                          (it) => it.salespersonCode === memberShip.salespersonCode,
-                        );
-                        if (!existing && memberShip) {
-                          const requestersInList =
-                            state.data?.members?.some((it) => it.isRequester) &&
-                            memberShip.isRequester;
-                          if (requestersInList) {
-                            // todo
-                            message.warning('There are a requester in list.');
-                          } else {
-                            actions.addMember(memberShip);
-                            //setSelectedMembers([...selectedMembers, memberShip]);
-                            form.setFieldsValue({ memberShip: undefined });
-                            setMemberShip(undefined);
-                          }
-                        } else if (existing) {
-                          message.warning(
-                            `${existing.salespersonCode} - ${existing.salespersonName} is added already.`,
-                          );
-                        }
-                      }
-                    }}
-                  />
-                </Tooltip>
-              }
               options={state.data?.initData?.salespersonList
                 ?.filter((it) => !it.isApprover)
                 .map((item) => {
@@ -274,7 +238,55 @@ const StockStoreForm: React.FC<Props> = ({ id, type }) => {
                   };
                 })}
               placeholder="Please Select member"
-            />,
+            />
+            <Tooltip placement="topLeft" title="Add Member">
+              <Button
+                size="small"
+                icon={<PlusOutlined />}
+                type="primary"
+                disabled={memberShip === undefined}
+                onClick={() => {
+                  if (memberShip) {
+                    const existing = state.data?.members?.find(
+                      (it) => it.salespersonCode === memberShip.salespersonCode,
+                    );
+                    if (!existing && memberShip) {
+                      const requestersInList =
+                        state.data?.members?.some((it) => it.isRequester) &&
+                        memberShip.isRequester;
+                      if (requestersInList) {
+                        // todo
+                        message.warning('There are a requester in list.');
+                      } else {
+                        actions.addMember(memberShip);
+                        //setSelectedMembers([...selectedMembers, memberShip]);
+                        form.setFieldsValue({ memberShip: undefined });
+                        setMemberShip(undefined);
+                      }
+                    } else if (existing) {
+                      message.warning(
+                        `${existing.salespersonCode} - ${existing.salespersonName} is added already.`,
+                      );
+                    }
+                  }
+                }}
+              />
+            </Tooltip>
+          </Space>
+        </>}
+      >
+        <ProTable<SalesTeamWorkLess>
+          actionRef={actionRefMembers}
+          size="small"
+          rowKey="id"
+          pagination={false}
+          bordered={false}
+          search={false}
+          loading={state.data?.members ? false : true}
+          dataSource={state.data?.members}
+          toolBarRender={() => [
+
+
           ]}
           options={{
             setting: false,

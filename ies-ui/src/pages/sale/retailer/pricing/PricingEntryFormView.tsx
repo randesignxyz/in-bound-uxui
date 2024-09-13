@@ -8,7 +8,7 @@ import {
   ProFormSelect,
 } from '@ant-design/pro-components';
 import { history } from '@umijs/max';
-import { Button, Card, Col, message, Modal, Row } from 'antd';
+import { Button, Card, Col, Modal, Row, Spin, message } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { useEffect, useState } from 'react';
 import { RetailerPath } from '..';
@@ -184,177 +184,178 @@ export default ({ id, type }: Props) => {
   };
 
   return (
-    <ProForm
-      form={form}
-      {...layout}
-      layout="horizontal"
-      onValuesChange={onFormValueChange}
-      submitter={{
-        render: () => {
-          return (
-            <FooterToolbar>
-              {type === 'new' && (
-                <Button
-                  onClick={() => {
-                    form.resetFields();
-                  }}
-                >
-                  Clear
-                </Button>
-              )}
+    <Spin spinning={requestActions.request?.loading}>
+      <ProForm
+        form={form}
+        {...layout}
+        layout="horizontal"
+        onValuesChange={onFormValueChange}
+        submitter={{
+          render: () => {
+            return (
+              <FooterToolbar>
+                {type === 'new' && (
+                  <Button
+                    onClick={() => {
+                      form.resetFields();
+                    }}
+                  >
+                    Clear
+                  </Button>
+                )}
 
-              {type === 'edit' && (
-                <Button
-                  onClick={() => {
-                    history.push(`${RetailerPath.pricing}/detail/${id}`);
-                  }}
-                >
-                  Cancel
-                </Button>
-              )}
-              {type === 'edit' && (
-                <Button
-                  onClick={() => {
-                    form.resetFields();
-                  }}
-                >
-                  Reset
-                </Button>
-              )}
-              {type === 'new' && (
+                {type === 'edit' && (
+                  <Button
+                    onClick={() => {
+                      history.push(`${RetailerPath.pricing}/detail/${id}`);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                )}
+                {type === 'edit' && (
+                  <Button
+                    onClick={() => {
+                      form.resetFields();
+                    }}
+                  >
+                    Reset
+                  </Button>
+                )}
+                {type === 'new' && (
+                  <Button
+                    type="primary"
+                    onClick={() => {
+                      onSaveActionHandler(true);
+                    }}
+                  >
+                    Save & Add New
+                  </Button>
+                )}
                 <Button
                   type="primary"
                   onClick={() => {
-                    onSaveActionHandler(true);
+                    onSaveActionHandler();
                   }}
                 >
-                  Save & Add New
+                  {type === 'new' ? 'Save & View' : 'Edit'}
                 </Button>
-              )}
-              <Button
-                type="primary"
-                onClick={() => {
-                  onSaveActionHandler();
-                }}
-              >
-                {type === 'new' ? 'Save & View' : 'Edit'}
-              </Button>
-            </FooterToolbar>
-          );
-        },
-      }}
-    >
-      <BreadCrumbCom separator=">" routes={routes} />
-      <Card
-        title={
-          'General Info'
-          // <TitleCard
-          //   title="Pricing Rule"
-          //   tagLable={type === 'new' ? 'New' : 'Edit'}
-          //   color={type === 'new' ? 'blue' : 'warning'}
-          // />
-        }
-        size="small"
-        style={{ marginTop: 10, marginBottom: 20 }}
+              </FooterToolbar>
+            );
+          },
+        }}
       >
-        <Row gutter={50}>
-          <Col span={12}>
-            <ProFormSelect
-              label="Product Item"
-              name="productId"
-              rules={[{ message: 'Please select product item.' }]}
-              required={true}
-              options={products.map((it) => ({
-                label: join([it.code, it.nameEn], ' - '),
-                value: it.id,
-              }))}
-              // request={async (params) => {
-              //   const data = await ProductServiceAPI(requestActions).listPrduct({
-              //     criteria: { searchValue: params['keyWords'] },
-              //   });
-              //   return data.items
-              //     .filter((it) => it.status === 'active')
-              //     .map((obj) => ({
-              //       code: obj.code,
-              //       label: join([obj.code, obj.nameEn], ' - '),
-              //       value: obj.id,
-              //     }))
-              //     .sort((a, b) => {
-              //       if (a.code < b.code) return -1;
-              //       if (a.code > b.code) return 1;
-              //       return 0;
-              //     });
-              // }}
-            />
-            <ProFormMoney label="Unit Price" name="unitPrice" required={true} min={1} />
-            <ProFormMoney label="Discount Price" name="discountPrice" min={0} />
-          </Col>
-          <Col span={12}>
-            <ProFormRadio.Group
-              name="priceType"
-              label="Apply For"
-              options={[
-                {
-                  label: 'Customer Group',
-                  value: 'customer group',
-                },
-                {
-                  label: 'Customer',
-                  value: 'customer',
-                },
-              ]}
-            />
-            {selectedPrcingType === 'customer group' ? (
+        <BreadCrumbCom separator=">" routes={routes} />
+        <Card
+          title={
+            'General Info'
+            // <TitleCard
+            //   title="Pricing Rule"
+            //   tagLable={type === 'new' ? 'New' : 'Edit'}
+            //   color={type === 'new' ? 'blue' : 'warning'}
+            // />
+          }
+          size="small"
+          style={{ marginTop: 10, marginBottom: 20 }}
+        >
+          <Row gutter={50}>
+            <Col span={12}>
               <ProFormSelect
-                label="Customer Group"
-                name="customerGroupId"
-                rules={[{ message: 'Please select customer group.' }]}
+                label="Product Item"
+                name="productId"
+                rules={[{ message: 'Please select product item.' }]}
                 required={true}
-                request={async (params) => {
-                  const criteria = { criteria: { searchValue: params['keyWords'] } };
-                  const data = await GroupCustomerServiceAPI(requestActions).listGroupCustomer(
-                    criteria,
-                  );
-
-                  return data.items
-                    .filter((it) => it.status === 'active')
-                    .map((obj) => ({ label: obj.name, value: obj.id }));
-                }}
-                // width={'md'}
+                options={products.map((it) => ({
+                  label: join([it.code, it.nameEn], ' - '),
+                  value: it.id,
+                }))}
+                // request={async (params) => {
+                //   const data = await ProductServiceAPI(requestActions).listPrduct({
+                //     criteria: { searchValue: params['keyWords'] },
+                //   });
+                //   return data.items
+                //     .filter((it) => it.status === 'active')
+                //     .map((obj) => ({
+                //       code: obj.code,
+                //       label: join([obj.code, obj.nameEn], ' - '),
+                //       value: obj.id,
+                //     }))
+                //     .sort((a, b) => {
+                //       if (a.code < b.code) return -1;
+                //       if (a.code > b.code) return 1;
+                //       return 0;
+                //     });
+                // }}
               />
-            ) : (
-              <ProFormSelect
-                label="Customer"
-                name="customerId"
-                rules={[{ message: 'Please select customer.' }]}
-                required={true}
-                request={async (params) => {
-                  const criteria = { criteria: { searchValue: params['keyWords'] } };
-                  const data = await servicescustomer.listCustomer(criteria);
-                  return data.items
-                    .filter((it) => it.status === 'active')
-                    .map((obj) => {
-                      console.log(typeof obj);
-                      return { label: obj.firstName + join(' ') + obj.lastName, value: obj.id };
-                    });
-                }}
-                // width={'md'}
+              <ProFormMoney label="Unit Price" name="unitPrice" required={true} min={1} />
+              <ProFormMoney label="Discount Price" name="discountPrice" min={0} />
+            </Col>
+            <Col span={12}>
+              <ProFormRadio.Group
+                name="priceType"
+                label="Apply For"
+                options={[
+                  {
+                    label: 'Customer Group',
+                    value: 'customer group',
+                  },
+                  {
+                    label: 'Customer',
+                    value: 'customer',
+                  },
+                ]}
               />
-            )}
+              {selectedPrcingType === 'customer group' ? (
+                <ProFormSelect
+                  label="Customer Group"
+                  name="customerGroupId"
+                  rules={[{ message: 'Please select customer group.' }]}
+                  required={true}
+                  request={async (params) => {
+                    const criteria = { criteria: { searchValue: params['keyWords'] } };
+                    const data = await GroupCustomerServiceAPI(requestActions).listGroupCustomer(
+                      criteria,
+                    );
 
-            <ProFormDateRangePicker
-              label="Expired Date"
-              name="expiredDates"
-              fieldProps={{
-                // disabledDate: disabledDate,
-                placeholder: ['Start Date', 'End Date'],
-                format: (value) => value.format('DD-MM-YYYY'),
-              }}
-            />
-          </Col>
-        </Row>
+                    return data.items
+                      .filter((it) => it.status === 'active')
+                      .map((obj) => ({ label: obj.name, value: obj.id }));
+                  }}
+                  // width={'md'}
+                />
+              ) : (
+                <ProFormSelect
+                  label="Customer"
+                  name="customerId"
+                  rules={[{ message: 'Please select customer.' }]}
+                  required={true}
+                  request={async (params) => {
+                    const criteria = { criteria: { searchValue: params['keyWords'] } };
+                    const data = await servicescustomer.listCustomer(criteria);
+                    return data.items
+                      .filter((it) => it.status === 'active')
+                      .map((obj) => {
+                        console.log(typeof obj);
+                        return { label: obj.firstName + join(' ') + obj.lastName, value: obj.id };
+                      });
+                  }}
+                  // width={'md'}
+                />
+              )}
 
-        {/* <Row gutter={16}>
+              <ProFormDateRangePicker
+                label="Expired Date"
+                name="expiredDates"
+                fieldProps={{
+                  // disabledDate: disabledDate,
+                  placeholder: ['Start Date', 'End Date'],
+                  format: (value) => value.format('DD-MM-YYYY'),
+                }}
+              />
+            </Col>
+          </Row>
+
+          {/* <Row gutter={16}>
           <Col span={12}>
             <ProFormText
               fieldProps={{ maxLength: 50 }}
@@ -374,7 +375,7 @@ export default ({ id, type }: Props) => {
           </Col>
         </Row> */}
 
-        {/* <Row gutter={16}>
+          {/* <Row gutter={16}>
           <Col span={6}>
             <ProFormDatePicker
               fieldProps={{
@@ -400,7 +401,7 @@ export default ({ id, type }: Props) => {
             <ProFormTextArea name={'description'} label="Description" fieldProps={{ rows: 1 }} />
           </Col>
         </Row> */}
-        {/* <Row gutter={4}>
+          {/* <Row gutter={4}>
           <Col span={12}>
             <Card>
               <Row gutter={4}>
@@ -500,7 +501,8 @@ export default ({ id, type }: Props) => {
             </Card>
           </Col>
         </Row> */}
-      </Card>
-    </ProForm>
+        </Card>
+      </ProForm>
+    </Spin>
   );
 };

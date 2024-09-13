@@ -1,3 +1,4 @@
+import { kc } from '@/auth';
 import { getUploadFileObjectUrl } from '@/services/apiGateway';
 import { getServiceUrl } from '@/services/ApiUrl';
 import { UploadOutlined } from '@ant-design/icons';
@@ -91,8 +92,8 @@ const AttachmentsEntity: React.FC<Props> = ({
             headers={
               token
                 ? {
-                    Authorization: `Bearer ${token}`,
-                  }
+                  Authorization: `Bearer ${token}`,
+                }
                 : {}
             }
             accept="image/*,.pdf"

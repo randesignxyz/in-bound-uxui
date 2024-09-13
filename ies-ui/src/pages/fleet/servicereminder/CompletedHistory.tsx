@@ -13,14 +13,11 @@ interface Props extends DrawerProps {
 export default ({ data, ...props }: Props) => {
   const requestActions = simpleRequestActions();
   const actionRef = useRef<ActionType>();
-
   useEffect(() => {
     props.open && actionRef.current?.reload?.();
   }, [props.open]);
-
   const meterFormat = (r: ServiceReminderDTO) => {
     const dmt = r.dueSoonMeterThreshold || 20;
-
     if (
       r.nextDueMeter - r.meterHistory?.meterValue > 0 &&
       r.nextDueMeter - r.meterHistory?.meterValue <= dmt
@@ -30,7 +27,6 @@ export default ({ data, ...props }: Props) => {
         status: 'Due Soon',
       };
     }
-
     if (r.meterHistory?.meterValue > r.nextDueMeter) {
       return {
         velue: `${r.meterHistory?.meterValue - r.nextDueMeter} km overdue`,
@@ -49,8 +45,8 @@ export default ({ data, ...props }: Props) => {
     const timeDuesoon = mpd.dueSoonTimeThresholdInterval;
     if (mpd.timeInterval != null) {
       if (timeDuesoon != null) {
-        const diff = moment().add(timeDuesoon, dueSoonFrequency).diff(moment.now(), 'days');
-        const dsiff = moment(nextDueAt).diff(moment.now(), 'days');
+        const diff = moment().add(timeDuesoon, dueSoonFrequency).diff(moment(), 'days');
+        const dsiff = moment(nextDueAt).diff(moment(), 'days');
 
         if (dsiff <= 2 && dsiff >= 0) {
           return 'Due Soon';
@@ -68,10 +64,7 @@ export default ({ data, ...props }: Props) => {
     } else {
       return moment(value).fromNow().replace('in', '') + ' from now';
     }
-
-    // return date
   };
-
   return (
     <>
       <Drawer {...props} width={800} styles={{
@@ -189,7 +182,6 @@ export default ({ data, ...props }: Props) => {
             const recordList = await ReminderServiceAPI(requestActions).pageReminderHistory({
               criteria: { searchValue: '', advanceSearch: { reminderId: data?.id || 0 } },
             });
-
             return Promise.resolve({
               data: recordList.items,
               success: true,

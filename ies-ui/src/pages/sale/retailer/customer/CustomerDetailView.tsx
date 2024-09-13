@@ -14,7 +14,7 @@ import {
 } from '@ant-design/pro-components';
 import { history, useAccess } from '@umijs/max';
 // import { request } from '@umijs/max';
-import { Button, Card, message, Modal, Space, Tabs, Tag, Typography } from 'antd';
+import { Button, Card, message, Modal, Space, Spin, Tabs, Tag, Typography } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { join, startCase } from 'lodash';
 import numeral from 'numeral';
@@ -27,7 +27,7 @@ import { GroupCustomerServiceAPI } from '../groupCustomer/service';
 import GoogleMapModal from '../orders/components/GoogleMapModal';
 import { GoogleEntity } from '../orders/data';
 import { ItemsPricing } from '../pricing/data';
-import type { CustomerAddressDTO, CustomerCreate, CustomerDto } from './data';
+import type { CustomerAddressDTO, CustomerDto } from './data';
 import { CustomerServiceAPI } from './services';
 
 interface Props {
@@ -194,16 +194,16 @@ export default ({ id }: Props) => {
                 onClick={
                   r.address.latitude !== undefined && r.address.longitude !== undefined
                     ? () => {
-                        setGoogleModal({
-                          visible: true,
-                          id: r.id,
-                          lat: parseFloat(r.address.latitude) ?? -1,
-                          lng: parseFloat(r.address.longitude) ?? -1,
-                          name: r.address.address,
-                          internalName: '',
-                          phone: `Contact Phone: ${r.phone}`,
-                        });
-                      }
+                      setGoogleModal({
+                        visible: true,
+                        id: r.id,
+                        lat: parseFloat(r.address.latitude) ?? -1,
+                        lng: parseFloat(r.address.longitude) ?? -1,
+                        name: r.address.address,
+                        internalName: '',
+                        phone: `Contact Phone: ${r.phone}`,
+                      });
+                    }
                     : undefined
                 }
               >
@@ -264,271 +264,273 @@ export default ({ id }: Props) => {
   );
 
   return (
-    <ProForm
-      form={form}
-      {...layout}
-      layout="horizontal"
-      submitter={{
-        render: () => {
-          return (
-            <FooterToolbar>
-              <Button
-                onClick={() => {
-                  history.push(`${RetailerPath.customer}/list`);
-                }}
-              >
-                Back
-              </Button>
-              {access.canCreateRetailer && (
-                <Space>
-                  <ModalForm
-                    size="middle"
-                    {...layoutModal}
-                    layout="horizontal"
-                    onFinish={async () => {
-                      Modal.confirm({
-                        title: 'Are you sure?',
-                        content: 'Change Group Customer',
-                        onOk: async () => {
-                          const data = formModal.getFieldsValue();
-                          const params = {
-                            id: id,
-                            groupId: data.customerGroupId!,
-                          };
-                          try {
-                            const respone = await services.changeGroupCustomer(params);
-                            message.success(respone.message);
-                            initdata();
-                          } catch (e) {
-                            message.error(e);
+    <Spin spinning={requestActions.request?.loading}>
+      <ProForm
+        form={form}
+        {...layout}
+        layout="horizontal"
+        submitter={{
+          render: () => {
+            return (
+              <FooterToolbar>
+                <Button
+                  onClick={() => {
+                    history.push(`${RetailerPath.customer}/list`);
+                  }}
+                >
+                  Back
+                </Button>
+                {access.canCreateRetailer && (
+                  <Space>
+                    <ModalForm
+                      size="middle"
+                      {...layoutModal}
+                      layout="horizontal"
+                      onFinish={async () => {
+                        Modal.confirm({
+                          title: 'Are you sure?',
+                          content: 'Change Group Customer',
+                          onOk: async () => {
+                            const data = formModal.getFieldsValue();
+                            const params = {
+                              id: id,
+                              groupId: data.customerGroupId!,
+                            };
+                            try {
+                              const respone = await services.changeGroupCustomer(params);
+                              message.success(respone.message);
+                              initdata();
+                            } catch (e: any) {
+                              message.error(e);
+                            }
+                          },
+                        });
+                        return Promise.resolve(true);
+                      }}
+                      form={formModal}
+                      title="Change Group Customer"
+                      trigger={
+                        <Button
+                          type="default"
+                          onClick={() =>
+                            formModal.setFieldsValue({
+                              customerGroupId: customer?.customerGroup?.id,
+                            })
                           }
-                        },
-                      });
-                      return Promise.resolve(true);
-                    }}
-                    form={formModal}
-                    title="Change Group Customer"
-                    trigger={
-                      <Button
-                        type="default"
-                        onClick={() =>
-                          formModal.setFieldsValue({
-                            customerGroupId: customer?.customerGroup?.id,
-                          })
-                        }
-                      >
-                        Change Group
-                      </Button>
-                    }
-                  >
-                    <ProFormSelect
-                      options={customerGroups.map((it) => ({
-                        value: it.id,
-                        label: join([it.code, it.name], ' - '),
-                      }))}
-                      width="lg"
-                      hidden={customer?.suggestion?.status === 'pending'}
-                      name="customerGroupId"
-                      rules={[{ required: true, message: 'Please select Customer Group' }]}
-                      label={'Customer Group'}
-                    />
-                  </ModalForm>
-                  <ModalForm
-                    size="middle"
-                    {...layoutModal}
-                    layout="horizontal"
-                    onFinish={async () => {
-                      Modal.confirm({
-                        title: 'Are you sure?',
-                        content: 'Update Customer',
-                        onOk: async () => {
-                          const data = formModal.getFieldsValue();
-                          const entity = {
-                            ...data,
-                            id: id,
-                          };
-                          try {
-                            const respone = await services.updateCustomer(entity);
-                            message.success(respone.message);
-                            initdata();
-                          } catch (e) {
-                            message.error(e);
+                        >
+                          Change Group
+                        </Button>
+                      }
+                    >
+                      <ProFormSelect
+                        options={customerGroups.map((it) => ({
+                          value: it.id,
+                          label: join([it.code, it.name], ' - '),
+                        }))}
+                        width="lg"
+                        hidden={customer?.suggestion?.status === 'pending'}
+                        name="customerGroupId"
+                        rules={[{ required: true, message: 'Please select Customer Group' }]}
+                        label={'Customer Group'}
+                      />
+                    </ModalForm>
+                    <ModalForm
+                      size="middle"
+                      {...layoutModal}
+                      layout="horizontal"
+                      onFinish={async () => {
+                        Modal.confirm({
+                          title: 'Are you sure?',
+                          content: 'Update Customer',
+                          onOk: async () => {
+                            const data = formModal.getFieldsValue();
+                            const entity = {
+                              ...data,
+                              id: id,
+                            };
+                            try {
+                              const respone = await services.updateCustomer(entity);
+                              message.success(respone.message);
+                              initdata();
+                            } catch (e: any) {
+                              message.error(e);
+                            }
+                          },
+                        });
+                        return Promise.resolve(true);
+                      }}
+                      form={formModal}
+                      title="Edit Customer"
+                      trigger={
+                        <Button
+                          type="primary"
+                          onClick={() =>
+                            formModal.setFieldsValue({
+                              firstName: customer?.firstName,
+                              lastName: customer?.lastName,
+                              phone: customer?.phone,
+                              customerGroupId: customer?.customerGroup?.id,
+                            })
                           }
-                        },
-                      });
-                      return Promise.resolve(true);
-                    }}
-                    form={formModal}
-                    title="Edit Customer"
-                    trigger={
-                      <Button
-                        type="primary"
-                        onClick={() =>
-                          formModal.setFieldsValue({
-                            firstName: customer?.firstName,
-                            lastName: customer?.lastName,
-                            phone: customer?.phone,
-                            customerGroupId: customer?.customerGroup?.id,
-                          })
-                        }
-                      >
-                        Edit
-                      </Button>
-                    }
-                  >
-                    <ProFormText
-                      label="First Name"
-                      name={'firstName'}
-                      rules={[{ required: true }]}
-                      width="lg"
-                    />
-                    <ProFormText
-                      label="Last Name"
-                      name={'lastName'}
-                      rules={[{ required: true }]}
-                      width="lg"
-                    />
-                    <ProFormText
-                      label="Phone"
-                      name="phone"
-                      rules={[{ required: true }]}
-                      width="lg"
-                    />
+                        >
+                          Edit
+                        </Button>
+                      }
+                    >
+                      <ProFormText
+                        label="First Name"
+                        name={'firstName'}
+                        rules={[{ required: true }]}
+                        width="lg"
+                      />
+                      <ProFormText
+                        label="Last Name"
+                        name={'lastName'}
+                        rules={[{ required: true }]}
+                        width="lg"
+                      />
+                      <ProFormText
+                        label="Phone"
+                        name="phone"
+                        rules={[{ required: true }]}
+                        width="lg"
+                      />
 
-                    <ProFormSelect
-                      options={customerGroups.map((it) => ({
-                        value: it.id,
-                        label: join([it.code, it.name], ' - '),
-                      }))}
-                      width="lg"
-                      hidden={customer?.suggestion?.status === 'pending'}
-                      name="customerGroupId"
-                      rules={[{ required: true, message: 'Please select Customer Group' }]}
-                      label={'Customer Group'}
-                    />
-                  </ModalForm>
-                </Space>
-              )}
-            </FooterToolbar>
-          );
-        },
-      }}
-    >
-      <BreadCrumbCom separator=">" routes={routes} />
-      {/* <Row justify="space-between">
+                      <ProFormSelect
+                        options={customerGroups.map((it) => ({
+                          value: it.id,
+                          label: join([it.code, it.name], ' - '),
+                        }))}
+                        width="lg"
+                        hidden={customer?.suggestion?.status === 'pending'}
+                        name="customerGroupId"
+                        rules={[{ required: true, message: 'Please select Customer Group' }]}
+                        label={'Customer Group'}
+                      />
+                    </ModalForm>
+                  </Space>
+                )}
+              </FooterToolbar>
+            );
+          },
+        }}
+      >
+        <BreadCrumbCom separator=">" routes={routes} />
+        {/* <Row justify="space-between">
         
       </Row> */}
-      <Card
-        title={<Text>General Info</Text>}
-        size="small"
-        style={{ marginTop: 10, marginBottom: 10 }}
-      >
-        <DescriptionDisplay data={displayItems} column={3} />
-      </Card>
-      {customer?.suggestion && (
-        <Card title={<Text>Business Info</Text>} size="small" style={{ marginBottom: 10 }}>
-          <DescriptionDisplay data={suggestion} column={3} />
-          <DescriptionDisplay data={suggestionAddress} column={1} />
-        </Card>
-      )}
-      <Card size="small">
-        <Tabs
+        <Card
+          title={<Text>General Info</Text>}
           size="small"
-          defaultActiveKey="1"
-          items={[
-            {
-              label: `Address`,
-              key: '1',
-              children: address,
-            },
-            {
-              label: `Item Pricing Rule`,
-              key: '2',
-              children: (
-                <ProTable<ItemsPricing>
-                  search={false}
-                  options={false}
-                  dataSource={customer?.customerGroup?.items}
-                  columns={[
-                    {
-                      title: 'Pricing Code',
-                      render: (_, r) => {
-                        return (
-                          <Button
-                            type="link"
-                            onClick={() => {
-                              const url = RetailerPath.pricing;
-                              history.push(url.concat('/detail/', r.id));
-                            }}
-                          >
-                            {r.code}
-                          </Button>
-                        );
+          style={{ marginTop: 10, marginBottom: 10 }}
+        >
+          <DescriptionDisplay data={displayItems} column={3} />
+        </Card>
+        {customer?.suggestion && (
+          <Card title={<Text>Business Info</Text>} size="small" style={{ marginBottom: 10 }}>
+            <DescriptionDisplay data={suggestion} column={3} />
+            <DescriptionDisplay data={suggestionAddress} column={1} />
+          </Card>
+        )}
+        <Card size="small">
+          <Tabs
+            size="small"
+            defaultActiveKey="1"
+            items={[
+              {
+                label: `Address`,
+                key: '1',
+                children: address,
+              },
+              {
+                label: `Item Pricing Rule`,
+                key: '2',
+                children: (
+                  <ProTable<ItemsPricing>
+                    search={false}
+                    options={false}
+                    dataSource={customer?.customerGroup?.items}
+                    columns={[
+                      {
+                        title: 'Pricing Code',
+                        render: (_, r) => {
+                          return (
+                            <Button
+                              type="link"
+                              onClick={() => {
+                                const url = RetailerPath.pricing;
+                                history.push(url.concat('/detail/', r.id));
+                              }}
+                            >
+                              {r.code}
+                            </Button>
+                          );
+                        },
                       },
-                    },
-                    {
-                      title: 'Product Item',
-                      render: (_, r) => {
-                        return (
-                          <Button
-                            type="link"
-                            onClick={() => {
-                              const url = '/retailer/products';
-                              history.push(url.concat('/detail/', r.productId ?? ''));
-                            }}
-                          >
-                            {r.productCode?.concat('-', r.productName ?? '')}
-                          </Button>
-                        );
+                      {
+                        title: 'Product Item',
+                        render: (_, r) => {
+                          return (
+                            <Button
+                              type="link"
+                              onClick={() => {
+                                const url = '/retailer/products';
+                                history.push(url.concat('/detail/', r.productId ?? ''));
+                              }}
+                            >
+                              {r.productCode?.concat('-', r.productName ?? '')}
+                            </Button>
+                          );
+                        },
                       },
-                    },
-                    {
-                      title: 'Unit Price',
-                      valueType: 'money',
-                      render: (_, r) => numeral(r.unitPrice).format('$ 0,0.00'),
-                    },
-                    {
-                      title: 'Discount Price',
-                      valueType: 'money',
-                      render: (_, r) =>
-                        r.discountPrice === undefined
-                          ? ''
-                          : numeral(r.discountPrice).format('$ 0,0.00'),
-                    },
-                    {
-                      title: 'Status',
-                      render: (_, r) => {
-                        return (
-                          <Tag color={`${r.status ? 'blue' : 'red'}`}>{startCase(r.status)}</Tag>
-                        );
+                      {
+                        title: 'Unit Price',
+                        valueType: 'money',
+                        render: (_, r) => numeral(r.unitPrice).format('$ 0,0.00'),
                       },
-                    },
+                      {
+                        title: 'Discount Price',
+                        valueType: 'money',
+                        render: (_, r) =>
+                          r.discountPrice === undefined
+                            ? ''
+                            : numeral(r.discountPrice).format('$ 0,0.00'),
+                      },
+                      {
+                        title: 'Status',
+                        render: (_, r) => {
+                          return (
+                            <Tag color={`${r.status ? 'blue' : 'red'}`}>{startCase(r.status)}</Tag>
+                          );
+                        },
+                      },
 
-                    {
-                      title: 'Effective Date',
-                      render: (_, r) => {
-                        return formatDate(r.effectiveDate);
+                      {
+                        title: 'Effective Date',
+                        render: (_, r) => {
+                          return formatDate(r.effectiveDate);
+                        },
                       },
-                    },
-                    {
-                      title: 'Expired Date',
-                      render: (_, r) => {
-                        return formatDate(r.expiredDate);
+                      {
+                        title: 'Expired Date',
+                        render: (_, r) => {
+                          return formatDate(r.expiredDate);
+                        },
                       },
-                    },
-                  ]}
-                />
-              ),
-            },
-          ]}
+                    ]}
+                  />
+                ),
+              },
+            ]}
+          />
+        </Card>
+        <GoogleMapModal
+          open={googleModal.visible}
+          onCancel={resetModal}
+          onSubmit={resetModal}
+          centerPoint={{ ...googleModal }}
         />
-      </Card>
-      <GoogleMapModal
-        open={googleModal.visible}
-        onCancel={resetModal}
-        onSubmit={resetModal}
-        centerPoint={{ ...googleModal }}
-      />
-    </ProForm>
+      </ProForm>
+    </Spin>
   );
 };

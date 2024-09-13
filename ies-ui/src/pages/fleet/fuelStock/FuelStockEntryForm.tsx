@@ -13,8 +13,8 @@ import FormModalComp, { FormModalProps } from '@/components/FormModal';
 import { Col, Row } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { useCallback, useEffect } from 'react';
-import { LookupDataServiceAPI } from '../lookupData/service';
 import { TankCreate, TankDTO } from './data';
+import { FleetServiceAPI } from '../service';
 
 interface Props extends FormModalProps {
   data?: TankDTO;
@@ -29,20 +29,16 @@ const FuelStockEntryForm: React.FC<Props> = ({ onSave, data, actionType, type, i
   const requestActions = simpleRequestActions();
 
   const lookupData = useCallback(async () => {
-    const dataLookup = LookupDataServiceAPI(requestActions).lookupData({ type: 'FUEL' });
+    const dataLookup = FleetServiceAPI(requestActions).lookupData({ type: 'FUEL' });
   }, []);
 
   useEffect(() => {
     props.open && initFormData();
-    // form.resetFields();
     lookupData();
   }, [props.open]);
 
   const initFormData = () => {
     form.setFieldsValue({
-      // beginningInventory:data?.beginningInventory,
-      // currentInventory:data?.currentInventory,
-      // description:data?.
     });
   };
 
@@ -78,7 +74,7 @@ const FuelStockEntryForm: React.FC<Props> = ({ onSave, data, actionType, type, i
                   label="Fuel Type"
                   rules={[{ required: true }]}
                   request={async () => {
-                    const data = await LookupDataServiceAPI(requestActions).lookupData({
+                    const data = await FleetServiceAPI(requestActions).lookupData({
                       type: 'VEHICLE',
                     });
                     return data
@@ -100,8 +96,6 @@ const FuelStockEntryForm: React.FC<Props> = ({ onSave, data, actionType, type, i
                         initialValue={0}
                         rules={[
                           {
-                            //   required: true,
-                            //   max: tankCapacity,
                             type: 'number',
                           },
                         ]}
@@ -120,8 +114,6 @@ const FuelStockEntryForm: React.FC<Props> = ({ onSave, data, actionType, type, i
                         label="Initial Balance"
                         rules={[
                           {
-                            //   required: true,
-                            //   max: tankCapacity,
                             type: 'number',
                           },
                         ]}
@@ -152,7 +144,7 @@ const FuelStockEntryForm: React.FC<Props> = ({ onSave, data, actionType, type, i
                   label="Location"
                   rules={[{ required: true }]}
                   request={async () => {
-                    const data = await LookupDataServiceAPI(requestActions).lookupData({
+                    const data = await FleetServiceAPI(requestActions).lookupData({
                       type: 'FUEL',
                     });
                     return data
@@ -210,7 +202,6 @@ const FuelStockEntryForm: React.FC<Props> = ({ onSave, data, actionType, type, i
                 },
               ]}
             />
-
             <ProFormDigit name={'quantity'} label="Quantity" />
           </ProForm>
         </>

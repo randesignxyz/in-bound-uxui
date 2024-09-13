@@ -17,7 +17,6 @@ interface Props {
 
 export default ({}: Props) => {
   const requestActions = simpleRequestActions();
-
   const [quickView, setQuickView] = useState<{
     visible: boolean;
     soldExchangeRate?: ExchangeRate;
@@ -54,9 +53,10 @@ export default ({}: Props) => {
             },
             {
               title: 'Salesperson Name',
-              render: (_, r) => {
-                return `${r.salesperson.salespersonCode} - ${r.salesperson.salespersonName}`;
-              },
+              render: (_, r) =>[r.salesperson?.salespersonCode, r.salesperson?.salespersonName].filter(p=>p).join("-")
+              //    {
+              //   return `${r.salesperson?.salespersonCode} - ${r.salesperson?.salespersonName}`;
+              // },
             },
             {
               title: 'Settled Bank Amount USD',
@@ -76,58 +76,56 @@ export default ({}: Props) => {
               title: 'Settled Amount KHM',
               align: 'right',
               render: (_, r) => {
-                return `${parent.settledExchangeRate.target_symbol} ${numeral(r.amountKH).format(
-                  '0,0',
-                )}`;
+                return ` ${numeral(r.amountKH).format(" 0,#00")} ៛`;
               },
             },
             {
-              title: 'Exchange Rate KHM',
+              title: 'Exchange Rate',
               align: 'right',
               render: (_, r) => {
-                return `${parent.settledExchangeRate.target_symbol} ${numeral(
+                return ` ${numeral(
                   r.exchangeRate,
-                ).format('0,0')}`;
+                ).format('0,0')} ៛`;
               },
             },
             {
-              title: 'Total Settled Amount KHM',
+              title: 'Total Sold Amount',
               align: 'right',
               render: (_, r) => {
-                const total = r.amountKH + (r.amount + (r.bankAmount || 0.0)) * r.exchangeRate;
-                return `${parent.settledExchangeRate.target_symbol} ${numeral(total).format(
-                  '0,0',
-                )}`;
+                // const total = r.soldAmount * (parent.soldExchangeRate?.target_amount || 0.0);
+                // return `${parent.settledExchangeRate?.target_symbol} ${numeral(total).format(
+                //   '0,0',
+                // )}`;
+                return <Typography.Text>$ {numeral(r.soldAmount).format("0,000.00")}</Typography.Text>
               },
             },
-
             {
-              title: 'Total Sold Amount KHM',
+              title: 'Total Settled Amount',
               align: 'right',
               render: (_, r) => {
-                const total = r.soldAmount * (parent.soldExchangeRate.target_amount || 0.0);
-                return `${parent.settledExchangeRate.target_symbol} ${numeral(total).format(
-                  '0,0',
-                )}`;
+                // const total = r.amountKH + (r.amount + (r.bankAmount || 0.0)) * r.exchangeRate;
+                // return `${parent.settledExchangeRate?.target_symbol} ${numeral(total).format(
+                //   '0,0',
+                // )}`;
+                const total = r.amount + (r.amountKH/r.exchangeRate) + (r.bankAmount||0)
+                return <Typography.Text type='warning'>$ {numeral(total).format("0,000.00")}</Typography.Text>
               },
             },
           ]}
           summary={(data) => {
-            const totalAmount = data.reduce(function (acc, it) {
-              return acc + it.amount;
-            }, 0);
+            const totalAmount = data.reduce((p,c) =>p + c.amount, 0);
             const totalAmountKH = data.reduce(function (acc, it) {
               return acc + it.amountKH;
             }, 0);
             const bankAmount = data.reduce(function (acc, it) {
-              return acc + (it.bankAmount || 0.0) * it.exchangeRate;
+              return acc + (it.bankAmount?? 0.0);
             }, 0);
             const settledAmount = data.reduce(function (acc, it) {
-              return acc + (it.bankAmount || 0.0 + it.amount) * it.exchangeRate + it.amountKH;
+              return acc + ((it.bankAmount?? 0.0) + it.amount + (it.amountKH/it.exchangeRate)) ;
             }, 0);
 
             const soldAmount = data.reduce(function (acc, it) {
-              return acc + it.soldAmount * (parent.soldExchangeRate.target_amount || 0.0);
+              return acc + it.soldAmount ;
             }, 0);
             return (
               <>
@@ -138,26 +136,26 @@ export default ({}: Props) => {
                   <Table.Summary.Cell index={1} align="right">
                     <Text type="success">{numeral(bankAmount).format('$ 0,0.00')}</Text>
                   </Table.Summary.Cell>
-                  <Table.Summary.Cell index={2} align="right">
+                  <Table.Summary.Cell index={1} align="right">
                     <Text type="success">{numeral(totalAmount).format('$ 0,0.00')}</Text>
                   </Table.Summary.Cell>
-                  <Table.Summary.Cell index={3} align="right">
+                  <Table.Summary.Cell index={2} align="right">
                     <Text type="success">
-                      {parent.soldExchangeRate.target_symbol} {numeral(totalAmountKH).format('0,0')}
+                      ៛​ {numeral(totalAmountKH).format('0,0')}
                     </Text>
                   </Table.Summary.Cell>
                   <Table.Summary.Cell index={4} align="right" />
-
                   <Table.Summary.Cell index={5} align="right">
                     <Text type="success">
-                      {parent.soldExchangeRate.target_symbol} {numeral(settledAmount).format('0,0')}
+                      $ {numeral(soldAmount).format('0,0.00')}
                     </Text>
                   </Table.Summary.Cell>
                   <Table.Summary.Cell index={6} align="right">
                     <Text type="success">
-                      {parent.soldExchangeRate.target_symbol} {numeral(soldAmount).format('0,0')}
+                      $ {numeral(settledAmount).format('0,0.00')}
                     </Text>
                   </Table.Summary.Cell>
+                  
                 </Table.Summary.Row>
               </>
             );
@@ -228,19 +226,21 @@ export default ({}: Props) => {
             },
           },
           {
-            title: 'Settled Amount KHM',
+            title: 'Sold Amount',
             align: 'right',
             render: (_, r) => {
-              const total = (r.soldExchangeRate.target_amount || 0.0) * r.totalSoldAmount;
-              return `${r.settledExchangeRate.target_symbol} ${numeral(total).format('0,0')}`;
+              // const total = (r.soldExchangeRate?.target_amount || 0.0) * r.totalSoldAmount;
+              // return r.soldExchangeRate? `${r.settledExchangeRate?.target_symbol} ${numeral(total).format('0,0')}`:0;
+              return <Typography.Text type='success'>$ {numeral(r.totalSoldAmount).format("0,000.00")}</Typography.Text>
             },
           },
           {
-            title: 'Sold Amount KHM',
+            title: 'Settled Amount',
             align: 'right',
             render: (_, r) => {
-              const total = (r.soldExchangeRate.target_amount || 0.0) * r.totalSoldAmount;
-              return `${r.settledExchangeRate.target_symbol} ${numeral(total).format('0,0')}`;
+              // const total = (r.soldExchangeRate?.target_amount || 0.0) * r.totalSoldAmount;
+              // return `${r.settledExchangeRate?.target_symbol} ${numeral(total).format('0,0')}`;
+              return <Typography.Text type='success'>$ {numeral(r.totalSettledAmount).format("0,000.00")}</Typography.Text>
             },
           },
         ]}
@@ -248,14 +248,15 @@ export default ({}: Props) => {
       <QuickViewDetail
         title={'Settlement View'}
         width={700}
-        destroyOnClose
-        placement={'right'}
+        drawerProps={{
+          onClose:()=>setQuickView({ visible: false, settlement: undefined, soldExchangeRate: undefined })
+        }}
         open={quickView?.visible}
         soldExchangeRate={quickView?.soldExchangeRate}
         settlement={quickView?.settlement}
-        onClose={() =>
-          setQuickView({ visible: false, settlement: undefined, soldExchangeRate: undefined })
-        }
+        // onClose={() =>
+        //   setQuickView({ visible: false, settlement: undefined, soldExchangeRate: undefined })
+        // }
       />
     </>
   );

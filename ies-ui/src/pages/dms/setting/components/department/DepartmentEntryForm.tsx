@@ -9,40 +9,24 @@ interface Props extends FormModalProps {
     onSave:(data:DeparmentCreate)=>void;
     data?:DepartmentDTO
 }
-
 const DepartmentEntryFormModal :React.FC<Props> =({ onSave, data ,...props}:Props)=>{
     const requestAction = simpleRequestActions();
     const [form]  =useForm<DeparmentCreate>();
-   
-    const loadData = async()=>{
-    //   const sas =await AccountServiceAPI(requestAction).findUsers();
-    //   console.log(sas);
-      
-    }
-    
-
     useEffect(()=>{
-        loadData();
         form.resetFields();
         props.open && form.setFieldsValue({...data,buId:data?.buId?.id });
-        
     }, [props.open])
-
     return (
         <FormModalComp
             {...props}
             width="600px"
             onSubmit={async()=>{
-                
-                
                 const dataForm = await form.validateFields();
                 const entry ={
                     ...dataForm,
                     id:data?.id,
                     status:"active"
-                    
                 }
-                
                onSave(entry);
             }}
             title="Department Form"
@@ -86,10 +70,7 @@ const DepartmentEntryFormModal :React.FC<Props> =({ onSave, data ,...props}:Prop
                     name="description"
                     label="Description"
                 />
-                
             </ProForm>
-
-
         </FormModalComp>
     );
 }

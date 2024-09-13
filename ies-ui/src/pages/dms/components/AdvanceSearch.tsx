@@ -1,15 +1,14 @@
 import { LookupDataItem } from '@/services/data';
 import { SoDeliveryMethod } from '@/services/sale/data';
 import ProForm from '@ant-design/pro-form';
-import { Button, Drawer, DrawerProps, Space } from 'antd';
+import { Button, Divider, Drawer, DrawerProps, Space } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { useEffect } from 'react';
 import { simpleRequestActions } from '@/services/model';
 import { DocumentationAdvanceSearch } from '../documentation/data';
-import { ProFormSelect } from '@ant-design/pro-components';
+import { ProFormDateRangePicker, ProFormSelect } from '@ant-design/pro-components';
 import { CoreServiceAPI } from '../service';
 import { DepartmentServiceAPI } from '../setting/components/department/service';
-import { DocumentTypeServiceAPI } from '../setting/components/documentType/service';
 
 interface Props extends DrawerProps {
   initData?: DocumentationAdvanceSearch;
@@ -18,7 +17,6 @@ interface Props extends DrawerProps {
   onSearch: (params: DocumentationAdvanceSearch) => void;
   onReset: () => void;
 }
-
 const AdvanceDocumentSearch: React.FC<Props> = ({
   initData,
   onSearch,
@@ -32,7 +30,6 @@ const AdvanceDocumentSearch: React.FC<Props> = ({
     if (!props.open) return;
     form.setFieldsValue({ ...initData });
   }, [props.open]);
-
   const requestActions = simpleRequestActions();
   return (
     <Drawer
@@ -43,6 +40,7 @@ const AdvanceDocumentSearch: React.FC<Props> = ({
           <Button 
             onClick={()=>{
               form.resetFields();
+              onReset();
             }}
           type='default'>Reset</Button>
           <Button
@@ -58,21 +56,14 @@ const AdvanceDocumentSearch: React.FC<Props> = ({
         form={form}
         onReset={() => onReset()}
         submitter={false}
-      // submitter={{
-      //   onSubmit: async () => {
-      //     
-      //     
-      //   },
-      // }}
       >
-
         <ProFormSelect
           name={"buId"}
           allowClear
           label={"Bussiness Unit"}
           request={async () => {
             const data = await CoreServiceAPI(requestActions).orgUnitList();
-            return data.map(i => ({ value: i.name, label: i.name }))
+            return data.map(i => ({ value: i.id, label: i.name }))
           }}
         />
         <ProFormSelect
@@ -87,26 +78,15 @@ const AdvanceDocumentSearch: React.FC<Props> = ({
                 advanceSearch: {}
               }
             });
-            return data.items.map(i => ({ value: i.name, label: i.name }))
+            return data.items.map(i => ({ value: i.id, label: i.name }))
           }}
         />
-        <ProFormSelect
-          name={"documentType"}
-          allowClear
-          label={"Document Type"}
-          showSearch
-          request={async (k: { keyWords?: string }) => {
-            const data = await DocumentTypeServiceAPI(requestActions).page({
-              criteria: {
-                searchValue: k.keyWords || ""
-              }
-            });
-            return data.items.map(i => ({ value: i.name, label: i.name }))
-          }}
+        <Divider orientation='left'> Expiry Date</Divider>
+        <ProFormDateRangePicker
+          name={"expiryDate"}
         />
       </ProForm>
     </Drawer>
   );
 };
-
 export default AdvanceDocumentSearch

@@ -4,6 +4,7 @@ import {
   EditableFormInstance,
   EditableProTable,
   FooterToolbar,
+  PageContainer,
   ProForm,
   ProFormDatePicker,
   ProFormDependency,
@@ -18,7 +19,6 @@ import { useForm } from 'antd/lib/form/Form';
 import moment from 'moment';
 import { useEffect, useRef, useState } from 'react';
 import { FleetPaths } from '..';
-import BreadCrumbCom from '../components/BreadCrumbCom';
 import { DriverServiceAPI } from '../driver/service';
 import { VehicleListItem } from '../vehicle/data';
 import { VehicleServiceAPI } from '../vehicle/service';
@@ -69,14 +69,12 @@ export default () => {
     const duration = +new Date() - +startDate;
 
     await editableFormRef.current?.validateFields();
-
     const entity = {
       ...dataForm,
       item: items,
       odometer: form.getFieldValue("odometer"),
       duration: duration
     }
-
 
     Modal.confirm({
       title: 'save Inspection record',
@@ -91,28 +89,12 @@ export default () => {
     });
   };
 
-  const routes = [
-    {
-      path: FleetPaths.fleet,
-      label: 'Fleet',
-    },
-    {
-      path: FleetPaths.inspection + '/list',
-      label: 'List',
-    },
-    {
-      path: '',
-      label: 'Inspection',
-    },
-  ];
-
-
-
-
-
   return (
+    <PageContainer
+      onBack={()=>history.push(`${FleetPaths.inspection}/list`)}
+      title={"New Inspection"}
+    >
     <Spin spinning={requestActions.request?.loading || false}>
-      <BreadCrumbCom separator=">" routes={routes} />
       <Card>
         <ProForm
           form={form}
@@ -163,8 +145,6 @@ export default () => {
                 }}
                 fieldProps={{
                   onChange: (e: string) => {
-                    // const odometer = vehicle?.filter(it => it.id == e).map((it) => it.currentMeter?.meterValue);
-                    // setOdometer(odometer[0]);
                     const data = VehicleServiceAPI(requestActions)
                       .findMeterHistory({
                         vehicleId: e,
@@ -274,7 +254,6 @@ export default () => {
                       },
                     ]}
                   />
-
                 </Col> : ""
               }}
             </ProFormDependency>
@@ -353,7 +332,6 @@ export default () => {
                 ),
                 formItemProps: (form, confige) => {
                   const item = form.getFieldValue(confige.rowKey || '');
-
                   return {
                     ...confige,
                     rules: [{ required: item?.result ? false : true }],
@@ -365,26 +343,7 @@ export default () => {
           <ProFormTextArea name="remark" placeholder={'remark...'} />
         </ProForm>
       </Card>
-
-      {/* <ServiceReminderModalForm
-        open={reminderModalState?.visible?.name === "modal"}
-        onSave={(data: ServiceReminderCreate) => {
-          Modal.confirm({
-            title: "Save Service Reminder Record",
-            content: " are you sure?",
-            onOk: async () => {
-              const response = await ReminderServiceAPI(requestActions).save(data) as ({
-                data: string,
-                message: string
-              });
-              setReminderModalState((v) => ({ ...v, visible: undefined }));
-
-            }
-          })
-        }}
-        onCancel={() => setReminderModalState((v) => ({ ...v, visible: undefined }))}
-        outReminder={reminderModalState?.visible?.payload}
-      /> */}
     </Spin>
+    </PageContainer>
   );
 };

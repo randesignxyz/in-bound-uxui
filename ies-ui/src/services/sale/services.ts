@@ -21,7 +21,6 @@ import type {
   CountStockDto,
   CustomerSaleInfo,
   ExchangeRate,
-  initProductParamsType,
   InitSaleInvoiceParam,
   InitSoParamsType,
   InitSuggestionParam,
@@ -59,7 +58,9 @@ import type {
   TransactionDetail,
   UpdateStockControlDto,
   VehicleLess,
+  initProductParamsType,
 } from './data';
+import { StatusActionForm } from '@/pages/sale/mpu/settlement/data';
 
 export const SaleService = (serviceName?: SaleServiceName): ServiceType => {
   return {
@@ -141,6 +142,11 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
 
   donwloadDSDLeadReport: downloadReport<{
     salespersonCode?: string[];
+  }>(actions),
+
+  donwloadDSDVisitReport: downloadReport<{
+    visitedDates?: moment.Moment[];
+    salespersonCodes?: string[];
   }>(actions),
 
   fetchSoSummary: () => find<SoSummary>(ReqParams.fetchSoSummary())(actions),
@@ -240,11 +246,6 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
     actions,
   ),
 
-  listStock: findPagingService<
-    { searchValue?: string; advanceSearch?: { status: string }; sort?: Record<string, SortOrder> },
-    StockControlLess
-  >(SaleService('list-stock'), actions),
-
   listSuggestionStock: findPagingService<
     {
       role: string;
@@ -271,6 +272,11 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
     actions,
   ),
 
+  pageVehicleByPlateNumber: findAllService<{ id: string }, VehicleLess>(
+    SaleService('page-vehicle-by-plate-number'),
+    actions,
+  ),
+
   onSaveLead: execService<LeadLess, { data: any; message: string }>(
     SaleService('save-lead'),
     actions,
@@ -283,6 +289,10 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
 
   onAcceptStockRequest: execService<{ id: number }, { data: any; message: string }>(
     SaleService('accept-stock-request'),
+    actions,
+  ),
+  onRejectStockRequest: execService<StatusActionForm, { data: any; message: string }>(
+    SaleService('reject-request-stock'),
     actions,
   ),
 
@@ -378,10 +388,10 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
     actions,
   ),
 
-  listStockDetailItems: findAllService<{ id: number }, StockDetailLess>(
-    SaleService('list-detail-stock-item'),
-    actions,
-  ),
+  // listStockDetailItems: findAllService<{ id: number }, StockDetailLess>(
+  //   SaleService('list-detail-stock-item'),
+  //   actions,
+  // ),
 
   fetchLastStockControl: findAllService<{ id: string }, StockDetailLess>(
     SaleService('fetch-last-stock-control'),
@@ -432,7 +442,7 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
     actions,
   ),
   findExchangeRate: findService<{}, ExchangeRate>(SaleService('exchange-rate'), actions),
-  findDSDExchangeRate: findService<{}, ExchangeRate>(SaleService('exchange-rate-dsd'), actions),
+  findDSDExchangeRate: findService<{}, ExchangeRate>(SaleService('exchange-rate-dsd-only'), actions),
 
   pageLead: findPagingService<{ id?: string; sort?: Record<string, SortOrder> }, LeadDetail>(
     SaleService('page-lead'),

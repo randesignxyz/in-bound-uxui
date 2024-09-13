@@ -5,29 +5,33 @@ import { SalePaths } from '..';
 import Create from './Create';
 import StockStoreDetail from './Detail';
 import Edit from './Edit';
-import StoreListView from './List';
+import StoreMainPage from './MainPage';
 
 export default () => {
   const access = useAccess();
   return (
-    <CrudWrapper baseURL={SalePaths.store}>
+    <CrudWrapper baseURL={SalePaths.store} disablePageContainer>
       {(view, id, navigate) => {
         return (
           (view === 'list' && (
-            <StoreListView
-              actionHandlers={{
-                onAdd: navigate?.goToCreate,
-                onDetail: navigate?.goToDetail,
-              }}
-            />
+            <StoreMainPage/>
+            // <StoreListView
+            //   actionHandlers={{
+            //     onAdd: navigate?.goToCreate,
+            //     onDetail: navigate?.goToDetail,
+            //   }}
+            // />
           )) ||
           (view === 'detail' && (
             <StockStoreDetail
               id={id as number}
               actionHandlers={{
                 onBack: navigate?.gotToListHandler,
-              }}
-            />
+              }} onEdit={function (id?: number): void {
+                throw new Error('Function not implemented.');
+              } } onAdd={function (): void {
+                throw new Error('Function not implemented.');
+              } }            />
           )) ||
           (view === 'create' && (
             <Access

@@ -25,21 +25,16 @@ const ReminderAction ={
         type:"EXEC",
         payload:{id}
     }),
-
     page:(param:TableViewSearchParams<ReminderAdvanceSearchParam>):ServiceApiType<{searchValue?:string}> =>({
         actionName:"page-reminder",
         endpoint:"DMS",
         type:"PAGING_QUERY",
-        payload:{
-            
-        }
+        payload:{}
     })
-
 }
 
 export const ReminderServiceAPI = (requestActions:RequestActions)=>{
     return {
-
         save:(data:ReminderCreate)=>singleRequest<{data:string; message:string}>(ReminderAction.save(data))(requestActions),
         list:(id?:number)=>singleRequest<ReminderDTO>(ReminderAction.list(id))(requestActions) as Promise<ReminderDTO[]>,
         delete:(id?:number) =>singleRequest<ReminderDTO>(ReminderAction.delete(id))(requestActions),

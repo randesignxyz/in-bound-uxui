@@ -5,8 +5,8 @@ import type { RequestActions, ServiceApiType } from '@/services/apiGateway';
 import { singleRequest } from '@/services/apiGateway';
 import type { Locations } from '@/services/crm/data';
 import { LookupData } from '@/services/data';
-import type { LeadDetail, LeadLess } from '@/services/sale/data';
-import type { LeadAdvanceSearchParams } from './data';
+import type { LeadDetail, LeadLess, SalesTeamWorkLess } from '@/services/sale/data';
+import type { LeadAdvanceSearchParams, UpdateCustomerOwnerEntry } from './data';
 
 const LeadActions = {
   list: (
@@ -22,7 +22,7 @@ const LeadActions = {
     },
   }),
 
-  detail: (id: number): ServiceApiType<{ id: number }> => ({
+  detail: (id?: number): ServiceApiType<{ id?: number }> => ({
     type: 'FETCH_QUERY',
     endpoint: 'SALE',
     actionName: 'detail-lead',
@@ -56,30 +56,30 @@ const LeadActions = {
     actionName: 'sales_type',
     payload: params,
   }),
+  
+  saleperson:():ServiceApiType<{}> =>({
+    type:"LIST_QUERY",
+    actionName:"list-sales-team-work",
+    endpoint:"SALE",
+    payload:{},
+  }),
+  updateCustomerOwner:(param:UpdateCustomerOwnerEntry):ServiceApiType<UpdateCustomerOwnerEntry>=>({
+     actionName:"update-lead-owner",
+     endpoint:"SALE",
+     type:"EXEC",
+     payload:param
+  })
 };
 
 export const LeadServiceAPI = (requestActions: RequestActions) => {
   return {
-    listLead: (params: TableViewSearchParams<LeadAdvanceSearchParams>) =>
-      singleRequest<LeadDetail>(LeadActions.list(params))(requestActions) as Promise<
-        Paging<LeadDetail>
-      >,
-    detailLead: (id: number) =>
-      singleRequest<LeadDetail>(LeadActions.detail(id))(requestActions) as Promise<LeadDetail>,
-    save: (params: LeadDetail) =>
-      singleRequest<{ data: number; message: string }>(LeadActions.save(params))(requestActions),
-    location: (type: string, parentId?: number) =>
-      singleRequest<Locations[]>(LeadActions.loadRegion({ type: type, parentId: parentId }))(
-        requestActions,
-      ) as Promise<Locations[]>,
-    locations: (ids: number[]) =>
-      singleRequest<Locations[]>(LeadActions.loadLocations({ ids: ids }))(
-        requestActions,
-      ) as Promise<Locations[]>,
-
-    outletTypes: () =>
-      singleRequest<LookupData[]>(LeadActions.outletTypes({ id: -1 }))(requestActions) as Promise<
-        LookupData[]
-      >,
+    listLead: (params: TableViewSearchParams<LeadAdvanceSearchParams>) => singleRequest<LeadDetail>(LeadActions.list(params))(requestActions) as Promise< Paging<LeadDetail>>,
+    detailLead: (id?: number) =>singleRequest<LeadDetail>(LeadActions.detail(id))(requestActions) as Promise<LeadDetail>,
+    save: (params: LeadLess) =>singleRequest<{ data: number; message: string }>(LeadActions.save(params))(requestActions),
+    location: (type: string, parentId?: number) => singleRequest<Locations[]>(LeadActions.loadRegion({ type: type, parentId: parentId }))(requestActions) as Promise<Locations[]>,
+    locations: (ids: number[]) =>singleRequest<Locations[]>(LeadActions.loadLocations({ ids: ids }))(requestActions) as Promise<Locations[]>,
+    outletTypes: () =>singleRequest<LookupData[]>(LeadActions.outletTypes({ id: -1 }))(requestActions) as Promise<LookupData[]>,
+    saleperson :()=>singleRequest(LeadActions.saleperson())(requestActions) as Promise<SalesTeamWorkLess[]>,
+    updateCustomerOwner:(param:UpdateCustomerOwnerEntry)=>singleRequest(LeadActions.updateCustomerOwner(param))(requestActions) as Promise<{data:string; message:string}>,
   };
 };

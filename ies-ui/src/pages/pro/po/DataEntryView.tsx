@@ -3,9 +3,9 @@ import { ProcessFlowModalWrapper } from '@/pages/process-flow/components/Process
 import { formatter } from '@/pages/utils';
 import { UserResult } from '@/services/process-workflow/data';
 import {
+  CaretRightOutlined,
   CheckCircleOutlined,
   ClearOutlined,
-  DeleteOutlined,
   MergeCellsOutlined,
   MinusCircleOutlined,
   QuestionCircleOutlined,
@@ -15,7 +15,6 @@ import {
   EditableFormInstance,
   EditableProTable,
   FooterToolbar,
-  PageContainer,
   ProCard,
   ProForm,
   ProFormDatePicker,
@@ -26,9 +25,8 @@ import {
   ProFormSwitch,
   ProFormText,
   ProFormTextArea,
-  ProTable,
+  ProList,
 } from '@ant-design/pro-components';
-import { history } from '@umijs/max';
 import { Button, Flex, message, Popconfirm, Space } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import _, { round } from 'lodash';
@@ -37,7 +35,6 @@ import { createVendorService } from '../vendor/services';
 import { VendorDetail } from '../vendor/vendor';
 import {
   CompanyAddress,
-  PoItemSearch,
   PoRequestFormNames,
   PoRequestSavePayload,
   SavePoItem,
@@ -45,6 +42,15 @@ import {
 import PoItemFinder from './PoItemFinder';
 import { createPoService } from './services';
 import { Moment } from 'moment';
+import { useInView } from 'react-intersection-observer';
+import { getRelatedItms, RelatedObj } from '../services';
+import Link from 'antd/es/typography/Link';
+import { EmployeeServices } from '@/pages/hrm/services';
+import { Department } from '@/pages/hrm/data';
+import { openQC } from '../price-comparison/MainPage';
+import { openPQ } from '../quotation/MainPage';
+import { openPR } from '../requisition/MainPage';
+import RelatedObjectItems from '../components/RelatedObjectItems';
 
 type DataFormType = {
   vendorId: number;
@@ -72,17 +78,18 @@ type DataFormType = {
   taxPercentage?: number;
   taxAmount?: number;
   paymentDue: number;
+  ownerFunctionId?: number;
   remarks?: string;
 };
 
 export default ({
-  id,
-  type,
+  onView,
   onBack,
 }: {
   id?: number;
   type: 'CREATE' | 'EDIT';
   onBack: () => void;
+  onView?: (processInstId: string, fornNo: string) => void;
 }) => {
   const [form] = useForm<DataFormType>();
   const vendorSrv = createVendorService();
@@ -99,6 +106,10 @@ export default ({
   const [requestVisible, setRequestVisible] = useState(false);
   const [addItemVisible, setAddItemVisible] = useState(false);
   const [isService, setIsService] = useState(false);
+  const [ownerFunctions, setOwnerFunctions] = useState<Department[]>([])
+  const [allFunctions, setAllFunctions] = useState<Department[]>()
+
+  const { ref, inView } = useInView({});
 
   const onFindVendorHandler = async ({ keyWords }: { keyWords?: string }) => {
     const rs = await vendorSrv.fetchPaging({
@@ -141,9 +152,7 @@ export default ({
   const onSelectVendor = async (vendorId: number) => {
     try {
       if (vendorId < 0) return;
-
       const rs = await vendorSrv.fetchItem(vendorId);
-
       setVendor(rs);
     } catch (error: any) {
       message.error(error.message || 'Failed to fetch date.');
@@ -158,43 +167,6 @@ export default ({
       shipToAddress: shippedAddress?.address,
     });
     setCompanyAddress(rs);
-  };
-
-  const linkObject = (record: SavePoItem) => {
-    return (
-      <ProTable<PoItemSearch>
-        size="small"
-        rowKey={'id'}
-        search={false}
-        options={false}
-        pagination={false}
-        dataSource={[record.item, ...(record.combineWith || [])]}
-        columns={[
-          { title: 'Liked To', render: (_, r) => r.refType },
-          {
-            title: 'Doc No',
-            render: (_, r) =>
-              r.relatedTo
-                ?.filter((it) => it.type == r.refType)
-                .map((it) => it.code)
-                .join(', '),
-          },
-          { title: 'Qty', hideInTable: isService, align: 'right', render: (_, r) => r.qty },
-          { title: 'UoM', hideInTable: isService, render: (_, r) => r.uomName },
-          {
-            title: 'Price',
-            align: 'right',
-            hideInTable: isService,
-            render: (_, r) => r.price && formatter.format(r.price),
-          },
-          {
-            title: 'Amount',
-            align: 'right',
-            render: (_, r) => formatter.format((r.price || 0) * (r.qty || 1)),
-          },
-        ]}
-      />
-    );
   };
 
   const dataValidation = async () => {
@@ -213,8 +185,7 @@ export default ({
   const doMerge = () => {
     const removeItems = mergeItems.filter((it) => it.key != mergeItemEnabled?.key);
     setItems((v) =>
-      v
-        .filter((it) => !removeItems.some((i) => i.key == it.key))
+      v.filter((it) => !removeItems.some((i) => i.key == it.key))
         .map((it) =>
           it.key == mergeItemEnabled?.key
             ? {
@@ -252,6 +223,11 @@ export default ({
       );
       const shipToAddress = companyAddress?.find((it) => it.id == dataForm.shipToAddressId);
 
+      if (dataForm.totalAmount <= 0) {
+        message.error("Total must be geater than 0.")
+        return
+      }
+
       const data: PoRequestSavePayload = {
         buId: buId,
         requestor: requestor.id,
@@ -277,12 +253,13 @@ export default ({
         paymentTerm: vendor.paymentGroup,
         totalAmount: dataForm.totalAmount,
         isService: isService,
+        ownerFunctionId: dataForm.ownerFunctionId,
+        ownerFunction: (ownerFunctions.length > 0 ? ownerFunctions : allFunctions)?.find(it => it.id == dataForm.ownerFunctionId)?.name,
         discountPercentage: dataForm.discountPercentage,
         discountAmount: dataForm.discountAmount,
         tax: dataForm.taxPercentage,
         taxAmount: dataForm.taxAmount,
         paymentDue: dataForm.paymentDue,
-
         remarks: dataForm.remarks,
         items: items.map((it) => ({
           itemId: it.itemId,
@@ -309,10 +286,10 @@ export default ({
         files: uploadFiles,
       };
       const rs = await srv.saveItem(data);
-
       const { processInstId, formNo } = rs;
+      onView?.(processInstId, formNo)
       message.success(`Your request is submitted. Please track the request with form no ${formNo}`);
-      history.push(`/data-form/${PoRequestFormNames.processDefKey}/${processInstId}`);
+      // history.push(`/data-form/${PoRequestFormNames.processDefKey}/${processInstId}`);
     } catch (error: any) {
       message.error(error.message || 'Failed to submit.');
     }
@@ -329,6 +306,19 @@ export default ({
       shipToAddress: shippedAddress?.address,
     });
   };
+
+  const fetchDepartment = async () => {
+    const list = items.flatMap(it => it.relatedObjects.map(it1 => it1.deptId || 0)).filter(it => it > 0)
+    if (list.length == 0) {
+      setOwnerFunctions([])
+    } else {
+      const listDepartments = await EmployeeServices.listDepartmentByIds(_.uniq(list)).query()
+      if (!listDepartments.some(it => it.id == form.getFieldValue('ownerFunctionId'))) {
+        form.resetFields(['ownerFunctionId'])
+      }
+      setOwnerFunctions(listDepartments)
+    }
+  }
 
   useEffect(() => {
     initData();
@@ -349,12 +339,21 @@ export default ({
     billingAddressId && setBillingAddress(billingAddressId);
   }, [vendor]);
 
+  const loadFunction = async () => {
+    const functionList = await EmployeeServices.listDepartment.query()
+    setAllFunctions(functionList)
+
+  }
+
+  useEffect(() => {
+    loadFunction()
+  }, [])
+
   useEffect(() => {
     const totalAmount = _.sum(items.map((it) => it.amountAfterDiscount)) || 0;
     const discountAmount = totalAmount == 0 ? 0 : form.getFieldValue('discountAmount') || 0;
     const tax = form.getFieldValue('taxPercentage') || 0;
     const totalAfterDiscount = totalAmount - discountAmount;
-
     const taxAmount = totalAmount == 0 ? 0 : round((totalAfterDiscount * tax) / 100, 2) || 0;
 
     form.setFieldsValue({
@@ -362,15 +361,16 @@ export default ({
       paymentDue: totalAfterDiscount + taxAmount,
       taxAmount: taxAmount
     });
+    fetchDepartment()
   }, [items, forceUpdate]);
 
   return (
-    <PageContainer onBack={history.back} title="New Po Request">
+    <div ref={ref}>
       <ProForm
         form={form}
         submitter={{
           render: () => (
-            <FooterToolbar>
+            inView ? <FooterToolbar>
               <Button style={{ marginRight: 10 }} onClick={onBack}>
                 Cancel
               </Button>
@@ -387,7 +387,7 @@ export default ({
               >
                 Request
               </Button>
-            </FooterToolbar>
+            </FooterToolbar> : <></>
           ),
         }}
       >
@@ -490,8 +490,6 @@ export default ({
                     <ProFormText label="Payment Term" name={'paymentGroup'} />
                   </Flex>
                 </Flex>
-
-
               </Flex>
             </Flex>
           </ProCard>
@@ -518,9 +516,8 @@ export default ({
           >
             <EditableProTable<SavePoItem>
               expandable={{
-                expandedRowRender: linkObject,
-
-                rowExpandable: (record) => (record.item.relatedTo?.length || 0) > 0,
+                expandedRowRender: record => record.relatedObjects.length > 0 && <RelatedObjectItems mainId={record.id || 0} items={record.relatedObjects} />,
+                rowExpandable: (record) => (record.relatedObjects?.length || 0) > 0,
               }}
               size="small"
               recordCreatorProps={{
@@ -638,13 +635,6 @@ export default ({
                     </Flex>
                   ),
                 },
-                // {
-                //   title: isService ? 'Service Name' : 'Item Name',
-
-                //   readonly: true,
-                //   responsive: ['xs', 'sm'],
-                //   dataIndex: 'itemName',
-                // },
                 {
                   title: 'Description',
                   valueType: 'textarea',
@@ -817,19 +807,28 @@ export default ({
             if (shipToAddressId) {
               const address = companyAddress?.find((it) => it.id == shipToAddressId);
               form.setFieldValue('shipToAddress', address?.address);
+
             }
           }}
         >
           <Flex justify="space-between">
-            <Flex justify="flex-start">
+            <Flex justify='flex-start' vertical >
+              <ProFormSelect labelCol={{ span: 6 }}
+                wrapperCol={{ span: 18 }}
+                rules={[{ required: true }]}
+                showSearch
+                name={"ownerFunctionId"}
+                options={ownerFunctions.length > 0 ? ownerFunctions.map(it => ({ label: it.name, value: it.id })) : allFunctions?.map(it => ({ label: it.name, value: it.id }))}
+                label="Owner Function" />
               <ProFormTextArea
-                labelCol={{ span: 4 }}
-                wrapperCol={{ span: 20 }}
+                labelCol={{ span: 6 }}
+                wrapperCol={{ span: 18 }}
                 fieldProps={{ rows: 6 }}
                 label="Remarks"
                 name={'remarks'}
                 width={600}
               />
+
             </Flex>
             <Flex vertical style={{ width: 400 }}>
               <ProFormMoney
@@ -926,7 +925,7 @@ export default ({
         open={addItemVisible}
         isService={isService}
         onOpenChange={(visible) => !visible && setAddItemVisible(false)}
-        onSave={(data) => {
+        onSave={async (data) => {
           if (
             vendor &&
             data.some((it) =>
@@ -945,14 +944,23 @@ export default ({
 
           if (!vendor && vendorFromItem) {
             onSelectVendor(vendorFromItem.id).finally(() => setForceReloadVendorList((v) => v + 1));
-
             form.setFieldsValue({ vendorId: vendorFromItem.id });
           }
+          const itemList = (await Promise.all(data.map(it => getRelatedItms(it.refId, it.refType, isService).query().then(items => ({ itemId: it.refId, type: it.refType, items: items }))))).flatMap(it => it)
 
-          setItems((v) => [...v, ...data].map((it, index) => ({ ...it, baseItemId: it.item.baseItemId, baseType: it.item.baseType, seq: index + 1 })));
+          const newItems = data.map((it, index) => ({
+            ...it,
+            baseItemId: it.item.baseItemId,
+            relatedObjects: itemList.find(i => i.itemId == it.refId && i.type == it.refType)?.items || [],
+            baseType: it.item.baseType,
+            seq: index + 1
+          }))
+
+          setItems(v => [...v, ...newItems]);
+
         }}
         vendor={vendor}
       />
-    </PageContainer>
+    </ div >
   );
 };

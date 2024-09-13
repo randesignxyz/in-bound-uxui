@@ -13,7 +13,7 @@ import {
   PlusOutlined,
 } from '@ant-design/icons';
 import type { ActionType } from '@ant-design/pro-table';
-import { useModel } from '@umijs/max';
+import { history, useModel } from '@umijs/max';
 import {
   Badge,
   Button,
@@ -31,13 +31,14 @@ import moment from 'moment';
 import Omit from 'omit.js';
 import { useRef, useState } from 'react';
 import { FleetPaths } from '..';
-import BreadCrumbCom from '../components/BreadCrumbCom';
 import { DieselMonthlyReportParams, FuelAvanceSearchParam, FuelCreate, FuelDTO } from './data';
 import DetailViewDrawer from './DetailViewDrawer';
 import FuelModalForm from './FuelFormModal';
 import { FuelServiceAPI } from './service';
 import FuelExportModal from '../report/component/FuelExportModal';
 import AdvanceFuelSearch from '../components/AdvanceFuelSearch';
+import { PageContainer } from '@ant-design/pro-components';
+import { formatDate, formatDateTime } from '@/pages/utils';
 
 interface Props {
   onDetail?: (id: number) => void;
@@ -85,17 +86,12 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
         reportName: 'fleet-diesel-monthly-report',
         data: param,
         type: 'EXCEL',
-        // target: '_blank'
       });
     } catch (error) {
       message.error('Failed to download.');
     }
   };
-
-
-
   const cacheList = useModel('dataList');
-
   const onRequestHandler = async (params: TableViewSearchParams<FuelAvanceSearchParam>) => {
     try {
       return services.page(params).then((it) => {
@@ -110,14 +106,12 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
       return Promise.reject();
     }
   };
-
   const onAddHandler = async () => {
     setSate((v) => ({
       ...v,
       visible: { name: 'modal', type: 'ADD' },
     }));
   };
-
   const onSaveActionHandler = (data: FuelCreate) => {
     Modal.confirm({
       title: 'Save Fuel Consumption record',
@@ -133,7 +127,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
       },
     });
   };
-
   const items = (row: FuelDTO): MenuProps['items'] => [
     {
       key: '1',
@@ -148,7 +141,7 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
       label: row.status == 'void' ? 'Unvoid' : 'Void',
       itemIcon: <BlockOutlined />,
       style: { color: row.status == 'void' ? '' : 'red' },
-      disabled: moment(row.createdDate).isBefore(moment(), 'month'),
+      // disabled: moment(row.createdDate).isBefore(moment(), 'month'),
       onClick: () => {
         Modal.confirm({
           title: 'Confirm Fuel Entry Void',
@@ -169,7 +162,7 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
       key: '3',
       label: 'Edit',
       itemIcon: <EditOutlined />,
-      disabled: moment(row.createdDate).isBefore(moment(), 'month'),
+      // disabled: moment(row.createdDate).isBefore(moment(), 'month'),
       onClick: () => {
         setSate({ visible: { name: 'modal', type: 'Edit', payload: { vehicle: row } } });
       },
@@ -180,7 +173,7 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
     {
       key: '4',
       label: 'Delete',
-      disabled: moment(row.createdDate).isBefore(moment(), 'month'),
+      // disabled: moment(row.createdDate).isBefore(moment(), 'month'),
       itemIcon: <DeleteOutlined />,
       danger: true,
       onClick: () => {
@@ -197,12 +190,14 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
       },
     },
   ];
-
   return (
     <>
+      <PageContainer
+        title="Fuel Lists"
+        onBack={()=>history.push("/fleet")}
+        fixedHeader
+      >
       <Spin spinning={requestActions.request?.loading || false}>
-        <BreadCrumbCom separator=">" routes={routes} />
-
         <TableView
           hasCriteria={Object.values(Omit(advanceSearchParams, ['status'])).some((v) => v)}
           cache
@@ -218,13 +213,12 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
 
                   actionRef.current?.reloadAndRest?.();
                 }}
-       
               >
                 <Radio.Button value="ALL" >
                   All
                 </Radio.Button>
                 <Radio.Button value="void" >
-                  VOID
+                  Void
                 </Radio.Button>
                 <Badge offset={[-20, 0]} count={0}></Badge>
               </Radio.Group>
@@ -237,6 +231,7 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
               valueType: 'date',
               dataIndex: 'refilledDate',
               sorter: 'refilledDate',
+              render:(_,r)=><Button type='link' onClick={()=>setDetailSate({ visible: { open: true, record: r } })}>{formatDate(r.refilledDate)}</Button>
             },
             {
               key: 'plateNumber',
@@ -250,7 +245,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
               sorter: 'driverName',
               dataIndex: 'driverName',
             },
-
             {
               key: 'pumpBy',
               title: 'Pump By',
@@ -282,16 +276,12 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
               sorter: 'gasType',
               render: (_, r) => r.gasType?.name,
             },
-
             {
               key: 'Consumption Rate',
               title: 'Consumption Rate',
               render: (_, r) => {
                 const rating = (r.quantity / r.numberKilometer) * 100 - r.previousRate?.usageRate;
-                console.log(r);
-                
                 return r.gasType?.id != 1063?(
-
                   <Space>
                     <span
                       style={{
@@ -408,7 +398,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
                 } else {
                   return onRequestHandler({
                     criteria: {
-                      
                       advanceSearch: advanceSearchParams,
                     },
                   });
@@ -417,7 +406,7 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
           }}
         />
       </Spin>
-
+      </PageContainer>
       <FuelModalForm
         open={state.visible?.name == 'modal'}
         onCancel={() => setSate((v) => ({ ...v, visible: undefined }))}
@@ -429,8 +418,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
         onClose={() => setDetailSate((v) => ({ ...v, visible: undefined }))}
         data={detailState.visible?.record}
       />
-
-
        <FuelExportModal
         open={exportState?.visible?.name === 'modal'}
         modalProps={{
@@ -444,7 +431,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
         }}
         onSubmitExport={downloadFuelDoc}
       />
-
       <AdvanceFuelSearch
         title="Advance Fuel Search"
         placement="right"
@@ -458,7 +444,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
           setAdvanceSearchParams(data);
           actionRef.current?.reloadAndRest?.();
         }}
-
       />
     </>
   );

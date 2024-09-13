@@ -15,9 +15,9 @@ export default (props: DataViewProps) => {
     const [processData, setProcessData] = useState<ProcessInstanceData<{ id: number }>>()
     const requestActions = simpleRequestActions()
 
-    const dataReport=(data: {id?:number,label?: string,status?: string,contractTypeCode?: string},exportType: 'PDF' | 'EXCEL'): DownloadData<CriteriaExportReport>=> {
-   
-        var direct = data?.contractTypeCode=='IN_DIRECT'? 'Indirect':'Direct'
+    const dataReport=(data: {id?:number,label?: string,status?: string,contractTypeCode?: string},exportType: 'PDF' | 'EXCEL'): DownloadData<CriteriaExportReport>=> { 
+      
+        var direct = data?.contractTypeCode == 'OTHER' ? 'Display':data?.contractTypeCode == 'IN_DIRECT' ?'Indirect' : 'Direct'
         var issued=  data?.status=='ISSUED'? 'Issued':''
         var reportName = replace('SettlementIncentive@@##Report','@@',direct)
         reportName = replace(reportName,'##',issued) 

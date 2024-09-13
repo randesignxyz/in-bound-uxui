@@ -2,10 +2,10 @@ import type { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import TableView from '@/components/DataCrud/TableView';
 import type { Paging } from '@/services/API';
 import { simpleRequestActions } from '@/services/model';
-import { EditOutlined } from '@ant-design/icons';
+import { EditOutlined, SyncOutlined } from '@ant-design/icons';
 import type { ActionType } from '@ant-design/pro-table';
-import { history, useModel } from '@umijs/max';
-import { Badge, Button, message, Radio, Row, Space, Tag } from 'antd';
+import { history, useAccess, useModel } from '@umijs/max';
+import { Badge, Button, Modal, Radio, Row, Space, Tag, Tooltip, message } from 'antd';
 import { startCase } from 'lodash';
 import Omit from 'omit.js';
 import { useRef, useState } from 'react';
@@ -29,6 +29,7 @@ export default ({ onAdd, onEdit, onDetail }: Props) => {
     status: 'ALL',
   });
   const actionRef = useRef<ActionType>();
+  const access = useAccess();
 
   const cacheList = useModel('dataList');
 
@@ -71,6 +72,7 @@ export default ({ onAdd, onEdit, onDetail }: Props) => {
       <TableView<ProductDto, { searchValue?: string; advanceSearch: ProductAdvanceSearchParams }>
         hasCriteria={Object.values(Omit(advanceSearchParams, ['status'])).some((v) => v)}
         cache
+        displayOnly={!access.canCreateRetailer}
         extraFilter={
           <Space size="large">
             <Radio.Group
@@ -148,14 +150,48 @@ export default ({ onAdd, onEdit, onDetail }: Props) => {
           {
             title: 'Action',
             align: 'center',
+            hideInTable: !access.canCreateRetailer,
+            width: '150px',
             render: (_, r) => {
               return (
-                <EditOutlined
-                  style={{ color: '#448DF7' }}
-                  onClick={() => {
-                    onEdit?.(r.id);
-                  }}
-                />
+                <Space size={20}>
+                  <EditOutlined
+                    style={{ color: '#448DF7' }}
+                    onClick={() => {
+                      onEdit?.(r.id);
+                    }}
+                  />
+
+                  <Tooltip title={r.status === 'active' ? 'Inactive Product' : 'Active Product'}>
+                    <Button
+                      type="link"
+                      style={{ color: r.status === 'active' ? 'red' : 'green' }}
+                      icon={<SyncOutlined />}
+                      onClick={() => {
+                        Modal.confirm({
+                          title:
+                            r.status === 'active'
+                              ? 'Inactive product will effect to group of customer.'
+                              : 'Active Product',
+                          content: 'Are you sure?',
+                          onOk: async () => {
+                            try {
+                              const response = await services.updateStatusProduct({
+                                id: r.id,
+                                status: r.status === 'active' ? 'inactive' : 'active',
+                              });
+                              message.info(response.message);
+                            } catch (e: any) {
+                              message.error(e);
+                            } finally {
+                              actionRef.current?.reload();
+                            }
+                          },
+                        });
+                      }}
+                    />
+                  </Tooltip>
+                </Space>
               );
             },
           },

@@ -1,12 +1,11 @@
-import { ArrowRightOutlined, BellOutlined, DeleteOutlined, DownloadOutlined, EllipsisOutlined, ExportOutlined, FileExcelOutlined, FileJpgOutlined, FilePdfOutlined, FileUnknownOutlined, FileWordOutlined, HeartOutlined, HistoryOutlined, ShareAltOutlined, StopOutlined } from "@ant-design/icons"
+import { ArrowRightOutlined, AuditOutlined, BellOutlined, DeleteOutlined, DownloadOutlined, EllipsisOutlined, ExportOutlined, FileAddOutlined, HeartOutlined, HistoryOutlined, PlusOutlined, ShareAltOutlined, SwapOutlined } from "@ant-design/icons"
 import { ActionType } from "@ant-design/pro-components"
-import { history, useModel } from "@umijs/max"
-import { Button, Dropdown, Flex, MenuProps, Modal, Radio, message } from "antd"
+import { history, useModel, useParams } from "@umijs/max"
+import { Badge, Button, Dropdown, Flex, MenuProps, Modal, Segmented, Space, message } from "antd"
 import { DMSPaths } from ".."
 import { simpleRequestActions } from "@/services/model"
 import { DocumentServiceAPI } from "./service"
-import { DocumentationAdvanceSearch, DocumentationDTO, DocumentationSearchByFolder } from "./data"
-import { formateBytes, formateFileType } from "../core"
+import { DocumentationAdvanceSearch, DocumentationCreate, DocumentationDTO, DocumentationSearchByFolder, MoveDocParams } from "./data"
 import { formatDate } from "@/pages/utils"
 import TableView, { TableViewSearchParams } from "@/components/DataCrud/TableView"
 import { Paging } from "@/services/API"
@@ -20,22 +19,37 @@ import { ShareCreate } from "../share/data"
 import ReminderModalForm from "../reminder/ModalFormEntry"
 import { ReminderCreate } from "../reminder/data"
 import { ReminderServiceAPI } from "../reminder/service"
-import { FavoriteServiceAPI } from "../favorite/service"
 import QuickView from "../share/QuickView"
 import { HistoryServiceAPI } from "../history/service"
 import HistoryDoc from "./HistoryDoc"
-import MoveModalForm from "./MoveModalForm"
+import MoveDocumentModal from "./MoveDocument"
+import { StatusColor, expriationStatus } from "../core"
+import { FavoriteServiceAPI } from "../favorite/service"
+import DocumentModalForm from "./EntryForm"
 
 interface Props {
     items?: DocumentationDTO[];
     folderSlect?: number;
-    paramSearch?: DocumentationSearchByFolder
+    paramSearch?: DocumentationSearchByFolder;
+    division?: string;
+    folderId?: number;
+    libraryId: number;
 }
-
-export default ({ items, paramSearch, folderSlect }: Props) => {
+export default ({ paramSearch, libraryId, folderId }: Props) => {
     const requestAction = simpleRequestActions();
     const services = DocumentServiceAPI(requestAction);
     const actionRef = useRef<ActionType>();
+    const param = useParams();
+    const [documentModalState, setDocumentState] = useState<{
+        visible?: {
+            name: "MODAL";
+            type: "ADD" | "EDIT";
+            folderId?: number;
+            payload?: DocumentationCreate;
+            libraryId?: number;
+            division: "DOC" | "CONTRACT"
+        }
+    }>();
     const [shareDrawerState, setShareDrawerState] = useState<{
         visible?: {
             name: "DRAWER";
@@ -52,7 +66,7 @@ export default ({ items, paramSearch, folderSlect }: Props) => {
     const [moveState, setMoveState] = useState<{
         visible?: {
             name: "MODAL";
-            docId?: number;
+            moveDoc: MoveDocParams
         }
     }>();
     const [quickViewDrawerState, setQuickViewDrawerState] = useState<{
@@ -69,7 +83,7 @@ export default ({ items, paramSearch, folderSlect }: Props) => {
         }
     }>();
     const [advanceSearchParams, setAdvanceSearchParams] = useState<DocumentationAdvanceSearch>({
-        status: "ALL"
+        status: "All",
     });
     const [advanceSearch, setAdvanceSearch] = useState<{ visible: boolean }>();
     const actionItem = (record: DocumentationDTO): MenuProps["items"] => [
@@ -84,16 +98,16 @@ export default ({ items, paramSearch, folderSlect }: Props) => {
             key: "2",
             label: "Download",
             itemIcon: <DownloadOutlined />,
-            disabled: record.attachment == null ? true : false,
+            disabled: record.attachment?.length ? false : true,
             onClick: async () => {
                 HistoryServiceAPI(requestAction).save({
                     instantId: record.id,
-                    action: "DOWNLOAD",
-                    actionType: "DOCUMENT",
-                }).then(it => {
-                    console.log(it);
+                    action: "files was downloaded",
+                    actionType: "Download",
+                    source: "DOCUMENTATION",
 
-                    downloadUploadFileV2()(record.attachment.fileId || "", record.title);
+                }).then(() => {
+                    record.attachment?.forEach(o => downloadUploadFileV2()(o || "", record.documentation.docName || ""))
                 });
             }
         },
@@ -101,18 +115,29 @@ export default ({ items, paramSearch, folderSlect }: Props) => {
             key: "3",
             label: "Share",
             itemIcon: <ShareAltOutlined />,
+            disabled: record.status == "Inactive" ? true : false,
             onClick: () => setShareDrawerState({ visible: { name: "DRAWER", docId: record.id, type: "ADD" } })
         },
         {
             key: "5",
             label: "Move",
-            itemIcon: <ExportOutlined />,
-            onClick: () => setMoveState({ visible: { name: "MODAL", docId: record.id } })
+            itemIcon: <SwapOutlined />,
+            disabled: record.status == "Inactive" ? true : false,
+            onClick: () => {
+                setMoveState({
+                    visible: {
+                        name: "MODAL", moveDoc: {
+                            docId: record.id,
+                        }
+                    }
+                })
+            }
         },
         {
             key: "6",
             label: "Reminder",
             itemIcon: <BellOutlined />,
+            disabled: record.status == "Inactive" ? true : false,
             onClick: () => setReminderState({ visible: { name: "MODAL", documentId: record.id } })
         },
         {
@@ -131,25 +156,44 @@ export default ({ items, paramSearch, folderSlect }: Props) => {
             }
         },
         {
+            key: "trash",
+            label: "Move To Trash",
+            disabled: record.status == "Active" ? false : true,
+            itemIcon: <DeleteOutlined />,
+            onClick: () => {
+                Modal.confirm({
+                    title: "Move documentation to Trash",
+                    content: "Are you sure you want to move documents to trash? You can restore the document",
+                    onOk: () => {
+                        services.moveToTrash(record.id).then(() => {
+                            actionRef.current?.reloadAndRest?.();
+                            message.success("document moved to trash")
+                        });
+                    }
+                })
+            }
+        },
+        {
+            key: "restore",
+            label: "Restore",
+            disabled: record.status == "Active" ? true : false,
+            itemIcon: <HistoryOutlined />,
+            onClick: () => {
+                Modal.confirm({
+                    title: "Restore Documentation",
+                    content: "Are you sure you want to move documents to trash? You can restore the document",
+                    onOk: () => {
+                        services.moveToTrash(record.id).then(() => {
+                            actionRef.current?.reloadAndRest?.();
+                            message.success("document moved to trash")
+                        });
+                    }
+                })
+            }
+        },
+        {
             type: "divider"
         },
-        // {
-        //     key: "7",
-        //     label: record.status == "Void" ? "Unvoid" : "Void",
-        //     danger: true,
-        //     itemIcon: <StopOutlined />,
-        //     onClick: () => {
-        //         Modal.confirm({
-        //             title: "Void Documentation",
-        //             content: "are you sure?",
-        //             onOk: () => {
-        //                 services.void(record.id);
-        //                 actionRef.current?.reload?.();
-        //             }
-        //         })
-        //     }
-        // },
-
         {
             key: "8",
             label: "Delete",
@@ -158,10 +202,12 @@ export default ({ items, paramSearch, folderSlect }: Props) => {
             onClick: () => {
                 Modal.confirm({
                     title: "Delete Documentation",
-                    content: "are you sure?",
+                    content: "Are you sure you want to delete the document? You cannot undo this action.",
                     onOk: () => {
-                        services.delete(record.id);
-                        actionRef.current?.reload?.();
+                        services.delete(record.id).then(() => {
+                            actionRef.current?.reloadAndRest?.();
+                            message.success("document in the database was deleted.");
+                        });
                     }
                 })
             }
@@ -173,11 +219,9 @@ export default ({ items, paramSearch, folderSlect }: Props) => {
             onClick: () => setHistoryState({ visible: { name: "DRAWER", docId: record.id } })
         },
     ];
-
     useEffect(() => {
-        setAdvanceSearchParams({ folderId: paramSearch?.folderId, folderType: paramSearch?.folderType });
-        actionRef.current?.reload?.()
-    }, [paramSearch]);
+        actionRef.current?.reload?.();
+    }, [paramSearch, libraryId]);
     const cacheList = useModel('dataList');
     const onRequestHandler = async (params: TableViewSearchParams<DocumentationAdvanceSearch>) => {
         try {
@@ -193,8 +237,34 @@ export default ({ items, paramSearch, folderSlect }: Props) => {
             return Promise.reject();
         }
     };
-
-
+    const itemCreateNew = (): MenuProps["items"] => [
+        {
+            key: "1",
+            label: "New Document",
+            icon: <FileAddOutlined />,
+            onClick: () => setDocumentState({
+                visible: {
+                    name: "MODAL",
+                    type: "ADD",
+                    folderId: parseInt(param["*"] || ""),
+                    division: "DOC",
+                }
+            }),
+        },
+        {
+            key: "2",
+            label: "New Contract",
+            icon: <AuditOutlined />,
+            onClick: () => setDocumentState({
+                visible: {
+                    name: "MODAL",
+                    type: "ADD",
+                    folderId: parseInt(param["*"] || ""),
+                    division: "CONTRACT",
+                }
+            }),
+        },
+    ];
     return (
         <>
             <TableView<DocumentationDTO, { searchValue?: string }>
@@ -203,28 +273,81 @@ export default ({ items, paramSearch, folderSlect }: Props) => {
                 displayOnly
                 extraFilter={
                     <>
-                        <Flex>
-                            <Radio.Group
+                        <Flex justify="space-between" align="baseline" gap={20}>
+                            <Segmented
                                 value={advanceSearchParams.status}
+                                onChange={(e) => {
+                                    if (e == "All") {
+                                        setAdvanceSearchParams((v) => ({
+                                            status: e.toString(),
+                                        }));
+                                    }
+                                    else {
+                                        setAdvanceSearchParams((v) => ({
+                                            ...v,
+                                            status: e.toString(),
+                                        }));
+                                    }
+                                    actionRef.current?.reloadAndRest?.();
+                                }}
+                                options={[
+                                    {
+                                        label: "All",
+                                        value: "All"
+                                    },
+                                    {
+                                        label: "Active",
+                                        value: "Active"
+                                    },
+                                    {
+                                        label: "Inactive",
+                                        value: "Inactive"
+                                    },
+                                ]}
+                            />
+                            <Segmented
+                                value={advanceSearchParams.status =="All"?"":advanceSearchParams.division}
                                 onChange={(e) => {
                                     setAdvanceSearchParams((v) => ({
                                         ...v,
-                                        status: e.target.value,
+                                        status:undefined,
+                                        division: e.toString(),
                                     }));
-
                                     actionRef.current?.reloadAndRest?.();
                                 }}
-                            >
-                                <Radio.Button value="ALL">All</Radio.Button>
-                                <Radio.Button value="void">Void</Radio.Button>
-                                <Radio.Button value="Draft">Drafted</Radio.Button>
-                            </Radio.Group>
+                                options={[
+                                    {
+                                        label: "Document",
+                                        value: "DOC"
+                                    },
+                                    {
+                                        label: "Contract",
+                                        value: "CONTRACT"
+                                    },
+                                ]}
+                            />
                         </Flex>
                     </>
                 }
                 tableProps={{
                     actionRef: actionRef,
-
+                    toolbar: {
+                        actions: [
+                            <Dropdown
+                                menu={{
+                                    items: itemCreateNew(),
+                                    style: {
+                                        width: 200
+                                    }
+                                }}
+                            >
+                                <Button
+                                    icon={<PlusOutlined />}
+                                    type="link"
+                                />
+                            </Dropdown>
+                        ]
+                    }
                 }}
                 advanceSearch
                 actionHandlers={{
@@ -232,8 +355,12 @@ export default ({ items, paramSearch, folderSlect }: Props) => {
                     onRequest: (criteria, pagination, sort) =>
                         onRequestHandler({
                             criteria: {
-                                searchValue: criteria.searchValue || "",
-                                advanceSearch: advanceSearchParams,
+                                ...criteria,
+                                advanceSearch: {
+                                    ...advanceSearchParams,
+                                    library: libraryId,
+                                    folderId:folderId,
+                                },
                                 sort,
                             },
                             pagination,
@@ -242,15 +369,18 @@ export default ({ items, paramSearch, folderSlect }: Props) => {
                         cacheList.fetchDataList('dms-document').then((v) => {
                             if (v) {
                                 setAdvanceSearchParams({
-                                    ...v.creteria,
-                                    status: v.creteria?.criteria?.advanceSearch?.status ?? "ALL",
+                                    ...v.creteria?.criteria,
+                                    status: v.creteria?.criteria?.advanceSearch?.status ?? "All",
                                 });
                                 return v.dataList;
                             } else {
                                 return onRequestHandler({
                                     criteria: {
-                                        searchValue: "",
-                                        advanceSearch: advanceSearchParams,
+                                        advanceSearch: {
+                                            ...advanceSearchParams,
+                                            library: libraryId,
+                                            folderType: "LIBRARY"
+                                        }
                                     },
                                 });
                             }
@@ -258,57 +388,64 @@ export default ({ items, paramSearch, folderSlect }: Props) => {
                 }}
                 columns={[
                     {
-                        title: "Icon",
-                        width: 50,
-                        align: "center",
-                        render: (_, r) => (<>
-                            {
-                                formateFileType(r?.attachment?.fileType) == "EXCEL" && <FileExcelOutlined /> ||
-                                formateFileType(r?.attachment?.fileType) == "JPG" && <FileJpgOutlined /> ||
-                                formateFileType(r?.attachment?.fileType) == "PDF" && <FilePdfOutlined /> ||
-                                formateFileType(r?.attachment?.fileType) == "PNG" && <FileJpgOutlined /> ||
-                                formateFileType(r?.attachment?.fileType) == "WORD" && <FileWordOutlined /> ||
-                                <FileUnknownOutlined />
-                            }
-                        </>)
+                        title: "#",
+                        sorter: "code",
+                        width: 180,
+                        render: (_, r) => (<Space align="center" >
+                            <Button size="small" type="link" icon={<ExportOutlined />} onClick={() => {
+                                window.open(`/external/dms/document/detail/${r.id}`)?.focus();
+                            }} />
+                            <Button
+                                type="link"
+                                size="small"
+                                onClick={() => history.push(`${DMSPaths.document}/detail/${r.id}`)}
+                            >
+                                {r.documentation.docNumber?r.documentation.docNumber:"N/A"}
+                            </Button>
+                        </Space>),
                     },
                     {
                         title: "Name",
-                        sorter: "title",
-                        render: (_, r) => (
-                            <Button
-                                type="link"
-                                onClick={() => history.push(`${DMSPaths.document}/detail/${r.id}`)}
-                            >
-                                {r.title}
-                            </Button>)
-                    },
-                    {
-                        title: "Created By",
-                        dataIndex: "createdBy"
-                    },
-                    {
-                        title: "Modified Date",
-                        dataIndex: "lastModifiedDate",
-                        valueType: "date"
+                        sorter: "name",
+                        width:400,
+                        render:(_,r)=>r.documentation?.docName,
                     },
                     {
                         title: "Expiry Date",
-                        render: (_, r) => formatDate(r.expirationDate)
+                        sorter: "expiryDate",
+                        fixed: true,
+                        render: (_, r) => <span style={{ color: expriationStatus(r.term?.expiryDate) > 0 ? "red" : "" }}>{formatDate(r.term.expiryDate)}</span>
                     },
                     {
-                        title: "Size",
-                        render: (_, r) => formateBytes(r?.attachment?.fileSize, 2)
+                        title: "Created",
+                        sorter: "createdDate",
+                        dataIndex: "createdDate",
+                        valueType: "date",
+                        fixed: true,
                     },
-                    // {
-                    //     title: "Status",
-                    //     render: (_, r) => <Tag color={r.status=="Void"?"error":"processing"}>{r.status}</Tag>
-                    // },
+                    {
+                        title: "Updated",
+                        sorter: "lastModifiedDate",
+                        dataIndex: "lastModifiedDate",
+                        valueType: "date",
+                        fixed: true,
+                    },
+                    {
+                        title: "Type",
+                        render: (_, r) => r.division == "CONTRACT" ? "contract" : "document"
+                    },
+                    {
+                        title: "Status",
+                        sorter: "status",
+                        fixed: true,
+                        render: (_, r) => <Badge text={r.status} status={StatusColor.getColorStatus(r.status)} />
+                    },
                     {
                         title: "Shared",
+                        align: "center",
                         render: (_, r) => {
                             if (r.share > 0) {
-                                return <Button icon={<ShareAltOutlined />} type="link" onClick={() => setQuickViewDrawerState({ visible: { name: "DRAWER", docId: r.id } })} />
+                                return <Button size="small" icon={<ShareAltOutlined />} type="link" onClick={() => setQuickViewDrawerState({ visible: { name: "DRAWER", docId: r.id } })} />
                             }
                             else {
                                 return ""
@@ -316,6 +453,7 @@ export default ({ items, paramSearch, folderSlect }: Props) => {
                         }
                     },
                     {
+                        title:"Action",
                         render: (_, r) => (<Dropdown
                             menu={{
                                 items: actionItem(r),
@@ -334,6 +472,7 @@ export default ({ items, paramSearch, folderSlect }: Props) => {
                 open={advanceSearch?.visible}
                 onClose={() => setAdvanceSearch({ visible: false })}
                 onReset={() => {
+                    setAdvanceSearchParams({})
                     actionRef.current?.reloadAndRest?.();
                 }}
                 onSearch={(data) => {
@@ -349,11 +488,10 @@ export default ({ items, paramSearch, folderSlect }: Props) => {
                 onSave={(data: ShareCreate) => {
                     ShareServiceAPI(requestAction).save(data);
                     message.success("Success"),
-                        actionRef.current?.reloadAndRest?.();
-                    setShareDrawerState(v => ({ visible: undefined }));
+                        setShareDrawerState(() => ({ visible: undefined }));
+                    actionRef.current?.reloadAndRest?.();
                 }}
             />
-
             <ReminderModalForm
                 open={reminderState?.visible?.name == "MODAL"}
                 onCancel={() => setReminderState(v => ({ ...v, visible: undefined }))}
@@ -365,24 +503,50 @@ export default ({ items, paramSearch, folderSlect }: Props) => {
                 }}
                 documentId={reminderState?.visible?.documentId}
             />
-
             <QuickView
                 open={quickViewDrawerState?.visible?.name == "DRAWER"}
                 onClose={() => setQuickViewDrawerState(v => ({ ...v, visible: undefined }))}
                 docId={quickViewDrawerState?.visible?.docId}
             />
-
             <HistoryDoc
                 open={historyState?.visible?.name == "DRAWER"}
                 onClose={() => setHistoryState((v) => ({ ...v, visible: undefined }))}
                 docId={historyState?.visible?.docId}
             />
-
-
-            <MoveModalForm
-                open={moveState?.visible?.name === "MODAL"}
-                onCancel={() => setMoveState((v) => ({ ...v, visible: undefined }))}
-                docId={moveState?.visible?.docId}
+            <MoveDocumentModal
+                open={moveState?.visible?.name == "MODAL"}
+                onCancel={() => setMoveState({ visible: undefined })}
+                data={moveState?.visible?.moveDoc}
+                onSave={(data: MoveDocParams) => {
+                    services.moveDoc(data);
+                    actionRef.current?.reload?.();
+                    message.success("Success!");
+                    setMoveState({ visible: undefined });
+                }}
+            />
+            < DocumentModalForm
+                open={documentModalState?.visible?.name === "MODAL"}
+                type={documentModalState?.visible?.type}
+                libraryId={documentModalState?.visible?.libraryId}
+                onCancel={() => setDocumentState(v => ({ ...v, visible: undefined }))}
+                division={documentModalState?.visible?.division}
+                onSave={ (data: DocumentationCreate) => {
+                    Modal.confirm({
+                        title: "Save document",
+                        content: "are you sure?",
+                        onOk:async () => {
+                            const entry = {
+                                ...data,
+                                libraryId: libraryId,
+                                folderId:folderId
+                            }
+                            await services.save(entry);
+                            actionRef.current?.reloadAndRest?.();
+                            setDocumentState({ visible: undefined });
+                            message.success("Success!");
+                        }
+                    });
+                }}
             />
         </>
     )

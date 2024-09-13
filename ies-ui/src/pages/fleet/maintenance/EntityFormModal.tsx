@@ -21,11 +21,9 @@ import { useForm } from 'antd/es/form/Form';
 import { uniqueId } from 'lodash';
 import { useEffect, useRef, useState } from 'react';
 import { FleetPaths } from '..';
-import { AddOnServiceAPI } from '../addOn/service';
+import { AddOnServiceAPI } from '../setting/service';
 import { VehicleDriverDTO } from '../driver/data';
 import { DriverServiceAPI } from '../driver/service';
-import { LookUpDataDTO } from '../lookupData/data';
-import { LookupDataServiceAPI } from '../lookupData/service';
 import { ServiceReminderCreate, ServiceReminderDTO } from '../servicereminder/data';
 import ServiceReminderModalForm from '../servicereminder/EntryFormModel';
 import { ReminderServiceAPI } from '../servicereminder/service';
@@ -35,6 +33,8 @@ import { VehicleListItem } from '../vehicle/data';
 import { VehicleServiceAPI } from '../vehicle/service';
 import { MaintenanceCreate, MaintenanceItemCreate, MaintenneceDTO } from './data';
 import { MaintenanceServiceAPI } from './service';
+import { FleetServiceAPI } from '../service';
+import { LookUpDataDTO } from '../data';
 
 interface Props extends FormModalProps {
   dataEntry?: MaintenneceDTO;
@@ -57,10 +57,8 @@ const MaintenanceModalForm: React.FC<Props> = ({
   const [lookupData, setLookupData] = useState<LookUpDataDTO[]>([]);
   const [vehicleDriver, setVehicleDriver] = useState<VehicleDriverDTO[]>([]);
   const [odometer, setOdometer] = useState();
-  const [vehicle, setVehicle] = useState<VehicleListItem[]>([]);
   const [uploadFileIds, setUploadFileIds] = useState<string[]>([]);
   const services = MaintenanceServiceAPI(requestActions);
-
   const [reminderModalState, setReminderModalState] = useState<{
     visible?: {
       name: 'modal';
@@ -69,14 +67,11 @@ const MaintenanceModalForm: React.FC<Props> = ({
     };
   }>();
   const [dataSource, setDataSource] = useState<MaintenanceItemCreate[]>();
-
   const onServiceTaskData = async (k?: { keyWords: string }) => {
     const data = await ServiceTasksServiceAPI(requestActions).page({
       criteria: { searchValue: k?.keyWords || serviceReminder?.serviceTask?.name },
     });
-
     const items = data.items.map((it) => ({ label: it.name, value: it.id }));
-
     if (
       dataEntry?.item &&
       !items.some((ob) => dataEntry.item?.find((it) => it.serviceId?.id === ob.value))
@@ -88,7 +83,6 @@ const MaintenanceModalForm: React.FC<Props> = ({
       }));
       return [...expenceData, ...items];
     }
-
     if (serviceReminder && !items.some((ob) => serviceReminder.serviceTask?.id === ob.value)) {
       const expenceData = {
         value: serviceReminder.serviceTask?.id,
@@ -98,9 +92,6 @@ const MaintenanceModalForm: React.FC<Props> = ({
     }
     return items;
   };
-
-
-
   useEffect(() => {
     props.open && initFormData();
     dataLoad();
@@ -123,9 +114,8 @@ const MaintenanceModalForm: React.FC<Props> = ({
     props.open && onServiceTaskData();
   }, [props.open]);
   const dataLoad = async () => {
-    setLookupData(await LookupDataServiceAPI(requestActions).lookupData({ type: 'MAINTENANCE' }));
+    setLookupData(await FleetServiceAPI(requestActions).lookupData({ type: 'MAINTENANCE' }));
   };
-
   const initFormData = () => {
     form.setFieldsValue({
       ...dataEntry,
@@ -138,7 +128,6 @@ const MaintenanceModalForm: React.FC<Props> = ({
     });
     setDataSource([]);
   };
-
   const columns: ProColumns<MaintenanceItemCreate>[] = [
     {
       title: 'Item Service',
@@ -163,7 +152,6 @@ const MaintenanceModalForm: React.FC<Props> = ({
         ],
       },
     },
-
     {
       title: 'Category',
       dataIndex: 'sparePart',
@@ -315,7 +303,6 @@ const MaintenanceModalForm: React.FC<Props> = ({
       ],
     },
   ];
-
   const onSaveActionHandler = (data: MaintenanceCreate) => {
     Modal.confirm({
       title: 'Save Maintenance Record',
@@ -325,20 +312,17 @@ const MaintenanceModalForm: React.FC<Props> = ({
           data: string;
           message: string;
         };
-
         actionRef.current?.reloadAndRest?.();
         history.push(`${FleetPaths.mantenence}/detail/${response.data}`);
         message.success(response.message);
       },
     });
   };
-
   const onVehicleChange = async (e: string | undefined) => {
     const data = await DriverServiceAPI(requestActions).listVehicleDriver({
       id: e || serviceReminder?.vehicleId.id,
       status: 'active',
     });
-
     VehicleServiceAPI(requestActions)
       .findMeterHistory({
         vehicleId: e || '',
@@ -355,7 +339,6 @@ const MaintenanceModalForm: React.FC<Props> = ({
       form.setFieldValue(['driverId'], '');
     }
   };
-
   return (
     <FormModalComp
       title="Service & Maintenance"
@@ -396,8 +379,6 @@ const MaintenanceModalForm: React.FC<Props> = ({
                       keyWords || dataEntry?.vehicle?.id || serviceReminder?.vehicleId?.id,
                   },
                 });
-
-                setVehicle(data.items);
                 return data.items.map((obj) => ({ value: obj.id, label: `${obj.plateNumber}` }));
               }}
               fieldProps={{
@@ -470,13 +451,11 @@ const MaintenanceModalForm: React.FC<Props> = ({
               name="referentNumber"
               label="Receipt Number"
               placeholder="receipt number (optional)"
-
               fieldProps={{
                 onKeyUp: (e) => {
                   const newValue = ('0'.repeat(6) + e.currentTarget?.value.toString()).slice(-6);
                   form.setFieldValue('referentNumber', newValue);
                 },
-
               }}
             />
           </Col>
@@ -562,7 +541,6 @@ const MaintenanceModalForm: React.FC<Props> = ({
                       const serviceTaskItem = await ServiceTasksServiceAPI(requestActions).fetch(
                         row.serviceId,
                       );
-
                       if ((await form.validateFields(['vehicleId'])) && itemName != null) {
                         const vehicleId = form.getFieldValue('vehicleId');
                         const vehicle = await VehicleServiceAPI(requestActions).fetchVehicle(
@@ -602,7 +580,6 @@ const MaintenanceModalForm: React.FC<Props> = ({
           onSetFiles={(files) => setUploadFileIds(files.map((it) => it.response))}
         />
       </ProForm>
-
       <ServiceReminderModalForm
         open={reminderModalState?.visible?.name === 'modal'}
         onSave={(data: ServiceReminderCreate) => {
@@ -610,11 +587,7 @@ const MaintenanceModalForm: React.FC<Props> = ({
             title: 'Save Service Reminder Record',
             content: ' are you sure?',
             onOk: async () => {
-              const response = (await ReminderServiceAPI(requestActions).save(data)) as {
-                data: string;
-                message: string;
-              };
-
+              await ReminderServiceAPI(requestActions).save(data);
               setReminderModalState((v) => ({ ...v, visible: undefined }));
             },
           });

@@ -1,3 +1,4 @@
+import { kc } from '@/auth';
 import { downloadUploadFile, downloadUploadFileV2 } from '@/services/apiGateway';
 import { getServiceUrl } from '@/services/ApiUrl';
 import { UploadOutlined } from '@ant-design/icons';
@@ -23,18 +24,14 @@ const ImageUploader: React.FC<{
   };
 
   return (
-    // <ProCard
-    //   title={<Space size={1}>  {required && <Typography.Text type="danger">*</Typography.Text>} {title || 'Attachment Files'} </Space>}
-    //   size="small"
-    // >
     <Upload
       multiple={multiple}
       showUploadList={false}
       headers={
         token
           ? {
-              Authorization: `Bearer ${token}`,
-            }
+            Authorization: `Bearer ${token}`,
+          }
           : {}
       }
       action={uploadUrl()}
@@ -59,15 +56,11 @@ const ImageUploader: React.FC<{
           });
         }
       }}
-      // showUploadList={{
-      //   showDownloadIcon: true,
-      // }}
     >
       <Button type="link" icon={<UploadOutlined />}>
         Upload
       </Button>
     </Upload>
-    // </ProCard >
   );
 };
 

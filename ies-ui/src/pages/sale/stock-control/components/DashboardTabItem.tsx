@@ -16,7 +16,7 @@ import type { ColumnConfig } from '@ant-design/plots';
 import { Column, Gauge } from '@ant-design/plots';
 import type { ActionType } from '@ant-design/pro-table';
 import ProTable from '@ant-design/pro-table';
-import { Card, Image, Input, Row, Skeleton, Space, Tag } from 'antd';
+import { Card, Flex, Image, Input, Row, Skeleton, Space, Tag } from 'antd';
 import type { SortOrder } from 'antd/lib/table/interface';
 import { uniqueId } from 'lodash';
 import numeral from 'numeral';
@@ -194,8 +194,8 @@ const DashboardTabItem: React.FC<Props> = ({ forceUpdate, data }) => {
                         it.itemType === 132
                           ? 'Sale Mee Chiet'
                           : it.itemType === 131
-                          ? 'Sale Vital'
-                          : 'Merchandise',
+                            ? 'Sale Vital'
+                            : 'Merchandise',
                     },
                     content: {
                       style: {
@@ -285,9 +285,10 @@ const DashboardTabItem: React.FC<Props> = ({ forceUpdate, data }) => {
       </Card>
       <Card size="small" title="Transaction" style={{ marginBottom: 10 }}>
         {data.types && (
-          <Row justify="center">
-            <Row style={{ width: '40%', marginBottom: 16 }} justify="space-between">
-              {/* <Card
+          // <Row justify="center">
+          //   <Row style={{ width: '40%', marginBottom: 16 }} justify="space-between">
+          <Flex wrap gap={12} justify='center' style={{ marginBottom:16 }}>
+            {/* <Card
                 className={style.fabShadow}
                 style={{ width: 170, height: 170 }}
                 // actions={[
@@ -318,39 +319,39 @@ const DashboardTabItem: React.FC<Props> = ({ forceUpdate, data }) => {
                   </p>
                 </Skeleton>
               </Card> */}
-              {data.types?.map((it) => {
-                return (
-                  <Card
-                    key={it.key}
-                    className={style.fabShadow}
-                    style={{ width: 170, height: 170 }}
-                    // actions={[
-                    //   <Tooltip placement="top" title={`Add ${it.name} items`}>
-                    //     <PlusOutlined
-                    //       key="add"
-                    //       onClick={() => {
-                    //         actionHandlers &&
-                    //           actionHandlers.onAddItem &&
-                    //           actionHandlers.onAddItem(it.id, it.name);
-                    //       }}
-                    //     />
-                    //   </Tooltip>,
-                    //   <BarChartOutlined key="barChart" onClick={() => message.info(it.id)} />,
-                    //   <EllipsisOutlined key="ellipsis" onClick={() => message.info(it.id)} />,
-                    // ]}
-                  >
-                    <Skeleton className={style.skeletonClass} loading={data.loading} avatar active>
-                      <Row justify="center">
-                        <Image
-                          preview={false}
-                          src={it.id === 131 ? vital : it.id === 132 ? mee : posm}
-                          height={50}
-                        />
-                      </Row>
-                      <p style={{ fontWeight: 'bold', marginBottom: 0, textAlign: 'center' }}>
-                        {it.name}
-                      </p>
-                      {/* <p
+            {data.types?.map((it) => {
+              return (
+                <Card
+                  key={it.key}
+                  className={style.fabShadow}
+                  style={{ width: 170, height: 170 }}
+                // actions={[
+                //   <Tooltip placement="top" title={`Add ${it.name} items`}>
+                //     <PlusOutlined
+                //       key="add"
+                //       onClick={() => {
+                //         actionHandlers &&
+                //           actionHandlers.onAddItem &&
+                //           actionHandlers.onAddItem(it.id, it.name);
+                //       }}
+                //     />
+                //   </Tooltip>,
+                //   <BarChartOutlined key="barChart" onClick={() => message.info(it.id)} />,
+                //   <EllipsisOutlined key="ellipsis" onClick={() => message.info(it.id)} />,
+                // ]}
+                >
+                  <Skeleton className={style.skeletonClass} loading={data.loading} avatar active>
+                    <Row justify="center">
+                      <Image
+                        preview={false}
+                        src={it.id === 131 ? vital : it.id === 132 ? mee : posm}
+                        height={50}
+                      />
+                    </Row>
+                    <p style={{ fontWeight: 'bold', marginBottom: 0, textAlign: 'center' }}>
+                      {it.name}
+                    </p>
+                    {/* <p
                         style={{
                           color: '#58565C',
                           fontWeight: 'bold',
@@ -368,56 +369,57 @@ const DashboardTabItem: React.FC<Props> = ({ forceUpdate, data }) => {
                           </>
                         )}
                       </p> */}
-                      <p
-                        style={{
-                          color: '#58565C',
-                          fontWeight: 'bold',
-                          textAlign: 'center',
-                          marginTop: 0,
-                          marginBottom: 0,
-                        }}
-                      >
-                        {getTotalCurrentQty(it.id) !== '' && (
-                          <>
-                            Current: {getTotalCurrentQty(it.id)}&nbsp;
-                            <span style={{ fontSize: 9, fontWeight: 'bold' }}>
-                              {getTotalCurrentQty(it.id) !== ''
-                                ? it.id === 133
-                                  ? 'UNIT'
-                                  : 'CASE'
-                                : ''}
-                            </span>
-                          </>
-                        )}
-                      </p>
-                      <p
-                        style={{
-                          color: '#58565C',
-                          fontWeight: 'bold',
-                          textAlign: 'center',
-                          marginTop: 0,
-                          marginBottom: 0,
-                        }}
-                      >
-                        {getTotalSaleOutByType(it.id) !== '' && (
-                          <>
-                            Sold: {getTotalSaleOutByType(it.id)}&nbsp;
-                            <span style={{ fontSize: 9, fontWeight: 'bold' }}>
-                              {getTotalSaleOutByType(it.id) !== ''
-                                ? it.id === 133
-                                  ? 'UNIT'
-                                  : 'CASE'
-                                : ''}
-                            </span>
-                          </>
-                        )}
-                      </p>
-                    </Skeleton>
-                  </Card>
-                );
-              })}
-            </Row>
-          </Row>
+                    <p
+                      style={{
+                        color: '#58565C',
+                        fontWeight: 'bold',
+                        textAlign: 'center',
+                        marginTop: 0,
+                        marginBottom: 0,
+                      }}
+                    >
+                      {getTotalCurrentQty(it.id) !== '' && (
+                        <>
+                          Current: {getTotalCurrentQty(it.id)}&nbsp;
+                          <span style={{ fontSize: 9, fontWeight: 'bold' }}>
+                            {getTotalCurrentQty(it.id) !== ''
+                              ? it.id === 133
+                                ? 'UNIT'
+                                : 'CASE'
+                              : ''}
+                          </span>
+                        </>
+                      )}
+                    </p>
+                    <p
+                      style={{
+                        color: '#58565C',
+                        fontWeight: 'bold',
+                        textAlign: 'center',
+                        marginTop: 0,
+                        marginBottom: 0,
+                      }}
+                    >
+                      {getTotalSaleOutByType(it.id) !== '' && (
+                        <>
+                          Sold: {getTotalSaleOutByType(it.id)}&nbsp;
+                          <span style={{ fontSize: 9, fontWeight: 'bold' }}>
+                            {getTotalSaleOutByType(it.id) !== ''
+                              ? it.id === 133
+                                ? 'UNIT'
+                                : 'CASE'
+                              : ''}
+                          </span>
+                        </>
+                      )}
+                    </p>
+                  </Skeleton>
+                </Card>
+              );
+            })}
+          </Flex>
+          //   {/* </Row>
+          // </Row> */}
         )}
 
         <ProTable<TransactionDetail, { stockControlId: number; searchValue?: string }>
@@ -463,12 +465,12 @@ const DashboardTabItem: React.FC<Props> = ({ forceUpdate, data }) => {
                   r.transactionType === 'top-up'
                     ? 'default'
                     : r.transactionType === 'approved'
-                    ? 'success'
-                    : r.transactionType === 'transfer'
-                    ? 'blue'
-                    : r.transactionType === 'sold'
-                    ? 'magenta'
-                    : 'warning';
+                      ? 'success'
+                      : r.transactionType === 'transfer'
+                        ? 'blue'
+                        : r.transactionType === 'sold'
+                          ? 'magenta'
+                          : 'warning';
                 return (
                   <span>
                     <Tag color={color}>{r.transactionType}</Tag>
@@ -483,10 +485,10 @@ const DashboardTabItem: React.FC<Props> = ({ forceUpdate, data }) => {
                   r.status === 'COMPLETED'
                     ? 'success'
                     : r.status === 'approved'
-                    ? 'default'
-                    : r.status === 'canceled'
-                    ? 'magenta'
-                    : 'warning';
+                      ? 'default'
+                      : r.status === 'canceled'
+                        ? 'magenta'
+                        : 'warning';
                 const str = r.status === 'COMPLETED' ? 'Completed' : 'Pending';
                 return (
                   <span>
@@ -523,7 +525,7 @@ const DashboardTabItem: React.FC<Props> = ({ forceUpdate, data }) => {
               data: result?.items.map((it: TransactionDetail) => it).filter((it: any) => !!it),
             };
           }}
-          // pagination={pagination}
+        // pagination={pagination}
         />
       </Card>
     </>

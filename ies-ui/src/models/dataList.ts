@@ -45,7 +45,14 @@ import { TankTransactionDTO } from '@/pages/fleet/fuelStock/data';
 import { AppraisalEmp } from '@/pages/hrm/appraisal-submit/data.types';
 import { CategoryDTO } from '@/pages/dms/setting/components/category/data';
 import { DocumentationDTO } from '@/pages/dms/documentation/data';
+import { ShareDTO } from '@/pages/dms/share/data';
+import { Term } from '@/pages/crm/term/types';
 import { TransferRequest } from '@/pages/prod/inventory-transfer-request/data';
+import { StockRequestLess, StockRequestListItem } from '@/pages/fma-stock/request/data.types';
+import { ItemList } from '@/pages/fma-stock/item/data.types';
+import { TransferRequestListItem } from '@/pages/fma-stock/transfer/data.types';
+import { EmpWhsMappingList } from '@/pages/fma-stock/emp-whs/data.types';
+import { AdjRequestListItem } from '@/pages/fma-stock/adjustment/data.types';
 
 type DataList =
   | {
@@ -99,7 +106,7 @@ type DataList =
     data: Paging<PackagesLess>;
   }
   | {
-    type: 'stock';
+    type: 'stock-control';
     criteria?: any;
     data: Paging<StockControlLess>;
   }
@@ -264,6 +271,11 @@ type DataList =
     data?: Paging<DepartmentDTO>;
   }
   | {
+    type: 'dms-share';
+    criteria?: any;
+    data?: Paging<ShareDTO>;
+  }
+  | {
     type: 'incentive-settlement';
     criteria?: any;
     data: Paging<IncentiveSettlement>;
@@ -272,11 +284,30 @@ type DataList =
     type: 'appraisal-submit';
     criteria?: any;
     data: Paging<AppraisalEmp>;
-  }
-  | {
+  } | {
+    type: 'term';
+    criteria?: any;
+    data: Paging<Term>;
+  } | {
     type: 'transfer-request-list';
     criteria?: any;
     data: Paging<TransferRequest>;
+  } | {
+    type: 'fma-stock-request';
+    criteria?: any;
+    data?: Paging<StockRequestListItem>;
+  } | {
+    type: 'fma-item-list';
+    criteria?: any;
+    data?: Paging<ItemList>;
+  } | {
+    type: 'whh-inventory-transfer-request';
+    criteria?: any;
+    data?: Paging<TransferRequestListItem>;
+  } | {
+    type: 'fma-emp-whs-mapping-list';
+    criteria?: any;
+    data?: Paging<EmpWhsMappingList>;
   }
   | {
     type: 'transfer-request-final-list';
@@ -294,7 +325,7 @@ type MomainType =
   | 'sale-order-delivery'
   | 'trade-offer'
   | 'list-notification'
-  | 'stock'
+  | 'stock-control'
   | 'sale-invoice'
   | 'team-work'
   | 'stockStore'
@@ -327,8 +358,13 @@ type MomainType =
   | 'appraisal-submit'
   | 'dms-category'
   | 'dms-department'
+  | 'dms-share'
   | 'dms-document'
+  | 'term'
   | 'transfer-request-list'
+  | 'fma-stock-request'
+  | 'whh-inventory-transfer-request'
+  | 'fma-emp-whs-mapping-list'
   | 'transfer-request-final-list';
 
 export default () => {

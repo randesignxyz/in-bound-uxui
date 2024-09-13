@@ -14,28 +14,34 @@ import type {
   StockDetailItemLess,
 } from '@/services/sale/data';
 import {
+  CheckCircleOutlined,
+  CloseCircleOutlined,
   CrownOutlined,
   EditOutlined,
+  ExclamationCircleOutlined,
   FileDoneOutlined,
   HistoryOutlined,
   PlusOutlined,
   QuestionCircleOutlined,
   ShopOutlined,
   SolutionOutlined,
+  SyncOutlined,
   TeamOutlined,
   UserOutlined,
 } from '@ant-design/icons';
-import { PageContainer } from '@ant-design/pro-components';
+import { PageContainer, ProDescriptions } from '@ant-design/pro-components';
 import ProTable from '@ant-design/pro-table';
 import { useSetState } from 'ahooks';
 import {
   Button,
   Card,
   Empty,
+  Flex,
   Image,
   message,
   Modal,
   Space,
+  Spin,
   Tabs,
   Tag,
   Tooltip,
@@ -56,13 +62,15 @@ import StockControlFormModal from '../components/StockControlFormModal';
 import { Model } from '../model';
 
 type Props = {
-  id: number;
+  id?: number;
+  onEdit: (id?: number) => void;
+  onAdd: () => void;
   actionHandlers?: {
     onBack?: () => void;
   };
 };
 
-const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
+const StockStoreDetail: React.FC<Props> = ({ id, onEdit, onAdd, actionHandlers }) => {
   const { state, actions } = Model();
   const [forceUpdate, setForceUpdate] = useState<number>(0);
   const [forceHistoryUpdate, setForceHistoryUpdate] = useState<number>(0);
@@ -106,24 +114,24 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
     })();
   }, []);
 
-  const displayItems: (DescriptionDisplayDataItem | undefined)[] = [
-    { label: 'Store Name', value: state.data?.detail?.name },
-    {
-      label: 'Description',
-      value: `${state.data?.detail?.description ? state.data?.detail?.description : '-'}`,
-    },
-    // { label: 'Team Name', value: state.data?.detail?.teamWork?.teamName },
-    { label: 'Plate Number', value: state.data?.detail?.vehicle?.plateNumber },
-    { label: 'Created Date', value: formatDate(state.data?.detail?.createdDate) },
-    // { label: 'Status', value: state.data?.detail?.status },
-    { label: 'Initialize Stock', value: state.data?.detail?.isInitialize ? 'TRUE' : 'FALSE' },
-  ];
+  // const displayItems: (DescriptionDisplayDataItem | undefined)[] = [
+  //   { label: 'Store Name', value: state.data?.detail?.name },
+  //   {
+  //     label: 'Description',
+  //     value: `${state.data?.detail?.description ? state.data?.detail?.description : '-'}`,
+  //   },
+  //   // { label: 'Team Name', value: state.data?.detail?.teamWork?.teamName },
+  //   { label: 'Plate Number', value: state.data?.detail?.vehicle?.plateNumber },
+  //   { label: 'Created Date', value: formatDate(state.data?.detail?.createdDate) },
+  //   // { label: 'Status', value: state.data?.detail?.status },
+  //   { label: 'Initialize Stock', value: state.data?.detail?.isInitialize ? 'TRUE' : 'FALSE' },
+  // ];
 
   const calculateTotalAmount = (settlement: SettlementLessDto | undefined): number => {
     return settlement
-      ? settlement.amountKH +
-          settlement.amount * settlement.exchangeRate +
-          settlement.bankAmount * settlement.exchangeRate
+      ? (settlement.amountKH / settlement.exchangeRate) +
+      settlement.amount +
+      settlement.bankAmount
       : 0;
     // return numeral(total).format('$ 0,0.00');
   };
@@ -150,7 +158,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
       label: 'Invoices Amount',
       value: `${dsdExchangeRate?.target_symbol} ${numeral(
         (state.data?.detail?.stockControl?.soldAmount || 0.0) *
-          (dsdExchangeRate?.target_amount || 0.0),
+        (dsdExchangeRate?.target_amount || 0.0),
       ).format('0,0')}`,
     },
 
@@ -191,7 +199,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
         (state.data?.detail?.stockControl?.settlement?.adjustMentItems?.reduce(
           (acc, it) => acc + (it.originQuantity - it.adjustQuantity) * (it.unitPrice || 0.0),
           (state.data?.detail?.stockControl?.settlement?.bankAmount || 0) +
-            (state.data?.detail?.stockControl?.soldAmount || 0),
+          (state.data?.detail?.stockControl?.soldAmount || 0),
         ) || 0) * (dsdExchangeRate?.target_amount || 0.0),
       ).format('0,0')}`,
     },
@@ -211,8 +219,8 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
     { label: 'Requested Date', value: formatDate(state.data?.detail?.stockControl?.requestDate) },
     {
       label: 'Received By',
-      value: state.data?.detail?.stockControl?.receiver
-        ? `${state.data?.detail?.stockControl?.receiver.salespersonCode} - ${state.data?.detail?.stockControl?.receiver.salespersonName}`
+      value: state.data?.detail?.stockControl?.receivedBy
+        ? `${state.data?.detail?.stockControl?.receivedBy.salespersonCode} - ${state.data?.detail?.stockControl?.receivedBy.salespersonName}`
         : 'N/A',
     },
     { label: 'Status', value: state.data?.detail?.stockControl?.status },
@@ -274,13 +282,14 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
   };
 
   return (
-    <PageContainer
-      title="Store Info"
-      breadcrumb={undefined}
-      onBack={actionHandlers?.onBack}
-      extra={
-        access.canCreateEditStockControl && [
-          state.data?.detail?.isInitialize &&
+    <>
+      <Card
+        size="small"
+        title="General Info"
+        style={{ marginBottom: 10 }}
+        extra={
+          access.canCreateEditStockControl && [
+            state.data?.detail?.isInitialize &&
             state.data?.detail?.stockControl?.status === 'closed' && (
               <Button
                 type="link"
@@ -294,58 +303,336 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
                 Initial New Stock Request
               </Button>
             ),
-          state.data?.detail?.stockControl && state.data.detail.stockControl.status === 'closed' && (
-            <Button
-              type="link"
-              htmlType="button"
-              icon={<ShopOutlined />}
-              onClick={() => {
-                setAddNewModal({ visible: true });
-              }}
-              key="createNewStockRequest"
-            >
-              Create New Stock Request
-            </Button>
-          ),
-          state.data?.detail?.stockControl && state.data.detail.stockControl.status === 'open' && (
-            <>
+            state.data?.detail?.stockControl && state.data.detail.stockControl.status === 'closed' && (
               <Button
                 type="link"
                 htmlType="button"
-                icon={<SolutionOutlined />}
-                onClick={() => setSaleInvoiceModal({ visible: true, record: undefined })}
-                key="createNewInvoice"
+                icon={<ShopOutlined />}
+                onClick={() => {
+                  setAddNewModal({ visible: true });
+                }}
+                key="createNewStockRequest"
               >
-                Create New Invoice
+                Create New Stock Request
               </Button>
-              {access.canAccessSettlement && (
+            ),
+            state.data?.detail?.stockControl && state.data.detail.stockControl.status === 'open' && (
+              <>
                 <Button
                   type="link"
                   htmlType="button"
-                  icon={<FileDoneOutlined />}
-                  onClick={() => setAddSettlement({ visible: true })}
-                  key="settlementButton"
+                  icon={<SolutionOutlined />}
+                  onClick={() => setSaleInvoiceModal({ visible: true, record: undefined })}
+                  key="createNewInvoice"
                 >
-                  Settlement
+                  Create New Invoice
                 </Button>
-              )}
-            </>
-          ),
-          <Button
-            type="link"
-            htmlType="button"
-            icon={<EditOutlined />}
-            onClick={() => history.push(`${SalePaths.store}/edit/${id}`)}
-            key="edit"
-          >
-            Edit
-          </Button>,
-        ]
-      }
-    >
-      <Card size="small" title="General Info" style={{ marginBottom: 10 }}>
-        <DescriptionDisplay data={displayItems} />
+                {/* {
+                  // access.canAccessSettlement &&
+                  (
+                    <Button
+                      type="link"
+                      htmlType="button"
+                      icon={<FileDoneOutlined />}
+                      onClick={() => setAddSettlement({ visible: true })}
+                      key="settlementButton"
+                    >
+                      Settlement
+                    </Button>
+                  )} */}
+              </>
+            ),
+            <Button
+              type="link"
+              htmlType="button"
+              icon={<EditOutlined />}
+              // onClick={() => history.push(`${SalePaths.store}/edit/${id}`)}
+              onClick={() => onEdit(id)}
+              key="edit"
+            >
+              Edit
+            </Button>,
+          ]
+        }
+      >
+        <ProDescriptions
+          column={3}
+          dataSource={state.data?.detail}
+          loading={state.data?.detail ? false : true}
+          contentStyle={{
+            fontWeight: 500
+          }}
+          columns={[
+            {
+              title: "Store Name",
+              dataIndex: "name",
+            },
+            {
+              title: "Plate Number",
+              dataIndex: "name",
+              render: (_, r) => r.vehicle?.plateNumber
+            },
+            {
+              title: "Initialize Stock",
+              dataIndex: "name",
+              render: (_, r) => <Text
+                type={r.isInitialize ? "success" : "danger"}
+              >{r.isInitialize ? "Yes" : "No"}</Text>
+            },
+            {
+              title: "Created Date",
+              dataIndex: "createdDate",
+              valueType: "date"
+            },
+            {
+              title: "Description",
+              dataIndex: "description",
+              span: 2
+            },
+          ]}
+        />
+        {/* <DescriptionDisplay data={displayItems} /> */}
       </Card>
+      <Tabs
+        items={[
+          {
+            key: "stock",
+            label: "Stock Control",
+            icon: <ShopOutlined />,
+            children:
+              <Flex gap={16} vertical>
+                <Card>
+                  {state.data?.detail?.stockControl === null && (
+                    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={<span>No Data</span>}>
+                      <Button type="primary" onClick={() => setAddNewModal({ visible: true })}>
+                        Create New Stock Request
+                      </Button>
+                    </Empty>
+                  )}
+                  {state.data?.detail?.stockControl !== null && (
+                    <ProDescriptions
+                      dataSource={state.data?.detail?.stockControl}
+                      loading={state.data?.detail?.stockControl ? false : true}
+                      contentStyle={{
+                        fontWeight: 500
+                      }}
+                      columns={[
+                        {
+                          title: "Serial Number",
+                          dataIndex: "referenceNo"
+                        },
+                        {
+                          title: "Requested Date",
+                          dataIndex: "requestDate",
+                          valueType: "date"
+                        },
+                        {
+                          title: "Received By",
+                          dataIndex: "",
+                          render: (_, r) => [r.receivedBy?.salespersonCode, r.receivedBy?.salespersonName].filter(p => p).join(" - ")
+                        },
+                        {
+                          title: "Approved Date",
+                          dataIndex: "approvedDate",
+                          valueType: "date",
+                        },
+                        {
+                          title: "Approved By",
+                          dataIndex: "serial",
+                          render: (_, r) => [r.approvedBy?.salespersonCode, r.approvedBy?.salespersonName].filter(p => p).join(" - "),
+                          span: 2
+                        },
+                        {
+                          title: "Status",
+                          dataIndex: "serial",
+                          render: (_, r) => {
+                            const color =
+                              r.status === 'pending'
+                                ? 'processing'
+                                : r.status === 'open'
+                                  ? 'success'
+                                  : r.status === 'canceled' || r.status === 'closed'
+                                    ? 'magenta'
+                                    : 'warning';
+                            return (
+                              <span>
+                                <Tag color={color}
+                                  bordered={false}
+                                  icon={
+                                    r.status === "pending" ? <SyncOutlined spin />
+                                      : r.status === "open" ? <CheckCircleOutlined />
+                                        : r.status === "canceled" ? <CloseCircleOutlined />
+                                          : r.status == "closed" ? <CheckCircleOutlined />
+                                            : <ExclamationCircleOutlined />
+                                  }
+                                >{r.status}</Tag>
+                              </span>
+                            )
+                          }
+                        },
+                        {
+                          title: "Stock balance is to be carried Forward",
+                          dataIndex: "serial",
+                          render: (_, r) => <Text
+                            type={r.isKeepForwarding ? "success" : "danger"}
+                          >{r.isKeepForwarding ? "Yes" : "No"}</Text>
+                        },
+                      ]}
+                    />
+                  )}
+                </Card>
+                {state.data?.detail?.stockControl?.settlement && (
+                  <Card title="Settlement" size="small" key="settlementInfo">
+                    <ProDescriptions<SettlementLessDto>
+                      dataSource={state.data.detail.stockControl.settlement}
+                      contentStyle={{
+                        fontWeight: "500"
+                      }}
+                      columns={[
+                        {
+                          title: "Cashier",
+                          dataIndex: "cashierName"
+                        },
+                        {
+                          title: "Exchange Rate",
+                          render: (_, r) => `៛ ${numeral(r.exchangeRate).format(" 0,00")}`
+                        },
+                        {
+                          title: "Actual Amount USD",
+                          render: (_, r) => <Typography.Text type='success'>{numeral(r.amount).format("$ 0,000.00")}</Typography.Text>
+                        },
+                        {
+                          title: "Settlement Date",
+                          dataIndex: "settlementDate",
+                          valueType: "dateTime"
+                        },
+                        {
+                          title: "Invoices Amount",
+                          render: (_, r) => {
+                            return < Typography.Text type='success' > {numeral(state.data?.detail?.stockControl?.soldAmount).format("$ 0,000.00")}</Typography.Text>
+
+                          }
+
+                        },
+                        {
+                          title: "Actual Amount KH",
+                          render: (_, r) => <Typography.Text type='success'>៛ {numeral(r.amountKH).format(" 000,000")}</Typography.Text>
+                        },
+                       {render:()=>""},
+                        {
+                          title: "Lost Amount",
+                          render: (_, r) => {
+                            const total = (state.data?.detail?.stockControl?.settlement?.adjustMentItems?.reduce(
+                              (acc, it) => acc + (it.originQuantity - it.adjustQuantity) * (it.unitPrice || 0.0),
+                              0,
+                            ) || 0.0)
+                            return <Typography.Text type='danger'> {numeral(total).format("$ 0,000.00")}</Typography.Text>
+                          }
+
+                        },
+                        {
+                          title: "Bank Transfer Amount",
+                          render: (_, r) => {
+                            return < Typography.Text type='success' > {numeral(r.bankAmount).format("$ 0,000.00")}</Typography.Text>
+                          }
+                        },
+                        {render:()=>""},
+                        {
+                          title: "System Amount KH",
+                          render: (_, r) => {
+                            const total = (state.data?.detail?.stockControl?.settlement?.adjustMentItems?.reduce(
+                              (acc, it) => acc + (it.originQuantity - it.adjustQuantity) * (it.unitPrice || 0.0),
+                              (state.data?.detail?.stockControl?.settlement?.bankAmount || 0) +
+                              (state.data?.detail?.stockControl?.soldAmount || 0),
+                            ) || 0)
+
+                            return < Typography.Text type='success' >៛ {numeral(total).format(" 000,000")}</Typography.Text>
+                          }
+                        },
+                        {
+                          title: "Actual Total Amount",
+                          render: (_, r) => {
+                            return < Typography.Text type='warning' >$ {numeral(calculateTotalAmount(state.data?.detail?.stockControl?.settlement)).format(" 000,000.00")}</Typography.Text>
+                          }
+                        },
+                        {
+                          title: "Remark",
+                          dataIndex: "remark",
+
+                        },
+                      ]}
+                    />
+                    {/* <DescriptionDisplay data={settlementInfo} column={3} /> */}
+                  </Card>
+                )}
+              </Flex >
+          },
+          {
+            key: "invoice",
+            label: "Sale Invoice",
+            icon: <SolutionOutlined />,
+            children: <SaleInvoiceTabItem
+              data={{
+                stockStoreId: id || 0,
+                stockControlId: state.data?.detail?.stockControl?.id,
+                exchangeRate: dsdExchangeRate,
+              }}
+              forceUpdate={forceUpdate}
+              actionHandlers={{
+                onEditSaleInvoice: (item) => {
+                  setSaleInvoiceModal({ visible: true, record: item });
+                },
+              }}
+            />
+          },
+          {
+            key: "member",
+            label: "Member",
+            icon: <TeamOutlined />,
+            children: <ProTable<SalesTeamWorkLess>
+              size="small"
+              rowKey="id"
+              key="salespersonCode"
+              pagination={false}
+              bordered={false}
+              search={false}
+              dataSource={state.data?.detail?.members}
+              options={{
+                setting: false,
+                density: false,
+                fullScreen: false,
+                reload: false,
+              }}
+              columns={[
+                { title: 'Code', dataIndex: 'salespersonCode' },
+                { title: 'Full Name', dataIndex: 'salespersonName' },
+                { title: 'Phone Number', dataIndex: 'phoneNumber' },
+                { title: 'Role', dataIndex: 'role' },
+                {
+                  title: '',
+                  render: (_, r) => {
+                    return r.isRequester ? (
+                      <Tooltip title="Owner">
+                        <CrownOutlined style={{ color: 'blue' }} />
+                      </Tooltip>
+                    ) : (
+                      <UserOutlined />
+                    );
+                  },
+                },
+              ]}
+            />
+          },
+          {
+            key: "history",
+            label: "Stock Control History",
+            icon: <HistoryOutlined />,
+            children: <HistoryTabItem
+              data={{ id: id || 0, forceUpdate: forceHistoryUpdate, dsdExchangeRate: dsdExchangeRate }}
+            />
+          }
+        ]}
+      />
       {/* defaultActiveKey="stockControl" */}
       <Tabs>
         {/* <Tabs.TabPane
@@ -357,7 +644,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
           key="dashboardTabItem"
         ></Tabs.TabPane> */}
 
-        <Tabs.TabPane
+        {/* <Tabs.TabPane
           tab={
             <Space size={0}>
               <ShopOutlined />
@@ -365,23 +652,23 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
             </Space>
           }
           key="stockControlTabItem"
-        >
-          <Card
+        > */}
+        {/* <Card
             size="small"
             title={state.data?.detail?.stockControl === null ? 'Stock Detail' : 'Detail'}
             style={{ marginBottom: 10 }}
-          >
-            {state.data?.detail?.stockControl === null && (
+          > */}
+        {/* {state.data?.detail?.stockControl === null && (
               <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={<span>No Data</span>}>
                 <Button type="primary" onClick={() => setAddNewModal({ visible: true })}>
                   Create New Stock Request
                 </Button>
               </Empty>
-            )}
-            {state.data?.detail?.stockControl !== null && (
+            )} */}
+        {/* {state.data?.detail?.stockControl !== null && (
               <DescriptionDisplay data={stockControlInfo} column={3} />
             )}
-            <Tabs
+            {/* <Tabs
             // onTabClick={(activeKey) => {
             //   const id = activeKey.split('-').pop();
             //   if (id) setStockCategory(parseInt(id));
@@ -436,134 +723,134 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
                           toolBarRender={() => {
                             return state.data?.detail?.stockControl?.status === 'Open'
                               ? [
-                                  <Button
-                                    key={`button - ${state.data?.detail?.stockControl?.id}`}
-                                    size="small"
-                                    type="link"
-                                    htmlType="button"
-                                    disabled={state.loading}
-                                    onClick={() =>
-                                      setRequestStockControl({
-                                        visible: true,
-                                        stockCategoryId: it.id,
-                                        captionName: `Request ${it.name} Stock`,
-                                      })
-                                    }
-                                    icon={<PlusOutlined />}
-                                  >
-                                    {`Request ${it.name} Stock`}
-                                  </Button>,
-                                ]
+                                <Button
+                                  key={`button - ${state.data?.detail?.stockControl?.id}`}
+                                  size="small"
+                                  type="link"
+                                  htmlType="button"
+                                  disabled={state.loading}
+                                  onClick={() =>
+                                    setRequestStockControl({
+                                      visible: true,
+                                      stockCategoryId: it.id,
+                                      captionName: `Request ${it.name} Stock`,
+                                    })
+                                  }
+                                  icon={<PlusOutlined />}
+                                >
+                                  {`Request ${it.name} Stock`}
+                                </Button>,
+                              ]
                               : [];
                           }}
                           dataSource={items}
                           columns={
                             it.id === 132
                               ? [
-                                  {
-                                    title: 'Batch #',
-                                    dataIndex: 'batchNo',
+                                {
+                                  title: 'Batch #',
+                                  dataIndex: 'batchNo',
+                                },
+                                // {
+                                //   title: 'Code',
+                                //   dataIndex: 'itemCode',
+                                // },
+                                {
+                                  title: 'Description',
+                                  // dataIndex: 'itemName',
+                                  key: 'itemId',
+                                  render: (_, r) => {
+                                    return `${r.itemCode} - ${r.itemName}`;
                                   },
-                                  // {
-                                  //   title: 'Code',
-                                  //   dataIndex: 'itemCode',
-                                  // },
-                                  {
-                                    title: 'Description',
-                                    // dataIndex: 'itemName',
-                                    key: 'itemId',
-                                    render: (_, r) => {
-                                      return `${r.itemCode} - ${r.itemName}`;
-                                    },
-                                  },
+                                },
 
-                                  { title: 'SKU', dataIndex: 'description' },
-                                  { title: 'UOM', dataIndex: 'uom' },
-                                  {
-                                    title: (
-                                      <Space>
-                                        {'Total Quantity'}
-                                        <Tooltip title="Begin Quantity + Request Quantity">
-                                          <QuestionCircleOutlined color={'processing'} />
-                                        </Tooltip>
-                                      </Space>
-                                    ),
-                                    align: 'right',
-                                    render: (_, r) => {
-                                      return r.beginningQty + r.quantity;
-                                    },
-                                    //dataIndex: 'quantity'
+                                { title: 'SKU', dataIndex: 'description' },
+                                { title: 'UOM', dataIndex: 'uom' },
+                                {
+                                  title: (
+                                    <Space>
+                                      {'Total Quantity'}
+                                      <Tooltip title="Begin Quantity + Request Quantity">
+                                        <QuestionCircleOutlined color={'processing'} />
+                                      </Tooltip>
+                                    </Space>
+                                  ),
+                                  align: 'right',
+                                  render: (_, r) => {
+                                    return r.beginningQty + r.quantity;
                                   },
-                                  {
-                                    title: 'Sold Quantity',
-                                    align: 'right',
-                                    render: (_, r) => {
-                                      return r.soldQty;
-                                    },
+                                  //dataIndex: 'quantity'
+                                },
+                                {
+                                  title: 'Sold Quantity',
+                                  align: 'right',
+                                  render: (_, r) => {
+                                    return r.soldQty;
                                   },
-                                  {
-                                    title: 'Current Quantity',
-                                    align: 'right',
-                                    render: (_, r) => {
-                                      return r.beginningQty + r.quantity - r.soldQty;
-                                    },
+                                },
+                                {
+                                  title: 'Current Quantity',
+                                  align: 'right',
+                                  render: (_, r) => {
+                                    return r.beginningQty + r.quantity - r.soldQty;
                                   },
-                                  {
-                                    title: 'Actural Quantity',
-                                    align: 'right',
-                                    dataIndex: 'actualQty',
+                                },
+                                {
+                                  title: 'Actural Quantity',
+                                  align: 'right',
+                                  dataIndex: 'actualQty',
+                                },
+                                {
+                                  title: 'Expired Date',
+                                  render: (_, r) => {
+                                    return r.expiredDate ? formatDate(r.expiredDate) : '-';
                                   },
-                                  {
-                                    title: 'Expired Date',
-                                    render: (_, r) => {
-                                      return r.expiredDate ? formatDate(r.expiredDate) : '-';
-                                    },
-                                  },
-                                ]
+                                },
+                              ]
                               : [
-                                  {
-                                    title: 'Code',
-                                    dataIndex: 'itemCode',
-                                  },
-                                  {
-                                    title: 'Description',
-                                    dataIndex: 'itemName',
-                                    key: 'itemId',
-                                  },
+                                {
+                                  title: 'Code',
+                                  dataIndex: 'itemCode',
+                                },
+                                {
+                                  title: 'Description',
+                                  dataIndex: 'itemName',
+                                  key: 'itemId',
+                                },
 
-                                  { title: 'SKU', dataIndex: 'description' },
-                                  {
-                                    title: 'Quantity',
-                                    align: 'right',
-                                    render: (_, r) => {
-                                      return r.beginningQty + r.quantity;
-                                    },
+                                { title: 'SKU', dataIndex: 'description' },
+                                {
+                                  title: 'Quantity',
+                                  align: 'right',
+                                  render: (_, r) => {
+                                    return r.beginningQty + r.quantity;
                                   },
-                                  {
-                                    title: 'Sold Quantity',
-                                    align: 'right',
-                                    render: (_, r) => {
-                                      return r.soldQty;
-                                    },
+                                },
+                                {
+                                  title: 'Sold Quantity',
+                                  align: 'right',
+                                  render: (_, r) => {
+                                    return r.soldQty;
                                   },
-                                  { title: 'UOM', dataIndex: 'uom' },
-                                ]
+                                },
+                                { title: 'UOM', dataIndex: 'uom' },
+                              ]
                           }
                         />
                       </Tabs.TabPane>
                     )
                   );
                 })}
-            </Tabs>
-          </Card>
-          {state.data?.detail?.stockControl?.settlement && (
+            </Tabs> */}
+        {/* </Card> */}
+        {/* {state.data?.detail?.stockControl?.settlement && (
             <Card title="Settlement" size="small" key="settlementInfo">
               <DescriptionDisplay data={settlementInfo} column={3} />
             </Card>
-          )}
-        </Tabs.TabPane>
+          )} */}
+        {/* </Tabs.TabPane> */}
 
-        <Tabs.TabPane
+        {/* <Tabs.TabPane
           tab={
             <Space size={0}>
               <SolutionOutlined /> <span>Sale Invoice</span>
@@ -573,7 +860,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
         >
           <SaleInvoiceTabItem
             data={{
-              stockStoreId: id,
+              stockStoreId: id || 0,
               stockControlId: state.data?.detail?.stockControl?.id,
               exchangeRate: dsdExchangeRate,
             }}
@@ -584,7 +871,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
               },
             }}
           />
-        </Tabs.TabPane>
+        </Tabs.TabPane> */}
 
         {/* <Tabs.TabPane
           tab={
@@ -595,7 +882,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
           key="settlementTab"
         ></Tabs.TabPane> */}
 
-        <Tabs.TabPane
+        {/* <Tabs.TabPane
           tab={
             <Space size={0}>
               <TeamOutlined /> <span>Member</span>
@@ -638,9 +925,9 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
               ]}
             />
           </Card>
-        </Tabs.TabPane>
+        </Tabs.TabPane> */}
 
-        <Tabs.TabPane
+        {/* <Tabs.TabPane
           tab={
             <Space size={0}>
               <HistoryOutlined /> <span>Stock Control History</span>
@@ -649,9 +936,9 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
           key="historyTabItem"
         >
           <HistoryTabItem
-            data={{ id: id, forceUpdate: forceHistoryUpdate, dsdExchangeRate: dsdExchangeRate }}
+            data={{ id: id || 0, forceUpdate: forceHistoryUpdate, dsdExchangeRate: dsdExchangeRate }}
           />
-        </Tabs.TabPane>
+        </Tabs.TabPane> */}
       </Tabs>
 
       <SaleInvoiceFormModal
@@ -704,7 +991,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
               message.info(result.message);
               setForceUpdate(forceUpdate + 1);
               // reload dashboard
-              actions.detail(id);
+              actions.detail(id || 0);
             }
           },
 
@@ -712,10 +999,10 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
             await actions.loadLocations(type, parentId, isNotClearChild);
           },
         }}
-        // actionHandlers={{
-        //   onAddItem: onSaveSaleItemEvent,
+      // actionHandlers={{
+      //   onAddItem: onSaveSaleItemEvent,
 
-        // }}
+      // }}
       />
       <RequestStockControlModal
         title={requestStockControl.captionName}
@@ -735,7 +1022,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
         }}
         isLoading={state.loading || false}
         actionHandlers={{
-          onLoadInitData: () => {},
+          onLoadInitData: () => { },
         }}
       />
 
@@ -756,7 +1043,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
         }}
         isLoading={state.loading || false}
         actionHandlers={{
-          onLoadInitData: () => {},
+          onLoadInitData: () => { },
           onSave: onSaveAddNewStoreActionHandler,
         }}
       />
@@ -776,7 +1063,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
         }}
         onCancel={() => setInitNewModal({ visible: false })}
         actionHandlers={{
-          onLoadInitData: () => {},
+          onLoadInitData: () => { },
           onSave: onSaveInitStockControlActionHandler,
           onSaveVehicle: actions.saveVehicle,
         }}
@@ -817,7 +1104,7 @@ const StockStoreDetail: React.FC<Props> = ({ id, actionHandlers }) => {
             }) || [],
         }}
       />
-    </PageContainer>
+    </>
   );
 };
 

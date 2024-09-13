@@ -1,10 +1,5 @@
 import { simpleRequestActions } from '@/services/model';
-import type {
-  ExchangeRate,
-  SaleInvoiceLess,
-  SaveStockControl,
-  // StockDetailItemSettle,
-} from '@/services/sale/data';
+import type { ExchangeRate, SaleInvoiceLess, SaveStockControl } from '@/services/sale/data';
 import {
   AuditOutlined,
   DashboardOutlined,
@@ -128,11 +123,8 @@ const StockControlDetail: React.FC<Props> = ({ id, actionHandlers }) => {
   return (
     <>
       <PageContainer
-        title={`${state.data?.detail?.stockName}${
-          state.data?.detail?.serialNumber !== null ? ` - ${state.data?.detail?.serialNumber}` : ''
-        }`}
+        title={[state.data?.detail?.stockName, state.data?.detail?.serialNumber,state.data?.detail?.serialNumber].filter(o=>o).join("-")}
         breadcrumb={undefined}
-        // subTitle={formatDate(state.data?.detail?.scheduleDate)}
         onBack={actionHandlers?.onBack}
         // extra={
         //   access.canCreateEditSo &&
@@ -169,13 +161,14 @@ const StockControlDetail: React.FC<Props> = ({ id, actionHandlers }) => {
         //     </Button>,
         //   ]
         // }
+        
       >
         <Tabs defaultActiveKey="stockControl">
           <Tabs.TabPane
             tab={
-              <Space size={0}>
+              <Space size={4}>
                 {/* <ScheduleOutlined /> <span>Transaction</span> */}
-                <DashboardOutlined /> <span>Dashboard</span>
+                <DashboardOutlined /> <span>Transaction</span>
               </Space>
             }
             key="dashboardTabItem"
@@ -194,7 +187,7 @@ const StockControlDetail: React.FC<Props> = ({ id, actionHandlers }) => {
 
           <Tabs.TabPane
             tab={
-              <Space size={0}>
+              <Space size={4}>
                 <ShopOutlined /> <span>Stock</span>
               </Space>
             }
@@ -207,8 +200,8 @@ const StockControlDetail: React.FC<Props> = ({ id, actionHandlers }) => {
                 isOpen: isOpenStock(),
                 details: state.data?.detail,
                 types: state.data?.initData?.types,
-                loading: state.loading,
-                listStockDetailItem: state.data?.listStockDetailItem,
+                // loading: state.loading,
+                listStockDetailItem: state.data?.detail?.items ?? [],
               }}
               // actionHandlers={{
               //   onTransferMoney: () => setAddModal({ visible: true }),
@@ -227,8 +220,8 @@ const StockControlDetail: React.FC<Props> = ({ id, actionHandlers }) => {
             <>
               <Tabs.TabPane
                 tab={
-                  <Space size={0}>
-                    <AuditOutlined /> <span>Sale Invoice</span>
+                  <Space size={4}>
+                    <AuditOutlined /> <span>Sales Invoice</span>
                   </Space>
                 }
                 key="saleInvoiceTab"
@@ -236,14 +229,15 @@ const StockControlDetail: React.FC<Props> = ({ id, actionHandlers }) => {
                 <SaleInvoiceTabItem
                   forceUpdate={forceUpdate}
                   data={{
-                    listStockDetailItem: state.data?.listStockDetailItem,
+                    listStockDetailItem: state.data?.detail?.items,
                     typeProductItems: state.data?.initData?.typeProductItems,
                     id: id,
                     // saleTypes: state.data?.initData?.lookDataList?.filter(
                     //   (it) => it.type === 'SALE_TYPE',
                     // ),
+                    owner: state.data?.detail?.owner,
                     exchangeRate: dsdExchangeRate,
-
+                  
                     isOpen: isOpenStock(),
                     //salespersonCode: state.data?.detail?.owner.salespersonCode,
                     salespersonList: state.data?.initData?.salespersonList,
@@ -354,7 +348,7 @@ const StockControlDetail: React.FC<Props> = ({ id, actionHandlers }) => {
         title={addStockModal.title}
         open={addStockModal.visible}
         data={{
-          selectedSE: state.data?.detail?.owner.salespersonCode,
+          selectedSE: state.data?.detail?.owner?.salespersonCode,
           typeId: addStockModal.typeId,
           seList: state.data?.initData?.salespersonList,
           stockCategory: state.data?.initData?.types,

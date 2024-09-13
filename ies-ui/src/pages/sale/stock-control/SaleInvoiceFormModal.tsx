@@ -17,23 +17,25 @@ import ProForm, {
 } from '@ant-design/pro-form';
 import ProTable, { ActionType } from '@ant-design/pro-table';
 import { useSetState } from 'ahooks';
-import { Button, Card, Col, message, Row, Tooltip } from 'antd';
+import { Button, Card, Col, Flex, message, Row, Tooltip, Typography } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import numeral from 'numeral';
 import { useEffect, useRef, useState } from 'react';
 import ItemEntryFormModal from '../so-invoice/components/ItemEntryFormModal';
 import LeadFormModel from '../so-invoice/components/LeadFormModel';
 import { Model } from './model';
+import { v4 as uuid} from "uuid"
+
 
 export interface Props extends FormModalProps {
   data?: {
-    // saleTypes?: LookupData[];
     detail?: SaleInvoiceLess;
     typeProductItems?: { itemId: number; itemType: number }[];
     saleItems: SaleItem[];
     stockControlId?: number;
     salespersonList?: SalesTeamWorkLess[];
     regionList?: Locations[];
+    owner?:SalesTeamWorkLess;
     locations?: {
       communeList?: Locations[];
       districtList?: Locations[];
@@ -60,20 +62,19 @@ const SaleInvoiceFormModal: React.FC<Props> = ({ isLoading, data, actionHandlers
   const [itemModal, setItemModal] = useSetState<{ visible?: boolean }>({});
 
   const [selectedSalespersonCode, setSelectedSalespersonCode] = useState<string>();
-
   const actionRef = useRef<ActionType>();
-
   const [phoneNumber, setPhoneNumber] = useState<string>();
   const [dataSource, setDataSource] = useState<SaleInvoiceItemLess[]>([]);
-
+  
   const onSubmitActionHandler = async () => {
     const dataFormat = await formSaleInvoice.validateFields();
     const saleInvoice: SaleInvoiceLess = {
       ...dataFormat,
       items: dataSource,
       id: data?.detail?.id,
-      //salespersonCode: dataFormat.salespersonCode,
+      salespersonCode: dataFormat.salespersonCode,
       stockControlId: data?.stockControlId || -1,
+      internalId:uuid(),
     };
     actionHandlers && actionHandlers.onSubmit(saleInvoice);
   };
@@ -103,8 +104,6 @@ const SaleInvoiceFormModal: React.FC<Props> = ({ isLoading, data, actionHandlers
 
   useEffect(() => {
     if (!rest.open) return;
-    // load region
-
     if (!data?.detail) {
       actions.fetchInvoiceNo().then((it) => {
         formSaleInvoice.setFieldsValue({
@@ -153,7 +152,6 @@ const SaleInvoiceFormModal: React.FC<Props> = ({ isLoading, data, actionHandlers
             Reset
           </Button>
         ),
-
         <Button
           loading={rest.confirmLoading}
           disabled={!data?.detail && (rest.disabled || dataSource.length <= 0)}
@@ -163,30 +161,23 @@ const SaleInvoiceFormModal: React.FC<Props> = ({ isLoading, data, actionHandlers
         >
           {data?.detail ? 'Update' : 'Submit'}
         </Button>,
-        // <Button
-        //   loading={rest.confirmLoading}
-        //   disabled={rest.disabled}
-        //   key="submitView"
-        //   type="primary"
-        //   onClick={async () => await onSubmitActionHandler(true)}
-        // >
-        //   Submit & Detail
-        // </Button>,
       ]}
     >
       <ProForm<SaleInvoiceLess>
         form={formSaleInvoice}
         submitter={false}
-        {...layout}
         autoFocusFirstInput
         onValuesChange={onValuesChange}
-        layout="horizontal"
       >
-        <Card size="small" style={{ marginBottom: 16 }}>
-          <Row>
-            <Col flex="auto">
-              <ProFormText label="Invoice #" name="invoiceNo" disabled />
-              <ProFormText label="Reference #" name="referenceNo" />
+        <Card size="small" style={{ marginBottom: 16 }}
+        >
+          <ProForm.Group>
+            <ProFormText label="Invoice #" name="invoiceNo" disabled />
+            <ProFormText label="Reference #" name="referenceNo" />
+            <ProFormDateTimePicker label="Invoice Date" name="invoiceDate" />
+          </ProForm.Group>
+          <Row gutter={10}>
+            <Col span={12}>
               <ProFormSelect
                 name="salespersonCode"
                 disabled={data?.salespersonList ? false : true}
@@ -194,12 +185,11 @@ const SaleInvoiceFormModal: React.FC<Props> = ({ isLoading, data, actionHandlers
                 rules={[{ required: true }]}
                 label="Issued By"
                 showSearch
+                initialValue={data?.owner?.salespersonCode}
                 fieldProps={{
                   optionLabelProp: 'label',
-                  // dropdownMatchSelectWidth: 400,
                   filterOption: (input, option) =>
-                    (option?.label?.toString() || '').toLowerCase().indexOf(input.toLowerCase()) >=
-                    0,
+                    (option?.label?.toString() || '').toLowerCase().indexOf(input.toLowerCase()) >= 0,
                 }}
                 options={data?.salespersonList
                   ?.filter((it) => !it.isApprover)
@@ -211,41 +201,43 @@ const SaleInvoiceFormModal: React.FC<Props> = ({ isLoading, data, actionHandlers
                   })}
               />
             </Col>
-            <Col flex="auto">
-              <ProFormDateTimePicker label="Invoice Date" name="invoiceDate" />
-              <ProFormSelect
-                rules={[{ required: true }]}
-                name="customerId"
-                label="Customer"
-                showSearch
-                debounceTime={300}
-                addonAfter={
-                  <Tooltip placement="topLeft" title="Add Customer">
-                    <Button
-                      size="small"
-                      icon={<PlusOutlined />}
-                      type="primary"
-                      onClick={() => {
-                        if (selectedSalespersonCode) {
-                          setLeadModal({ visible: true, phoneNumber: phoneNumber });
-                        } else {
-                          message.info('Please select owner');
-                        }
-                      }}
-                    />
-                  </Tooltip>
-                }
-                request={async ({ keyWords }) => {
-                  setPhoneNumber(keyWords);
-                  const result =
-                    keyWords && keyWords.length > 1 && (await actions.searchLeadByPhone(keyWords));
-                  return result.map((it: { phone: string }) => ({
-                    label: it.phone,
-                    value: it.phone,
-                  }));
-                }}
-                placeholder="Please select customer"
-              />
+            <Col span={12}>
+              <Flex align='center' gap={12}>
+                <ProFormSelect
+                  rules={[{ required: true }]}
+                  name="customerId"
+                  label="Customer"
+                  showSearch
+                  debounceTime={300}
+                  width={"md"}
+                  fieldProps={{
+                    optionLabelProp: 'label',
+                  }}
+                  request={async ({ keyWords }) => {
+                    setPhoneNumber(keyWords);
+                    const result = keyWords && (await actions.searchLeadByPhone(keyWords));
+                    return result.map((it: LeadLess) => ({
+                      label: [it.phone, `${[it.internalName, it.firstName, it.lastName].join(" ")}`].filter(o => o).join(" - "),
+                      value: it.phone,
+                    }));
+                  }}
+                  placeholder="Please select customer"
+                />
+                <Tooltip placement="topLeft" title="Add Customer">
+                  <Button
+                    size="small"
+                    icon={<PlusOutlined />}
+                    type="primary"
+                    onClick={() => {
+                      if (selectedSalespersonCode) {
+                        setLeadModal({ visible: true, phoneNumber: phoneNumber });
+                      } else {
+                        message.info('Please select owner');
+                      }
+                    }}
+                  />
+                </Tooltip>
+              </Flex>
               {/* <ProFormMoney
                 label="Amount Riel"
                 name="amountKH"
@@ -284,7 +276,7 @@ const SaleInvoiceFormModal: React.FC<Props> = ({ isLoading, data, actionHandlers
                     icon={<PlusOutlined />}
                     type="primary"
                     onClick={() => setItemModal({ visible: true })}
-                  />
+                  >Add Item</Button>
                 </Tooltip>,
               ]}
               options={{
@@ -294,11 +286,10 @@ const SaleInvoiceFormModal: React.FC<Props> = ({ isLoading, data, actionHandlers
                 search: false,
               }}
               columns={[
-                // {
-                //   title: '#',
-                //   dataIndex: 'index',
-                //   key: 'key',
-                // },
+                {
+                  title: 'Batch No',
+                  dataIndex: 'batchNo',
+                },
                 {
                   title: 'Code',
                   dataIndex: 'itemCode',
@@ -342,14 +333,12 @@ const SaleInvoiceFormModal: React.FC<Props> = ({ isLoading, data, actionHandlers
                         key={`${r.itemId}${r.stockCategoryId}`}
                         onClick={() => {
                           setDataSource(dataSource.filter((it) => it.key !== r.key));
-
                           const amount: number = dataSource.reduce<number>(
                             (itemAmount, current) => {
                               return (itemAmount += current.amount);
                             },
                             -r.amount,
                           );
-
                           formSaleInvoice.setFieldsValue({
                             subAmount: amount,
                             discount: 0.0,
@@ -362,42 +351,39 @@ const SaleInvoiceFormModal: React.FC<Props> = ({ isLoading, data, actionHandlers
                 },
               ]}
             />
-            <Card size="small" style={{ marginTop: 10 }}>
-              <Row justify="end">
-                <Col flex="3" />
-                <Col style={{ textAlign: 'right', flex: '30px' }}>
+            {/* <Card size='small'> */}
+            <Flex justify='flex-end' >
+              <Card size='small' style={{ width: 250 }}>
+                <Flex justify='space-between'> <Typography.Text>Sub Total</Typography.Text>
                   <ProFormMoney
-                    fieldProps={{
-                      precision: 4,
-                    }}
-                    label="Sub Total"
-                    labelCol={{ span: 10 }}
+                    noStyle
                     name="subAmount"
                     readonly
-                    width="sm"
                     locale="en-US"
                   />
+                </Flex>
+                <Flex justify='space-between'>
+                  <Typography.Text>VAT Amount</Typography.Text>
                   <ProFormMoney
-                    labelAlign="right"
-                    label="VAT Amount"
-                    labelCol={{ span: 10 }}
+                    noStyle
                     name="discount"
                     readonly
-                    width="sm"
                     locale="en-US"
                   />
+                </Flex>
+
+                <Flex justify='space-between'>
+                  <Typography.Text>Total Amount </Typography.Text>
                   <ProFormMoney
-                    labelAlign="right"
-                    label="Total Amount"
-                    labelCol={{ span: 10 }}
+                    noStyle
                     name="amount"
                     readonly
-                    width="sm"
                     locale="en-US"
                   />
-                </Col>
-              </Row>
-            </Card>
+                </Flex>
+              </Card>
+            </Flex>
+           
           </>
         )}
       </ProForm>
@@ -413,11 +399,11 @@ const SaleInvoiceFormModal: React.FC<Props> = ({ isLoading, data, actionHandlers
         }}
         actionHandlers={{
           onAddItem: async (item) => {
-            // console.log(item);
+            
             setItemModal({ visible: false });
             // const items = dataSource;
             const index = dataSource.findIndex(
-              (it) => it.itemId === item.itemId && it.itemType === item.itemType,
+              (it) => it.batchNo ===item.batchNo && it.itemType === item.itemType,
             );
             let initialAmount = 0;
             if (index !== -1) {

@@ -3,7 +3,6 @@ import CrudWrapper from "@/components/DataCrud/CrudWrapper"
 import { FleetPaths } from "..";
 import ListView from "./VendorListView";
 export default () => {
-
     return( 
     <CrudWrapper baseURL={FleetPaths.mantenence} >
         {(view, id, navigate) => {

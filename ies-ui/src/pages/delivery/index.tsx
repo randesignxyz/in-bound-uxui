@@ -13,8 +13,8 @@ import settingIcon from '@/assets/settings.png';
 import qrCodeIcon from '@/assets/qr-code.png';
 import forkLift from '@/assets/fork-lift.png';
 import { Divider, Menu } from 'antd';
-import { AreaChartOutlined, HistoryOutlined, PlusCircleOutlined } from '@ant-design/icons';
-import { useAccess, history } from 'umi';
+import { AreaChartOutlined, EnvironmentOutlined, HistoryOutlined, PlusCircleOutlined } from '@ant-design/icons';
+import { useAccess, history } from "@umijs/max";
 import { PageContainer } from '@ant-design/pro-components';
 import ModalMngt, { modalType } from './modal-mngt';
 import { useState } from 'react';
@@ -37,6 +37,7 @@ export const DeliveryPaths = {
   review: '/delivery/review',
   reviewer: '/delivery/reviewer',
   history: '/delivery/history',
+  locationTracking: '/delivery/tracking',
   loadingHistory: '/delivery/loading-history',
   deliveryHistory: '/delivery/list-instances-delivery'
 };
@@ -145,26 +146,34 @@ export default () => {
       link: `${DeliveryPaths.board}`,
       icon: boardIcon,
       // isMenu: true,
-      overlay: deliveryMenu,
+
+      // overlay: deliveryMenu,
       visible: access.canAccessDeliveryMenuItem,
       menu: {
-        items: [{
-          label: 'Delivery History',
-          icon: <HistoryOutlined style={{ fontSize: '16px', color: '#08c' }} />,
-          key: 'delivery-list',
-          onClick: () => history.push(DeliveryPaths.history),
-        },
-        {
-          type: 'divider'
-        },
-        {
-          label: 'Delivery Time Report',
-          icon: <AreaChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
-          key: 'delivery-time-report',
-          onClick: () => setModal({
-            type: 'DELIVERY_TIME'
-          }),
-        }]
+        items: [
+          {
+            label: 'Location Tracking',
+            icon: <EnvironmentOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+            key: 'location-tracking',
+            onClick: () => history.push(DeliveryPaths.locationTracking)
+          },
+          {
+            label: 'Delivery History',
+            icon: <HistoryOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+            key: 'delivery-list',
+            onClick: () => history.push(DeliveryPaths.history),
+          },
+          {
+            type: 'divider'
+          },
+          {
+            label: 'Delivery Time Report',
+            icon: <AreaChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+            key: 'delivery-time-report',
+            onClick: () => setModal({
+              type: 'DELIVERY_TIME'
+            }),
+          }]
       }
     },
     {
@@ -173,7 +182,17 @@ export default () => {
       description: 'Cash collection list',
       link: `${DeliveryPaths.cashCollection}`,
       icon: cashCollectionIcon,
-      visible: access.canAccessDeliveryCashSettlementMenuItem
+      visible: access.canAccessDeliveryCashSettlementMenuItem,
+      menu: {
+        items: [{
+          label: 'Cash collection Report',
+          icon: <AreaChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+          key: 'cash-collection-report',
+          onClick: () => setModal({
+            type: 'CASH_COLLECTION_REPORT'
+          }),
+        }]
+      }
     },
     {
       id: 'reviewer',

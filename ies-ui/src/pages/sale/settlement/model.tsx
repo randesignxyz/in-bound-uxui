@@ -2,7 +2,6 @@ import { commmonActions } from '@/services/model';
 import type { InitSaleInvoiceParam } from '@/services/sale/data';
 import { SaleServiceAPI } from '@/services/sale/services';
 import { message } from 'antd';
-import { SortOrder } from 'antd/lib/table/interface';
 import { useReducer } from 'react';
 import type { State } from './reducer';
 import { reducer } from './reducer';

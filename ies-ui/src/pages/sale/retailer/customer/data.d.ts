@@ -8,7 +8,7 @@ interface CustomerDto {
   points: number;
   phone: string;
   type: string;
-  imageId?: string = null;
+  imageId?: string;
   verifyCount: number;
   verifyCode: string;
   status: string;
@@ -21,12 +21,22 @@ interface CustomerDto {
   customerGroup?: CustomerGroup;
 }
 
-interface CustomerCreate {
+interface CustomerUpdate {
   id: string;
   firstName: string;
   lastName: string;
   phone: string;
   customerGroupId?: string;
+}
+
+interface CustomerCreate {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  userName: string;
+  password: string;
+  referencePhone: string;
+  type: string;
 }
 
 interface Address {

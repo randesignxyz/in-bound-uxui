@@ -9,7 +9,7 @@ import { PageContainer } from '@ant-design/pro-components';
 import { ActionType } from '@ant-design/pro-table';
 import { Badge, Button, message, Radio, Space, Spin, Tooltip } from 'antd';
 import { useRef, useState } from 'react';
-import { history } from 'umi';
+import { history } from "@umijs/max";
 import ReviewList from './review-list';
 
 export default () => {

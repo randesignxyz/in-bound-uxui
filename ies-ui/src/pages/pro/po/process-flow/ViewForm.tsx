@@ -37,6 +37,7 @@ export default (props: DataViewProps) => {
     <ViewFormWrapper<{ id: number }>
       workflowProp={props}
       attachedFiles={attatchFiles}
+
       moreActions={() => [
         {
           icon: <UploadOutlined />,
@@ -45,7 +46,7 @@ export default (props: DataViewProps) => {
           key: 'postToSAP',
           name: "Post To SAP",
           action: onPostHandler
-        }, ,
+        },
         {
           icon: <PartitionOutlined />, key: 'view-flow', name: "Flow", action: () => {
             setOpenFlow(poRequestDetail?.id)

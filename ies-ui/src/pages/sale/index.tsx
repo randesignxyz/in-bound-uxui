@@ -3,18 +3,33 @@ import userIcon from '@/assets/customer.png';
 import deliveryIcon from '@/assets/delivery.png';
 import plannerIcon from '@/assets/planner.png';
 import productIcon from '@/assets/product.png';
+import scheduleIcon from '@/assets/schedule.png';
+
+import pricingIcon from '@/assets/price-64.png';
 // import customerIcon from '@/assets/people.png';
 import settlementIcon from '@/assets/receive-cash.png';
 // import orderItemIcon from '@/assets/requisition.png';
 import dailyReportIcon from '@/assets/dsd-report-icon.png';
 
 // import soInvoiceIcon from '@/assets/sale-invoice.png';
+import agreementIcon from '@/assets/agreement.png';
+import complainIcon from '@/assets/complain.png';
+import purchaseOrderIcon from '@/assets/order-items.png';
+
 import saleIcon from '@/assets/shopping.png';
 import stockIcon from '@/assets/stock.png';
 import storeIcon from '@/assets/store.png';
+import stockCountId from '@/assets/stock-count.png';
+
 import type { ListMenuItem } from '@/components/ListMenu';
 import ListMenuComp from '@/components/ListMenu';
-import { BarChartOutlined, PlusCircleOutlined } from '@ant-design/icons';
+import {
+  BarChartOutlined,
+  PlusCircleOutlined,
+  ScheduleOutlined,
+  TagsOutlined,
+  TeamOutlined,
+} from '@ant-design/icons';
 import { Divider, Menu, message } from 'antd';
 import { useState } from 'react';
 import { history, useAccess } from 'umi';
@@ -22,6 +37,7 @@ import type { ReportName } from './reports';
 
 import { PageContainer } from '@ant-design/pro-components';
 import { MenuProps } from 'rc-menu';
+import { MPUPath } from './mpu';
 import Reports from './reports';
 {
   /* <TeamOutlined /> */
@@ -46,12 +62,14 @@ export const SalePaths = {
   product: '/sale/product',
   uom: '/sale/uom',
   teamWork: '/sale/team-work',
+  visit: '/sale/visit',
   // ------------- retailer app -------------
   retailer: '/retailer',
   customer: '/retailer/customers/list',
   groupCustomer: '/retailer/group/customer/list',
   order: '/retailer/order/list',
   user: '/sale/user',
+  pricing: '/sale/pricing',
 };
 
 export default () => {
@@ -111,15 +129,21 @@ export default () => {
     />
   );
 
-  const leadReportMenu = (
+  const reportsMenu = (
     <Menu
       onClick={(info) => {
         switch (info.key) {
           // case 'newSaleOrder':
           //   history.push(`${SalePaths.so}/create`);
           //   break;
-          case 'lead-report':
+          case 'lead-reports':
             setReport('dsd-lead-report');
+            break;
+          case 'dsd-reports':
+            setReport('dsd-reports');
+            break;
+          case 'visit-reports':
+            setReport('visit-report');
             break;
           default:
             message.error('Something went wrong.');
@@ -127,20 +151,19 @@ export default () => {
         return undefined;
       }}
       items={[
+        // getItem('Export Leads', 'lead-reports', <BarChartOutlined />),
+        // getItem('Sales Invoice Report', 'dsd-reports', <AuditOutlined />),
         getItem(
           'Reports',
           'lead-report-menu',
           null,
-          [getItem('Export Leads', 'lead-report', <BarChartOutlined />)],
+          [
+            getItem('Export Leads', 'lead-reports', <TeamOutlined />),
+            getItem('Sales Invoice Report', 'dsd-reports', <TagsOutlined />),
+            getItem('Visit Report', 'visit-reports', <ScheduleOutlined />),
+          ],
           'group',
         ),
-        // getItem(
-        //   'Reports',
-        //   'report-menu',
-        //   null,
-        //   [getItem('Sale Order Report', 'sale-order-report', <BarChartOutlined />)],
-        //   'group',
-        // ),
       ]}
     />
   );
@@ -169,14 +192,15 @@ export default () => {
   //   />
   // );
 
-  const stockMenuItems = [
+  const stockMenuItems: ListMenuItem[] = [
     {
       id: 'suggestion',
       name: 'Task List',
       description: 'Task list of stock control',
       link: `${SalePaths.suggestion}/list`,
       icon: plannerIcon,
-      visible: access.canAcessStockControlMenuItem || access.canAccessSettlementMenuItem,
+      // visible: access.canAcessStockControlMenuItem || access.canAccessSettlementMenuItem,
+      visible:access.canAccessSaleTaskList
     },
     {
       id: 'store',
@@ -184,15 +208,25 @@ export default () => {
       description: 'Store for Van Sale and MPU',
       link: `${SalePaths.store}/list`,
       icon: storeIcon,
-      visible: access.canAccessAllMenuDSD,
+      // visible: access.canAccessAllMenuDSD || access.canAccessTabWarehouse,
+      visible : access.canAccessSaleStore
     },
     {
       id: 'stock',
       name: 'Stock Control',
-      description: 'Van Sale or MPU',
+      description: 'Van Sale',
       link: `${SalePaths.stock}/list`,
       icon: stockIcon,
       visible: access.canAcessStockControlMenuItem,
+    },
+    {
+      id: 'sales-visit',
+      name: 'Visit',
+      description: 'DSD Visit',
+      link: `${SalePaths.visit}/list`,
+      icon: scheduleIcon,
+      // visible: access.canAccessAllMenuDSD,
+      visible: access.canAccessSaleVisit,
     },
     {
       id: 'settlement',
@@ -200,16 +234,18 @@ export default () => {
       description: 'Cash collection list',
       link: `${SalePaths.settlement}/list`,
       icon: settlementIcon,
-      visible: access.canAccessSettlementMenuItem,
+      // visible: access.canAccessSettlementMenuItem,
+      visible: access.canAccessSaleCash,
     },
     {
       id: 'lead',
       name: 'Lead',
       description: 'DSD Customers',
       link: `${SalePaths.lead}/list`,
-      overlay: leadReportMenu,
+      //overlay: leadReportMenu,
       icon: userIcon,
-      visible: access.canAccessAllMenuDSD,
+      // visible: access.canAccessAllMenuDSD,
+      visible: access.canAccessSaleLead,
     },
     {
       id: 'daily',
@@ -217,21 +253,79 @@ export default () => {
       description: 'Daily report',
       link: `${SalePaths.daily}/list`,
       icon: dailyReportIcon,
-      visible: access.canAccessARMenuItem,
+      visible: access.canAccessSaleDailyReport,
     },
     {
       id: 'dsdReport',
-      name: 'DSD Reports',
-      description: 'Sales Invoice and Sale Items',
-      // link: `${SalePaths.daily}/list`,
+      name: 'Reports',
+      description: 'All Reports in DSD.',
       icon: reportIcon,
       visible: access.canAccessAllMenuDSD,
-      onClick: () => {
-        setReport('dsd-reports');
-      },
-      // isMenu: true,
-      //overlay: reportMenus,
+      menu: {
+        onClick: (info) => {
+          switch (info.key) {
+            // case 'newSaleOrder':
+            //   history.push(`${SalePaths.so}/create`);
+            //   break;
+            case 'lead-reports':
+              setReport('dsd-lead-report');
+              break;
+            case 'dsd-reports':
+              setReport('dsd-reports');
+              break;
+            case 'visit-reports':
+              setReport('visit-report');
+              break;
+            default:
+              message.error('Something went wrong.');
+          }
+          return undefined;
+        },
+        items: [
+          // getItem('Export Leads', 'lead-reports', <BarChartOutlined />),
+          // getItem('Sales Invoice Report', 'dsd-reports', <AuditOutlined />),
+          getItem(
+            'Reports',
+            'lead-report-menu',
+            null,
+            [
+              getItem('Export Leads', 'lead-reports', <TeamOutlined />),
+              getItem('Sales Invoice Report', 'dsd-reports', <TagsOutlined />),
+              getItem('Visit Report', 'visit-reports', <ScheduleOutlined />),
+            ],
+            'group',
+          ),
+        ]
+      }
+      // overlay: reportsMenu,
+      // onClick: () => {
+      //   setReport('dsd-reports');
+      // },
     },
+    {
+      id: 'item-sales-line-price',
+      name: 'Pricing',
+      description: 'Setting Pricing for DSD',
+      icon: pricingIcon,
+      visible: access.canAccessAllMenuDSD,
+      link: `${SalePaths.pricing}/list`,
+    },
+    {
+      id: 'settlement',
+      name: 'Settlement',
+      description: '',
+      icon: settlementIcon,
+      // visible: access.canAccessAllMenuDSD,
+      link: `${MPUPath.mpuSettlement}/list`,
+    },
+    {
+      id: 'stock-count',
+      name: 'Stock Counts',
+      description: '',
+      icon: stockCountId,
+      // visible: access.canAccessAllMenuDSD,
+      link: `${MPUPath.mpuCountStock}/list`,
+    }, 
   ];
 
   const items: ListMenuItem[] = [
@@ -241,9 +335,38 @@ export default () => {
       description: 'Sale Order List',
       link: `${SalePaths.so}/list`,
       icon: saleIcon,
-      //      isMenu: true,
-      overlay: soMenu,
-      // menu: soMenu,
+      menu: {
+        onClick: (info) => {
+          switch (info.key) {
+            case 'newSaleOrder':
+              history.push(`${SalePaths.so}/create`);
+              break;
+            case 'sale-order-report':
+              setReport('sale-order-report');
+              break;
+            default:
+              message.error('Something went wrong.');
+          }
+          return undefined;
+        },
+        items: [
+          getItem(
+            'Actions',
+            'action-menu',
+            null,
+            [getItem('New SO', 'newSaleOrder', <PlusCircleOutlined />)],
+            'group',
+          ),
+          getItem(
+            'Reports',
+            'report-menu',
+            null,
+            [getItem('Sale Order Report', 'sale-order-report', <BarChartOutlined />)],
+            'group',
+          ),
+        ]
+      }
+      // overlay: soMenu,
     },
     {
       id: 'deliveryPlan',
@@ -259,6 +382,51 @@ export default () => {
       visible: access.canAcessStockControlMenuItem,
       link: `${SalePaths.product}/list`,
       icon: productIcon,
+    },
+  ];
+
+  const mpuMenuItems = [
+    // {
+    //   id: 'rsm_request',
+    //   // name: 'RSM Request',
+    //   name: 'Purchase Request',
+    //   description: 'Order Items',
+    //   link: `${MPUPath.rsmRequest}/list`,
+    //   icon: agreementIcon,
+    //   visible: access.canAccessViewMpu,
+    // },
+    {
+      id: 'mpu_po',
+      name: 'Purchase Order',
+      description: 'make po for request stock',
+      link: `${MPUPath.mpuPurchaseOrder}/list`, 
+      icon: purchaseOrderIcon,
+      visible: access.canAccessViewMpu,
+    },
+    {
+      id: 'mpu_stock',
+      name: 'MPU Stock',
+      description: '',
+      link: `${MPUPath.mpuStock}/list`,
+      icon: stockIcon,
+      visible: access.canAccessViewMpu,
+    },
+    {
+      id: 'mpu_count_stock',
+      name: 'Daily Count Stock',
+      description: '',
+      link: `${MPUPath.mpuCountStock}/list`,
+      icon: complainIcon,
+      visible: access.canAccessViewMpu,
+    },
+
+    {
+      id: 'mpu_report',
+      name: 'MPU Report',
+      description: '',
+      link: `${MPUPath.mpuReport}/list`,
+      icon: reportIcon,
+      visible: access.canAccessViewMpu,
     },
   ];
 
@@ -290,23 +458,24 @@ export default () => {
 
   return (
     <PageContainer title={false}>
-      {access.canAccessSaleMenuItems && (
-        <>
-          <ListMenuComp items={items} />
-          <Divider />
-        </>
-      )}
+      {access.canAccessSaleMenuItems && <ListMenuComp items={items} />}
       {/* <ListMenuComp items={retailerMenuItems} /> */}
       <Reports reportName={report} onClose={() => setReport(undefined)} />
+
       {(access.canAcessStockControlMenuItem ||
         access.canAccessSettlementMenuItem ||
-        access.canAccessARMenuItem) && <ListMenuComp items={stockMenuItems} />}
-      {/* {access.canAccessRetailer && (
+        access.canAccessARMenuItem) && (
+          <>
+            <Divider/>
+            <ListMenuComp items={stockMenuItems} />
+          </>
+        )}
+      {access.canAccessViewMpu && (
         <>
-          <Divider />
-          <ListMenuComp items={retailerMenuItems} />
+          <Divider plain orientation='left' >MPU</Divider>
+          <ListMenuComp items={mpuMenuItems} />
         </>
-      )} */}
+      )}
     </PageContainer>
   );
 };

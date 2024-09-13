@@ -1,7 +1,7 @@
 import FileUploader from '@/components/Attachment/FileUploader';
 import { EmployeeServices } from '@/pages/hrm/services';
 import { ProcessFlowModalWrapper } from '@/pages/process-flow/components/ProcessFlowModalWrapper';
-import { formatDate, formatter, formatterPercentage } from '@/pages/utils';
+import { formatter, formatterPercentage } from '@/pages/utils';
 import { LookupDataItem } from '@/services/data';
 import { RequisitionListItem } from '@/services/pro/data';
 import { UserResult } from '@/services/process-workflow/data';
@@ -13,16 +13,17 @@ import {
   DeleteOutlined,
   InfoCircleOutlined,
   MinusCircleOutlined,
+  PaperClipOutlined,
   PlusOutlined,
   QuestionCircleOutlined,
   SplitCellsOutlined,
+  StockOutlined,
   SwapOutlined,
 } from '@ant-design/icons';
 import {
   EditableFormInstance,
   EditableProTable,
   FooterToolbar,
-  PageContainer,
   ProCard,
   ProColumns,
   ProForm,
@@ -31,7 +32,6 @@ import {
   ProFormText,
   ProFormTextArea,
 } from '@ant-design/pro-components';
-import { history } from '@umijs/max';
 import {
   App,
   Button,
@@ -53,6 +53,7 @@ import { PriceComparisonSavePayload } from './data';
 import ItemFinder from './ItemFinder';
 import { PriceComparisonFormNames } from './process-flow/data';
 import { createPriceComparisonService } from './service';
+import { useInView } from 'react-intersection-observer';
 
 export type PriceOfferType = 'first' | 'last';
 
@@ -150,6 +151,7 @@ const offerComparisons: { label: string; value: PriceOfferType; id: number }[] =
 export default ({
   // id,
   onBack,
+  onView
   // onEdit,
   // onAdd,
 }: {
@@ -158,6 +160,7 @@ export default ({
   onBack: () => void;
   onAdd?: (id?: number) => void;
   onEdit?: (id: number) => void;
+  onView?: (processInstId: string, fornNo: string) => void;
 }) => {
   const { message } = App.useApp();
   const priceComparisonSrv = createPriceComparisonService();
@@ -189,6 +192,8 @@ export default ({
     priceOffer: PriceOfferType;
     vendorKey?: string;
   }>();
+
+  const { ref, inView } = useInView({});
 
   const onAddOtherCostHandler = (type: SummaryTypes) => {
     const seq = otherCost.filter((it) => it.type == type).length + 1;
@@ -567,8 +572,6 @@ export default ({
             const quotation = quotations.find(
               (q) => q.priceOffer == po.value && q.vendor.id == v.id,
             );
-
-
             return {
               priceOffer: po.value,
               vendorId: v.id,
@@ -654,7 +657,11 @@ export default ({
         } as AddPriceComparisonItem),
       );
 
+
     setItems((v) => [...v, ...addedItems].map((it, index) => ({ ...it, seq: index + 1 })));
+
+    console.log([...items, ...addedItems]);
+
 
     setFinderVisible(undefined);
   };
@@ -781,8 +788,6 @@ export default ({
             ],
           }}
         >
-
-
           <Flex align='flex-end' vertical>
             {[<Typography.Link>{vendor.name}</Typography.Link>, <Typography.Text type="secondary"> {quotation?.code}</Typography.Text>].filter(it => it).map((it, index) => (<Flex key={`${vendor.key}-${index}`}> {it}</Flex>))}
           </Flex>
@@ -903,75 +908,79 @@ export default ({
     comment?: string,
   ) => {
     const dataForm = await form.validateFields();
-    const saveData: PriceComparisonSavePayload = {
-      processDef: processDef,
-      formKey: formKey,
-      buId: buId,
-      isService: isService,
-      requestor: requestor.id,
-      acceptedBy: dataForm.acceptedBy,
-      remarks: comment!!,
-      justifications: dataForm.justifications,
-      items: items.map((it) => {
-
-        const selectedQuotation = quotations.find(q => q.id == itemsSelected.find(it1 => it1.key == it.key)?.quotationId)
-        return {
-          itemId: it.itemId,
-          seq: it.seq,
-          baseItemId: selectedQuotation?.items.find(it1 => it1.itemId == it.itemId && it1.baseItemId == it.baseItemId)?.id,
-          baseType: 'PQ',
-          itemCode: it.itemCode,
-          itemName: it.itemName,
-          description: it.description,
-          qty: it.qty,
-          targetPrice: it.targetPrice || 0,
-          uomId: it.uomList.find((it) => it.name == it.name)?.id || it.uomId,
-          uomName: it.uomName,
-          quotationList: quotations.map((q) => ({
-            quotationId: q.id,
-            quotationNo: q.code,
-            vendorId: q.vendor.id || 0,
-            vendorCode: q.vendor.code,
-            vendorName: q.vendor.name,
-            priceOffer: q.priceOffer == 'first' ? 1 : 0,
-            selected: itemsSelected.some(
-              (it1) => it1.vendorId == q.vendor.id && it1.priceOffer == q.priceOffer && it1.key == it.key,
-            ),
-            price: q.items.find((it1) => it1.itemId == it.itemId && it1.baseItemId == it.baseItemId)?.price || 0,
-          })),
-        };
-      }),
-      otherCostItems: summary.map((it) => ({
-        seq: 0,
-        type: it.type,
-        key: it.key,
-        providerName: it.title || '',
-        items: (it.values || []).map((it1) => ({
-          priceOffer: it1.priceOffer == 'first' ? 1 : 0,
-          vendorId: it1.vendorId,
-          amount: it1.numberValue,
-          selected: it1.selected || false,
-          text: it1.stringValue,
-        })),
-      })),
-      files: uploadFiles,
-    };
     try {
+      const acceptedFunction = await EmployeeServices.fetchFunctionByUser(dataForm.acceptedBy).query()
+      const saveData: PriceComparisonSavePayload = {
+        processDef: processDef,
+        formKey: formKey,
+        buId: buId,
+        isService: isService,
+        requestor: requestor.id,
+        acceptedBy: dataForm.acceptedBy,
+        acceptedFunctionId: acceptedFunction.id,
+        acceptedFunction: acceptedFunction.name,
+        remarks: comment!!,
+        justifications: dataForm.justifications,
+        items: items.map((it) => {
+          const selectedQuotation = quotations.find(q => q.id == itemsSelected.find(it1 => it1.key == it.key)?.quotationId)
+          return {
+            itemId: it.itemId,
+            seq: it.seq,
+            baseItemId: selectedQuotation?.items.find(it1 => it1.itemId == it.itemId && it1.baseItemId == it.baseItemId)?.id,
+            baseType: 'PQ',
+            itemCode: it.itemCode,
+            itemName: it.itemName,
+            description: it.description,
+            qty: it.qty,
+            targetPrice: it.targetPrice || 0,
+            uomId: it.uomList.find((it) => it.name == it.name)?.id || it.uomId,
+            uomName: it.uomName,
+            quotationList: quotations.map((q) => ({
+              quotationId: q.id,
+              quotationNo: q.code,
+              vendorId: q.vendor.id || 0,
+              vendorCode: q.vendor.code,
+              vendorName: q.vendor.name,
+              priceOffer: q.priceOffer == 'first' ? 1 : 0,
+              selected: itemsSelected.some(
+                (it1) => it1.vendorId == q.vendor.id && it1.priceOffer == q.priceOffer && it1.key == it.key,
+              ),
+              price: q.items.find((it1) => it1.itemId == it.itemId && it1.baseItemId == it.baseItemId)?.price || 0,
+            })),
+          };
+        }),
+        otherCostItems: summary.map((it) => ({
+          seq: 0,
+          type: it.type,
+          key: it.key,
+          providerName: it.title || '',
+          items: (it.values || []).map((it1) => ({
+            priceOffer: it1.priceOffer == 'first' ? 1 : 0,
+            vendorId: it1.vendorId,
+            amount: it1.numberValue,
+            selected: it1.selected || false,
+            text: it1.stringValue,
+          })),
+        })),
+        files: uploadFiles,
+      };
       const rs = await priceComparisonSrv.saveItem(saveData);
       const { processInstId, formNo } = rs;
+      onView?.(processInstId, formNo)
       message.success(`Your request is submitted. Please track the request with form no ${formNo}`);
-      history.push(`/data-form/${PriceComparisonFormNames.processDefKey}/${processInstId}`);
+      // history.push(`/data-form/${PriceComparisonFormNames.processDefKey}/${processInstId}`);
     } catch (error: any) {
       message.error(error.message || 'Failed to make request.');
     }
   };
   return (
-    <PageContainer title="Price Comparison Requisition Form" onBack={() => history.back()}>
+    <div ref={ref}>
       <ProForm
+
         form={form}
         submitter={{
           render: () => (
-            <FooterToolbar>
+            inView ? <FooterToolbar>
               <Button style={{ marginRight: 10 }} onClick={onBack}>
                 Cancel
               </Button>
@@ -1002,11 +1011,13 @@ export default ({
               >
                 Submit
               </Button>
-            </FooterToolbar>
+            </FooterToolbar> : <></>
           ),
         }}
       />
       <ProCard
+        size='small'
+        title={<Space><StockOutlined />Quotation Comparison</Space>}
         direction="column"
         extra={
           <Space align="baseline">
@@ -1092,7 +1103,7 @@ export default ({
                       <Popconfirm
                         key={`${row.key}-split`}
                         title="Split item"
-                        description="Are you sure to delete?"
+                        description="Are you sure to split?"
                         onConfirm={() => {
                           const first = items.filter((it) => it.seq < row.seq);
                           const last = items.filter((it) => it.seq > row.seq);
@@ -1136,7 +1147,6 @@ export default ({
                   </Flex>
                 ),
               },
-
               {
                 title: 'Description',
                 valueType: 'textarea',
@@ -1477,7 +1487,7 @@ export default ({
           />
         </ProCard>
 
-        <ProCard title="Attachment Files" bordered style={{ marginBlockStart: 8 }}>
+        <ProCard title={<Space size={0}><PaperClipOutlined />Attachment Files</Space>} bordered style={{ marginBlockStart: 8 }}>
           <FileUploader
             multiple
             showTitle={false}
@@ -1488,7 +1498,7 @@ export default ({
             }}
           />
         </ProCard>
-      </ProCard>
+      </ProCard >
 
       <ProcessFlowModalWrapper
         type="action"
@@ -1529,6 +1539,6 @@ export default ({
         // onSave={  => onAddItemHandler}
         isService={isService}
       />
-    </PageContainer>
+    </div >
   );
 };

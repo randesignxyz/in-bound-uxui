@@ -1,3 +1,4 @@
+import { kc } from "@/auth";
 import { getUploadFileObjectUrlV2 } from "@/services/apiGateway";
 import { getServiceUrl } from "@/services/ApiUrl"
 import { LoadingOutlined, UploadOutlined } from "@ant-design/icons";
@@ -5,7 +6,7 @@ import { Upload, UploadFile, UploadProps } from "antd"
 import { UploadChangeParam } from "antd/lib/upload";
 import { CSSProperties, useEffect, useState } from "react";
 
-export default ({style, onSave, imageId}:{ style?: CSSProperties,  onSave: (fileId: string) => void, imageId?: string}) => {
+export default ({ style, onSave, imageId }: { style?: CSSProperties, onSave: (fileId: string) => void, imageId?: string }) => {
 
     const [loading, setLoading] = useState(false);
     const [imageUrl, setImageUrl] = useState<string>();
@@ -38,7 +39,7 @@ export default ({style, onSave, imageId}:{ style?: CSSProperties,  onSave: (file
         }
     };
 
-    useEffect(()=> {
+    useEffect(() => {
         imageId && getFileUrl(imageId).then(setImageUrl)
     }, [imageId])
     return <Upload
@@ -50,11 +51,11 @@ export default ({style, onSave, imageId}:{ style?: CSSProperties,  onSave: (file
         listType="picture-card"
         className="avatar-uploader"
         action={uploadUrl()}
-        onChange = {handleChange}
+        onChange={handleChange}
         showUploadList={false}
 
     >
-        {imageUrl ? <img src={imageUrl} alt="avatar" style={ style || { width: '100%' }} /> : uploadButton}
+        {imageUrl ? <img src={imageUrl} alt="avatar" style={style || { width: '100%' }} /> : uploadButton}
     </Upload>
 
 }

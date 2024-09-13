@@ -1,7 +1,11 @@
+import { QueueServices } from "@/pages/queue/services/queue-service"
 import { MultiRequest, execDataService0 } from "@/services/apiGateway"
-import { LoadingCapacityListItem, LoadingDock, TransportSource } from "@/services/delivery/data"
+import { LookupData } from "@/services/data"
+import { LoadingCapacityListItem, LoadingDock, QRCodeListItem, TransportSource } from "@/services/delivery/data"
 import { DeliveryParams } from "@/services/delivery/delivery-params"
 import { LoadingServiceParams } from "@/services/delivery/loading-bay-service-params"
+import { LoadingParams } from "@/services/delivery/loading-params"
+import { ReqQueuetParams } from "@/services/delivery/queue-params"
 import { simpleRequestActions } from "@/services/model"
 import { ModalForm, ProFormSelect, ProFormTextArea } from "@ant-design/pro-components"
 import { Modal, Spin, message } from "antd"
@@ -14,7 +18,7 @@ type DataFormType = {
     remarks?: string
 }
 
-export default ({ trigger, type, onRefresh }: { trigger?: JSX.Element, type: 'WAREHOUSE' | 'DELIVERY' , onRefresh?: ()=> void} ) => {
+export default ({ trigger, type, onRefresh }: { trigger?: JSX.Element, type: 'WAREHOUSE' | 'DELIVERY', onRefresh?: () => void }) => {
 
     const requestActions = simpleRequestActions()
     const [open, setOpen] = useState(false)
@@ -22,6 +26,10 @@ export default ({ trigger, type, onRefresh }: { trigger?: JSX.Element, type: 'WA
         transportSourceList: TransportSource[];
         loadingCapacityList: LoadingCapacityListItem[];
         loadingDockList: LoadingDock[];
+        qrCodeList: QRCodeListItem[];
+        warehouses: LookupData[];
+
+
     }>()
 
     useEffect(() => {
@@ -33,10 +41,15 @@ export default ({ trigger, type, onRefresh }: { trigger?: JSX.Element, type: 'WA
             transportSourceList: TransportSource[];
             loadingCapacityList: LoadingCapacityListItem[];
             loadingDockList: LoadingDock[];
+            qrCodeList: QRCodeListItem[]
+            warehouses: LookupData[]
 
-        }>([DeliveryParams.listAllTranSource(),
-        LoadingServiceParams.listLoadingCapacity(),
-        LoadingServiceParams.listAllLoadingDock(),
+        }>([
+            DeliveryParams.listAllTranSource(),
+            LoadingServiceParams.listLoadingCapacity(),
+            LoadingServiceParams.listAllLoadingDock(),
+            ReqQueuetParams.listAllQRCode(),
+            LoadingParams.listWarehouse.queryParams,
         ])(
             requestActions,
         );
@@ -45,14 +58,16 @@ export default ({ trigger, type, onRefresh }: { trigger?: JSX.Element, type: 'WA
             transportSourceList: rs.transportSourceList,
             loadingCapacityList: rs.loadingCapacityList,
             loadingDockList: rs.loadingDockList,
+            qrCodeList: rs.qrCodeList,
+            warehouses: rs.warehouses
         })
     }
 
     return <ModalForm<DataFormType>
         modalProps={{ destroyOnClose: true }}
         title="Check In"
-        open = {open}
-        onOpenChange={setOpen }
+        open={open}
+        onOpenChange={setOpen}
         onFinish={async (dataForm) => {
             Modal.confirm({
                 title: 'Check in',
@@ -67,16 +82,18 @@ export default ({ trigger, type, onRefresh }: { trigger?: JSX.Element, type: 'WA
                         onRefresh?.()
                     } catch (error: any) {
                         message.error(error.message || 'Failed to check in.')
-                      
+
                     }
                 }
-            }) 
+            })
 
         }}
         trigger={trigger}>
         <Spin spinning={requestActions.request?.loading || false}>
+            {type == 'DELIVERY' && <ProFormSelect allowClear mode="multiple" name={'qrCodes'} label="QR Code" options={data?.qrCodeList.map(it => ({ label: it.name, value: it.id }))} />}
             {type == 'DELIVERY' && <ProFormSelect allowClear mode="multiple" name={'transportSources'} label="Transport Source" options={data?.transportSourceList.map(it => ({ label: it.name, value: it.id }))} />}
             {type == 'DELIVERY' && <ProFormSelect allowClear mode="multiple" name={'loadingCapacities'} label="Loading Capacity" options={data?.loadingCapacityList.map(it => ({ label: it.name, value: it.id }))} />}
+            {type == 'WAREHOUSE' && <ProFormSelect allowClear mode="multiple" name={'warehouses'} label="Warehouses" options={data?.warehouses.map(it => ({ label: it.name, value: it.id }))} />}
             {type == 'WAREHOUSE' && <ProFormSelect allowClear mode="multiple" name={'loadingDocks'} label="Loading Dock" options={data?.loadingDockList.map(it => ({ label: it.name, value: it.id }))} />}
             <ProFormTextArea name={"remarks"} label="Remarks" />
         </Spin>

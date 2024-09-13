@@ -16,7 +16,6 @@ import {
   StaffRequisitionRequest,
   SubDepartment,
 } from './data';
-import { Employee } from '@/services/process-workflow/data';
 
 export const EmployeeServices = {
   listBu: fetchDataListService<BU>({
@@ -28,6 +27,13 @@ export const EmployeeServices = {
   listDepartment: fetchDataListService<Department>({
     actionName: 'list-department',
     responseKey: 'deptList',
+    endpoint: 'HR',
+  }),
+
+  listDepartmentByIds: (ids: number[]) => fetchDataListService<Department, { ids: number[] }>({
+    actionName: 'list-department-by-ids',
+    responseKey: 'deptList',
+    payload: { ids },
     endpoint: 'HR',
   }),
 
@@ -50,8 +56,6 @@ export const EmployeeServices = {
       endpoint: 'HR',
       payload: { ids },
     }),
-
-
   list: (params: TableViewSearchParams<EmployeeAdvanceSearchParams>) =>
     fetchDataPagingService<EmployeeListItem, { searchValue?: string }>({
       actionName: 'list-employee',
@@ -62,7 +66,12 @@ export const EmployeeServices = {
         page: params.pagination?.current,
       },
     }),
-
+  EmployeeUpdate : (data: EmployeeListItem) =>
+    execDataService0<EmployeeListItem>({
+      actionName: 'update-employee-profile',
+      endpoint: 'HR',
+      payload: { ...data }
+    }), 
   requisitionRequest: (data: RequisitionData) =>
     execDataService<{ data: string }, RequisitionData>({
       actionName: 'staff-requisition-request',
@@ -139,6 +148,19 @@ export const EmployeeServices = {
     actionName: 'fetch-hod-of-users',
     endpoint: 'HR',
     payload: { buId, keywords, users }
+  }),
+
+  fetchFunctionByUser: (user: string) => fetchDataItemService<Department, { id: string }>({
+    actionName: 'fetch-function-by-user',
+    endpoint: 'HR',
+    payload: { id: user }
+  }),
+
+
+  fetchFunctionsByUsers: (users: string[]) => fetchDataListService<Department, { list: string[] }>({
+    actionName: 'fetch-function-by-users',
+    endpoint: 'HR',
+    payload: { list: users }
   }),
 
   fetchHodByDeptAndBu: (deptId: number, buId: number) => fetchDataItemService<EmployeeListItem, { deptId: number; buId: number; }>({

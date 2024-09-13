@@ -3,15 +3,14 @@ import { Paging } from "@/services/API"
 import { simpleRequestActions } from "@/services/model"
 import type { ActionType } from "@ant-design/pro-table"
 import { useModel } from "@umijs/max"
-import { Badge, Button, Dropdown, Modal, message } from "antd"
+import { Badge, Button, Modal, message } from "antd"
 import { useRef, useState } from "react"
 import { MeterHistoryDTO, MeterSearchParam } from "../data"
 import { VehicleServiceAPI } from "../service"
-import { BlockOutlined, ClockCircleOutlined, DeleteOutlined } from "@ant-design/icons"
+import { BlockOutlined, ClockCircleOutlined } from "@ant-design/icons"
 import Tooltip from "antd/lib/tooltip"
 import { Radio } from "antd/lib"
 import Omit from "omit.js"
-
 
 interface Props {
   id: string;
@@ -27,14 +26,10 @@ export default ({ id }: Props) => {
   });
   const actionRef = useRef<ActionType>()
   const cacheList = useModel('dataList');
-
   const onRequestHandler = async (params: TableViewSearchParams<MeterSearchParam>) => {
-
-
     try {
       return services.pageMeterHistory(
         { criteria: { 
-       
           sort: { ...params.criteria?.sort },
           searchValue:id,
           advanceSearch:{
@@ -47,7 +42,6 @@ export default ({ id }: Props) => {
           type: 'fleet-meter-history',
           criteria: params,
           data: it,
-
         });
       }) as Promise<Paging<MeterHistoryDTO>>;
     } catch (error: any) {
@@ -55,14 +49,9 @@ export default ({ id }: Props) => {
       return Promise.reject();
     }
   };
-
-
-
-
   return (
     <>
       <TableView<MeterHistoryDTO, { searchValue?: string }>
-        // disableSearch
         hasCriteria={Object.values(Omit(advanceSearchParams, ['status'])).some((v) => v)}
         displayOnly
         extraFilter={<Radio.Group
@@ -112,14 +101,12 @@ export default ({ id }: Props) => {
               <>
                 <span style={{ color: r.void ? "red" : "" }} >{r.meterValue.toFixed(2)} km </span>
                 {r.void && <Tooltip
-                  title={`This meter entry is marked as void because it was invalid or out of sequence. Voided meter entries are saved, but are ignored by ${r.updatedBy}`} >
+                  title={`This meter entry is marked as void because it was invalid or out of sequence. Voided meter entries are saved but are ignored by ${r.updatedBy}`} >
                   <ClockCircleOutlined style={{ color: r.void ? "red" : "" }} />
                 </Tooltip>}
               </>
-
             )
           },
-
           {
             key: "source",
             title: "Source",
@@ -137,7 +124,6 @@ export default ({ id }: Props) => {
             key: "reson",
             title: "Reason",
             dataIndex: "voidStatus",
-
           },
           {
             width: 100,
@@ -158,17 +144,13 @@ export default ({ id }: Props) => {
                   })
                 }}
               /></Tooltip>
-              {/* <Tooltip title="Delete"><Button style={{ color: "red" }} type="link" icon={<DeleteOutlined />} /></Tooltip> */}
             </>)
           }
-
         ]}
-
         tableProps={{
           actionRef: actionRef,
         }}
         actionHandlers={{
-          // onAdd: () => onAddHandler(),
           onRequest: (criteria, pagination, sort) =>
             onRequestHandler({
               criteria: {
@@ -195,11 +177,7 @@ export default ({ id }: Props) => {
               }
             }) as Promise<Paging<MeterHistoryDTO>>,
         }}
-
-
-
       />
-
     </>
   )
 }

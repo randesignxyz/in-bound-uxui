@@ -12,7 +12,8 @@ export const HrmPaths = {
     newStaffRequest: '/hrm/new-staff',
     staffProposalRequest: '/hrm/staff-proposal',
     appraisalSubmit: '/hrm/appraisal-submit',
-    appraisalRequest: '/hrm/appraisal-request'
+    appraisalRequest: '/hrm/appraisal-request',
+    probationEvaluation: '/hrm/probation-evaluation',
 }
 
 export default () => {
@@ -20,12 +21,12 @@ export default () => {
     const access = useAccess()
     const items: ListMenuItem[] = [
         {
-          id: 'employee',
-          name: 'Employee',
-          description: 'Employee List',
-          link: `${HrmPaths.employee}/list`,
-          visible: access.canAccessHrEmployeeMenuItem,
-          icon: requisitionIcon,
+            id: 'employee',
+            name: 'Employee',
+            description: 'Employee List',
+            link: `${HrmPaths.employee}/list`,
+            visible: access.canAccessHrEmployeeMenuItem,
+            icon: requisitionIcon,
         },
         {
             id: 'employee-requisition',
@@ -59,13 +60,20 @@ export default () => {
             link: `${HrmPaths.appraisalRequest}/list`,
             icon: performanceReview,
             menu: {
-                items: [{label: <PerformanceReport trigger={<a >Export</a>}/> , key: 'exportContract', icon: <ExportOutlined style={{ fontSize: '16px', color: '#08c' }}/>}]
+                items: [{ label: <PerformanceReport trigger={<a >Export</a>} />, key: 'exportContract', icon: <ExportOutlined style={{ fontSize: '16px', color: '#08c' }} /> }]
             }
-        }
+        },{
+            id: 'probation_evaluation',
+            name: 'Probation Evaluation',
+            description: 'Probation Evaluation Form',
+            visible: access.canAccessProbationEvaluation,
+            link: `${HrmPaths.probationEvaluation}/list`,
+            icon: requisitionIcon,
+        },
     ]
 
     return (
-        <PageContainer title = {false}>
+        <PageContainer title={false}>
             <ListMenuComp items={items} />
         </PageContainer>
     )

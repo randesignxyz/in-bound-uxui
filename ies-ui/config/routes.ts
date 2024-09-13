@@ -1,4 +1,6 @@
-﻿/**
+﻿import icons from "@/.umi/plugin-layout/icons";
+
+/**
  *
  * @doc https://umijs.org/docs/guides/routes
  */
@@ -70,12 +72,37 @@ export default [
     access: 'canAccessCrmMenuItem',
     component: './crm/customer',
   },
-
+  // {
+  //   path: '/crm/customer/new',
+  //   name: 'customers',
+  //   icon: 'UnorderedListOutlined',
+  //   hideInMenu: 'true',
+  //   access: 'canAccessCrmMenuItem',
+  //   component: './crm/customer/CustomerNew',
+  // },
+  {
+    path: '/external/crm/customer/:view/*',
+    name: 'view-customer',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    layout: false,
+    access: 'canAccessCrmMenuItem',
+    component: './crm/customer',
+  },
   {
     path: '/crm/visit-plan/:view/*',
     name: 'visit-plan',
     icon: 'TeamOutlined',
     hideInMenu: 'true',
+    access: 'canAccessCrmMenuItem',
+    component: './crm/visit-plan',
+  },
+  {
+    path: '/external/crm/visit-plan/:view/*',
+    name: 'visit-plan',
+    icon: 'TeamOutlined',
+    hideInMenu: 'true',
+    layout: false,
     access: 'canAccessCrmMenuItem',
     component: './crm/visit-plan',
   },
@@ -88,10 +115,28 @@ export default [
     component: './crm/visit-schedule',
   },
   {
+    path: '/external/crm/visit-schedule/:view/*',
+    name: 'visit-schedule',
+    icon: 'TeamOutlined',
+    hideInMenu: 'true',
+    layout: false,
+    access: 'canAccessCrmMenuItem',
+    component: './crm/visit-schedule',
+  },
+  {
     path: '/crm/contract/:view/*',
     name: 'contract',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
+    access: 'canAccessCrmMenuItem',
+    component: './crm/contract',
+  },
+  {
+    path: '/external/crm/contract/:view/*',
+    name: 'contract',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    layout: false,
     access: 'canAccessCrmMenuItem',
     component: './crm/contract',
   },
@@ -103,6 +148,23 @@ export default [
     access: 'canAccessCrmMenuItem',
     component: './crm/notification',
   },
+  {
+    path: '/crm/term/:view/*',
+    name: 'term',
+    icon: 'TeamOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessCrmMenuItem',
+    component: './crm/term',
+  },
+  {
+    path: '/external/crm/term/:view/*',
+    name: 'term',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    layout: false,
+    access: 'canAccessCrmMenuItem',
+    component: './crm/term',
+  },
 
   /**********<<Pro**************/
   {
@@ -111,6 +173,16 @@ export default [
     icon: 'FormOutlined',
     access: 'canAccessProMenuItem',
     component: './pro',
+
+  },
+
+  {
+    path: '/pro/setting',
+    name: 'pro-setting',
+    icons: 'FormOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessProSettingMenuItem',
+    component: './pro/setting',
   },
 
   {
@@ -184,8 +256,7 @@ export default [
     icon: 'FormOutlined',
     access: 'canAccessHrMenu',
     component: './hrm',
-  },
-
+  }, 
   {
     path: '/hrm/employee/:view/*',
     name: 'employee',
@@ -237,6 +308,23 @@ export default [
     access: 'canAccessAppraisalReaquest',
     component: './hrm/appraisal-request',
   },
+  {
+    path: '/hrm/probation-evaluation/:view/*',
+    name: 'probation-evaluation',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessProbationEvaluation',
+    component: './hrm/probation',
+  },
+  {
+    path: '/external/hrm/probation-evaluation/:view/*',
+    name: 'probation-evaluation',
+    icon: 'UnorderedListOutlined',
+    layout: false,
+    hideInMenu: 'true',
+    access: 'canAccessProbationEvaluation',
+    component: './hrm/probation',
+  },
   /**********HRM>>**************/
 
   /**********<<Sale**************/
@@ -252,6 +340,16 @@ export default [
     name: 'so',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
+    access: 'canAccessSaleMenuItems',
+    component: './sale/so',
+  },
+
+  {
+    path: 'external/sale/so/:view/*',
+    name: 'so',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    layout: false,
     access: 'canAccessSaleMenuItems',
     component: './sale/so',
   },
@@ -302,7 +400,17 @@ export default [
     name: 'store',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessAllMenuDSD',
+    // access: 'canAccessAllMenuDSD',
+    access: 'canAccessSaleStore',
+    component: './sale/store',
+  },
+  {
+    path: 'external/sale/store/:view/*',
+    name: 'store',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    layout: false,
+    access: 'canAccessSaleStore',
     component: './sale/store',
   },
   {
@@ -334,7 +442,8 @@ export default [
     name: 'lead',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessAllMenuDSD',
+    // access: 'canAccessAllMenuDSD',
+    access: 'canAccessSaleLead',
     component: './sale/lead',
   },
   {
@@ -345,12 +454,92 @@ export default [
     access: 'canAccessARMenuItem',
     component: './sale/daily_report',
   },
+  {
+    path: '/sale/visit/:view/*',
+    name: 'sales-visit',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    // access: 'canAccessAllMenuDSD',
+    access: 'canAccessSaleVisit',
+    component: './sale/visit',
+  },
+  {
+    path: '/sale/pricing/:view/*',
+    name: 'item-sales-line-price',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessAllMenuDSD',
+    component: './sale/pricing',
+  },
+  {
+    path: '/sale/mpu_settlement/:view/*',
+    name: 'item-sales-line-price',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    // access: 'canAccessAllMenuDSD',
+    component: './sale/mpu/settlement',
+  },
+
+  /******************* MPU *******************/
+
+  // {
+  //   path: '/sale/mpu',
+  //   name: 'mpu',
+  //   icon: 'UnorderedListOutlined',
+  //   access: 'canAccessViewMpu',
+  //   component: './sale/mpu',
+  // },
+
+  // {
+  //   path: '/sale/stock/:view/*',
+  //   name: 'stock',
+  //   icon: 'UnorderedListOutlined',
+  //   hideInMenu: 'true',
+  //   access: 'canAcessStockControlMenuItem',
+  //   component: './sale/stock-control',
+  // },
+
+  {
+    path: '/sale/mpu/:view/*',
+    name: 'sale_rsm_request',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessViewMpu',
+    component: './sale/mpu/request',
+  },
+  {
+    path: '/sale/mpu_stock/:view/*',
+    name: 'sale_mpu_stock',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessViewMpu',
+    component: './sale/mpu/stock',
+  },
+  {
+    path: '/sale/mpu_purchase_order/:view/*',
+    name: 'sale_mpu_purchase_order',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessViewMpu',
+    component: './sale/mpu/purchase_order',
+  },
+  {
+    path: '/sale/mpu_count_stock/:view/*',
+    name: 'sale_mpu_count_stock',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    // access: 'canAccessViewMpu',
+    component: './sale/mpu/count_stock',
+  },
+
+  /******************* MPU *******************/
+
   /******************* Retailer *******************/
   {
     path: '/retailer',
     name: 'retailer',
     icon: 'UnorderedListOutlined',
-    access: 'canViewRetailer',
+    access: 'canViewRetailerSalesperons',
     component: './sale/retailer',
   },
 
@@ -368,7 +557,7 @@ export default [
     name: 'retailer_cutomer_group',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canCreateRetailer',
+    access: 'canViewRetailerSalesperons',
     component: './sale/retailer/groupCustomer',
   },
 
@@ -385,7 +574,7 @@ export default [
     name: 'retailer_customer',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canViewRetailer',
+    access: 'canViewRetailerSalesperons',
     component: './sale/retailer/customer',
   },
   {
@@ -405,12 +594,22 @@ export default [
     access: 'canAccessRetailer',
     component: './sale/retailer/ingredient',
   },
+
+  {
+    path: '/retailer/customer_pricing/:view/*',
+    name: 'retailer_customer_pricing',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canViewRetailerSalesperons',
+    component: './sale/retailer/customer_pricing',
+  },
+
   {
     path: '/retailer/pricings/:view/*',
     name: 'retailer_pricing',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canCreateRetailer',
+    access: 'canViewRetailerSalesperons',
     component: './sale/retailer/pricing',
   },
   {
@@ -429,7 +628,6 @@ export default [
     access: 'canCreateRetailer',
     component: './sale/retailer/settings',
   },
-
   /******************* Retailer *******************/
 
   /******************* Developer *******************/
@@ -444,7 +642,7 @@ export default [
   /******************* Developer *******************/
 
   {
-    path: '/profile',
+    path: '/profile/:is_admin/:id',
     name: 'account',
     // icon: 'DeliveredProcedureOutlined',
     // access: 'canAccesDeliveyMenu',
@@ -505,7 +703,7 @@ export default [
     component: './delivery/loading',
   },
   {
-    path: '/delivery/tracking',
+    path: '/delivery/tracking1',
     name: 'delivery-tracking',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
@@ -588,7 +786,14 @@ export default [
     access: 'canAccessDeliveryTruck',
     component: './delivery/truck',
   },
-
+  {
+    path: '/delivery/tracking',
+    name: 'location-tracking',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessDeliveryTruck',
+    component: './delivery/location-tracking',
+  },
 
   /************************ Queque  ******************/
 
@@ -795,7 +1000,6 @@ export default [
   },
   /*************Delivery Expense>>********************/
 
-
   //  =================  FLEET =================
 
   {
@@ -813,11 +1017,26 @@ export default [
     access: 'canAccessFleetMenu',
     component: './fleet/vehicle/',
   },
-
+  {
+    path: '/external/fleet/vehicle/:view/*',
+    layout: false,
+    name: "fleet",
+    component: './fleet/vehicle/',
+    access: 'canAccessFleetMenu',
+    hideInMenu: 'true',
+  },
 
   {
     path: '/fleet/maintenance/:view/*',
     name: 'fleet_maintenence',
+    hideInMenu: 'true',
+    access: 'canAccessFleetMenu',
+    component: './fleet/maintenance/',
+  },
+  {
+    path: '/external/fleet/maintenance/:view/*',
+    name: 'fleet_maintenence',
+    layout: false,
     hideInMenu: 'true',
     access: 'canAccessFleetMenu',
     component: './fleet/maintenance/',
@@ -830,11 +1049,21 @@ export default [
     component: './fleet/inspection/',
   },
   {
-    path: '/fleet/accident/:view/*',
-    name: 'fleet_accident',
+    path: '/external/fleet/inspection/:view/*',
+    name: 'inspection',
+    layout:false,
     hideInMenu: 'true',
     access: 'canAccessFleetMenu',
-    component: './fleet/accident/',
+    component: './fleet/inspection/',
+  },
+
+  {
+    path: '/external/fleet/inspection/:view/*',
+    name: 'inspection',
+    layout: false,
+    hideInMenu: 'true',
+    access: 'canAccessFleetMenu',
+    component: './fleet/inspection/',
   },
   {
     path: '/fleet/fuel/:view/*',
@@ -844,11 +1073,11 @@ export default [
     component: './fleet/fuel/',
   },
   {
-    path: '/fleet/add-on/:view/*',
-    name: 'fleet_add_on',
+    path: '/fleet/setting/:view',
+    name: 'Setting',
     hideInMenu: 'true',
     access: 'canAccessFleetMenu',
-    component: './fleet/addOn/',
+    component: './fleet/setting/',
   },
   {
     path: '/fleet/fuel-stock/:view/*',
@@ -892,17 +1121,39 @@ export default [
     access: 'canAccessFleetMenu',
     component: './fleet/fuelStock/',
   },
+  {
+    path: '/fleet/accessory/:view/*',
+    name: 'fleet_accessory',
+    hideInMenu: 'true',
+    access: 'canAccessFleetMenu',
+    component: './fleet/accessory/',
+  },
+  {
+    path: '/fleet/accessory/:view/*',
+    name: 'fleet_accessory',
+    hideInMenu: 'true',
+    access: 'canAccessFleetMenu',
+    component: './fleet/accessory/',
+  },
   //  ================= END FLEET =================
-
 
   // ================= DMS =======================
   {
-    path: "/dms",
-    name: "dms",
-    icon: "FileSearchOutlined",
-    component: "./dms",
-    access: "canAccessDMSMenu",
-    redirect: "/dms/workspace/library"
+    path: '/dms',
+    name: 'dms',
+    icon: 'FileSearchOutlined',
+    component: './dms',
+    access: 'canAccessDMSMenu',
+    redirect: '/dms/workspace/library',
+  },
+
+  {
+    path: '/dms/workspace/:view/*',
+    name: 'dms',
+    icon: 'FileSearchOutlined',
+    component: './dms',
+    access: 'canAccessDMSMenu',
+    hideInMenu: 'true',
   },
 
   {
@@ -932,6 +1183,35 @@ export default [
     path: "/dms/document/:view/*",
     name: "dms",
     component: "./dms/documentation",
+    access: "canAccessDMSMenu",
+    hideInMenu: 'true',
+  },
+  {
+    path: '/external/dms/document/:view/*',
+    layout: false,
+    name: "dms",
+    component: "./dms/documentation",
+    access: "canAccessDMSMenu",
+    hideInMenu: 'true',
+  },
+  {
+    path: "/dms/contracts/:view/*",
+    name: "dms",
+    component: "./dms/contract",
+    access: "canAccessDMSMenu",
+    hideInMenu: 'true',
+  },
+  {
+    path: "/dms/share/:view/:id",
+    name: "dms",
+    component: "./dms/share",
+    access: "canAccessDMSMenu",
+    hideInMenu: 'true',
+  },
+  {
+    path: "/dms/company/:view/*",
+    name: "dms",
+    component: "./dms/contract/company",
     access: "canAccessDMSMenu",
     hideInMenu: 'true',
   },
@@ -991,7 +1271,151 @@ export default [
   },
 
   //  ================= END Prod =================
+  //  ================= START In-house Stock ==============
+  {
+    path: '/whm',
+    name: 'whm',
+    icon: 'ReconciliationOutlined',
+    access: 'canAccessWhmMenut',
+    component: './fma-stock',
+  },
+  {
+    path: '/whm/issue/request/:view/*',
+    name: 'whm_issue_request',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessNcmIssueRequest',
+    component: './fma-stock/request',
+  },
+  {
+    path: '/whm/inventory/item/:view/*',
+    name: 'whm_inventory_item',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessWhmItemMenu',
+    component: './fma-stock/item',
+  },
+  {
+    path: '/external/whm/inventory/item/:view/*',
+    name: 'whm_inventory_item',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    layout: false,
+    access: 'canAccessWhmItemMenu',
+    component: './fma-stock/item',
+  },
+  {
+    path: '/whm/transfer/request/:view/*',
+    name: 'whm-transter-request',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessWhmInventoryTransferRequestMenu',
+    component: './fma-stock/transfer',
+  },
+  {
+    path: '/whm/inventory/empwhs/:view/*',
+    name: 'whm_inventory_empwhs',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessWhmEmpMappingMenu',
+    component: './fma-stock/emp-whs',
+  },
+  {
+    path: '/external/whm/inventory/empwhs/:view/*',
+    name: 'whm_inventory_empwhs',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    layout: false,
+    access: 'canAccessWhmEmpMappingMenu',
+    component: './fma-stock/emp-whs',
+  },
+  {
+    path: '/whm/adj/request/:view/*',
+    name: 'whm-adj-request',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessWhmInventoryTransferRequestMenu',
+    component: './fma-stock/adjustment',
+  },
+  
+  //  ================= END In-house Stock ================
+  
   //  ================= Setting =================
+  /**
+   * ESS Management
+   */
+  // {
+  //   path: '/ess/em/list',
+  //   name: 'inventoryTransfer',
+  //   icon: 'SettingOutlined',
+  //   hideInMenu: 'true',
+  //   access: 'canAccessInventoryTranferMenuItem',
+  //   component: './prod/inventory-transfer'
+  // },
+  {
+    path: '/ess',
+    name: 'ess',
+    icon: 'TeamOutlined', 
+    component: './ess'
+  },{
+    path: '/ess/:view/*',
+    name: 'ess',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessHrEmployeeMenuItem',
+    component: './ess/ess-announce',
+  },
+  
+  {
+    path: '/ess/details/:id',
+    name: 'Ess Annountment Details',
+    // icon: 'DeliveredProcedureOutlined',
+    // access: 'canAccesDeliveyMenu',
+    hideInMenu: 'true',
+    component: './ess/ess-announce/Details',
+  },
+  {
+    path: '/feedback',
+    name: 'feedback',
+    icon: 'TeamOutlined', 
+    hideInMenu: 'true',
+    component: './ess'
+  },
+  {
+    path: 'fleet/carbooking',
+    name: 'bookingcar',
+    icon: 'TeamOutlined', 
+    hideInMenu: 'true',
+    component: './fleet/carbooking'
+  },
+  /**
+   * End ESS Management
+   */
+  /* request car */
+  // {
+  //   path: 'fleet/booking/rqblist',
+  //   name: 'booking',
+  //   icon: 'TeamOutlined', 
+  //   hideInMenu: 'true',
+  //   component: './fleet/carbooking/bookinglist'
+  // },
+  // {
+  //   path: 'fleet/booking/ocplist',
+  //   name: 'booking',
+  //   icon: 'TeamOutlined', 
+  //   hideInMenu: 'true',
+  //   component: './fleet/carbooking/occupylist'
+  // },
+  // {
+  //   path: 'fleet/booking/bknew',
+  //   name: 'booking',
+  //   icon: 'TeamOutlined', 
+  //   hideInMenu: 'true',
+  //   component: './fleet/carbooking/occupylist'
+  // },
+
+  /* En request car */
+
 
   {
     path: '/setting',
@@ -1002,8 +1426,9 @@ export default [
   },
   {
     path: '/',
-    // component: 'initial-page',
-    redirect: '/task-list',
+    component: 'initial-page',
+    // redirect: '/user/auth',
+    // redirect: '/task-list',
     // redirect: '/expense/delivery',
   },
   {

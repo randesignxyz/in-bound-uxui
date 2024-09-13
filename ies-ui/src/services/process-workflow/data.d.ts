@@ -44,20 +44,19 @@ export interface ProcessInstanceDef extends MenuItem {
 }
 
 export type ProcessDefInfo = {
-  id: string
-  shortName?: string
-  description?: string
-  department?: LookupDataItem
-  urlPath?: string,
-  bizKeyFormat?: string
-  increment?: number,
-  startFormInNewPage: boolean,
-  liveDate?: Moment,
-  announcementDays?: number,
-  accessRole?: string
-
+  id: string;
+  shortName?: string;
+  description?: string;
+  department?: LookupDataItem;
+  urlPath?: string;
+  bizKeyFormat?: string;
+  increment?: number;
+  shownInEForms?: boolean;
+  startFormInNewPage: boolean;
+  liveDate?: Moment;
+  announcementDays?: number;
+  accessRole?: string;
 }
-
 
 export interface ProcessInstanceDefItem {
   id: string;
@@ -129,6 +128,25 @@ export interface DestUser {
   userId: string;
   userName?: string;
   email?: string;
+}
+
+
+export interface Delegation {
+  id: number;
+  approver: LookupDataItem
+  delegateUser?: LookupDataItem
+  effectiveDate: Moment
+  expiryDate?: Moment
+  remarks: string;
+}
+
+export interface DelegationSaveParams {
+  taskDefId: string;
+  approver: string,
+  delegateTo: string,
+  effectiveDate: Moment
+  expiryDate?: Moment
+  remarks: string;
 }
 
 export interface DestGroup {

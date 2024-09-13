@@ -982,6 +982,13 @@ export default [
     access: 'canAccessDailyHACCPMonitoringMenuItem',
     component: './prod/daily-haccp-monitoring/',
   },
+  {
+    path: '/prod/daily-haccp-monitoring-ozone/:view/*',
+    name: 'dailyHACCPMonitoringOzone',
+    hideInMenu: 'true',
+    access: 'canAccessDailyHACCPMonitoringOzoneMenuItem',
+    component: './prod/daily-haccp-monitoring-ozone/',
+  },
 
   //  ================= END Prod =================
   //  ================= Setting =================

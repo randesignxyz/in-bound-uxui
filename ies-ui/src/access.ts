@@ -433,6 +433,16 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           'ROLE_PROD_ADMIN'
         ].some((it) => it === item),
       ) || false,
+      canAccessDailyHACCPMonitoringOzoneMenuItem:
+      currentUser?.authorities.some((item) =>
+        [
+          'ROLE_ADMIN',
+          'ROLE_PROD_HACCP_USER',
+          'ROLE_PROD_PRO_ADMIN',
+          'ROLE_PROD_ADMIN'
+        ].some((it) => it === item),
+      ) || false,
+
 
     /*****Queque */
     canAccesSqueueMenu:

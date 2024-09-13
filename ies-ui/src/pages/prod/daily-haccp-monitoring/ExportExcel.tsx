@@ -15,12 +15,44 @@ interface Props extends FormModalProps {
 export default ({ loading, onSave, ...props }: Props) => {
   const [form] = useForm<{ line: string; duration: any }>();
   const [line, setLine] = useState('')
+  const [disabledOptions, setDisabledOptions] = useState({
+    Line2: false,
+    Line3: false,
+    Line4: false,
+    Line5: false,
+    Line6: false,
+  });
+
   useEffect(() => {
     if (props.open) {
       form.resetFields();
       setLine('')
+      setDisabledOptions({
+        Line2: false,
+        Line3: false,
+        Line4: false,
+        Line5: false,
+        Line6: false,
+      })
     }
   }, [props.open]);
+
+  const handleLineChange = (value: string[]) => {
+    const disableGroup1 = value.includes('Line 2') || value.includes('Line 3');
+    const disableGroup2 = value.includes('Line 4') || value.includes('Line 5') || value.includes('Line 6');
+
+    setDisabledOptions({
+      Line2: disableGroup2,
+      Line3: disableGroup2,
+      Line4: disableGroup1,
+      Line5: disableGroup1,
+      Line6: disableGroup1,
+    });
+
+    const lineString = value.join(',');
+    const finalValues = { line: lineString };
+    setLine(finalValues.line);
+  };
 
   return (
     <FormModalComp
@@ -40,36 +72,38 @@ export default ({ loading, onSave, ...props }: Props) => {
               <ProFormSelect
                 options={[
                   {
-                      value: 'Line 2',
-                      label: 'Line 2',
+                    value: 'Line 2',
+                    label: 'Line 2',
+                    disabled: disabledOptions.Line2,
                   },
                   {
-                      value: 'Line 3',
-                      label: 'Line 3',
+                    value: 'Line 3',
+                    label: 'Line 3',
+                    disabled: disabledOptions.Line3,
                   },
                   {
-                      value: 'Line 4',
-                      label: 'Line 4',
+                    value: 'Line 4',
+                    label: 'Line 4',
+                    disabled: disabledOptions.Line4,
                   },
                   {
-                      value: 'Line 5',
-                      label: 'Line 5',
+                    value: 'Line 5',
+                    label: 'Line 5',
+                    disabled: disabledOptions.Line5,
                   },
                   {
-                      value: 'Line 6',
-                      label: 'Line 6'
-                  }
-              ]}
+                    value: 'Line 6',
+                    label: 'Line 6',
+                    disabled: disabledOptions.Line6,
+                  },
+                ]}
                 name="line"
                 label="Line"
                 mode="multiple"
                 fieldProps={{
-                  onChange: (value: any) => {
-                    const lineString = value.join(',');
-                    const finalValues = { ...value, line: lineString };
-                    setLine(finalValues.line)
-                  },
+                  onChange: handleLineChange,
                 }}
+                rules={[{ required: true }]}
               />
             </Col>
           </Row>

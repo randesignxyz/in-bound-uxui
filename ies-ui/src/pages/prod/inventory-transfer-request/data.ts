@@ -79,7 +79,9 @@ export type TransferRequestAdvanceParams = {
   business_unit: string;
   state: string;
   count?: number;
-  transfer_type: string
+  transfer_type: string;
+  postingDate?: string | null;
+  docDueDate?:string | null;
 };
 
 export interface TransferRequestCreate {
@@ -131,8 +133,8 @@ export interface Provided {
   item: ProvidedItem[];
   transfer_request_id: string,
   status: string,
-  transfer_request?:string,
-  activities_name?:string,
+  transfer_request?: string,
+  activities_name?: string,
   action?: string,
   remark?: string
 }
@@ -158,7 +160,7 @@ export interface ProvidedItem {
   is_receive: string;
   total: string;
   supplier: string;
-  received:string
+  received: string
 }
 export interface ActivitiesItem {
   transfer_request?: string;
@@ -270,12 +272,12 @@ export interface TotalProvideParams {
   item_code: string;
 }
 
-export interface closeParams{
+export interface closeParams {
   docEntry: number,
-  id:string,
-  statusChange:string,
-  state:string,
-  remark:string,
+  id: string,
+  statusChange: string,
+  state: string,
+  remark: string,
   transfer_request?: string;
   activities_name: string;
   action: string;
@@ -283,8 +285,8 @@ export interface closeParams{
   actionDate?: Moment;
 }
 
-export interface ProductionLine{
-  id?:number,
+export interface ProductionLine {
+  id?: number,
   prdcode: string,
   prdname: string
 }

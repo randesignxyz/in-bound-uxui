@@ -1,6 +1,6 @@
 import TableView, { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { simpleRequestActions } from '@/services/model';
-import { Button, Col, Flex, Modal, Progress, Radio, Row, Select, Space, Tabs, Tag, Tooltip, message } from 'antd';
+import { Button, Col, DatePicker, Flex, Modal, Progress, Radio, Row, Select, Space, Tabs, Tag, Tooltip, message } from 'antd';
 import Omit from 'omit.js';
 import { useRef, useState } from 'react';
 // import { TransferServiceAPI } from "../service";
@@ -46,7 +46,7 @@ export default ({ }: Props) => {
   const [advanceSearchParams, setAdvanceSearchParams] = useState<TransferAdvanceParams>({
     transfer_type: 'ALL',
     transfer_request: '',
-    status:'ALL'
+    status: 'ALL'
   });
   const [viewDetail, setViewDetail] = useState<{ visible: boolean; data?: Transfer }>({
     visible: false,
@@ -208,23 +208,30 @@ export default ({ }: Props) => {
               <Radio.Button value='pending'>Pending</Radio.Button>
               <Radio.Button value="completed">Completed</Radio.Button>
             </Radio.Group>
-            {/* <Select
-              defaultValue="ALL"
-              style={{ width: 120 }}
-              onChange={(e) => {
+            <DatePicker
+              style={{ width: 165 }}
+              onChange={(v => {
+                const dateWithoutTime = v?.format("YYYY-MM-DD")
                 setAdvanceSearchParams((v) => ({
                   ...v,
-                  status: e,
+                  postingDate: dateWithoutTime,
                 }));
                 actionRef.current?.reloadAndRest?.();
-              }}
-              options={[
-                { value: 'ALL', label: 'ALL' },
-                { value: 'pending', label: 'Pending' },
-                { value: 'completed', label: 'Completed' },
-              ]}
-            /> */}
-            {/* :''} */}
+              })}
+              placeholder='Posting date'
+            />
+            <DatePicker
+              style={{ width: 165 }}
+              onChange={(v => {
+                const dateWithoutTime = v?.format("YYYY-MM-DD")
+                setAdvanceSearchParams((v) => ({
+                  ...v,
+                  docDueDate: dateWithoutTime,
+                }));
+                actionRef.current?.reloadAndRest?.();
+              })}
+              placeholder='Doc Due date'
+            />
           </Space>
         }
         tableProps={{
@@ -232,16 +239,16 @@ export default ({ }: Props) => {
           toolbar: {
             actions: [
               <div style={{ width: '100%' }}>
-                <Row style={{ alignItems: 'center'}}>
-                    <Tabs
-                    style={{marginRight:20}}
-                      activeKey={activeTab}
-                      onChange={handleTabChange}
-                      items={[
-                        { label: 'Transaction Movement', key: '1' },
-                        { label: 'Transaction', key: '2' },
-                      ]}
-                    />
+                <Row style={{ alignItems: 'center' }}>
+                  <Tabs
+                    style={{ marginRight: 20 }}
+                    activeKey={activeTab}
+                    onChange={handleTabChange}
+                    items={[
+                      { label: 'Transaction Movement', key: '1' },
+                      { label: 'Transaction', key: '2' },
+                    ]}
+                  />
                   <Col>
                     <Button
                       key="add-button"
@@ -459,17 +466,17 @@ export default ({ }: Props) => {
         title="Export Excel"
         open={exportModel.visible}
         loading={excelLoading}
-        type = 'transfer'
+        type='transfer'
         onCancel={() => setExportModal({ visible: false })}
-        onSave={async (duration, line, shift,state,request_type) => {
+        onSave={async (duration, line, shift, state, request_type) => {
           const result = {
             line: line,
             shift: shift,
             startDate: dayjs(duration[0]).format('YYYY-MM-DD'),
             endDate: dayjs(duration[1]).format('YYYY-MM-DD'),
-            state:state,
-            type:'transfer',
-            request_type:request_type || ''
+            state: state,
+            type: 'transfer',
+            request_type: request_type || ''
           };
           try {
             setExcelLoading(true)

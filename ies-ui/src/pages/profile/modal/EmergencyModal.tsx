@@ -88,7 +88,7 @@ export default ({ profile,data,locations,type,isAdmin,empId, cb, ...rest }: Prop
             content: 'Are you sure?',
             onOk: async () => {
               try { 
-                bmForm.otherFile = createFileOther;  
+                bmForm.otherFile = createFileOther||[];  
                 bmForm.id = (!!data!!?data!!.id:0);
                 bmForm.empId = empId;
                 bmForm.status=true;
@@ -181,7 +181,7 @@ export default ({ profile,data,locations,type,isAdmin,empId, cb, ...rest }: Prop
                         <ProFormText label="House No" name={'homeNo'} rules={[{ required: true }]}/> 
                     </Col>
                         <Col span={8} style={{padding:'3px'}}>    
-                        <ProFormText label="Street" name={'street'} rules={[{ required: true }]}/> 
+                        <ProFormText label="Street" name={'street'} rules={[{ required: false }]}/> 
                     </Col>
                     <Col span={8} style={{padding:'3px'}}>   
                         <ProFormText label="Group/Village" name={'villageId'} rules={[{ required: false }]}/> 

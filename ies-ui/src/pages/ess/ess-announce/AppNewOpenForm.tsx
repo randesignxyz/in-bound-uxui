@@ -93,8 +93,8 @@ export default ({ open, onOpenModalChange, refreshTable,data}: Props) => {
               // options={lookupList.filter(it => it.type == 'CONTACT_TYPE').map(it => ({ label: it.name, value: it.id }))}
             /> */}
             <Space direction="horizontal" style={{ width: '100%' }}>
-              <ProFormDatePicker name = "startDate" rules={[{ required: true }]}  label = {<div><strong>Started Date</strong></div>} />            
-              <ProFormDatePicker name = "endDate" rules={[{ required: true }]}  label = {<div><strong>Ended Date</strong></div>} /> 
+              <ProFormDatePicker name = "startDate" rules={[{ required: true }]}  label = {<div><strong>Start Date</strong></div>} />            
+              <ProFormDatePicker name = "endDate" rules={[{ required: true }]}  label = {<div><strong>End Date</strong></div>} /> 
             </Space> 
             <ProFormTextArea name = "description" rules={[{ required: true }]}  label = {<div><strong>Description</strong></div>} />  
           </Space>

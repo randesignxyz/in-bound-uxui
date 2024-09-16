@@ -65,7 +65,10 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
                 bmForm.otherFile = createFileOther;  
                 bmForm.id = (!!data!!?data!!.id:0);
                 bmForm.empId = empId;
+                bmForm.typeId = 2;
                 bmForm.status=true;
+                bmForm.isDelete = 0; 
+                bmForm.toYear = ""; 
                 await ProfileServicesEss.saveTrainingAdmin(bmForm)(requestActions); 
                 // call back fun
                 cb.onReload(); 

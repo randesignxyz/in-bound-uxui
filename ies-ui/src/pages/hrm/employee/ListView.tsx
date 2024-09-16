@@ -20,8 +20,9 @@ interface Props {
     onEdit?: (id: number) => void;
   }
 
-export default ({ onAdd, onEdit }: Props) => {
-    const access = useAccess(); 
+export default ({ onAdd, onEdit }: Props) => { 
+    const access = useAccess();  
+ 
     const [modalVisible, setModalVisible] = useState< { type: 'ADD'; payload: EmployeeListItem } | { type: 'EDIT'; payload: EmployeeListItem } >();
     const hideModal = (visble?: boolean) => !visble && setModalVisible(undefined);
 
@@ -31,8 +32,41 @@ export default ({ onAdd, onEdit }: Props) => {
      
     const onRequestHandler = async (params: TableViewSearchParams<EmployeeAdvanceSearchParams>) => {
         try {
-
-            return await EmployeeServices.list(params).query(requestActions)
+            
+            if(access.ROLE_OFL_NVC_WHM_CASUAL==true){ 
+                params.criteria.permissionLevel = 'ROLE_HR_OFL-NVC_WHM_CASUAL';
+            }
+            else if(access.ROLE_HR_OMM_ENG_PRD_CASUAL==true){ 
+                params.criteria.permissionLevel = 'ROLE_HR_OMM_ENG_PRD_CASUAL';
+            }
+            else if(access.ROLE_HR_NVC_PRD_CASUAL==true){ 
+                params.criteria.permissionLevel = 'ROLE_HR_NVC_PRD_CASUAL';
+            }
+            else if(access.ROLE_OFL_NVC_OMM_FMA_CASUAL==true){ 
+                params.criteria.permissionLevel = 'ROLE_HR_OFL-NVC-OMM_FMA_CASUAL';
+            } 
+            else if(access.ROLE_HR_OFL_DEL_CASUAL==true){ 
+                params.criteria.permissionLevel = 'ROLE_HR_OFL_DEL_CASUAL';
+            }
+            else if(access.ROLE_HR_OMD_DEL_CASUAL==true){ 
+                params.criteria.permissionLevel = 'ROLE_HR_OMD_DEL_CASUAL';
+            }
+            else{
+                params.criteria.permissionLevel = '0';
+            }
+            // if(access.ROLE_HR_DIRECTOR==true){ 
+            //     params.criteria.permissionLevel = 'ROLE_HR_DIRECTOR';
+            // }
+            // if(access.ROLE_HR_MANAGEMENT==true){ 
+            //     params.criteria.permissionLevel = 'ROLE_HR_MANAGEMENT';
+            // }
+            // if(access.ROLE_HR_EXEUTIVE_MANAGEMENT==true){ 
+            //     params.criteria.permissionLevel = 'ROLE_HR_EXEUTIVE_MANAGEMENT';
+            // }
+            // if(access.ROLE_HR_MIDEL_MANAGEMENT==true){ 
+            //     params.criteria.permissionLevel = 'ROLE_HR_MIDEL_MANAGEMENT';
+            // }  
+            return await EmployeeServices.list(params).query(requestActions);
 
         } catch (error: any) {
             message.error(error.message)
@@ -124,8 +158,8 @@ export default ({ onAdd, onEdit }: Props) => {
                 {title: 'Full Name (EN)', dataIndex: 'firstName', sorter: 'firstName',render(_, entity) {return(entity.firstName+" "+entity.lastName)} },
                 // {title: 'Last Name', dataIndex: 'lastName', sorter: 'lastName'},
                 // {title: 'SAP ID', dataIndex:  'sapId', sorter: 'sapId'},
-                {title: 'Position', dataIndex: 'jobTitle', sorter: 'jobTitle'},
-                {title: 'Function', dataIndex: 'department', sorter: 'department'},
+                {title: 'Position', dataIndex: 'jobTitle'},
+                {title: 'Function', dataIndex: 'department'},
                 {title: 'Company', dataIndex: 'bu'},
                 {title: 'Status', render:(_,r) =><Status text={r.status}/>},
                 {width: 50,

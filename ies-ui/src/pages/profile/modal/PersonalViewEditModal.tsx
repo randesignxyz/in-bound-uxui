@@ -240,7 +240,7 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                 </ProCard> */}
                 
                 {/* National ID */}
-                <div style={{marginTop:'10px'}}><Typography.Title level={5}>National Brief</Typography.Title></div>
+                <div style={{marginTop:'10px'}}><Typography.Title level={5}>National ID</Typography.Title></div>
                 <ProCard bordered style={{backgroundColor:'#f5f5f5'}}> 
                     <Row>
                         <Col span={8} style={{padding:'3px'}}>
@@ -258,7 +258,7 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                     </Row>
                 </ProCard>
                 {/* Passport Number */}
-                <div style={{marginTop:'10px'}}><Typography.Title level={5}>Passport Brief</Typography.Title></div>
+                <div style={{marginTop:'10px'}}><Typography.Title level={5}>Passport ID</Typography.Title></div>
                 <ProCard bordered style={{backgroundColor:'#f5f5f5'}}> 
                     <Row>            
                         <Col span={8} style={{padding:'3px'}}>  

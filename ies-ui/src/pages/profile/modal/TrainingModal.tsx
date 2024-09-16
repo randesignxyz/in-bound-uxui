@@ -65,10 +65,17 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
             content: 'Are you sure?',
             onOk: async () => {
               try { 
-                bmForm.otherFile = createFileOther;  
+                bmForm.otherFile = createFileOther||[];  
                 bmForm.id = (!!data!!?data!!.id:0);
                 bmForm.empId = empId;
-                bmForm.status=true;
+                bmForm.typeId = 1;
+                bmForm.status=true; 
+
+                var fromyear = bmForm.year[0];
+                var toyear = bmForm.year[1];
+
+                bmForm.year = fromyear;
+                bmForm.toYear = toyear; 
                 await ProfileServicesEss.saveTrainingAdmin(bmForm)(requestActions); 
                 // call back fun
                 cb.onReload(); 

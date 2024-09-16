@@ -274,8 +274,9 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                 <ProCard bordered style={{backgroundColor:'#f5f5f5'}}> 
                     <Row>
                         <Col span={8} style={{padding:'3px'}}>
-                            <ProFormSelect 
+                            <ProFormSelect rules={[{ required: true }]}
                                 label="City/ Province" 
+                                showSearch
                                 name={'provincePbId'}
                                 options={locations?.map((it) => {
                                     return { value: it.id, label: it.name };
@@ -290,8 +291,9 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                         </Col> 
                         <Col span={8} style={{padding:'3px'}}>         
                             {/*  */}
-                            <ProFormSelect 
+                            <ProFormSelect rules={[{ required: true }]}
                                 label="Khan/ District" 
+                                showSearch
                                 name={'districtPbId'}
                                 options={districtPB?.map((it) => {
                                     return { value: it.id, label: it.name };
@@ -306,8 +308,9 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                         </Col> 
                         <Col span={8} style={{padding:'3px'}}>      
                             {/*  */}
-                            <ProFormSelect 
+                            <ProFormSelect rules={[{ required: true }]}
                                 label="Sangkhat/ Commune" 
+                                showSearch
                                 name={'communePbId'}
                                 options={communePB?.map((it) => {
                                     return { value: it.id, label: it.name };
@@ -325,6 +328,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                             <ProFormSelect rules={[{ required: true }]}
                                 label="City/ Province" 
                                 name={'provincePaId'}
+                                showSearch
                                 options={locations?.map((it) => {
                                     return { value: it.id, label: it.name };
                                 })}
@@ -341,6 +345,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                             <ProFormSelect rules={[{ required: true }]}
                                 label="Khan/ District" 
                                 name={'districtPaId'}
+                                showSearch
                                 options={districtPA?.map((it) => {
                                     return { value: it.id, label: it.name };
                                 })}
@@ -357,6 +362,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                             <ProFormSelect rules={[{ required: true }]}
                                 label="Sangkhat/ Commune" 
                                 name={'communePaId'}
+                                showSearch
                                 options={communePA?.map((it) => {
                                     return { value: it.id, label: it.name };
                                 })}
@@ -367,7 +373,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                     <Flex vertical={false} gap="middle" style={{width:'100%'}}>
                     {/*  */}
                     <ProFormText label="House No" name={'homePaNo'} rules={[{ required: true }]}/>  
-                    <ProFormText label="Street" name={'streetPa'} rules={[{ required: true }]}/> 
+                    <ProFormText label="Street" name={'streetPa'} rules={[{ required: false }]}/> 
                     <ProFormText label="Group/Village" name={'villagePaId'} />
                     </Flex>
                 </ProCard>
@@ -380,6 +386,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                     <Row>
                         <Col span={8} style={{padding:'3px'}}>
                             <ProFormSelect rules={[{ required: true }]}
+                                showSearch
                                 label="City/ Province" 
                                 name={'provinceCrId'}
                                 options={locations?.map((it) => {
@@ -396,6 +403,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                         <Col span={8} style={{padding:'3px'}}>  
                             {/*  */}
                             <ProFormSelect rules={[{ required: true }]}
+                                showSearch
                                 label="Khan/ District" 
                                 name={'districtCrId'}
                                 options={districtCA?.map((it) => {
@@ -412,6 +420,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                     {/*  */}
                         <Col span={8} style={{padding:'3px'}}>
                             <ProFormSelect rules={[{ required: true }]}
+                                showSearch
                                 label="Sangkhat/ Commune" 
                                 name={'communeCrId'}
                                 options={communeCA?.map((it) => {
@@ -424,7 +433,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                     <Flex vertical={false} gap="middle" style={{width:'100%'}}>
                     {/*  */}
                     <ProFormText label="House No" name={'homeCrNo'} rules={[{ required: true }]}/>  
-                    <ProFormText label="Street" name={'streetCr'} rules={[{ required: true }]}/> 
+                    <ProFormText label="Street" name={'streetCr'} rules={[{ required: false }]}/> 
                     <ProFormText label="Group/Village" name={'villageCrId'} />
                     </Flex>
                 </ProCard>
@@ -436,7 +445,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                     </Space>
                     <div style={{fontSize:'12px'}}>- National ID (Image File or PDF)</div>
                     <div style={{fontSize:'12px'}}>- Passport (Image File or PDF)</div> 
-                    <div style={{fontSize:'12px'}}>- Married Certificate</div> 
+                    <div style={{fontSize:'12px'}}>- Married Certificate (Image File or PDF)</div> 
                 </div> 
                 <ProCard size="small" bordered>   
                     <FileUploader   

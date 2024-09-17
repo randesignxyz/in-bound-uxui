@@ -194,7 +194,7 @@ export interface RelationshipData {
   refId:number;
   relationshipName: number; 
   occupationId: string; 
-  dateOfBirth: string;  
+  dateOfBirth: moment.Moment;  
   status:Boolean;  
   isDelete:number;
   type:string; 

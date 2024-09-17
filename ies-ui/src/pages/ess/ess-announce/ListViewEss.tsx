@@ -14,6 +14,7 @@ import { MenuProps } from "rc-menu";
 import { ProfileServicesEss } from "@/pages/profile/service_ess";
 import { ProFormTextArea } from "@ant-design/pro-components";
 
+import { useAccess } from '@umijs/max';
 
 interface Props {
     profile: OpenEssDataItem;
@@ -21,6 +22,7 @@ interface Props {
 
  
 export default ({ profile }: Props) =>{
+    const access = useAccess();  
     const { data, modals } = Model();
     const requestActions = simpleRequestActions()
     const [loading, setLoading] = useSafeState(false)
@@ -49,7 +51,30 @@ export default ({ profile }: Props) =>{
     }
 
     const onRequestItemHandler = async (params: TableViewSearchParams<OpenAdvanceSearchParams>) => {
-        try {    
+        try {  
+            
+            if(access.ROLE_OFL_NVC_WHM_CASUAL==true){ 
+                params.criteria.permissionLevel = 'ROLE_HR_OFL-NVC_WHM_CASUAL';
+            }
+            else if(access.ROLE_HR_OMM_ENG_PRD_CASUAL==true){ 
+                params.criteria.permissionLevel = 'ROLE_HR_OMM_ENG_PRD_CASUAL';
+            }
+            else if(access.ROLE_HR_NVC_PRD_CASUAL==true){ 
+                params.criteria.permissionLevel = 'ROLE_HR_NVC_PRD_CASUAL';
+            }
+            else if(access.ROLE_OFL_NVC_OMM_FMA_CASUAL==true){ 
+                params.criteria.permissionLevel = 'ROLE_HR_OFL-NVC-OMM_FMA_CASUAL';
+            } 
+            else if(access.ROLE_HR_OFL_DEL_CASUAL==true){ 
+                params.criteria.permissionLevel = 'ROLE_HR_OFL_DEL_CASUAL';
+            }
+            else if(access.ROLE_HR_OMD_DEL_CASUAL==true){ 
+                params.criteria.permissionLevel = 'ROLE_HR_OMD_DEL_CASUAL';
+            }
+            else{
+                params.criteria.permissionLevel = '0';
+            }
+            
             return await ServicesEss.listEssOpenItem(params,profile.id,statusItem).query(requestActions)
 
         } catch (error: any) {

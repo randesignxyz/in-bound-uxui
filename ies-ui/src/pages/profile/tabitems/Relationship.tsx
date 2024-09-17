@@ -1,7 +1,7 @@
 
 import { ProTable } from "@ant-design/pro-components"
-import { Button, message, Modal, Space, Typography,Card } from 'antd'; 
-import { PlusCircleFilled,EditOutlined, EyeOutlined, PlusOutlined } from "@ant-design/icons";
+import { Button, message, Modal, Space, Typography,Card, Flex } from 'antd'; 
+import { PlusCircleFilled,EditOutlined, EyeOutlined, PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import RelationshipModal from '../modal/RelationshipModal';
 import { useEffect,useState } from 'react';
 
@@ -10,6 +10,7 @@ import { FilesData, RelationshipData} from "../data.ess";
 import { ProfileServicesEss } from '../service_ess'; 
 import { simpleRequestActions } from '@/services/model';
 import RelationshipView from "../view/RelationshipView";
+import { formatDate } from "@/pages/utils";
 
 interface Props {
     profile: ProfileData;
@@ -68,7 +69,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
     };
     const onDelete = async (data: RelationshipData) => {
         Modal.confirm({
-          title: 'Delete eduction',
+          title: 'Delete Family Memember',
           content: 'Are you sure you want to delete items?',
           onOk: async () => {
             try { 
@@ -76,6 +77,27 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                 data.type = "ADD";
                 data.empId= profile.id;
                 await ProfileServicesEss.saveRelationship(data)(requestActions); 
+                // call back fun
+                cb.onLoadData();
+                initData();
+                hideModal();
+            } catch (error: any) {
+              message.error(error.message || 'Failed to created.');
+            }
+          },
+        });
+    };
+    
+    const onDeleteAdmin = async (data: RelationshipData) => {
+        Modal.confirm({
+          title: 'Delete Family Memember',
+          content: 'Are you sure you want to delete items?',
+          onOk: async () => {
+            try { 
+                data.isDelete = 1;
+                data.type = "ADD";
+                data.empId= profile.id;
+                await ProfileServicesEss.saveRelationshipAdmin(data)(requestActions); 
                 // call back fun
                 cb.onLoadData();
                 initData();
@@ -131,23 +153,28 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                         },{
                             title: "Occupation", dataIndex: "occupationName"
                         },{
-                            title: "Date of Birth", dataIndex: "dateOfBirth"
+                            title: "Date of Birth", dataIndex: "dateOfBirth",render: (dom, r) => {return formatDate(r.dateOfBirth)}
                         },
                         // {
                         //     title: "Description", dataIndex: "description"
                         // },
                         {   width: 100, 
                             render: (dom, r) => {
-                                return (<>
+                                return (<Flex vertical={false} justify='space-between'>
                                   {profile!!.ess.id!!<=0?'':<a style={{display: (is_admin==0&&empId==0&&[7,5,2].find((element) => element == profile!!.ess.stepId))?'':'none'}}
-                                    onClick={() => setModalVisible({ type: 'EDIT', payload: r })} 
-                                  >
-                                    <EditOutlined />
-                                  </a>}
-                                    <a style={{display: (is_admin==2&&empId>0)?'':'none'}} 
-                                        onClick={() => setModalVisible({ type: 'EDIT', payload: r })}>
+                                        onClick={() => setModalVisible({ type: 'EDIT', payload: r })} title='Edit'
+                                    >
                                         <EditOutlined />
-                                    </a></>  
+                                    </a>}
+                                    <a style={{display: (is_admin==2&&empId>0)?'':'none'}} 
+                                        onClick={() => setModalVisible({ type: 'EDIT', payload: r })} title='Edit'>
+                                        <EditOutlined />
+                                    </a>
+                                    <a style={{display: (is_admin==2&&empId>0)?'':'none',color:'red'}} title="Remove"
+                                        onClick={() => onDeleteAdmin(r)}>
+                                        <DeleteOutlined />
+                                    </a>
+                                    </Flex>  
                                 );
                               },
                         }

@@ -44,7 +44,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                     },{
                         title: "Emergency Phone", dataIndex: "emergencyPhone"
                     },{
-                        title: "Emergency Address", render: (dom, r) => {return r.provinceName+", "+r.districtName+", "+r.communeName+", "+r.homeNo+", "+r.street+", "+r.villageId}
+                        title: "Emergency Address", render: (dom, r) => {return "#"+r.homeNo+", Str. "+r.street+", "+r.villageId+", "+r.communeName+", "+r.districtName+", "+r.provinceName}
                     },{   width: '70px',
                         render: (dom, r) => {
                             return ( <Flex vertical={false} justify='space-between'>
@@ -82,7 +82,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                     },{
                         title: "Emergency Phone", dataIndex: "emergencyPhone"
                     },{
-                        title: "Emergency Address", render: (dom, r) => {return r.provinceName+", "+r.districtName+", "+r.communeName+", "+r.homeNo+", "+r.street+", "+r.villageId}
+                        title: "Emergency Address", render: (dom, r) => {return "#"+r.homeNo+", Str. "+r.street+", "+r.villageId+", "+r.communeName+", "+r.districtName+", "+r.provinceName}
                     },{   width: '70px',
                         render: (dom, r) => {
                             return ( <Flex vertical={false} justify='space-between'>

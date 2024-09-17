@@ -53,16 +53,29 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
     }
     // 
     const onAdminSubmit = async ()=>{
-        const bmForm = await form.validateFields(); 
+        const bmForm = await form.validateFields();
+        // attachment files
+        if(createFileOther.length==0){  
+            message.error('Please do select attachment files.');
+            return false;
+        } 
+        // submit 
         Modal.confirm({
             title: 'Save Training',
             content: 'Are you sure?',
             onOk: async () => {
               try { 
-                bmForm.otherFile = createFileOther;  
+                bmForm.otherFile = createFileOther||[];  
                 bmForm.id = (!!data!!?data!!.id:0);
                 bmForm.empId = empId;
-                bmForm.status=true;
+                bmForm.typeId = 1;
+                bmForm.status=true; 
+
+                var fromyear = bmForm.year[0];
+                var toyear = bmForm.year[1];
+
+                bmForm.year = fromyear;
+                bmForm.toYear = toyear; 
                 await ProfileServicesEss.saveTrainingAdmin(bmForm)(requestActions); 
                 // call back fun
                 cb.onReload(); 
@@ -98,7 +111,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
             <ProFormText label="Institution" name={'institution'} rules={[{ required: true }]} placeholder={"institution"}/> 
             <Row>              
                 <Col span={24} style={{padding:'3px'}}>  
-                    <ProFormDateRangePicker label="Date" name={"year"} />
+                    <ProFormDateRangePicker label="Date" name={"year"} rules={[{ required: true }]} />
                 </Col>      
             </Row> 
             <Row>              

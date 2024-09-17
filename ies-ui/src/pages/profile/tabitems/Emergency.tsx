@@ -1,7 +1,7 @@
 
 import { Button, message, Modal, Space, Typography,Card, Flex } from 'antd';  
 import { ProDescriptions, ProTable } from '@ant-design/pro-components';
-import { EditOutlined, EyeOutlined, PlusCircleFilled, PlusOutlined } from "@ant-design/icons"; 
+import { DeleteOutlined, EditOutlined, EyeOutlined, PlusCircleFilled, PlusOutlined } from "@ant-design/icons"; 
 import { ProfileData} from '../data';
 import { EmergencyData,  FilesData,  SaveEmergency } from "../data.ess"; 
 import { ProfileServicesEss } from '../service_ess'; 
@@ -87,7 +87,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
     
     const onDelete = async (data: SaveEmergency) => {
         Modal.confirm({
-          title: 'Delete eduction',
+          title: 'Delete emergency',
           content: 'Are you sure you want to delete items?',
           onOk: async () => {
             try {
@@ -96,6 +96,27 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
                 data.type = "ADD";
                 data.empId= profile.id;
                 await ProfileServicesEss.saveEmergency(data)(requestActions); 
+                // call back fun
+                cb.onLoadData();
+                initData();
+                hideModal();
+            } catch (error: any) {
+              message.error(error.message || 'Failed to created.');
+            }
+          },
+        });
+    };
+    const onDeleteAdmin = async (data: SaveEmergency) => {
+        Modal.confirm({
+          title: 'Delete emergency',
+          content: 'Are you sure you want to delete items?',
+          onOk: async () => {
+            try {
+                data.otherFile = [];
+                data.isDelete = 1;
+                data.type = "ADD";
+                data.empId= profile.id;
+                await ProfileServicesEss.saveEmergencyAdmin(data)(requestActions); 
                 // call back fun
                 cb.onLoadData();
                 initData();
@@ -152,18 +173,22 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
                     },{
                         title: "Emergency Phone", dataIndex: "emergencyPhone"
                     },{
-                        title: "Emergency Address", render: (dom, r) => {return r.provinceName+", "+r.districtName+", "+r.communeName+", "+r.homeNo+", "+r.street+", "+r.villageId}
+                        title: "Emergency Address", render: (dom, r) => {return "#"+r.homeNo+", Str. "+r.street+", "+r.villageId+", "+r.communeName+", "+r.districtName+", "+r.provinceName}
                     }, 
                     {   width: '70px',
                         render: (dom, r) => {
                             return ( <Flex vertical={false} justify='space-between'>
                                     {profile!!.ess.id!!<=0?'':<a style={{display: (is_admin==0&&empId==0&&[7,5,2].find((element) => element == profile!!.ess.stepId))?'':'none'}} 
-                                        onClick={() => setModalVisible({ type: 'EDIT', payload: r })}>
+                                        onClick={() => setModalVisible({ type: 'EDIT', payload: r })} title='Edit'>
                                         <EditOutlined />
                                     </a> }
-                                    <a style={{display: (is_admin==2&&empId>0)?'':'none'}} 
+                                    <a style={{display: (is_admin==2&&empId>0)?'':'none'}} title='Edit'
                                         onClick={() => setModalVisible({ type: 'EDIT', payload: r })}>
                                         <EditOutlined />
+                                    </a>  
+                                    <a style={{display: (is_admin==2&&empId>0)?'':'none',color:'red'}} title="Remove" 
+                                        onClick={() => onDeleteAdmin(r)}>
+                                        <DeleteOutlined />
                                     </a>  
                                 </Flex>
                             );

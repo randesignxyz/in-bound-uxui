@@ -168,7 +168,11 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                         {
                             title: "Company Name", width: '250px',dataIndex: "companyName"
                         },{
-                            title: "Location", render: (_, r) => {return ((r.countryName==null?"":r.countryName)+" "+(r.provinceName==null?"":r.provinceName)+" "+(r.locationRemark==null?"":r.locationRemark));}
+                            title: "Location", render: (_, r) => {
+                                if(r.countryId==76){var location = (r.provinceName==null?"":r.provinceName)+", "+(r.countryName==null?"":r.countryName)}
+                                else{var location = (r.locationRemark==null?"":r.locationRemark)};
+                                return location;
+                        }
                         }, {
                             title: "Started Position", width: '250px',dataIndex: 'startPosition'
                         },{

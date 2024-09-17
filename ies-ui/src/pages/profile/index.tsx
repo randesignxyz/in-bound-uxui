@@ -47,16 +47,21 @@ function Profile() {
       _valueText = val;
   } 
   // start modified on profiles 
-  const onStartModify = (step_id : number)=>{ 
+  const onStartModify = (step_id : number,sms:string)=>{ 
     //
     Modal.confirm({
-      title: 'Start Modify',
-      content: 'Do you want to start modify data?',
+      title: sms,
+      content: 'Do you want to '+sms+' data?',
       onOk: async () => {
         try {  
           if(step_id==2){ 
             await ProfileServicesEss.saveEssProfile({...profile?.profile, empId: profile?.id,step:step_id,openEssId:profile?.ess.id,otherFile:[],remark:'',status:true})(requestActions); 
-          }else{ 
+          }
+          else if(step_id==9){ // not yet have action need to be make another step for save draft action
+            //
+            message.info("Save to draft...");
+          }
+          else{ 
             await ProfileServicesEss.saveEssProfile({...profile?.profile_draft, empId: profile?.id,step:step_id,openEssId:profile?.ess.id,otherFile:[],remark:'',status:true})(requestActions); 
           }
           initData();  
@@ -295,7 +300,7 @@ function Profile() {
               is_admin={[1,2].find((element) => element == Number(is_admin))?true:false}
               cb={{
                 onStartModify: (stepId) => { 
-                  onStartModify(stepId);
+                  onStartModify(stepId,'Start Modify Data');
                 },
               }}
             /> 
@@ -309,10 +314,10 @@ function Profile() {
         onTabChange={onOperationTabChange}
         tabList={operationTabList} 
         footer={[ 
-          profile!!.ess.id!!<=0?'':<Button style={{display:(step==2&&Number(id)==0)?'':'none',color: 'red'}} onClick={()=>onStartModify(8)}><ExclamationCircleOutlined /> Cancel Update</Button>,   
-          <Button style={{background:'#E7E6E6'}}><EditOutlined/> Save Draft</Button>,       
-          profile!!.ess.id!!<=0?'':<Button type="primary" style={{display:([7,5,2].find((element) => element == step))&&Number(id)==0?'':'none'}} onClick={()=>onStartModify(3)}><EditOutlined/> Submit Update</Button>,
-          profile!!.ess.id!!<=0?'':<Button style={{display:(step==3&&Number(id)==0)==true?'':'none',color: 'red'}} onClick={()=>onStartModify(7)}><HistoryOutlined/> Cancel Submitted</Button>,
+          profile!!.ess.id!!<=0?'':<Button style={{display:(step==2&&Number(id)==0)?'':'none',color: 'red'}} onClick={()=>onStartModify(8,'Cancel Update')}><ExclamationCircleOutlined /> Cancel Update</Button>,   
+          <Button style={{background:'#E7E6E6'}} style={{display:([7,5,2].find((element) => element == step))&&Number(id)==0?'':'none'}} onClick={()=>onStartModify(9,'Save Draft')}><EditOutlined/> Save Draft</Button>,       
+          profile!!.ess.id!!<=0?'':<Button type="primary" style={{display:([7,5,2].find((element) => element == step))&&Number(id)==0?'':'none'}} onClick={()=>onStartModify(3,'Submit Update')}><EditOutlined/> Submit Update</Button>,
+          profile!!.ess.id!!<=0?'':<Button style={{display:(step==3&&Number(id)==0)==true?'':'none',color: 'red'}} onClick={()=>onStartModify(7,'Cancel Submitted')}><HistoryOutlined/> Cancel Submitted</Button>,
           // profile!!.ess.id!!<=0?'':<Button style={{display:(step==4&&Number(id)==0)==true?'':'none',color: 'red'}} onClick={()=>onStartResubmit(5)}><HistoryOutlined/> Re-Edit</Button>, 
 
           profile!!.ess.id!!<=0?'':<Button style={{color: 'red',display:(step==3&&Number(id)>0)==true?'':'none'}} onClick={()=>onRejected(4)}><EditOutlined/> Rejected</Button>,

@@ -379,7 +379,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                     selectedFileOther(tid);
                 },
                 onReload:()=>{
-                    hideModal();
+                    hideCertificateModal();
                     initData();
                 }
             }}

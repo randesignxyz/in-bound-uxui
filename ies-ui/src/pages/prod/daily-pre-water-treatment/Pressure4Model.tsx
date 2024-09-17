@@ -83,7 +83,8 @@ export default ({ data, onSave, type, ...props }: Props) => {
                         id: data?.id,
                         warning_count: updatedWarningCount,
                         status: status,
-                        action: `has modified ${actionString}`,                        pre_treatment_id: data?.pre_treatment_id,
+                        action: `has modified ${actionString}`,                        
+                        pre_treatment_id: data?.pre_treatment_id,
                         pre_treatment_type: type
                     }
                 }

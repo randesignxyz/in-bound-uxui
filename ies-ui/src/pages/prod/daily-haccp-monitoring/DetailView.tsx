@@ -11,12 +11,13 @@ import { useEffect, useState } from 'react';
 import { DailyHACCPMonitoringServiceAPI } from './service';
 import { HACCPMonitoring, HACCPMonitoringList } from './data';
 import DescriptionDisplay from '@/components/Descriptions';
-import { EditFilled, PlusCircleFilled } from '@ant-design/icons';
+import { EditFilled, FileDoneOutlined, PlusCircleFilled } from '@ant-design/icons';
 import { useAccess } from '@umijs/max';
 import ItemTab from './ItemTab';
 import ActivitiesTab from './ActivitiesTab';
 import Line2Line3Model from './Line2Line3Model';
 import Line4Line5Line6Model from './Line4Line5Line6Model';
+import InstructionViewModal from './InstructionViewModal';
 
 interface Props extends DrawerFormProps {
     id: string;
@@ -33,6 +34,7 @@ export default ({ id, ...rest }: Props) => {
     const [line2Line3ModelOpen, setLine2Line3ModelOpen] = useState<{ visible: boolean, data?: any }>({ visible: false })
     const [line4Line5Line6ModelOpen, setLine4Line5Line6ModelOpen] = useState<{ visible: boolean, data?: any }>({ visible: false })
     const [onRefresh, setOnRefresh] = useState(false)
+    const [instructionModal, setInstructionModal] = useState(false)
     const part = id.split("/");
     const [data, setData] = useState<HACCPMonitoring>()
     const [subData, setSubData] = useState<HACCPMonitoringList[]>([])
@@ -72,8 +74,8 @@ export default ({ id, ...rest }: Props) => {
             onOk: async () => {
                 try {
                     await services.post_haccp_monitoring_list(data)
-                    setLine2Line3ModelOpen({ visible: false,data:undefined })
-                    setLine4Line5Line6ModelOpen({ visible: false,data:undefined })
+                    setLine2Line3ModelOpen({ visible: false, data: undefined })
+                    setLine4Line5Line6ModelOpen({ visible: false, data: undefined })
                     setOnRefresh(true)
                     message.success('Success');
                 } catch (e) {
@@ -90,13 +92,23 @@ export default ({ id, ...rest }: Props) => {
                 <Space>
                     <>
                         {data?.assign_to?.split(" ").includes(access.currentUser?.login || '') || access.canAssignItemPre ?
-                            <Button
-                                onClick={() => (data?.line == 'Line 2' || data?.line == 'Line 3') ? setLine2Line3ModelOpen({ visible: true,data:data }) : (data?.line == 'Line 4' || data?.line == 'Line 5' || data?.line == 'Line 6') ? setLine4Line5Line6ModelOpen({ visible: true,data:data }) : ''}
-                                type="primary"
-                                icon={<PlusCircleFilled />}
-                            >
-                                New
-                            </Button>
+                            <>
+
+                                <Button
+                                    onClick={() => (data?.line == 'Line 2' || data?.line == 'Line 3') ? setLine2Line3ModelOpen({ visible: true, data: data }) : (data?.line == 'Line 4' || data?.line == 'Line 5' || data?.line == 'Line 6') ? setLine4Line5Line6ModelOpen({ visible: true, data: data }) : ''}
+                                    type="primary"
+                                    icon={<PlusCircleFilled />}
+                                >
+                                    New
+                                </Button>
+                                <Button
+                                    // style={{ color: 'red', borderColor: 'red' }}
+                                    icon={<FileDoneOutlined />}
+                                    onClick={() => { setInstructionModal(true) }}
+                                >
+                                    Instruction
+                                </Button>
+                            </>
                             : ''}
                         {data?.assign_to?.split(" ").includes(access.currentUser?.login || '') ?
                             <>
@@ -122,6 +134,7 @@ export default ({ id, ...rest }: Props) => {
                                 >
                                     Disenroll
                                 </Button>
+
 
                             </>
                             : <Button
@@ -166,75 +179,6 @@ export default ({ id, ...rest }: Props) => {
                 </Space>
             </Card>
             <Card size="small">
-
-                {/* <ProTable
-                    size="small"
-                    search={false}
-                    rowKey="id"
-                    dataSource={subData}
-                    options={{
-                        density: false,
-                        fullScreen: false,
-                        reload: false,
-                        setting: false,
-
-                    }}
-                    pagination={false}
-                    columns={[
-                        {
-                            title: 'No',
-                            width: 10,
-                            render: (_, r, index) => index + 1
-                        },
-
-                        {
-                            title: 'Time',
-                            dataIndex: 'time',
-                            render: (_, r) => { return formatDateTime(r.time) }
-                        },
-                        ...(hasWaterPressure ? [{
-                            title: 'Water Pressure',
-                            dataIndex: 'water_pressure',
-                        }] : []),
-                        ...(hasNozzlesRinser ? [{
-                            title: 'Nozzles Rinser',
-                            dataIndex: 'nozzles_rinser',
-                        }] : []),
-                        {
-                            title: 'FG',
-                            dataIndex: 'fg',
-                        },
-                        ...(hasSmell ? [{
-                            title: 'Smell',
-                            dataIndex: 'smell',
-                            render: (_: any, r: any) => r.smell == 1 ? "Yes" : r.smell == 0 ? "No" : 'N/A'
-                        }] : []),
-                        {
-                            title: 'Activities Control',
-                            dataIndex: 'activity_control',
-                            render: (_: any, r: any) => r.activity_control == 1 ? "Under Control" : r.activity_control == 0 ? "Over Control" : 'N/A'
-                        },
-                        {
-                            title: 'Take Action',
-                            dataIndex: 'take_action',
-                        },
-                        {
-                            title: 'Done By',
-                            dataIndex: 'done_by',
-                        },
-                        {
-                            title: 'Other',
-                            dataIndex: 'other',
-                        },
-                        {
-                            title: 'Status',
-                            dataIndex: 'status',
-                            render: (_, r) => r.status == 'pending' ? <Badge status={'processing'} text={r.status.charAt(0).toUpperCase() + r.status.slice(1)} /> : r.status == 'normal' ? <Badge status={'success'} text={r.status.charAt(0).toUpperCase() + r.status.slice(1)} /> : r.status == 'warning' ? <Badge status={'error'} text={r.status.charAt(0).toUpperCase() + r.status.slice(1)} /> : <Badge status={'default'} text={r.status.charAt(0).toUpperCase() + r.status.slice(1)} />,
-                        },
-
-
-                    ]}
-                /> */}
                 <Tabs
                     items={[
                         {
@@ -268,6 +212,11 @@ export default ({ id, ...rest }: Props) => {
                 onCancel={() => {
                     setLine4Line5Line6ModelOpen({ visible: false, data: undefined });
                 }}
+            />
+            <InstructionViewModal
+                group_line={(data?.line == 'Line 2' || data?.line == 'Line 3') ? '1' : (data?.line == 'Line 4' || data?.line == 'Line 5' || data?.line == 'Line 6') ? '2' : ''}
+                open={instructionModal}
+                onCancel={() => setInstructionModal(false)}
             />
         </>
     );

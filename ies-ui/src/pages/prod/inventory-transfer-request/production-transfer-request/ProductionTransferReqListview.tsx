@@ -3,9 +3,9 @@ import { Paging } from '@/services/API';
 import { downloadReport } from '@/services/apiGateway';
 import { simpleRequestActions } from '@/services/model';
 import { EyeFilled, FileExcelOutlined, PlusOutlined } from '@ant-design/icons';
-import { ActionType } from '@ant-design/pro-components';
+import { ActionType, ProFormDateRangePicker } from '@ant-design/pro-components';
 import { useAccess, useModel } from '@umijs/max';
-import { Button, Modal, Radio, Select, Space, Tag, Tooltip, message } from 'antd';
+import { Button, DatePicker, Input, Modal, Radio, Select, Space, Tag, Tooltip, message } from 'antd';
 import Omit from 'omit.js';
 import { useEffect, useRef, useState } from 'react';
 import ApproveRemarkFormModal from '../../ApproveRemarkFormModal';
@@ -44,7 +44,7 @@ export default ({ onAdd }: Props) => {
   const [advanceSearchParams, setAdvanceSearchParams] = useState<TransferRequestAdvanceParams>({
     business_unit: 'ALL',
     state: 'in-progress',
-    transfer_type: 'ALL'
+    transfer_type: 'ALL',
   });
   const actionRef = useRef<ActionType>();
   const [viewDetail, setViewDetail] = useState<{
@@ -180,26 +180,8 @@ export default ({ onAdd }: Props) => {
         hasCriteria={Object.values(Omit(advanceSearchParams, ['business_unit'])).some((v) => v)}
         cache
         extraFilter={
-          <Space size="large">
-            {/* {access.canAccessItem ? (
-              <Radio.Group
-                value={advanceSearchParams.business_unit}
-                onChange={(e) => {
-                  setAdvanceSearchParams((v) => ({
-                    ...v,
-                    business_unit: e.target.value,
-                  }));
-                  actionRef.current?.reloadAndRest?.();
-                }}
-              >
-                <Radio.Button value="ALL">All</Radio.Button>
-                <Radio.Button value="NVC">NVC</Radio.Button>
-                <Radio.Button value="OFL">OFL</Radio.Button>
-                <Radio.Button value="OMM">OMM</Radio.Button>
-              </Radio.Group>
-            ) : (
-              ''
-            )} */}
+
+          <Space size="large" style={{ flexDirection: 'row' }}>
             <Radio.Group
               value={advanceSearchParams.transfer_type}
               onChange={(e) => {
@@ -230,20 +212,32 @@ export default ({ onAdd }: Props) => {
                 { value: 'completed', label: 'Completed' },
               ]}
             />
+            <DatePicker
+              style={{ width: 165 }}
+              onChange={(v => {
+                const dateWithoutTime = v?.format("YYYY-MM-DD")
+                setAdvanceSearchParams((v) => ({
+                  ...v,
+                  postingDate: dateWithoutTime,
+                }));
+                actionRef.current?.reloadAndRest?.();
+              })}
+              placeholder='Posting date'
+            />
+            <DatePicker
+              style={{ width: 165 }}
+              onChange={(v => {
+                const dateWithoutTime = v?.format("YYYY-MM-DD")
+                setAdvanceSearchParams((v) => ({
+                  ...v,
+                  docDueDate: dateWithoutTime,
+                }));
+                actionRef.current?.reloadAndRest?.();
+              })}
+              placeholder='Doc Due date'
+            />
+
           </Space>
-          // <Space wrap>
-          // <Select
-          //   defaultValue="lucy"
-          //   style={{ width: 120 }}
-          //   onChange={handleChange}
-          //   options={[
-          //     { value: 'jack', label: 'Jack' },
-          //     { value: 'lucy', label: 'Lucy' },
-          //     { value: 'Yiminghe', label: 'yiminghe' },
-          //     { value: 'disabled', label: 'Disabled', disabled: true },
-          //   ]}
-          // />
-          // </Space>
         }
         tableProps={{
           actionRef: actionRef,
@@ -520,7 +514,7 @@ export default ({ onAdd }: Props) => {
         title="Export Excel"
         open={exportModel.visible}
         loading={excelLoading}
-        type = 'request'
+        type='request'
         onCancel={() => setExportModal({ visible: false })}
         onSave={async (duration, line, shift, state, request_type) => {
           const result = {

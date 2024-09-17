@@ -82,29 +82,29 @@ export default () => {
       <Card size="small" style={{ textAlign: 'right', marginBottom: 10, marginTop: 10 }}>
         <Space >
           <ProForm submitter={false}>
-            <Row>
-            <ProFormSelect
-              style={{ marginTop: -10 }}
-              request={async ({ }) => {
-                const data = await services.getPlant();
+            <Row style={{alignItems:'center'}}>
+              <ProFormSelect
+                style={{ marginTop: -5 }}
+                request={async ({ }) => {
+                  const data = await services.getPlant();
 
-                return data.map((obj: any) => ({
-                  value: obj.plant,
-                  label: `${obj.plant}`,
-                }));
-              }}
-              // options={options}
-              fieldProps={{
-                onChange: async (e: string) => {
-                  setInitialValue(e)
-                }
-              }}
-              name="plant"
-              label=" "
-              initialValue={initialValue}
-            />
-          <DatePicker onChange={(v => setDate(v))} value={date} style={{ height: '32px',marginTop: 27,marginLeft:10}} />
-          </Row>
+                  return data.map((obj: any) => ({
+                    value: obj.plant,
+                    label: `${obj.plant}`,
+                  }));
+                }}
+                // options={options}
+                fieldProps={{
+                  onChange: async (e: string) => {
+                    setInitialValue(e)
+                  }
+                }}
+                name="plant"
+                label=" "
+                initialValue={initialValue}
+              />
+              <DatePicker onChange={(v => setDate(v))} value={date} style={{ height: '32px', marginLeft: 10 }} />
+            </Row>
           </ProForm>
           {/* <DatePicker onChange={(v => setDate(v))} value={date} style={{ marginTop: 7 }} /> */}
           {access.canAssignItem ?

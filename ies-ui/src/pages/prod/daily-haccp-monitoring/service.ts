@@ -1,5 +1,5 @@
 import { RequestActions, ServiceApiType, singleRequest } from "@/services/apiGateway";
-import { HACCPMonitoring, HACCPMonitoringActivities, HACCPMonitoringList } from "./data";
+import { HACCPMonitoring, HACCPMonitoringActivities, HACCPMonitoringInstruction, HACCPMonitoringList } from "./data";
 
 const DailyHACCPMonitoringAction = {
     get_haccp_by_date: (assign_date:string): ServiceApiType<{assign_date:string}> => ({
@@ -38,6 +38,18 @@ const DailyHACCPMonitoringAction = {
         type: "EXEC",
         payload: data
     }),
+    add_instruction:(data:HACCPMonitoringInstruction): ServiceApiType<HACCPMonitoringInstruction>=>({
+        actionName:'add-instruction',
+        endpoint: "PROD",
+        type: "EXEC",
+        payload: data
+    }),
+    get_instruction:(group_line:string):ServiceApiType<{group_line:string}>=>({
+        actionName:'get-instruction',
+        endpoint: 'PROD',
+        type: 'LIST_QUERY',
+        payload: {group_line}
+    })
 }
 
 export const DailyHACCPMonitoringServiceAPI = (requestAction: RequestActions) => {
@@ -58,6 +70,12 @@ export const DailyHACCPMonitoringServiceAPI = (requestAction: RequestActions) =>
             requestAction
         ),
         post_haccp_monitoring_list:(data:HACCPMonitoringList)=> singleRequest<{data: string; message: string}>(DailyHACCPMonitoringAction.post_haccp_monitoring_list(data))(
+            requestAction
+        ),
+        add_instruction:(data:HACCPMonitoringInstruction)=> singleRequest<{data: string; message: string}>(DailyHACCPMonitoringAction.add_instruction(data))(
+            requestAction
+        ),
+        get_instruction:(group_line:string)=> singleRequest<HACCPMonitoringInstruction>(DailyHACCPMonitoringAction.get_instruction(group_line))(
             requestAction
         ),
     }

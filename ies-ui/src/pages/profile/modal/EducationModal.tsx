@@ -54,10 +54,12 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb, ...rest }: Pr
     const onAdminSubmit = async ()=>{
         const bmForm = await form.validateFields(); 
         // attachment files
-        if(createFileOther.length==0){  
-            message.error('Please do select attachment files.');
-            return false;
-        } 
+        if(type=="ADD"){ 
+            if(createFileOther.length==0){  
+                message.error('Please do select attachment files.');
+                return false;
+            } 
+        }
         // submit
         Modal.confirm({
             title: 'Save Education',
@@ -68,6 +70,7 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb, ...rest }: Pr
                 bmForm.id = (!!data!!?data!!.id:0);
                 bmForm.empId = empId;
                 bmForm.status=true;
+                bmForm.isDelete=0;
                 await ProfileServicesEss.saveEducationAdmin(bmForm)(requestActions); 
                 // call back fun
                 cb.onReload(); 

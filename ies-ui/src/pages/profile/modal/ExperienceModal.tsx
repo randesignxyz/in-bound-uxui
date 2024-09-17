@@ -1,5 +1,5 @@
 import { ModalForm, ModalFormProps, ProFormTextArea, ProCard,ProForm, ProFormText,ProFormDatePicker, ProFormSelect } from "@ant-design/pro-components" 
-import { ExperienceData, FilesData, LocationData, SaveExperience } from "../data.ess"
+import { ExperienceData, FilesData} from "../data.ess"
 import { useEffect,useState } from 'react'; 
 import FileUploader , { UploadType } from '@/components/Attachment/FileUploader';
 import { Space, Typography, Image,List, Modal, message, Button, Row, Col } from "antd";
@@ -65,10 +65,11 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
             content: 'Are you sure?',
             onOk: async () => {
               try { 
-                bmForm.otherFile = createFileOther;  
+                bmForm.otherFile = createFileOther||[];  
                 bmForm.id = (!!data!!?data!!.id:0);
                 bmForm.empId = empId;
                 bmForm.status=true;
+                bmForm.isDelete=0;
                 await ProfileServicesEss.saveExperienceAdmin(bmForm)(requestActions); 
                 // call back fun
                 cb.onReload(); 
@@ -81,8 +82,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
     return <ModalForm  {...rest} form={form} width={'30%'} title={!!data?"Edit Experience":"Add Experience"}
         onOpenChange={visible => {
             // form.resetFields() 
-            rest.onOpenChange?.(visible)
-            console.log(visible);
+            rest.onOpenChange?.(visible);
         }} 
             submitter={isAdmin==2&&empId>0?
                 {

@@ -185,6 +185,7 @@ export interface LanguageData {
   levelId: number; 
   description: string;  
   status:Boolean; 
+  isDelete:number;
   otherFile  :AttachmentFile[];
 }
 export interface RelationshipData {
@@ -265,8 +266,8 @@ export interface SaveExperience {
   provinceId: number; 
   startPosition: string; 
   endPosition: string; 
-  startDate: moment.Moment;
-  endDate: moment.Moment;
+  startDate       : moment.Moment;
+  endDate         : moment.Moment;
   description: string;  
   status:Boolean;
   type:string;
@@ -284,14 +285,14 @@ export interface ExperienceData {
   countryName: string; 
   provinceName: string; 
 
-  startPosition: string; 
-  endPosition: string; 
-  startDate: moment.Moment;
-  endDate: moment.Moment;
-  description: string;  
-  status:Boolean;
-  type:string;
-  otherFile  :AttachmentFile[];
+  startPosition   : string; 
+  endPosition     : string; 
+  startDate       : moment.Moment;
+  endDate         : moment.Moment;
+  description     : string;  
+  status          : Boolean;
+  type            : string;
+  otherFile       : AttachmentFile[];
 }
 export interface ProfileExperienceData { 
   data     : ExperienceData[];  

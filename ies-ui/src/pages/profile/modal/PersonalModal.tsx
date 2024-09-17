@@ -1,7 +1,7 @@
 import { ModalForm, ModalFormProps, ProFormDatePicker, ProFormSelect, ProFormText,ProCard, ProFormTextArea, ProFormCheckbox, ProFormDigit} from "@ant-design/pro-components"
 import { useForm } from "antd/lib/form/Form"
 import { SaveEssProfile,LocationData, FilesData, EssProfileData } from "../data.ess"
-import { Image, Flex, Spin, List,message, Button, Modal} from 'antd';
+import { Image, Flex, Spin, List,message, Button, Modal,InputNumber} from 'antd';
 import { Space,Row, Col,Typography} from 'antd';
 import { useEffect,useState } from 'react'; 
 import { simpleRequestActions } from '@/services/model';
@@ -111,10 +111,12 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
     const onAdminSubmit = async ()=>{
         const bmForm = await form.validateFields(); 
         // attachment files
-        if(createFileOther.length==0){  
-            message.error('Please do select attachment files.');
-            return false;
-        } 
+        if(isAdmin!=2){
+            if(createFileOther.length==0){  
+                message.error('Please do select attachment files.');
+                return false;
+            } 
+        }
         // submit
         Modal.confirm({
             title: 'Save Lanuage',
@@ -229,10 +231,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                             <ProFormCheckbox label="Married to OML Staff" name={"marriedWith"} placeholder={"Married to OML Staff"}/>
                         </Col>
                         <Col span={12} style={{padding:'3px'}}>
-                            <ProFormDigit label="Spouse's OML Employee ID number" name={"spouseStaffId"} placeholder={"000000"} rules={[{
-                                max: 6,
-                                message: "Value should be less than 50 character",
-                            }]}/>
+                            <ProFormDigit label="Spouse's OML Employee ID number" name={"spouseStaffId"} placeholder={"000000"} />
                         </Col>       
                     </Row>
 

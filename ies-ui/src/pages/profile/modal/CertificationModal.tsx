@@ -52,17 +52,21 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
     const onAdminSubmit = async ()=>{
         const bmForm = await form.validateFields(); 
         // attachment files
-        if(createFileOther.length==0){  
-            message.error('Please do select attachment files.');
-            return false;
-        } 
+        if(type=="ADD"){ 
+            // 
+            if(createFileOther.length==0){  
+                message.error('Please do select attachment files.');
+                return false;
+            } 
+        }
+
         // submit
         Modal.confirm({
             title: 'Save Certification',
             content: 'Are you sure?',
             onOk: async () => {
               try { 
-                bmForm.otherFile = createFileOther;  
+                bmForm.otherFile = createFileOther||[];  
                 bmForm.id = (!!data!!?data!!.id:0);
                 bmForm.empId = empId;
                 bmForm.typeId = 2;
@@ -102,7 +106,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
         <ProCard bordered> 
             <ProFormText label="Certified Courses" name={'trainingCourse'} rules={[{ required: true }]} placeholder={"courses"}/> 
             <ProFormText label="Institution" name={'institution'} rules={[{ required: true }]} placeholder={"institution"}/> 
-            <ProFormDatePicker picker="month" label="In Month-Year" name={'year'} rules={[{ required: true }]} placeholder={"In Month-Year"}/>  
+            <ProFormDatePicker.Month label="In Month-Year" name={'year'} rules={[{ required: true }]} placeholder={"In Month-Year"}/>  
             <ProFormTextArea label="Description" name={'description'} placeholder={"description"}/> 
         </ProCard>
           

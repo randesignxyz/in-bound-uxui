@@ -327,6 +327,7 @@ export type AppraisalDataLookup = {
 }
 
 
+
 export type ProbationEvaluation = {
     id: number   
     key: string
@@ -338,4 +339,52 @@ export type ProbationEvaluation = {
     rating2?: number
     rating1?: number
     remark?: string
+    seqNo?: number
+}
+
+export type ProbationEvaluationResources = {
+    id: number
+    key:string
+    group: string   
+    title?: string
+    description?: string
+    active?: boolean
+    sort?: number
+    rating5?: number
+    rating4?: number
+    rating3?: number
+    rating2?: number
+    rating1?: number
+    seqNo?: number
+}
+
+export type ProbationEvaluationResourcesSupport = {
+    id: number
+    key?:string
+    group: string   
+    title?: string
+    description?: string
+    active?: boolean
+    sort?: number
+    fully?: number
+    partial?: number
+    no?: number
+    seqNo?: number
+}
+
+
+export type ProbationEvaluationDetailRs = {
+    id: number
+    section1: ProbationEvaluation[]
+    section2: ProbationEvaluation[]
+    section3: ProbationEvaluationResources[]
+    section4: ProbationEvaluationResourcesSupport[]
+}
+
+export type ProbationEvaluationPaloay = {
+    instId: string
+    section1: ProbationEvaluation[]
+    section2: ProbationEvaluation[]
+    section3: ProbationEvaluationResources[]
+    section4: ProbationEvaluationResourcesSupport[]
 }

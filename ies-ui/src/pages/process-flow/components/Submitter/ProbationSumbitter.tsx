@@ -61,6 +61,7 @@ export default ({ title, form, onlyCurrentUser, onSetSubmitter }: {
   return (<Spin spinning={requestActions.request?.loading}>
     <ProCard title= {title || 'Submitter'}
       bordered 
+      headerBordered
       // bodyStyle={{ backgroundColor: '#fefae7' }}
       size="small">
       <ProFormGroup >

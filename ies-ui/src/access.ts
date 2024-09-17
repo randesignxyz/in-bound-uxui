@@ -849,5 +849,8 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canCreateInventoryAdjRequest:
       currentUser?.authorities.some((item) => ['ROLE_NCM_INVENTORY_ADJUSTMENT_REQUEST'].some((it) => it === item)) ||
       false,       
+    canCreateHrProbationEvaluationRequest:
+      currentUser?.authorities.some((item) => ['ROLE_HR_PROBATION_EVALUATION_REQUEST'].some((it) => it === item)) ||
+      false,        
   };
 }

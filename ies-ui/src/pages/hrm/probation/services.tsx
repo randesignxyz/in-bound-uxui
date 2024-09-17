@@ -1,10 +1,11 @@
 import { SimpleRequestActions } from "@/services/model";
-import { RequestItem,  SearchParams,  AppraisalEmp,  AppraisalEmpSubmissionResult, AppraisalEmPayload, AppraisalDimension, UpdateAppraisalEmPayload, CurrentAppraisalEmpSearch, AppraisalAttachmentFile, AppraisalEmpStatusTotal, AppraisalEmpSubmitAllPayload, AppraisalOverallPerformanceRating, AppraisalMapping, EmployeeInfResult, AppraisalInstructionItem, AppraisalDataLookup } from "./data.types";
+import { RequestItem,  SearchParams,  AppraisalEmp,  AppraisalEmpSubmissionResult, AppraisalEmPayload, AppraisalDimension, UpdateAppraisalEmPayload, CurrentAppraisalEmpSearch, AppraisalAttachmentFile, AppraisalEmpStatusTotal, AppraisalEmpSubmitAllPayload, AppraisalOverallPerformanceRating, AppraisalMapping, EmployeeInfResult, AppraisalInstructionItem, AppraisalDataLookup, ProbationEvaluationResources, ProbationEvaluationResourcesSupport, ProbationEvaluationDetailRs, ProbationEvaluationPaloay } from "./data.types";
 import { CrudBaseServices } from "@/services/CrudBaseSevices";
 import { FetchPagingParams } from "@/components/DataCrud/TableView";
 import { execDataService, execDataService0, fetchDataItemService, fetchDataListService, fetchDataPagingService } from "@/services/apiGateway";
 import { TaskActionDataParam } from "@/services/process-workflow/params";
 import { Activity } from "@/services/process-workflow/data";
+import { ProbationEvaluationData } from "../data";
 
 
 export const createService = ({ request }: { request: SimpleRequestActions; }): CrudBaseServices<
@@ -15,6 +16,9 @@ export const createService = ({ request }: { request: SimpleRequestActions; }): 
 > & {
     // actionHR: (data: TaskActionDataParam<{id: number; items: RequestItem[]}>) => Promise<void>,
     // findByInstId: (instId: number) => Promise<AppraisalEmp>
+    request:(data: ProbationEvaluationData)=> Promise<any>,
+    insertAssessment:(data: ProbationEvaluationPaloay)=> Promise<any>,
+
     fetchActivityList:(id: number) => Promise<Activity[]>
     fetchAppraisalDimensionList:(id: number) => Promise<AppraisalEmpSubmissionResult[]>
     fetchAppraisalEmpDimensionList:(id: number) => Promise<AppraisalEmpSubmissionResult[]>
@@ -28,9 +32,26 @@ export const createService = ({ request }: { request: SimpleRequestActions; }): 
     fetchProbationEmpList:(searchValue?:string)=>Promise<AppraisalMapping[]>,
     fetchEmployeeInfo:(id:number)=> Promise<EmployeeInfResult>,
     fetchAppraisalIntructionList:(id:number)=> Promise<AppraisalInstructionItem[]>,
-    fetchAppraisalDataLookupList:()=> Promise<AppraisalDataLookup[]>
+    fetchAppraisalDataLookupList:()=> Promise<AppraisalDataLookup[]>,
+    fetchProbationEvaluationResourcesList:()=> Promise<ProbationEvaluationResources[]>,
+    fetchProbationEvaluationResourcesSupportList:()=> Promise<ProbationEvaluationResourcesSupport[]>,
+    detailByProcessFlow: (instId: string) => Promise<ProbationEvaluationDetailRs>
 } => {
     return {
+        request: async (data: ProbationEvaluationData) =>
+            execDataService<{data: string}, ProbationEvaluationData>({
+                actionName: 'probation-evaluation-request',
+                endpoint: 'HR',
+                payload: data
+            })(request),
+        insertAssessment: async (data: ProbationEvaluationPaloay) =>
+            execDataService<{data: string}, ProbationEvaluationPaloay>({
+                actionName: 'probation-evaluation-insert-assessment',
+                endpoint: 'HR',
+                payload: data
+            })(request),
+            
+
         fetchPaging: async (params: FetchPagingParams<SearchParams>) =>
             fetchDataPagingService<AppraisalEmp, FetchPagingParams<SearchParams>>({
                 actionName: 'fetch-paging-appraisal-submit',
@@ -150,7 +171,22 @@ export const createService = ({ request }: { request: SimpleRequestActions; }): 
             fetchDataListService<AppraisalDataLookup>({
                 actionName: 'fetch-appraisal-data-lookup-list',
                 endpoint: 'HR'
-            }).query(request)    
-    ,
+            }).query(request),
+        fetchProbationEvaluationResourcesList: async () =>
+            fetchDataListService<ProbationEvaluationResources>({
+                actionName: 'fetch_probation_evaluation_resources',
+                endpoint: 'HR'
+            }).query(request),  
+        fetchProbationEvaluationResourcesSupportList: async () =>
+                fetchDataListService<ProbationEvaluationResourcesSupport>({
+                    actionName: 'fetch_probation_evaluation_resources',
+                    endpoint: 'HR'
+                }).query(request),    
+        detailByProcessFlow: async(instId: string) => fetchDataItemService<ProbationEvaluationDetailRs>({
+                actionName: 'probation-evaluation-detail-by-process-flow',
+                endpoint: 'HR',
+                payload: {id:instId}
+            }).query(request),
+
     }
 }

@@ -29,16 +29,11 @@ export const Model = (id?: number) => {
 
   const initilizeData = async (stockControlId?: number) => {
     const initParams: InitCustomerParamsType[] = [
-      // { actionName: 'sale', responseKey: 'seList', payload: {} },
       { actionName: 'locations', responseKey: 'regionList', payload: { type: 'DIVISION' } },
     ];
 
     try {
       const result = await crmServices.initCustomerData(initParams);
-
-      // const rsType = await saleServices.listStockCategory();
-      // const typeProductItems = await saleServices.listTypeProductItems();
-
       let initSaleInvoiceParams: InitSaleInvoiceParam[] = [
         {
           actionName: 'look-up-data',
@@ -63,13 +58,6 @@ export const Model = (id?: number) => {
           payload: {},
         },
       ];
-      // if (stockControlId) {
-      //   initSaleInvoiceParams = initSaleInvoiceParams.concat({
-      //     actionName: 'list-sale-invoices',
-      //     responseKey: 'saleInvoiceList',
-      //     payload: { id: stockControlId },
-      //   });
-      // }
       const rs = await saleServices.initSaleInvoiceData(initSaleInvoiceParams);
 
       dispatch({
@@ -85,8 +73,6 @@ export const Model = (id?: number) => {
     try {
       const result = await saleServices.findStock({ id: id });
       dispatch({ type: 'detail', payload: result });
-      // const rs = await saleServices.listStockDetailItems({ id: id });
-      // dispatch({ type: 'listStockDetailItem', payload: rs });
     } catch (err) {
       return;
     }

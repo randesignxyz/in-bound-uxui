@@ -2,10 +2,9 @@ import TableView, { TableViewProps } from '@/components/DataCrud/TableView';
 import { formatDate } from '@/pages/utils';
 import { Paging } from '@/services/API';
 import { StockStoreAdvanceSearchParams, StockStoreLess } from '@/services/sale/data';
-import { EditOutlined } from '@ant-design/icons';
 import { ActionType } from '@ant-design/pro-table';
 import { useSetState } from 'ahooks';
-import { message, Modal, Radio, Space, Tag, Tooltip } from 'antd';
+import { message, Modal, Radio, Space, Tag } from 'antd';
 import { SortOrder } from 'antd/lib/table/interface';
 import { omit } from 'lodash';
 import { useEffect, useRef, useState } from 'react';
@@ -80,21 +79,6 @@ const StoreListView: React.FC<TableViewProps<StockStoreLess>> = ({ actionHandler
             </Radio.Group>
           </Space>
         }
-        // tableProps={{
-        //   actionRef: actionRef,
-        //   toolbar: !access.canOpenStore
-        //     ? undefined
-        //     : {
-        //         actions: [
-        //           <Button
-        //             key={'bt'}
-        //             type="link"
-        //             onClick={() => setAddNewModal({ visible: true, record: undefined })}
-        //             icon={<PlusOutlined />}
-        //           />,
-        //         ],
-        //       },
-        // }}
         actionHandlers={{
           onSearchCriteria: (data) => {
             return { searchValue: data, advanceSearch: advanceSearchParams };
@@ -113,7 +97,6 @@ const StoreListView: React.FC<TableViewProps<StockStoreLess>> = ({ actionHandler
         columns={[
           {
             title: 'Store Name',
-            // dataIndex: 'name',
             render: (_, r) => {
               return (
                 <a onClick={() => actionHandlers?.onDetail && actionHandlers?.onDetail(r)}>
@@ -132,11 +115,6 @@ const StoreListView: React.FC<TableViewProps<StockStoreLess>> = ({ actionHandler
             title: 'Vehicle',
             render: (_, r) => {
               return r.vehicle?.plateNumber;
-              //   return (
-              //     <a onClick={() => history.push(`${SalePaths.teamWork}/detail/${r.teamWork?.id}`)}>
-              //       {r.teamWork?.teamName}
-              //     </a>
-              //   );
             },
           },
           {
@@ -147,14 +125,12 @@ const StoreListView: React.FC<TableViewProps<StockStoreLess>> = ({ actionHandler
           },
           {
             title: 'Status',
-            // dataIndex: 'status',
             align: 'center',
             render: (_, r) => {
               const color =
                 r.status === 'pending'
                   ? 'default'
-                  : //: r.status === 'approved'
-                  r.status === 'Open'
+                  :r.status === 'Open'
                   ? 'success'
                   : r.status === 'canceled' || r.status === 'Closed'
                   ? 'magenta'
@@ -170,22 +146,22 @@ const StoreListView: React.FC<TableViewProps<StockStoreLess>> = ({ actionHandler
             title: 'Description',
             dataIndex: 'description', 
           },
-          access.canOpenStore? {
-                title: '',
-                align: 'center',
-                render: (_, r) => {
-                  return (
-                    <Tooltip title="Edit" key="edit">
-                      <EditOutlined
-                        style={{ color: '#448DF7' }}
-                        onClick={() => history.push(`${SalePaths.store}/edit/${r.id}`)}
-                      />
-                    </Tooltip>
-                  );
-                  // return <Checkbox defaultChecked={r.isActive ? true : false} disabled />;
-                },
-              }
-            : {},
+          // access.canOpenStore? {
+          //       title: '',
+          //       align: 'center',
+          //       render: (_, r) => {
+          //         return (
+          //           <Tooltip title="Edit" key="edit">
+          //             <EditOutlined
+          //               style={{ color: '#448DF7' }}
+          //               onClick={() => history.push(`${SalePaths.store}/edit/${r.id}`)}
+          //             />
+          //           </Tooltip>
+          //         );
+          //         // return <Checkbox defaultChecked={r.isActive ? true : false} disabled />;
+          //       },
+          //     }
+          //   : {},
         ]}
       />
       <StockStoreFormModal

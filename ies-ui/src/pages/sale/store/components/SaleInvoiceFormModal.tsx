@@ -27,7 +27,6 @@ import { Model } from '../../stock-control/model';
 
 export interface Props extends FormModalProps {
   data?: {
-    // saleTypes?: LookupData[];
     detail?: SaleInvoiceLess;
     typeProductItems?: { itemId: number; itemType: number }[];
     saleItems: SaleItem[];
@@ -72,7 +71,6 @@ const SaleInvoiceFormModal: React.FC<Props> = ({ isLoading, data, actionHandlers
       ...dataFormat,
       items: dataSource,
       id: data?.detail?.id,
-      //salespersonCode: dataFormat.salespersonCode,
       stockControlId: data?.stockControlId || -1,
     };
     actionHandlers && actionHandlers.onSubmit(saleInvoice);
@@ -103,7 +101,6 @@ const SaleInvoiceFormModal: React.FC<Props> = ({ isLoading, data, actionHandlers
 
   useEffect(() => {
     if (!rest.open) return;
-    // load region
 
     if (!data?.detail) {
       actions.fetchInvoiceNo().then((it) => {
@@ -163,15 +160,6 @@ const SaleInvoiceFormModal: React.FC<Props> = ({ isLoading, data, actionHandlers
         >
           {data?.detail ? 'Update' : 'Submit'}
         </Button>,
-        // <Button
-        //   loading={rest.confirmLoading}
-        //   disabled={rest.disabled}
-        //   key="submitView"
-        //   type="primary"
-        //   onClick={async () => await onSubmitActionHandler(true)}
-        // >
-        //   Submit & Detail
-        // </Button>,
       ]}
     >
       <ProForm<SaleInvoiceLess>
@@ -196,7 +184,6 @@ const SaleInvoiceFormModal: React.FC<Props> = ({ isLoading, data, actionHandlers
                 showSearch
                 fieldProps={{
                   optionLabelProp: 'label',
-                  // dropdownMatchSelectWidth: 400,
                   filterOption: (input, option) =>
                     (option?.label?.toString() || '').toLowerCase().indexOf(input.toLowerCase()) >=
                     0,
@@ -246,30 +233,14 @@ const SaleInvoiceFormModal: React.FC<Props> = ({ isLoading, data, actionHandlers
                 }}
                 placeholder="Please select customer"
               />
-              {/* <ProFormMoney
-                label="Amount Riel"
-                name="amountKH"
-                width={300}
-                fieldProps={{
-                  precision: 0,
-                  formatter: (value) => {
-                    //numeral(data.details?.cashOnHand).format('$ 0,0.00')
-                    return numeral(value).format('0,0');
-                  },
-                }}
-                min={0}
-              /> */}
             </Col>
           </Row>
         </Card>
         {!data?.detail && (
           <>
             <ProTable<SaleInvoiceItemLess>
-              // dataSource={dataSource}
               search={false}
               actionRef={actionRef}
-              //    rowClassName={(r) => r.parentKey && styles.subLineItem}
-              //    dataSource={data.lineItemList || []}
               dataSource={dataSource}
               style={{ marginTop: 10 }}
               pagination={false}
@@ -280,7 +251,6 @@ const SaleInvoiceFormModal: React.FC<Props> = ({ isLoading, data, actionHandlers
                 <Tooltip placement="topLeft" title="Add Item">
                   <Button
                     size="small"
-                    //   icon={<PlusCircleFilled style={{ color: blueColor }} />}
                     icon={<PlusOutlined />}
                     type="primary"
                     onClick={() => setItemModal({ visible: true })}
@@ -294,11 +264,6 @@ const SaleInvoiceFormModal: React.FC<Props> = ({ isLoading, data, actionHandlers
                 search: false,
               }}
               columns={[
-                // {
-                //   title: '#',
-                //   dataIndex: 'index',
-                //   key: 'key',
-                // },
                 {
                   title: 'Code',
                   dataIndex: 'itemCode',
@@ -407,15 +372,12 @@ const SaleInvoiceFormModal: React.FC<Props> = ({ isLoading, data, actionHandlers
         width={'500px'}
         onCancel={() => setItemModal({ visible: false })}
         data={{
-          // saleTypes: data?.saleTypes,
           productItems: data?.saleItems,
           typeProductItems: data?.typeProductItems,
         }}
         actionHandlers={{
           onAddItem: async (item) => {
-            // console.log(item);
             setItemModal({ visible: false });
-            // const items = dataSource;
             const index = dataSource.findIndex(
               (it) => it.itemId === item.itemId && it.itemType === item.itemType,
             );
@@ -434,7 +396,6 @@ const SaleInvoiceFormModal: React.FC<Props> = ({ isLoading, data, actionHandlers
               initialAmount = item.amount;
               setDataSource([...dataSource, item].sort(sortFun));
             }
-            // const dataForm = await formSaleInvoice.validateFields();
             const amount: number = dataSource.reduce<number>((itemAmount, current) => {
               return (itemAmount += current.amount);
             }, initialAmount);

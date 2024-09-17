@@ -21,12 +21,6 @@ export interface RequestStockControlModalProps extends FormModalProps {
     onLoadInitData: () => void;
   };
 }
-
-// const layout = {
-//   labelCol: { span: 8 },
-//   wrapperCol: { span: 14 },
-// };
-
 const RequestStockControlModal: React.FC<RequestStockControlModalProps> = ({
   isLoading,
   actionHandlers,
@@ -34,7 +28,6 @@ const RequestStockControlModal: React.FC<RequestStockControlModalProps> = ({
   ...rest
 }) => {
   const [dataSource, setDataSource] = useState<StockControlItemLess[]>([]);
-  // const [form] = useForm<SaveStockControl>();
   const actionRef = useRef<ActionType>();
   const [addNewModal, setAddNewModal] = useSetState<{
     visible?: boolean;
@@ -42,18 +35,11 @@ const RequestStockControlModal: React.FC<RequestStockControlModalProps> = ({
 
   useEffect(() => {
     if (!rest.open) {
-      //actionHandlers?.onClearLastStockControl && actionHandlers.onClearLastStockControl();
       return;
     }
     actionHandlers?.onLoadInitData();
     setDataSource([]);
-    // form.setFieldsValue({
-    //   empNo: data?.selectedSE,
-    //   approvedDate: moment(),
-    //   requestedDate: moment(),
-    // });
     return () => {
-      // form.resetFields();
     };
   }, [rest.open]);
 
@@ -72,7 +58,6 @@ const RequestStockControlModal: React.FC<RequestStockControlModalProps> = ({
         <Button
           key="reset"
           onClick={() => {
-            // form.resetFields();
             setDataSource([]);
           }}
         >
@@ -140,7 +125,6 @@ const RequestStockControlModal: React.FC<RequestStockControlModalProps> = ({
               render: (_, data) => {
                 return (
                   <Space size={0}>
-                    {/* <Button size="small" type="link" icon={<EditOutlined />} onClick={(_) => {}} /> */}
                     <Button
                       size="small"
                       type="link"

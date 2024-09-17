@@ -260,7 +260,7 @@ export default () => {
       name: 'Reports',
       description: 'All Reports in DSD.',
       icon: reportIcon,
-      visible: access.canAccessAllMenuDSD,
+      visible: access.canAccessSaleReport,
       menu: {
         onClick: (info) => {
           switch (info.key) {

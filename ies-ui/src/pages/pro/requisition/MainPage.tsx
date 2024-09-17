@@ -207,6 +207,11 @@ export default () => {
                                     render: (_, r) => r.requestedBy,
                                 },
                                 {
+                                    title: 'BU',
+                                    width: 50,
+                                    dataIndex: 'buName'
+                                },
+                                {
                                     title: 'Requested Dt',
                                     align: 'right',
                                     sorter: 'createdDate',

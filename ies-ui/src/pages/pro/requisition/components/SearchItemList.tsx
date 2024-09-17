@@ -13,16 +13,17 @@ import CheckableTag from 'antd/es/tag/CheckableTag';
 import { useEffect, useRef, useState } from 'react';
 
 interface Props extends ModalFormProps {
+  buId: number;
   addedItems?: number[];
   onAddItem?: (data: ItemDetail) => void;
 }
 
-export default ({ addedItems, onAddItem, ...rest }: Props) => {
+export default ({ buId, addedItems, onAddItem, ...rest }: Props) => {
   const requestActions = simpleRequestActions();
   const services = ItemServiceAPI(requestActions);
   const actionRef = useRef<ActionType>();
   const [searchValue, setSearchValue] = useState<string>();
-  const [searchParams, setSearchParams] = useState<ItemAdvanceSearchParams>({});
+  const [searchParams, setSearchParams] = useState<ItemAdvanceSearchParams>({ buId: buId });
   const [itemGroups, setItemGroups] = useState<ItemGroupListItem[]>([]);
   const onRequestHandler = async (params: TableViewSearchParams<ItemAdvanceSearchParams>) => {
     try {
@@ -49,12 +50,16 @@ export default ({ addedItems, onAddItem, ...rest }: Props) => {
   }, [rest.open]);
 
   const initData = async () => {
-    const data = await services.listAllItemGroup();
+    const data = await services.listAllItemGroupByBu(buId);
+    setSearchParams({ buId: buId })
     setItemGroups(data);
+    actionRef.current?.reloadAndRest?.();
   };
 
   return (
     <DrawerForm
+      clearOnDestroy
+
       onValuesChange={(changedValue) => {
         if ('itemType' in changedValue) {
           const { itemType } = changedValue;

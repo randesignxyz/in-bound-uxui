@@ -29,6 +29,7 @@ export interface ItemListItem {
   itemCode: string;
   itemName: string;
   buyUoM?: string;
+  buId?: number;
   lastPurchasePrice?: number;
   lastPurchaseCurr?: string;
   itemGroup: {
@@ -47,6 +48,7 @@ export interface ItemGroupListItem {
 
 export interface Requistion {
   id?: number;
+  buId: number;
   acquisitionDate: Moment;
   budgetCodeRequired: boolean;
   reason: string;
@@ -98,6 +100,8 @@ export interface RequisitionDetailResponse {
   service: boolan;
   remarks?: string;
   processStatus: string;
+  buId: number;
+  buName: string;
   deptId: number;
   createdDate: Moment;
   createdBy: string;
@@ -150,7 +154,7 @@ export interface ProEmployee {
 
 export interface RequisitionLess {
   id: number;
-  formNo?: String;
+  formNo?: string;
   acquisitionDate: Moment;
   budgetCodeRequired: boolean;
   service: string;

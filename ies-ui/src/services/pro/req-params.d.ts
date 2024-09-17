@@ -21,6 +21,7 @@ export interface SaveRequisitionParams {
 export type ItemAdvanceSearchParams = {
   groupIds?: number[]
   itemType?: 'ALL' | 'PRODUCT' | 'SERVICE';
+  buId?: number;
 }
 
 export interface RequisitionBudgetCodeReviewParams {

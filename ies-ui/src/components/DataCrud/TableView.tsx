@@ -158,7 +158,7 @@ const TableView = <T extends { id: any }, C extends { searchValue?: string }>(
         disableSearch ?? (
           <ProCard bordered>
             <div style={{ float: 'left' }}>
-              <Space> Search:
+              <Space>
                 <Input.Search allowClear onSearch={onSearchHandler} />
 
                 {props.advanceSearch && (

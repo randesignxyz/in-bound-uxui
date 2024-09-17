@@ -70,19 +70,21 @@ export const RequisitionParams = {
     payload: { id },
   }),
 
-  listBudgetCode: (): ServiceApiType<any> => ({
+  listBudgetCode: (buId?: number): ServiceApiType<any> => ({
     type: 'LIST_QUERY',
     endpoint: 'PRO',
     actionName: 'list-budget-code',
     responseKey: '',
-    payload: null
+    payload: {
+      buId
+    }
   }),
 
-  listBudgetCodeByDept: (deptId: number): ServiceApiType<{ id: number }> => ({
+  listBudgetCodeByDept: (deptId: number, buId?: number): ServiceApiType<{ deptId: number; buId?: number }> => ({
     type: 'LIST_QUERY',
     endpoint: 'PRO',
     actionName: 'list-budget-code-by-dept',
-    payload: { id: deptId }
+    payload: { deptId, buId }
   }),
 
   saveBudgetCodeReview: (data: TaskActionDataParam<RequisitionBudgetCodeReviewParams>): ServiceApiType<TaskActionDataParam<RequisitionBudgetCodeReviewParams>> => ({
@@ -159,8 +161,8 @@ export const RequisitionServiceAPI = (requestActions?: RequestActions) => {
 
     post: (id: number) => singleRequest(RequisitionParams.post(id))(requestActions) as Promise<RequisitionResponse>,
 
-    listBudgetCode: () => singleRequest(RequisitionParams.listBudgetCode())(requestActions) as Promise<BudgetCodeListItem[]>,
-    listBudgetCodeByDept: (deptId: number) => singleRequest(RequisitionParams.listBudgetCodeByDept(deptId))(requestActions) as Promise<BudgetCodeListItem[]>,
+    listBudgetCode: (buId?: number) => singleRequest(RequisitionParams.listBudgetCode(buId))(requestActions) as Promise<BudgetCodeListItem[]>,
+    listBudgetCodeByDept: (deptId: number, buId?: number) => singleRequest(RequisitionParams.listBudgetCodeByDept(deptId))(requestActions) as Promise<BudgetCodeListItem[]>,
     saveBudgetCodeReviews: (data: TaskActionDataParam<RequisitionBudgetCodeReviewParams>) => singleRequest(RequisitionParams.saveBudgetCodeReview(data))(requestActions),
     listProEmplyee: () => singleRequest(RequisitionParams.listProEmployee())(requestActions) as Promise<ProEmployee[]>,
     saveProReview: (data: TaskActionDataParam<RequisitionProReviewparams>) => singleRequest(RequisitionParams.saveProReview(data))(requestActions),
@@ -187,7 +189,7 @@ const ItemParams = {
     type: 'PAGING_QUERY',
     endpoint: 'PRO',
     actionName: 'list-item',
-    payload: { ...params.criteria },
+    payload: { ...params.criteria, },
     pagination: {
       pageSize: params.pagination?.pageSize,
       page: params.pagination?.current,
@@ -202,6 +204,16 @@ const ItemParams = {
     payload: null
   }),
 
+  listAllItemGroupByBu: (buId: number): ServiceApiType<any> => ({
+    type: 'LIST_QUERY',
+    endpoint: 'PRO',
+    actionName: 'list-all-item-group-by-bu',
+    responseKey: '',
+    payload: {
+      buId
+    }
+  }),
+
   detail: (id: number): ServiceApiType<{ id: number }> => ({
     type: 'FETCH_QUERY',
     endpoint: 'PRO',
@@ -214,6 +226,7 @@ export const ItemServiceAPI = (requestActions: RequestActions) => {
   return {
     list: (params: TableViewSearchParams<ItemAdvanceSearchParams>) => singleRequest<ItemListItem>(ItemParams.list(params))(requestActions) as Promise<Paging<ItemListItem>>,
     listAllItemGroup: () => singleRequest<ItemGroupListItem>(ItemParams.listAllItemGroup())(requestActions) as Promise<ItemGroupListItem[]>,
+    listAllItemGroupByBu: (id: number) => singleRequest<ItemGroupListItem>(ItemParams.listAllItemGroupByBu(id))(requestActions) as Promise<ItemGroupListItem[]>,
     detail: (id: number) => singleRequest(ItemParams.detail(id))(requestActions) as Promise<ItemDetail>
   };
 };

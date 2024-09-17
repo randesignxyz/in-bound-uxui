@@ -13,6 +13,7 @@ import { RequisitionServiceAPI } from '@/services/pro/services';
 import { StartWorkFlowParam } from '@/services/process-workflow/params';
 import { ClearOutlined, MinusCircleOutlined } from '@ant-design/icons';
 import {
+  CheckCard,
   EditableFormInstance,
   EditableProTable,
   FooterToolbar,
@@ -33,10 +34,16 @@ import {
 import { uniqueId } from 'lodash';
 import moment, { Moment } from 'moment';
 import { useEffect, useRef, useState } from 'react';
-import { history } from "@umijs/max";
+import { history, useAccess } from "@umijs/max";
 import SearchItemList from './components/SearchItemList';
 import { AcquisitionFormNames } from './process-flow';
 import { useInView } from 'react-intersection-observer';
+
+type BU = {
+  id: number;
+  name: string;
+  description?: string;
+}
 
 export default ({
   id,
@@ -52,47 +59,61 @@ export default ({
 }) => {
   const [form] = Form.useForm<Requistion>();
   const editableFormRef = useRef<EditableFormInstance>();
-
   const [searchVisible, setSearcVisible] = useState(false);
   const [startFormVisible, setStartFormVisible] = useState(false);
   const [addedItems, setAddedItems] = useState<RequisitionItem[]>([]);
   const [addedServices, setAddedServices] = useState<RequisitionService[]>([]);
-
   const requestActions = simpleRequestActions();
   const services = RequisitionServiceAPI(requestActions);
   const [isService, setIsService] = useState<boolean>(false);
   const [requiredBudgetCode, setRequiredBudgetCode] = useState<boolean>(false);
   const [budgetCodeList, setBudgetCodesList] = useState<BudgetCodeListItem[]>([]);
-  const [itemUomList, setItemUomList] = useState<{ itemCode: string; uom: string }[]>([]);
-
+  const [itemUomList, setItemUomList] = useState<{ itemCode: string; uom: string, buId: number }[]>([]);
+  const access = useAccess()
   const [forceClearUpload, setForceClearUpload] = useState(0);
   const [fileIds, setFileIds] = useState<string[]>([]);
-
+  const [bu, setBu] = useState<BU[]>([])
+  const [selectedBu, setSelectedBu] = useState(1)
   const { ref, inView } = useInView({});
 
   const clear = () => {
     form.resetFields();
     setAddedItems([]);
     setAddedServices([]);
-    // setInitFileIds([]);
     setFileIds([]);
     setForceClearUpload((v) => v + 1);
     setIsService(false);
   };
 
-
   const initData = async () => {
-    services.listBudgetCode().then(budgetCodes => setBudgetCodesList(budgetCodes));
-
+    const buList = [
+      access.hasProOflAccess && { id: 1, name: 'OFL', description: 'Onefraternity' },
+      access.hasProNvcAccess && { id: 2, name: 'NVC', description: 'Vital' },
+      access.hasProOmmAccess && { id: 3, name: 'OMM', description: 'OMM' }
+    ].filter(it => it) as BU[]
+    setBu(buList)
     if (id && id > 0) {
       const data = await services.detail(id);
+      setSelectedBu(_ => data.buId)
       initFormData(data);
+    } else {
+      setSelectedBu(buList.find(it => it)?.id || 1)
     }
   };
+
+  const changeBu = async (buId: number) => {
+    const budgetCodeList = await services.listBudgetCode(buId);
+    setBudgetCodesList(_ => budgetCodeList)
+  }
 
   useEffect(() => {
     initData();
   }, [id]);
+
+  useEffect(() => {
+    setItemUomList([])
+    changeBu(selectedBu)
+  }, [selectedBu])
 
 
   const initFormData = (data: RequisitionDetailResponse) => {
@@ -102,6 +123,7 @@ export default ({
       budgetCodeRequired: data.budgetCodeRequired,
       totalAmount: data.totalAmount,
       reason: data.reason,
+      buId: data.buId,
       remarks: data.remarks,
       service: data.service,
       fileIds: data.fileIds || [],
@@ -161,9 +183,7 @@ export default ({
   };
 
   const layout = <div ref={ref}><ProForm
-
     form={form}
-
     onValuesChange={(changeValue, values) => {
       const { budgetCodeRequired, service } = changeValue;
 
@@ -196,7 +216,7 @@ export default ({
                 content: 'Are you sure?',
                 onOk: async () => {
                   try {
-                    await services.save(dataForm);
+                    await services.save({ ...dataForm, buId: selectedBu });
                     message.success('Save successfully.');
 
                     !openInTab && clear();
@@ -225,12 +245,20 @@ export default ({
   >
     <Card title="General" size="small">
       <Row gutter={20}>
+        <Col flex={1}>
+          {bu.length > 0 && <CheckCard.Group key={`bu_${selectedBu}`} disabled={addedItems.length > 0 || bu.length == 1} onChange={v => setSelectedBu(v?.valueOf() as number)} defaultValue={selectedBu} size='small' >
+            {bu.map(it => (<CheckCard key={`bu-${it.id}`} size='small' title={it.name} description={it.description} value={it.id} />))}
+
+          </CheckCard.Group>}
+        </Col>
+      </Row>
+      <Row gutter={20}>
         <Col flex={'400px'}>
           <ProFormDatePicker
             rules={[
               {
                 required: true,
-                validator: (rules, value) => {
+                validator: (_, value) => {
                   if ((value as Moment).startOf('day').isBefore(moment().startOf('day'))) {
                     return Promise.reject('Request date cannot be back date.');
                   } else {
@@ -239,7 +267,7 @@ export default ({
                 },
               },
             ]}
-            label=" Expected date"
+            label="Expected date"
             name={'acquisitionDate'}
           />
           <ProFormTextArea
@@ -355,11 +383,13 @@ export default ({
               dataIndex: 'uom',
               valueType: 'select',
               formItemProps: { rules: [{ required: true }] },
-              request: async (_, { record }: { record: RequisitionItem }) => {
-                return itemUomList
-                  .filter((it) => it.itemCode == record.itemCode)
-                  .map((it) => ({ label: it.uom, value: it.uom }));
-              },
+              valueEnum: (r) =>
+                itemUomList.filter(it => it.itemCode == r.itemCode).reduce((acc, cur) => ({ ...acc, [cur.uom]: cur.uom }), {}),
+              // request: async (_, { record }: { record: RequisitionItem }) => {
+              //   return itemUomList
+              //     .filter((it) => it.itemCode == record.itemCode && it.buId == selectedBu)
+              //     .map((it) => ({ label: it.uom, value: it.uom, }));
+              // },
             },
             {
               title: 'Unit Price',
@@ -382,9 +412,8 @@ export default ({
               dataIndex: 'budgetCode',
               fieldProps: { showSearch: true },
               valueType: 'select',
-              request: async (_, { record }: { record: RequisitionItem }) => {
-                return budgetCodeList.map((it) => ({ label: it.code, value: it.code }));
-              },
+              valueEnum: (_) =>
+                budgetCodeList.reduce((acc, cur) => ({ ...acc, [cur.code]: cur.code }), {}),
             },
             {
               title: 'Remarks',
@@ -519,14 +548,15 @@ export default ({
         {layout}
       </PageContainer>}
       <SearchItemList
+        buId={selectedBu}
         width={1000}
         open={searchVisible}
         onOpenChange={setSearcVisible}
         addedItems={addedItems?.map((it) => it.itemId)}
         onAddItem={(item) => {
           if (!itemUomList.some((it) => it.itemCode == item.itemCode)) {
-            const newItems = item.uomList.map((it1) => ({ itemCode: item.itemCode, uom: it1 }));
-            setItemUomList((v) => [...v, ...newItems]);
+            const newItems = item.uomList.map((it1) => ({ itemCode: item.itemCode, uom: it1, buId: item.buId ?? 1 }));
+            setItemUomList((v) => [...(v.filter(it1 => it1.itemCode != item.itemCode)), ...newItems]);
           }
           const itemList = [
             ...addedItems,
@@ -537,7 +567,7 @@ export default ({
               itemName: item.itemName,
               qty: 1,
               unitPrice: item.lastPurchasePrice,
-              uom: item.buyUoM,
+              uom: item.uomList.find(it => it == item.buyUoM) ?? item.uomList.find(it => it),
               amount: item.lastPurchasePrice,
             } as RequisitionItem,
           ];
@@ -557,12 +587,12 @@ export default ({
         // payload={{ from: 'Requisition', id: id }}
         visible={startFormVisible}
         actionHandlers={{
-          onStartWorkflow: async (processDef, formKey, buId, requestor, comment) => {
+          onStartWorkflow: async (processDef, formKey, _, requestor, comment) => {
             const dataForm = await getDataForm();
             const data: StartWorkFlowParam<Requistion> = {
               processDef: processDef,
               formKey: formKey,
-              buId: buId,
+              buId: selectedBu,
               requestor: requestor.id,
               comment: comment,
               payload: dataForm,

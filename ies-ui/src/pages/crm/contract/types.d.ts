@@ -143,7 +143,7 @@ export type ContractCheckedDataView = {
 
 export type SaveCustomerPosmParams = {
   id?: number
-  contractId: number
+  customerId: number
   itemId: number
   qty: number
   remarks?: string

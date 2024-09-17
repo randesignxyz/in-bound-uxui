@@ -1,4 +1,3 @@
-import { rule } from "@/services/ant-design-pro/api"
 import { execDataService0, fetchDataItemService, fetchDataListService } from "@/services/apiGateway"
 import { simpleRequestActions } from "@/services/model"
 import { ProcessDefInfo, ProcessInstanceDef } from "@/services/process-workflow/data"
@@ -16,6 +15,7 @@ type SaveProcessDefInfo = {
     increment?: number
     deptId?: number
     urlPath?: string,
+    shownInEForms?: boolean;
     startFormInNewPage?: boolean,
     liveDate?: Moment,
     announcementDays?: number,
@@ -57,11 +57,12 @@ export default ({ item, ...rest }: ModalFormProps<SaveProcessDefInfo> & { item: 
                 urlPath: rs.urlPath,
                 bizKeyFormat: rs.bizKeyFormat,
                 increment: rs.increment,
+                shownInEForms: rs.shownInEForms,
                 startFormInNewPage: rs.startFormInNewPage,
                 liveDate: rs.liveDate,
                 announcementDays: rs.announcementDays,
                 accessRole: rs.accessRole
-                
+
             })
         })()
     }, [rest.open])
@@ -92,15 +93,18 @@ export default ({ item, ...rest }: ModalFormProps<SaveProcessDefInfo> & { item: 
             <ProFormText width={'md'} rules={[{ required: true }]} label="Business Key Format" name={"bizKeyFormat"} />
             <ProFormDigit width={'md'} readonly label="Increment" name={"increment"} />
         </ProFormGroup>
-        <ProFormText rules={[{ required: true }]}  name={'urlPath'} label="UI Route Path" />
-        <ProFormText label = "Access Roles" name={'accessRole'}/>
-        <ProFormCheckbox label = "Start Form In New Pag" name={'startFormInNewPage'}/>
+        <ProFormText rules={[{ required: true }]} name={'urlPath'} label="UI Route Path" />
+        <ProFormText label="Access Roles" name={'accessRole'} />
         <ProFormGroup>
-            <ProFormDatePicker label = "Go Live Data" name={'liveDate'}/>
-            <ProFormDigit label = "Anouncement Days" name={"announcementDays"}/>
+            <ProFormCheckbox label="Shown in E-Forms" name={'shownInEForms'} />
+            <ProFormCheckbox label="Start Form In New Page" name={'startFormInNewPage'} />
+        </ProFormGroup>
+        <ProFormGroup>
+            <ProFormDatePicker label="Go Live Data" name={'liveDate'} />
+            <ProFormDigit label="Anouncement Days" name={"announcementDays"} />
         </ProFormGroup>
         <ProFormTextArea label="Descrption" name={"description"} />
 
-        
+
     </ModalForm>
 }

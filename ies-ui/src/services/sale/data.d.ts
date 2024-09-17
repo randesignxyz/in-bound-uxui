@@ -468,6 +468,7 @@ export interface SettlementLessDto {
   isKeepForwarding: boolean;
   remark: string;
   adjustMentItems?: StockAdjustmentDto[] = [];
+  stockAdjusts?:StockAjust;
 }
 
 export interface StockQuantity {

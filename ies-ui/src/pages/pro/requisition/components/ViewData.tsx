@@ -34,6 +34,7 @@ export default ({ data }: Props) => {
         <Descriptions.Item label="Created Date">
           {data?.createdDate && formatDateTime(data?.createdDate)}
         </Descriptions.Item>
+        <Descriptions.Item label="BU">{data?.buName}</Descriptions.Item>
         <Descriptions.Item label="Created By">{data?.createdBy}</Descriptions.Item>
         {data?.lastModifiedDate && (
           <Descriptions.Item label="Last Modified Date">

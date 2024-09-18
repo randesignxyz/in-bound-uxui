@@ -41,7 +41,7 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
           width: 93,
           align:'center',
           valueType: 'radio',  
-          editable:(_,r) => editableRating, 
+          // editable:(_,r) => editableRating, 
           renderFormItem(_, config, form,record) {
             return editableRating?(<Radio  
               key={`checked-${config.record?.key}`}
@@ -55,7 +55,7 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
                   checked: e.target.checked,
               });
             }}
-            />):(<Radio key={`checked1-${config.record?.key}`} checked={(config.record?.fully==1)}/>)
+            />):(<Radio checked={(config.record?.fully==1)}/>)
           }
         },{
           title: <span style={{fontSize:11}}>Partially Done</span>,                
@@ -63,7 +63,7 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
           width: 100,
           align:'center',
           valueType: 'radio',  
-          editable:(_,r) => editableRating, 
+          // editable:(_,r) => editableRating, 
           renderFormItem(_, config, form) {
             return editableRating?(<Radio  
               key={`checked-${config.record?.key}`}
@@ -77,12 +77,12 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
                   checked: e.target.checked,
               });
             }}
-            />):(<Radio key={`checked1-${config.record?.key}`} checked={(config.record?.partial==1)}/>)
+            />):(<Radio checked={(config.record?.partial==1)}/>)
           },
         },{
           title: <span style={{fontSize:11}}>No</span>,    
           valueType: 'radio',            
-          editable:(_,r) => editableRating, 
+          // editable:(_,r) => editableRating, 
           dataIndex: 'rating3',
           width: 70,
           align:'center',
@@ -99,26 +99,11 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
                     checked: e.target.checked,
                 });
               }}
-            />):(<Radio key={`checked1-${config.record?.key}`} checked={(config.record?.no==1)}/>)
+            />):(<Radio checked={(config.record?.no==1)}/>)
           },
         }]              
       },
-      // {
-      //   valueType: 'option',
-      //   width: 50,
-      //   render: () => {
-      //     return null;
-      //   },
-      // },  
     ]
-
-    cols.push({
-      title:'Rating',
-      valueType: 'radio', 
-      render:(r)=>{
-        return (<Radio checked></Radio>)
-      }
-    })
 
   return (<EditableProTable<ProbationEvaluationResourcesSupport>
     bordered

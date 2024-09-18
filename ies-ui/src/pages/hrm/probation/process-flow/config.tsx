@@ -4,6 +4,9 @@ import { ActionDataFormProps, DataForm, DataViewProps } from '@/pages/process-fl
 import ViewForm from './ViewForm';
 import { ProbationEvaluationRequestFormNames } from '.';
 import PreparationAssessmentForm from './PreparationAssessmentForm';
+import PreparationForm from './AssessmentPreparationForm';
+import AssessmentPreparationForm from './AssessmentPreparationForm';
+import AssessmentSubmissionForm from './AssessmentSubmissionForm';
 // import CheckStockControlForm from './CheckStockControlForm';
 
 export const getProbationEvaluationRequestForms = (): DataForm[] => [
@@ -18,13 +21,20 @@ export const getProbationEvaluationRequestForms = (): DataForm[] => [
     formKey: [     
       ProbationEvaluationRequestFormNames.assessmentPreparation,    
     ],
-    dataViewForm: (props: DataViewProps) => <PreparationAssessmentForm {...props} />,
-    actionDataForm: (props: ActionDataFormProps) => <DefaultActionForm {...props} />,
+    dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,
+    actionDataForm: (props: ActionDataFormProps) => <AssessmentPreparationForm {...props} />,
   },
   {
     formKey: [     
-      ProbationEvaluationRequestFormNames.assessmentPreparation,
-      ProbationEvaluationRequestFormNames.lineManagerSubmission,
+      ProbationEvaluationRequestFormNames.lineManagerSubmission,    
+    ],
+    dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,
+    actionDataForm: (props: ActionDataFormProps) => <AssessmentSubmissionForm {...props} />,
+  },
+  {
+    formKey: [     
+      // ProbationEvaluationRequestFormNames.assessmentPreparation,
+      // ProbationEvaluationRequestFormNames.lineManagerSubmission,
       ProbationEvaluationRequestFormNames.hrbp,
       ProbationEvaluationRequestFormNames.hrm,
       ProbationEvaluationRequestFormNames.mbo,

@@ -63,38 +63,38 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
       }
     };
 
-    const onSaveHandler = async ()=>{
-      // const payload = await getDataForm();
-      // setStartFormVisible(true);
-      // console.log('Payload',editableFormRef2.current?.isFieldsValidating())
-      // if(editableFormRef1.current?.isFieldsValidating()) return;
-      const f1 = await editableFormRef1.current?.validateFields()
-      const f2 = await editableFormRef2.current?.validateFields()
-      const f = await form.validateFields()
+    // const onSaveHandler = async ()=>{
+    //   // const payload = await getDataForm();
+    //   // setStartFormVisible(true);
+    //   // console.log('Payload',editableFormRef2.current?.isFieldsValidating())
+    //   // if(editableFormRef1.current?.isFieldsValidating()) return;
+    //   const f1 = await editableFormRef1.current?.validateFields()
+    //   const f2 = await editableFormRef2.current?.validateFields()
+    //   const f = await form.validateFields()
     
-        const payload = {
-          instId: instId ||0,
-          section1: addedSection1,
-          section2: addedSection2,
-          section3: probaResources,
-          section4: probaResourcesSupport
-        } as ProbationEvaluationPaloay
-        console.log('data form: ', payload)
-        Modal.confirm({
-          title: 'Probation Evaluation',
-          content: 'Are you sure?',
-          onOk: async () => {
-            try {
-              const rs = await srv.insertAssessment(payload);
-              // message.success(`Appraisal Form is ${'SUBMITTED' === status ? 'submitted' : 'saved'}.`);
-              // onOpenModalChange?.(false);
-              // refreshTable();
-            } catch (error: any) {
-              message.error(error.message || 'Failed to submit.');
-            }
-          },
-        });
-    }
+    //     const payload = {
+    //       instId: instId ||0,
+    //       section1: addedSection1,
+    //       section2: addedSection2,
+    //       section3: probaResources,
+    //       section4: probaResourcesSupport
+    //     } as ProbationEvaluationPaloay
+    //     console.log('data form: ', payload)
+    //     Modal.confirm({
+    //       title: 'Probation Evaluation',
+    //       content: 'Are you sure?',
+    //       onOk: async () => {
+    //         try {
+    //           const rs = await srv.insertAssessment(payload);
+    //           // message.success(`Appraisal Form is ${'SUBMITTED' === status ? 'submitted' : 'saved'}.`);
+    //           // onOpenModalChange?.(false);
+    //           // refreshTable();
+    //         } catch (error: any) {
+    //           message.error(error.message || 'Failed to submit.');
+    //         }
+    //       },
+    //     });
+    // }
 
     return(  
     <ViewFormWrapper<{ id: number }>
@@ -109,31 +109,40 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
             <ProForm
                 form={form}   
                 style={{paddingBottom:35}}
-                submitter={{
-                    render: () => (
-                      <FooterToolbar>
-                        {/* <Button style={{ marginRight: 10 }} onClick={onBack}>
-                          Cancel
-                        </Button> */}
-                        <Button
-                          onClick={() => {
-                            clear();
-                          }}
-                        >
-                          Clear
-                        </Button>
-                        <Button
-                          type="primary"
-                          onClick={()=>onSaveHandler()}
-                        >
-                          Save
-                        </Button>
-                      </FooterToolbar>
-                    ),
-                  }}
+                submitter={false}
             >
-                {/* {instId && <ViewData title="Item Request List" instId={instId}/>} */}
-                <div>{instId}</div>
+                <ProCard title="Employee Info" 
+                      collapsible ={false}  
+                      size="small"
+                      bordered headerBordered 
+                  >                  
+                  <Descriptions column={3}>
+                    <Descriptions.Item label='Employee Id:'>t </Descriptions.Item>
+                    <Descriptions.Item label='Employee Name:'>t </Descriptions.Item>
+                    <Descriptions.Item label='Hired Date:'>t</Descriptions.Item>
+
+                    <Descriptions.Item label='Position:'>t </Descriptions.Item>
+                    <Descriptions.Item label='Function:'>t </Descriptions.Item>
+                    <Descriptions.Item label='Company:'>t</Descriptions.Item>
+
+                  </Descriptions>
+                </ProCard>
+                
+                <ProCard title="INSTRUCTION" 
+                    collapsible  
+                    size="small"
+                    bordered headerBordered 
+                >                  
+                  <div >• Information in this form and process is private and confidential.</div>
+                  <div >• Line Manager must set realistic performance expectations and communicate these expectations clearly to employee at the start of the probation.</div>
+                  <div >• Probation evaluation is to be conducted at least 2 weeks before probation ends.</div>
+                  <div >• Probation evaluation will determine the employment status of the employee as follows:</div>
+                    <div style={{paddingLeft:15}}> 1- Regular employee if the probation performance is satisfied. </div>
+                    <div style={{paddingLeft:15}}> 2- Terminated employee if the probation performance is unsatisfied.</div>
+                    <div style={{paddingLeft:15}}> 3- Re-assessed employee if the probation is extended. </div>
+                  <div >• Probation confirmation does not link or tight to change or adjustment in benefits</div>
+                  <div >• Probation evaluation is appraised by Line Manager. Employee will be provided with opportunity to discuss and seek clarification over the results.</div>                  
+                </ProCard>          
                 <ProCard title="EVALUATION" 
                     collapsible  
                     size="small"
@@ -147,7 +156,7 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
                         <div><span style={{color:'red'}}>*</span> At least 3 items are required.</div>
                         </div>
                     </div>
-                    <Section1Table editable={true} editableRating={false} editableFormRef={editableFormRef1} addedItems={addedSection1} onSetAddedItems={setAddedSection1} />
+                    <Section1Table editable={false} editableRating={false} editableFormRef={editableFormRef1} addedItems={addedSection1} onSetAddedItems={setAddedSection1} />
                     {/*---------------------------- SECTION II. JOB KNOWLEDGE AND SKILLS (Weightage: 20%)----------------------------------*/}
                     <div>
                         <div style={{paddingTop:5}}>
@@ -155,7 +164,7 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
                         <div>What relevant knowledge and skills that employee possesses and applies effectively in the job</div>
                         </div>
                     </div>
-                    <Section2Card editable={true} editableRating={true} editableFormRef={editableFormRef2} addedItems={addedSection2} onSetAddedItems={setAddedSection2} />
+                    <Section2Card editable={false} editableRating={false} editableFormRef={editableFormRef2} addedItems={addedSection2} onSetAddedItems={setAddedSection2} />
                     {/*---------------------------- SECTION III. BEHAVIOR (Weightage: 30%)-------------------------------------------------*/}
                     <div>
                         <div style={{paddingTop:5}}>
@@ -163,7 +172,7 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
                         <div>How employee is expected to behave in a proper manner.</div>
                         </div>
                     </div>
-                    {probaResources&&<Section3Card editable={false} editableRating={true} editableFormRef={editableFormRef3} addedItems={probaResources} onSetAddedItems={setProbaResources} />}
+                    {probaResources&&<Section3Card editable={false} editableRating={false} editableFormRef={editableFormRef3} addedItems={probaResources} onSetAddedItems={setProbaResources} />}
                     {/*---------------------------- SECTION IV. SUPPORT / RESOURCES NEEDED-------------------------------------------------*/}
                     <div>
                         <div style={{paddingTop:5}}>
@@ -171,7 +180,7 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
                         <div>What Line Manager provides/facilitates employee during probation period.</div>
                         </div>
                     </div>
-                    <Section4Card editable={false} editableRating={true} editableFormRef={editableFormRef4} addedItems={probaResourcesSupport} onSetAddedItems={setProbaResourcesSupport} />
+                    <Section4Card editable={false} editableRating={false} editableFormRef={editableFormRef4} addedItems={probaResourcesSupport} onSetAddedItems={setProbaResourcesSupport} />
                     {/*---------------------------- SECTION V. ADDITIONAL COMMENTS-------------------------------------------------*/}
                     <div>
                         <div style={{paddingTop:5}}>
@@ -180,11 +189,11 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
                         </div>
                     </div>
                     <Row>
-                        <Col style={{width:'100%'}}><ProFormTextArea name='achievement' label='1. Achievement' style={{width:'100%'}} rules={[{ required: true }]} ></ProFormTextArea></Col>
+                        <Col style={{width:'100%'}}><ProFormTextArea name='achievement' label='1. Achievement' style={{width:'100%'}} readonly rules={[{ required: true }]} ></ProFormTextArea></Col>
                     </Row>
                     <Row>
-                        <Col style={{width:'50%',paddingRight:2}}><ProFormTextArea name='strength' label='2. Strength' style={{width:'100%'}} rules={[{ required: true }]} ></ProFormTextArea></Col>
-                        <Col style={{width:'50%',paddingLeft:2}}><ProFormTextArea name='developmentArea' label='3. Development Area' style={{width:'100%'}} rules={[{ required: true }]} ></ProFormTextArea></Col>
+                        <Col style={{width:'50%',paddingRight:2}}><ProFormTextArea name='strength' label='2. Strength' style={{width:'100%'}} readonly rules={[{ required: true }]} ></ProFormTextArea></Col>
+                        <Col style={{width:'50%',paddingLeft:2}}><ProFormTextArea name='developmentArea' label='3. Development Area' style={{width:'100%'}} readonly rules={[{ required: true }]} ></ProFormTextArea></Col>
                     </Row>
                 </ProCard>
             </ProForm>     

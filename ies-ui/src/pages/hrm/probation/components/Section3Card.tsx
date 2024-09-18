@@ -52,9 +52,9 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
           width: 93,
           align:'center',
           valueType: 'radio',  
-          editable:(_,r) => editableRating, 
+          // editable:(_,r) => editableRating, 
           renderFormItem(_, config, form,record) {
-            return (<Radio  
+            return (editableRating?<Radio  
               key={`checked-${config.record?.key}`}
               checked={(config.record?.rating5==1)}
               onChange={(e) => {                    
@@ -68,7 +68,7 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
                   checked: e.target.checked,
               });
             }}
-            />)
+            />:<Radio checked={(config.record?.rating5==1)}/>)
           }
         },{
           title: <span style={{fontSize:11}}>4- Exceeds Expectations</span>,                
@@ -76,9 +76,9 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
           width: 70,
           align:'center',
           valueType: 'radio',  
-          editable:(_,r) => editableRating, 
+          // editable:(_,r) => editableRating, 
           renderFormItem(_, config, form) {
-            return (<Radio  
+            return (editableRating?<Radio  
               key={`checked-${config.record?.key}`}
               checked={(config.record?.rating4==1)}
               onChange={(e) => {                    
@@ -92,17 +92,17 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
                   checked: e.target.checked,
               });
             }}
-            />)
+            />:<Radio checked={(config.record?.rating4==1)}/>)
           },
         },{
           title: <span style={{fontSize:11}}>3- Meets Expectations</span>,    
           valueType: 'radio',            
-          editable:(_,r) => editableRating, 
+          // editable:(_,r) => editableRating, 
           dataIndex: 'rating3',
           width: 70,
           align:'center',
           renderFormItem(_, config, form) {
-            return (<Radio  
+            return (editableRating?<Radio  
               key={`checked-${config.record?.key}`}
               checked={(config.record?.rating3==1)}
               onChange={(e) => {
@@ -116,17 +116,17 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
                     checked: e.target.checked,
                 });
             }}
-            />)
+            />:<Radio checked={(config.record?.rating3==1)}/>)
           },
         },{
-          title: <span style={{fontSize:11}}>1- Needs Improvement</span>,                
+          title: <span style={{fontSize:11}}>2- Needs Improvement</span>,                
           dataIndex: 'rating2',
           width: 70,
           align:'center',
           valueType: 'radio',  
-          editable:(_,r) => editableRating,       
+          // editable:(_,r) => editableRating,       
           renderFormItem(_, config, form) {
-            return (<Radio  
+            return (editableRating?<Radio  
               key={`checked-${config.record?.key}`}
               checked={(config.record?.rating2==1)}
               onChange={(e) => {                    
@@ -140,7 +140,7 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
                   checked: e.target.checked,
               });
             }}
-            />)
+            />:<Radio checked={(config.record?.rating2==1)}/>)
           },
         },{
           title: <span style={{fontSize:11}}>1- Unsatisfactory</span>,                
@@ -148,9 +148,9 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
           width: 102,
           align:'center',
           valueType: 'radio',
-          editable:(_,r) => editableRating,         
+          // editable:(_,r) => editableRating,         
           renderFormItem(_, config, form) {
-            return (<Radio  
+            return (editableRating?<Radio  
               key={`checked-${config.record?.key}`}
               checked={(config.record?.rating1==1)}
               onChange={(e) => {                    
@@ -164,7 +164,7 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
                   checked: e.target.checked,
               });
             }}
-            />)
+            />:<Radio checked={(config.record?.rating1==1)}/>)
           },
         }]              
       }, 
@@ -174,6 +174,7 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
           width: '10%',
           valueType: 'textarea',
           dataIndex: 'remark',
+          editable:(_,r) => editable, 
           fieldProps: { rows: 1, maxLength: 200 },
         }]
       

@@ -17,7 +17,7 @@ export const createService = ({ request }: { request: SimpleRequestActions; }): 
     // actionHR: (data: TaskActionDataParam<{id: number; items: RequestItem[]}>) => Promise<void>,
     // findByInstId: (instId: number) => Promise<AppraisalEmp>
     request:(data: ProbationEvaluationData)=> Promise<any>,
-    insertAssessment:(data: ProbationEvaluationPaloay)=> Promise<any>,
+    insertAssessment:(data: TaskActionDataParam<ProbationEvaluationPaloay>)=> Promise<any>,
 
     fetchActivityList:(id: number) => Promise<Activity[]>
     fetchAppraisalDimensionList:(id: number) => Promise<AppraisalEmpSubmissionResult[]>
@@ -44,8 +44,8 @@ export const createService = ({ request }: { request: SimpleRequestActions; }): 
                 endpoint: 'HR',
                 payload: data
             })(request),
-        insertAssessment: async (data: ProbationEvaluationPaloay) =>
-            execDataService<{data: string}, ProbationEvaluationPaloay>({
+        insertAssessment: async (data: TaskActionDataParam<ProbationEvaluationPaloay>) =>
+            execDataService<{data: string}, TaskActionDataParam<ProbationEvaluationPaloay>>({
                 actionName: 'probation-evaluation-insert-assessment',
                 endpoint: 'HR',
                 payload: data

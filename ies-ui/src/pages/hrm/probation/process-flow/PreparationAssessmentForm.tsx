@@ -132,8 +132,7 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
                     ),
                   }}
             >
-                {/* {instId && <ViewData title="Item Request List" instId={instId}/>} */}
-                <div>{instId}</div>
+                {/* {instId && <ViewData title="Item Request List" instId={instId}/>} */}               
                 <ProCard title="EVALUATION" 
                     collapsible  
                     size="small"

@@ -46,7 +46,8 @@ const dataFormResources: DataForm[] = [
   ...getGratisSettlementRequestForms(),
   ...getFmaStockRequestForms(),
   ...getInventoryTransferRequestForms(),
-  ...getInventoryAdjustmentRequestForms()
+  ...getInventoryAdjustmentRequestForms(),
+  ...getProbationEvaluationRequestForms(),
 ];
 
 export const getActionForm = (props: ActionDataFormProps) =>

@@ -388,3 +388,8 @@ export type ProbationEvaluationPaloay = {
     section3: ProbationEvaluationResources[]
     section4: ProbationEvaluationResourcesSupport[]
 }
+// export type ProbationEvaluationItemsPayload ={
+//     taskId: string
+//     actionName: string
+
+// }

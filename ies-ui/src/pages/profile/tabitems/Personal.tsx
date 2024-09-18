@@ -55,10 +55,18 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
     // var Rg = ["" ,"Buddhism","Islam"];  
     
     //
-    var pb = profile.profile_adr_pb?(profile.profile_adr_pb.provinceName+" "+profile.profile_adr_pb.districtName+" "+profile.profile_adr_pb.communeName):'N/A';
-    var ct = profile.profile_adr_ct?("#"+profile.profile_adr_ct.homeNo+", St. "+profile.profile_adr_ct.street+", "+profile.profile_adr_ct.villageId+", "+profile.profile_adr_ct.communeName+", "+profile.profile_adr_ct.districtName+", "+profile.profile_adr_ct.provinceName+" "+
-            profile.profile_adr_ct.remark):'';
-    var pm = "#"+profile.profile_adr_pm.homeNo+", St. "+profile.profile_adr_pm.street+", "+profile.profile_adr_pm.villageId+" "+profile.profile_adr_pm.communeName+" "+profile.profile_adr_pm.districtName+" "+profile.profile_adr_pm?(profile.profile_adr_pm.provinceName+" "+profile.profile_adr_pm.remark):''; 
+    var pb = profile.profile_adr_pb?(profile.profile_adr_pb.communeName+" "+profile.profile_adr_pb.districtName+" "+profile.profile_adr_pb.provinceName):'N/A';
+    var ct = profile.profile_adr_ct?(   (profile.profile_adr_ct.homeNo==''?'':"#"+profile.profile_adr_ct.homeNo)+
+                                        (profile.profile_adr_ct.street==''?'':", St. "+profile.profile_adr_ct.street)+
+                                        (profile.profile_adr_ct.villageId==''?', ':", "+profile.profile_adr_ct.villageId+", ")
+                                        + profile.profile_adr_ct.communeName
+                                        +", "+profile.profile_adr_ct.districtName
+                                        +", "+profile.profile_adr_ct.provinceName+" "+
+                                        profile.profile_adr_ct.remark):'';
+    var pm =(profile.profile_adr_pm.homeNo==''?' ':"#"+profile.profile_adr_pm.homeNo)+
+            (profile.profile_adr_pm.street==''?'':", St. "+profile.profile_adr_pm.street)+
+            (profile.profile_adr_pm.villageId==''?', ':", "+profile.profile_adr_pm.villageId+", ")
+            +profile.profile_adr_pm.communeName+", "+profile.profile_adr_pm.districtName+", "+profile.profile_adr_pm.provinceName;
 
     //
     const items: DescriptionsProps['items'] = [

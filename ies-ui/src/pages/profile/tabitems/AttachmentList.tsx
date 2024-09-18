@@ -1,7 +1,7 @@
 
 import { ProTable } from "@ant-design/pro-components"  
-import { PlusCircleFilled,EditOutlined, DownloadOutlined } from "@ant-design/icons"
-import { Button, message, Modal, Space, Typography,Card } from 'antd';
+import { FileExcelOutlined,FilePdfOutlined, DownloadOutlined,FileWordOutlined,FileOutlined } from "@ant-design/icons"
+import { Button, message, Modal, Space, Typography,Card, Flex } from 'antd';
 import ExperienceModal from '../modal/ExperienceModal';
 import { useEffect,useState } from 'react';
 import { ProfileData} from '../data';
@@ -66,38 +66,79 @@ export default ({ profile ,step,is_admin}: Props) => {
                         {
                             title: "Image",  
                             render: (dom, r) => { //downloadUploadFileV2()(r?.fileId || "", r.fileName || "");
-                                return <ImagePreview
-                                    version={2}
-                                    width={'30px'}
-                                    key={r.id}
-                                    fileId={r.id || ''}
-                                    // fileName={r.file_name}
-                                />
+                                switch(r.fileType){
+                                    case "text/csv":
+                                        return <FileOutlined />;
+                                    case "application/pdf":
+                                        return <FilePdfOutlined />;
+                                    case "application/vnd.ms-excel":
+                                        return <FileExcelOutlined />;
+                                    case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+                                        return <FileWordOutlined />; 
+                                    case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+                                        return <FileExcelOutlined />;
+                                    default:
+                                        return <ImagePreview
+                                            version={2}
+                                            width={'30px'}
+                                            key={r.id}
+                                            fileId={r.id || ''}
+                                            // fileName={r.file_name}
+                                        />
+                                }
                             }
                         },
                         {
-                            title: "File Name", dataIndex: "fileName"
+                            title: "File Name", 
+                            dataIndex: "fileName",
+                            render: (_, r) =>{ 
+                                // 
+                                if(r.fileType=="text/csv"||
+                                    r.fileType=="application/pdf"||
+                                    r.fileType=="application/vnd.ms-excel"||
+                                    r.fileType=="application/vnd.openxmlformats-officedocument.wordprocessingml.document"||
+                                    r.fileType=="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                ){  
+                                    return(<Flex>{r.fileName}
+                                        <Button title="download"
+                                            icon={<DownloadOutlined />}
+                                            type="link"
+                                            onClick={async () => {  downloadUploadFileV2()(r?.id || "", r.fileType || ""); }}
+                                        />
+                                        </Flex>
+                                    )
+                                }
+                                else{
+                                    return(<>{r.fileName}</>)
+                                }
+                            }
                         },{
                             title: "Type", dataIndex: "fileType"
                         },{
                             title: "Created Date", render: (_, r) => <>{formatDateTime(r.createdDate)}</>  
                         },{
+                            title: "Created By",
+                            dataIndex: "createdBy",
+                        },{
+                            title: "Located", 
                             render: (_, r) =>{ 
-                                // 
-                                if(r.fileType=="text/csv"||r.fileType=="application/pdf"||r.fileType=="application/vnd.ms-excel"||r.fileType=="application/vnd.openxmlformats-officedocument.wordprocessingml.document"){  
-                                    return(
-                                        <Button
-                                            icon={<DownloadOutlined />}
-                                            type="link"
-                                            onClick={async () => {  downloadUploadFileV2()(r?.id || "", r.fileType || ""); }}
-                                        />
-                                    )
+                                // 1: personal;2:emergency;3:education;4:language;5:training;6:workingexperience
+                                switch (r.type) {
+                                    case 1:
+                                        return 'Personal Information'
+                                    case 3:
+                                        return 'Education'
+                                    case 4:
+                                        return 'Language'
+                                    case 5:
+                                        return 'Training/Certification'
+                                    case 6:
+                                        return 'Work Experiences' 
+                                    default: return 'N/A'
                                 }
-                                else{
-                                    return(<></>)
-                                }
+ 
                             }
-                        }
+                        },
                     ]}
                 />
             </Space>

@@ -36,9 +36,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
         setImageList(list); 
         // 
         if(!!data){
-
-                var dataRange= [data.year,data.toYear];
-
+            var dataRange= [data.year,data.toYear];
             form.setFieldsValue({...data!!,year:dataRange});
         }
         else{
@@ -55,10 +53,13 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
     const onAdminSubmit = async ()=>{
         const bmForm = await form.validateFields();
         // attachment files
-        if(createFileOther.length==0){  
-            message.error('Please do select attachment files.');
-            return false;
-        } 
+        if(type=="ADD"){ 
+            // 
+            if(createFileOther.length==0){  
+                message.error('Please do select attachment files.');
+                return false;
+            } 
+        }
         // submit 
         Modal.confirm({
             title: 'Save Training',
@@ -70,6 +71,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
                 bmForm.empId = empId;
                 bmForm.typeId = 1;
                 bmForm.status=true; 
+                bmForm.isDelete=0;
 
                 var fromyear = bmForm.year[0];
                 var toyear = bmForm.year[1];

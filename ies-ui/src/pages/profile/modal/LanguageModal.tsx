@@ -57,10 +57,11 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
             content: 'Are you sure?',
             onOk: async () => {
               try { 
-                bmForm.otherFile = createFileOther;  
+                bmForm.otherFile = createFileOther||[];  
                 bmForm.id = (!!data!!?data!!.id:0);
                 bmForm.empId = empId;
                 bmForm.status=true;
+                bmForm.isDelete=0;
                 await ProfileServicesEss.saveLanguageAdmin(bmForm)(requestActions); 
                 // call back fun
                 cb.onReload(); 

@@ -3,7 +3,8 @@ import {
   ProFormText,
   ProFormDatePicker,
   ProFormTextArea,  
-  ModalForm, 
+  ModalForm,
+  ProForm, 
 } from '@ant-design/pro-components';
 import { Button, message, Modal,  Space  } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
@@ -21,9 +22,9 @@ interface Props {
 
 export default ({ open, onOpenModalChange, refreshTable,data}: Props) => {
   const requestActions = simpleRequestActions();
-  const [formSubmittor] = useForm<OpenEssDataItem>();
+  const [formSubmittor] = ProForm.useForm<OpenEssDataItem>();
   const onSaveHandler = async (status: string) => {
-    try {
+    try { 
       const formData = await formSubmittor.validateFields();    
       const dataV = {id:data.id||-1,...formData} as OpenEssDataItem 
       Modal.confirm({

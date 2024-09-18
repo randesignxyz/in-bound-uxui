@@ -69,11 +69,9 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
           content: 'Are you sure?',
           onOk: async () => {
             try {
-                data.otherFile = createFileOther;
+                data.otherFile = createFileOther||[];
                 data.isDelete = 0;
-                await ProfileServicesEss.saveExperience(data)(requestActions);
-            //   const list = await ProfileServicesEss.listExperience(data.empId).query(requestActions);
-            //   setExperienceList(list);
+                await ProfileServicesEss.saveExperience(data)(requestActions); 
                 // call back fun
                 cb.onLoadData();
                 initData();

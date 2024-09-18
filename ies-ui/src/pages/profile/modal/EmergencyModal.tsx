@@ -92,6 +92,7 @@ export default ({ profile,data,locations,type,isAdmin,empId, cb, ...rest }: Prop
                 bmForm.id = (!!data!!?data!!.id:0);
                 bmForm.empId = empId;
                 bmForm.status=true;
+                bmForm.isDelete=0;
                 await ProfileServicesEss.saveEmergencyAdmin(bmForm)(requestActions); 
                 // call back fun
                 cb.onReload(); 

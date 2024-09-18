@@ -2,6 +2,7 @@ import { Flex, ModalProps, Space, Typography } from "antd"
 import { ModalForm, ProCard, ProTable } from "@ant-design/pro-components"
 import { RelationshipData } from "../data.ess" 
 import { EditOutlined,DeleteOutlined } from "@ant-design/icons"
+import { formatDate } from "@/pages/utils";
 
 interface Props extends ModalProps { 
     oldData:RelationshipData[],
@@ -42,7 +43,10 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                 },{
                     title: "Occupation", dataIndex: "occupationName"
                 },{
-                    title: "Date of Birth", dataIndex: "dateOfBirth"
+                    title: "Date of Birth", dataIndex: "dateOfBirth",
+                    render: (dom, r) => {
+                        return (formatDate(r.dateOfBirth));
+                    },
                 },
                 // {
                 //     title: "Description", dataIndex: "description"
@@ -84,7 +88,10 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                 },{
                     title: "Occupation", dataIndex: "occupationName"
                 },{
-                    title: "Date of Birth", dataIndex: "dateOfBirth"
+                    title: "Date of Birth", dataIndex: "dateOfBirth",
+                    render: (dom, r) => {
+                        return (formatDate(r.dateOfBirth));
+                    },
                 },
                 // {
                 //     title: "Description", dataIndex: "description"

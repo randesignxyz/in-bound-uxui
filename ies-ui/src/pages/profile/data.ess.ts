@@ -287,6 +287,7 @@ export interface ExperienceData {
 
   startPosition   : string; 
   endPosition     : string; 
+  experienceDate       : moment.Moment[];
   startDate       : moment.Moment;
   endDate         : moment.Moment;
   description     : string;  

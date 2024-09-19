@@ -13,7 +13,8 @@ export interface OpenEssDataItem {
   lastName    : string;  
   startDate    : moment.Moment;  
   endDate      : moment.Moment;  
-  createdDate  : string; 
+  annountmentDate    : moment.Moment[];  
+  createdDate  : moment.Moment; 
   createdBy    : string; 
   description   : string;  
   status        : Boolean;

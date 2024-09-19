@@ -5,13 +5,14 @@ import {
   ProFormTextArea,  
   ModalForm,
   ProForm, 
+  ProFormDateRangePicker
 } from '@ant-design/pro-components';
-import { Button, message, Modal,  Space  } from 'antd';
-import { useForm } from 'antd/lib/form/Form';
+import { Button, message, Modal,  Space  } from 'antd'; 
 import { simpleRequestActions } from '@/services/model'; 
 import { OpenEssDataItem} from '../data_ess';
 import { ServicesEss } from '../service_ess_tran';  
 import { useEffect } from 'react';
+import moment from 'moment';
  
 interface Props {
   open?: boolean;
@@ -26,11 +27,18 @@ export default ({ open, onOpenModalChange, refreshTable,data}: Props) => {
   const onSaveHandler = async (status: string) => {
     try { 
       const formData = await formSubmittor.validateFields();    
+          
+      var startDate = formData.annountmentDate[0];
+      var endDate = formData.annountmentDate[1];
+
+      formData.startDate = startDate;
+      formData.endDate = endDate; 
+
       const dataV = {id:data.id||-1,...formData} as OpenEssDataItem 
       Modal.confirm({
         title:'New Open',
         content:'Are you to create new open?',
-        onOk: async () => {
+        onOk: async () => { 
           await ServicesEss.saveOpenAnnounce(dataV)(requestActions).then(it=>{
             message.success('create successfully.');
             onOpenModalChange?.(false); 
@@ -48,8 +56,9 @@ export default ({ open, onOpenModalChange, refreshTable,data}: Props) => {
   useEffect(() => {
       initData()
   }, [data])
-  const initData = async () => {
-    formSubmittor.setFieldsValue(data);
+  const initData = async () => { 
+    var dataRange= [data.startDate,data.endDate];
+    formSubmittor.setFieldsValue({...data,annountmentDate:dataRange});
   }
   return (
     <ModalForm
@@ -94,8 +103,10 @@ export default ({ open, onOpenModalChange, refreshTable,data}: Props) => {
               // options={lookupList.filter(it => it.type == 'CONTACT_TYPE').map(it => ({ label: it.name, value: it.id }))}
             /> */}
             <Space direction="horizontal" style={{ width: '100%' }}>
-              <ProFormDatePicker name = "startDate" rules={[{ required: true }]}  label = {<div><strong>Start Date</strong></div>} />            
-              <ProFormDatePicker name = "endDate" rules={[{ required: true }]}  label = {<div><strong>End Date</strong></div>} /> 
+              {/* <ProFormDatePicker name = "startDate" rules={[{ required: true }]}  label = {<div><strong>Start Date</strong></div>} />            
+              <ProFormDatePicker name = "endDate" rules={[{ required: true }]}  label = {<div><strong>End Date</strong></div>} />  */}
+              
+              <ProFormDateRangePicker label="Date" name={"annountmentDate"} rules={[{ required: true }]} />
             </Space> 
             <ProFormTextArea name = "description" rules={[{ required: true }]}  label = {<div><strong>Description</strong></div>} />  
           </Space>

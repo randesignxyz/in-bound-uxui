@@ -70,7 +70,14 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
           onOk: async () => {
             try {
                 data.otherFile = createFileOther||[];
-                data.isDelete = 0;
+                data.isDelete = 0; 
+                
+                var startDate = data.experienceDate[0];
+                var endDate = data.experienceDate[1];
+
+                data.startDate = startDate;
+                data.endDate = endDate;  
+
                 await ProfileServicesEss.saveExperience(data)(requestActions); 
                 // call back fun
                 cb.onLoadData();

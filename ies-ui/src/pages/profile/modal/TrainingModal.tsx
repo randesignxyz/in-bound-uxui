@@ -1,5 +1,7 @@
 import { LookupDataItem2 } from "@/services/data"
-import { ModalForm, ModalFormProps, ProFormTextArea, ProFormDatePicker, ProForm, ProFormText,ProCard, ProFormSelect, ProFormDateRangePicker, ProFormDigit } from "@ant-design/pro-components" 
+import { ModalForm, ModalFormProps, ProFormTextArea, 
+    ProForm, ProFormText,ProCard, 
+    ProFormDateRangePicker, ProFormDigit } from "@ant-design/pro-components" 
 import { TrainingData, SaveTraining, FilesData } from "../data.ess"
 import { useEffect,useState } from 'react';
 import FileUploader , { UploadType } from '@/components/Attachment/FileUploader';

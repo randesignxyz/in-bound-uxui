@@ -1,4 +1,5 @@
-import { ModalForm, ModalFormProps, ProFormTextArea, ProCard,ProForm, ProFormText,ProFormDatePicker, ProFormSelect } from "@ant-design/pro-components" 
+import { ModalForm, ModalFormProps, ProFormTextArea, ProCard,ProForm, ProFormText,
+    ProFormDateRangePicker,ProFormSelect } from "@ant-design/pro-components" 
 import { ExperienceData, FilesData} from "../data.ess"
 import { useEffect,useState } from 'react'; 
 import FileUploader , { UploadType } from '@/components/Attachment/FileUploader';
@@ -36,8 +37,9 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
         const list = await ProfileServicesEss.listImageProfile(profile.id,6,type=="ADD"?2:1,data?.id!!).query(requestActions);
         setImageList(list); 
         // 
-        if(!!data){
-            form.setFieldsValue(data!!);
+        if(!!data){  
+            var dataRange= [data.startDate,data.endDate];
+            form.setFieldsValue({...data!!,experienceDate:dataRange});
         }
         else{
             form.resetFields();
@@ -69,7 +71,14 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
                 bmForm.id = (!!data!!?data!!.id:0);
                 bmForm.empId = empId;
                 bmForm.status=true;
-                bmForm.isDelete=0;
+                bmForm.isDelete=0; 
+                
+                var startDate = bmForm.experienceDate[0];
+                var endDate = bmForm.experienceDate[1];
+
+                bmForm.startDate = startDate;
+                bmForm.endDate = endDate;  
+
                 await ProfileServicesEss.saveExperienceAdmin(bmForm)(requestActions); 
                 // call back fun
                 cb.onReload(); 
@@ -111,11 +120,12 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
             </Row>
             {/*  */}
             <Row>
-                <Col span={12} style={{padding:'3px'}}>
-                    <ProFormDatePicker label="Started Date" name={'startDate'} rules={[{ required: true }]}/> 
+                <Col span={24} style={{padding:'3px'}}>
+                    <ProFormDateRangePicker label="Date" name={"experienceDate"} rules={[{ required: true }]} />
+                    {/* <ProFormDatePicker label="Started Date" name={'startDate'} rules={[{ required: true }]}/> 
                 </Col>
                 <Col span={12} style={{padding:'3px'}}> 
-                    <ProFormDatePicker label="Ended Date" name={'endDate'} rules={[{ required: true }]}/>  
+                    <ProFormDatePicker label="Ended Date" name={'endDate'} rules={[{ required: true }]}/>   */}
                 </Col> 
             </Row> 
         </ProCard>

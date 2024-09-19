@@ -156,9 +156,9 @@ export default ({ onAdd, onEdit }: Props) => {
                 </Space>
             }  
             columns={[
-                {title: 'ID', dataIndex: 'id', sorter: 'id',width:'5%'},
-                {title: 'Title', dataIndex: 'openTitle',
-                render(_, entity) {
+                {title: 'ID', dataIndex: 'id', width:'3%'},
+                {title: 'Title', dataIndex: 'openTitle',width:'20%',
+                 render(_, entity) {
                     return <Flex gap={5}><Button
                         size="small"
                         type="link"

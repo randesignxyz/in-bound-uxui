@@ -15,16 +15,23 @@ interface Props {
 }
 export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable, editableRating }: Props) => {
 
-    // const data = [
-    //   {id:0,key: 'default-1' , assessment:'',  target:'',},
-    //   {id:0,key: 'default-2' , assessment:'', target:'',},
-    //   {id:0,key: 'default-3' , assessment:'', target:'',}
-    // ]
-    // useEffect(()=>{
-    //     if(addedItems?.length==0){
-    //       onSetAddedItems?.(data)
-    //     }
-    // },[addedItems])
+    const setRatingScore=(key?: string, rating1?: number, rating2?: number, rating3?: number, rating4?: number, rating5?: number)=>{
+      onSetAddedItems?.(
+        addedItems.map(it=> {
+          if(it.key==key){
+            return {
+              ...it, 
+              rating1: rating1,
+              rating2: rating2,
+              rating3: rating3,
+              rating4: rating4,
+              rating5: rating5
+            }
+          }
+          return it
+        })
+      )
+    }
 
     const  cols: ProColumns<ProbationEvaluationResources>[] = [
       { title: 'No', width: 20, editable: false, render: (_, __, index) => index + 1 },
@@ -67,6 +74,7 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
                   rating1: 0,
                   checked: e.target.checked,
               });
+              setRatingScore(config.record?.key,0,0,0,0,e.target.checked?1:0) 
             }}
             />:<Radio checked={(config.record?.rating5==1)}/>)
           }
@@ -91,6 +99,7 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
                   rating1: 0,
                   checked: e.target.checked,
               });
+              setRatingScore(config.record?.key,0,0,0,e.target.checked?1:0,0) 
             }}
             />:<Radio checked={(config.record?.rating4==1)}/>)
           },
@@ -115,6 +124,7 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
                     rating1: 0,
                     checked: e.target.checked,
                 });
+                setRatingScore(config.record?.key,0,0,e.target.checked?1:0,0,0) 
             }}
             />:<Radio checked={(config.record?.rating3==1)}/>)
           },
@@ -139,6 +149,7 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
                   rating1: 0,
                   checked: e.target.checked,
               });
+              setRatingScore(config.record?.key,0,e.target.checked?1:0,0,0,0) 
             }}
             />:<Radio checked={(config.record?.rating2==1)}/>)
           },
@@ -163,6 +174,7 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
                   rating2: 0,
                   checked: e.target.checked,
               });
+              setRatingScore(config.record?.key,e.target.checked?1:0,0,0,0,0) 
             }}
             />:<Radio checked={(config.record?.rating1==1)}/>)
           },
@@ -213,11 +225,11 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
         />),
       ],
       onValuesChange: (_, recordList) => {           
-        onSetAddedItems?.(
-          recordList.map((it) => ({
-            ...it,                   
-          })),
-        );
+        // onSetAddedItems?.(
+        //   recordList.map((it) => ({
+        //     ...it,                   
+        //   })),
+        // );
       },
     }}
     // recordCreatorProps={{

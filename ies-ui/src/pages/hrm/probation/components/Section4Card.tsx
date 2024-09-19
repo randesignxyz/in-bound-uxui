@@ -14,96 +14,115 @@ interface Props {
     editableRating: boolean|false
 }
 export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable, editableRating }: Props) => {
-    
-    const  cols: ProColumns<ProbationEvaluationResourcesSupport>[] = [
-      { title: 'No', width: 20, editable: false, render: (_, __, index) => index + 1 },
-      { title: 'ASSESSMENT',  
-        // editable: false,
-        dataIndex: 'assessment',
-        valueType: 'textarea',
-        editable:(_,r) => editable, 
-        formItemProps: {rules: [{ required: true}] },
-        fieldProps: { rows: 1, maxLength: 200 },
-        render: (_, r) => {
-          return (<div>
-            <div>{r?.title}</div>
-            {r?.description?.split('/r/n').map(r => 
-               <div style={{fontSize:12}}>• {r}</div>
-            )}
-          </div>)
-        },
-      },    
-      {
-        title: 'RATING SCORE',
-        children:[{
-          title: <span style={{fontSize:11}}>Fully Done</span>,
-          dataIndex: 'rating5',
-          width: 93,
-          align:'center',
-          valueType: 'radio',  
-          // editable:(_,r) => editableRating, 
-          renderFormItem(_, config, form,record) {
-            return editableRating?(<Radio  
-              key={`checked-${config.record?.key}`}
-              checked={(config.record?.fully==1)}
-              onChange={(e) => {                    
-                form.setFieldValue(config.record?.key || '', {
-                  ...config.record,
-                  fully: e.target.checked?1:0,
-                  partial: 0,
-                  no: 0,                  
-                  checked: e.target.checked,
-              });
-            }}
-            />):(<Radio checked={(config.record?.fully==1)}/>)
+
+  const setScore=(key?: string, fully?: number, partial?: number, no?: number)=>{
+    onSetAddedItems?.(
+      addedItems.map(it=> {
+        if(it.key==key){
+          return {
+            ...it, 
+            fully: fully,
+            partial: partial,
+            no: no
           }
-        },{
-          title: <span style={{fontSize:11}}>Partially Done</span>,                
-          dataIndex: 'rating4',
-          width: 100,
-          align:'center',
-          valueType: 'radio',  
-          // editable:(_,r) => editableRating, 
-          renderFormItem(_, config, form) {
-            return editableRating?(<Radio  
-              key={`checked-${config.record?.key}`}
-              checked={(config.record?.partial==1)}
-              onChange={(e) => {                    
-                form.setFieldValue(config.record?.key || '', {
+        }
+        return it
+      })
+    )
+  }
+    
+  const  cols: ProColumns<ProbationEvaluationResourcesSupport>[] = [
+    { title: 'No', width: 20, editable: false, render: (_, __, index) => index + 1 },
+    { title: 'ASSESSMENT',  
+      // editable: false,
+      dataIndex: 'assessment',
+      valueType: 'textarea',
+      editable:(_,r) => editable, 
+      formItemProps: {rules: [{ required: true}] },
+      fieldProps: { rows: 1, maxLength: 200 },
+      render: (_, r) => {
+        return (<div>
+          <div>{r?.title}</div>
+          {r?.description?.split('/r/n').map(r => 
+              <div style={{fontSize:12}}>• {r}</div>
+          )}
+        </div>)
+      },
+    },    
+    {
+      title: 'RATING SCORE',
+      children:[{
+        title: <span style={{fontSize:11}}>Fully Done</span>,
+        dataIndex: 'rating5',
+        width: 93,
+        align:'center',
+        valueType: 'radio',  
+        // editable:(_,r) => editableRating, 
+        renderFormItem(_, config, form,record) {
+          return editableRating?(<Radio  
+            key={`checked-${config.record?.key}`}
+            checked={(config.record?.fully==1)}
+            onChange={(e) => {                    
+              form.setFieldValue(config.record?.key || '', {
+                ...config.record,
+                fully: e.target.checked?1:0,
+                partial: 0,
+                no: 0,                  
+                checked: e.target.checked,
+            });
+            setScore(config.record?.key,0,0,e.target.checked?1:0)
+          }}
+          />):(<Radio checked={(config.record?.fully==1)}/>)
+        }
+      },{
+        title: <span style={{fontSize:11}}>Partially Done</span>,                
+        dataIndex: 'rating4',
+        width: 100,
+        align:'center',
+        valueType: 'radio',  
+        // editable:(_,r) => editableRating, 
+        renderFormItem(_, config, form) {
+          return editableRating?(<Radio  
+            key={`checked-${config.record?.key}`}
+            checked={(config.record?.partial==1)}
+            onChange={(e) => {                    
+              form.setFieldValue(config.record?.key || '', {
+                ...config.record,
+                partial: e.target.checked?1:0,
+                fully: 0,
+                no: 0,
+                checked: e.target.checked,
+            });
+            setScore(config.record?.key,0,e.target.checked?1:0,0)
+          }}
+          />):(<Radio checked={(config.record?.partial==1)}/>)
+        },
+      },{
+        title: <span style={{fontSize:11}}>No</span>,    
+        valueType: 'radio',            
+        // editable:(_,r) => editableRating, 
+        dataIndex: 'rating3',
+        width: 70,
+        align:'center',
+        renderFormItem(_, config, form) {
+          return editableRating?(<Radio  
+            key={`checked-${config.record?.key}`}
+            checked={(config.record?.no==1)}
+            onChange={(e) => {
+              form.setFieldValue(config.record?.key || '', {
                   ...config.record,
-                  partial: e.target.checked?1:0,
+                  no: e.target.checked?1:0,
                   fully: 0,
-                  no: 0,
+                  partial: 0,
                   checked: e.target.checked,
               });
+              setScore(config.record?.key,e.target.checked?1:0,0,0)
             }}
-            />):(<Radio checked={(config.record?.partial==1)}/>)
-          },
-        },{
-          title: <span style={{fontSize:11}}>No</span>,    
-          valueType: 'radio',            
-          // editable:(_,r) => editableRating, 
-          dataIndex: 'rating3',
-          width: 70,
-          align:'center',
-          renderFormItem(_, config, form) {
-            return editableRating?(<Radio  
-              key={`checked-${config.record?.key}`}
-              checked={(config.record?.no==1)}
-              onChange={(e) => {
-                form.setFieldValue(config.record?.key || '', {
-                    ...config.record,
-                    no: e.target.checked?1:0,
-                    fully: 0,
-                    partial: 0,
-                    checked: e.target.checked,
-                });
-              }}
-            />):(<Radio checked={(config.record?.no==1)}/>)
-          },
-        }]              
-      },
-    ]
+          />):(<Radio checked={(config.record?.no==1)}/>)
+        },
+      }]              
+    },
+  ]
 
   return (<EditableProTable<ProbationEvaluationResourcesSupport>
     bordered
@@ -130,7 +149,7 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
         />),
       ],
       onValuesChange: (_, recordList) => {  
-           console.log(recordList)
+          //  console.log(recordList)
         // onSetAddedItems?.(
         //   recordList.map((it) => ({
         //     ...it,                   

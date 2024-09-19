@@ -328,6 +328,18 @@ export type AppraisalDataLookup = {
 
 
 
+
+
+
+
+/**  Probation Evaluation Employee */
+export type ProbationFormType = {
+    id: number
+    code: string
+    name: string
+    description?: string
+    status: boolean
+}
 export type ProbationEvaluation = {
     id: number   
     key: string

@@ -26,6 +26,24 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
       }
     },[addedItems])
 
+    const setRatingScore=(key?: string, rating1?: number, rating2?: number, rating3?: number, rating4?: number, rating5?: number)=>{
+      onSetAddedItems?.(
+        addedItems.map(it=> {
+          if(it.key==key){
+            return {
+              ...it, 
+              rating1: rating1,
+              rating2: rating2,
+              rating3: rating3,
+              rating4: rating4,
+              rating5: rating5
+            }
+          }
+          return it
+        })
+      )
+    }
+
     const  cols: ProColumns<ProbationEvaluation>[] = [
       { title: 'No', width: 20, editable: false, render: (_, __, index) => index + 1 },
       { title: 'ASSESSMENT',  
@@ -59,6 +77,7 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
                   rating1: 0,
                   checked: e.target.checked,
               });
+              setRatingScore(config.record?.key,0,0,0,0,e.target.checked?1:0) 
             }}
             />:<Radio  checked={(config.record?.rating5==1)}/>)
           }
@@ -83,8 +102,10 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
                   rating1: 0,
                   checked: e.target.checked,
               });
+              setRatingScore(config.record?.key,0,0,0,e.target.checked?1:0,0) 
             }}
             />:<Radio  checked={(config.record?.rating4==1)}/>)
+            
           },
         },{
           title: <span style={{fontSize:11}}>3- Meets Expectations</span>,    
@@ -107,6 +128,7 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
                     rating1: 0,
                     checked: e.target.checked,
                 });
+                setRatingScore(config.record?.key,0,0,e.target.checked?1:0,0,0) 
             }}
             />:<Radio  checked={(config.record?.rating3==1)}/>)
           },
@@ -131,6 +153,7 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
                   rating1: 0,
                   checked: e.target.checked,
               });
+              setRatingScore(config.record?.key,0,e.target.checked?1:0,0,0,0) 
             }}
             />:<Radio checked={(config.record?.rating2==1)}/>)
           },
@@ -155,6 +178,7 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
                   rating2: 0,
                   checked: e.target.checked,
               });
+              setRatingScore(config.record?.key,e.target.checked?1:0,0,0,0,0) 
             }}
             />:<Radio checked={(config.record?.rating1==1)}/>)
           },
@@ -198,19 +222,31 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
           onClick={() => {
             const list =addedItems?.filter((it) => it.key != row.key)
             onSetAddedItems?.(list)
-            console.log('assessment list',addedItems)
           }}
           size="small"
           icon={<MinusCircleOutlined />}
         />),
       ],
-      onValuesChange: (_, recordList) => {           
-        onSetAddedItems?.(
-          recordList.map((it) => ({
-            ...it,                   
-          })),
-        );
-      },
+      onValuesChange: (_, recordList) => {   
+        if(addedItems.length< recordList.length){
+          const newRecord = recordList.find(it=> !addedItems.find(r=> r.key==it.key))
+          if(newRecord){
+            onSetAddedItems?.(
+              [...addedItems,{id:0,key: newRecord?.key}]//.map(it=> ({...it}))
+            )
+          }
+        }else{          
+          onSetAddedItems?.(
+            addedItems.map((it) => {
+              const edit = recordList.find(r=> r.key==it.key)
+              if(edit){
+                return {...it, assessment: edit.assessment,target: edit.target}
+              }
+              return it
+            }),
+          );
+        }
+    }
     }}
     recordCreatorProps={editable?{
       creatorButtonText: 'Add',

@@ -23,7 +23,7 @@ import { useEffect, useState } from 'react';
 import { BU, Department, ProbationEvaluationData, SubDepartment } from '../data';
 import { EmployeeServices } from '../services';
 import ProbationSumbitter from '@/pages/process-flow/components/Submitter/ProbationSumbitter';
-import { EmployeeInfResult } from './data.types';
+import { EmployeeInfResult, ProbationFormType } from './data.types';
 import { createService } from './services';
 
 type DataFormType = {
@@ -43,6 +43,8 @@ export default ({
   const [lookupList, setLookupList] = useState<LookupDataItem2[]>();
   const [uploadFileIds, setUploadFileIds] = useState<string[]>([]);
   const [probationEmp, setProbationEmp] = useState<EmployeeInfResult>();
+  const [probationFormType,setProbationFormType] = useState<ProbationFormType[]>()
+
   const [data, setData] = useState<{
     buList: BU[];
     departmentList: Department[];
@@ -84,6 +86,9 @@ export default ({
         'WORK_SHIFT',
       ]).query(requestActions);
       setLookupList(rs);
+      srv.fetchProbationFormTypeList().then(rs => {
+        setProbationFormType(rs)
+      })
     })();
   }, []);
 
@@ -179,7 +184,7 @@ export default ({
               rules={[{ required: true }]}
               width={'sm'}
               label="Form Type"
-              options={data?.buList.map((it) => ({ label: it.name, value: it.name }))}
+              options={probationFormType?.map((it) => ({ label: it.name, value: it.code }))}
             />
             <ProFormSelect
               showSearch

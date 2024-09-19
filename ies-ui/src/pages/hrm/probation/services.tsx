@@ -1,5 +1,5 @@
 import { SimpleRequestActions } from "@/services/model";
-import { RequestItem,  SearchParams,  AppraisalEmp,  AppraisalEmpSubmissionResult, AppraisalEmPayload, AppraisalDimension, UpdateAppraisalEmPayload, CurrentAppraisalEmpSearch, AppraisalAttachmentFile, AppraisalEmpStatusTotal, AppraisalEmpSubmitAllPayload, AppraisalOverallPerformanceRating, AppraisalMapping, EmployeeInfResult, AppraisalInstructionItem, AppraisalDataLookup, ProbationEvaluationResources, ProbationEvaluationResourcesSupport, ProbationEvaluationDetailRs, ProbationEvaluationPaloay } from "./data.types";
+import { RequestItem,  SearchParams,  AppraisalEmp,  AppraisalEmpSubmissionResult, AppraisalEmPayload, AppraisalDimension, UpdateAppraisalEmPayload, CurrentAppraisalEmpSearch, AppraisalAttachmentFile, AppraisalEmpStatusTotal, AppraisalEmpSubmitAllPayload, AppraisalOverallPerformanceRating, AppraisalMapping, EmployeeInfResult, AppraisalInstructionItem, AppraisalDataLookup, ProbationEvaluationResources, ProbationEvaluationResourcesSupport, ProbationEvaluationDetailRs, ProbationEvaluationPaloay, ProbationFormType } from "./data.types";
 import { CrudBaseServices } from "@/services/CrudBaseSevices";
 import { FetchPagingParams } from "@/components/DataCrud/TableView";
 import { execDataService, execDataService0, fetchDataItemService, fetchDataListService, fetchDataPagingService } from "@/services/apiGateway";
@@ -18,6 +18,8 @@ export const createService = ({ request }: { request: SimpleRequestActions; }): 
     // findByInstId: (instId: number) => Promise<AppraisalEmp>
     request:(data: ProbationEvaluationData)=> Promise<any>,
     insertAssessment:(data: TaskActionDataParam<ProbationEvaluationPaloay>)=> Promise<any>,
+    updateAssessment:(data: TaskActionDataParam<ProbationEvaluationPaloay>)=> Promise<any>,
+    fetchProbationFormTypeList:()=> Promise<ProbationFormType[]>,
 
     fetchActivityList:(id: number) => Promise<Activity[]>
     fetchAppraisalDimensionList:(id: number) => Promise<AppraisalEmpSubmissionResult[]>
@@ -50,6 +52,17 @@ export const createService = ({ request }: { request: SimpleRequestActions; }): 
                 endpoint: 'HR',
                 payload: data
             })(request),
+        updateAssessment: async (data: TaskActionDataParam<ProbationEvaluationPaloay>) =>
+                execDataService<{data: string}, TaskActionDataParam<ProbationEvaluationPaloay>>({
+                    actionName: 'probation-evaluation-assessment-submission',
+                    endpoint: 'HR',
+                    payload: data
+                })(request),
+        fetchProbationFormTypeList: async () =>
+            fetchDataListService<ProbationFormType>({
+                actionName: 'fetch-probation-form-type-list',
+                endpoint: 'HR'
+            }).query(request),            
             
 
         fetchPaging: async (params: FetchPagingParams<SearchParams>) =>

@@ -272,17 +272,18 @@ function Profile() {
 
   // stage
   const _info = "Period: From  "+(profile?.ess.id!!<=0?'':formatDate(profile?.ess.startDate))+" To  "+(profile?.ess.id!!<=0?'':formatDate(profile?.ess.endDate))+"";
-  const _stag = ["Cancel Updated","Start","Start Modified","Reviewing","Rejected","Re-Edit","Approval","Cancelled Submitted"];
+  const _stag = ["Cancel Updated","Getting Starts","Start Modifying","Reviewing","Rejected","Re-Edit","Approval","Cancelled Submitted"];
   const _stag_message = [
     /*0*/"Cancel Updated",
     /*1*/_info,
-    /*2*/"Employee start modified profiles data",
+    /*2*/"Employee starts modifying profile",
     /*3*/"Your request update is under review",
     /*4*/ (profile?.profile_draft==null?'':profile?.profile_draft.remark),
     /*5*/ (profile?.profile_draft==null?'':profile?.profile_draft.remark), 
     /*6*/ "Approval",
     /*7*/ "Cancelled Submitted"
   ];
+  
   //
   return (
     <Spin spinning = {requestActions.request?.loading}> 

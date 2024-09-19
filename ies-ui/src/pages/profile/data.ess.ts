@@ -361,7 +361,9 @@ export interface FilesData {
   description: string;  
   fileName: string;  
   fileType: string;  
+  type: number;  
   title: string;  
+  createdBy: string;  
   createdDate: moment.Moment;
 } 
 export interface MarjorData {
@@ -383,5 +385,6 @@ export interface ActivityData {
   step: number;  
   remark: string;   
   createdDate: moment.Moment;
+  locatedBy:string;
   createdBy:string;
 } 

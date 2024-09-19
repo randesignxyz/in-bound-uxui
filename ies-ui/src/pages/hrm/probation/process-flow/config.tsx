@@ -3,11 +3,8 @@ import DefaultStartForm from '@/pages/process-flow/components/forms/DefaultStart
 import { ActionDataFormProps, DataForm, DataViewProps } from '@/pages/process-flow/data';
 import ViewForm from './ViewForm';
 import { ProbationEvaluationRequestFormNames } from '.';
-import PreparationAssessmentForm from './PreparationAssessmentForm';
-import PreparationForm from './AssessmentPreparationForm';
 import AssessmentPreparationForm from './AssessmentPreparationForm';
 import AssessmentSubmissionForm from './AssessmentSubmissionForm';
-// import CheckStockControlForm from './CheckStockControlForm';
 
 export const getProbationEvaluationRequestForms = (): DataForm[] => [
   {
@@ -32,21 +29,12 @@ export const getProbationEvaluationRequestForms = (): DataForm[] => [
     actionDataForm: (props: ActionDataFormProps) => <AssessmentSubmissionForm {...props} />,
   },
   {
-    formKey: [     
-      // ProbationEvaluationRequestFormNames.assessmentPreparation,
-      // ProbationEvaluationRequestFormNames.lineManagerSubmission,
+    formKey: [  
       ProbationEvaluationRequestFormNames.hrbp,
       ProbationEvaluationRequestFormNames.hrm,
       ProbationEvaluationRequestFormNames.mbo,
     ],
     dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,
     actionDataForm: (props: ActionDataFormProps) => <DefaultActionForm {...props} />,
-  },
-  // {
-  //   formKey: [
-  //     ProbationEvaluationRequestFormNames.physicalStock
-  //   ],
-  //   dataViewForm: (props: DataViewProps) => <ViewForm {...props} contribute={{formNo: 1}} />,
-  //   actionDataForm: (props: ActionDataFormProps) => <CheckStockControlForm {...props} />,
-  // },
+  }
 ];

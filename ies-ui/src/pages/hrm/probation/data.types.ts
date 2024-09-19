@@ -340,6 +340,30 @@ export type ProbationFormType = {
     description?: string
     status: boolean
 }
+export type ProbationEvaluationRs = {
+    id: number  
+    formNo: string
+    empId: number
+    empNo: string
+    empName: string
+    internalName?: string
+    empFirstName: string
+    empLastName: string
+    buId: number
+    buName?: string
+    departmentId: number
+    departmentName: String
+    subDepartmentId?: number
+    subDepartmentName?: string
+    jobId: number
+    jobTitle: string
+    reportToId?: number
+    reportTo?: string
+    hodId?: number
+    hodName?: string
+    joinedDate?:Moment
+}
+
 export type ProbationEvaluation = {
     id: number   
     key: string
@@ -383,10 +407,24 @@ export type ProbationEvaluationResourcesSupport = {
     no?: number
     seqNo?: number
 }
+export type ProbationEvaluationRating = {
+    id: number
+    title?:string   
+    description?: string
+    description1?: string
+    startedScore?: number
+    endedScore?: number
+    score: number
+    seqNo?: number
+    status: boolean
+}
 
 
 export type ProbationEvaluationDetailRs = {
     id: number
+    ratingScale: ProbationEvaluationRating[]
+    overallRating: ProbationEvaluationRating[]
+    probationEvaluation: ProbationEvaluationRs
     section1: ProbationEvaluation[]
     section2: ProbationEvaluation[]
     section3: ProbationEvaluationResources[]
@@ -400,8 +438,11 @@ export type ProbationEvaluationPaloay = {
     section3: ProbationEvaluationResources[]
     section4: ProbationEvaluationResourcesSupport[]
 }
-// export type ProbationEvaluationItemsPayload ={
-//     taskId: string
-//     actionName: string
-
-// }
+export type ProbationEvaluationRef ={
+    id: string
+    formNo: string
+    empId: number
+    workflowStatus?: string
+    processStatus?: string
+    status?: string
+}

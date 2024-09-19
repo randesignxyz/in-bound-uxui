@@ -3,7 +3,7 @@ import ProcessFlowModel from "@/models/ProcessFlowModel";
 import { DataViewProps } from "@/pages/process-flow/data";
 import { simpleRequestActions } from "@/services/model";
 import { Button, Col, Descriptions, Form, message, Modal, Row, Spin } from "antd";
-import { EditableFormInstance, FooterToolbar, ProCard, ProForm, ProFormTextArea } from "@ant-design/pro-components";
+import { EditableFormInstance, FooterToolbar, ProCard, ProForm, ProFormTextArea, ProTable } from "@ant-design/pro-components";
 import { useEffect, useRef, useState } from "react";
 import { ProbationEvaluation, ProbationEvaluationDetailRs, ProbationEvaluationPaloay, ProbationEvaluationResources, ProbationEvaluationResourcesSupport } from "../data.types";
 import Section2Card from "../components/Section2Card";
@@ -13,6 +13,7 @@ import Section4Card from "../components/Section4Card";
 import { useForm } from "antd/lib/form/Form";
 import { createService } from "../services";
 import { uniqueId } from "lodash";
+import { formatDate, formatterQty, formatterQty1 } from "@/pages/utils";
 
 export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
     const workflowModel = ProcessFlowModel();
@@ -22,7 +23,7 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
 
     const [probaResources,setProbaResources] = useState<ProbationEvaluationResources[]>([])
     const [probaResourcesSupport,setProbaResourcesSupport] = useState<ProbationEvaluationResourcesSupport[]>([])
-    // const [probaRequest,setProbaRequest] = useState<ProbationEvaluationDetailRs>()
+    const [probaRequest,setProbaRequest] = useState<ProbationEvaluationDetailRs>()
     const [addedSection1, setAddedSection1] = useState<ProbationEvaluation[]>([]);
     const [addedSection2, setAddedSection2] = useState<ProbationEvaluation[]>([]);
     const editableFormRef1 = useRef<EditableFormInstance>();
@@ -45,7 +46,7 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
       if (!instId) return;
       try {       
         const data = await srv.detailByProcessFlow(instId);
-        // setProbaRequest({ ...data });
+        setProbaRequest({ ...data });
         setAddedSection1(data.section1.map(v=> {
           return {...v,key: uniqueId().toString()}
         }))
@@ -117,13 +118,13 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
                       bordered headerBordered 
                   >                  
                   <Descriptions column={3}>
-                    <Descriptions.Item label='Employee Id:'>t </Descriptions.Item>
-                    <Descriptions.Item label='Employee Name:'>t </Descriptions.Item>
-                    <Descriptions.Item label='Hired Date:'>t</Descriptions.Item>
+                    <Descriptions.Item label='Employee Id'>{probaRequest?.probationEvaluation.empNo} </Descriptions.Item>
+                    <Descriptions.Item label='Employee Name'>{probaRequest?.probationEvaluation.empName} </Descriptions.Item>
+                    <Descriptions.Item label='Hired Date'>{probaRequest?.probationEvaluation?.joinedDate&&formatDate(probaRequest?.probationEvaluation?.joinedDate)}</Descriptions.Item>
 
-                    <Descriptions.Item label='Position:'>t </Descriptions.Item>
-                    <Descriptions.Item label='Function:'>t </Descriptions.Item>
-                    <Descriptions.Item label='Company:'>t</Descriptions.Item>
+                    <Descriptions.Item label='Position'>{probaRequest?.probationEvaluation.jobTitle}</Descriptions.Item>
+                    <Descriptions.Item label='Function'>{probaRequest?.probationEvaluation.departmentName} </Descriptions.Item>
+                    <Descriptions.Item label='Company'>{probaRequest?.probationEvaluation.buName}</Descriptions.Item>
 
                   </Descriptions>
                 </ProCard>
@@ -142,7 +143,19 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
                     <div style={{paddingLeft:15}}> 3- Re-assessed employee if the probation is extended. </div>
                   <div >• Probation confirmation does not link or tight to change or adjustment in benefits</div>
                   <div >• Probation evaluation is appraised by Line Manager. Employee will be provided with opportunity to discuss and seek clarification over the results.</div>                  
-                </ProCard>          
+                </ProCard>    
+                <ProCard title="RATING SCALE" 
+                 collapsible  
+                 size="small"
+                 bordered headerBordered 
+                >
+                  {probaRequest?.ratingScale.map(it => 
+                    <Descriptions column={2}>
+                      <Descriptions.Item style={{width:'15%'}}> <b>{it.seqNo} - {it.title}</b></Descriptions.Item>
+                      <Descriptions.Item> {it.description}</Descriptions.Item>
+                    </Descriptions>
+                  )}
+                </ProCard>      
                 <ProCard title="EVALUATION" 
                     collapsible  
                     size="small"
@@ -195,6 +208,36 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
                         <Col style={{width:'50%',paddingRight:2}}><ProFormTextArea name='strength' label='2. Strength' style={{width:'100%'}} readonly rules={[{ required: true }]} ></ProFormTextArea></Col>
                         <Col style={{width:'50%',paddingLeft:2}}><ProFormTextArea name='developmentArea' label='3. Development Area' style={{width:'100%'}} readonly rules={[{ required: true }]} ></ProFormTextArea></Col>
                     </Row>
+                </ProCard>
+                <ProCard title="VERALL PROBATION RATING" 
+                  collapsible  
+                  size="small"
+                  bordered headerBordered 
+                >
+                  {probaRequest?.overallRating&&<ProTable
+                    pagination={false}  
+                    search={false}
+                    options={{
+                        density:false,
+                        search:false,
+                        reload:false,
+                        setting:false,
+                        fullScreen:false
+                        
+                    }}                
+                    dataSource={probaRequest?.overallRating} 
+                    columns={[
+                      {title:'Rating',dataIndex:'score',
+                        render:(_,r)=>(<div>{formatterQty1.format(r.startedScore||0)} - { formatterQty1.format(r.endedScore||0)}</div>)
+                      },                     
+                      {title:'Description',
+                        children:[
+                          {title:'', dataIndex:'title'},
+                          {title:'', dataIndex:'description1'}
+                        ]
+                      }
+                    ]}
+                  />}
                 </ProCard>
             </ProForm>     
         </Spin>)

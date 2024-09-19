@@ -23,7 +23,7 @@ import { useEffect, useState } from 'react';
 import { BU, Department, ProbationEvaluationData, SubDepartment } from '../data';
 import { EmployeeServices } from '../services';
 import ProbationSumbitter from '@/pages/process-flow/components/Submitter/ProbationSumbitter';
-import { EmployeeInfResult, ProbationFormType } from './data.types';
+import { EmployeeInfResult, ProbationEvaluationRef, ProbationFormType } from './data.types';
 import { createService } from './services';
 
 type DataFormType = {
@@ -44,6 +44,7 @@ export default ({
   const [uploadFileIds, setUploadFileIds] = useState<string[]>([]);
   const [probationEmp, setProbationEmp] = useState<EmployeeInfResult>();
   const [probationFormType,setProbationFormType] = useState<ProbationFormType[]>()
+  const [probationRef,setProbationRef] = useState<ProbationEvaluationRef[]>()
 
   const [data, setData] = useState<{
     buList: BU[];
@@ -89,6 +90,8 @@ export default ({
       srv.fetchProbationFormTypeList().then(rs => {
         setProbationFormType(rs)
       })
+      setProbationRef([])
+      form.setFieldValue('refId',undefined)
     })();
   }, []);
 
@@ -124,7 +127,10 @@ export default ({
   const onChangeSubmitterHandler = async (data: EmployeeInfResult) => {
     console.log('employee info',data)
     setProbationEmp(data)
-    
+    form.setFieldValue('refId',undefined)
+    srv.fetchProbationEvaluationRefList(data.empId).then(rs=> {
+      setProbationRef(rs)
+    })
   }
 
   return (
@@ -192,7 +198,7 @@ export default ({
               rules={[{ required: false }]}
               width={'sm'}
               label="Ref"
-              options={data?.departmentList.map((it) => ({ label: it.name, value: it.id }))}
+              options={probationRef?.map((it) => ({ label: it.formNo, value: it.id }))}
             />           
           </ProFormGroup>
           <ProFormTextArea name='remarks' label={'Remarks'}/>

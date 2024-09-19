@@ -93,8 +93,18 @@ export default (props: ActionDataFormProps) => {
                         });
 
                     }else{
-                        const f1 = await editableFormRef1.current?.validateFields()
-                        const f2 = await editableFormRef2.current?.validateFields()
+                        
+                        if( addedSection1.filter(it=> (it.assessment==undefined || it.assessment=='' || it.target==undefined || it.target=='')).length>0){
+                            message.error("SECTION I. PERFORMANCE, (assessment/target) is required.")
+                            await editableFormRef1.current?.validateFields()
+                            return
+                        }
+                        
+                        if( addedSection2.filter(it=> (it.assessment==undefined || it.assessment=='')).length>0){
+                            message.error("SECTION II. JOB KNOWLEDGE AND SKILLS, assessment is required.")
+                            await editableFormRef2.current?.validateFields()
+                            return
+                        }
                         const dataForm = await form.validateFields()        
                         const payload = {
                             instId: props.procInstId||'',

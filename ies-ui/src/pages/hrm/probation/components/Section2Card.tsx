@@ -2,8 +2,8 @@ import { EditableFormInstance, EditableProTable, ProColumns } from "@ant-design/
 import { useEffect } from "react";
 import { ProbationEvaluation } from "../data.types";
 import { MinusCircleOutlined } from "@ant-design/icons";
-import { Button, Radio } from "antd";
-import { uniqueId } from "lodash";
+import { Button, Radio, Table } from "antd";
+import { round, uniqueId } from "lodash";
 
 interface Props {
     dataDetail?: string;
@@ -66,20 +66,20 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
           renderFormItem(_, config, form,record) {
             return (editableRating?<Radio  
               key={`checked-${config.record?.key}`}
-              checked={(config.record?.rating5==1)}
+              checked={(config.record?.rating5==5)}
               onChange={(e) => {                    
                 form.setFieldValue(config.record?.key || '', {
                   ...config.record,
-                  rating5: e.target.checked?1:0,
+                  rating5: e.target.checked?5:0,
                   rating4: 0,
                   rating3: 0,
                   rating2: 0,
                   rating1: 0,
                   checked: e.target.checked,
               });
-              setRatingScore(config.record?.key,0,0,0,0,e.target.checked?1:0) 
+              setRatingScore(config.record?.key,0,0,0,0,e.target.checked?5:0) 
             }}
-            />:<Radio  checked={(config.record?.rating5==1)}/>)
+            />:<Radio  checked={(config.record?.rating5==5)}/>)
           }
         },{
           title: <span style={{fontSize:11}}>4- Exceeds Expectations</span>,                
@@ -91,20 +91,20 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
           renderFormItem(_, config, form) {
             return (editableRating?<Radio  
               key={`checked-${config.record?.key}`}
-              checked={(config.record?.rating4==1)}
+              checked={(config.record?.rating4==4)}
               onChange={(e) => {                    
                 form.setFieldValue(config.record?.key || '', {
                   ...config.record,
-                  rating4: e.target.checked?1:0,
+                  rating4: e.target.checked?4:0,
                   rating5: 0,
                   rating3: 0,
                   rating2: 0,
                   rating1: 0,
                   checked: e.target.checked,
               });
-              setRatingScore(config.record?.key,0,0,0,e.target.checked?1:0,0) 
+              setRatingScore(config.record?.key,0,0,0,e.target.checked?4:0,0) 
             }}
-            />:<Radio  checked={(config.record?.rating4==1)}/>)
+            />:<Radio  checked={(config.record?.rating4==4)}/>)
             
           },
         },{
@@ -117,20 +117,20 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
           renderFormItem(_, config, form) {
             return (editableRating?<Radio  
               key={`checked-${config.record?.key}`}
-              checked={(config.record?.rating3==1)}
+              checked={(config.record?.rating3==3)}
               onChange={(e) => {
                 form.setFieldValue(config.record?.key || '', {
                     ...config.record,
-                    rating3: e.target.checked?1:0,
+                    rating3: e.target.checked?3:0,
                     rating5: 0,
                     rating4: 0,
                     rating2: 0,
                     rating1: 0,
                     checked: e.target.checked,
                 });
-                setRatingScore(config.record?.key,0,0,e.target.checked?1:0,0,0) 
+                setRatingScore(config.record?.key,0,0,e.target.checked?3:0,0,0) 
             }}
-            />:<Radio  checked={(config.record?.rating3==1)}/>)
+            />:<Radio  checked={(config.record?.rating3==3)}/>)
           },
         },{
           title: <span style={{fontSize:11}}>2- Needs Improvement</span>,                
@@ -142,18 +142,18 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
           renderFormItem(_, config, form) {
             return (editableRating?<Radio  
               key={`checked-${config.record?.key}`}
-              checked={(config.record?.rating2==1)}
+              checked={(config.record?.rating2==2)}
               onChange={(e) => {                    
                 form.setFieldValue(config.record?.key || '', {
                   ...config.record,
-                  rating2: e.target.checked?1:0,
+                  rating2: e.target.checked?2:0,
                   rating5: 0,
                   rating4: 0,
                   rating3: 0,
                   rating1: 0,
                   checked: e.target.checked,
               });
-              setRatingScore(config.record?.key,0,e.target.checked?1:0,0,0,0) 
+              setRatingScore(config.record?.key,0,e.target.checked?2:0,0,0,0) 
             }}
             />:<Radio checked={(config.record?.rating2==1)}/>)
           },
@@ -255,5 +255,21 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
     }:false}
     value={addedItems}
     columns={cols}
+    summary={(data) => {
+      var rating = 0;
+      data?.forEach((it) => {
+        rating += (it.rating1||0) +  (it.rating2||0) +  (it.rating3||0) +  (it.rating4||0) +  (it.rating5||0)
+      });
+      return (
+        <Table.Summary.Row style={{ textAlign: 'right', fontWeight: 'bold' }}>
+          <Table.Summary.Cell colSpan={3} index={3}>
+            {'SECTION II. JOB KNOWLEDGE AND SKILLS (Weightage: 20%)'}
+          </Table.Summary.Cell>
+          <Table.Summary.Cell index={4} align="center">
+            {round(rating, 2) || 0}
+          </Table.Summary.Cell>
+        </Table.Summary.Row>
+      );
+    }}
   />)
 }

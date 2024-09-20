@@ -11,6 +11,7 @@ import CertificationView from "../view/CertificationView";
 import { formatDate, formatMonth, formatYear } from "@/pages/utils";
 import TrainingModal from '../modal/TrainingModal';
 import CertificationModal from "../modal/CertificationModal";
+import moment from "moment";
 
 
 interface Props {
@@ -42,8 +43,11 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
     
     const [trainingOldImageList, setTrainingOldImageList] = useState<FilesData[]>([]);
     const [trainingNewImageList, setTrainingNewImageList] = useState<FilesData[]>([]); 
+    
     const [certificateOldImageList, setCertificateOldImageList] = useState<FilesData[]>([]);
     const [certificateNewImageList, setCertificateNewImageList] = useState<FilesData[]>([]); 
+
+
     const [trainingAllImageList, setTrainingAllImageList] = useState<FilesData[]>([]);
     
     const [createFileOther, selectedFileOther] = useState<any>();  
@@ -72,10 +76,10 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
             setCertificateNewList(list.newDataCert);             
             // image list 
             setTrainingOldImageList(list.fileOldData); 
-            setCertificateOldImageList(list.fileOldData); 
+            setCertificateOldImageList(list.fileOldCertData); 
             //
             setTrainingNewImageList(list.fileNewData); 
-            setCertificateNewImageList(list.fileNewData); 
+            setCertificateNewImageList(list.fileNewCertData); 
             // all image
             setTrainingAllImageList(list.fileAllData); 
 
@@ -101,6 +105,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                 var toyear = data.year[1];
                 data.year = fromyear;
                 data.toYear = toyear; 
+                data.traincert=1;
 
                 await ProfileServicesEss.saveTraining(data)(requestActions); 
                 // call back fun
@@ -121,13 +126,14 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
         } 
         // submit
         Modal.confirm({
-          title: 'Save Training',
+          title: 'Save Certificate',
           content: 'Are you sure?',
           onOk: async () => {
             try {
                 data.otherFile = createFileOther||[];
                 data.isDelete = 0; 
-                data.toYear = ""; 
+                data.toYear = '';
+                data.traincert=2;
 
                 await ProfileServicesEss.saveTraining(data)(requestActions); 
                 // call back fun
@@ -135,7 +141,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                 initData();
                 hideCertificateModal();
             } catch (error: any) {
-              message.error(error.message || 'Failed to Training.');
+              message.error(error.message || 'Failed to Certificate.');
             }
           },
         });

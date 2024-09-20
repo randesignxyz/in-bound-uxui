@@ -74,6 +74,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
                 bmForm.typeId = 1;
                 bmForm.status=true; 
                 bmForm.isDelete=0;
+                bmForm.traincert=1;
 
                 var fromyear = bmForm.year[0];
                 var toyear = bmForm.year[1];

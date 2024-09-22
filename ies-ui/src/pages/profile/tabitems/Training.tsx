@@ -206,27 +206,33 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
             <Space direction={"vertical"} style={{width:'100%'}}>
                 <div style={{width:'100%',textAlign:'right'}}> 
                     <Space direction='horizontal'>
-                        <Button style={{display:(is_admin==2&&empId>0)?'':'none'}} onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}><PlusOutlined/> Add Training</Button>
-                        <Button style={{display:(is_admin==2&&empId>0)?'':'none'}} onClick={() => setModalCertificateVisible({ type: 'ADD', payload: undefined })}><PlusOutlined/> Add Certification</Button>
+                        <Button style={{display:(is_admin==2&&empId>0)?'':'none'}} onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}
+                            icon={<PlusCircleFilled />}
+                            key="lnd8"
+                            type="primary"> Add Training</Button>
+                        <Button style={{display:(is_admin==2&&empId>0)?'':'none'}} onClick={() => setModalCertificateVisible({ type: 'ADD', payload: undefined })}
+                            icon={<PlusCircleFilled />}
+                            key="lnd7"
+                            type="primary"> Add Certification</Button>
                         {/*  */}
                         <Button danger onClick={() => setModalTrainingViewVisible({ type: 'VIEW', payload: undefined})} 
-                            style={{display:([7,5,4,3,2].find((element) => element == profile!!.ess.stepId))&&is_admin!=2?'':'none'}}><EyeOutlined/> View Training Edit</Button> 
+                            style={{display:([7,5,4,3,2].find((element) => element == profile!!.ess.stepId))&&is_admin!=2?'':'none'}} type="primary"><EyeOutlined/> View Training Edit</Button> 
                         {/*  */}
                         <Button danger onClick={() => setModalCertificationViewVisible({ type: 'VIEW', payload: undefined})} 
-                            style={{display:([7,5,4,3,2].find((element) => element == profile!!.ess.stepId))&&is_admin!=2?'':'none'}}><EyeOutlined/> View Certification Edit </Button> 
+                            style={{display:([7,5,4,3,2].find((element) => element == profile!!.ess.stepId))&&is_admin!=2?'':'none'}} type="primary"><EyeOutlined/> View Certification Edit </Button> 
                          {/*  */}
                         {profile!!.ess.id!!<=0?'':<Button style={{display: ([7,5,2].find((element) => element == step))&&is_admin==0?'':'none'}}
                                 onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}
-                                icon={<PlusOutlined />}
-                                key="1"
+                                icon={<PlusCircleFilled />}
+                                key="lnd6"
                                 type="primary">
                                 Add Training
                             </Button>
                         }
                         {profile!!.ess.id!!<=0?'':<Button style={{display: ([7,5,2].find((element) => element == step))&&is_admin==0?'':'none'}}
                                 onClick={() => setModalCertificateVisible({ type: 'ADD', payload: undefined })}
-                                icon={<PlusOutlined />}
-                                key="1"
+                                icon={<PlusCircleFilled />}
+                                key="lnd5"
                                 type="primary">
                                 Add Certification
                             </Button>
@@ -249,9 +255,9 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                         }}
                         columns={[
                             {
-                                title: "Courses", dataIndex: "trainingCourse"
+                                title: "Courses", dataIndex: "trainingCourse",width:250
                             },{
-                                title: "Institution", dataIndex: "institution"
+                                title: "Institution", dataIndex: "institution",width:250
                             },{
                                 title: "Date", 
                                 dataIndex: "year",
@@ -286,8 +292,10 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                     />
                 </ProCard>
                 {/* cource */}
-                <ProCard bordered>
-                    <Typography.Title level={5}>Certification </Typography.Title>  
+                <ProCard bordered>                    
+                    <Space direction="horizontal">
+                        <Typography.Title level={5}>Professional Certification</Typography.Title><Typography.Title style={{fontSize:'12px',color:"gray"}}>(Professional's competency with international standards, industry specifications or technical rules)</Typography.Title>  
+                    </Space>
                     <ProTable<TrainingData>
                         dataSource={certificateList}
                         search={false}
@@ -301,9 +309,9 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                         }}
                         columns={[
                             {
-                                title: "Courses", dataIndex: "trainingCourse"
+                                title: "Courses", dataIndex: "trainingCourse",width:250
                             },{
-                                title: "Institution", dataIndex: "institution"
+                                title: "Institution", dataIndex: "institution",width:250
                             },{
                                 title: "In Year", 
                                 dataIndex: "year",

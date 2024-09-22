@@ -6,7 +6,9 @@ export interface SaveEssProfile {
   openEssId: number; 
   empId:number;
   nameKh: string; 
-  nameEn: string; 
+  firstNameEn: string; 
+  lastNameEn: string; 
+  
   genderId   : number; 
   dateBirth  : moment.Moment;
   
@@ -88,7 +90,9 @@ export interface EssProfileData {
 
   empId           : number;
   nameKh          : string; 
-  nameEn          : string;  
+  firstNameEn          : string;  
+  lastNameEn          : string;   
+  
   genderId        : number; 
   dateBirth       : moment.Moment; 
   placeBirth      : string;  
@@ -316,7 +320,9 @@ export interface EducationData {
   degreeId    : number; 
   statusId    : number; 
   isDelete    : number;
-  educationCenter: string; 
+  educationYear    : moment.Moment[]; 
+  fromYear    : moment.Moment; 
+  toYear      : moment.Moment; 
   marjorSubject: string;  
   type        : string; 
   status      : boolean;

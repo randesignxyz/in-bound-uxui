@@ -138,14 +138,18 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
           <Space direction={"vertical"} style={{width:'100%'}}>
             <div style={{width:'100%',textAlign:'right'}}>
                 <Space direction='horizontal'>
-                    <Button style={{display:(is_admin==2&&empId>0)?'':'none'}} onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}><PlusCircleFilled/> Add</Button>
+                    <Button style={{display:(is_admin==2&&empId>0)?'':'none'}} onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}
+                        icon={<PlusCircleFilled />}
+                        key="1"
+                        type="primary">Add</Button>
 
                     <Button danger onClick={() => setModalEducationViewVisible({ type: 'VIEW', payload: profile.emergency})} 
-                        style={{display:([7,5,4,3,2].find((element) => element == profile!!.ess.stepId))&&is_admin!=2?'':'none'}}><EyeOutlined/> View edit</Button>
+                        style={{display:([7,5,4,3,2].find((element) => element == profile!!.ess.stepId))&&is_admin!=2?'':'none'}}
+                        type="primary"><EyeOutlined/> View edit</Button>
 
                     {profile!!.ess.id!!<=0?'':<Button style={{display: ([7,5,2].find((element) => element == step))&&is_admin==0?'':'none'}}
                             onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}
-                            icon={<PlusOutlined />}
+                            icon={<PlusCircleFilled />}
                             key="1"
                             type="primary">
                             Add

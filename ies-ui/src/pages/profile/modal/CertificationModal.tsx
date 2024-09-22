@@ -8,6 +8,7 @@ import ImagePreview from "@/components/ImagePreview";
 import { ProfileData } from "../data";
 import { simpleRequestActions } from "@/services/model";
 import { ProfileServicesEss } from "../service_ess";
+import { ProfileOutlined,SaveOutlined,CloseSquareOutlined } from "@ant-design/icons";
 
 interface Props extends ModalFormProps<SaveTraining> { 
     profile: ProfileData;
@@ -62,7 +63,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
 
         // submit
         Modal.confirm({
-            title: 'Save Certification',
+            title: 'Save Professional Certification',
             content: 'Are you sure?',
             onOk: async () => {
               try { 
@@ -84,7 +85,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
         });
     }
     // 
-    return <ModalForm  {...rest} form={form} width={'30%'} title={!!data?"Edit Certification":"Add Certification"}
+    return <ModalForm  {...rest} form={form} width={'30%'} title={!!data?<><ProfileOutlined /> Edit Professional Certification</>:<><ProfileOutlined /> Add Professional Certification</>}
         // onOpenChange={visible => {
         //     form.resetFields()
         //     rest.onOpenChange?.(visible)
@@ -98,8 +99,8 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
                     }
                     :{
                         searchConfig: {
-                            submitText: 'Submit',
-                            resetText: 'Cancel',
+                            submitText: <div><SaveOutlined /> Submit</div>,
+                            resetText: <div><CloseSquareOutlined /> Cancel</div>,
                         }
                     }
                 } 
@@ -117,7 +118,8 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
             <Space direction="horizontal">
                 <Typography.Title level={5}>Attachments</Typography.Title><Typography.Title level={5} style={{color:'red'}}> (Required*)</Typography.Title>
             </Space>
-            <div style={{fontSize:'12px'}}>- Certificate (Image File or PDF)</div>
+            <div style={{fontSize:'12px'}}>- Professional Certification (Professional's competency with international standards, industry specifications or technical rules)</div>
+            
         </div> 
         <ProCard size="small" bordered>   
             <FileUploader   

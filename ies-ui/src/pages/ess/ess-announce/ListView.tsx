@@ -130,7 +130,7 @@ export default ({ onAdd, onEdit }: Props) => {
                     actions: [false],
                 },
             }} 
-            extraRightFilter={active>0?'':<Tooltip placement="bottom" title="Create new open ess"><Button icon={<SoundOutlined />} onClick={onOpenESS}>Open ESS </Button></Tooltip>}
+            extraRightFilter={active>0?'':<Tooltip placement="bottom" title="Create new open ess"><Button icon={<SoundOutlined />} onClick={onOpenESS}>Create Announcement</Button></Tooltip>}
             actionHandlers={{ 
                 onRequest: (criteria, pagination, sort) => onRequestHandler({
                     criteria: {

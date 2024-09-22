@@ -149,8 +149,8 @@ function Profile() {
     <RouteContext.Consumer>
       {({ isMobile }) => (
         <ProDescriptions className={styles.headerList} size="small" column={isMobile ? 1 : 2}>
-          <ProDescriptions.Item label="Name KH">{data?.internalName}</ProDescriptions.Item>
-          <ProDescriptions.Item label="Name EN">{data?.firstName} {data?.lastName}</ProDescriptions.Item>
+          <ProDescriptions.Item label="Name KH">{data?.profile.nameKh}</ProDescriptions.Item>
+          <ProDescriptions.Item label="Name EN">{data?.profile.lastNameEn} {data?.profile.firstNameEn}</ProDescriptions.Item>
           <ProDescriptions.Item label="Company">{data?.company}</ProDescriptions.Item>
           <ProDescriptions.Item label="Location">{data?.location}</ProDescriptions.Item>
           <ProDescriptions.Item label="Function">{data?.functions}</ProDescriptions.Item>
@@ -272,7 +272,7 @@ function Profile() {
 
   // stage
   const _info = "Period: From  "+(profile?.ess.id!!<=0?'':formatDate(profile?.ess.startDate))+" To  "+(profile?.ess.id!!<=0?'':formatDate(profile?.ess.endDate))+"";
-  const _stag = ["Cancel Updated","Getting Starts","Start Modifying","Reviewing","Rejected","Re-Edit","Approval","Cancelled Submitted"];
+  const _stag = ["Cancel Updated","Getting Started","Start Modifying","Reviewing","Rejected","Re-Edit","Approval","Cancelled Submitted"];
   const _stag_message = [
     /*0*/"Cancel Updated",
     /*1*/_info,

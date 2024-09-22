@@ -10,6 +10,7 @@ import ImagePreview from "@/components/ImagePreview";
 import { ProfileData } from "../data";
 import { simpleRequestActions } from "@/services/model";
 import { ProfileServicesEss } from "../service_ess";
+import { ProfileOutlined,SaveOutlined,CloseSquareOutlined } from "@ant-design/icons";
 
 interface Props extends ModalFormProps<SaveTraining> { 
     profile: ProfileData;
@@ -91,7 +92,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
         });
     }
     // 
-    return <ModalForm  {...rest} form={form} width={'30%'} title={!!data?"Edit Training":"Add Training"}
+    return <ModalForm  {...rest} form={form} width={'30%'} title={!!data?<><ProfileOutlined /> Edit Training</>:<><ProfileOutlined /> Add Training</>}
         // onOpenChange={visible => {
         //     form.resetFields()
         //     rest.onOpenChange?.(visible)
@@ -105,8 +106,8 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
                     }
                     :{
                         searchConfig: {
-                            submitText: 'Submit',
-                            resetText: 'Cancel',
+                            submitText: <div><SaveOutlined /> Submit</div>,
+                            resetText: <div><CloseSquareOutlined /> Cancel</div>,
                         }
                     }
                 } 
@@ -116,7 +117,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
             <ProFormText label="Institution" name={'institution'} rules={[{ required: true }]} placeholder={"institution"}/> 
             <Row>              
                 <Col span={24} style={{padding:'3px'}}>  
-                    <ProFormDateRangePicker label="Date" name={"year"} rules={[{ required: true }]} />
+                    <ProFormDateRangePicker label="Period Training" name={"year"} rules={[{ required: true }]} />
                 </Col>      
             </Row> 
             <Row>              

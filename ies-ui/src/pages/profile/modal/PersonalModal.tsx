@@ -9,7 +9,7 @@ import { ProfileServicesEss } from '../service_ess';
 import FileUploader , { UploadType } from '@/components/Attachment/FileUploader';
 import ImagePreview from "@/components/ImagePreview";
 import { ProfileData } from "../data";
-import { DeliveredProcedureOutlined } from "@ant-design/icons";
+import { DeliveredProcedureOutlined,SaveOutlined,CloseSquareOutlined,ProfileOutlined } from "@ant-design/icons";
 
 interface Props extends ModalFormProps<SaveEssProfile> { 
     data?: EssProfileData;
@@ -54,13 +54,13 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
             //current address
             districtList(data!!.provinceCrId!!,3);
             communeList(data!!.districtCrId!!,3);
-        }
-        // 
-        if(data?.maritalStatusId==19){
-            setIsOtherVisible(false);
-        }
-        else{ 
-            setIsOtherVisible(true);
+            // 
+            if(data?.maritalStatusId==19){
+                setIsOtherVisible(false);
+            }
+            else{ 
+                setIsOtherVisible(true);
+            }
         }
          
     };  
@@ -119,7 +119,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
         }
         // submit
         Modal.confirm({
-            title: 'Save Lanuage',
+            title: 'Save Profile',
             content: 'Are you sure?',
             onOk: async () => {
               try { 
@@ -152,7 +152,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
         }); 
     }
     return <div>
-        <ModalForm  {...rest} form={form} width={'40%'} title="Edit Personal Information"
+        <ModalForm  {...rest} form={form} width={'40%'} title={<><ProfileOutlined /> Edit Personal Information</>}
             // onOpenChange={visible => {
             //     form.resetFields() 
             //     rest.onOpenChange?.(visible)
@@ -161,21 +161,30 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
             submitter={isAdmin==2&&empId>0?
                 {
                     render: () => { 
-                    return <><Button onClick={()=>{onAdminSubmit();}}>Submit</Button></>
+                    return <><Button type="primary" onClick={()=>{onAdminSubmit();}}>Submit</Button></>
                     }
                 }
                 :{
                     searchConfig: {
-                        submitText: 'Submit',
-                        resetText: 'Cancel',
+                        submitText: <div><SaveOutlined /> Submit</div>,
+                        resetText: <div><CloseSquareOutlined /> Cancel</div>,
                     }
                 }
             } 
             > 
             <Spin spinning = {isLoading}> 
                 <ProCard bordered style={{backgroundColor:'#f5f5f5'}}> 
-                    <ProFormText label="Name KH" name={'nameKh'} placeholder={"គោត្តនាម និង នាម"}/>
-                    <ProFormText label="Name EN" name={'nameEn'} placeholder={"Family name, Given Name"}/>
+                    <Row>
+                        <Col span={8} style={{padding:'3px'}}> 
+                            <ProFormText label="Name KH" name={'nameKh'} placeholder={"គោត្តនាម និង នាម"}/>
+                        </Col>    
+                        <Col span={8} style={{padding:'3px'}}> 
+                            <ProFormText label="Last Name EN" name={'lastNameEn'} placeholder={"Given Name"}/>
+                        </Col>    
+                        <Col span={8} style={{padding:'3px'}}> 
+                            <ProFormText label="First Name EN" name={'firstNameEn'} placeholder={"Family name"}/>
+                        </Col>    
+                    </Row>
                     <Row>
                         <Col span={12}>
                             <ProFormDatePicker label="Date of Birth" name={'dateBirth'} />
@@ -378,8 +387,9 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                 </ProCard>
 
                 {/* current address  */}
-                <div style={{marginTop:'10px'}}><Typography.Title level={5}>Current Address</Typography.Title> 
-                    <Button onClick={(e)=>onCloneAddress(form.getFieldsValue())}><DeliveredProcedureOutlined /> Clone Permanent Address</Button>
+                <div style={{marginTop:'10px'}}>
+                    <Typography.Title level={5}>Current Address</Typography.Title> 
+                    <Button onClick={(e)=>onCloneAddress(form.getFieldsValue())}><DeliveredProcedureOutlined /> Copy from Permanent Address</Button>
                 </div> 
                 <ProCard bordered style={{backgroundColor:'#f5f5f5'}}> 
                     <Row>
@@ -442,9 +452,9 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                         <Typography.Title level={5}>Attachments </Typography.Title><Typography.Title level={5} style={{color:'red'}}> (Required*)</Typography.Title>
                         
                     </Space>
-                    <div style={{fontSize:'12px'}}>- National ID (Image File or PDF)</div>
-                    <div style={{fontSize:'12px'}}>- Passport (Image File or PDF)</div> 
-                    <div style={{fontSize:'12px'}}>- Married Certificate (Image File or PDF)</div> 
+                    <div style={{fontSize:'12px'}}>- National ID (for updating ID number, Name, DOB, Expiry date)</div>
+                    <div style={{fontSize:'12px'}}>- Passport (for updating Passport number, Name, DOB, Expiry date)</div> 
+                    <div style={{fontSize:'12px'}}>- Marriage Certificate (for updating marital status)</div> 
                 </div> 
                 <ProCard size="small" bordered>   
                     <FileUploader   

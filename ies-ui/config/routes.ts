@@ -1356,13 +1356,14 @@ export default [
     path: '/ess',
     name: 'ess',
     icon: 'TeamOutlined', 
+    access: 'canAccessHrViewEmployeeMenuItem',
     component: './ess'
   },{
     path: '/ess/:view/*',
     name: 'ess',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessHrEmployeeMenuItem',
+    // access: 'canAccessHrEmployeeMenuItem',
     component: './ess/ess-announce',
   },
   
@@ -1392,27 +1393,27 @@ export default [
    * End ESS Management
    */
   /* request car */
-  // {
-  //   path: 'fleet/booking/rqblist',
-  //   name: 'booking',
-  //   icon: 'TeamOutlined', 
-  //   hideInMenu: 'true',
-  //   component: './fleet/carbooking/bookinglist'
-  // },
-  // {
-  //   path: 'fleet/booking/ocplist',
-  //   name: 'booking',
-  //   icon: 'TeamOutlined', 
-  //   hideInMenu: 'true',
-  //   component: './fleet/carbooking/occupylist'
-  // },
-  // {
-  //   path: 'fleet/booking/bknew',
-  //   name: 'booking',
-  //   icon: 'TeamOutlined', 
-  //   hideInMenu: 'true',
-  //   component: './fleet/carbooking/occupylist'
-  // },
+  {
+    path: 'fleet/booking/rqblist',
+    name: 'booking',
+    icon: 'TeamOutlined', 
+    hideInMenu: 'true',
+    component: './fleet/carbooking/bookinglist'
+  },
+  {
+    path: 'fleet/booking/ocplist',
+    name: 'booking',
+    icon: 'TeamOutlined', 
+    hideInMenu: 'true',
+    component: './fleet/carbooking/occupylist'
+  },
+  {
+    path: 'fleet/booking/bknew',
+    name: 'booking',
+    icon: 'TeamOutlined', 
+    hideInMenu: 'true',
+    component: './fleet/carbooking/occupylist'
+  },
 
   /* En request car */
 

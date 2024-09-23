@@ -10,13 +10,14 @@ interface Props extends ModalProps {
     newData:TrainingData[],
     essProfileId: number;
     isAdmin:number;
+    step:number;
     cb:{ //used callback function to parent form
         onOpenEditForm: (data:TrainingData,type:string) => void;  
         onDelete: (data:TrainingData) => void;  
     };
 }
 
-export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {   
+export default ( {oldData,newData,essProfileId,isAdmin,step,cb, ...rest}: Props) => {   
      
     return <>
       <ModalForm title = "View training edit" {...rest} width={'90%'} submitter={false} > 
@@ -53,7 +54,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                         },{   
                             width: '70px',
                             render: (_, r) => { 
-                                return ( <Flex vertical={false} justify='space-between'>
+                                return ( <Flex vertical={false} justify='space-between' hidden={step==3?true:false}>
                                     <a style={{display: isAdmin==0?'':'none'}} title="Edit item" 
                                         onClick={() => {
                                                 cb.onOpenEditForm(r,"EDIT"); 
@@ -100,7 +101,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                         },{   
                             width: '70px',
                             render: (_, r) => {
-                                return ( <Flex vertical={false} justify='space-between'>
+                                return ( <Flex vertical={false} justify='space-between' hidden={step==3?true:false}>
                                     <a style={{display: isAdmin==0?'':'none'}} title="Edit item" 
                                         onClick={() => {
                                             cb.onOpenEditForm(r,"ADD");

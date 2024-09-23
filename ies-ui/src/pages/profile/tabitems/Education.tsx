@@ -265,6 +265,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
             newData={educationNewList}
             essProfileId={profile.id}
             files={educationAllImageList}
+            step={step}
             cb={{
                 onOpenEditForm: (id,type) => { 
                     onOpenForm(id,type);

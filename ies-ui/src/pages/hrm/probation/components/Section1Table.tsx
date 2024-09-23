@@ -4,6 +4,7 @@ import { ProbationEvaluation } from "../data.types";
 import { MinusCircleOutlined } from "@ant-design/icons";
 import { Button, message, Radio, Table } from "antd";
 import { round, uniqueId } from "lodash";
+import { formatterQty1 } from "@/pages/utils";
 
 interface Props {
     // dataDetail?: string;
@@ -12,8 +13,9 @@ interface Props {
     onSetAddedItems?: (v: ProbationEvaluation[]) => void;
     editable: boolean|false;
     editableRating: boolean|false
+    totalScore?: number
 }
-export default({editableFormRef,addedItems,onSetAddedItems,editable,editableRating }: Props) => {
+export default({editableFormRef,addedItems,onSetAddedItems,editable,editableRating,totalScore }: Props) => {
 
     const dataSection1 = [
       {id:0,key:'default1-1', assessment:'', target:''},
@@ -271,17 +273,18 @@ export default({editableFormRef,addedItems,onSetAddedItems,editable,editableRati
       },  
     ]}
     summary={(data) => {
-      var rating = 0;
-      data?.forEach((it) => {
-        rating += (it.rating1||0) +  (it.rating2||0) +  (it.rating3||0) +  (it.rating4||0) +  (it.rating5||0)
-      });
+      // var rating = 0;
+      // data?.forEach((it) => {
+      //   rating += (it.rating1||0) +  (it.rating2||0) +  (it.rating3||0) +  (it.rating4||0) +  (it.rating5||0)
+      // });
+      // rating = (rating / data.length)*0.5
       return (
         <Table.Summary.Row style={{ textAlign: 'right', fontWeight: 'bold' }}>
-          <Table.Summary.Cell colSpan={3} index={3}>
+          <Table.Summary.Cell colSpan={8} index={8}>
             {'SECTION I. PERFORMANCE (Weightage: 50%)'}
           </Table.Summary.Cell>
-          <Table.Summary.Cell index={4} align="center">
-            {round(rating, 2) || 0}
+          <Table.Summary.Cell colSpan={2} index={9} align="left">
+            {formatterQty1.format(totalScore || 0)}
           </Table.Summary.Cell>
         </Table.Summary.Row>
       );

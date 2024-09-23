@@ -2,10 +2,10 @@ import ViewFormWrapper from "@/pages/process-flow/components/forms/ViewFormWrapp
 import ProcessFlowModel from "@/models/ProcessFlowModel";
 import { DataViewProps } from "@/pages/process-flow/data";
 import { simpleRequestActions } from "@/services/model";
-import { Button, Col, Descriptions, Form, message, Modal, Row, Spin } from "antd";
+import { Button, Col, Descriptions, Form, Input, message, Modal, Row, Space, Spin } from "antd";
 import { EditableFormInstance, FooterToolbar, ProCard, ProForm, ProFormTextArea, ProTable } from "@ant-design/pro-components";
 import { useEffect, useRef, useState } from "react";
-import { ProbationEvaluation, ProbationEvaluationDetailRs, ProbationEvaluationPaloay, ProbationEvaluationResources, ProbationEvaluationResourcesSupport } from "../data.types";
+import { ProbationEvaluation, ProbationEvaluationDetailRs, ProbationEvaluationResources, ProbationEvaluationResourcesSupport } from "../data.types";
 import Section2Card from "../components/Section2Card";
 import Section1Table from "../components/Section1Table";
 import Section3Card from "../components/Section3Card";
@@ -14,6 +14,8 @@ import { useForm } from "antd/lib/form/Form";
 import { createService } from "../services";
 import { uniqueId } from "lodash";
 import { formatDate, formatterQty, formatterQty1 } from "@/pages/utils";
+import EmpImprovmentTable1 from "../components/EmpImprovmentTable1";
+import EmpImprovmentTable from "../components/EmpImprovmentTable";
 
 export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
     const workflowModel = ProcessFlowModel();
@@ -63,45 +65,10 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
           message.error(error.message || 'Failed to load request.');
       }
     };
-
-    // const onSaveHandler = async ()=>{
-    //   // const payload = await getDataForm();
-    //   // setStartFormVisible(true);
-    //   // console.log('Payload',editableFormRef2.current?.isFieldsValidating())
-    //   // if(editableFormRef1.current?.isFieldsValidating()) return;
-    //   const f1 = await editableFormRef1.current?.validateFields()
-    //   const f2 = await editableFormRef2.current?.validateFields()
-    //   const f = await form.validateFields()
-    
-    //     const payload = {
-    //       instId: instId ||0,
-    //       section1: addedSection1,
-    //       section2: addedSection2,
-    //       section3: probaResources,
-    //       section4: probaResourcesSupport
-    //     } as ProbationEvaluationPaloay
-    //     console.log('data form: ', payload)
-    //     Modal.confirm({
-    //       title: 'Probation Evaluation',
-    //       content: 'Are you sure?',
-    //       onOk: async () => {
-    //         try {
-    //           const rs = await srv.insertAssessment(payload);
-    //           // message.success(`Appraisal Form is ${'SUBMITTED' === status ? 'submitted' : 'saved'}.`);
-    //           // onOpenModalChange?.(false);
-    //           // refreshTable();
-    //         } catch (error: any) {
-    //           message.error(error.message || 'Failed to submit.');
-    //         }
-    //       },
-    //     });
-    // }
-
     return(  
     <ViewFormWrapper<{ id: number }>
         workflowModel={workflowModel}
         workflowProp={props}
-        // attachedFiles={stockRequest?.fileIds?.map(it => ({ fileId: it, activity: 'Start' }))}
     >
         {(data) => {
                
@@ -169,7 +136,7 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
                         <div><span style={{color:'red'}}>*</span> At least 3 items are required.</div>
                         </div>
                     </div>
-                    <Section1Table editable={false} editableRating={false} editableFormRef={editableFormRef1} addedItems={addedSection1} onSetAddedItems={setAddedSection1} />
+                    <Section1Table editable={false} editableRating={false} editableFormRef={editableFormRef1} addedItems={addedSection1} onSetAddedItems={setAddedSection1} totalScore={probaRequest?.totalScore1}/>
                     {/*---------------------------- SECTION II. JOB KNOWLEDGE AND SKILLS (Weightage: 20%)----------------------------------*/}
                     <div>
                         <div style={{paddingTop:5}}>
@@ -177,7 +144,7 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
                         <div>What relevant knowledge and skills that employee possesses and applies effectively in the job</div>
                         </div>
                     </div>
-                    <Section2Card editable={false} editableRating={false} editableFormRef={editableFormRef2} addedItems={addedSection2} onSetAddedItems={setAddedSection2} />
+                    <Section2Card editable={false} editableRating={false} editableFormRef={editableFormRef2} addedItems={addedSection2} onSetAddedItems={setAddedSection2}  totalScore={probaRequest?.totalScore2}/>
                     {/*---------------------------- SECTION III. BEHAVIOR (Weightage: 30%)-------------------------------------------------*/}
                     <div>
                         <div style={{paddingTop:5}}>
@@ -185,7 +152,7 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
                         <div>How employee is expected to behave in a proper manner.</div>
                         </div>
                     </div>
-                    {probaResources&&<Section3Card editable={false} editableRating={false} editableFormRef={editableFormRef3} addedItems={probaResources} onSetAddedItems={setProbaResources} />}
+                    {probaResources&&<Section3Card editable={false} editableRating={false} editableFormRef={editableFormRef3} addedItems={probaResources} onSetAddedItems={setProbaResources}  totalScore={probaRequest?.totalScore3}/>}
                     {/*---------------------------- SECTION IV. SUPPORT / RESOURCES NEEDED-------------------------------------------------*/}
                     <div>
                         <div style={{paddingTop:5}}>
@@ -201,43 +168,46 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
                         <div>What employee has done, their strength, and further development need.</div>
                         </div>
                     </div>
-                    <Row>
-                        <Col style={{width:'100%'}}><ProFormTextArea name='achievement' label='1. Achievement' style={{width:'100%'}} readonly rules={[{ required: true }]} ></ProFormTextArea></Col>
-                    </Row>
-                    <Row>
-                        <Col style={{width:'50%',paddingRight:2}}><ProFormTextArea name='strength' label='2. Strength' style={{width:'100%'}} readonly rules={[{ required: true }]} ></ProFormTextArea></Col>
-                        <Col style={{width:'50%',paddingLeft:2}}><ProFormTextArea name='developmentArea' label='3. Development Area' style={{width:'100%'}} readonly rules={[{ required: true }]} ></ProFormTextArea></Col>
-                    </Row>
+                    <Space direction="vertical" style={{ width: '100%' }}>
+                      {probaRequest?.empAchievement&&<EmpImprovmentTable editable={false} addedItems={probaRequest?.empAchievement.map(it => ({...it,key: uniqueId().toString()}))} />}
+                      {probaRequest?.empImprovement&&<EmpImprovmentTable1  editable={false} addedItems={probaRequest?.empImprovement.map(it => ({...it,key: uniqueId().toString()}))} />}
+                    </Space>                    
                 </ProCard>
-                <ProCard title="VERALL PROBATION RATING" 
+                <ProCard title="SUMMARY" 
                   collapsible  
                   size="small"
                   bordered headerBordered 
                 >
-                  {probaRequest?.overallRating&&<ProTable
-                    pagination={false}  
-                    search={false}
-                    options={{
-                        density:false,
-                        search:false,
-                        reload:false,
-                        setting:false,
-                        fullScreen:false
-                        
-                    }}                
-                    dataSource={probaRequest?.overallRating} 
-                    columns={[
-                      {title:'Rating',dataIndex:'score',
-                        render:(_,r)=>(<div>{formatterQty1.format(r.startedScore||0)} - { formatterQty1.format(r.endedScore||0)}</div>)
-                      },                     
-                      {title:'Description',
-                        children:[
-                          {title:'', dataIndex:'title'},
-                          {title:'', dataIndex:'description1'}
-                        ]
-                      }
-                    ]}
-                  />}
+                  <Space direction="vertical" style={{ width: '100%' }}>
+                    <div style={{paddingBottom:20}}><b>FINAL SCORE </b> <span style={{paddingRight:20, borderRadius:'9px', padding:'8px', border:'solid 1.5px black'}}><b>{`${formatterQty1.format(probaRequest?.totalScore||0)} / ${formatterQty1.format(probaRequest?.maxScore||0)}`}</b></span> 
+                    {/* <Input style={{width:150}} value={`${formatterQty1.format(probaRequest?.totalScore||0)} / ${formatterQty1.format(probaRequest?.maxScore||0)}`} /> */}
+                    </div>
+                    <div><b>OVERALL PROBATION RATING</b></div>
+                    {probaRequest?.overallRating&&<ProTable
+                      pagination={false}  
+                      search={false}
+                      options={{
+                          density:false,
+                          search:false,
+                          reload:false,
+                          setting:false,
+                          fullScreen:false
+                          
+                      }}                
+                      dataSource={probaRequest?.overallRating} 
+                      columns={[
+                        {title:'Rating',dataIndex:'score',
+                          render:(_,r)=>(<div>{formatterQty1.format(r.startedScore||0)} - { formatterQty1.format(r.endedScore||0)}</div>)
+                        },                     
+                        {title:'Description',
+                          children:[
+                            {title:'', dataIndex:'title'},
+                            {title:'', dataIndex:'description1'}
+                          ]
+                        }
+                      ]}
+                    />}
+                  </Space>                  
                 </ProCard>
             </ProForm>     
         </Spin>)

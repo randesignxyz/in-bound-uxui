@@ -4,6 +4,7 @@ import { ProbationEvaluation, ProbationEvaluationResources } from "../data.types
 import { MinusCircleOutlined } from "@ant-design/icons";
 import { Button, Radio, Table } from "antd";
 import { round, uniqueId } from "lodash";
+import { formatterQty1 } from "@/pages/utils";
 
 interface Props {
     dataDetail?: string;
@@ -12,8 +13,9 @@ interface Props {
     onSetAddedItems?: (v: ProbationEvaluationResources[]) => void;
     editable: boolean|false;
     editableRating: boolean|false
+    totalScore?: number
 }
-export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable, editableRating }: Props) => {
+export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable, editableRating, totalScore }: Props) => {
 
     const setRatingScore=(key?: string, rating1?: number, rating2?: number, rating3?: number, rating4?: number, rating5?: number)=>{
       onSetAddedItems?.(
@@ -241,17 +243,18 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
     value={addedItems}
     columns={cols}
     summary={(data) => {
-      var rating = 0;
-      data?.forEach((it) => {
-        rating += (it.rating1||0) +  (it.rating2||0) +  (it.rating3||0) +  (it.rating4||0) +  (it.rating5||0)
-      });
+      // var rating = 0;
+      // data?.forEach((it) => {
+      //   rating += (it.rating1||0) +  (it.rating2||0) +  (it.rating3||0) +  (it.rating4||0) +  (it.rating5||0)
+      // });
+      // rating = (rating / data.length)*0.3
       return (
         <Table.Summary.Row style={{ textAlign: 'right', fontWeight: 'bold' }}>
-          <Table.Summary.Cell colSpan={3} index={3}>
+          <Table.Summary.Cell colSpan={7} index={7}>
             {'SECTION II. JOB KNOWLEDGE AND SKILLS (Weightage: 20%)'}
           </Table.Summary.Cell>
-          <Table.Summary.Cell index={4} align="center">
-            {round(rating, 2) || 0}
+          <Table.Summary.Cell colSpan={2} index={8} align="left">
+            {formatterQty1.format(totalScore || 0)}
           </Table.Summary.Cell>
         </Table.Summary.Row>
       );

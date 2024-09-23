@@ -1,8 +1,8 @@
 import { ActionDataFormProps } from '@/pages/process-flow/data';
 import ActionFormWrapper from '@/pages/process-flow/components/forms/ActionFormWrapper';
-import { ActionType, EditableFormInstance, ProCard, ProForm, ProFormTextArea } from "@ant-design/pro-components";
-import { Card, Col, message, Modal, Row, UploadFile } from "antd";
-import { ProbationEvaluation, ProbationEvaluationPaloay, ProbationEvaluationResources, ProbationEvaluationResourcesSupport } from '../data.types';
+import { ActionType, EditableFormInstance, EditableProTable, ProCard, ProForm, ProFormTextArea } from "@ant-design/pro-components";
+import { Button, Card, Col, message, Modal, Row, Space, UploadFile } from "antd";
+import { ProbationEmpImprovement, ProbationEvaluation, ProbationEvaluationPayload, ProbationEvaluationResources, ProbationEvaluationResourcesSupport } from '../data.types';
 import { useForm } from 'antd/es/form/Form';
 import { simpleRequestActions } from '@/services/model';
 import { createService } from '../services';
@@ -13,6 +13,9 @@ import Section2Card from '../components/Section2Card';
 import Section3Card from '../components/Section3Card';
 import Section4Card from '../components/Section4Card';
 import { TaskActionDataParam } from '@/services/process-workflow/params';
+import { MinusCircleOutlined } from '@ant-design/icons';
+import EmpImprovmentTable1 from '../components/EmpImprovmentTable1';
+import EmpImprovmentTable from '../components/EmpImprovmentTable';
 
 export default (props: ActionDataFormProps) => {
 
@@ -29,11 +32,15 @@ export default (props: ActionDataFormProps) => {
     const [addedSection2, setAddedSection2] = useState<ProbationEvaluation[]>([]);
     const [addedSection3,setAddedSection3] = useState<ProbationEvaluationResources[]>([])
     const [addedSection4,setAddedSection4] = useState<ProbationEvaluationResourcesSupport[]>([])
+    const [addedEmpAchievement,setAddedEmpAchievement] = useState<ProbationEmpImprovement[]>([])
+    const [addedEmpImprovement,setAddedEmpImprovement] = useState<ProbationEmpImprovement[]>([])
 
     const editableFormRef1 = useRef<EditableFormInstance>();
     const editableFormRef2 = useRef<EditableFormInstance>();
     const editableFormRef3 = useRef<EditableFormInstance>();
     const editableFormRef4 = useRef<EditableFormInstance>();
+    const editableEmpAchievForm = useRef<EditableFormInstance>();
+    const editableEmpImprovementForm = useRef<EditableFormInstance>();
 
     useEffect(()=>{
         loadData()
@@ -74,6 +81,8 @@ export default (props: ActionDataFormProps) => {
                     const section2Valid = addedSection2.filter(r => ( r.rating1==undefined || r.rating2==undefined || r.rating3==undefined || r.rating4==undefined || r.rating5==undefined))
                     const section3Valid = addedSection3.filter(r => ( r.rating1==undefined || r.rating2==undefined || r.rating3==undefined || r.rating4==undefined || r.rating5==undefined))
                     const section4Valid = addedSection4.filter(r => ( r.fully==undefined || r.partial==undefined || r.no==undefined))
+                    const empAchievement = addedEmpAchievement.filter(r => ( r.description==undefined || r.description=='' ))
+                    const empImprovement = addedEmpImprovement.filter(r => ( r.description==undefined || r.description=='' || r.description1==undefined || r.description1==''))
                     
                     if(section1Valid.length>0) {
                         message.error("SECTION I. PERFORMANCE, rating score is required.")
@@ -92,6 +101,14 @@ export default (props: ActionDataFormProps) => {
                         message.error("SECTION IV. SUPPORT / RESOURCES NEEDED, rating score is required.")
                         return
                     }
+                    if(empAchievement.length>0) {
+                        message.error("SECTION V. ADDITIONAL COMMENTS, 1. achievment is required.")
+                        return
+                    }
+                    if(empImprovement.length>0) {
+                        message.error("SECTION V. ADDITIONAL COMMENTS, (2. Strength/ 3. Development Area) is required.")
+                        return
+                    }
 
                     if(!props.activityData?.taskId) {
                         message.error("Task Id is not found")
@@ -108,8 +125,10 @@ export default (props: ActionDataFormProps) => {
                         section1: addedSection1.map((v, index) => ({ ...v, seqNo: index + 1 })),
                         section2: addedSection2.map((v, index) => ({ ...v, seqNo: index + 1 })),
                         section3: addedSection3.map((v, index) => ({ ...v, seqNo: index + 1 })),
-                        section4: addedSection4.map((v, index) => ({ ...v, seqNo: index + 1 }))
-                    } as ProbationEvaluationPaloay
+                        section4: addedSection4.map((v, index) => ({ ...v, seqNo: index + 1 })),
+                        empAchievement: addedEmpAchievement.map((v, index) => ({ ...v, seqNo: index + 1 })),
+                        empImprovement: addedEmpImprovement.map((v, index) => ({ ...v, seqNo: index + 1 }))
+                    } as ProbationEvaluationPayload
                             
                     const data = {                      
                         taskId: props.activityData?.taskId || '',
@@ -117,7 +136,7 @@ export default (props: ActionDataFormProps) => {
                         comment: dataForm.comment,  
                         payload: payload,                     
                         fileIds: files.map(it=> it.response)
-                    } as TaskActionDataParam<ProbationEvaluationPaloay>
+                    } as TaskActionDataParam<ProbationEvaluationPayload>
                     console.log('data form: ', payload)
                     Modal.confirm({
                         title: 'Assessment, Submission',
@@ -198,13 +217,11 @@ export default (props: ActionDataFormProps) => {
                     <div>What employee has done, their strength, and further development need.</div>
                     </div>
                 </div>
-                <Row>
-                    <Col style={{width:'100%'}}><ProFormTextArea name='achievement' label='1. Achievement' style={{width:'100%'}} rules={[{ required: true }]} ></ProFormTextArea></Col>
-                </Row>
-                <Row>
-                    <Col style={{width:'50%',paddingRight:2}}><ProFormTextArea name='strength' label='2. Strength' style={{width:'100%'}} rules={[{ required: true }]} ></ProFormTextArea></Col>
-                    <Col style={{width:'50%',paddingLeft:2}}><ProFormTextArea name='developmentArea' label='3. Development Area' style={{width:'100%'}} rules={[{ required: true }]} ></ProFormTextArea></Col>
-                </Row>
+                <Space direction="vertical" style={{ width: '100%' }}>
+                    <EmpImprovmentTable editableFormRef={editableEmpAchievForm} editable={true} addedItems={addedEmpAchievement} onSetAddedItems={setAddedEmpAchievement}/>
+                    <EmpImprovmentTable1 editableFormRef={editableEmpImprovementForm} editable={true} addedItems={addedEmpImprovement} onSetAddedItems={setAddedEmpImprovement}/>
+                </Space>
+                
                 <Card style={{ marginTop: 10, marginBottom: 10 }}>
                     <ProFormTextArea rules={[{required: props.action =='Rejected'}]} label="Comment" name="comment" />
                 </Card>

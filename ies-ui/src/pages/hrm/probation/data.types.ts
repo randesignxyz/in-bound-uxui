@@ -422,6 +422,11 @@ export type ProbationEvaluationRating = {
 
 export type ProbationEvaluationDetailRs = {
     id: number
+    totalScore: number
+    totalScore1: number
+    totalScore2: number
+    totalScore3: number
+    maxScore: number
     ratingScale: ProbationEvaluationRating[]
     overallRating: ProbationEvaluationRating[]
     probationEvaluation: ProbationEvaluationRs
@@ -429,14 +434,26 @@ export type ProbationEvaluationDetailRs = {
     section2: ProbationEvaluation[]
     section3: ProbationEvaluationResources[]
     section4: ProbationEvaluationResourcesSupport[]
+    empAchievement: ProbationEmpImprovement[]
+    empImprovement: ProbationEmpImprovement[]
+}
+export type ProbationEmpImprovement = {
+    id: number
+    key:string
+    description: string
+    description1?: string
+    seqNo?: number
 }
 
-export type ProbationEvaluationPaloay = {
+export type ProbationEvaluationPayload = {
     instId: string
     section1: ProbationEvaluation[]
     section2: ProbationEvaluation[]
     section3: ProbationEvaluationResources[]
     section4: ProbationEvaluationResourcesSupport[]
+    empAchievement: ProbationEmpImprovement[]
+    empImprovement: ProbationEmpImprovement[]
+
 }
 export type ProbationEvaluationRef ={
     id: string

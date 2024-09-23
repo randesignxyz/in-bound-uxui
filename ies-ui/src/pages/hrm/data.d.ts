@@ -56,23 +56,6 @@ export type ProbationEvaluationData = {
   formType: string;
   refId: number;
   empId: number;
-  // subDepartmentId?: number;
-  // section?: string;
-  // team?: string;
-  // directReportTo: number;
-  // workingShiftId: string;
-  // segmentId: number;
-  // otherSegment?: string;
-  // contractTypeId: number;
-  // contractDates?: Moment[];
-  // expectedJoinDate: Moment;
-  // requisitionTypeId: number;
-  // headcount: number;
-  // workplaceId?: number;
-  // replacedEmployeeId?: number;
-  // replacedEmployeeName?: string;
-  // hiredReasonFor?: string;
-  // suggestedSourcing?: string;
   attachedFiles?: string[];
   remarks?: string;
 }

@@ -10,6 +10,7 @@ import { ProfileServicesEss } from '../service_ess';
 import { simpleRequestActions } from '@/services/model';
 import EducationView from "../view/EducationView";
 import PersonalViewEditModal from "../modal/PersonalViewEditModal";
+import { formatYear } from "@/pages/utils";
 
 interface Props {
     profile: ProfileData;
@@ -84,7 +85,13 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
           onOk: async () => {
             try {
                 data.otherFile = createFileOther;
-                data.isDelete = 0;
+                data.isDelete = 0; 
+
+                var educationYear = data.educationYear;
+                
+                data.fromYear = educationYear[0];
+                data.toYear = educationYear[1]; 
+
                 await ProfileServicesEss.saveEducation(data)(requestActions); 
                 // call back fun
                 cb.onLoadData();
@@ -105,7 +112,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                 data.otherFile = [];
                 data.isDelete = 1;
                 data.type = "ADD";
-                data.empId= profile.id;
+                data.empId= profile.id; 
                 await ProfileServicesEss.saveEducation(data)(requestActions); 
                 // call back fun
                 cb.onLoadData();
@@ -126,7 +133,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                 data.otherFile = [];
                 data.isDelete = 1;
                 data.type = "ADD";
-                data.empId= profile.id;
+                data.empId= profile.id; 
                 await ProfileServicesEss.saveEducationAdmin(data)(requestActions); 
                 // call back fun
                 cb.onLoadData();
@@ -149,18 +156,22 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
             <Space direction={"vertical"} style={{width:'100%'}}>
                 <div style={{width:'100%',textAlign:'right'}}> 
                     <Space direction='horizontal'>
-                        <Button style={{display:(is_admin==2&&empId>0)?'':'none'}} onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}><PlusCircleFilled/> Add</Button>
+                        <Button style={{display:(is_admin==2&&empId>0)?'':'none'}} onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}
+                                icon={<PlusCircleFilled />}
+                                key="1"
+                                type="primary"> Add</Button>
 
                         <Button danger onClick={() => setModalEducationViewVisible({ type: 'VIEW', payload: null})} 
-                            style={{display:([7,5,4,3,2].find((element) => element == profile!!.ess.stepId))&&is_admin!=2?'':'none'}}><EyeOutlined/> View edit</Button> 
+                            style={{display:([7,5,4,3,2].find((element) => element == profile!!.ess.stepId))&&is_admin!=2?'':'none'}}
+                            type="primary"><EyeOutlined/> View edit</Button> 
 
                         {profile!!.ess.id!!<=0?'':<Button style={{display: ([7,5,2].find((element) => element == step))&&is_admin==0?'':'none'}}
                                 onClick={() => setModalVisible({ type: 'ADD', payload: null })}
-                                icon={<PlusOutlined />}
+                                icon={<PlusCircleFilled />}
                                 key="1"
                                 type="primary">
                                 Add
-                            </Button>
+                            </Button> 
                         }
                     </Space>
                 </div>
@@ -185,6 +196,8 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                             title: "Education Institution", dataIndex: "educationCenter"
                         },{
                             title: "Country of Education Institution", dataIndex: "countryEducationCenterName" 
+                        },{
+                            title: "Year", render: (_, r) => {return formatYear(r.fromYear)+" - "+ formatYear(r.toYear)}
                         },{
                             title: "Status", dataIndex: "statusName" 
                         },

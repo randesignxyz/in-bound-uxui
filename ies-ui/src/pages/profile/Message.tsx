@@ -65,7 +65,7 @@ export default ({visible,message,description,opentitle,type,step,cb,data,is_admi
                 <Button danger size={'large'} style={{display:step==4?'':'none',width:"150px"}} onClick={()=>cb.onStartModify(5)}><HistoryOutlined /> Re-Edit Info</Button>   
             </Space> }
             type={type||"info"} 
-            closable
+            // closable
             showIcon
             // action={
             //     <Space direction="vertical"> 

@@ -8,6 +8,7 @@ import ImagePreview from "@/components/ImagePreview";
 import { ProfileData } from "../data";
 import { ProfileServicesEss } from "../service_ess";
 import { simpleRequestActions } from "@/services/model";
+import { ProfileOutlined,SaveOutlined,CloseSquareOutlined } from "@ant-design/icons";
 
 interface Props extends ModalFormProps<ExperienceData> { 
     profile: ProfileData;
@@ -88,7 +89,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
             },
         });
     }
-    return <ModalForm  {...rest} form={form} width={'30%'} title={!!data?"Edit Experience":"Add Experience"}
+    return <ModalForm  {...rest} form={form} width={'30%'} title={!!data?<><ProfileOutlined /> Edit Experience</>:<><ProfileOutlined /> Add Experience</>}
         onOpenChange={visible => {
             // form.resetFields() 
             rest.onOpenChange?.(visible);
@@ -101,8 +102,8 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
                 }
                 :{
                     searchConfig: {
-                        submitText: 'Submit',
-                        resetText: 'Cancel',
+                        submitText: <div><SaveOutlined /> Submit</div>,
+                        resetText: <div><CloseSquareOutlined /> Cancel</div>,
                     }
                 }
             } 

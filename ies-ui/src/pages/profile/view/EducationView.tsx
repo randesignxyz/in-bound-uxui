@@ -2,6 +2,7 @@ import { Flex, ModalProps, Space, Typography } from "antd"
 import { ModalForm, ProCard, ProTable } from "@ant-design/pro-components"
 import { EducationData } from "../data.ess" 
 import { EditOutlined,DeleteOutlined } from "@ant-design/icons"
+import { formatYear } from "@/pages/utils";
 
 interface Props extends ModalProps {
     // data: BasicContactData;
@@ -47,6 +48,8 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                         },{
                             title: "Country of Education Institution", dataIndex: "countryEducationCenterName" 
                         },{
+                            title: "Year", render: (_, r) => {return formatYear(r.fromYear)+" - "+ formatYear(r.toYear)}
+                        },{
                             title: "Status", dataIndex: "statusName" 
                         },{   width: '70px',
                             render: (dom, r) => {
@@ -88,6 +91,8 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                             title: "Education Institution", dataIndex: "educationCenter"
                         },{
                             title: "Country of Education Institution", dataIndex: "countryEducationCenterName" 
+                        },{
+                            title: "Year", render: (_, r) => {return formatYear(r.fromYear)+" - "+ formatYear(r.toYear)}
                         },{
                             title: "Status", dataIndex: "statusName" 
                         },{   width: '70px',

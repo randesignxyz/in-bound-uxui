@@ -7,7 +7,7 @@ import { useEffect,useState } from 'react';
 import { simpleRequestActions } from '@/services/model';
 import { ProfileServicesEss } from '../service_ess'; 
 import FileUploader , { UploadType } from '@/components/Attachment/FileUploader';
-import ImagePreview from "@/components/ImagePreview";
+import { ProfileOutlined,SaveOutlined,CloseSquareOutlined } from "@ant-design/icons";
 import { ProfileData } from "../data";
 
 interface Props extends ModalFormProps<SaveEmergency> { 
@@ -103,7 +103,7 @@ export default ({ profile,data,locations,type,isAdmin,empId, cb, ...rest }: Prop
         });
     }
     // 
-    return <ModalForm  {...rest} form={form} width={'35%'} title={!!data?"Edit Emergency":"Add Emergency"}  
+    return <ModalForm  {...rest} form={form} width={'35%'} title={!!data?<><ProfileOutlined /> Edit Emergency</>:<><ProfileOutlined /> Add Emergency</>}  
             submitter={isAdmin==2&&empId>0?
                 {
                     render: () => { 
@@ -112,8 +112,8 @@ export default ({ profile,data,locations,type,isAdmin,empId, cb, ...rest }: Prop
                 }
                 :{
                     searchConfig: {
-                        submitText: 'Submit',
-                        resetText: 'Cancel',
+                        submitText: <div><SaveOutlined /> Submit</div>,
+                        resetText: <div><CloseSquareOutlined /> Cancel</div>,
                     }
                 }
             } 

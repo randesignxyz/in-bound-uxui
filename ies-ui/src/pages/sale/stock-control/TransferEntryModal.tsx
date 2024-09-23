@@ -6,20 +6,16 @@ import { useForm } from 'antd/lib/form/Form';
 import { useEffect } from 'react';
 
 export interface TransferEntryFromProps extends FormModalProps {
-  // data?: TopupLess;
-  // lookupDataList?: LookupData[];
   seCode?: string;
   seList?: SalesTeamWorkLess[];
   actionHandlers?: {
     onSave?: (data: TopupLess, isView: boolean) => void;
     onLoadInitData?: () => void;
-    // onCancel?: () => void;
   };
 }
 
 const TransferEntryModal: React.FC<TransferEntryFromProps> = ({
   actionHandlers,
-  // data,
   seCode,
   seList,
   ...rest
@@ -95,7 +91,6 @@ const TransferEntryModal: React.FC<TransferEntryFromProps> = ({
               showSearch
               fieldProps={{
                 optionLabelProp: 'label',
-                // dropdownMatchSelectWidth: 400,
                 filterOption: (input, option) =>
                   (option?.label?.toString() || '').toLowerCase().indexOf(input.toLowerCase()) >= 0,
               }}
@@ -124,18 +119,8 @@ const TransferEntryModal: React.FC<TransferEntryFromProps> = ({
               }}
               locale="en-US"
               min={0}
-              // width="lg"
             />
-            {/* <ProFormTextArea
-              help={<span />}
-              rules={[{ required: true }]}
-              label="Message"
-              name="body"
-            /> */}
           </Col>
-          {/* <Col flex="500px">
-                
-              </Col> */}
         </Row>
       </ProForm>
     </FormModalComp>

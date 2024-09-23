@@ -1,6 +1,5 @@
 import CrudWrapper from '@/components/DataCrud/CrudWrapper';
 import { Access, useAccess } from 'umi';
-// import { Access, useAccess } from 'umi';
 import { SalePaths } from '..';
 import Create from './Create';
 import StockStoreDetail from './Detail';
@@ -15,12 +14,6 @@ export default () => {
         return (
           (view === 'list' && (
             <StoreMainPage/>
-            // <StoreListView
-            //   actionHandlers={{
-            //     onAdd: navigate?.goToCreate,
-            //     onDetail: navigate?.goToDetail,
-            //   }}
-            // />
           )) ||
           (view === 'detail' && (
             <StockStoreDetail

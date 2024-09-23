@@ -1,11 +1,9 @@
 import CrudWrapper from '@/components/DataCrud/CrudWrapper';
-// import { Access, useAccess } from 'umi';
 import { SalePaths } from '..';
 import StockControlDetail from './Detail';
 import StockListView from './List';
 
 export default () => {
-  // const access = useAccess();
   return (
     <CrudWrapper baseURL={SalePaths.stock} disablePageContainer>
       {(view, id, navigate) => {
@@ -28,9 +26,6 @@ export default () => {
           ))
         );
 
-        //  ||
-        //    view === 'create' && <Access accessible = {access.canCreateEditSo} fallback={<div>Unauthorized</div>}> <Create/> </Access> ||
-        //    view === 'edit' && <Access accessible = {access.canCreateEditSo} fallback={<div>Unauthorized</div>}> <Edit id = {id as number}/> </Access>
       }}
     </CrudWrapper>
   );

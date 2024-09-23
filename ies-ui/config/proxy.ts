@@ -8,6 +8,7 @@
  * @doc https://umijs.org/docs/guides/proxy
  */
 export default {
+<<<<<<< HEAD
       dev: {
             '/api/': {
                   target: 'http://[::1]:8080',
@@ -26,6 +27,23 @@ export default {
             },
       },
       test: {
+=======
+  dev: {
+    '/api/': {
+      target: 'http://[::1]:8080',
+      // target: 'http://10.0.12.247:85',
+      changeOrigin: true,
+      pathRewrite: { '^': '' },
+    },
+    '/services': {
+      target: 'http://[::1]:8080',
+      // target: 'http://10.0.12.247:85',
+      changeOrigin: true,
+      pathRewrite: { '^': '' },
+    },
+  },
+  test: {
+>>>>>>> origin/reach-01
 
       },
       pre: {

@@ -42,7 +42,6 @@ const StockStoreForm: React.FC<Props> = ({ id, type, onBack, onView }) => {
     if (state.data?.detail) {
       form.setFieldsValue({
         name: state.data.detail.name,
-        // requesterCode: state.data?.detail?.requester?.salespersonCode,
         description: state.data?.detail?.description,
         vehicleId: state.data.detail.vehicle?.plateNumber,
         isInitialize: state.data.detail.isInitialize,
@@ -77,7 +76,6 @@ const StockStoreForm: React.FC<Props> = ({ id, type, onBack, onView }) => {
               actions.clearMember();
               form.resetFields();
             } else {
-              // if (so) history.push(`${SalePaths.store}/detail/${so?.data.id}`);
               onView(so.data);
               message.success("Article successfully saved")
             }
@@ -117,10 +115,6 @@ const StockStoreForm: React.FC<Props> = ({ id, type, onBack, onView }) => {
               portalDom={false}
             >
               <Button
-                // onClick={() => {
-                //   if (type === 'edit') history.push(`${SalePaths.store}/detail/${id}`);
-                //   else history.push(`${SalePaths.store}/list`);
-                // }}
                 onClick={() => onBack()}
               >
                 Cancel
@@ -135,16 +129,6 @@ const StockStoreForm: React.FC<Props> = ({ id, type, onBack, onView }) => {
                   Clear
                 </Button>
               )}
-
-              {/* {type === 'edit' && (
-                <Button
-                  onClick={() => {
-                    form.resetFields();
-                  }}
-                >
-                  Reset
-                </Button>
-              )} */}
               {type === 'new' && (
                 <Button
                   type="primary"
@@ -213,7 +197,6 @@ const StockStoreForm: React.FC<Props> = ({ id, type, onBack, onView }) => {
         </Row>
       </Card>
       <Card
-        // size="small"
         style={{ marginBottom: 10 }}
         title="Members"
         extra={<>
@@ -259,7 +242,6 @@ const StockStoreForm: React.FC<Props> = ({ id, type, onBack, onView }) => {
                         message.warning('There are a requester in list.');
                       } else {
                         actions.addMember(memberShip);
-                        //setSelectedMembers([...selectedMembers, memberShip]);
                         form.setFieldsValue({ memberShip: undefined });
                         setMemberShip(undefined);
                       }
@@ -285,8 +267,6 @@ const StockStoreForm: React.FC<Props> = ({ id, type, onBack, onView }) => {
           loading={state.data?.members ? false : true}
           dataSource={state.data?.members}
           toolBarRender={() => [
-
-
           ]}
           options={{
             setting: false,

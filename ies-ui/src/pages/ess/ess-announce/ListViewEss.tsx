@@ -110,7 +110,7 @@ export default ({ profile }: Props) =>{
             key: "2",
             label: "Approve",
             itemIcon: <CheckOutlined />,
-            disabled:([7,4,3].find((element) => element == record.stepId))?false:true,
+            disabled:([4,3,5].find((element) => element == record.stepId))?false:true,
             onClick: async () => { 
                 Modal.confirm({
                     title: 'Approve',
@@ -152,8 +152,8 @@ export default ({ profile }: Props) =>{
         {
             key: "4",
             label: "Cancel Update",
-            itemIcon: <CloseCircleOutlined />,
-            disabled:record.stepId<3?false:true,
+            itemIcon: <CloseCircleOutlined />, 
+            disabled:([3,2,5].find((element) => element == record.stepId))?false:true,
             style:{color:record.stepId<3?'red':''},
             onClick: async () => {
                 Modal.confirm({
@@ -162,7 +162,7 @@ export default ({ profile }: Props) =>{
                     onOk: async () => {
                       try {  
                         const rs = await ServicesEss.essInfoDetail(record.empId,profile.id).query(requestActions);  
-                        await ProfileServicesEss.saveEssProfile({...rs?.profile_draft,id: record.empId, empId: record.empId,step:0,openEssId:profile.id!!,otherFile:[],remark:'',status:true})(requestActions);
+                        await ProfileServicesEss.saveEssProfile({...rs?.profile_draft,id: record.empId, empId: record.empId,step:8,openEssId:profile.id!!,otherFile:[],remark:'',status:true})(requestActions);
                         actionRefItem?.current?.reloadAndRest?.();
                       } catch (error: any) {
                         message.error(error.message || 'Failed to created.');
@@ -205,7 +205,7 @@ export default ({ profile }: Props) =>{
                             { label: "Started", value: "2" },
                             { label: "Review", value: "3" },
                             { label: "Rejected", value: "4" },
-                            { label: "Approval", value: "6" },
+                            { label: "Approved", value: "6" },
                             { label: "Cancel Update", value: "8" }
                         ]}
                         onChange={(e) => {setAdanceSearchItem(e.target.value);}}
@@ -245,6 +245,9 @@ export default ({ profile }: Props) =>{
                         }else if (r.stepId==8){
                             _status = "Cancelled Update";
                         }
+                        else if (r.stepId==7){
+                            _status = "Re-Submit Updated";
+                        }
                         return <div><Status text={_status}/></div>;
                     }
                 },                 
@@ -266,15 +269,7 @@ export default ({ profile }: Props) =>{
                     }
                 ]} 
                 actionHandlers={{ 
-                    onRequest: (criteria, pagination, sort) => onRequestItemHandler({
-                        criteria: {
-                            ...criteria,
-                           
-                            sort,
-                          },
-                          pagination,
-                        // sort
-                    })
+                    onRequest: (criteria, pagination, sort) => onRequestItemHandler()
                 }} 
                 pagination={false}
             />

@@ -237,6 +237,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
             newData={languageNewList}
             essProfileId={profile.id} 
             files={languageAllImageList}
+            step={step}
             cb={{
                 onOpenEditForm: (id,type) => { 
                     onOpenForm(id,type);

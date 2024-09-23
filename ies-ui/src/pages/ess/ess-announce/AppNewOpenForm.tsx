@@ -13,6 +13,7 @@ import { OpenEssDataItem} from '../data_ess';
 import { ServicesEss } from '../service_ess_tran';  
 import { useEffect } from 'react';
 import moment from 'moment';
+import dayjs from 'dayjs';
  
 interface Props {
   open?: boolean;
@@ -106,7 +107,12 @@ export default ({ open, onOpenModalChange, refreshTable,data}: Props) => {
               {/* <ProFormDatePicker name = "startDate" rules={[{ required: true }]}  label = {<div><strong>Start Date</strong></div>} />            
               <ProFormDatePicker name = "endDate" rules={[{ required: true }]}  label = {<div><strong>End Date</strong></div>} />  */}
               
-              <ProFormDateRangePicker label="Date" name={"annountmentDate"} rules={[{ required: true }]} />
+              <ProFormDateRangePicker label="Date" name={"annountmentDate"} rules={[{ required: true }]} 
+              fieldProps={{
+                disabledDate: (current: any) => {
+                    return current && current < dayjs().endOf('day');
+                }
+            }}/>
             </Space> 
             <ProFormTextArea name = "description" rules={[{ required: true }]}  label = {<div><strong>Description</strong></div>} />  
           </Space>

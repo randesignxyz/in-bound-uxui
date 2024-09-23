@@ -152,7 +152,7 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb, ...rest }: Pr
             </Row>  
             <Row>
                 <Col span={24} style={{padding:'3px'}}>
-                    <ProFormDateYearRangePicker name="educationYear" label = "Period Education" rules={[{ required: true }]}/>
+                    <ProFormDateYearRangePicker name="educationYear" label = "Year" rules={[{ required: true }]}/>
                 </Col> 
             </Row>  
             <ProFormSelect rules={[{ required: true }]} allowClear={true}  

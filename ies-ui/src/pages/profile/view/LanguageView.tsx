@@ -9,13 +9,14 @@ interface Props extends ModalProps {
     newData:LanguageData[],
     essProfileId: number;
     isAdmin:number;
+    step:number;
     cb:{ //used callback function to parent form
         onOpenEditForm: (data:LanguageData,type:string) => void;  
         onDelete: (data:LanguageData) => void;  
     };
 }
 
-export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {  
+export default ( {oldData,newData,essProfileId,isAdmin,step,cb, ...rest}: Props) => {  
  
     return <>
       <ModalForm title = "View language edit" {...rest} width={'90%'} submitter={false} > 
@@ -42,7 +43,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                     title: "Description", dataIndex: "description"
                 },{   width: '70px',
                     render: (dom, r) => {
-                        return ( <Flex vertical={false} justify='space-between'>
+                        return ( <Flex vertical={false} justify='space-between' hidden={step==3?true:false}>
                             <a style={{display: isAdmin==0?'':'none'}}  title="Edit item" 
                                 onClick={() => cb.onOpenEditForm(r,"EDIT")}>
                                 <EditOutlined />
@@ -75,7 +76,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                     title: "Description", dataIndex: "description"
                 },{   width: '70px',
                     render: (dom, r) => {
-                        return ( <Flex vertical={false} justify='space-between'>
+                        return ( <Flex vertical={false} justify='space-between' hidden={step==3?true:false}>
                             <a style={{display: isAdmin==0?'':'none'}}  title="Edit item" 
                                 onClick={() => cb.onOpenEditForm(r,"ADD")}>
                                 <EditOutlined />

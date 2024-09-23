@@ -263,6 +263,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
             newData={experienceNewList}
             essProfileId={profile.id}
             files={experienceAllImageList}
+            step={step}
             cb={{
                 onOpenEditForm: (id,type) => { 
                     onOpenForm(id,type);

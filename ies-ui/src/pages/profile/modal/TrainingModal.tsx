@@ -117,7 +117,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
             <ProFormText label="Institution" name={'institution'} rules={[{ required: true }]} placeholder={"institution"}/> 
             <Row>              
                 <Col span={24} style={{padding:'3px'}}>  
-                    <ProFormDateRangePicker label="Period Training" name={"year"} rules={[{ required: true }]} />
+                    <ProFormDateRangePicker label="Training Period" name={"year"} rules={[{ required: true }]} />
                 </Col>      
             </Row> 
             <Row>              

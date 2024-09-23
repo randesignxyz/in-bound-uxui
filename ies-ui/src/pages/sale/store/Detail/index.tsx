@@ -1,8 +1,4 @@
-import vital from '@/assets/logo.svg';
-import mee from '@/assets/mee.png';
-import posm from '@/assets/stock.png';
 import type { DescriptionDisplayDataItem } from '@/components/Descriptions';
-import DescriptionDisplay from '@/components/Descriptions';
 import { formatDate, formatDateTime } from '@/pages/utils';
 import { simpleRequestActions } from '@/services/model';
 import type {
@@ -11,7 +7,6 @@ import type {
   SalesTeamWorkLess,
   SaveStockControl,
   SettlementLessDto,
-  StockDetailItemLess,
 } from '@/services/sale/data';
 import {
   CheckCircleOutlined,
@@ -19,17 +14,14 @@ import {
   CrownOutlined,
   EditOutlined,
   ExclamationCircleOutlined,
-  FileDoneOutlined,
   HistoryOutlined,
-  PlusOutlined,
-  QuestionCircleOutlined,
   ShopOutlined,
   SolutionOutlined,
   SyncOutlined,
   TeamOutlined,
   UserOutlined,
 } from '@ant-design/icons';
-import { PageContainer, ProDescriptions } from '@ant-design/pro-components';
+import { ProDescriptions } from '@ant-design/pro-components';
 import ProTable from '@ant-design/pro-table';
 import { useSetState } from 'ahooks';
 import {
@@ -37,11 +29,8 @@ import {
   Card,
   Empty,
   Flex,
-  Image,
   message,
   Modal,
-  Space,
-  Spin,
   Tabs,
   Tag,
   Tooltip,
@@ -49,8 +38,7 @@ import {
 } from 'antd';
 import numeral from 'numeral';
 import { useEffect, useState } from 'react';
-import { history, useAccess } from 'umi';
-import { SalePaths } from '../..';
+import { useAccess } from 'umi';
 import { SuggestionServiceAPI } from '../../suggestion/services';
 import HistoryTabItem from '../components/HistoryTabItem';
 import InitializeStockControlFormModal from '../components/InitializeStockControl';
@@ -74,9 +62,6 @@ const StockStoreDetail: React.FC<Props> = ({ id, onEdit, onAdd, actionHandlers }
   const { state, actions } = Model();
   const [forceUpdate, setForceUpdate] = useState<number>(0);
   const [forceHistoryUpdate, setForceHistoryUpdate] = useState<number>(0);
-
-  // const [dataSource, setDataSource] = useState<StockDetailItemSettle[]>([]);
-
   const [addSettlement, setAddSettlement] = useSetState<{ visible?: boolean }>({});
   const [initNewModal, setInitNewModal] = useSetState<{ visible?: boolean }>({});
   const [addNewModal, setAddNewModal] = useSetState<{ visible?: boolean }>({});
@@ -114,18 +99,6 @@ const StockStoreDetail: React.FC<Props> = ({ id, onEdit, onAdd, actionHandlers }
     })();
   }, []);
 
-  // const displayItems: (DescriptionDisplayDataItem | undefined)[] = [
-  //   { label: 'Store Name', value: state.data?.detail?.name },
-  //   {
-  //     label: 'Description',
-  //     value: `${state.data?.detail?.description ? state.data?.detail?.description : '-'}`,
-  //   },
-  //   // { label: 'Team Name', value: state.data?.detail?.teamWork?.teamName },
-  //   { label: 'Plate Number', value: state.data?.detail?.vehicle?.plateNumber },
-  //   { label: 'Created Date', value: formatDate(state.data?.detail?.createdDate) },
-  //   // { label: 'Status', value: state.data?.detail?.status },
-  //   { label: 'Initialize Stock', value: state.data?.detail?.isInitialize ? 'TRUE' : 'FALSE' },
-  // ];
 
   const calculateTotalAmount = (settlement: SettlementLessDto | undefined): number => {
     return settlement
@@ -133,7 +106,6 @@ const StockStoreDetail: React.FC<Props> = ({ id, onEdit, onAdd, actionHandlers }
       settlement.amount +
       settlement.bankAmount
       : 0;
-    // return numeral(total).format('$ 0,0.00');
   };
 
   const settlementInfo: (DescriptionDisplayDataItem | undefined)[] = [
@@ -187,7 +159,6 @@ const StockStoreDetail: React.FC<Props> = ({ id, onEdit, onAdd, actionHandlers }
     {
       label: 'Bank Transfer Amount',
       value: numeral(state.data?.detail?.stockControl?.settlement?.bankAmount).format('$ 0,0.00'),
-      //value: numeral(data.details?.cashOnHand).format('$ 0,0.00'),
     },
     { label: '', value: '' },
     {
@@ -256,8 +227,6 @@ const StockStoreDetail: React.FC<Props> = ({ id, onEdit, onAdd, actionHandlers }
           setForceUpdate(forceUpdate + 1);
           setForceHistoryUpdate(forceHistoryUpdate + 1);
           actions.initData(id);
-          // actionRef.current?.reload();
-          // setForce({ update: force.update + 1 });
         }
       },
     });
@@ -327,26 +296,12 @@ const StockStoreDetail: React.FC<Props> = ({ id, onEdit, onAdd, actionHandlers }
                 >
                   Create New Invoice
                 </Button>
-                {/* {
-                  // access.canAccessSettlement &&
-                  (
-                    <Button
-                      type="link"
-                      htmlType="button"
-                      icon={<FileDoneOutlined />}
-                      onClick={() => setAddSettlement({ visible: true })}
-                      key="settlementButton"
-                    >
-                      Settlement
-                    </Button>
-                  )} */}
               </>
             ),
             <Button
               type="link"
               htmlType="button"
               icon={<EditOutlined />}
-              // onClick={() => history.push(`${SalePaths.store}/edit/${id}`)}
               onClick={() => onEdit(id)}
               key="edit"
             >
@@ -391,7 +346,6 @@ const StockStoreDetail: React.FC<Props> = ({ id, onEdit, onAdd, actionHandlers }
             },
           ]}
         />
-        {/* <DescriptionDisplay data={displayItems} /> */}
       </Card>
       <Tabs
         items={[
@@ -562,7 +516,6 @@ const StockStoreDetail: React.FC<Props> = ({ id, onEdit, onAdd, actionHandlers }
                         },
                       ]}
                     />
-                    {/* <DescriptionDisplay data={settlementInfo} column={3} /> */}
                   </Card>
                 )}
               </Flex >
@@ -633,7 +586,6 @@ const StockStoreDetail: React.FC<Props> = ({ id, onEdit, onAdd, actionHandlers }
           }
         ]}
       />
-      {/* defaultActiveKey="stockControl" */}
       <Tabs>
         {/* <Tabs.TabPane
           tab={
@@ -940,14 +892,12 @@ const StockStoreDetail: React.FC<Props> = ({ id, onEdit, onAdd, actionHandlers }
           />
         </Tabs.TabPane> */}
       </Tabs>
-
       <SaleInvoiceFormModal
         title="Sale Invoice"
         isLoading={state.loading || false}
         open={saleInvoiceModal.visible}
         data={{
           stockControlId: state.data?.detail?.stockControl?.id,
-          // saleTypes: data.saleTypes,
           salespersonList: state.data?.members,
           regionList: state.data?.initData?.regionList,
           locations: {
@@ -974,23 +924,15 @@ const StockStoreDetail: React.FC<Props> = ({ id, onEdit, onAdd, actionHandlers }
             });
           }),
           detail: saleInvoiceModal.record,
-          // selectedSE: state.data?.detail?.owner.code,
-          // typeId: addStockModal.typeId,
-          // seList: state.data?.initData?.seList,
-          // stockCategory: state.data?.initData?.types,
-          // typeProductItems: state.data?.initData?.typeProductItems,
         }}
         onCancel={() => setSaleInvoiceModal({ visible: false, record: undefined })}
         actionHandlers={{
           onSubmit: async (item: SaleInvoiceLess) => {
-            //actionHandlers.onSaveSaleInvoice(item);
-
             const result = await actions.saveSaleInvoice(item);
             setSaleInvoiceModal({ visible: false, record: undefined });
             if (result) {
               message.info(result.message);
               setForceUpdate(forceUpdate + 1);
-              // reload dashboard
               actions.detail(id || 0);
             }
           },
@@ -999,10 +941,6 @@ const StockStoreDetail: React.FC<Props> = ({ id, onEdit, onAdd, actionHandlers }
             await actions.loadLocations(type, parentId, isNotClearChild);
           },
         }}
-      // actionHandlers={{
-      //   onAddItem: onSaveSaleItemEvent,
-
-      // }}
       />
       <RequestStockControlModal
         title={requestStockControl.captionName}
@@ -1025,7 +963,6 @@ const StockStoreDetail: React.FC<Props> = ({ id, onEdit, onAdd, actionHandlers }
           onLoadInitData: () => { },
         }}
       />
-
       <StockControlFormModal
         title="Create Stock Control"
         open={addNewModal.visible}
@@ -1059,7 +996,6 @@ const StockStoreDetail: React.FC<Props> = ({ id, onEdit, onAdd, actionHandlers }
           typeProductItems: state.data?.initData?.typeProductItems,
           plateNumber: state.data?.detail?.vehicle?.plateNumber,
           stockStoreId: state.data?.detail?.id,
-          //isBeginningManual: state.data?.isBeginningManual,
         }}
         onCancel={() => setInitNewModal({ visible: false })}
         actionHandlers={{
@@ -1068,7 +1004,6 @@ const StockStoreDetail: React.FC<Props> = ({ id, onEdit, onAdd, actionHandlers }
           onSaveVehicle: actions.saveVehicle,
         }}
       />
-
       <SettlementFormModal
         title="Settlement"
         open={addSettlement.visible}

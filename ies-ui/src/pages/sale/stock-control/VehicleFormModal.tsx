@@ -10,7 +10,6 @@ interface VehicleFormModelProps extends FormModalProps {
     onSave?: (item: VehicleLess) => void;
   };
 }
-
 const layout = {
   labelCol: { span: 9 },
   wrapperCol: { span: 13 },
@@ -18,7 +17,6 @@ const layout = {
 
 const VehicleFormModal: React.FC<VehicleFormModelProps> = ({ actionHandlers, ...props }) => {
   const [form] = useForm<VehicleLess>();
-
   const onSubmitActionHandler = async () => {
     try {
       const dataForm = await form.validateFields();
@@ -27,10 +25,8 @@ const VehicleFormModal: React.FC<VehicleFormModelProps> = ({ actionHandlers, ...
       message.error('Required field');
     }
   };
-
   useEffect(() => {
     if (!props.open) return;
-
     form.resetFields();
   }, [props.open]);
 

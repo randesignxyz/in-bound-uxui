@@ -589,9 +589,14 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
 
     canAccessSaleStore:
       currentUser?.authorities.some((items) =>
-        ['ROLE_AR', 'ROLE_WAREHOUSE', 'ROLE_DSD_ADMIN', 'ROLE_ADMIN', 'ROLE_DSD_REPORT'].some(
-          (it) => it === items,
-        ),
+        [
+          'ROLE_AR',
+          'ROLE_WAREHOUSE',
+          'ROLE_DSD_ADMIN',
+          'ROLE_SALE_INDIVIDUAL',
+          'ROLE_ADMIN',
+          'ROLE_DSD_REPORT',
+        ].some((it) => it === items),
       ) || false,
 
     canAccessSaleCash:
@@ -606,18 +611,29 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
 
     canAccessSaleVisit:
       currentUser?.authorities.some((items) =>
-        ['ROLE_DSD_ADMIN', 'ROLE_ADMIN', 'ROLE_DSD_REPORT'].some((it) => it === items),
+        ['ROLE_DSD_ADMIN', 'ROLE_SALE_INDIVIDUAL', 'ROLE_ADMIN', 'ROLE_DSD_REPORT'].some(
+          (it) => it === items,
+        ),
       ) || false,
 
     canAccessSaleLead:
       currentUser?.authorities.some((items) =>
+        ['ROLE_DSD_ADMIN', 'ROLE_ADMIN', 'ROLE_SALE_INDIVIDUAL', 'ROLE_DSD_REPORT'].some(
+          (it) => it === items,
+        ),
+      ) || false,
+
+    canAccessSaleReport:
+      currentUser?.authorities.some((items) =>
         ['ROLE_DSD_ADMIN', 'ROLE_ADMIN', 'ROLE_DSD_REPORT'].some((it) => it === items),
       ) || false,
+    // canAccessSaleDailySettle :currentUser?.authorities.some((items)=>
+    //  || false),
     // ==== END reach ====
 
     canAccessAllMenuDSD:
       currentUser?.authorities.some((item) =>
-        ['ROLE_DSD_ADMIN', 'ROLE_ADMIN'].some((it) => it === item),
+        ['ROLE_DSD_ADMIN', 'ROLE_ADMIN', 'ROLE_DSD_REPORT'].some((it) => it === item),
       ) || false,
 
     canAcessStockControlMenuItem:

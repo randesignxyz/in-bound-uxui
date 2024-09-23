@@ -186,7 +186,7 @@ export default ({ onAdd, onEdit }: Props) => {
                         var _status = 'PENDING';
                         
                         //checking expiry
-                        if(moment(currentTime).format("DDMYYYY")>moment(r.endDate).format("DDMYYYY")&&r.empClosed==0){
+                        if(moment(currentTime).format("DDMYYYY")>moment(r.endDate).format("DDMYYYY")){
                             _status = "Expired";
                         }else{
                             if (r.stepId==1){
@@ -205,7 +205,7 @@ export default ({ onAdd, onEdit }: Props) => {
                     render: (dom, r) => {   
                         var _val=0;
                         var currentTime = new Date(); 
-                        if(moment(currentTime).format("DDmmYYYY")>moment(r.endDate).format("DDmmYYYY")&&r.empClosed==0){
+                        if(moment(currentTime).format("DDmmYYYY")>moment(r.endDate).format("DDmmYYYY")){
                             _val = 1;
                         } 
                         return (<>

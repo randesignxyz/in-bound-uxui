@@ -10,7 +10,7 @@ import { Model } from "../model";
 import { EyeOutlined, ExclamationCircleOutlined, CheckOutlined, CloseCircleOutlined, HeartOutlined, EllipsisOutlined } from "@ant-design/icons";
 import Status from "@/components/Status";
 import { history } from 'umi';
-import { MenuProps } from "rc-menu";
+import { Divider, MenuProps } from "rc-menu";
 import { ProfileServicesEss } from "@/pages/profile/service_ess";
 import { ProFormTextArea } from "@ant-design/pro-components";
 
@@ -50,32 +50,32 @@ export default ({ profile }: Props) =>{
         }
     }
 
-    const onRequestItemHandler = async (params: TableViewSearchParams<OpenAdvanceSearchParams>) => {
+    const onRequestItemHandler = async () => {
         try {  
             
-            if(access.ROLE_OFL_NVC_WHM_CASUAL==true){ 
-                params.criteria.permissionLevel = 'ROLE_HR_OFL-NVC_WHM_CASUAL';
-            }
-            else if(access.ROLE_HR_OMM_ENG_PRD_CASUAL==true){ 
-                params.criteria.permissionLevel = 'ROLE_HR_OMM_ENG_PRD_CASUAL';
-            }
-            else if(access.ROLE_HR_NVC_PRD_CASUAL==true){ 
-                params.criteria.permissionLevel = 'ROLE_HR_NVC_PRD_CASUAL';
-            }
-            else if(access.ROLE_OFL_NVC_OMM_FMA_CASUAL==true){ 
-                params.criteria.permissionLevel = 'ROLE_HR_OFL-NVC-OMM_FMA_CASUAL';
-            } 
-            else if(access.ROLE_HR_OFL_DEL_CASUAL==true){ 
-                params.criteria.permissionLevel = 'ROLE_HR_OFL_DEL_CASUAL';
-            }
-            else if(access.ROLE_HR_OMD_DEL_CASUAL==true){ 
-                params.criteria.permissionLevel = 'ROLE_HR_OMD_DEL_CASUAL';
-            }
-            else{
-                params.criteria.permissionLevel = '0';
-            }
+            // if(access.ROLE_OFL_NVC_WHM_CASUAL==true){ 
+            //     params.criteria.permissionLevel = 'ROLE_HR_OFL-NVC_WHM_CASUAL';
+            // }
+            // else if(access.ROLE_HR_OMM_ENG_PRD_CASUAL==true){ 
+            //     params.criteria.permissionLevel = 'ROLE_HR_OMM_ENG_PRD_CASUAL';
+            // }
+            // else if(access.ROLE_HR_NVC_PRD_CASUAL==true){ 
+            //     params.criteria.permissionLevel = 'ROLE_HR_NVC_PRD_CASUAL';
+            // }
+            // else if(access.ROLE_OFL_NVC_OMM_FMA_CASUAL==true){ 
+            //     params.criteria.permissionLevel = 'ROLE_HR_OFL-NVC-OMM_FMA_CASUAL';
+            // } 
+            // else if(access.ROLE_HR_OFL_DEL_CASUAL==true){ 
+            //     params.criteria.permissionLevel = 'ROLE_HR_OFL_DEL_CASUAL';
+            // }
+            // else if(access.ROLE_HR_OMD_DEL_CASUAL==true){ 
+            //     params.criteria.permissionLevel = 'ROLE_HR_OMD_DEL_CASUAL';
+            // }
+            // else{
+            //     params.criteria.permissionLevel = '0';
+            // }
             
-            return await ServicesEss.listEssOpenItem(params,profile.id,statusItem).query(requestActions)
+            return {items : await ServicesEss.listEssOpenItem(profile.id,statusItem,'').query(requestActions)}
 
         } catch (error: any) {
             message.error(error.message)
@@ -101,6 +101,7 @@ export default ({ profile }: Props) =>{
             key: "1",
             label: "Review Updates",
             itemIcon: <EyeOutlined />,
+            disabled:([3,4,5,6].find((element) => element == record.stepId))?false:true,
             onClick: async () => {
                 window.open(`/profile/1/${record.empId}`,)?.focus();
             }
@@ -169,7 +170,29 @@ export default ({ profile }: Props) =>{
                     },
                   });  
             }
+        }, 
+        { // using for rollback cancel update
+            key: "8",
+            label: "Re Edit Profile",
+            itemIcon: <CloseCircleOutlined />,
+            disabled:record.stepId==8?false:true, 
+            onClick: async () => {
+                Modal.confirm({
+                    title: 'Re Cancelled Update',
+                    content: 'Do you want to re-edit profile after cancel update?',
+                    onOk: async () => {
+                      try {  
+                        const rs = await ServicesEss.essInfoDetail(record.empId,profile.id).query(requestActions);  
+                        await ProfileServicesEss.saveEssProfile({...rs?.profile_draft,id: record.empId, empId: record.empId,step:33,openEssId:profile.id!!,otherFile:[],remark:'',status:true})(requestActions);
+                        actionRefItem?.current?.reloadAndRest?.();
+                      } catch (error: any) {
+                        message.error(error.message || 'Failed to created.');
+                      }
+                    },
+                  });  
+            }
         } 
+       
        
     ]
     return <Spin spinning = {loading}>
@@ -182,8 +205,8 @@ export default ({ profile }: Props) =>{
                             { label: "Started", value: "2" },
                             { label: "Review", value: "3" },
                             { label: "Rejected", value: "4" },
-                            // { label: "Verified", value: "3" },
-                            { label: "Approval", value: "6" }
+                            { label: "Approval", value: "6" },
+                            { label: "Cancel Update", value: "8" }
                         ]}
                         onChange={(e) => {setAdanceSearchItem(e.target.value);}}
                     />
@@ -219,6 +242,8 @@ export default ({ profile }: Props) =>{
                             _status = "Reviewing";
                         } else if (r.stepId==6){
                             _status = "Approved";
+                        }else if (r.stepId==8){
+                            _status = "Cancelled Update";
                         }
                         return <div><Status text={_status}/></div>;
                     }

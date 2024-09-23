@@ -9,8 +9,7 @@ import { ServicesEss } from '../service_ft_tran';
 import Status from "@/components/Status"; 
 import { IssuesCloseOutlined, DownloadOutlined, HistoryOutlined, EditOutlined, RedoOutlined, EllipsisOutlined,SoundOutlined, ExportOutlined } from "@ant-design/icons";
 import { history } from 'umi';
-import { Model } from "./../model";
-import AppNewOpenForm from "./../AppNewOpenForm"; 
+import { Model } from "./../model"; 
 import moment from 'moment'; 
 import { MenuProps } from "rc-menu";
 
@@ -227,13 +226,6 @@ export default ({ onAdd, onEdit }: Props) => {
             // }}
 
         />
-
-        {modals.isVisible('CreateNewOpenForm') && <AppNewOpenForm
-            open={modals.isVisible('CreateNewOpenForm')}
-            onOpenModalChange={(v: any) => !v && modals.hideModal('CreateNewOpenForm')}
-            refreshTable={refeshTable}
-            data={openEssItem!!}  
-        />}
-           
+ 
     </Spin>
 }

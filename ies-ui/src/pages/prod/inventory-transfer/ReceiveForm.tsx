@@ -166,12 +166,12 @@ export default ({ id, ...rest }: Props) => {
                                 request={async ({ keyWords }) => {
                                     const data = await services.pageFG({
                                         criteria: { searchValue: keyWords, advanceSearch: advanceSearchParams },
-                                        pagination: { pageSize: 10 },
+                                        pagination: { pageSize: 100 },
                                     });
 
                                     return data.items.map((obj) => ({
                                         value: obj.id,
-                                        label: `PDR-${String(obj.id).padStart(6, '0')}`,
+                                        label: `PDR-${String(obj.id).padStart(6, '0')}`+ ` (${obj.transfer_type})`,
                                     }));
                                 }}
                                 fieldProps={{

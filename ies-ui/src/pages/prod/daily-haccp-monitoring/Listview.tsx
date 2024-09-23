@@ -7,7 +7,7 @@ import moment from 'moment';
 import { simpleRequestActions } from '@/services/model';
 import { ActionType, ProForm, ProFormSelect, ProTable } from '@ant-design/pro-components';
 import { Badge, Button, Card, Col, DatePicker, Flex, Modal, Progress, Row, Space, Tag, Tooltip, Typography, message } from 'antd';
-import { ArrowRightOutlined, EditOutlined, EllipsisOutlined, FileExcelOutlined, PlusOutlined, RedoOutlined, SettingOutlined } from '@ant-design/icons';
+import { ArrowRightOutlined, EditOutlined, EllipsisOutlined, FileDoneOutlined, FileExcelOutlined, PlusOutlined, RedoOutlined, SettingOutlined } from '@ant-design/icons';
 import { DailyHACCPMonitoringServiceAPI } from './service';
 import { HACCPMonitoring } from './data';
 import FormModal from './FormModal';
@@ -95,6 +95,8 @@ export default () => {
             </Tooltip>
             : <></>}
           <Tooltip title="Dowload Excel File"><Button type="link" icon={<FileExcelOutlined />} onClick={() => setExportModal({ visible: true })} /></Tooltip>
+          <Tooltip title="Instruction"><Button type="link" icon={ <FileDoneOutlined />} onClick={() => history.push(`/prod/daily-haccp-monitoring/create`)} /></Tooltip>
+         
           <Tooltip title="Refresh">
             <Button
               key="refresh"
@@ -120,7 +122,7 @@ export default () => {
             return (
               <Col span={8} key={index}>
                 <Card
-                  title={item.name}
+                  title={'Production '+item.name}
                   extra={<a
                     onClick={() => (filteredData[0] ? (history.push(`/prod/daily-haccp-monitoring/detail/${filteredData[0]?.assign_date}/${filteredData[0]?.line}/${filteredData[0]?.haccp_id}`))
                       : {})

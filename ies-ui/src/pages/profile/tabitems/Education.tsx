@@ -1,6 +1,6 @@
 import { ProTable } from "@ant-design/pro-components"
-import { Button, message, Modal, Space, Typography,Card } from 'antd'; 
-import { PlusCircleFilled,EditOutlined, EyeOutlined, PlusOutlined } from "@ant-design/icons";
+import { Button, message, Modal, Space, Typography,Card,Flex } from 'antd'; 
+import { PlusCircleFilled,EditOutlined, EyeOutlined, PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import EducationModal from '../modal/EducationModal';
 import { useEffect,useState } from 'react';
 
@@ -10,6 +10,7 @@ import { ProfileServicesEss } from '../service_ess';
 import { simpleRequestActions } from '@/services/model';
 import EducationView from "../view/EducationView";
 import PersonalViewEditModal from "../modal/PersonalViewEditModal";
+import { formatYear } from "@/pages/utils";
 
 interface Props {
     profile: ProfileData;
@@ -72,13 +73,25 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
         }
     };
     const saveEducationHandler = async (data: EducationData) => {
+        // attachment files
+        if(createFileOther.length==0){  
+            message.error('Please do select attachment files.');
+            return false;
+        } 
+        // submit
         Modal.confirm({
           title: 'Save eduction',
           content: 'Are you sure?',
           onOk: async () => {
             try {
                 data.otherFile = createFileOther;
-                data.isDelete = 0;
+                data.isDelete = 0; 
+
+                var educationYear = data.educationYear;
+                
+                data.fromYear = educationYear[0];
+                data.toYear = educationYear[1]; 
+
                 await ProfileServicesEss.saveEducation(data)(requestActions); 
                 // call back fun
                 cb.onLoadData();
@@ -99,8 +112,29 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                 data.otherFile = [];
                 data.isDelete = 1;
                 data.type = "ADD";
-                data.empId= profile.id;
+                data.empId= profile.id; 
                 await ProfileServicesEss.saveEducation(data)(requestActions); 
+                // call back fun
+                cb.onLoadData();
+                initData();
+                hideModal();
+            } catch (error: any) {
+              message.error(error.message || 'Failed to created.');
+            }
+          },
+        });
+    };
+    const onDeleteAdmin = async (data: EducationData) => {
+        Modal.confirm({
+          title: 'Delete eduction',
+          content: 'Are you sure you want to delete items?',
+          onOk: async () => {
+            try {
+                data.otherFile = [];
+                data.isDelete = 1;
+                data.type = "ADD";
+                data.empId= profile.id; 
+                await ProfileServicesEss.saveEducationAdmin(data)(requestActions); 
                 // call back fun
                 cb.onLoadData();
                 initData();
@@ -122,18 +156,22 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
             <Space direction={"vertical"} style={{width:'100%'}}>
                 <div style={{width:'100%',textAlign:'right'}}> 
                     <Space direction='horizontal'>
-                        <Button style={{display:(is_admin==2&&empId>0)?'':'none'}} onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}><PlusCircleFilled/> Add</Button>
+                        <Button style={{display:(is_admin==2&&empId>0)?'':'none'}} onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}
+                                icon={<PlusCircleFilled />}
+                                key="1"
+                                type="primary"> Add</Button>
 
                         <Button danger onClick={() => setModalEducationViewVisible({ type: 'VIEW', payload: null})} 
-                            style={{display:([7,5,4,3,2].find((element) => element == profile!!.ess.stepId))&&is_admin!=2?'':'none'}}><EyeOutlined/> View edit</Button> 
+                            style={{display:([7,5,4,3,2].find((element) => element == profile!!.ess.stepId))&&is_admin!=2?'':'none'}}
+                            type="primary"><EyeOutlined/> View edit</Button> 
 
                         {profile!!.ess.id!!<=0?'':<Button style={{display: ([7,5,2].find((element) => element == step))&&is_admin==0?'':'none'}}
                                 onClick={() => setModalVisible({ type: 'ADD', payload: null })}
-                                icon={<PlusOutlined />}
+                                icon={<PlusCircleFilled />}
                                 key="1"
                                 type="primary">
                                 Add
-                            </Button>
+                            </Button> 
                         }
                     </Space>
                 </div>
@@ -159,19 +197,26 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                         },{
                             title: "Country of Education Institution", dataIndex: "countryEducationCenterName" 
                         },{
+                            title: "Year", render: (_, r) => {return formatYear(r.fromYear)+" - "+ formatYear(r.toYear)}
+                        },{
                             title: "Status", dataIndex: "statusName" 
                         },
                         {   width: 100,
                             render: (dom, r) => {
-                                return (<>
+                                return (<Flex vertical={false} justify='space-between'>
                                   {profile!!.ess.id!!<=0?'':<a style={{display: (is_admin==0&&empId==0&&[7,5,2].find((element) => element == profile!!.ess.stepId))?'':'none'}} 
-                                  onClick={() => setModalVisible({ type: 'EDIT', payload: r })}>
-                                    <EditOutlined />
-                                  </a>}
-                                  <a style={{display: (is_admin==2&&empId>0)?'':'none'}} 
-                                  onClick={() => setModalVisible({ type: 'EDIT', payload: r })}>
-                                    <EditOutlined />
-                                  </a></>
+                                    onClick={() => setModalVisible({ type: 'EDIT', payload: r })} title='Edit'>
+                                        <EditOutlined />
+                                    </a>}
+                                    <a style={{display: (is_admin==2&&empId>0)?'':'none'}} title='Edit'
+                                    onClick={() => setModalVisible({ type: 'EDIT', payload: r })}>
+                                        <EditOutlined />
+                                    </a>
+                                    <a style={{display: (is_admin==2&&empId>0)?'':'none',color:'red'}} title="Remove" 
+                                        onClick={() => onDeleteAdmin(r)}>
+                                        <DeleteOutlined />
+                                    </a>
+                                    </Flex>
                                 );
                               },
                         }

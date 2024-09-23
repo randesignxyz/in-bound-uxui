@@ -54,7 +54,7 @@ export default ({ data, onSave, type, ...props }: Props) => {
                     return
                 }
                 let status = 'normal'
-                if (parseFloat(dataForm.water_pressure) > 1.0) {
+                if (parseFloat(dataForm.water_pressure) < 1.0) {
                     updatedWarningCount++;
                 }
                 if (parseFloat(dataForm.fg) < 0.05 || parseFloat(dataForm.fg) > 0.4) {
@@ -74,7 +74,7 @@ export default ({ data, onSave, type, ...props }: Props) => {
                 }
                 const entity = {
                     ...dataForm,
-                    line:data?.line,
+                    line: data?.line,
                     warning_count: updatedWarningCount,
                     status: status,
                     nozzles_rinser: nozzlesRinser,
@@ -100,7 +100,7 @@ export default ({ data, onSave, type, ...props }: Props) => {
                         <Col span={12}>
                             <ProFormText
                                 hasFeedback={false}
-                                rules={[{ required: true, message: 'Please Enter Water pressure' },{ pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
+                                rules={[{ required: true, message: 'Please Enter Water pressure' }, { pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
                                 label={
                                     <ProForm.Item
                                         noStyle
@@ -110,11 +110,11 @@ export default ({ data, onSave, type, ...props }: Props) => {
                                             const waterPressureValue = getFieldValue('water_pressure');
                                             return (
                                                 <div>
-                                                   Water pressure
+                                                    Water pressure
                                                     <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px' }}>
-                                                    (&gt; 1.0 bar)
+                                                        (&gt; 1.0 bar)
                                                     </span>
-                                                    {Number(waterPressureValue) > 1.0 && waterPressureValue !== '' && waterPressureValue !== null && (
+                                                    {Number(waterPressureValue) < 1.0 && waterPressureValue !== '' && waterPressureValue !== null && (
                                                         <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} />
                                                     )}
                                                 </div>
@@ -126,16 +126,16 @@ export default ({ data, onSave, type, ...props }: Props) => {
                                 fieldProps={{
                                     type: 'number',
                                     step: 'any'
-                                  }}
+                                }}
                             // initialValue={data?.raw_water}
                             />
                         </Col>
                         <Col span={12} style={{ display: 'flex', flexDirection: 'column' }}>
                             <div style={{ flexDirection: 'row' }}>
                                 <Text style={{ color: 'red', fontSize: 20 }}>*</Text>
-                                <Text style={{ marginBottom: 10 }}>Nozzles rainser</Text>
+                                <Text style={{ marginBottom: 10 }}>Nozzles rinser</Text>
                                 <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px', }}>(No one clog of 32/40)</span>
-                                {nozzlesRinser == 0  ? <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} /> : <></>}
+                                {nozzlesRinser == 0 ? <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} /> : <></>}
 
                             </div>
                             <Radio.Group
@@ -158,7 +158,7 @@ export default ({ data, onSave, type, ...props }: Props) => {
                         <Col span={12}>
                             <ProFormText
                                 hasFeedback={false}
-                                rules={[{ required: true, message: 'Please Enter FG' },{ pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
+                                rules={[{ required: true, message: 'Please Enter FG' }, { pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
                                 label={
                                     <ProForm.Item
                                         noStyle
@@ -168,9 +168,9 @@ export default ({ data, onSave, type, ...props }: Props) => {
                                             const fgValue = getFieldValue('fg');
                                             return (
                                                 <div>
-                                                   FG [O₃]
+                                                    FG [O₃]
                                                     <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px' }}>
-                                                    (0.05-0.4 ppm)
+                                                        (0.05-0.4 ppm)
                                                     </span>
                                                     {(Number(fgValue) < 0.05 || Number(fgValue) > 0.4) && fgValue !== '' && fgValue !== null && (
                                                         <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} />
@@ -184,7 +184,7 @@ export default ({ data, onSave, type, ...props }: Props) => {
                                 fieldProps={{
                                     type: 'number',
                                     step: 'any'
-                                  }}
+                                }}
                             // initialValue={data?.acf}
                             />
                         </Col>
@@ -192,7 +192,7 @@ export default ({ data, onSave, type, ...props }: Props) => {
                             <div style={{ flexDirection: 'row' }}>
                                 <Text style={{ color: 'red', fontSize: 20 }}>*</Text>
                                 <Text style={{ marginBottom: 10 }}>Smell</Text>
-                                {smell == 0  ? <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} /> : <></>}
+                                {smell == 0 ? <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} /> : <></>}
                             </div>
                             <Radio.Group
                                 onChange={(e) => (setSmell(e.target.value))}
@@ -213,9 +213,10 @@ export default ({ data, onSave, type, ...props }: Props) => {
                             <div style={{ flexDirection: 'row' }}>
                                 <Text style={{ color: 'red', fontSize: 20 }}>*</Text>
                                 <Text style={{ marginBottom: 10 }}>Control</Text>
-                                {activityControl == 0  ? <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} /> : <></>}
+                                {activityControl == 0 ? <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} /> : <></>}
                             </div>
                             <Radio.Group
+                                // value={nozzlesRinser == 0 || smell == 0 ? '0' : activityControl}
                                 onChange={(e) => (setActivityControl(e.target.value))}
                             >
                                 <Radio value='1'>Under Control</Radio>
@@ -226,7 +227,7 @@ export default ({ data, onSave, type, ...props }: Props) => {
 
                             <ProFormText
                                 hasFeedback={false}
-                                // rules={[{ required: true, message: 'Please Enter FG' }]}
+                                rules={[nozzlesRinser == 0 || smell == 0 ? { required: true, message: 'Please Enter Take action' } : {}]}
                                 label={
                                     <div>
                                         Take action

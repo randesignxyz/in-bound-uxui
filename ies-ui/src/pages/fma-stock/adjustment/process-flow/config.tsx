@@ -3,7 +3,7 @@ import DefaultStartForm from '@/pages/process-flow/components/forms/DefaultStart
 import { ActionDataFormProps, DataForm, DataViewProps } from '@/pages/process-flow/data';
 import ViewForm from './ViewForm';
 import { AdjustmentRequestFormNames } from '.';
-import CheckStockControlForm from './CheckStockControlForm';
+// import CheckStockControlForm from './CheckStockControlForm';
 
 export const getInventoryAdjustmentRequestForms = (): DataForm[] => [
   {

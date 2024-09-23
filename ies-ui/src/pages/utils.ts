@@ -70,6 +70,11 @@ export const formatter = new Intl.NumberFormat('en-US', {
 export const formatterQty = new Intl.NumberFormat('en-US', {
     compactDisplay: 'short',
 });
+export const formatterQty1 = new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+});
+
 
 export const formatterKh = new Intl.NumberFormat('km-KH', {
     style: 'currency',

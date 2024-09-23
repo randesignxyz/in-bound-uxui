@@ -8,8 +8,8 @@ import {
 import { Button, message, Modal,  Space  } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { simpleRequestActions } from '@/services/model'; 
-import { OpenEssDataItem} from '../data_ess';
-import { ServicesEss } from '../service_ess_tran';  
+import { OpenEssDataItem} from '../data_ft';
+import { ServicesEss } from '../service_ft_tran';  
 import { useEffect } from 'react';
  
 interface Props {

@@ -1,5 +1,7 @@
 import { LookupDataItem2 } from "@/services/data"
-import { ModalForm, ModalFormProps, ProFormTextArea, ProFormDatePicker, ProForm, ProFormText,ProCard, ProFormSelect, ProFormDateRangePicker, ProFormDigit } from "@ant-design/pro-components" 
+import { ModalForm, ModalFormProps, ProFormTextArea, 
+    ProForm, ProFormText,ProCard, 
+    ProFormDateRangePicker, ProFormDigit } from "@ant-design/pro-components" 
 import { TrainingData, SaveTraining, FilesData } from "../data.ess"
 import { useEffect,useState } from 'react';
 import FileUploader , { UploadType } from '@/components/Attachment/FileUploader';
@@ -8,6 +10,7 @@ import ImagePreview from "@/components/ImagePreview";
 import { ProfileData } from "../data";
 import { simpleRequestActions } from "@/services/model";
 import { ProfileServicesEss } from "../service_ess";
+import { ProfileOutlined,SaveOutlined,CloseSquareOutlined } from "@ant-design/icons";
 
 interface Props extends ModalFormProps<SaveTraining> { 
     profile: ProfileData;
@@ -36,9 +39,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
         setImageList(list); 
         // 
         if(!!data){
-
-                var dataRange= [data.year,data.toYear];
-
+            var dataRange= [data.year,data.toYear];
             form.setFieldsValue({...data!!,year:dataRange});
         }
         else{
@@ -53,16 +54,34 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
     }
     // 
     const onAdminSubmit = async ()=>{
-        const bmForm = await form.validateFields(); 
+        const bmForm = await form.validateFields();
+        // attachment files
+        if(type=="ADD"){ 
+            // 
+            if(createFileOther.length==0){  
+                message.error('Please do select attachment files.');
+                return false;
+            } 
+        }
+        // submit 
         Modal.confirm({
             title: 'Save Training',
             content: 'Are you sure?',
             onOk: async () => {
               try { 
-                bmForm.otherFile = createFileOther;  
+                bmForm.otherFile = createFileOther||[];  
                 bmForm.id = (!!data!!?data!!.id:0);
                 bmForm.empId = empId;
-                bmForm.status=true;
+                bmForm.typeId = 1;
+                bmForm.status=true; 
+                bmForm.isDelete=0;
+                bmForm.traincert=1;
+
+                var fromyear = bmForm.year[0];
+                var toyear = bmForm.year[1];
+
+                bmForm.year = fromyear;
+                bmForm.toYear = toyear; 
                 await ProfileServicesEss.saveTrainingAdmin(bmForm)(requestActions); 
                 // call back fun
                 cb.onReload(); 
@@ -73,7 +92,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
         });
     }
     // 
-    return <ModalForm  {...rest} form={form} width={'30%'} title={!!data?"Edit Training":"Add Training"}
+    return <ModalForm  {...rest} form={form} width={'30%'} title={!!data?<><ProfileOutlined /> Edit Training</>:<><ProfileOutlined /> Add Training</>}
         // onOpenChange={visible => {
         //     form.resetFields()
         //     rest.onOpenChange?.(visible)
@@ -87,8 +106,8 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
                     }
                     :{
                         searchConfig: {
-                            submitText: 'Submit',
-                            resetText: 'Cancel',
+                            submitText: <div><SaveOutlined /> Submit</div>,
+                            resetText: <div><CloseSquareOutlined /> Cancel</div>,
                         }
                     }
                 } 
@@ -98,7 +117,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
             <ProFormText label="Institution" name={'institution'} rules={[{ required: true }]} placeholder={"institution"}/> 
             <Row>              
                 <Col span={24} style={{padding:'3px'}}>  
-                    <ProFormDateRangePicker label="Date" name={"year"} />
+                    <ProFormDateRangePicker label="Period Training" name={"year"} rules={[{ required: true }]} />
                 </Col>      
             </Row> 
             <Row>              
@@ -113,8 +132,9 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
         {/* Attachment files  */} 
         <div style={{marginTop:'10px'}}>
             <Space direction="horizontal">
-                <Typography.Title level={5}>Attachments</Typography.Title>
+                <Typography.Title level={5}>Attachments</Typography.Title><Typography.Title level={5} style={{color:'red'}}> (Required*)</Typography.Title>
             </Space>
+            <div style={{fontSize:'12px'}}>- Certificate (Image File or PDF)</div>
         </div> 
         <ProCard size="small" bordered>   
             <FileUploader   

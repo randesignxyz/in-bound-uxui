@@ -3,7 +3,7 @@ import { Paging } from '@/services/API';
 import { simpleRequestActions } from '@/services/model';
 import { ActionType } from '@ant-design/pro-components';
 import { useAccess, useModel } from '@umijs/max';
-import { Button, Modal, Radio, Select, Space, Tag, Tooltip, message } from 'antd';
+import { Button, DatePicker, Modal, Radio, Select, Space, Tag, Tooltip, message } from 'antd';
 import Omit from 'omit.js';
 import { useEffect, useRef, useState } from 'react';
 import ApproveRemarkFormModal from '../../ApproveRemarkFormModal';
@@ -231,6 +231,30 @@ export default ({ onAdd }: Props) => {
                 { value: 'rejected', label: 'Rejectetd' },
                 { value: 'completed', label: 'Completed' },
               ]}
+            />
+            <DatePicker
+              style={{ width: 165 }}
+              onChange={(v => {
+                const dateWithoutTime = v?.format("YYYY-MM-DD")
+                setAdvanceSearchParams((v) => ({
+                  ...v,
+                  postingDate: dateWithoutTime,
+                }));
+                actionRef.current?.reloadAndRest?.();
+              })}
+              placeholder='Posting date'
+            />
+            <DatePicker
+              style={{ width: 165 }}
+              onChange={(v => {
+                const dateWithoutTime = v?.format("YYYY-MM-DD")
+                setAdvanceSearchParams((v) => ({
+                  ...v,
+                  docDueDate: dateWithoutTime,
+                }));
+                actionRef.current?.reloadAndRest?.();
+              })}
+              placeholder='Doc Due date'
             />
           </Space>
         }

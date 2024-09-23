@@ -55,11 +55,19 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
     // var Rg = ["" ,"Buddhism","Islam"];  
     
     //
-    var pb = profile.profile_adr_pb?(profile.profile_adr_pb.provinceName+" "+profile.profile_adr_pb.districtName+" "+profile.profile_adr_pb.communeName):'N/A';
-    var ct = profile.profile_adr_ct?(profile.profile_adr_ct.provinceName+" "+profile.profile_adr_ct.districtName+" "+profile.profile_adr_ct.communeName+" "+
-            profile.profile_adr_ct.villageId+" "+profile.profile_adr_ct.homeNo+" "+profile.profile_adr_ct.street+" "+profile.profile_adr_ct.remark):'';
-    var pm = profile.profile_adr_pm?(profile.profile_adr_pm.provinceName+" "+profile.profile_adr_pm.districtName+" "+profile.profile_adr_pm.communeName+" "+
-            profile.profile_adr_pm.villageId+" "+profile.profile_adr_pm.homeNo+" "+profile.profile_adr_pm.street+" "+profile.profile_adr_pm.remark):''; 
+    var pb = profile.profile_adr_pb?(profile.profile_adr_pb.communeName+" "+profile.profile_adr_pb.districtName+" "+profile.profile_adr_pb.provinceName):'N/A';
+    var ct = profile.profile_adr_ct?(   (profile.profile_adr_ct.homeNo==''?'':"#"+profile.profile_adr_ct.homeNo)+
+                                        (profile.profile_adr_ct.street==''?'':", St. "+profile.profile_adr_ct.street)+
+                                        (profile.profile_adr_ct.villageId==''?', ':", "+profile.profile_adr_ct.villageId+", ")
+                                        + profile.profile_adr_ct.communeName
+                                        +", "+profile.profile_adr_ct.districtName
+                                        +", "+profile.profile_adr_ct.provinceName+" "+
+                                        profile.profile_adr_ct.remark):'N/A';
+    var pm = profile.profile_adr_pm?(profile.profile_adr_pm.homeNo==''?' ':"#"+profile.profile_adr_pm.homeNo)+
+            (profile.profile_adr_pm.street==''?'':", St. "+profile.profile_adr_pm.street)+
+            (profile.profile_adr_pm.villageId==''?', ':", "+profile.profile_adr_pm.villageId+", ")
+            +profile.profile_adr_pm.communeName+", "+profile.profile_adr_pm.districtName+", "+profile.profile_adr_pm.provinceName
+            :'N/A';
 
     //
     const items: DescriptionsProps['items'] = [
@@ -71,7 +79,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
         {
             key     : '2',
             label   : 'Name EN',
-            children: <Flex vertical={'vertical'}><div>{profile.profile.nameEn}</div><div style={{color:'red',display:'none'}}>{""}</div></Flex>,
+            children: <Flex vertical={'vertical'}><div>{profile.profile.lastNameEn } {profile.profile.firstNameEn}</div><div style={{color:'red',display:'none'}}>{""}</div></Flex>,
         },
         {
             key     : '3',
@@ -81,7 +89,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
         {
             key     : '4',
             label   : 'Date of Birth',
-            children: profile.profile.dateBirth,
+            children: <>{profile.profile.dateBirth}</>,
         },
         {
             key     : '5',
@@ -95,7 +103,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
         {
             key     : '6',
             label   : 'Marital Status',
-            children: profile.marriedStatusObj.titleName,
+            children: <>{profile.marriedStatusObj?profile.marriedStatusObj.titleName:''}</>,
         },
         {
             key     : '7',
@@ -126,12 +134,12 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
         {
             key     : '10',
             label   : 'National ID',
-            children: profile.profile.nationalId,
+            children: <>{profile.profile.nationalId?profile.profile.nationalId:'N/A'}</>,
         },
         {
             key     : '11',
             label   : 'Passport Number',
-            children: profile.profile.passportNumber,
+            children: <>{profile.profile.passportNumber?profile.profile.passportNumber:'N/A'}</>,
         },
         // {
         //     key     : '12',
@@ -140,7 +148,13 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
         // }
     ];
     //
-    const saveEssProfileHandler = async (data: SaveEssProfile) => {
+    const saveEssProfileHandler = async (data: SaveEssProfile) => { 
+        // attachment files
+        if(createFileOther.length==0){  
+            message.error('Please do select attachment files.');
+            return false;
+        } 
+        // submit
         Modal.confirm({
           title: 'Save Profile',
           content: 'Are you sure?',
@@ -183,11 +197,17 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
         });
     };
     // 
-    const editFormEssProfileHandler = async () => { 
-        profile!!.ess.id!!<=0?'':setModalVisible({ type: 'EDIT', payload: profile.profile_draft});
-        profile!!.ess.id!!<=0?'':hideViewModal(false);
-        if(profile!!.ess.id!!<=0){
-            message.error('Expired period allowed to edit data profiles.Please contact HR  for helping.');
+    const editFormEssProfileHandler = async () => {  
+        if([7,5,4,2].find((element) => element == profile!!.ess.stepId)){
+            profile!!.ess.id!!<=0?'':setModalVisible({ type: 'EDIT', payload: profile.profile_draft});
+            profile!!.ess.id!!<=0?'':hideViewModal(false);
+            if(profile!!.ess.id!!<=0){
+                message.error('Expired period allowed to edit data profiles.Please contact HR  for helping.');
+            }
+        }
+        else{
+            message.error('You have not right to edit, If you want to edit please cancel submitted and re-edit.'); 
+            
         }
     }
 
@@ -198,7 +218,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
             <ProCard bordered> 
                 <div style={{width:'100%',textAlign:'right'}}>
                     <Space direction='horizontal'>
-                        <Button onClick={() => setModalVisible({ type: 'EDIT', payload: profile.profile!!})} style={{display:(is_admin==2&&empId>0)?'':'none'}}><EditOutlined/> EDIT</Button>, 
+                        <Button onClick={() => setModalVisible({ type: 'EDIT', payload: profile.profile!!})} style={{display:(is_admin==2&&empId>0)?'':'none'}}><EditOutlined/> EDIT</Button>
 
                         <Button danger onClick={() => setModalViewVisible({ type: 'VIEW', payload: profile.profile!!})} 
                                 style={{display:([7,5,4,3,2].find((element) => element == profile!!.ess.stepId))&&is_admin!=2?'':'none'}}><EyeOutlined/> View edit</Button>
@@ -232,15 +252,15 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
                         {
                             key     : '1',
                             label   : 'City/Province',
-                            children: profile.profile.nameKh,
+                            children: profile.profile.nameEn,
                         },{
                             key     : '2',
                             label   : 'Khan/District',
-                            children: profile.profile.nameKh,
+                            children: profile.profile.nameEn,
                         },{
                             key     : '3',
                             label   : 'Sangkan/Commune',
-                            children: profile.profile.nameKh,
+                            children: profile.profile.nameEn,
                         } 
                     ]}
                 />            
@@ -367,7 +387,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
                 return saveEssProfileHandler({ ...data, essProfId: modalVisible?.payload?.id!!,openEssId:profile.ess.id!!, empId: profile.id,status:true,step:22,remark:'' });
             }}
         /> 
-        {/* PersonalViewEditModal */}        
+        {/* PersonalViewEditModal */}  
         <PersonalViewEditModal
             open={!!modalViewVisible?.type}
             locations={profile?.essLocation}

@@ -8,6 +8,7 @@ import ImagePreview from "@/components/ImagePreview";
 import { ProfileData } from "../data";
 import { simpleRequestActions } from "@/services/model";
 import { ProfileServicesEss } from "../service_ess";
+import { ProfileOutlined,SaveOutlined,CloseSquareOutlined } from "@ant-design/icons";
 
 interface Props extends ModalFormProps<LanguageData> { 
     profile: ProfileData;
@@ -57,10 +58,11 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
             content: 'Are you sure?',
             onOk: async () => {
               try { 
-                bmForm.otherFile = createFileOther;  
+                bmForm.otherFile = createFileOther||[];  
                 bmForm.id = (!!data!!?data!!.id:0);
                 bmForm.empId = empId;
                 bmForm.status=true;
+                bmForm.isDelete=0;
                 await ProfileServicesEss.saveLanguageAdmin(bmForm)(requestActions); 
                 // call back fun
                 cb.onReload(); 
@@ -70,7 +72,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
             },
         });
     }
-    return <ModalForm  {...rest} form={form} width={'30%'} title={!!data?"Edit Language":"Add Language"}
+    return <ModalForm  {...rest} form={form} width={'30%'} title={!!data?<><ProfileOutlined /> Edit Language</>:<><ProfileOutlined /> Add Language</>}
     //     onOpenChange={visible => {
     //         form.resetFields()
     //     //     if(visible) {
@@ -94,8 +96,8 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
                 }
                 :{
                     searchConfig: {
-                        submitText: 'Submit',
-                        resetText: 'Cancel',
+                        submitText: <div><SaveOutlined /> Submit</div>,
+                        resetText: <div><CloseSquareOutlined /> Cancel</div>,
                     }
                 }
             } 

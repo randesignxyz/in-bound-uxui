@@ -23,6 +23,7 @@ import moment from "moment";
 const { Link } = Typography;
 
 interface Props {
+    onAdd?: (id?: number) => void;
     onDetail?: (data: AppraisalEmp) => void
     forceRefresh: number
 }
@@ -35,7 +36,7 @@ interface LightFilterProp {
     pendingFilter?: string[]
 }
 
-const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
+const AppraisalList: React.FC<Props> = ({ onAdd, forceRefresh, onDetail }) => {
     const { data, modals } = Model();
     const actionRef = useRef<ActionType>();
     const cacheList = useModel('dataList');
@@ -290,11 +291,11 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                         <Button type="primary" onClick={submitAllHandler}>Submit All</Button>
                     </Space>}
                 </Space>
-
             }
             extraRightFilter={<Tooltip placement="bottom" title="Dowload Excel File"><Button icon={<FileExcelOutlined />} onClick={dowloandExcelHandler} /></Tooltip>}
             actionHandlers={{
-                onAdd: createAppraisalFormHandler,
+                // onAdd: createAppraisalFormHandler,
+                onAdd: onAdd,
                 onFirstLoad: () => onRequestHandler(),
                 onRequest: onRequestHandler,
             }}

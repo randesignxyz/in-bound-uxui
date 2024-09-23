@@ -7,7 +7,7 @@ import { useEffect,useState } from 'react';
 import { simpleRequestActions } from '@/services/model';
 import { ProfileServicesEss } from '../service_ess'; 
 import FileUploader , { UploadType } from '@/components/Attachment/FileUploader';
-import ImagePreview from "@/components/ImagePreview";
+import { ProfileOutlined,SaveOutlined,CloseSquareOutlined } from "@ant-design/icons";
 import { ProfileData } from "../data";
 
 interface Props extends ModalFormProps<SaveEmergency> { 
@@ -88,10 +88,11 @@ export default ({ profile,data,locations,type,isAdmin,empId, cb, ...rest }: Prop
             content: 'Are you sure?',
             onOk: async () => {
               try { 
-                bmForm.otherFile = createFileOther;  
+                bmForm.otherFile = createFileOther||[];  
                 bmForm.id = (!!data!!?data!!.id:0);
                 bmForm.empId = empId;
                 bmForm.status=true;
+                bmForm.isDelete=0;
                 await ProfileServicesEss.saveEmergencyAdmin(bmForm)(requestActions); 
                 // call back fun
                 cb.onReload(); 
@@ -102,7 +103,7 @@ export default ({ profile,data,locations,type,isAdmin,empId, cb, ...rest }: Prop
         });
     }
     // 
-    return <ModalForm  {...rest} form={form} width={'35%'} title={!!data?"Edit Emergency":"Add Emergency"}  
+    return <ModalForm  {...rest} form={form} width={'35%'} title={!!data?<><ProfileOutlined /> Edit Emergency</>:<><ProfileOutlined /> Add Emergency</>}  
             submitter={isAdmin==2&&empId>0?
                 {
                     render: () => { 
@@ -111,8 +112,8 @@ export default ({ profile,data,locations,type,isAdmin,empId, cb, ...rest }: Prop
                 }
                 :{
                     searchConfig: {
-                        submitText: 'Submit',
-                        resetText: 'Cancel',
+                        submitText: <div><SaveOutlined /> Submit</div>,
+                        resetText: <div><CloseSquareOutlined /> Cancel</div>,
                     }
                 }
             } 
@@ -181,10 +182,10 @@ export default ({ profile,data,locations,type,isAdmin,empId, cb, ...rest }: Prop
                         <ProFormText label="House No" name={'homeNo'} rules={[{ required: true }]}/> 
                     </Col>
                         <Col span={8} style={{padding:'3px'}}>    
-                        <ProFormText label="Street" name={'street'} rules={[{ required: true }]}/> 
+                        <ProFormText label="Street" name={'street'} rules={[{ required: false }]}/> 
                     </Col>
                     <Col span={8} style={{padding:'3px'}}>   
-                        <ProFormText label="Group/Village" name={'villageId'} rules={[{ required: true }]}/> 
+                        <ProFormText label="Group/Village" name={'villageId'} rules={[{ required: false }]}/> 
                     </Col>
                 </Row>
             </ProCard>

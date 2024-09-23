@@ -10,6 +10,7 @@ export const ProdPaths = {
   inventoryTransfer: '/prod/inventory-transfer',
   dailyWaterTreatment: '/prod/daily-water-treatment',
   dailyPreWaterTreatment: '/prod/daily-pre-water-treatment',
+  dailyHACCPMonitoringtOzone: '/prod/daily-haccp-monitoring-ozone',
   dailyHACCPMonitoring: '/prod/daily-haccp-monitoring',
 };
 
@@ -56,6 +57,14 @@ export default () => {
       icon: dailyWaterTreatmentIcon,
       link: `${ProdPaths.dailyHACCPMonitoring}/list`,
       visible: access.canAccessDailyHACCPMonitoringMenuItem,
+    },
+    {
+      id: 'dailyHACCPMonitoringtOzone',
+      name: 'Daily HACCP Monitoring Ozone',
+      description: 'Daily HACCP Monitoring Ozone',
+      icon: dailyWaterTreatmentIcon,
+      link: `${ProdPaths.dailyHACCPMonitoringtOzone}/list`,
+      visible: access.canAccessDailyHACCPMonitoringOzoneMenuItem,
     },
   ];
 

@@ -13,6 +13,7 @@ import { Model } from "../model";
 import AppNewOpenForm from "./AppNewOpenForm"; 
 import moment from 'moment'; 
 import { MenuProps } from "rc-menu";
+import { formatDate } from "@/pages/utils";
 
 interface Props {
     onAdd?: (id?: number) => void;
@@ -129,7 +130,7 @@ export default ({ onAdd, onEdit }: Props) => {
                     actions: [false],
                 },
             }} 
-            extraRightFilter={active>0?'':<Tooltip placement="bottom" title="Create new open ess"><Button icon={<SoundOutlined />} onClick={onOpenESS}>Open ESS </Button></Tooltip>}
+            extraRightFilter={active>0?'':<Tooltip placement="bottom" title="Create new open ess"><Button icon={<SoundOutlined />} onClick={onOpenESS}>Create Announcement</Button></Tooltip>}
             actionHandlers={{ 
                 onRequest: (criteria, pagination, sort) => onRequestHandler({
                     criteria: {
@@ -155,9 +156,9 @@ export default ({ onAdd, onEdit }: Props) => {
                 </Space>
             }  
             columns={[
-                {title: 'ID', dataIndex: 'id', sorter: 'id',width:'5%'},
-                {title: 'Title', dataIndex: 'openTitle',
-                render(_, entity) {
+                {title: 'ID', dataIndex: 'id', width:'3%'},
+                {title: 'Title', dataIndex: 'openTitle',width:'20%',
+                 render(_, entity) {
                     return <Flex gap={5}><Button
                         size="small"
                         type="link"
@@ -174,10 +175,10 @@ export default ({ onAdd, onEdit }: Props) => {
                     </Flex>
                 },
                 },
-                {title: 'Started Date', dataIndex: 'startDate', render    : (_, r) => moment(r.startDate).format("DD-MMM-YYYY"),width:'7%'},
-                {title: 'End Date', dataIndex: 'endDate', render    : (_, r) => moment(r.endDate).format("DD-MMM-YYYY"), width:'7%'},
+                {title: 'Start Date', dataIndex: 'startDate', render    : (_, r) => formatDate(r.startDate),width:'7%'},
+                {title: 'End Date', dataIndex: 'endDate', render    : (_, r) => formatDate(r.endDate), width:'7%'},
                 {title: 'Description', dataIndex:  'description', },
-                {title: 'Created Date', dataIndex: 'createdDate', render    : (_, r) => moment(r.createdDate).format("DD-MMM-YYYY"), width:'7%'},
+                {title: 'Created Date', dataIndex: 'createdDate', render    : (_, r) => formatDate(r.createdDate), width:'7%'},
                 {title: 'Created By', dataIndex: 'createdBy', width:'7%'},
                 {title: 'Status',width: 120, render:(_,r) =>{
                         var currentTime = new Date(); 

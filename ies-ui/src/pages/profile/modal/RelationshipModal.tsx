@@ -5,6 +5,7 @@ import { Modal, message, Button} from "antd";
 import { ProfileData } from "../data";
 import { simpleRequestActions } from "@/services/model";
 import { ProfileServicesEss } from "../service_ess";
+import { ProfileOutlined,SaveOutlined,CloseSquareOutlined } from "@ant-design/icons";
 
 interface Props extends ModalFormProps<RelationshipData> { 
     profile: ProfileData;
@@ -46,6 +47,7 @@ export default ({ profile,data,type,isAdmin,empId,cb, ...rest }: Props) => {
                 bmForm.id = (!!data!!?data!!.id:0);
                 bmForm.empId = empId;
                 bmForm.status=true;
+                bmForm.isDelete=0;
                 await ProfileServicesEss.saveRelationshipAdmin(bmForm)(requestActions); 
                 // call back fun
                 cb.onReload(); 
@@ -55,7 +57,7 @@ export default ({ profile,data,type,isAdmin,empId,cb, ...rest }: Props) => {
             },
         });
     }
-    return <ModalForm  {...rest} form={form} width={'30%'} title={!!data?"Edit Family member":"Add Family member"} 
+    return <ModalForm  {...rest} form={form} width={'30%'} title={!!data?<><ProfileOutlined /> Edit Family member</>:<><ProfileOutlined /> Add Family member</>} 
             submitter={isAdmin==2&&empId>0?
                 {
                     render: () => { 
@@ -64,14 +66,14 @@ export default ({ profile,data,type,isAdmin,empId,cb, ...rest }: Props) => {
                 }
                 :{
                     searchConfig: {
-                        submitText: 'Submit',
-                        resetText: 'Cancel',
+                        submitText: <div><SaveOutlined /> Submit</div>,
+                        resetText: <div><CloseSquareOutlined /> Cancel</div>,
                     }
                 }
             } 
         >  
         <ProCard bordered>
-            <ProFormText label="Full Name (Family Name, Given Name)" name={'relationshipName'} rules={[{ required: true }]} /> 
+            <ProFormText label="Full Name" name={'relationshipName'} rules={[{ required: true }]} placeholder={"Family Name, Given Name"} /> 
             <ProFormSelect rules={[{ required: true }]} 
                 label="Relationship"
                 // disabled = {!!data}

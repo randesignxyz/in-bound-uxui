@@ -2,6 +2,7 @@ import { Flex, ModalProps, Space, Typography } from "antd"
 import { ModalForm, ProCard, ProTable } from "@ant-design/pro-components"
 import { EducationData } from "../data.ess" 
 import { EditOutlined,DeleteOutlined } from "@ant-design/icons"
+import { formatYear } from "@/pages/utils";
 
 interface Props extends ModalProps {
     // data: BasicContactData;
@@ -23,7 +24,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
       <ModalForm title = "View education edit" {...rest} width={'90%'} submitter={false} > 
         <Space direction={"vertical"} style={{width:'100%'}}>
             <ProCard bordered>
-                <Typography.Title level={5}>Existing Datas Modified </Typography.Title> 
+                <Typography.Title level={5}>Existing Data Modified </Typography.Title> 
                 {/* existing data */} 
                 <ProTable<EducationData>
                     dataSource={oldData}
@@ -46,6 +47,8 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                             title: "Education Institution", dataIndex: "educationCenter"
                         },{
                             title: "Country of Education Institution", dataIndex: "countryEducationCenterName" 
+                        },{
+                            title: "Year", render: (_, r) => {return formatYear(r.fromYear)+" - "+ formatYear(r.toYear)}
                         },{
                             title: "Status", dataIndex: "statusName" 
                         },{   width: '70px',
@@ -88,6 +91,8 @@ export default ( {oldData,newData,essProfileId,isAdmin,cb, ...rest}: Props) => {
                             title: "Education Institution", dataIndex: "educationCenter"
                         },{
                             title: "Country of Education Institution", dataIndex: "countryEducationCenterName" 
+                        },{
+                            title: "Year", render: (_, r) => {return formatYear(r.fromYear)+" - "+ formatYear(r.toYear)}
                         },{
                             title: "Status", dataIndex: "statusName" 
                         },{   width: '70px',

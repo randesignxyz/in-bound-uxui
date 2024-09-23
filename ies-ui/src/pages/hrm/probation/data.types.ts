@@ -327,6 +327,43 @@ export type AppraisalDataLookup = {
 }
 
 
+
+
+
+
+
+/**  Probation Evaluation Employee */
+export type ProbationFormType = {
+    id: number
+    code: string
+    name: string
+    description?: string
+    status: boolean
+}
+export type ProbationEvaluationRs = {
+    id: number  
+    formNo: string
+    empId: number
+    empNo: string
+    empName: string
+    internalName?: string
+    empFirstName: string
+    empLastName: string
+    buId: number
+    buName?: string
+    departmentId: number
+    departmentName: String
+    subDepartmentId?: number
+    subDepartmentName?: string
+    jobId: number
+    jobTitle: string
+    reportToId?: number
+    reportTo?: string
+    hodId?: number
+    hodName?: string
+    joinedDate?:Moment
+}
+
 export type ProbationEvaluation = {
     id: number   
     key: string
@@ -338,4 +375,91 @@ export type ProbationEvaluation = {
     rating2?: number
     rating1?: number
     remark?: string
+    seqNo?: number
+}
+
+export type ProbationEvaluationResources = {
+    id: number
+    key:string
+    group: string   
+    title?: string
+    description?: string
+    active?: boolean
+    sort?: number
+    rating5?: number
+    rating4?: number
+    rating3?: number
+    rating2?: number
+    rating1?: number
+    seqNo?: number
+}
+
+export type ProbationEvaluationResourcesSupport = {
+    id: number
+    key?:string
+    group: string   
+    title?: string
+    description?: string
+    active?: boolean
+    sort?: number
+    fully?: number
+    partial?: number
+    no?: number
+    seqNo?: number
+}
+export type ProbationEvaluationRating = {
+    id: number
+    title?:string   
+    description?: string
+    description1?: string
+    startedScore?: number
+    endedScore?: number
+    score: number
+    seqNo?: number
+    status: boolean
+}
+
+
+export type ProbationEvaluationDetailRs = {
+    id: number
+    totalScore: number
+    totalScore1: number
+    totalScore2: number
+    totalScore3: number
+    maxScore: number
+    ratingScale: ProbationEvaluationRating[]
+    overallRating: ProbationEvaluationRating[]
+    probationEvaluation: ProbationEvaluationRs
+    section1: ProbationEvaluation[]
+    section2: ProbationEvaluation[]
+    section3: ProbationEvaluationResources[]
+    section4: ProbationEvaluationResourcesSupport[]
+    empAchievement: ProbationEmpImprovement[]
+    empImprovement: ProbationEmpImprovement[]
+}
+export type ProbationEmpImprovement = {
+    id: number
+    key:string
+    description: string
+    description1?: string
+    seqNo?: number
+}
+
+export type ProbationEvaluationPayload = {
+    instId: string
+    section1: ProbationEvaluation[]
+    section2: ProbationEvaluation[]
+    section3: ProbationEvaluationResources[]
+    section4: ProbationEvaluationResourcesSupport[]
+    empAchievement: ProbationEmpImprovement[]
+    empImprovement: ProbationEmpImprovement[]
+
+}
+export type ProbationEvaluationRef ={
+    id: string
+    formNo: string
+    empId: number
+    workflowStatus?: string
+    processStatus?: string
+    status?: string
 }

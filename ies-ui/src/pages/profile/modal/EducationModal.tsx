@@ -1,5 +1,5 @@
 import { LookupDataItem2 } from "@/services/data"
-import { ModalForm, ModalFormProps, ProCard, ProFormSelect, ProFormText } from "@ant-design/pro-components"
+import { ModalForm, ModalFormProps, ProCard, ProForm, ProFormDateYearRangePicker, ProFormSelect, ProFormText } from "@ant-design/pro-components"
 import { useForm } from "antd/lib/form/Form"
 import { EducationData, EssLookupData, FilesData, MarjorData } from "../data.ess"
 import { Flex, Space, Typography, Row, Col, Image,List, Modal, message, Button,} from 'antd';
@@ -9,6 +9,7 @@ import ImagePreview from "@/components/ImagePreview";
 import { ProfileServicesEss } from "../service_ess";
 import { ProfileData } from "../data";
 import { simpleRequestActions } from "@/services/model";
+import { ProfileOutlined,SaveOutlined,CloseSquareOutlined } from "@ant-design/icons";
 
 interface Props extends ModalFormProps<EducationData> { 
     profile: ProfileData;
@@ -25,7 +26,7 @@ interface Props extends ModalFormProps<EducationData> {
 }
 
 export default ({ profile,data,files,type,isAdmin,empId,marjor,cb, ...rest }: Props) => { 
-    const [form] = useForm<EducationData>(); 
+    const [form] = ProForm.useForm<EducationData>(); 
     const requestActions = simpleRequestActions();
     const [imageList, setImageList] = useState<FilesData[]>([]);
     const [createFileOther, selectedFileOther] = useState<any>();  
@@ -38,7 +39,8 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb, ...rest }: Pr
         setImageList(list); 
         // 
         if(!!data){
-            form.setFieldsValue(data!!);
+
+            form.setFieldsValue({...data!!,educationYear:[data.fromYear,data.toYear]});
         }
         else{
             form.resetFields();
@@ -53,6 +55,14 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb, ...rest }: Pr
     // 
     const onAdminSubmit = async ()=>{
         const bmForm = await form.validateFields(); 
+        // attachment files
+        if(type=="ADD"){ 
+            if(createFileOther.length==0){  
+                message.error('Please do select attachment files.');
+                return false;
+            } 
+        }
+        // submit
         Modal.confirm({
             title: 'Save Education',
             content: 'Are you sure?',
@@ -62,6 +72,13 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb, ...rest }: Pr
                 bmForm.id = (!!data!!?data!!.id:0);
                 bmForm.empId = empId;
                 bmForm.status=true;
+                bmForm.isDelete=0;
+
+                var educationYear = bmForm.educationYear;
+                
+                bmForm.fromYear = educationYear[0];
+                bmForm.toYear = educationYear[1]; 
+
                 await ProfileServicesEss.saveEducationAdmin(bmForm)(requestActions); 
                 // call back fun
                 cb.onReload(); 
@@ -71,7 +88,7 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb, ...rest }: Pr
             },
         });
     }
-    return <ModalForm  {...rest} form={form} width={'30%'} title={!!data?"Edit Education":"Add Education"}
+    return <ModalForm  {...rest} form={form} width={'30%'} title={!!data?<><ProfileOutlined /> Edit Education</>:<><ProfileOutlined /> Add Education</>}
         // onOpenChange={visible => {
         //     form.resetFields(); 
         //     form.setFieldsValue({
@@ -94,8 +111,8 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb, ...rest }: Pr
                 }
                 :{
                     searchConfig: {
-                        submitText: 'Submit',
-                        resetText: 'Cancel',
+                        submitText: <div><SaveOutlined /> Submit</div>,
+                        resetText: <div><CloseSquareOutlined /> Cancel</div>,
                     }
                 }
             } 
@@ -111,7 +128,7 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb, ...rest }: Pr
                 })} 
             />    
             <Row>
-                <Col span={12}>
+                <Col span={12} style={{padding:'3px'}}>
                     <ProFormSelect rules={[{ required: true }]} allowClear={true} 
                         name="degreeId" label = "Degree" placeholder="Degree"  
                         showSearch 
@@ -121,7 +138,7 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb, ...rest }: Pr
                         })}  
                     />   
                 </Col>
-                <Col span={12}>
+                <Col span={12} style={{padding:'3px'}}>
                     <ProFormSelect rules={[{ required: true }]} allowClear={true} 
                         name="statusId" label = "Status" placeholder="Status"  
                         showSearch 
@@ -132,6 +149,11 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb, ...rest }: Pr
                         })}  
                     /> 
                 </Col>
+            </Row>  
+            <Row>
+                <Col span={24} style={{padding:'3px'}}>
+                    <ProFormDateYearRangePicker name="educationYear" label = "Period Education" rules={[{ required: true }]}/>
+                </Col> 
             </Row>  
             <ProFormSelect rules={[{ required: true }]} allowClear={true}  
                 name="countryEducationCenter" label = "Country of Education Institution" placeholder="Country of Education Institution"  
@@ -146,7 +168,7 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb, ...rest }: Pr
         {/* Attachment files  */} 
         <div style={{marginTop:'10px'}}>
             <Space direction="horizontal">
-                <Typography.Title level={5}>Education Document</Typography.Title>
+                <Typography.Title level={5}>Education Document</Typography.Title><Typography.Title level={5} style={{color:'red'}}> (Required*)</Typography.Title>
             </Space>
             <div style={{fontSize:'12px'}}>(Degree and transcript or other related documents)</div>
         </div> 

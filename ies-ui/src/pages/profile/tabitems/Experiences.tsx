@@ -1,7 +1,7 @@
 
 import { ProTable } from "@ant-design/pro-components"  
-import { PlusCircleFilled,EditOutlined, EyeOutlined, PlusOutlined } from "@ant-design/icons"
-import { Button, message, Modal, Space, Typography,Card } from 'antd';
+import { PlusCircleFilled,EditOutlined, EyeOutlined, PlusOutlined, DeleteOutlined } from "@ant-design/icons"
+import { Button, message, Modal, Space, Typography,Card, Flex } from 'antd';
 import ExperienceModal from '../modal/ExperienceModal';
 import { useEffect,useState } from 'react';
 import { ProfileData} from '../data';
@@ -69,11 +69,16 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
           content: 'Are you sure?',
           onOk: async () => {
             try {
-                data.otherFile = createFileOther;
-                data.isDelete = 0;
-                await ProfileServicesEss.saveExperience(data)(requestActions);
-            //   const list = await ProfileServicesEss.listExperience(data.empId).query(requestActions);
-            //   setExperienceList(list);
+                data.otherFile = createFileOther||[];
+                data.isDelete = 0; 
+                
+                var startDate = data.experienceDate[0];
+                var endDate = data.experienceDate[1];
+
+                data.startDate = startDate;
+                data.endDate = endDate;  
+
+                await ProfileServicesEss.saveExperience(data)(requestActions); 
                 // call back fun
                 cb.onLoadData();
                 initData();
@@ -86,7 +91,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
     };
     const onDelete = async (data: ExperienceData) => {
         Modal.confirm({
-          title: 'Delete eduction',
+          title: 'Delete Experience',
           content: 'Are you sure you want to delete items?',
           onOk: async () => {
             try {
@@ -95,6 +100,28 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                 data.type = "ADD";
                 data.empId= profile.id;
                 await ProfileServicesEss.saveExperience(data)(requestActions); 
+                // call back fun
+                cb.onLoadData();
+                initData();
+                hideModal();
+            } catch (error: any) {
+              message.error(error.message || 'Failed to created.');
+            }
+          },
+        });
+    };
+    
+    const onDeleteAdmin = async (data: ExperienceData) => {
+        Modal.confirm({
+          title: 'Delete Experience',
+          content: 'Are you sure you want to delete items?',
+          onOk: async () => {
+            try {
+                data.otherFile = [];
+                data.isDelete = 1;
+                data.type = "ADD";
+                data.empId= profile.id;
+                await ProfileServicesEss.saveExperienceAdmin(data)(requestActions); 
                 // call back fun
                 cb.onLoadData();
                 initData();
@@ -116,14 +143,18 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
             <Space direction={"vertical"} style={{width:'100%'}}>
                 <div style={{width:'100%',textAlign:'right'}}>
                     <Space direction='horizontal'>
-                        <Button style={{display:(is_admin==2&&empId>0)?'':'none'}} onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}><PlusOutlined/> Add</Button>
+                        <Button style={{display:(is_admin==2&&empId>0)?'':'none'}} onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}
+                                icon={<PlusCircleFilled />}
+                                key="1"
+                                type="primary">Add</Button>
                     
                         <Button danger onClick={() => setModalEducationViewVisible({ type: 'VIEW', payload: null})} 
-                            style={{display:([7,5,4,3,2].find((element) => element == profile!!.ess.stepId))&&is_admin!=2?'':'none'}}><EyeOutlined/> View edit</Button>
+                            style={{display:([7,5,4,3,2].find((element) => element == profile!!.ess.stepId))&&is_admin!=2?'':'none'}}
+                                type="primary"><EyeOutlined/> View edit</Button>
 
                         {profile!!.ess.id!!<=0?'':<Button style={{display: ([7,5,2].find((element) => element == step))&&is_admin==0?'':'none'}}
                                 onClick={() => setModalVisible({ type: 'ADD', payload: null })}
-                                icon={<PlusOutlined />}
+                                icon={<PlusCircleFilled />}
                                 key="1"
                                 type="primary">
                                 Add
@@ -146,7 +177,11 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                         {
                             title: "Company Name", width: '250px',dataIndex: "companyName"
                         },{
-                            title: "Location", render: (_, r) => {return ((r.countryName==null?"":r.countryName)+" "+(r.provinceName==null?"":r.provinceName)+" "+(r.locationRemark==null?"":r.locationRemark));}
+                            title: "Location", render: (_, r) => {
+                                if(r.countryId==76){var location = (r.provinceName==null?"":r.provinceName)+", "+(r.countryName==null?"":r.countryName)}
+                                else{var location = (r.locationRemark==null?"":r.locationRemark)};
+                                return location;
+                        }
                         }, {
                             title: "Started Position", width: '250px',dataIndex: 'startPosition'
                         },{
@@ -164,16 +199,21 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                         },
                         {   width: 100,
                             render: (_, r) => {
-                                return (<>
+                                return (<Flex vertical={false} justify='space-between'>
                                   {profile!!.ess.id!!<=0?'':<a style={{display: (is_admin==0&&empId==0&&[7,5,2].find((element) => element == profile!!.ess.stepId))?'':'none'}}
-                                    onClick={() => setModalVisible({ type: 'EDIT', payload: r })} 
-                                  >
-                                    <EditOutlined/>
-                                  </a> }
+                                        onClick={() => setModalVisible({ type: 'EDIT', payload: r })} title='Edit'
+                                    >
+                                        <EditOutlined/>
+                                    </a> }
                                     <a style={{display: (is_admin==2&&empId>0)?'':'none'}} 
-                                        onClick={() => setModalVisible({ type: 'EDIT', payload: r })}>
+                                        onClick={() => setModalVisible({ type: 'EDIT', payload: r })} title='Edit'>
                                         <EditOutlined />
-                                    </a></>  
+                                    </a>
+                                    <a style={{display: (is_admin==2&&empId>0)?'':'none',color:'red'}} title="Remove" 
+                                        onClick={() => onDeleteAdmin(r)}>
+                                        <DeleteOutlined />
+                                    </a>
+                                    </Flex>
                                 );
                               },
                         }

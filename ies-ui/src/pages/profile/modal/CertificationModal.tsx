@@ -8,6 +8,7 @@ import ImagePreview from "@/components/ImagePreview";
 import { ProfileData } from "../data";
 import { simpleRequestActions } from "@/services/model";
 import { ProfileServicesEss } from "../service_ess";
+import { ProfileOutlined,SaveOutlined,CloseSquareOutlined } from "@ant-design/icons";
 
 interface Props extends ModalFormProps<SaveTraining> { 
     profile: ProfileData;
@@ -51,15 +52,29 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
     // 
     const onAdminSubmit = async ()=>{
         const bmForm = await form.validateFields(); 
+        // attachment files
+        if(type=="ADD"){ 
+            // 
+            if(createFileOther.length==0){  
+                message.error('Please do select attachment files.');
+                return false;
+            } 
+        }
+
+        // submit
         Modal.confirm({
-            title: 'Save Certification',
+            title: 'Save Professional Certification',
             content: 'Are you sure?',
             onOk: async () => {
               try { 
-                bmForm.otherFile = createFileOther;  
+                bmForm.otherFile = createFileOther||[];  
                 bmForm.id = (!!data!!?data!!.id:0);
                 bmForm.empId = empId;
+                bmForm.typeId = 2;
                 bmForm.status=true;
+                bmForm.isDelete = 0; 
+                bmForm.traincert=2;
+                bmForm.toYear = ""; 
                 await ProfileServicesEss.saveTrainingAdmin(bmForm)(requestActions); 
                 // call back fun
                 cb.onReload(); 
@@ -70,7 +85,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
         });
     }
     // 
-    return <ModalForm  {...rest} form={form} width={'30%'} title={!!data?"Edit Certification":"Add Certification"}
+    return <ModalForm  {...rest} form={form} width={'30%'} title={!!data?<><ProfileOutlined /> Edit Professional Certification</>:<><ProfileOutlined /> Add Professional Certification</>}
         // onOpenChange={visible => {
         //     form.resetFields()
         //     rest.onOpenChange?.(visible)
@@ -84,8 +99,8 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
                     }
                     :{
                         searchConfig: {
-                            submitText: 'Submit',
-                            resetText: 'Cancel',
+                            submitText: <div><SaveOutlined /> Submit</div>,
+                            resetText: <div><CloseSquareOutlined /> Cancel</div>,
                         }
                     }
                 } 
@@ -93,7 +108,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
         <ProCard bordered> 
             <ProFormText label="Certified Courses" name={'trainingCourse'} rules={[{ required: true }]} placeholder={"courses"}/> 
             <ProFormText label="Institution" name={'institution'} rules={[{ required: true }]} placeholder={"institution"}/> 
-            <ProFormDatePicker picker="month" label="In Month-Year" name={'year'} rules={[{ required: true }]} placeholder={"In Month-Year"}/>  
+            <ProFormDatePicker.Month label="In Month-Year" name={'year'} rules={[{ required: true }]} placeholder={"In Month-Year"}/>  
             <ProFormTextArea label="Description" name={'description'} placeholder={"description"}/> 
         </ProCard>
           
@@ -101,8 +116,10 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
         {/* Attachment files  */} 
         <div style={{marginTop:'10px'}}>
             <Space direction="horizontal">
-                <Typography.Title level={5}>Attachments</Typography.Title>
+                <Typography.Title level={5}>Attachments</Typography.Title><Typography.Title level={5} style={{color:'red'}}> (Required*)</Typography.Title>
             </Space>
+            <div style={{fontSize:'12px'}}>- Professional Certification (Professional's competency with international standards, industry specifications or technical rules)</div>
+            
         </div> 
         <ProCard size="small" bordered>   
             <FileUploader   

@@ -3,14 +3,16 @@ import {
   ProFormText,
   ProFormDatePicker,
   ProFormTextArea,  
-  ModalForm, 
+  ModalForm,
+  ProForm, 
+  ProFormDateRangePicker
 } from '@ant-design/pro-components';
-import { Button, message, Modal,  Space  } from 'antd';
-import { useForm } from 'antd/lib/form/Form';
+import { Button, message, Modal,  Space  } from 'antd'; 
 import { simpleRequestActions } from '@/services/model'; 
 import { OpenEssDataItem} from '../data_ess';
 import { ServicesEss } from '../service_ess_tran';  
 import { useEffect } from 'react';
+import moment from 'moment';
  
 interface Props {
   open?: boolean;
@@ -21,15 +23,22 @@ interface Props {
 
 export default ({ open, onOpenModalChange, refreshTable,data}: Props) => {
   const requestActions = simpleRequestActions();
-  const [formSubmittor] = useForm<OpenEssDataItem>();
+  const [formSubmittor] = ProForm.useForm<OpenEssDataItem>();
   const onSaveHandler = async (status: string) => {
-    try {
+    try { 
       const formData = await formSubmittor.validateFields();    
+          
+      var startDate = formData.annountmentDate[0];
+      var endDate = formData.annountmentDate[1];
+
+      formData.startDate = startDate;
+      formData.endDate = endDate; 
+
       const dataV = {id:data.id||-1,...formData} as OpenEssDataItem 
       Modal.confirm({
         title:'New Open',
         content:'Are you to create new open?',
-        onOk: async () => {
+        onOk: async () => { 
           await ServicesEss.saveOpenAnnounce(dataV)(requestActions).then(it=>{
             message.success('create successfully.');
             onOpenModalChange?.(false); 
@@ -47,8 +56,9 @@ export default ({ open, onOpenModalChange, refreshTable,data}: Props) => {
   useEffect(() => {
       initData()
   }, [data])
-  const initData = async () => {
-    formSubmittor.setFieldsValue(data);
+  const initData = async () => { 
+    var dataRange= [data.startDate,data.endDate];
+    formSubmittor.setFieldsValue({...data,annountmentDate:dataRange});
   }
   return (
     <ModalForm
@@ -85,7 +95,7 @@ export default ({ open, onOpenModalChange, refreshTable,data}: Props) => {
       <Space direction="vertical" style={{ width: '100%' }}>
         <ProCard size="small" bordered headerBordered>
           <Space direction="vertical" style={{ width: '100%' }}>
-            <ProFormText name = "openTitle" /*fieldProps={{ style: { height:'50px',fontSize:'24px' }}} */label = {<div><strong>Title</strong></div>} /> 
+            <ProFormText name = "openTitle" rules={[{ required: true }]} placeholder={"Title"} label = {<div><strong>Title</strong></div>} /> 
             {/* <ProFormSelect
               rules={[{ required: true }]} 
               label="Department" 
@@ -93,10 +103,12 @@ export default ({ open, onOpenModalChange, refreshTable,data}: Props) => {
               // options={lookupList.filter(it => it.type == 'CONTACT_TYPE').map(it => ({ label: it.name, value: it.id }))}
             /> */}
             <Space direction="horizontal" style={{ width: '100%' }}>
-              <ProFormDatePicker name = "startDate" /*fieldProps={{ style: { height:'50px',fontSize:'24px' }}}*/ label = {<div><strong>Started Date</strong></div>} />            
-              <ProFormDatePicker name = "endDate" /*fieldProps={{ style: { height:'50px',fontSize:'24px' }}}*/ label = {<div><strong>Ended Date</strong></div>} /> 
+              {/* <ProFormDatePicker name = "startDate" rules={[{ required: true }]}  label = {<div><strong>Start Date</strong></div>} />            
+              <ProFormDatePicker name = "endDate" rules={[{ required: true }]}  label = {<div><strong>End Date</strong></div>} />  */}
+              
+              <ProFormDateRangePicker label="Date" name={"annountmentDate"} rules={[{ required: true }]} />
             </Space> 
-            <ProFormTextArea name = "description" /*fieldProps={{ style: { height:'50px',fontSize:'24px' }}}*/ label = {<div><strong>Description</strong></div>} />  
+            <ProFormTextArea name = "description" rules={[{ required: true }]}  label = {<div><strong>Description</strong></div>} />  
           </Space>
         </ProCard>
       </Space>

@@ -75,6 +75,7 @@ export default ({ data, onSave, ...props }: Props) => {
                         initData?.tds != dataForm.tds ? `TDS from ${initData?.tds} to ${dataForm.tds}` : '',
                         initData?.ph != dataForm.ph ? `PH from ${initData?.ph} to ${dataForm.ph}` : '',
                         initData?.temperature != dataForm.temperature ? `Temperature from ${initData?.temperature} to ${dataForm.temperature}` : '',
+                        initData?.pressure != dataForm.pressure ? `Pressure from ${initData?.pressure} to ${dataForm.pressure}` : '',
                         initData?.air_release != air_release ? `Air Release from ${initData?.air_release == 1 ? 'Yes' : 'No'} to ${air_release == '1' ? 'Yes' : 'No'}` : '',
                         initData?.other != dataForm.other ? `Other from ${initData?.other == null ? '' : initData?.other} to ${dataForm.other}` : '',
                     ];

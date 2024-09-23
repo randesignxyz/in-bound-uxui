@@ -1,7 +1,7 @@
 import { ModalForm, ModalFormProps, ProFormDatePicker, ProFormSelect, ProFormText,ProCard, ProFormTextArea, ProFormCheckbox, ProFormDigit} from "@ant-design/pro-components"
 import { useForm } from "antd/lib/form/Form"
 import { SaveEssProfile,LocationData, FilesData, EssProfileData } from "../data.ess"
-import { Image, Flex, Spin, List,message, Button, Modal} from 'antd';
+import { Image, Flex, Spin, List,message, Button, Modal,InputNumber} from 'antd';
 import { Space,Row, Col,Typography} from 'antd';
 import { useEffect,useState } from 'react'; 
 import { simpleRequestActions } from '@/services/model';
@@ -9,7 +9,7 @@ import { ProfileServicesEss } from '../service_ess';
 import FileUploader , { UploadType } from '@/components/Attachment/FileUploader';
 import ImagePreview from "@/components/ImagePreview";
 import { ProfileData } from "../data";
-import { DeliveredProcedureOutlined } from "@ant-design/icons";
+import { DeliveredProcedureOutlined,SaveOutlined,CloseSquareOutlined,ProfileOutlined } from "@ant-design/icons";
 
 interface Props extends ModalFormProps<SaveEssProfile> { 
     data?: EssProfileData;
@@ -37,6 +37,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
     const [communeCA, setCommuneCA] = useState<LocationData[]>(); 
     const [isLoading,setLoading] = useState(false);  
     const [createFileOther, selectedFileOther] = useState<any>();  
+    const [isOther, setIsOtherVisible] = useState(true);
 
     useEffect(() => {
         initData();
@@ -53,6 +54,13 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
             //current address
             districtList(data!!.provinceCrId!!,3);
             communeList(data!!.districtCrId!!,3);
+            // 
+            if(data?.maritalStatusId==19){
+                setIsOtherVisible(false);
+            }
+            else{ 
+                setIsOtherVisible(true);
+            }
         }
          
     };  
@@ -102,8 +110,16 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
     // 
     const onAdminSubmit = async ()=>{
         const bmForm = await form.validateFields(); 
+        // attachment files
+        if(isAdmin!=2){
+            if(createFileOther.length==0){  
+                message.error('Please do select attachment files.');
+                return false;
+            } 
+        }
+        // submit
         Modal.confirm({
-            title: 'Save Lanuage',
+            title: 'Save Profile',
             content: 'Are you sure?',
             onOk: async () => {
               try { 
@@ -136,7 +152,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
         }); 
     }
     return <div>
-        <ModalForm  {...rest} form={form} width={'40%'} title="Edit Personal Information"
+        <ModalForm  {...rest} form={form} width={'40%'} title={<><ProfileOutlined /> Edit Personal Information</>}
             // onOpenChange={visible => {
             //     form.resetFields() 
             //     rest.onOpenChange?.(visible)
@@ -145,21 +161,30 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
             submitter={isAdmin==2&&empId>0?
                 {
                     render: () => { 
-                    return <><Button onClick={()=>{onAdminSubmit();}}>Submit</Button></>
+                    return <><Button type="primary" onClick={()=>{onAdminSubmit();}}>Submit</Button></>
                     }
                 }
                 :{
                     searchConfig: {
-                        submitText: 'Submit',
-                        resetText: 'Cancel',
+                        submitText: <div><SaveOutlined /> Submit</div>,
+                        resetText: <div><CloseSquareOutlined /> Cancel</div>,
                     }
                 }
             } 
             > 
             <Spin spinning = {isLoading}> 
                 <ProCard bordered style={{backgroundColor:'#f5f5f5'}}> 
-                    <ProFormText label="Name KH" name={'nameKh'} />
-                    <ProFormText label="Name EN" name={'nameEn'} />
+                    <Row>
+                        <Col span={8} style={{padding:'3px'}}> 
+                            <ProFormText label="Name KH" name={'nameKh'} placeholder={"គោត្តនាម និង នាម"}/>
+                        </Col>    
+                        <Col span={8} style={{padding:'3px'}}> 
+                            <ProFormText label="Last Name EN" name={'lastNameEn'} placeholder={"Given Name"}/>
+                        </Col>    
+                        <Col span={8} style={{padding:'3px'}}> 
+                            <ProFormText label="First Name EN" name={'firstNameEn'} placeholder={"Family name"}/>
+                        </Col>    
+                    </Row>
                     <Row>
                         <Col span={12}>
                             <ProFormDatePicker label="Date of Birth" name={'dateBirth'} />
@@ -185,14 +210,17 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                                 name={'maritalStatusId'} 
                                 options={profile.marriedStatus?.map((it) => {
                                     return { value: it.id, label: it.titleName };
-                                })} 
-                                // options={[
-                                //     { value: 1, label: "Single" },
-                                //     { value: 2, label: "Married"},
-                                //     { value: 3, label: "Divorced"},
-                                //     { value: 4, label: "Widowed"}    
-                                // ]}  
-                                // options={lookupList.filter(it => it.type == 'CONTACT_TYPE').map(it => ({ label: it.name, value: it.id }))}
+                                })}  
+                                fieldProps={{
+                                    onChange: (val) => { 
+                                        if(val==19){
+                                            setIsOtherVisible(false);
+                                        }else{ 
+                                            setIsOtherVisible(true);
+                                        }
+                                    }, 
+                                }} 
+                                
                             />
                         </Col>                
                         <Col span={12} style={{padding:'3px'}}>     
@@ -201,33 +229,25 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                                 name={'religionId'}
                                 options={profile.religion?.map((it) => {
                                     return { value: it.id, label: it.titleName };
-                                })} 
-                                // options={[
-                                //     { value: 1, label: "Buddhism"},
-                                //     { value: 2, label: "Islam"},   
-                                //     { value: 3, label: "Christianity"},   
-                                //     { value: 4, label: "Hinduism"},   
-                                //     { value: 5, label: "Judaism"} 
-                                // ]}  
-                                // options={lookupList.filter(it => it.type == 'CONTACT_TYPE').map(it => ({ label: it.name, value: it.id }))}
+                                })}  
                             />
                         </Col>       
                     </Row>
                     
                     {/*  */}
-                    <Row>
+                    <Row hidden={isOther}>
                         <Col span={8} style={{padding:'3px'}}>
                             <ProFormCheckbox label="Married to OML Staff" name={"marriedWith"} placeholder={"Married to OML Staff"}/>
                         </Col>
                         <Col span={12} style={{padding:'3px'}}>
-                            <ProFormDigit label="Spouse's OML Employee ID number" name={"spouseStaffId"} placeholder={"Spouse's OML Employee ID number"} />
+                            <ProFormDigit label="Spouse's OML Employee ID number" name={"spouseStaffId"} placeholder={"000000"} />
                         </Col>       
                     </Row>
 
                      
                 </ProCard>  
                 {/* National ID */}
-                <div style={{marginTop:'10px'}}><Typography.Title level={5}>National Brief</Typography.Title></div>
+                <div style={{marginTop:'10px'}}><Typography.Title level={5}>National ID</Typography.Title></div>
                 <ProCard bordered style={{backgroundColor:'#f5f5f5'}}> 
                     <Row>
                         <Col span={8} style={{padding:'3px'}}>
@@ -242,7 +262,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                     </Row>
                 </ProCard>
                 {/* Passport Number */}
-                <div style={{marginTop:'10px'}}><Typography.Title level={5}>Passport Brief</Typography.Title></div>
+                <div style={{marginTop:'10px'}}><Typography.Title level={5}>Passport ID</Typography.Title></div>
                 <ProCard bordered style={{backgroundColor:'#f5f5f5'}}> 
                     <Row>            
                         <Col span={8} style={{padding:'3px'}}>  
@@ -262,8 +282,9 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                 <ProCard bordered style={{backgroundColor:'#f5f5f5'}}> 
                     <Row>
                         <Col span={8} style={{padding:'3px'}}>
-                            <ProFormSelect 
+                            <ProFormSelect rules={[{ required: true }]}
                                 label="City/ Province" 
+                                showSearch
                                 name={'provincePbId'}
                                 options={locations?.map((it) => {
                                     return { value: it.id, label: it.name };
@@ -278,8 +299,9 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                         </Col> 
                         <Col span={8} style={{padding:'3px'}}>         
                             {/*  */}
-                            <ProFormSelect 
+                            <ProFormSelect rules={[{ required: true }]}
                                 label="Khan/ District" 
+                                showSearch
                                 name={'districtPbId'}
                                 options={districtPB?.map((it) => {
                                     return { value: it.id, label: it.name };
@@ -294,8 +316,9 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                         </Col> 
                         <Col span={8} style={{padding:'3px'}}>      
                             {/*  */}
-                            <ProFormSelect 
+                            <ProFormSelect rules={[{ required: true }]}
                                 label="Sangkhat/ Commune" 
+                                showSearch
                                 name={'communePbId'}
                                 options={communePB?.map((it) => {
                                     return { value: it.id, label: it.name };
@@ -310,9 +333,10 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                 <ProCard bordered style={{backgroundColor:'#f5f5f5'}}> 
                     <Row>
                         <Col span={8} style={{padding:'3px'}}>
-                            <ProFormSelect 
+                            <ProFormSelect rules={[{ required: true }]}
                                 label="City/ Province" 
                                 name={'provincePaId'}
+                                showSearch
                                 options={locations?.map((it) => {
                                     return { value: it.id, label: it.name };
                                 })}
@@ -326,9 +350,10 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                         </Col> 
                         <Col span={8} style={{padding:'3px'}}>   
                         {/*  */}
-                            <ProFormSelect 
+                            <ProFormSelect rules={[{ required: true }]}
                                 label="Khan/ District" 
                                 name={'districtPaId'}
+                                showSearch
                                 options={districtPA?.map((it) => {
                                     return { value: it.id, label: it.name };
                                 })}
@@ -342,9 +367,10 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                         </Col> 
                     {/*  */}
                         <Col span={8} style={{padding:'3px'}}>
-                            <ProFormSelect 
+                            <ProFormSelect rules={[{ required: true }]}
                                 label="Sangkhat/ Commune" 
                                 name={'communePaId'}
+                                showSearch
                                 options={communePA?.map((it) => {
                                     return { value: it.id, label: it.name };
                                 })}
@@ -355,19 +381,21 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                     <Flex vertical={false} gap="middle" style={{width:'100%'}}>
                     {/*  */}
                     <ProFormText label="House No" name={'homePaNo'} rules={[{ required: true }]}/>  
-                    <ProFormText label="Street" name={'streetPa'} rules={[{ required: true }]}/> 
+                    <ProFormText label="Street" name={'streetPa'} rules={[{ required: false }]}/> 
                     <ProFormText label="Group/Village" name={'villagePaId'} />
                     </Flex>
                 </ProCard>
 
                 {/* current address  */}
-                <div style={{marginTop:'10px'}}><Typography.Title level={5}>Current Address</Typography.Title> 
-                    <Button onClick={(e)=>onCloneAddress(form.getFieldsValue())}><DeliveredProcedureOutlined /> Clone Permanent Address</Button>
+                <div style={{marginTop:'10px'}}>
+                    <Typography.Title level={5}>Current Address</Typography.Title> 
+                    <Button onClick={(e)=>onCloneAddress(form.getFieldsValue())}><DeliveredProcedureOutlined /> Copy from Permanent Address</Button>
                 </div> 
                 <ProCard bordered style={{backgroundColor:'#f5f5f5'}}> 
                     <Row>
                         <Col span={8} style={{padding:'3px'}}>
-                            <ProFormSelect 
+                            <ProFormSelect rules={[{ required: true }]}
+                                showSearch
                                 label="City/ Province" 
                                 name={'provinceCrId'}
                                 options={locations?.map((it) => {
@@ -383,7 +411,8 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                         </Col>  
                         <Col span={8} style={{padding:'3px'}}>  
                             {/*  */}
-                            <ProFormSelect 
+                            <ProFormSelect rules={[{ required: true }]}
+                                showSearch
                                 label="Khan/ District" 
                                 name={'districtCrId'}
                                 options={districtCA?.map((it) => {
@@ -399,7 +428,8 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                         </Col>        
                     {/*  */}
                         <Col span={8} style={{padding:'3px'}}>
-                            <ProFormSelect 
+                            <ProFormSelect rules={[{ required: true }]}
+                                showSearch
                                 label="Sangkhat/ Commune" 
                                 name={'communeCrId'}
                                 options={communeCA?.map((it) => {
@@ -412,7 +442,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                     <Flex vertical={false} gap="middle" style={{width:'100%'}}>
                     {/*  */}
                     <ProFormText label="House No" name={'homeCrNo'} rules={[{ required: true }]}/>  
-                    <ProFormText label="Street" name={'streetCr'} rules={[{ required: true }]}/> 
+                    <ProFormText label="Street" name={'streetCr'} rules={[{ required: false }]}/> 
                     <ProFormText label="Group/Village" name={'villageCrId'} />
                     </Flex>
                 </ProCard>
@@ -422,8 +452,9 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                         <Typography.Title level={5}>Attachments </Typography.Title><Typography.Title level={5} style={{color:'red'}}> (Required*)</Typography.Title>
                         
                     </Space>
-                    <div style={{fontSize:'12px'}}>- National ID attachment (Image File or PDF)</div>
-                    <div style={{fontSize:'12px'}}>- Passport attachment (Image File or PDF)</div> 
+                    <div style={{fontSize:'12px'}}>- National ID (for updating ID number, Name, DOB, Expiry date)</div>
+                    <div style={{fontSize:'12px'}}>- Passport (for updating Passport number, Name, DOB, Expiry date)</div> 
+                    <div style={{fontSize:'12px'}}>- Marriage Certificate (for updating marital status)</div> 
                 </div> 
                 <ProCard size="small" bordered>   
                     <FileUploader   

@@ -48,3 +48,14 @@ export type HACCPMonitoringActivities = {
     haccp_id: string,
     line_id?: number
 }
+
+export type HACCPMonitoringInstruction={
+    id?:number,
+    instruction?:string,
+    group?:string,
+    createdBy?: string,
+    createdDate?: Moment,
+    lastModifiedBy?: string,
+    lastModifiedDate?: Moment,
+    active?:number
+}

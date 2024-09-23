@@ -47,16 +47,21 @@ function Profile() {
       _valueText = val;
   } 
   // start modified on profiles 
-  const onStartModify = (step_id : number)=>{ 
+  const onStartModify = (step_id : number,sms:string)=>{ 
     //
     Modal.confirm({
-      title: 'Start Modify',
-      content: 'Do you want to start modify data?',
+      title: sms,
+      content: 'Do you want to '+sms+' data?',
       onOk: async () => {
         try {  
           if(step_id==2){ 
             await ProfileServicesEss.saveEssProfile({...profile?.profile, empId: profile?.id,step:step_id,openEssId:profile?.ess.id,otherFile:[],remark:'',status:true})(requestActions); 
-          }else{ 
+          }
+          else if(step_id==9){ // not yet have action need to be make another step for save draft action
+            //
+            message.info("Save to draft...");
+          }
+          else{ 
             await ProfileServicesEss.saveEssProfile({...profile?.profile_draft, empId: profile?.id,step:step_id,openEssId:profile?.ess.id,otherFile:[],remark:'',status:true})(requestActions); 
           }
           initData();  
@@ -144,14 +149,14 @@ function Profile() {
     <RouteContext.Consumer>
       {({ isMobile }) => (
         <ProDescriptions className={styles.headerList} size="small" column={isMobile ? 1 : 2}>
-          <ProDescriptions.Item label="Name KH">{data?.internalName}</ProDescriptions.Item>
-          <ProDescriptions.Item label="Name EN">{data?.firstName} {data?.lastName}</ProDescriptions.Item>
+          <ProDescriptions.Item label="Name KH">{data?.profile.nameKh}</ProDescriptions.Item>
+          <ProDescriptions.Item label="Name EN">{data?.profile.lastNameEn} {data?.profile.firstNameEn}</ProDescriptions.Item>
           <ProDescriptions.Item label="Company">{data?.company}</ProDescriptions.Item>
           <ProDescriptions.Item label="Location">{data?.location}</ProDescriptions.Item>
           <ProDescriptions.Item label="Function">{data?.functions}</ProDescriptions.Item>
           <ProDescriptions.Item label="Position">{data?.position}</ProDescriptions.Item>
           <ProDescriptions.Item> </ProDescriptions.Item> 
-          <ProDescriptions.Item label="Start Date">{data?.dateJoined && formatDateTime(data.dateJoined)}</ProDescriptions.Item> 
+          <ProDescriptions.Item label="Start Date">{data?.dateJoined && formatDate(data.dateJoined)}</ProDescriptions.Item> 
         </ProDescriptions>
       )}
     </RouteContext.Consumer>
@@ -267,24 +272,25 @@ function Profile() {
 
   // stage
   const _info = "Period: From  "+(profile?.ess.id!!<=0?'':formatDate(profile?.ess.startDate))+" To  "+(profile?.ess.id!!<=0?'':formatDate(profile?.ess.endDate))+"";
-  const _stag = ["Cancel Updated","Start","Started Modified","Reviewing","Rejected with Revoke","Revoke","Approval","Cancelled Submitted"];
+  const _stag = ["Cancel Updated","Getting Started","Start Modifying","Reviewing","Rejected","Re-Edit","Approval","Cancelled Submitted"];
   const _stag_message = [
     /*0*/"Cancel Updated",
     /*1*/_info,
-    /*2*/"Employee Started modified profiles data",
+    /*2*/"Employee starts modifying profile",
     /*3*/"Your request update is under review",
     /*4*/ (profile?.profile_draft==null?'':profile?.profile_draft.remark),
-    /*5*/ "Revoke", 
+    /*5*/ (profile?.profile_draft==null?'':profile?.profile_draft.remark), 
     /*6*/ "Approval",
     /*7*/ "Cancelled Submitted"
   ];
+  
   //
   return (
     <Spin spinning = {requestActions.request?.loading}> 
       {/*  
         checking open announcement expiry
       */}  
-      {profile?.ess.id!!<=0?'': profile?.ess.empClosed==2||profile?.ess.stag==8?'':
+      {profile?.ess.id!!<=0?'': profile?.ess.empClosed==2?'': profile?.ess.stag==8?'':
             <Message visible={(step==6&&Number(id)==0)?true:false}
               message={_stag[step]}
               description={_stag_message[step]}
@@ -295,7 +301,7 @@ function Profile() {
               is_admin={[1,2].find((element) => element == Number(is_admin))?true:false}
               cb={{
                 onStartModify: (stepId) => { 
-                  onStartModify(stepId);
+                  onStartModify(stepId,'Start Modify Data');
                 },
               }}
             /> 
@@ -309,14 +315,14 @@ function Profile() {
         onTabChange={onOperationTabChange}
         tabList={operationTabList} 
         footer={[ 
-          profile!!.ess.id!!<=0?'':<Button style={{display:(step==2&&Number(id)==0)?'':'none',color: 'red'}} onClick={()=>onStartModify(8)}><ExclamationCircleOutlined /> Cancel Update</Button>,          
-          profile!!.ess.id!!<=0?'':<Button type="primary" style={{display:([7,5,2].find((element) => element == step))&&Number(id)==0?'':'none'}} onClick={()=>onStartModify(3)}><EditOutlined/> Submit Update</Button>,
-          profile!!.ess.id!!<=0?'':<Button style={{display:(step==3&&Number(id)==0)==true?'':'none',color: 'red'}} onClick={()=>onStartModify(7)}><HistoryOutlined/> Cancel Submitted</Button>,
-          profile!!.ess.id!!<=0?'':<Button style={{display:(step==4&&Number(id)==0)==true?'':'none',color: 'red'}} onClick={()=>onStartResubmit(5)}><HistoryOutlined/> Re-Edit</Button>, 
+          profile!!.ess.id!!<=0?'':<Button style={{display:(step==2&&Number(id)==0)?'':'none',color: 'red'}} onClick={()=>onStartModify(8,'Cancel Update')}><ExclamationCircleOutlined /> Cancel Update</Button>,   
+          <Button style={{background:'#E7E6E6'}} style={{display:([7,5,2].find((element) => element == step))&&Number(id)==0?'':'none'}} onClick={()=>onStartModify(9,'Save Draft')}><EditOutlined/> Save Draft</Button>,       
+          profile!!.ess.id!!<=0?'':<Button type="primary" style={{display:([7,5,2].find((element) => element == step))&&Number(id)==0?'':'none'}} onClick={()=>onStartModify(3,'Submit Update')}><EditOutlined/> Submit Update</Button>,
+          profile!!.ess.id!!<=0?'':<Button style={{display:(step==3&&Number(id)==0)==true?'':'none',color: 'red'}} onClick={()=>onStartModify(7,'Cancel Submitted')}><HistoryOutlined/> Cancel Submitted</Button>,
+          // profile!!.ess.id!!<=0?'':<Button style={{display:(step==4&&Number(id)==0)==true?'':'none',color: 'red'}} onClick={()=>onStartResubmit(5)}><HistoryOutlined/> Re-Edit</Button>, 
 
           profile!!.ess.id!!<=0?'':<Button style={{color: 'red',display:(step==3&&Number(id)>0)==true?'':'none'}} onClick={()=>onRejected(4)}><EditOutlined/> Rejected</Button>,
           
-          // <Button type="primary" style={{display:(step==3)==true?'':'none'}} onClick={()=>onViewProfileData()}><EyeOutlined/> View edit</Button>,
           <Button type="primary" style={{display:(step==3&&Number(id)>0)==true?'':'none'}} onClick={()=>onStartAproval(6)}><EditOutlined/> Approval</Button>, 
 
         ]}

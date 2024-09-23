@@ -420,6 +420,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
             newData={trainingNewList}
             essProfileId={profile.id} 
             files={trainingAllImageList}
+            step={step}
             cb={{
                 onOpenEditForm: (id,type) => { 
                     onOpenForm(id,type);
@@ -447,6 +448,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
             newData={certificateNewList}
             essProfileId={profile.id} 
             files={trainingAllImageList}
+            step={step}
             cb={{
                 onOpenEditForm: (id,type) => { 
                     onOpenCertificatedForm(id,type);

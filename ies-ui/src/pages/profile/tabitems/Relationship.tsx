@@ -220,6 +220,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
             oldData={relationshipOldList}
             newData={relationshipNewList}
             essProfileId={profile.id}  
+            step={step}
             cb={{
                 onOpenEditForm: (id,type) => { 
                     onOpenForm(id,type);

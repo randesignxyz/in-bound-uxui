@@ -32,19 +32,25 @@ export const ServicesEss = {
       page: params.pagination?.current,
     },
   }),
-  listEssOpenItem: (params: TableViewSearchParams<OpenAdvanceSearchParams>,id:number,step:number) => fetchDataPagingService<OpenEssDataItem, { id: number,step:number }>({
+  listEssOpenItem: (id: number,step:number,permissionLevel:'') => fetchDataListService<OpenEssDataItem, { id: number,step:number,permissionLevel:'' }>({
     actionName: 'list-ess-open-item',
     endpoint: 'HR',
-    payload: {
-      ...params.criteria,
-      id: id,
-      step: step
-    },
-    pagination: {
-      pageSize: params.pagination?.pageSize,
-      page: params.pagination?.current,
-    },
-  }), 
+    payload: { id: id, step: step,permissionLevel:permissionLevel }
+  }),  
+   
+  // listEssOpenItem: (params: TableViewSearchParams<OpenAdvanceSearchParams>,id:number,step:number) => fetchDataPagingService<OpenEssDataItem, { id: number,step:number }>({
+  //   actionName: 'list-ess-open-item',
+  //   endpoint: 'HR',
+  //   payload: {
+  //     ...params.criteria,
+  //     id: id,
+  //     step: step
+  //   },
+  //   pagination: {
+  //     pageSize: params.pagination?.pageSize,
+  //     page: params.pagination?.current,
+  //   },
+  // }), 
   
   saveOpenAnnounce: (data: OpenEssDataItem) => execDataService0<OpenEssDataItem>({
     actionName: 'save-create-announce-open',

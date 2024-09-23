@@ -1,5 +1,7 @@
 import essIcon from '@/assets/ess.png';
 import essAnnIcon from '@/assets/ess-announce.png';  
+import fBookingCarIcon from '@/assets/booking_car.png';  
+import fBookRoomIcon from '@/assets/booking_room.png';  
 import ListMenuComp, { ListMenuItem } from '@/components/ListMenu'; 
 import { useAccess } from '@umijs/max'; 
 import { PageContainer } from '@ant-design/pro-components';
@@ -25,10 +27,18 @@ export default () => {
           },
           {
             id: 'booking_car',
-            name: 'Booking Car',
-            description: 'Booking Car',
+            name: 'My Booking Car',
+            description: 'My Booking Car',
             link: `${HrmPaths.bkc}/rqblist`, 
-            icon: essAnnIcon,
+            icon: fBookingCarIcon,
+            visible: true
+          },   
+          {
+            id: 'booking_room',
+            name: 'My Booking Room',
+            description: 'My Booking Room',
+            link: `${HrmPaths.bkc}/rqroomlist`, 
+            icon: fBookRoomIcon,
             visible: true
           },           
           {

@@ -7,10 +7,10 @@ import { useEffect, useRef,useState } from "react";
 import { OpenEssDataItem,OpenAdvanceSearchParams } from "../data_ft"; 
 import { ServicesEss } from '../service_ft_tran';  
 import Status from "@/components/Status"; 
-import { IssuesCloseOutlined, CarOutlined, HistoryOutlined, EditOutlined, RedoOutlined, EllipsisOutlined,SoundOutlined, ExportOutlined } from "@ant-design/icons";
+import { IssuesCloseOutlined, CarOutlined, HistoryOutlined, EditOutlined, RedoOutlined, EllipsisOutlined,DeploymentUnitOutlined, ExportOutlined } from "@ant-design/icons";
 import { history } from 'umi';
 import { Model } from "./../model";
-import AppNewOpenForm from "./../AppNewOpenForm"; 
+import NewRequestCar from "./NewRequestCar"; 
 import moment from 'moment'; 
 import { MenuProps } from "rc-menu";
 
@@ -68,55 +68,37 @@ export default ({ onAdd, onEdit }: Props) => {
     const actionItem1 =(record:OpenEssDataItem,isExp:number):MenuProps["items"] =>[
         {
             key: "1",
-            label: "Edit",
-            itemIcon: <EditOutlined />,
+            label: <><EditOutlined /> Edit</>,
+            // itemIcon: <EditOutlined />,
             disabled:record.empClosed==0?false:true,
             onClick: async () => {
                 onOpenESS(record);
             }
         },
-        // {
-        //     key: "2",
-        //     label: "Revoke",
-        //     itemIcon: <HistoryOutlined />,
-        //     disabled:record.stepId==2?false:true,
-        //     onClick: async () => { 
-        //         onOpenESS(record);
-        //     }
-        // },
-        // {
-        //     key: "3",
-        //     label: <div title="it is meaning that all employee not yet editing info and will forward to next date!">Forwarding</div>, 
-        //     itemIcon: <RedoOutlined />,
-        //     disabled:record.stepId==1?false:true,
-        //     onClick: async () => {
-        //         onOpenESS(record);
-        //     }
-        // },
+        {
+            key: "2",
+            label: <><HistoryOutlined /> Approval</>,
+            // itemIcon: <HistoryOutlined />,
+            disabled:record.stepId==2?false:true,
+            onClick: async () => { 
+                onOpenESS(record);
+            }
+        },
+        {
+            key: "3",
+            label: <><RedoOutlined /> Rejected</>, 
+            // itemIcon: <RedoOutlined />,
+            disabled:record.stepId==1?false:true,
+            onClick: async () => {
+                onOpenESS(record);
+            }
+        },
         {
             key: "4",
-            label: <div title="Force to close announcement before expiry date!">Force Close</div>,
-            itemIcon: <IssuesCloseOutlined />, 
+            label: <><DeploymentUnitOutlined /> Diagram</>,
+            // itemIcon: <IssuesCloseOutlined />, 
             style:{color:'red'},
-            disabled:record.stepId==1?false:true,
-            onClick: async () => {   
-                Modal.confirm({
-                    title: 'Force Close',
-                    content: 'Do you want to Force Close?',
-                    onOk: async () => {
-                      try {         
-                            record.stepId = 2;
-                            await ServicesEss.closeAnnounce({...record})(requestActions).then(it=>{
-                            message.success('create successfully.'); 
-                            actionRef?.current?.reloadAndRest?.();
-                            setActive(0);
-                        }) 
-                      } catch (error: any) {
-                        message.error(error.message || 'Failed to created.');
-                      }
-                    },
-                  }); 
-            }
+            disabled:record.stepId==1?false:true 
         } 
        
     ]
@@ -129,7 +111,7 @@ export default ({ onAdd, onEdit }: Props) => {
                     actions: [false],
                 },
             }} 
-            extraRightFilter={active>0?'':<Tooltip placement="bottom" title="Create new open ess"><Button icon={<CarOutlined />} onClick={onOpenESS}>New Request Car</Button></Tooltip>}
+            extraRightFilter={<Tooltip placement="bottom"><Button icon={<CarOutlined />} onClick={(e)=>onOpenESS(null)}>New Request Car</Button></Tooltip>}
             actionHandlers={{ 
                 onRequest: (criteria, pagination, sort) => onRequestHandler({
                     criteria: {
@@ -146,40 +128,44 @@ export default ({ onAdd, onEdit }: Props) => {
                     <Radio.Group optionType="button"  defaultValue={"1"}
                         options={[
                             { label: "All", value: "0" },
-                            { label: "Opening", value: "1" },
-                            { label: "Closed", value: "2" },
-                            // { label: "Deleted", value: "3" }
+                            { label: "Pending", value: "1" },
+                            { label: "Approved", value: "2" },
+                            { label: "Rejected", value: "3" } 
                         ]}
                         onChange={(e) => {setAdanceSearch(e.target.value);}}
                     />
                 </Space>
             }  
             columns={[
-                {title: 'ID', dataIndex: 'id', sorter: 'id',width:'5%'},
-                {title: 'Title', dataIndex: 'openTitle',
-                render(_, entity) {
-                    return <Flex gap={5}><Button
-                        size="small"
-                        type="link"
-                        title="Open in new tab"
-                        icon={<ExportOutlined />}
-                        onClick={() => {
-                            window
-                                .open(
-                                    `/ess/details/${entity.id}`,
-                                )
-                                ?.focus();
-                        }}
-                    /> <a onClick={() => { history.push(`/ess/details/${entity.id}`) }}>{entity.openTitle}</a>
-                    </Flex>
+                {title: 'ID', dataIndex: 'id', width:'3%'},
+                {title: 'Destination', dataIndex: 'openTitle', width:'250px',
+                    render(_, entity) {
+                        return <Flex gap={5}><Button
+                            size="small"
+                            type="link"
+                            title="Open in new tab"
+                            icon={<ExportOutlined />}
+                            onClick={() => {
+                                window
+                                    .open(
+                                        `/ess/details/${entity.id}`,
+                                    )
+                                    ?.focus();
+                            }}
+                        /> <a onClick={() => { history.push(`/ess/details/${entity.id}`) }}>{entity.openTitle}</a>
+                        </Flex>
+                    },
                 },
-                },
-                {title: 'Started Date', dataIndex: 'startDate', render    : (_, r) => moment(r.startDate).format("DD-MMM-YYYY"),width:'7%'},
-                {title: 'End Date', dataIndex: 'endDate', render    : (_, r) => moment(r.endDate).format("DD-MMM-YYYY"), width:'7%'},
-                {title: 'Description', dataIndex:  'description', },
-                {title: 'Created Date', dataIndex: 'createdDate', render    : (_, r) => moment(r.createdDate).format("DD-MMM-YYYY"), width:'7%'},
-                {title: 'Created By', dataIndex: 'createdBy', width:'7%'},
-                {title: 'Status',width: 120, render:(_,r) =>{
+                {title: 'Purpose', dataIndex: 'id', width:'250px'},
+                {title: 'Number of Person', dataIndex: 'id',align:'center',width: 120 },
+                {title: 'License Plate', dataIndex: 'id',align:'center',width: 120 }, 
+                {title: 'Occupy Date', dataIndex: 'startDate', align:'center',render    : (_, r) => moment(r.startDate).format("DD-MMM-YYYY"),width: 120 },
+                {title: 'Start Hour', dataIndex: 'endDate', align:'center',render    : (_, r) => moment(r.endDate).format("HH:ss"), width: 120 },
+                {title: 'End Hour', dataIndex: 'endDate', align:'center',render    : (_, r) => moment(r.endDate).format("HH:ss"), width: 120 },
+                {title: 'Total Hour', dataIndex: 'id',align:'center',width: 120 }, 
+                {title: 'Requested Date', dataIndex: 'createdDate', align:'center',render    : (_, r) => moment(r.createdDate).format("DD-MMM-YYYY"), width: 120 },
+                {title: 'Requested By', dataIndex: 'createdBy', align:'center',width: 120 },
+                {title: 'Status',width: 90, align:'center',render:(_,r) =>{
                         var currentTime = new Date(); 
                         
                         var _status = 'PENDING';
@@ -189,11 +175,11 @@ export default ({ onAdd, onEdit }: Props) => {
                             _status = "Expired";
                         }else{
                             if (r.stepId==1){
-                                _status = "Open";
+                                _status = "Pending";
                             } else if (r.stepId==2){
-                                _status = "Closed";
+                                _status = "Approved";
                             } else if (r.stepId==3){
-                                _status = "DELETED";
+                                _status = "Rejected";
                             }
 
                         } 
@@ -209,14 +195,14 @@ export default ({ onAdd, onEdit }: Props) => {
                         } 
                         return (<>
                                 <Dropdown
-                                        menu={{
-                                            items:actionItem1(r,_val),
-                                            style:{
-                                                width:200
-                                            }
-                                        }}
-                                    ><EllipsisOutlined />
-                                    </Dropdown>  
+                                    menu={{
+                                        items:actionItem1(r,_val),
+                                        style:{
+                                            width:200
+                                        }
+                                    }}
+                                ><EllipsisOutlined />
+                                </Dropdown>  
                                 </>
                             );
                         },
@@ -228,7 +214,7 @@ export default ({ onAdd, onEdit }: Props) => {
 
         />
 
-        {modals.isVisible('CreateNewOpenForm') && <AppNewOpenForm
+        {modals.isVisible('CreateNewOpenForm') && <NewRequestCar
             open={modals.isVisible('CreateNewOpenForm')}
             onOpenModalChange={(v: any) => !v && modals.hideModal('CreateNewOpenForm')}
             refreshTable={refeshTable}

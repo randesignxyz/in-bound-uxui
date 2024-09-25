@@ -52,8 +52,8 @@ export default () => {
     },
     {
       id: 'dailyHACCPMonitoring',
-      name: 'Daily HACCP Monitoring',
-      description: 'Daily HACCP Monitoring',
+      name: 'Daily HACCP Monitoring Line',
+      description: 'Daily HACCP Monitoring Line',
       icon: dailyWaterTreatmentIcon,
       link: `${ProdPaths.dailyHACCPMonitoring}/list`,
       visible: access.canAccessDailyHACCPMonitoringMenuItem,

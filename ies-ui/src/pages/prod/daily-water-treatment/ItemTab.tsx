@@ -66,7 +66,7 @@ export default ({ data, refresh, ...rest }: Props) => {
                         render: (_, r, index) => index + 1
                     },
                     {
-                        title: 'Machine',
+                        title: 'Process',
                         dataIndex: 'machine',
                         render: (_, r) => <Badge
                             size="small"

@@ -9,21 +9,23 @@ import { HACCPMonitoring, HACCPMonitoringList } from './data';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 
 interface Props extends FormModalProps {
-    data?: HACCPMonitoring
+    data?: HACCPMonitoringList
     type?: string
     onSave: (data: HACCPMonitoringList) => void
+    line?: string
+    assign_to?: string
 }
-export default ({ data, onSave, type, ...props }: Props) => {
+export default ({ data, onSave, type, line, assign_to, ...props }: Props) => {
     const access = useAccess();
     const [form] = useForm<HACCPMonitoringList>();
-    const [activityControl, setActivityControl] = useState()
+    const [activityControl, setActivityControl] = useState<string | undefined | number>(undefined)
 
     const { Text } = Typography;
 
     useEffect(() => {
         if (props.open) {
             form.resetFields();
-            setActivityControl(undefined)
+            setActivityControl(data?.activity_control)
         }
     }, [props.open]);
 
@@ -32,8 +34,8 @@ export default ({ data, onSave, type, ...props }: Props) => {
             title="Inventory Transfer"
             {...props}
             width={'600px'}
-            // readOnly={!(data?.assign_to_user?.split(" ").includes(access.currentUser?.login || '') || access.canAssignItemPre)}            
-            // okText={data?.status !== 'pending' ? 'Update' : 'Submit'}
+            readOnly={!(assign_to?.split(" ").includes(access.currentUser?.login || '') || access.canAssignItemPre)}
+            okText={data?.status !== 'pending' ? 'Update' : 'Submit'}
             onSubmit={async () => {
                 const dataForm = await form.validateFields();
                 let updatedWarningCount = 0;
@@ -65,7 +67,8 @@ export default ({ data, onSave, type, ...props }: Props) => {
                 }
                 const entity = {
                     ...dataForm,
-                    line:data?.line,
+                    id: data?.id,
+                    line: line,
                     warning_count: updatedWarningCount,
                     status: status,
                     activity_control: activityControl,
@@ -95,7 +98,7 @@ export default ({ data, onSave, type, ...props }: Props) => {
                         <Col span={12}>
                             <ProFormText
                                 hasFeedback={false}
-                                rules={[{ required: true, message: 'Please Enter Side-wall' },{ pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
+                                rules={[{ required: true, message: 'Please Enter Side-wall' }, { pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
                                 label={
                                     <ProForm.Item
                                         noStyle
@@ -107,7 +110,7 @@ export default ({ data, onSave, type, ...props }: Props) => {
                                                 <div>
                                                     Side-wall
                                                     <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px' }}>
-                                                    (Sensitive 100-110%)
+                                                        (Sensitive 100-110%)
                                                     </span>
                                                     {(Number(sideWallValue) < 100 || Number(sideWallValue) > 110) && sideWallValue !== '' && sideWallValue !== null && (
                                                         <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} />
@@ -121,14 +124,14 @@ export default ({ data, onSave, type, ...props }: Props) => {
                                 fieldProps={{
                                     type: 'number',
                                     step: 'any'
-                                  }}
-                            // initialValue={data?.raw_water}
+                                }}
+                                initialValue={data?.side_wall}
                             />
                         </Col>
                         <Col span={12} style={{ display: 'flex', flexDirection: 'column' }}>
                             <ProFormText
                                 hasFeedback={false}
-                                rules={[{ required: true, message: 'Please Enter Air Pressure' },{ pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
+                                rules={[{ required: true, message: 'Please Enter Air Pressure' }, { pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
                                 label={
                                     <ProForm.Item
                                         noStyle
@@ -140,9 +143,9 @@ export default ({ data, onSave, type, ...props }: Props) => {
                                                 <div>
                                                     Air Pressure
                                                     <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px' }}>
-                                                    (&gt; 1.5 bar)
+                                                        (&gt; 1.5 bar)
                                                     </span>
-                                                    {Number(airPressureValue)  < 1.5 && airPressureValue !== '' && airPressureValue !== null && (
+                                                    {Number(airPressureValue) < 1.5 && airPressureValue !== '' && airPressureValue !== null && (
                                                         <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} />
                                                     )}
                                                 </div>
@@ -154,7 +157,8 @@ export default ({ data, onSave, type, ...props }: Props) => {
                                 fieldProps={{
                                     type: 'number',
                                     step: 'any'
-                                  }}
+                                }}
+                                initialValue={data?.air_pressure}
                             />
                         </Col>
                     </Row>
@@ -174,7 +178,7 @@ export default ({ data, onSave, type, ...props }: Props) => {
                         <Col span={12}>
                             <ProFormText
                                 hasFeedback={false}
-                                rules={[{ required: true, message: 'Please Enter Temperature Preform' },{ pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
+                                rules={[{ required: true, message: 'Please Enter Temperature Preform' }, { pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
                                 label={
                                     <ProForm.Item
                                         noStyle
@@ -186,7 +190,7 @@ export default ({ data, onSave, type, ...props }: Props) => {
                                                 <div>
                                                     Temperature Preform
                                                     <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px' }}>
-                                                    (87-115 °C)
+                                                        (87-115 °C)
                                                     </span>
                                                     {(Number(temperaturePreformValue) < 87 || Number(temperaturePreformValue) > 115) && temperaturePreformValue !== '' && temperaturePreformValue !== null && (
                                                         <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} />
@@ -200,14 +204,15 @@ export default ({ data, onSave, type, ...props }: Props) => {
                                 fieldProps={{
                                     type: 'number',
                                     step: 'any'
-                                  }}
+                                }}
+                                initialValue={data?.temperature_preform}
                             // initialValue={data?.acf}
                             />
                         </Col>
                         <Col span={12} style={{ display: 'flex', flexDirection: 'column' }}>
-                        <ProFormText
+                            <ProFormText
                                 hasFeedback={false}
-                                rules={[{ required: true, message: 'Please Enter FG [O₃]' },{ pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
+                                rules={[{ required: true, message: 'Please Enter FG [O₃]' }, { pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
                                 label={
                                     <ProForm.Item
                                         noStyle
@@ -219,7 +224,7 @@ export default ({ data, onSave, type, ...props }: Props) => {
                                                 <div>
                                                     FG [O₃]
                                                     <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px' }}>
-                                                    (0.05-0.4 ppm)
+                                                        (0.05-0.4 ppm)
                                                     </span>
                                                     {(Number(fgValue) < 0.05 || Number(fgValue) > 0.4) && fgValue !== '' && fgValue !== null && (
                                                         <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} />
@@ -233,7 +238,8 @@ export default ({ data, onSave, type, ...props }: Props) => {
                                 fieldProps={{
                                     type: 'number',
                                     step: 'any'
-                                  }}
+                                }}
+                                initialValue={data?.fg}
                             />
                         </Col>
                     </Row>
@@ -245,10 +251,10 @@ export default ({ data, onSave, type, ...props }: Props) => {
                         </Col>
                     </Row>
                     <Row gutter={6}>
-                    <Col span={24} style={{ display: 'flex', flexDirection: 'column' }}>
-                        <ProFormText
+                        <Col span={24} style={{ display: 'flex', flexDirection: 'column' }}>
+                            <ProFormText
                                 hasFeedback={false}
-                                rules={[{ required: true, message: 'Please Enter Treated water pressure/Flow scale' },{ pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
+                                rules={[{ required: true, message: 'Please Enter Treated water pressure/Flow scale' }, { pattern: /^\d*\.?\d+$/, message: 'Please enter a valid number' }]}
                                 label={
                                     <ProForm.Item
                                         noStyle
@@ -260,7 +266,7 @@ export default ({ data, onSave, type, ...props }: Props) => {
                                                 <div>
                                                     Treated water pressure/Flow scale
                                                     <span style={{ fontSize: 'small', color: 'gray', marginLeft: '5px' }}>
-                                                    (&gt; 1.5 bar / flow scale&gt;3)
+                                                        (&gt; 1.5 bar / flow scale&gt;3)
                                                     </span>
                                                     {Number(treatedWaterPressureValue) < 1.5 && treatedWaterPressureValue !== '' && treatedWaterPressureValue !== null && (
                                                         <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} />
@@ -274,10 +280,11 @@ export default ({ data, onSave, type, ...props }: Props) => {
                                 fieldProps={{
                                     type: 'number',
                                     step: 'any'
-                                  }}
+                                }}
+                                initialValue={data?.treated_water_pressure}
                             />
                         </Col>
-                        </Row>
+                    </Row>
                     <Row gutter={6}>
                         <Col span={24}>
                             <Text style={{ fontWeight: 'bold' }}>Activity control when exceeding critical limit</Text>
@@ -292,6 +299,7 @@ export default ({ data, onSave, type, ...props }: Props) => {
                                 {activityControl == 0 ? <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} /> : <></>}
                             </div>
                             <Radio.Group
+                                defaultValue={data?.activity_control == '1' ? '1' : data?.activity_control == '0' ? '0' : ''}
                                 onChange={(e) => (setActivityControl(e.target.value))}
                             >
                                 <Radio value='1'>Under Control</Radio>
@@ -310,6 +318,7 @@ export default ({ data, onSave, type, ...props }: Props) => {
                                     </div>
                                 }
                                 name={'take_action'}
+                                initialValue={data?.take_action}
                             />
                         </Col>
                     </Row>
@@ -319,6 +328,7 @@ export default ({ data, onSave, type, ...props }: Props) => {
                                 hasFeedback={false}
                                 label="Other"
                                 name={'other'}
+                                initialValue={data?.other}
                             // initialValue={data?.status !== 'pending' ? (data?.remark == null ? '-' : data?.remark) : data?.remark}
                             />
                         </Col>

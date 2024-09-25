@@ -11,7 +11,7 @@ import CertificationView from "../view/CertificationView";
 import { formatDate, formatMonth, formatYear } from "@/pages/utils";
 import TrainingModal from '../modal/TrainingModal';
 import CertificationModal from "../modal/CertificationModal";
-import moment from "moment";
+import { useAccess } from '@umijs/max';
 
 
 interface Props {
@@ -25,6 +25,11 @@ interface Props {
   }
 
 export default ({ profile ,step,is_admin,empId,cb}: Props) => {
+
+    
+    const access = useAccess();  
+
+
     const [modalVisible, setModalVisible] = useState< { type: 'ADD'; payload: undefined } | { type: 'EDIT'; payload: TrainingData } >();
     const hideModal = (visble?: boolean) => !visble && setModalVisible(undefined);
 
@@ -58,7 +63,6 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
     // certification
     const [modalCertificationViewVisible, setModalCertificationViewVisible] = useState< { type: 'VIEW'; payload: undefined } >(); 
     const hideCertificationViewModal = (visble?: boolean) => !visble && setModalCertificationViewVisible(undefined);  
-    
     
     useEffect(() => {
         initData();
@@ -202,8 +206,8 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
      
     var type = ["" ,"Training","Certification"];
     return <div>
-        <Card>
-            <Space direction={"vertical"} style={{width:'100%'}}>
+        <Card> 
+            <Space direction={"vertical"} style={{width:'100%'}} hidden={access.canAccessHrVissibleTraining}>
                 <div style={{width:'100%',textAlign:'right'}}> 
                     <Space direction='horizontal'>
                         <Button style={{display:(is_admin==2&&empId>0)?'':'none'}} onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}
@@ -343,6 +347,10 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                         ]}
                     />
                 </ProCard>
+            </Space>
+            
+            <Space direction={"vertical"} style={{width:'100%'}} hidden={!access.canAccessHrVissibleTraining}>
+                <div style={{textAlign:'center',fontSize:'24px', padding:'30px',color:'blue'}}>Your training record will be uploaded soon!!!</div> 
             </Space>
         </Card>
         

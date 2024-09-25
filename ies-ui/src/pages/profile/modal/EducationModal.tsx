@@ -106,12 +106,12 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb, ...rest }: Pr
             submitter={isAdmin==2&&empId>0?
                 {
                     render: () => { 
-                    return <><Button onClick={()=>{onAdminSubmit();}}>Submit</Button></>
+                    return <><Button onClick={()=>{onAdminSubmit();}}><SaveOutlined /> Save</Button></>
                     }
                 }
                 :{
                     searchConfig: {
-                        submitText: <div><SaveOutlined /> Submit</div>,
+                        submitText: <div><SaveOutlined /> Save</div>,
                         resetText: <div><CloseSquareOutlined /> Cancel</div>,
                     }
                 }

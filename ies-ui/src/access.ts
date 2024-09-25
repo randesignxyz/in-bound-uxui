@@ -581,6 +581,10 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         ['ROLE_HR_MENU_VIEW', 'ROLE_ADMIN'].some((it) => it === item),
       ) || false, 
+    canAccessHrVissibleTraining:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_HR_VISSIBLE_TRAINING'].some((it) => it === item),
+      ) || false, 
 
     canAccessHrStaffRequisitionMenuItem:
       currentUser?.authorities.some((item) =>

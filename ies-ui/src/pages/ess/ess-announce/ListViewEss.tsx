@@ -149,49 +149,49 @@ export default ({ profile }: Props) =>{
               });  
             }
         },
-        {
-            key: "4",
-            label: "Cancel Update",
-            itemIcon: <CloseCircleOutlined />, 
-            disabled:([3,2,5].find((element) => element == record.stepId))?false:true,
-            style:{color:record.stepId<3?'red':''},
-            onClick: async () => {
-                Modal.confirm({
-                    title: 'Cancel Update',
-                    content: 'Do you want to cancel update?',
-                    onOk: async () => {
-                      try {  
-                        const rs = await ServicesEss.essInfoDetail(record.empId,profile.id).query(requestActions);  
-                        await ProfileServicesEss.saveEssProfile({...rs?.profile_draft,id: record.empId, empId: record.empId,step:8,openEssId:profile.id!!,otherFile:[],remark:'',status:true})(requestActions);
-                        actionRefItem?.current?.reloadAndRest?.();
-                      } catch (error: any) {
-                        message.error(error.message || 'Failed to created.');
-                      }
-                    },
-                  });  
-            }
-        }, 
-        { // using for rollback cancel update
-            key: "8",
-            label: "Re Edit Profile",
-            itemIcon: <CloseCircleOutlined />,
-            disabled:record.stepId==8?false:true, 
-            onClick: async () => {
-                Modal.confirm({
-                    title: 'Re Cancelled Update',
-                    content: 'Do you want to re-edit profile after cancel update?',
-                    onOk: async () => {
-                      try {  
-                        const rs = await ServicesEss.essInfoDetail(record.empId,profile.id).query(requestActions);  
-                        await ProfileServicesEss.saveEssProfile({...rs?.profile_draft,id: record.empId, empId: record.empId,step:33,openEssId:profile.id!!,otherFile:[],remark:'',status:true})(requestActions);
-                        actionRefItem?.current?.reloadAndRest?.();
-                      } catch (error: any) {
-                        message.error(error.message || 'Failed to created.');
-                      }
-                    },
-                  });  
-            }
-        } 
+        // {
+        //     key: "4",
+        //     label: "Cancel Update",
+        //     itemIcon: <CloseCircleOutlined />, 
+        //     disabled:([3,2,5].find((element) => element == record.stepId))?false:true,
+        //     style:{color:record.stepId<3?'red':''},
+        //     onClick: async () => {
+        //         Modal.confirm({
+        //             title: 'Cancel Update',
+        //             content: 'Do you want to cancel update?',
+        //             onOk: async () => {
+        //               try {  
+        //                 const rs = await ServicesEss.essInfoDetail(record.empId,profile.id).query(requestActions);  
+        //                 await ProfileServicesEss.saveEssProfile({...rs?.profile_draft,id: record.empId, empId: record.empId,step:8,openEssId:profile.id!!,otherFile:[],remark:'',status:true})(requestActions);
+        //                 actionRefItem?.current?.reloadAndRest?.();
+        //               } catch (error: any) {
+        //                 message.error(error.message || 'Failed to created.');
+        //               }
+        //             },
+        //           });  
+        //     }
+        // }, 
+        // { // using for rollback cancel update
+        //     key: "8",
+        //     label: "Re Edit Profile",
+        //     itemIcon: <CloseCircleOutlined />,
+        //     disabled:record.stepId==8?false:true, 
+        //     onClick: async () => {
+        //         Modal.confirm({
+        //             title: 'Re Cancelled Update',
+        //             content: 'Do you want to re-edit profile after cancel update?',
+        //             onOk: async () => {
+        //               try {  
+        //                 const rs = await ServicesEss.essInfoDetail(record.empId,profile.id).query(requestActions);  
+        //                 await ProfileServicesEss.saveEssProfile({...rs?.profile_draft,id: record.empId, empId: record.empId,step:33,openEssId:profile.id!!,otherFile:[],remark:'',status:true})(requestActions);
+        //                 actionRefItem?.current?.reloadAndRest?.();
+        //               } catch (error: any) {
+        //                 message.error(error.message || 'Failed to created.');
+        //               }
+        //             },
+        //           });  
+        //     }
+        // } 
        
        
     ]
@@ -206,7 +206,7 @@ export default ({ profile }: Props) =>{
                             { label: "Review", value: "3" },
                             { label: "Rejected", value: "4" },
                             { label: "Approved", value: "6" },
-                            { label: "Cancel Update", value: "8" }
+                            // { label: "Cancel Update", value: "8" }
                         ]}
                         onChange={(e) => {setAdanceSearchItem(e.target.value);}}
                     />

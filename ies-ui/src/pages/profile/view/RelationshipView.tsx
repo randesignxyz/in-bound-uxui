@@ -104,7 +104,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,step,cb, ...rest}: Props)
                                 onClick={() => cb.onOpenEditForm(r,"ADD")}>
                                 <EditOutlined />
                             </a>   
-                            <a style={{display: isAdmin==0?'':'none'}} title="Delete item" 
+                            <a style={{display: isAdmin==0?'':'none', color:'red'}} title="Delete item" 
                                 onClick={() => cb.onDelete(r)}>
                                 <DeleteOutlined />
                             </a>  

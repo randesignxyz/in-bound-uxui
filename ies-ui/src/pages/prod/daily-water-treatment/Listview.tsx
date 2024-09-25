@@ -224,6 +224,20 @@ export default () => {
                   </Tag> : '')
               },
             },
+            // {
+            //   width: 10,
+            //   render: (_, record) => {
+            //     const assignItem = data?.find(v => v.shift === record.label);
+
+            //     return (assignItem ?
+            //       <Button onClick={async()=>
+            //         {
+            //           const da = await services.get_treatment_by_date(moment(assignItem.assign_date).format("YYYY-MM-DD"), assignItem.shift)
+            //         console.log(da[0].treatment_id)}}
+            //         >Unassign</Button>
+            //       : <></>)
+            //   }
+            // }
 
           ]}
         />
@@ -263,7 +277,7 @@ export default () => {
             shift: shift,
             startDate: dayjs(duration[0]).format('YYYY-MM-DD'),
             endDate: dayjs(duration[1]).format('YYYY-MM-DD'),
-            pre:'treatment'
+            pre: 'treatment'
           };
           try {
             setExcelLoading(true)

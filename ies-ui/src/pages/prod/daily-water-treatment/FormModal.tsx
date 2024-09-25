@@ -225,7 +225,7 @@ export default ({ onSave, ...props }: Props) => {
                                 render: (_, r, index) => index + 1
                             },
                             {
-                                title: 'Machine',
+                                title: 'Process',
                                 width: 150,
                                 dataIndex: 'machine'
                             },

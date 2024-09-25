@@ -33,16 +33,20 @@ export default ({ onSave, ...props }: Props) => {
         form.resetFields()
     }, [props.open]);
 
-    useEffect(() => {
-        if (props.open) {
-            const getMachine = async () => {
-                // const data = await services.getControl(typeValue)
-                // setControl(data)
-            }
-            getMachine()
-        }
-
-    }, [props.open, typeValue]);
+    const time = [
+        { name: '7:00' },
+        { name: '9:00' },
+        { name: '11:00' },
+        { name: '13:00' },
+        { name: '15:00' },
+        { name: '17:00' },
+        { name: '19:00' },
+        { name: '21:00' },
+        { name: '23:00' },
+        { name: '1:00' },
+        { name: '3:00' },
+        { name: '5:00' }
+    ]
 
     return (
         <FormModalComp
@@ -55,24 +59,42 @@ export default ({ onSave, ...props }: Props) => {
                 const endDate = moment(dataForm.assign_date[1]);
                 let current = moment(startDate);
                 const end = moment(endDate);
-
                 const item = []
                 while (current.isSameOrBefore(end)) {
-                    current = current.add(1, 'day');
+                    
+                    // for (let i = 0; i < line.length; i++) {
+                    //     const entity = {
+                    //         ...dataForm,
+                    //         assign_date: current,
+                    //         assign_to: assignTo,
+                    //         line: line[i],
+                    //         activities: [{ action: "Assign to " + `${dataForm.assign_to}` }],
+                    //     }
+                    //     item.push(entity)
+                    // }
                     for (let i = 0; i < line.length; i++) {
+                        // Create the entity without the haccpList first
                         const entity = {
                             ...dataForm,
-                            assign_date: current,
+                            assign_date: current.clone().format('YYYY-MM-DD'), // Keep date only
                             assign_to: assignTo,
                             line: line[i],
                             activities: [{ action: "Assign to " + `${dataForm.assign_to}` }],
+                            haccpList: [] // Initialize haccpList as an empty array
+                        };
+                    
+                        // Now, loop through the time array to push the time values into the haccpList
+                        for (let j = 0; j < time.length; j++) {
+                            entity.haccpList.push({ time: time[j].name });
                         }
-                        item.push(entity)
+                    
+                        // Push the entity with the complete haccpList into the item array
+                        item.push(entity);
                     }
+                    current = current.add(1, 'day');
                 }
                 onSave(item)
-                // console.log(entity)
-
+                
             }}
         >
             <ProForm form={form} onReset={() => form.resetFields()} submitter={false}>

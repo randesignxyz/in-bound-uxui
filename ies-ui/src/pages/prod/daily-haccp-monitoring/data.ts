@@ -37,6 +37,8 @@ export type HACCPMonitoringList = {
     air_pressure: string,
     temperature_preform: string,
     treated_water_pressure: string,
+    remark:string,
+    opo:string
 }
 
 export type HACCPMonitoringActivities = {

@@ -97,7 +97,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
                         return <><Button onClick={()=>{onAdminSubmit();}}><SaveOutlined /> Save</Button></>
                         }
                     }
-                    :{
+                    :{ 
                         searchConfig: {
                             submitText: <div><SaveOutlined /> Save</div>,
                             resetText: <div><CloseSquareOutlined /> Cancel</div>,

@@ -161,12 +161,12 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
             submitter={isAdmin==2&&empId>0?
                 {
                     render: () => { 
-                    return <><Button type="primary" onClick={()=>{onAdminSubmit();}}>Submit</Button></>
+                    return <><Button type="primary" onClick={()=>{onAdminSubmit();}}><SaveOutlined /> Save</Button></>
                     }
                 }
                 :{
                     searchConfig: {
-                        submitText: <div><SaveOutlined /> Submit</div>,
+                        submitText: <div><SaveOutlined /> Save</div>,
                         resetText: <div><CloseSquareOutlined /> Cancel</div>,
                     }
                 }

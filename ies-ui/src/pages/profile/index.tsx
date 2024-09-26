@@ -6,7 +6,7 @@ import { Alert, message, Spin,Space, Modal,Button} from 'antd';
 import { history, useParams } from '@umijs/max';
 import { useEffect } from 'react';
 import { useState } from 'react';
-import { formatDate, formatDateTime } from '../utils';
+import { formatDate, formatDATEFUll, formatDateTime } from '../utils';
 import { ProfileData } from './data';
 import { EssProfileData, SaveEssProfile } from "./data.ess"
 import Personal from './tabitems/Personal';
@@ -156,7 +156,7 @@ function Profile() {
           <ProDescriptions.Item label="Function">{data?.functions}</ProDescriptions.Item>
           <ProDescriptions.Item label="Position">{data?.position}</ProDescriptions.Item>
           <ProDescriptions.Item> </ProDescriptions.Item> 
-          <ProDescriptions.Item label="Start Date">{data?.dateJoined && formatDate(data.dateJoined)}</ProDescriptions.Item> 
+          <ProDescriptions.Item label="Start Date">{data?.dateJoined && formatDATEFUll(data.dateJoined)}</ProDescriptions.Item> 
         </ProDescriptions>
       )}
     </RouteContext.Consumer>
@@ -271,7 +271,7 @@ function Profile() {
   }
 
   // stage
-  const _info = "Period: From  "+(profile?.ess.id!!<=0?'':formatDate(profile?.ess.startDate))+" To  "+(profile?.ess.id!!<=0?'':formatDate(profile?.ess.endDate))+"";
+  const _info = "Period: From  "+(profile?.ess.id!!<=0?'':formatDATEFUll(profile?.ess.startDate))+" To  "+(profile?.ess.id!!<=0?'':formatDATEFUll(profile?.ess.endDate))+"";
   const _stag = ["Cancel Updated","Getting Started","Start Modifying","Reviewing","Rejected","Re-Edit","Approval","Cancelled Submitted"];
   const _stag_message = [
     /*0*/"Cancel Updated",

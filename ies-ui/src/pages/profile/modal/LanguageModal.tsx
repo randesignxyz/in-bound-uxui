@@ -104,13 +104,21 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
         >  
         <ProCard bordered>
             <ProFormSelect rules={[{ required: true }]} allowClear={true}  
-                name="languageId" label = "Languages" placeholder="Languages"  
+                name="languageId" label = "Language" placeholder="Language"  
                 showSearch 
                 mode="single" 
                 options={profile.language?.map((it) => {
                     return { value: it.id, label: it.titleName };
                 })}  
             /> 
+            <ProFormSelect rules={[{ required: true }]} allowClear={true}  
+                name="typeId" label = "Type" placeholder="Type"  
+                showSearch 
+                mode="single"
+                options={profile.languageType?.map((it) => {
+                    return { value: it.id, label: it.titleName };
+                })}  
+            />
             {/* <ProFormText label="Level" name='levelName' rules={[{ required: true }]}/>   */}
             <ProFormSelect rules={[{ required: true }]} allowClear={true}  
                 name="levelId" label = "Level" placeholder="Level"  
@@ -122,6 +130,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
             /> 
             <ProFormTextArea label="Description" name='description' /> 
         </ProCard>
+             
         
         {/* Attachment files  */} 
         <div style={{marginTop:'10px'}}>

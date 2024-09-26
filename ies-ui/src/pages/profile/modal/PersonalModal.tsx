@@ -152,7 +152,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
         }); 
     }
     return <div>
-        <ModalForm  {...rest} form={form} width={'40%'} title={<><ProfileOutlined /> Edit Personal Information</>}
+        <ModalForm  {...rest} form={form} width={'60%'} title={<><ProfileOutlined /> Edit Personal Information</>}
             // onOpenChange={visible => {
             //     form.resetFields() 
             //     rest.onOpenChange?.(visible)

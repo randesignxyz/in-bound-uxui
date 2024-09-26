@@ -118,7 +118,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
             <Space direction="horizontal">
                 <Typography.Title level={5}>Attachments</Typography.Title><Typography.Title level={5} style={{color:'red'}}> (Required*)</Typography.Title>
             </Space>
-            <div style={{fontSize:'12px'}}>- Professional Certification (Professional's competency with international standards, industry specifications or technical rules)</div>
+            <div style={{fontSize:'12px'}}>- Professional Certification (e.g., ACCA, Project Management Professional, SHRM-CP/SCP, ITIL, etc.)</div>
             
         </div> 
         <ProCard size="small" bordered>   

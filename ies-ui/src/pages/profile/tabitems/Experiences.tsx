@@ -9,7 +9,7 @@ import { ExperienceData,  FilesData,  SaveExperience } from "../data.ess";
 import { ProfileServicesEss } from '../service_ess'; 
 import { simpleRequestActions } from '@/services/model';
 import ExperienceView from "../view/ExperienceView";
-import { formatDate, formatDateTime } from "@/pages/utils";
+import { formatDate, formatDATEFUll, formatDateTime } from "@/pages/utils";
 
 
 interface Props {
@@ -189,12 +189,12 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                         },{
                             title: "Started Date", width: '150px',dataIndex: 'startDate',
                             render:(_, r) => {
-                                return formatDate(r.startDate)
+                                return formatDATEFUll(r.startDate)
                             }
                         },{
                             title: "Ended Date", width: '150px',dataIndex: 'endDate',
                             render:(_, r) => {
-                                return formatDate(r.endDate)
+                                return formatDATEFUll(r.endDate)
                             }
                         },
                         {   width: 100,

@@ -197,6 +197,8 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                         },{
                             title: "Country of Education Institution", dataIndex: "countryEducationCenterName" 
                         },{
+                            title: "GPA", dataIndex: "gpa" 
+                        },{
                             title: "Year", render: (_, r) => {return formatYear(r.fromYear)+" - "+ formatYear(r.toYear)}
                         },{
                             title: "Status", dataIndex: "statusName" 

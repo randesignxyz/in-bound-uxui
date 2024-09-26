@@ -83,6 +83,7 @@ export interface ProfileData {
   degree          : EssLookupData[];   
   status          : EssLookupData[];    
   language        : EssLookupData[];    //language
+  languageType    : EssLookupData[];    //language
   coei            : EssLookupData[];    //Country of Education Institution
   level           : EssLookupData[];    //language
 }

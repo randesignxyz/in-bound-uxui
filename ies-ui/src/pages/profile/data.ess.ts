@@ -184,8 +184,10 @@ export interface LanguageData {
   empId:number;
   refId:number;
   languageId: number; 
+  typeId: number; 
   languageName: string; 
   levelName: string; 
+  typeName: string; 
   levelId: number; 
   description: string;  
   status:Boolean; 
@@ -325,6 +327,7 @@ export interface EducationData {
   toYear      : moment.Moment; 
   marjorSubject: string;  
   type        : string; 
+  gpa        :  number; 
   status      : boolean;
   otherFile   : AttachmentFile[];
   degreeName  : string; 

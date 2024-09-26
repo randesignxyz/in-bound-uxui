@@ -239,6 +239,30 @@ export default () => {
                   </Tag> : '')
               },
             },
+            ...(access.canAssignItem ? [{
+              width: 10,
+              render: (_:any, record:any) => {
+                const assignItem = list.find(v => v.time === record.name);
+                return (assignItem ?
+                  <Button onClick={async () => {
+                    Modal.confirm({
+                      title: "Unassign",
+                      content: 'Are you sure to unassign? This assign will disappare forever',
+                      onOk: async () => {
+                        try {
+                          await services.unassignOzone(assignItem.haccp_ozone_id)
+                          setOnRefresh(true)
+                          message.success('Success');
+                        } catch (e: any) {
+                          message.error(e.message);
+                        }
+                      }
+                    })
+                  }}
+                  >Unassign</Button>
+                  : <></>)
+              }
+            }] : []),
 
           ]}
         />

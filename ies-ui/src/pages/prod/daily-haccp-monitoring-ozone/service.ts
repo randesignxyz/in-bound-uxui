@@ -34,24 +34,18 @@ const HACCPMonitoringOzoneAction = {
         type: "EXEC",
         payload: data
     }),
-    // post_daily_pre_water_treatment: (data: DailyPreWaterTreatmentList): ServiceApiType<DailyPreWaterTreatmentList> => ({
-    //     actionName: 'post_daily_pre_water_treatment',
-    //     endpoint: "PROD",
-    //     type: "EXEC",
-    //     payload: data
-    // }),
     get_ozone_activities: (haccp_ozone_id: string): ServiceApiType<{ haccp_ozone_id: string}> => ({
         actionName: 'get-ozone-activities',
         endpoint: 'PROD',
         type: 'LIST_QUERY',
         payload: { haccp_ozone_id },
     }),
-    // assign_self_pre: (id: number,action: string,pre_treatment_id: string,pre_treatment_type: string): ServiceApiType<{id: number,action: string,pre_treatment_id: string,pre_treatment_type: string}> => ({
-    //     actionName:"assign-self-pre",
-    //     endpoint:"PROD",
-    //     type:'EXEC',
-    //     payload:{id,action,pre_treatment_id,pre_treatment_type}
-    // })
+    unassign_ozone: (haccp_ozone_id: string): ServiceApiType<{haccp_ozone_id: string}> => ({
+        actionName:"unassign-ozone",
+        endpoint:"PROD",
+        type:'EXEC',
+        payload:{haccp_ozone_id}
+    })
 }
 
 export const HACCPMonitoringOzoneServiceAPI = (requestAction: RequestActions) => {
@@ -74,17 +68,13 @@ export const HACCPMonitoringOzoneServiceAPI = (requestAction: RequestActions) =>
             singleRequest<{ data: string; message: string }>(HACCPMonitoringOzoneAction.assign_ozone_to_user(data))(
                 requestAction
             ),
-        // post_daily_pre_water_treatment: (data: DailyPreWaterTreatmentList) =>
-        //     singleRequest<{ data: string; message: string }>(DailyPreWaterTreatmentAction.post_daily_pre_water_treatment(data))(
-        //         requestAction
-        //     ),
         getOzoneActivities: (haccp_ozone_id: string) =>
             singleRequest<HACCPMonitoringActivities>(HACCPMonitoringOzoneAction.get_ozone_activities(haccp_ozone_id))(
                 requestAction
             ),
-        // assign_self_pre:(id: number,action: string,pre_treatment_id: string,pre_treatment_type: string)=>
-        //         singleRequest<DailyPreWaterTreatment>(DailyPreWaterTreatmentAction.assign_self_pre(id,action,pre_treatment_id,pre_treatment_type))(
-        //             requestAction
-        //         )
+        unassignOzone:(haccp_ozone_id: string)=>
+                singleRequest<HACCPMonitoringOzone>(HACCPMonitoringOzoneAction.unassign_ozone(haccp_ozone_id))(
+                    requestAction
+                )
     }
 }

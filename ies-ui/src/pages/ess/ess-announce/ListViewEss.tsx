@@ -226,7 +226,7 @@ export default ({ profile }: Props) =>{
                     hideInForm: false, 
                 }, 
                 { title: "Full Name (KH)",dataIndex: 'internalName'},   
-                { width:'12%',title: "Full Name (EN)",dataIndex:'firstName',search: false,render:(_,r) =>{return(r.firstName+" "+r.lastName)}}, 
+                { width:'12%',title: "Full Name (EN)",dataIndex:'firstName',search: false,render:(_,r) =>{return(r.lastName+" "+r.firstName)}}, 
                 // { width:'12%',title: "Last Name",dataIndex:'lastName',search: false}, 
                 // { width:'7%',title: "Integrated ID",dataIndex:'integratedId',search: false}, 
                 { width:'12%',title: "Position",dataIndex:'jobTitle',search: false}, 

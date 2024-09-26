@@ -261,6 +261,7 @@ export interface LeadInfo extends LeadLess {
 
 export interface LeadDetail {
   id: number;
+  leadCode?:string;
   lastName?: string;
   firstName?: string;
   internalName?: string;

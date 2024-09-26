@@ -91,7 +91,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,step,cb, ...rest}: Props)
                 },{
                     title: "Date of Birth", dataIndex: "dateOfBirth",
                     render: (dom, r) => {
-                        return (formatDate(r.dateOfBirth));
+                        return (formatDATEFUll(r.dateOfBirth));
                     },
                 },
                 // {

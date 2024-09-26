@@ -2,7 +2,7 @@ import { Flex, ModalProps, Space, Typography } from "antd"
 import { ModalForm, ProCard, ProTable } from "@ant-design/pro-components"
 import { TrainingData } from "../data.ess" 
 import { EditOutlined,DeleteOutlined } from "@ant-design/icons"
-import { formatDate, formatYear } from "@/pages/utils";
+import { formatDate, formatDATEFUll, formatMonthFull, formatYear } from "@/pages/utils";
 
 interface Props extends ModalProps {
     // data: BasicContactData;
@@ -45,7 +45,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,step,cb, ...rest}: Props)
                             title: "Date", 
                             dataIndex: "year",
                             render:(_, r) => {
-                                return (formatDate(r.year) +" - "+ formatDate(r.toYear));
+                                return (formatDATEFUll(r.year) +" - "+ formatDATEFUll(r.toYear));
                             }
                         },{
                             title: "Duration", dataIndex: "duration"
@@ -92,7 +92,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,step,cb, ...rest}: Props)
                             title: "Date", 
                             dataIndex: "year",
                             render:(dom, r) => {
-                                return (formatDate(r.year) +" - "+ formatDate(r.toYear));
+                                return (formatMonthFull(r.year) +" - "+ formatMonthFull(r.toYear));
                             }
                         },{
                             title: "Duration(Hours)", dataIndex: "duration"

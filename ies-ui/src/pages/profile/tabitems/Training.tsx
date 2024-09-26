@@ -8,7 +8,7 @@ import { simpleRequestActions } from '@/services/model';
 import { ProfileServicesEss } from '../service_ess'; 
 import TrainingView from "../view/TrainingView";
 import CertificationView from "../view/CertificationView";
-import { formatDate, formatMonth, formatYear } from "@/pages/utils";
+import { formatDate, formatDATEFUll, formatMonth, formatMonthFull, formatYear } from "@/pages/utils";
 import TrainingModal from '../modal/TrainingModal';
 import CertificationModal from "../modal/CertificationModal";
 import { useAccess } from '@umijs/max';
@@ -266,7 +266,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                                 title: "Date", 
                                 dataIndex: "year",
                                 render:(dom, r) => {
-                                    return (formatDate(r.year) +" - "+ formatDate(r.toYear));
+                                    return (formatDATEFUll(r.year) +" - "+ formatDATEFUll(r.toYear));
                                 }
                             },{
                                 title: "Duration(Hours)", dataIndex: "duration"
@@ -320,7 +320,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                                 title: "In Year", 
                                 dataIndex: "year",
                                 render:(dom, r) => {
-                                    return formatMonth(r.year)
+                                    return formatMonthFull(r.year)
                                 }
                             },{
                                 title: "Description", dataIndex: "description"

@@ -10,7 +10,7 @@ import { FilesData, RelationshipData} from "../data.ess";
 import { ProfileServicesEss } from '../service_ess'; 
 import { simpleRequestActions } from '@/services/model';
 import RelationshipView from "../view/RelationshipView";
-import { formatDate } from "@/pages/utils";
+import { formatDate, formatDATEFUll } from "@/pages/utils";
 
 interface Props {
     profile: ProfileData;
@@ -156,7 +156,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                         },{
                             title: "Occupation", dataIndex: "occupationName"
                         },{
-                            title: "Date of Birth", dataIndex: "dateOfBirth",render: (dom, r) => {return formatDate(r.dateOfBirth)}
+                            title: "Date of Birth", dataIndex: "dateOfBirth",render: (dom, r) => {return formatDATEFUll(r.dateOfBirth)}
                         },
                         // {
                         //     title: "Description", dataIndex: "description"

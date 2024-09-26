@@ -23,10 +23,13 @@ export const getInventoryAdjustmentRequestForms = (): DataForm[] => [
   },
   {
     formKey: [     
-      AdjustmentRequestFormNames.functionReview,
-      // AdjustmentRequestFormNames.financeReview,
-      AdjustmentRequestFormNames.functionAckwonledge,
-      AdjustmentRequestFormNames.executiveApproval
+      AdjustmentRequestFormNames.whApproval,
+      AdjustmentRequestFormNames.functionApproval,
+      AdjustmentRequestFormNames.finManagerApproval,
+      AdjustmentRequestFormNames.dmbo1,
+      AdjustmentRequestFormNames.dmbo2,
+      AdjustmentRequestFormNames.mbo,
+      AdjustmentRequestFormNames.dmd
     ],
     dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,
     actionDataForm: (props: ActionDataFormProps) => <DefaultActionForm {...props} />,

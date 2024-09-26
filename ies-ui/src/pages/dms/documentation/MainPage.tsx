@@ -3,19 +3,17 @@ import { DocumentationAdvanceSearch, DocumentationCreate, DocumentationDTO } fro
 import { DocumentServiceAPI } from "./service";
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { simpleRequestActions } from "@/services/model";
-import { history, useParams, useQuery } from "@umijs/max";
+import { useParams, useQuery } from "@umijs/max";
 import { useState } from "react";
 import { formatDate } from "@/pages/utils";
-import { ExportOutlined, ShareAltOutlined, EllipsisOutlined, AuditOutlined, FileAddOutlined, PlusOutlined } from "@ant-design/icons";
-import { Space, Button, Badge, Dropdown, MenuProps, message, Modal } from "antd";
-import { DMSPaths } from "..";
+import { AuditOutlined, FileAddOutlined, PlusOutlined } from "@ant-design/icons";
+import { Button, Badge, Dropdown, MenuProps, message, Modal } from "antd";
 import { expriationStatus, StatusColor } from "../core";
 import DocumentationDetail from "./DetailView";
-import DocumentationEntry from "./DocumentationEntry";
 import DocumentModalForm from "./EntryForm";
 
 interface Props {
-
+    
 }
 
 const DocumentMainPage: React.FC<Props> = () => {
@@ -69,7 +67,6 @@ const DocumentMainPage: React.FC<Props> = () => {
         },
     ];
     return (<>
-        
         <PageWrapper<DocumentationDTO, DocumentationAdvanceSearch, {}>
             tabRender={items => [
                 {
@@ -80,21 +77,15 @@ const DocumentMainPage: React.FC<Props> = () => {
                     action: "view",
                     panel: ({ }) => <DocumentationDetail
                         id={items?.id || 0}
-
                     />
                 },
                 {
                     tabLabel:"as",
                     action:"add",
-                }   
+                },
             ]}
-            onNewRender={(k)=>{
-                return "sas"
-            }}
             listView={{
                 type: "Table",
-                title: "Documents",
-                onStatusRender: <>s</>,
                 actionButtons: [
                     <Dropdown
                         menu={{
@@ -126,7 +117,6 @@ const DocumentMainPage: React.FC<Props> = () => {
                     },
                     { option: { label: "Active", value: "Active", default: true } },
                     { option: { label: "Inactive", value: "Inactive", default: true } },
-
                 ],
                 onFilter: (params, page, sort) => {
                     setFilter(f => ({
@@ -136,7 +126,6 @@ const DocumentMainPage: React.FC<Props> = () => {
                             advanceSearch: {
                                 library: 0
                             },
-
                         },
                         pagination: page
                     }))

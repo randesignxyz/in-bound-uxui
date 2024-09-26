@@ -7,12 +7,13 @@ import numeral from "numeral";
 import { SuggestionServiceAPI } from "./services";
 import { simpleRequestActions } from "@/services/model";
 import RemarkModalForm from "../component/RemarkModal";
+import MMAApproval from "./components/MMAAproval";
 interface Props {
     data?: StockControlLess;
     source: "ADMIN" | "WAREHHOUSE" | "CASHIER";
     actionButton?: boolean;
     onReload?: () => void;
-    onSettlement:(data?:StockControlLess)=>void;
+    onSettlement: (data?: StockControlLess) => void;
 }
 
 const ExpendableTable: React.FC<Props> = ({ data, source, onReload, onSettlement }) => {
@@ -28,12 +29,19 @@ const ExpendableTable: React.FC<Props> = ({ data, source, onReload, onSettlement
     const [countModal, setCountModal] = useState<{
         open?: boolean;
         record?: StockControlLess;
-      }>({});
+    }>({});
     const [settleModal, setSettleModal] = useState<{
         open?: boolean;
         record?: StockControlLess;
     }>({});
 
+    const [approvalState, setApprovalState] = useState<{
+        visible?: {
+            name: "MODAL";
+            type: "ADD";
+            payload?: any;
+        }
+    }>();
     return (
         <>
             {
@@ -163,16 +171,16 @@ const ExpendableTable: React.FC<Props> = ({ data, source, onReload, onSettlement
                     size="small"
                     footer={() => {
                         return <Flex justify="flex-end" gap={12}>
-                            {data?.invoices?.length ? <Button onClick={() => onSettlement( data )} type="primary">Settlement</Button> : ""}
+                            {data?.invoices?.length ? <Button onClick={() => onSettlement(data)} type="primary">Settlement</Button> : ""}
                             {data?.invoices?.length ? "" : <Button onClick={() => {
                                 Modal.confirm({
                                     title: 'Settlement has no invoice.',
                                     content: 'Are you sure?',
                                     onOk: async () => {
-                                      await services.onClosedRequest(data?.id);
-                                      onReload?.();
+                                        await services.onClosedRequest(data?.id);
+                                        onReload?.();
                                     },
-                                  });
+                                });
                             }} type="primary">Submit</Button>}
                         </Flex>
                     }}
@@ -330,7 +338,12 @@ const ExpendableTable: React.FC<Props> = ({ data, source, onReload, onSettlement
                     // actionRef.current?.reload?.();
                 }}
             />
-            
+
+            <MMAApproval
+                open={approvalState?.visible?.name == "MODAL"}
+                onCancel={()=>setApprovalState({visible:undefined})}
+            />
+
         </>
 
     )

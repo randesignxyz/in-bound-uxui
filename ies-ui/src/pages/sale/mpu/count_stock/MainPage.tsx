@@ -38,7 +38,7 @@ const CountStockMainPage: React.FC<Props> = () => {
       ]}
       listView={{
         type: "Table",
-        title: "Count Stock",
+        title: "Stock Count",
         onRefresh: refetch,
         onFilter: (params, page, sort) => {
           setFilter(k => ({

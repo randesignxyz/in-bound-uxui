@@ -6,8 +6,7 @@ import { ProForm, ProFormSelect } from '@ant-design/pro-components';
 import { Card, message, Spin } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { useState } from 'react';
-// import { useState } from 'react';
-// import { DSDReportAPI } from './service';
+import { DSDReportAPI } from './service';
 
 const layout = {
   labelCol: { span: 8 },
@@ -15,25 +14,17 @@ const layout = {
 };
 
 interface Props extends FormModalProps {
-  salespersons: SalesTeamWorkLess[];
+  salespersons?: SalesTeamWorkLess[];
 }
 
 export default (props: Props) => {
   const requestActions = simpleRequestActions();
-  //   const services = DSDReportAPI(requestActions);
   const saleServices = SaleServiceAPI(requestActions);
   const [loading, setLoading] = useState<boolean>(false);
 
   const [form] = useForm<{
     salespersonCode?: string[];
   }>();
-
-  //   useEffect(() => {
-  //     (async () => {
-  //       const salesTeam = await services.salespersonList();
-  //       setSalesperson(salesTeam.filter((it) => it.isApprover === false));
-  //     })();
-  //   }, []);
 
   const onDowloadReportHandler = async () => {
     try {
@@ -65,20 +56,25 @@ export default (props: Props) => {
       >
         <Spin spinning={loading}>
           <Card>
-            <ProForm submitter={false} layout="horizontal" {...layout} form={form}>
+            <ProForm
+              submitter={false} layout="horizontal"
+              form={form}
+            >
               <ProFormSelect
                 mode="multiple"
                 label="Salesperson"
                 name="salespersonCode"
-                width="md"
+                // width="md"
                 showSearch
+                debounceTime={500}
+                request={async () => {
+                  const data = await DSDReportAPI(requestActions).salespersonList();
+                  return data.map(p => ({
+                    value: p.salespersonCode,
+                    label: p.salespersonCode.concat(' - ', p.salespersonName),
+                  }))
+                }}
                 allowClear
-                options={props.salespersons.map((it) => {
-                  return {
-                    value: it.salespersonCode,
-                    label: it.salespersonCode.concat(' - ', it.salespersonName),
-                  };
-                })}
               />
             </ProForm>
           </Card>

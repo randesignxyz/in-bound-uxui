@@ -273,11 +273,6 @@ export default({editableFormRef,addedItems,onSetAddedItems,editable,editableRati
       },  
     ]}
     summary={(data) => {
-      // var rating = 0;
-      // data?.forEach((it) => {
-      //   rating += (it.rating1||0) +  (it.rating2||0) +  (it.rating3||0) +  (it.rating4||0) +  (it.rating5||0)
-      // });
-      // rating = (rating / data.length)*0.5
       return (
         <Table.Summary.Row style={{ textAlign: 'right', fontWeight: 'bold' }}>
           <Table.Summary.Cell colSpan={8} index={8}>

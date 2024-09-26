@@ -107,7 +107,10 @@ export interface AdjRequestItemDetailResponse {
   itemCode: string;
   itemName: string;
   qty: number;
+  itemCost: number;
+  amount: number;
   uom: string;
+  budgetCode: string;
   remarks?: string;
   stockRemarks?: string;
   seqNo: number;
@@ -154,6 +157,12 @@ export interface FieldsValidation {
   field: string;
   msg: string;
 }
-
+export interface AdjRequestItemPayload {
+  id: number;  
+  budgetCode: string;
+  itemId: number;
+  itemCost: number;
+  qty: number;
+}
   
 

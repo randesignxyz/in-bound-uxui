@@ -147,7 +147,7 @@ export default ({ profile,step,is_admin}: Props) => {
           ];
         }}
         showActions="hover"
-        rowSelection={{}}
+        rowSelection={false}
         grid={{ gutter: 16, column: 4 }}
         onItem={(record: any) => {
           return {

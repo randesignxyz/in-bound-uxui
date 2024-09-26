@@ -298,7 +298,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                 {/* cource */}
                 <ProCard bordered>                    
                     <Space direction="horizontal">
-                        <Typography.Title level={5}>Professional Certification</Typography.Title><Typography.Title style={{fontSize:'12px',color:"gray"}}>(Professional's competency with international standards, industry specifications or technical rules)</Typography.Title>  
+                        <Typography.Title level={5}>Professional Certification</Typography.Title><Typography.Title style={{fontSize:'11px',color:"gray"}}>(Professional's competency with international standards, industry specifications or technical rules - e.g., ACCA, Project Management Professional, SHRM-CP/SCP, ITIL, etc.)</Typography.Title>  
                     </Space>
                     <ProTable<TrainingData>
                         dataSource={certificateList}

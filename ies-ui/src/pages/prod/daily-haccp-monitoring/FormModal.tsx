@@ -61,7 +61,7 @@ export default ({ onSave, ...props }: Props) => {
                 const end = moment(endDate);
                 const item = []
                 while (current.isSameOrBefore(end)) {
-                    
+
                     // for (let i = 0; i < line.length; i++) {
                     //     const entity = {
                     //         ...dataForm,
@@ -82,19 +82,19 @@ export default ({ onSave, ...props }: Props) => {
                             activities: [{ action: "Assign to " + `${dataForm.assign_to}` }],
                             haccpList: [] // Initialize haccpList as an empty array
                         };
-                    
+
                         // Now, loop through the time array to push the time values into the haccpList
                         for (let j = 0; j < time.length; j++) {
                             entity.haccpList.push({ time: time[j].name });
                         }
-                    
+
                         // Push the entity with the complete haccpList into the item array
                         item.push(entity);
                     }
                     current = current.add(1, 'day');
                 }
                 onSave(item)
-                
+
             }}
         >
             <ProForm form={form} onReset={() => form.resetFields()} submitter={false}>
@@ -102,35 +102,35 @@ export default ({ onSave, ...props }: Props) => {
                     <Row gutter={6}>
                         <Col span={12}>
                             <ProFormSelect
-                                // request={async ({ keyWords }) => {
-                                //     const data = await EmployeeServices.list({
-                                //         criteria: {
-                                //             searchValue: keyWords,
-                                //             advanceSearch: {
-                                //                 status: 'ACTIVE',
-                                //             },
-                                //         },
-                                //     }).query(requestActions);
-
-                                //     return data.items.map((obj) => ({
-                                //         value: obj.userId,
-                                //         label: `${obj.firstName + ' ' + obj.lastName} `,
-                                //     }));
-                                // }}
-                                options={[
-                                    {
-                                        value: 'prodadm',
-                                        label: 'prodadm',
-                                    },
-                                    {
-                                        value: 'prod1',
-                                        label: 'prod1',
-                                    },
-                                    {
-                                        value: 'prod2',
-                                        label: 'prod2',
-                                    }
-                                ]}
+                                 request={async ({ keyWords }) => {
+                                    const data = await EmployeeServices.list({
+                                        criteria: {
+                                            searchValue: keyWords,
+                                            advanceSearch: {
+                                                status: 'ACTIVE',
+                                            },
+                                        }, pagination: { pageSize: 2000 }
+                                    }).query(requestActions);
+                                    const filteredData = data.items.filter((obj) => obj.department === 'PRD' && obj.userId != null);
+                                    return filteredData.map((obj) => ({
+                                        value: `${obj.userId}`,
+                                        label: `${obj.firstName + ' ' + obj.lastName}`,
+                                    }));
+                                }}
+                                // options={[
+                                //     {
+                                //         value: 'prodadm',
+                                //         label: 'prodadm',
+                                //     },
+                                //     {
+                                //         value: 'prod1',
+                                //         label: 'prod1',
+                                //     },
+                                //     {
+                                //         value: 'prod2',
+                                //         label: 'prod2',
+                                //     }
+                                // ]}
                                 showSearch
                                 mode="multiple"
                                 name="assign_to"

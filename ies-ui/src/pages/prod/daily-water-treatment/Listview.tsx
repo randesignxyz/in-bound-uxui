@@ -224,21 +224,32 @@ export default () => {
                   </Tag> : '')
               },
             },
-            // {
-            //   width: 10,
-            //   render: (_, record) => {
-            //     const assignItem = data?.find(v => v.shift === record.label);
+            ...(access.canAssignItem ? [{
+              width: 10,
+              render: (_:any, record:any) => {
+                const assignItem = data?.find(v => v.shift === record.label);
 
-            //     return (assignItem ?
-            //       <Button onClick={async()=>
-            //         {
-            //           const da = await services.get_treatment_by_date(moment(assignItem.assign_date).format("YYYY-MM-DD"), assignItem.shift)
-            //         console.log(da[0].treatment_id)}}
-            //         >Unassign</Button>
-            //       : <></>)
-            //   }
-            // }
-
+                return (assignItem ?
+                  <Button onClick={async () => {
+                    Modal.confirm({
+                      title: "Unassign",
+                      content: 'Are you sure to unassign? This assign will disappare forever',
+                      onOk: async () => {
+                        try {
+                          const da = await services.get_treatment_by_date(moment(assignItem.assign_date).format("YYYY-MM-DD"), assignItem.shift)
+                          await services.unassign(da[0].treatment_id)
+                          setOnRefresh(true)
+                          message.success('Success');
+                        } catch (e: any) {
+                          message.error(e.message);
+                        }
+                      }
+                    })
+                  }}
+                  >Unassign</Button>
+                  : <></>)
+              }
+            }] : []),
           ]}
         />
       </Card>

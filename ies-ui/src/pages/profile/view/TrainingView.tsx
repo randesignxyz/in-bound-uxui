@@ -95,7 +95,7 @@ export default ( {oldData,newData,essProfileId,isAdmin,step,cb, ...rest}: Props)
                                 return (formatDate(r.year) +" - "+ formatDate(r.toYear));
                             }
                         },{
-                            title: "Duration", dataIndex: "duration"
+                            title: "Duration(Hours)", dataIndex: "duration"
                         },{
                             title: "Description", dataIndex: "description"
                         },{   

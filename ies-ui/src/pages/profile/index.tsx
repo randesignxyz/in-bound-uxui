@@ -277,7 +277,7 @@ function Profile() {
     /*0*/"Cancel Updated",
     /*1*/_info,
     /*2*/"Employee starts modifying profile",
-    /*3*/"Your request update is under review",
+    /*3*/"Your update request is under review",
     /*4*/ (profile?.profile_draft==null?'':profile?.profile_draft.remark),
     /*5*/ (profile?.profile_draft==null?'':profile?.profile_draft.remark), 
     /*6*/ "Approval",

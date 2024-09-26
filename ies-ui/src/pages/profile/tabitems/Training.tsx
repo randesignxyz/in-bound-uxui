@@ -269,7 +269,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                                     return (formatDate(r.year) +" - "+ formatDate(r.toYear));
                                 }
                             },{
-                                title: "Duration", dataIndex: "duration"
+                                title: "Duration(Hours)", dataIndex: "duration"
                             },{
                                 title: "Description", dataIndex: "description"
                             }, 
@@ -350,7 +350,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
             </Space>
             
             <Space direction={"vertical"} style={{width:'100%'}} hidden={!access.canAccessHrVissibleTraining}>
-                <div style={{textAlign:'center',fontSize:'24px', padding:'30px',color:'blue'}}>Your training record will be uploaded soon!!!</div> 
+                <div style={{textAlign:'center',fontSize:'24px', padding:'30px',color:'gray'}}>Your training record will be uploaded soon!!!</div> 
             </Space>
         </Card>
         

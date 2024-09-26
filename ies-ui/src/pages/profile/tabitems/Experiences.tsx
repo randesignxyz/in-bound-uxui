@@ -45,7 +45,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
     }, []);
     const initData = async () => {
         try {
-            const list = await ProfileServicesEss.listExperience(profile.id).query(requestActions);
+            const list = await ProfileServicesEss.listExperience(profile.id,profile.ess.id||0).query(requestActions);
             setExperienceList(list.data); 
             // old records edit 
             setExperienceOldList(list.oldData); 
@@ -77,6 +77,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
 
                 data.startDate = startDate;
                 data.endDate = endDate;  
+                data.openId = profile.ess.id||0;
 
                 await ProfileServicesEss.saveExperience(data)(requestActions); 
                 // call back fun
@@ -99,6 +100,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                 data.isDelete = 1;
                 data.type = "ADD";
                 data.empId= profile.id;
+                data.openId = profile.ess.id||0;
                 await ProfileServicesEss.saveExperience(data)(requestActions); 
                 // call back fun
                 cb.onLoadData();
@@ -121,6 +123,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                 data.isDelete = 1;
                 data.type = "ADD";
                 data.empId= profile.id;
+                data.openId = profile.ess.id||0;
                 await ProfileServicesEss.saveExperienceAdmin(data)(requestActions); 
                 // call back fun
                 cb.onLoadData();
@@ -222,7 +225,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
             </Space>
         </Card>
         
-        <ExperienceModal
+        <ExperienceModal modalProps={{maskClosable:false}} 
             open={!!modalVisible?.type} 
             onOpenChange={(visible) => hideModal(visible)}
             profile={profile}

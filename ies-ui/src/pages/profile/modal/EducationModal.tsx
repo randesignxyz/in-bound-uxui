@@ -78,6 +78,7 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb, ...rest }: Pr
                 
                 bmForm.fromYear = educationYear[0];
                 bmForm.toYear = educationYear[1]; 
+                bmForm.openId = profile.ess.id||0;
 
                 await ProfileServicesEss.saveEducationAdmin(bmForm)(requestActions); 
                 // call back fun
@@ -88,7 +89,7 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb, ...rest }: Pr
             },
         });
     }
-    return <ModalForm modalProps={{maskClosable:true}}    {...rest} form={form} width={'30%'} title={!!data?<><ProfileOutlined /> Edit Education</>:<><ProfileOutlined /> Add Education</>}
+    return <ModalForm   {...rest} form={form} width={'40%'} title={!!data?<><ProfileOutlined /> Edit Education</>:<><ProfileOutlined /> Add Education</>}
         // onOpenChange={visible => {
         //     form.resetFields(); 
         //     form.setFieldsValue({

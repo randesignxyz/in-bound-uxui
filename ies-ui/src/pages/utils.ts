@@ -88,10 +88,10 @@ export const formatterPercentage = new Intl.NumberFormat('en-US');
 export const formatConfig = {
     year: 'YYYY',
     date: 'YYYY-MM-DD',
-    dateFull: 'YYYY-MMM-DD',
+    dateFull: 'DD-MMM-YYYY',
     dateTime: 'YYYY-MM-DD HH:mm:ss',
     month: 'YYYY-MM',
-    monthFull: 'YYYY-MMM',
+    monthFull: 'MMM-YYYY',
     duration: 'HH:mm:ss', // 'HH:mm:ss.SSS',
 };
 

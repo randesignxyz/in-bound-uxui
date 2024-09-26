@@ -162,7 +162,7 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
     var MF = ["" ,"Male","Female"];
     // 
     return <div>
-        <ModalForm  {...rest} form={form} width={'40%'} title="View Edit Personal Information"
+        <ModalForm  {...rest} form={form} width={'60%'} title="View Edit Personal Information"
             onOpenChange={visible => {
                 form.resetFields() 
                 rest.onOpenChange?.(visible)

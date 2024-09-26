@@ -356,7 +356,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
             </ProCard>   
         </Space> 
         {/* personal */}
-        <PersonalModal
+        <PersonalModal modalProps={{maskClosable:false}} 
             open={!!modalVisible?.type}
             locations={profile?.essLocation}
             onOpenChange={(visible) => hideModal(visible)}

@@ -38,7 +38,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
     }, []);
     const initData = async () => {
         try {
-            const list = await ProfileServicesEss.listRelationship(profile.id).query(requestActions);
+            const list = await ProfileServicesEss.listRelationship(profile.id,profile.ess.id||0).query(requestActions);
             setRelationshipList(list.data); 
             // old records edit 
             setRelationshipOldList(list.oldData); 
@@ -57,6 +57,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
           onOk: async () => {
             try { 
                 data.isDelete = 0;
+                data.openId = profile.ess.id||0;
                 await ProfileServicesEss.saveRelationship(data)(requestActions); 
                 cb.onLoadData();
                 initData();
@@ -76,6 +77,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                 data.isDelete = 1;
                 data.type = "ADD";
                 data.empId= profile.id;
+                data.openId = profile.ess.id||0;
                 await ProfileServicesEss.saveRelationship(data)(requestActions); 
                 // call back fun
                 cb.onLoadData();
@@ -97,6 +99,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                 data.isDelete = 1;
                 data.type = "ADD";
                 data.empId= profile.id;
+                data.openId = profile.ess.id||0;
                 await ProfileServicesEss.saveRelationshipAdmin(data)(requestActions); 
                 // call back fun
                 cb.onLoadData();
@@ -185,7 +188,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                 />
             </Space>
         </Card>
-        <RelationshipModal
+        <RelationshipModal modalProps={{maskClosable:false}} 
             open={!!modalVisible?.type} 
             onOpenChange={(visible) => hideModal(visible)}
             profile={profile}

@@ -1,7 +1,7 @@
 import { FetchPagingParams } from "@/components/DataCrud/TableView";
 import { execDataService, execDataService0, fetchDataItemService, fetchDataListService, fetchDataPagingService } from "@/services/apiGateway";
 import { SimpleRequestActions } from "@/services/model";
-import { EmpWarehouseList, ItemDetail, ItemGroupListItem, ItemListItem,  SearchParams,  AdjRequest, AdjRequestDetailResponse, AdjRequestListItem, AdjRequestResponse, UoMItemList, SearchLookupParams, LookupData } from "./data.types";
+import { EmpWarehouseList, ItemDetail, ItemGroupListItem, ItemListItem,  SearchParams,  AdjRequest, AdjRequestDetailResponse, AdjRequestListItem, AdjRequestResponse, UoMItemList, SearchLookupParams, LookupData, AdjRequestItemPayload } from "./data.types";
 import { StartWorkFlowParam, TaskActionDataParam } from "@/services/process-workflow/params";
 
 export const createService = (request: SimpleRequestActions) => {
@@ -12,6 +12,12 @@ export const createService = (request: SimpleRequestActions) => {
                 endpoint: 'FMA',
                 payload: params
             })(request),
+        updateAdj: (params: TaskActionDataParam<{items:AdjRequestItemPayload[]}> & {processInstId: string, warehouseFrom?: string}) => 
+                execDataService<any,TaskActionDataParam<{items:AdjRequestItemPayload[]}> & {processInstId: string, warehouseFrom?: string}>({
+                    actionName: 'whm-inventory-update-adj-request',
+                    endpoint: 'FMA',
+                    payload: params
+                })(request),    
         fetchPaging: async (params: FetchPagingParams<SearchParams>) =>
             fetchDataPagingService<AdjRequestListItem, FetchPagingParams<SearchParams>>({
                 actionName: 'fetch-paging-adj-request',

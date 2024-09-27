@@ -1,20 +1,22 @@
 import { ActionType, ProCard, ProColumns, ProTable } from "@ant-design/pro-components";
 import { AdjRequestDetailResponse, AdjRequestItemDetailResponse } from "../data.types";
-import { Descriptions } from "antd";
-import { formatDate, formatDateTime } from "@/pages/utils";
+import { Descriptions, Table } from "antd";
+import { formatDate, formatDateTime, formatter } from "@/pages/utils";
 import { useForm } from "antd/es/form/Form";
 import { useEffect, useRef, useState } from "react";
 import { simpleRequestActions } from "@/services/model";
 import { createService } from "../services";
 import Status from "@/components/Status";
+import { AdjustmentRequestFormNames } from "../process-flow";
 
 interface Props {
     title?:string; 
     instId?: string;
     forceRefresh?: number;
+    formKey: string;
 }
   
-export default ({title,instId, forceRefresh }: Props) => {
+export default ({title,instId, forceRefresh,formKey }: Props) => {
     const [form] = useForm<{stockRemarks:string}>()
     const requestActions = simpleRequestActions();
     const services = createService(requestActions);
@@ -61,28 +63,44 @@ export default ({title,instId, forceRefresh }: Props) => {
         },
         {
             title:'BudgetCode',
+            width: 120,
             dataIndex:'budgetCode'
 
         },
         
-        /*{
-            title: 'Expected Return Date',
-            width: 110,
-            dataIndex:'returnDate',
-            render: (_, r) => formatDate(r?.returnDate)
-
-        },*/
+    ]
+    const isViewCost = AdjustmentRequestFormNames.whApproval!=formKey
+    if(isViewCost){
+        columns.push(
+            {
+                title: 'Item Cost',
+                width: 110,
+                align: 'right',
+                dataIndex:'itemCost',
+                render:(_,r)=> formatter.format(r.itemCost)
+    
+            }
+        )
+        columns.push(
+            {
+                title: 'Amout',
+                width: 110,
+                align: 'right',
+                dataIndex:'qty',
+                render:(_,r) => {
+                    return formatter.format((r.qty<0?-1:1)*(r.qty*r.itemCost))
+                },
+            }
+        )
+    }
+    
+    columns.push(
         {
             title:'Remarks',
             dataIndex:'remarks'
 
-        } /*,{
-            title:'Stock Comment',
-            dataIndex:'stockRemarks'
-
-        }*/
-
-    ]
+        }
+    )
     
     return <>
         <ProCard title='Request Info' collapsible={true}>
@@ -149,6 +167,22 @@ export default ({title,instId, forceRefresh }: Props) => {
                     }
                 }}
                 columns={columns}
+                summary={(data) => {
+                    var totalAmount = 0
+                    data?.forEach((it) => {
+                        totalAmount += (it.qty<0?-1:1)*(it.qty*it.itemCost)
+                    })
+                    return isViewCost&&(
+                      <Table.Summary.Row style={{ textAlign: 'right', fontWeight: 'bold' }}>
+                        <Table.Summary.Cell colSpan={8} index={8}>
+                          {'Total Amount'}
+                        </Table.Summary.Cell>
+                        <Table.Summary.Cell colSpan={1} index={9} align="right">
+                          {formatter.format(totalAmount || 0)}
+                        </Table.Summary.Cell>
+                      </Table.Summary.Row>
+                    );
+                  }}
             />
         </ProCard>
     </>

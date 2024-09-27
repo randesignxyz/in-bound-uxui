@@ -37,7 +37,7 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
     >
         {(data) => {
         return (<Spin spinning={requestActions.request?.loading}>          
-            {instId && <ViewData title="Item Request List" instId={instId}/>}
+            {instId && <ViewData title="Item Request List" instId={instId} formKey={props.formKey}/>}
         </Spin>)
       }}
     </ViewFormWrapper>)

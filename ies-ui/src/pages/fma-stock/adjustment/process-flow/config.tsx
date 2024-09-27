@@ -3,6 +3,7 @@ import DefaultStartForm from '@/pages/process-flow/components/forms/DefaultStart
 import { ActionDataFormProps, DataForm, DataViewProps } from '@/pages/process-flow/data';
 import ViewForm from './ViewForm';
 import { AdjustmentRequestFormNames } from '.';
+import FinReviewControlForm from './FinReviewControlForm';
 // import CheckStockControlForm from './CheckStockControlForm';
 
 export const getInventoryAdjustmentRequestForms = (): DataForm[] => [
@@ -14,20 +15,24 @@ export const getInventoryAdjustmentRequestForms = (): DataForm[] => [
     ),
   },
   {
-    formKey: [     
-      AdjustmentRequestFormNames.functionReview,
+    formKey: [
       AdjustmentRequestFormNames.financeReview,
-      AdjustmentRequestFormNames.functionAckwonledge,
-      AdjustmentRequestFormNames.executiveApproval
+    ],
+    dataViewForm: (props: DataViewProps) => <ViewForm {...props} contribute={{formNo: 1}} />,
+    actionDataForm: (props: ActionDataFormProps) => <FinReviewControlForm {...props} />,
+  },
+  {
+    formKey: [     
+      AdjustmentRequestFormNames.whApproval,
+      AdjustmentRequestFormNames.functionApproval,
+      AdjustmentRequestFormNames.finManagerApproval,
+      AdjustmentRequestFormNames.dmbo1,
+      AdjustmentRequestFormNames.dmbo2,
+      AdjustmentRequestFormNames.mbo,
+      AdjustmentRequestFormNames.dmd
     ],
     dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,
     actionDataForm: (props: ActionDataFormProps) => <DefaultActionForm {...props} />,
   },
-  // {
-  //   formKey: [
-  //     AdjustmentRequestFormNames.physicalStock
-  //   ],
-  //   dataViewForm: (props: DataViewProps) => <ViewForm {...props} contribute={{formNo: 1}} />,
-  //   actionDataForm: (props: ActionDataFormProps) => <CheckStockControlForm {...props} />,
-  // },
+ 
 ];

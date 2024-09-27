@@ -11,6 +11,7 @@ import { simpleRequestActions } from '@/services/model';
 import { ProCard } from "@ant-design/pro-components";
 import PersonalModal from '../modal/PersonalModal';
 import PersonalViewEditModal from '../modal/PersonalViewEditModal';
+import { formatDATEFUll } from '@/pages/utils';
 
 interface Props {
     profile: ProfileData; 
@@ -89,7 +90,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
         {
             key     : '4',
             label   : 'Date of Birth',
-            children: <>{profile.profile.dateBirth}</>,
+            children: <>{formatDATEFUll(profile.profile.dateBirth)}</>,
         },
         {
             key     : '5',

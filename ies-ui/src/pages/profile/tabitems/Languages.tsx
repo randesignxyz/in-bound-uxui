@@ -171,6 +171,8 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                         },{
                             title: "Level", dataIndex: "levelName"
                         },{
+                            title: "Type", dataIndex: "typeName"
+                        },{
                             title: "Description", dataIndex: "description"
                         },
                         {   width: 100, 

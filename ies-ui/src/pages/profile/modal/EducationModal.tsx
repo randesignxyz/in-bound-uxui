@@ -1,5 +1,5 @@
 import { LookupDataItem2 } from "@/services/data"
-import { ModalForm, ModalFormProps, ProCard, ProForm, ProFormDateYearRangePicker, ProFormSelect, ProFormText } from "@ant-design/pro-components"
+import { ModalForm, ModalFormProps, ProCard, ProForm, ProFormDateYearRangePicker, ProFormDigit, ProFormSelect, ProFormText } from "@ant-design/pro-components"
 import { useForm } from "antd/lib/form/Form"
 import { EducationData, EssLookupData, FilesData, MarjorData } from "../data.ess"
 import { Flex, Space, Typography, Row, Col, Image,List, Modal, message, Button,} from 'antd';
@@ -88,7 +88,7 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb, ...rest }: Pr
             },
         });
     }
-    return <ModalForm  {...rest} form={form} width={'30%'} title={!!data?<><ProfileOutlined /> Edit Education</>:<><ProfileOutlined /> Add Education</>}
+    return <ModalForm modalProps={{maskClosable:true}}    {...rest} form={form} width={'30%'} title={!!data?<><ProfileOutlined /> Edit Education</>:<><ProfileOutlined /> Add Education</>}
         // onOpenChange={visible => {
         //     form.resetFields(); 
         //     form.setFieldsValue({
@@ -149,7 +149,8 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb, ...rest }: Pr
                         })}  
                     /> 
                 </Col>
-            </Row>  
+            </Row> 
+            <ProFormDigit label="GPA" name={'gpa'} rules={[{ required: true }]}/>   
             <Row>
                 <Col span={24} style={{padding:'3px'}}>
                     <ProFormDateYearRangePicker name="educationYear" label = "Year" rules={[{ required: true }]}/>

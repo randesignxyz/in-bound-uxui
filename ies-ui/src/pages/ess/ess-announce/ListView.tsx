@@ -13,7 +13,7 @@ import { Model } from "../model";
 import AppNewOpenForm from "./AppNewOpenForm"; 
 import moment from 'moment'; 
 import { MenuProps } from "rc-menu";
-import { formatDate } from "@/pages/utils";
+import { formatDate, formatDATEFUll } from "@/pages/utils";
 
 interface Props {
     onAdd?: (id?: number) => void;
@@ -175,10 +175,10 @@ export default ({ onAdd, onEdit }: Props) => {
                     </Flex>
                 },
                 },
-                {title: 'Start Date', dataIndex: 'startDate', render    : (_, r) => formatDate(r.startDate),width:'7%'},
-                {title: 'End Date', dataIndex: 'endDate', render    : (_, r) => formatDate(r.endDate), width:'7%'},
+                {title: 'Start Date', dataIndex: 'startDate', render    : (_, r) => formatDATEFUll(r.startDate),width:'7%'},
+                {title: 'End Date', dataIndex: 'endDate', render    : (_, r) => formatDATEFUll(r.endDate), width:'7%'},
                 {title: 'Description', dataIndex:  'description', },
-                {title: 'Created Date', dataIndex: 'createdDate', render    : (_, r) => formatDate(r.createdDate), width:'7%'},
+                {title: 'Created Date', dataIndex: 'createdDate', render    : (_, r) => formatDATEFUll(r.createdDate), width:'7%'},
                 {title: 'Created By', dataIndex: 'createdBy', width:'7%'},
                 {title: 'Status',width: 120, render:(_,r) =>{
                         var currentTime = new Date(); 

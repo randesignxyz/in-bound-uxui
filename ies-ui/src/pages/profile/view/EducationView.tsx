@@ -49,6 +49,8 @@ export default ( {oldData,newData,essProfileId,isAdmin,step,cb, ...rest}: Props)
                         },{
                             title: "Country of Education Institution", dataIndex: "countryEducationCenterName" 
                         },{
+                            title: "GPA", dataIndex: "gpa" 
+                        },{
                             title: "Year", render: (_, r) => {return formatYear(r.fromYear)+" - "+ formatYear(r.toYear)}
                         },{
                             title: "Status", dataIndex: "statusName" 
@@ -92,6 +94,8 @@ export default ( {oldData,newData,essProfileId,isAdmin,step,cb, ...rest}: Props)
                             title: "Education Institution", dataIndex: "educationCenter"
                         },{
                             title: "Country of Education Institution", dataIndex: "countryEducationCenterName" 
+                        },{
+                            title: "GPA", dataIndex: "gpa" 
                         },{
                             title: "Year", render: (_, r) => {return formatYear(r.fromYear)+" - "+ formatYear(r.toYear)}
                         },{

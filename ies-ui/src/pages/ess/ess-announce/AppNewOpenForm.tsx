@@ -59,7 +59,7 @@ export default ({ open, onOpenModalChange, refreshTable,data}: Props) => {
   }, [data])
   const initData = async () => { 
     var dataRange= [data.startDate,data.endDate];
-    formSubmittor.setFieldsValue({...data,annountmentDate:dataRange});
+    formSubmittor.setFieldsValue({...data,annountmentDate:dataRange}); 
   }
   return (
     <ModalForm
@@ -110,7 +110,7 @@ export default ({ open, onOpenModalChange, refreshTable,data}: Props) => {
               <ProFormDateRangePicker label="Date" name={"annountmentDate"} rules={[{ required: true }]} 
               fieldProps={{
                 disabledDate: (current: any) => {
-                    return current && current < dayjs().endOf('day');
+                    return current && current < dayjs().subtract(1, 'day');
                 }
             }}/>
             </Space> 

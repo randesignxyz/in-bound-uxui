@@ -8,7 +8,7 @@ import { simpleRequestActions } from '@/services/model';
 import { ProfileServicesEss } from '../service_ess'; 
 import TrainingView from "../view/TrainingView";
 import CertificationView from "../view/CertificationView";
-import { formatDate, formatMonth, formatYear } from "@/pages/utils";
+import { formatDate, formatDATEFUll, formatMonth, formatMonthFull, formatYear } from "@/pages/utils";
 import TrainingModal from '../modal/TrainingModal';
 import CertificationModal from "../modal/CertificationModal";
 import { useAccess } from '@umijs/max';
@@ -266,10 +266,10 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                                 title: "Date", 
                                 dataIndex: "year",
                                 render:(dom, r) => {
-                                    return (formatDate(r.year) +" - "+ formatDate(r.toYear));
+                                    return (formatDATEFUll(r.year) +" - "+ formatDATEFUll(r.toYear));
                                 }
                             },{
-                                title: "Duration", dataIndex: "duration"
+                                title: "Duration(Hours)", dataIndex: "duration"
                             },{
                                 title: "Description", dataIndex: "description"
                             }, 
@@ -298,7 +298,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                 {/* cource */}
                 <ProCard bordered>                    
                     <Space direction="horizontal">
-                        <Typography.Title level={5}>Professional Certification</Typography.Title><Typography.Title style={{fontSize:'12px',color:"gray"}}>(Professional's competency with international standards, industry specifications or technical rules)</Typography.Title>  
+                        <Typography.Title level={5}>Professional Certification</Typography.Title><Typography.Title style={{fontSize:'11px',color:"gray"}}>(Professional's competency with international standards, industry specifications or technical rules - e.g., ACCA, Project Management Professional, SHRM-CP/SCP, ITIL, etc.)</Typography.Title>  
                     </Space>
                     <ProTable<TrainingData>
                         dataSource={certificateList}
@@ -320,7 +320,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                                 title: "In Year", 
                                 dataIndex: "year",
                                 render:(dom, r) => {
-                                    return formatMonth(r.year)
+                                    return formatMonthFull(r.year)
                                 }
                             },{
                                 title: "Description", dataIndex: "description"
@@ -350,7 +350,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
             </Space>
             
             <Space direction={"vertical"} style={{width:'100%'}} hidden={!access.canAccessHrVissibleTraining}>
-                <div style={{textAlign:'center',fontSize:'24px', padding:'30px',color:'blue'}}>Your training record will be uploaded soon!!!</div> 
+                <div style={{textAlign:'center',fontSize:'24px', padding:'30px',color:'gray'}}>Your training record will be uploaded soon!!!</div> 
             </Space>
         </Card>
         

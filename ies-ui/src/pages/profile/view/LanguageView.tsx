@@ -40,6 +40,8 @@ export default ( {oldData,newData,essProfileId,isAdmin,step,cb, ...rest}: Props)
                 },{
                     title: "Level", dataIndex: "levelName"
                 },{
+                    title: "Type", dataIndex: "typeName"
+                },{
                     title: "Description", dataIndex: "description"
                 },{   width: '70px',
                     render: (dom, r) => {
@@ -72,6 +74,8 @@ export default ( {oldData,newData,essProfileId,isAdmin,step,cb, ...rest}: Props)
                     title: "Languages", dataIndex: "languageName"
                 },{
                     title: "Level", dataIndex: "levelName"
+                },{
+                    title: "Type", dataIndex: "typeName"
                 },{
                     title: "Description", dataIndex: "description"
                 },{   width: '70px',

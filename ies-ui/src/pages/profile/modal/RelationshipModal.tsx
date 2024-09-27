@@ -48,6 +48,7 @@ export default ({ profile,data,type,isAdmin,empId,cb, ...rest }: Props) => {
                 bmForm.empId = empId;
                 bmForm.status=true;
                 bmForm.isDelete=0;
+                bmForm.openId = profile.ess.id||0;
                 await ProfileServicesEss.saveRelationshipAdmin(bmForm)(requestActions); 
                 // call back fun
                 cb.onReload(); 
@@ -57,7 +58,7 @@ export default ({ profile,data,type,isAdmin,empId,cb, ...rest }: Props) => {
             },
         });
     }
-    return <ModalForm  {...rest} form={form} width={'30%'} title={!!data?<><ProfileOutlined /> Edit Family member</>:<><ProfileOutlined /> Add Family member</>} 
+    return <ModalForm  {...rest} form={form} width={'40%'} title={!!data?<><ProfileOutlined /> Edit Family member</>:<><ProfileOutlined /> Add Family member</>} 
             submitter={isAdmin==2&&empId>0?
                 {
                     render: () => { 

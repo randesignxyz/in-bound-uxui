@@ -132,6 +132,7 @@ export interface SaveEmergency {
   homeNo: number;
   street: number;
   villageId: number;
+  openId: number;
 
   status:Boolean;
   type:string;
@@ -173,6 +174,7 @@ export interface SaveLanguage {
   empId:number;
   isDelete:number;
   languageId: number; 
+  openId: number; 
   levelName: string; 
   description: string;  
   status:Boolean;
@@ -192,6 +194,7 @@ export interface LanguageData {
   description: string;  
   status:Boolean; 
   isDelete:number;
+  openId:number;
   otherFile  :AttachmentFile[];
 }
 export interface RelationshipData {
@@ -204,6 +207,7 @@ export interface RelationshipData {
   dateOfBirth: moment.Moment;  
   status:Boolean;  
   isDelete:number;
+  openId:number;
   type:string; 
 }
 
@@ -237,6 +241,7 @@ export interface SaveTraining {
   description : string;  
   status      : Boolean;
   type        : string;
+  openId:number;
   otherFile   : AttachmentFile[];
 }  
 export interface TrainingData {
@@ -251,6 +256,7 @@ export interface TrainingData {
   duration    : string;
   description : string;  
   status      : Boolean;
+  openId:number;
   otherFile   : AttachmentFile[];
 }
 export interface ProfileTrainingData { 
@@ -280,6 +286,7 @@ export interface SaveExperience {
   description: string;  
   status:Boolean;
   type:string;
+  openId:number;
   otherFile  :AttachmentFile[];
 }  
 export interface ExperienceData {
@@ -302,6 +309,7 @@ export interface ExperienceData {
   description     : string;  
   status          : Boolean;
   type            : string;
+  openId:number;
   otherFile       : AttachmentFile[];
 }
 export interface ProfileExperienceData { 
@@ -332,6 +340,7 @@ export interface EducationData {
   otherFile   : AttachmentFile[];
   degreeName  : string; 
   statusName  : string; 
+  openId:number;
   countryEducationCenterName: string; 
 }
 export interface ProfileEducationData { 

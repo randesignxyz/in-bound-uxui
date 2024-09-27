@@ -69,7 +69,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
     }, []);
     const initData = async () => {
         try {
-            const list = await ProfileServicesEss.listTraining(profile.id).query(requestActions);
+            const list = await ProfileServicesEss.listTraining(profile.id,profile.ess.id||0).query(requestActions);
             setTrainingList(list.data); 
             setCertificateList(list.dataCert);
             // old records edit 
@@ -110,6 +110,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                 data.year = fromyear;
                 data.toYear = toyear; 
                 data.traincert=1;
+                data.openId = profile.ess.id||0;
 
                 await ProfileServicesEss.saveTraining(data)(requestActions); 
                 // call back fun
@@ -136,8 +137,9 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
             try {
                 data.otherFile = createFileOther||[];
                 data.isDelete = 0; 
-                data.toYear = '';
+                data.toYear = data.year;
                 data.traincert=2;
+                data.openId = profile.ess.id||0;
 
                 await ProfileServicesEss.saveTraining(data)(requestActions); 
                 // call back fun
@@ -160,6 +162,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                 data.isDelete = 1;
                 data.type = "ADD";
                 data.empId= profile.id;
+                data.openId = profile.ess.id||0;
                 await ProfileServicesEss.saveTraining(data)(requestActions); 
                 // call back fun
                 cb.onLoadData();
@@ -181,6 +184,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                 data.isDelete = 1;
                 data.type = "ADD";
                 data.empId= profile.id;
+                data.openId = profile.ess.id||0;
                 await ProfileServicesEss.saveTrainingAdmin(data)(requestActions); 
                 // call back fun
                 cb.onLoadData();
@@ -354,7 +358,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
             </Space>
         </Card>
         
-        <TrainingModal
+        <TrainingModal modalProps={{maskClosable:false}} 
             open={!!modalVisible?.type} 
             onOpenChange={(visible) => hideModal(visible)}
             profile={profile}
@@ -387,7 +391,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
         /> 
         
         
-        <CertificationModal
+        <CertificationModal modalProps={{maskClosable:false}} 
             open={!!modalCertificateVisible?.type} 
             onOpenChange={(visible) => hideCertificateModal(visible)}
             profile={profile}

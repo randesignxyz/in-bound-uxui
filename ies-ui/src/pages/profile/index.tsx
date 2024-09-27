@@ -271,7 +271,7 @@ function Profile() {
   }
 
   // stage
-  const _info = "Period: From  "+(profile?.ess.id!!<=0?'':formatDATEFUll(profile?.ess.startDate))+" To  "+(profile?.ess.id!!<=0?'':formatDATEFUll(profile?.ess.endDate))+"";
+  const _info = "Start Date  "+(profile?.ess.id!!<=0?'':formatDATEFUll(profile?.ess.startDate))+" \n\r End Date  "+(profile?.ess.id!!<=0?'':formatDATEFUll(profile?.ess.endDate))+"";
   const _stag = ["Cancel Updated","Getting Started","Start Modifying","Reviewing","Rejected","Re-Edit","Approval","Cancelled Submitted"];
   const _stag_message = [
     /*0*/"Cancel Updated",

@@ -67,113 +67,120 @@ const LeadDetailView: React.FC<Props> = ({ id, onEdit }) => {
 
   return (
     // <Spin spinning={requestActions.request?.loading}>
-      <Flex gap={12} vertical>
-        <Card size='small' title={"Saleperson"}>
-            <ProDescriptions
-              dataSource={lead?.salesperson}
-              loading={requestActions.request?.loading}
-              contentStyle={{
-                fontWeight:500
-              }}
-              columns={[
-                {
-                  title:"Saleperson",
-                  render:(_,r)=>[r.salespersonCode, r.salespersonName].filter(p=>p).join(" - ")
-                },
-                {
-                  title:"Phone Number",
-                  render:(_,r)=><Typography.Text type='warning'>{r.phoneNumber}</Typography.Text>
-                },
-                {
-                  title:"Plate Number",
-                  render:(_,r)=>r.vehicle?.plateNumber
-                },
-              ]}
-            />
-        </Card>
-        <Card size='small' title={"Customer Information"}>
-          <ProDescriptions
+    <Flex gap={12} vertical>
+      <Card size='small' title={"Saleperson"} 
+         extra={[
+          <Button type="link" onClick={() => onEdit?.(lead)} icon={<EditOutlined />}>
+            Edit
+          </Button>
+        ]}
+      >
+        <ProDescriptions
+          dataSource={lead?.salesperson}
           loading={requestActions.request?.loading}
-            contentStyle={{
-              fontWeight: 500
-            }}
-            dataSource={lead}
-            columns={[
-              {
-                title: "Code",
-                render: (_, r) => r.leadCode ? r.leadCode : "N/A"
-              },
-              {
-                title: "Shop Name",
-                dataIndex: "internalName"
-              },
-              {
-                title:"Ownere Name",
-                render:(_,r)=>[r.firstName, r.lastName].filter(o=>o).join(" ")
-              },
-              {
-                title:"Phone",
-                render:(_,r)=><Typography.Text type='warning'>{[r.phone, r.phone1, r.phone2].filter(p=>p).join(" / ")}</Typography.Text>
-              },
-              {
-                title:"Outlet Type",
-                render:(_,r)=><Tag  color='blue'>{lead?.outletType?.name}</Tag>,
-                span:2
-              },
-              {
-                valueType:"divider",
-                span:3,
-              },
-              {
-                title:"House No",
-                dataIndex:"houseNo"
-              },
-              {
-                title:"Street No",
-                dataIndex:"streetNo"
-              },
-              {
-                title:"Street Name",
-                dataIndex:"streetName"
-              },
-              {
-                title:"Village",
-                dataIndex:"streetName",
-                render:(_,r)=>lead?.village?.name
-              },
-              {
-                title:"Commune",
-                dataIndex:"streetName",
-                render:(_,r)=>lead?.commune?.name
-              },
-              {
-                title:"District",
-                dataIndex:"streetName",
-                render:(_,r)=>lead?.district?.name
-              },
-              {
-                title:"Province",
-                render:(_,r)=>lead?.province?.name,
-                
-              },
-              {
-                title:"Region",
-                render:(_,r)=>lead?.region?.name,
-                span:2
-              },
-              {
-                title:"Latitude",
-                render:(_,r)=>lead?.latitude,
-              },
-              {
-                title:"Longitude",
-                render:(_,r)=>lead?.longitude,
-              },
-            ]}
-          />
-        </Card>
+         
+          contentStyle={{
+            fontWeight: 500
+          }}
+          columns={[
+            {
+              title: "Saleperson",
+              render: (_, r) => [r.salespersonCode, r.salespersonName].filter(p => p).join(" - ")
+            },
+            {
+              title: "Phone Number",
+              render: (_, r) => <Typography.Text type='warning'>{r.phoneNumber}</Typography.Text>
+            },
+            {
+              title: "Plate Number",
+              render: (_, r) => r.vehicle?.plateNumber
+            },
+          ]}
+        />
+      </Card>
+      <Card size='small' title={"Customer Information"}>
+        <ProDescriptions
+          loading={requestActions.request?.loading}
+          contentStyle={{
+            fontWeight: 500
+          }}
+          dataSource={lead}
+          columns={[
+            {
+              title: "Code",
+              render: (_, r) => r.leadCode ? r.leadCode : "N/A"
+            },
+            {
+              title: "Shop Name",
+              dataIndex: "internalName"
+            },
+            {
+              title: "Ownere Name",
+              render: (_, r) => [r.firstName, r.lastName].filter(o => o).join(" ")
+            },
+            {
+              title: "Phone",
+              render: (_, r) => <Typography.Text type='warning'>{[r.phone, r.phone1, r.phone2].filter(p => p).join(" / ")}</Typography.Text>
+            },
+            {
+              title: "Outlet Type",
+              render: (_, r) => <Tag color='blue'>{lead?.outletType?.name}</Tag>,
+              span: 2
+            },
+            {
+              valueType: "divider",
+              span: 3,
+            },
+            {
+              title: "House No",
+              dataIndex: "houseNo"
+            },
+            {
+              title: "Street No",
+              dataIndex: "streetNo"
+            },
+            {
+              title: "Street Name",
+              dataIndex: "streetName"
+            },
+            {
+              title: "Village",
+              dataIndex: "streetName",
+              render: (_, r) => lead?.village?.name
+            },
+            {
+              title: "Commune",
+              dataIndex: "streetName",
+              render: (_, r) => lead?.commune?.name
+            },
+            {
+              title: "District",
+              dataIndex: "streetName",
+              render: (_, r) => lead?.district?.name
+            },
+            {
+              title: "Province",
+              render: (_, r) => lead?.province?.name,
 
-      </Flex>
+            },
+            {
+              title: "Region",
+              render: (_, r) => lead?.region?.name,
+              span: 2
+            },
+            {
+              title: "Latitude",
+              render: (_, r) => lead?.latitude,
+            },
+            {
+              title: "Longitude",
+              render: (_, r) => lead?.longitude,
+            },
+          ]}
+        />
+      </Card>
+
+    </Flex>
 
     //   <ProForm form={form} {...layout} layout="horizontal" submitter={false}>
     //     <Row justify="end">

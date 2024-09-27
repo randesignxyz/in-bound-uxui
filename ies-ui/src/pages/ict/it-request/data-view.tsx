@@ -27,14 +27,16 @@ export default ({ processInstaceId }: { processInstaceId: string }) => {
         <ProDescriptions<ITRequestDetail>
 
             columns={[
-                { label: 'Session', dataIndex: 'session', render: (_,r ) => itRequestSessions.find(it => it.value == r.requestTypeId)?.label },
+                { label: 'section', dataIndex: 'session', render: (_, r) => itRequestSessions.find(it => it.value == r.requestTypeId)?.label },
                 { label: 'Reason', dataIndex: 'reason', valueType: 'textarea' },
                 ...data?.requestTypeId == 2 ? [
-                    { label: 'Date', render: () => {
-                        var review = firstItem?.requestedDate?formatDateTime(firstItem.requestedDate):'';
-                        review += firstItem?.requestedDateTo? (' ~ '+formatDateTime(firstItem.requestedDateTo)):''
-                      return review
-                    }},
+                    {
+                        label: 'Date', render: () => {
+                            var review = firstItem?.requestedDate ? formatDateTime(firstItem.requestedDate) : '';
+                            review += firstItem?.requestedDateTo ? (' ~ ' + formatDateTime(firstItem.requestedDateTo)) : ''
+                            return review
+                        }
+                    },
                     { label: 'CCTV Location', render: () => firstItem?.itemName },
                     { label: 'Remarks', render: () => firstItem?.remarks }
                 ] : []
@@ -43,14 +45,14 @@ export default ({ processInstaceId }: { processInstaceId: string }) => {
             dataSource={data}
         />
 
-        {data?.requestTypeId  != 2 && <Table<ITRequestItemDetail> 
-            dataSource = {data?.items}
-            rowKey = 'id'
+        {data?.requestTypeId != 2 && <Table<ITRequestItemDetail>
+            dataSource={data?.items}
+            rowKey='id'
             size='small'
             columns={[
-                {title: "Category", width: 300 , dataIndex:'category'},
-                {title: "Item Name", width: 350 , dataIndex:'itemName'},
-                {title: "Remarks", dataIndex:'remarks'},
+                { title: "Category", width: 300, dataIndex: 'category' },
+                { title: "Item Name", width: 350, dataIndex: 'itemName' },
+                { title: "Remarks", dataIndex: 'remarks' },
             ]}
         />}
 

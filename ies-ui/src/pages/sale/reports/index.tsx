@@ -27,12 +27,12 @@ const Reports: React.FC<Props> = ({ reportName, onClose }) => {
 
   return (
     <div>
-      {/* <SaleOrderReport
+      <SaleOrderReport
         title="Sale Order Report"
         width="800px"
         open={reportName === 'sale-order-report'}
         onCancel={onClose}
-      /> */}
+      />
       <DSDSalesInvoiceReport
         salespersons={salesperson}
         title="Generate DSD Reports"

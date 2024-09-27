@@ -59,6 +59,10 @@ export default ({ profile,data,type,isAdmin,empId,cb, ...rest }: Props) => {
         });
     }
     return <ModalForm  {...rest} form={form} width={'40%'} title={!!data?<><ProfileOutlined /> Edit Family member</>:<><ProfileOutlined /> Add Family member</>} 
+            onOpenChange={visible => {
+                form.resetFields()
+                rest.onOpenChange?.(visible);
+            }}        
             submitter={isAdmin==2&&empId>0?
                 {
                     render: () => { 

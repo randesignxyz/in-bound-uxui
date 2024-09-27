@@ -74,20 +74,10 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
         });
     }
     return <ModalForm  {...rest} form={form} width={'40%'} title={!!data?<><ProfileOutlined /> Edit Language</>:<><ProfileOutlined /> Add Language</>}
-    //     onOpenChange={visible => {
-    //         form.resetFields()
-    //     //     if(visible) {
-    //     //         form.setFieldsValue({
-    //     //             id: data?.id,
-    //     //             languageId: data?.languageId,
-    //     //             level_name: data?.level_name,
-    //     //             description: data?.description
-    //     //         })
-    //     //     }
-
-    //         rest.onOpenChange?.(visible);
-    //     } 
-    // }
+            onOpenChange={visible => {
+                form.resetFields()
+                rest.onOpenChange?.(visible);
+            }}
 
             submitter={isAdmin==2&&empId>0?
                 {

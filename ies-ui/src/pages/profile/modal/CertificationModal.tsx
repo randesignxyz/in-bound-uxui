@@ -87,10 +87,10 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
     }
     // 
     return <ModalForm  {...rest} form={form} width={'50%'} title={!!data?<><ProfileOutlined /> Edit Professional Certification</>:<><ProfileOutlined /> Add Professional Certification</>}
-        // onOpenChange={visible => {
-        //     form.resetFields()
-        //     rest.onOpenChange?.(visible)
-        // }}
+        onOpenChange={visible => {
+            form.resetFields()
+            rest.onOpenChange?.(visible);
+        }}
 
         submitter={isAdmin==2&&empId>0?
                     {

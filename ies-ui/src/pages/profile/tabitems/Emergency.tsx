@@ -181,7 +181,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
                     },{
                         title: "Emergency Address", render: (dom, r) => {
                             var homeNo = (r.homeNo==''?'':"#"+r.homeNo);
-                            var street = (r.street==''?', ':", Str. "+r.street);
+                            var street = (r.street==''?'':", Str. "+r.street);
                             var villageId = (r.villageId==''?', ': ", "+r.villageId+", ");  
                             return homeNo + street + villageId+r.communeName+", "+r.districtName+", "+r.provinceName;
                         }

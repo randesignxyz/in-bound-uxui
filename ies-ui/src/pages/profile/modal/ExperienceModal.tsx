@@ -92,7 +92,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
     }
     return <ModalForm  {...rest} form={form} width={'40%'} title={!!data?<><ProfileOutlined /> Edit Experience</>:<><ProfileOutlined /> Add Experience</>}
         onOpenChange={visible => {
-            // form.resetFields() 
+            form.resetFields() 
             rest.onOpenChange?.(visible);
         }} 
             submitter={isAdmin==2&&empId>0?

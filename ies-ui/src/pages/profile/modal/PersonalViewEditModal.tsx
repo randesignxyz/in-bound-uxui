@@ -258,7 +258,7 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                         </Col>
                         <Col span={12} style={{padding:'3px'}}>
                             <ProFormDigit name={"spouseStaffId"} label="Spouse's OML Employee ID number"  allowClear={false} hidden={profile.profile.marriedWith==true?false:true}/>
-                            <ProFormText fieldProps={{ style: { color:'red',display:profile_draft?.spouseStaffId=="0"?'none':'' },value:`${profile_draft==null?'':profile_draft!!.spouseStaffId}`}} />
+                            <ProFormText fieldProps={{ style: { color:'red',display:profile_draft?.spouseStaffId==""||profile_draft?.spouseStaffId==null?'none':'' },value:`${profile_draft==null?'':profile_draft!!.spouseStaffId}`}} />
                         </Col>       
                     </Row>
 
@@ -273,11 +273,11 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                             <ProFormText hidden={profile_draft?.nationalId==profile.profile?.nationalId?true:false} fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.nationalId}`}} />
                         </Col>                       
                         <Col span={8} style={{padding:'3px'}}>  
-                            <ProFormText label="Issued Date" name={'nationalIssuedDate'} allowClear={false} />
+                            <ProFormDatePicker label="Issued Date" name={'nationalIssuedDate'} allowClear={false} />
                             <ProFormText hidden={profile_draft?.nationalIssuedDate==profile.profile?.nationalIssuedDate?true:false}  fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':formatDATEFUll(profile_draft!!.nationalIssuedDate)}`}} />
                         </Col>   
                         <Col span={8} style={{padding:'3px'}}>
-                            <ProFormText label="Expiry Date" name={'nationalExpiryDate'} allowClear={false} />
+                            <ProFormDatePicker label="Expiry Date" name={'nationalExpiryDate'} allowClear={false} />
                             <ProFormText hidden={profile_draft?.nationalExpiryDate==profile.profile?.nationalExpiryDate?true:false}  fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':formatDATEFUll(profile_draft!!.nationalExpiryDate)}`}} />
                         </Col>             
                     </Row>

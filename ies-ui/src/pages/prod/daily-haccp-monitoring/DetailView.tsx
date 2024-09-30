@@ -49,7 +49,7 @@ export default ({ id, ...rest }: Props) => {
         },
         {
             path: `${ProdPaths.dailyHACCPMonitoring}/list`,
-            label: 'Daily HACCP Monitoring',
+            label: 'Daily HACCP Monitoring Line',
         },
         {
             path: '',
@@ -94,13 +94,13 @@ export default ({ id, ...rest }: Props) => {
                         {data?.assign_to?.split(" ").includes(access.currentUser?.login || '') || access.canAssignItemPre ?
                             <>
 
-                                <Button
+                                {/* <Button
                                     onClick={() => (data?.line == 'Line 2' || data?.line == 'Line 3') ? setLine2Line3ModelOpen({ visible: true, data: data }) : (data?.line == 'Line 4' || data?.line == 'Line 5' || data?.line == 'Line 6') ? setLine4Line5Line6ModelOpen({ visible: true, data: data }) : ''}
                                     type="primary"
                                     icon={<PlusCircleFilled />}
                                 >
                                     New
-                                </Button>
+                                </Button> */}
                                 <Button
                                     // style={{ color: 'red', borderColor: 'red' }}
                                     icon={<FileDoneOutlined />}
@@ -184,7 +184,7 @@ export default ({ id, ...rest }: Props) => {
                         {
                             label: 'List',
                             key: '1',
-                            children: <ItemTab data={subData ?? {}} type={part[2]} refresh={(v) => { v == true ? setOnRefresh(true) : setOnRefresh(false) }} />,
+                            children: <ItemTab data={subData ?? {}} assign_to={data?.assign_to} line={data?.line} type={part[2]} refresh={(v) => { v == true ? setOnRefresh(true) : setOnRefresh(false) }} />,
 
                         },
                         {

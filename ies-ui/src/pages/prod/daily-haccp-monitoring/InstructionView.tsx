@@ -34,7 +34,7 @@ export default () => {
         },
         {
             path: `/prod/daily-haccp-monitoring/list`,
-            label: 'Daily HACCP Monitoring',
+            label: 'Daily HACCP Monitoring Line',
         },
         {
             path: '',

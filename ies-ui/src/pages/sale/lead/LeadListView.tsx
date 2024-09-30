@@ -205,19 +205,19 @@ export default ({ onDetail }: Props) => {
               return r.province?.name;
             },
           },
-          {
-            title: 'Commene',
-            render: (_, r) => {
-              return r.commune?.name;
-            },
-          },
+
           {
             title: 'District',
             render: (_, r) => {
               return r.district?.name;
             },
           },
-
+          {
+            title: 'Commune',
+            render: (_, r) => {
+              return r.commune?.name;
+            },
+          },
           {
             title: 'Village',
             render: (_, r) => {

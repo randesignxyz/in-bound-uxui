@@ -252,6 +252,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
             rowKey={(r) => {
               return r.key;
             }}
+            size='small'
             actionRef={actionRef}
             key={`EditableProTable-${data?.id}`}
             recordCreatorProps={false}
@@ -407,13 +408,17 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
                               setDataSource(dataSourceItems);
                               actionRef.current?.reload();
                             } else {
-                              const isCopied = dataSource.some((e) => (e.id === record.id) && !record.isSplit);
-                              console.log(dataSource)
-                              if (isCopied) {
-                                message.error('Please remove copied item firstly.');
-                              } else {
-                                setShowRemark({ isOpen: true, record: record });
-                              }
+                              // const isCopied = dataSource.some((e) => {
+                              //   console.log((e.id === record.id) && record.isSplit);
+                                
+                              // });
+                              // console.log(isCopied)
+                              // if (isCopied) {
+                              //   message.error('Please remove copied item firstly.');
+                              // } else {
+                                // setShowRemark({ isOpen: true, record: record });
+                              // }
+                              setShowRemark({ isOpen: true, record: record });
                             }
                           }}
                         />

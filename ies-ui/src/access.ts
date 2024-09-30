@@ -707,11 +707,17 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canAccessSaleLead: currentUser?.authorities.some((items) =>
       ['ROLE_DSD_ADMIN', 'ROLE_ADMIN', 'ROLE_SALE_INDIVIDUAL'].some((it) => it === items)
     ) || false,
+
+    canAccessSaleReport: currentUser?.authorities.some((items) =>
+      ['ROLE_DSD_ADMIN', 'ROLE_ADMIN',"ROLE_DSD_REPORT"].some((it) => it === items)
+    ) || false,
+    // canAccessSaleDailySettle :currentUser?.authorities.some((items)=>
+    //  || false),
     // ==== END reach ====
 
     canAccessAllMenuDSD:
       currentUser?.authorities.some((item) =>
-        ['ROLE_DSD_ADMIN', 'ROLE_ADMIN'].some((it) => it === item),
+        ['ROLE_DSD_ADMIN', 'ROLE_ADMIN', "ROLE_DSD_REPORT"].some((it) => it === item),
       ) || false,
 
     canAcessStockControlMenuItem:

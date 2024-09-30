@@ -9,25 +9,28 @@ import { HACCPMonitoring, HACCPMonitoringList } from './data';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 
 interface Props extends FormModalProps {
-    data?: HACCPMonitoring
+    data?: HACCPMonitoringList
     type?: string
     onSave: (data: HACCPMonitoringList) => void
+    line?: string,
+    assign_to?: string
 }
-export default ({ data, onSave, type, ...props }: Props) => {
+export default ({ data, onSave, type, line, assign_to, ...props }: Props) => {
     const access = useAccess();
     const [form] = useForm<HACCPMonitoringList>();
-    const [smell, setSmell] = useState()
-    const [activityControl, setActivityControl] = useState()
-    const [nozzlesRinser, setNozzlesRinser] = useState()
-
+    const [smell, setSmell] = useState<string | undefined | number>(undefined);
+    const [activityControl, setActivityControl] = useState<string | undefined | number>(undefined)
+    const [nozzlesRinser, setNozzlesRinser] = useState<string | undefined | number>(undefined)
+    const [opo, setOpo] = useState<string | undefined | number>(undefined)
     const { Text } = Typography;
 
     useEffect(() => {
         if (props.open) {
             form.resetFields();
-            setSmell(undefined)
-            setActivityControl(undefined)
-            setNozzlesRinser(undefined)
+            setSmell(data?.smell)
+            setActivityControl(data?.activity_control)
+            setNozzlesRinser(data?.nozzles_rinser)
+            setOpo(data?.opo)
         }
     }, [props.open]);
 
@@ -36,8 +39,8 @@ export default ({ data, onSave, type, ...props }: Props) => {
             title="Inventory Transfer"
             {...props}
             width={'600px'}
-            // readOnly={!(data?.assign_to_user?.split(" ").includes(access.currentUser?.login || '') || access.canAssignItemPre)}            
-            // okText={data?.status !== 'pending' ? 'Update' : 'Submit'}
+            readOnly={!(assign_to?.split(" ").includes(access.currentUser?.login || '') || access.canAssignItemPre)}
+            okText={data?.status !== 'pending' ? 'Update' : 'Submit'}
             onSubmit={async () => {
                 const dataForm = await form.validateFields();
                 let updatedWarningCount = 0;
@@ -51,6 +54,10 @@ export default ({ data, onSave, type, ...props }: Props) => {
                 }
                 if (nozzlesRinser == null) {
                     message.error('Please select nozzles rinser!')
+                    return
+                }
+                if (line == 'Line 3' && opo == null) {
+                    message.error('Please select OPO!')
                     return
                 }
                 let status = 'normal'
@@ -74,11 +81,13 @@ export default ({ data, onSave, type, ...props }: Props) => {
                 }
                 const entity = {
                     ...dataForm,
-                    line: data?.line,
+                    id: data?.id,
+                    line: line,
                     warning_count: updatedWarningCount,
                     status: status,
                     nozzles_rinser: nozzlesRinser,
                     smell: smell,
+                    opo: opo,
                     activity_control: activityControl,
                     haccp_id: data?.haccp_id,
                     activities: [{ action: "Add Monitoring " }],
@@ -88,6 +97,20 @@ export default ({ data, onSave, type, ...props }: Props) => {
         >
             <ProForm form={form} onReset={() => form.resetFields()} submitter={false}>
                 <Card size="small">
+                    {line == 'Line 3' ?
+                        <Row gutter={12}>
+                            <Col span={24} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                <Radio.Group
+                                    defaultValue={data?.opo == 'OPO 1' ? 'OPO 1' : data?.opo == 'OPO 2' ? 'OPO 2' : ''}
+                                    onChange={(e) => (setOpo(e.target.value))}
+                                >
+                                    <Radio value='OPO 1'>OPO 1</Radio>
+                                    <Radio value="OPO 2">OPO 2</Radio>
+                                </Radio.Group>
+                            </Col>
+                        </Row>
+                        : <></>}
+
                     <Row gutter={6}>
                         <Col span={24}>
                             <Text style={{ fontWeight: 'bold' }}>Bottle and Cap rinsing </Text>
@@ -123,11 +146,11 @@ export default ({ data, onSave, type, ...props }: Props) => {
                                     </ProForm.Item>
                                 }
                                 name={'water_pressure'}
+                                initialValue={data?.water_pressure}
                                 fieldProps={{
                                     type: 'number',
                                     step: 'any'
                                 }}
-                            // initialValue={data?.raw_water}
                             />
                         </Col>
                         <Col span={12} style={{ display: 'flex', flexDirection: 'column' }}>
@@ -139,6 +162,7 @@ export default ({ data, onSave, type, ...props }: Props) => {
 
                             </div>
                             <Radio.Group
+                                defaultValue={data?.nozzles_rinser == '1' ? '1' : data?.nozzles_rinser == '0' ? '0' : ''}
                                 onChange={(e) => (setNozzlesRinser(e.target.value))}
                             >
                                 <Radio value='1'>Yes</Radio>
@@ -185,7 +209,7 @@ export default ({ data, onSave, type, ...props }: Props) => {
                                     type: 'number',
                                     step: 'any'
                                 }}
-                            // initialValue={data?.acf}
+                                initialValue={data?.fg}
                             />
                         </Col>
                         <Col span={12} style={{ display: 'flex', flexDirection: 'column' }}>
@@ -195,6 +219,7 @@ export default ({ data, onSave, type, ...props }: Props) => {
                                 {smell == 0 ? <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} /> : <></>}
                             </div>
                             <Radio.Group
+                                defaultValue={data?.smell == '1' ? '1' : data?.smell == '0' ? '0' : ''}
                                 onChange={(e) => (setSmell(e.target.value))}
                             >
                                 <Radio value='1'>Yes</Radio>
@@ -216,7 +241,7 @@ export default ({ data, onSave, type, ...props }: Props) => {
                                 {activityControl == 0 ? <ExclamationCircleOutlined style={{ color: 'red', marginLeft: '5px' }} /> : <></>}
                             </div>
                             <Radio.Group
-                                // value={nozzlesRinser == 0 || smell == 0 ? '0' : activityControl}
+                                defaultValue={data?.activity_control == '1' ? '1' : data?.activity_control == '0' ? '0' : ''}
                                 onChange={(e) => (setActivityControl(e.target.value))}
                             >
                                 <Radio value='1'>Under Control</Radio>
@@ -235,6 +260,7 @@ export default ({ data, onSave, type, ...props }: Props) => {
                                     </div>
                                 }
                                 name={'take_action'}
+                                initialValue={data?.take_action}
                             />
                         </Col>
                     </Row>
@@ -244,8 +270,7 @@ export default ({ data, onSave, type, ...props }: Props) => {
                                 hasFeedback={false}
                                 label="Other"
                                 name={'other'}
-                            // initialValue={data?.status !== 'pending' ? (data?.remark == null ? '-' : data?.remark) : data?.remark}
-                            />
+                                initialValue={data?.other} />
                         </Col>
                     </Row>
                 </Card>

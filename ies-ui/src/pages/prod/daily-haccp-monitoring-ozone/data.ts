@@ -24,7 +24,7 @@ export type HACCPMonitoringOzone = {
     createdDate?: Moment,
     lastModifiedBy?: String,
     lastModifiedDate?: Moment,
-    haccp_ozone_id?:string,
+    haccp_ozone_id:string,
     haccp_ozone_type?:string,
     ozonelist: HACCPMonitoringOzoneList[],
     length:number

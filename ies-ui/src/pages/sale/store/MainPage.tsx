@@ -11,11 +11,8 @@ import { useRef, useState } from "react"
 import StockStoreDetail from "./Detail"
 import { ActionType } from "@ant-design/pro-components"
 import StockStoreForm from "./components/StockStoreForm"
-
 interface Props {
-
 }
-
 const StoreMainPage: React.FC<Props> = () => {
     const access = useAccess();
     const { state, actions, modals } = Model();
@@ -29,7 +26,6 @@ const StoreMainPage: React.FC<Props> = () => {
     ), {
         refetchOnWindowFocus: false
     });
-
     return <>
         <PageWrapper<StockStoreLess, StockStoreAdvanceSearchParams, {}>
             tabRender={item => [
@@ -97,7 +93,7 @@ const StoreMainPage: React.FC<Props> = () => {
                         icon: <PlusOutlined />,
                         type: "link",
                         addNewTab: true
-                    }
+                    },
                 ],
                 statuses: [
                     { option: { label: "All", value: "ALL", default: true } },
@@ -134,11 +130,6 @@ const StoreMainPage: React.FC<Props> = () => {
                             title: 'Vehicle',
                             render: (_, r) => {
                                 return r.vehicle?.plateNumber;
-                                //   return (
-                                //     <a onClick={() => history.push(`${SalePaths.teamWork}/detail/${r.teamWork?.id}`)}>
-                                //       {r.teamWork?.teamName}
-                                //     </a>
-                                //   );
                             },
                         },
                         {
@@ -154,8 +145,7 @@ const StoreMainPage: React.FC<Props> = () => {
                                 const color =
                                     r.status === 'pending'
                                         ? 'default'
-                                        : //: r.status === 'approved'
-                                        r.status === 'Open'
+                                        :r.status === 'Open'
                                             ? 'success'
                                             : r.status === 'canceled' || r.status === 'Closed'
                                                 ? 'magenta'
@@ -171,23 +161,6 @@ const StoreMainPage: React.FC<Props> = () => {
                             title: 'Description',
                             dataIndex: 'description',
                         },
-                        // access.canOpenStore ?
-                        //     {
-                        //         title: '',
-                        //         align: 'center',
-                        //         render: (_, r) => {
-                        //             return (
-                        //                 <Tooltip title="Edit" key="edit">
-                        //                     <EditOutlined
-                        //                         style={{ color: '#448DF7' }}
-                        //                         onClick={() => history.push(`${SalePaths.store}/edit/${r.id}`)}
-                        //                     />
-                        //                 </Tooltip>
-                        //             );
-                        //             // return <Checkbox defaultChecked={r.isActive ? true : false} disabled />;
-                        //         },
-                        //     }
-                        //     : {},
                     ]
                 }
             }}

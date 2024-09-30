@@ -73,7 +73,7 @@ export default ({
   const [forceClearUpload, setForceClearUpload] = useState(0);
   const [fileIds, setFileIds] = useState<string[]>([]);
   const [bu, setBu] = useState<BU[]>([])
-  const [selectedBu, setSelectedBu] = useState(1)
+  const [selectedBu, setSelectedBu] = useState(0)
   const { ref, inView } = useInView({});
 
   const clear = () => {
@@ -111,8 +111,12 @@ export default ({
   }, [id]);
 
   useEffect(() => {
-    setItemUomList([])
-    changeBu(selectedBu)
+    if (selectedBu > 0) {
+      setItemUomList([])
+      console.log('selectedBu', selectedBu);
+      changeBu(selectedBu)
+    }
+
   }, [selectedBu])
 
 

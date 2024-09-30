@@ -50,7 +50,7 @@ export default ({ onSave, ...props }: Props) => {
                 const item = []
                 let current = moment(startDate); // Initialize with the starting date
                 const end = moment(endDate); // Initialize with the ending date
-                
+
                 while (current.isSameOrBefore(end)) {
                     current = current.add(1, 'day'); // Ensure current is being updated
                     for (let i = 0; i < shift.length; i++) {
@@ -85,35 +85,35 @@ export default ({ onSave, ...props }: Props) => {
                     <Row gutter={6}>
                         <Col span={12}>
                             <ProFormSelect
-                                // request={async ({ keyWords }) => {
-                                //     const data = await EmployeeServices.list({
-                                //         criteria: {
-                                //             searchValue: keyWords,
-                                //             advanceSearch: {
-                                //                 status: 'ACTIVE',
-                                //             },
-                                //         },pagination:{pageSize:2000}
-                                //     }).query(requestActions);
-                                //     const filteredData = data.items.filter((obj) => obj.department === 'ICT');
-                                //     return filteredData.map((obj) => ({
-                                //         value: obj.userId,
-                                //         label: `${obj.firstName + ' ' + obj.lastName} `,
-                                //     }));
-                                // }}
-                                options={[
-                                    {
-                                        value: 'prodadm',
-                                        label: 'prodadm',
-                                    },
-                                    {
-                                        value: 'prod1',
-                                        label: 'prod1',
-                                    },
-                                    {
-                                        value: 'prod2',
-                                        label: 'prod2',
-                                    }
-                                ]}
+                                request={async ({ keyWords }) => {
+                                    const data = await EmployeeServices.list({
+                                        criteria: {
+                                            searchValue: keyWords,
+                                            advanceSearch: {
+                                                status: 'ACTIVE',
+                                            },
+                                        }, pagination: { pageSize: 2000 }
+                                    }).query(requestActions);
+                                    const filteredData = data.items.filter((obj) => obj.department === 'PRD' && obj.userId != null);
+                                    return filteredData.map((obj) => ({
+                                        value: `${obj.userId}`,
+                                        label: `${obj.firstName + ' ' + obj.lastName}`,
+                                    }));
+                                }}
+                                // options={[
+                                //     {
+                                //         value: 'prodadm',
+                                //         label: 'prodadm',
+                                //     },
+                                //     {
+                                //         value: 'prod1',
+                                //         label: 'prod1',
+                                //     },
+                                //     {
+                                //         value: 'prod2',
+                                //         label: 'prod2',
+                                //     }
+                                // ]}
                                 showSearch
                                 mode="multiple"
                                 name="assign_to"
@@ -225,7 +225,7 @@ export default ({ onSave, ...props }: Props) => {
                                 render: (_, r, index) => index + 1
                             },
                             {
-                                title: 'Machine',
+                                title: 'Process',
                                 width: 150,
                                 dataIndex: 'machine'
                             },

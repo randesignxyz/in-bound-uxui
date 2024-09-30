@@ -224,7 +224,32 @@ export default () => {
                   </Tag> : '')
               },
             },
+            ...(access.canAssignItem ? [{
+              width: 10,
+              render: (_:any, record:any) => {
+                const assignItem = data?.find(v => v.shift === record.label);
 
+                return (assignItem ?
+                  <Button onClick={async () => {
+                    Modal.confirm({
+                      title: "Unassign",
+                      content: 'Are you sure to unassign? This assign will disappare forever',
+                      onOk: async () => {
+                        try {
+                          const da = await services.get_treatment_by_date(moment(assignItem.assign_date).format("YYYY-MM-DD"), assignItem.shift)
+                          await services.unassign(da[0].treatment_id)
+                          setOnRefresh(true)
+                          message.success('Success');
+                        } catch (e: any) {
+                          message.error(e.message);
+                        }
+                      }
+                    })
+                  }}
+                  >Unassign</Button>
+                  : <></>)
+              }
+            }] : []),
           ]}
         />
       </Card>
@@ -263,7 +288,7 @@ export default () => {
             shift: shift,
             startDate: dayjs(duration[0]).format('YYYY-MM-DD'),
             endDate: dayjs(duration[1]).format('YYYY-MM-DD'),
-            pre:'treatment'
+            pre: 'treatment'
           };
           try {
             setExcelLoading(true)

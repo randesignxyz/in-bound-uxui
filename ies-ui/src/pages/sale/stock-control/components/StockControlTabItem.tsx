@@ -109,7 +109,7 @@ const StockControlTabItem: React.FC<Props> = ({ data, forceUpdate }) => {
               },
               {
                 title: "Approved Date",
-                render: (_, r) => <a>{formatDateTime(r.approvedDate)}</a>
+                render: (_, r) => formatDateTime(r.approvedDate)
               },
 
               {

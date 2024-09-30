@@ -5,6 +5,7 @@ import { LookUpDataDTO } from "../fleet/lookupData/data";
 
 export interface EmployeeListItem {
   id: number;
+  employeeId: number;
   employeeCode: string;
   employeeLocalName: string;
   firstName: string;
@@ -23,7 +24,7 @@ export interface EmployeeListItem {
 
 export type EmployeeAdvanceSearchParams = {
   status: 'ALL' | 'ACTIVE' | 'INACTIVE';
-  department?: string;
+  department?: number;
 };
 
 export type BU = {

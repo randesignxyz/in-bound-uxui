@@ -29,6 +29,7 @@ export const getInventoryAdjustmentRequestForms = (): DataForm[] => [
       AdjustmentRequestFormNames.dmbo1,
       AdjustmentRequestFormNames.dmbo2,
       AdjustmentRequestFormNames.mbo,
+      AdjustmentRequestFormNames.smFin,
       AdjustmentRequestFormNames.dmd
     ],
     dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,

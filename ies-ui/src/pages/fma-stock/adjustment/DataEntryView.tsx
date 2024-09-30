@@ -27,7 +27,7 @@ export default ({
   }) => {
     const requestActions = simpleRequestActions();
     const services = createService(requestActions);
-    const proServices = RequisitionServiceAPI(requestActions);
+    // const proServices = RequisitionServiceAPI(requestActions);
     const editableFormRef = useRef<EditableFormInstance>();
     const [form] = Form.useForm<AdjRequest>();
     const [searchVisible, setSearcVisible] = useState(false);
@@ -41,7 +41,7 @@ export default ({
     const [requestType,setRequestType] = useState<LookupData[]>([]);
 
     useEffect(()=>{
-      proServices.listBudgetCode().then(budgetCodes => setBudgetCodesList(budgetCodes)); 
+      services.listBudgetCode().then(budgetCodes => setBudgetCodesList(budgetCodes)); 
       services.listLookupData({type:'INVENTORY_ADJ_REQUEST_TYPE',searchValue:''}).then(rs=>{setRequestType(rs)})
     },[])
     const clear = () => {
@@ -74,7 +74,6 @@ export default ({
         </div>);
         return Promise.reject();
       }
-      console.log('adj request',addedItems)
       return {
         ...dataForm,
         id: type == 'EDIT' ? id : undefined,

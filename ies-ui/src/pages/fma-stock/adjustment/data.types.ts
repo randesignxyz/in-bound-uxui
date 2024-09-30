@@ -80,6 +80,15 @@ export interface UoMItemList {
   uom: string;
 }
 
+export interface BudgetList {
+  id: number;
+  code: string;
+  name: string;
+  active: string;
+  deptId: number;
+  buId: number;
+}
+
 export interface ItemDetail extends ItemListItem {
   uomList: string[];
 }

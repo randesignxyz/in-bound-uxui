@@ -1,7 +1,7 @@
 import { FetchPagingParams } from "@/components/DataCrud/TableView";
 import { execDataService, execDataService0, fetchDataItemService, fetchDataListService, fetchDataPagingService } from "@/services/apiGateway";
 import { SimpleRequestActions } from "@/services/model";
-import { EmpWarehouseList, ItemDetail, ItemGroupListItem, ItemListItem,  SearchParams,  AdjRequest, AdjRequestDetailResponse, AdjRequestListItem, AdjRequestResponse, UoMItemList, SearchLookupParams, LookupData, AdjRequestItemPayload } from "./data.types";
+import { EmpWarehouseList, ItemDetail, ItemGroupListItem, ItemListItem,  SearchParams,  AdjRequest, AdjRequestDetailResponse, AdjRequestListItem, AdjRequestResponse, UoMItemList, SearchLookupParams, LookupData, AdjRequestItemPayload, BudgetList } from "./data.types";
 import { StartWorkFlowParam, TaskActionDataParam } from "@/services/process-workflow/params";
 
 export const createService = (request: SimpleRequestActions) => {
@@ -45,7 +45,11 @@ export const createService = (request: SimpleRequestActions) => {
             endpoint: 'FMA',
 
         }).query(request),
-      
+        listBudgetCode: async () => fetchDataListService<BudgetList>({
+            actionName: 'fetch-budget-list',
+            endpoint: 'FMA',
+
+        }).query(request),
         detailByProcessFlow: async(instId: string) => fetchDataItemService<AdjRequestDetailResponse>({
             actionName: 'adj-request-detail-by-process-flow',
             endpoint: 'FMA',

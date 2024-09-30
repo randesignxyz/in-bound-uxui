@@ -74,7 +74,8 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
                 bmForm.status=true;
                 bmForm.isDelete = 0; 
                 bmForm.traincert=2;
-                bmForm.toYear = ""; 
+                bmForm.toYear = bmForm.year; 
+                bmForm.openId = profile.ess.id||0;
                 await ProfileServicesEss.saveTrainingAdmin(bmForm)(requestActions); 
                 // call back fun
                 cb.onReload(); 
@@ -85,11 +86,11 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
         });
     }
     // 
-    return <ModalForm  {...rest} form={form} width={'30%'} title={!!data?<><ProfileOutlined /> Edit Professional Certification</>:<><ProfileOutlined /> Add Professional Certification</>}
-        // onOpenChange={visible => {
-        //     form.resetFields()
-        //     rest.onOpenChange?.(visible)
-        // }}
+    return <ModalForm  {...rest} form={form} width={'50%'} title={!!data?<><ProfileOutlined /> Edit Professional Certification</>:<><ProfileOutlined /> Add Professional Certification</>}
+        onOpenChange={visible => {
+            form.resetFields()
+            rest.onOpenChange?.(visible);
+        }}
 
         submitter={isAdmin==2&&empId>0?
                     {

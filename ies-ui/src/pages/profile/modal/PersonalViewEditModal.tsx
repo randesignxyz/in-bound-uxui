@@ -8,6 +8,7 @@ import { simpleRequestActions } from '@/services/model';
 import { ProfileServicesEss } from '../service_ess';  
 import ImagePreview from "@/components/ImagePreview";
 import { ProfileData } from "../data";
+import { formatDATEFUll } from "@/pages/utils";
 
 interface Props extends ModalFormProps<SaveEssProfile> { 
     data?: EssProfileData;
@@ -162,7 +163,7 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
     var MF = ["" ,"Male","Female"];
     // 
     return <div>
-        <ModalForm  {...rest} form={form} width={'40%'} title="View Edit Personal Information"
+        <ModalForm  {...rest} form={form} width={'60%'} title="View Edit Personal Information"
             onOpenChange={visible => {
                 form.resetFields() 
                 rest.onOpenChange?.(visible)
@@ -273,11 +274,11 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                         </Col>                       
                         <Col span={8} style={{padding:'3px'}}>  
                             <ProFormText label="Issued Date" name={'nationalIssuedDate'} allowClear={false} />
-                            <ProFormText hidden={profile_draft?.nationalIssuedDate==profile.profile?.nationalIssuedDate?true:false}  fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.nationalIssuedDate}`}} />
+                            <ProFormText hidden={profile_draft?.nationalIssuedDate==profile.profile?.nationalIssuedDate?true:false}  fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':formatDATEFUll(profile_draft!!.nationalIssuedDate)}`}} />
                         </Col>   
                         <Col span={8} style={{padding:'3px'}}>
                             <ProFormText label="Expiry Date" name={'nationalExpiryDate'} allowClear={false} />
-                            <ProFormText hidden={profile_draft?.nationalExpiryDate==profile.profile?.nationalExpiryDate?true:false}  fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.nationalExpiryDate}`}} />
+                            <ProFormText hidden={profile_draft?.nationalExpiryDate==profile.profile?.nationalExpiryDate?true:false}  fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':formatDATEFUll(profile_draft!!.nationalExpiryDate)}`}} />
                         </Col>             
                     </Row>
                 </ProCard>
@@ -291,11 +292,11 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                         </Col>     
                         <Col span={8} style={{padding:'3px'}}>
                             <ProFormDatePicker label="Issued Date" name={'passportIssuedDate'} allowClear={false} />
-                            <ProFormText hidden={profile_draft?.passportIssuedDate==profile.profile?.passportIssuedDate?true:false} fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.passportIssuedDate}`}}  />
+                            <ProFormText hidden={profile_draft?.passportIssuedDate==profile.profile?.passportIssuedDate?true:false} fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':formatDATEFUll(profile_draft!!.passportIssuedDate)}`}}  />
                         </Col>         
                         <Col span={8} style={{padding:'3px'}}>
                             <ProFormDatePicker label="Expiry Date" name={'passportExpiryDate'} allowClear={false} />
-                            <ProFormText hidden={profile_draft?.passportExpiryDate==profile.profile?.passportExpiryDate?true:false} fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':profile_draft!!.passportExpiryDate}`}}  />
+                            <ProFormText hidden={profile_draft?.passportExpiryDate==profile.profile?.passportExpiryDate?true:false} fieldProps={{ style: { color:'red' },value:`${profile_draft==null?'':formatDATEFUll(profile_draft!!.passportExpiryDate)}`}}  />
                         </Col>               
                     </Row>
                 </ProCard> 

@@ -51,7 +51,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
     const initData = async () => { 
         try {
             // 
-            const list = await ProfileServicesEss.listEducation(profile.id).query(requestActions);
+            const list = await ProfileServicesEss.listEducation(profile.id,profile.ess.id||0).query(requestActions);
             setMarjorList(list.marjor);  
             // setDegreeList(list.degree);  
             // setStatusList(list.status);  
@@ -91,6 +91,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                 
                 data.fromYear = educationYear[0];
                 data.toYear = educationYear[1]; 
+                data.openId = profile.ess.id||0;
 
                 await ProfileServicesEss.saveEducation(data)(requestActions); 
                 // call back fun
@@ -113,6 +114,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                 data.isDelete = 1;
                 data.type = "ADD";
                 data.empId= profile.id; 
+                data.openId = profile.ess.id||0;
                 await ProfileServicesEss.saveEducation(data)(requestActions); 
                 // call back fun
                 cb.onLoadData();
@@ -227,7 +229,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
             </Space>
         </Card>
         {/*  */}
-        <EducationModal
+        <EducationModal modalProps={{maskClosable:false}} 
             open={!!modalVisible?.type} 
             onOpenChange={(visible) => hideModal(visible)}
             profile={profile}
@@ -260,7 +262,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
             }}
         />
         {/*  */}
-        <EducationView 
+        <EducationView  
             open={!!modalEducationViewVisible?.type} 
             onOpenChange={(visible) => hideEducationViewModal(visible)} 
             oldData={educationOldList}

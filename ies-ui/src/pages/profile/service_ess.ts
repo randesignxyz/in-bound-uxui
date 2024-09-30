@@ -36,10 +36,10 @@ export const ProfileServicesEss = {
     endpoint: 'HR',
     payload: { ...data }
   }), 
-  listEmergency: (id: number) => fetchDataItemService<ProfileEmergencyData, { id: number }>({
+  listEmergency: (id: number,openId:number) => fetchDataItemService<ProfileEmergencyData, { id: number,openId:number }>({
     actionName: 'list-emergency',
     endpoint: 'HR',
-    payload: { id }
+    payload: { id,openId }
   }),   
   listEmergencyModify: (id: number,type:number) => fetchDataListService<EmergencyData, { id: number,type: number }>({
     actionName: 'list-emergency-modify',
@@ -57,10 +57,10 @@ export const ProfileServicesEss = {
     endpoint: 'HR',
     payload: { ...data }
   }), 
-  listRelationship: (id: number) => fetchDataItemService<ProfileRelationshipData, { id: number }>({
+  listRelationship: (id: number,openId:number) => fetchDataItemService<ProfileRelationshipData, { id: number,openId:number }>({
     actionName: 'list-relationship',
     endpoint: 'HR',
-    payload: { id }
+    payload: { id,openId }
   }),
   listRelationshipModify: (id: number,type:number) => fetchDataListService<RelationshipData, { id: number,type: number }>({
     actionName: 'list-relationship-modify',
@@ -79,10 +79,10 @@ export const ProfileServicesEss = {
     endpoint: 'HR',
     payload: { ...data }
   }), 
-  listLanguage: (id: number) => fetchDataItemService<ProfileLanguageData, { id: number }>({
+  listLanguage: (id: number,openId:number) => fetchDataItemService<ProfileLanguageData, { id: number,openId:number }>({
     actionName: 'list-language',
     endpoint: 'HR',
-    payload: { id }
+    payload: { id,openId }
   }),
   listlanguageModify: (id: number,type:number) => fetchDataListService<LanguageData, { id: number,type: number }>({
     actionName: 'list-language-modify',
@@ -102,10 +102,10 @@ export const ProfileServicesEss = {
     payload: { ...data }
   }),
   
-  listTraining: (id: number) => fetchDataItemService<ProfileTrainingData, { id: number }>({
+  listTraining: (id: number,openId:number) => fetchDataItemService<ProfileTrainingData, { id: number,openId:number }>({
     actionName: 'list-training',
     endpoint: 'HR',
-    payload: { id }
+    payload: { id,openId }
   }), 
   listTrainingModify: (id: number,type:number) => fetchDataListService<TrainingData, { id: number,type: number }>({
     actionName: 'list-training-modify',
@@ -124,10 +124,10 @@ export const ProfileServicesEss = {
     endpoint: 'HR',
     payload: { ...data }
   }),
-  listExperience: (id: number) => fetchDataItemService<ProfileExperienceData, { id: number }>({
+  listExperience: (id: number,openId:number) => fetchDataItemService<ProfileExperienceData, { id: number,openId:number }>({
     actionName: 'list-experience',
     endpoint: 'HR',
-    payload: { id }
+    payload: { id,openId }
   }),
   listExperienceModify: (id: number,type:number) => fetchDataListService<ExperienceData, { id: number,type: number }>({
     actionName: 'list-experience-modify',
@@ -146,10 +146,10 @@ export const ProfileServicesEss = {
     endpoint: 'HR',
     payload: { ...data }
   }),  
-  listEducation: (id: number) => fetchDataItemService<ProfileEducationData, { id: number }>({
+  listEducation: (id: number,openId:number) => fetchDataItemService<ProfileEducationData, { id: number,openId:number }>({
     actionName: 'list-education',
     endpoint: 'HR',
-    payload: { id }
+    payload: { id,openId }
   }), 
   listEducationModify: (id: number,type:number) => fetchDataListService<EducationData, { id: number,type: number }>({
     actionName: 'list-education-modify',

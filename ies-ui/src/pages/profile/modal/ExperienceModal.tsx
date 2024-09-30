@@ -79,6 +79,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
 
                 bmForm.startDate = startDate;
                 bmForm.endDate = endDate;  
+                bmForm.openId = profile.ess.id||0;
 
                 await ProfileServicesEss.saveExperienceAdmin(bmForm)(requestActions); 
                 // call back fun
@@ -89,9 +90,9 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
             },
         });
     }
-    return <ModalForm  {...rest} form={form} width={'30%'} title={!!data?<><ProfileOutlined /> Edit Experience</>:<><ProfileOutlined /> Add Experience</>}
+    return <ModalForm  {...rest} form={form} width={'40%'} title={!!data?<><ProfileOutlined /> Edit Experience</>:<><ProfileOutlined /> Add Experience</>}
         onOpenChange={visible => {
-            // form.resetFields() 
+            form.resetFields() 
             rest.onOpenChange?.(visible);
         }} 
             submitter={isAdmin==2&&empId>0?

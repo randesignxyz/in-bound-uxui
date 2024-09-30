@@ -44,7 +44,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
     }, []);
     const initData = async () => {
         try {
-            const list = await ProfileServicesEss.listLanguage(profile.id).query(requestActions);
+            const list = await ProfileServicesEss.listLanguage(profile.id,profile.ess.id||0).query(requestActions);
             setLanguageList(list.data); 
             // old records edit 
             setLanguageOldList(list.oldData); 
@@ -70,6 +70,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
             try {
                 data.otherFile = createFileOther;
                 data.isDelete = 0;
+                data.openId = profile.ess.id||0;
                 await ProfileServicesEss.saveLanguage(data)(requestActions);
             //   const list = await ProfileServicesEss.listLanguage(data.empId).query(requestActions);
             //   setLanguageList(list);
@@ -93,6 +94,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                 data.isDelete = 1;
                 data.type = "ADD";
                 data.empId= profile.id;
+                data.openId = profile.ess.id||0;
                 await ProfileServicesEss.saveLanguage(data)(requestActions); 
                 // call back fun
                 cb.onLoadData();
@@ -113,7 +115,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                 data.otherFile = [];
                 data.isDelete = 1;
                 data.type = "ADD";
-                data.empId= profile.id;
+                data.empId= profile.id; 
                 await ProfileServicesEss.saveLanguageAdmin(data)(requestActions); 
                 // call back fun
                 cb.onLoadData();
@@ -199,7 +201,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                 />
             </Space>
         </Card>
-        <LanguageModal
+        <LanguageModal modalProps={{maskClosable:false}} 
             open={!!modalVisible?.type} 
             onOpenChange={(visible) => hideModal(visible)}
             profile={profile}

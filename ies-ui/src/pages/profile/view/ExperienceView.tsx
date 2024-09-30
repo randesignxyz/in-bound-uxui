@@ -2,7 +2,7 @@ import { Flex, ModalProps, Space, Typography } from "antd"
 import { ModalForm, ProTable } from "@ant-design/pro-components"
 import { ExperienceData } from "../data.ess" 
 import { EditOutlined,DeleteOutlined } from "@ant-design/icons"
-import { formatDate } from "@/pages/utils";
+import { formatDate, formatDATEFUll } from "@/pages/utils";
 
 interface Props extends ModalProps {
     // data: BasicContactData;
@@ -47,12 +47,12 @@ export default ( {oldData,newData,essProfileId,isAdmin,step,cb, ...rest}: Props)
                 },{
                     title: "Started Date", width: '150px',dataIndex: 'startDate',
                     render:(_, r) => {
-                        return formatDate(r.startDate)
+                        return formatDATEFUll(r.startDate)
                     }
                 },{
                     title: "Ended Date", width: '150px',dataIndex: 'endDate',
                     render:(_, r) => {
-                        return formatDate(r.endDate)
+                        return formatDATEFUll(r.endDate)
                     }
                 },{   width: '70px',
                     render: (dom, r) => {

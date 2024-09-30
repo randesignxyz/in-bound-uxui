@@ -44,7 +44,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
     }, []);
     const initData = async () => {
         try {
-            const list = await ProfileServicesEss.listEmergency(profile.id).query(requestActions);
+            const list = await ProfileServicesEss.listEmergency(profile.id,profile.ess.id||0).query(requestActions);
             setEmergencyList(list.data);  
             // old records edit
             // const dataOld = await ProfileServicesEss.listEmergencyModify(profile.id,1).query(requestActions);
@@ -73,6 +73,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
             try { 
                 data.otherFile = createFileOther||[];
                 data.isDelete = 0;
+                data.openId = profile.ess.id||0;
                 await ProfileServicesEss.saveEmergency(data)(requestActions); 
                 // call back fun
                 cb.onLoadData();
@@ -95,6 +96,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
                 data.isDelete = 1;
                 data.type = "ADD";
                 data.empId= profile.id;
+                data.openId = profile.ess.id||0;
                 await ProfileServicesEss.saveEmergency(data)(requestActions); 
                 // call back fun
                 cb.onLoadData();
@@ -179,7 +181,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
                     },{
                         title: "Emergency Address", render: (dom, r) => {
                             var homeNo = (r.homeNo==''?'':"#"+r.homeNo);
-                            var street = (r.street==''?', ':", Str. "+r.street);
+                            var street = (r.street==''?'':", Str. "+r.street);
                             var villageId = (r.villageId==''?', ': ", "+r.villageId+", ");  
                             return homeNo + street + villageId+r.communeName+", "+r.districtName+", "+r.provinceName;
                         }
@@ -208,7 +210,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
           </Space>
         </Card>
 
-        <EmergencyModal
+        <EmergencyModal modalProps={{maskClosable:false}} 
             open={!!modalVisible?.type}
             locations={profile?.essLocation}
             onOpenChange={(visible) => hideModal(visible)}

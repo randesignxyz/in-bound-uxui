@@ -82,6 +82,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
 
                 bmForm.year = fromyear;
                 bmForm.toYear = toyear; 
+                bmForm.openId = profile.ess.id||0;
                 await ProfileServicesEss.saveTrainingAdmin(bmForm)(requestActions); 
                 // call back fun
                 cb.onReload(); 
@@ -92,11 +93,11 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
         });
     }
     // 
-    return <ModalForm  {...rest} form={form} width={'30%'} title={!!data?<><ProfileOutlined /> Edit Training</>:<><ProfileOutlined /> Add Training</>}
-        // onOpenChange={visible => {
-        //     form.resetFields()
-        //     rest.onOpenChange?.(visible)
-        // }}
+    return <ModalForm  {...rest} form={form} width={'50%'} title={!!data?<><ProfileOutlined /> Edit Training</>:<><ProfileOutlined /> Add Training</>}
+        onOpenChange={visible => {
+            form.resetFields()
+            rest.onOpenChange?.(visible);
+        }}
 
         submitter={isAdmin==2&&empId>0?
                     {

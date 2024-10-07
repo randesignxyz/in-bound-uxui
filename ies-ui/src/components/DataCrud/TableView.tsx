@@ -20,11 +20,11 @@ export type FetchPagingParams<T> = {
 };
 
 export interface TableViewSearchParams<T> {
-  criteria?: { 
-    searchValue?: string; 
-    advanceSearch?: T; 
+  criteria?: {
+    searchValue?: string;
+    advanceSearch?: T;
     sort?: Record<string, SortOrder>;
-    permissionLevel:string;
+    permissionLevel?: string;
   };
   pagination?: {
     pageSize?: number;

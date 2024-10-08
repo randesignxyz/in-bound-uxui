@@ -873,35 +873,42 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           (it) => it === item,
         ),
       ) || false,
-    canAccessWhmMenut:
+    canAccessWhmMenu:
       currentUser?.authorities.some((item) =>
         [
           'ROLE_ADMIN',
-          'ROLE_NCM_INVENTORY_TRANSFER_SUPPORT',
-          'ROLE_NCM_STOCK_REQUEST_SUPPORT',
+          // 'ROLE_NCM_INVENTORY_TRANSFER_SUPPORT',
+          // 'ROLE_NCM_STOCK_REQUEST_SUPPORT',
+          'ROLE_NCM_INVENTORY_ITEM_ADMIN',
+          'ROLE_NCM_INVENTORY_WH_EMP_MAPPING_ADMIN',
+          'ROLE_NCM_STOCK_REQUEST',
+          'ROLE_NCM_INVENTORY_TRANSFER_REQUEST',
+          'ROLE_NCM_INVENTORY_ADJUSTMENT_REQUEST'
         ].some((it) => it === item),
       ) || false,
-    canAccessNcmIssueRequest:
+    canAccessNcmIssueRequestMenu:
       currentUser?.authorities.some((item) =>
         [
           'ROLE_ADMIN',
-          'ROLE_NCM_STOCK_REQUEST_APPROVAL',
+          'ROLE_NCM_STOCK_REQUEST',
         ].some((it) => it === item),
       ) || false,
     canAccessWhmItemMenu:
       currentUser?.authorities.some((item) =>
         [
           'ROLE_ADMIN',
-          'ROLE_NCM_INVENTORY_TRANSFER_SUPPORT',
-          'ROLE_NCM_STOCK_REQUEST_SUPPORT',
-          'ROLE_NCM_STOCK_REQUEST_ADMIN'
+          // 'ROLE_NCM_INVENTORY_TRANSFER_SUPPORT',
+          // 'ROLE_NCM_STOCK_REQUEST_SUPPORT',
+          // 'ROLE_NCM_STOCK_REQUEST_ADMIN',
+          'ROLE_NCM_INVENTORY_ITEM_ADMIN'
         ].some((it) => it === item),
       ) || false,
     canAccessWhmEmpMappingMenu:
       currentUser?.authorities.some((item) =>
         [
           'ROLE_ADMIN',
-          'ROLE_NCM_INVENTORY_TRANSFER_SUPPORT',
+          // 'ROLE_NCM_INVENTORY_TRANSFER_SUPPORT',
+          'ROLE_NCM_INVENTORY_WH_EMP_MAPPING_ADMIN',
         ].some((it) => it === item),
       ) || false,
     canAccessWhmInventoryTransferRequestMenu:
@@ -911,8 +918,15 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           'ROLE_NCM_INVENTORY_TRANSFER_REQUEST',
         ].some((it) => it === item),
       ) || false,
+      canAccessWhmInventoryAdjRequestMenu:
+      currentUser?.authorities.some((item) =>
+        [
+          'ROLE_ADMIN',
+          'ROLE_NCM_INVENTORY_ADJUSTMENT_REQUEST',
+        ].some((it) => it === item),
+      ) || false,
     canCreateNCMRequest:
-      currentUser?.authorities.some((item) => ['ROLE_ADMIN', 'ROLE_NCM_STOCK_REQUEST_APPROVAL'].some((it) => it === item)) ||
+      currentUser?.authorities.some((item) => ['ROLE_ADMIN', 'ROLE_NCM_STOCK_REQUEST'].some((it) => it === item)) ||
       false,
     canCreateInventoryTransferRequest:
       currentUser?.authorities.some((item) => ['ROLE_ADMIN', 'ROLE_NCM_INVENTORY_TRANSFER_REQUEST'].some((it) => it === item)) ||
@@ -921,10 +935,10 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) => ['ROLE_ADMIN', 'ROLE_NCM_INVENTORY_TRANSFER_SUPPORT'].some((it) => it === item)) ||
       false,
     canCreateInventoryAdjRequest:
-      currentUser?.authorities.some((item) => ['ROLE_NCM_INVENTORY_ADJUSTMENT_REQUEST'].some((it) => it === item)) ||
+      currentUser?.authorities.some((item) => ['ROLE_ADMIN','ROLE_NCM_INVENTORY_ADJUSTMENT_REQUEST'].some((it) => it === item)) ||
       false,       
     canCreateHrProbationEvaluationRequest:
-      currentUser?.authorities.some((item) => ['ROLE_HR_PROBATION_EVALUATION_REQUEST'].some((it) => it === item)) ||
+      currentUser?.authorities.some((item) => ['ROLE_ADMIN','ROLE_HR_PROBATION_EVALUATION_REQUEST'].some((it) => it === item)) ||
       false,        
   };
 }

@@ -1276,7 +1276,7 @@ export default [
     path: '/whm',
     name: 'whm',
     icon: 'ReconciliationOutlined',
-    access: 'canAccessWhmMenut',
+    access: 'canAccessWhmMenu',
     component: './fma-stock',
   },
   {
@@ -1284,7 +1284,7 @@ export default [
     name: 'whm_issue_request',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessNcmIssueRequest',
+    access: 'canAccessNcmIssueRequestMenu',
     component: './fma-stock/request',
   },
   {
@@ -1334,7 +1334,7 @@ export default [
     name: 'whm-adj-request',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessWhmInventoryTransferRequestMenu',
+    access: 'canAccessWhmInventoryAdjRequestMenu',
     component: './fma-stock/adjustment',
   },
   

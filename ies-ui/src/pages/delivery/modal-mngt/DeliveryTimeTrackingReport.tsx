@@ -17,8 +17,6 @@ type FormDataType = {
     dateRange: Moment[];
     sourceIds?: number[];
     driverIds?: number[];
-    statuses?: string[];
-    truckIds?: number[];
 }
 
 export default ({ ...rest }: ModalFormProps) => {
@@ -54,6 +52,7 @@ export default ({ ...rest }: ModalFormProps) => {
 
     const onDownload = async () => {
         try {
+            const dataForm = await form.validateFields()
             await downloadGenericReport(requestActions)({
                 fileName: `transportation-time-tracking-report-${moment().format()}.xls`,
                 type: 'EXCEL',
@@ -61,10 +60,10 @@ export default ({ ...rest }: ModalFormProps) => {
                     reportName: 'transportation-time-tracking-report',
                     reportPath: '/Reports/qa/delivery',
                     data: [
-                        { key: 'driver', value: 1 },
-                        { key: 'driver', value: 2 },
-                        { key: 'company', value: 2 },
-
+                        { key: 'dateFrom', value: dataForm.dateRange[0] },
+                        { key: 'dateTo', value: dataForm.dateRange[1] },
+                        ...(dataForm.sourceIds || []).map(it => ({ key: 'sourceIds', value: it })),
+                        ...(dataForm.driverIds || []).map(it => ({ key: 'driverIds', value: it })),
                     ]
                 }
             })

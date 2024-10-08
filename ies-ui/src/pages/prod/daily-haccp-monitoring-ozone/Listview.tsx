@@ -159,7 +159,7 @@ export default () => {
               dataIndex: 'name',
               render: (_, record) => {
                 const assignItem = list?.find(v => v.time === record.name);
-                return (
+                return (assignItem?
                   <a
                     onClick={() =>
                     (assignItem ?
@@ -169,6 +169,7 @@ export default () => {
                   >
                     {record.name}
                   </a>
+                  :<>{record.name}</>
                 );
               },
             },
@@ -243,7 +244,8 @@ export default () => {
               width: 10,
               render: (_:any, record:any) => {
                 const assignItem = list.find(v => v.time === record.name);
-                return (assignItem ?
+                if (!assignItem) return null;
+                return (assignItem?.ozonelist.length == assignItem?.ozonelist.filter(i=>i.status=='pending').length ?
                   <Button onClick={async () => {
                     Modal.confirm({
                       title: "Unassign",

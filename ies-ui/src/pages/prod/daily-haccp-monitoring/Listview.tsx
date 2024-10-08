@@ -123,12 +123,12 @@ export default () => {
               <Col span={8} key={index}>
                 <Card
                   title={'Production '+item.name}
-                  extra={<a
+                  extra={filteredData[0]?<a
                     onClick={() => (filteredData[0] ? (history.push(`/prod/daily-haccp-monitoring/detail/${filteredData[0]?.assign_date}/${filteredData[0]?.line}/${filteredData[0]?.haccp_id}`))
                       : {})
                     }>
                     <ArrowRightOutlined />
-                  </a>}
+                  </a>:<></>}
                   style={{ marginTop: 40, borderWidth: '2px', borderStyle: 'solid',
                     borderColor: filteredData[0] !== undefined ? 'rgba(216, 204, 120, 0.5)' : 'rgba(128, 128, 128, 0.1)',
                       

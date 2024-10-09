@@ -19,7 +19,7 @@ export default (props: ActionDataFormProps) => {
 
     const requestActions = simpleRequestActions();
     const services = createService(requestActions);
-    const proServices = RequisitionServiceAPI(requestActions);
+    // const proServices = RequisitionServiceAPI(requestActions);
     const actionRef = useRef<ActionType>();
     const [files, setFiles] = useState<UploadFile[]>([])
     const [dataItems, setDataItems] = useState<AdjRequestItemDetailResponse[]>()
@@ -41,7 +41,7 @@ export default (props: ActionDataFormProps) => {
         const rs = await services.detailByProcessFlow(props.procInstId||'')
         const ds = rs.items.map(v=> ({...v,key: uniqueId().toString()}))
         setDataItems(ds)
-        await proServices.listBudgetCode().then(budgetCodes => setBudgetCodesList(budgetCodes)); 
+        await services.listBudgetCode().then(budgetCodes => setBudgetCodesList(budgetCodes)); 
     }
 
     return (

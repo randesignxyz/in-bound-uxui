@@ -16,6 +16,7 @@ export const getFmaStockRequestForms = (): DataForm[] => [
   {
     formKey: [     
       StockRequestFormNames.functionRequest,
+      StockRequestFormNames.marketingReview,
       StockRequestFormNames.functionApproval,
     ],
     dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,

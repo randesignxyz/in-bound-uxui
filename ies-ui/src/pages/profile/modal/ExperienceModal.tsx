@@ -16,7 +16,7 @@ interface Props extends ModalFormProps<ExperienceData> {
     files: FilesData[];   
     type:string; 
     isAdmin:number;
-    empId:number;
+    empId:number; 
     cb: { //used callback function to parent form
         onLoadMenu: (tid:UploadType[]) => void;  
         onReload:()=>void;
@@ -29,18 +29,28 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
     const [form] = ProForm.useForm<ExperienceData>(); 
     const [imageList, setImageList] = useState<FilesData[]>([]);
     const [createFileOther, selectedFileOther] = useState<any>();  
+    const [only1File, setOnly1FileVisible] = useState('display');
     const [isOther, setIsOtherVisible] = useState(true);
     
     useEffect(() => {
         initData();
     }, [data]);
     const initData = async () => { 
-        const list = await ProfileServicesEss.listImageProfile(profile.id,6,type=="ADD"?2:1,data?.id!!).query(requestActions);
+        const list = await ProfileServicesEss.listImageProfileExp(profile.id,6,type=="ADD"?2:1,data?.id||0,profile.ess.id||0).query(requestActions);
         setImageList(list); 
+        // 
+        if(list.length==0){
+            setOnly1FileVisible('display');
+        }
+        else{
+            setOnly1FileVisible('none');
+            //
+            cb.onLoadMenu(list as UploadType);
+        }
         // 
         if(!!data){  
             var dataRange= [data.startDate,data.endDate];
-            form.setFieldsValue({...data!!,experienceDate:dataRange});
+            form.setFieldsValue({...data!!,experienceDate:dataRange}); 
         }
         else{
             form.resetFields();
@@ -56,7 +66,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
 
     //    
     const setUpladFileHandle=(ploadFiles: UploadType[])=>{ 
-        selectedFileOther(ploadFiles);
+        selectedFileOther(ploadFiles); 
         cb.onLoadMenu(ploadFiles);
     }
     
@@ -91,10 +101,10 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
         });
     }
     return <ModalForm  {...rest} form={form} width={'40%'} title={!!data?<><ProfileOutlined /> Edit Experience</>:<><ProfileOutlined /> Add Experience</>}
-        onOpenChange={visible => {
-            form.resetFields() 
-            rest.onOpenChange?.(visible);
-        }} 
+            onOpenChange={visible => {
+                form.resetFields() 
+                rest.onOpenChange?.(visible);
+            }} 
             submitter={isAdmin==2&&empId>0?
                 {
                     render: () => { 
@@ -178,12 +188,14 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
             </Space>
             <div style={{fontSize:'12px'}}>- Curriculum Vitae (CV) (Image File or PDF)</div>
         </div> 
-        <ProCard size="small" bordered>   
-            <FileUploader   
-                required={false}  
-                service="FILE" onSetFiles={f=>setUpladFileHandle?.(f)}
-                showUploadList={true} 
-            />
+        <ProCard size="small" bordered> 
+            <div style={{display:only1File}}>
+                <FileUploader
+                    required={false}  
+                    service="FILE" onSetFiles={f=>setUpladFileHandle?.(f)}
+                    showUploadList={true}  
+                />
+            </div>  
             <Image.PreviewGroup>
                 <List style={{display:imageList.length>0?'':'none'}}
                     grid={{ gutter: 5 }}

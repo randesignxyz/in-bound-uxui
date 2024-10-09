@@ -64,12 +64,24 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
     };
 
     const saveExperienceHandler = async (data: ExperienceData) => {
+        // attachment files
+        if(createFileOther.length==0 && modalVisible?.type=='ADD'){  
+            message.error('Please do select attachment files.');
+            return false;
+        } 
         Modal.confirm({
           title: 'Save Experience',
           content: 'Are you sure?',
           onOk: async () => {
             try {
-                data.otherFile = createFileOther||[];
+                //
+                if(createFileOther[0].uid=='0'){
+                    data.otherFile = []; 
+                }
+                else{ 
+                    data.otherFile = createFileOther;
+                } 
+                // data.otherFile = createFileOther||[];
                 data.isDelete = 0; 
                 
                 var startDate = data.experienceDate[0];
@@ -233,9 +245,9 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
             files={modalVisible?.type=='EDIT'?experienceOldImageList:experienceNewImageList}
             type={modalVisible?.type!!}
             isAdmin={is_admin}
-            empId={empId}
+            empId={empId} 
             cb={{
-                onLoadMenu: (tid) => { 
+                onLoadMenu: (tid) => {  
                     selectedFileOther(tid);
                 },
                 onReload:()=>{

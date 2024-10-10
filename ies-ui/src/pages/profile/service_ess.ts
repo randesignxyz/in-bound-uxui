@@ -173,6 +173,11 @@ export const ProfileServicesEss = {
     endpoint: 'HR',
     payload: { id,type,isNew,refId }
   }),  
+  listImageProfileExp: (id: number,type: number,isNew: number,refId: number,openId:number) => fetchDataListService<FilesData, { id: number,type: number,isNew: number,refId: number,openId:number }>({
+    actionName: 'list-profile-exp-image',
+    endpoint: 'HR',
+    payload: { id,type,isNew,refId,openId }
+  }),  
   // activity list
   listActivityProfile: (id: number) => fetchDataListService<ActivityData, { id: number }>({
     actionName: 'list-profile-activity',

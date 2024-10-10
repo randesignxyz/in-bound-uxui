@@ -379,9 +379,11 @@ export interface LocationData {
 
 export interface FilesData {
   id?: string;  
+  uid?: string;  
   path:string;
   description: string;  
   fileName: string;  
+  name: string;  
   fileType: string;  
   type: number;  
   title: string;  

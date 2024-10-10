@@ -6,14 +6,16 @@ import { useSafeState } from "ahooks";
 import { message, Radio, Space, Spin, Tooltip, Flex, Button, Modal } from "antd";
 import { useRef } from "react";
 import { EmployeeAdvanceSearchParams, EmployeeListItem } from "../data";
-import { EmployeeServices } from "../services";
-
+import { EmployeeServices } from "../services";  
+ 
 import Status from "@/components/Status";
 import { ExportOutlined, EditOutlined } from "@ant-design/icons";
 // import { history } from 'umi';
 import { useState } from 'react';
 import EmployeeModal from './EmployeeModal';
 import { history, useAccess } from '@umijs/max';
+import AdvanceEmployeeSearch from "./AdvanceEmployeeSearch";
+import Omit from "omit.js";
 
 interface Props {
     onAdd?: (id?: number) => void;
@@ -28,32 +30,39 @@ export default ({ onAdd, onEdit }: Props) => {
 
     const requestActions = simpleRequestActions()
     const [loading, setLoading] = useSafeState(false)
-    const actionRef = useRef<ActionType>();
-
+    const actionRef = useRef<ActionType>();       
+    
+  const [advanceSearch, setAdvanceSearch] = useState<{ visible: boolean }>();
+  const [advanceSearchParams, setAdvanceSearchParams] = useState<EmployeeAdvanceSearchParams>({
+    status: 'ACTIVE',
+  });
+     
     const onRequestHandler = async (params: TableViewSearchParams<EmployeeAdvanceSearchParams>) => {
         try {
             
             if(access.ROLE_OFL_NVC_WHM_CASUAL==true){ 
-                params.criteria.permissionLevel = 'ROLE_HR_OFL-NVC_WHM_CASUAL';
+                params.criteria!!.permissionLevel = 'ROLE_HR_OFL-NVC_WHM_CASUAL';
             }
             else if(access.ROLE_HR_OMM_ENG_PRD_CASUAL==true){ 
-                params.criteria.permissionLevel = 'ROLE_HR_OMM_ENG_PRD_CASUAL';
+                params.criteria!!.permissionLevel = 'ROLE_HR_OMM_ENG_PRD_CASUAL';
             }
             else if(access.ROLE_HR_NVC_PRD_CASUAL==true){ 
-                params.criteria.permissionLevel = 'ROLE_HR_NVC_PRD_CASUAL';
+                params.criteria!!.permissionLevel = 'ROLE_HR_NVC_PRD_CASUAL';
             }
             else if(access.ROLE_OFL_NVC_OMM_FMA_CASUAL==true){ 
-                params.criteria.permissionLevel = 'ROLE_HR_OFL-NVC-OMM_FMA_CASUAL';
+                params.criteria!!.permissionLevel = 'ROLE_HR_OFL-NVC-OMM_FMA_CASUAL';
             } 
             else if(access.ROLE_HR_OFL_DEL_CASUAL==true){ 
-                params.criteria.permissionLevel = 'ROLE_HR_OFL_DEL_CASUAL';
+                params.criteria!!.permissionLevel = 'ROLE_HR_OFL_DEL_CASUAL';
             }
             else if(access.ROLE_HR_OMD_DEL_CASUAL==true){ 
-                params.criteria.permissionLevel = 'ROLE_HR_OMD_DEL_CASUAL';
+                params.criteria!!.permissionLevel = 'ROLE_HR_OMD_DEL_CASUAL';
             }
             else{
-                params.criteria.permissionLevel = '0';
+                params.criteria!!.permissionLevel = '0';
             }
+            //
+            // params.criteria!!.advanceSearch?.department = 0;
             // if(access.ROLE_HR_DIRECTOR==true){ 
             //     params.criteria.permissionLevel = 'ROLE_HR_DIRECTOR';
             // }
@@ -89,8 +98,13 @@ export default ({ onAdd, onEdit }: Props) => {
         });
     }
 
-    return <Spin spinning={loading}>
-        <TableView<EmployeeListItem, { searchValue?: string; }>
+    // const setAdanceSearch = (id:string)=>{
+    //     setStatus(id);
+    //     actionRef?.current?.reloadAndRest?.();
+    // }
+    return <Spin spinning = {loading}>
+        <TableView<EmployeeListItem, { searchValue?: string; advanceSearch: EmployeeAdvanceSearchParams }> 
+            hasCriteria={Object.values(Omit(advanceSearchParams, ['status'])).some((v) => v)}
             tableProps={{
                 actionRef: actionRef,
                 toolbar: {
@@ -110,50 +124,60 @@ export default ({ onAdd, onEdit }: Props) => {
                     </Tooltip> : '',
 
                     ],
-                },
+                  },
+            }} 
+            advanceSearch
+            actionHandlers={{ 
+                onAdvanceSearchClicked: () => setAdvanceSearch({ visible: true }),
+                onRequest: (criteria, pagination, sort) => 
+                    onRequestHandler({
+                        criteria: {
+                            ...criteria,
+                            advanceSearch: advanceSearchParams,
+                            sort,
+                        },
+                        pagination,
+                    }) 
             }}
-            actionHandlers={{
-                onRequest: (criteria, pagination, sort) => onRequestHandler({
-                    criteria: {
-                        ...criteria,
+            extraFilter={
+                <Space >  
+                    <Radio.Group optionType="button" defaultValue={"ACTIVE"}
+                        options={[
+                            { label: "All", value: "ALL" },
+                            { label: "Active", value: "ACTIVE" },
+                            { label: "In Active", value: "INACTIVE" }
+                        ]} 
+                        // onChange={(e) => {setAdanceSearch(e.target.value);}}
 
-                        sort,
-                    },
-                    pagination,
-                    // sort
-                })
-            }}
-            // extraFilter={
-            //     <Space > 
-            //         <Radio.Group optionType="button"
-            //             defaultValue={"ACTIVE"}
-            //             options={[
-            //                 // { label: "All", value: "ALL" },
-            //                 // { label: "Employee Requested", value: "REQUESTED" },
-            //                 // { label: "HR Requested", value: "REVIEWED" }
-            //             ]} 
-            //         />
-            //     </Space>
-            // }  
+                        value={advanceSearchParams.status}
+                        onChange={(e) => {
+                            setAdvanceSearchParams((v) => ({
+                                ...v,
+                                status: e.target.value,
+                            }));
+                            actionRef.current?.reloadAndRest?.();
+                        }}
+                    />
+                </Space>
+            }  
             columns={[
-                {
-                    title: 'Employee ID', dataIndex: 'employeeCode', sorter: 'employeeCode',
+                {title: 'Employee ID', dataIndex: 'employeeCode', sorter: 'employeeCode',
                     render(_, entity) {
-                        return <Flex gap={5}><Button
-                            size="small"
-                            type="link"
-                            title="Open in new tab"
-                            icon={<ExportOutlined />}
-                            onClick={() => {
-                                window
-                                    .open(
-                                        `/profile/2/${entity.id}`,
-                                    )
-                                    ?.focus();
-                            }}
-                        /> <a onClick={() => { history.push(`/profile/2/${entity.id}`) }}>{entity.employeeCode}</a>
-                        </Flex>
-                    },
+                    return <Flex gap={5}><Button
+                        size="small"
+                        type="link"
+                        title="Open in new tab"
+                        icon={<ExportOutlined />}
+                        onClick={() => {
+                            window
+                                .open(
+                                    `/profile/2/${entity.id}`,
+                                )
+                                ?.focus();
+                        }}
+                    /> <a onClick={() => { history.push(`/profile/2/${entity.id}`) }}>{entity.employeeCode}</a>
+                    </Flex>
+                },
                 },
                 { title: 'Full Name (KH)', dataIndex: 'employeeLocalName' },
                 { title: 'Full Name (EN)', dataIndex: 'firstName', sorter: 'firstName', render(_, entity) { return (entity.firstName + " " + entity.lastName) } },
@@ -164,18 +188,34 @@ export default ({ onAdd, onEdit }: Props) => {
                 {title: 'Company', dataIndex: 'bu'},
                 {title: 'Status', render:(_,r) =><Status text={r.status}/>},
                 {width: 50,
-                hidden: !access.canAdmin,
-                render: (dom, r) => {  
+                    hidden: !access.canAdmin,
+                    render: (dom, r) => {  
                     return (<a onClick={() => setModalVisible({ type: 'EDIT', payload: r })}>
                                 <EditOutlined/>
                             </a>
                         );
                     },
                 }
-            ]}
-
+            ]} 
         />
-
+        {/*  advance search */}
+        <AdvanceEmployeeSearch
+          title="Advance Search"
+          closable
+          open={advanceSearch?.visible} 
+          dataItem={modalVisible?.payload}
+          onClose={() => {
+            setAdvanceSearch({ visible: false });
+          }}
+          onReset={() => {  
+            actionRef.current?.reloadAndRest?.();
+          }}
+          onSearch={(data) => {  
+            setAdvanceSearchParams((v) => ({ ...v, ...data, status: v.status }));
+            actionRef.current?.reloadAndRest?.();
+          }}
+        />
+        {/* new modal */}
         <EmployeeModal
             open={!!modalVisible?.type}
             onOpenChange={(visible) => hideModal(visible)}
@@ -190,7 +230,7 @@ export default ({ onAdd, onEdit }: Props) => {
                 );
             }}
             onFinish={(data) => {
-                return saveEmployeeHandler({ ...data, employeeId: modalVisible?.payload.id });
+                return saveEmployeeHandler({ ...data,employeeId:modalVisible?.payload.id||0});
             }}
         />
     </Spin>

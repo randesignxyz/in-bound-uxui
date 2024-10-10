@@ -1,11 +1,10 @@
 
 import { ProTable } from "@ant-design/pro-components"  
-import { FileExcelOutlined,FilePdfOutlined, DownloadOutlined,FileWordOutlined,FileOutlined } from "@ant-design/icons"
-import { Button, message, Modal, Space, Typography,Card, Flex } from 'antd';
-import ExperienceModal from '../modal/ExperienceModal';
+import { FileExcelOutlined,FilePdfOutlined, DownloadOutlined,FileWordOutlined,FileOutlined,FileZipOutlined } from "@ant-design/icons"
+import { Button, message, Modal, Space, Typography,Card, Flex } from 'antd'; 
 import { useEffect,useState } from 'react';
 import { ProfileData} from '../data';
-import { ExperienceData,  FilesData,  SaveExperience } from "../data.ess"; 
+import { FilesData } from "../data.ess"; 
 import { ProfileServicesEss } from '../service_ess'; 
 import { simpleRequestActions } from '@/services/model';
 import ImagePreview from "@/components/ImagePreview";
@@ -77,6 +76,8 @@ export default ({ profile ,step,is_admin}: Props) => {
                                         return <FileWordOutlined />; 
                                     case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
                                         return <FileExcelOutlined />;
+                                    case "application/x-zip-compressed":
+                                        return <FileZipOutlined />;
                                     default:
                                         return <ImagePreview
                                             version={2}
@@ -97,7 +98,8 @@ export default ({ profile ,step,is_admin}: Props) => {
                                     r.fileType=="application/pdf"||
                                     r.fileType=="application/vnd.ms-excel"||
                                     r.fileType=="application/vnd.openxmlformats-officedocument.wordprocessingml.document"||
-                                    r.fileType=="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                    r.fileType=="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"||
+                                    r.fileType=="application/x-zip-compressed"
                                 ){  
                                     return(<Flex>{r.fileName}
                                         <Button title="download"

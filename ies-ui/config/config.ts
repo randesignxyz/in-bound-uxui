@@ -140,7 +140,7 @@ export default defineConfig({
     }
   },
   esbuildMinifyIIFE: true,
-  requestRecord: {}, 
+  requestRecord: {},
   /*
   qiankun: {
     master: {

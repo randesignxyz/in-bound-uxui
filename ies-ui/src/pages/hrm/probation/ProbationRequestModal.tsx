@@ -128,6 +128,7 @@ export default ({
     console.log('employee info',data)
     setProbationEmp(data)
     form.setFieldValue('refId',undefined)
+    formSubmittor.setFieldValue('requestorBuId',undefined)
     srv.fetchProbationEvaluationRefList(data.empId).then(rs=> {
       setProbationRef(rs)
     })

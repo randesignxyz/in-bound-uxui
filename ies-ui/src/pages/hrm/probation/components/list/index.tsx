@@ -9,17 +9,15 @@ import { Paging } from "@/services/API";
 import { formatDateTime } from "@/pages/utils";
 import Status from "@/components/Status";
 import { ExportOutlined, EyeOutlined, FileExcelOutlined } from "@ant-design/icons";
-import AppraisalFormQuickView from "../quick-view/index";
 import { useEffect, useRef, useState } from "react";
-import ProbationEvaluationForm from "../../ProbationEvaluationForm";
 import { LightFilter, ProFormSelect } from "@ant-design/pro-components";
 import { ActionType } from '@ant-design/pro-table';
-import SubmitAllListModal from "./SubmitAllListModal";
 import { CheckboxChangeEvent } from "antd/es/checkbox";
 import { Model } from "../../model";
 import { DownloadData, downloadReport } from '@/services/apiGateway';
 import { replace } from "lodash";
 import moment from "moment";
+import ProbationRequestModal from "../../ProbationRequestModal";
 const { Link } = Typography;
 
 interface Props {
@@ -36,7 +34,7 @@ interface LightFilterProp {
     pendingFilter?: string[]
 }
 
-const AppraisalList: React.FC<Props> = ({ onAdd, forceRefresh, onDetail }) => {
+const ProbationList: React.FC<Props> = ({ onAdd, forceRefresh, onDetail }) => {
     const { data, modals } = Model();
     const actionRef = useRef<ActionType>();
     const cacheList = useModel('dataList');
@@ -90,7 +88,7 @@ const AppraisalList: React.FC<Props> = ({ onAdd, forceRefresh, onDetail }) => {
         actionRef?.current?.reload?.()
     }
     const createAppraisalFormHandler = () => {
-        modals.showModal('CreateAppraisalForm');
+        modals.showModal('CreateProbationForm');
     }
 
     const submitAllHandler = () => {
@@ -294,27 +292,27 @@ const AppraisalList: React.FC<Props> = ({ onAdd, forceRefresh, onDetail }) => {
             }
             extraRightFilter={<Tooltip placement="bottom" title="Dowload Excel File"><Button icon={<FileExcelOutlined />} onClick={dowloandExcelHandler} /></Tooltip>}
             actionHandlers={{
-                // onAdd: createAppraisalFormHandler,
-                onAdd: onAdd,
+                onAdd: createAppraisalFormHandler,
+                // onAdd: onAdd,
                 onFirstLoad: () => onRequestHandler(),
                 onRequest: onRequestHandler,
             }}
             columns={cols}
         />
         {/* {appraisalEmp && modals.isVisible('QuickViewAppraisalForm') &&  */}
-        <AppraisalFormQuickView refreshTable={refeshTable} appraisalEmp={appraisalEmp} open={modals.isVisible('QuickViewAppraisalForm')} onOpenModalChange={(v: any) => !v && modals.hideModal('QuickViewAppraisalForm')} />
-        {modals.isVisible('CreateAppraisalForm') && <ProbationEvaluationForm
-            open={modals.isVisible('CreateAppraisalForm')}
-            onOpenModalChange={(v: any) => !v && modals.hideModal('CreateAppraisalForm')}
-            refreshTable={refeshTable}
+        {/* <AppraisalFormQuickView refreshTable={refeshTable} appraisalEmp={appraisalEmp} open={modals.isVisible('QuickViewAppraisalForm')} onOpenModalChange={(v: any) => !v && modals.hideModal('QuickViewAppraisalForm')} /> */}
+        {modals.isVisible('CreateProbationForm') && <ProbationRequestModal
+            open={modals.isVisible('CreateProbationForm')}
+            onOpenChange={(v: any) => !v && modals.hideModal('CreateProbationForm')}
+            // refreshTable={refeshTable}
         />}
-        {modals.isVisible('SubmitAllListView') && <SubmitAllListModal
+        {/* {modals.isVisible('SubmitAllListView') && <SubmitAllListModal
             open={modals.isVisible('SubmitAllListView')}
             onOpenModalChange={(v: any) => !v && modals.hideModal('SubmitAllListView')}
             refreshTable={refeshTable}
         />
-        }
+        } */}
     </Spin>
 }
 
-export default AppraisalList
+export default ProbationList

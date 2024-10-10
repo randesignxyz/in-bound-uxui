@@ -74,7 +74,7 @@ export const createService = ({ request }: { request: SimpleRequestActions; }): 
 
         fetchPaging: async (params: FetchPagingParams<SearchParams>) =>
             fetchDataPagingService<AppraisalEmp, FetchPagingParams<SearchParams>>({
-                actionName: 'fetch-paging-appraisal-submit',
+                actionName: 'probation-evaluation-page',
                 endpoint: 'HR',
                 payload: params,
                  pagination: {
@@ -110,14 +110,14 @@ export const createService = ({ request }: { request: SimpleRequestActions; }): 
                 endpoint: 'HR',
                 payload: {id}
             }).query(request)
-            ,
+        ,
         fetchProbationEmpList: async (searchValue?: string) =>
             fetchDataListService<AppraisalMapping, {searchValue?:string}>({
                 actionName: 'fetch-probation-evaluation-emp-list',
                 endpoint: 'HR',
                 payload: {searchValue}
             }).query(request)
-            ,    
+        ,    
         fetchAppraisalEmpDimensionList: async (id: number) =>
                 fetchDataListService<AppraisalEmpSubmissionResult, {id:number}>({
                     actionName: 'appraisal-emp-dimension-list',

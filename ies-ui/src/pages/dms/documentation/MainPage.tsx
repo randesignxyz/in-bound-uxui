@@ -432,7 +432,7 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
                             title: "Expiry Date",
                             sorter: "expiryDate",
                             fixed: true,
-                            render: (_, r) => <span style={{ color: expriationStatus(r.term?.expiryDate) > 0 ? "red" : "" }}>{formatDate(r.term.expiryDate)}</span>
+                            render: (_, r) => <span style={{ color: expriationStatus(r.term?.expiryDate) > 0 ? "red" : "" }}>{formatDate(r?.term?.expiryDate)}</span>
                         },
                         {
                             title: "Created",

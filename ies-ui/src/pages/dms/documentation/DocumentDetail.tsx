@@ -192,6 +192,7 @@ export default ({ document, actionRef }: Props) => {
                     <ProDescriptions
                         dataSource={document}
                         column={4}
+                        size="small"
                         columns={[
                             {
                                 title: "Created Date",

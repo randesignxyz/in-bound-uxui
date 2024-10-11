@@ -69,6 +69,18 @@ const SuggestionActions = {
     actionName:"approve-stock-request",
     endpoint:"SALE",
     payload:param
+  }),
+  onMMAApprovalStockRequest:(param:ApprovalStockControlDto):ServiceApiType<ApprovalStockControlDto> =>({
+    type:"EXEC",
+    actionName:"mma-approve-stock-request",
+    endpoint:"SALE",
+    payload:param
+  }),
+  fetchRoleByUser :(id:string):ServiceApiType<{id:string}>=>({
+    type:"LIST_QUERY",
+    endpoint:"SALE",
+    payload:{id},
+    actionName:"fetch-role-by-user"
   })
   // list: (
   //   params: TableViewSearchParams<CustomerAdvanceSearchParams>,
@@ -109,6 +121,8 @@ export const SuggestionServiceAPI = (requestActions: RequestActions) => {
     countStock:(param:CountStockDto)=>singleRequest(SuggestionActions.countStock(param))(requestActions) as Promise<{data:string; message:string}>,
     onClosedRequest:(id?:number)=>singleRequest(SuggestionActions.onClosedRequest(id))(requestActions) as Promise<{data:string; message:string}>,
     onApprovalStockRequest:(param:ApprovalStockControlDto)=>singleRequest(SuggestionActions.onApprovalStockRequest(param))(requestActions) as Promise<{data:string; message:string}>,
+    onMMAApprovalStockRequest:(param:ApprovalStockControlDto)=>singleRequest(SuggestionActions.onMMAApprovalStockRequest(param))(requestActions) as Promise<{data:string; message:string}>,
+    fetchRolByUser:(id:string)=>singleRequest(SuggestionActions.fetchRoleByUser(id))(requestActions) as Promise<{roleName:string}[]>,
     // listCustomer: (params: TableViewSearchParams<CustomerAdvanceSearchParams>) =>
     //   singleRequest<CustomerDto>(CustomerActions.list(params))(requestActions) as Promise<
     //     Paging<CustomerDto>

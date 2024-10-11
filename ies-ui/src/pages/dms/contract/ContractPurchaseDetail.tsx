@@ -51,35 +51,35 @@ export default ({ document, actionRef }: Props) => {
                                     {
                                         label: "Category",
                                         dataIndex: "category",
-                                        render:(_,r)=>document?.category
+                                        render: (_, r) => document?.category
                                     },
                                     {
                                         label: "Vendor Name",
-                                        render:(_,r)=>document?.vendor?.name
+                                        render: (_, r) => document?.vendor?.name
                                     },
                                     {
-                                        label:"OpCo",
-                                        dataIndex:"opCo",
-                                        render:(_,r)=>document?.opCo?.name
+                                        label: "OpCo",
+                                        dataIndex: "opCo",
+                                        render: (_, r) => document?.opCo?.name
                                     },
                                     {
-                                        label:"Function",
-                                        render:(_,r)=>document?.department?.name
+                                        label: "Function",
+                                        render: (_, r) => document?.department?.name
                                     },
                                     {
-                                        label:"Currency",
-                                        render:(_,r)=>document?.currency?.name
+                                        label: "Currency",
+                                        render: (_, r) => document?.currency?.name
                                     },
                                     {
                                         label: "Description",
                                         dataIndex: "description",
-                                        span:2
+                                        span: 2
                                     },
-                                   
-                                    
+
+
                                 ]}
                             />
-                        
+
                         </Col>
                         <Col md={24} sm={24} lg={12}>
                             {/* <Divider orientation="left" plain>Term and Renewal</Divider> */}
@@ -115,16 +115,16 @@ export default ({ document, actionRef }: Props) => {
                                         dataIndex: "noticePeriod",
                                     },
                                     {
-                                        label:"Warranty",
-                                        dataIndex:"warranty"
+                                        label: "Warranty",
+                                        dataIndex: "warranty"
                                     },
                                     {
-                                        label:"Penalty Clause",
-                                        dataIndex:"penaltyClause"
+                                        label: "Penalty Clause",
+                                        dataIndex: "penaltyClause"
                                     },
                                     {
-                                        label:"Term of Payment",
-                                        dataIndex:"termPayment"
+                                        label: "Term of Payment",
+                                        dataIndex: "termPayment"
                                     },
                                     {
                                         title: "Status",
@@ -135,7 +135,7 @@ export default ({ document, actionRef }: Props) => {
                                     //     dataIndex: "noticeDate",
                                     //     valueType: "date"
                                     // },
-                                    
+
                                 ]}
                             />
                         </Col>
@@ -149,32 +149,32 @@ export default ({ document, actionRef }: Props) => {
                         style={{ fontWeight: 500 }}
                         columns={[
                             {
-                                label:"Total Amount",
-                                dataIndex:"totalAmount",
-                                valueType:"money"
+                                label: "Total Amount",
+                                dataIndex: "totalAmount",
+                                valueType: "money"
                             },
                             {
-                                label:"Final Amount",
-                                dataIndex:"finalAmount",
-                                valueType:"money"
+                                label: "Final Amount",
+                                dataIndex: "finalAmount",
+                                valueType: "money"
                             },
                             {
-                                label:"PO",
-                                dataIndex:"po"
+                                label: "PO",
+                                dataIndex: "po"
                             },
                             {
-                                label:"Paid",
-                                dataIndex:"paid",
-                                valueType:"money"
+                                label: "Paid",
+                                dataIndex: "paid",
+                                valueType: "money"
                             },
                             {
-                                label:"Balance",
-                                dataIndex:"balance",
-                                valueType:"money"
+                                label: "Balance",
+                                dataIndex: "balance",
+                                valueType: "money"
                             },
                             {
-                                label:"Comments",
-                                dataIndex:"comments"
+                                label: "Comments",
+                                dataIndex: "comments"
                             },
                             // {
                             //     label: "Company Name",
@@ -200,6 +200,7 @@ export default ({ document, actionRef }: Props) => {
                     <ProDescriptions
                         dataSource={document}
                         column={4}
+                        size="small"
                         columns={[
                             {
                                 title: "Created Date",

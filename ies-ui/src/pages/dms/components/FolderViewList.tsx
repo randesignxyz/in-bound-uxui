@@ -177,7 +177,8 @@ export default ({ onSearch, activeKey, moveDoc, onMove, setFolder: setFolderId, 
                     <DirectoryTree
                         key={"doprdown-1"}
                         defaultExpandAll
-                        selectedKeys={view != "library" ? [] : [(folderSelected || "")]}
+                        // selectedKeys={view != "library" ? [] : [(folderSelected || "")]}
+                        selectedKeys={[folderSelected||""]}
                         expandAction={"doubleClick"}
                         onSelect={(e, { selectedNodes }) => {
                             setFolderId(selectedNodes[0].libraryId);

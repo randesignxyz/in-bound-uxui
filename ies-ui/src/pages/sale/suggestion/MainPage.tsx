@@ -69,6 +69,7 @@ const TaskListMainPage: React.FC<Props> = () => {
     const [addNewModal, setAddNewModal] = useState<{
         open?: boolean;
         record?: StockControlLess;
+        role?: string;
     }>({});
 
     const expendableRender = (parent: StockControlLess) => {
@@ -82,16 +83,19 @@ const TaskListMainPage: React.FC<Props> = () => {
                         : access.canAccessTabWarehouse ? "WAREHHOUSE"
                             : "ADMIN"
                 }
+                onMMAApprove={(data, role) => {
+                    setAddNewModal({ open: true, record: data, role: role });
+                }}
             />
         )
     }
-    const onLoadDSDExchange= async () => {
+    const onLoadDSDExchange = async () => {
         const rs1 = await suggestionService.dsdExchangeRage();
         setExchangeRate(rs1);
     }
     useEffect(() => {
         onLoadDSDExchange()
-    },[]);
+    }, []);
     return <Spin spinning={false}>
         <PageWrapper<StockControlLess, StockStoreAdvanceSearchParams, {}>
             tabRender={item => [
@@ -118,7 +122,7 @@ const TaskListMainPage: React.FC<Props> = () => {
                 type: "Table",
                 title: "Task List",
                 onFilter: (params, page, sort) => {
-
+                        
                 },
                 onRefresh: refetch,
                 props: {
@@ -131,10 +135,6 @@ const TaskListMainPage: React.FC<Props> = () => {
                             render: (_, r) => {
                                 return r.stockName ? r.stockName : '-';
                             },
-                            // actionProps: (item) => ({
-                            //     type: 'view',
-                            //     label: item.stockName || 'n/a',
-                            // }),
                         },
                         {
                             width: 120,
@@ -224,6 +224,7 @@ const TaskListMainPage: React.FC<Props> = () => {
             open={addNewModal.open}
             onCancel={() => setAddNewModal({ open: false, record: undefined })}
             data={addNewModal.record}
+            role={addNewModal.role}
             actionHandlers={{
                 onRejectItem: async (id: number, remark: string) => {
                     try {
@@ -246,21 +247,31 @@ const TaskListMainPage: React.FC<Props> = () => {
                     });
                 },
                 onAddItem: async (item) => {
+
                     Modal.confirm({
                         title: "Set Batch No to Item",
                         content: "are you sure?",
                         onOk: async () => {
                             try {
-                                const res = await suggestionService.onApprovalStockRequest(item);
-                                res && setAddNewModal({
-                                    open: false,
-                                    record: undefined,
-                                });
-                                res && message.success("Data was recorded!")
+                                if (item.distributorCode) {
+                                    const res = await suggestionService.onMMAApprovalStockRequest(item);
+                                    res && setAddNewModal({
+                                        open: false,
+                                        record: undefined,
+                                    });
+                                    res && message.success("success approval!")
+                                }
+                                else {
+                                    const res = await suggestionService.onApprovalStockRequest(item);
+                                    res && setAddNewModal({
+                                        open: false,
+                                        record: undefined,
+                                    });
+                                    res && message.success("Data was recorded!")
+                                }
                             }
                             catch (error) {
                             }
-
                             refetch();
                         }
                     });
@@ -290,8 +301,8 @@ const TaskListMainPage: React.FC<Props> = () => {
             open={settleModal.open}
             data={settleModal.record}
             dsdExchangeRate={exchangeRate}
-            onCancel ={()=>setSettleModal({ open: false, record: undefined })}
-            onSave={ async( data)=>{
+            onCancel={() => setSettleModal({ open: false, record: undefined })}
+            onSave={async (data) => {
                 Modal.confirm({
                     title: "Confirm settlement is valid data.",
                     content: "are you sure?",

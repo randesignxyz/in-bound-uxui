@@ -445,6 +445,7 @@ export interface ApprovalStockControlDto {
   referenceNo?: string;
   receivedBy?: string;
   items?: ApprovalStockItemDto[];
+  distributorCode?:string;
 }
 
 export interface ApprovalStockItemDto {
@@ -526,12 +527,17 @@ export interface StockControlLess {
   invoices?: SaleInvoiceLess[];
   adjustmentItems?: StockAdjustmentDto[] = [];
   beginningQty:number;
-  comments?:Comment[];
+  comments?:Comments[];
   stockAdjusts?:StockAjust;
   stockCountId?:number;
   isKeepForwarding?:boolean;
   storeId?:number;
   description?:string;
+}
+
+interface Comments{
+  id :number;
+  description:string;
 }
 
 interface StockAjust{

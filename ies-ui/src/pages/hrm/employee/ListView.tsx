@@ -13,7 +13,7 @@ import { ExportOutlined,EditOutlined } from "@ant-design/icons";
 // import { history } from 'umi';
 import { useState } from 'react';
 import EmployeeModal from './EmployeeModal'; 
-import { history, useAccess } from '@umijs/max';
+import { history, useAccess,useModel } from '@umijs/max';
 import AdvanceEmployeeSearch from "./AdvanceEmployeeSearch";
 import Omit from "omit.js";
 
@@ -23,6 +23,8 @@ interface Props {
   }
 
 export default ({ onAdd, onEdit }: Props) => { 
+    const { initialState } = useModel('@@initialState');
+    const { currentUser } = initialState || {};
     const access = useAccess();  
  
     const [modalVisible, setModalVisible] = useState< { type: 'ADD'; payload: EmployeeListItem } | { type: 'EDIT'; payload: EmployeeListItem } >();
@@ -38,45 +40,8 @@ export default ({ onAdd, onEdit }: Props) => {
   });
      
     const onRequestHandler = async (params: TableViewSearchParams<EmployeeAdvanceSearchParams>) => {
-        try {
-            
-            if(access.ROLE_OFL_NVC_WHM_CASUAL==true){ 
-                params.criteria!!.permissionLevel = 'ROLE_HR_OFL-NVC_WHM_CASUAL';
-            }
-            else if(access.ROLE_HR_OMM_ENG_PRD_CASUAL==true){ 
-                params.criteria!!.permissionLevel = 'ROLE_HR_OMM_ENG_PRD_CASUAL';
-            }
-            else if(access.ROLE_HR_NVC_PRD_CASUAL==true){ 
-                params.criteria!!.permissionLevel = 'ROLE_HR_NVC_PRD_CASUAL';
-            }
-            else if(access.ROLE_OFL_NVC_OMM_FMA_CASUAL==true){ 
-                params.criteria!!.permissionLevel = 'ROLE_HR_OFL-NVC-OMM_FMA_CASUAL';
-            } 
-            else if(access.ROLE_HR_OFL_DEL_CASUAL==true){ 
-                params.criteria!!.permissionLevel = 'ROLE_HR_OFL_DEL_CASUAL';
-            }
-            else if(access.ROLE_HR_OMD_DEL_CASUAL==true){ 
-                params.criteria!!.permissionLevel = 'ROLE_HR_OMD_DEL_CASUAL';
-            }
-            else{
-                params.criteria!!.permissionLevel = '0';
-            }
-            //
-            // params.criteria!!.advanceSearch?.department = 0;
-            // if(access.ROLE_HR_DIRECTOR==true){ 
-            //     params.criteria.permissionLevel = 'ROLE_HR_DIRECTOR';
-            // }
-            // if(access.ROLE_HR_MANAGEMENT==true){ 
-            //     params.criteria.permissionLevel = 'ROLE_HR_MANAGEMENT';
-            // }
-            // if(access.ROLE_HR_EXEUTIVE_MANAGEMENT==true){ 
-            //     params.criteria.permissionLevel = 'ROLE_HR_EXEUTIVE_MANAGEMENT';
-            // }
-            // if(access.ROLE_HR_MIDEL_MANAGEMENT==true){ 
-            //     params.criteria.permissionLevel = 'ROLE_HR_MIDEL_MANAGEMENT';
-            // }  
+        try { 
             return await EmployeeServices.list(params).query(requestActions);
-
         } catch (error: any) {
             message.error(error.message)
             return Promise.reject()
@@ -145,7 +110,7 @@ export default ({ onAdd, onEdit }: Props) => {
                         options={[
                             { label: "All", value: "ALL" },
                             { label: "Active", value: "ACTIVE" },
-                            { label: "In Active", value: "INACTIVE" }
+                            { label: "Inactive", value: "INACTIVE" }
                         ]} 
                         // onChange={(e) => {setAdanceSearch(e.target.value);}}
 

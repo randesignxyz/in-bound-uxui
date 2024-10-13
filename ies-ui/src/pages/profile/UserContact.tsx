@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import ContactModal from './modal/ContactModal';
 import { ContactData, ProfileData, SaveContract } from './data';
 import { ProfileServices } from './service';
+import { useAccess } from '@umijs/max'; 
 
 interface Props {
   profile: ProfileData;
@@ -22,6 +23,8 @@ export default ({ profile,step,is_admin}: Props) => {
   const [cardActionProps] = useState<'actions' | 'extra'>('extra');
   const [lookupDataList, setLookupDataList] = useState<LookupDataItem2[]>([]);
   const [contactList, setContactList] = useState<ContactData[]>([]);
+  
+  const access = useAccess();  
 
   useEffect(() => {
     initData();
@@ -47,10 +50,10 @@ export default ({ profile,step,is_admin}: Props) => {
       title: item.type.name,
       subTitle: item.isMain && <StarTwoTone />,
       actions: [
-        <a key="edit" onClick={() => onEditHandler(item)} style={{display: [7,5,4,3,2].find((element) => element == step)?'':'none'}}>
+        access.canAccessHrESSViewOnly?'':<a key="edit" onClick={() => onEditHandler(item)} style={{display: [7,5,4,3,2].find((element) => element == step)?'':'none'}}>
           <EditOutlined />
         </a>,
-        <a style={{display: [7,5,4,3,2].find((element) => element == step)?'':'none'}} key="delete" onClick={() => deleteContractHandler(item)}>
+        access.canAccessHrESSViewOnly?'':<a style={{display: [7,5,4,3,2].find((element) => element == step)?'':'none'}} key="delete" onClick={() => deleteContractHandler(item)}>
           <DeleteOutlined />
         </a>,
       ],
@@ -124,11 +127,8 @@ export default ({ profile,step,is_admin}: Props) => {
     <div>
       <ProList<any>
         toolBarRender={() => {
-          return [
-            // <Button danger onClick={() => setModalVisible({ type: 'VIEW', payload: undefined})} 
-            //     style={{display:step>=2?'':'none'}}><EyeOutlined/> View edit</Button>, 
-
-            <Button style={{display: ([7,5,2].find((element) => element == step))&&is_admin==0?'':'none'}}
+          return [ 
+            access.canAccessHrESSViewOnly?'':<Button style={{display: ([7,5,2].find((element) => element == step))&&is_admin==0?'':'none'}}
               onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}
               icon={<PlusCircleFilled />}
               key=" 3 "
@@ -136,7 +136,7 @@ export default ({ profile,step,is_admin}: Props) => {
             >
               Add
             </Button>,
-            <Button style={{display: is_admin==2?'':'none'}}
+            access.canAccessHrESSViewOnly?'':<Button style={{display: is_admin==2?'':'none'}}
               onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}
               icon={<PlusCircleFilled />}
               key=" 3 "

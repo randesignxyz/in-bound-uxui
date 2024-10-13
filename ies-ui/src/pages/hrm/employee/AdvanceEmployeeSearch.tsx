@@ -61,10 +61,10 @@ const AdvanceEmployeeSearch: React.FC<Props> = ({
           },
         }}
       >
-        <ProFormSelect label="BU" name={'bu'}  shouldUpdate allowClear
+        <ProFormSelect label="Company" name={'bu'}  shouldUpdate allowClear
             options={data?.buList.map((it) => ({ label: it.name, value: it.id }))}
         />    
-         <ProFormSelect label="Department" name={'department'} showSearch  allowClear
+         <ProFormSelect label="Function" name={'department'} showSearch  allowClear
             options={data?.departmentList?.map((it) => ({ label: it.name, value: it.id }))}
         />    
         

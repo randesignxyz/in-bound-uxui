@@ -3,39 +3,7 @@
  * */
 export default function access(initialState: { currentUser?: API.CurrentUser } | undefined) {
   const { currentUser } = initialState ?? {}; 
-  return {
-    ROLE_OFL_NVC_WHM_CASUAL: currentUser?.authorities.some((item) =>
-      ['ROLE_HR_OFL-NVC_WHM_CASUAL'].some((it) => it === item),
-    ) || false,
-    
-    ROLE_HR_OMM_ENG_PRD_CASUAL: currentUser?.authorities.some((item) =>
-      ['ROLE_HR_OMM_ENG_PRD_CASUAL'].some((it) => it === item),
-    ) || false,
-    ROLE_HR_NVC_PRD_CASUAL: currentUser?.authorities.some((item) =>
-      ['ROLE_HR_NVC_PRD_CASUAL'].some((it) => it === item),
-    ) || false,
-    ROLE_OFL_NVC_OMM_FMA_CASUAL: currentUser?.authorities.some((item) =>
-      ['ROLE_HR_OFL-NVC-OMM_FMA_CASUAL'].some((it) => it === item),
-    ) || false,
-    ROLE_HR_OFL_DEL_CASUAL: currentUser?.authorities.some((item) =>
-      ['ROLE_HR_OFL_DEL_CASUAL'].some((it) => it === item),
-    ) || false, 
-    ROLE_HR_OMD_DEL_CASUAL: currentUser?.authorities.some((item) =>
-      ['ROLE_HR_OMD_DEL_CASUAL'].some((it) => it === item),
-    ) || false, 
-    // ROLE_HR_DIRECTOR: currentUser?.authorities.some((item) =>
-    //   ['ROLE_HR_DIRECTOR'].some((it) => it === item),
-    // ) || false, 
-    // ROLE_HR_MANAGEMENT: currentUser?.authorities.some((item) =>
-    //   ['ROLE_HR_MANAGEMENT'].some((it) => it === item),
-    // ) || false, 
-    // ROLE_HR_EXEUTIVE_MANAGEMENT: currentUser?.authorities.some((item) =>
-    //   ['ROLE_HR_EXEUTIVE_MANAGEMENT'].some((it) => it === item),
-    // ) || false, 
-    // ROLE_HR_MIDEL_MANAGEMENT: currentUser?.authorities.some((item) =>
-    //   ['ROLE_HR_MIDEL_MANAGEMENT'].some((it) => it === item),
-    // ) || false,  
-
+  return { 
     isRequesterRole:
       currentUser?.authorities.some((item) =>
         ['ROLE_PRO_PR_USER', 'ROLE_TICKET_INCIDENT_USER'].some((it) => it === item),
@@ -575,11 +543,15 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       ) || false,
     canAccessHrEmployeeMenuItem:
       currentUser?.authorities.some((item) =>
-        ['ROLE_HR_ADMIN', 'ROLE_ADMIN', 'ROLE_HR_EMPLOYEE_VIEW'].some((it) => it === item),
+        ['ROLE_HR_ADMIN','ROLE_HR_EMPLOYEE_VIEW'].some((it) => it === item),
       ) || false, 
     canAccessHrViewEmployeeMenuItem:
       currentUser?.authorities.some((item) =>
-        ['ROLE_HR_MENU_VIEW', 'ROLE_ADMIN'].some((it) => it === item),
+        ['ROLE_HR_MENU_VIEW'].some((it) => it === item),
+      ) || false, 
+    canAccessHrESSViewOnly:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_HR_ESS_VIEW_ONLY'].some((it) => it === item),
       ) || false, 
     canAccessHrVissibleTraining:
       currentUser?.authorities.some((item) =>

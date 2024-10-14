@@ -62,7 +62,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
     const hideTrainingViewModal = (visble?: boolean) => !visble && setModalTrainingViewVisible(undefined); 
     // certification
     const [modalCertificationViewVisible, setModalCertificationViewVisible] = useState< { type: 'VIEW'; payload: undefined } >(); 
-    const hideCertificationViewModal = (visble?: boolean) => !visble && setModalCertificationViewVisible(undefined);  
+    const hideCertificationViewModal = (visble?: boolean) => !visble && setModalCertificationViewVisible(undefined); 
     
     useEffect(() => {
         initData();
@@ -211,14 +211,14 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
     var type = ["" ,"Training","Certification"];
     return <div>
         <Card> 
-            <Space direction={"vertical"} style={{width:'100%'}} hidden={access.canAccessHrVissibleTraining}>
+            <Space direction={"vertical"} style={{width:'100%'}} hidden={access.canAccessHrVissibleTraining}> 
                 <div style={{width:'100%',textAlign:'right'}}> 
                     <Space direction='horizontal'>
-                        <Button style={{display:(is_admin==2&&empId>0)?'':'none'}} onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}
+                        <Button style={{display:(is_admin==2&&empId>0&&access.canAccessHrESSViewOnly==false)?'':'none'}} onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}
                             icon={<PlusCircleFilled />}
                             key="lnd8"
                             type="primary"> Add Training</Button>
-                        <Button style={{display:(is_admin==2&&empId>0)?'':'none'}} onClick={() => setModalCertificateVisible({ type: 'ADD', payload: undefined })}
+                        <Button style={{display:(is_admin==2&&empId>0&&access.canAccessHrESSViewOnly==false)?'':'none'}} onClick={() => setModalCertificateVisible({ type: 'ADD', payload: undefined })}
                             icon={<PlusCircleFilled />}
                             key="lnd7"
                             type="primary"> Add Certification</Button>
@@ -228,7 +228,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                         {/*  */}
                         <Button danger onClick={() => setModalCertificationViewVisible({ type: 'VIEW', payload: undefined})} 
                             style={{display:([7,5,4,3,2].find((element) => element == profile!!.ess.stepId))&&is_admin!=2?'':'none'}} type="primary"><EyeOutlined/> View Certification Edit </Button> 
-                         {/*  */}
+                        {/*  */}
                         {profile!!.ess.id!!<=0?'':<Button style={{display: ([7,5,2].find((element) => element == step))&&is_admin==0?'':'none'}}
                                 onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}
                                 icon={<PlusCircleFilled />}
@@ -246,7 +246,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                             </Button>
                         }
                     </Space>
-                </div>
+                </div> 
                 {/* training */}
                 <ProCard bordered>
                     <Typography.Title level={5}>Training </Typography.Title> 
@@ -277,7 +277,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                             },{
                                 title: "Description", dataIndex: "description"
                             }, 
-                            {   width: 100,
+                            {   width: 100,hidden:access.canAccessHrESSViewOnly,
                                 render: (dom, r) => {
                                     return (<Flex vertical={false} justify='space-between'>
                                     {profile!!.ess.id!!<=0?'':<a style={{display: (is_admin==0&&empId==0&&[7,5,2].find((element) => element == profile!!.ess.stepId))?'':'none'}}
@@ -329,7 +329,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                             },{
                                 title: "Description", dataIndex: "description"
                             },
-                            {   width: 100,
+                            {   width: 100,hidden:access.canAccessHrESSViewOnly,
                                 render: (dom, r) => {
                                     return (<Flex vertical={false} justify='space-between'>
                                     {profile!!.ess.id!!<=0?'':<a style={{display: (is_admin==0&&empId==0&&[7,5,2].find((element) => element == profile!!.ess.stepId))?'':'none'}}

@@ -36,6 +36,7 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
     const editableFormRef3 = useRef<EditableFormInstance>();
     const editableFormRef4 = useRef<EditableFormInstance>();
     const instId = workflowModel.state?.instanceData?.processInstance?.procInstId;
+    console.log('workflowModel===',workflowModel)
     
     const clear = () => {
         form.resetFields();
@@ -88,7 +89,8 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
     const downloadDataFile =async (exportType: 'PDF' | 'EXCEL',requestAction: SimpleRequestActions)=>{
         await downloadReport<CriteriaExportReport>(requestActions)(dataReport(exportType))
     }
-    const isDownloadForm = props.formKey==ProbationEvaluationRequestFormNames.assessmentPreparation ?true:false
+    const isDownloadForm = [ProbationEvaluationRequestFormNames.assessmentPreparation ,ProbationEvaluationRequestFormNames.lineManagerSubmission].find(r=> r== props.formKey)
+                          && ['SETTING','PREPARED'].find(r => r==probaRequest?.probationEvaluation?.status)? true:false
   
     return(  
     <ViewFormWrapper<{ id: number }>

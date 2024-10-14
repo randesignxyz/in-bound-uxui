@@ -400,6 +400,11 @@ export type ProbationEvaluationRs = {
     hodId?: number
     hodName?: string
     joinedDate?:Moment
+    status: string
+    workflowStatus: string
+    processStatus: string
+
+
 }
 
 export type ProbationEvaluation = {

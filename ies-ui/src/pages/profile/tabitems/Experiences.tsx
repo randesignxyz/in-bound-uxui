@@ -10,6 +10,7 @@ import { ProfileServicesEss } from '../service_ess';
 import { simpleRequestActions } from '@/services/model';
 import ExperienceView from "../view/ExperienceView";
 import { formatDate, formatDATEFUll, formatDateTime } from "@/pages/utils";
+import { useAccess } from '@umijs/max'; 
 
 
 interface Props {
@@ -35,6 +36,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
     const [experienceAllImageList, setExperienceAllImageList] = useState<FilesData[]>([]);
     
     const [createFileOther, selectedFileOther] = useState<any>();  
+    const access = useAccess();  
 
     
     const [modalEducationViewVisible, setModalEducationViewVisible] = useState< { type: 'VIEW'; payload: ExperienceData } >(); 
@@ -155,17 +157,17 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
     }
     return <div>
         <Card>
-            <Space direction={"vertical"} style={{width:'100%'}}>
+            <Space direction={"vertical"} style={{width:'100%'}}>         
                 <div style={{width:'100%',textAlign:'right'}}>
                     <Space direction='horizontal'>
-                        <Button style={{display:(is_admin==2&&empId>0)?'':'none'}} onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}
-                                icon={<PlusCircleFilled />}
-                                key="1"
-                                type="primary">Add</Button>
-                    
+                        <Button style={{display:(is_admin==2&&empId>0&&access.canAccessHrESSViewOnly==false)?'':'none'}} onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}
+                                    icon={<PlusCircleFilled />}
+                                    key="1"
+                                    type="primary">Add</Button>
+                        
                         <Button danger onClick={() => setModalEducationViewVisible({ type: 'VIEW', payload: null})} 
-                            style={{display:([7,5,4,3,2].find((element) => element == profile!!.ess.stepId))&&is_admin!=2?'':'none'}}
-                                type="primary"><EyeOutlined/> View edit</Button>
+                                style={{display:([7,5,4,3,2].find((element) => element == profile!!.ess.stepId))&&is_admin!=2?'':'none'}}
+                                    type="primary"><EyeOutlined/> View edit</Button>
 
                         {profile!!.ess.id!!<=0?'':<Button style={{display: ([7,5,2].find((element) => element == step))&&is_admin==0?'':'none'}}
                                 onClick={() => setModalVisible({ type: 'ADD', payload: null })}
@@ -176,7 +178,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                             </Button>
                         }
                     </Space>
-                </div>
+                </div> 
                 <ProTable<ExperienceData>
                     dataSource={experienceList}
                     search={false}
@@ -212,7 +214,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                                 return formatDATEFUll(r.endDate)
                             }
                         },
-                        {   width: 100,
+                        {   width: 100,hidden:access.canAccessHrESSViewOnly,
                             render: (_, r) => {
                                 return (<Flex vertical={false} justify='space-between'>
                                   {profile!!.ess.id!!<=0?'':<a style={{display: (is_admin==0&&empId==0&&[7,5,2].find((element) => element == profile!!.ess.stepId))?'':'none'}}

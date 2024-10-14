@@ -1,5 +1,5 @@
 import { RequestActions, ServiceApiType, singleRequest } from "@/services/apiGateway";
-import { HACCPMonitoringOzoneSystem, HACCPMonitoringOzoneControl, HACCPMonitoringOzone } from "./data";
+import { HACCPMonitoringOzoneSystem, HACCPMonitoringOzoneControl, HACCPMonitoringOzone, HACCPMonitoringOzoneList } from "./data";
 import { HACCPMonitoringActivities } from "../daily-haccp-monitoring/data";
 // import { DailyPreWaterTreatment, DailyPreWaterTreatmentControl, DailyPreWaterTreatmentList, DailyPreWaterTreatmentPlant } from "./data";
 
@@ -34,18 +34,30 @@ const HACCPMonitoringOzoneAction = {
         type: "EXEC",
         payload: data
     }),
-    get_ozone_activities: (haccp_ozone_id: string): ServiceApiType<{ haccp_ozone_id: string}> => ({
+    get_ozone_activities: (haccp_ozone_id: string): ServiceApiType<{ haccp_ozone_id: string }> => ({
         actionName: 'get-ozone-activities',
         endpoint: 'PROD',
         type: 'LIST_QUERY',
         payload: { haccp_ozone_id },
     }),
-    unassign_ozone: (haccp_ozone_id: string): ServiceApiType<{haccp_ozone_id: string}> => ({
-        actionName:"unassign-ozone",
-        endpoint:"PROD",
-        type:'EXEC',
-        payload:{haccp_ozone_id}
-    })
+    unassign_ozone: (haccp_ozone_id: string): ServiceApiType<{ haccp_ozone_id: string }> => ({
+        actionName: "unassign-ozone",
+        endpoint: "PROD",
+        type: 'EXEC',
+        payload: { haccp_ozone_id }
+    }),
+    assign_self_ozone: (id: number, haccp_ozone_id: string, action: string): ServiceApiType<{ id: number, haccp_ozone_id: string, action: string }> => ({
+        actionName: "assign-self-ozone",
+        endpoint: "PROD",
+        type: 'EXEC',
+        payload: { id, haccp_ozone_id, action }
+    }),
+    post_haccp_monitoring_ozone_list: (data: HACCPMonitoringOzoneList): ServiceApiType<HACCPMonitoringOzoneList> => ({
+        actionName: 'post-haccp-monitoring-ozone-list',
+        endpoint: "PROD",
+        type: "EXEC",
+        payload: data
+    }),
 }
 
 export const HACCPMonitoringOzoneServiceAPI = (requestAction: RequestActions) => {
@@ -72,9 +84,17 @@ export const HACCPMonitoringOzoneServiceAPI = (requestAction: RequestActions) =>
             singleRequest<HACCPMonitoringActivities>(HACCPMonitoringOzoneAction.get_ozone_activities(haccp_ozone_id))(
                 requestAction
             ),
-        unassignOzone:(haccp_ozone_id: string)=>
-                singleRequest<HACCPMonitoringOzone>(HACCPMonitoringOzoneAction.unassign_ozone(haccp_ozone_id))(
-                    requestAction
-                )
+        unassignOzone: (haccp_ozone_id: string) =>
+            singleRequest<HACCPMonitoringOzone>(HACCPMonitoringOzoneAction.unassign_ozone(haccp_ozone_id))(
+                requestAction
+            ),
+        assign_self_ozone: (id: number, haccp_ozone_id: string, action: string) =>
+            singleRequest<HACCPMonitoringOzone>(HACCPMonitoringOzoneAction.assign_self_ozone(id, haccp_ozone_id, action))(
+                requestAction
+            ),
+        post_haccp_monitoring_ozone_list: (data: HACCPMonitoringOzoneList) =>
+            singleRequest<{ data: string; message: string }>(HACCPMonitoringOzoneAction.post_haccp_monitoring_ozone_list(data))(
+                requestAction
+            ),
     }
 }

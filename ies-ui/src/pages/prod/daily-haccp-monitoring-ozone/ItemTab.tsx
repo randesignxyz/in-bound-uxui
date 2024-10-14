@@ -13,6 +13,10 @@ import { HACCPMonitoringOzoneServiceAPI } from "./service";
 // import PH4Model from "./pH4Model";
 import { formatDateTime } from "@/pages/utils";
 import { useAccess } from "@umijs/max";
+import RO1Modal from "./RO1Modal";
+import RO2Modal from "./RO2Modal";
+import RO4Modal from "./RO4Modal";
+import OzoneModal from "./OzoneModal";
 
 interface Props extends DrawerFormProps {
     data?: any;
@@ -24,36 +28,32 @@ export default ({ data, refresh, type, ...rest }: Props) => {
     const requestActions = simpleRequestActions();
     const access = useAccess();
     const services = HACCPMonitoringOzoneServiceAPI(requestActions);
-    const [pressureModelOpen, setPressureModelOpen] = useState<{ visible: boolean, data?: any, type?: string }>({ visible: false })
-    const [airReleaseModelOpen, setairReleaseModelOpen] = useState<{ visible: boolean, data?: any, type?: string }>({ visible: false })
-    const [tds2ModelOpen, setTDS2ModelOpen] = useState<{ visible: boolean, data?: any, type?: string }>({ visible: false })
-    const [ph2ModelOpen, setpH2ModelOpen] = useState<{ visible: boolean, data?: any, type?: string }>({ visible: false })
-    const [pressure4ModelOpen, setPressure4ModelOpen] = useState<{ visible: boolean, data?: any, type?: string }>({ visible: false })
-    const [tds4ModelOpen, setTDS4ModelOpen] = useState<{ visible: boolean, data?: any, type?: string }>({ visible: false })
-    const [ph4ModelOpen, setpH4ModelOpen] = useState<{ visible: boolean, data?: any, type?: string }>({ visible: false })
+    const [control, setControl] = useState<HACCPMonitoringOzoneList>();
+    const [RO1ModalOpen, setRO1ModalOpen]=useState<{ visible: boolean }>({ visible: false })
+    const [RO2ModalOpen, setRO2ModalOpen]=useState<{ visible: boolean }>({ visible: false })
+    const [RO4ModalOpen, setRO4ModalOpen]=useState<{ visible: boolean }>({ visible: false })
+    const [ozoneModalOpen, setOzoneModalOpen]=useState<{ visible: boolean }>({ visible: false })
 
-    // const onSubmitHandaler = async (data: DailyPreWaterTreatmentList) => {
-    //     Modal.confirm({
-    //         title: "Submit",
-    //         content: 'are you sure',
-    //         onOk: async () => {
-    //             try {
-    //                 await services.post_daily_pre_water_treatment(data)
-    //                 setPressureModelOpen({ visible: false, data: undefined, type: undefined });
-    //                 setairReleaseModelOpen({ visible: false, data: undefined, type: undefined });
-    //                 setTDS2ModelOpen({ visible: false, data: undefined, type: undefined });
-    //                 setTDS4ModelOpen({ visible: false, data: undefined, type: undefined });
-    //                 setpH2ModelOpen({ visible: false, data: undefined, type: undefined });
-    //                 setpH4ModelOpen({ visible: false, data: undefined, type: undefined });
-    //                 setPressure4ModelOpen({ visible: false, data: undefined, type: undefined });
-    //                 refresh(true)
-    //                 message.success('Success');
-    //             } catch (e) {
-    //                 message.error('Error');
-    //             }
-    //         }
-    //     })
-    // }
+    const onSubmitHandaler = async (data: HACCPMonitoringOzoneList) => {
+        Modal.confirm({
+            title: "Submit",
+            content: 'are you sure',
+            onOk: async () => {
+                try {
+                    await services.post_haccp_monitoring_ozone_list(data)
+                    setRO1ModalOpen({ visible: false});
+                    setRO2ModalOpen({ visible: false});
+                    setRO4ModalOpen({ visible: false});
+                    setOzoneModalOpen({ visible: false});
+                    setControl(undefined)
+                    refresh(true)
+                    message.success('Success');
+                } catch (e) {
+                    message.error('Error');
+                }
+            }
+        })
+    }
 
     return (
         <>
@@ -84,7 +84,7 @@ export default ({ data, refresh, type, ...rest }: Props) => {
                                 r.warning_count
                             }
                         >
-                            <a onClick={() => {}}>
+                            <a onClick={() => { data?.haccp_ozone_type == 'Reverses Osmosis System (RO1)'?(setRO1ModalOpen({visible:true}),setControl(r)):(data?.haccp_ozone_type == 'Reverses Osmosis System (RO2)' || data?.haccp_ozone_type == 'Reverses Osmosis System (RO3)')?(setRO2ModalOpen({visible:true}),setControl(r)):data?.haccp_ozone_type == 'Reverses Osmosis System (RO4)'?(setRO4ModalOpen({visible:true}),setControl(r)):(data?.haccp_ozone_type == 'Ozone System (RO3)' || data?.haccp_ozone_type == 'Ozone System (RO4)' )?(setOzoneModalOpen({visible:true}),setControl(r)):{}}}>
                                 {r.control}
                             </a>
                         </Badge>
@@ -106,58 +106,97 @@ export default ({ data, refresh, type, ...rest }: Props) => {
                         dataIndex: 'lastModifiedDate',
                         render: (_, r) => (r.lastModifiedDate ? formatDateTime(r.lastModifiedDate) : '-')
                     },
-                    // {
-                    //     render: (_, r) => (
-                    //         <>
-                    //             {r?.assign_to_user?.split(" ").includes(access.currentUser?.login || '') ?
-                    //                 <Button
-                    //                     style={{ width: '100%', color: "red", borderColor: 'red' }}
-                    //                     onClick={() => {
-                    //                         Modal.confirm({
-                    //                             title: "Submit",
-                    //                             content: 'are you sure to disenroll',
-                    //                             onOk: async () => {
-                    //                                 try {
-                    //                                     await services.assign_self_pre(r.id, access.currentUser?.login + " disenroll", r.pre_treatment_id, data.pre_treatment_type)
-                    //                                     refresh(true)
-                    //                                     message.success('Success');
-                    //                                 } catch (e) {
-                    //                                     message.error('Error');
-                    //                                 }
-                    //                             }
-                    //                         })
-                    //                         // console.log(r,data)
-                    //                     }}
-                    //                 >
-                    //                     Disenroll
-                    //                 </Button>
-                    //                 :
-                    //                 <Button
-                    //                     style={{ width: '100%' }}
-                    //                     onClick={() => {
-                    //                         Modal.confirm({
-                    //                             title: "Submit",
-                    //                             content: 'are you sure to enroll',
-                    //                             onOk: async () => {
-                    //                                 try {
-                    //                                     await services.assign_self_pre(r.id, access.currentUser?.login + " enroll", r.pre_treatment_id, data.pre_treatment_type)
-                    //                                     refresh(true)
-                    //                                     message.success('Success');
-                    //                                 } catch (e) {
-                    //                                     message.error('Error');
-                    //                                 }
-                    //                             }
-                    //                         })
-                    //                     }}
-                    //                 >
-                    //                     Enroll
-                    //                 </Button>
-                    //             }
+                    {
+                        render: (_, r) => (
+                            <>
+                                {r?.assign_to_user?.split(" ").includes(access.currentUser?.login || '') ?
+                                    <Button
+                                        style={{ width: '100%', color: "red", borderColor: 'red' }}
+                                        onClick={() => {
+                                            Modal.confirm({
+                                                title: "Submit",
+                                                content: 'are you sure to disenroll',
+                                                onOk: async () => {
+                                                    try {
+                                                        await services.assign_self_ozone(r.id ?? 0, r.haccp_ozone_id ?? '',access.currentUser?.login + " disenroll")
+                                                        refresh(true)
+                                                        message.success('Success');
+                                                    } catch (e) {
+                                                        message.error('Error');
+                                                    }
+                                                }
+                                            })
+                                            // console.log(r,data)
+                                        }}
+                                    >
+                                        Disenroll
+                                    </Button>
+                                    :
+                                    <Button
+                                        style={{ width: '100%' }}
+                                        onClick={() => {
+                                            console.log(r)
+                                            Modal.confirm({
+                                                title: "Submit",
+                                                content: 'are you sure to enroll',
+                                                onOk: async () => {
+                                                    try {
+                                                        await services.assign_self_ozone(r.id ?? 0, r.haccp_ozone_id ?? '', access.currentUser?.login + " enroll")
+                                                        refresh(true)
+                                                        message.success('Success');
+                                                    } catch (e) {
+                                                        message.error('Error');
+                                                    }
+                                                }
+                                            })
+                                        }}
+                                    >
+                                        Enroll
+                                    </Button>
+                                }
 
-                    //         </>
-                    //     ),
-                    // },
+                            </>
+                        ),
+                    },
                 ]}
+            />
+            <RO1Modal
+                data={control}
+                open={RO1ModalOpen.visible}
+                onCancel={() => {
+                    setRO1ModalOpen({ visible: false});
+                    setControl(undefined)
+                }}
+                onSave={onSubmitHandaler}
+            />
+            <RO2Modal
+                data={control}
+                open={RO2ModalOpen.visible}
+                onCancel={() => {
+                    setRO2ModalOpen({ visible: false});
+                    setControl(undefined)
+                }}
+                type={data?.haccp_ozone_type}
+                onSave={onSubmitHandaler}
+            />
+            <RO4Modal
+                data={control}
+                open={RO4ModalOpen.visible}
+                onCancel={() => {
+                    setRO4ModalOpen({ visible: false});
+                    setControl(undefined)
+                }}
+                onSave={onSubmitHandaler}
+            />
+            <OzoneModal
+                data={control}
+                open={ozoneModalOpen.visible}
+                onCancel={() => {
+                    setOzoneModalOpen({ visible: false});
+                    setControl(undefined)
+                }}
+                onSave={onSubmitHandaler}
+                type={data?.haccp_ozone_type}
             />
             {/* <Pressure2Model
                 title={pressureModelOpen.data?.control + ' (0.1-0.3 Mpa)'}

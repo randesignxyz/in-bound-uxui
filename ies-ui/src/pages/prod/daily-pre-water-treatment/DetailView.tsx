@@ -59,7 +59,7 @@ export default ({ id, ...rest }: Props) => {
     return (
         <>
             <BreadCrumbCom separator=">" routes={routes} />
-            <Card size="small" style={{ textAlign: 'right', marginBottom: 10, marginTop: 20 }}>
+            <Card size="small" style={{ textAlign: 'left', marginBottom: 10, marginTop: 20 }}>
                 <Space >
                     <ProForm submitter={false}>
                         <DescriptionDisplay

@@ -49,7 +49,13 @@ const DailyHACCPMonitoringAction = {
         endpoint: 'PROD',
         type: 'LIST_QUERY',
         payload: {group_line}
-    })
+    }),
+    unassign_haccp:(id:number,line:string,haccp_id:string,activities: { action: string }[],haccp_type:string): ServiceApiType<{id:number,line:string,haccp_id:string,activities: { action: string }[],haccp_type:string}>=>({
+        actionName:'unassign-haccp',
+        endpoint: 'PROD',
+        type: 'EXEC',
+        payload: {id,line,haccp_id,activities,haccp_type}
+    }),
 }
 
 export const DailyHACCPMonitoringServiceAPI = (requestAction: RequestActions) => {
@@ -76,6 +82,9 @@ export const DailyHACCPMonitoringServiceAPI = (requestAction: RequestActions) =>
             requestAction
         ),
         get_instruction:(group_line:string)=> singleRequest<HACCPMonitoringInstruction>(DailyHACCPMonitoringAction.get_instruction(group_line))(
+            requestAction
+        ),
+        unassign_haccp:(id:number,line:string,haccp_id:string,activities: { action: string }[],haccp_type:string)=> singleRequest<{data: string; message: string}>(DailyHACCPMonitoringAction.unassign_haccp(id,line,haccp_id,activities,haccp_type))(
             requestAction
         ),
     }

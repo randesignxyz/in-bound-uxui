@@ -46,9 +46,9 @@ export default () => {
   ];
 
   const line = [
-    // {
-    //   name: 'Line 1'
-    // },
+    {
+      name: 'Line Barrel'
+    },
     {
       name: 'Line 2'
     },
@@ -114,7 +114,7 @@ export default () => {
           {line.map((item, index) => {
             // Filter data based on the current line name
             const filteredData = data.filter(i => i.line === item.name);
-            const total = (filteredData[0]?.haccplist.length || 0)
+            const total = (filteredData[0]?.haccplist?.length || 0)
             const warningStatus = (filteredData[0]?.haccplist || []).filter(item => item.status === 'warning').length;
             const normalStatus = (filteredData[0]?.haccplist || []).filter(item => item.status === 'normal').length;
             const percentage = total > 0 ? ((normalStatus / total) * 100).toFixed(2) : '0.00';

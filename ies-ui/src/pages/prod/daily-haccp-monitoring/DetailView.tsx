@@ -160,7 +160,7 @@ export default ({ id, ...rest }: Props) => {
                     </>
                 </Space>
             </Row>
-            <Card size="small" style={{ textAlign: 'right', marginBottom: 10, marginTop: 20 }}>
+            <Card size="small" style={{ textAlign: 'left', marginBottom: 10, marginTop: 20 }}>
                 <Space >
                     <ProForm submitter={false}>
                         <DescriptionDisplay
@@ -214,7 +214,7 @@ export default ({ id, ...rest }: Props) => {
                 }}
             />
             <InstructionViewModal
-                group_line={(data?.line == 'Line 2' || data?.line == 'Line 3') ? '1' : (data?.line == 'Line 4' || data?.line == 'Line 5' || data?.line == 'Line 6') ? '2' : ''}
+                group_line={(data?.line == 'Line 2' || data?.line == 'Line 3') ? '1' : (data?.line == 'Line 4' || data?.line == 'Line 5' || data?.line == 'Line 6') ? '2' : (data?.line == 'Line Barrel') ? '3' : ''}
                 open={instructionModal}
                 onCancel={() => setInstructionModal(false)}
             />

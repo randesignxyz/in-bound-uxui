@@ -6,67 +6,98 @@ export class AppraisalStyle {
     static color3:string = '#0000001a'
 }
 
-export type AppraisalEmp = {
+// export type AppraisalEmp = {
+//     id: number
+//     empId: number
+//     empNo: string    
+//     empName: string
+//     internalName:string
+//     empEmail:string
+//     endBuId:number
+//     empBuName:string
+//     departmentName:string
+//     subDepartmentName?:string
+//     appraisalPerformanceId:number
+//     appraisalDate: Moment
+//     buName?: string
+//     reportTo?:string
+//     jobTitle?: string
+//     createdBy: string
+//     createdDate: Moment
+//     modifiedDate?:Moment
+//     modifiedBy?: string
+//     title?: string
+//     startedDate?: Moment
+//     endedDate?: Moment
+//     rating1: number
+//     rating2?: number
+//     rating3?: number
+//     rating4?: number
+//     rating5?: number
+//     hasRating2: boolean
+//     currentAssign1:boolean
+//     currentAssign2:boolean
+//     currentAssign3:boolean
+//     currentDrafted:boolean
+//     rated1:boolean
+//     rated2:boolean
+//     rated3:boolean
+//     rated4:boolean
+//     rated5:boolean
+//     status:string
+//     actionStatus?:string
+//     itemStatus?:string
+//     appraisalRequestItemId?:number
+//     rating2Comment?:string
+//     rating2Comment1?:string
+//     rating3Comment?:string
+//     rating4Comment?:string
+//     rating5Comment?:string
+//     empComment?:string
+//     empTrainingNeeded?:string
+//     empStrength?:string
+//     requestStatus?:string
+//     attachedFiles?:string[]
+//     appraisalEmpSubmissionList?: AppraisalEmpSubmission[]
+//     appraisalEmpImprovementRated1List?: AppraisalEmpImprovement[]
+//     appraisalEmpImprovementRated2List?: AppraisalEmpImprovement[] 
+//     appraisalEmpImprovementRated3List?: AppraisalEmpImprovement[]   
+//     appraisalRequestItem?:{
+//         personalAction?: string
+//         devAction?: number  
+//         remark?: string
+//     }
+// }
+export type ProbationEvaluationEmpList = {
     id: number
+    formNo: string
+    requestedDate?: Moment
     empId: number
-    empNo: string    
+    empNo: string
     empName: string
-    internalName:string
-    empEmail:string
-    endBuId:number
-    empBuName:string
-    departmentName:string
-    subDepartmentName?:string
-    appraisalPerformanceId:number
-    appraisalDate: Moment
-    buName?: string
-    reportTo?:string
+    internalName?: string
+    empFirstName?: string
+    empLastName?: string
+    empEmail?: string
+    buId: number
+    buName: string
+    departmentId?: number
+    departmentName?: string
+    subDepartmentId?: number
+    subDepartmentName?: string
+    jobId?: number
     jobTitle?: string
-    createdBy: string
-    createdDate: Moment
-    modifiedDate?:Moment
-    modifiedBy?: string
-    title?: string
-    startedDate?: Moment
-    endedDate?: Moment
-    rating1: number
-    rating2?: number
-    rating3?: number
-    rating4?: number
-    rating5?: number
-    hasRating2: boolean
-    currentAssign1:boolean
-    currentAssign2:boolean
-    currentAssign3:boolean
-    currentDrafted:boolean
-    rated1:boolean
-    rated2:boolean
-    rated3:boolean
-    rated4:boolean
-    rated5:boolean
-    status:string
-    actionStatus?:string
-    itemStatus?:string
-    appraisalRequestItemId?:number
-    rating2Comment?:string
-    rating2Comment1?:string
-    rating3Comment?:string
-    rating4Comment?:string
-    rating5Comment?:string
-    empComment?:string
-    empTrainingNeeded?:string
-    empStrength?:string
-    requestStatus?:string
-    attachedFiles?:string[]
-    appraisalEmpSubmissionList?: AppraisalEmpSubmission[]
-    appraisalEmpImprovementRated1List?: AppraisalEmpImprovement[]
-    appraisalEmpImprovementRated2List?: AppraisalEmpImprovement[] 
-    appraisalEmpImprovementRated3List?: AppraisalEmpImprovement[]   
-    appraisalRequestItem?:{
-        personalAction?: string
-        devAction?: number  
-        remark?: string
-    }
+    hodId?: number
+    hodName?: string
+    jointedDate?: Moment
+    processInstId: string
+    parentId?: number
+    formTypeCode: string
+    workflowStatus: string
+    status: String
+    processStatus: string
+    lastModifiedBy?: string
+    lastModifiedDate?: Moment
 }
 
 export type AppraisalEmpSubmission={
@@ -102,6 +133,13 @@ export type AppraisalPerformance = {
     endtedDate: Moment
     active: number
 }
+export interface CriteriaExportReport {
+    // id: number;
+    // reportName: string;
+    processDefKey: string;
+    processInstId: string;
+
+  }
 
 export type CurrentAppraisalEmpSearch = {
     id: number

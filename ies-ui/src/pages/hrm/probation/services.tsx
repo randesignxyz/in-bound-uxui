@@ -1,5 +1,5 @@
 import { SimpleRequestActions } from "@/services/model";
-import { RequestItem,  SearchParams,  AppraisalEmp,  AppraisalEmpSubmissionResult, AppraisalEmPayload, AppraisalDimension, UpdateAppraisalEmPayload, CurrentAppraisalEmpSearch, AppraisalAttachmentFile, AppraisalEmpStatusTotal, AppraisalEmpSubmitAllPayload, AppraisalOverallPerformanceRating, AppraisalMapping, EmployeeInfResult, AppraisalInstructionItem, AppraisalDataLookup, ProbationEvaluationResources, ProbationEvaluationResourcesSupport, ProbationEvaluationDetailRs, ProbationEvaluationPaloay, ProbationFormType, ProbationEvaluationRef } from "./data.types";
+import { RequestItem,  SearchParams,  ProbationEvaluationEmpList,  AppraisalEmpSubmissionResult, AppraisalEmPayload, AppraisalDimension, UpdateAppraisalEmPayload, CurrentAppraisalEmpSearch, AppraisalAttachmentFile, AppraisalEmpStatusTotal, AppraisalEmpSubmitAllPayload, AppraisalOverallPerformanceRating, AppraisalMapping, EmployeeInfResult, AppraisalInstructionItem, AppraisalDataLookup, ProbationEvaluationResources, ProbationEvaluationResourcesSupport, ProbationEvaluationDetailRs, ProbationEvaluationPaloay, ProbationFormType, ProbationEvaluationRef } from "./data.types";
 import { CrudBaseServices } from "@/services/CrudBaseSevices";
 import { FetchPagingParams } from "@/components/DataCrud/TableView";
 import { execDataService, execDataService0, fetchDataItemService, fetchDataListService, fetchDataPagingService } from "@/services/apiGateway";
@@ -9,8 +9,8 @@ import { ProbationEvaluationData } from "../data";
 
 
 export const createService = ({ request }: { request: SimpleRequestActions; }): CrudBaseServices<
-    AppraisalEmp,   
-    AppraisalEmp,
+ProbationEvaluationEmpList,   
+ProbationEvaluationEmpList,
     SearchParams,
     AppraisalEmPayload
 > & {
@@ -29,7 +29,7 @@ export const createService = ({ request }: { request: SimpleRequestActions; }): 
     removeAttachmentList:(id: string)=> Promise<{data: string}>
     addAppraisalAttachment: (appraisalEmpId:number,list: string[]) =>Promise<AppraisalAttachmentFile[]>
     findAppraisalEmpStatusTotal:()=> Promise<AppraisalEmpStatusTotal>,
-    findDraftedAppraisalEmpList:()=> Promise<AppraisalEmp[]>,
+    findDraftedAppraisalEmpList:()=> Promise<ProbationEvaluationEmpList[]>,
     submitAllAppraisalEmps:(ids?: AppraisalEmpSubmitAllPayload[])=> Promise<{ok:string}>,
     fetchAppraisalOveralRating:(id:number)=>Promise<AppraisalOverallPerformanceRating[]>,
     fetchProbationEmpList:(searchValue?:string)=>Promise<AppraisalMapping[]>,
@@ -73,7 +73,7 @@ export const createService = ({ request }: { request: SimpleRequestActions; }): 
           
 
         fetchPaging: async (params: FetchPagingParams<SearchParams>) =>
-            fetchDataPagingService<AppraisalEmp, FetchPagingParams<SearchParams>>({
+            fetchDataPagingService<ProbationEvaluationEmpList, FetchPagingParams<SearchParams>>({
                 actionName: 'probation-evaluation-page',
                 endpoint: 'HR',
                 payload: params,
@@ -126,7 +126,7 @@ export const createService = ({ request }: { request: SimpleRequestActions; }): 
                 }).query(request)    
         ,
         fetchList: async (params: SearchParams) =>
-            fetchDataListService<AppraisalEmp, SearchParams>({
+            fetchDataListService<ProbationEvaluationEmpList, SearchParams>({
                 actionName: 'fetch-list-it-request',
                 endpoint: 'HR',
                 payload: params
@@ -139,7 +139,7 @@ export const createService = ({ request }: { request: SimpleRequestActions; }): 
                 payload: {id}
             }).query(request),
         fetchItem: async (id: number) =>
-            fetchDataItemService<AppraisalEmp, { id: number }>({
+            fetchDataItemService<ProbationEvaluationEmpList, { id: number }>({
                 actionName: 'fetch-appraisal-emp-by-id',
                 endpoint: 'HR',
                 payload: { id }
@@ -176,7 +176,7 @@ export const createService = ({ request }: { request: SimpleRequestActions; }): 
             endpoint: 'HR',
             payload: {id: id}
         }).query(request),
-        findDraftedAppraisalEmpList: async()=> fetchDataListService<AppraisalEmp>({
+        findDraftedAppraisalEmpList: async()=> fetchDataListService<ProbationEvaluationEmpList>({
             actionName: 'fetch-drafted-appraisal-emp',
             endpoint: 'HR',
             // payload: {id}

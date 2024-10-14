@@ -323,9 +323,9 @@ function Profile() {
           profile!!.ess.id!!<=0?'':<Button style={{display:(step==3&&Number(id)==0)==true?'':'none',color: 'red'}} onClick={()=>onStartModify(7,'Cancel Submitted')}><HistoryOutlined/> Cancel Submitted</Button>,
           // profile!!.ess.id!!<=0?'':<Button style={{display:(step==4&&Number(id)==0)==true?'':'none',color: 'red'}} onClick={()=>onStartResubmit(5)}><HistoryOutlined/> Re-Edit</Button>, 
 
-          access.canAccessHrESSViewOnly==true?'':profile!!.ess.id!!<=0?'':<Button style={{color: 'red',display:(step==3&&Number(id)>0)==true?'':'none'}} onClick={()=>onRejected(4)}><EditOutlined/> Rejected</Button>,
+          access.canAccessHrESSApprovalProfile==false?'':profile!!.ess.id!!<=0?'':<Button style={{color: 'red',display:(step==3&&Number(id)>0)==true?'':'none'}} onClick={()=>onRejected(4)}><EditOutlined/> Rejected</Button>,
           
-          access.canAccessHrESSViewOnly==true?'':<Button type="primary" style={{display:(step==3&&Number(id)>0)==true?'':'none'}} onClick={()=>onStartAproval(6)}><EditOutlined/> Approval</Button>, 
+          access.canAccessHrESSApprovalProfile==false?'':<Button type="primary" style={{display:(step==3&&Number(id)>0)==true?'':'none'}} onClick={()=>onStartAproval(6)}><EditOutlined/> Approval</Button>, 
 
         ]}
       >

@@ -14,6 +14,7 @@ import AppNewOpenForm from "./AppNewOpenForm";
 import moment from 'moment'; 
 import { MenuProps } from "rc-menu";
 import { formatDate, formatDATEFUll } from "@/pages/utils";
+import { useAccess } from '@umijs/max'; 
 
 interface Props {
     onAdd?: (id?: number) => void;
@@ -27,7 +28,8 @@ export default ({ onAdd, onEdit }: Props) => {
     const actionRef = useRef<ActionType>();
     const [status, setStatus] = useState(1);   
     const [openEssItem, setOpenEssItem] = useState<OpenEssDataItem>();
-    const [active, setActive] = useState(0);   
+    const [active, setActive] = useState(0);  
+    const access = useAccess();   
     
     //
     useEffect(()=> {
@@ -200,7 +202,7 @@ export default ({ onAdd, onEdit }: Props) => {
                         return <div><Status text={_status}/></div>;
                     }
                 },
-                {   width: 50,align:'center',
+                {   width: 50,align:'center', hidden:access.canAccessHrESSViewOnly,
                     render: (dom, r) => {   
                         var _val=0;
                         var currentTime = new Date(); 

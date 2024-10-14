@@ -128,7 +128,7 @@ export default ({ profile,step,is_admin}: Props) => {
       <ProList<any>
         toolBarRender={() => {
           return [ 
-            access.canAccessHrESSViewOnly?'':<Button style={{display: ([7,5,2].find((element) => element == step))&&is_admin==0?'':'none'}}
+            access.canAccessHrESSViewOnly==true?'':<Button style={{display: ([7,5,2].find((element) => element == step))&&is_admin==0?'':'none'}}
               onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}
               icon={<PlusCircleFilled />}
               key=" 3 "
@@ -136,7 +136,7 @@ export default ({ profile,step,is_admin}: Props) => {
             >
               Add
             </Button>,
-            access.canAccessHrESSViewOnly?'':<Button style={{display: is_admin==2?'':'none'}}
+            access.canAccessHrESSViewOnly==true?'':<Button style={{display: is_admin==2?'':'none'}}
               onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}
               icon={<PlusCircleFilled />}
               key=" 3 "

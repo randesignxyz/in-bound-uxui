@@ -187,13 +187,13 @@ export default ({ data,profile,profile_draft,locations,files, ...rest }: Props) 
                         </Col>
                         <Col span={8} style={{padding:'3px'}}>
                             <ProFormText label="Last Name EN" name={'lastNameEn'} allowClear={false} />
-                            <ProFormText hidden={profile_draft?.lastNameEn==profile.profile?.lastNameEn?true:false} allowClear={false} 
-                                fieldProps={{ style: { color:'red',marginTop:'-10px' },value:`${profile_draft==null?'':profile_draft!!.lastNameEn!!}`}}  />
+                            <ProFormText hidden={profile_draft?.firstNameEn==profile.profile?.firstNameEn?true:false} allowClear={false} 
+                                fieldProps={{ style: { color:'red',marginTop:'-10px' },value:`${profile_draft==null?'':profile_draft!!.firstNameEn!!}`}}  />
                         </Col> 
                         <Col span={8} style={{padding:'3px'}}>
                             <ProFormText label="First Name EN" name={'firstNameEn'} allowClear={false} />
-                            <ProFormText hidden={profile_draft?.firstNameEn==profile.profile?.firstNameEn?true:false} allowClear={false} 
-                                fieldProps={{ style: { color:'red',marginTop:'-10px' },value:`${profile_draft==null?'':profile_draft!!.firstNameEn!!}`}}  />
+                            <ProFormText hidden={profile_draft?.lastNameEn==profile.profile?.lastNameEn?true:false} allowClear={false} 
+                                fieldProps={{ style: { color:'red',marginTop:'-10px' },value:`${profile_draft==null?'':profile_draft!!.lastNameEn!!}`}}  />
                         </Col>  
                     </Row>  
                     <Row>

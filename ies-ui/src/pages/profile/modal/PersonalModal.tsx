@@ -179,10 +179,10 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                             <ProFormText label="Name KH" name={'nameKh'} placeholder={"គោត្តនាម និង នាម"}/>
                         </Col>    
                         <Col span={8} style={{padding:'3px'}}> 
-                            <ProFormText label="Last Name EN" name={'lastNameEn'} placeholder={"Given Name"}/>
+                            <ProFormText label="Last Name EN" name={'firstNameEn'} placeholder={"Given Name"}/>
                         </Col>    
                         <Col span={8} style={{padding:'3px'}}> 
-                            <ProFormText label="First Name EN" name={'firstNameEn'} placeholder={"Family name"}/>
+                            <ProFormText label="First Name EN" name={'lastNameEn'} placeholder={"Family name"}/>
                         </Col>    
                     </Row>
                     <Row>
@@ -454,7 +454,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                     </Space>
                     <div style={{fontSize:'12px'}}>- National ID (for updating ID number, Name, DOB, Expiry date)</div>
                     <div style={{fontSize:'12px'}}>- Passport (for updating Passport number, Name, DOB, Expiry date)</div> 
-                    <div style={{fontSize:'12px'}}>- Marriage Certificate (for updating marital status)</div> 
+                    {/* <div style={{fontSize:'12px'}}>- Marriage Certificate (for updating marital status)</div>  */}
                 </div> 
                 <ProCard size="small" bordered>   
                     <FileUploader   

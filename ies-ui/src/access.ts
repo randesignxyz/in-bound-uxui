@@ -581,6 +581,10 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         ['ROLE_HR_ESS_VIEW_ONLY'].some((it) => it === item),
       ) || false, 
+    canAccessHrESSApprovalProfile:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_HR_ESS_APPROVAL_PROFILE'].some((it) => it === item),
+      ) || false, 
     canAccessHrVissibleTraining:
       currentUser?.authorities.some((item) =>
         ['ROLE_HR_VISSIBLE_TRAINING'].some((it) => it === item),

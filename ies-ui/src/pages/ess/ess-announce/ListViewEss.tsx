@@ -14,6 +14,7 @@ import { ProFormTextArea } from "@ant-design/pro-components";
 
 import Omit from "omit.js";
 import AdvanceOpenItemSearch from "./AdvanceOpenItemSearch";
+import { useAccess } from '@umijs/max'; 
 
 
 interface Props {
@@ -36,6 +37,7 @@ export default ({ profile }: Props) =>{
         status: '3',
     });
     
+    const access = useAccess();   
     var _valueText = "";
     useEffect(()=> {
         initData();
@@ -78,7 +80,7 @@ export default ({ profile }: Props) =>{
             key: "2",
             label: "Approve",
             itemIcon: <CheckOutlined />,
-            disabled:([4,3,5].find((element) => element == record.stepId))?false:true,
+            disabled:([4,3,5].find((element) => element == record.stepId))?access.canAccessHrESSApprovalProfile==false?true:false:true,
             onClick: async () => { 
                 Modal.confirm({
                     title: 'Approve',
@@ -100,7 +102,7 @@ export default ({ profile }: Props) =>{
             label: "Reject",
             itemIcon: <ExclamationCircleOutlined />,
             style:{color:[3].find((element) => element == record.stepId)?'red':''},
-            disabled:([3].find((element) => element == record.stepId))?false:true,
+            disabled:([3].find((element) => element == record.stepId))?access.canAccessHrESSApprovalProfile==false?true:false:true,
             onClick: async () => {
                 Modal.confirm({
                 title: 'Reject', 

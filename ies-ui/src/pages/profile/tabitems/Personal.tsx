@@ -82,7 +82,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
         {
             key     : '2',
             label   : 'Name EN',
-            children: <Flex vertical={'vertical'}><div>{profile.profile.firstNameEn} {profile.profile.lastNameEn }</div><div style={{color:'red',display:'none'}}>{""}</div></Flex>,
+            children: <Flex vertical={'vertical'}><div>{profile.profile.lastNameEn } {profile.profile.firstNameEn}</div><div style={{color:'red',display:'none'}}>{""}</div></Flex>,
         },
         {
             key     : '3',

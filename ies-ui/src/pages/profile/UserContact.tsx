@@ -110,8 +110,10 @@ export default ({ profile,step,is_admin}: Props) => {
       content: 'Are you sure?',
       onOk: async () => {
         try {
-          data.type = modalVisible?.type||'';
-          await ProfileServices.saveContact(data)(requestActions);
+          data.type = modalVisible?.type||''; 
+          await ProfileServices.saveContact(data,is_admin)(requestActions); 
+
+
           const list = await ProfileServices.listContact(data.empId).query(requestActions);
           setContactList(list);
           // if (modalVisible?.type == 'EDIT') 

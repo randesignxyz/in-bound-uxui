@@ -21,10 +21,10 @@ export const ProfileServices = {
     payload: { list }
   }),
 
-  saveContact: (data: SaveContract) => execDataService0<SaveContract>({
+  saveContact: (data: SaveContract,isAdmin:number) => execDataService0<SaveContract>({
     actionName: 'save-contact',
     endpoint: 'HR',
-    payload: { ...data }
+    payload: { ...data,isAdmin:isAdmin }
   }),
 
   listContact: (id: number) => fetchDataListService<ContactData, { id: number }>({

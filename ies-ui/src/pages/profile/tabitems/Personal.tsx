@@ -163,7 +163,14 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
           content: 'Are you sure?',
           onOk: async () => {
             try { 
-                data.otherFile = createFileOther;
+                //
+                if(createFileOther[0].uid=='0'){
+                    data.otherFile = []; 
+                }
+                else{ 
+                    data.otherFile = createFileOther;
+                } 
+                // data.otherFile = createFileOther;
                 await ProfileServicesEss.saveEssProfile(data)(requestActions); 
                 // call back fun
                 cb.onLoadData();

@@ -9,7 +9,7 @@ import { ProfileServicesEss } from '../service_ess';
 import FileUploader , { UploadType } from '@/components/Attachment/FileUploader';
 import ImagePreview from "@/components/ImagePreview";
 import { ProfileData } from "../data";
-import { DeliveredProcedureOutlined,SaveOutlined,CloseSquareOutlined,ProfileOutlined } from "@ant-design/icons";
+import { DeliveredProcedureOutlined,SaveOutlined,CloseSquareOutlined,ProfileOutlined, DeleteOutlined } from "@ant-design/icons";
 
 interface Props extends ModalFormProps<SaveEssProfile> { 
     data?: EssProfileData;
@@ -35,6 +35,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
     const [communePB, setCommunePB] = useState<LocationData[]>();
     const [communePA, setCommunePA] = useState<LocationData[]>();
     const [communeCA, setCommuneCA] = useState<LocationData[]>(); 
+    const [attachFilesList, setAttachFiles] = useState<FilesData[]>(); 
     const [isLoading,setLoading] = useState(false);  
     const [createFileOther, selectedFileOther] = useState<any>();  
     const [isOther, setIsOtherVisible] = useState(true);
@@ -61,6 +62,10 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
             else{ 
                 setIsOtherVisible(true);
             }
+            // set files
+            setAttachFiles(files);
+            //
+            cb.onLoadMenu(files as UploadType[]);
         }
          
     };  
@@ -150,6 +155,17 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
             streetCr:nData.streetPa,
             villageCrId:nData.villagePaId
         }); 
+    }
+    const onRevemoveAttachFiles = async (data:FilesData)=>{  
+
+        const remItems = attachFilesList!!.filter((ele, ind) => ele.id!=data.id);
+        data.name = "";
+        data.response= "";
+        data.type= "";
+        setAttachFiles(remItems);
+        //  
+        await ProfileServicesEss.removeEssPersonalAttachFiles(data)(requestActions); 
+        
     }
     return <div>
         <ModalForm  {...rest} form={form} width={'60%'} title={<><ProfileOutlined /> Edit Personal Information</>}
@@ -465,7 +481,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                     <Image.PreviewGroup>
                         <List
                             grid={{ gutter: 5 }}
-                            dataSource={files.filter((it) => it) || []}
+                            dataSource={attachFilesList?.filter((it) => it) || []}
                             renderItem={(it) => {
                             return (
                                 <List.Item>
@@ -476,6 +492,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                                         fileId={it.id || ''}
                                         fileName={it.fileName}
                                     />
+                                    <Button type="danger" onClick={()=>{onRevemoveAttachFiles(it)}}><DeleteOutlined /></Button>
                                 </List.Item>
                             );
                             }}

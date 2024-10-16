@@ -12,7 +12,7 @@ export const ProfileServices = {
   fetchProfile: (id: number) =>fetchDataItemService<ProfileData, { id: number }>({
     actionName: 'fetch-profile-by-user',
     endpoint: 'HR',
-    payload: { id: id,roleCode:"" }
+    payload: { id: id}
   }),
 
   listLookupData: (list: string[]) => fetchDataListService<LookupDataItem2, { list: string[] }>({

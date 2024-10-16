@@ -14,6 +14,11 @@ export const ProfileServicesEss = {
     endpoint: 'HR',
     payload: { ...data }
   }),
+  removeEssPersonalAttachFiles: (data: FilesData) => execDataService0<FilesData>({
+    actionName: 'delete-essprofile-attachfile',
+    endpoint: 'HR',
+    payload: { ...data }
+  }),
   saveEssProfileAdmin: (data: SaveEssProfile) => execDataService0<SaveEssProfile>({
     actionName: 'save-essprofile-admin',
     endpoint: 'HR',

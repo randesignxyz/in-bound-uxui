@@ -55,6 +55,11 @@ export default ({ id, ...rest }: Props) => {
         setOnRefresh(false)
     }, [id,onRefresh==true])
 
+    const formatDate = (dateString:any) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toISOString().split('T')[0];
+    };
 
     return (
         <>
@@ -71,8 +76,6 @@ export default ({ id, ...rest }: Props) => {
                                 { label: 'Created By', value: data?.createdBy },
                                 { label: 'Created Date', value: formatDateTime(data?.createdDate) },
                                 { label: 'Remark', value: data?.remark ? data?.remark : '-'},
-                                // { label: 'Assign To', value: data?.assign_to },
-                                // { label: 'Treatment Type', value: data?.pre_treatment_type },
                             ]}
                         />
                     </ProForm>

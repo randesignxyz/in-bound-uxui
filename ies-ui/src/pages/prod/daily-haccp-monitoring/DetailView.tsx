@@ -1,4 +1,4 @@
-import { formatDate, formatDateTime } from '@/pages/utils';
+import { formatDateTime } from '@/pages/utils';
 import { ProCard, ProForm, ProList, ProTable } from '@ant-design/pro-components';
 import { DrawerForm, DrawerFormProps } from '@ant-design/pro-form';
 import { Badge, Button, Card, Col, Descriptions, Divider, Modal, Row, Space, Spin, Tabs, Typography, message } from 'antd';
@@ -84,6 +84,12 @@ export default ({ id, ...rest }: Props) => {
             }
         })
     }
+
+    const formatDate = (dateString:any) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toISOString().split('T')[0];
+    };
 
     return (
         <>

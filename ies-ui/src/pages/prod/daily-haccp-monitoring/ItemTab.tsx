@@ -56,24 +56,45 @@ export default ({ data, refresh, type, line, assign_to, ...rest }: Props) => {
     const items = (row: HACCPMonitoringList): MenuProps['items'] => [
         {
             key: 1,
-            label: 'Unassign',
+            label: row.status == 'pending' ? 'Unassign' : row.status == 'unassigned' ? 'Re-assign' : '',
             itemIcon: <EditOutlined />,
             danger: true,
             onClick: () => {
-                Modal.confirm({
-                    title: 'Confirm',
-                    content:
-                        'Are you sure to unassign? This assign will disappare forever',
-                    onOk: async () => {
-                        try {
-                            await services.unassign_haccp(row.id ?? 0,line ?? '',row.haccp_id?? '',[{ action: `Unassign time ${row.time}`}],line ?? '')
-                            refresh(true)
-                            message.success('Success');
-                        } catch (e: any) {
-                            message.error(e.message);
-                        }
-                    },
-                });
+                row.status == 'pending' ?
+                    Modal.confirm({
+                        title: 'Confirm',
+                        content:
+                            'Are you sure to unassign?',
+                        onOk: async () => {
+                            try {
+
+                                // await services.unassign_haccp(row.id ?? 0,line ?? '',row.haccp_id?? '',[{ action: `Unassign time ${row.time}`}],line ?? '')
+                                const data = { id: row.id ?? 0, status: 'unassigned', line: line ?? '', haccp_id: row.haccp_id ?? '', activities: [{ action: `Unassign time ${row.time}` }] }
+                                await services.post_haccp_monitoring_list(data)
+                                refresh(true)
+                                message.success('Success');
+                            } catch (e: any) {
+                                message.error(e.message);
+                            }
+                        },
+                    })
+                    : Modal.confirm({
+                        title: 'Confirm',
+                        content:
+                            'Are you sure to re-assign?',
+                        onOk: async () => {
+                            try {
+
+                                // await services.unassign_haccp(row.id ?? 0,line ?? '',row.haccp_id?? '',[{ action: `Unassign time ${row.time}`}],line ?? '')
+                                const data = { id: row.id ?? 0, status: 'pending', line: line ?? '', haccp_id: row.haccp_id ?? '', activities: [{ action: `Re-assign time ${row.time}` }] }
+                                await services.post_haccp_monitoring_list(data)
+                                refresh(true)
+                                message.success('Success');
+                            } catch (e: any) {
+                                message.error(e.message);
+                            }
+                        },
+                    });
             },
         },
     ];
@@ -103,7 +124,7 @@ export default ({ data, refresh, type, line, assign_to, ...rest }: Props) => {
                     {
                         title: 'Time',
                         dataIndex: 'time',
-                        render: (_, r) => { return (<a onClick={() => (line == 'Line 2' || line == 'Line 3') ? (setLine2Line3ModelOpen({ visible: true, data: r })) : (line == 'Line 4' || line == 'Line 5' || line == 'Line 6') ? setLine4Line5Line6ModelOpen({ visible: true, data: r }) : (line == 'Line Barrel') ? setLineBarrelModelOpen({ visible: true, data: r }) : ''}>{r.time}</a>) }
+                        render: (_, r) => { return (r.status == 'unassigned' ? r.time : <a onClick={() => (line == 'Line 2' || line == 'Line 3') ? (setLine2Line3ModelOpen({ visible: true, data: r })) : (line == 'Line 4' || line == 'Line 5' || line == 'Line 6') ? setLine4Line5Line6ModelOpen({ visible: true, data: r }) : (line == 'Line Barrel') ? setLineBarrelModelOpen({ visible: true, data: r }) : ''}>{r.time}</a>) }
                     },
                     ...(line == 'Line Barrel' ? [{
                         title: 'UV Lamp',
@@ -208,11 +229,11 @@ export default ({ data, refresh, type, line, assign_to, ...rest }: Props) => {
                     {
                         title: 'Status',
                         dataIndex: 'status',
-                        render: (_, r) => r.status == 'pending' ? <Badge status={'processing'} text={r.status.charAt(0).toUpperCase() + r.status.slice(1)} /> : r.status == 'normal' ? <Badge status={'success'} text={r.status.charAt(0).toUpperCase() + r.status.slice(1)} /> : r.status == 'warning' ? <Badge status={'error'} text={r.status.charAt(0).toUpperCase() + r.status.slice(1)} /> : '-',
+                        render: (_, r) => r.status == 'pending' ? <Badge status={'processing'} text={r.status.charAt(0).toUpperCase() + r.status.slice(1)} /> : r.status == 'normal' ? <Badge status={'success'} text={r.status.charAt(0).toUpperCase() + r.status.slice(1)} /> : r.status == 'warning' ? <Badge status={'error'} text={r.status.charAt(0).toUpperCase() + r.status.slice(1)} /> : r.status == 'unassigned' ? <Badge status={'warning'} text={r.status.charAt(0).toUpperCase() + r.status.slice(1)} /> : '-',
                     },
                     {
                         render: (_, r) => (
-                            r.status == 'pending' ?
+                            r.status == 'pending' || r.status == 'unassigned' ?
                                 <>
                                     <Dropdown
                                         menu={{

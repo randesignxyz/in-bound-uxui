@@ -52,6 +52,9 @@ export default () => {
 
   const time = [
     {
+      name: '3:00'
+    },
+    {
       name: '7:00'
     },
     {
@@ -66,9 +69,7 @@ export default () => {
     {
       name: '23:00'
     },
-    {
-      name: '3:00'
-    }
+    
   ]
 
   useEffect(() => {

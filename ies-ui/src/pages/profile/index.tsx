@@ -332,7 +332,7 @@ function Profile() {
         { profile &&  contentList(profile)[tabStatus.operationKey as  keyof {}]}
       
       </PageContainer>}
-      {!profile && <Alert message="Error" description="Your profile is not yet setup. please contact ICT team for support." type="error" showIcon />}
+      {!profile && <Alert message="Error" description={<div>Your profile is not yet set up , please contact ICT for support or submit by this <a href='https://forms.office.com/r/Zzw498T9Vv' target='_blank'>Link</a>.</div> }  type="error" showIcon />}
 
       
       <PersonalViewDetailModal

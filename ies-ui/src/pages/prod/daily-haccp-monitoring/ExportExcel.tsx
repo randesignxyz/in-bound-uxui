@@ -21,6 +21,7 @@ export default ({ loading, onSave, ...props }: Props) => {
     Line4: false,
     Line5: false,
     Line6: false,
+    LineBarrel:false
   });
 
   useEffect(() => {
@@ -33,6 +34,7 @@ export default ({ loading, onSave, ...props }: Props) => {
         Line4: false,
         Line5: false,
         Line6: false,
+        LineBarrel:false
       })
     }
   }, [props.open]);
@@ -40,13 +42,15 @@ export default ({ loading, onSave, ...props }: Props) => {
   const handleLineChange = (value: string[]) => {
     const disableGroup1 = value.includes('Line 2') || value.includes('Line 3');
     const disableGroup2 = value.includes('Line 4') || value.includes('Line 5') || value.includes('Line 6');
+    const disableAllExceptBarrel = value.includes('Line Barrel');
 
     setDisabledOptions({
-      Line2: disableGroup2,
-      Line3: disableGroup2,
-      Line4: disableGroup1,
-      Line5: disableGroup1,
-      Line6: disableGroup1,
+      Line2: disableGroup2 || disableAllExceptBarrel,
+      Line3: disableGroup2 || disableAllExceptBarrel,
+      Line4: disableGroup1 || disableAllExceptBarrel,
+      Line5: disableGroup1 || disableAllExceptBarrel,
+      Line6: disableGroup1 || disableAllExceptBarrel,
+      LineBarrel: (disableGroup1 || disableGroup2)
     });
 
     const lineString = value.join(',');
@@ -71,6 +75,11 @@ export default ({ loading, onSave, ...props }: Props) => {
             <Col span={23}>
               <ProFormSelect
                 options={[
+                  {
+                    value: 'Line Barrel',
+                    label: 'Line Barrel',
+                    disabled: disabledOptions.LineBarrel,
+                  },
                   {
                     value: 'Line 2',
                     label: 'Line 2',

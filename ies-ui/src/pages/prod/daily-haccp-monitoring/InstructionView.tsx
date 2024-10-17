@@ -79,6 +79,7 @@ export default () => {
             <Card size="small" style={{ textAlign: 'right', marginBottom: 10, marginTop: 20 }}>
                 <Tabs
                     items={[
+                        
                         {
                             label: 'Line 2 and 3',
                             key: '1',
@@ -88,6 +89,11 @@ export default () => {
                             label: 'Line 4, 5 and 6',
                             key: '2',
                             children: <InstructionListTab group_line='2' refresh={onRefresh} onRefresh={(a)=>{a==true?setOnRefresh(true):setOnRefresh(false)}}/>,                        
+                        },
+                        {
+                            label: 'Line Barrel',
+                            key: '3',
+                            children: <InstructionListTab group_line='3' refresh={onRefresh} onRefresh={(a)=>{a==true?setOnRefresh(true):setOnRefresh(false)}}/>,
                         },
                     ]}
                 />

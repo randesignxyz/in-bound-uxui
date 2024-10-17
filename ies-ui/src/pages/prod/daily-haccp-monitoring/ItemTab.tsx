@@ -1,14 +1,15 @@
 import { DrawerFormProps, ProTable } from "@ant-design/pro-components"
-import { Badge, Button, Modal, message } from "antd"
+import { Badge, Button, Dropdown, MenuProps, Modal, message } from "antd"
 import { useState } from "react";
 import { simpleRequestActions } from "@/services/model";
 import { formatDateTime } from "@/pages/utils";
 import { useAccess } from "@umijs/max";
 import { DailyHACCPMonitoringServiceAPI } from "./service";
 import { HACCPMonitoring, HACCPMonitoringList } from "./data";
-import { CheckCircleOutlined, CheckOutlined, CloseCircleOutlined } from "@ant-design/icons";
+import { CheckCircleOutlined, CheckOutlined, CloseCircleOutlined, DashOutlined, EditOutlined } from "@ant-design/icons";
 import Line2Line3Model from "./Line2Line3Model";
 import Line4Line5Line6Model from "./Line4Line5Line6Model";
+import LineBarrelModel from "./LineBarrelModel";
 
 interface Props extends DrawerFormProps {
     data?: HACCPMonitoringList[];
@@ -24,6 +25,7 @@ export default ({ data, refresh, type, line, assign_to, ...rest }: Props) => {
     const services = DailyHACCPMonitoringServiceAPI(requestActions);
     const [line2Line3ModelOpen, setLine2Line3ModelOpen] = useState<{ visible: boolean, data?: any }>({ visible: false })
     const [line4Line5Line6ModelOpen, setLine4Line5Line6ModelOpen] = useState<{ visible: boolean, data?: any }>({ visible: false })
+    const [lineBarrelModelOpen, setLineBarrelModelOpen] = useState<{ visible: boolean, data?: any }>({ visible: false })
     const hasWaterPressure = data && data.some(item => item.water_pressure !== undefined);
     const hasNozzlesRinser = data && data.some(item => item.nozzles_rinser !== undefined);
     const hasSmell = data && data.some(item => item.smell !== undefined);
@@ -41,6 +43,7 @@ export default ({ data, refresh, type, line, assign_to, ...rest }: Props) => {
                     await services.post_haccp_monitoring_list(data)
                     setLine2Line3ModelOpen({ visible: false, data: undefined })
                     setLine4Line5Line6ModelOpen({ visible: false, data: undefined })
+                    setLineBarrelModelOpen({ visible: false, data: undefined })
                     refresh(true)
                     message.success('Success');
                 } catch (e) {
@@ -49,6 +52,31 @@ export default ({ data, refresh, type, line, assign_to, ...rest }: Props) => {
             }
         })
     }
+
+    const items = (row: HACCPMonitoringList): MenuProps['items'] => [
+        {
+            key: 1,
+            label: 'Unassign',
+            itemIcon: <EditOutlined />,
+            danger: true,
+            onClick: () => {
+                Modal.confirm({
+                    title: 'Confirm',
+                    content:
+                        'Are you sure to unassign? This assign will disappare forever',
+                    onOk: async () => {
+                        try {
+                            await services.unassign_haccp(row.id ?? 0,line ?? '',row.haccp_id?? '',[{ action: `Unassign time ${row.time}`}],line ?? '')
+                            refresh(true)
+                            message.success('Success');
+                        } catch (e: any) {
+                            message.error(e.message);
+                        }
+                    },
+                });
+            },
+        },
+    ];
 
     return (
         <>
@@ -75,8 +103,39 @@ export default ({ data, refresh, type, line, assign_to, ...rest }: Props) => {
                     {
                         title: 'Time',
                         dataIndex: 'time',
-                        render: (_, r) => { return (<a onClick={() => (line == 'Line 2' || line == 'Line 3') ? (setLine2Line3ModelOpen({ visible: true, data: r }), console.log(r)) : (line == 'Line 4' || line == 'Line 5' || line == 'Line 6') ? setLine4Line5Line6ModelOpen({ visible: true, data: r }) : ''}>{r.time}</a>) }
+                        render: (_, r) => { return (<a onClick={() => (line == 'Line 2' || line == 'Line 3') ? (setLine2Line3ModelOpen({ visible: true, data: r })) : (line == 'Line 4' || line == 'Line 5' || line == 'Line 6') ? setLine4Line5Line6ModelOpen({ visible: true, data: r }) : (line == 'Line Barrel') ? setLineBarrelModelOpen({ visible: true, data: r }) : ''}>{r.time}</a>) }
                     },
+                    ...(line == 'Line Barrel' ? [{
+                        title: 'UV Lamp',
+                        dataIndex: 'uv_lamp',
+                        render: (_: any, r: any) => r.uv_lamp ?? '-'
+                    }, {
+                        title: 'Temperature',
+                        dataIndex: 'temperature',
+                        render: (_: any, r: any) => r.temperature ? r.temperature + `°C` : '-'
+                    }, {
+                        title: 'O₃ water pressure',
+                        dataIndex: 'water_pressure',
+                        render: (_: any, r: any) => r.water_pressure ?? '-'
+                    }] : []),
+                    ...(line == 'Line 3' ? [{
+                        title: 'OPO',
+                        dataIndex: 'opo',
+                        render: (_: any, r: any) => r.opo ?? '-'
+                    }] : []),
+                    ...(line == 'Line 2' || line == 'Line 3' ? [{
+                        title: 'Water Pressure',
+                        dataIndex: 'water_pressure',
+                        render: (_: any, r: any) => r.water_pressure ? r.water_pressure + ` bar` : '-'
+                    }, {
+                        title: 'Nozzles Rinser',
+                        dataIndex: 'nozzles_rinser',
+                        render: (_: any, r: any) => r.nozzles_rinser == 1 ? <CheckCircleOutlined style={{ color: 'green', justifySelf: 'center' }} /> : r.nozzles_rinser == 0 ? <CloseCircleOutlined style={{ color: 'red' }} /> : '-'
+                    }, {
+                        title: 'Smell',
+                        dataIndex: 'smell',
+                        render: (_: any, r: any) => r.smell == 1 ? <CheckCircleOutlined style={{ color: 'green' }} /> : r.smell == 0 ? <CloseCircleOutlined style={{ color: 'red' }} /> : '-'
+                    }] : []),
                     ...(hasSideWall ? [{
                         title: 'Side Wall',
                         dataIndex: 'side_wall',
@@ -96,26 +155,26 @@ export default ({ data, refresh, type, line, assign_to, ...rest }: Props) => {
                         title: 'Treated Water Pressure',
                         dataIndex: 'treated_water_pressure',
                     }] : []),
-                    ...(hasWaterPressure ? [{
-                        title: 'Water Pressure',
-                        dataIndex: 'water_pressure',
-                        render: (_: any, r: any) => r.water_pressure ? r.water_pressure + ` bar` : '-'
-                    }] : []),
-                    ...(hasNozzlesRinser ? [{
-                        title: 'Nozzles Rinser',
-                        dataIndex: 'nozzles_rinser',
-                        render: (_: any, r: any) => r.nozzles_rinser == 1 ? <CheckCircleOutlined style={{ color: 'green', justifySelf: 'center' }} /> : r.nozzles_rinser == 0 ? <CloseCircleOutlined style={{ color: 'red' }} /> : '-'
-                    }] : []),
+                    // ...(hasWaterPressure ? [{
+                    //     title: 'Water Pressure',
+                    //     dataIndex: 'water_pressure',
+                    //     render: (_: any, r: any) => r.water_pressure ? r.water_pressure + ` bar` : '-'
+                    // }] : []),
+                    // ...(hasNozzlesRinser ? [{
+                    //     title: 'Nozzles Rinser',
+                    //     dataIndex: 'nozzles_rinser',
+                    //     render: (_: any, r: any) => r.nozzles_rinser == 1 ? <CheckCircleOutlined style={{ color: 'green', justifySelf: 'center' }} /> : r.nozzles_rinser == 0 ? <CloseCircleOutlined style={{ color: 'red' }} /> : '-'
+                    // }] : []),
                     {
-                        title: 'FG',
+                        title: 'FG [O₃]',
                         dataIndex: 'fg',
                         render: (_: any, r: any) => r.fg ? r.fg + ` ppm` : '-'
                     },
-                    ...(hasSmell ? [{
-                        title: 'Smell',
-                        dataIndex: 'smell',
-                        render: (_: any, r: any) => r.smell == 1 ? <CheckCircleOutlined style={{ color: 'green' }} /> : r.smell == 0 ? <CloseCircleOutlined style={{ color: 'red' }} /> : '-'
-                    }] : []),
+                    // ...(hasSmell ? [{
+                    //     title: 'Smell',
+                    //     dataIndex: 'smell',
+                    //     render: (_: any, r: any) => r.smell == 1 ? <CheckCircleOutlined style={{ color: 'green' }} /> : r.smell == 0 ? <CloseCircleOutlined style={{ color: 'red' }} /> : '-'
+                    // }] : []),
                     {
                         title: 'Activities Control',
                         dataIndex: 'activity_control',
@@ -145,15 +204,31 @@ export default ({ data, refresh, type, line, assign_to, ...rest }: Props) => {
                         title: 'Other',
                         dataIndex: 'other',
                     },
-                    ...(line == 'Line 3' ? [{
-                        title: 'OPO',
-                        dataIndex: 'opo',
-                        render: (_: any, r: any) => r.opo ?? '-'
-                    }] : []),
+
                     {
                         title: 'Status',
                         dataIndex: 'status',
                         render: (_, r) => r.status == 'pending' ? <Badge status={'processing'} text={r.status.charAt(0).toUpperCase() + r.status.slice(1)} /> : r.status == 'normal' ? <Badge status={'success'} text={r.status.charAt(0).toUpperCase() + r.status.slice(1)} /> : r.status == 'warning' ? <Badge status={'error'} text={r.status.charAt(0).toUpperCase() + r.status.slice(1)} /> : '-',
+                    },
+                    {
+                        render: (_, r) => (
+                            r.status == 'pending' ?
+                                <>
+                                    <Dropdown
+                                        menu={{
+                                            items: items(r),
+                                            style: {
+                                                width: 200,
+                                            },
+                                        }}
+                                    >
+                                        <a>
+                                            <DashOutlined />
+                                        </a>
+                                    </Dropdown>
+                                </>
+                                : <></>
+                        ),
                     },
 
 
@@ -179,6 +254,17 @@ export default ({ data, refresh, type, line, assign_to, ...rest }: Props) => {
                 data={line4Line5Line6ModelOpen.data ?? {}}
                 onCancel={() => {
                     setLine4Line5Line6ModelOpen({ visible: false, data: undefined });
+                }}
+            />
+            <LineBarrelModel
+                open={lineBarrelModelOpen.visible}
+                title={(('Monitoring ' + line))}
+                onSave={onSubmitHandaler}
+                data={lineBarrelModelOpen.data ?? {}}
+                line={line}
+                assign_to={assign_to}
+                onCancel={() => {
+                    setLineBarrelModelOpen({ visible: false, data: undefined });
                 }}
             />
         </>

@@ -1,4 +1,4 @@
-import { formatDate, formatDateTime } from '@/pages/utils';
+import { formatDateTime } from '@/pages/utils';
 import { ProCard, ProForm, ProList, ProTable } from '@ant-design/pro-components';
 import { DrawerForm, DrawerFormProps } from '@ant-design/pro-form';
 import { Badge, Button, Card, Col, Descriptions, Divider, Modal, Row, Space, Spin, Tabs, Typography, message } from 'antd';
@@ -85,6 +85,12 @@ export default ({ id, ...rest }: Props) => {
         })
     }
 
+    const formatDate = (dateString:any) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toISOString().split('T')[0];
+    };
+
     return (
         <>
             <Row justify="space-between">
@@ -160,7 +166,7 @@ export default ({ id, ...rest }: Props) => {
                     </>
                 </Space>
             </Row>
-            <Card size="small" style={{ textAlign: 'right', marginBottom: 10, marginTop: 20 }}>
+            <Card size="small" style={{ textAlign: 'left', marginBottom: 10, marginTop: 20 }}>
                 <Space >
                     <ProForm submitter={false}>
                         <DescriptionDisplay
@@ -214,7 +220,7 @@ export default ({ id, ...rest }: Props) => {
                 }}
             />
             <InstructionViewModal
-                group_line={(data?.line == 'Line 2' || data?.line == 'Line 3') ? '1' : (data?.line == 'Line 4' || data?.line == 'Line 5' || data?.line == 'Line 6') ? '2' : ''}
+                group_line={(data?.line == 'Line 2' || data?.line == 'Line 3') ? '1' : (data?.line == 'Line 4' || data?.line == 'Line 5' || data?.line == 'Line 6') ? '2' : (data?.line == 'Line Barrel') ? '3' : ''}
                 open={instructionModal}
                 onCancel={() => setInstructionModal(false)}
             />

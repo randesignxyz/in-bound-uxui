@@ -228,7 +228,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
             <ProCard bordered> 
                 <div style={{width:'100%',textAlign:'right'}}> 
                         <Space direction='horizontal'>
-                            <Button onClick={() => setModalVisible({ type: 'EDIT', payload: profile.profile!!})} style={{display:(is_admin==2&&empId>0&&access.canAccessHrESSViewOnly==false)?'':'none'}}><EditOutlined/> EDIT</Button>
+                            <Button onClick={() => setModalVisible({ type: 'EDIT', payload: profile.profile!!})} style={{display:access.canAccessHrESSAddEditProfile==true&&is_admin==2?'':'none'}}><EditOutlined/> EDIT</Button>
 
                             <Button danger onClick={() => setModalViewVisible({ type: 'VIEW', payload: profile.profile!!})} 
                                     style={{display:([7,5,4,3,2].find((element) => element == profile!!.ess.stepId))&&is_admin!=2?'':'none'}}><EyeOutlined/> View edit</Button>

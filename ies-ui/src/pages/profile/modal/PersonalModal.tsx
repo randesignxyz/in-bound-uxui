@@ -157,14 +157,23 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
         }); 
     }
     const onRevemoveAttachFiles = async (data:FilesData)=>{  
-
-        const remItems = attachFilesList!!.filter((ele, ind) => ele.id!=data.id);
-        data.name = "";
-        data.response= "";
-        data.type= "";
-        setAttachFiles(remItems);
-        //  
-        await ProfileServicesEss.removeEssPersonalAttachFiles(data)(requestActions); 
+        Modal.confirm({
+            title: 'Remove Attachment Files',
+            content: 'Are you sure?',
+            onOk: async () => {
+              try {  
+                const remItems = attachFilesList!!.filter((ele, ind) => ele.id!=data.id);
+                data.name = "";
+                data.response= "";
+                data.type= "";
+                setAttachFiles(remItems);
+                //  
+                await ProfileServicesEss.removeEssPersonalAttachFiles(data)(requestActions); 
+        } catch (error: any) {
+            message.error(error.message || 'Failed to save.');
+        }
+        },
+    });
         
     }
     return <div>

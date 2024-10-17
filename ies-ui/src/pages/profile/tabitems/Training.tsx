@@ -214,11 +214,11 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
             <Space direction={"vertical"} style={{width:'100%'}} hidden={access.canAccessHrVissibleTraining}> 
                 <div style={{width:'100%',textAlign:'right'}}> 
                     <Space direction='horizontal'>
-                        <Button style={{display:(is_admin==2&&empId>0&&access.canAccessHrESSViewOnly==false)?'':'none'}} onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}
+                        <Button style={{display:access.canAccessHrESSAddEditProfile==true&&is_admin==2?'':'none'}} onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}
                             icon={<PlusCircleFilled />}
                             key="lnd8"
                             type="primary"> Add Training</Button>
-                        <Button style={{display:(is_admin==2&&empId>0&&access.canAccessHrESSViewOnly==false)?'':'none'}} onClick={() => setModalCertificateVisible({ type: 'ADD', payload: undefined })}
+                        <Button style={{display:access.canAccessHrESSAddEditProfile==true?'':'none'}} onClick={() => setModalCertificateVisible({ type: 'ADD', payload: undefined })}
                             icon={<PlusCircleFilled />}
                             key="lnd7"
                             type="primary"> Add Certification</Button>
@@ -277,7 +277,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                             },{
                                 title: "Description", dataIndex: "description"
                             }, 
-                            {   width: 100,hidden:access.canAccessHrESSViewOnly,
+                            {   width: 100,hidden:!access.canAccessHrESSAddEditProfile,
                                 render: (dom, r) => {
                                     return (<Flex vertical={false} justify='space-between'>
                                     {profile!!.ess.id!!<=0?'':<a style={{display: (is_admin==0&&empId==0&&[7,5,2].find((element) => element == profile!!.ess.stepId))?'':'none'}}
@@ -329,7 +329,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                             },{
                                 title: "Description", dataIndex: "description"
                             },
-                            {   width: 100,hidden:access.canAccessHrESSViewOnly,
+                            {   width: 100,hidden:!access.canAccessHrESSApprovalProfile,
                                 render: (dom, r) => {
                                     return (<Flex vertical={false} justify='space-between'>
                                     {profile!!.ess.id!!<=0?'':<a style={{display: (is_admin==0&&empId==0&&[7,5,2].find((element) => element == profile!!.ess.stepId))?'':'none'}}

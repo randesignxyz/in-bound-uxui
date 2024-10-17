@@ -32,12 +32,25 @@ export const ServicesEss = {
       page: params.pagination?.current,
     },
   }),
-  listEssOpenItem: (id: number,step:number,permissionLevel:'') => fetchDataListService<OpenEssDataItem, { id: number,step:number,permissionLevel:'' }>({
-    actionName: 'list-ess-open-item',
-    endpoint: 'HR',
-    payload: { id: id, step: step,permissionLevel:permissionLevel }
-  }),  
-   
+  // listEssOpenItem: (id: number,step:number) => fetchDataListService<OpenEssDataItem, { id: number,step:number}>({
+  //   actionName: 'list-ess-open-item',
+  //   endpoint: 'HR',
+  //   payload: { id: id, step: step}
+  // }),
+  
+
+    
+  listEssOpenItem: (params: TableViewSearchParams<OpenAdvanceSearchParams>,id: number) =>
+    fetchDataPagingService<OpenEssDataItem, { searchValue?: string,id: number }>({
+      actionName: 'list-ess-open-item',
+      endpoint: 'HR',
+      payload: { ...params.criteria,id: id },
+      pagination: {
+        pageSize: params.pagination?.pageSize,
+        page: params.pagination?.current,
+      },
+    }), 
+
   // listEssOpenItem: (params: TableViewSearchParams<OpenAdvanceSearchParams>,id:number,step:number) => fetchDataPagingService<OpenEssDataItem, { id: number,step:number }>({
   //   actionName: 'list-ess-open-item',
   //   endpoint: 'HR',

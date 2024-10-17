@@ -2,17 +2,18 @@ import { ActionDataFormProps } from '@/pages/process-flow/data';
 import ActionFormWrapper from '@/pages/process-flow/components/forms/ActionFormWrapper';
 import { ActionType, EditableFormInstance, ProCard, ProForm, ProFormTextArea } from "@ant-design/pro-components";
 import { Card, message, Modal, UploadFile } from "antd";
-import { ProbationEvaluation, ProbationEvaluationPaloay, ProbationEvaluationResources, ProbationEvaluationResourcesSupport } from '../data.types';
+import { CriteriaExportReport, ProbationEvaluation, ProbationEvaluationPayload, ProbationEvaluationResources, ProbationEvaluationResourcesSupport } from '../data.types';
 import { useForm } from 'antd/es/form/Form';
-import { simpleRequestActions } from '@/services/model';
+import { SimpleRequestActions, simpleRequestActions } from '@/services/model';
 import { createService } from '../services';
 import { useEffect, useRef, useState } from 'react';
-import { uniqueId } from 'lodash';
+import { replace, uniqueId } from 'lodash';
 import Section1Table from '../components/Section1Table';
 import Section2Card from '../components/Section2Card';
 import Section3Card from '../components/Section3Card';
 import Section4Card from '../components/Section4Card';
 import { TaskActionDataParam } from '@/services/process-workflow/params';
+import { DownloadData, downloadReport } from '@/services/apiGateway';
 
 export default (props: ActionDataFormProps) => {
 
@@ -58,6 +59,7 @@ export default (props: ActionDataFormProps) => {
             message.error(error.message || 'Failed to load request.');
         }
     }
+
  
     
     return (
@@ -74,9 +76,9 @@ export default (props: ActionDataFormProps) => {
                             taskId: props.activityData?.taskId || '',
                             actionName: props.action,
                             comment: dataForm.comment,  
-                            payload: { instId: props.procInstId||'',} as ProbationEvaluationPaloay,                     
+                            payload: { instId: props.procInstId||'',} as ProbationEvaluationPayload,                     
                             fileIds: files.map(it=> it.response)
-                        } as TaskActionDataParam<ProbationEvaluationPaloay>
+                        } as TaskActionDataParam<ProbationEvaluationPayload>
                         Modal.confirm({
                             title: 'Workflow Action',
                             content: 'Are you sure?',
@@ -112,7 +114,7 @@ export default (props: ActionDataFormProps) => {
                             section2: addedSection2.map((v, index) => ({ ...v, seqNo: index + 1 })),
                             section3: addedSection3.map((v, index) => ({ ...v, seqNo: index + 1 })),
                             section4: addedSection4.map((v, index) => ({ ...v, seqNo: index + 1 }))
-                        } as ProbationEvaluationPaloay
+                        } as ProbationEvaluationPayload
 
                         if(!props.activityData?.taskId) {
                             message.error("Task Id is not found")
@@ -125,7 +127,7 @@ export default (props: ActionDataFormProps) => {
                             comment: dataForm.comment,  
                             payload: payload,                     
                             fileIds: files.map(it=> it.response)
-                        } as TaskActionDataParam<ProbationEvaluationPaloay>
+                        } as TaskActionDataParam<ProbationEvaluationPayload>
                         console.log('data form: ', payload)
                         Modal.confirm({
                             title: 'Assessment, Preparation',

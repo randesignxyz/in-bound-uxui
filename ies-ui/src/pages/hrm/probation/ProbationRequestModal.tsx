@@ -128,6 +128,7 @@ export default ({
     console.log('employee info',data)
     setProbationEmp(data)
     form.setFieldValue('refId',undefined)
+    formSubmittor.setFieldValue('requestorBuId',undefined)
     srv.fetchProbationEvaluationRefList(data.empId).then(rs=> {
       setProbationRef(rs)
     })
@@ -148,14 +149,14 @@ export default ({
         //   message.error('Please upload job description as support document.');
         //   return;
         // }
-        const data1 = { ...formData,empId: probationEmp?.empId, attachedFiles: uploadFileIds };
+        const data1 = { ...formData,empId: probationEmp?.empId,buId: probationEmp?.buId, attachedFiles: uploadFileIds };
         console.log('probation payload',data1)
         Modal.confirm({
           title: 'Probation Evaluation Request',
           content: 'Are you sure?',
           onOk: async () => {
             try {
-              const data = { ...formData,empId: probationEmp?.empId, attachedFiles: uploadFileIds } as ProbationEvaluationData;
+              const data = { ...formData,empId: probationEmp?.empId,buId: probationEmp?.buId, attachedFiles: uploadFileIds } as ProbationEvaluationData;
               const rs = await srv.request(data);
               message.success(
                 `Probation Evaluation request is submitted sucessfully.form no: ${rs.data}`,

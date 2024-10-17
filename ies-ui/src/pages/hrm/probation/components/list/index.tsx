@@ -1,30 +1,28 @@
 import { Button, Checkbox, Radio, Space, Spin, Tooltip, Typography } from "antd"
-import { AppraisalEmp, AppraisalEmpStatusTotal } from "../../data.types"
+import { ProbationEvaluationEmpList, AppraisalEmpStatusTotal } from "../../data.types"
 import { useModel } from 'umi'
 import TableView from "@/components/DataCrud/TableView";
 import { SortOrder } from "antd/es/table/interface";
 import { simpleRequestActions } from "@/services/model";
 import { createService } from "../../services";
 import { Paging } from "@/services/API";
-import { formatDateTime } from "@/pages/utils";
+import { formatDate, formatDateTime } from "@/pages/utils";
 import Status from "@/components/Status";
 import { ExportOutlined, EyeOutlined, FileExcelOutlined } from "@ant-design/icons";
-import AppraisalFormQuickView from "../quick-view/index";
 import { useEffect, useRef, useState } from "react";
-import ProbationEvaluationForm from "../../ProbationEvaluationForm";
 import { LightFilter, ProFormSelect } from "@ant-design/pro-components";
 import { ActionType } from '@ant-design/pro-table';
-import SubmitAllListModal from "./SubmitAllListModal";
 import { CheckboxChangeEvent } from "antd/es/checkbox";
 import { Model } from "../../model";
 import { DownloadData, downloadReport } from '@/services/apiGateway';
 import { replace } from "lodash";
 import moment from "moment";
+import ProbationRequestModal from "../../ProbationRequestModal";
 const { Link } = Typography;
 
 interface Props {
     onAdd?: (id?: number) => void;
-    onDetail?: (data: AppraisalEmp) => void
+    onDetail?: (data: ProbationEvaluationEmpList) => void
     forceRefresh: number
 }
 export interface AppraisalEmpAdvanceSearchParams {
@@ -36,13 +34,13 @@ interface LightFilterProp {
     pendingFilter?: string[]
 }
 
-const AppraisalList: React.FC<Props> = ({ onAdd, forceRefresh, onDetail }) => {
+const ProbationList: React.FC<Props> = ({ onAdd, forceRefresh, onDetail }) => {
     const { data, modals } = Model();
     const actionRef = useRef<ActionType>();
     const cacheList = useModel('dataList');
     const requestActions = simpleRequestActions();
     const srv = createService({ request: requestActions })
-    const [appraisalEmp, setAppraisalEmp] = useState<AppraisalEmp>()
+    const [appraisalEmp, setAppraisalEmp] = useState<ProbationEvaluationEmpList>()
     const [total, setTotal] = useState<AppraisalEmpStatusTotal>()
     const [forceChange, setForceChange] = useState<number>(0)
 
@@ -76,12 +74,12 @@ const AppraisalList: React.FC<Props> = ({ onAdd, forceRefresh, onDetail }) => {
 
         }).then(it => {
             return cacheList.cacheDataList({
-                type: 'appraisal-submit',
+                type: 'probation-evaluation-emp',
                 data: it
             })
-        }) as Promise<Paging<AppraisalEmp>>
+        }) as Promise<Paging<ProbationEvaluationEmpList>>
     }
-    const quickViewHandler = (appEmp: AppraisalEmp) => {
+    const quickViewHandler = (appEmp: ProbationEvaluationEmpList) => {
         modals.showModal('QuickViewAppraisalForm');
         setAppraisalEmp(appEmp)
     }
@@ -90,7 +88,7 @@ const AppraisalList: React.FC<Props> = ({ onAdd, forceRefresh, onDetail }) => {
         actionRef?.current?.reload?.()
     }
     const createAppraisalFormHandler = () => {
-        modals.showModal('CreateAppraisalForm');
+        modals.showModal('CreateProbationForm');
     }
 
     const submitAllHandler = () => {
@@ -194,25 +192,27 @@ const AppraisalList: React.FC<Props> = ({ onAdd, forceRefresh, onDetail }) => {
                 return r.internalName
             },
         },
+        { title: 'Position', dataIndex: 'jobTitle', sorter: 'jobTitle' },
+        { title: 'Job Level', dataIndex: 'formTypeName', sorter: 'formTypeName' },
         { title: 'Business Unit', dataIndex: 'buName', sorter: 'buName' },
         { title: 'Function', dataIndex: 'departmentName', sorter: 'function' },
-        { title: 'Job Title', dataIndex: 'jobTitle', sorter: 'jobTitle' },
-        { title: 'Self- Rating', dataIndex: 'rating1', sorter: 'rating1' },
+       
+        // { title: 'Self- Rating', dataIndex: 'rating1', sorter: 'rating1' },
+        // {
+        //     title: 'FM Rating', dataIndex: 'rating2', sorter: 'rating2',
+        //     render: (_: any, r: any) => {
+        //         return (r?.rating2 == 0 ? '-' : r?.rating2 == -1.0 ? '-' : r.rating2)
+        //     }
+        // },
+        // {
+        //     title: 'Agreed Rating', dataIndex: 'rating5', sorter: 'rating5',
+        //     render: (_: any, r: any) => !r?.rating5 || r?.rating5 == 0 ? '-' : r?.rating5
+        // },
+        { title: 'Modified By', sorter: 'lastModifiedBy', dataIndex: 'lastModifiedBy' },
         {
-            title: 'FM Rating', dataIndex: 'rating2', sorter: 'rating2',
-            render: (_: any, r: any) => {
-                return (r?.rating2 == 0 ? '-' : r?.rating2 == -1.0 ? '-' : r.rating2)
-            }
-        },
-        {
-            title: 'Agreed Rating', dataIndex: 'rating5', sorter: 'rating5',
-            render: (_: any, r: any) => !r?.rating5 || r?.rating5 == 0 ? '-' : r?.rating5
-        },
-        { title: 'Modified By', sorter: 'modifiedBy', dataIndex: 'modifiedBy' },
-        {
-            title: 'Modified Date', sorter: 'modifiedDate', dataIndex: 'modifiedDate',
+            title: 'Modified Date', sorter: 'lastModifiedDate', dataIndex: 'lastModifiedDate',
             render(_: any, r: any) {
-                return r.modifiedDate && formatDateTime(r.modifiedDate)
+                return r.lastModifiedDate && formatDateTime(r.lastModifiedDate,'DD-MMM-YYYY')
             }
         },
         {
@@ -232,16 +232,22 @@ const AppraisalList: React.FC<Props> = ({ onAdd, forceRefresh, onDetail }) => {
                         backgroundColor: '#faad14fa',
                     }}>Drafted</sup> : ''}
             </>
-        }
+        },{
+            title: 'Due Date', sorter: 'requestedDate', dataIndex: 'requestedDate',
+            with: 180,
+            render(_: any, r: any) {
+                return r.requestedDate && formatDate(r.requestedDate,'DD-MMM-YYYY')
+            }
+        },
     ]
-    if (total?.accessRequest) {
-        cols.push({
-            title: 'Process Request Status', width: '120px',
-            render: (_: any, r: any) => <Status text={r.requestStatus || 'NA'} />
-        })
-    }
+    // if (total?.accessRequest) {
+    //     cols.push({
+    //         title: 'Process Request Status', width: '120px',
+    //         render: (_: any, r: any) => <Status text={r.requestStatus || 'NA'} />
+    //     })
+    // }
     return <Spin spinning={requestActions.request?.loading}>
-        <TableView<AppraisalEmp, { searchValue?: string; advanceSearch?: AppraisalEmpAdvanceSearchParams }>
+        <TableView<ProbationEvaluationEmpList, { searchValue?: string; advanceSearch?: AppraisalEmpAdvanceSearchParams }>
             // advanceSearch            
             cache
             addButtonLabel={'New Probation Evaluation Form'}
@@ -294,27 +300,27 @@ const AppraisalList: React.FC<Props> = ({ onAdd, forceRefresh, onDetail }) => {
             }
             extraRightFilter={<Tooltip placement="bottom" title="Dowload Excel File"><Button icon={<FileExcelOutlined />} onClick={dowloandExcelHandler} /></Tooltip>}
             actionHandlers={{
-                // onAdd: createAppraisalFormHandler,
-                onAdd: onAdd,
+                onAdd: createAppraisalFormHandler,
+                // onAdd: onAdd,
                 onFirstLoad: () => onRequestHandler(),
                 onRequest: onRequestHandler,
             }}
             columns={cols}
         />
         {/* {appraisalEmp && modals.isVisible('QuickViewAppraisalForm') &&  */}
-        <AppraisalFormQuickView refreshTable={refeshTable} appraisalEmp={appraisalEmp} open={modals.isVisible('QuickViewAppraisalForm')} onOpenModalChange={(v: any) => !v && modals.hideModal('QuickViewAppraisalForm')} />
-        {modals.isVisible('CreateAppraisalForm') && <ProbationEvaluationForm
-            open={modals.isVisible('CreateAppraisalForm')}
-            onOpenModalChange={(v: any) => !v && modals.hideModal('CreateAppraisalForm')}
-            refreshTable={refeshTable}
+        {/* <AppraisalFormQuickView refreshTable={refeshTable} appraisalEmp={appraisalEmp} open={modals.isVisible('QuickViewAppraisalForm')} onOpenModalChange={(v: any) => !v && modals.hideModal('QuickViewAppraisalForm')} /> */}
+        {modals.isVisible('CreateProbationForm') && <ProbationRequestModal
+            open={modals.isVisible('CreateProbationForm')}
+            onOpenChange={(v: any) => !v && modals.hideModal('CreateProbationForm')}
+            // refreshTable={refeshTable}
         />}
-        {modals.isVisible('SubmitAllListView') && <SubmitAllListModal
+        {/* {modals.isVisible('SubmitAllListView') && <SubmitAllListModal
             open={modals.isVisible('SubmitAllListView')}
             onOpenModalChange={(v: any) => !v && modals.hideModal('SubmitAllListView')}
             refreshTable={refeshTable}
         />
-        }
+        } */}
     </Spin>
 }
 
-export default AppraisalList
+export default ProbationList

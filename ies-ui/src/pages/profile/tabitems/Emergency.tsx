@@ -7,7 +7,7 @@ import { EmergencyData,  FilesData,  SaveEmergency } from "../data.ess";
 import { ProfileServicesEss } from '../service_ess'; 
 import { simpleRequestActions } from '@/services/model';
 import EmergencyModal from '../modal/EmergencyModal';
-import EmergencyAddressModal from '../modal/EmergencyAddressModal';
+import { useAccess } from '@umijs/max'; 
 import { useEffect,useState } from 'react';
 import EmergencyView from '../view/EmergencyView';
 
@@ -25,6 +25,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
     const [modalVisible, setModalVisible] = useState< { type: 'ADD'; payload: undefined } | { type: 'EDIT'; payload: EmergencyData } | { type: 'NEWEDIT'; payload: EmergencyData }>(); 
     const hideModal = (visble?: boolean) => !visble && setModalVisible(undefined); 
     const requestActions = simpleRequestActions(); 
+    const access = useAccess();  
 
     
     const [modalEducationViewVisible, setModalEducationViewVisible] = useState<{ type: 'VIEW'; payload: EmergencyData } >(); 
@@ -137,14 +138,14 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
     //   
     return <div>
         <Card> 
-          <Space direction={"vertical"} style={{width:'100%'}}>
+          <Space direction={"vertical"} style={{width:'100%'}}> 
             <div style={{width:'100%',textAlign:'right'}}>
                 <Space direction='horizontal'>
-                    <Button style={{display:(is_admin==2&&empId>0)?'':'none'}} onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}
+                    <Button style={{display:access.canAccessHrESSAddEditProfile==true&&is_admin==2?'':'none'}} onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}
                         icon={<PlusCircleFilled />}
                         key="1"
                         type="primary">Add</Button>
-
+                    
                     <Button danger onClick={() => setModalEducationViewVisible({ type: 'VIEW', payload: profile.emergency})} 
                         style={{display:([7,5,4,3,2].find((element) => element == profile!!.ess.stepId))&&is_admin!=2?'':'none'}}
                         type="primary"><EyeOutlined/> View edit</Button>
@@ -158,7 +159,8 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
                         </Button>
                     }
                 </Space>
-            </div>
+           
+            </div>  
             <ProTable<EmergencyData>
                 dataSource={emergencyList}
                 search={false}
@@ -186,7 +188,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
                             return homeNo + street + villageId+r.communeName+", "+r.districtName+", "+r.provinceName;
                         }
                     }, 
-                    {   width: '70px',
+                    {   width: '70px', hidden:!access.canAccessHrESSAddEditProfile,
                         render: (dom, r) => {
                             return ( <Flex vertical={false} justify='space-between'>
                                     {profile!!.ess.id!!<=0?'':<a style={{display: (is_admin==0&&empId==0&&[7,5,2].find((element) => element == profile!!.ess.stepId))?'':'none'}} 

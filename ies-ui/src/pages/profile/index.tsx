@@ -26,10 +26,11 @@ import PersonalViewDetailModal from './modal/PersonalViewDetailModal';
 import AttachmentList from './tabitems/AttachmentList';
 import Message from './Message';
 import Activity from './tabitems/Activity';
+import { useAccess } from '@umijs/max'; 
 
 function Profile() {
   const params = useParams();
-  const {is_admin,id} = params  
+  const {is_admin,id} = params;
  
   const requestActions = simpleRequestActions();
   const [tabStatus, seTabStatus] = useState<AdvancedState>({
@@ -121,6 +122,7 @@ function Profile() {
     });  
   } 
 
+  const access = useAccess();  
   // effect
   useEffect(()=> {
     initData();  
@@ -315,15 +317,15 @@ function Profile() {
         onTabChange={onOperationTabChange}
         tabList={operationTabList} 
         footer={[ 
-          profile!!.ess.id!!<=0?'':<Button style={{display:(step==2&&Number(id)==0)?'':'none',color: 'red'}} onClick={()=>onStartModify(8,'Cancel Update')}><ExclamationCircleOutlined /> Cancel Update</Button>,   
+          // profile!!.ess.id!!<=0?'':<Button style={{display:(step==3&&Number(id)==0)?'':'none',color: 'red'}} onClick={()=>onStartModify(8,'Cancel Update')}><ExclamationCircleOutlined /> Cancel Update</Button>,   
           <Button style={{background:'#E7E6E6'}} style={{display:([7,5,2].find((element) => element == step))&&Number(id)==0?'':'none'}} onClick={()=>onStartModify(9,'Save Draft')}><EditOutlined/> Save Draft</Button>,       
           profile!!.ess.id!!<=0?'':<Button type="primary" style={{display:([7,5,2].find((element) => element == step))&&Number(id)==0?'':'none'}} onClick={()=>onStartModify(3,'Submit Update')}><EditOutlined/> Submit Update</Button>,
           profile!!.ess.id!!<=0?'':<Button style={{display:(step==3&&Number(id)==0)==true?'':'none',color: 'red'}} onClick={()=>onStartModify(7,'Cancel Submitted')}><HistoryOutlined/> Cancel Submitted</Button>,
           // profile!!.ess.id!!<=0?'':<Button style={{display:(step==4&&Number(id)==0)==true?'':'none',color: 'red'}} onClick={()=>onStartResubmit(5)}><HistoryOutlined/> Re-Edit</Button>, 
 
-          profile!!.ess.id!!<=0?'':<Button style={{color: 'red',display:(step==3&&Number(id)>0)==true?'':'none'}} onClick={()=>onRejected(4)}><EditOutlined/> Rejected</Button>,
+          access.canAccessHrESSApprovalProfile==true?profile!!.ess.id!!<=0?'':<Button style={{color: 'red',display:(step==3&&Number(id)>0)==true?'':'none'}} onClick={()=>onRejected(4)}><EditOutlined/> Rejected</Button>:'',
           
-          <Button type="primary" style={{display:(step==3&&Number(id)>0)==true?'':'none'}} onClick={()=>onStartAproval(6)}><EditOutlined/> Approval</Button>, 
+          access.canAccessHrESSApprovalProfile==true?<Button type="primary" style={{display:(step==3&&Number(id)>0)==true?'':'none'}} onClick={()=>onStartAproval(6)}><EditOutlined/> Approval</Button>:'', 
 
         ]}
       >

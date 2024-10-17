@@ -12,6 +12,7 @@ import { ProCard } from "@ant-design/pro-components";
 import PersonalModal from '../modal/PersonalModal';
 import PersonalViewEditModal from '../modal/PersonalViewEditModal';
 import { formatDATEFUll } from '@/pages/utils';
+import { useAccess } from '@umijs/max'; 
 
 interface Props {
     profile: ProfileData; 
@@ -39,6 +40,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
     // 
     const [createFileOther, selectedFileOther] = useState<any>();
     const [stepId,setStepId] = useState(0);
+    const access = useAccess();  
     // 
     useEffect(()=> {
         initData(); 
@@ -161,7 +163,14 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
           content: 'Are you sure?',
           onOk: async () => {
             try { 
-                data.otherFile = createFileOther;
+                //
+                if(createFileOther[0].uid=='0'){
+                    data.otherFile = []; 
+                }
+                else{ 
+                    data.otherFile = createFileOther;
+                } 
+                // data.otherFile = createFileOther;
                 await ProfileServicesEss.saveEssProfile(data)(requestActions); 
                 // call back fun
                 cb.onLoadData();
@@ -215,24 +224,24 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
     return <div>
         <Space direction="vertical">
             
-            {/* personal info */}
+            {/* personal info */}                     
             <ProCard bordered> 
-                <div style={{width:'100%',textAlign:'right'}}>
-                    <Space direction='horizontal'>
-                        <Button onClick={() => setModalVisible({ type: 'EDIT', payload: profile.profile!!})} style={{display:(is_admin==2&&empId>0)?'':'none'}}><EditOutlined/> EDIT</Button>
+                <div style={{width:'100%',textAlign:'right'}}> 
+                        <Space direction='horizontal'>
+                            <Button onClick={() => setModalVisible({ type: 'EDIT', payload: profile.profile!!})} style={{display:access.canAccessHrESSAddEditProfile==true&&is_admin==2?'':'none'}}><EditOutlined/> EDIT</Button>
 
-                        <Button danger onClick={() => setModalViewVisible({ type: 'VIEW', payload: profile.profile!!})} 
-                                style={{display:([7,5,4,3,2].find((element) => element == profile!!.ess.stepId))&&is_admin!=2?'':'none'}}><EyeOutlined/> View edit</Button>
-                        {/* checking open announce is null */}
-                        {profile!!.ess.id!!<=0?'':<Button style={{display: ([7,5,2].find((element) => element == profile!!.ess.stepId))&&is_admin==0?'':'none'}}
-                                onClick={() => setModalVisible({ type: 'EDIT', payload: (profile.profile_draft==null?profile.profile:profile.profile_draft) })}
-                                icon={<EditOutlined />}
-                                key="1"
-                                type="primary">
-                                Edit
-                            </Button>
-                        }
-                    </Space>
+                            <Button danger onClick={() => setModalViewVisible({ type: 'VIEW', payload: profile.profile!!})} 
+                                    style={{display:([7,5,4,3,2].find((element) => element == profile!!.ess.stepId))&&is_admin!=2?'':'none'}}><EyeOutlined/> View edit</Button>
+                            {/* checking open announce is null */}
+                            {profile!!.ess.id!!<=0?'':<Button style={{display: ([7,5,2].find((element) => element == profile!!.ess.stepId))&&is_admin==0?'':'none'}}
+                                    onClick={() => setModalVisible({ type: 'EDIT', payload: (profile.profile_draft==null?profile.profile:profile.profile_draft) })}
+                                    icon={<EditOutlined />}
+                                    key="1"
+                                    type="primary">
+                                    Edit
+                                </Button>
+                            }
+                        </Space> 
                 </div>
 
                 <Descriptions size="small" items={items}/>  

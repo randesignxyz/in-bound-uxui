@@ -379,14 +379,17 @@ export interface LocationData {
 
 export interface FilesData {
   id?: string;  
+  uid?: string;  
   path:string;
   description: string;  
   fileName: string;  
+  name: string;  
+  response: string;  
   fileType: string;  
-  type: number;  
+  type: string;  
   title: string;  
   createdBy: string;  
-  createdDate: moment.Moment;
+  createdDate: moment.Moment; 
 } 
 export interface MarjorData {
   id?: string;  

@@ -258,18 +258,18 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
     value={addedItems}
     columns={cols}
     summary={(data) => {
-      // var rating = 0;
-      // data?.forEach((it) => {
-      //   rating += (it.rating1||0) +  (it.rating2||0) +  (it.rating3||0) +  (it.rating4||0) +  (it.rating5||0)
-      // });
-      // rating = (rating / data.length)*0.2
+      var rating = 0;
+      data?.forEach((it) => {
+        rating += (it.rating1||0) +  (it.rating2||0) +  (it.rating3||0) +  (it.rating4||0) +  (it.rating5||0)
+      });
+      rating = (rating / data.length)*0.2
       return (
         <Table.Summary.Row style={{ textAlign: 'right', fontWeight: 'bold' }}>
           <Table.Summary.Cell colSpan={7} index={7}>
             {'SECTION II. JOB KNOWLEDGE AND SKILLS (Weightage: 20%)'}
           </Table.Summary.Cell>
           <Table.Summary.Cell colSpan={2} index={8} align="left">
-            {formatterQty1.format(totalScore || 0)}
+            {formatterQty1.format(totalScore || rating)}
           </Table.Summary.Cell>
         </Table.Summary.Row>
       );

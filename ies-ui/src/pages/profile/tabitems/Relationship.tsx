@@ -11,6 +11,7 @@ import { ProfileServicesEss } from '../service_ess';
 import { simpleRequestActions } from '@/services/model';
 import RelationshipView from "../view/RelationshipView";
 import { formatDate, formatDATEFUll } from "@/pages/utils";
+import { useAccess } from '@umijs/max'; 
 
 interface Props {
     profile: ProfileData;
@@ -32,6 +33,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
     
     const [modalRelationshipViewVisible, setModalRelationshipViewVisible] = useState< { type: 'VIEW'; payload: RelationshipData } >(); 
     const hideRelationshipViewModal = (visble?: boolean) => !visble && setModalRelationshipViewVisible(undefined); 
+    const access = useAccess();  
 
     useEffect(() => {
         initData();
@@ -119,16 +121,16 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
     } 
     return <div>
         <Card>
-            <Space direction={"vertical"} style={{width:'100%'}}>
+            <Space direction={"vertical"} style={{width:'100%'}}> 
                 <div style={{width:'100%',textAlign:'right'}}>
                     <Space direction='horizontal'> 
-                        <Button style={{display:(is_admin==2&&empId>0)?'':'none'}} onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}icon={<PlusCircleFilled />}
-                        key="lnd3"
-                        type="primary">Add</Button>
+                        <Button style={{display:access.canAccessHrESSAddEditProfile==true&&is_admin==2?'':'none'}} onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}icon={<PlusCircleFilled />}
+                                key="lnd3"
+                                type="primary">Add</Button>
 
                         <Button danger onClick={() => setModalRelationshipViewVisible({ type: 'VIEW', payload: undefined})} 
-                            style={{display:([7,5,4,3,2].find((element) => element == step))&&is_admin!=2?'':'none'}}
-                            type="primary"><EyeOutlined/> View edit</Button>
+                                                    style={{display:([7,5,4,3,2].find((element) => element == step))&&is_admin!=2?'':'none'}}
+                                                    type="primary"><EyeOutlined/> View edit</Button>
 
                         {profile!!.ess.id!!<=0?'':<Button style={{display: ([7,5,2].find((element) => element == step))&&is_admin==0?'':'none'}}
                                 onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}
@@ -139,7 +141,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                             </Button>
                         }
                     </Space>
-                </div>
+                </div> 
                 <ProTable<RelationshipData>
                     dataSource={relationshipList}
                     search={false}
@@ -164,7 +166,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                         // {
                         //     title: "Description", dataIndex: "description"
                         // },
-                        {   width: 100, 
+                        {   width: 100, hidden:!access.canAccessHrESSAddEditProfile,
                             render: (dom, r) => {
                                 return (<Flex vertical={false} justify='space-between'>
                                   {profile!!.ess.id!!<=0?'':<a style={{display: (is_admin==0&&empId==0&&[7,5,2].find((element) => element == profile!!.ess.stepId))?'':'none'}}

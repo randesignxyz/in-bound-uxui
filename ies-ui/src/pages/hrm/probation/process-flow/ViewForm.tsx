@@ -1,11 +1,11 @@
 import ViewFormWrapper from "@/pages/process-flow/components/forms/ViewFormWrapper";
 import ProcessFlowModel from "@/models/ProcessFlowModel";
 import { DataViewProps } from "@/pages/process-flow/data";
-import { simpleRequestActions } from "@/services/model";
+import { SimpleRequestActions, simpleRequestActions } from "@/services/model";
 import { Button, Col, Descriptions, Form, Input, message, Modal, Row, Space, Spin } from "antd";
 import { EditableFormInstance, FooterToolbar, ProCard, ProForm, ProFormTextArea, ProTable } from "@ant-design/pro-components";
 import { useEffect, useRef, useState } from "react";
-import { ProbationEvaluation, ProbationEvaluationDetailRs, ProbationEvaluationResources, ProbationEvaluationResourcesSupport } from "../data.types";
+import { CriteriaExportReport, ProbationEvaluation, ProbationEvaluationDetailRs, ProbationEvaluationResources, ProbationEvaluationResourcesSupport } from "../data.types";
 import Section2Card from "../components/Section2Card";
 import Section1Table from "../components/Section1Table";
 import Section3Card from "../components/Section3Card";
@@ -16,6 +16,9 @@ import { uniqueId } from "lodash";
 import { formatDate, formatterQty, formatterQty1 } from "@/pages/utils";
 import EmpImprovmentTable1 from "../components/EmpImprovmentTable1";
 import EmpImprovmentTable from "../components/EmpImprovmentTable";
+import { FileExcelOutlined, FilePdfOutlined } from "@ant-design/icons";
+import { DownloadData, downloadReport } from "@/services/apiGateway";
+import { ProbationEvaluationRequestFormNames } from ".";
 
 export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
     const workflowModel = ProcessFlowModel();
@@ -33,6 +36,7 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
     const editableFormRef3 = useRef<EditableFormInstance>();
     const editableFormRef4 = useRef<EditableFormInstance>();
     const instId = workflowModel.state?.instanceData?.processInstance?.procInstId;
+    console.log('workflowModel===',workflowModel)
     
     const clear = () => {
         form.resetFields();
@@ -65,10 +69,46 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
           message.error(error.message || 'Failed to load request.');
       }
     };
+    const dataReport=(exportType: 'PDF' | 'EXCEL'): DownloadData<CriteriaExportReport>=> { 
+      
+      // var direct = data?.contractTypeCode == 'OTHER' ? 'Display':data?.contractTypeCode == 'IN_DIRECT' ?'Indirect' : 'Direct'
+      // var issued=  data?.status=='ISSUED'? 'Issued':''
+      // var reportName = replace('SettlementIncentive@@##Report','@@',direct)
+      // reportName = replace(reportName,'##',issued) 
+      return {
+        reportName: 'export-form',
+        fileName: `Probation Evaluation Form`,
+        type: exportType,
+        data: {
+          processDefKey: 'probation_evaluation_form',
+          processInstId: instId||''
+        }
+      }    
+    }
+
+    const downloadDataFile =async (exportType: 'PDF' | 'EXCEL',requestAction: SimpleRequestActions)=>{
+        await downloadReport<CriteriaExportReport>(requestActions)(dataReport(exportType))
+    }
+    const isDownloadForm = [ProbationEvaluationRequestFormNames.assessmentPreparation ,ProbationEvaluationRequestFormNames.lineManagerSubmission].find(r=> r== props.formKey)
+                          && ['SETTING','PREPARED'].find(r => r==probaRequest?.probationEvaluation?.status)? true:false
+  
     return(  
     <ViewFormWrapper<{ id: number }>
         workflowModel={workflowModel}
         workflowProp={props}
+        moreActions= {() => {
+          return (isDownloadForm)?[{
+              icon: <FilePdfOutlined />, key: 'export-pdf', name: " Download Form",
+              action: async () => {                    
+                try {                        
+                    downloadDataFile('PDF',requestActions)
+                } catch (error: any) {
+                    message.error(error.message || 'Failed to export data.')
+                }
+              }
+            }]:[]
+          }
+        }
     >
         {(data) => {
                

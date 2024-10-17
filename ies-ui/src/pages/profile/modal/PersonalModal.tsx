@@ -9,7 +9,7 @@ import { ProfileServicesEss } from '../service_ess';
 import FileUploader , { UploadType } from '@/components/Attachment/FileUploader';
 import ImagePreview from "@/components/ImagePreview";
 import { ProfileData } from "../data";
-import { DeliveredProcedureOutlined,SaveOutlined,CloseSquareOutlined,ProfileOutlined } from "@ant-design/icons";
+import { DeliveredProcedureOutlined,SaveOutlined,CloseSquareOutlined,ProfileOutlined, DeleteOutlined } from "@ant-design/icons";
 
 interface Props extends ModalFormProps<SaveEssProfile> { 
     data?: EssProfileData;
@@ -35,6 +35,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
     const [communePB, setCommunePB] = useState<LocationData[]>();
     const [communePA, setCommunePA] = useState<LocationData[]>();
     const [communeCA, setCommuneCA] = useState<LocationData[]>(); 
+    const [attachFilesList, setAttachFiles] = useState<FilesData[]>(); 
     const [isLoading,setLoading] = useState(false);  
     const [createFileOther, selectedFileOther] = useState<any>();  
     const [isOther, setIsOtherVisible] = useState(true);
@@ -61,6 +62,10 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
             else{ 
                 setIsOtherVisible(true);
             }
+            // set files
+            setAttachFiles(files);
+            //
+            cb.onLoadMenu(files as UploadType[]);
         }
          
     };  
@@ -151,6 +156,26 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
             villageCrId:nData.villagePaId
         }); 
     }
+    const onRevemoveAttachFiles = async (data:FilesData)=>{  
+        Modal.confirm({
+            title: 'Remove Attachment Files',
+            content: 'Are you sure?',
+            onOk: async () => {
+              try {  
+                const remItems = attachFilesList!!.filter((ele, ind) => ele.id!=data.id);
+                data.name = "";
+                data.response= "";
+                data.type= "";
+                setAttachFiles(remItems);
+                //  
+                await ProfileServicesEss.removeEssPersonalAttachFiles(data)(requestActions); 
+        } catch (error: any) {
+            message.error(error.message || 'Failed to save.');
+        }
+        },
+    });
+        
+    }
     return <div>
         <ModalForm  {...rest} form={form} width={'60%'} title={<><ProfileOutlined /> Edit Personal Information</>}
             // onOpenChange={visible => {
@@ -179,10 +204,10 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                             <ProFormText label="Name KH" name={'nameKh'} placeholder={"គោត្តនាម និង នាម"}/>
                         </Col>    
                         <Col span={8} style={{padding:'3px'}}> 
-                            <ProFormText label="Last Name EN" name={'lastNameEn'} placeholder={"Given Name"}/>
+                            <ProFormText label="Last Name EN" name={'firstNameEn'} placeholder={"Given Name"}/>
                         </Col>    
                         <Col span={8} style={{padding:'3px'}}> 
-                            <ProFormText label="First Name EN" name={'firstNameEn'} placeholder={"Family name"}/>
+                            <ProFormText label="First Name EN" name={'lastNameEn'} placeholder={"Family name"}/>
                         </Col>    
                     </Row>
                     <Row>
@@ -454,7 +479,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                     </Space>
                     <div style={{fontSize:'12px'}}>- National ID (for updating ID number, Name, DOB, Expiry date)</div>
                     <div style={{fontSize:'12px'}}>- Passport (for updating Passport number, Name, DOB, Expiry date)</div> 
-                    <div style={{fontSize:'12px'}}>- Marriage Certificate (for updating marital status)</div> 
+                    {/* <div style={{fontSize:'12px'}}>- Marriage Certificate (for updating marital status)</div>  */}
                 </div> 
                 <ProCard size="small" bordered>   
                     <FileUploader   
@@ -465,7 +490,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                     <Image.PreviewGroup>
                         <List
                             grid={{ gutter: 5 }}
-                            dataSource={files.filter((it) => it) || []}
+                            dataSource={attachFilesList?.filter((it) => it) || []}
                             renderItem={(it) => {
                             return (
                                 <List.Item>
@@ -476,6 +501,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                                         fileId={it.id || ''}
                                         fileName={it.fileName}
                                     />
+                                    <Button type="danger" onClick={()=>{onRevemoveAttachFiles(it)}}><DeleteOutlined /></Button>
                                 </List.Item>
                             );
                             }}

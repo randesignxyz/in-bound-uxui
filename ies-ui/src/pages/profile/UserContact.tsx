@@ -50,10 +50,18 @@ export default ({ profile,step,is_admin}: Props) => {
       title: item.type.name,
       subTitle: item.isMain && <StarTwoTone />,
       actions: [
-        access.canAccessHrESSViewOnly?'':<a key="edit" onClick={() => onEditHandler(item)} style={{display: [7,5,4,3,2].find((element) => element == step)?'':'none'}}>
+        // admin
+        <a style={{display: access.canAccessHrESSAddEditProfile==true&&is_admin==2?'':'none'}} key="edit" onClick={() => onEditHandler(item)} >
           <EditOutlined />
         </a>,
-        access.canAccessHrESSViewOnly?'':<a style={{display: [7,5,4,3,2].find((element) => element == step)?'':'none'}} key="delete" onClick={() => deleteContractHandler(item)}>
+        <a style={{display: access.canAccessHrESSAddEditProfile==true&&is_admin==2?'':'none'}} key="delete" onClick={() => deleteContractHandler(item)}>
+          <DeleteOutlined />
+        </a>,
+        // employee
+        <a key="edit" onClick={() => onEditHandler(item)} style={{display: [7,5,4].find((element) => element == step)?'':'none'}}>
+          <EditOutlined />
+        </a>,
+        <a style={{display: [7,5,4].find((element) => element == step)?'':'none'}} key="delete" onClick={() => deleteContractHandler(item)}>
           <DeleteOutlined />
         </a>,
       ],
@@ -110,8 +118,10 @@ export default ({ profile,step,is_admin}: Props) => {
       content: 'Are you sure?',
       onOk: async () => {
         try {
-          data.type = modalVisible?.type||'';
-          await ProfileServices.saveContact(data)(requestActions);
+          data.type = modalVisible?.type||''; 
+          await ProfileServices.saveContact(data,is_admin)(requestActions); 
+
+
           const list = await ProfileServices.listContact(data.empId).query(requestActions);
           setContactList(list);
           // if (modalVisible?.type == 'EDIT') 
@@ -128,7 +138,7 @@ export default ({ profile,step,is_admin}: Props) => {
       <ProList<any>
         toolBarRender={() => {
           return [ 
-            access.canAccessHrESSViewOnly==true?'':<Button style={{display: ([7,5,2].find((element) => element == step))&&is_admin==0?'':'none'}}
+            <Button style={{display: ([7,5,2].find((element) => element == step))&&is_admin==0?'':'none'}}
               onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}
               icon={<PlusCircleFilled />}
               key=" 3 "
@@ -136,14 +146,14 @@ export default ({ profile,step,is_admin}: Props) => {
             >
               Add
             </Button>,
-            access.canAccessHrESSViewOnly==true?'':<Button style={{display: is_admin==2?'':'none'}}
+            access.canAccessHrESSAddEditProfile==true?<Button style={{display: is_admin==2?'':'none'}}
               onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}
               icon={<PlusCircleFilled />}
               key=" 3 "
               type="primary"
             >
               Add
-            </Button>,
+            </Button>:'',
           ];
         }}
         showActions="hover"

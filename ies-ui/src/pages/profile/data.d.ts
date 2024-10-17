@@ -124,6 +124,7 @@ export interface SaveContract {
   empId: number;
   contact: string;
   isMain?: boolean;
+  isAdmin: number;
 }
 
 export interface ContactData {

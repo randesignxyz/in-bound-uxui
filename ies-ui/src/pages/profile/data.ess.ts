@@ -384,11 +384,12 @@ export interface FilesData {
   description: string;  
   fileName: string;  
   name: string;  
+  response: string;  
   fileType: string;  
-  type: number;  
+  type: string;  
   title: string;  
   createdBy: string;  
-  createdDate: moment.Moment;
+  createdDate: moment.Moment; 
 } 
 export interface MarjorData {
   id?: string;  

@@ -34,7 +34,7 @@ export default ({ profile }: Props) =>{
     // canAccessHrViewEmployeeMenuItem
     const [advanceSearch, setAdvanceSearch] = useState<{ visible: boolean }>();
     const [advanceSearchParams, setAdvanceSearchParams] = useState<OpenAdvanceSearchParams>({
-        status: '3',
+        status: 3,
     });
     
     const access = useAccess();   
@@ -240,13 +240,13 @@ export default ({ profile }: Props) =>{
             }}
             extraFilter={
                 <Space > 
-                <Radio.Group optionType="button" defaultValue={"3"}
+                <Radio.Group optionType="button" defaultValue={3}
                     options={[
-                        { label: "All", value: "0" },
-                        { label: "Started", value: "2" },
-                        { label: "Review", value: "3" },
-                        { label: "Rejected", value: "4" },
-                        { label: "Approved", value: "6" },
+                        { label: "All", value: 0 },
+                        { label: "Started", value: 2 },
+                        { label: "Review", value: 3 },
+                        { label: "Rejected", value: 4 },
+                        { label: "Approved", value: 5 },
                         // { label: "Cancel Update", value: "8" }
                     ]}
                     // onChange={(e) => {setAdanceSearchItem(e.target.value);}}

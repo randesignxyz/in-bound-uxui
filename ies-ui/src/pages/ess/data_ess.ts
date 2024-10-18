@@ -25,5 +25,5 @@ export interface OpenEssDataItem {
 
 
 export type OpenAdvanceSearchParams = {
-  status: '0' | '1' | '2' | '3' | '4'; 
+  status: number; 
 };

@@ -129,15 +129,15 @@ export default ({ profile ,step,is_admin}: Props) => {
                             render: (_, r) =>{ 
                                 // 1: personal;2:emergency;3:education;4:language;5:training;6:workingexperience
                                 switch (r.type) {
-                                    case '1':
+                                    case 1:
                                         return 'Personal Information'
-                                    case '3':
+                                    case 3:
                                         return 'Education'
-                                    case '4':
+                                    case 4:
                                         return 'Language'
-                                    case '5':
+                                    case 5:
                                         return 'Training/Certification'
-                                    case '6':
+                                    case 6:
                                         return 'Work Experiences' 
                                     default: return 'N/A'
                                 }

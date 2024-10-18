@@ -6,6 +6,7 @@ export interface SaveEssProfile {
   openEssId: number; 
   empId:number;
   nameKh: string; 
+  empNo: string; 
   firstNameEn: string; 
   lastNameEn: string; 
   
@@ -386,7 +387,7 @@ export interface FilesData {
   name: string;  
   response: string;  
   fileType: string;  
-  type: string;  
+  type: number;  
   title: string;  
   createdBy: string;  
   createdDate: moment.Moment; 

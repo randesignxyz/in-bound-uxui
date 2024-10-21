@@ -1,5 +1,5 @@
 import { DrawerForm, EditableFormInstance, SubmitterProps } from "@ant-design/pro-components"
-import {AppraisalRemark, AppraisalEmp, AppraisalEmpSubmissionResult, ValidatorMsg, AppraisalEmpImprovement, AppraisalDataLookup } from "../../data.types";
+import {AppraisalRemark, AppraisalEmp, AppraisalEmpSubmissionResult, ValidatorMsg, AppraisalEmpImprovement, AppraisalDataLookup, ProbationEvaluationEmpList } from "../../data.types";
 import { useEffect, useRef, useState } from "react";
 import { simpleRequestActions } from "@/services/model";
 import { Button, Modal, Space, Tag, Typography, message } from "antd";
@@ -11,15 +11,16 @@ import { createService } from "../../services";
 import SubmissionInfo from "../SubmissionInfo";
 import { Model } from "../../model";
 import { uniqueId } from "lodash";
+import Status from "@/components/Status";
 
 interface Props{
-    appraisalEmp?: AppraisalEmp;
+    appraisalEmp?: ProbationEvaluationEmpList;
     open?: boolean;
     onOpenModalChange:(v:boolean)=>void;
     refreshTable:()=>void
 }
 
-const AppraisalFormQuickView=({appraisalEmp, open, onOpenModalChange, refreshTable}:Props) =>{
+const ProbationEvaluationQuickView=({appraisalEmp, open, onOpenModalChange, refreshTable}:Props) =>{
     const [lang,setLang] = useState<string>("ENG")
     const [dataLookup,setDataLookup] = useState<AppraisalDataLookup[]>()
     const requestActions = simpleRequestActions()
@@ -52,7 +53,7 @@ const AppraisalFormQuickView=({appraisalEmp, open, onOpenModalChange, refreshTab
     useEffect(() => {
         (async () => {
             try {
-                reloadData()
+                // reloadData()
                 const dimensionList = await services.fetchAppraisalDimensionList(appraisalEmp?.id||0)
                 setAppraisal(dimensionList)    
                
@@ -61,11 +62,11 @@ const AppraisalFormQuickView=({appraisalEmp, open, onOpenModalChange, refreshTab
             }
         })()
     },[])
-    useEffect(()=>{
-        services.fetchItem(appraisalEmp?.id||0).then(rs =>{
-            setAttachedFiles(rs?.attachedFiles) 
-        })
-    },[])
+    // useEffect(()=>{
+    //     services.fetchItem(appraisalEmp?.id||0).then(rs =>{
+    //         setAttachedFiles(rs?.attachedFiles) 
+    //     })
+    // },[])
     const onUploadFileIdHandler= (file:any)=>{        
         setAttachedFiles(v =>{return [...v||'',file]})
         setAttachedUpdated(true)
@@ -75,47 +76,47 @@ const AppraisalFormQuickView=({appraisalEmp, open, onOpenModalChange, refreshTab
         setAttachedUpdated(true)             
     }
 
-    const reloadData = async () => {
-        try {
-            services.fetchItem(appraisalEmp?.id||0).then(rs=>{
-                setDataDetail(rs)               
-                setImprovementRated1List(
-                    rs?.appraisalEmpImprovementRated1List?.length!=0? rs?.appraisalEmpImprovementRated1List?.map(it=>{
-                    return {key:uniqueId().toString(),...it}
-                    }): [{key:uniqueId().toString(),id:0,appraisalEmpId:appraisalEmp?.id,improvement:'',propose:'',refCode:'r1'} as (AppraisalEmpImprovement & {key:string})]
-                )           
-                setImprovementRated2List(
-                    rs?.appraisalEmpImprovementRated2List?.length!=0? rs?.appraisalEmpImprovementRated2List?.map(it=>{
-                    return {key:uniqueId().toString(),...it}
-                    }): [{key:uniqueId().toString(),id:0,appraisalEmpId:appraisalEmp?.id,improvement:'',propose:'',refCode:'r2'} as (AppraisalEmpImprovement & {key:string})]
-                ) 
+    // const reloadData = async () => {
+    //     try {
+    //         services.fetchItem(appraisalEmp?.id||0).then(rs=>{
+    //             setDataDetail(rs)               
+    //             setImprovementRated1List(
+    //                 rs?.appraisalEmpImprovementRated1List?.length!=0? rs?.appraisalEmpImprovementRated1List?.map(it=>{
+    //                 return {key:uniqueId().toString(),...it}
+    //                 }): [{key:uniqueId().toString(),id:0,appraisalEmpId:appraisalEmp?.id,improvement:'',propose:'',refCode:'r1'} as (AppraisalEmpImprovement & {key:string})]
+    //             )           
+    //             setImprovementRated2List(
+    //                 rs?.appraisalEmpImprovementRated2List?.length!=0? rs?.appraisalEmpImprovementRated2List?.map(it=>{
+    //                 return {key:uniqueId().toString(),...it}
+    //                 }): [{key:uniqueId().toString(),id:0,appraisalEmpId:appraisalEmp?.id,improvement:'',propose:'',refCode:'r2'} as (AppraisalEmpImprovement & {key:string})]
+    //             ) 
                 
-                setImprovementRated3List(
-                    rs?.appraisalEmpImprovementRated3List?.length!=0? rs?.appraisalEmpImprovementRated3List?.map(it=>{
-                    return {key:uniqueId().toString(),...it}
-                    }): [{key:uniqueId().toString(),id:0,appraisalEmpId:appraisalEmp?.id,improvement:'',propose:'',refCode:'r3'} as (AppraisalEmpImprovement & {key:string})]
-                ) 
-                setAttachedUpdated(false)      
-            })
+    //             setImprovementRated3List(
+    //                 rs?.appraisalEmpImprovementRated3List?.length!=0? rs?.appraisalEmpImprovementRated3List?.map(it=>{
+    //                 return {key:uniqueId().toString(),...it}
+    //                 }): [{key:uniqueId().toString(),id:0,appraisalEmpId:appraisalEmp?.id,improvement:'',propose:'',refCode:'r3'} as (AppraisalEmpImprovement & {key:string})]
+    //             ) 
+    //             setAttachedUpdated(false)      
+    //         })
             
-        } catch (error: any) {
-            message.error(error.message || 'Failed to load data.')
-        }
-    }
+    //     } catch (error: any) {
+    //         message.error(error.message || 'Failed to load data.')
+    //     }
+    // }
 
-    const isDrafted = appraisalEmp?.actionStatus==='DRAFTED'?true:false
-    const currentDrafted = appraisalEmp?.currentDrafted
+    // const isDrafted = appraisalEmp?.actionStatus==='DRAFTED'?true:false
+    // const currentDrafted = appraisalEmp?.currentDrafted
 
-    const currentAssign1 = (appraisalEmp?.currentAssign1||false)
-    const currentAssign2 = appraisalEmp?.currentAssign2||false
-    const currentAssign3 = appraisalEmp?.currentAssign3||false
-    const hasRating2 = appraisalEmp?.hasRating2||false
-    const rated1 = appraisalEmp?.rated1
-    const rated2 = appraisalEmp?.rated2
-    const rated3 = appraisalEmp?.rated3  
+    // const currentAssign1 = (appraisalEmp?.currentAssign1||false)
+    // const currentAssign2 = appraisalEmp?.currentAssign2||false
+    // const currentAssign3 = appraisalEmp?.currentAssign3||false
+    // const hasRating2 = appraisalEmp?.hasRating2||false
+    // const rated1 = appraisalEmp?.rated1
+    // const rated2 = appraisalEmp?.rated2
+    // const rated3 = appraisalEmp?.rated3  
 
-    const isSaveDraft = ((currentAssign1 && (currentDrafted || !rated1)) || (currentAssign2 && (currentDrafted || !rated2)) || (currentAssign3 && (currentDrafted || !rated3)))
-    const isSubmitForm = ((currentAssign1 && (currentDrafted || !rated1)) || (currentAssign2 && (currentDrafted || !rated2)) || (currentAssign3 && (currentDrafted || !rated3)))
+    // const isSaveDraft = ((currentAssign1 && (currentDrafted || !rated1)) || (currentAssign2 && (currentDrafted || !rated2)) || (currentAssign3 && (currentDrafted || !rated3)))
+    // const isSubmitForm = ((currentAssign1 && (currentDrafted || !rated1)) || (currentAssign2 && (currentDrafted || !rated2)) || (currentAssign3 && (currentDrafted || !rated3)))
 
     const onSetRatingScoreHandler=(status:string,appraisalDimensionId: number,appraisalBehaviorId:number,rating:number)=>{   
         setAppraisal(v=> { 
@@ -136,116 +137,116 @@ const AppraisalFormQuickView=({appraisalEmp, open, onOpenModalChange, refreshTab
         setImprovementRated3Updated(true)  
     }
 
-    const saveDraftHandler =async () => {
-        try {               
-            var status = actions.getStatus('DRAFTED',dataDetail)  
-            var validatorList = data.appraisalRatingValidation(lang,appraisal||[])
-            var dataForm = form.getFieldsValue()
-            var empPayload =  data.appraisalFormPayload(
-                status,
-                appraisalEmp,
-                dataForm,
-                validatorList,
-                appraisal,
-                improvementRated1Updated,
-                improvementRated1List?.filter(it=>!(!it.improvement && !it.propose)).map(it=> ({id:it.id,appraisalEmpId:it.appraisalEmpId,improvement:it.improvement,propose:it.propose,refCode:'r1'})),
-                improvementRated2Updated,
-                improvementRated2List?.filter(it=>!(!it.improvement && !it.propose)).map(it=> ({id:it.id,appraisalEmpId:it.appraisalEmpId,improvement:it.improvement,propose:it.propose,refCode:'r2'})),
-                improvementRated3Updated,
-                improvementRated3List?.map(it=> ({id:it.id,appraisalEmpId:it.appraisalEmpId,improvement:it.improvement,propose:it.propose,refCode:'r3'})),
-                attachedUpdated,
-                attachedFiles
-            )
-            await services.saveItem(empPayload)
-            reloadData()
-            message.success(`Your submission is saved`)
-            refreshTable()
+    // const saveDraftHandler =async () => {
+    //     try {               
+    //         var status = actions.getStatus('DRAFTED',dataDetail)  
+    //         var validatorList = data.appraisalRatingValidation(lang,appraisal||[])
+    //         var dataForm = form.getFieldsValue()
+    //         var empPayload =  data.appraisalFormPayload(
+    //             status,
+    //             appraisalEmp,
+    //             dataForm,
+    //             validatorList,
+    //             appraisal,
+    //             improvementRated1Updated,
+    //             improvementRated1List?.filter(it=>!(!it.improvement && !it.propose)).map(it=> ({id:it.id,appraisalEmpId:it.appraisalEmpId,improvement:it.improvement,propose:it.propose,refCode:'r1'})),
+    //             improvementRated2Updated,
+    //             improvementRated2List?.filter(it=>!(!it.improvement && !it.propose)).map(it=> ({id:it.id,appraisalEmpId:it.appraisalEmpId,improvement:it.improvement,propose:it.propose,refCode:'r2'})),
+    //             improvementRated3Updated,
+    //             improvementRated3List?.map(it=> ({id:it.id,appraisalEmpId:it.appraisalEmpId,improvement:it.improvement,propose:it.propose,refCode:'r3'})),
+    //             attachedUpdated,
+    //             attachedFiles
+    //         )
+    //         await services.saveItem(empPayload)
+    //         reloadData()
+    //         message.success(`Your submission is saved`)
+    //         refreshTable()
            
-        }catch (error: any) {
-            message.error(error.message || 'Failed to submit.')
-        }
-    }
+    //     }catch (error: any) {
+    //         message.error(error.message || 'Failed to submit.')
+    //     }
+    // }
    
-    const saveSubmitHandler =async ()=> {
-        var status = actions.getStatus('DONE',appraisalEmp) 
-        var dataForm = await form.getFieldsValue()
-        data.onAppraisalFormDataValidator(lang,hasRating2,currentAssign1,currentAssign2,currentAssign3,dataForm, appraisal||[],improvementRated1List,improvementRated2List,improvementRated3List, async (requireFields,requireRating)=>{
-            var title= 'Appraisal Form'        
-            var content= `Are you sure to submit this form?`
-            if(status.checkRating==='r1'){
-                if(requireRating.find(it=> !it?.rating1)){                   
-                    alertMsg(getLable('TITTLE_REQUIRE_RATING'),requireRating.filter(it=>(!it?.rating1 || it?.rating1==0)).map(it=>{ 
-                        return {id:it.id,title:it.title,msg:lang=='KH'? `${getLable('MSG_IS_REQUIRED')}${getLable('TBL_RATING1')}`:`${getLable('TBL_RATING1')} ${getLable('MSG_IS_REQUIRED')}`} as ValidatorMsg
-                    }))
-                    return
-                }                  
-            } else if(status.checkRating==='r2'){
-                if(requireRating.find(it=> !it?.rating2)){
-                    alertMsg(getLable('TITTLE_REQUIRE_RATING'),requireRating.filter(it=>(!it?.rating2 || it?.rating2==0)).map(it=>{ 
-                        return {id:it.id,title: it.title,msg:lang=='KH'? `${getLable('MSG_IS_REQUIRED')}${getLable('TBL_RATING2')}`:`${getLable('TBL_RATING2')} ${getLable('MSG_IS_REQUIRED')}`} as ValidatorMsg
-                    }))
-                    return
-                }
-            }else if(status.checkRating==='r3'){
-                if(requireRating.find(it=> !it?.rating3)){
-                    alertMsg(getLable('TITTLE_REQUIRE_RATING'),requireRating.filter(it=>(!it?.rating3 || it?.rating3==0)).map(it=>{ 
-                        return {id:it.id,title: it.title,msg:lang=='KH'? `${getLable('MSG_IS_REQUIRED')}${getLable('TBL_RATING5')}`:`${getLable('TBL_RATING5')} ${getLable('MSG_IS_REQUIRED')}`} as ValidatorMsg
-                    }))
-                    return
-                }
-            }
-            if(requireFields.length>0) {
-                Modal.warning({
-                    title: getLable('TITTLE_REQUIRE_FIELD'),
-                    width: '45%',
-                    content: <div>{requireFields.map(it =>{
-                        return <div><b style={{color:'orange'}}>{getLable(it.title)}: </b><span>{getLable(it.msg)}</span></div>
-                    })}</div>
-                })
-                await form.validateFields()
-                await editableImprovementRated1FormRef.current?.validateFields()
-                await editableImprovementRated2FormRef.current?.validateFields()
-                await editableImprovementRated3FormRef.current?.validateFields()
-                return
-            }
-            try {            
-                Modal.confirm({
-                    title: title,
-                    content: content,
-                    onOk: async () => {
-                        try {
-                            var dataForm = form.getFieldsValue()
-                            await services.saveItem(
-                                data.appraisalFormPayload(
-                                    status,
-                                    appraisalEmp,
-                                    dataForm,
-                                    requireRating,
-                                    appraisal,
-                                    improvementRated1Updated,
-                                    improvementRated1List?.map(it=> ({id:it.id,appraisalEmpId:it.appraisalEmpId,improvement:it.improvement,propose:it.propose,refCode:'r1'})),
-                                    improvementRated2Updated,
-                                    improvementRated2List?.map(it=> ({id:it.id,appraisalEmpId:it.appraisalEmpId,improvement:it.improvement,propose:it.propose,refCode:'r2'})),
-                                    improvementRated3Updated,
-                                    improvementRated3List?.map(it=> ({id:it.id,appraisalEmpId:it.appraisalEmpId,improvement:it.improvement,propose:it.propose,refCode:'r3'})),
-                                    attachedUpdated,
-                                    attachedFiles
-                                )
-                            ) 
-                            message.success(`Appraisal form is submitted`)
-                            onOpenModalChange(false)
-                            refreshTable()
-                        } catch (error: any) {
-                            message.error(error.message || 'Failed')                       
-                        }
-                    }
-                })
+    // const saveSubmitHandler =async ()=> {
+    //     var status = actions.getStatus('DONE',appraisalEmp) 
+    //     var dataForm = await form.getFieldsValue()
+    //     data.onAppraisalFormDataValidator(lang,hasRating2,currentAssign1,currentAssign2,currentAssign3,dataForm, appraisal||[],improvementRated1List,improvementRated2List,improvementRated3List, async (requireFields,requireRating)=>{
+    //         var title= 'Appraisal Form'        
+    //         var content= `Are you sure to submit this form?`
+    //         if(status.checkRating==='r1'){
+    //             if(requireRating.find(it=> !it?.rating1)){                   
+    //                 alertMsg(getLable('TITTLE_REQUIRE_RATING'),requireRating.filter(it=>(!it?.rating1 || it?.rating1==0)).map(it=>{ 
+    //                     return {id:it.id,title:it.title,msg:lang=='KH'? `${getLable('MSG_IS_REQUIRED')}${getLable('TBL_RATING1')}`:`${getLable('TBL_RATING1')} ${getLable('MSG_IS_REQUIRED')}`} as ValidatorMsg
+    //                 }))
+    //                 return
+    //             }                  
+    //         } else if(status.checkRating==='r2'){
+    //             if(requireRating.find(it=> !it?.rating2)){
+    //                 alertMsg(getLable('TITTLE_REQUIRE_RATING'),requireRating.filter(it=>(!it?.rating2 || it?.rating2==0)).map(it=>{ 
+    //                     return {id:it.id,title: it.title,msg:lang=='KH'? `${getLable('MSG_IS_REQUIRED')}${getLable('TBL_RATING2')}`:`${getLable('TBL_RATING2')} ${getLable('MSG_IS_REQUIRED')}`} as ValidatorMsg
+    //                 }))
+    //                 return
+    //             }
+    //         }else if(status.checkRating==='r3'){
+    //             if(requireRating.find(it=> !it?.rating3)){
+    //                 alertMsg(getLable('TITTLE_REQUIRE_RATING'),requireRating.filter(it=>(!it?.rating3 || it?.rating3==0)).map(it=>{ 
+    //                     return {id:it.id,title: it.title,msg:lang=='KH'? `${getLable('MSG_IS_REQUIRED')}${getLable('TBL_RATING5')}`:`${getLable('TBL_RATING5')} ${getLable('MSG_IS_REQUIRED')}`} as ValidatorMsg
+    //                 }))
+    //                 return
+    //             }
+    //         }
+    //         if(requireFields.length>0) {
+    //             Modal.warning({
+    //                 title: getLable('TITTLE_REQUIRE_FIELD'),
+    //                 width: '45%',
+    //                 content: <div>{requireFields.map(it =>{
+    //                     return <div><b style={{color:'orange'}}>{getLable(it.title)}: </b><span>{getLable(it.msg)}</span></div>
+    //                 })}</div>
+    //             })
+    //             await form.validateFields()
+    //             await editableImprovementRated1FormRef.current?.validateFields()
+    //             await editableImprovementRated2FormRef.current?.validateFields()
+    //             await editableImprovementRated3FormRef.current?.validateFields()
+    //             return
+    //         }
+    //         try {            
+    //             Modal.confirm({
+    //                 title: title,
+    //                 content: content,
+    //                 onOk: async () => {
+    //                     try {
+    //                         var dataForm = form.getFieldsValue()
+    //                         await services.saveItem(
+    //                             data.appraisalFormPayload(
+    //                                 status,
+    //                                 appraisalEmp,
+    //                                 dataForm,
+    //                                 requireRating,
+    //                                 appraisal,
+    //                                 improvementRated1Updated,
+    //                                 improvementRated1List?.map(it=> ({id:it.id,appraisalEmpId:it.appraisalEmpId,improvement:it.improvement,propose:it.propose,refCode:'r1'})),
+    //                                 improvementRated2Updated,
+    //                                 improvementRated2List?.map(it=> ({id:it.id,appraisalEmpId:it.appraisalEmpId,improvement:it.improvement,propose:it.propose,refCode:'r2'})),
+    //                                 improvementRated3Updated,
+    //                                 improvementRated3List?.map(it=> ({id:it.id,appraisalEmpId:it.appraisalEmpId,improvement:it.improvement,propose:it.propose,refCode:'r3'})),
+    //                                 attachedUpdated,
+    //                                 attachedFiles
+    //                             )
+    //                         ) 
+    //                         message.success(`Appraisal form is submitted`)
+    //                         onOpenModalChange(false)
+    //                         refreshTable()
+    //                     } catch (error: any) {
+    //                         message.error(error.message || 'Failed')                       
+    //                     }
+    //                 }
+    //             })
                 
-            }catch (error: any) {
-                message.error(error.message || 'Failed to submit.')           
-            }            
-        })
-    }
+    //         }catch (error: any) {
+    //             message.error(error.message || 'Failed to submit.')           
+    //         }            
+    //     })
+    // }
     const alertMsg=(tittle?:string,data?:ValidatorMsg[])=>{
         Modal.warning({
             title: tittle||'',
@@ -256,19 +257,19 @@ const AppraisalFormQuickView=({appraisalEmp, open, onOpenModalChange, refreshTab
         })
     }
 
-    const submitter = {
-        searchConfig: {
-            submitText: (currentAssign1 && rated1 && !isDrafted)?'Resubmit':'Submit',
-            resetText:'Close'            
-        },
-        render: (_, defaultDoms) => {
-            return [
-              defaultDoms[0],
-              isSaveDraft  &&<Button key="1" icon={<SaveOutlined />} onClick={() => saveDraftHandler()}>Save Draft</Button>,
-              isSubmitForm&&defaultDoms[1]
-          ];
-          }
-    } as SubmitterProps 
+    // const submitter = {
+    //     searchConfig: {
+    //         submitText: (currentAssign1 && rated1 && !isDrafted)?'Resubmit':'Submit',
+    //         resetText:'Close'            
+    //     },
+    //     render: (_, defaultDoms) => {
+    //         return [
+    //           defaultDoms[0],
+    //           isSaveDraft  &&<Button key="1" icon={<SaveOutlined />} onClick={() => saveDraftHandler()}>Save Draft</Button>,
+    //           isSubmitForm&&defaultDoms[1]
+    //       ];
+    //       }
+    // } as SubmitterProps 
 
     const onChangeLanglauge=()=>{
         setLang(v=> actions.getLangauge(v))
@@ -283,10 +284,11 @@ const AppraisalFormQuickView=({appraisalEmp, open, onOpenModalChange, refreshTab
         open={open}
         onOpenChange={onOpenModalChange}       
         title={<Space>
-            <div>Performance Appraisal {dataDetail?.title} | {dataDetail?.empNo}- {dataDetail?.empName}</div>
+            <div>Probation Evaluation {appraisalEmp?.empNo}- {appraisalEmp?.empName}</div>
             <div>
-                <Tag><Typography.Text type={ dataDetail?.status  == 'COMPLETED' ? 'success' : 'warning'}> {toReadable(dataDetail?.status )}</Typography.Text></Tag>
-                {dataDetail?.actionStatus&& currentDrafted &&<span style={{
+                {/* <Tag><Typography.Text type={ appraisalEmp?.status  == 'COMPLETED' ? 'success' : 'warning'}> {toReadable(appraisalEmp?.status)}</Typography.Text></Tag> */}
+                {/* {appraisalEmp && <Status text={appraisalEmp.status} />} */}
+                {/* {dataDetail?.actionStatus&& currentDrafted &&<span style={{
                     zIndex:'auto',
                     minWidth:'20px',
                     padding:'0px 6px 1px 6px',
@@ -298,13 +300,14 @@ const AppraisalFormQuickView=({appraisalEmp, open, onOpenModalChange, refreshTab
                     whiteSpace:'nowrap' , 
                     textAlign:'center', 
                     backgroundColor:'#faad14fa',
-                }}>{toReadable(dataDetail?.actionStatus)}</span>}
+                }}>{toReadable(dataDetail?.actionStatus)}</span>} */}
             </div>
         </Space>}
         
-        submitter={submitter}
+        // submitter={submitter}
+        submitter={false}
         onFinish={ async (dataForm:any)=> {           
-             saveSubmitHandler()
+            //  saveSubmitHandler()
            return false
         }}
     >
@@ -312,7 +315,7 @@ const AppraisalFormQuickView=({appraisalEmp, open, onOpenModalChange, refreshTab
         {dataDetail && improvementRated1List && improvementRated2List && improvementRated3List && <DataView 
             loading={requestActions.request?.loading}
             lang={lang}
-            actions={{isSaveDraft,isSubmitForm}}
+            // actions={{isSaveDraft,isSubmitForm}}
             onChangeLanglauge={onChangeLanglauge}
             dataLookup={dataLookup}
             appraisalEmp={dataDetail}
@@ -350,4 +353,4 @@ const AppraisalFormQuickView=({appraisalEmp, open, onOpenModalChange, refreshTab
 
     )
 }
-export default AppraisalFormQuickView
+export default ProbationEvaluationQuickView

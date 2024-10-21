@@ -71,6 +71,7 @@ export class AppraisalStyle {
 export type ProbationEvaluationEmpList = {
     id: number
     formNo: string
+    instanceId: string
     requestedDate?: Moment
     empId: number
     empNo: string
@@ -94,7 +95,7 @@ export type ProbationEvaluationEmpList = {
     parentId?: number
     formTypeCode: string
     workflowStatus: string
-    status: String
+    status: string
     processStatus: string
     lastModifiedBy?: string
     lastModifiedDate?: Moment

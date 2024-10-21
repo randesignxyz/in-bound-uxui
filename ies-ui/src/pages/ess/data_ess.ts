@@ -21,6 +21,7 @@ export interface OpenEssDataItem {
   
   profile_draft     : SaveEssProfile;   
   ess         : EssOpenData; 
+  essOpenItem : OpenEssDataItem
 }
 
 

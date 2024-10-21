@@ -70,6 +70,7 @@ export default ({ open, onOpenModalChange, refreshTable,data}: Props) => {
       setDisbStart(true);
     }
   }
+  
   return (
     <ModalForm
       modalProps={{

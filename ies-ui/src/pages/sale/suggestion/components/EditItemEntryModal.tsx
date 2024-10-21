@@ -2,19 +2,18 @@ import type { FormModalProps } from '@/components/FormModal';
 import FormModalComp from '@/components/FormModal';
 import RemarkModal from '@/components/remark-modal';
 import { formatDate } from '@/pages/utils';
+import { CrmServiceAPI } from '@/services/crm/services';
+import { simpleRequestActions } from '@/services/model';
 import type { ApprovalStockControlDto, StockControlLess } from '@/services/sale/data';
 import { CopyOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
-import { ProDescriptions } from '@ant-design/pro-components';
+import { ProDescriptions, ProForm, ProFormSelect } from '@ant-design/pro-components';
 import type { ActionType } from '@ant-design/pro-table';
 import { EditableProTable } from '@ant-design/pro-table';
 import { Button, Card, Flex, Tag, Tooltip, Typography } from 'antd';
+import { useForm } from 'antd/es/form/Form';
 import moment from 'moment';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-
-// const layout = {
-//   labelCol: { span: 6 },
-//   wrapperCol: { span: 14 },
-// };
+import { DistributorCreate } from '../../mpu/request/data';
 
 interface Props extends FormModalProps {
   data?: StockControlLess;
@@ -23,6 +22,7 @@ interface Props extends FormModalProps {
     onRejectItem: (id: number, remark: string) => void;
     onReload?: () => void;
   };
+  role?: string;
 }
 
 const waitTime = (time: number = 100) => {
@@ -50,15 +50,15 @@ interface EditableStockItem {
   itemType?: number;
 }
 
-const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props }) => {
-  //   const [formStock] = useForm<StockControlItemLess>();
-  // const uomList = [{ id: 1, name: 'Case' }];
+const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...props }) => {
+  const requestActions = simpleRequestActions();
   const formatStringDate = 'DD-MM-YYYY';
   const actionRef = useRef<ActionType>();
   const [editableKeys, setEditableRowKeys] = useState<React.Key[]>([]);
   const [dataSource, setDataSource] = useState<EditableStockItem[]>([]);
   const { Text } = Typography;
-
+  const [distributor, setDistributor] = useState<DistributorCreate>();
+  const [form] = useForm<ApprovalStockControlDto>();
   const [isError, setIsError] = useState<boolean>(false);
 
   const [showRemark, setShowRemark] = useState<{
@@ -77,7 +77,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
               id: it.id,
               key: (Math.random() * 1000000).toFixed(0),
               batchNo:
-                it.batchNo === null || it.batchNo === '' || it.batchNo === 'n/a'
+                it.batchNo === null || it.batchNo === '' || it.batchNo == 'n/a'
                   ? undefined
                   : batchNo,
               beginningQty: it.beginningQty,
@@ -102,8 +102,8 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
 
   useEffect(() => {
     if (!props.open) return;
-    // formStock.resetFields();
 
+    props.open && form.resetFields();
     onResetActionHandler();
     return () => {
       //   formStock.resetFields();
@@ -118,7 +118,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
   // }, [dataSource]);
 
   const disabledButton = useCallback(() => {
-    return dataSource.some((o) => o.itemType === 132 && o.batchNo === null);
+    return dataSource.some((o) => o.itemType == 132 && o.batchNo == null && role == undefined);
     // return dataSource
     //   .filter((it) => it.beginningQty === 0)
     //   .filter((it) => it.status !== 'rejected')
@@ -127,6 +127,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
   }, [dataSource]);
 
   const onSubmitActionHandler = async () => {
+    await form.validateFields();
     const items = dataSource.map((it) => {
       const isBeginning = it.beginningQty > 0;
       // const batchNumber = formatDate(it.batchNo, formatStringDate);
@@ -149,11 +150,11 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
       receivedBy: data?.receivedBy,
       referenceNo: data?.referenceNo,
       items: items,
+      distributorCode: distributor?.code,
     };
     if (actionHandlers.onAddItem) {
       actionHandlers.onAddItem(item);
     }
-    // }
   };
 
   return (
@@ -225,6 +226,37 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
             ]}
           />
         </Card>
+        {role != undefined && (
+          <Card size={'small'}>
+            <ProForm submitter={false} form={form} layout="horizontal">
+              <ProFormSelect
+                showSearch
+                debounceTime={500}
+                name={'distributorId'}
+                rules={[{ required: true }]}
+                onChange={async (s: number) => {
+                  const y = await CrmServiceAPI(requestActions).findDetailCustomer({ id: s });
+                  setDistributor({
+                    code: y.code,
+                    id: y.id,
+                    name: y.name,
+                    phone: y.contacts?.[0].phone1,
+                    latitude: y?.addressList?.[0]?.latitude,
+                    longitude: y?.addressList?.[0]?.longitude,
+                  });
+                }}
+                label={'Distributor'}
+                request={async (k: { keyWords: string }) => {
+                  const data = await CrmServiceAPI(requestActions).findAllCustomer({
+                    searchValue: k.keyWords,
+                  });
+
+                  return data.items.map((p) => ({ value: p.id, label: p.name }));
+                }}
+              />
+            </ProForm>
+          </Card>
+        )}
         <Card size="small">
           <EditableProTable<EditableStockItem>
             title={() => <Text>Stock Items</Text>}
@@ -266,7 +298,8 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
                     hidden: _config.entity.itemType === 132 ? false : true,
                     rules: [
                       {
-                        required: _config.entity.itemType === 132 ? true : false,
+                        required:
+                          _config.entity.itemType === 132 && role === undefined ? true : false,
                       },
                     ],
                   };
@@ -422,7 +455,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
             setDataSource(dataSourceItems);
             actionRef.current?.reload();
             setShowRemark({ isOpen: false, record: undefined });
-            actionHandlers.onRejectItem(showRemark!.record!.id!, remarks);
+            actionHandlers.onRejectItem(showRemark?.record!.id!, remarks);
           }
         }}
       />

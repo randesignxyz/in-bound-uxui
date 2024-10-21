@@ -7,15 +7,19 @@ import numeral from "numeral";
 import { SuggestionServiceAPI } from "./services";
 import { simpleRequestActions } from "@/services/model";
 import RemarkModalForm from "../component/RemarkModal";
+
 interface Props {
     data?: StockControlLess;
     source: "ADMIN" | "WAREHHOUSE" | "CASHIER";
     actionButton?: boolean;
     onReload?: () => void;
-    onSettlement:(data?:StockControlLess)=>void;
+    onSettlement: (data?: StockControlLess) => void;
+    onMMAApprove?: (data?: StockControlLess, role?: string) => void;
+    onMMAReviewSettlement?: (data:StockControlLess) => void;
 }
 
-const ExpendableTable: React.FC<Props> = ({ data, source, onReload, onSettlement }) => {
+
+const ExpendableTable: React.FC<Props> = ({ data, source, onMMAReviewSettlement, onReload, onSettlement, onMMAApprove }) => {
     const requestActions = simpleRequestActions();
     const services = SuggestionServiceAPI(requestActions);
 
@@ -25,15 +29,43 @@ const ExpendableTable: React.FC<Props> = ({ data, source, onReload, onSettlement
             carryData?: StockControlLess;
         }
     }>();
+    const [modalApproveState, setModalApproveState] = useState<{
+        state?: {
+            visible: boolean;
+            data?: StockControlLess
+        }
+    }>();
     const [countModal, setCountModal] = useState<{
         open?: boolean;
         record?: StockControlLess;
-      }>({});
+    }>({});
     const [settleModal, setSettleModal] = useState<{
         open?: boolean;
         record?: StockControlLess;
     }>({});
 
+    const [approvalState, setApprovalState] = useState<{
+        visible?: {
+            name: "MODAL";
+            type: "ADD";
+            payload?: any;
+        }
+    }>();
+
+    const onApprove = (id?: number) => {
+        Modal.confirm({
+            title: 'Accept Suggestion.',
+            content: 'Are you sure?',
+            onOk: async () => {
+                await services.aceptRequestStock(id).then(o => {
+                    message.success("The stock request was accepted.")
+                }).catch(p => {
+                    message.error(p.message)
+                });
+                onReload?.();
+            },
+        });
+    }
     return (
         <>
             {
@@ -65,30 +97,46 @@ const ExpendableTable: React.FC<Props> = ({ data, source, onReload, onSettlement
                                                     },
                                                 });
                                             }}
+                                        // onClick={()=>onReject?.()}
                                         >
                                             Reject
                                         </Button>
                                     }
-                                    <Button
-                                        type="primary"
-                                        onClick={async () => {
-                                            Modal.confirm({
-                                                title: 'Accept Suggestion.',
-                                                content: 'Are you sure?',
-                                                onOk: async () => {
-                                                    await services.aceptRequestStock(data?.id).then(o => {
-                                                        message.success("The stock request was accepted.")
-                                                    }).catch(p => {
-                                                        message.error(p.message)
-                                                    });
+                                    {
+                                        data?.status == "settled" && <Button
+                                            type="primary"
+                                            onClick={() => {
+                                                onMMAReviewSettlement?.(data);
+                                            }}
+                                        >
+                                            Review Settlement
+                                        </Button> ||
+                                        <Button
+                                            type="primary"
+                                            onClick={async () => {
 
-                                                    onReload?.();
-                                                },
-                                            });
-                                        }}
-                                    >
-                                        Approve
-                                    </Button>
+                                                const empNo = data?.owner.split("-")[0];
+                                                const roles = await services.fetchRolByUser(empNo || "");
+                                                if (roles.length < 2) {
+                                                    if (roles.find(p => p.roleName == "ROLE_MPU_LEADER")) {
+                                                        onMMAApprove?.(data, "ROLE_MPU_LEADER");
+                                                    }
+                                                    else if (roles.find(p => p.roleName == "ROLE_VAN_SALE_LEADER")) {
+                                                        data && onApprove(data.id);
+                                                    }
+                                                    else {
+                                                        // onApprove(data.id);
+                                                    }
+                                                }
+                                                else {
+                                                    setModalApproveState({ state: { visible: true, data } });
+                                                }
+                                            }}
+                                        >
+                                            Approve
+                                        </Button>
+                                    }
+
                                 </Space>
                             </Flex>)
                         }}
@@ -163,16 +211,16 @@ const ExpendableTable: React.FC<Props> = ({ data, source, onReload, onSettlement
                     size="small"
                     footer={() => {
                         return <Flex justify="flex-end" gap={12}>
-                            {data?.invoices?.length ? <Button onClick={() => onSettlement( data )} type="primary">Settlement</Button> : ""}
+                            {data?.invoices?.length ? <Button onClick={() => onSettlement(data)} type="primary">Settlement</Button> : ""}
                             {data?.invoices?.length ? "" : <Button onClick={() => {
                                 Modal.confirm({
                                     title: 'Settlement has no invoice.',
                                     content: 'Are you sure?',
                                     onOk: async () => {
-                                      await services.onClosedRequest(data?.id);
-                                      onReload?.();
+                                        await services.onClosedRequest(data?.id);
+                                        onReload?.();
                                     },
-                                  });
+                                });
                             }} type="primary">Submit</Button>}
                         </Flex>
                     }}
@@ -302,12 +350,6 @@ const ExpendableTable: React.FC<Props> = ({ data, source, onReload, onSettlement
                                     return <Typography.Text type="warning">{r.quantity}</Typography.Text>
                                 }
                             },
-                            // data?.status == "count stock" ? {
-                            //     title: "sold Qty",
-                            //     dataIndex: "soldQty",
-                            //     align: "right",
-                            // }
-                            //     : {},
                         ]}
                     />
                 )
@@ -327,10 +369,32 @@ const ExpendableTable: React.FC<Props> = ({ data, source, onReload, onSettlement
                         message.success("Your rejection request was a success!")
                     });
                     setRemarkState({ visible: undefined });
-                    // actionRef.current?.reload?.();
                 }}
             />
-            
+            <Modal
+                open={modalApproveState?.state?.visible}
+                onCancel={() => setModalApproveState({ state: undefined })}
+                title={"Which module you want to approve Stock?"}
+                footer={false}
+            >
+                {/* <Flex vertical>
+                <Typography.Text> - MMA Approveal is the action that approve saleperson request and assign distibutor saleperson stock issue</Typography.Text>
+                <Typography.Text> - CMD approve that saleperson issue stock from internal warehouse </Typography.Text>
+                </Flex> */}
+                <Flex vertical gap={8}>
+                    <Button
+                        onClick={() => {
+                            onMMAApprove?.(modalApproveState?.state?.data, "ROLE_MPU_LEADER");
+                            setModalApproveState({ state: undefined });
+                        }}
+                    >MMA Approval</Button>
+                    <Button onClick={() => {
+                        modalApproveState?.state?.data && onApprove(modalApproveState?.state?.data.id);
+                        setModalApproveState({ state: undefined });
+                    }}>CND Approval</Button>
+                </Flex>
+            </Modal>
+
         </>
 
     )
@@ -339,6 +403,4 @@ const ExpendableTable: React.FC<Props> = ({ data, source, onReload, onSettlement
 
 export default ExpendableTable
 
-
-/// ================ invoice ================= 
 

@@ -19,7 +19,6 @@ interface Props {
     onMove?: () => void;
     setFolder: (libraryId?: number) => void;
     onFolderSelected: () => void
-
 }
 const updateTreeData = (list: DataNode[], key: React.Key, children: DataNode[]): DataNode[] => list.map((node) => {
     if (node.key === key) {
@@ -81,7 +80,7 @@ export default ({ onSearch, activeKey, moveDoc, onMove, setFolder: setFolderId, 
         })));
         setTreeFolderList(dd);
         setFolderId(folder[0]?.id);
-        setFolderSelected(folder[0]?.id.toString());
+        // setFolderSelected(folder[0]?.id.toString());
     }
 
     const [folderState, setFolderState] = useState<{
@@ -91,10 +90,8 @@ export default ({ onSearch, activeKey, moveDoc, onMove, setFolder: setFolderId, 
             data?: DataNode,
             libraryId?: string;
             code: "LIBRARY" | "FOLDER",
-
         }
     }>();
-
     useEffect(() => {
         loadFolder();
     }, [actionRef]);
@@ -156,7 +153,6 @@ export default ({ onSearch, activeKey, moveDoc, onMove, setFolder: setFolderId, 
             },
         ];
     }
-
     return (
         <>
             <Spin spinning={requestAction.request?.loading}>
@@ -177,7 +173,8 @@ export default ({ onSearch, activeKey, moveDoc, onMove, setFolder: setFolderId, 
                     <DirectoryTree
                         key={"doprdown-1"}
                         defaultExpandAll
-                        selectedKeys={view != "library" ? [] : [(folderSelected || "")]}
+                        // selectedKeys={view != "library" ? [] : [(folderSelected || "")]}
+                        selectedKeys={[folderSelected||""]}
                         expandAction={"doubleClick"}
                         onSelect={(e, { selectedNodes }) => {
                             setFolderId(selectedNodes[0].libraryId);

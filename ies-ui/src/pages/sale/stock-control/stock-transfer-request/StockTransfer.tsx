@@ -8,7 +8,7 @@ import { useForm } from "antd/es/form/Form";
 import { ActionType, EditableProTable, ProDescriptions, ProForm, ProFormTextArea } from "@ant-design/pro-components";
 import moment from "moment";
 import { formatDate } from "@/pages/utils";
-import { StockTransferRequest, StockTransferRequestItem } from "./process-flow/data";
+import { StockTransferRequest } from "./process-flow/data";
 import { CopyOutlined, DeleteOutlined, EditOutlined } from "@ant-design/icons";
 
 interface EditableStockItem {
@@ -59,7 +59,6 @@ export default (props: ActionDataFormProps) => {
     }, [props.visible])
 
     return <ActionFormWrapper {...props}
-        // title="Stock Transfer"
         title="Issue Stock"
         actionHandlers={{
             ...props.actionHandlers,
@@ -68,44 +67,42 @@ export default (props: ActionDataFormProps) => {
             },
             onCompleted: async () => {
                 const dataForm = await form.validateFields();
-                console.log(dataForm);
-
-                // Modal.confirm({
-                //     title: 'Stock Transfer',
-                //     content: 'Are you sure?',
-                //     onOk: async () => {
-                //         try {
-                //             if (!props.activityData?.taskId) {
-                //                 message.error("Activity not found.")
-                //                 return
-                //             }
-                //             if (!transferRequest) {
-                //                 message.error("Stock transfer request not found.")
-                //                 return
-                //             }
-                //             await services.stockTransferAction({
-                //                 taskId: props.activityData.taskId,
-                //                 actionName: props.action,
-                //                 payload: {
-                //                     requestId: transferRequest.id,
-                //                     items: transferRequest.items.map(it => ({
-                //                         itemId: it.itemId,
-                //                         requestItemId: it.id,
-                //                         qty: it.qty,
-                //                         uom: it.uom,
-                //                         batchNo: formatDate(moment(), "dd-MM-yyyy"),
-                //                         expiryDate: moment(),
-                //                     }))
-                //                 },
-                //                 fileIds: files.map(it => it.response),
-                //                 comment: dataForm.comment
-                //             })
-                //             props.actionHandlers?.onCancel?.(true)
-                //         } catch (error: any) {
-                //             message.error(error?.message || 'Failed to submit.')
-                //         }
-                //     }
-                // });
+                Modal.confirm({
+                    title: 'Stock Transfer',
+                    content: 'Are you sure?',
+                    onOk: async () => {
+                        try {
+                            if (!props.activityData?.taskId) {
+                                message.error("Activity not found.")
+                                return
+                            }
+                            if (!transferRequest) {
+                                message.error("Stock transfer request not found.")
+                                return
+                            }
+                            await services.stockTransferAction({
+                                taskId: props.activityData.taskId,
+                                actionName: props.action,
+                                payload: {
+                                    requestId: transferRequest.id,
+                                    items: transferRequest.items.map(it => ({
+                                        itemId: it.itemId,
+                                        requestItemId: it.id,
+                                        qty: it.qty,
+                                        uom: it.uom,
+                                        batchNo: formatDate(moment(), "dd-MM-yyyy"),
+                                        expiryDate: moment(),
+                                    }))
+                                },
+                                fileIds: files.map(it => it.response),
+                                comment: dataForm.comment
+                            })
+                            props.actionHandlers?.onCancel?.(true)
+                        } catch (error: any) {
+                            message.error(error?.message || 'Failed to submit.')
+                        }
+                    }
+                });
             },
             onSetFiles: file => setFiles(v => (file)),
             onRemoveFile: file => setFiles(v => v.filter(it => it.uid !== file.uid)),
@@ -130,11 +127,11 @@ export default (props: ActionDataFormProps) => {
                                     title:"Current Status",
                                     render:(_,r)=><Tag color={"processing"}>{r.status}</Tag>
                                 },
-                                {
-                                    title: "Remark",
-                                    dataIndex: "remarks",
-                                    span:3
-                                },
+                                // {
+                                //     title: "Remark",
+                                //     dataIndex: "remarks",
+                                //     span:3
+                                // },
                                 
                             ]}
                         />
@@ -167,19 +164,19 @@ export default (props: ActionDataFormProps) => {
                                 dataIndex: 'batchNo',
                                 valueType: 'date',
                                 ellipsis: true,
-                                formItemProps: (form, _config) => {
-                                    return (
-                                      {
-                                        ...form,
-                                        hidden: _config.entity.itemType == 132 ? false : true,
-                                        rules: [
-                                          {
-                                            required: _config.entity.itemType == 132 ? true : false
-                                          }
-                                        ],
-                                      } 
-                                    ) 
-                                  },
+                                // formItemProps: (form, _config) => {
+                                //     return (
+                                //       {
+                                //         ...form,
+                                //         hidden: _config.entity.itemType == 132 ? false : true,
+                                //         rules: [
+                                //           {
+                                //             required: _config.entity.itemType == 132 ? true : false
+                                //           }
+                                //         ],
+                                //       } 
+                                //     ) 
+                                //   },
                             },
                             {
                                 title: 'Expired Date',

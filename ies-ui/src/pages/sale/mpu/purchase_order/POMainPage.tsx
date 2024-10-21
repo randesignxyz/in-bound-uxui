@@ -149,7 +149,7 @@ const POMainPage: React.FC<Props> = () => {
                             dataIndex: "purchaseRequestNo",
                             actionProps: (item) => ({
                                 type: 'view',
-                                label: item.purchaseRequestNo || 'n/a',
+                                label: item.requestedCode || 'n/a',
                             }),
                         },
                         {

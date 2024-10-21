@@ -16,8 +16,6 @@ interface Props extends FormModalProps {
 const FolderEntryForm: React.FC<Props> = ({ code, libraryId, libraryData, data, onSave, type, ...props }: Props) => {
     const [form] = useForm<FolderCreate>();
     const requestAction = simpleRequestActions();
-    console.log(libraryData);
-    
     useEffect(() => {
         type === "EDIT" && data && form.setFieldsValue({
             name: data?.title,

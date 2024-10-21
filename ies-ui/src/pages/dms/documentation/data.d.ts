@@ -55,7 +55,13 @@ interface DocumentationAdvanceSearch{
     folderType?:string;
     division?:string;
     searchValue?:string;
+    subStatus?:string;
+    expired?:string;
+    shared?:string[];
+    isDeleted?:boolean;
 }
+
+
 
 interface DocumentationSearchByFolder{
     folderId?:number;

@@ -27,11 +27,11 @@ export default ({ document, actionRef }: Props) => {
                         <Col md={24} sm={24} lg={12}>
 
                             <ProDescriptions
-                            style={{ fontWeight: 500 }}
+                                style={{ fontWeight: 500 }}
                                 labelStyle={{
                                     width: 150
                                 }}
-                              
+
                                 column={1}
                                 dataSource={document?.documentation}
                                 actionRef={actionRef}
@@ -157,7 +157,7 @@ export default ({ document, actionRef }: Props) => {
                     <ProDescriptions
                         dataSource={document}
                         column={4}
-
+                        size="small"
                         columns={[
                             {
                                 title: "Created Date",

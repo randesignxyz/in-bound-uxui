@@ -82,6 +82,7 @@ const StockControlTabItem: React.FC<Props> = ({ data, forceUpdate }) => {
                 title: "Status",
                 dataIndex: "Status",
                 render: (_, r) => <Tag
+                  bordered={false}
                   color={
                     r.status == "pending" ? "processing"
                       : r.status == "open" || r.status == "approved" ? "success"
@@ -109,7 +110,7 @@ const StockControlTabItem: React.FC<Props> = ({ data, forceUpdate }) => {
               },
               {
                 title: "Approved Date",
-                render: (_, r) => <a>{formatDateTime(r.approvedDate)}</a>
+                render: (_, r) => formatDateTime(r.approvedDate)
               },
 
               {
@@ -279,7 +280,7 @@ const StockControlTabItem: React.FC<Props> = ({ data, forceUpdate }) => {
                                   fullScreen: false,
                                   reload: false,
                                 }}
-                               
+
                                 dataSource={data.details.pendingItems.flatMap((e) => e.items)}
                                 columns={[
                                   {
@@ -298,9 +299,9 @@ const StockControlTabItem: React.FC<Props> = ({ data, forceUpdate }) => {
                                     dataIndex: 'quantity',
                                     width: 100,
                                   },
-                               
+
                                   { title: 'UOM', dataIndex: 'uom', align: 'center' },
-                             
+
                                 ]}
                               />
                             </Tabs.TabPane>
@@ -314,52 +315,52 @@ const StockControlTabItem: React.FC<Props> = ({ data, forceUpdate }) => {
             </Tabs>
           </Card>
         )}
-          {( data.details?.pendingItems?.length ||0 >0) && (data.details?.items?.length <=0) && (
-            <Card title={"Pending Request"} size='small'>
-              <ProTable<StockDetailItemLess>
-                size="small"
-                sortDirections={['ascend']}
-                showSorterTooltip={false}
-                key="id"
-                actionRef={actionRef}
-                rowKey={(r) => {
-                  return [r.batchNo, r.itemId].filter(p => p).join(" - ");
-                }}
-                pagination={false}
-                search={false}
-                options={{
-                  setting: false,
-                  density: false,
-                  fullScreen: false,
-                  reload: false,
-                }}
-                dataSource={data?.details?.pendingItems.flatMap((e) => e.items)}
-                columns={[
-                  {
-                    title: 'Description',
-                    render: (_, r) => join([r.itemCode, r.itemName].filter(p => p), ' - '),
-                    key: 'itemId',
-                  },
-                  {
-                    title: 'SKU',
-                    dataIndex: 'description',
-                    width: 80
-                  },
-                  {
-                    title: 'Request',
-                    align: 'right',
-                    dataIndex: 'quantity',
-                    width: 100,
-                    render:(_,r)=><Typography.Text type='success'>{r.quantity}</Typography.Text>
-                  },
-                  { title: 'UOM', dataIndex: 'uom', align: 'center' },
-                ]}
-              />
-            </Card>
-          )
+        {(data.details?.pendingItems?.length || 0 > 0) && (data.details?.items?.length <= 0) && (
+          <Card title={"Pending Request"} size='small'>
+            <ProTable<StockDetailItemLess>
+              size="small"
+              sortDirections={['ascend']}
+              showSorterTooltip={false}
+              key="id"
+              actionRef={actionRef}
+              rowKey={(r) => {
+                return [r.batchNo, r.itemId].filter(p => p).join(" - ");
+              }}
+              pagination={false}
+              search={false}
+              options={{
+                setting: false,
+                density: false,
+                fullScreen: false,
+                reload: false,
+              }}
+              dataSource={data?.details?.pendingItems.flatMap((e) => e.items)}
+              columns={[
+                {
+                  title: 'Description',
+                  render: (_, r) => join([r.itemCode, r.itemName].filter(p => p), ' - '),
+                  key: 'itemId',
+                },
+                {
+                  title: 'SKU',
+                  dataIndex: 'description',
+                  width: 80
+                },
+                {
+                  title: 'Request',
+                  align: 'right',
+                  dataIndex: 'quantity',
+                  width: 100,
+                  render: (_, r) => <Typography.Text type='success'>{r.quantity}</Typography.Text>
+                },
+                { title: 'UOM', dataIndex: 'uom', align: 'center' },
+              ]}
+            />
+          </Card>
+        )
         }
         {data.details?.settlement?.stockAdjusts && (
-          <Card title={"Free of Charge"} size='small' styles={{body:{padding:0}}}>
+          <Card title={"Free of Charge"} size='small' styles={{ body: { padding: 0 } }}>
             <ProTable<StockAdjustmentItem>
               size='small'
               dataSource={data.details?.settlement?.stockAdjusts.items || []}

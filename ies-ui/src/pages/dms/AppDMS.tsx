@@ -1,4 +1,4 @@
-import { Button } from "antd"
+import { Affix, Button, Divider, Flex, Menu } from "antd"
 import FolderViewList from "./components/FolderViewList";
 import { useEffect, useState } from "react";
 import DocumentListView from "./documentation/DocumentListView";
@@ -12,6 +12,7 @@ import { Tabs } from "antd/lib";
 import ReminderListView from "./reminder/ReminderListView";
 import PageWrapper from "@/components/PageWrapper";
 import DocumentMainPage from "./documentation/MainPage";
+import Setting from "./setting";
 
 const APPDMS: React.FC = () => {
     const param = useParams();
@@ -31,33 +32,53 @@ const APPDMS: React.FC = () => {
             overflow: "auto",
             borderRadius: 5,
             boxShadow: "-1px 1px 25px -1px lightgray",
-            padding: 10
+            padding: 10,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+            marginTop: view == undefined ? "30px" : ""
         }
     );
     // useEffect(() => {
     // }, []);
     const onTableSelectd = (e: string) => {
-        if (e == "library") {
-            history.push(`${DMSPaths.workspace}/${e}`);
-        }
-        else {
-            history.push(`${DMSPaths.workspace}/${e}`);
-            setFolderId(0);
-        }
+        // if (e == "library") {
+        //     history.push(`${DMSPaths.dms}/${e}`);
+        // }
+        // else {
+        //     history.push(`${DMSPaths.dms}/${e}`);
+        //     setFolderId(0);
+        // }
     }
 
+
+    
     return (
         <>
             <div
                 style={menuStyleState}
             >
+
+
                 <FolderViewList activeKey={view == "library" ? true : false}
                     setFolder={setFolderId}
                     onSearch={(param: DocumentationSearchByFolder) => setParamByFolder(param)}
                     onFolderSelected={() => {
-                        onTableSelectd("library");
+                        // onTableSelectd("library");
+                        history.push(`${DMSPaths.dms}`);
                     }}
                 />
+
+                <Affix offsetBottom={50}  >
+                    <div style={{ backgroundColor:"white" }}>
+                    <Divider plain orientation="left">Other</Divider>
+                    <Flex vertical gap={12} >
+                        <Button icon={<TeamOutlined />} type={view=="team"?"primary":"default"} onClick={()=>history.push(`${DMSPaths.dms}/team`)} >Team</Button>
+                        <Button icon={<SettingOutlined />}  onClick={()=>history.push(`${DMSPaths.setting}/department`)} >Setting</Button>
+                    </Flex>
+                    </div>
+                </Affix>
+
             </div>
             <div
                 style={
@@ -65,10 +86,17 @@ const APPDMS: React.FC = () => {
                         {
                             marginLeft: "310px",
                             transition: "all 0.5s",
+                            marginTop: view == undefined ? "10px" : ""
                         }}
             >
+                {
+                    (view === "team" && <TeamsViewList isCurrentUser={true} actionKey={view} />) ||
+                    (view === undefined && <DocumentMainPage paramSearch={paramByFolder} />)
+                    // ( view === "setting" && <Setting/> )
+                }
+
                 {/* <DocumentMainPage/> */}
-                <Tabs
+                {/* <Tabs
                     activeKey={folderId ? "library" : view}
                     onChange={onTableSelectd}
                     type="line"
@@ -91,14 +119,15 @@ const APPDMS: React.FC = () => {
                             key: "library",
                             label: "Docuemnts",
                             icon: <FileOutlined />,
-                            children: <DocumentListView paramSearch={paramByFolder} libraryId={folderId || 0} folderId={paramByFolder?.folderId} />
+                            children:<DocumentMainPage/>
+                            // children: <DocumentListView paramSearch={paramByFolder} libraryId={folderId || 0} folderId={paramByFolder?.folderId} />
                         },
-                        {
-                            key: "share",
-                            label: "Shared",
-                            icon: <ShareAltOutlined />,
-                            children: <RecievedShare />
-                        },
+                        // {
+                        //     key: "share",
+                        //     label: "Shared",
+                        //     icon: <ShareAltOutlined />,
+                        //     children: <RecievedShare />
+                        // },
                         {
                             key: "reminder",
                             label: "Reminders",
@@ -112,7 +141,7 @@ const APPDMS: React.FC = () => {
                             children: <TeamsViewList isCurrentUser={true} actionKey={view} />
                         },
                     ]}
-                />
+                /> */}
             </div>
         </>
     )

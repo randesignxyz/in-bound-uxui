@@ -21,6 +21,8 @@ import stockIcon from '@/assets/stock.png';
 import storeIcon from '@/assets/store.png';
 import stockCountId from '@/assets/stock-count.png';
 
+import FOC from '@/assets/free.png';
+
 import type { ListMenuItem } from '@/components/ListMenu';
 import ListMenuComp from '@/components/ListMenu';
 import {
@@ -324,6 +326,13 @@ export default () => {
       description: '',
       icon: stockCountId,
       // visible: access.canAccessAllMenuDSD,
+      link: `${MPUPath.mpuCountStock}/list`,
+    }, 
+    {
+      id: 'free-of-charge',
+      name: 'Free Of Charge',
+      description: '',
+      icon: FOC,
       link: `${MPUPath.mpuCountStock}/list`,
     }, 
   ];

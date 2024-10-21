@@ -1,4 +1,6 @@
-﻿/**
+﻿import icons from "@/.umi/plugin-layout/icons";
+
+/**
  *
  * @doc https://umijs.org/docs/guides/routes
  */
@@ -1093,8 +1095,17 @@ export default [
     icon: 'FileSearchOutlined',
     component: './dms',
     access: 'canAccessDMSMenu',
-    redirect: '/dms/workspace/library',
+    // redirect: '/dms/workspace/library',
   },
+  {
+    path: '/dms/:view/*',
+    name: 'dms',
+    icon: 'FileSearchOutlined',
+    component: './dms',
+    access: 'canAccessDMSMenu',
+    hideInMenu: 'true',
+  },
+
 
   {
     path: '/dms/workspace/:view/*',

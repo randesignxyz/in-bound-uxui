@@ -11,9 +11,11 @@ import { Button, message, Modal,  Space  } from 'antd';
 import { simpleRequestActions } from '@/services/model'; 
 import { OpenEssDataItem} from '../data_ess';
 import { ServicesEss } from '../service_ess_tran';  
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import moment from 'moment';
 import dayjs from 'dayjs';
+import { useSafeState } from 'ahooks';
+import { SoundOutlined } from '@ant-design/icons';
  
 interface Props {
   open?: boolean;
@@ -25,6 +27,9 @@ interface Props {
 export default ({ open, onOpenModalChange, refreshTable,data}: Props) => {
   const requestActions = simpleRequestActions();
   const [formSubmittor] = ProForm.useForm<OpenEssDataItem>();
+
+  const [disbStart, setDisbStart] = useSafeState(false);
+
   const onSaveHandler = async (status: string) => {
     try { 
       const formData = await formSubmittor.validateFields();    
@@ -55,12 +60,17 @@ export default ({ open, onOpenModalChange, refreshTable,data}: Props) => {
   };
  
   useEffect(() => {
-      initData()
+      initData();
   }, [data])
   const initData = async () => { 
     var dataRange= [data.startDate,data.endDate];
     formSubmittor.setFieldsValue({...data,annountmentDate:dataRange}); 
+    // set disable selected date start
+    if(data.id>0){
+      setDisbStart(true);
+    }
   }
+  
   return (
     <ModalForm
       modalProps={{
@@ -69,7 +79,7 @@ export default ({ open, onOpenModalChange, refreshTable,data}: Props) => {
       form={formSubmittor}
       open={open}
       width={'30%'}
-      title={data!=null?<div>Edit Announment ESS</div>:<div>New Announment ESS</div>}
+      title={data!=null?<div><SoundOutlined /> Edit Announment ESS</div>:<div><SoundOutlined /> New Announment ESS</div>}
       submitter={{
         searchConfig: {
           submitText: 'Submit',
@@ -108,11 +118,11 @@ export default ({ open, onOpenModalChange, refreshTable,data}: Props) => {
               <ProFormDatePicker name = "endDate" rules={[{ required: true }]}  label = {<div><strong>End Date</strong></div>} />  */}
               
               <ProFormDateRangePicker label="Date" name={"annountmentDate"} rules={[{ required: true }]} 
-              fieldProps={{
-                disabledDate: (current: any) => {
-                    return current && current < dayjs().subtract(1, 'day');
-                }
-            }}/>
+                fieldProps={{  
+                  format: 'YYYY-MMM-DD',
+                  disabled: [disbStart, false],
+                  minDate: disbStart==false?dayjs().subtract(0, 'day'):undefined
+              }}/>
             </Space> 
             <ProFormTextArea name = "description" rules={[{ required: true }]}  label = {<div><strong>Description</strong></div>} />  
           </Space>

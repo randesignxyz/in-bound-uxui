@@ -22,12 +22,19 @@ interface PurchaseOrderDTO{
     purchaseOrderDate:string;
     // ownerBy:string;
     // ownerCode:string;
+    requestedBy:string;
+    
     grantAmount:number;
     discountAmount:number;
     totalAmount:number;
     status: "pending"|"rejected"|"paid",
     items?:PurchaseRequestItemCreate[];
-    purchaseRequest:PurchaseRequestDTO
+    purchaseRequest:PurchaseRequestDTO;
+    requestedCode:string;
+    distributorCode?:string;
+    distributorName?:string;
+    distributorPhone?:string;
+    foc?:{qty:number; itemName:string;itemCode:string}[]
 }
 
 

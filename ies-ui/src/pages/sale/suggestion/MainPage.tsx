@@ -16,6 +16,8 @@ import EditItemEntryModal from "./components/EditItemEntryModal";
 import SettlementModal from "./components/SettlementModal";
 import CountStockModal from "./components/CountStockModal";
 import TaskListDetailView from "./DetailView";
+import MMAApproval from "./components/MMAAproval";
+import MMASettlement from "./components/MMASettlement";
 
 interface Props {
 
@@ -54,6 +56,12 @@ const TaskListMainPage: React.FC<Props> = () => {
         record?: StockControlLess;
     }>({});
 
+    const [approvedState, setApprovedState] = useState<{
+        visible?:{
+            open:boolean;
+            record?: StockControlLess;
+        }
+    }>();
     const { data, isFetching, refetch } = useQuery(['fetch-customer-list', filter], () => suggestionService.page(filter), {
         refetchOnWindowFocus: false,
         refetchInterval: 50000
@@ -72,6 +80,13 @@ const TaskListMainPage: React.FC<Props> = () => {
         role?: string;
     }>({});
 
+    const [mmaSettilementState, setMMASettlementState] = useState<{
+        visible?:{
+            open:boolean;
+            record?: StockControlLess;
+        }
+    }>();
+
     const expendableRender = (parent: StockControlLess) => {
         return (
             <ExpendableTable
@@ -83,8 +98,10 @@ const TaskListMainPage: React.FC<Props> = () => {
                         : access.canAccessTabWarehouse ? "WAREHHOUSE"
                             : "ADMIN"
                 }
+                onMMAReviewSettlement={(data)=>setMMASettlementState({visible:{open:true, record:data}})}
                 onMMAApprove={(data, role) => {
-                    setAddNewModal({ open: true, record: data, role: role });
+                    setApprovedState({visible:{open:true, record:data}})
+                    // setAddNewModal({ open: true, record: data, role: role });
                 }}
             />
         )
@@ -234,10 +251,10 @@ const TaskListMainPage: React.FC<Props> = () => {
                         message.error(e.toString());
                     }
                     if (addNewModal.record?.items?.length === 1) {
-                        setAddNewModal({
-                            open: false,
-                            record: undefined,
-                        });
+                        // setAddNewModal({
+                        //     open: false,
+                        //     record: undefined,
+                        // });
                     }
                 },
                 onReload: () => {
@@ -253,15 +270,6 @@ const TaskListMainPage: React.FC<Props> = () => {
                         content: "are you sure?",
                         onOk: async () => {
                             try {
-                                if (item.distributorCode) {
-                                    const res = await suggestionService.onMMAApprovalStockRequest(item);
-                                    res && setAddNewModal({
-                                        open: false,
-                                        record: undefined,
-                                    });
-                                    res && message.success("success approval!")
-                                }
-                                else {
                                     const res = await suggestionService.onApprovalStockRequest(item);
                                     res && setAddNewModal({
                                         open: false,
@@ -269,7 +277,6 @@ const TaskListMainPage: React.FC<Props> = () => {
                                     });
                                     res && message.success("Data was recorded!")
                                 }
-                            }
                             catch (error) {
                             }
                             refetch();
@@ -343,6 +350,49 @@ const TaskListMainPage: React.FC<Props> = () => {
                         }
                     });
                 },
+            }}
+        />
+
+        <MMAApproval
+            open={approvedState?.visible?.open}
+            onCancel={()=>setApprovedState({visible:undefined})}
+            data={approvedState?.visible?.record}
+            onSave={(data)=>{
+                Modal.confirm({
+                    title:"Make Approve Requested",
+                    content:'are you sure?',
+                    onOk: async()=>{
+                        try {
+                                const res = await suggestionService.onMMAApprovalStockRequest(data);
+                                res && setAddNewModal({
+                                    open: false,
+                                    record: undefined,
+                                });
+                                res && message.success("success approval!")
+                        }
+                        catch (error) {
+                        }
+                        setApprovedState({visible:undefined});
+                        refetch();   
+                    }
+                })
+            }}
+        />
+
+        <MMASettlement
+            open={mmaSettilementState?.visible?.open}
+            data={mmaSettilementState?.visible?.record}
+            onCancel={()=>setMMASettlementState({visible:undefined})}
+            onSave={(data)=>{
+                Modal.confirm({
+                    title:"Approve MMA Request Settlement",
+                    content:"are you sure?",
+                    onOk:async()=>{
+                        await suggestionService.onMMASaveSettlementModel(data);
+                        setMMASettlementState({visible:undefined});
+                        refetch();
+                    }
+                })
             }}
         />
     </Spin>

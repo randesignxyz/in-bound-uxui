@@ -58,6 +58,7 @@ interface DocumentationAdvanceSearch{
     subStatus?:string;
     expired?:string;
     shared?:string[];
+    isDeleted?:boolean;
 }
 
 

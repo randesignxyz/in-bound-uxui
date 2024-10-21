@@ -1,5 +1,4 @@
 import type { DescriptionDisplayDataItem } from '@/components/Descriptions';
-import DescriptionDisplay from '@/components/Descriptions';
 import type { FormModalProps } from '@/components/FormModal';
 import FormModalComp from '@/components/FormModal';
 import RemarkModal from '@/components/remark-modal';
@@ -7,22 +6,16 @@ import { formatDate } from '@/pages/utils';
 import { CrmServiceAPI } from '@/services/crm/services';
 import type { ApprovalStockControlDto, StockControlLess } from '@/services/sale/data';
 import { CopyOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
-import { ProDescriptions, ProForm, ProFormDatePicker, ProFormSelect } from '@ant-design/pro-components';
+import { ProDescriptions, ProForm, ProFormSelect } from '@ant-design/pro-components';
 import type { ActionType } from '@ant-design/pro-table';
 import { EditableProTable } from '@ant-design/pro-table';
-import { Button, Card, Flex, Input, Tag, Tooltip, Typography, message } from 'antd';
-import { uniqueId } from 'lodash';
+import { Button, Card, Flex, Tag, Tooltip, Typography } from 'antd';
 import moment from 'moment';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { PurChaseRequestAPIService } from '../../mpu/request/service';
 import { DistributorCreate } from '../../mpu/request/data';
 import { simpleRequestActions } from '@/services/model';
 import { useForm } from 'antd/es/form/Form';
 
-// const layout = {
-//   labelCol: { span: 6 },
-//   wrapperCol: { span: 14 },
-// };
 
 interface Props extends FormModalProps {
   data?: StockControlLess;
@@ -60,8 +53,7 @@ interface EditableStockItem {
 }
 
 const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...props }) => {
-  //   const [formStock] = useForm<StockControlItemLess>();
-  // const uomList = [{ id: 1, name: 'Case' }];
+
   const requestActions = simpleRequestActions();
   const formatStringDate = 'DD-MM-YYYY';
   const actionRef = useRef<ActionType>();
@@ -110,8 +102,8 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...pr
 
   useEffect(() => {
     if (!props.open) return;
-    // formStock.resetFields();
 
+    props.open && form.resetFields();
     onResetActionHandler();
     return () => {
       //   formStock.resetFields();
@@ -150,7 +142,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...pr
   // }, [dataSource]);
 
   const disabledButton = useCallback(() => {
-    return dataSource.some(o => ((o.itemType == 132) && o.batchNo == null));
+    return dataSource.some(o => ((o.itemType == 132) && o.batchNo == null && role == undefined));
     // return dataSource
     //   .filter((it) => it.beginningQty === 0)
     //   .filter((it) => it.status !== 'rejected')
@@ -328,10 +320,10 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...pr
                   return (
                     {
                       ...form,
-                      hidden: _config.entity.itemType == 132 ? false : true,
+                      hidden:( _config.entity.itemType == 132 ) ? false : true,
                       rules: [
                         {
-                          required: _config.entity.itemType == 132 ? true : false
+                          required: (_config.entity.itemType == 132 && role == undefined) ? true : false
                         }
                       ],
                     }
@@ -474,6 +466,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...pr
         </Card>
       </Flex>
 
+          
       <RemarkModal
         title="Delete the item"
         open={showRemark?.isOpen}
@@ -488,7 +481,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...pr
             setDataSource(dataSourceItems);
             actionRef.current?.reload();
             setShowRemark({ isOpen: false, record: undefined });
-            actionHandlers.onRejectItem(showRemark!.record!.id!, remarks);
+            actionHandlers.onRejectItem(showRemark?.record!.id!, remarks);
           }
         }}
       />

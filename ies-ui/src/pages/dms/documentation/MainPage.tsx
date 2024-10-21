@@ -257,8 +257,7 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
     
     const extractFilter = <Card size="small"><LightFilter
         onFinish={(value) => {
-            setFilter((v) => ({ criteria: { advanceSearch: { ...v.criteria?.advanceSearch,expired:value.expired,shared:value.shared   } } }));
-            
+            setFilter((v) => ({ criteria: { advanceSearch: { ...v.criteria?.advanceSearch,expired:value.expired,shared:value.shared,isDeleted:value.isDeleted   } } }));
         }}
     >
         <ProFormSelect
@@ -267,7 +266,7 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
             options={[
                 {
                     label: "Expire Soon",
-                    value: "expireSoon"
+                    value: "expiredSoon"
                 },
                 {
                     label: "Expired",
@@ -391,6 +390,7 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
                 ],
                 onExtraFilterRender:()=>extractFilter,
                 onFilter: (params, page, sort) => {
+                    
                     setFilter(f => ({
                         ...f,
                         criteria: {
@@ -400,6 +400,7 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
                                 ...params,
                                 division: params?.subStatus,
                             },
+                            sort
                         },
                         pagination: page
                     }))

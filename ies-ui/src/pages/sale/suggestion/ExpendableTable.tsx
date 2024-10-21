@@ -15,10 +15,11 @@ interface Props {
     onReload?: () => void;
     onSettlement: (data?: StockControlLess) => void;
     onMMAApprove?: (data?: StockControlLess, role?: string) => void;
+    onMMAReviewSettlement?: (data:StockControlLess) => void;
 }
 
 
-const ExpendableTable: React.FC<Props> = ({ data, source, onReload, onSettlement, onMMAApprove }) => {
+const ExpendableTable: React.FC<Props> = ({ data, source, onMMAReviewSettlement, onReload, onSettlement, onMMAApprove }) => {
     const requestActions = simpleRequestActions();
     const services = SuggestionServiceAPI(requestActions);
 
@@ -96,36 +97,46 @@ const ExpendableTable: React.FC<Props> = ({ data, source, onReload, onSettlement
                                                     },
                                                 });
                                             }}
+                                        // onClick={()=>onReject?.()}
                                         >
                                             Reject
                                         </Button>
                                     }
-                                    <Button
-                                        type="primary"
-                                        onClick={async () => {
+                                    {
+                                        data?.status == "settled" && <Button
+                                            type="primary"
+                                            onClick={() => {
+                                                onMMAReviewSettlement?.(data);
+                                            }}
+                                        >
+                                            Review Settlement
+                                        </Button> ||
+                                        <Button
+                                            type="primary"
+                                            onClick={async () => {
 
-                                            const empNo = data?.owner.split("-")[0];
-                                            const roles = await services.fetchRolByUser(empNo || "");
-                                            if (roles.length < 2) {
-                                                if (roles.find(p => p.roleName == "ROLE_MPU_LEADER")) {
-                                                    // setApprovalState({visible:{ name:"MODAL", type:"ADD", payload:data }})
-                                                    onMMAApprove?.(data, "ROLE_MPU_LEADER");
-                                                }
-                                                else if (roles.find(p => p.roleName == "ROLE_VAN_SALE_LEADER")) {
-                                                    data && onApprove(data.id);
-                                                  
+                                                const empNo = data?.owner.split("-")[0];
+                                                const roles = await services.fetchRolByUser(empNo || "");
+                                                if (roles.length < 2) {
+                                                    if (roles.find(p => p.roleName == "ROLE_MPU_LEADER")) {
+                                                        onMMAApprove?.(data, "ROLE_MPU_LEADER");
+                                                    }
+                                                    else if (roles.find(p => p.roleName == "ROLE_VAN_SALE_LEADER")) {
+                                                        data && onApprove(data.id);
+                                                    }
+                                                    else {
+                                                        // onApprove(data.id);
+                                                    }
                                                 }
                                                 else {
-                                                    // onApprove(data.id);
+                                                    setModalApproveState({ state: { visible: true, data } });
                                                 }
-                                            }
-                                            else {
-                                                setModalApproveState({ state: { visible: true, data } });
-                                            }
-                                        }}
-                                    >
-                                        Approve
-                                    </Button>
+                                            }}
+                                        >
+                                            Approve
+                                        </Button>
+                                    }
+
                                 </Space>
                             </Flex>)
                         }}
@@ -360,11 +371,11 @@ const ExpendableTable: React.FC<Props> = ({ data, source, onReload, onSettlement
                     setRemarkState({ visible: undefined });
                 }}
             />
-            <Modal 
-            open={modalApproveState?.state?.visible} 
-            onClose={() => setModalApproveState({ state: undefined })} 
-            title={"Approval"}
-            footer={false}
+            <Modal
+                open={modalApproveState?.state?.visible}
+                onCancel={() => setModalApproveState({ state: undefined })}
+                title={"Which module you want to approve Stock?"}
+                footer={false}
             >
                 {/* <Flex vertical>
                 <Typography.Text> - MMA Approveal is the action that approve saleperson request and assign distibutor saleperson stock issue</Typography.Text>

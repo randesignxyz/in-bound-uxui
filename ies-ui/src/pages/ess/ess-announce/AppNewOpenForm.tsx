@@ -15,6 +15,7 @@ import { useEffect, useState } from 'react';
 import moment from 'moment';
 import dayjs from 'dayjs';
 import { useSafeState } from 'ahooks';
+import { SoundOutlined } from '@ant-design/icons';
  
 interface Props {
   open?: boolean;
@@ -77,7 +78,7 @@ export default ({ open, onOpenModalChange, refreshTable,data}: Props) => {
       form={formSubmittor}
       open={open}
       width={'30%'}
-      title={data!=null?<div>Edit Announment ESS</div>:<div>New Announment ESS</div>}
+      title={data!=null?<div><SoundOutlined /> Edit Announment ESS</div>:<div><SoundOutlined /> New Announment ESS</div>}
       submitter={{
         searchConfig: {
           submitText: 'Submit',

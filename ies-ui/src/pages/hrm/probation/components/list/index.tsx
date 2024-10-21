@@ -253,22 +253,7 @@ const ProbationList: React.FC<Props> = ({ onAdd, forceRefresh, onDetail }) => {
             }
         },
         {
-            title: 'Status', width: '100px', render: (_: any, r: any) => <><Status text={r.status} />
-                {r.actionStatus === 'DRAFTED' && r.currentDrafted ?
-                    <sup style={{
-                        zIndex: 'auto',
-                        minWidth: '20px',
-                        padding: '0px 6px 1px 6px',
-                        color: 'white',
-                        fontWeight: '400',
-                        fontSize: '10px',
-                        lineHeight: '20px',
-                        borderRadius: '10px',
-                        whiteSpace: 'nowrap',
-                        textAlign: 'center',
-                        backgroundColor: '#faad14fa',
-                    }}>Drafted</sup> : ''}
-            </>
+            title: 'Status', width: '100px', render: (_: any, r: any) => <><Status text={r.status} /></>
         },{
             title: 'Due Date', sorter: 'requestedDate', dataIndex: 'requestedDate',
             with: 210,
@@ -322,17 +307,18 @@ const ProbationList: React.FC<Props> = ({ onAdd, forceRefresh, onDetail }) => {
                                 mode="multiple"
                                 initialValue={advanceSearchParams.pendingFilter}
                                 options={[
-                                    { label: 'Submitting', value: 'SUBMITTING' },
-                                    { label: 'Submitted', value: 'SUBMITTED' },
-                                    { label: 'Reviewed', value: 'REVIEWED' }
+                                    { label: 'Form', value: 'FORM' },
+                                    { label: 'Setting', value: 'SETTING' },
+                                    { label: 'In progress', value: 'IN_PROGRESS' },
+                                    { label: 'Reviewing', value: 'REVIEWING' }
                                 ]}
                             />
 
                         </LightFilter>}
-                    {advanceSearchParams?.status === 'PENDING' && <Checkbox name="drafted" checked={advanceSearchParams?.drafted} onChange={onDraftedHandler}>Drafted{(total?.drafted || 0 > 0) && supTitle(total?.drafted || 0)}</Checkbox>}
-                    {(advanceSearchParams?.status === 'PENDING' && (total?.drafted || 0) > 1) && <Space>
+                    {/* {advanceSearchParams?.status === 'PENDING' && <Checkbox name="drafted" checked={advanceSearchParams?.drafted} onChange={onDraftedHandler}>Drafted{(total?.drafted || 0 > 0) && supTitle(total?.drafted || 0)}</Checkbox>} */}
+                    {/* {(advanceSearchParams?.status === 'PENDING' && (total?.drafted || 0) > 1) && <Space>
                         <Button type="primary" onClick={submitAllHandler}>Submit All</Button>
-                    </Space>}
+                    </Space>} */}
                 </Space>
             }
             // extraRightFilter={<Tooltip placement="bottom" title="Dowload Excel File"><Button icon={<FileExcelOutlined />} onClick={dowloandExcelHandler} /></Tooltip>}
@@ -345,7 +331,7 @@ const ProbationList: React.FC<Props> = ({ onAdd, forceRefresh, onDetail }) => {
             columns={cols}
         />
         {/* {appraisalEmp && modals.isVisible('QuickViewAppraisalForm') &&  */}
-        <ProbationEvaluationQuickView refreshTable={refeshTable} appraisalEmp={appraisalEmp} open={modals.isVisible('QuickViewAppraisalForm')} onOpenModalChange={(v: any) => !v && modals.hideModal('QuickViewAppraisalForm')} />
+        <ProbationEvaluationQuickView refreshTable={refeshTable} probationEmp={appraisalEmp} open={modals.isVisible('QuickViewAppraisalForm')} onOpenModalChange={(v: any) => !v && modals.hideModal('QuickViewAppraisalForm')} />
         {modals.isVisible('CreateProbationForm') && <ProbationRequestModal
             open={modals.isVisible('CreateProbationForm')}
             onOpenChange={(v: any) => !v && modals.hideModal('CreateProbationForm')}

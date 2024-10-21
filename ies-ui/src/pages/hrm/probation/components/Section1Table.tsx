@@ -46,7 +46,16 @@ export default({editableFormRef,addedItems,onSetAddedItems,editable,editableRati
       )
     }
 
-  return (<><EditableProTable<ProbationEvaluation>
+  return (<>
+  <div>
+      <span>Please choose rating of each criterion that describes best of your employee’s performance compares to the job expectations and goals/work priorities.</span>
+      <div style={{paddingTop:5}}>
+      <div><b>SECTION I. PERFORMANCE (Weightage: 50%)</b></div>
+      <div>What employee is expected to do/achieved during probation period.</div>
+      <div><span style={{color:'red'}}>*</span> At least 3 items are required.</div>
+      </div>
+  </div>
+  <EditableProTable<ProbationEvaluation>
     bordered
     pagination={false}
     cardProps={false}

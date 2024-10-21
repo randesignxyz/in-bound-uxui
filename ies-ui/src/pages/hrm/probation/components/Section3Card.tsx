@@ -202,7 +202,14 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
       },  
     ]
 
-  return (<EditableProTable<ProbationEvaluationResources>
+  return (<>
+  <div>
+      <div style={{paddingTop:5}}>
+      <div><b>SECTION III. BEHAVIOR (Weightage: 30%)</b></div>
+      <div>How employee is expected to behave in a proper manner.</div>
+      </div>
+  </div>
+  <EditableProTable<ProbationEvaluationResources>
     bordered
     pagination={false}
     cardProps={false}
@@ -259,5 +266,5 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
         </Table.Summary.Row>
       );
     }}
-  />)
+  /></>)
 }

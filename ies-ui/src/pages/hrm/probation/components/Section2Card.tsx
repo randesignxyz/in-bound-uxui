@@ -206,7 +206,14 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
       },  
     ]
 
-  return (<EditableProTable<ProbationEvaluation>
+  return (<>
+   <div>
+      <div style={{paddingTop:5}}>
+      <div><b>SECTION II. JOB KNOWLEDGE AND SKILLS (Weightage: 20%)</b></div>
+      <div>What relevant knowledge and skills that employee possesses and applies effectively in the job</div>
+      </div>
+  </div>
+  <EditableProTable<ProbationEvaluation>
     bordered
     pagination={false}
     cardProps={false}
@@ -274,5 +281,6 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
         </Table.Summary.Row>
       );
     }}
-  />)
+  />
+  </>)
 }

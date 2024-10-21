@@ -246,7 +246,7 @@ export default ({ profile }: Props) =>{
                         { label: "Started", value: 2 },
                         { label: "Review", value: 3 },
                         { label: "Rejected", value: 4 },
-                        { label: "Approved", value: 5 },
+                        { label: "Approved", value: 6 },
                         // { label: "Cancel Update", value: "8" }
                     ]}
                     // onChange={(e) => {setAdanceSearchItem(e.target.value);}}

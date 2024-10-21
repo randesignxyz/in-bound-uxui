@@ -1,6 +1,5 @@
 import { Button, Checkbox, Radio, Space, Spin, Tooltip, Typography } from "antd"
 import { ProbationEvaluationEmpList, AppraisalEmpStatusTotal } from "../../data.types"
-import { useModel } from 'umi'
 import TableView from "@/components/DataCrud/TableView";
 import { SortOrder } from "antd/es/table/interface";
 import { simpleRequestActions } from "@/services/model";
@@ -18,6 +17,9 @@ import { DownloadData, downloadReport } from '@/services/apiGateway';
 import { replace } from "lodash";
 import moment from "moment";
 import ProbationRequestModal from "../../ProbationRequestModal";
+import { ProbationEvaluationRequestFormNames } from "../../process-flow";
+import { history, useModel } from 'umi';
+import ProbationEvaluationQuickView from "../quick-view";
 const { Link } = Typography;
 
 interface Props {
@@ -144,14 +146,14 @@ const ProbationList: React.FC<Props> = ({ onAdd, forceRefresh, onDetail }) => {
             data: params
         }
     }
-    const dowloandExcelHandler = () => {
-        return downloadReport<{ searchValue?: string; advanceSearch?: AppraisalEmpAdvanceSearchParams }>(requestActions)(dowloandData())
-    }
+    // const dowloandExcelHandler = () => {
+    //     return downloadReport<{ searchValue?: string; advanceSearch?: AppraisalEmpAdvanceSearchParams }>(requestActions)(dowloandData())
+    // }
     const cols = [
         {
-            title: 'Employee No #',
-            sorter: 'empNo',
-            width: 140,
+            title: 'Form No #',
+            sorter: 'formNo',
+            width: 150,
             render: (_: any, r: any) => {
                 var vali = data.validationMsgList(r)
                 return (<Space size={1}>
@@ -166,21 +168,56 @@ const ProbationList: React.FC<Props> = ({ onAdd, forceRefresh, onDetail }) => {
                         type="link"
                         icon={<ExportOutlined />}
                         onClick={async () => {
-                            window.open(`/external/hrm/appraisal-submit/detail/${r.id}`, '_blank')?.focus();
+                            // window.open(`/external/hrm/probation-evaluation/detail/${r.id}`, '_blank')?.focus();
+                            window.open(`/external/data-form/${ProbationEvaluationRequestFormNames.processDefKey}/${r.instanceId}`, '_blank')?.focus();
                         }}
                     />
-                    <a onClick={() => { onDetail?.(r) }}>
+                    <a onClick={() => {history.push(`/data-form/${ProbationEvaluationRequestFormNames.processDefKey}/${r.instanceId}`)}}>
                         <Link type={(vali.length > 0) ? 'danger' : undefined}>
                             <Tooltip
                                 title={(vali.length > 0) && vali.map(it => <div><b style={{ color: 'orange' }}>{it.title}: </b>{it.msg}</div>)}
                                 overlayStyle={{ maxWidth: '500px' }}
                             >
-                                {r.empNo}
+                                {r.formNo}
                             </Tooltip>
                         </Link>
                     </a>
                 </Space>)
             },
+        },
+        {
+            title: 'Employee No',
+            dataIndex: 'empNo', sorter: 'empNo',
+            // width: 140,
+            // render: (_: any, r: any) => {
+            //     var vali = data.validationMsgList(r)
+            //     return (<Space size={1}>
+            //         <Button
+            //             type="link"
+            //             size="small"
+            //             icon={<EyeOutlined />}
+            //             onClick={() => quickViewHandler(r)}
+            //         />
+            //         <Button
+            //             size="small"
+            //             type="link"
+            //             icon={<ExportOutlined />}
+            //             onClick={async () => {
+            //                 window.open(`/external/hrm/appraisal-submit/detail/${r.id}`, '_blank')?.focus();
+            //             }}
+            //         />
+            //         <a onClick={() => { onDetail?.(r) }}>
+            //             <Link type={(vali.length > 0) ? 'danger' : undefined}>
+            //                 <Tooltip
+            //                     title={(vali.length > 0) && vali.map(it => <div><b style={{ color: 'orange' }}>{it.title}: </b>{it.msg}</div>)}
+            //                     overlayStyle={{ maxWidth: '500px' }}
+            //                 >
+            //                     {r.empNo}
+            //                 </Tooltip>
+            //             </Link>
+            //         </a>
+            //     </Space>)
+            // },
         },
         {
             title: 'Employee Name',
@@ -216,25 +253,10 @@ const ProbationList: React.FC<Props> = ({ onAdd, forceRefresh, onDetail }) => {
             }
         },
         {
-            title: 'Status', width: '100px', render: (_: any, r: any) => <><Status text={r.status} />
-                {r.actionStatus === 'DRAFTED' && r.currentDrafted ?
-                    <sup style={{
-                        zIndex: 'auto',
-                        minWidth: '20px',
-                        padding: '0px 6px 1px 6px',
-                        color: 'white',
-                        fontWeight: '400',
-                        fontSize: '10px',
-                        lineHeight: '20px',
-                        borderRadius: '10px',
-                        whiteSpace: 'nowrap',
-                        textAlign: 'center',
-                        backgroundColor: '#faad14fa',
-                    }}>Drafted</sup> : ''}
-            </>
+            title: 'Status', width: '100px', render: (_: any, r: any) => <><Status text={r.status} /></>
         },{
             title: 'Due Date', sorter: 'requestedDate', dataIndex: 'requestedDate',
-            with: 180,
+            with: 210,
             render(_: any, r: any) {
                 return r.requestedDate && formatDate(r.requestedDate,'DD-MMM-YYYY')
             }
@@ -285,20 +307,21 @@ const ProbationList: React.FC<Props> = ({ onAdd, forceRefresh, onDetail }) => {
                                 mode="multiple"
                                 initialValue={advanceSearchParams.pendingFilter}
                                 options={[
-                                    { label: 'Submitting', value: 'SUBMITTING' },
-                                    { label: 'Submitted', value: 'SUBMITTED' },
-                                    { label: 'Reviewed', value: 'REVIEWED' }
+                                    { label: 'Form', value: 'FORM' },
+                                    { label: 'Setting', value: 'SETTING' },
+                                    { label: 'In progress', value: 'IN_PROGRESS' },
+                                    { label: 'Reviewing', value: 'REVIEWING' }
                                 ]}
                             />
 
                         </LightFilter>}
-                    {advanceSearchParams?.status === 'PENDING' && <Checkbox name="drafted" checked={advanceSearchParams?.drafted} onChange={onDraftedHandler}>Drafted{(total?.drafted || 0 > 0) && supTitle(total?.drafted || 0)}</Checkbox>}
-                    {(advanceSearchParams?.status === 'PENDING' && (total?.drafted || 0) > 1) && <Space>
+                    {/* {advanceSearchParams?.status === 'PENDING' && <Checkbox name="drafted" checked={advanceSearchParams?.drafted} onChange={onDraftedHandler}>Drafted{(total?.drafted || 0 > 0) && supTitle(total?.drafted || 0)}</Checkbox>} */}
+                    {/* {(advanceSearchParams?.status === 'PENDING' && (total?.drafted || 0) > 1) && <Space>
                         <Button type="primary" onClick={submitAllHandler}>Submit All</Button>
-                    </Space>}
+                    </Space>} */}
                 </Space>
             }
-            extraRightFilter={<Tooltip placement="bottom" title="Dowload Excel File"><Button icon={<FileExcelOutlined />} onClick={dowloandExcelHandler} /></Tooltip>}
+            // extraRightFilter={<Tooltip placement="bottom" title="Dowload Excel File"><Button icon={<FileExcelOutlined />} onClick={dowloandExcelHandler} /></Tooltip>}
             actionHandlers={{
                 onAdd: createAppraisalFormHandler,
                 // onAdd: onAdd,
@@ -308,7 +331,7 @@ const ProbationList: React.FC<Props> = ({ onAdd, forceRefresh, onDetail }) => {
             columns={cols}
         />
         {/* {appraisalEmp && modals.isVisible('QuickViewAppraisalForm') &&  */}
-        {/* <AppraisalFormQuickView refreshTable={refeshTable} appraisalEmp={appraisalEmp} open={modals.isVisible('QuickViewAppraisalForm')} onOpenModalChange={(v: any) => !v && modals.hideModal('QuickViewAppraisalForm')} /> */}
+        <ProbationEvaluationQuickView refreshTable={refeshTable} probationEmp={appraisalEmp} open={modals.isVisible('QuickViewAppraisalForm')} onOpenModalChange={(v: any) => !v && modals.hideModal('QuickViewAppraisalForm')} />
         {modals.isVisible('CreateProbationForm') && <ProbationRequestModal
             open={modals.isVisible('CreateProbationForm')}
             onOpenChange={(v: any) => !v && modals.hideModal('CreateProbationForm')}

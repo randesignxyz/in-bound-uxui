@@ -1,5 +1,5 @@
 import { SimpleRequestActions } from "@/services/model";
-import { RequestItem,  SearchParams,  ProbationEvaluationEmpList,  AppraisalEmpSubmissionResult, AppraisalEmPayload, AppraisalDimension, UpdateAppraisalEmPayload, CurrentAppraisalEmpSearch, AppraisalAttachmentFile, AppraisalEmpStatusTotal, AppraisalEmpSubmitAllPayload, AppraisalOverallPerformanceRating, AppraisalMapping, EmployeeInfResult, AppraisalInstructionItem, AppraisalDataLookup, ProbationEvaluationResources, ProbationEvaluationResourcesSupport, ProbationEvaluationDetailRs, ProbationEvaluationPaloay, ProbationFormType, ProbationEvaluationRef } from "./data.types";
+import { RequestItem,  SearchParams,  ProbationEvaluationEmpList,  AppraisalEmpSubmissionResult, AppraisalEmPayload, AppraisalDimension, UpdateAppraisalEmPayload, CurrentAppraisalEmpSearch, AppraisalAttachmentFile, AppraisalEmpStatusTotal, AppraisalEmpSubmitAllPayload, AppraisalOverallPerformanceRating, AppraisalMapping, EmployeeInfResult, AppraisalInstructionItem, AppraisalDataLookup, ProbationEvaluationResources, ProbationEvaluationResourcesSupport, ProbationEvaluationDetailRs, ProbationEvaluationPayload, ProbationFormType, ProbationEvaluationRef } from "./data.types";
 import { CrudBaseServices } from "@/services/CrudBaseSevices";
 import { FetchPagingParams } from "@/components/DataCrud/TableView";
 import { execDataService, execDataService0, fetchDataItemService, fetchDataListService, fetchDataPagingService } from "@/services/apiGateway";
@@ -17,8 +17,8 @@ ProbationEvaluationEmpList,
     // actionHR: (data: TaskActionDataParam<{id: number; items: RequestItem[]}>) => Promise<void>,
     // findByInstId: (instId: number) => Promise<AppraisalEmp>
     request:(data: ProbationEvaluationData)=> Promise<any>,
-    insertAssessment:(data: TaskActionDataParam<ProbationEvaluationPaloay>)=> Promise<any>,
-    updateAssessment:(data: TaskActionDataParam<ProbationEvaluationPaloay>)=> Promise<any>,
+    insertAssessment:(data: TaskActionDataParam<ProbationEvaluationPayload>)=> Promise<any>,
+    updateAssessment:(data: TaskActionDataParam<ProbationEvaluationPayload>)=> Promise<any>,
     fetchProbationFormTypeList:()=> Promise<ProbationFormType[]>,
     fetchProbationEvaluationRefList:(empId: number)=> Promise<ProbationEvaluationRef[]>,
 
@@ -47,14 +47,14 @@ ProbationEvaluationEmpList,
                 endpoint: 'HR',
                 payload: data
             })(request),
-        insertAssessment: async (data: TaskActionDataParam<ProbationEvaluationPaloay>) =>
-            execDataService<{data: string}, TaskActionDataParam<ProbationEvaluationPaloay>>({
+        insertAssessment: async (data: TaskActionDataParam<ProbationEvaluationPayload>) =>
+            execDataService<{data: string}, TaskActionDataParam<ProbationEvaluationPayload>>({
                 actionName: 'probation-evaluation-insert-assessment',
                 endpoint: 'HR',
                 payload: data
             })(request),
-        updateAssessment: async (data: TaskActionDataParam<ProbationEvaluationPaloay>) =>
-                execDataService<{data: string}, TaskActionDataParam<ProbationEvaluationPaloay>>({
+        updateAssessment: async (data: TaskActionDataParam<ProbationEvaluationPayload>) =>
+                execDataService<{data: string}, TaskActionDataParam<ProbationEvaluationPayload>>({
                     actionName: 'probation-evaluation-assessment-submission',
                     endpoint: 'HR',
                     payload: data

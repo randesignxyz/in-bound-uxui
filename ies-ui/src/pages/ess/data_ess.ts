@@ -21,9 +21,10 @@ export interface OpenEssDataItem {
   
   profile_draft     : SaveEssProfile;   
   ess         : EssOpenData; 
+  essOpenItem : OpenEssDataItem
 }
 
 
 export type OpenAdvanceSearchParams = {
-  status: '0' | '1' | '2' | '3' | '4'; 
+  status: number; 
 };

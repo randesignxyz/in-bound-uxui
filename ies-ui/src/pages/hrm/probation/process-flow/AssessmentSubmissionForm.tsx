@@ -175,38 +175,38 @@ export default (props: ActionDataFormProps) => {
                     bordered headerBordered 
                 >
                     
-                    <div>
+                    {/* <div>
                         <span>Please choose rating of each criterion that describes best of your employee’s performance compares to the job expectations and goals/work priorities.</span>
                         <div style={{paddingTop:5}}>
                         <div><b>SECTION I. PERFORMANCE (Weightage: 50%)</b></div>
                         <div>What employee is expected to do/achieved during probation period.</div>
                         <div><span style={{color:'red'}}>*</span> At least 3 items are required.</div>
                         </div>
-                    </div>
+                    </div> */}
                     <Section1Table editable={false} editableRating={true} editableFormRef={editableFormRef1} addedItems={addedSection1} onSetAddedItems={setAddedSection1} />
                     {/*---------------------------- SECTION II. JOB KNOWLEDGE AND SKILLS (Weightage: 20%)----------------------------------*/}
-                    <div>
+                    {/* <div>
                         <div style={{paddingTop:5}}>
                         <div><b>SECTION II. JOB KNOWLEDGE AND SKILLS (Weightage: 20%)</b></div>
                         <div>What relevant knowledge and skills that employee possesses and applies effectively in the job</div>
                         </div>
-                    </div>
+                    </div> */}
                     <Section2Card editable={false} editableRating={true} editableFormRef={editableFormRef2} addedItems={addedSection2} onSetAddedItems={setAddedSection2} />
                     {/*---------------------------- SECTION III. BEHAVIOR (Weightage: 30%)-------------------------------------------------*/}
-                    <div>
+                    {/* <div>
                         <div style={{paddingTop:5}}>
                         <div><b>SECTION III. BEHAVIOR (Weightage: 30%)</b></div>
                         <div>How employee is expected to behave in a proper manner.</div>
                         </div>
-                    </div>
+                    </div> */}
                     <Section3Card editable={false} editableRating={true} editableFormRef={editableFormRef3} addedItems={addedSection3} onSetAddedItems={setAddedSection3} />
                     {/*---------------------------- SECTION IV. SUPPORT / RESOURCES NEEDED-------------------------------------------------*/}
-                    <div>
+                    {/* <div>
                         <div style={{paddingTop:5}}>
                         <div><b>SECTION IV. SUPPORT / RESOURCES NEEDED</b></div>
                         <div>What Line Manager provides/facilitates employee during probation period.</div>
                         </div>
-                    </div>
+                    </div> */}
                     <Section4Card editable={false} editableRating={true} editableFormRef={editableFormRef4} addedItems={addedSection4} onSetAddedItems={setAddedSection4} />
 
                 </ProCard>

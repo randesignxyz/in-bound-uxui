@@ -124,7 +124,14 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
     },
   ]
 
-  return (<EditableProTable<ProbationEvaluationResourcesSupport>
+  return (<>
+  <div>
+      <div style={{paddingTop:5}}>
+      <div><b>SECTION IV. SUPPORT / RESOURCES NEEDED</b></div>
+      <div>What Line Manager provides/facilitates employee during probation period.</div>
+      </div>
+  </div>
+  <EditableProTable<ProbationEvaluationResourcesSupport>
     bordered
     pagination={false}
     cardProps={false}
@@ -165,5 +172,5 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
     // }}
     value={addedItems}
     columns={cols}
-  />)
+  /></>)
 }

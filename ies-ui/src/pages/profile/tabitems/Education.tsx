@@ -159,7 +159,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
             <Space direction={"vertical"} style={{width:'100%'}}>    
                 <div style={{width:'100%',textAlign:'right'}}> 
                     <Space direction='horizontal'>
-                        <Button style={{display:access.canAccessHrESSApprovalProfile==true&&is_admin==2?'':'none'}} onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}
+                        <Button style={{display:access.canAccessHrESSAddEditProfile==true&&is_admin==2?'':'none'}} onClick={() => setModalVisible({ type: 'ADD', payload: undefined })}
                                 icon={<PlusCircleFilled />}
                                 key="1"
                                 type="primary"> Add</Button>

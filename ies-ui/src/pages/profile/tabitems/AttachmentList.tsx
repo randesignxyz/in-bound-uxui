@@ -77,7 +77,9 @@ export default ({ profile ,step,is_admin}: Props) => {
                                     case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
                                         return <FileExcelOutlined />;
                                     case "application/x-zip-compressed":
-                                        return <FileZipOutlined />;
+                                        return <FileZipOutlined />;                                    
+                                    case "application/x-compressed":
+                                        return <FileZipOutlined />;    
                                     default:
                                         return <ImagePreview
                                             version={2}
@@ -99,7 +101,8 @@ export default ({ profile ,step,is_admin}: Props) => {
                                     r.fileType=="application/vnd.ms-excel"||
                                     r.fileType=="application/vnd.openxmlformats-officedocument.wordprocessingml.document"||
                                     r.fileType=="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"||
-                                    r.fileType=="application/x-zip-compressed"
+                                    r.fileType=="application/x-zip-compressed"||
+                                    r.fileType=="application/x-compressed"
                                 ){  
                                     return(<Flex>{r.fileName}
                                         <Button title="download"

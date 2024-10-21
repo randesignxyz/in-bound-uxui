@@ -857,8 +857,8 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         [
           'ROLE_ADMIN',
-          // 'ROLE_NCM_INVENTORY_TRANSFER_SUPPORT',
-          // 'ROLE_NCM_STOCK_REQUEST_SUPPORT',
+          'ROLE_NCM_INVENTORY_TRANSFER_SUPPORT',
+          'ROLE_NCM_STOCK_REQUEST_SUPPORT',
           'ROLE_NCM_INVENTORY_ITEM_ADMIN',
           'ROLE_NCM_INVENTORY_WH_EMP_MAPPING_ADMIN',
           'ROLE_NCM_STOCK_REQUEST',

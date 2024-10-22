@@ -69,6 +69,9 @@ export default ({
           if(r.requestType=='Write-Off' && r.qty>=0){
              fieldsErr.push({field: r.itemName ,msg: `Qty(${r.qty}) Write-Off is required less than zero.`})
            }
+          if(r.requestType=='Adjustment' && r.qty==0){
+            fieldsErr.push({field: r.itemName ,msg: `Qty(${r.qty}) Adjustment is required not zero.`})
+          }
         })
       }
       if(fieldsErr.length> 0) {        

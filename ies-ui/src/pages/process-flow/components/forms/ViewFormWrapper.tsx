@@ -109,6 +109,7 @@ const ViewFormWrapper = <T extends { id: number }>(props: Props<T>) => {
       const skip = await actionHandlers?.onActionInterceptor(action, requestActions, () => { })
       if (skip) return
     }
+
     if ('flow' == action) {
       if (!state.instanceData?.processInstance?.procInstId) return;
 
@@ -143,9 +144,9 @@ const ViewFormWrapper = <T extends { id: number }>(props: Props<T>) => {
         message.error(error.message || 'Failed to export data.')
       }
 
-    }
-
-    else {
+    } else if ('cancel' == action) {
+      actions.showUserDest
+    } else {
       actions.openActionForm(
         state.instanceData?.task?.taskName || '',
         workflowProp.formKey,

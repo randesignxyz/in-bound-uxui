@@ -4,6 +4,7 @@ import { ActionDataFormProps } from "../data"
 import { ActionFormWrapper } from "../form-resources"
 import DiagramModal, { DiagramModalProps } from "./diagram"
 import UserDest, { UserDestProps } from "./UserDest"
+import DefaultActionForm from "./forms/DefaultActionForm"
 
 export type ProcessFlowModalProps = {
     type: 'action';
@@ -35,7 +36,7 @@ export const ProcessFlowModalWrapper: React.FC<ProcessFlowModalProps> = ({
 }
 
 
-export const ProcessFlowModalMngt = ({ workflowModel: { state, actions, modals }, onRefresh } : {
+export const ProcessFlowModalMngt = ({ workflowModel: { state, actions, modals }, onRefresh }: {
 
     workflowModel: IProcessWorkflowModel,
     onRefresh?: () => void;
@@ -48,8 +49,8 @@ export const ProcessFlowModalMngt = ({ workflowModel: { state, actions, modals }
                 {...state.activityData}
                 visible={modals.isVisible('Action')}
                 loading={state.loading}
-                activityData = {state.activityData}
-                ProcessInstanceData = {state.instanceData}
+                activityData={state.activityData}
+                ProcessInstanceData={state.instanceData}
 
                 actionHandlers={{
                     onCancel: reloadRequired => {
@@ -58,9 +59,9 @@ export const ProcessFlowModalMngt = ({ workflowModel: { state, actions, modals }
                     },
                     onSetRequestor: actions.setRequestor,
                     onCompletedTask: async (payload, comment) => {
-                       await actions.completeTask({payload:payload, comment:comment})
-                       onRefresh?.()
-                       return Promise.resolve()
+                        await actions.completeTask({ payload: payload, comment: comment })
+                        onRefresh?.()
+                        return Promise.resolve()
                     },
                     onSetFiles: actions.onSetFiles,
                     // onRemoveFile: actions.removeFile,
@@ -73,12 +74,12 @@ export const ProcessFlowModalMngt = ({ workflowModel: { state, actions, modals }
 
             <ProcessFlowModalWrapper
                 type='diagram'
-                loading = {state.loading}
-                onShowUserDest = {taskId => actions.showUserDest(taskId)}
+                loading={state.loading}
+                onShowUserDest={taskId => actions.showUserDest(taskId)}
                 diagramData={{
                     xml: state.diagramData?.bpmn20Xml,
                     status: state.diagramData?.status,
-                    
+
                     drawing: {
                         activities: state.diagramData?.taskList.map(it => {
                             return {
@@ -99,6 +100,8 @@ export const ProcessFlowModalMngt = ({ workflowModel: { state, actions, modals }
                 onCancel={() => modals.hideModal('ShowUserDest')}
                 data={state.userDestinationList}
             />
+
+            {modals.isVisible('cancel') && <DefaultActionForm formKey={""} action={"cancel"} />}
         </div>
     )
 }

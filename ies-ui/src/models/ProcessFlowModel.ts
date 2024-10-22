@@ -283,6 +283,10 @@ export default () => {
 
     }
 
+    const cancelAction = () => {
+        actions.showModalAction('cancel')
+    }
+
     const showUserDest = async (taskId: string) => {
         try {
             const rs = await workflowServices.findUserDestinationList({ id: taskId })
@@ -353,6 +357,7 @@ export default () => {
             showUserDest: showUserDest,
             startWorkflow: startWorkflow,
             completeTask: completeTask,
+            cancelAction: cancelAction,
             loadDiagram: loadDiagram,
             openActionForm: openActionForm,
             loadInstanceData: loadInstanceData,

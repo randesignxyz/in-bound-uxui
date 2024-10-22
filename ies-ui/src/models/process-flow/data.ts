@@ -13,6 +13,7 @@ export type WorkflowModalName = 'Start' | 'Action' | 'Diagram'
     | 'InstanceDefList' | 'ShowUserDest'
     | 'originator-setup' | 'destination-setup'
     | 'end-task-setup' | 'deployment' | 'process-info'
+    | 'cancel'
 
 export interface ModelService {
 
@@ -136,6 +137,7 @@ export interface IProcessWorkflowModel {
         completeTask: (params: { payload: any; ori?: 'taskList' | 'instView'; comment?: string; }) => Promise<void>;
         loadDiagram: (instId?: string) => Promise<void>;
         openActionForm: (activity: string, formKey: string, action: string, procInstId: string, taskId?: string, payload?: { from: Source, id: number } | any) => void;
+        cancelAction: () => void;
         loadInstanceData: (id: string, type: 'inst' | 'task') => Promise<void>;
         selectedCompanyId: (id: number) => void;
         loadInitData: () => Promise<void>;

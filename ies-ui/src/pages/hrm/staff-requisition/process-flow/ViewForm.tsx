@@ -7,6 +7,7 @@ import { EmployeeServices } from "../../services";
 import { simpleRequestActions } from "@/services/model";
 // import { at } from "lodash";
 import { useAccess } from "@umijs/max";
+import { DeleteOutlined } from "@ant-design/icons";
 
 export default (props: DataViewProps) => {
 
@@ -15,34 +16,44 @@ export default (props: DataViewProps) => {
    const requestActions = simpleRequestActions();
    const [removeFile, setRemoveFile] = useState<string[]>([]);
    const access = useAccess()
+
+
    return (
       <ViewFormWrapper<{ id: number }>
          workflowProp={props}
          attachedFiles={attatchFiles}
+
+         moreActions={(inst => [{
+            icon: <DeleteOutlined />,
+            danger: true,
+            key: 'cancel',
+            name: "Cancel",
+            action: () => {
+
+            }
+         }])}
          actionHandlers={{
             onRefresh: () => { }
          }}
          enabledUplodFile={access.canSupportHrStaffRequisition}
          onUpdateFileIds={async (procInstId, files) => {
 
-            // if (attatchFiles?.every(it => !files.some(i => i == it.fileId)))
-               Modal.confirm({
-                  title: "Upload file",
-                  content: "Are you sure?",
-                  onOk: async () => {
-                     try {
-                        const saveFiles = files.filter(it => !removeFile.some(i => i == it))
-                        const rs = await EmployeeServices.uploadFilesStaffRequisition(procInstId, saveFiles)(requestActions)
-                        setAttatchFiles(v => [...(v || []), ...saveFiles.map(it => ({ fileId: it, activity: 'Attached' }))])
-                     } catch (error: any) {
-                        message.error("Failed to upload." || error.message)
-                     }
-
-                  },
-                  onCancel: () => {
-                     setRemoveFile(files)
+            Modal.confirm({
+               title: "Upload file",
+               content: "Are you sure?",
+               onOk: async () => {
+                  try {
+                     const saveFiles = files.filter(it => !removeFile.some(i => i == it))
+                     await EmployeeServices.uploadFilesStaffRequisition(procInstId, saveFiles)(requestActions)
+                     setAttatchFiles(v => [...(v || []), ...saveFiles.map(it => ({ fileId: it, activity: 'Attached' }))])
+                  } catch (error: any) {
+                     message.error(error.message || "Failed to upload.")
                   }
-               })
+               },
+               onCancel: () => {
+                  setRemoveFile(files)
+               }
+            })
          }}
       >
          {(data) => {

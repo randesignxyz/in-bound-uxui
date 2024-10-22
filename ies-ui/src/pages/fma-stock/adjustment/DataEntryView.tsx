@@ -41,9 +41,13 @@ export default ({
     const [requestType,setRequestType] = useState<LookupData[]>([]);
 
     useEffect(()=>{
-      services.listBudgetCode().then(budgetCodes => setBudgetCodesList(budgetCodes)); 
+      // services.listBudgetCode().then(budgetCodes => setBudgetCodesList(budgetCodes)); 
       services.listLookupData({type:'INVENTORY_ADJ_REQUEST_TYPE',searchValue:''}).then(rs=>{setRequestType(rs)})
     },[])
+
+    const onFirstSelectedItem=(itemGroupName: string)=>{
+      services.listBudgetCode([itemGroupName]).then(budgetCodes => setBudgetCodesList(budgetCodes)); 
+    }
     const clear = () => {
       form.resetFields();
       setAddedItems([]);
@@ -51,6 +55,7 @@ export default ({
       setForceClearUpload((v) => v + 1);
       setItemUomList([])
       setGroupId(-1)
+      setBudgetCodesList([])
     };
     const getDataForm = async () => {
       const dataForm = await form.validateFields();
@@ -162,6 +167,7 @@ export default ({
                   onClick={() => {
                     setAddedItems([])
                     setGroupId(-1)
+                    setBudgetCodesList([])
                   }}
                 />
               </Space>
@@ -185,6 +191,7 @@ export default ({
                     setAddedItems((v) =>{
                       if(v.length==1){
                         setGroupId(-1)
+                        setBudgetCodesList([])
                       }
                        return v.filter((it) => it.key != row.key)
                     })
@@ -242,9 +249,11 @@ export default ({
                 dataIndex: 'budgetCode',
                 fieldProps: { showSearch: true },
                 valueType: 'select',
-                request: async (_, r: any) => {
-                  return budgetCodeList.map((it) => ({ label: it.code, value: it.code }));
-                },
+                // request: async (_, r: any) => {
+                //   return budgetCodeList.map((it) => ({ label: it.code, value: it.code }));
+                // }
+                valueEnum: (r) => budgetCodeList.reduce((acc, cur) => ({ ...acc, [cur.code]: cur.code }), {})   
+                ,
               }/*,
               {
                 title: 'Expected Return Date',
@@ -291,6 +300,7 @@ export default ({
           onAddItem={(item) => {
             if(groupId==-1){
               setGroupId(item.itemGroup.id)
+              onFirstSelectedItem(item.itemGroup.itemGroupName)
             }
             if (!itemUomList.some((it) => it.itemCode == item.itemCode)) {
               const newItems = item.uomList.map((it1) => ({ itemCode: item.itemCode, uom: it1 }));

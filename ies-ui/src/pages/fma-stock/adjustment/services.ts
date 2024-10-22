@@ -45,9 +45,10 @@ export const createService = (request: SimpleRequestActions) => {
             endpoint: 'FMA',
 
         }).query(request),
-        listBudgetCode: async () => fetchDataListService<BudgetList>({
+        listBudgetCode: async (groups?: string[]) => fetchDataListService<BudgetList>({
             actionName: 'fetch-budget-list',
             endpoint: 'FMA',
+            payload: {groups}
 
         }).query(request),
         detailByProcessFlow: async(instId: string) => fetchDataItemService<AdjRequestDetailResponse>({

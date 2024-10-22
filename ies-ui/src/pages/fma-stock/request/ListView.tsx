@@ -100,7 +100,7 @@ export default ({ onAdd, onEdit }: Props) => {
             </Space>
         }
         columns={[
-          {
+          /*{
             title: '',
             width: 10,
             render: (_, r) => (
@@ -113,12 +113,20 @@ export default ({ onAdd, onEdit }: Props) => {
                   />
                 </Tooltip>
             ),
-          },{
+          },*/{
             title: 'Form No',
             sorter: 'formNo',
             width: 100,
             render: (_, r) => (
               <Flex gap={5}>
+                <Tooltip title="View Data">
+                  <Button
+                    size="small"
+                    type="link"
+                    icon={<EyeFilled />}
+                    onClick={() => onDetailhandler(r)}
+                  />
+                </Tooltip>
                 <Button
                   size="small"
                   type="link"
@@ -137,6 +145,12 @@ export default ({ onAdd, onEdit }: Props) => {
               </Flex>
 
             ),
+          },
+          {
+            title: 'Reason',
+            width: 130,
+            sorter: 'reason',
+            render: (_, r) => r.reason,
           },
           {
             title: 'Expected Dt',

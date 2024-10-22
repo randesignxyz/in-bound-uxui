@@ -41,7 +41,7 @@ export default (props: ActionDataFormProps) => {
         const rs = await services.detailByProcessFlow(props.procInstId||'')
         const ds = rs.items.map(v=> ({...v,key: uniqueId().toString()}))
         setDataItems(ds)
-        await services.listBudgetCode().then(budgetCodes => setBudgetCodesList(budgetCodes)); 
+        await services.listBudgetCode([rs.groupName]).then(budgetCodes => setBudgetCodesList(budgetCodes)); 
     }
 
     return (

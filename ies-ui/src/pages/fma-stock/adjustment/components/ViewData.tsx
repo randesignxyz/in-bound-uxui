@@ -13,7 +13,7 @@ interface Props {
     title?:string; 
     instId?: string;
     forceRefresh?: number;
-    formKey: string;
+    formKey?: string;
 }
   
 export default ({title,instId, forceRefresh,formKey }: Props) => {

@@ -11,9 +11,10 @@ import FileUploader from "@/components/Attachment/FileUploader";
 import { ProcessFlowModalWrapper } from "@/pages/process-flow/components/ProcessFlowModalWrapper";
 import { StockRequestFormNames } from './process-flow';
 import { StartWorkFlowParam } from "@/services/process-workflow/params";
-import { createService } from "./services";
-import { RequisitionServiceAPI } from "@/services/pro/services";
+import { createService as createServiceAdj } from "@/pages/fma-stock/adjustment/services";
+// import { RequisitionServiceAPI } from "@/services/pro/services";
 import { BudgetCodeListItem } from "@/services/pro/data";
+import { createService } from "./services";
 
 export default ({
     id,
@@ -26,7 +27,8 @@ export default ({
   }) => {
     const requestActions = simpleRequestActions();
     const services = createService(requestActions);
-    const proServices = RequisitionServiceAPI(requestActions);
+    const servicesAdj = createServiceAdj(requestActions);
+    // const proServices = RequisitionServiceAPI(requestActions);
     const editableFormRef = useRef<EditableFormInstance>();
     const [form] = Form.useForm<StockRequest>();
     const [searchVisible, setSearcVisible] = useState(false);
@@ -41,7 +43,7 @@ export default ({
 
 
     const initData = async () => {
-      proServices.listBudgetCode().then(budgetCodes => setBudgetCodesList(budgetCodes)); 
+      // servicesAdj.listBudgetCode().then(budgetCodes => setBudgetCodesList(budgetCodes)); 
       services.listWarehouseGroup().then(whg => setWarehouseGroup(whg)); 
      
     };  
@@ -55,7 +57,11 @@ export default ({
       setForceClearUpload((v) => v + 1);
       setItemUomList([])
       setGroupId(-1)
+      setBudgetCodesList([])
     };
+    const onFirstSelectedItem=(itemGroupName: string)=>{
+      servicesAdj.listBudgetCode([itemGroupName]).then(budgetCodes => setBudgetCodesList(budgetCodes)); 
+    }
     const getDataForm = async () => {
       const dataForm = await form.validateFields();
       await editableFormRef.current?.validateFields();
@@ -93,9 +99,8 @@ export default ({
                 <Button
                   type="primary"
                   onClick={async () => {
-                    const payload = await getDataForm();
+                    await getDataForm();
                     setStartFormVisible(true);
-                    console.log('Payload',payload)
                   }}
                 >
                   Submit
@@ -153,6 +158,7 @@ export default ({
                   onClick={() => {
                     setAddedItems([])
                     setGroupId(-1)
+                    setBudgetCodesList([])
                   }}
                 />
               </Space>
@@ -176,6 +182,7 @@ export default ({
                     setAddedItems((v) =>{
                       if(v.length==1){
                         setGroupId(-1)
+                        setBudgetCodesList([])
                       }
                        return v.filter((it) => it.key != row.key)
                     })
@@ -224,9 +231,10 @@ export default ({
                 dataIndex: 'budgetCode',
                 fieldProps: { showSearch: true },
                 valueType: 'select',
-                request: async (_, r: any) => {
-                  return budgetCodeList.map((it) => ({ label: it.code, value: it.code }));
-                },
+                // request: async (_, r: any) => {
+                //   return budgetCodeList.map((it) => ({ label: it.code, value: it.code }));
+                // },
+                valueEnum: (r) => budgetCodeList.reduce((acc, cur) => ({ ...acc, [cur.code]: cur.code }), {})   
               },/*{
                 title: 'To be Returned in Full or Partial (F/P)',
                 valueType: 'select',
@@ -280,11 +288,15 @@ export default ({
           onAddItem={(item) => {
             if(groupId==-1){
               setGroupId(item.itemGroup.id)
+              onFirstSelectedItem(item.itemGroup.itemGroupName)
             }
             if (!itemUomList.some((it) => it.itemCode == item.itemCode)) {
               const newItems = item.uomList.map((it1) => ({ itemCode: item.itemCode, uom: it1 }));
+              // setItemUomList((v) => [...v, ...newItems,{itemCode: 'UN00000001',uom: 'Set1' }]);
               setItemUomList((v) => [...v, ...newItems]);
             }
+
+            console.log('itemUomList',itemUomList)
 
             const itemList = [
               ...addedItems,

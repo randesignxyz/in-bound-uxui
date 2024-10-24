@@ -35,7 +35,6 @@ export const ProcessFlowModalWrapper: React.FC<ProcessFlowModalProps> = ({
     }
 }
 
-
 export const ProcessFlowModalMngt = ({ workflowModel: { state, actions, modals }, onRefresh }: {
 
     workflowModel: IProcessWorkflowModel,
@@ -100,8 +99,6 @@ export const ProcessFlowModalMngt = ({ workflowModel: { state, actions, modals }
                 onCancel={() => modals.hideModal('ShowUserDest')}
                 data={state.userDestinationList}
             />
-
-            {modals.isVisible('cancel') && <DefaultActionForm formKey={""} action={"cancel"} />}
         </div>
     )
 }

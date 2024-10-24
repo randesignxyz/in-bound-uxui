@@ -232,9 +232,6 @@ export default () => {
 
 
     const loadTaskList = (params: TableViewSearchParams<TaskListAdvanceSearchParams>) => {
-
-        console.log(params);
-
         return workflowServices.findTaskList({
             filter: params.criteria?.advanceSearch?.status || '',
             latest: params.criteria?.advanceSearch?.latest || false,

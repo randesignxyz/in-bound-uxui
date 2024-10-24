@@ -5,35 +5,27 @@ import { useState } from "react";
 import StaffRequisitionRequestDetail from "./StaffRequisitionRequestDetail";
 import { EmployeeServices } from "../../services";
 import { simpleRequestActions } from "@/services/model";
-// import { at } from "lodash";
 import { useAccess } from "@umijs/max";
-import { DeleteOutlined } from "@ant-design/icons";
 
 export default (props: DataViewProps) => {
 
    const [attatchFiles, setAttatchFiles] = useState<{ fileId: string, activity: string }[]>()
-   // const [uploadFileIds, setUploadFileIds] = useState<string[]>([])
    const requestActions = simpleRequestActions();
    const [removeFile, setRemoveFile] = useState<string[]>([]);
    const access = useAccess()
 
+   const [status, setStatus] = useState<string>()
 
    return (
       <ViewFormWrapper<{ id: number }>
          workflowProp={props}
          attachedFiles={attatchFiles}
-
-         moreActions={(inst => [{
-            icon: <DeleteOutlined />,
-            danger: true,
-            key: 'cancel',
-            name: "Cancel",
-            action: () => {
-
-            }
-         }])}
+         cancelActionEnabled={status != undefined && status != "CANCELED"}
          actionHandlers={{
-            onRefresh: () => { }
+            onCancel: (remarks, files) => {
+               console.log(remarks, files);
+               return Promise.reject()
+            },
          }}
          enabledUplodFile={access.canSupportHrStaffRequisition}
          onUpdateFileIds={async (procInstId, files) => {
@@ -60,6 +52,7 @@ export default (props: DataViewProps) => {
             if (!data?.processInstance?.procInstId) return <Spin spinning={true} />
 
             return <StaffRequisitionRequestDetail
+               onSetStatus={setStatus}
                setAttachFiles={files => setAttatchFiles(files.map(it => ({ fileId: it, activity: 'Start' })))}
                processInstanceId={data?.processInstance?.procInstId}
             />

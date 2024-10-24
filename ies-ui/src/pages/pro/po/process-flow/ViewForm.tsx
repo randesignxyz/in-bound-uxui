@@ -26,9 +26,7 @@ export default (props: DataViewProps) => {
           setForceReload(v => v + 1)
         } catch (error: any) {
           message.error(error.message || "Failed to post.")
-
         }
-
       }
     })
   }

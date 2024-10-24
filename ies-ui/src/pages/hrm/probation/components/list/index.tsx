@@ -1,5 +1,5 @@
 import { Button, Checkbox, Radio, Space, Spin, Tooltip, Typography } from "antd"
-import { ProbationEvaluationEmpList, AppraisalEmpStatusTotal } from "../../data.types"
+import { ProbationEvaluationEmpList, ProbationEmpStatusTotal } from "../../data.types"
 import TableView from "@/components/DataCrud/TableView";
 import { SortOrder } from "antd/es/table/interface";
 import { simpleRequestActions } from "@/services/model";
@@ -43,7 +43,7 @@ const ProbationList: React.FC<Props> = ({ onAdd, forceRefresh, onDetail }) => {
     const requestActions = simpleRequestActions();
     const srv = createService({ request: requestActions })
     const [appraisalEmp, setAppraisalEmp] = useState<ProbationEvaluationEmpList>()
-    const [total, setTotal] = useState<AppraisalEmpStatusTotal>()
+    const [total, setTotal] = useState<ProbationEmpStatusTotal>()
     const [forceChange, setForceChange] = useState<number>(0)
 
     const [advanceSearchParams, setAdvanceSearchParams] = useState<AppraisalEmpAdvanceSearchParams>({
@@ -51,7 +51,7 @@ const ProbationList: React.FC<Props> = ({ onAdd, forceRefresh, onDetail }) => {
     })
     const [criteria, setCriteria] = useState<{ searchValue?: string; advanceSearch?: AppraisalEmpAdvanceSearchParams }>()
     useEffect(() => {
-        srv.findAppraisalEmpStatusTotal().then((it: AppraisalEmpStatusTotal) => {
+        srv.findProbationEmpStatusTotal().then((it: ProbationEmpStatusTotal) => {
             setTotal(it)
         })
     }, [forceChange])
@@ -292,6 +292,7 @@ const ProbationList: React.FC<Props> = ({ onAdd, forceRefresh, onDetail }) => {
                         <Radio.Button value="ALL">All</Radio.Button>
                         <Radio.Button value="PENDING" style={{ paddingRight: '5px' }}>Pending {(total?.pending || 0 > 0) && supTitle(total?.pending || 0)}</Radio.Button>
                         <Radio.Button value="COMPLETED">Completed</Radio.Button>
+                        <Radio.Button value="REJECTED">Rejected</Radio.Button>
                     </Radio.Group>
                     {advanceSearchParams?.status === 'PENDING' &&
                         <LightFilter<LightFilterProp>
@@ -307,7 +308,7 @@ const ProbationList: React.FC<Props> = ({ onAdd, forceRefresh, onDetail }) => {
                                 mode="multiple"
                                 initialValue={advanceSearchParams.pendingFilter}
                                 options={[
-                                    { label: 'Form', value: 'FORM' },
+                                    { label: 'Requested', value: 'REQUESTED' },
                                     { label: 'Setting', value: 'SETTING' },
                                     { label: 'In progress', value: 'IN_PROGRESS' },
                                     { label: 'Reviewing', value: 'REVIEWING' }

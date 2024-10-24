@@ -1,5 +1,5 @@
 import { SimpleRequestActions } from "@/services/model";
-import { RequestItem,  SearchParams,  ProbationEvaluationEmpList,  AppraisalEmpSubmissionResult, AppraisalEmPayload, AppraisalDimension, UpdateAppraisalEmPayload, CurrentAppraisalEmpSearch, AppraisalAttachmentFile, AppraisalEmpStatusTotal, AppraisalEmpSubmitAllPayload, AppraisalOverallPerformanceRating, AppraisalMapping, EmployeeInfResult, AppraisalInstructionItem, AppraisalDataLookup, ProbationEvaluationResources, ProbationEvaluationResourcesSupport, ProbationEvaluationDetailRs, ProbationEvaluationPayload, ProbationFormType, ProbationEvaluationRef } from "./data.types";
+import { RequestItem,  SearchParams,  ProbationEvaluationEmpList,  AppraisalEmpSubmissionResult, AppraisalEmPayload, AppraisalDimension, UpdateAppraisalEmPayload, CurrentAppraisalEmpSearch, AppraisalAttachmentFile, AppraisalEmpSubmitAllPayload, AppraisalOverallPerformanceRating, AppraisalMapping, EmployeeInfResult, AppraisalInstructionItem, AppraisalDataLookup, ProbationEvaluationResources, ProbationEvaluationResourcesSupport, ProbationEvaluationDetailRs, ProbationEvaluationPayload, ProbationFormType, ProbationEvaluationRef, ProbationEmpStatusTotal, ProbationEvaluationHrRevievPayload } from "./data.types";
 import { CrudBaseServices } from "@/services/CrudBaseSevices";
 import { FetchPagingParams } from "@/components/DataCrud/TableView";
 import { execDataService, execDataService0, fetchDataItemService, fetchDataListService, fetchDataPagingService } from "@/services/apiGateway";
@@ -19,6 +19,7 @@ ProbationEvaluationEmpList,
     request:(data: ProbationEvaluationData)=> Promise<any>,
     insertAssessment:(data: TaskActionDataParam<ProbationEvaluationPayload>)=> Promise<any>,
     updateAssessment:(data: TaskActionDataParam<ProbationEvaluationPayload>)=> Promise<any>,
+    hrReviewAssessment:(data: TaskActionDataParam<ProbationEvaluationHrRevievPayload>)=> Promise<any>,
     fetchProbationFormTypeList:()=> Promise<ProbationFormType[]>,
     fetchProbationEvaluationRefList:(empId: number)=> Promise<ProbationEvaluationRef[]>,
 
@@ -28,7 +29,9 @@ ProbationEvaluationEmpList,
     findCurrentAppraisalEmp:(id: number)=> Promise<CurrentAppraisalEmpSearch>
     removeAttachmentList:(id: string)=> Promise<{data: string}>
     addAppraisalAttachment: (appraisalEmpId:number,list: string[]) =>Promise<AppraisalAttachmentFile[]>
-    findAppraisalEmpStatusTotal:()=> Promise<AppraisalEmpStatusTotal>,
+    
+    findProbationEmpStatusTotal:()=> Promise<ProbationEmpStatusTotal>,
+
     findDraftedAppraisalEmpList:()=> Promise<ProbationEvaluationEmpList[]>,
     submitAllAppraisalEmps:(ids?: AppraisalEmpSubmitAllPayload[])=> Promise<{ok:string}>,
     fetchAppraisalOveralRating:(id:number)=>Promise<AppraisalOverallPerformanceRating[]>,
@@ -53,6 +56,12 @@ ProbationEvaluationEmpList,
                 endpoint: 'HR',
                 payload: data
             })(request),
+        hrReviewAssessment: async (data: TaskActionDataParam<ProbationEvaluationHrRevievPayload>) =>
+                execDataService<{data: string}, TaskActionDataParam<ProbationEvaluationHrRevievPayload>>({
+                    actionName: 'probation-evaluation-hr-review-assessment',
+                    endpoint: 'HR',
+                    payload: data
+                })(request),    
         updateAssessment: async (data: TaskActionDataParam<ProbationEvaluationPayload>) =>
                 execDataService<{data: string}, TaskActionDataParam<ProbationEvaluationPayload>>({
                     actionName: 'probation-evaluation-assessment-submission',
@@ -166,8 +175,8 @@ ProbationEvaluationEmpList,
             endpoint: 'HR',
             payload: {id: id}
         }).query(request),
-        findAppraisalEmpStatusTotal: async() => fetchDataItemService<AppraisalEmpStatusTotal>({
-            actionName: "fetch-appraisal-emp-status-total",
+        findProbationEmpStatusTotal: async() => fetchDataItemService<ProbationEmpStatusTotal>({
+            actionName: "fetch-probation-status-total",
             endpoint: 'HR',
             // payload: {id: id}
         }).query(request),

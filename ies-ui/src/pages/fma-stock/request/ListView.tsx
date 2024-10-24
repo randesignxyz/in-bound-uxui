@@ -90,8 +90,11 @@ export default ({ onAdd, onEdit }: Props) => {
                 >
                     <Radio.Button value="ALL">All</Radio.Button>
                     <Radio.Button value="PENDING">Pending</Radio.Button>                      
-                    <Badge size="small" offset={[-20, 0]} count={0}>
+                    {/* <Badge size="small" offset={[-20, 0]} count={0}>
                         <Radio.Button value="APPROVED">Approved</Radio.Button>
+                    </Badge> */}
+                    <Badge size="small" offset={[-20, 0]} count={0}>
+                        <Radio.Button value="COMPLETED">Completed</Radio.Button>
                     </Badge>
                     <Badge size="small" offset={[-20, 0]} count={0}>
                         <Radio.Button value="REJECTED">Rejected</Radio.Button>
@@ -116,7 +119,7 @@ export default ({ onAdd, onEdit }: Props) => {
           },*/{
             title: 'Form No',
             sorter: 'formNo',
-            width: 100,
+            width: 170,
             render: (_, r) => (
               <Flex gap={5}>
                 <Tooltip title="View Data">
@@ -148,7 +151,7 @@ export default ({ onAdd, onEdit }: Props) => {
           },
           {
             title: 'Reason',
-            width: 130,
+            // width: 130,
             sorter: 'reason',
             render: (_, r) => r.reason,
           },
@@ -175,7 +178,7 @@ export default ({ onAdd, onEdit }: Props) => {
           {
             title: 'Status',
             dataIndex: 'workflowStatus',
-            width: 70,
+            width: 100,
             render: (_, r) => r.workflowStatus && <Status text={r.workflowStatus} />,
           }
         ]}

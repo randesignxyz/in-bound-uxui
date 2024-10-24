@@ -335,6 +335,8 @@ const readableWords = [
     { REMOVED: 'Removed' },
     { NEW_REQUEST: 'New Request' },
     { UPDATED: 'Updated' },
+    {REVIEWING: 'Reviewing'},
+    {SETTING: 'Setting'},
     { NONE: 'NA' },
 ];
 export const toReadable = (word?: string) => {

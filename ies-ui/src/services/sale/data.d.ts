@@ -554,6 +554,7 @@ export interface StockControlLess {
   description: string;
   isActive: number;
   owner: string;
+  requestedBy?: SalesTeamWorkLess;
   approvedBy?: string;
   approvedDate?: moment.Moment;
   requestedDate?: moment.Moment;

@@ -17,7 +17,7 @@ import type { ActionType } from '@ant-design/pro-table';
 import ProTable from '@ant-design/pro-table';
 import { history, useAccess, useModel } from '@umijs/max';
 import { useSetState } from 'ahooks';
-import { Button, Col, Flex, Input, Modal, Row, Space, Table, Tag, Tooltip, Typography, message } from 'antd';
+import { Button, Col, Input, Modal, Row, Space, Table, Tag, Tooltip, Typography, message } from 'antd';
 import type { SortOrder } from 'antd/lib/table/interface';
 import numeral from 'numeral';
 import { useEffect, useRef, useState } from 'react';

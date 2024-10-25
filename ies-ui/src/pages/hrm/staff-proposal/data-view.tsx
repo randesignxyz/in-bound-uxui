@@ -5,7 +5,10 @@ import { RequestedItem, StaffProposalDetail } from "./data.types"
 import { Checkbox, Space, Spin, message } from "antd"
 import { ProCard, ProDescriptions, ProTable } from "@ant-design/pro-components"
 import { formatDate, formatter } from "@/pages/utils"
-export default ({ processInstaceId, forceReload }: { processInstaceId: string, forceReload?: number }) => {
+export default ({ processInstaceId, forceReload, onSetStatus }: {
+    processInstaceId: string, forceReload?: number,
+    onSetStatus: (status: string) => void;
+}) => {
     const requestActions = simpleRequestActions()
     const services = createService(requestActions)
     const [dataDetail, setDataDetail] = useState<StaffProposalDetail>()
@@ -14,6 +17,7 @@ export default ({ processInstaceId, forceReload }: { processInstaceId: string, f
         (async () => {
             try {
                 const rs = await services.findByInstId(processInstaceId)
+                onSetStatus(rs.status)
                 setDataDetail(rs)
             } catch (error: any) {
                 message.error(error.message || 'Failed to load data.')

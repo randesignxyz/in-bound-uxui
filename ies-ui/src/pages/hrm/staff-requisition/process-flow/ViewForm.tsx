@@ -22,6 +22,8 @@ export default (props: DataViewProps) => {
          attachedFiles={attatchFiles}
          cancelActionEnabled={status != undefined && status != "CANCELED"}
          actionHandlers={{
+            onRefresh: () => {
+            },
             onCancel: (remarks, files) => {
                console.log(remarks, files);
                return Promise.reject()

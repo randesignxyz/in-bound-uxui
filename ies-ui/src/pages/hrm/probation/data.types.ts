@@ -272,12 +272,8 @@ export type AppraisalAttachmentFile = {
     id: number
     fileId: string
 }
-export type AppraisalEmpStatusTotal = {
-    all: number
+export type ProbationEmpStatusTotal = {    
     pending?: number
-    completed?:number
-    drafted?:number
-    accessRequest:boolean
 }
 
 export type AppraisalEmpStatus = {
@@ -498,6 +494,9 @@ export type ProbationEvaluationPayload = {
     empAchievement: ProbationEmpImprovement[]
     empImprovement: ProbationEmpImprovement[]
 
+}
+export type ProbationEvaluationHrRevievPayload = {
+    instId: string
 }
 export type ProbationEvaluationRef ={
     id: string

@@ -1,5 +1,5 @@
 import { simpleRequestActions } from "@/services/model";
-import { EditableFormInstance, EditableProTable, FooterToolbar, PageContainer, ProForm, ProFormDatePicker, ProFormSelect, ProFormTextArea } from "@ant-design/pro-components";
+import { EditableFormInstance, EditableProTable, FooterToolbar, PageContainer, ProForm, ProFormCheckbox, ProFormDatePicker, ProFormSelect, ProFormTextArea } from "@ant-design/pro-components";
 import { Button, Card, Col, Form, Row, Space, Spin, message } from "antd";
 import { history } from 'umi';
 import { StockRequest, StockRequestItem, WarehouseGroup } from "./data.types";
@@ -12,7 +12,6 @@ import { ProcessFlowModalWrapper } from "@/pages/process-flow/components/Process
 import { StockRequestFormNames } from './process-flow';
 import { StartWorkFlowParam } from "@/services/process-workflow/params";
 import { createService as createServiceAdj } from "@/pages/fma-stock/adjustment/services";
-// import { RequisitionServiceAPI } from "@/services/pro/services";
 import { BudgetCodeListItem } from "@/services/pro/data";
 import { createService } from "./services";
 
@@ -28,7 +27,6 @@ export default ({
     const requestActions = simpleRequestActions();
     const services = createService(requestActions);
     const servicesAdj = createServiceAdj(requestActions);
-    // const proServices = RequisitionServiceAPI(requestActions);
     const editableFormRef = useRef<EditableFormInstance>();
     const [form] = Form.useForm<StockRequest>();
     const [searchVisible, setSearcVisible] = useState(false);
@@ -43,9 +41,7 @@ export default ({
 
 
     const initData = async () => {
-      // servicesAdj.listBudgetCode().then(budgetCodes => setBudgetCodesList(budgetCodes)); 
-      services.listWarehouseGroup().then(whg => setWarehouseGroup(whg)); 
-     
+      services.listWarehouseGroup().then(whg => setWarehouseGroup(whg));      
     };  
     useEffect(() => {
       initData();
@@ -64,12 +60,13 @@ export default ({
     }
     const getDataForm = async () => {
       const dataForm = await form.validateFields();
+
+      console.log('dataForm', dataForm)
       await editableFormRef.current?.validateFields();
       if ((addedItems.length || 0) == 0) {
         message.error('Please add some request items.');
         return Promise.reject();
       }
-      // console.log('addedItems: ',addedItems.map(it => (it.returnDate)))
       return {
         ...dataForm,
         id: type == 'EDIT' ? id : undefined,
@@ -120,34 +117,20 @@ export default ({
                   name={'reason'}
                 />
               </Col>
-              <Col flex={'200px'}>     
-                {warehouseGroupList&&
-                <ProFormSelect
-                  // initialValue={warehouse?warehouse?.warehouseCode:''}
-                  options={warehouseGroupList.map(i=>({label:i.name, value: i.code}))}
-                  rules={[{ required: true, whitespace: true }]}
-                  label="From Warehouse"
-                  name={'warehouseFrom'}
-                />}       
-              </Col>             
-              {/* <Col flex={'200px'}>
-                <ProFormDatePicker
-                  rules={[
-                    {
-                      required: true,
-                      validator: (rules, value) => {
-                        if ((value as Moment).startOf('day').isBefore(moment().startOf('day'))) {
-                          return Promise.reject('Request date cannot be back date.');
-                        } else {
-                          return Promise.resolve();
-                        }
-                      },
-                    },
-                  ]}
-                  label=" Expected date"
-                  name={'requestDate'}
-                />               
-              </Col>              */}
+              <Col flex={'200px'}>   
+                <Row>
+                  {warehouseGroupList&&
+                  <ProFormSelect
+                    options={warehouseGroupList.map(i=>({label:i.name, value: i.code}))}
+                    rules={[{ required: true, whitespace: true }]}
+                    label="From Warehouse"
+                    name={'warehouseFrom'}
+                  />}       
+                </Row>  
+                <Row>                   
+                  <ProFormCheckbox name={'delivery'}>Delivery</ProFormCheckbox>
+                </Row>               
+              </Col> 
             </Row>           
           </Card>
           <Card
@@ -235,26 +218,7 @@ export default ({
                 //   return budgetCodeList.map((it) => ({ label: it.code, value: it.code }));
                 // },
                 valueEnum: (r) => budgetCodeList.reduce((acc, cur) => ({ ...acc, [cur.code]: cur.code }), {})   
-              },/*{
-                title: 'To be Returned in Full or Partial (F/P)',
-                valueType: 'select',
-                width: 110,
-                dataIndex: 'returnType',
-                fieldProps: { rows: 1, maxLength: 110 },
-                valueEnum: (r) => ['F','P'].reduce((acc, cur) => ({ ...acc, [cur]: cur }), {})    
-              },
-              {
-                title: 'Expected Return Date',
-                width: 110,
-                dataIndex: 'returnDate',
-                fieldProps: { style: { width: 110 }},
-                valueType: 'date',                
-                formItemProps: {rules:[
-                  {
-                    required: false
-                  },
-                ]},
-              }, */           
+              },         
               {
                 title: 'Remarks',
                 valueType: 'textarea',
@@ -321,7 +285,7 @@ export default ({
           visible={startFormVisible}
           actionHandlers={{
             onStartWorkflow: async (processDef, formKey, buId, requestor, comment) => {
-              const dataForm = await getDataForm();
+              const dataForm = await getDataForm();             
               const data: StartWorkFlowParam<StockRequest> = {
                 processDef: processDef,
                 formKey: formKey,
@@ -331,6 +295,7 @@ export default ({
                 payload: dataForm,
               };
               try {
+                console.log('NCM Request: ',data)
                 const rs = await services.request(data);
                 message.success(
                   `Your request is submitted. Please track the request with form no ${rs.formNo} `,

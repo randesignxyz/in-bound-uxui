@@ -24,10 +24,17 @@ export default (props: DataViewProps) => {
          actionHandlers={{
             onRefresh: () => {
             },
-            onCancel: (remarks, files) => {
-               console.log(remarks, files);
+            onCancel: async (remarks, files) => {
+               if (props.type == 'inst' && props.id) {
+                  try {
+                     await EmployeeServices.cancelRequisitionRequest({ processInstanceId: props.id, remarks, fileIds: files.map(it => it.response) })(requestActions)
+                     return Promise.resolve()
+                  } catch (error) {
+                  }
+               }
                return Promise.reject()
             },
+
          }}
          enabledUplodFile={access.canSupportHrStaffRequisition}
          onUpdateFileIds={async (procInstId, files) => {

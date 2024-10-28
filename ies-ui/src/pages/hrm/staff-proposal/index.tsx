@@ -71,6 +71,7 @@ export default () => {
                     { label: "Pending", value: "PENDING" },
                     { label: "Completed", value: "COMPLETED" },
                     { label: "Rejected", value: "REJECTED" },
+                    { label: "Canceled", value: "CANCELED" },
                 ]
             },
             subStatusProps: undefined,

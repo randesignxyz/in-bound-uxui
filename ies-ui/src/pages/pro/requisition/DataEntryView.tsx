@@ -74,6 +74,7 @@ export default ({
   const [fileIds, setFileIds] = useState<string[]>([]);
   const [bu, setBu] = useState<BU[]>([])
   const [selectedBu, setSelectedBu] = useState(0)
+  const [selector, setSelector] = useState<string>()
   const { ref, inView } = useInView({});
 
   const clear = () => {
@@ -113,7 +114,6 @@ export default ({
   useEffect(() => {
     if (selectedBu > 0) {
       setItemUomList([])
-      console.log('selectedBu', selectedBu);
       changeBu(selectedBu)
     }
 
@@ -190,7 +190,6 @@ export default ({
     form={form}
     onValuesChange={(changeValue, values) => {
       const { budgetCodeRequired, service } = changeValue;
-
       if ('service' in changeValue) {
         setIsService(service);
       }
@@ -328,7 +327,9 @@ export default ({
                 type="link"
                 danger
                 onClick={() => {
-                  setAddedItems((v) => v.filter((it) => it.key != row.key));
+                  const newList = addedItems.filter((it) => it.key != row.key)
+                  setAddedItems((v) => newList);
+                  newList.length == 0 && setSelector(undefined)
                   form.setFieldsValue({
                     totalAmount: addedItems
                       .filter((it) => it.key != row.key)
@@ -553,11 +554,13 @@ export default ({
       </PageContainer>}
       <SearchItemList
         buId={selectedBu}
+        selector={selector}
         width={1000}
         open={searchVisible}
         onOpenChange={setSearcVisible}
         addedItems={addedItems?.map((it) => it.itemId)}
         onAddItem={(item) => {
+          setSelector(item.itemGroup.selector || 'N/A')
           if (!itemUomList.some((it) => it.itemCode == item.itemCode)) {
             const newItems = item.uomList.map((it1) => ({ itemCode: item.itemCode, uom: it1, buId: item.buId ?? 1 }));
             setItemUomList((v) => [...(v.filter(it1 => it1.itemCode != item.itemCode)), ...newItems]);

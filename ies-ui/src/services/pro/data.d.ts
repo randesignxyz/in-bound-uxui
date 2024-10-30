@@ -34,6 +34,7 @@ export interface ItemListItem {
   lastPurchaseCurr?: string;
   itemGroup: {
     itemGroupName: string;
+    selector?: string;
   };
 }
 
@@ -44,6 +45,7 @@ export interface ItemDetail extends ItemListItem {
 export interface ItemGroupListItem {
   id: number;
   itemGroupName: string;
+  selector?: string;
 }
 
 export interface Requistion {

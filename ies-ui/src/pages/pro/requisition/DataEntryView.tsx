@@ -1,6 +1,6 @@
 import FileUploader from '@/components/Attachment/FileUploader';
 import { ProcessFlowModalWrapper } from '@/pages/process-flow/components/ProcessFlowModalWrapper';
-import { formatter } from '@/pages/utils';
+import { formatter1 } from '@/pages/utils';
 import { simpleRequestActions } from '@/services/model';
 import {
   BudgetCodeListItem,
@@ -357,7 +357,6 @@ export default ({
           }}
           recordCreatorProps={{
             creatorButtonText: 'Add Item ',
-
             onClick: () => {
               setSearcVisible(true);
             },
@@ -400,16 +399,16 @@ export default ({
               title: 'Unit Price',
               dataIndex: 'unitPrice',
               width: 130,
+              valueType: 'digit',
               fieldProps: { style: { width: 120 } },
-              valueType: 'money',
-              formItemProps: { rules: [{ required: true }], style: { width: '130px' } },
+              formItemProps: { rules: [{ required: true }], style: { width: '130px' }, },
             },
             {
               title: 'Amount',
               width: 130,
               align: 'right',
               editable: false,
-              renderText: (_, record) => formatter.format(record.qty * record.unitPrice),
+              renderText: (_, record) => formatter1.format(record.qty * record.unitPrice),
             },
             {
               title: 'Budget.Code',
@@ -529,7 +528,11 @@ export default ({
         <Col flex={'200px'}>
           <ProFormMoney
             placeholder={''}
-            fieldProps={{ readOnly: true }}
+
+            fieldProps={{
+              readOnly: true,
+              formatter: (value) => formatter1.format(value || 0),
+            }}
             name={'totalAmount'}
           />
         </Col>

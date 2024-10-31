@@ -43,6 +43,11 @@ const ProbationEvaluationQuickView=({probationEmp, open, onOpenModalChange, refr
     useEffect(()=>{
         loadData()
     },[probationEmp?.instanceId])
+    const confirmedStatusList = [
+        {status:'CONFIRMED', desc:'Confirmed Probation'},
+        {status:'EXTENDED', desc:'Extended Probation Until: '},
+        {status:'TERMINATED', desc:'Terminated'}
+    ]
 
     const loadData = async () => {
         if (!probationEmp?.instanceId) return;
@@ -87,14 +92,21 @@ const ProbationEvaluationQuickView=({probationEmp, open, onOpenModalChange, refr
                 size="small"
                 bordered headerBordered 
             >                  
-            <Descriptions column={3}>
+            <Descriptions column={5}>
             <Descriptions.Item label='Employee Id'>{probationEmp.empNo} </Descriptions.Item>
             <Descriptions.Item label='Employee Name'>{probationEmp.empName} </Descriptions.Item>
             <Descriptions.Item label='Hired Date'>{probationEmp?.joinedDate&&formatDate(probationEmp?.joinedDate)}</Descriptions.Item>
+            
 
-            <Descriptions.Item label='Position'>{probationEmp.jobTitle}</Descriptions.Item>
+            <Descriptions.Item label='Decision by Line Manager' span={2}>
+                {confirmedStatusList.find(v=> v.status==probaRequest?.probationEvaluation?.confirmedStatus)?.desc} {probaRequest?.probationEvaluation?.confirmedStatus==='EXTENDED'? formatDate(probaRequest?.probationEvaluation?.extendedDate):''}
+            </Descriptions.Item>           
             <Descriptions.Item label='Function'>{probationEmp.departmentName} </Descriptions.Item>
             <Descriptions.Item label='Company'>{probationEmp.buName}</Descriptions.Item>
+            <Descriptions.Item label='Position'>{probationEmp.jobTitle}</Descriptions.Item>
+
+            <Descriptions.Item label='Ref' span={2}>{probaRequest?.probationEvaluation?.ref?.formNo}</Descriptions.Item>
+
 
             </Descriptions>
         </ProCard>}

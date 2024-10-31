@@ -20,6 +20,7 @@ ProbationEvaluationEmpList,
     insertAssessment:(data: TaskActionDataParam<ProbationEvaluationPayload>)=> Promise<any>,
     updateAssessment:(data: TaskActionDataParam<ProbationEvaluationPayload>)=> Promise<any>,
     hrReviewAssessment:(data: TaskActionDataParam<ProbationEvaluationHrRevievPayload>)=> Promise<any>,
+    mboAssessment:(data: TaskActionDataParam<ProbationEvaluationHrRevievPayload>)=> Promise<any>,
     fetchProbationFormTypeList:()=> Promise<ProbationFormType[]>,
     fetchProbationEvaluationRefList:(empId: number)=> Promise<ProbationEvaluationRef[]>,
 
@@ -61,7 +62,13 @@ ProbationEvaluationEmpList,
                     actionName: 'probation-evaluation-hr-review-assessment',
                     endpoint: 'HR',
                     payload: data
-                })(request),    
+                })(request),  
+        mboAssessment: async (data: TaskActionDataParam<ProbationEvaluationHrRevievPayload>) =>
+            execDataService<{data: string}, TaskActionDataParam<ProbationEvaluationHrRevievPayload>>({
+                actionName: 'probation-evaluation-mbo-assessment',
+                endpoint: 'HR',
+                payload: data
+            })(request),           
         updateAssessment: async (data: TaskActionDataParam<ProbationEvaluationPayload>) =>
                 execDataService<{data: string}, TaskActionDataParam<ProbationEvaluationPayload>>({
                     actionName: 'probation-evaluation-assessment-submission',
@@ -74,10 +81,10 @@ ProbationEvaluationEmpList,
                 endpoint: 'HR'
             }).query(request),            
         fetchProbationEvaluationRefList: async (empId: number) =>
-                fetchDataListService<ProbationEvaluationRef,{empId: number}>({
+                fetchDataListService<ProbationEvaluationRef,{id: number}>({
                     actionName: 'fetch_probation_evaluation_ref_list',
                     endpoint: 'HR',
-                    payload: {empId},
+                    payload: {id:empId},
                 }).query(request),            
           
 

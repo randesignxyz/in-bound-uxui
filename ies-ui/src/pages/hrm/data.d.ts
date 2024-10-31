@@ -13,12 +13,12 @@ export interface EmployeeListItem {
   status: string;
   sapId: string;
   jobTitle?: string;
-  job_id?:number;
+  job_id?: number;
   reportTo?: string;
   department?: string;
-  department_id?:number;
+  department_id?: number;
   bu?: string;
-  bu_id?:number;
+  bu_id?: number;
   userId?: string;
 }
 
@@ -59,6 +59,38 @@ export type ProbationEvaluationData = {
   empId: number;
   attachedFiles?: string[];
   remarks?: string;
+}
+
+export type StaffRequisitionRequestCancel = {
+  processInstanceId: string;
+  remarks: string;
+  fileIds?: string[];
+}
+
+export type RequisitionData = {
+  requestorId: string;
+  requestorBuId: number;
+  jobId: number;
+  buId: number;
+  departmentId: number;
+  subDepartmentId?: number;
+  section?: string;
+  team?: string;
+  directReportTo: number;
+  workingShiftId: string;
+  segmentId: number;
+  otherSegment?: string;
+  contractTypeId: number;
+  contractDates?: Moment[];
+  expectedJoinDate: Moment;
+  requisitionTypeId: number;
+  headcount: number;
+  workplaceId?: number;
+  replacedEmployeeId?: number;
+  replacedEmployeeName?: string;
+  hiredReasonFor?: string;
+  suggestedSourcing?: string;
+  attachedFiles?: string[];
 }
 
 export type StaffRequisitionRequest = {

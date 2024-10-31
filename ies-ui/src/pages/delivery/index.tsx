@@ -13,7 +13,12 @@ import settingIcon from '@/assets/settings.png';
 import qrCodeIcon from '@/assets/qr-code.png';
 import forkLift from '@/assets/fork-lift.png';
 import { Divider, Menu } from 'antd';
-import { AreaChartOutlined, EnvironmentOutlined, HistoryOutlined, PlusCircleOutlined } from '@ant-design/icons';
+import {
+  AreaChartOutlined,
+  EnvironmentOutlined,
+  HistoryOutlined,
+  PlusCircleOutlined
+} from '@ant-design/icons';
 import { useAccess, history } from "@umijs/max";
 import { PageContainer } from '@ant-design/pro-components';
 import ModalMngt, { modalType } from './modal-mngt';
@@ -173,7 +178,16 @@ export default () => {
             onClick: () => setModal({
               type: 'DELIVERY_TIME'
             }),
-          }]
+          },
+          {
+            label: 'Transportation Time Tracking Report',
+            icon: <AreaChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+            key: 'transportation-time-tracking-report',
+            onClick: () => setModal({
+              type: 'DELIVERY_TIME_TRACKING'
+            }),
+          }
+        ]
       }
     },
     {

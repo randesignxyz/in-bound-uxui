@@ -131,6 +131,10 @@ export default ({ onSave, ...props }: Props) => {
                             <ProFormSelect
                                 options={[
                                     {
+                                        value: '3:00',
+                                        label: '3:00'
+                                    },
+                                    {
                                         value: '7:00',
                                         label: '7:00',
                                     },
@@ -150,10 +154,7 @@ export default ({ onSave, ...props }: Props) => {
                                         value: '23:00',
                                         label: '23:00',
                                     },
-                                    {
-                                        value: '3:00',
-                                        label: '3:00'
-                                    }
+                                    
                                 ]}
                                 fieldProps={{
                                     onChange: async (e: string) => {

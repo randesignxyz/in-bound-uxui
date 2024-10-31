@@ -85,7 +85,7 @@ export const AcquisitionForm: DataForm[] = [
       AcquisitionNvcFormNames.finMngApproval,
       AcquisitionNvcFormNames.mbo,
       AcquisitionNvcFormNames.dmbo,
-      AcquisitionFormNames.smFinance,
+      AcquisitionNvcFormNames.smFinance,
       AcquisitionNvcFormNames.dmbo1,
       AcquisitionNvcFormNames.dmbo2,
       AcquisitionNvcFormNames.md_dmd,

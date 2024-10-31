@@ -14,6 +14,7 @@ import {
   RequisitionData,
   StaffRequisitionAdvanceSearchParams,
   StaffRequisitionRequest,
+  StaffRequisitionRequestCancel,
   SubDepartment,
 } from './data';
 
@@ -66,15 +67,22 @@ export const EmployeeServices = {
         page: params.pagination?.current,
       },
     }),
-  EmployeeUpdate : (data: EmployeeListItem) =>
+  EmployeeUpdate: (data: EmployeeListItem) =>
     execDataService0<EmployeeListItem>({
       actionName: 'update-employee-profile',
       endpoint: 'HR',
       payload: { ...data }
-    }), 
+    }),
   requisitionRequest: (data: RequisitionData) =>
     execDataService<{ data: string }, RequisitionData>({
       actionName: 'staff-requisition-request',
+      endpoint: 'HR',
+      payload: data
+    }),
+
+  cancelRequisitionRequest: (data: StaffRequisitionRequestCancel) =>
+    execDataService<{ data: string }, StaffRequisitionRequestCancel>({
+      actionName: 'staff-requisition-request-cancel',
       endpoint: 'HR',
       payload: data
     }),

@@ -10,7 +10,11 @@ import { FileServiceAPI } from "@/services/files/service";
 import { downloadUploadFileV2 } from "@/services/apiGateway";
 import { FileOutlined } from "@ant-design/icons";
 
-export default ({ processInstanceId, setAttachFiles }: { processInstanceId: string, setAttachFiles: (files: string[]) => void }) => {
+export default ({ processInstanceId, setAttachFiles, onSetStatus }: {
+    processInstanceId: string,
+    onSetStatus: (status: string) => void;
+    setAttachFiles: (files: string[]) => void
+}) => {
 
     const requestActions = simpleRequestActions();
     const [data, setData] = useState<StaffRequisitionRequest>()
@@ -23,6 +27,7 @@ export default ({ processInstanceId, setAttachFiles }: { processInstanceId: stri
     const loadData = async () => {
         try {
             const rs = await EmployeeServices.fetchStaffRequisitionRequest(processInstanceId).query(requestActions)
+            onSetStatus(rs.status)
             setData(rs)
             if (rs.attachedFiles) {
                 setAttachFiles(rs.attachedFiles || [])
@@ -85,7 +90,7 @@ export default ({ processInstanceId, setAttachFiles }: { processInstanceId: stri
                         loading={requestActions.request?.loading}
                         metas={{
                             avatar: {
-                                render: ()=> <FileOutlined />
+                                render: () => <FileOutlined />
                             },
                             title: {
                                 render: (_, r) => (

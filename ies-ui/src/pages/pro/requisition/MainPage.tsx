@@ -1,7 +1,7 @@
 import { TableViewSearchParams } from "@/components/DataCrud/TableView"
 import PageWrapper from "@/components/PageWrapper"
 import Status from "@/components/Status"
-import { formatDate, formatter } from "@/pages/utils"
+import { formatDate, formatter1 } from "@/pages/utils"
 import { ProDepartment, RequisitionDetailResponse, RequisitionListItem } from "@/services/pro/data"
 import { RequisitionAdvanceSearchParams } from "@/services/pro/req-params"
 import { RequisitionServiceAPI } from "@/services/pro/services"
@@ -185,7 +185,7 @@ export default () => {
                                     align: 'right',
                                     width: 120,
                                     sorter: 'totalAmount',
-                                    render: (_, r) => formatter.format(r.totalAmount || 0),
+                                    render: (_, r) => formatter1.format(r.totalAmount || 0),
                                 },
                                 {
                                     title: 'Srv',

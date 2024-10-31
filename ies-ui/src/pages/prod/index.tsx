@@ -34,14 +34,14 @@ export default () => {
       link: `${ProdPaths.inventoryTransfer}/list`,
       visible: access.canAccessInventoryTranferMenuItem,
     },
-    {
-      id: 'dailyWaterTreatment',
-      name: 'Daily Water Treatment',
-      description: 'Daily Water Treatment Plant 2',
-      icon: dailyWaterTreatmentIcon,
-      link: `${ProdPaths.dailyWaterTreatment}/list`,
-      visible: access.canAccessDailyWaterTreatmentMenuItem,
-    },
+    // {
+    //   id: 'dailyWaterTreatment',
+    //   name: 'Daily Water Treatment',
+    //   description: 'Daily Water Treatment Plant 2',
+    //   icon: dailyWaterTreatmentIcon,
+    //   link: `${ProdPaths.dailyWaterTreatment}/list`,
+    //   visible: access.canAccessDailyWaterTreatmentMenuItem,
+    // },
     {
       id: 'dailyPreWaterTreatment',
       name: 'Daily Pre-Water Treatment',
@@ -60,7 +60,7 @@ export default () => {
     },
     {
       id: 'dailyHACCPMonitoringtOzone',
-      name: 'Daily HACCP Monitoring Ozone',
+      name: 'Daily HACCP Monitoring of WTP',
       description: 'Daily HACCP Monitoring Ozone',
       icon: dailyWaterTreatmentIcon,
       link: `${ProdPaths.dailyHACCPMonitoringtOzone}/list`,

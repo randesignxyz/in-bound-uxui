@@ -34,6 +34,9 @@ export default ({ onSave, ...props }: Props) => {
     }, [props.open]);
 
     const time = [
+        { name: '1:00' },
+        { name: '3:00' },
+        { name: '5:00' },
         { name: '7:00' },
         { name: '9:00' },
         { name: '11:00' },
@@ -42,10 +45,7 @@ export default ({ onSave, ...props }: Props) => {
         { name: '17:00' },
         { name: '19:00' },
         { name: '21:00' },
-        { name: '23:00' },
-        { name: '1:00' },
-        { name: '3:00' },
-        { name: '5:00' }
+        { name: '23:00' }, 
     ]
 
     return (
@@ -148,6 +148,10 @@ export default ({ onSave, ...props }: Props) => {
                         <Col span={12}>
                             <ProFormSelect
                                 options={[
+                                    {
+                                        value: 'Line Barrel',
+                                        label: 'Line Barrel'
+                                    },
                                     {
                                         value: 'Line 2',
                                         label: 'Line 2',

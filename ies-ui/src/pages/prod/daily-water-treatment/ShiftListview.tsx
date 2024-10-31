@@ -68,7 +68,7 @@ export default ({ id, onAdd, shift, shift1, date, refresh }: Props) => {
     <>
       <BreadCrumbCom separator=">" routes={routes} />
       <ProForm form={form} onReset={() => form.resetFields()} submitter={false}>
-        <Card size="small" style={{ textAlign: 'right', marginBottom: 10, marginTop: 20 }}>
+        <Card size="small" style={{ textAlign: 'left', marginBottom: 10, marginTop: 20 }}>
           <Space >
             <ProForm submitter={false}>
               <DescriptionDisplay

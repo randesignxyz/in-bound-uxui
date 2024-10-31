@@ -46,9 +46,9 @@ export default () => {
   ];
 
   const line = [
-    // {
-    //   name: 'Line 1'
-    // },
+    {
+      name: 'Line Barrel'
+    },
     {
       name: 'Line 2'
     },
@@ -95,8 +95,8 @@ export default () => {
             </Tooltip>
             : <></>}
           <Tooltip title="Dowload Excel File"><Button type="link" icon={<FileExcelOutlined />} onClick={() => setExportModal({ visible: true })} /></Tooltip>
-          <Tooltip title="Instruction"><Button type="link" icon={ <FileDoneOutlined />} onClick={() => history.push(`/prod/daily-haccp-monitoring/create`)} /></Tooltip>
-         
+          <Tooltip title="Instruction"><Button type="link" icon={<FileDoneOutlined />} onClick={() => history.push(`/prod/daily-haccp-monitoring/create`)} /></Tooltip>
+
           <Tooltip title="Refresh">
             <Button
               key="refresh"
@@ -113,8 +113,11 @@ export default () => {
 
           {line.map((item, index) => {
             // Filter data based on the current line name
-            const filteredData = data.filter(i => i.line === item.name);
-            const total = (filteredData[0]?.haccplist.length || 0)
+            const filteredData = data.filter(i => i.line === item.name).map(i => ({
+              ...i,
+              haccplist: i.haccplist?.filter(haccp => haccp.status !== 'unassigned') // Filter haccplist by status
+            }));
+            const total = (filteredData[0]?.haccplist?.length || 0)
             const warningStatus = (filteredData[0]?.haccplist || []).filter(item => item.status === 'warning').length;
             const normalStatus = (filteredData[0]?.haccplist || []).filter(item => item.status === 'normal').length;
             const percentage = total > 0 ? ((normalStatus / total) * 100).toFixed(2) : '0.00';
@@ -122,17 +125,18 @@ export default () => {
             return (
               <Col span={8} key={index}>
                 <Card
-                  title={'Production '+item.name}
-                  extra={<a
+                  title={'Production ' + item.name}
+                  extra={filteredData[0] ? <a
                     onClick={() => (filteredData[0] ? (history.push(`/prod/daily-haccp-monitoring/detail/${filteredData[0]?.assign_date}/${filteredData[0]?.line}/${filteredData[0]?.haccp_id}`))
                       : {})
                     }>
                     <ArrowRightOutlined />
-                  </a>}
-                  style={{ marginTop: 40, borderWidth: '2px', borderStyle: 'solid',
+                  </a> : <></>}
+                  style={{
+                    marginTop: 40, borderWidth: '2px', borderStyle: 'solid',
                     borderColor: filteredData[0] !== undefined ? 'rgba(216, 204, 120, 0.5)' : 'rgba(128, 128, 128, 0.1)',
-                      
-                    }}
+
+                  }}
                   actions={[
                     <Badge status={'success'} text={`Total: ${total}`} />,
                     <Badge status={'error'} text={`Warning: ${warningStatus}`} />,

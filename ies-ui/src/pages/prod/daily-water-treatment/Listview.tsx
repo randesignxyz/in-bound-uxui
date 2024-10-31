@@ -144,7 +144,7 @@ export default () => {
               dataIndex: 'label',
               render: (_, record) => {
                 const assignItem = data?.find(v => v.shift === record.label);
-                return (
+                return (assignItem?
                   <a
                     onClick={() =>
                     (assignItem ?
@@ -154,6 +154,7 @@ export default () => {
                   >
                     {record.label}
                   </a>
+                  :<>{record.label}</>
                 );
               },
             },
@@ -228,8 +229,8 @@ export default () => {
               width: 10,
               render: (_:any, record:any) => {
                 const assignItem = data?.find(v => v.shift === record.label);
-
-                return (assignItem ?
+                if (!assignItem) return null;
+                return (assignItem?.treatmentlist.length == assignItem?.treatmentlist.filter(i=>i.status=='pending').length ?
                   <Button onClick={async () => {
                     Modal.confirm({
                       title: "Unassign",

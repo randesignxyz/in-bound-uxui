@@ -20,6 +20,7 @@ import timezone from 'dayjs/plugin/timezone';
 import { HACCPMonitoringOzoneServiceAPI } from './service';
 import FormModal from './FormModal';
 import { HACCPMonitoringOzone } from './data';
+import ExportExcel from './ExportExcel';
 
 export default () => {
   dayjs.extend(utc);
@@ -51,6 +52,9 @@ export default () => {
 
   const time = [
     {
+      name: '3:00'
+    },
+    {
       name: '7:00'
     },
     {
@@ -65,9 +69,7 @@ export default () => {
     {
       name: '23:00'
     },
-    {
-      name: '3:00'
-    }
+    
   ]
 
   useEffect(() => {
@@ -159,7 +161,7 @@ export default () => {
               dataIndex: 'name',
               render: (_, record) => {
                 const assignItem = list?.find(v => v.time === record.name);
-                return (
+                return (assignItem?
                   <a
                     onClick={() =>
                     (assignItem ?
@@ -169,6 +171,7 @@ export default () => {
                   >
                     {record.name}
                   </a>
+                  :<>{record.name}</>
                 );
               },
             },
@@ -243,7 +246,8 @@ export default () => {
               width: 10,
               render: (_:any, record:any) => {
                 const assignItem = list.find(v => v.time === record.name);
-                return (assignItem ?
+                if (!assignItem) return null;
+                return (assignItem?.ozonelist.length == assignItem?.ozonelist.filter(i=>i.status=='pending').length ?
                   <Button onClick={async () => {
                     Modal.confirm({
                       title: "Unassign",
@@ -292,7 +296,7 @@ export default () => {
           })
         }}
       />
-      {/* <ExportExcel
+      <ExportExcel
         title="Export Excel"
         open={exportModel.visible}
         loading={excelLoading}
@@ -302,13 +306,13 @@ export default () => {
             time: time,
             startDate: dayjs(duration[0]).format('YYYY-MM-DD'),
             endDate: dayjs(duration[1]).format('YYYY-MM-DD'),
-            pre: 'pre-treatment',
+            pre: 'ozone',
             type: type
           };
           try {
             setExcelLoading(true)
             await downloadReport(requestActions)({
-              fileName: `daily-water-pre-treatment-report-${moment().toDate().toDateString()}`,
+              fileName: `daily-haccp-monitoring-ozone-report-${moment().toDate().toDateString()}`,
               reportName: 'prod-daily-water-treatment-report',
               data: result,
               type: 'EXCEL',
@@ -321,7 +325,7 @@ export default () => {
           }
           setExportModal({ visible: false });
         }}
-      /> */}
+      />
     </>
   );
 };

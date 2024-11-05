@@ -270,6 +270,7 @@ export interface SaveTruck {
   loadingCapacity: number;
   licensePlate: string;
   description?: string;
+  integratedTruckId?:string
 }
 
 export interface Truck {
@@ -281,6 +282,7 @@ export interface Truck {
   isSideDoor?: boolean;
   licensePlate: string;
   description?: string;
+  integratedTruckId?:string
 }
 
 export interface DriverListItem {

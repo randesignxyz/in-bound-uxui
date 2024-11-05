@@ -12,9 +12,9 @@ import { DeliveryParams } from '@/services/delivery/delivery-params';
 import { LoadingServiceParams } from '@/services/delivery/loading-bay-service-params';
 import { DeliveryServiceAPI } from '@/services/delivery/services';
 import { simpleRequestActions } from '@/services/model';
-import { CheckOutlined } from '@ant-design/icons';
+import { CheckOutlined, PlayCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import { ActionType } from '@ant-design/pro-table';
-import { message, Modal, Spin } from 'antd';
+import { Button, message, Modal, Spin } from 'antd';
 import { useRef, useState } from 'react';
 import TruckEntryModal from './EntryForm';
 
@@ -121,6 +121,27 @@ export default () => {
         ]}
         tableProps={{
           actionRef: actionRef,
+          toolbar: {
+            actions: [
+              <>
+                <Button
+                  type="link"
+                  onClick={async () => {
+                    onAddHandler()
+                  }}
+                  icon={<PlusOutlined />}
+                />
+                <Button
+                  type="link"
+                  onClick={async () => {
+                    await services.updateIntegrateId()
+                    actionRef.current?.reloadAndRest?.();
+                  }}
+                  icon={<PlayCircleOutlined />}
+                />
+              </>
+            ],
+          },
         }}
         actionHandlers={{
           onAdd: onAddHandler,

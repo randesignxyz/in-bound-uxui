@@ -1,7 +1,7 @@
 import { formatDate } from "@/pages/utils";
 import { simpleRequestActions } from "@/services/model";
 import { ProCard, ProDescriptions, ProList } from "@ant-design/pro-components"
-import { Checkbox, message, Space, Spin } from "antd"
+import { Button, Checkbox, message, Space, Spin } from "antd"
 import { useEffect, useState } from "react";
 import { StaffRequisitionRequest } from "../../data";
 import { EmployeeServices } from "../../services";
@@ -9,6 +9,7 @@ import { AttachmentFile } from "@/services/data";
 import { FileServiceAPI } from "@/services/files/service";
 import { downloadUploadFileV2 } from "@/services/apiGateway";
 import { FileOutlined } from "@ant-design/icons";
+import FilePreview from "@/components/Attachment/FilePreview";
 
 export default ({ processInstanceId, setAttachFiles, onSetStatus }: {
     processInstanceId: string,
@@ -93,8 +94,10 @@ export default ({ processInstanceId, setAttachFiles, onSetStatus }: {
                                 render: () => <FileOutlined />
                             },
                             title: {
-                                render: (_, r) => (
-                                    <a onClick={() => downloadUploadFileV2()(r.id, r.fileName)}>{r.fileName}</a>
+                                render: (_, r) => (<Space>
+                                    <a title='Download the file' onClick={() => downloadUploadFileV2()(r.id, r.fileName)}>{r.fileName}</a>
+                                    {(r.fileType.includes("image", 0) || r.fileType.includes("application/pdf", 0)) && <FilePreview fileInfo={r} trigger={<Button title='Preview the file' type='link' icon={<EyeFilled />} />} />}
+                                </Space>
                                 ),
                             },
                         }}

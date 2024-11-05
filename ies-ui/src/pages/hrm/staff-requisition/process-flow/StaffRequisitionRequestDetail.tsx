@@ -8,7 +8,7 @@ import { EmployeeServices } from "../../services";
 import { AttachmentFile } from "@/services/data";
 import { FileServiceAPI } from "@/services/files/service";
 import { downloadUploadFileV2 } from "@/services/apiGateway";
-import { FileOutlined } from "@ant-design/icons";
+import { EyeFilled, FileOutlined } from "@ant-design/icons";
 import FilePreview from "@/components/Attachment/FilePreview";
 
 export default ({ processInstanceId, setAttachFiles, onSetStatus }: {

@@ -924,6 +924,10 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       false,       
     canCreateHrProbationEvaluationRequest:
       currentUser?.authorities.some((item) => ['ROLE_ADMIN','ROLE_HR_PROBATION_EVALUATION_REQUEST'].some((it) => it === item)) ||
-      false,        
+      false,      
+    isAccessHRProbationEvaluationSupport:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_HR_PROBATION_EVALUATION_SUBMIT', 'ROLE_HR_PROBATION_EVALUATION_SUPPORT'].some((it) => it === item),
+      ) || false,  
   };
 }

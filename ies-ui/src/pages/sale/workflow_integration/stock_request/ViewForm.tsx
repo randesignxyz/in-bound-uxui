@@ -1,50 +1,47 @@
 import ViewFormWrapper from "@/pages/process-flow/components/forms/ViewFormWrapper";
 import { DataViewProps } from "@/pages/process-flow/data";
-import ApprovalStockRequest from "../ApprovalStockRequest";
 import { ProDescriptions, ProTable } from "@ant-design/pro-components";
 import { simpleRequestActions } from "@/services/model";
-import { StockControlServiceAPI } from "../../services";
 import { Card, Flex, Typography } from "antd";
 import { useState } from "react";
-import { StockTransferRequestItem } from "./data";
+import { StockControlDetail, StockDetailLess } from "@/services/sale/data";
+import { StockControlServiceAPI } from "../../stock-control/services";
 
 export default (props: DataViewProps) => {
     const requestActions = simpleRequestActions();
     const services = StockControlServiceAPI(requestActions);
-    const [items, setItems] = useState<StockTransferRequestItem[]>();
-    return <ViewFormWrapper<{ id: number }>
-
-        workflowProp={props}>
-        {(data, _) => {
+    const [items, setItems] = useState<StockDetailLess[]>();
+    return <ViewFormWrapper<{ id: number }> workflowProp={props}>{(data, _) => {
+            
             return (
                 <Flex vertical gap={24}>
                     {
                         data?.processInstance?.procInstId && (
                             <Card size="small">
-                                <ProDescriptions
-                                    contentStyle={{
-                                        fontWeight: 500
-                                    }}
-                                    request={async () => {
-                                        const response = await services.fetchStockTransferRequest(data?.processInstance?.procInstId || "");
+                                <ProDescriptions<StockControlDetail>
+                                    request={async () =>{
+                                        const response =await services.fetchStockControl(data?.processInstance?.procInstId || "");
                                         setItems(response.items);
                                         return Promise.resolve({
                                             data: response,
                                             success: true
                                         })
                                     }}
+                                    contentStyle={{
+                                        fontWeight: 500
+                                    }}
                                     columns={[
                                         {
                                             title: "Store Name",
-                                            dataIndex: "storeName"
+                                            render: (_, r) => <Typography.Text type='success'>{r.stockName}</Typography.Text>
                                         },
                                         {
-                                            title: "Truck No",
-                                            dataIndex: "truckNo"
+                                            title:"Owner",
+                                            // render:(_,r)=>r.owner.toString()
                                         },
                                         {
-                                            title: "Remark",
-                                            dataIndex: "remark"
+                                            title:"Items Count",
+                                            render:(_,r)=><Typography.Text >{r.items?.length}</Typography.Text>
                                         }
                                     ]}
                                 />
@@ -52,7 +49,7 @@ export default (props: DataViewProps) => {
                         )
                     }
 
-                    <ProTable
+                    <ProTable<StockDetailLess>
                         search={false}
                         options={false}
                         pagination={false}
@@ -67,13 +64,19 @@ export default (props: DataViewProps) => {
                                 dataIndex: "itemName"
                             },
                             {
-                                title: "Quantity",
-                                dataIndex: "qty",
-                                render:(_,r)=><Typography.Text  type="warning">{r.qty}</Typography.Text>
+                                title: "Beginning Qty",
+                                dataIndex: "beginningQty",
                             },
                             {
-                                title:"UOM",
-                                dataIndex:"uom"
+                                title: "Quantity",
+                                dataIndex: "quantity",
+                               renderText:(text, record, index, action) =>{
+                                   return <Typography.Text type="warning">{text}</Typography.Text>
+                               },
+                            },
+                            {
+                                title: "UOM",
+                                dataIndex: "uom"
                             },
                             {
                                 title: "Remark",

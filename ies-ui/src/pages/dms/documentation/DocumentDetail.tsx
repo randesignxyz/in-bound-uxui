@@ -6,6 +6,7 @@ import { useState } from "react";
 import PathDocument from "../components/PathDocument";
 import { formatDate } from "@/pages/utils";
 import { expriationStatus } from "../core";
+import { Typography } from "antd/lib";
 
 interface Props {
     document?: DocumentationDTO;
@@ -62,7 +63,7 @@ export default ({ document, actionRef }: Props) => {
                                     },
                                     {
                                         title: "Status",
-                                        render: (_, r) => <Badge status={r.status == "Inactive" ? "error" : "success"} text={r.status} />,
+                                        render: (_, r) => <Typography.Text type={r.status =="Inactive"?"danger":"success"}>{r.status}</Typography.Text>
                                     },
                                     {
                                         title: "Description",
@@ -78,6 +79,7 @@ export default ({ document, actionRef }: Props) => {
                                     <ProDescriptions
                                         dataSource={document}
                                         column={1}
+                                        size="small"
                                         actionRef={actionRef}
                                         labelStyle={{
                                             width: 200
@@ -117,6 +119,7 @@ export default ({ document, actionRef }: Props) => {
                                     <ProDescriptions
                                         dataSource={document}
                                         column={1}
+                                        size="small"
                                         actionRef={actionRef}
                                         labelStyle={{
                                             width: 100
@@ -151,7 +154,7 @@ export default ({ document, actionRef }: Props) => {
                                             },
                                             {
                                                 title: "Status",
-                                                render: (_, r) => <Badge status={r.status == "Inactive" ? "error" : "success"} text={r.status} />,
+                                                render: (_, r) => <Typography.Text type={r.status =="Inactive"?"danger":"success"}>{r.status}</Typography.Text>,
                                             },
                                         ]}
                                     />

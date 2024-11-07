@@ -1,5 +1,5 @@
 import { ProCard, ProDescriptions } from "@ant-design/pro-components"
-import { Badge, Col, Row, Space } from "antd"
+import { Badge, Col, Row, Space, Typography } from "antd"
 import React, { useState } from "react";
 import CompanyDetail from "./company/CompanyDetail";
 import { DocumentationDTO } from "../documentation/data";
@@ -104,7 +104,8 @@ export default ({ document, actionRef }: Props) => {
                                         label: "Expiry Date",
                                         dataIndex: "expiryDate",
                                         valueType: "date",
-                                        render: (_, r) => (<Badge status={expriationStatus(r.expiryDate) > 0 ? "error" : "processing"} text={formatDate(r.expiryDate)} />)
+                                        render:(_,r)=><Typography.Text type={expriationStatus(r.expiryDate) > 0 ?"danger":"success"} >{formatDate(r.expiryDate)}</Typography.Text>
+                                        // render: (_, r) => (<Badge status={expriationStatus(r.expiryDate) > 0 ? "error" : "processing"} text={formatDate(r.expiryDate)} />)
                                     },
                                     // {
                                     //     label: "Renewal Interval (Months)",
@@ -128,7 +129,8 @@ export default ({ document, actionRef }: Props) => {
                                     },
                                     {
                                         title: "Status",
-                                        render: (_, r) => <Badge status={document?.status == "Inactive" ? "error" : "processing"} text={document?.status} />
+                                        render:(_,r)=><Typography.Text type={document?.status =="Inactive"?"danger":"success"} >{document?.status}</Typography.Text>
+                                        // render: (_, r) => <Badge status={document?.status == "Inactive" ? "error" : "processing"} text={document?.status} />
                                     }
                                     // {
                                     //     label: "Notice Date",

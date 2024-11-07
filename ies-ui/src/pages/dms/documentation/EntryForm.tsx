@@ -18,7 +18,6 @@ interface Props extends FormModalProps {
 const DocumentModalForm: React.FC<Props> = ({ type, onSave, division, data, libraryId, ...props }: Props) => {
   const [fileUpload, setFileUpload] = useState<{ file?: UploadFile[], required?: boolean }>();
   const [form] = useForm<DocumentationCreate>();
-
   
   useEffect(() => {
     props.open && data && form.setFieldsValue({
@@ -30,6 +29,7 @@ const DocumentModalForm: React.FC<Props> = ({ type, onSave, division, data, libr
     });
     props.open && !data && form.resetFields();
   }, [props.open]);
+
   return (<>
     <FormModalComp
       {...props}

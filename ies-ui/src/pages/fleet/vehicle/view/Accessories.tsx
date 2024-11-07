@@ -2,7 +2,7 @@ import { simpleRequestActions } from '@/services/model';
 import { ReloadOutlined } from '@ant-design/icons';
 import type { ActionType } from '@ant-design/pro-components';
 import { ProList } from '@ant-design/pro-components';
-import { Button, message, Modal, Spin, Tag } from 'antd';
+import { Button, message, Modal, Spin, Tag, Typography } from 'antd';
 import { useRef, useState } from 'react';
 import { AccessoriesDTO, AddVehicleAccessory } from '../../accessory/data';
 import { AccessoryServiceAPI } from '../../accessory/service';
@@ -54,6 +54,7 @@ export default ({ id }: Props) => {
     <>
       <Spin spinning={requestAction.request?.loading}>
         <ProList<AccessoriesDTO>
+          size='small'
           toolBarRender={() => {
             return [
               <Button
@@ -83,15 +84,8 @@ export default ({ id }: Props) => {
             },
             description: {
               dataIndex: 'description',
-              render: (_, r) => {
-                return (
-                  <>
-                    Quantity: <Tag color="geekblue">{r.quantity}</Tag>
-                  </>
-                );
-              },
+              render: (_, r) => <Typography.Text type='warning'>{r.quantity}</Typography.Text>
             },
-           
           }}
         />
       </Spin>

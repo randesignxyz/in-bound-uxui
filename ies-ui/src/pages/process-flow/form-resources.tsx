@@ -12,7 +12,7 @@ import { getPriceComparisonForms } from '../pro/price-comparison/process-flow/co
 import { ActionDataFormProps, DataForm, DataViewProps } from './data';
 import { getAppraisalRequestForms } from '../hrm/appraisal-request/config';
 import { getGratisSettlementRequestForms } from '../crm/gratis/request/config';
-import { getSaleStockTransferRequestRequestForms } from '../sale/stock-control/stock-transfer-request/process-flow/config';
+import { getSaleStockTransferRequestRequestForms } from '../sale/workflow_integration/stock_request/config';
 
 const dataFormResources: DataForm[] = [
   // ...CashAdvanceForms,

@@ -400,7 +400,6 @@ const MMAApproval: React.FC<Props> = ({ data, onSave, ...props }) => {
                   valueType: "digit",
                   initialValue: 0,
                   renderFormItem: (schema, { record }, form) => {
-                    // record?.price = 0
                     return <InputNumber disabled={record?.division == "FOC" ? true : false} min={0} />
                   },
                   formItemProps: {
@@ -414,7 +413,6 @@ const MMAApproval: React.FC<Props> = ({ data, onSave, ...props }) => {
                   align: 'right',
                   width: 120,
                   render: (_text, record, _, action) => [
-                    
                       <>
                         <Tooltip title="Edit" key={`editable-${record.key}`}>
                           <Button
@@ -428,7 +426,6 @@ const MMAApproval: React.FC<Props> = ({ data, onSave, ...props }) => {
                         <Tooltip title="Copy" key={`copy-${record.key}`}>
                           <Button
                             type="link"
-                            // icon={<CopyOutlined />}
                             onClick={() => {
                               const key = (Math.random() * 1000000).toFixed(0);
                               const first: EditableStockItem = {

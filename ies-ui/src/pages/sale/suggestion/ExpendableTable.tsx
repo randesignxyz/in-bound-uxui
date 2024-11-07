@@ -114,7 +114,6 @@ const ExpendableTable: React.FC<Props> = ({ data, source, onMMAReviewSettlement,
                                         <Button
                                             type="primary"
                                             onClick={async () => {
-
                                                 const empNo = data?.owner.split("-")[0];
                                                 const roles = await services.fetchRolByUser(empNo || "");
                                                 if (roles.length < 2) {

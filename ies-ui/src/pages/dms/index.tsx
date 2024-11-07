@@ -7,7 +7,8 @@ export const DMSPaths = {
   document: '/dms/document',
   workspace: '/dms/workspace',
   contracts: "/dms/contracts",
-  company: "/dms/company"
+  company: "/dms/company",
+  
 };
 
 export default () => {

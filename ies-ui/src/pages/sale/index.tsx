@@ -328,13 +328,13 @@ export default () => {
       // visible: access.canAccessAllMenuDSD,
       link: `${MPUPath.mpuCountStock}/list`,
     }, 
-    {
-      id: 'free-of-charge',
-      name: 'Free Of Charge',
-      description: '',
-      icon: FOC,
-      link: `${MPUPath.mpuCountStock}/list`,
-    }, 
+    // {
+    //   id: 'free-of-charge',
+    //   name: 'Free Of Charge',
+    //   description: '',
+    //   icon: FOC,
+    //   link: `${MPUPath.mpuCountStock}/list`,
+    // }, 
   ];
 
   const items: ListMenuItem[] = [

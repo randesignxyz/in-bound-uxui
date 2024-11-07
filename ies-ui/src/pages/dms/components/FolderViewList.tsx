@@ -1,23 +1,22 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Button, Dropdown, Flex, MenuProps, Space, message } from 'antd';
+import { Affix, Button, Dropdown, Flex, MenuProps, Space, Tooltip, Tree, message } from 'antd';
 import { FolderServiceAPI } from '../folder/service';
 import { simpleRequestActions } from '@/services/model';
-import { BankOutlined, DeleteOutlined, EditOutlined, EllipsisOutlined, FileTextOutlined, FolderAddOutlined, FolderOutlined, UserOutlined } from '@ant-design/icons';
+import { BankFilled, BankOutlined, DeleteOutlined, EditOutlined, FileTextOutlined, FolderAddOutlined, FolderFilled, ShareAltOutlined, UserOutlined } from '@ant-design/icons';
 import { ActionType } from '@ant-design/pro-components';
-import { useAccess, useParams } from '@umijs/max';
-import { Modal, Spin } from 'antd/lib';
+import { Modal, Spin, Typography } from 'antd/lib';
 import FolderEntryForm from '../folder/EntryForm';
 import { DataNode, FolderCreate } from '../folder/data';
 import DocumentModalForm from '../documentation/EntryForm';
 import { DocumentServiceAPI } from '../documentation/service';
 import { DocumentationAdvanceSearch, DocumentationCreate } from '../documentation/data';
 import DirectoryTree from 'antd/es/tree/DirectoryTree';
+import { useAccess } from '@/.umi/plugin-access';
 interface Props {
     onSearch: (param: DocumentationAdvanceSearch) => void,
     activeKey?: boolean;
     moveDoc?: boolean;
     onMove?: () => void;
-    setFolder: (libraryId?: number) => void;
     onFolderSelected: () => void
 }
 const updateTreeData = (list: DataNode[], key: React.Key, children: DataNode[]): DataNode[] => list.map((node) => {
@@ -44,12 +43,10 @@ const makeTree = (items: any[], key = 0, link = 'parentId'): any => {
         children: makeTree(items, item.id)
     }));
 }
-export default ({ onSearch, activeKey, moveDoc, onMove, setFolder: setFolderId, onFolderSelected, ...props }: Props) => {
+export default ({ onSearch, activeKey, moveDoc, onMove, onFolderSelected, ...props }: Props) => {
     const requestAction = simpleRequestActions();
     const actionRef = useRef<ActionType>();
     const access = useAccess();
-    const param = useParams();
-    const view = param["view"];
     const [folderSelected, setFolderSelected] = useState<string>();
     const [documentModalState, setDocumentState] = useState<{
         visible?: {
@@ -79,10 +76,15 @@ export default ({ onSearch, activeKey, moveDoc, onMove, setFolder: setFolderId, 
             type: o.type
         })));
         setTreeFolderList(dd);
-        setFolderId(folder[0]?.id);
-        // setFolderSelected(folder[0]?.id.toString());
+        if (access.canAccessDMSAdminMenu) {
+            onSearch({ libraryId: 0 })
+        }
+        else {
+            const lId = folder.find((o) => o.code == "LIBRARY" && o.type == "personal")
+            onSearch({ libraryId: lId?.id });
+            setFolderSelected(`${lId?.id}`)
+        }
     }
-
     const [folderState, setFolderState] = useState<{
         visible?: {
             name: "MODAL";
@@ -153,35 +155,38 @@ export default ({ onSearch, activeKey, moveDoc, onMove, setFolder: setFolderId, 
             },
         ];
     }
+
     return (
         <>
             <Spin spinning={requestAction.request?.loading}>
-                {access.canAccessDMSAdminMenu && <Button
-                    onClick={() => {
-                        onFolderSelected?.();
-                        setFolderId(0)
-                        setFolderSelected("")
-                        onSearch({
-                            library: 0,
-                            folderId: 0,
-                            folderType: ""
-                        })
-                    }}
-                    type={folderSelected ? "default" : "primary"}
-                    style={{ width: "100%", margin: "10px 0" }} icon={<FileTextOutlined />}>All Documents</Button>}
-                {treeFolderList.length &&
+                <Affix offsetTop={70}>
+                    {access.canAccessDMSAdminMenu && <Button
+                        onClick={() => {
+                            onFolderSelected?.();
+                            setFolderSelected("")
+                            onSearch({
+                                libraryId: 0,
+                                folderId: 0,
+                                folderType: ""
+                            })
+                        }}
+                        type={folderSelected ? "default" : "primary"}
+                        style={{ width: "100%", margin: "10px 0" }} icon={<FileTextOutlined />}>All Documents</Button>}
+                </Affix>
+
+                {treeFolderList.length != 0 &&
                     <DirectoryTree
                         key={"doprdown-1"}
                         defaultExpandAll
-                        // selectedKeys={view != "library" ? [] : [(folderSelected || "")]}
-                        selectedKeys={[folderSelected||""]}
+                        blockNode
+                        checkStrictly
+                        selectedKeys={[folderSelected || ""]}
                         expandAction={"doubleClick"}
                         onSelect={(e, { selectedNodes }) => {
-                            setFolderId(selectedNodes[0].libraryId);
                             setFolderSelected(`${e[0]}`);
                             onFolderSelected?.();
                             onSearch({
-                                library: selectedNodes[0]?.libraryId,
+                                libraryId: selectedNodes[0]?.libraryId,
                                 folderId: parseInt(selectedNodes[0]?.key),
                                 folderType: selectedNodes[0]?.code
                             });
@@ -198,48 +203,41 @@ export default ({ onSearch, activeKey, moveDoc, onMove, setFolder: setFolderId, 
                             });
                             actionRef.current?.reload();
                         }}
-                        showLine
-                        icon={<></>}
-                        blockNode
+                        icon={<>{ }</>}
                         titleRender={(items: DataNode) => {
                             return (
-                                <Flex
-                                    gap={12}
-                                    justify='space-between'
-                                    align='baseline'
-                                >
-                                    <Space size={12} style={{ whiteSpace: "nowrap", }}>
-                                        {
-                                            (items.type == "department") && <BankOutlined /> ||
-                                            (items.type == "personal" && <UserOutlined />) ||
-                                            <FolderOutlined />
+                                <Dropdown
+                                    key={"dropdoan"}
+                                    trigger={["contextMenu"]}
+                                    menu={{
+                                        items: itemsAction(items),
+                                        style: {
+                                            width: 200,
+                                            float: "right",
                                         }
-                                        <span>{items.title?.toString()}
-                                        </span>
-                                    </Space>
-                                    {
-                                        !moveDoc && (
-                                            <Dropdown
-                                                key={"dropdoan"}
-                                                trigger={["hover"]}
-                                                menu={{
-                                                    items: itemsAction(items),
-                                                    style: {
-                                                        width: 200,
-                                                        float: "right",
-                                                    }
-                                                }}
-                                            >
-                                                <a><EllipsisOutlined /></a>
-                                            </Dropdown>
-                                        )
-                                    }
-                                </Flex>
+                                    }}
+                                >
+                                    {/* <Flex
+                                        // gap={12}
+                                        justify='space-between'
+                                        align='baseline'
+                                    > */}
+                                        <Space size={6} style={{ whiteSpace: "nowrap", padding: "3px 0" }}>
+                                            {
+                                                (items.type == "department") && <BankFilled style={{ color: "#54aeff" }} /> ||
+                                                (items.type == "personal" && <UserOutlined style={{ color: "#54aeff" }} />) ||
+                                                <FolderFilled style={{ color: "#f3d534" }} />
+                                            }
+                                            <span>{items.title?.toString()}</span>
+                                        </Space>
+
+                                    {/* </Flex> */}
+                                </Dropdown>
                             )
                         }}
                     />
                 }
-            </Spin>
+            </Spin >
             < DocumentModalForm
                 open={documentModalState?.visible?.name === "MODAL"}
                 type={documentModalState?.visible?.type}

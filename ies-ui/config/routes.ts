@@ -1161,13 +1161,13 @@ export default [
     access: "canAccessDMSMenu",
     hideInMenu: 'true',
   },
-  {
-    path: "/dms/share/:view/:id",
-    name: "dms",
-    component: "./dms/share",
-    access: "canAccessDMSMenu",
-    hideInMenu: 'true',
-  },
+  // {
+  //   path: "/dms/share",
+  //   name: "dms",
+  //   component: "./dms/share",
+  //   access: "canAccessDMSMenu",
+  //   hideInMenu: 'true',
+  // },
   {
     path: "/dms/company/:view/*",
     name: "dms",

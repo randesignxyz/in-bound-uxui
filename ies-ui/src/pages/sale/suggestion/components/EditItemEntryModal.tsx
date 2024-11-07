@@ -6,7 +6,7 @@ import { formatDate } from '@/pages/utils';
 import { CrmServiceAPI } from '@/services/crm/services';
 import type { ApprovalStockControlDto, StockControlLess } from '@/services/sale/data';
 import { CopyOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
-import { ProDescriptions, ProForm, ProFormSelect } from '@ant-design/pro-components';
+import { EditableFormInstance, ProDescriptions, ProForm, ProFormSelect } from '@ant-design/pro-components';
 import type { ActionType } from '@ant-design/pro-table';
 import { EditableProTable } from '@ant-design/pro-table';
 import { Button, Card, Flex, Tag, Tooltip, Typography } from 'antd';
@@ -63,7 +63,6 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...pr
   const [distributor, setDistributor] = useState<DistributorCreate>();
   const [form] = useForm<ApprovalStockControlDto>();
   const [isError, setIsError] = useState<boolean>(false);
-
   const [showRemark, setShowRemark] = useState<{
     record: EditableStockItem | undefined;
     isOpen: boolean;
@@ -79,7 +78,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...pr
             const itemEdit: EditableStockItem = {
               id: it.id,
               key: (Math.random() * 1000000).toFixed(0),
-              batchNo: it.batchNo === null || it.batchNo === '' || it.batchNo == "n/a" ? undefined : batchNo,
+              batchNo: it.batchNo === null  || it.batchNo === '' || it.batchNo == "n/a" ? undefined : batchNo,
               beginningQty: it.beginningQty,
               expiredDate: it.expiredDate,
               itemName: it.itemName,
@@ -180,6 +179,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...pr
     if (actionHandlers.onAddItem) {
       actionHandlers.onAddItem(item);
     }
+    
   };
 
 

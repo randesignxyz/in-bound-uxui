@@ -114,15 +114,5 @@ export const SuggestionServiceAPI = (requestActions: RequestActions) => {
     fetchRolByUser:(id:string)=>singleRequest(SuggestionActions.fetchRoleByUser(id))(requestActions) as Promise<{roleName:string}[]>,
     listPurchaseOrderStock:(id?:number)=>singleRequest(SuggestionActions.listPurchaseOrderStock(id))(requestActions) as Promise<PurchaseOrderDTO[]>,
     onMMASaveSettlementModel:(param:SettlementEntry) =>singleRequest(SuggestionActions.onMMASaveSettlementModel(param))(requestActions) as Promise<{data:string, message:string}>,
-    // listCustomer: (params: TableViewSearchParams<CustomerAdvanceSearchParams>) =>
-    //   singleRequest<CustomerDto>(CustomerActions.list(params))(requestActions) as Promise<
-    //     Paging<CustomerDto>
-    //   >,
-    // detailCustomer: (id: string) =>
-    //   singleRequest<CustomerDto>(CustomerActions.detail(id))(
-    //     requestActions,
-    //   ) as Promise<CustomerDto>,
-    // save: (params: PricingCreate) =>
-    //   singleRequest<{ data: string; message: string }>(PricingActions.save(params))(requestActions),
   };
 };

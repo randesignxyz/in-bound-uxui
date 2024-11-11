@@ -129,6 +129,12 @@ export const DeliveryParams = {
         actionName: 'save-truck',
         payload: params
     }),
+    updateIntegrateId: (): ServiceApiType<{}> => ({
+        type: 'EXEC',
+        endpoint: 'DELIVERY',
+        actionName: 'update-integrate-id',
+        payload: {}
+    }),
 
     listAllCompany: (): ServiceApiType<{}> => ({
         type: 'LIST_QUERY',

@@ -103,6 +103,7 @@ export const DeliveryServiceAPI = (requestActions: RequestActions) => {
 
         listTruck: (params: TableViewSearchParams<any>) => singleRequest<TruckListItem>(DeliveryParams.listTruck(params))(requestActions) as Promise<Paging<TruckListItem>>,
         saveTruck: (data: SaveTruck) => singleRequest(DeliveryParams.saveTruck(data))(requestActions),
+        updateIntegrateId: () => singleRequest(DeliveryParams.updateIntegrateId())(requestActions),
         fetchTruck: (id: number) => singleRequest(DeliveryParams.fetchTruck(id))(requestActions) as Promise<Truck>,
 
         listCompany: (params: TableViewSearchParams<any>) => singleRequest<CompanyListItem>(DeliveryParams.listCompany(params))(requestActions) as Promise<Paging<CompanyListItem>>,

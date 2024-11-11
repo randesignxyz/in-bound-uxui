@@ -69,7 +69,7 @@ export class AppraisalStyle {
 //     }
 // }
 export type ProbationEvaluationEmpList = {
-    id: number
+    id: number  
     formNo: string
     instanceId: string
     requestedDate?: Moment
@@ -92,7 +92,7 @@ export type ProbationEvaluationEmpList = {
     hodName?: string
     joinedDate?: Moment
     processInstId: string
-    parentId?: number
+    parentId?: number    
     formTypeCode: string
     workflowStatus: string
     status: string
@@ -377,6 +377,7 @@ export type ProbationFormType = {
 }
 export type ProbationEvaluationRs = {
     id: number  
+    ref?:ProbationEvaluationRs
     formNo: string
     empId: number
     empNo: string
@@ -400,6 +401,8 @@ export type ProbationEvaluationRs = {
     status: string
     workflowStatus: string
     processStatus: string
+    confirmedStatus?: string
+    extendedDate?: Moment
 
 
 }
@@ -493,6 +496,8 @@ export type ProbationEvaluationPayload = {
     section4: ProbationEvaluationResourcesSupport[]
     empAchievement: ProbationEmpImprovement[]
     empImprovement: ProbationEmpImprovement[]
+    confirmedStatus?: string
+    extendedDate?: Moment
 
 }
 export type ProbationEvaluationHrRevievPayload = {

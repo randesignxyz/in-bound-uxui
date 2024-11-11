@@ -6,6 +6,7 @@ import { ProbationEvaluationRequestFormNames } from '.';
 import AssessmentPreparationForm from './AssessmentPreparationForm';
 import AssessmentSubmissionForm from './AssessmentSubmissionForm';
 import HrReviewForm from './HrReviewForm';
+import MboApprovalForm from './MboApprovalForm';
 
 export const getProbationEvaluationRequestForms = (): DataForm[] => [
   {
@@ -42,12 +43,14 @@ export const getProbationEvaluationRequestForms = (): DataForm[] => [
     }
   },
   {
-    formKey: [  
-      // ProbationEvaluationRequestFormNames.hrbp,
-      // ProbationEvaluationRequestFormNames.hrm,
-      ProbationEvaluationRequestFormNames.mbo,
+    formKey: [     
+      ProbationEvaluationRequestFormNames.mbo,  
     ],
     dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,
-    actionDataForm: (props: ActionDataFormProps) => <DefaultActionForm {...props} />,
-  }
+    actionDataForm: (props: ActionDataFormProps) => {
+      const title= 'MBO/ Approval'
+      props = {...props,title}
+     return <MboApprovalForm {...props} />
+    }
+  },
 ];

@@ -7,6 +7,7 @@ import ListMenuComp, { ListMenuItem } from '@/components/ListMenu';
 import { ClockCircleOutlined, ExportOutlined } from '@ant-design/icons'; 
 import { useAccess } from '@umijs/max'; 
 import { PageContainer } from '@ant-design/pro-components';
+import EmpReport from './reports/EmpReport';
 
 export const HrmPaths = {
     employee: '/hrm/employee',
@@ -25,6 +26,9 @@ export default () => {
             link: `${HrmPaths.employee}/list`,
             visible: access.canAccessHrEmployeeMenuItem,
             icon: essIcon,
+            menu: access.canAccessHrESSEmpMenuReport? {
+              items: [{ label: <EmpReport trigger={<a>Export</a>} />, key: 'exportEssEmpReport', icon: <ExportOutlined style={{ fontSize: '16px', color: '#08c' }} /> }]
+            }: undefined
           },
           {
             id: 'ess_announcement',
@@ -53,7 +57,7 @@ export default () => {
     ]
 
     return (
-        <PageContainer title = {false}>
+        <PageContainer contentWidth='Fluid' title={false}>
             <ListMenuComp items={items} />
         </PageContainer>
     )

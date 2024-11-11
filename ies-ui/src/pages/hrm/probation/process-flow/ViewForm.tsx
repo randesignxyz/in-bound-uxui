@@ -39,7 +39,11 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
     const editableFormRef3 = useRef<EditableFormInstance>();
     const editableFormRef4 = useRef<EditableFormInstance>();
     const instId = workflowModel.state?.instanceData?.processInstance?.procInstId;
-    console.log('workflowModel===',workflowModel)
+    const confirmedStatusList = [
+      {status:'CONFIRMED', desc:'Confirmed Probation'},
+      {status:'EXTENDED', desc:'Extended Probation Until: '},
+      {status:'TERMINATED', desc:'Terminated'}
+    ]
     
     const clear = () => {
         form.resetFields();
@@ -73,11 +77,6 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
       }
     };
     const dataReport=(exportType: 'PDF' | 'EXCEL'): DownloadData<CriteriaExportReport>=> { 
-      
-      // var direct = data?.contractTypeCode == 'OTHER' ? 'Display':data?.contractTypeCode == 'IN_DIRECT' ?'Indirect' : 'Direct'
-      // var issued=  data?.status=='ISSUED'? 'Issued':''
-      // var reportName = replace('SettlementIncentive@@##Report','@@',direct)
-      // reportName = replace(reportName,'##',issued) 
       return {
         reportName: 'export-form',
         fileName: `Probation Evaluation Form`,
@@ -127,14 +126,20 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
                         size="small"
                         bordered headerBordered 
                     >                  
-                    <Descriptions column={3}>
+                   <Descriptions column={5}>
                     <Descriptions.Item label='Employee Id'>{probaRequest?.probationEvaluation.empNo} </Descriptions.Item>
                     <Descriptions.Item label='Employee Name'>{probaRequest?.probationEvaluation.empName} </Descriptions.Item>
                     <Descriptions.Item label='Hired Date'>{probaRequest?.probationEvaluation?.joinedDate&&formatDate(probaRequest?.probationEvaluation?.joinedDate)}</Descriptions.Item>
+                    
 
-                    <Descriptions.Item label='Position'>{probaRequest?.probationEvaluation.jobTitle}</Descriptions.Item>
+                    <Descriptions.Item label='Decision by Line Manager' span={2}>
+                        {confirmedStatusList.find(v=> v.status==probaRequest?.probationEvaluation?.confirmedStatus)?.desc} {probaRequest?.probationEvaluation?.confirmedStatus==='EXTENDED'? formatDate(probaRequest?.probationEvaluation?.extendedDate):''}
+                    </Descriptions.Item>           
                     <Descriptions.Item label='Function'>{probaRequest?.probationEvaluation.departmentName} </Descriptions.Item>
                     <Descriptions.Item label='Company'>{probaRequest?.probationEvaluation.buName}</Descriptions.Item>
+                    <Descriptions.Item label='Position'>{probaRequest?.probationEvaluation.jobTitle}</Descriptions.Item>
+
+                    <Descriptions.Item label='Ref' span={2}>{probaRequest?.probationEvaluation?.ref?.formNo}</Descriptions.Item>
 
                     </Descriptions>
                 </ProCard>}
@@ -146,38 +151,15 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
                     size="small"
                     bordered headerBordered 
                 >
-                    {/* <div>
-                        <span>Please choose rating of each criterion that describes best of your employee’s performance compares to the job expectations and goals/work priorities.</span>
-                        <div style={{paddingTop:5}}>
-                        <div><b>SECTION I. PERFORMANCE (Weightage: 50%)</b></div>
-                        <div>What employee is expected to do/achieved during probation period.</div>
-                        <div><span style={{color:'red'}}>*</span> At least 3 items are required.</div>
-                        </div>
-                    </div> */}
+                   
                     <Section1Table editable={false} editableRating={false} editableFormRef={editableFormRef1} addedItems={addedSection1} onSetAddedItems={setAddedSection1} totalScore={probaRequest?.totalScore1}/>
-                    {/*---------------------------- SECTION II. JOB KNOWLEDGE AND SKILLS (Weightage: 20%)----------------------------------*/}
-                    {/* <div>
-                        <div style={{paddingTop:5}}>
-                        <div><b>SECTION II. JOB KNOWLEDGE AND SKILLS (Weightage: 20%)</b></div>
-                        <div>What relevant knowledge and skills that employee possesses and applies effectively in the job</div>
-                        </div>
-                    </div> */}
+                    
                     <Section2Card editable={false} editableRating={false} editableFormRef={editableFormRef2} addedItems={addedSection2} onSetAddedItems={setAddedSection2}  totalScore={probaRequest?.totalScore2}/>
                     {/*---------------------------- SECTION III. BEHAVIOR (Weightage: 30%)-------------------------------------------------*/}
-                    {/* <div>
-                        <div style={{paddingTop:5}}>
-                        <div><b>SECTION III. BEHAVIOR (Weightage: 30%)</b></div>
-                        <div>How employee is expected to behave in a proper manner.</div>
-                        </div>
-                    </div> */}
+                   
                     {probaResources&&<Section3Card editable={false} editableRating={false} editableFormRef={editableFormRef3} addedItems={probaResources} onSetAddedItems={setProbaResources}  totalScore={probaRequest?.totalScore3}/>}
                     {/*---------------------------- SECTION IV. SUPPORT / RESOURCES NEEDED-------------------------------------------------*/}
-                    {/* <div>
-                        <div style={{paddingTop:5}}>
-                        <div><b>SECTION IV. SUPPORT / RESOURCES NEEDED</b></div>
-                        <div>What Line Manager provides/facilitates employee during probation period.</div>
-                        </div>
-                    </div> */}
+                    
                     <Section4Card editable={false} editableRating={false} editableFormRef={editableFormRef4} addedItems={probaResourcesSupport} onSetAddedItems={setProbaResourcesSupport} />
                     {/*---------------------------- SECTION V. ADDITIONAL COMMENTS-------------------------------------------------*/}
                     <div>
@@ -191,43 +173,8 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
                       {probaRequest?.empImprovement&&<EmpImprovmentTable1  editable={false} addedItems={probaRequest?.empImprovement.map(it => ({...it,key: uniqueId().toString()}))} />}
                     </Space>                    
                 </ProCard>
-                {probaRequest &&<SummaryCard probaRequest={probaRequest}/>}
-                {/* <ProCard title="SUMMARY" 
-                  collapsible  
-                  size="small"
-                  bordered headerBordered 
-                >
-                  <Space direction="vertical" style={{ width: '100%' }}>
-                    <div style={{paddingBottom:20}}><b>FINAL SCORE </b> <span style={{paddingRight:20, borderRadius:'9px', padding:'8px', border:'solid 1.5px black'}}><b>{`${formatterQty1.format(probaRequest?.totalScore||0)} / ${formatterQty1.format(probaRequest?.maxScore||0)}`}</b></span> 
-                  
-                    </div>
-                    <div><b>OVERALL PROBATION RATING</b></div>
-                    {probaRequest?.overallRating&&<ProTable
-                      pagination={false}  
-                      search={false}
-                      options={{
-                          density:false,
-                          search:false,
-                          reload:false,
-                          setting:false,
-                          fullScreen:false
-                          
-                      }}                
-                      dataSource={probaRequest?.overallRating} 
-                      columns={[
-                        {title:'Rating',dataIndex:'score',
-                          render:(_,r)=>(<div>{formatterQty1.format(r.startedScore||0)} - { formatterQty1.format(r.endedScore||0)}</div>)
-                        },                     
-                        {title:'Description',
-                          children:[
-                            {title:'', dataIndex:'title'},
-                            {title:'', dataIndex:'description1'}
-                          ]
-                        }
-                      ]}
-                    />}
-                  </Space>                  
-                </ProCard> */}
+                {probaRequest &&<SummaryCard probaRequest={probaRequest} initialValue={{status:probaRequest.probationEvaluation?.confirmedStatus||'', extendedDate: probaRequest.probationEvaluation?.extendedDate}}/>}
+                
             </ProForm>     
         </Spin>)
         }}

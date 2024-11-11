@@ -66,7 +66,7 @@ export default ({ title, form, onlyCurrentUser, onSetSubmitter }: {
                 fetchUser(value)
               },
             }}
-            disabled = {onlyCurrentUser ||  !access.isAccessHRApprasilSupport}
+            disabled = {onlyCurrentUser ||  !access.isAccessHRProbationEvaluationSupport}
             name={"requestorId"}          
             allowClear
             showSearch

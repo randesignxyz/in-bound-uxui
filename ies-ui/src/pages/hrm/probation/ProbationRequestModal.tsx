@@ -191,7 +191,7 @@ export default ({
               rules={[{ required: true }]}
               width={'sm'}
               label="Form Type"
-              options={probationFormType?.map((it) => ({ label: it.name, value: it.code }))}
+              options={probationFormType?.map((it) => ({ label: it.description, value: it.code }))}
             />
             <ProFormSelect
               showSearch

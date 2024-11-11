@@ -594,6 +594,10 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         ['ROLE_HR_ESS_ADD_EDIT_PROFILE'].some((it) => it === item),
       ) || false, 
+    canAccessHrESSEmpMenuReport:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_HR_ESS_EMP_REPORT'].some((it) => it === item),
+      ) || false,   
     canAccessHrVissibleTraining:
       currentUser?.authorities.some((item) =>
         ['ROLE_HR_VISSIBLE_TRAINING'].some((it) => it === item),

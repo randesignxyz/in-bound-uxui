@@ -31,6 +31,7 @@ export default ({ trigger }: { trigger?: JSX.Element}) => {
         {name:'Education Information', value: 'hr_ess_education_info_report'},
         {name:'Languages Information', value: 'hr_ess_languages_info_report'},
         {name:'Training Certification', value: 'hr_ess_training_certication_report'},
+        {name:'Work Experiences', value: 'hr_ess_work_experience_report'},
         {name:'Employee Information', value: 'hr_ess_employee_info_report'}
     ]
     const [rawData, setRawData] = useState<boolean>(false)

@@ -40,7 +40,7 @@ interface PurchaseOrderDTO{
     distributorPhone?:string;
     latitude?:string;
     longitude?:string;
-    foc?:{qty:number; itemName:string;itemCode:string}[]
+    foc?:{qty:number; itemName:string;itemCode:string; uom?:string}[]
 }
 
 

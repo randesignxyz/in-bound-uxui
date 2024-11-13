@@ -345,6 +345,17 @@ export default [
     access: 'canAccessSaleMenuItems',
     component: './sale/product',
   },
+
+    /******************* PURCHASEORDER MMA *******************/
+    {
+      path: '/sale/purchase-order/:view/*',
+      name: 'mpu',
+      icon: 'packingList',
+      hideInMenu: 'true',
+      // access: 'canAccessRSMRequestToMPU',
+      component: './sale/purchase-order',
+    },
+    
   /******************* DSD *******************/
   {
     path: '/sale/stock/:view/*',

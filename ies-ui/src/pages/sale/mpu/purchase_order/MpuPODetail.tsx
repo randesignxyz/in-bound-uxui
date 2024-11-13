@@ -1,5 +1,5 @@
 import { formatter } from "@/pages/utils";
-import { SyncOutlined, CheckCircleOutlined, CloseCircleOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
+import { SyncOutlined, CheckCircleOutlined, CloseCircleOutlined, ExclamationCircleOutlined, EnvironmentOutlined } from "@ant-design/icons";
 import { ProDescriptions, ProTable } from "@ant-design/pro-components";
 import { Flex, Card, Tag, Typography, Row } from "antd";
 import { PurchaseRequestItemCreate } from "../request/data";
@@ -36,6 +36,7 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                         <Col md={8} xs={24}>
                             <ProDescriptions
                                 column={1}
+                                contentStyle={{fontWeight:500}}
                                 dataSource={dataSource}
                                 loading={requestActions.request?.loading}
                                 columns={[
@@ -78,6 +79,7 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                             <ProDescriptions
                                 dataSource={dataSource}
                                 loading={requestActions.request?.loading}
+                                contentStyle={{fontWeight:500}}
                                 column={1}
                                 columns={[
                                     {
@@ -94,7 +96,8 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                                     },
                                     {
                                         title: 'Checked In Location',
-                                        render: (_, r) => <Typography.Paragraph copyable>{[r.latitude, r.longitude].filter(p => p).join(",")}</Typography.Paragraph>
+                                        render:(_,r)=><a href={`https://www.google.com/maps/search/?api=1&query=${r.latitude?.replace(/[&\/[\]\#,+()$~%'":*?<>{}]/g, "")}%2C${r.longitude?.replace(/[&\/[\]\#,+()$~%'":*?<>{}]/g, "")}`} target="_blank" ><EnvironmentOutlined  /></a>
+                                        // render: (_, r) => <Typography.Paragraph copyable>{[r.latitude, r.longitude].filter(p => p).join(",")}</Typography.Paragraph>
                                     },
                                 ]}
                             />
@@ -102,6 +105,7 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                         <Col md={8} xs={24}>
                             <ProDescriptions
                                 dataSource={dataSource}
+                                contentStyle={{fontWeight:500}}
                                 loading={requestActions.request?.loading}
                                 column={1}
                                 columns={[
@@ -151,10 +155,11 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                         ]}
                     />
                 </Card>
-                <Card size="small" title="Free of Charge">
+              
                     {
                         (dataSource?.foc?.length || 0) > 0 && (
                             <>
+                              <Card size="small" title="Free of Charge">
                                 <ProTable
                                     search={false}
                                     options={false}
@@ -177,14 +182,16 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                                         },
                                         {
                                             title: "Uom",
-                                            dataIndex: "uom"
+                                            dataIndex: "uom",
+                                            render:(_,r)=>r.uom?.toLowerCase()
                                         }
                                     ]}
                                 />
+                                </Card>
                             </>
+                            
                         )
                     }
-                </Card>
                 <Card size='small'>
                     <Flex
                         justify='space-between'
@@ -207,18 +214,20 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                                     title: "Grand Amount",
                                     dataIndex: "grandAmount",
                                     valueType: "money",
-                                    render: (_, r) => r.grantAmount ? formatter.format(r.grantAmount) : "$0.00"
+                                    render: (_, r) =><Typography.Text type="warning">{ r.grantAmount ? formatter.format(r.grantAmount) : "$0.00"}</Typography.Text>
                                 },
                                 {
                                     title: "Discount Amount",
                                     dataIndex: "discountAmount",
                                     valueType: "percent",
+                                    render:(_,r)=> <Typography.Text type="warning">{r.discountAmount ? formatter.format(r.discountAmount) : "%0.00"}</Typography.Text>
+                              
                                 },
                                 {
                                     title: "Total Amount",
                                     dataIndex: "totalAmount",
                                     valueType: "money",
-                                    render: (_, r) => r.totalAmount ? formatter.format(r.totalAmount,) : "$0.00"
+                                    render: (_, r) => <Typography.Text type="warning">{r.totalAmount ? formatter.format(r.totalAmount,) : "$0.00"}</Typography.Text>
                                 },
                             ]}
                         />

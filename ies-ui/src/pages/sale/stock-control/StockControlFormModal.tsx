@@ -64,8 +64,6 @@ const StockControlFormModal: React.FC<StockControlFormModalProps> = ({
     isFromRequest?: boolean;
   }>({});
   const [vehicleModal, setVehicleModal] = useSetState<{ visible?: boolean }>({});
-
-  // const [salesperson, setSalesperson] = useSetState<{ isVanSale?: boolean }>();
   const [form] = useForm<SaveStockControl>();
 
   const actionRef = useRef<ActionType>();
@@ -75,7 +73,6 @@ const StockControlFormModal: React.FC<StockControlFormModalProps> = ({
   const onValuesChange = (changedValues: any, values: any) => {
     const { empNo, isVanSale } = values;
     if ('empNo' in changedValues) {
-      // actionHandlers?.onFetchLastStockControl && actionHandlers.onFetchLastStockControl(empNo);
       actionHandlers?.onCheckInitializeMenu && actionHandlers.onCheckInitializeMenu(empNo);
       form.setFieldsValue({ receivedBy: empNo });
     }
@@ -83,18 +80,10 @@ const StockControlFormModal: React.FC<StockControlFormModalProps> = ({
       setBeginningDataSource([]);
       actionHandlers?.onClearLastStockControl && actionHandlers.onClearLastStockControl();
     }
-    // if ('isVanSale' in changedValues) {
-    //   setSalesperson({ isVanSale: isVanSale });
-    //   form.setFieldsValue({ amount: undefined });
-    // }
   };
-
+  
   const onSubmitActionHandler = async (isView: boolean) => {
     try {
-      // if (!salesperson.isVanSale && dataSource.length === 0) {
-      //   message.error('No line items');
-      //   return;
-      // }
       const dataForm = await form.validateFields();
 
       const importNoItemReqeust =
@@ -148,10 +137,8 @@ const StockControlFormModal: React.FC<StockControlFormModalProps> = ({
       actionHandlers?.onClearLastStockControl && actionHandlers.onClearLastStockControl();
       return;
     }
-    // actionHandlers?.onLoadInitData?.();
     setDataSource([]);
     setBeginningDataSource([]);
-    // setSalesperson({ isVanSale: true });
     form.resetFields();
     form.setFieldsValue({
       empNo: data?.selectedSE,
@@ -177,7 +164,6 @@ const StockControlFormModal: React.FC<StockControlFormModalProps> = ({
             onClick={() => {
               form.resetFields();
               setDataSource([]);
-              // setSalesperson({ isVanSale: false });
             }}
           >
             Reset
@@ -215,7 +201,6 @@ const StockControlFormModal: React.FC<StockControlFormModalProps> = ({
         ),
       ]}
     >
-      {/* {!data?.typeId && ( */}
       <Card size="small" title="General Info" style={{ marginBottom: 10 }}>
         <ProForm
           {...layout}
@@ -235,7 +220,6 @@ const StockControlFormModal: React.FC<StockControlFormModalProps> = ({
                 showSearch
                 fieldProps={{
                   optionLabelProp: 'label',
-                  // dropdownMatchSelectWidth: 400,
                   filterOption: (input, option) =>
                     (option?.label?.toString() || '').toLowerCase().indexOf(input.toLowerCase()) >=
                     0,
@@ -270,7 +254,6 @@ const StockControlFormModal: React.FC<StockControlFormModalProps> = ({
                       </Tooltip>
                     }
                     request={async ({ keyWords }) => {
-                      //setPhoneNumber(keyWords);
                       const result =
                         keyWords &&
                         keyWords.length > 1 &&
@@ -290,7 +273,6 @@ const StockControlFormModal: React.FC<StockControlFormModalProps> = ({
                     showSearch
                     fieldProps={{
                       optionLabelProp: 'label',
-                      //dropdownMatchSelectWidth: 400,
                       filterOption: (input, option) =>
                         (option?.label?.toString() || '')
                           .toLowerCase()
@@ -305,19 +287,6 @@ const StockControlFormModal: React.FC<StockControlFormModalProps> = ({
                         };
                       })}
                   />
-                  {/*<ProFormText
-                      help={<span />}
-                      label="Plate Number"
-                      name="plateNumber"
-                      rules={[{ required: true }]}
-                      // width="md"
-                    />
-                    <ProFormCheckbox
-                      disabled={data?.selectedSE ? true : false}
-                      label="Van Sale"
-                      name="isVanSale"
-                      
-                    /> */}
                 </>
               )}
             </Col>
@@ -327,8 +296,6 @@ const StockControlFormModal: React.FC<StockControlFormModalProps> = ({
                   <ProFormText
                     label="Serial Number"
                     name="serialNumber"
-                    // rules={[{ required: true }]}
-                    // width="md"
                   />
                   <ProFormDateTimePicker
                     label="Request Date"
@@ -343,7 +310,6 @@ const StockControlFormModal: React.FC<StockControlFormModalProps> = ({
                     showSearch
                     fieldProps={{
                       optionLabelProp: 'label',
-                      // dropdownMatchSelectWidth: 400,
                       filterOption: (input, option) =>
                         (option?.label?.toString() || '')
                           .toLowerCase()
@@ -363,24 +329,12 @@ const StockControlFormModal: React.FC<StockControlFormModalProps> = ({
                     name="approvedDate"
                     rules={[{ required: true }]}
                   />
-                  {/* <ProFormMoney
-                      customSymbol="$"
-                      help={<span />}
-                      label="Amount"
-                      name="amount"
-                      disabled={salesperson.isVanSale}
-                      rules={[{ required: !salesperson.isVanSale }]}
-                      locale="en-US"
-                      min={0}
-                    /> */}
                 </>
               )}
             </Col>
           </Row>
         </ProForm>
       </Card>
-      {/* )} */}
-
       {!data?.isBeginningManual &&
         data?.listLastStockControl &&
         data?.listLastStockControl.length > 0 && (
@@ -391,8 +345,6 @@ const StockControlFormModal: React.FC<StockControlFormModalProps> = ({
                   <Tabs.TabPane
                     tab={
                       <Space size={0}>
-                        {/* <ScheduleOutlined /> <span>Transaction</span> */}
-                        {/*<DashboardOutlined />*/}
                         <span>
                           {it.typeId === 131
                             ? 'Vital'
@@ -483,7 +435,6 @@ const StockControlFormModal: React.FC<StockControlFormModalProps> = ({
                 render: (_, data) => {
                   return (
                     <Space size={0}>
-                      {/* <Button size="small" type="link" icon={<EditOutlined />} onClick={(_) => {}} /> */}
                       <Button
                         size="small"
                         type="link"
@@ -560,7 +511,6 @@ const StockControlFormModal: React.FC<StockControlFormModalProps> = ({
               render: (_, data) => {
                 return (
                   <Space size={0}>
-                    {/* <Button size="small" type="link" icon={<EditOutlined />} onClick={(_) => {}} /> */}
                     <Button
                       size="small"
                       type="link"
@@ -615,7 +565,6 @@ const StockControlFormModal: React.FC<StockControlFormModalProps> = ({
         }}
         actionHandlers={{
           onAddItem: (item) => {
-            console.log(item);
             const existing = addNewModal.isFromRequest
               ? dataSource.find(
                   (it) =>
@@ -624,7 +573,6 @@ const StockControlFormModal: React.FC<StockControlFormModalProps> = ({
                       : it.itemType === item.itemType &&
                         it.itemId === item.itemId &&
                         it.batchNo === item.batchNo,
-                  //item.expiredDate?.isSame(it.expiredDate, 'day'),
                 )
               : beginningDataSource.find(
                   (it) =>
@@ -633,9 +581,7 @@ const StockControlFormModal: React.FC<StockControlFormModalProps> = ({
                       : it.itemType === item.itemType &&
                         it.itemId === item.itemId &&
                         it.batchNo === item.batchNo,
-                  //item.expiredDate?.isSame(it.expiredDate, 'day'),
                 );
-            console.log(existing);
             if (existing) {
               let copyArray = addNewModal.isFromRequest
                 ? dataSource.copyWithin(-1, -1)
@@ -647,7 +593,6 @@ const StockControlFormModal: React.FC<StockControlFormModalProps> = ({
                     : it.itemType === item.itemType &&
                       it.itemId === item.itemId &&
                       it.batchNo === item.batchNo
-                  //item.expiredDate?.isSame(it.expiredDate, 'day')
                 )
                   it.itemQuantity += item.itemQuantity;
               });
@@ -662,11 +607,6 @@ const StockControlFormModal: React.FC<StockControlFormModalProps> = ({
             setAddNewModal({ visible: false, isFromRequest: !addNewModal.isFromRequest });
           },
         }}
-        // actionHandlers={{
-        //   onAddItem: (item) => {
-        //
-        //   },
-        // }}
       />
     </FormModalComp>
   );

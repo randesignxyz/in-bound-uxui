@@ -140,7 +140,6 @@ const StockStoreFormModal: React.FC<StockControlFormModalProps> = ({
                 showSearch
                 fieldProps={{
                   optionLabelProp: 'label',
-                  // dropdownMatchSelectWidth: 400,
                   filterOption: (input, option) =>
                     (option?.label?.toString() || '').toLowerCase().indexOf(input.toLowerCase()) >=
                     0,

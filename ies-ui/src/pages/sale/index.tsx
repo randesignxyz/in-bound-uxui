@@ -21,6 +21,8 @@ import stockIcon from '@/assets/stock.png';
 import storeIcon from '@/assets/store.png';
 import stockCountId from '@/assets/stock-count.png';
 
+import FOC from '@/assets/free.png';
+
 import type { ListMenuItem } from '@/components/ListMenu';
 import ListMenuComp from '@/components/ListMenu';
 import {
@@ -70,6 +72,7 @@ export const SalePaths = {
   order: '/retailer/order/list',
   user: '/sale/user',
   pricing: '/sale/pricing',
+  purchaseOrder: "/sale/purchase-order"
 };
 
 export default () => {
@@ -260,7 +263,7 @@ export default () => {
       name: 'Reports',
       description: 'All Reports in DSD.',
       icon: reportIcon,
-      visible: access.canAccessAllMenuDSD,
+      visible: access.canAccessSaleReport,
       menu: {
         onClick: (info) => {
           switch (info.key) {
@@ -326,6 +329,13 @@ export default () => {
       // visible: access.canAccessAllMenuDSD,
       link: `${MPUPath.mpuCountStock}/list`,
     }, 
+    // {
+    //   id: 'free-of-charge',
+    //   name: 'Free Of Charge',
+    //   description: '',
+    //   icon: FOC,
+    //   link: `${MPUPath.mpuCountStock}/list`,
+    // }, 
   ];
 
   const items: ListMenuItem[] = [
@@ -455,9 +465,19 @@ export default () => {
   // },
 
   // ];
+  const purchaseOrder = [
+    {
+      id: "rsmRequest",
+      name: "Purchase Order" ,
+      description: "Rsm make Purchase Order for MMA",
+      link: `${SalePaths.purchaseOrder}/list`,
+      icon:purchaseOrderIcon,
+      // visible: access.canAccessRSMRequestToMPU,
+    }
+  ];
 
   return (
-    <PageContainer title={false}>
+    <PageContainer title={false} >
       {access.canAccessSaleMenuItems && <ListMenuComp items={items} />}
       {/* <ListMenuComp items={retailerMenuItems} /> */}
       <Reports reportName={report} onClose={() => setReport(undefined)} />
@@ -476,6 +496,12 @@ export default () => {
           <ListMenuComp items={mpuMenuItems} />
         </>
       )}
+        {/* {access.canAccessRSMRequestToMPU && ( */}
+        <>
+          <Divider plain orientation='left'>MMA</Divider>
+          <ListMenuComp items={purchaseOrder} />
+        </>
+      {/* // )} */}
     </PageContainer>
   );
 };

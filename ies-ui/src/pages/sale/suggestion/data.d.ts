@@ -1,29 +1,19 @@
 
-
-interface SettleMethod{
-    key?:React.Key,
-    settlementMethod: string,
-    currency: string,
-    amount: number,
-    exchangeRate?: number,
-    referenceNo?: string,
-    bankName?: string,
-    attachments?: string[] 
-}
-
-interface SettlementEntry {
-    id?: number = 0,
+interface SettlementEntry{
+    id?:number,
     settlementDate: moment.Moment,
     salespersonCode?: string,
     stockControlId?: number,
-    cashierId?: number,
+    cashierId: number,
     cashierName?: string,
-    exchangeRate?: number,
+    exchangeRate: number,
     amount: number,
     amountKH: number,
-    isKeepForwarding?: boolean,
-    remark?: string,
+    isKeepForwarding: boolean,
+    remark: string,
     storeId?: number,
-    stockCountId?: number,
-    items?: SettleMethod[] 
+    stockCountId?: number
+    items?: CreateSettlementMethodDto[]
 }
+
+interface CreateSettlementMethodDto{}

@@ -87,9 +87,6 @@ const EditStockControlFormModal: React.FC<EditStockControlFormModalProps> = ({
         <Button key="button" onClick={() => rest.onCancel && rest.onCancel()}>
           Cancel
         </Button>,
-        // <Button key="reset" onClick={() => form.resetFields}>
-        //   Reset
-        // </Button>,
         <Button
           disabled={data?.stockControl?.id === null}
           loading={rest.confirmLoading}
@@ -120,10 +117,8 @@ const EditStockControlFormModal: React.FC<EditStockControlFormModalProps> = ({
                 showSearch
                 fieldProps={{
                   optionLabelProp: 'label',
-                  // dropdownMatchSelectWidth: 400,
                   filterOption: (input, option) =>
-                    (option?.label?.toString() || '').toLowerCase().indexOf(input.toLowerCase()) >=
-                    0,
+                    (option?.label?.toString() || '').toLowerCase().indexOf(input.toLowerCase()) >=0,
                 }}
                 options={data?.seList
                   ?.filter((it) => it.isRequester)
@@ -153,7 +148,6 @@ const EditStockControlFormModal: React.FC<EditStockControlFormModalProps> = ({
                   </Tooltip>
                 }
                 request={async ({ keyWords }) => {
-                  //setPhoneNumber(keyWords);
                   const result =
                     keyWords &&
                     keyWords.length > 1 &&
@@ -172,7 +166,6 @@ const EditStockControlFormModal: React.FC<EditStockControlFormModalProps> = ({
                 showSearch
                 fieldProps={{
                   optionLabelProp: 'label',
-                  //dropdownMatchSelectWidth: 400,
                   filterOption: (input, option) =>
                     (option?.label?.toString() || '').toLowerCase().indexOf(input.toLowerCase()) >=
                     0,
@@ -186,26 +179,11 @@ const EditStockControlFormModal: React.FC<EditStockControlFormModalProps> = ({
                     };
                   })}
               />
-              {/*<ProFormText
-                      help={<span />}
-                      label="Plate Number"
-                      name="plateNumber"
-                      rules={[{ required: true }]}
-                      // width="md"
-                    />
-                    <ProFormCheckbox
-                      disabled={data?.selectedSE ? true : false}
-                      label="Van Sale"
-                      name="isVanSale"
-
-                    /> */}
             </Col>
             <Col flex="1">
               <ProFormText
                 label="Serial Number"
                 name="referenceNo"
-                // rules={[{ required: true }]}
-                // width="md"
               />
               <ProFormDateTimePicker
                 disabled={data?.stockControl?.id !== null}
@@ -220,7 +198,6 @@ const EditStockControlFormModal: React.FC<EditStockControlFormModalProps> = ({
                 showSearch
                 fieldProps={{
                   optionLabelProp: 'label',
-                  // dropdownMatchSelectWidth: 400,
                   filterOption: (input, option) =>
                     (option?.label?.toString() || '').toLowerCase().indexOf(input.toLowerCase()) >=
                     0,

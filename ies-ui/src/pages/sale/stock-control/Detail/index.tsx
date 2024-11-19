@@ -1,8 +1,9 @@
 import { simpleRequestActions } from '@/services/model';
-import type { ExchangeRate, SaleInvoiceLess, SaveStockControl } from '@/services/sale/data';
+import type { ExchangeRate, SaleInvoiceLess, SaveStockControl, StockDetailItemSettle } from '@/services/sale/data';
 import {
   AuditOutlined,
   DashboardOutlined,
+  FileDoneOutlined,
   // FileDoneOutlined,
   ShopOutlined,
 } from '@ant-design/icons';
@@ -18,6 +19,7 @@ import SaleInvoiceTabItem from '../components/SaleInvoiceTabItem';
 import StockControlTabItem from '../components/StockControlTabItem';
 import { Model } from '../model';
 import StockControlFormModal from '../StockControlFormModal';
+import SettlementTabItem from '../components/SettlementTabItem';
 
 type Props = {
   id: number;
@@ -288,7 +290,6 @@ const StockControlDetail: React.FC<Props> = ({ id, actionHandlers }) => {
                     dataSource:
                       state.data?.listStockDetailItem?.flatMap((it) =>
                         it.items
-                          //.filter((it1) => it1.beginningQty + it1.quantity > it1.soldQty)
                           .flatMap((it1) => {
                             const endQty = it1.beginningQty + it1.quantity - it1.soldQty;
                             const d: StockDetailItemSettle = {

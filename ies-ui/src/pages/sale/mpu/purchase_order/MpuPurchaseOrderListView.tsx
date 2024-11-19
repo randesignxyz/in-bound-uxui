@@ -101,7 +101,7 @@ export default ({ onDetail }: Props) => {
                   : r.status == "paid" ? "success"
                     : r.status == "rejected" ? "error"
                       : "warning"
-              }>{r.status.toUpperCase()}</Tag>
+              }>{r.status?.toUpperCase()}</Tag>
           },
           {
             title: 'Order Date ',

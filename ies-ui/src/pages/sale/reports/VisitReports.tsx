@@ -55,7 +55,6 @@ export default (props: Props) => {
     } finally {
       setLoading(false);
     }
-    //if (props !== undefined && props.onCancel !== undefined) props.onCancel();
   };
   return (
     <>

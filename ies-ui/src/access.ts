@@ -622,11 +622,17 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canAccessSaleLead: currentUser?.authorities.some((items) =>
       ['ROLE_DSD_ADMIN','ROLE_ADMIN','ROLE_SALE_INDIVIDUAL', "ROLE_DSD_REPORT"].some((it) => it === items)
     ) || false,
+
+    canAccessSaleReport: currentUser?.authorities.some((items) =>
+      ['ROLE_DSD_ADMIN', 'ROLE_ADMIN',"ROLE_DSD_REPORT"].some((it) => it === items)
+    ) || false,
+    // canAccessSaleDailySettle :currentUser?.authorities.some((items)=>
+    //  || false),
     // ==== END reach ====
     
     canAccessAllMenuDSD:
       currentUser?.authorities.some((item) =>
-        ['ROLE_DSD_ADMIN', 'ROLE_ADMIN'].some((it) => it === item),
+        ['ROLE_DSD_ADMIN', 'ROLE_ADMIN', "ROLE_DSD_REPORT"].some((it) => it === item),
       ) || false,
 
     canAcessStockControlMenuItem:
@@ -740,7 +746,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     // Reach-2024-02-13 
     canAccessFleetMenu:
       currentUser?.authorities.some((item) =>
-        ['ROLE_FLEET_ADMIN', 'ROLE_FLEET'].some((it) => it === item),
+        ['ROLE_FLEET_ADMIN', 'ROLE_FLEET', 'ROLE_ADMIN'].some((it) => it === item),
       ) || false,
     canAccessDMSMenu:
       currentUser?.authorities.some((item) =>
@@ -776,5 +782,28 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           'ROLE_HR_APPRAISAL_REQUEST_SM_EXECTIVE',
         ].some((it) => it === item),
       ) || false,
+       /* LH: PURCHASE ORDER MMA  */
+    canAccessRSMRequestToMPU:
+    currentUser?.authorities.some((item) => 
+      [
+        'ROLE_SALE_ADMIN',
+        'ROLE_SALE_ADMIN',
+        'ROLE_MPU_LEADER',
+        'ROLE_ACTIVATION_LEADER',
+        'ROLE_CASHIER',
+        'ROLE_CRM_ADMIN',
+        'ROLE_CRM_SALE_ADMIN',
+        'ROLE_DEVELOPER',
+        'ROLE_MPU',
+        'ROLE_RETAILER_APP',
+        'ROLE_SALESPERSON',
+        'ROLE_VAN_SALE_LEADER',
+        'ROLE_VAN_SALES',
+        'ROLE_WHAREHOUSE'
+      ].some((it) => it === item)
+    ) || false,
+
+  canCreateEditMpuRequest : true
+  /* LH : END */
   };
 }

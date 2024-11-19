@@ -34,11 +34,8 @@ interface Props extends FormModalProps {
 
 const ItemEntryFormModal: React.FC<Props> = ({ data, actionHandlers, loading, ...props }) => {
   const [formStock] = useForm<StockControlItemLess>();
-  // const uomList = [{ id: 1, name: 'Case' }];
-
   const [productItems, setProductItems] = useState<LookupDataItem[]>([]);
   const [selectedType, setSelectedType] = useState<number>();
-  // const [selectProductItems, setSelectedProductItems] = useState<LookupDataItem>();
 
   useEffect(() => {
     if (!props.open) return;

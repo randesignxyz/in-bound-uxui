@@ -1,23 +1,21 @@
 import type { DescriptionDisplayDataItem } from '@/components/Descriptions';
-import DescriptionDisplay from '@/components/Descriptions';
 import type { FormModalProps } from '@/components/FormModal';
 import FormModalComp from '@/components/FormModal';
 import RemarkModal from '@/components/remark-modal';
 import { formatDate } from '@/pages/utils';
+import { CrmServiceAPI } from '@/services/crm/services';
 import type { ApprovalStockControlDto, StockControlLess } from '@/services/sale/data';
 import { CopyOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
-import { ProDescriptions, ProFormDatePicker } from '@ant-design/pro-components';
+import { EditableFormInstance, ProDescriptions, ProForm, ProFormSelect } from '@ant-design/pro-components';
 import type { ActionType } from '@ant-design/pro-table';
 import { EditableProTable } from '@ant-design/pro-table';
-import { Button, Card, Flex, Input, Tag, Tooltip, Typography, message } from 'antd';
-import { uniqueId } from 'lodash';
+import { Button, Card, Flex, Tag, Tooltip, Typography } from 'antd';
 import moment from 'moment';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { DistributorCreate } from '../../mpu/request/data';
+import { simpleRequestActions } from '@/services/model';
+import { useForm } from 'antd/es/form/Form';
 
-// const layout = {
-//   labelCol: { span: 6 },
-//   wrapperCol: { span: 14 },
-// };
 
 interface Props extends FormModalProps {
   data?: StockControlLess;
@@ -26,6 +24,7 @@ interface Props extends FormModalProps {
     onRejectItem: (id: number, remark: string) => void;
     onReload?: () => void;
   };
+  role?:string
 }
 
 const waitTime = (time: number = 100) => {
@@ -53,17 +52,17 @@ interface EditableStockItem {
   itemType?: number;
 }
 
-const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props }) => {
-  //   const [formStock] = useForm<StockControlItemLess>();
-  // const uomList = [{ id: 1, name: 'Case' }];
+const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...props }) => {
+
+  const requestActions = simpleRequestActions();
   const formatStringDate = 'DD-MM-YYYY';
   const actionRef = useRef<ActionType>();
   const [editableKeys, setEditableRowKeys] = useState<React.Key[]>([]);
   const [dataSource, setDataSource] = useState<EditableStockItem[]>([]);
   const { Text } = Typography;
-
+  const [distributor, setDistributor] = useState<DistributorCreate>();
+  const [form] = useForm<ApprovalStockControlDto>();
   const [isError, setIsError] = useState<boolean>(false);
-
   const [showRemark, setShowRemark] = useState<{
     record: EditableStockItem | undefined;
     isOpen: boolean;
@@ -79,7 +78,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
             const itemEdit: EditableStockItem = {
               id: it.id,
               key: (Math.random() * 1000000).toFixed(0),
-              batchNo: it.batchNo === null || it.batchNo === '' || it.batchNo =="n/a" ? undefined : batchNo,
+              batchNo: it.batchNo === null  || it.batchNo === '' || it.batchNo == "n/a" ? undefined : batchNo,
               beginningQty: it.beginningQty,
               expiredDate: it.expiredDate,
               itemName: it.itemName,
@@ -102,8 +101,8 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
 
   useEffect(() => {
     if (!props.open) return;
-    // formStock.resetFields();
 
+    props.open && form.resetFields();
     onResetActionHandler();
     return () => {
       //   formStock.resetFields();
@@ -142,7 +141,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
   // }, [dataSource]);
 
   const disabledButton = useCallback(() => {
-    return dataSource.some(o => ((o.itemType == 132) && o.batchNo == null ));
+    return dataSource.some(o => ((o.itemType == 132) && o.batchNo == null && role == undefined));
     // return dataSource
     //   .filter((it) => it.beginningQty === 0)
     //   .filter((it) => it.status !== 'rejected')
@@ -151,15 +150,15 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
   }, [dataSource]);
 
   const onSubmitActionHandler = async () => {
-   
+    await form.validateFields();
     const items = dataSource.map((it) => {
       const isBeginning = it.beginningQty > 0;
       const batchNumber = formatDate(it.batchNo, formatStringDate);
       return {
         id: it.id!,
         itemCode: it.itemCode,
-        batchNo: it.batchNo?formatDate(moment(it.batchNo), formatStringDate) : 'n/a',
-        expiredDate: it.batchNo?moment(it.batchNo).add(6,"M"):undefined,
+        batchNo: it.batchNo ? formatDate(moment(it.batchNo), formatStringDate) : 'n/a',
+        expiredDate: it.batchNo ? moment(it.batchNo).add(6, "M") : undefined,
         isBeginning: isBeginning,
         quantity: isBeginning ? it.beginningQty : it.quantity,
         isSplit: it.isSplit,
@@ -169,17 +168,21 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
       };
     });
     const item: ApprovalStockControlDto = {
+ 
       stockControlId: data?.id || -1,
       description: data?.description,
       receivedBy: data?.receivedBy,
       referenceNo: data?.referenceNo,
       items: items,
+      distributorCode:distributor?.code
     };
     if (actionHandlers.onAddItem) {
       actionHandlers.onAddItem(item);
     }
-    // }
+    
   };
+
+
 
   return (
     <FormModalComp
@@ -191,6 +194,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
       onResetForm={onResetActionHandler}
       okText={'Update'}
       title="Issue Stock"
+    
     >
       <Flex vertical gap={12}>
         <Card size={"small"}>
@@ -246,12 +250,43 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
             ]}
           />
         </Card>
+        { role != undefined && <Card size={"small"}>
+          <ProForm submitter={false} form={form} layout='horizontal'>
+          <ProFormSelect
+            showSearch
+            debounceTime={500}
+            name={"distributorId"}
+            rules={[
+              { required: true }
+            ]}
+            onChange={async (s: number) => {
+              const y = await CrmServiceAPI(requestActions).findDetailCustomer({ id: s });
+              setDistributor({
+                code: y.code,
+                id: y.id,
+                name: y.name,
+                phone: y.contacts?.[0].phone1,
+                latitude: y?.addressList?.[0]?.latitude,
+                longitude: y?.addressList?.[0]?.longitude
+              });
+            }}
+            label={"Distributor"}
+            request={async (k: { keyWords: string }) => {
+              const data = await CrmServiceAPI(requestActions).findAllCustomer({
+                searchValue: k.keyWords
+              });
+            
+              return data.items.map(p => ({ value: p.id, label: p.name }));
+            }}
+          /></ProForm>
+        </Card>}
         <Card size='small'>
           <EditableProTable<EditableStockItem>
             title={() => <Text>Stock Items</Text>}
             rowKey={(r) => {
               return r.key;
             }}
+            size='small'
             actionRef={actionRef}
             key={`EditableProTable-${data?.id}`}
             recordCreatorProps={false}
@@ -265,7 +300,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
               editableKeys,
               onSave: async (_, record: EditableStockItem, originRow: EditableStockItem) => {
 
-                if(record.batchNo){
+                if (record.batchNo) {
                   record.batchNo = moment(originRow.batchNo)
                   record.expiredDate = moment(record.batchNo).add(6, 'M');
                 }
@@ -285,14 +320,14 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
                   return (
                     {
                       ...form,
-                      hidden: _config.entity.itemType == 132 ? false : true,
+                      hidden:( _config.entity.itemType == 132 ) ? false : true,
                       rules: [
                         {
-                          required: _config.entity.itemType == 132 ? true : false
+                          required: (_config.entity.itemType == 132 && role == undefined) ? true : false
                         }
                       ],
-                    } 
-                  ) 
+                    }
+                  )
                 },
               },
               {
@@ -386,7 +421,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
                               status: record.status,
                               stockCategoryId: record.stockCategoryId,
                               internalId: record.internalId,
-                              itemType:record.itemType,
+                              itemType: record.itemType,
                               key: key,
                             };
                             actionRef.current?.addEditRecord?.(first);
@@ -399,7 +434,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
                           danger
                           icon={<DeleteOutlined />}
                           onClick={() => {
-                            
+
                             if (record.internalId === undefined) {
                               const dataSourceItems = dataSource.filter(
                                 (it) => it.key !== record.key && it.internalId !== record.internalId,
@@ -407,13 +442,17 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
                               setDataSource(dataSourceItems);
                               actionRef.current?.reload();
                             } else {
-                              const isCopied = dataSource.some((e) => (e.id === record.id) && !record.isSplit);
-                              console.log(dataSource)
-                              if (isCopied) {
-                                message.error('Please remove copied item firstly.');
-                              } else {
-                                setShowRemark({ isOpen: true, record: record });
-                              }
+                              // const isCopied = dataSource.some((e) => {
+                              //   console.log((e.id === record.id) && record.isSplit);
+
+                              // });
+                              // console.log(isCopied)
+                              // if (isCopied) {
+                              //   message.error('Please remove copied item firstly.');
+                              // } else {
+                              // setShowRemark({ isOpen: true, record: record });
+                              // }
+                              setShowRemark({ isOpen: true, record: record });
                             }
                           }}
                         />
@@ -427,6 +466,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
         </Card>
       </Flex>
 
+          
       <RemarkModal
         title="Delete the item"
         open={showRemark?.isOpen}
@@ -441,7 +481,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, ...props })
             setDataSource(dataSourceItems);
             actionRef.current?.reload();
             setShowRemark({ isOpen: false, record: undefined });
-            actionHandlers.onRejectItem(showRemark!.record!.id!, remarks);
+            actionHandlers.onRejectItem(showRemark?.record!.id!, remarks);
           }
         }}
       />

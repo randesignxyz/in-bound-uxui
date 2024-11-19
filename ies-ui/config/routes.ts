@@ -1,4 +1,6 @@
-﻿/**
+﻿import icons from "@/.umi/plugin-layout/icons";
+
+/**
  *
  * @doc https://umijs.org/docs/guides/routes
  */
@@ -343,6 +345,17 @@ export default [
     access: 'canAccessSaleMenuItems',
     component: './sale/product',
   },
+
+    /******************* PURCHASEORDER MMA *******************/
+    {
+      path: '/sale/purchase-order/:view/*',
+      name: 'mpu',
+      icon: 'packingList',
+      hideInMenu: 'true',
+      // access: 'canAccessRSMRequestToMPU',
+      component: './sale/purchase-order',
+    },
+    
   /******************* DSD *******************/
   {
     path: '/sale/stock/:view/*',
@@ -1093,8 +1106,17 @@ export default [
     icon: 'FileSearchOutlined',
     component: './dms',
     access: 'canAccessDMSMenu',
-    redirect: '/dms/workspace/library',
+    // redirect: '/dms/workspace/library',
   },
+  {
+    path: '/dms/:view/*',
+    name: 'dms',
+    icon: 'FileSearchOutlined',
+    component: './dms',
+    access: 'canAccessDMSMenu',
+    hideInMenu: 'true',
+  },
+
 
   {
     path: '/dms/workspace/:view/*',
@@ -1150,13 +1172,13 @@ export default [
     access: "canAccessDMSMenu",
     hideInMenu: 'true',
   },
-  {
-    path: "/dms/share/:view/:id",
-    name: "dms",
-    component: "./dms/share",
-    access: "canAccessDMSMenu",
-    hideInMenu: 'true',
-  },
+  // {
+  //   path: "/dms/share",
+  //   name: "dms",
+  //   component: "./dms/share",
+  //   access: "canAccessDMSMenu",
+  //   hideInMenu: 'true',
+  // },
   {
     path: "/dms/company/:view/*",
     name: "dms",

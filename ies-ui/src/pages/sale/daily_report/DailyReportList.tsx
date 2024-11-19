@@ -1,6 +1,6 @@
 import { simpleRequestActions } from '@/services/model';
 import { ProTable } from '@ant-design/pro-components';
-import { Button } from 'antd';
+import { Button, Typography } from 'antd';
 import type { StockControlARLess } from './data';
 import type { StockControlAR } from './data';
 import { DailyReportAPI } from './services';
@@ -83,7 +83,7 @@ export default ({}: Props) => {
               align: 'right',
               render: (_, r) => {
                 const amountKH = r.totalSoldAmount ;
-                return `$ ${numeral(amountKH).format('0,000.00')}`;
+                return <Typography.Text type='success'>$ {numeral(amountKH).format('0,000.00')} </Typography.Text>;
               },
             },
           ]}

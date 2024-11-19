@@ -9,8 +9,8 @@ const port = window.location.port;
 const kc_production = 'http://10.0.8.215:8989/auth/';
 const kc_qa = 'http://10.0.12.247:8989/auth/';
 //New keycloak
-// const kc_local = 'http://localhost:8989/auth/'
-const kc_local = 'http://10.0.12.247:8989/auth/';
+const kc_local = 'http://localhost:8989/auth/'
+// const kc_local = 'http://10.0.12.247:8989/auth/';
 const pro_host_name = 'ies.vital.com.kh';
 const pro_host_name1 = '10.0.8.215';
 const qa_host_name = '10.0.12.247';
@@ -37,7 +37,6 @@ export const endpoint = (): {
     url: keycloakUri(),
     redirectUri: port == '80' || port.trim().length == 0 ? `${protocal}//${host}/` : `${protocal}//${host}:${port}/`,
   };
-
 };
 
 export const Auth = {

@@ -54,7 +54,9 @@ export default ({ }: Props) => {
           onChange={(e) => {
             history.push(`${DMSPaths.setting}/${e}`)
           }}
+          type="card"
           items={items}
+          size="small"
           key={"tab"}
           itemRef="tab"
           activeKey={view}

@@ -19,20 +19,15 @@ export default ({data}:Props) => {
         });
         setLookupData(data);
       }
-
       useEffect(()=>{
          onLookupData();
       },[])
-
-
-
     return (<>
         <ProFormSelect
             label="Please Select Contract Type"
             initialValue={"GENERAL"}
             name={"category"}
             disabled={data?true:false}
-            // options={lookupData?.filter(i=>i.type="DOC").map(o=>({label:o.name, value:o.id}))}
             options={[
               {
                 value: "GENERAL",
@@ -48,7 +43,6 @@ export default ({data}:Props) => {
               },
             ]}
           />
-
           <ProFormDependency dependencies={["category"]} name={["category"]}>
             {({category})=>{
                 return category ==="GENERAL" &&(<ContractGeneral lookupData={lookupData} />)||
@@ -56,9 +50,5 @@ export default ({data}:Props) => {
                 category ==="SALSE" &&(<ContractSales/>)
             }}
           </ProFormDependency>
-    
-
-
-
     </>)
 }

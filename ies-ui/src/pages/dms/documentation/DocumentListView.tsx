@@ -1,4 +1,4 @@
-import { ArrowRightOutlined, AuditOutlined, BellOutlined, DeleteOutlined, DownloadOutlined, EllipsisOutlined, ExportOutlined, FileAddOutlined, HeartOutlined, HistoryOutlined, PlusOutlined, ShareAltOutlined, SwapOutlined } from "@ant-design/icons"
+import { ArrowRightOutlined, AuditOutlined, BellOutlined, DeleteOutlined, DownloadOutlined, DownOutlined, EllipsisOutlined, ExportOutlined, FileAddOutlined, HeartOutlined, HistoryOutlined, PlusOutlined, ShareAltOutlined, SwapOutlined } from "@ant-design/icons"
 import { ActionType } from "@ant-design/pro-components"
 import { history, useModel, useParams } from "@umijs/max"
 import { Badge, Button, Dropdown, Flex, MenuProps, Modal, Segmented, Space, message } from "antd"
@@ -265,6 +265,17 @@ export default ({ paramSearch, libraryId, folderId }: Props) => {
             }),
         },
     ];
+
+    const data = ():MenuProps["items"] =>[
+        {
+            key:"exprireSoon",
+            label:"Expire Soon"
+        },
+        {
+            key:"expired",
+            label:"Expired"
+        },
+    ]
     return (
         <>
             <TableView<DocumentationDTO, { searchValue?: string }>
@@ -324,8 +335,19 @@ export default ({ paramSearch, libraryId, folderId }: Props) => {
                                         label: "Contract",
                                         value: "CONTRACT"
                                     },
+                                    {
+                                        label: "Shared",
+                                        value: "shared"
+                                    },
                                 ]}
                             />
+                            <Dropdown
+                                menu={{
+                                    items:data()
+                                }}  
+                            >
+                                <a>Document Expire <DownOutlined /></a>
+                            </Dropdown>
                         </Flex>
                     </>
                 }

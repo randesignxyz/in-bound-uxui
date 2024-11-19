@@ -3,14 +3,15 @@ import { Button, message, Modal, Tag } from "antd";
 import { LeadAdvanceSearchParams } from "./data";
 import { LeadDetail } from "@/services/sale/data";
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
-import { useQuery } from "@umijs/max";
+import { useAccess, useQuery } from "@umijs/max";
 import { useState } from "react";
 import { simpleRequestActions } from "@/services/model";
 import { LeadServiceAPI } from "./services";
 import LeadEntryFormView from "./LeadEntryFormView";
 import LeadDetailView from "./LeadDetailView";
-import { EditOutlined, PlusOutlined, SwapOutlined } from "@ant-design/icons";
+import { EditOutlined, ExportOutlined, PlusOutlined, SwapOutlined } from "@ant-design/icons";
 import ChangeSalepersonForm from "./ChangeSalepersonForm";
+import DSDLeadReport from "../reports/DSDLeadReport";
 
 
 interface Props {
@@ -20,6 +21,7 @@ interface Props {
 const LeadMainPage: React.FC<Props> = () => {
     const requestActions = simpleRequestActions();
     const services = LeadServiceAPI(requestActions);
+    const access = useAccess();
     const [filter, setFilter] = useState<TableViewSearchParams<LeadAdvanceSearchParams>>({
         criteria: { advanceSearch: { status: 'ALL' } }
     });
@@ -30,6 +32,12 @@ const LeadMainPage: React.FC<Props> = () => {
         visible?:{
             name:"MODAL",
             payloads?:any
+        }
+    }>();
+    const [exportModalState, setExportModalState] = useState<{
+        visible?:{
+            name:"MODAL";
+            payloads?:any;
         }
     }>();
     return (
@@ -51,7 +59,7 @@ const LeadMainPage: React.FC<Props> = () => {
                         />
                     },
                     {
-                        tabLabel: `Edit ${items?.internalName
+                        tabLabel: `${items?.internalName
                                 ? items?.internalName
                                 : [items?.firstName, items?.lastName].join(" ")
                             }`,
@@ -68,7 +76,9 @@ const LeadMainPage: React.FC<Props> = () => {
                         />
                     },
                     {
-                        tabLabel: `view ${items?.internalName}`,
+                        tabLabel: `${items?.internalName
+                                ? items?.internalName
+                                : [items?.firstName, items?.lastName].join(" ")}`,
                         action: "view",
                         panel: ({ onUpdateTab, key }) => <LeadDetailView
                             onEdit={(items) => onUpdateTab("edit",items, undefined, key )}
@@ -85,7 +95,8 @@ const LeadMainPage: React.FC<Props> = () => {
                             type:"link",
                             addNewTab:true
                         },
-                        <Button icon={<SwapOutlined />} type="link" onClick={()=>setChangeSalepersonState({visible:{name:"MODAL"}})}  >Tranfer Lead</Button>
+                        <Button disabled={!access.canAccessDSD} icon={<SwapOutlined />} type="link" onClick={()=>setChangeSalepersonState({visible:{name:"MODAL"}})}  >Tranfer Lead</Button>,
+                        <Button icon={<ExportOutlined />} type="link" onClick={()=>setExportModalState({visible:{name:"MODAL"}})}  >Export</Button>
                     ],
                     onRefresh: refetch,
                     onFilter: (param, page, sort) => {
@@ -106,15 +117,21 @@ const LeadMainPage: React.FC<Props> = () => {
                         },
                         columns: [
                             {
+                                title:"Code",
+                                actionProps: (items) => ({
+                                    label: `${items.leadCode?items.leadCode:"N/A"}`,
+                                    type: "view",
+                                }),
+                                width:100
+                            },
+                            {
                                 title: 'Shop Name',
                                 dataIndex: 'internalName',
-                                actionProps: (items) => ({
-                                    label: `${items.internalName
-                                            ? items.internalName
-                                            : [items.firstName, items.lastName].filter(p=>p).join(" ")
-                                        }`,
-                                    type: "view",
-                                })
+                                render:(_,r)=>`${r.internalName
+                                            ? r.internalName
+                                            : [r.firstName, r.lastName].filter(p=>p).join(" ")
+                                        }`
+                               
                             },
                             {
                                 title: 'First Name',
@@ -148,18 +165,17 @@ const LeadMainPage: React.FC<Props> = () => {
                                 },
                             },
                             {
-                                title: 'Commene',
-                                render: (_, r) => {
-                                    return r.commune?.name;
-                                },
-                            },
-                            {
                                 title: 'District',
                                 render: (_, r) => {
-                                    return r.district?.name;
+                                  return r.district?.name;
                                 },
-                            },
-
+                              },
+                              {
+                                title: 'Commune',
+                                render: (_, r) => {
+                                  return r.commune?.name;
+                                },
+                              },
                             {
                                 title: 'Village',
                                 render: (_, r) => {
@@ -171,6 +187,14 @@ const LeadMainPage: React.FC<Props> = () => {
                 }}
 
             />
+
+            <DSDLeadReport
+                open={exportModalState?.visible?.name == "MODAL"}
+                onCancel={() => setExportModalState({ visible: undefined })}
+                // salespersons={salesperson}
+                title="Generate DSD Reports"
+                width="700px"         
+                   />
 
             <ChangeSalepersonForm
                 open={changeSalepersonState?.visible?.name=="MODAL"}

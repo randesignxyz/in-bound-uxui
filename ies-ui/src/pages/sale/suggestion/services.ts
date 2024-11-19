@@ -2,11 +2,12 @@ import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { RequestActions, ServiceApiType } from '@/services/apiGateway';
 
 import { singleRequest } from '@/services/apiGateway';
-import type { ApprovalStockControlDto, ExchangeRate, SettlementModel, StockControlLess, StockStoreAdvanceSearchParams } from '@/services/sale/data';
+import type { ApprovalStockControlDto, ExchangeRate, MMAApprovalStockItemDto, MMAAprovalEntity, SettlementModel, StockControlLess, StockStoreAdvanceSearchParams } from '@/services/sale/data';
 import { Page } from '@/services/shared/data';
 import { reject } from 'lodash';
 import { CountStockDto } from '../../../services/sale/data';
 import { endpoint } from '@/auth';
+import { PurchaseOrderDTO } from '../mpu/purchase_order/data';
 
 const SuggestionActions = {
   page:(param:TableViewSearchParams<StockStoreAdvanceSearchParams>):ServiceApiType<{searchValue?:string, role?:string}>=>({
@@ -69,32 +70,32 @@ const SuggestionActions = {
     actionName:"approve-stock-request",
     endpoint:"SALE",
     payload:param
-  })
-  // list: (
-  //   params: TableViewSearchParams<CustomerAdvanceSearchParams>,
-  // ): ServiceApiType<{ searchValue?: string }> => ({
-  //   type: 'PAGING_QUERY',
-  //   endpoint: 'RETAILER',
-  //   actionName: 'page-customer',
-  //   payload: { ...params.criteria },
-  //   pagination: {
-  //     pageSize: params.pagination?.pageSize,
-  //     page: params.pagination?.current,
-  //   },
-  // }),
-
-  // detail: (id: string): ServiceApiType<{ id: string }> => ({
-  //   type: 'FETCH_QUERY',
-  //   endpoint: 'RETAILER',
-  //   actionName: 'detail-customer',
-  //   payload: { id },
-  // }),
-  //   save: (data: PricingCreate): ServiceApiType<PricingCreate> => ({
-  //     type: 'EXEC',
-  //     endpoint: 'RETAILER',
-  //     actionName: 'save-pricing',
-  //     payload: data,
-  //   }),
+  }),
+  onMMAApprovalStockRequest:(param:MMAAprovalEntity):ServiceApiType<MMAAprovalEntity> =>({
+    type:"EXEC",
+    actionName:"mma-approve-stock-request",
+    endpoint:"SALE",
+    payload:param
+  }),
+  fetchRoleByUser :(id:string):ServiceApiType<{id:string}>=>({
+    type:"LIST_QUERY",
+    endpoint:"SALE",
+    payload:{id},
+    actionName:"fetch-role-by-user"
+  }),
+  listPurchaseOrderStock:(id?:number):ServiceApiType<{id?:number}> =>({
+    actionName:"list-purchase-order-stock",
+    endpoint:"SALE",
+    type:"LIST_QUERY",
+    payload:{id}
+  }),
+  onMMASaveSettlementModel:(param:SettlementEntry):ServiceApiType<SettlementEntry> =>({
+    type:"EXEC",
+    actionName:"save-mma-settlement-model",
+    endpoint:"SALE",
+    payload:param
+  }),
+ 
 };
 
 export const SuggestionServiceAPI = (requestActions: RequestActions) => {
@@ -109,15 +110,9 @@ export const SuggestionServiceAPI = (requestActions: RequestActions) => {
     countStock:(param:CountStockDto)=>singleRequest(SuggestionActions.countStock(param))(requestActions) as Promise<{data:string; message:string}>,
     onClosedRequest:(id?:number)=>singleRequest(SuggestionActions.onClosedRequest(id))(requestActions) as Promise<{data:string; message:string}>,
     onApprovalStockRequest:(param:ApprovalStockControlDto)=>singleRequest(SuggestionActions.onApprovalStockRequest(param))(requestActions) as Promise<{data:string; message:string}>,
-    // listCustomer: (params: TableViewSearchParams<CustomerAdvanceSearchParams>) =>
-    //   singleRequest<CustomerDto>(CustomerActions.list(params))(requestActions) as Promise<
-    //     Paging<CustomerDto>
-    //   >,
-    // detailCustomer: (id: string) =>
-    //   singleRequest<CustomerDto>(CustomerActions.detail(id))(
-    //     requestActions,
-    //   ) as Promise<CustomerDto>,
-    // save: (params: PricingCreate) =>
-    //   singleRequest<{ data: string; message: string }>(PricingActions.save(params))(requestActions),
+    onMMAApprovalStockRequest:(param:MMAAprovalEntity)=>singleRequest(SuggestionActions.onMMAApprovalStockRequest(param))(requestActions) as Promise<{data:string; message:string}>,
+    fetchRolByUser:(id:string)=>singleRequest(SuggestionActions.fetchRoleByUser(id))(requestActions) as Promise<{roleName:string}[]>,
+    listPurchaseOrderStock:(id?:number)=>singleRequest(SuggestionActions.listPurchaseOrderStock(id))(requestActions) as Promise<PurchaseOrderDTO[]>,
+    onMMASaveSettlementModel:(param:SettlementEntry) =>singleRequest(SuggestionActions.onMMASaveSettlementModel(param))(requestActions) as Promise<{data:string, message:string}>,
   };
 };

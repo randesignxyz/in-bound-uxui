@@ -1,5 +1,5 @@
 import { ProCard, ProDescriptions } from "@ant-design/pro-components"
-import { Badge, Col, Row, Space } from "antd"
+import { Col, Row, Space, Typography } from "antd"
 import React, { useState } from "react";
 import CompanyDetail from "./company/CompanyDetail";
 import { DocumentationDTO } from "../documentation/data";
@@ -51,35 +51,32 @@ export default ({ document, actionRef }: Props) => {
                                     {
                                         label: "Category",
                                         dataIndex: "category",
-                                        render:(_,r)=>document?.category
+                                        render: (_, r) => document?.category
                                     },
                                     {
                                         label: "Vendor Name",
-                                        render:(_,r)=>document?.vendor?.name
+                                        render: (_, r) => document?.vendor?.name
                                     },
                                     {
-                                        label:"OpCo",
-                                        dataIndex:"opCo",
-                                        render:(_,r)=>document?.opCo?.name
+                                        label: "OpCo",
+                                        dataIndex: "opCo",
+                                        render: (_, r) => document?.opCo?.name
                                     },
                                     {
-                                        label:"Function",
-                                        render:(_,r)=>document?.department?.name
+                                        label: "Function",
+                                        render: (_, r) => document?.department?.name
                                     },
                                     {
-                                        label:"Currency",
-                                        render:(_,r)=>document?.currency?.name
+                                        label: "Currency",
+                                        render: (_, r) => document?.currency?.name
                                     },
                                     {
                                         label: "Description",
                                         dataIndex: "description",
-                                        span:2
+                                        span: 2
                                     },
-                                   
-                                    
                                 ]}
                             />
-                        
                         </Col>
                         <Col md={24} sm={24} lg={12}>
                             {/* <Divider orientation="left" plain>Term and Renewal</Divider> */}
@@ -104,7 +101,8 @@ export default ({ document, actionRef }: Props) => {
                                         label: "Expiry Date",
                                         dataIndex: "expiryDate",
                                         valueType: "date",
-                                        render: (_, r) => (<Badge status={expriationStatus(r.expiryDate) > 0 ? "error" : "processing"} text={formatDate(r.expiryDate)} />)
+                                        render:(_,r)=><Typography.Text type={expriationStatus(r.expiryDate) > 0 ?"danger":"success"} >{formatDate(r.expiryDate)}</Typography.Text>
+                                        // render: (_, r) => (<Badge status={expriationStatus(r.expiryDate) > 0 ? "error" : "processing"} text={formatDate(r.expiryDate)} />)
                                     },
                                     // {
                                     //     label: "Renewal Interval (Months)",
@@ -115,33 +113,33 @@ export default ({ document, actionRef }: Props) => {
                                         dataIndex: "noticePeriod",
                                     },
                                     {
-                                        label:"Warranty",
-                                        dataIndex:"warranty"
+                                        label: "Warranty",
+                                        dataIndex: "warranty"
                                     },
                                     {
-                                        label:"Penalty Clause",
-                                        dataIndex:"penaltyClause"
+                                        label: "Penalty Clause",
+                                        dataIndex: "penaltyClause"
                                     },
                                     {
-                                        label:"Term of Payment",
-                                        dataIndex:"termPayment"
+                                        label: "Term of Payment",
+                                        dataIndex: "termPayment"
                                     },
                                     {
                                         title: "Status",
-                                        render: (_, r) => <Badge status={document?.status == "Inactive" ? "error" : "processing"} text={document?.status} />
+                                        render:(_,r)=><Typography.Text type={document?.status =="Inactive"?"danger":"success"} >{document?.status}</Typography.Text>
+                                        // render: (_, r) => <Badge status={document?.status == "Inactive" ? "error" : "processing"} text={document?.status} />
                                     }
                                     // {
                                     //     label: "Notice Date",
                                     //     dataIndex: "noticeDate",
                                     //     valueType: "date"
                                     // },
-                                    
+
                                 ]}
                             />
                         </Col>
                     </Row>
                 </ProCard>
-
                 <ProCard
                 >
                     <ProDescriptions
@@ -149,32 +147,32 @@ export default ({ document, actionRef }: Props) => {
                         style={{ fontWeight: 500 }}
                         columns={[
                             {
-                                label:"Total Amount",
-                                dataIndex:"totalAmount",
-                                valueType:"money"
+                                label: "Total Amount",
+                                dataIndex: "totalAmount",
+                                valueType: "money"
                             },
                             {
-                                label:"Final Amount",
-                                dataIndex:"finalAmount",
-                                valueType:"money"
+                                label: "Final Amount",
+                                dataIndex: "finalAmount",
+                                valueType: "money"
                             },
                             {
-                                label:"PO",
-                                dataIndex:"po"
+                                label: "PO",
+                                dataIndex: "po"
                             },
                             {
-                                label:"Paid",
-                                dataIndex:"paid",
-                                valueType:"money"
+                                label: "Paid",
+                                dataIndex: "paid",
+                                valueType: "money"
                             },
                             {
-                                label:"Balance",
-                                dataIndex:"balance",
-                                valueType:"money"
+                                label: "Balance",
+                                dataIndex: "balance",
+                                valueType: "money"
                             },
                             {
-                                label:"Comments",
-                                dataIndex:"comments"
+                                label: "Comments",
+                                dataIndex: "comments"
                             },
                             // {
                             //     label: "Company Name",
@@ -200,6 +198,7 @@ export default ({ document, actionRef }: Props) => {
                     <ProDescriptions
                         dataSource={document}
                         column={4}
+                        size="small"
                         columns={[
                             {
                                 title: "Created Date",
@@ -223,7 +222,6 @@ export default ({ document, actionRef }: Props) => {
                     />
                 </ProCard>
             </Space>
-
             <CompanyDetail
                 open={companyState?.visible?.name == "MODAL"}
                 onClose={() => setCompanyState({ visible: undefined })}

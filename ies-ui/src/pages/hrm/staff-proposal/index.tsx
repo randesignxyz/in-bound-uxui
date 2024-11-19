@@ -19,6 +19,7 @@ export default () => {
 
         services={srv}
         listView={{
+
             columns: () => [
                 {
                     title: 'Form #', sorter: 'formNo', render(_, entity) {
@@ -57,7 +58,9 @@ export default () => {
                 icon: <PlusOutlined />,
                 key: 'new-request',
                 onRenderComp(props) {
-                    return <StaffProposalRequestForm   {...props} formKey={StaffProposalFormNames.processDefKey} />
+                    return <StaffProposalRequestForm{...props}
+                        formKey={StaffProposalFormNames.processDefKey}
+                    />
                 },
             } : undefined,
 
@@ -68,6 +71,7 @@ export default () => {
                     { label: "Pending", value: "PENDING" },
                     { label: "Completed", value: "COMPLETED" },
                     { label: "Rejected", value: "REJECTED" },
+                    { label: "Canceled", value: "CANCELED" },
                 ]
             },
             subStatusProps: undefined,

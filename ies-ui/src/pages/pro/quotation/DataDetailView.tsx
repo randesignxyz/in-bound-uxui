@@ -7,12 +7,10 @@ import { PageContainer, ProCard, ProDescriptions } from '@ant-design/pro-compone
 import { Button, Checkbox, Flex, Form, Input, message, Modal, Space, Table } from 'antd';
 import { useEffect, useState } from 'react';
 import ChangeVendorForm from './ChangeVendorForm';
-import { PrItem, QuotationDetail, QuotationItemtDetail } from './data';
+import { QuotationDetail, QuotationItemtDetail } from './data';
 import { createQuotationService } from './services';
 import Flow from '../flow';
-import { downloadReport } from '@/services/apiGateway';
-import moment from 'moment';
-import { simpleRequestActions } from '@/services/model';
+import RelatedObjectItems from '../components/RelatedObjectItems';
 
 export default ({
   id,
@@ -59,14 +57,15 @@ export default ({
   const onSelectHandler = async (remarks: string) => {
     try {
       await srv.select(data?.id!!, remarks);
-      initData();
+
       try {
         await srv.postPQ(data?.id!!)
       } catch (error: any) {
         message.error(error.message || 'Failed to post to SAP.');
+        initData();
         return false;
       }
-
+      initData();
       message.success("Successfully selected.")
       return true;
     } catch (error: any) {
@@ -90,44 +89,6 @@ export default ({
       }
     })
   }
-
-  const linkPR = (records: QuotationItemtDetail) => {
-    return (
-      <Table<PrItem>
-        size="small"
-        rowKey={'id'}
-        pagination={false}
-        dataSource={records?.item?.prItems?.filter((it) =>
-          records.prLinked.some((i) => i == it.id),
-        )}
-        columns={[
-          {
-            title: 'Form No',
-            render: (_, r) => (
-              <a
-                onClick={() => {
-                  window
-                    .open(
-                      `./../../../data-form/requisition_request_process/${r?.processInstId}`,
-                      '_blank',
-                    )
-                    ?.focus();
-                }}
-              >
-                {r.formNo}
-              </a>
-            ),
-          },
-          { title: 'Doc No', render: (_, r) => r.docNo },
-          { title: 'Requested By', render: (_, r) => r.requestedBy },
-
-          { title: 'Qty', align: 'right', render: (_, r) => r.qty },
-          { title: 'uom', render: (_, r) => r.uom },
-        ]}
-      />
-    );
-  };
-
 
   const actionButtons = <Space>
     {data?.status == 'PENDING' && (
@@ -284,8 +245,10 @@ export default ({
         rowKey={'id'}
         pagination={false}
         expandable={{
-          expandedRowRender: linkPR,
-          rowExpandable: (record) => record.prLinked.length > 0,
+          expandedRowRender: record => {
+            return <RelatedObjectItems mainId={record.id} items={record.relatedObjects || []} />
+          },
+          rowExpandable: (record) => (record.relatedObjects?.length || 0) > 0,
         }}
         size="small"
         columns={

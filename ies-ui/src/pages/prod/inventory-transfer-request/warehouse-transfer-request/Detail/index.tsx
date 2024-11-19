@@ -44,6 +44,8 @@ export default ({ id, ...rest }: Props) => {
   ];
   const [data, setData] = useState<TransferRequest>()
   const [onRefresh, setOnRefresh] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [rejectLoading, setRejectLoading] = useState(false)
   const [providedList, setProvidedList] = useState<ProvidedList[]>([])
   const [commentModal, setCommentModal] = useState<{
     visible: boolean;
@@ -82,11 +84,11 @@ export default ({ id, ...rest }: Props) => {
               message.error(`Mismatch found for item code ${sapItem.itemCode} in IES ${detailItem.quantity} in SAP ${sapItem.quantity}!`);
               return
             }
-            setApproveModal({ visible: true, id: id, transfer_id: transfer_id })
           } else {
             message.error(`Item code ${sapItem.itemCode} not found in the sap list!`);
           }
         }
+        setApproveModal({ visible: true, id: id, transfer_id: transfer_id })
       } else {
         console.error("One of the lists is undefined or empty.");
       }
@@ -118,8 +120,8 @@ export default ({ id, ...rest }: Props) => {
         {data?.status == 'request-production-approve' ?
           <Space>
             <Button
-              onClick={() => 
-                getSap( data?.sapDocEntry || 0,  data?.id,  data?.transfer_id )
+              onClick={() =>
+                getSap(data?.sapDocEntry || 0, data?.id, data?.transfer_id)
               }
               type="default"
               icon={<CheckOutlined />}
@@ -227,11 +229,13 @@ export default ({ id, ...rest }: Props) => {
       <RemarkFormModal
         title="Reject Form"
         open={commentModal.visible}
+        loading={rejectLoading}
         onCancel={() => {
           setCommentModal({ visible: false, id: undefined, transfer_id: undefined, sapDocEntry: undefined });
         }}
         onSave={async (id, remark, transfer_id, sapDocEntry) => {
           try {
+            setRejectLoading(true)
             await services.close_transfer(
               {
                 docEntry: sapDocEntry || 0,
@@ -248,6 +252,8 @@ export default ({ id, ...rest }: Props) => {
             message.success('Success');
           } catch (e) {
             message.error('Error');
+          } finally {
+            setRejectLoading(false); 
           }
         }}
         id={commentModal.id ?? ''}
@@ -258,11 +264,13 @@ export default ({ id, ...rest }: Props) => {
       <ApproveRemarkFormModal
         title="Approve Form"
         open={approveModel.visible}
+        loading={loading}
         onCancel={() => {
           setApproveModal({ visible: false, id: undefined });
         }}
         onSave={async (id, remark, transfer_id) => {
           try {
+            setLoading(true)
             await services.status_change({
               id: id,
               remark: remark,
@@ -280,6 +288,8 @@ export default ({ id, ...rest }: Props) => {
             message.success('Success');
           } catch (e) {
             message.error('Error');
+          } finally {
+            setLoading(false);
           }
         }}
         id={approveModel.id ?? ''}

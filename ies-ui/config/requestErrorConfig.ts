@@ -1,7 +1,6 @@
 ﻿import type { RequestConfig, RequestOptions } from '@umijs/max';
-import { notification } from 'antd';
+import { message, notification } from 'antd';
 import { offlineToken } from '../src/pages/utils';
-import { message } from 'antd/lib';
 
 enum ErrorShowType {
   SILENT = 0,
@@ -86,8 +85,7 @@ export const errorConfig: RequestConfig = {
         if (status === 500 || data?.status === 550 || status === 505) {
           throw { error, message: errorMessage }
         } else if (status == 404) {
-          // message.error("Services not responding.");
-          notification.error({ message: 'Services not responding.', key: "404", description: errorMessage.error, role: 'alert' })
+          notification.error({ message: 'Services not responding.', key: "404", description: errorMessage, role: 'alert' })
           return
         }
         notification.error({ message: ` Response status:${error.response.status}` });

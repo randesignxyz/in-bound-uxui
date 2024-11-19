@@ -20,12 +20,12 @@ export interface SettlementLess {
   salesperson: SalesTeamWorkLess;
   soldAmount: number;
   amount: number;
-  totalSettledAmount:number;
+  totalSettledAmount: number;
   amountKH: number;
   cashierName: string;
   exchangeRate: number;
   settlementDate: moment.Moment;
   bankAmount?: number = 0.0;
-  stockAdjusts?:StockAjust,
+  stockAdjusts?: StockAjust,
   invoices?: SalesInvoiceAR[];
 }

@@ -1,25 +1,25 @@
 
-interface VendorDTO{
-    id:number,
-    name:string,
-    phone?:string,
+interface VendorDTO {
+    id: number,
+    name: string,
+    phone?: string,
     address?: string,
     lateLong?: string,
     type?: string,
     referTo: string,
-    group?:string;
-    latinName?:string;
-    code:string?,
-    phone1:string?,
-    specialist:string?,
-    
+    group?: string;
+    latinName?: string;
+    code?: string,
+    phone1?: string,
+    specialist?: string,
+
 }
 
 
-interface VendorCreate{
-    id?:number,
-    name:string,
-    phone?:string,
+interface VendorCreate {
+    id?: number,
+    name: string,
+    phone?: string,
     address?: string,
     lateLong?: string,
     type?: string,
@@ -27,7 +27,7 @@ interface VendorCreate{
 }
 
 
-interface SearchVendorParam{
+interface SearchVendorParam {
     searchValue?: string
 }
 

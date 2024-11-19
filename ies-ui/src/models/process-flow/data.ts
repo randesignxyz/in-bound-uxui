@@ -9,10 +9,11 @@ import { UploadFile } from "antd/lib/upload/interface";
 
 
 type Source = 'WorkList' | 'Edit' | 'Customer' | 'Contract' | 'settlement'
-export type WorkflowModalName = 'Start' | 'Action' | 'Diagram' 
-| 'InstanceDefList' | 'ShowUserDest' 
-| 'originator-setup' | 'destination-setup'
-| 'end-task-setup' | 'deployment' | 'process-info'
+export type WorkflowModalName = 'Start' | 'Action' | 'Diagram'
+    | 'InstanceDefList' | 'ShowUserDest'
+    | 'originator-setup' | 'destination-setup'
+    | 'end-task-setup' | 'deployment' | 'process-info'
+    | 'cancel'
 
 export interface ModelService {
 
@@ -51,7 +52,7 @@ export type ModalData = {
 export const InstanceStateFilter = [
     { id: 'ALL', name: 'All' },
     { id: 'PENDING', name: 'Pending' },
-    { id: 'IN_PROGRESS', name: 'In Process' },
+    { id: 'IN_PROGRESS', name: 'In Progress' },
     { id: 'COMPLETED', name: 'Completed' },
     { id: 'REJECTED', name: 'Rejected' },
 ]
@@ -80,7 +81,7 @@ export interface ActivityData {
 export interface State extends StateType<WorkflowModalName> {
 
     //Action Data
-    requestor?: UserResult;    
+    requestor?: UserResult;
     uploadFiles?: UploadFile[];
     activityDatamodalData?: ModalData;
 
@@ -130,12 +131,13 @@ export interface IProcessWorkflowModel {
         loadProcessDefList: (id: number) => Promise<void>;
         openStartMenu: (id: number) => Promise<void>;
         loadInstanceList: (params?: { criteria?: InstanceSearchParams, paging?: Pagination }) => Promise<void>;
-        loadTaskList: ( params: TableViewSearchParams<TaskListAdvanceSearchParams>) =>Promise<Paging<UserTask>>;
+        loadTaskList: (params: TableViewSearchParams<TaskListAdvanceSearchParams>) => Promise<Paging<UserTask>>;
         showUserDest: (taskId: string) => Promise<void>
         startWorkflow: (data: any, processDef: string, buId: number, formKey: string, comment?: string) => Promise<UserTask>;
         completeTask: (params: { payload: any; ori?: 'taskList' | 'instView'; comment?: string; }) => Promise<void>;
         loadDiagram: (instId?: string) => Promise<void>;
         openActionForm: (activity: string, formKey: string, action: string, procInstId: string, taskId?: string, payload?: { from: Source, id: number } | any) => void;
+        cancelAction: () => void;
         loadInstanceData: (id: string, type: 'inst' | 'task') => Promise<void>;
         selectedCompanyId: (id: number) => void;
         loadInitData: () => Promise<void>;
@@ -149,16 +151,16 @@ export interface IProcessWorkflowModel {
         addFile: (file: UploadFile) => void;
         removeFile: (file: UploadFile) => void;
         downloadForm: (pInst: string, fileName?: string) => Promise<void>;
-        extractProcessDef: (processDefId: string)=> Promise<BMPNData>;
+        extractProcessDef: (processDefId: string) => Promise<BMPNData>;
         fetchWorkflowOriginator: (processDefId: string) => Promise<OriginatorAuth>;
-        fetchDestApproval:(processDefId: string) => Promise<SaveFirstLevelApproval>;
+        fetchDestApproval: (processDefId: string) => Promise<SaveFirstLevelApproval>;
         fetchNotificationFeedback: (processDefId: string) => Promise<NotificationFeedback>;
         saveConfigEndEvent: (params: ConfigEndEventParams) => Promise<void>;
         fetchConfigEndEvent: (eventId: string) => Promise<ConfigEndEventRs>;
         deployProcessDef: (fileId: string) => Promise<void>;
-        saveDest:(data: SaveFirstLevelApproval) => Promise<void>;
-        saveOriginator: (data: SaveWorkflowOriginator) =>Promise<void>;
-        saveContractTermTemp: (data: ContractTermData) => Promise<{id: number;}>;
+        saveDest: (data: SaveFirstLevelApproval) => Promise<void>;
+        saveOriginator: (data: SaveWorkflowOriginator) => Promise<void>;
+        saveContractTermTemp: (data: ContractTermData) => Promise<{ id: number; }>;
         listMessageTemplate: () => Promise<MessageTemplate[]>
 
     };

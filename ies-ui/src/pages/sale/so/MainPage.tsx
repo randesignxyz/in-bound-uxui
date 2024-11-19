@@ -68,7 +68,7 @@ export default () => {
             ]}
             listView={{
                 type: 'Table',
-                title: 'Task List',
+                title: 'SO List',
                 actionButtons: [{
                     icon: <PlusCircleOutlined />,
                     type: 'link',

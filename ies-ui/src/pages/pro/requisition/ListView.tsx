@@ -1,6 +1,6 @@
 import TableView, { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import Status from '@/components/Status';
-import { formatDate, formatter } from '@/pages/utils';
+import { formatDate, formatter1 } from '@/pages/utils';
 import { Paging } from '@/services/API';
 import { simpleRequestActions } from '@/services/model';
 import {
@@ -236,7 +236,7 @@ export default ({ onAdd, onEdit }: Props) => {
                   align: 'right',
                   width: 120,
                   sorter: 'totalAmount',
-                  render: (_, r) => formatter.format(r.totalAmount || 0),
+                  render: (_, r) => formatter1.format(r.totalAmount || 0),
                 },
                 {
                   title: 'Srv',

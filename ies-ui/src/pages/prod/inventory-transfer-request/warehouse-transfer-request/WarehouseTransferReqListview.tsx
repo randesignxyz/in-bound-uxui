@@ -3,7 +3,7 @@ import { Paging } from '@/services/API';
 import { simpleRequestActions } from '@/services/model';
 import { ActionType } from '@ant-design/pro-components';
 import { useAccess, useModel } from '@umijs/max';
-import { Button, Modal, Radio, Select, Space, Tag, Tooltip, message } from 'antd';
+import { Button, DatePicker, Modal, Radio, Select, Space, Tag, Tooltip, message } from 'antd';
 import Omit from 'omit.js';
 import { useEffect, useRef, useState } from 'react';
 import ApproveRemarkFormModal from '../../ApproveRemarkFormModal';
@@ -14,8 +14,13 @@ import { AddSupplierParams, TransferRequest, TransferRequestAdvanceParams } from
 import { ItemServiceAPI, TransferRequestServiceAPI } from '../service';
 import FormModal from './FormModal';
 import { TransferServiceAPI } from '../../inventory-transfer/service';
-import { EyeFilled } from '@ant-design/icons';
-// import InventoryModelForm from "./InventoryModelForm";
+import { EyeFilled, FileExcelOutlined } from '@ant-design/icons';
+import ExportExcel from '../../ExportExcel';
+import { downloadReport } from '@/services/apiGateway';
+import moment from 'moment';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 
 interface Props {
   onDetail?: (id: string) => void;
@@ -25,13 +30,22 @@ interface Props {
 }
 
 export default ({ onAdd }: Props) => {
+  dayjs.extend(utc);
+  dayjs.extend(timezone);
   const requestActions = simpleRequestActions();
   const access = useAccess();
   const services = TransferRequestServiceAPI(requestActions);
+  const [loading, setLoading] = useState(false)
+  const [rejectLoading, setRejectLoading] = useState(false)
+  const [excelLoading, setExcelLoading] = useState(false)
   // const [advanceSearch, setAdvanceSearch] = useState<{ visible: boolean }>();
   const [advanceSearchParams, setAdvanceSearchParams] = useState<TransferRequestAdvanceParams>({
     business_unit: 'ALL',
     state: 'in-progress',
+    transfer_type: 'ALL'
+  });
+  const [exportModel, setExportModal] = useState<{ visible: boolean }>({
+    visible: false,
   });
   const actionRef = useRef<ActionType>();
   const [commentModal, setCommentModal] = useState<{
@@ -147,11 +161,11 @@ export default ({ onAdd }: Props) => {
               message.error(`Mismatch found for item code ${sapItem.itemCode} in IES ${detailItem.quantity} in SAP ${sapItem.quantity}!`);
               return
             }
-            setApproveModal({ visible: true, id: id, transfer_id: transfer_id })
           } else {
             message.error(`Item code ${sapItem.itemCode} not found in the sap list!`);
           }
         }
+        setApproveModal({ visible: true, id: id, transfer_id: transfer_id })
       } else {
         console.error("One of the lists is undefined or empty.");
       }
@@ -169,7 +183,7 @@ export default ({ onAdd }: Props) => {
         displayOnly
         extraFilter={
           <Space size="large">
-            {access.canAccessItem ? (
+            {/* {access.canAccessItem ? (
               <Radio.Group
                 value={advanceSearchParams.business_unit}
                 onChange={(e) => {
@@ -187,7 +201,21 @@ export default ({ onAdd }: Props) => {
               </Radio.Group>
             ) : (
               ''
-            )}
+            )} */}
+            <Radio.Group
+              value={advanceSearchParams.transfer_type}
+              onChange={(e) => {
+                setAdvanceSearchParams((v) => ({
+                  ...v,
+                  transfer_type: e.target.value,
+                }));
+                actionRef.current?.reloadAndRest?.();
+              }}
+            >
+              <Radio.Button value="ALL">All</Radio.Button>
+              <Radio.Button value="PM/RM">PM/RM</Radio.Button>
+              <Radio.Button value="FG">FG</Radio.Button>
+            </Radio.Group>
             <Select
               defaultValue="in-progress"
               style={{ width: 120 }}
@@ -204,10 +232,41 @@ export default ({ onAdd }: Props) => {
                 { value: 'completed', label: 'Completed' },
               ]}
             />
+            <DatePicker
+              style={{ width: 165 }}
+              onChange={(v => {
+                const dateWithoutTime = v?.format("YYYY-MM-DD")
+                setAdvanceSearchParams((v) => ({
+                  ...v,
+                  postingDate: dateWithoutTime,
+                }));
+                actionRef.current?.reloadAndRest?.();
+              })}
+              placeholder='Posting date'
+            />
+            <DatePicker
+              style={{ width: 165 }}
+              onChange={(v => {
+                const dateWithoutTime = v?.format("YYYY-MM-DD")
+                setAdvanceSearchParams((v) => ({
+                  ...v,
+                  docDueDate: dateWithoutTime,
+                }));
+                actionRef.current?.reloadAndRest?.();
+              })}
+              placeholder='Doc Due date'
+            />
           </Space>
         }
         tableProps={{
           actionRef: actionRef,
+          toolbar: {
+            actions: [
+              <>
+                <Tooltip title="Dowload Excel File"><Button type="link" icon={<FileExcelOutlined />} onClick={() => setExportModal({ visible: true })} /></Tooltip>
+              </>
+            ],
+          },
         }}
         columns={[
           {
@@ -244,7 +303,7 @@ export default ({ onAdd }: Props) => {
             dataIndex: 'transfer_type',
           },
           {
-            width: 80,
+            width: 150,
             key: 'line',
             title: 'Line',
             dataIndex: 'line',
@@ -270,8 +329,9 @@ export default ({ onAdd }: Props) => {
             render: (_, r) => r.to_warehouse.map((w) => w.whsCode),
           },
           {
+            width: 80,
             key: 'tendency',
-            title: 'Business Unit',
+            title: 'BU',
             dataIndex: 'tendency',
             render: (_, r) => r.from_warehouse.map((w) => w.tendency),
           },
@@ -378,39 +438,34 @@ export default ({ onAdd }: Props) => {
       <RemarkFormModal
         title="Reject Form"
         open={commentModal.visible}
+        loading={rejectLoading}
         onCancel={() => {
           setCommentModal({ visible: false, id: undefined, transfer_id: undefined, sapDocEntry: undefined });
         }}
         onSave={async (id, remark, transfer_id, sapDocEntry) => {
-          // const response: { data: string; message: string } = (
-          //   await services.status_change({
-          //   id: id,
-          //   remark: remark,
-          //   statusChange: 'transfer-request-warehouse-reject',
-          //   state: 'rejected',
-          // })) as { data: string; message: string };
-          const response: { data: string; message: string; } =
-            (await services.close_transfer(
-              {
-                docEntry: sapDocEntry || 0,
-                id: id,
-                remark: remark,
-                statusChange: 'transfer-request-warehouse-reject',
-                state: 'rejected',
-                activities_name: 'Warehouse Approval',
-                action: 'Rejected',
-                transfer_request: transfer_id,
-              })
-            ) as { data: string; message: string; }
-          // await services.save_activites({
-          //   activities_name: 'Warehouse Approval',
-          //   action: 'Rejected',
-          //   remark: remark,
-          //   transfer_request: transfer_id,
-          // });
-          setCommentModal({ visible: false, id: undefined, transfer_id: undefined, sapDocEntry: undefined });
-          message.info(response.message);
-          actionRef.current?.reload();
+          try {
+            setRejectLoading(true)
+            const response: { data: string; message: string; } =
+              (await services.close_transfer(
+                {
+                  docEntry: sapDocEntry || 0,
+                  id: id,
+                  remark: remark,
+                  statusChange: 'transfer-request-warehouse-reject',
+                  state: 'rejected',
+                  activities_name: 'Warehouse Approval',
+                  action: 'Rejected',
+                  transfer_request: transfer_id,
+                })
+              ) as { data: string; message: string; }
+            setCommentModal({ visible: false, id: undefined, transfer_id: undefined, sapDocEntry: undefined });
+            message.info(response.message);
+            actionRef.current?.reload();
+          } catch (e) {
+            message.error('Error');
+          } finally {
+            setRejectLoading(false);
+          }
         }}
         id={commentModal.id ?? ''}
         transfer_id={commentModal.transfer_id ?? ''}
@@ -419,84 +474,69 @@ export default ({ onAdd }: Props) => {
       <ApproveRemarkFormModal
         title="Approve Form"
         open={approveModel.visible}
+        loading={loading}
         onCancel={() => {
           setApproveModal({ visible: false, id: undefined });
         }}
         onSave={async (id, remark, transfer_id) => {
-          const response: { data: string; message: string; } = (await services.status_change({
-            id: id,
-            remark: remark,
-            statusChange: 'request-warehouse-approve',
-            state: 'in-progress',
-          })) as { data: string; message: string; };
-          await services.save_activites({
-            activities_name: 'Warehouse Approval',
-            action: 'Approved',
-            remark: remark,
-            transfer_request: transfer_id,
-          });
-          setApproveModal({ visible: false, id: undefined });
-          message.info(response.message);
-          actionRef.current?.reload();
+          try {
+            setLoading(true)
+            const response: { data: string; message: string; } = (await services.status_change({
+              id: id,
+              remark: remark,
+              statusChange: 'request-warehouse-approve',
+              state: 'in-progress',
+            })) as { data: string; message: string; };
+            await services.save_activites({
+              activities_name: 'Warehouse Approval',
+              action: 'Approved',
+              remark: remark,
+              transfer_request: transfer_id,
+            });
+            setApproveModal({ visible: false, id: undefined });
+            message.info(response.message);
+            actionRef.current?.reload();
+          } catch (e) {
+            message.error('Error');
+          } finally {
+            setLoading(false);
+          }
         }}
         id={approveModel.id ?? ''}
         transfer_id={approveModel.transfer_id ?? ''} data={undefined} />
-      {/* <FormModal
-        title="Approve Form"
-        open={Model.visible}
-        onCancel={() => {
-          setModal({ visible: false, id: undefined });
+      <ExportExcel
+        title="Export Excel"
+        open={exportModel.visible}
+        loading={excelLoading}
+        type = 'request'
+        onCancel={() => setExportModal({ visible: false })}
+        onSave={async (duration, line, shift, state, request_type) => {
+          const result = {
+            line: line,
+            shift: shift,
+            startDate: dayjs(duration[0]).format('YYYY-MM-DD'),
+            endDate: dayjs(duration[1]).format('YYYY-MM-DD'),
+            state: state,
+            type: 'warehouse',
+            request_type: request_type || ''
+          };
+          try {
+            setExcelLoading(true)
+            await downloadReport(requestActions)({
+              fileName: `invantory-transfer-request-warehouse-report-${moment().toDate().toDateString()}`,
+              reportName: 'prod-transfer-request-report',
+              data: result,
+              type: 'EXCEL',
+              // target: '_blank'
+            });
+          } catch (error) {
+            message.error('Failed to download.');
+          } finally {
+            setExcelLoading(false)
+          }
+          setExportModal({ visible: false });
         }}
-        onSave={async (data: AddSupplierParams, id, remark, transfer_id) => {
-          // const response: { data: string; message: string } =
-          //   (await services.status_change({
-          //     id: id,
-          //     remark: remark,
-          //     status: "request-warehouse-approve",
-          //     state:"in-progress"
-          //   })) as { data: string; message: string };
-          //   await services.save_activites({
-          //     activities_name: 'Warehouse Approval',
-          //     action: 'Approved',
-          //     remark: remark,
-          //     transfer_request: transfer_id
-          //   });
-          Modal.confirm({
-            title: 'Save Transfer Request record',
-            content: 'are you sure',
-            onOk: async () => {
-              for (let i = 0; i < data.length; i++) {
-                await ItemServiceAPI(requestActions).add_supplier(data[i]);
-              }
-              // const response = (await ItemServiceAPI(requestActions).add_supplier(data))
-
-              const response = (await services.status_change({
-                id: id,
-                remark: remark,
-                statusChange: 'request-warehouse-approve',
-                state: 'in-progress',
-              })) as { data: string; message: string };
-              await services.save_activites({
-                activities_name: 'Warehouse Approval',
-                action: 'Approved',
-                remark: remark,
-                transfer_request: transfer_id,
-              });
-              // await services.save_activites(activities)
-              setModal({ visible: false, id: undefined });
-              actionRef.current?.reloadAndRest?.();
-              message.success(response.data);
-            },
-          });
-          // console.log(id, remark, transfer_id)
-
-          // message.info(response.message);
-          actionRef.current?.reload();
-        }}
-        id={Model.id ?? ''}
-        transfer_id={Model.transfer_id ?? ''}
-        data={Model.data ?? undefined}
-      /> */}
+      />
     </>
   );
 };

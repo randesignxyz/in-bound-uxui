@@ -46,7 +46,7 @@ export interface SalesInvoiceInfo {
   invoiceDate: moment.Moment;
   subAmount: number;
   amount: number;
-  discount?: number = 0.0;
+  discount?: number;
   status: string;
   salespersonCode: string;
   stockControlId: number;
@@ -59,8 +59,8 @@ export interface SaleInvoiceItemInfo {
   id: number;
   sequence: number;
   itemId: number;
-  itemName?: string = null;
-  stockCategoryId?: number = null;
+  itemName?: string;
+  stockCategoryId?: number;
   itemType: string;
   itemCode: string;
   quantity: number;

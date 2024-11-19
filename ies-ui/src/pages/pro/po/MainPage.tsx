@@ -62,7 +62,7 @@ export default () => {
                         onUpdateTab?.('view', { processInstId: processInstId, formNo: formNo }, undefined, key)
                         refetch()
                     }} type="CREATE" />
-                }
+                },
             ]}
             listView={{
                 onRefresh: refetch,
@@ -92,7 +92,7 @@ export default () => {
                         ]
                     },
                     { option: { label: 'Pending', value: 'REQUESTED' } },
-                    { option: { label: 'In Process', value: 'IN_PROGRESS' } },
+                    { option: { label: 'In Progress', value: 'IN_PROGRESS' } },
                     {
                         option: { label: 'Approved', value: 'APPROVED' }, subOptions: [
                             { label: 'All', value: 'ALL', default: true },
@@ -159,10 +159,10 @@ export default () => {
 
                         {
                             title: 'SAP Information',
-                            hideInTable: !['ALL', 'APPROVED'].some((it) => it == filter.criteria?.advanceSearch?.workflowStatus),
+                            hideInTable: !['ALL', 'APPROVED'].some((it) => it == filter.criteria?.advanceSearch?.workflowStatus || 'ALL'),
                             children: [
+                                { title: 'Doc#', render: (_, r) => r.sapDocNo },
                                 { title: 'Posted Date', sorter: "postedDate", align: 'right', render: (_, r) => r.postedDate && formatDate(r.postedDate) },
-                                { title: 'Doc Num', render: (_, r) => r.sapDocNo },
                                 { title: 'Status', render: (_, r) => r.integratedStatus && <Status text={r.integratedStatus} /> },
                             ],
                         },

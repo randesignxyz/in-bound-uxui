@@ -1,6 +1,7 @@
 import { LookupDataItem } from "@/services/data"
 import moment, { Moment } from "moment"
 import { VendorDetail } from "../vendor/vendor"
+import { RelatedObj } from "../services";
 
 export type QuotationListItem = {
     id: number;
@@ -124,6 +125,7 @@ export type QuotationItemtDetail = {
     amountAfterDiscount: number;
     remarks?: string;
     prLinked: number[]
+    relatedObjects?: RelatedObj[]
     item: Item,
 
 }
@@ -184,11 +186,14 @@ export type PrItem = {
     requestedBy: string;
     docNo: string;
     qty: number;
-    orderdQty?: number;
-    purchaseQty?: number;
+    orderedQty?: number;
+    purchasedQty?: number;
+    availableQty?: number
     uom: string;
     unitPrice: number;
     amount: number;
+    itemCode: string;
+    itemName: string;
     description: string;
     remarks: string;
     default: boolean;
@@ -224,6 +229,7 @@ export type SaveQuotationItem = {
     amount: number;
     discount?: number;
     amountAfterDiscount: number;
+    relatedObjects?: RelatedObj[];
     item?: Item;
     prLinked: number[]
 }

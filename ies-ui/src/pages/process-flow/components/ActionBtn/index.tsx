@@ -3,6 +3,7 @@ import { ActionDataType, UserTask } from '@/services/process-workflow/data';
 import {
   CheckCircleOutlined,
   CheckOutlined,
+  DeleteOutlined,
   FilePdfOutlined,
   HolderOutlined,
   IssuesCloseOutlined,
@@ -30,6 +31,8 @@ interface ActionBtnProps {
   item?: UserTask;
   taskActions?: boolean;
   hideExport?: boolean;
+  processEnded?: boolean,
+  cancelActionEnabled?: boolean;
   moreActions?: MoreAction[];
   onValidate?: (action: string, task?: UserTask) => boolean;
   actionHandler: (key: string, item?: UserTask) => void;
@@ -106,6 +109,8 @@ const TaskActionButtons: React.FC<{
 export const ActionBtn: React.FC<ActionBtnProps> = ({
   item,
   hideExport,
+  processEnded,
+  cancelActionEnabled,
   taskActions,
   moreActions,
   actionHandler,
@@ -117,13 +122,16 @@ export const ActionBtn: React.FC<ActionBtnProps> = ({
 
   return (
     <Space size="large">
+
       <Space>
         <MoreActionsButtons moreActions={moreActions} />
         {actionList.filter(action => action).map(action => (
           <ActionButton key={action?.value} action={action} item={item} actionHandler={actionHandler} />
         ))}
       </Space>
+
       <Space>
+        {processEnded && cancelActionEnabled && <Button danger onClick={() => actionHandler('cancel', item)} icon={<DeleteOutlined />}>Cancel</Button>}
         <Button onClick={() => actionHandler('flow', item)} icon={<PartitionOutlined />}>
           Diagram
         </Button>

@@ -49,7 +49,6 @@ export default ({ trigger }: { trigger?: JSX.Element}) => {
             }
         }}       
         onFinish={async(dataForm: DataFormType)=>{
-            console.log(dataForm);
             await downloadReport<TermReportParams>(requestActions)({
                 reportName: 'export-crm-term-list-report',
                 fileName: `crm-term-list-report-${moment().format()}.xls`,

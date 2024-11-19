@@ -1,7 +1,7 @@
 
 import { ProTable } from "@ant-design/pro-components"
 import { Card } from "antd"
-import { JobData, ProfileData } from "./data"
+import { JobData, ProfileData } from "../data"
 
 export default ({ profile }: { profile: ProfileData }) => {
     return <div>

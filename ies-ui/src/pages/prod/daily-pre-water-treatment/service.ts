@@ -44,11 +44,17 @@ const DailyPreWaterTreatmentAction = {
         type: 'LIST_QUERY',
         payload: { pre_treatment_id, pre_treatment_type },
     }),
-    assign_self_pre: (id: number,action: string,pre_treatment_id: string,pre_treatment_type: string): ServiceApiType<{id: number,action: string,pre_treatment_id: string,pre_treatment_type: string}> => ({
-        actionName:"assign-self-pre",
-        endpoint:"PROD",
-        type:'EXEC',
-        payload:{id,action,pre_treatment_id,pre_treatment_type}
+    assign_self_pre: (id: number, action: string, pre_treatment_id: string, pre_treatment_type: string): ServiceApiType<{ id: number, action: string, pre_treatment_id: string, pre_treatment_type: string }> => ({
+        actionName: "assign-self-pre",
+        endpoint: "PROD",
+        type: 'EXEC',
+        payload: { id, action, pre_treatment_id, pre_treatment_type }
+    }),
+    unassign_pre: (pre_treatment_id: string, pre_treatment_type: string): ServiceApiType<{ pre_treatment_id: string, pre_treatment_type: string }> => ({
+        actionName: "unassign-pre",
+        endpoint: "PROD",
+        type: 'EXEC',
+        payload: { pre_treatment_id, pre_treatment_type }
     })
 }
 
@@ -80,9 +86,13 @@ export const DailyPreWaterTreatmentServiceAPI = (requestAction: RequestActions) 
             singleRequest<DailyPreWaterTreatment>(DailyPreWaterTreatmentAction.get_shift_activities(pre_treatment_id, pre_treatment_type))(
                 requestAction
             ),
-        assign_self_pre:(id: number,action: string,pre_treatment_id: string,pre_treatment_type: string)=>
-                singleRequest<DailyPreWaterTreatment>(DailyPreWaterTreatmentAction.assign_self_pre(id,action,pre_treatment_id,pre_treatment_type))(
-                    requestAction
-                )
+        assign_self_pre: (id: number, action: string, pre_treatment_id: string, pre_treatment_type: string) =>
+            singleRequest<DailyPreWaterTreatment>(DailyPreWaterTreatmentAction.assign_self_pre(id, action, pre_treatment_id, pre_treatment_type))(
+                requestAction
+            ),
+        unassign_pre: (pre_treatment_id: string, pre_treatment_type: string) =>
+            singleRequest<DailyPreWaterTreatment>(DailyPreWaterTreatmentAction.unassign_pre(pre_treatment_id, pre_treatment_type))(
+                requestAction
+            )
     }
 }

@@ -1,23 +1,23 @@
 import moment from 'moment';
 
 export interface ItemSalesLinePrice {
-  id: number? = 0;
+  id?: number;
   priceType: string;
   code: string;
-  itemId: number?;
-  variantCode: string?;
-  unitOfMeasureId: number? = 1;
-  unitOfMeasureCode: string = 'CASE';
-  minimumQuantity: number = 1;
-  currencyId: number? = 1;
+  itemId?: number;
+  variantCode?: string;
+  unitOfMeasureId?: number;
+  unitOfMeasureCode: string;
+  minimumQuantity: number;
+  currencyId?: number;
   unitPrice: number;
   unitPriceAfterDiscount: number;
-  discountPercentage: number = 0;
-  discountAmount: number = 0;
-  startingDate: moment.Moment?;
-  endingDate: moment.Moment?;
+  discountPercentage: number;
+  discountAmount: number;
+  startingDate?: moment.Moment;
+  endingDate?: moment.Moment;
   isActive: boolean;
-  refId: number? = null;
+  refId?: number;
 }
 
 export interface ItemSalesLinePriceDto {
@@ -38,10 +38,10 @@ export interface ItemSalesLinePriceDto {
   isActive: boolean;
 }
 
-interface PricingUpdateParam{
-  id:number[];
-  unitPrice:number;
-  unitPriceAfterDiscount:number;
+interface PricingUpdateParam {
+  id: number[];
+  unitPrice: number;
+  unitPriceAfterDiscount: number;
 }
 
 export interface ItemSalesLinePriceParam {
@@ -57,5 +57,5 @@ export interface ItemSalesLinePriceParam {
 export interface PricingAdvanceSearchParam {
   searchValue?: string | undefined;
   // status: 'ALL' | 'ACT-GROUP' | 'DSD-GROUP';
-  status:string;
+  status: string;
 }

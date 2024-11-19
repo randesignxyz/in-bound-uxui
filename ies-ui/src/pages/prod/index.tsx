@@ -10,6 +10,7 @@ export const ProdPaths = {
   inventoryTransfer: '/prod/inventory-transfer',
   dailyWaterTreatment: '/prod/daily-water-treatment',
   dailyPreWaterTreatment: '/prod/daily-pre-water-treatment',
+  dailyHACCPMonitoringtOzone: '/prod/daily-haccp-monitoring-ozone',
   dailyHACCPMonitoring: '/prod/daily-haccp-monitoring',
 };
 
@@ -33,14 +34,14 @@ export default () => {
       link: `${ProdPaths.inventoryTransfer}/list`,
       visible: access.canAccessInventoryTranferMenuItem,
     },
-    {
-      id: 'dailyWaterTreatment',
-      name: 'Daily Water Treatment',
-      description: 'Daily Water Treatment Plant 2',
-      icon: dailyWaterTreatmentIcon,
-      link: `${ProdPaths.dailyWaterTreatment}/list`,
-      visible: access.canAccessDailyWaterTreatmentMenuItem,
-    },
+    // {
+    //   id: 'dailyWaterTreatment',
+    //   name: 'Daily Water Treatment',
+    //   description: 'Daily Water Treatment Plant 2',
+    //   icon: dailyWaterTreatmentIcon,
+    //   link: `${ProdPaths.dailyWaterTreatment}/list`,
+    //   visible: access.canAccessDailyWaterTreatmentMenuItem,
+    // },
     {
       id: 'dailyPreWaterTreatment',
       name: 'Daily Pre-Water Treatment',
@@ -51,11 +52,19 @@ export default () => {
     },
     {
       id: 'dailyHACCPMonitoring',
-      name: 'Daily HACCP Monitoring',
-      description: 'Daily HACCP Monitoring',
+      name: 'Daily HACCP Monitoring Line',
+      description: 'Daily HACCP Monitoring Line',
       icon: dailyWaterTreatmentIcon,
       link: `${ProdPaths.dailyHACCPMonitoring}/list`,
       visible: access.canAccessDailyHACCPMonitoringMenuItem,
+    },
+    {
+      id: 'dailyHACCPMonitoringtOzone',
+      name: 'Daily HACCP Monitoring of WTP',
+      description: 'Daily HACCP Monitoring Ozone',
+      icon: dailyWaterTreatmentIcon,
+      link: `${ProdPaths.dailyHACCPMonitoringtOzone}/list`,
+      visible: access.canAccessDailyHACCPMonitoringOzoneMenuItem,
     },
   ];
 

@@ -8,7 +8,7 @@ import { Paging } from '@/services/API';
 import { execDataService, fetchDataItemService, RequestActions, ServiceApiType, singleRequest } from '@/services/apiGateway';
 import { TaskActionDataParam } from '@/services/process-workflow/params';
 import { StockAdvanceSearchParams, StockControlDetail, StockControlLess } from '@/services/sale/data';
-import { StockTransfer, StockTransferRequest } from './stock-transfer-request_old/process-flow/data';
+import { StockTransfer, StockTransferRequest } from '../workflow_integration/stock_request/data';
 
 const StockControlActions = {
   listStock: (

@@ -48,6 +48,12 @@ import { DocumentationDTO } from '@/pages/dms/documentation/data';
 import { ShareDTO } from '@/pages/dms/share/data';
 import { Term } from '@/pages/crm/term/types';
 import { TransferRequest } from '@/pages/prod/inventory-transfer-request/data';
+import { StockRequestLess, StockRequestListItem } from '@/pages/fma-stock/request/data.types';
+import { ItemList } from '@/pages/fma-stock/item/data.types';
+import { TransferRequestListItem } from '@/pages/fma-stock/transfer/data.types';
+import { EmpWhsMappingList } from '@/pages/fma-stock/emp-whs/data.types';
+import { AdjRequestListItem } from '@/pages/fma-stock/adjustment/data.types';
+import { ProbationEvaluationEmpList } from '@/pages/hrm/probation/data.types';
 
 type DataList =
   | {
@@ -279,16 +285,40 @@ type DataList =
     type: 'appraisal-submit';
     criteria?: any;
     data: Paging<AppraisalEmp>;
-  }| {
+  } | {
     type: 'term';
     criteria?: any;
     data: Paging<Term>;
-  }
-  | {
+  } | {
     type: 'transfer-request-list';
     criteria?: any;
     data: Paging<TransferRequest>;
-  };
+  } | {
+    type: 'fma-stock-request';
+    criteria?: any;
+    data?: Paging<StockRequestListItem>;
+  } | {
+    type: 'fma-item-list';
+    criteria?: any;
+    data?: Paging<ItemList>;
+  } | {
+    type: 'whh-inventory-transfer-request';
+    criteria?: any;
+    data?: Paging<TransferRequestListItem>;
+  } | {
+    type: 'fma-emp-whs-mapping-list';
+    criteria?: any;
+    data?: Paging<EmpWhsMappingList>;
+  }
+  | {
+    type: 'transfer-request-final-list';
+    criteria?: any;
+    data: Paging<TransferRequest>;
+  }| {
+    type: 'probation-evaluation-emp';
+    criteria?: any;
+    data: Paging<ProbationEvaluationEmpList>;
+  } ;
 
 type MomainType =
   | 'sales-product-item'
@@ -336,7 +366,11 @@ type MomainType =
   | 'dms-share'
   | 'dms-document'
   | 'term'
-  | 'transfer-request-list';
+  | 'transfer-request-list'
+  | 'fma-stock-request'
+  | 'whh-inventory-transfer-request'
+  | 'fma-emp-whs-mapping-list'
+  | 'transfer-request-final-list';
 
 export default () => {
   const [cacheData, seCacheData] = useState<DataList>();

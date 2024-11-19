@@ -1,6 +1,6 @@
 import FormModalComp, { FormModalProps } from '@/components/FormModal';
 import { simpleRequestActions } from '@/services/model';
-import { EditableFormInstance, EditableProTable, ProForm, ProFormSelect, ProFormTextArea, ProTable } from '@ant-design/pro-components';
+import { EditableFormInstance, EditableProTable, ProForm, ProFormDateRangePicker, ProFormSelect, ProFormTextArea, ProTable } from '@ant-design/pro-components';
 import { useEffect, useRef, useState } from 'react';
 // import { DailyWaterTreatmentMachineServiceAPI } from './service';
 // import { AssignDailyWaterTreatment, DailyWaterTreatmentMachine } from './data';
@@ -32,9 +32,9 @@ export default ({ onSave, ...props }: Props) => {
     const [typeLable, setTypeLable] = useState('Water Treatment Plant 2')
 
     useEffect(() => {
-            form.resetFields()
+        form.resetFields()
     }, [props.open]);
-    
+
     useEffect(() => {
         if (props.open) {
             const getMachine = async () => {
@@ -53,28 +53,30 @@ export default ({ onSave, ...props }: Props) => {
             width={'800px'}
             onSubmit={async () => {
                 const dataForm = await form.validateFields();
-                const dateWithoutTime = date?.format("YYYY-MM-DD");
-                if (exited > 0) {
-                    message.error('This shift has been assigned!')
-                    setExited(0)
-                    return
-                }
+                const startDate = moment(dataForm.assign_date[0]);
+                const endDate = moment(dataForm.assign_date[1]);
+                let current = moment(startDate);
+                const end = moment(endDate);
+
                 const item = []
-                for (let i = 0; i < time.length; i++){
-                    const entity = {
-                        ...dataForm,
-                        pretreatmentlist: control.map((m) => ({ ...m ,assign_to_user:assignTo})),
-                        assign_date: dateWithoutTime,
-                        pre_treatment_type: typeLable,
-                        assign_to:assignTo,
-                        time:time[i],
-                        activities: [{ action: "Assign to " + `${dataForm.assign_to}` }],
+                while (current.isSameOrBefore(end)) {
+                    current = current.add(1, 'day');
+                    for (let i = 0; i < time.length; i++) {
+                        const entity = {
+                            ...dataForm,
+                            pretreatmentlist: control.map((m) => ({ ...m, assign_to_user: assignTo })),
+                            assign_date: current,
+                            pre_treatment_type: typeLable,
+                            assign_to: assignTo,
+                            time: time[i],
+                            activities: [{ action: "Assign to " + `${dataForm.assign_to}` }],
+                        }
+                        item.push(entity)
                     }
-                    item.push(entity)
                 }
                 onSave(item)
                 // console.log(entity)
-                
+
             }}
         >
             <ProForm form={form} onReset={() => form.resetFields()} submitter={false}>
@@ -82,51 +84,56 @@ export default ({ onSave, ...props }: Props) => {
                     <Row gutter={6}>
                         <Col span={12}>
                             <ProFormSelect
-                                // request={async ({ keyWords }) => {
-                                //     const data = await EmployeeServices.list({
-                                //         criteria: {
-                                //             searchValue: keyWords,
-                                //             advanceSearch: {
-                                //                 status: 'ACTIVE',
-                                //             },
-                                //         },
-                                //     }).query(requestActions);
-
-                                //     return data.items.map((obj) => ({
-                                //         value: obj.userId,
-                                //         label: `${obj.firstName + ' ' + obj.lastName} `,
-                                //     }));
-                                // }}
-                                options={[
-                                    {
-                                        value: 'prodadm',
-                                        label: 'prodadm',
-                                    },
-                                    {
-                                        value: 'prod1',
-                                        label: 'prod1',
-                                    },
-                                    {
-                                        value: 'prod2',
-                                        label: 'prod2',
-                                    }
-                                ]}
+                                request={async ({ keyWords }) => {
+                                    const data = await EmployeeServices.list({
+                                        criteria: {
+                                            searchValue: keyWords,
+                                            advanceSearch: {
+                                                status: 'ACTIVE',
+                                            },
+                                        }, pagination: { pageSize: 2000 }
+                                    }).query(requestActions);
+                                    const filteredData = data.items.filter((obj) => obj.department === 'PRD' && obj.userId != null);
+                                    return filteredData.map((obj) => ({
+                                        value: `${obj.userId}`,
+                                        label: `${obj.firstName + ' ' + obj.lastName}`,
+                                    }));
+                                }}
+                                // options={[
+                                //     {
+                                //         value: 'prodadm',
+                                //         label: 'prodadm',
+                                //     },
+                                //     {
+                                //         value: 'prod1',
+                                //         label: 'prod1',
+                                //     },
+                                //     {
+                                //         value: 'prod2',
+                                //         label: 'prod2',
+                                //     }
+                                // ]}
                                 showSearch
                                 mode="multiple"
                                 name="assign_to"
                                 label="Assign To"
                                 rules={[{ required: true }]}
                                 fieldProps={{
-                                    onChange: (value:any) => {
+                                    onChange: (value: any) => {
                                         const assignToString = value.join(' ');
                                         const finalValues = { ...value, assign_to: assignToString };
-                                        setAssignTo(finalValues.assign_to)},
-                                  }}
+                                        setAssignTo(finalValues.assign_to)
+                                    },
+                                }}
                             />
                         </Col>
                         <Col span={12}>
                             <ProFormSelect
                                 options={[
+                                    {
+                                        value: '3:00',
+                                        label: '3:00'
+                                    },
                                     {
                                         value: '7:00',
                                         label: '7:00',
@@ -147,10 +154,7 @@ export default ({ onSave, ...props }: Props) => {
                                         value: '23:00',
                                         label: '23:00',
                                     },
-                                    {
-                                        value: '3:00',
-                                        label: '3:00'
-                                    }
+                                    
                                 ]}
                                 fieldProps={{
                                     onChange: async (e: string) => {
@@ -169,7 +173,7 @@ export default ({ onSave, ...props }: Props) => {
                         </Col>
                     </Row>
                     <Row gutter={6}>
-                        <Col span={12} style={{marginTop:9}}>
+                        <Col span={12}>
                             <ProFormSelect
                                 style={{}}
                                 request={async ({ }) => {
@@ -194,12 +198,16 @@ export default ({ onSave, ...props }: Props) => {
                             />
                         </Col>
                         <Col span={12} style={{ display: 'flex', flexDirection: 'column' }}>
-                            <div style={{ flexDirection: 'row',marginBottom:8 }}>
-                                <Text style={{ color: 'red', fontSize: 20 }}>*</Text>
-                                <Text>Assign Date</Text>
-                            </div>
-                            <DatePicker onChange={(v => setDate(v))} value={date} />
-
+                            <ProFormDateRangePicker
+                                width={'lg'}
+                                name="assign_date"
+                                label="Assign Date"
+                                placeholder={['start', 'end']}
+                                fieldProps={{
+                                    format: 'YYYY-MM-DD',
+                                }}
+                                rules={[{ required: true }]}
+                            />
                         </Col>
 
                     </Row>

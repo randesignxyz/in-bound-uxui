@@ -6,14 +6,21 @@ import { Moment } from 'moment';
 import moment from 'moment';
 import { simpleRequestActions } from '@/services/model';
 import { ActionType, ProForm, ProFormSelect, ProTable } from '@ant-design/pro-components';
-import { Button, Card, DatePicker, Flex, Modal, Progress, Space, Tag, message } from 'antd';
-import { PlusOutlined, RedoOutlined } from '@ant-design/icons';
+import { Button, Card, DatePicker, Flex, Modal, Progress, Row, Space, Tag, Tooltip, message } from 'antd';
+import { FileExcelOutlined, PlusOutlined, RedoOutlined } from '@ant-design/icons';
 import { DailyPreWaterTreatmentServiceAPI } from './service';
 import { DailyPreWaterTreatment } from './data';
 import { history } from 'umi'
 import FormModal from './FormModal';
+import ExportExcel from './ExportExcel';
+import { downloadReport } from '@/services/apiGateway';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 
 export default () => {
+  dayjs.extend(utc);
+  dayjs.extend(timezone);
   const access = useAccess();
   const [date, setDate] = useState<Moment>(moment());
   const [modalOpen, setModalOpen] = useState(false)
@@ -23,6 +30,10 @@ export default () => {
   const actionRef = useRef<ActionType>();
   const [list, setList] = useState<DailyPreWaterTreatment[]>([]);
   const [initialValue, setInitialValue] = useState('Water Treatment Plant 2');
+  const [excelLoading, setExcelLoading] = useState(false)
+  const [exportModel, setExportModal] = useState<{ visible: boolean }>({
+    visible: false,
+  });
   const routes = [
     {
       path: ProdPaths.prod,
@@ -35,6 +46,9 @@ export default () => {
   ];
 
   const time = [
+    {
+      name: '3:00'
+    },
     {
       name: '7:00'
     },
@@ -50,9 +64,7 @@ export default () => {
     {
       name: '23:00'
     },
-    {
-      name: '3:00'
-    }
+    
   ]
 
   useEffect(() => {
@@ -71,43 +83,50 @@ export default () => {
       <Card size="small" style={{ textAlign: 'right', marginBottom: 10, marginTop: 10 }}>
         <Space >
           <ProForm submitter={false}>
-            <ProFormSelect
-            style={{marginTop:-10}}
-              request={async ({ }) => {
-                const data = await services.getPlant();
+            <Row style={{alignItems:'center'}}>
+              <ProFormSelect
+                style={{ marginTop: -5 }}
+                request={async ({ }) => {
+                  const data = await services.getPlant();
 
-                return data.map((obj: any) => ({
-                  value: obj.plant,
-                  label: `${obj.plant}`,
-                }));
-              }}
-              // options={options}
-              fieldProps={{
-                onChange: async (e: string) => {
-                  setInitialValue(e)
-                }
-              }}
-              name="plant"
-              label=" "
-              initialValue={initialValue}
-            />
-
+                  return data.map((obj: any) => ({
+                    value: obj.plant,
+                    label: `${obj.plant}`,
+                  }));
+                }}
+                // options={options}
+                fieldProps={{
+                  onChange: async (e: string) => {
+                    setInitialValue(e)
+                  }
+                }}
+                name="plant"
+                label=" "
+                initialValue={initialValue}
+              />
+              <DatePicker onChange={(v => setDate(v))} value={date} style={{ height: '32px', marginLeft: 10 }} />
+            </Row>
           </ProForm>
-          <DatePicker onChange={(v => setDate(v))} value={date} style={{marginTop:7}}/>
+          {/* <DatePicker onChange={(v => setDate(v))} value={date} style={{ marginTop: 7 }} /> */}
           {access.canAssignItem ?
-            <Button
-              key="click-add"
-              type="link"
-              icon={<PlusOutlined />}
-              onClick={() => setModalOpen(true)}
-            />
+            <Tooltip title="Assign Task">
+              <Button
+                key="click-add"
+                type="link"
+                icon={<PlusOutlined />}
+                onClick={() => setModalOpen(true)}
+              />
+            </Tooltip>
             : <></>}
-          <Button
-            key="refresh"
-            type="link"
-            icon={<RedoOutlined />}
-            onClick={() => setOnRefresh(true)}
-          />
+          <Tooltip title="Dowload Excel File"><Button type="link" icon={<FileExcelOutlined />} onClick={() => setExportModal({ visible: true })} /></Tooltip>
+          <Tooltip title="Refresh">
+            <Button
+              key="refresh"
+              type="link"
+              icon={<RedoOutlined />}
+              onClick={() => setOnRefresh(true)}
+            />
+          </Tooltip>
         </Space>
       </Card>
       <Card size="small">
@@ -137,7 +156,7 @@ export default () => {
               dataIndex: 'name',
               render: (_, record) => {
                 const assignItem = list.find(v => v.time === record.name);
-                return (
+                return (assignItem?
                   <a
                     onClick={() =>
                     (assignItem ?
@@ -147,6 +166,7 @@ export default () => {
                   >
                     {record.name}
                   </a>
+                  :<>{record.name}</>
                 );
               },
             },
@@ -217,6 +237,31 @@ export default () => {
                   </Tag> : '')
               },
             },
+            ...(access.canAssignItem ? [{
+              width: 10,
+              render: (_:any, record:any) => {
+                const assignItem = list.find(v => v.time === record.name);
+                if (!assignItem) return null;
+                return (assignItem?.pretreatmentlist.length ==  assignItem?.pretreatmentlist.filter(i=>i.status=='pending').length ?
+                  <Button onClick={async () => {
+                    Modal.confirm({
+                      title: "Unassign",
+                      content: 'Are you sure to unassign? This assign will disappare forever',
+                      onOk: async () => {
+                        try {
+                          await services.unassign_pre(assignItem.pre_treatment_id,assignItem.pre_treatment_type)
+                          setOnRefresh(true)
+                          message.success('Success');
+                        } catch (e: any) {
+                          message.error(e.message);
+                        }
+                      }
+                    })
+                  }}
+                  >Unassign</Button>
+                  : <></>)
+              }
+            }] : []),
 
           ]}
         />
@@ -233,7 +278,7 @@ export default () => {
             content: 'are you sure',
             onOk: async () => {
               try {
-                for (let i = 0; i < data.length; i++){
+                for (let i = 0; i < data.length; i++) {
                   await services.assign_pre_water_treatment(data[i])
                 }
                 setModalOpen(false)
@@ -244,6 +289,36 @@ export default () => {
               }
             }
           })
+        }}
+      />
+      <ExportExcel
+        title="Export Excel"
+        open={exportModel.visible}
+        loading={excelLoading}
+        onCancel={() => setExportModal({ visible: false })}
+        onSave={async (duration, time, type) => {
+          const result = {
+            time: time,
+            startDate: dayjs(duration[0]).format('YYYY-MM-DD'),
+            endDate: dayjs(duration[1]).format('YYYY-MM-DD'),
+            pre: 'pre-treatment',
+            type: type
+          };
+          try {
+            setExcelLoading(true)
+            await downloadReport(requestActions)({
+              fileName: `daily-water-pre-treatment-report-${moment().toDate().toDateString()}`,
+              reportName: 'prod-daily-water-treatment-report',
+              data: result,
+              type: 'EXCEL',
+              // target: '_blank'
+            });
+          } catch (error) {
+            message.error('Failed to download.');
+          } finally {
+            setExcelLoading(false)
+          }
+          setExportModal({ visible: false });
         }}
       />
     </>

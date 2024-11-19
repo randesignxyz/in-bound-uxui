@@ -28,6 +28,8 @@
   "include": [
     "./**/*.d.ts",
     "./**/*.ts",
-    "./**/*.tsx"
-, "src/pages/crm/customer/index.tsx.old"  ]
+    "./**/*.tsx",
+    "src/pages/crm/customer/index.tsx.old",
+    "src/pages/User/Login/index.tsx.old"
+  ]
 }

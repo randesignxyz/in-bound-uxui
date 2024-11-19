@@ -9,12 +9,13 @@ export default () => {
     const redirectList = [
         { access: access.canAccessTaskListMenu, path: './task-list' },
         { access: access.canAccessCrmMenuItem, path: './crm' },
-        { access: access.canAccessHrMenu, path: './hrm' },
         { access: access.canAccessProMenuItem, path: './pro' },
+        { access: access.canAccessHrMenu, path: './hrm' },
         { access: access.canAccesDeliveyMenu, path: './delivery' },
         { access: access.canAccessFleetMenu, path: './fleet' },
         { access: access.canAccessProdMenu, path: './prod' },
         { access: access.canAccessDeliveryExpenseMenu, path: './expense/delivery' },
+
     ]
 
     useEffect(() => {

@@ -41,6 +41,7 @@ interface Props {
 const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openInTab, getMenuItems, id, actionHandlers, }) => {
   const { state, ops, actions, modals } = model(id);
   const [selectedSchedule, setSelectedSchedule] = useState<{ id: number }>();
+  const [addressList, setAddressList] = useState<AddresssView[]>()
   const access = useAccess();
   const requestActions = simpleRequestActions()
 
@@ -141,7 +142,14 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
           <SaleInfoView data={state.data?.detail?.saleInfo} />
         </Tabs.TabPane>
         <Tabs.TabPane key={"posm"} tab="POSM">
-          <PosmView requestActions={requestActions}
+          <PosmView addresList={addressList || []} requestActions={requestActions}
+            initAddressList={async () => {
+              if (addressList != null) {
+                return;
+              }
+              const rs = await ops.listAddressDetailByCustomerId({ id: state.data?.detail?.id || 0 })
+              setAddressList(rs)
+            }}
             listPosm={() => Promise.resolve(state.data?.detail?.posmItems?.map(it => ({
               id: it.id,
               itemId: it.item.id,
@@ -149,13 +157,15 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
               remarks: it.remarks
             })) || [])}
             onSave={(itemId: number, qty: number, id?: number | undefined, remarks?: string | undefined) => {
+              if (!state.data?.detail?.id) {
+                throw Error("fetch to detect customer.")
+              }
               return CustomerServices.saveCustomerPOSM({
                 id: id,
                 itemId: itemId,
                 qty: qty,
                 remarks: remarks,
-                contractId: 0
-                // customerId: state.data?.detail?.id || 0
+                customerId: state.data?.detail?.id || 0
               })(requestActions)
             }}
             onDelete={(id) => CustomerServices.deleteCustomerPosm(id)(requestActions)}
@@ -184,6 +194,7 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
           <AddressListView
             addressReadonly={state.data?.detail?.source == 'SAP' || !access.saleAdmin}
             data={{
+              list: addressList || [],
               init: {
                 lookupDataList: state.initData?.lookupDataList,
                 provinceList: state.initData?.provinceList,
@@ -191,15 +202,18 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
               locations: { ...state.data?.locations },
             }}
             actionHandlers={{
-              loadData: () => ops.listAddressDetailByCustomerId({ id: state.data?.detail?.id || 0 }),
+              loadData: async () => {
+                const rs = await ops.listAddressDetailByCustomerId({ id: state.data?.detail?.id || 0 })
+                setAddressList(rs)
+                return rs
+              },
               onAdd: (data, cb) => onSaveAddressHandler(data, true, cb),
               onEdit: (data, cb) => onSaveAddressHandler(data, false, cb),
               onRemove: onRemoveAddressHandler,
               onCleaLocation: actions.clearLocations,
               onLoadLocations: ops.loadLocations,
               onLoadMultiLocations: ops.loadMultiLocations,
-            }}
-          />
+            }} />
         </Tabs.TabPane>
 
         <Tabs.TabPane key={'visitPlan'} tab="Visit Plan">

@@ -65,7 +65,7 @@ const ProcessForm: React.FC<ActionDataFormProps> = (props) => {
             try {
               Modal.confirm({
                 title: 'Completed Process',
-                content: 'Are you soure?',
+                content: 'Are you sure?',
                 onOk: async () => {
                   const saveData: CompleteContractData = {
                     ...dataForm,

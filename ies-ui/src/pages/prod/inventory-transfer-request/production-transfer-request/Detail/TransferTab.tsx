@@ -72,11 +72,12 @@ export default ({ providedList, data, refresh, ...rest }: Props) => {
                             message.error(`Mismatch found for item code ${sapItem.itemCode} in IES ${detailItem.quantity} in SAP ${sapItem.quantity}!`);
                             return
                         }
-                        setAddTransferOpen({ visible: true })
+                        
                     } else {
                         message.error(`Item code ${sapItem.itemCode} not found in the sap list!`);
                     }
                 }
+                setAddTransferOpen({ visible: true })
             } else {
                 console.error("One of the lists is undefined or empty.");
             }

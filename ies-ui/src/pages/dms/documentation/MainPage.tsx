@@ -7,7 +7,7 @@ import { useQuery } from "@umijs/max";
 import { useEffect, useRef, useState } from "react";
 import { formatDate } from "@/pages/utils";
 import { AuditOutlined, BellOutlined, DeleteOutlined, DownloadOutlined, EllipsisOutlined, FileAddOutlined, HeartOutlined, HistoryOutlined, PlusOutlined, ShareAltOutlined, SwapOutlined } from "@ant-design/icons";
-import { Button, Dropdown, MenuProps, message, Modal, Card, Typography, Space } from "antd";
+import { Button, Dropdown, MenuProps, message, Modal, Card, Typography, Space, FloatButton } from "antd";
 import { expriationStatus } from "../core";
 import DocumentationDetail from "./DetailView";
 import DocumentModalForm from "./EntryForm";
@@ -486,6 +486,7 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
                 }
             }}
         />
+     
         <AdvanceDocumentSearch
             initData={advanceSearchParams}
             open={advanceSearch?.visible}

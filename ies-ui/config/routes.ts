@@ -177,6 +177,15 @@ export default [
   },
 
   {
+    path: '/pro/setting',
+    name: 'pro-setting',
+    icons: 'FormOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessProSettingMenuItem',
+    component: './pro/setting',
+  },
+
+  {
     path: '/pro/requisition/:view/*',
     name: 'requisition',
     icon: 'UnorderedListOutlined',
@@ -247,8 +256,7 @@ export default [
     icon: 'FormOutlined',
     access: 'canAccessHrMenu',
     component: './hrm',
-  },
-
+  }, 
   {
     path: '/hrm/employee/:view/*',
     name: 'employee',
@@ -299,6 +307,23 @@ export default [
     hideInMenu: 'true',
     access: 'canAccessAppraisalReaquest',
     component: './hrm/appraisal-request',
+  },
+  {
+    path: '/hrm/probation-evaluation/:view/*',
+    name: 'probation-evaluation',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessProbationEvaluation',
+    component: './hrm/probation',
+  },
+  {
+    path: '/external/hrm/probation-evaluation/:view/*',
+    name: 'probation-evaluation',
+    icon: 'UnorderedListOutlined',
+    layout: false,
+    hideInMenu: 'true',
+    access: 'canAccessProbationEvaluation',
+    component: './hrm/probation',
   },
   /**********HRM>>**************/
 
@@ -628,7 +653,7 @@ export default [
   /******************* Developer *******************/
 
   {
-    path: '/profile',
+    path: '/profile/:is_admin/:id',
     name: 'account',
     // icon: 'DeliveredProcedureOutlined',
     // access: 'canAccesDeliveyMenu',
@@ -689,7 +714,7 @@ export default [
     component: './delivery/loading',
   },
   {
-    path: '/delivery/tracking',
+    path: '/delivery/tracking1',
     name: 'delivery-tracking',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
@@ -771,6 +796,14 @@ export default [
     hideInMenu: 'true',
     access: 'canAccessDeliveryTruck',
     component: './delivery/truck',
+  },
+  {
+    path: '/delivery/tracking',
+    name: 'location-tracking',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessDeliveryTruck',
+    component: './delivery/location-tracking',
   },
 
   /************************ Queque  ******************/
@@ -1029,6 +1062,15 @@ export default [
   {
     path: '/external/fleet/inspection/:view/*',
     name: 'inspection',
+    layout:false,
+    hideInMenu: 'true',
+    access: 'canAccessFleetMenu',
+    component: './fleet/inspection/',
+  },
+
+  {
+    path: '/external/fleet/inspection/:view/*',
+    name: 'inspection',
     layout: false,
     hideInMenu: 'true',
     access: 'canAccessFleetMenu',
@@ -1089,6 +1131,13 @@ export default [
     hideInMenu: 'true',
     access: 'canAccessFleetMenu',
     component: './fleet/fuelStock/',
+  },
+  {
+    path: '/fleet/accessory/:view/*',
+    name: 'fleet_accessory',
+    hideInMenu: 'true',
+    access: 'canAccessFleetMenu',
+    component: './fleet/accessory/',
   },
   {
     path: '/fleet/accessory/:view/*',
@@ -1233,9 +1282,161 @@ export default [
     access: 'canAccessDailyHACCPMonitoringMenuItem',
     component: './prod/daily-haccp-monitoring/',
   },
+  {
+    path: '/prod/daily-haccp-monitoring-ozone/:view/*',
+    name: 'dailyHACCPMonitoringOzone',
+    hideInMenu: 'true',
+    access: 'canAccessDailyHACCPMonitoringOzoneMenuItem',
+    component: './prod/daily-haccp-monitoring-ozone/',
+  },
 
   //  ================= END Prod =================
+  //  ================= START In-house Stock ==============
+  {
+    path: '/whm',
+    name: 'whm',
+    icon: 'ReconciliationOutlined',
+    access: 'canAccessWhmMenu',
+    component: './fma-stock',
+  },
+  {
+    path: '/whm/issue/request/:view/*',
+    name: 'whm_issue_request',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessNcmIssueRequestMenu',
+    component: './fma-stock/request',
+  },
+  {
+    path: '/whm/inventory/item/:view/*',
+    name: 'whm_inventory_item',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessWhmItemMenu',
+    component: './fma-stock/item',
+  },
+  {
+    path: '/external/whm/inventory/item/:view/*',
+    name: 'whm_inventory_item',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    layout: false,
+    access: 'canAccessWhmItemMenu',
+    component: './fma-stock/item',
+  },
+  {
+    path: '/whm/transfer/request/:view/*',
+    name: 'whm-transter-request',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessWhmInventoryTransferRequestMenu',
+    component: './fma-stock/transfer',
+  },
+  {
+    path: '/whm/inventory/empwhs/:view/*',
+    name: 'whm_inventory_empwhs',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessWhmEmpMappingMenu',
+    component: './fma-stock/emp-whs',
+  },
+  {
+    path: '/external/whm/inventory/empwhs/:view/*',
+    name: 'whm_inventory_empwhs',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    layout: false,
+    access: 'canAccessWhmEmpMappingMenu',
+    component: './fma-stock/emp-whs',
+  },
+  {
+    path: '/whm/adj/request/:view/*',
+    name: 'whm-adj-request',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessWhmInventoryAdjRequestMenu',
+    component: './fma-stock/adjustment',
+  },
+  
+  //  ================= END In-house Stock ================
+  
   //  ================= Setting =================
+  /**
+   * ESS Management
+   */
+  // {
+  //   path: '/ess/em/list',
+  //   name: 'inventoryTransfer',
+  //   icon: 'SettingOutlined',
+  //   hideInMenu: 'true',
+  //   access: 'canAccessInventoryTranferMenuItem',
+  //   component: './prod/inventory-transfer'
+  // },
+  {
+    path: '/ess',
+    name: 'ess',
+    icon: 'TeamOutlined', 
+    access: 'canAccessHrViewEmployeeMenuItem',
+    component: './ess'
+  },{
+    path: '/ess/:view/*',
+    name: 'ess',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    // access: 'canAccessHrEmployeeMenuItem',
+    component: './ess/ess-announce',
+  },
+  
+  {
+    path: '/ess/details/:id',
+    name: 'Ess Annountment Details',
+    // icon: 'DeliveredProcedureOutlined',
+    // access: 'canAccesDeliveyMenu',
+    hideInMenu: 'true',
+    component: './ess/ess-announce/Details',
+  },
+  {
+    path: '/feedback',
+    name: 'feedback',
+    icon: 'TeamOutlined', 
+    hideInMenu: 'true',
+    component: './ess'
+  },
+  {
+    path: 'fleet/carbooking',
+    name: 'bookingcar',
+    icon: 'TeamOutlined', 
+    hideInMenu: 'true',
+    component: './fleet/carbooking'
+  },
+  /**
+   * End ESS Management
+   */
+  /* request car */
+  {
+    path: 'fleet/booking/rqblist',
+    name: 'booking',
+    icon: 'TeamOutlined', 
+    hideInMenu: 'true',
+    component: './fleet/carbooking/bookinglist'
+  },
+  {
+    path: 'fleet/booking/ocplist',
+    name: 'booking',
+    icon: 'TeamOutlined', 
+    hideInMenu: 'true',
+    component: './fleet/carbooking/occupylist'
+  },
+  {
+    path: 'fleet/booking/bknew',
+    name: 'booking',
+    icon: 'TeamOutlined', 
+    hideInMenu: 'true',
+    component: './fleet/carbooking/occupylist'
+  },
+
+  /* En request car */
+
 
   {
     path: '/setting',

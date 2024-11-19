@@ -41,6 +41,7 @@ const FileUploader: React.FC<{
 }) => {
     const [file, setFile] = useState<UploadFile>();
     const [fileList, setFileList] = useState<UploadType[]>([]);
+    // const token = kc.token  
     const token = localStorage.getItem('accessToken');
     const requestActions = simpleRequestActions();
     const [forceReload, setForceReload] = useState(1);

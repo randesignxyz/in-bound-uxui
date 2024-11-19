@@ -128,27 +128,27 @@ export type OrderItems = {
 };
 
 export type CountOrder = {
-  pending?: number = 0;
-  accepted?: number = 0;
-  assigned?: number = 0;
-  ontheway?: number = 0;
-  delivered?: number = 0;
-  acceptDelivered?: number = 0;
-  canceled?: number = 0;
-  rejected?: number = 0;
+  pending?: number;
+  accepted?: number;
+  assigned?: number;
+  ontheway?: number;
+  delivered?: number;
+  acceptDelivered?: number;
+  canceled?: number;
+  rejected?: number;
 };
 
 export type OrderAdvanceParams = {
   status?:
-    | 'pending'
-    | 'accepted'
-    | 'ALL'
-    | 'ontheway'
-    | 'accept_delivered'
-    | 'delivered'
-    | 'rejected'
-    | 'canceled'
-    | 'assigned';
+  | 'pending'
+  | 'accepted'
+  | 'ALL'
+  | 'ontheway'
+  | 'accept_delivered'
+  | 'delivered'
+  | 'rejected'
+  | 'canceled'
+  | 'assigned';
 };
 
 export type OrderStatusHistory = {
@@ -164,13 +164,13 @@ export type OrderStatusHistoryCreate = {
   status?: string;
   remark?: string;
   assignTo?:
-    | {
-        storeType: string;
-        referenceCode: string;
-        referencePhone?: string;
-        comment?: string;
-      }
-    | undefined;
+  | {
+    storeType: string;
+    referenceCode: string;
+    referencePhone?: string;
+    comment?: string;
+  }
+  | undefined;
 };
 
 export type OrderDeliveryParam = {

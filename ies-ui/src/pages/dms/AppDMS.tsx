@@ -1,4 +1,4 @@
-import { Affix, Button, Divider, Flex } from "antd"
+import { Affix, Button, Divider, Flex, FloatButton } from "antd"
 import FolderViewList from "./components/FolderViewList";
 import { useEffect, useState } from "react";
 import { DMSPaths } from ".";
@@ -35,7 +35,6 @@ const APPDMS: React.FC = () => {
         },
     );
     useEffect(() => {
-
     }, [paramByFolder])
 
     return (
@@ -76,6 +75,7 @@ const APPDMS: React.FC = () => {
                     (view === "share" && <ShareListView actionKey={view} />) ||
                     (view === undefined && <DocumentMainPage paramSearch={paramByFolder} />)
                 }
+                   <FloatButton.BackTop/>
 
             </div>
         </>

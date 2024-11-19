@@ -22,6 +22,11 @@ import { Button, Input, message, Select, Space, Tag } from 'antd';
 import { useEffect, useState } from 'react';
 import { history } from "@umijs/max";
 import { ProcessRequestItem } from './data.type';
+import { StockRequestFormNames } from '@/pages/fma-stock/request/process-flow';
+import { TransferRequestFormNames } from '@/pages/fma-stock/transfer/process-flow';
+import { AdjustmentRequestFormNames } from '@/pages/fma-stock/adjustment/process-flow';
+import { ProbationEvaluationRequestFormNames } from '@/pages/hrm/probation/process-flow';
+import ProbationRequestModal from '@/pages/hrm/probation/ProbationRequestModal';
 
 export default () => {
   const [data, setData] = useState<ProcessRequestItem[]>([]);
@@ -52,7 +57,11 @@ export default () => {
     if (key == IncidentFormNames.processDefKey && access.canCreateIncidentTicket) return true;
     if (key == 'requisition_request_process' && access.canCreatePR) return true;
     if (key == PriceComparisonFormNames.processDefKey && access.canAccessProQCMenuItem) return true;
-    if (key == PoRequestFormNames.processDefKey && access.canAccessProPOMenuItem) return true;
+    if (key == PoRequestFormNames.processDefKey && access.canAccessProPOMenuItem) return true;   
+    if (key == StockRequestFormNames.processDefKey && access.canCreateNCMRequest) return true;
+    if (key == TransferRequestFormNames.processDefKey && access.canCreateInventoryTransferRequest) return true;
+    if (key == AdjustmentRequestFormNames.processDefKey && access.canCreateInventoryAdjRequest) return true;
+    if (key == ProbationEvaluationRequestFormNames.processDefKey && access.canCreateHrProbationEvaluationRequest) return true;
 
     return false;
   };
@@ -196,6 +205,8 @@ export default () => {
       {(() => {
         if (modalVisible?.type == StaffRequisitionFormNames.processDefKey) {
           return <RequestModal open={true} onOpenChange={onCloseModalHandler} width="1000px" />;
+        } if (modalVisible?.type == ProbationEvaluationRequestFormNames.processDefKey) {
+          return <ProbationRequestModal open={true} onOpenChange={onCloseModalHandler} width="1000px" />;
         } else if (modalVisible?.type == ITRequestFormNames.processDefKey) {
           return (
             <RequestForm

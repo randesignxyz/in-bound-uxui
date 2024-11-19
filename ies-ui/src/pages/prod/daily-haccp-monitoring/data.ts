@@ -16,17 +16,17 @@ export type HACCPMonitoring = {
 }
 
 export type HACCPMonitoringList = {
-    id: number,
-    haccp_id: string,
+    id: number | undefined,
+    haccp_id?: string,
     other: string,
-    warning_count: string,
+    warning_count: number,
     time: string,
     status: string,
     water_pressure: string,
-    nozzles_rinser: string,
+    nozzles_rinser: string | number,
     fg: string,
-    smell: string,
-    activity_control: string,
+    smell: string | number,
+    activity_control: string | number,
     take_action: string,
     done_by: string,
     createdBy: string,
@@ -37,6 +37,10 @@ export type HACCPMonitoringList = {
     air_pressure: string,
     temperature_preform: string,
     treated_water_pressure: string,
+    remark:string,
+    opo:string | number | undefined,
+    uv_lamp:string,
+    temperature:string
 }
 
 export type HACCPMonitoringActivities = {
@@ -47,4 +51,15 @@ export type HACCPMonitoringActivities = {
     line: string,
     haccp_id: string,
     line_id?: number
+}
+
+export type HACCPMonitoringInstruction={
+    id?:number,
+    instruction?:string,
+    group?:string,
+    createdBy?: string,
+    createdDate?: Moment,
+    lastModifiedBy?: string,
+    lastModifiedDate?: Moment,
+    active?:number
 }

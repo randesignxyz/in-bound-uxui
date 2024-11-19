@@ -31,10 +31,9 @@ const APPDMS: React.FC = () => {
             flexDirection: "column",
             justifyContent: "space-between",
             marginTop: view == undefined ? "30px" : "",
-            scrollbarWidth: "thin"
+            scrollbarWidth: "thin",
         },
     );
-
     useEffect(() => {
 
     }, [paramByFolder])
@@ -43,6 +42,7 @@ const APPDMS: React.FC = () => {
         <>
             <div
                 style={menuStyleState}
+                onContextMenu={(e)=>e.preventDefault()}
             >
                 <FolderViewList activeKey={view == "library" ? true : false}
                     onSearch={(param: DocumentationSearchByFolder) => setParamByFolder(param)}
@@ -53,7 +53,6 @@ const APPDMS: React.FC = () => {
                 <Affix   >
                     <div style={{ backgroundColor: "white" }}>
                         <Divider plain orientation="left">Other</Divider>
-
 
                         <Flex vertical gap={12} >
                             <Button icon={<ShareAltOutlined />} type={view == "share" ? "primary" : "default"} onClick={() => history.push(`${DMSPaths.dms}/share`)} >Shared</Button>
@@ -76,7 +75,6 @@ const APPDMS: React.FC = () => {
                     (view === "team" && <TeamsViewList isCurrentUser={true} actionKey={view} />) ||
                     (view === "share" && <ShareListView actionKey={view} />) ||
                     (view === undefined && <DocumentMainPage paramSearch={paramByFolder} />)
-
                 }
 
             </div>

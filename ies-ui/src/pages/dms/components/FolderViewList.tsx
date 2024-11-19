@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Affix, Button, Dropdown, Flex, MenuProps, Space, Tooltip, Tree, message } from 'antd';
+import { Affix, Button, Dropdown, Flex, MenuProps, Space, message } from 'antd';
 import { FolderServiceAPI } from '../folder/service';
 import { simpleRequestActions } from '@/services/model';
-import { BankFilled, BankOutlined, DeleteOutlined, EditOutlined, FileTextOutlined, FolderAddOutlined, FolderFilled, ShareAltOutlined, UserOutlined } from '@ant-design/icons';
+import { BankFilled, DeleteOutlined, EditOutlined, FileTextOutlined, FolderAddOutlined, FolderFilled, UserOutlined } from '@ant-design/icons';
 import { ActionType } from '@ant-design/pro-components';
-import { Modal, Spin, Typography } from 'antd/lib';
+import { Modal, Spin } from 'antd/lib';
 import FolderEntryForm from '../folder/EntryForm';
 import { DataNode, FolderCreate } from '../folder/data';
 import DocumentModalForm from '../documentation/EntryForm';
@@ -217,12 +217,11 @@ export default ({ onSearch, activeKey, moveDoc, onMove, onFolderSelected, ...pro
                                         }
                                     }}
                                 >
-                                    {/* <Flex
-                                        // gap={12}
+                                    <Flex
                                         justify='space-between'
                                         align='baseline'
-                                    > */}
-                                        <Space size={6} style={{ whiteSpace: "nowrap", padding: "3px 0" }}>
+                                    >
+                                        <Space size={6} style={{ whiteSpace: "nowrap", padding: "3px 0" }} >
                                             {
                                                 (items.type == "department") && <BankFilled style={{ color: "#54aeff" }} /> ||
                                                 (items.type == "personal" && <UserOutlined style={{ color: "#54aeff" }} />) ||
@@ -230,8 +229,7 @@ export default ({ onSearch, activeKey, moveDoc, onMove, onFolderSelected, ...pro
                                             }
                                             <span>{items.title?.toString()}</span>
                                         </Space>
-
-                                    {/* </Flex> */}
+                                    </Flex>
                                 </Dropdown>
                             )
                         }}

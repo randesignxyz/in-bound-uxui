@@ -1,7 +1,6 @@
-import { Badge, Breadcrumb, Button, Col, Row, Space } from "antd"
+import { Col, Row, Space } from "antd"
 import { ProCard, ProDescriptions } from "@ant-design/pro-components";
 import { DocumentationDTO } from "./data";
-import { InfoCircleOutlined } from "@ant-design/icons";
 import { useState } from "react";
 import PathDocument from "../components/PathDocument";
 import { formatDate } from "@/pages/utils";
@@ -54,13 +53,13 @@ export default ({ document, actionRef }: Props) => {
                                         title: "Category",
                                         render: (_, r) => r.category
                                     },
-                                    {
-                                        title: "Paths",
-                                        render: (_, r) => <Space align="center">
-                                            <Button size="small" icon={<InfoCircleOutlined />} type="link" onClick={() => setPathModalState({ visible: { name: "DRAWER", data: r } })} />
-                                            <Breadcrumb items={[{ key: r.library?.id, title: r.library?.name }].concat(r.path?.map(o => ({ key: o.id, title: o.name })) || [])} separator="/" />
-                                        </Space>
-                                    },
+                                    // {
+                                    //     title: "Paths",
+                                    //     render: (_, r) => <Space align="center">
+                                    //         <Button size="small" icon={<InfoCircleOutlined />} type="link" onClick={() => setPathModalState({ visible: { name: "DRAWER", data: r } })} />
+                                    //         <Breadcrumb items={[{ key: r.library?.id, title: r.library?.name }].concat(r.path?.map(o => ({ key: o.id, title: o.name })) || [])} separator="/" />
+                                    //     </Space>
+                                    // },
                                     {
                                         title: "Status",
                                         render: (_, r) => <Typography.Text type={r.status =="Inactive"?"danger":"success"}>{r.status}</Typography.Text>
@@ -142,16 +141,17 @@ export default ({ document, actionRef }: Props) => {
                                             },
                                             {
                                                 title: "Valid Date",
-                                                render: (_, r) => (<Badge status={expriationStatus(r.term.expiryDate) > 0 ? "error" : "processing"} text={formatDate(r.term.expiryDate)} />),
-                                                valueType: "date"
+                                                // render: (_, r) => (<Badge status={expriationStatus(r.term.expiryDate) > 0 ? "error" : "processing"} text={formatDate(r.term.expiryDate)} />),
+                                                valueType: "date",
+                                                render:(_,r)=><Typography.Text type={expriationStatus(r.term.expiryDate) > 0 ? "danger" : "success"}>{formatDate(r.term.expiryDate)}</Typography.Text>
                                             },
-                                            {
-                                                title: "Paths",
-                                                render: (_, r) => <Space align="center">
-                                                    <Button size="small" icon={<InfoCircleOutlined />} type="link" onClick={() => setPathModalState({ visible: { name: "DRAWER", data: r } })} />
-                                                    <Breadcrumb items={[{ key: r.library?.id, title: r.library?.name }].concat(r.path?.map(o => ({ key: o.id, title: o.name })) || [])} separator="/" />
-                                                </Space>
-                                            },
+                                            // {
+                                            //     title: "Paths",
+                                            //     render: (_, r) => <Space align="center">
+                                            //         <Button size="small" icon={<InfoCircleOutlined />} type="link" onClick={() => setPathModalState({ visible: { name: "DRAWER", data: r } })} />
+                                            //         <Breadcrumb items={[{ key: r.library?.id, title: r.library?.name }].concat(r.path?.map(o => ({ key: o.id, title: o.name })) || [])} separator="/" />
+                                            //     </Space>
+                                            // },
                                             {
                                                 title: "Status",
                                                 render: (_, r) => <Typography.Text type={r.status =="Inactive"?"danger":"success"}>{r.status}</Typography.Text>,

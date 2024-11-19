@@ -1,6 +1,6 @@
 import { formatDate } from "@/pages/utils";
 import { ProCard, ProDescriptions } from "@ant-design/pro-components";
-import { Space, Row, Col, Badge, Button } from "antd";
+import { Space, Row, Col, Badge, Button, Typography } from "antd";
 import { expriationStatus } from "../core";
 import { DocumentationDTO } from "../documentation/data";
 import { InfoCircleOutlined } from "@ant-design/icons";
@@ -98,7 +98,8 @@ export default ({ document, actionRef }: Props) => {
                                         label: "Expiry Date",
                                         dataIndex: "expiryDate",
                                         valueType: "date",
-                                        render: (_, r) => (<Badge status={expriationStatus(r.expiryDate) > 0 ? "error" : "processing"} text={formatDate(r.expiryDate)} />)
+                                        render:(_,r)=><Typography.Text type={expriationStatus(r.expiryDate) > 0 ? "danger" : "success"}>{formatDate(r.expiryDate)}</Typography.Text>
+                                        // render: (_, r) => (<Badge status={expriationStatus(r.expiryDate) > 0 ? "error" : "processing"} text={formatDate(r.expiryDate)} />)
                                     },
                                     {
                                         label: "Notice Peroid (Days)",

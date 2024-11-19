@@ -1,5 +1,5 @@
 import { ProCard, ProDescriptions } from "@ant-design/pro-components"
-import { Badge, Col, Row, Space, Typography } from "antd"
+import { Col, Row, Space, Typography } from "antd"
 import React, { useState } from "react";
 import CompanyDetail from "./company/CompanyDetail";
 import { DocumentationDTO } from "../documentation/data";
@@ -75,11 +75,8 @@ export default ({ document, actionRef }: Props) => {
                                         dataIndex: "description",
                                         span: 2
                                     },
-
-
                                 ]}
                             />
-
                         </Col>
                         <Col md={24} sm={24} lg={12}>
                             {/* <Divider orientation="left" plain>Term and Renewal</Divider> */}
@@ -143,7 +140,6 @@ export default ({ document, actionRef }: Props) => {
                         </Col>
                     </Row>
                 </ProCard>
-
                 <ProCard
                 >
                     <ProDescriptions
@@ -226,7 +222,6 @@ export default ({ document, actionRef }: Props) => {
                     />
                 </ProCard>
             </Space>
-
             <CompanyDetail
                 open={companyState?.visible?.name == "MODAL"}
                 onClose={() => setCompanyState({ visible: undefined })}

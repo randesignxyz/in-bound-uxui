@@ -8,7 +8,7 @@ const ContractSales:React.FC<Props> = () =>{
 
     return (
         <>
-
+            This page is under construction
         </>
     )
 }

@@ -347,6 +347,9 @@ export type EmployeeInfResult = {
     reportTo?: string
     hodId?: number
     hodName?: string
+    jobLevelId?: number
+    jobLevelName?: string
+    jobLevelCode?: string
 }
 export type AppraisalInstructionItem = {
     id: number
@@ -374,6 +377,18 @@ export type ProbationFormType = {
     name: string
     description?: string
     status: boolean
+}
+export type ProbationAssessmentList = {
+    id: number
+    userId: string
+    empNo: string
+    empName: string
+    internalName?: string
+    firstName?: string
+    lastName?: string
+    jobLevelId: number
+    jobLevelName: string
+    jobLevelCode: string
 }
 export type ProbationEvaluationRs = {
     id: number  

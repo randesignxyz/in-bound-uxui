@@ -1,13 +1,13 @@
 import essIcon from '@/assets/ess.png';
 import essAnnIcon from '@/assets/ess-announce.png';
 import essProfileIcon from '@/assets/customer.png';
-
-import performanceReview from '@/assets/performance-review.png';
+import reportIcon from '@/assets/clipboard.png';
 import ListMenuComp, { ListMenuItem } from '@/components/ListMenu';
-import { ClockCircleOutlined, ExportOutlined } from '@ant-design/icons'; 
+import {ExportOutlined } from '@ant-design/icons'; 
 import { useAccess } from '@umijs/max'; 
 import { PageContainer } from '@ant-design/pro-components';
 import EmpReport from './reports/EmpReport';
+import { message } from 'antd';
 
 export const HrmPaths = {
     employee: '/hrm/employee',
@@ -25,10 +25,7 @@ export default () => {
             description: 'Employee-List',
             link: `${HrmPaths.employee}/list`,
             visible: access.canAccessHrEmployeeMenuItem,
-            icon: essIcon,
-            menu: access.canAccessHrESSEmpMenuReport? {
-              items: [{ label: <EmpReport trigger={<a>Export</a>} />, key: 'exportEssEmpReport', icon: <ExportOutlined style={{ fontSize: '16px', color: '#08c' }} /> }]
-            }: undefined
+            icon: essIcon,            
           },
           {
             id: 'ess_announcement',
@@ -46,14 +43,17 @@ export default () => {
             icon: essProfileIcon,
             visible: true
           },
-          // {
-          //   id: 'ess_employee_feedback',
-          //   name: 'Employee Feedback',
-          //   description: 'Employee Feedback',
-          //   link: `${HrmPaths.ess}/feedback`, 
-          //   icon: essAnnIcon,
-          //   visible: true
-          // } 
+          {
+            id: 'ess_employee_feedback',
+            name: 'Reports',
+            description: 'Reports in ESS',
+            // link: `${HrmPaths.ess}/feedback`, 
+            icon: reportIcon,
+            visible: access.canAccessHrESSEmpMenuReport,
+            menu: access.canAccessHrESSEmpMenuReport? {
+              items: [{ label: <EmpReport trigger={<a>Export Employee Info</a>} />, key: 'exportEssEmpReport', icon: <ExportOutlined style={{ fontSize: '16px', color: '#08c' }} /> }]
+            }: undefined
+          } 
     ]
 
     return (

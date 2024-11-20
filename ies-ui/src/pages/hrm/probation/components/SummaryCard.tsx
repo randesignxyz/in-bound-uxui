@@ -15,7 +15,7 @@ interface Props{
 }
 
 export default({probaRequest, totalScore, form, setConfirmStatus, readonly=true,initialValue}:Props)=>{
-  const [value, setValue] = useState('CONFIRMED');
+  const [value, setValue] = useState('');
 
   useEffect(()=>{
     if(initialValue){
@@ -72,7 +72,7 @@ export default({probaRequest, totalScore, form, setConfirmStatus, readonly=true,
           <Col >
             <div><b>DECISION BY LINE MANAGER</b></div>
             <Radio.Group  name='confirmedStatus' onChange={onChange} value={value} style={{paddingTop:15}}>
-              <Space direction="vertical" style={{paddingLeft:5}}>d
+              <Space direction="vertical" style={{paddingLeft:5}}>
                 <Radio value={'CONFIRMED'} >Confirmed Probation</Radio>      
                 <Radio value={'EXTENDED'} > <Space>Extended Probation { value==='EXTENDED' && !readonly?<> Until: <ProFormDatePicker readonly={readonly} initialValue={initialValue?.extendedDate} name={'extendedDate'} rules={[{required: true}]}/></>:<>Until: {formatDate(initialValue?.extendedDate)}</>} </Space></Radio>
                 <Radio value={'TERMINATED'}>Terminated</Radio>

@@ -1,6 +1,6 @@
 import { simpleRequestActions } from "@/services/model"
-import { ModalForm, ProFormCheckbox, ProFormSelect } from "@ant-design/pro-components"
-import { Button, Dropdown, message, Space } from "antd"
+import { ModalForm, ProFormCheckbox, ProFormSelect, ProFormText } from "@ant-design/pro-components"
+import { Button, Col, Dropdown, message, Row, Space } from "antd"
 import type { MenuProps } from 'antd';
 import { useEffect, useState } from "react"
 import { useForm } from "antd/es/form/Form"
@@ -12,6 +12,8 @@ import { downloadGenericReport, MultiRequest } from "@/services/apiGateway";
 import { useSafeState } from "ahooks";
 
 type DataFormType = {
+    empSearch?: string
+    empStatus?: string[]
     bu?: string[]
     department?: string[]
 }
@@ -55,22 +57,7 @@ export default ({ trigger }: { trigger?: JSX.Element}) => {
             subDepartmentList: rs.subDeptList,
         }); 
     }
-    useEffect(() => {
-        (async () => {
-            // const rs = await MultiRequest<{
-            //     contractTypes: LookupData[],
-            //     terms: LookupData[],
-            //     brandList: LookupDataItem[]
-            // }>(
-            //     [
-            //         ContractServices.listContractType().queryParams, 
-            //         ContractServices.listTerms().queryParams,
-            //         CustomerServices.listBrand.queryParams
-            //     ]
-            // )(requestActions)
-            // setLookupData(rs)
-        })()
-    },[])  
+    
     const items=(): MenuProps['items']=>{
 
         return reportList.map(e => {
@@ -82,56 +69,7 @@ export default ({ trigger }: { trigger?: JSX.Element}) => {
                 disabled: isRaw && rawData                
             }
         })
-    }   
-    
-    // const items: MenuProps['items'] = [
-    //     {
-    //       key: '1',
-    //       label: 'Contact Information',
-    //       icon: <FileExcelOutlined style={{ fontSize: '16px', color: '#08c' }} />,
-          
-    //     },
-    //     // {
-    //     //   type: 'divider',
-    //     // },
-    //     {
-    //       key: '2',
-    //       label: 'Personal Information',
-    //       icon: <FileExcelOutlined style={{ fontSize: '16px', color: '#08c' }} />,
-    //     //   extra: '⌘P',
-    //     },
-    //     {
-    //       key: '3',
-    //       label: 'Education',
-    //       icon: <FileExcelOutlined style={{ fontSize: '16px', color: '#08c' }} />,
-    //     //   extra: '⌘B',
-    //     },
-    //     {
-    //       key: '4',
-    //       label: 'Languages',
-    //       icon: <FileExcelOutlined style={{ fontSize: '16px', color: '#08c' }} />,
-    //     //   extra: '⌘S',
-    //     },
-    //     {
-    //         key: '4',
-    //         label: 'Training Certification',
-    //         icon: <FileExcelOutlined style={{ fontSize: '16px', color: '#08c' }} />,
-    //         //   extra: '⌘S',
-    //     },
-    //     {
-    //         key: '4',
-    //         label: 'Work Experiences',
-    //         icon: <FileExcelOutlined style={{ fontSize: '16px', color: '#08c' }} />,
-    //         //   extra: '⌘S',
-    //     },
-    //     {
-    //         key: '4',
-    //         label: 'Employee Information',
-    //         icon: <FileExcelOutlined style={{ fontSize: '16px', color: '#08c' }} />,
-    //         //   extra: '⌘S',
-    //         disabled: rawData,
-    //     },
-    // ];
+    } 
     const onRawDataChange= (v:boolean) => {
         setRawData(v)
     }
@@ -146,8 +84,10 @@ export default ({ trigger }: { trigger?: JSX.Element}) => {
                 type: 'EXCEL',
                 data: {
                     reportName: e.key+raw,
-                    reportPath: '/Reports/hrm',
-                    data: [                      
+                    reportPath: '/Reports/hrm/ess',
+                    data: [      
+                       {key:'empSearch', value: dataForm.empSearch},
+                        ...(dataForm.empStatus || []).map(it => ({ key: 'empStatus', value: it })),                
                         ...(dataForm.bu || []).map(it => ({ key: 'buIds', value: it })),
                         ...(dataForm.department || []).map(it => ({ key: 'deptIds', value: it })),
                     ]
@@ -174,12 +114,12 @@ export default ({ trigger }: { trigger?: JSX.Element}) => {
             </Button>
         </Dropdown>
     ]  
+    const empStatusDS = [{name:'Active',value:'ACTIVE'},{name:'Inactive',value:'INACTIVE'}]
 
     return <ModalForm<DataFormType>   
         form={form}
         trigger={trigger}
-        title = "Employee List Export"
-        
+        title = "Employee List Export"        
         submitter = {{
             render(_, dom) {
                 // return [dom[0], ...bnts , dom[1]]
@@ -214,6 +154,14 @@ export default ({ trigger }: { trigger?: JSX.Element}) => {
             return true
         }}
     >
+        <Row>
+            <Col><ProFormText label='Employee ID/Name' name='empSearch'/></Col>
+            <Col style={{paddingLeft: 15,paddingTop:0, width:'50%'}}> 
+                <ProFormSelect mode="multiple"  label="Employee Status" name={'empStatus'} showSearch  allowClear
+                    options={empStatusDS?.map((it) => ({ label: it.name, value: it.value }))}
+                />  
+            </Col>
+        </Row>
          
         <ProFormSelect mode="multiple"  label="Company" name={'bu'}  shouldUpdate allowClear
             options={data?.buList.map((it) => ({ label: it.name, value: it.id }))}

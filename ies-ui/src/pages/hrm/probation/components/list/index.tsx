@@ -133,19 +133,19 @@ const ProbationList: React.FC<Props> = ({ onAdd, forceRefresh, onDetail }) => {
     }
 
 
-    const dowloandData = (): DownloadData<{ searchValue?: string; advanceSearch?: AppraisalEmpAdvanceSearchParams }> => {
-        var direct = 'Direct'
-        var issued = 'Issued'
-        var reportName = replace('SettlementIncentive@@##Report', '@@', direct)
-        var params = { ...criteria, searchValue: criteria?.searchValue, advanceSearch: criteria?.advanceSearch || advanceSearchParams }
-        reportName = replace(reportName, '##', issued)
-        return {
-            reportName: 'performance-review-list-report',
-            fileName: `Performance-Review-List_${moment().toDate().toDateString()}`,
-            type: 'EXCEL',
-            data: params
-        }
-    }
+    // const dowloandData = (): DownloadData<{ searchValue?: string; advanceSearch?: AppraisalEmpAdvanceSearchParams }> => {
+    //     var direct = 'Direct'
+    //     var issued = 'Issued'
+    //     var reportName = replace('SettlementIncentive@@##Report', '@@', direct)
+    //     var params = { ...criteria, searchValue: criteria?.searchValue, advanceSearch: criteria?.advanceSearch || advanceSearchParams }
+    //     reportName = replace(reportName, '##', issued)
+    //     return {
+    //         reportName: 'performance-review-list-report',
+    //         fileName: `Performance-Review-List_${moment().toDate().toDateString()}`,
+    //         type: 'EXCEL',
+    //         data: params
+    //     }
+    // }
     // const dowloandExcelHandler = () => {
     //     return downloadReport<{ searchValue?: string; advanceSearch?: AppraisalEmpAdvanceSearchParams }>(requestActions)(dowloandData())
     // }
@@ -275,7 +275,7 @@ const ProbationList: React.FC<Props> = ({ onAdd, forceRefresh, onDetail }) => {
             addButtonLabel={'New Probation Evaluation Form'}
             tableProps={{
                 actionRef: actionRef,
-                options: { reload: false, density: false, fullScreen: false, setting: false }
+                options: { reload: true, density: false, fullScreen: false, setting: false }
             }}
             extraFilter={
                 <Space align="baseline" style={{ right: '12px' }}>
@@ -336,7 +336,7 @@ const ProbationList: React.FC<Props> = ({ onAdd, forceRefresh, onDetail }) => {
         {modals.isVisible('CreateProbationForm') && <ProbationRequestModal
             open={modals.isVisible('CreateProbationForm')}
             onOpenChange={(v: any) => !v && modals.hideModal('CreateProbationForm')}
-            // refreshTable={refeshTable}
+            refreshTable={refeshTable}
         />}
         {/* {modals.isVisible('SubmitAllListView') && <SubmitAllListModal
             open={modals.isVisible('SubmitAllListView')}

@@ -1,29 +1,21 @@
 import FileUploader from '@/components/Attachment/FileUploader';
-import Requestor from '@/pages/process-flow/components/Requestor/Requestor';
 import { MultiRequest } from '@/services/apiGateway';
-import { LookupDataItem2 } from '@/services/data';
 import { simpleRequestActions } from '@/services/model';
 import {
   ModalForm,
   ModalFormProps,
   ProCard,
-  ProFormDatePicker,
-  ProFormDateRangePicker,
-  ProFormDependency,
   ProFormGroup,
-  ProFormRadio,
   ProFormSelect,
-  ProFormText,
   ProFormTextArea,
 } from '@ant-design/pro-components';
 import { message, Modal, Space } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
-import moment, { Moment } from 'moment';
 import { useEffect, useState } from 'react';
 import { BU, Department, ProbationEvaluationData, SubDepartment } from '../data';
 import { EmployeeServices } from '../services';
 import ProbationSumbitter from '@/pages/process-flow/components/Submitter/ProbationSumbitter';
-import { EmployeeInfResult, ProbationEvaluationRef, ProbationFormType } from './data.types';
+import { EmployeeInfResult, ProbationAssessmentList, ProbationEvaluationRef, ProbationFormType } from './data.types';
 import { createService } from './services';
 
 type DataFormType = {
@@ -31,20 +23,20 @@ type DataFormType = {
     requestorBuId: number;
   };
 export default ({
-  onRefresh,
+  refreshTable,
   ...rest
 }: ModalFormProps<ProbationEvaluationData> & {
-  onRefresh?: () => void;
+  refreshTable?: () => void;
 }) => {
   const [form] = useForm<ProbationEvaluationData>();
   const [formSubmittor] = useForm<DataFormType>();
   const requestActions = simpleRequestActions();
   const srv = createService({ request: requestActions });
-  const [lookupList, setLookupList] = useState<LookupDataItem2[]>();
   const [uploadFileIds, setUploadFileIds] = useState<string[]>([]);
   const [probationEmp, setProbationEmp] = useState<EmployeeInfResult>();
   const [probationFormType,setProbationFormType] = useState<ProbationFormType[]>()
   const [probationRef,setProbationRef] = useState<ProbationEvaluationRef[]>()
+  const [probationAssessor,setProbationAssessor] = useState<ProbationAssessmentList[]>()
 
   const [data, setData] = useState<{
     buList: BU[];
@@ -78,26 +70,19 @@ export default ({
   };
 
   useEffect(() => {
-    (async () => {
-      const rs = await EmployeeServices.listLookupData([
-        'EMPLOYEE_SEGMENT',
-        'EMPLOYEE_CONTRACT_TYPE',
-        'REQUISITION_TYPE',
-        'WORK_PLACE',
-        'WORK_SHIFT',
-      ]).query(requestActions);
-      setLookupList(rs);
+    (async () => {     
       srv.fetchProbationFormTypeList().then(rs => {
         setProbationFormType(rs)
       })
       setProbationRef([])
+      setProbationAssessor([])
       form.setFieldValue('refId',undefined)
+      form.setFieldValue('preparationUserId',undefined)
     })();
   }, []);
 
   useEffect(() => {
     if (!rest.open) return;
-
     (async () => {
       const rs = await MultiRequest<{
         buList: BU[];
@@ -115,42 +100,29 @@ export default ({
         subDepartmentList: rs.subDeptList,
       });
     })();
-
-    // form.setFieldsValue({ headcount: 1 });
   }, [rest.open]);
 
-  const fetchJobTitleHandler = async (id: number) => {
-    const rs = await EmployeeServices.fetchJobTitle(id).query(requestActions);
-    // rs.empSegment?.id && form.setFieldsValue({ segmentId: rs.empSegment.id });
-  };
-
   const onChangeSubmitterHandler = async (data: EmployeeInfResult) => {
-    console.log('employee info',data)
     setProbationEmp(data)
     form.setFieldValue('refId',undefined)
+    form.setFieldValue('formType',data.jobLevelCode)
+    form.setFieldValue('preparationUserId',undefined)
     formSubmittor.setFieldValue('requestorBuId',undefined)
     srv.fetchProbationEvaluationRefList(data.empId).then(rs=> {
       setProbationRef(rs)
+    })
+    srv.fetchProbationAssessmentEmpList(data.empId).then(rs=>{
+      setProbationAssessor(rs)
     })
   }
 
   return (
     <ModalForm
+      width={970}
       form={form}
-      onValuesChange={(changedValues) => {
-        const { jobId } = changedValues;
-        if ('jobId' in changedValues) {
-          fetchJobTitleHandler(jobId);
-        }
-      }}
       onFinish={async () => {
         const formData = await form.validateFields();
-        // if (uploadFileIds.length == 0) {
-        //   message.error('Please upload job description as support document.');
-        //   return;
-        // }
-        const data1 = { ...formData,empId: probationEmp?.empId,buId: probationEmp?.buId, attachedFiles: uploadFileIds };
-        console.log('probation payload',data1)
+        await formSubmittor.validateFields() 
         Modal.confirm({
           title: 'Probation Evaluation Request',
           content: 'Are you sure?',
@@ -161,7 +133,7 @@ export default ({
               message.success(
                 `Probation Evaluation request is submitted sucessfully.form no: ${rs.data}`,
               );
-              onRefresh?.();
+              refreshTable?.();
               rest.onOpenChange?.(false);
             } catch (error: any) {
               message.error(error.message || 'Failed to make request');
@@ -174,7 +146,7 @@ export default ({
     >
       <Space direction="vertical" style={{ width: '100%' }}>
         {/* <Requestor form={form} /> */}
-        <ProbationSumbitter          
+        <ProbationSumbitter         
           form={formSubmittor}
           title={
             <div> Employee Info
@@ -187,12 +159,21 @@ export default ({
           <ProFormGroup size={'small'}>
             <ProFormSelect
               shouldUpdate
+              name={'preparationUserId'}
+              rules={[{ required: true }]}
+              width={'sm'}
+              label="Preparation User"
+              options={probationAssessor?.map((it) => ({ label: it.empName, value: it.userId }))}
+            />
+             <ProFormSelect
+              shouldUpdate
               name={'formType'}
               rules={[{ required: true }]}
               width={'sm'}
               label="Form Type"
               options={probationFormType?.map((it) => ({ label: it.description, value: it.code }))}
             />
+
             <ProFormSelect
               showSearch
               name={'refId'}

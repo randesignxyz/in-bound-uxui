@@ -57,9 +57,7 @@ export default ({ addresList, requestActions, listPosm, onSave, onDelete }: {
             setData(list)
             setSavIds(list.map(it => ({ key: it.key, id: it.id })))
         })()
-
-
-    }, [])
+    }, []);
 
     return <ProCard>
         <Spin spinning={requestActions.request?.loading}>
@@ -105,7 +103,7 @@ export default ({ addresList, requestActions, listPosm, onSave, onDelete }: {
                             popupMatchSelectWidth: 310,
                             allowClear: true,
                         },
-                        valueEnum: (r) => addresList.reduce((acc, cur) => ({ ...acc, [cur.id || 0]: cur.address }), {})
+                        valueEnum: (r) => addresList?.reduce((acc, cur) => ({ ...acc, [cur.id || 0]: cur.address }), {})
                     },
                     {
                         title: 'Effective Date',

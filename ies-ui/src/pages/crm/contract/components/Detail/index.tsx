@@ -134,7 +134,10 @@ const ContactDetailView: React.FC<{
                 qty: qty,
                 remarks: remarks
               })(requestActions)}
-              onDelete={(id: number) => ContractServices.deletePOSM(id)(requestActions)} />
+              onDelete={(id: number) => ContractServices.deletePOSM(id)(requestActions)}
+              addresList={[]}
+              initAddressList={async()=>{}}
+               />
           }
 
           if (activeTab == 'shppingAddress' && data) {

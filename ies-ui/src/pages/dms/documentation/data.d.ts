@@ -60,6 +60,7 @@ interface DocumentationAdvanceSearch{
     expired?:string;
     shared?:string[];
     isDeleted?:boolean;
+    filterType:"ADMIN"|"USER" |undefined;
 }
 
 

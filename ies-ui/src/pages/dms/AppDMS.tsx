@@ -37,6 +37,8 @@ const APPDMS: React.FC = () => {
     useEffect(() => {
     }, [paramByFolder])
 
+
+    
     return (
         <>
             <div
@@ -44,7 +46,10 @@ const APPDMS: React.FC = () => {
                 onContextMenu={(e)=>e.preventDefault()}
             >
                 <FolderViewList activeKey={view == "library" ? true : false}
-                    onSearch={(param: DocumentationSearchByFolder) => setParamByFolder(param)}
+                    onSearch={(param: DocumentationSearchByFolder) => setParamByFolder({
+                        ...param,
+                        filterType:access.canAccessDMSAdminMenu?"ADMIN":"USER"
+                    })}
                     onFolderSelected={() => {
                         history.push(`${DMSPaths.dms}`);
                     }}
@@ -73,7 +78,7 @@ const APPDMS: React.FC = () => {
                 {
                     (view === "team" && <TeamsViewList isCurrentUser={true} actionKey={view} />) ||
                     (view === "share" && <ShareListView actionKey={view} />) ||
-                    (view === undefined && <DocumentMainPage paramSearch={paramByFolder} />)
+                    (view === undefined && paramByFolder && <DocumentMainPage paramSearch={paramByFolder} />)
                 }
                    <FloatButton.BackTop/>
 

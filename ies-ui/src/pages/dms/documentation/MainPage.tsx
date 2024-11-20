@@ -35,7 +35,7 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
     const actionRef = useRef<ActionType>();
     const services = DocumentServiceAPI(requestActions);
     const [filter, setFilter] = useState<TableViewSearchParams<DocumentationAdvanceSearch>>({
-        criteria: { advanceSearch: { status: 'ALL' } }
+        criteria: { advanceSearch: paramSearch }
     });
     const { data, isFetching, refetch } = useQuery(['fetch-customer-list', filter], () => services.page(filter), {
         refetchOnWindowFocus: false
@@ -122,9 +122,7 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
         }
     }>();
     const [advanceSearch, setAdvanceSearch] = useState<{ visible: boolean }>();
-    const [advanceSearchParams, setAdvanceSearchParams] = useState<DocumentationAdvanceSearch>({
-        status: "All",
-    });
+    const [advanceSearchParams, setAdvanceSearchParams] = useState<DocumentationAdvanceSearch>();
     const actionItem = (record: DocumentationDTO): MenuProps["items"] => [
 
         {
@@ -256,7 +254,15 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
 
     const extractFilter = <Card size="small"><LightFilter
         onFinish={(value) => {
-            setFilter((v) => ({ criteria: { advanceSearch: { ...v.criteria?.advanceSearch, expired: value.expired, shared: value.shared, isDeleted: value.isDeleted } } }));
+            setFilter((v) => ({ criteria: { 
+                advanceSearch: {
+                     ...v.criteria?.advanceSearch,
+                      expired: value.expired, 
+                      shared: value.shared,
+                       isDeleted: value.isDeleted ,
+                       filterType:paramSearch?.filterType
+                    }
+                     } }));
         }}
     >
         <ProFormSelect
@@ -397,6 +403,7 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
                             advanceSearch: {
                                 ...f.criteria?.advanceSearch,
                                 ...params,
+                                filterType:paramSearch?.filterType,
                                 division: params?.subStatus,
                             },
                             sort
@@ -492,7 +499,7 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
             open={advanceSearch?.visible}
             onClose={() => setAdvanceSearch({ visible: false })}
             onReset={() => {
-                setFilter((v) => ({ criteria: { advanceSearch: { ...v.criteria?.advanceSearch } } }));
+                setFilter((v) => ({ criteria: { advanceSearch: { ...v.criteria?.advanceSearch,filterType:paramSearch?.filterType } } }));
             }}
             onSearch={(data) => {
                 setAdvanceSearchParams(data);

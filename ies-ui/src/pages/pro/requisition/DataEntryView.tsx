@@ -66,7 +66,7 @@ export default ({
   const requestActions = simpleRequestActions();
   const services = RequisitionServiceAPI(requestActions);
   const [isService, setIsService] = useState<boolean>(false);
-  const [requiredBudgetCode, setRequiredBudgetCode] = useState<boolean>(false);
+  const [requiredBudgetCode, setRequiredBudgetCode] = useState<boolean>(true);
   const [budgetCodeList, setBudgetCodesList] = useState<BudgetCodeListItem[]>([]);
   const [itemUomList, setItemUomList] = useState<{ itemCode: string; uom: string, buId: number }[]>([]);
   const access = useAccess()
@@ -99,6 +99,7 @@ export default ({
       initFormData(data);
     } else {
       setSelectedBu(buList.find(it => it)?.id || 1)
+      form.setFieldsValue({ budgetCodeRequired: requiredBudgetCode });
     }
   };
 
@@ -284,6 +285,8 @@ export default ({
         <Col flex={'400px'}>
           <ProFormCheckbox
             labelAlign="left"
+            disabled
+
             label="Budget Code Required"
             name={'budgetCodeRequired'}
           />
@@ -415,6 +418,7 @@ export default ({
               width: 150,
               dataIndex: 'budgetCode',
               fieldProps: { showSearch: true },
+              formItemProps: { rules: [{ required: requiredBudgetCode }] },
               valueType: 'select',
               valueEnum: (_) =>
                 budgetCodeList.reduce((acc, cur) => ({ ...acc, [cur.code]: cur.code }), {}),

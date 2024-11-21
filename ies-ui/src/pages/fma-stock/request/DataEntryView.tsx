@@ -206,14 +206,14 @@ export default ({
               width: 130,
               dataIndex: 'uom',
               valueType: 'select',
-              formItemProps: { rules: [{ required: false }] },
+              formItemProps: { rules: [{ required: true }] },
               valueEnum: (r) => itemUomList.filter(it => it.itemCode == r.itemCode).reduce((acc, cur) => ({ ...acc, [cur.uom]: cur.uom }), {})
             }, {
               title: 'Budget.Code',
               width: 150,
               dataIndex: 'budgetCode',
               fieldProps: { showSearch: true },
-              formItemProps: { rules: [{ required: false }] },
+              formItemProps: { rules: [{ required: true }] },
               valueType: 'select',
               // request: async (_, r: any) => {
               //   return budgetCodeList.map((it) => ({ label: it.code, value: it.code }));

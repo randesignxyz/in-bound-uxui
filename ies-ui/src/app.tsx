@@ -23,6 +23,8 @@ export async function getInitialState(): Promise<{
   logout?: () => void;
   loading?: boolean;
 }> {
+
+  const isSidebarEnabled = (localStorage.getItem('sidebarEnabled') || 'true') === 'true';
   moment.locale('en');
   if (getLocale() !== 'en-US') {
     setLocale('en-US');
@@ -49,7 +51,7 @@ export async function getInitialState(): Promise<{
 
     return {
       currentUser: currentUser,
-      settings: defaultSettings as Partial<LayoutSettings>,
+      settings: { ...defaultSettings, layout: isSidebarEnabled ? 'mix' : 'top' } as Partial<LayoutSettings>,
       logout: () => {
         ckRs?.clearToken();
         ckRs?.logout({
@@ -66,6 +68,7 @@ export async function getInitialState(): Promise<{
 }
 
 export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) => {
+
 
   return {
     actionsRender: () => [
@@ -117,7 +120,16 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
       : [],
     menuHeaderRender: undefined,
     childrenRender: (children) => {
+      // const isSidebarEnabled = localStorage.getItem('sidebarEnabled') === 'true';
+      // const layout = isSidebarEnabled ? 'mix' : 'top';
       if (initialState?.loading) return <PageLoading />;
+      // setInitialState((preInitialState) => ({
+      //   ...preInitialState,
+      //   settings: {
+      //     ...preInitialState?.settings,
+      //     layout
+      //   },
+      // }));
       return (
         <>
           <App>

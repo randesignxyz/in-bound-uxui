@@ -27,7 +27,7 @@ interface TireAssignParam{
 export interface TireAssignCreate{
     id?:number;
     axleType: string;
-    tirePosition?:string;
+    tirePosition:string;
     vehicleId?:string;
     tireWidth:number;
     wheelDiameter:number;
@@ -37,6 +37,8 @@ export interface TireAssignCreate{
     purchaseDate:moment.Moment;
     durability:string;
     status:string;
+    replacementDate:moment.Moment;
+    notification: string[]?
 }
 // ====================== END =====================
 
@@ -89,5 +91,9 @@ export interface NormFuelConsumptionDTO{
     usage:number;
     usageRate:number;
     string?:string;
+}
+
+export interface VoidVehicleTireDTO{
+    id: number
 }
 // ====================== END =====================

@@ -27,22 +27,6 @@ export default ({ id }: Props) => {
     };
   }>({});
 
-  const onSave = (data: AddVehicleAccessory) => {
-    Modal.confirm({
-      title: 'Save Accessories Selected',
-      content: 'are you sure?',
-      onOk: async () => {
-        services.addAccessoriesToVehicle(data);
-        setAccessorieSate((v) => ({
-          ...v,
-          visible: undefined,
-        }));
-        message.success('success');
-        actionRef.current?.reloadAndRest?.();
-      },
-    });
-  };
-
   const onRequest = async () => {
     const response = await services.list(id);
     setAccessories(response);
@@ -51,6 +35,23 @@ export default ({ id }: Props) => {
       success: true,
     });
   };
+  const onSave = (data: AddVehicleAccessory) => {
+    Modal.confirm({
+      title: 'Save Accessories Selected',
+      content: 'are you sure?',
+      onOk: async () => {
+        await services.addAccessoriesToVehicle(data);
+        setAccessorieSate((v) => ({
+          ...v,
+          visible: undefined,
+        }));
+        message.success('success');
+        actionRef.current?.reloadAndRest?.();
+        await onRequest()
+      },
+    });
+  };
+
   const showDrawer = (r: AccessoriesDTO) => {
     setOpen(true);
     setDetail(r);
@@ -108,7 +109,7 @@ export default ({ id }: Props) => {
       <AccessoriesModalForm
         id={id}
         onSave={onSave}
-        open={accessorieState.visible?.name == 'modal'}
+        open={accessorieState.visible?.name == 'modal' }
         onCancel={() => setAccessorieSate((v) => ({ ...v, visible: undefined }))}
         data={accessorieState.visible?.payload?.enity}
       />

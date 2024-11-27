@@ -1,6 +1,7 @@
 import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import FormModalComp from '@/components/FormModal';
 import { simpleRequestActions } from '@/services/model';
+import { DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
 import {
   ActionType,
   ProDescriptions,
@@ -12,13 +13,14 @@ import {
   ProFormText,
   ProList,
 } from '@ant-design/pro-components';
-import { Alert, Button, Card, Col, Collapse, Flex, Row, Space, Tag, message } from 'antd';
+import { Button, Card, Col, Collapse, Flex, Modal, Row, Space, Tag, message } from 'antd';
 import { useForm } from 'antd/es/form/Form';
 import { useRef, useState } from 'react';
 import TiresInterface from '../components/Tires';
 import { TireAssignCreate, TireAssignParam, TireVehicleDTO } from '../specification/data';
 import { SpecificationServiceAPI } from '../specification/service';
 import { TireServiceAPI } from './service';
+import moment from 'moment';
 
 interface Props {
   vehicleId: string;
@@ -57,17 +59,25 @@ const TireVehicleAssignListView: React.FC<Props> = ({ vehicleId }) => {
     }
   };
   const handleVoid = async (id: number) => {
-    const result: { data: string; message: string } = (await services.voidVehicleTire({ id })) as {
-      data: string;
-      message: string;
-    };
-    message.success(result.data);
-    await onRequestHandler({
-      criteria: {
-        advanceSearch: {
-          vehicleId: vehicleId,
-          tirePosition: tireInfo?.value || '',
-        },
+    Modal.confirm({
+      title: `Are you sure to remove?`,
+      onOk: async () => {
+        try {
+          await services.voidVehicleTire({ id });
+          await onRequestHandler({
+            criteria: {},
+          });
+          await onRequestHandler({
+            criteria: {
+              advanceSearch: {
+                vehicleId: vehicleId,
+                tirePosition: tireInfo?.value || '',
+              },
+            },
+          });
+        } catch (error: any) {
+          message.error(error.message || 'Failed to driver.');
+        }
       },
     });
   };
@@ -86,23 +96,33 @@ const TireVehicleAssignListView: React.FC<Props> = ({ vehicleId }) => {
 
   const handleOk = async () => {
     const dataForm = await form.validateFields();
-    await SpecificationServiceAPI(requestAction).saveVehicleTire({
-      ...dataForm,
-      vehicleId,
-      tirePosition: tireInfo?.value,
-    });
-    message.success("SAVED")
-    form.resetFields();
-    setIsModalOpen(false);
-    await onRequestHandler({
-      criteria: {},
-    });
-    await onRequestHandler({
-      criteria: {
-        advanceSearch: {
-          vehicleId: vehicleId,
-          tirePosition: tireInfo?.value || '',
-        },
+    Modal.confirm({
+      title: 'Save tire for vehicle',
+      content: 'are your sure record your enter is correct?',
+      onOk: async () => {
+        try {
+          await SpecificationServiceAPI(requestAction).saveVehicleTire({
+            ...dataForm,
+            vehicleId,
+            tirePosition: tireInfo?.value,
+          });
+          form.resetFields();
+          setIsModalOpen(false);
+          message.success('Saved successfully.');
+          await onRequestHandler({
+            criteria: {},
+          });
+          await onRequestHandler({
+            criteria: {
+              advanceSearch: {
+                vehicleId: vehicleId,
+                tirePosition: tireInfo?.value || '',
+              },
+            },
+          });
+        } catch (error: any) {
+          message.error(error.message || 'Failed to driver.');
+        }
       },
     });
   };
@@ -121,35 +141,25 @@ const TireVehicleAssignListView: React.FC<Props> = ({ vehicleId }) => {
         key={'tires'}
         extra={[
           <>
-          <Space>
-          {!tireInfo?.value && <div style={{color: "gray"}}>Select Tire Position First!</div>}
-          <Button type='default' size='small' key={1} onClick={showModal} disabled={!tireInfo?.value}>
-            Add Tire Information
-          </Button>,
-          </Space>
-          </>
+            <Space>
+              {!tireInfo?.value && <div style={{ color: 'gray' }}>Select Tire Position First!</div>}
+              <Button
+                type="default"
+                size="small"
+                key={1}
+                onClick={showModal}
+                disabled={!tireInfo?.value}
+              >
+                Add Tire Information
+              </Button>
+              ,
+            </Space>
+          </>,
         ]}
       >
         <Row gutter={12}>
           <Col xl={8}>
             <Flex vertical gap={10}>
-              <Card>
-                <Flex>
-                  <ProDescriptions
-                    dataSource={tireInfo}
-                    column={1}
-                    columns={[
-                      {
-                        label: 'Position',
-                        dataIndex: 'label',
-                      },
-                    ]}
-                  />
-                  <Button type="primary" size="small" onClick={() => resetTire()}>
-                    Reset
-                  </Button>
-                </Flex>
-              </Card>
               <TiresInterface
                 onTireClick={(e) => {
                   setTireInfo(e);
@@ -172,7 +182,12 @@ const TireVehicleAssignListView: React.FC<Props> = ({ vehicleId }) => {
           </Col>
           <Col xl={16} sm={24} md={24}>
             <ProList<TireVehicleDTO>
-              headerTitle={'Tires History'}
+              headerTitle={`Position: ${tireInfo?.label !== undefined ? tireInfo?.label : 'All'}`}
+              toolBarRender={() => [
+                <Button key={1} type="primary" onClick={() => resetTire()}>
+                  <ReloadOutlined /> Reset
+                </Button>,
+              ]}
               options={{
                 reload: false,
                 density: false,
@@ -193,17 +208,12 @@ const TireVehicleAssignListView: React.FC<Props> = ({ vehicleId }) => {
                 },
                 actions: {
                   render: (_, r) => [
-                    <div key={'1'}>
-                      {r.status === 'using' ? (
+                    <Space key={'1'}>
+                      <div>{moment(r.lastModifiedDate).format('YYYY-MM-DD')}</div>
                         <Button onClick={() => handleVoid(r.id)} size="small">
-                          Void
+                        <DeleteOutlined />
                         </Button>
-                      ) : (
-                        <Button onClick={() => handleVoid(r.id)} size="small">
-                          Unvoid
-                        </Button>
-                      )}
-                    </div>,
+                    </Space>,
                   ],
                 },
                 description: {
@@ -268,7 +278,12 @@ const TireVehicleAssignListView: React.FC<Props> = ({ vehicleId }) => {
           </Col>
         </Row>
       </Card>
-      <FormModalComp open={isModalOpen} onSubmit={handleOk} onCancel={handleCancel} title={tireInfo?.label}>
+      <FormModalComp
+        open={isModalOpen}
+        onSubmit={handleOk}
+        onCancel={handleCancel}
+        title={tireInfo?.label}
+      >
         <ProForm form={form} submitter={false} onReset={() => form.resetFields()}>
           <Row justify="space-around">
             <Col span={7}>

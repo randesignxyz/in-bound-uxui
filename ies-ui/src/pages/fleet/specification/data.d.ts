@@ -1,3 +1,4 @@
+import moment from "moment";
 
 // ================= Model Tire item apply for each vehicle ====================
 export interface TireVehicleDTO{

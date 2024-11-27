@@ -2,7 +2,7 @@ import { simpleRequestActions } from '@/services/model';
 import { ReloadOutlined } from '@ant-design/icons';
 import type { ActionType } from '@ant-design/pro-components';
 import { ProList } from '@ant-design/pro-components';
-import { Button, message, Modal, Spin, Tag } from 'antd';
+import { Button, Drawer, message, Modal, Spin, Tag } from 'antd';
 import { useRef, useState } from 'react';
 import { AccessoriesDTO, AddVehicleAccessory } from '../../accessory/data';
 import { AccessoryServiceAPI } from '../../accessory/service';
@@ -17,6 +17,8 @@ export default ({ id }: Props) => {
   const services = AccessoryServiceAPI(requestAction);
   const [accessories, setAccessories] = useState<AccessoriesDTO[]>([]);
   const actionRef = useRef<ActionType>();
+  const [open, setOpen] = useState(false);
+  const [detail, setDetail] = useState<AccessoriesDTO | null>();
   const [accessorieState, setAccessorieSate] = useState<{
     visible?: {
       name: 'modal';
@@ -49,6 +51,11 @@ export default ({ id }: Props) => {
       success: true,
     });
   };
+  const showDrawer = (r: AccessoriesDTO) => {
+    setOpen(true);
+    setDetail(r);
+    console.log(r);
+  };
 
   return (
     <>
@@ -78,7 +85,11 @@ export default ({ id }: Props) => {
           metas={{
             title: {
               render: (_, r) => {
-                return `${r.name}`;
+                return (
+                  <>
+                    <span onClick={() => showDrawer(r)}>{r.name}</span>
+                  </>
+                );
               },
             },
             description: {
@@ -91,7 +102,6 @@ export default ({ id }: Props) => {
                 );
               },
             },
-           
           }}
         />
       </Spin>
@@ -102,6 +112,11 @@ export default ({ id }: Props) => {
         onCancel={() => setAccessorieSate((v) => ({ ...v, visible: undefined }))}
         data={accessorieState.visible?.payload?.enity}
       />
+      <Drawer title={detail?.name} onClose={() => setOpen(false)} open={open}>
+        <p>
+          <strong>Description:</strong> {detail?.description}
+        </p>
+      </Drawer>
     </>
   );
 };

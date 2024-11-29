@@ -590,6 +590,10 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         ['ROLE_HR_ESS_APPROVAL_PROFILE'].some((it) => it === item),
       ) || false, 
+    canAccessHrSelfServiceProgressStatusExportAll:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_HR_ESS_SELF_SERVICE_PROGRESS_STATUS_EXPORT_ALL'].some((it) => it === item),
+      ) || false,   
     canAccessHrESSAddEditProfile:
       currentUser?.authorities.some((item) =>
         ['ROLE_HR_ESS_ADD_EDIT_PROFILE'].some((it) => it === item),

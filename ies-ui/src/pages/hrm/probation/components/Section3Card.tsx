@@ -183,7 +183,7 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
         }]              
       }, 
       {
-        title: 'REMARKS',
+        title: 'JUSTIFICATION',
         children:[{
           width: '10%',
           valueType: 'textarea',

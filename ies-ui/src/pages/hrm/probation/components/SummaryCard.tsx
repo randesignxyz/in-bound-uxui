@@ -70,12 +70,12 @@ export default({probaRequest, totalScore, form, setConfirmStatus, readonly=true,
             />} 
           </Col>
           <Col >
-            <div><b>DECISION BY LINE MANAGER</b></div>
+            <div><b>DECISION BY FUNCTION MANAGER</b></div>
             <Radio.Group  name='confirmedStatus' onChange={onChange} value={value} style={{paddingTop:15}}>
               <Space direction="vertical" style={{paddingLeft:5}}>
-                <Radio value={'CONFIRMED'} >Confirmed Probation</Radio>      
+                <Radio value={'CONFIRMED'} >Passed Probation</Radio>      
                 <Radio value={'EXTENDED'} > <Space>Extended Probation { value==='EXTENDED' && !readonly?<> Until: <ProFormDatePicker readonly={readonly} initialValue={initialValue?.extendedDate} name={'extendedDate'} rules={[{required: true}]}/></>:<>Until: {formatDate(initialValue?.extendedDate)}</>} </Space></Radio>
-                <Radio value={'TERMINATED'}>Terminated</Radio>
+                <Radio value={'TERMINATED'}>Failed Probation</Radio>
               </Space>
           </Radio.Group>
           </Col>

@@ -148,25 +148,27 @@ export default () => {
       id: 'delivery-board',
       name: 'Delivery Board',
       description: 'List of delivery',
-      link: `${DeliveryPaths.board}`,
+      link: access.canAccessDeliveryMenuItem ? `${DeliveryPaths.board}` : undefined,
       icon: boardIcon,
       // isMenu: true,
 
       // overlay: deliveryMenu,
-      visible: access.canAccessDeliveryMenuItem,
+      visible: access.canAccessDeliveryMenuItem || access.canAccessDeliveryTimeReport || access.canAccessTransportationTimeReport,
       menu: {
         items: [
           {
             label: 'Location Tracking',
             icon: <EnvironmentOutlined style={{ fontSize: '16px', color: '#08c' }} />,
             key: 'location-tracking',
+            disabled: !access.canAccessDeliveryMenuItem,
             onClick: () => history.push(DeliveryPaths.locationTracking)
           },
           {
             label: 'Delivery History',
             icon: <HistoryOutlined style={{ fontSize: '16px', color: '#08c' }} />,
             key: 'delivery-list',
-            onClick: () => history.push(DeliveryPaths.history),
+            disabled: !access.canAccessDeliveryMenuItem,
+            onClick: () => history.push(DeliveryPaths.history)
           },
           {
             type: 'divider'
@@ -175,17 +177,19 @@ export default () => {
             label: 'Delivery Time Report',
             icon: <AreaChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
             key: 'delivery-time-report',
+            disabled: !access.canAccessDeliveryTimeReport,
             onClick: () => setModal({
               type: 'DELIVERY_TIME'
-            }),
+            })
           },
           {
             label: 'Transportation Time Tracking Report',
             icon: <AreaChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
             key: 'transportation-time-tracking-report',
+            disabled: !access.canAccessTransportationTimeReport,
             onClick: () => setModal({
               type: 'DELIVERY_TIME_TRACKING'
-            }),
+            })
           }
         ]
       }

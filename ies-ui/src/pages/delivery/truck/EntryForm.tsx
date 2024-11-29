@@ -63,7 +63,6 @@ const TruckEntryModal: React.FC<Props> = ({ companyList, loadingCapacityList, on
             help={<span />}
           />
           <ProFormText
-            // rules={[{ required: true }]}
             name={'integratedTruckId'}
             label="Intergrate ID"
             help={<span />}

@@ -1,5 +1,5 @@
 import { SimpleRequestActions } from "@/services/model";
-import { RequestItem, SavePayLoad, SearchCriteria, SearchParams, AppraisalRequestDetail, AppraisalRequestListItem, AppraisalRequestItemPayload, ReviewerMember, ReviewerMemberPayload, AppraisalLookupData, ApprovalAppraisalRequestItem } from "./data.types";
+import { RequestItem, SavePayLoad, SearchCriteria, SearchParams, AppraisalRequestDetail, AppraisalRequestListItem, AppraisalRequestItemPayload, ReviewerMember, ReviewerMemberPayload, AppraisalLookupData, ApprovalAppraisalRequestItem, PerformanceEvaluationAccessRs } from "./data.types";
 import { CrudBaseServices } from "@/services/CrudBaseSevices";
 import { FetchPagingParams } from "@/components/DataCrud/TableView";
 import { execDataService, execDataService0, fetchDataItemService, fetchDataListService, fetchDataPagingService } from "@/services/apiGateway";
@@ -30,7 +30,7 @@ export const createService = (request: SimpleRequestActions): CrudBaseServices<
     fetchRequestTypeList:()=> Promise<AppraisalLookupData[]>,
     fetchAppraisalPeriodList:()=> Promise<AppraisalLookupData[]>,
     fetchApprovalAppraisalRequestItemPaging:(params: FetchPagingParams<SearchParams>) => Promise<Paging<ApprovalAppraisalRequestItem>>,
-    saveItemConfirmDone:(id: number) => Promise<{data:string}>
+    saveItemConfirmDone:(id: number) => Promise<{data:string}>   
 } => {
     return {
         fetchPaging: async (params: FetchPagingParams<SearchParams>) =>
@@ -125,7 +125,7 @@ export const createService = (request: SimpleRequestActions): CrudBaseServices<
                 actionName: 'fetch-item-detail-appraisal-request',
                 endpoint: 'HR',
                 payload: { id }
-            }).query(request),
+            }).query(request),           
         saveItemDetail: async (item: AppraisalRequestItemPayload) =>
             execDataService<{data: string}, AppraisalRequestItemPayload>({
                 actionName: 'update-item-appraisal-request',

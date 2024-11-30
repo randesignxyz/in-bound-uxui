@@ -1,14 +1,14 @@
 import { Button, Checkbox, message, Radio, Space, Spin, Tabs, Tooltip, Typography, Splitter, Flex, Row, Col, Input, Table, Descriptions, Card } from "antd"
-import { AppraisalAdvanceParams, AppraisalEmp, AppraisalEmpStatusTotal, AppraisalOverallPerformanceRating, OverallPerformanceHeadCountRs } from "../../data.types"
+import { AppraisalAdvanceParams, AppraisalEmp, AppraisalEmpStatusTotal, AppraisalOverallPerformanceRating, OverallPerformanceHeadCountRs, PerformanceFunctionHeadCountCriter } from "../../data.types"
 import { useModel } from 'umi'
 import TableView from "@/components/DataCrud/TableView";
 import { SortOrder } from "antd/es/table/interface";
 import { simpleRequestActions } from "@/services/model";
 import { createService } from "../../services";
 import { Paging } from "@/services/API";
-import { formatDateTime, formatterPercentage0, formatterPercentage1 } from "@/pages/utils";
+import { formatDateTime, formatterPercentage0} from "@/pages/utils";
 import Status from "@/components/Status";
-import { ExportOutlined, EyeOutlined, FileExcelOutlined, PicRightOutlined, PlusOutlined, UnorderedListOutlined } from "@ant-design/icons";
+import { ExportOutlined, EyeOutlined, FileExcelOutlined, FilterOutlined, PicRightOutlined, PlusOutlined, UnorderedListOutlined } from "@ant-design/icons";
 import AppraisalFormQuickView from "../quick-view/index";
 import { useEffect, useRef, useState } from "react";
 import AppraisalRequestForm from "../../AppraisalSubmitForm";
@@ -21,7 +21,7 @@ import { DownloadData, downloadReport } from '@/services/apiGateway';
 import { replace } from "lodash";
 import moment from "moment";
 import AdvanceApprasialSubmitSearch from "../AdvanceApprasialSubmitSearch";
-import { AppraisalLookupData } from "@/pages/hrm/appraisal-request/data.types";
+import { AppraisalLookupData, PerformanceEvaluationAccessRs } from "@/pages/hrm/appraisal-request/data.types";
 import { createService as screateServiceRequesst } from "@/pages/hrm/appraisal-request/services"
 import styles from '@/pages/hrm/style.less';
 import Search from "antd/lib/input/Search";
@@ -30,6 +30,8 @@ import { render } from "@testing-library/react";
 import ticket from "@/pages/queue/ticket";
 import Center from "@/pages/account/center";
 import category from "@/pages/sale/retailer/category";
+import AdvancePerformanceEvaluationSearch from "../AdvancePerformanceEvaluationSearch";
+import company from "@/pages/delivery/company";
 
 
 const { Link } = Typography;
@@ -44,6 +46,15 @@ export interface AppraisalEmpAdvanceSearchParams {
     drafted?: boolean
     bu?: number[]
     department?: number[]
+    appraisalPeriodId?: number
+}
+export interface PerformanceEvaluationAdvanceSearchParams {
+    status?: string
+    pendingFilter?: string[]
+    drafted?: boolean
+    appraiser?:number
+    company?: number[]
+    function?: number[]
     appraisalPeriodId?: number
 }
 interface LightFilterProp {
@@ -67,6 +78,9 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
     const [criteria, setCriteria] = useState<{ searchValue?: string; advanceSearch?: AppraisalEmpAdvanceSearchParams }>()
     const [modalVisible, setModalVisible] = useState< { type: 'ADD'; payload: AppraisalAdvanceParams } | { type: 'EDIT'; payload: AppraisalAdvanceParams } >();
     const [advanceSearch, setAdvanceSearch] = useState<{ visible: boolean }>();
+    const [modalEvaluatioVisible, setModalEvaluatioVisible] = useState< { type: 'ADD'; payload: AppraisalAdvanceParams } | { type: 'EDIT'; payload: AppraisalAdvanceParams } >();
+    const [advanceEvaluationSearch, setAdvanceEvaluationSearch] = useState<{ visible: boolean }>();
+    
     
     /** Performance Target View ------------------------------------------------------------------------------------------------------------------------------- */
     const [activeTab, setActiveTab] = useState<string>()
@@ -75,7 +89,9 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
     const [overalPerfScore,setOveralPerfScore] = useState<AppraisalOverallPerformanceRating[]>([])
     const [overalPerfHeadCount, setOveralPerfHeadCount] = useState<OverallPerformanceHeadCountRs[]>([])
     const [overalPerfTotalHeadCount, setOveralPerfTotalHeadCount] = useState<number>(0)
-    const [advanceSearchTargetParams, setAdvanceSearchTargetParams] = useState<AppraisalEmpAdvanceSearchParams>({status: 'ALL'})
+    const [advanceSearchPerformEvaluationParams, setAdvanceSearchPerformEvaluationParams] = useState<PerformanceEvaluationAdvanceSearchParams>({status: 'ALL'})
+    const [accessPerfEvaluation,setAccessPerfEvaluation] = useState<boolean>(false)
+    const [perfEvaluationAccess,setPerfEvaluationAccess] = useState<PerformanceEvaluationAccessRs>()
 
     useEffect(() => {
         onLoadData()
@@ -87,6 +103,10 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
     const onLoadData =() =>{
         srvRequest.fetchAppraisalPeriodList().then(year=>{setPeriod(year)})
         onStatusTotal(period?.[0].value||-1)
+        srv.fetchPerformanceEvaluationAccess(period?.[0].value||-1).then(rs=>{
+            setAccessPerfEvaluation(rs.access)
+            setPerfEvaluationAccess(rs)
+        })
     }
     const onStatusTotal = (perfId: number) => {
         srv.findAppraisalEmpStatusTotal(perfId).then((it: AppraisalEmpStatusTotal) => {
@@ -292,10 +312,17 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
     },[forceChange,(overalPerfHeadCount.length<=0 && activeTab=="2")])
 
     const onDataLoad=(perfId: number)=>{
+        const adSearch = {appraisalPeriodId:perfId, 
+            appraiser: advanceSearchPerformEvaluationParams.appraiser,
+            company: advanceSearchPerformEvaluationParams.company,
+            function: advanceSearchPerformEvaluationParams.function
+        }
+
         srv.fetchAppraisalOveralRating(perfId).then(rs=>{
             setOveralPerfScore(rs)
         })
-        srv.fetchPerformanceFunctionHeadCount(perfId).then(rs=>{
+        const data  = {...adSearch, id:perfId} as PerformanceFunctionHeadCountCriter
+        srv.fetchPerformanceFunctionHeadCount(data).then(rs=>{
             setOveralPerfHeadCount(rs.data)
             setOveralPerfTotalHeadCount(rs.totalHeadCount)
         })
@@ -303,7 +330,8 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
             pageSize: 2000,
             current: 0
         }
-        var targetParams = {searchValue: undefined, keyword: undefined, advanceSearch: {appraisalPeriodId: perfId} }
+        
+        var targetParams = {searchValue: undefined, keyword: undefined, advanceSearch: adSearch }
         srv.fetchPerformanceEvaluationPaging({
             criteria: targetParams,
             pagination: pagination
@@ -319,27 +347,36 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
         actionTargetRef.current?.reloadAndRest?.();
     }
     const onYearTargetAppraisal = (value: any)=> {
-        setAdvanceSearchTargetParams((v) => ({
+        setAdvanceSearchPerformEvaluationParams((v) => ({
             ...v,
             appraisalPeriodId: value
         }))
         onDataLoad(value)        
     }
 
-
+    const onFilterEvaluationHandler = (v: any) => {
+        setAdvanceEvaluationSearch({ visible: true })
+        // setAdvanceSearchParams((v) => ({
+        //     ...v,
+        //     pendingFilter: (values?.pendingFilter || []).length > 0 ? values?.pendingFilter : undefined
+        // }))
+        // actionRef?.current?.reload?.()
+    }
+    
     const extraContent = (<>
         <Flex gap={1} style={{marginTop: 0, padding:0}}>
            <Col style={{padding:0, margin: 0}}>           
-            <Row style={{padding:0,marginBottom:5,height: 35}}>
-                <ProFormSelect style={{width:'200px' }}   allowClear={false}
+            <Row style={{padding:0,marginBottom:5,height: 35,width:245}}>
+                <ProFormSelect style={{width:'206px' }}   allowClear={false}
                         fieldProps={{defaultValue: period?.[0].value}}
                         rules={[{required:false}]}  name={"appraisalPeriodId"}
                         options={period?.map(it => ({label: it.label, value: it.value}))}
                         onChange={onYearTargetAppraisal}
                     />
+                <Button icon={<FilterOutlined/>} style={{marginLeft:2}} onClick={onFilterEvaluationHandler}></Button>
             </Row>
             <Row style={{padding:0, marginTop:0}}>
-                    <Input.Search allowClear  style={{ width: '200px' }} placeholder="Search" onSearch={ onSearch} />
+                    <Input.Search allowClear  style={{ width: '240px' }} placeholder="Search" onSearch={ onSearch} />
             </Row>
            </Col>
            
@@ -369,7 +406,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
             pageSize: params.pageSize,
             current: params.current
         }
-        var targetParams = {searchValue: searchTargetValue, keyword: searchTargetValue, advanceSearch: advanceSearchTargetParams }
+        var targetParams = {searchValue: searchTargetValue, keyword: searchTargetValue, advanceSearch: advanceSearchPerformEvaluationParams }
         // setCriteria(params1)
         const rs = await  srv.fetchPerformanceEvaluationPaging({
             criteria: targetParams,
@@ -384,6 +421,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
             data: rs?.items,
           };
     }
+   
 
     return <>
         <Tabs onChange={key => setActiveTab(key)} defaultActiveKey="1" style={{marginTop: -30}}>
@@ -497,7 +535,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                 />
                 </Spin>
             </Tabs.TabPane>
-           { 1==1 && <Tabs.TabPane icon={<PicRightOutlined />} tab="Performance Evaluation" key="2"    >
+           { accessPerfEvaluation && <Tabs.TabPane icon={<PicRightOutlined />} tab="Performance Evaluation" key="2">
                 <Flex>
                     <ProCard
                         size="small"
@@ -551,8 +589,8 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                                 {overalPerfHeadCount && 
                                                                       
                                     <ProTable<OverallPerformanceHeadCountRs>
-                                    size="small"
-                                        headerTitle = {<>Total Function Head Count: {overalPerfTotalHeadCount}</>}
+                                    size="small"                                        
+                                        headerTitle = {<Space direction="horizontal" style={{width:400}}><div style={{float:'left'}}>Total Function Head Count: {overalPerfTotalHeadCount}</div><div style={{float:'right'}}><Button>Submit All</Button></div></Space>}
                                         style={{width: 500}}
                                         pagination = {false}
                                         options={false}
@@ -635,6 +673,36 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                             </Flex>
                     </Space>
                     </Flex>
+                    {perfEvaluationAccess && <AdvancePerformanceEvaluationSearch
+                        title="Advance Search1"
+                        closable
+                        dataDS={perfEvaluationAccess}
+                        open={advanceEvaluationSearch?.visible} 
+                        // dataItem={modalEvaluatioVisible?.payload}
+                        onClose={() => {
+                            setAdvanceEvaluationSearch({ visible: false });
+                        }}
+                        onReset={() => {  
+                            setAdvanceSearchPerformEvaluationParams((v) => ({
+                                ...v,
+                                appraiser: undefined,
+                                company: undefined,
+                                function: undefined
+                            }))
+                            actionTargetRef.current?.reloadAndRest?.();
+                            onDataLoad(advanceSearchPerformEvaluationParams.appraisalPeriodId||-1) 
+                        }}
+                        onSearch={(data) => { 
+                            setAdvanceSearchPerformEvaluationParams((v) => ({
+                                ...v,
+                                appraiser: data.appraiser,
+                                company: data.company,
+                                function: data.function
+                            }))
+                            onDataLoad(advanceSearchPerformEvaluationParams.appraisalPeriodId||-1) 
+                            actionTargetRef.current?.reloadAndRest?.();
+                        }}
+                    />}
             </Tabs.TabPane>
             }
         </Tabs></>

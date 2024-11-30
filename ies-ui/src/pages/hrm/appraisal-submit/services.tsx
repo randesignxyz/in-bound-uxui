@@ -1,11 +1,12 @@
 import { SimpleRequestActions } from "@/services/model";
-import { RequestItem,  SearchParams,  AppraisalEmp,  AppraisalEmpSubmissionResult, AppraisalEmPayload, AppraisalDimension, UpdateAppraisalEmPayload, CurrentAppraisalEmpSearch, AppraisalAttachmentFile, AppraisalEmpStatusTotal, AppraisalEmpSubmitAllPayload, AppraisalOverallPerformanceRating, AppraisalMapping, EmployeeInfResult, AppraisalInstructionItem, AppraisalDataLookup, OverallPerformanceHeadCountRs, PerformanceFunctionHeadCountRs } from "./data.types";
+import { RequestItem,  SearchParams,  AppraisalEmp,  AppraisalEmpSubmissionResult, AppraisalEmPayload, AppraisalDimension, UpdateAppraisalEmPayload, CurrentAppraisalEmpSearch, AppraisalAttachmentFile, AppraisalEmpStatusTotal, AppraisalEmpSubmitAllPayload, AppraisalOverallPerformanceRating, AppraisalMapping, EmployeeInfResult, AppraisalInstructionItem, AppraisalDataLookup, OverallPerformanceHeadCountRs, PerformanceFunctionHeadCountRs, PerformanceFunctionHeadCountCriter } from "./data.types";
 import { CrudBaseServices } from "@/services/CrudBaseSevices";
 import { FetchPagingParams } from "@/components/DataCrud/TableView";
 import { execDataService, execDataService0, fetchDataItemService, fetchDataListService, fetchDataPagingService } from "@/services/apiGateway";
 import { TaskActionDataParam } from "@/services/process-workflow/params";
 import { Activity } from "@/services/process-workflow/data";
 import { Paging } from "@/services/API";
+import { PerformanceEvaluationAccessRs } from "../appraisal-request/data.types";
 
 
 export const createService = ({ request }: { request: SimpleRequestActions; }): CrudBaseServices<
@@ -31,8 +32,10 @@ export const createService = ({ request }: { request: SimpleRequestActions; }): 
     fetchAppraisalIntructionList:(id:number)=> Promise<AppraisalInstructionItem[]>,
     fetchAppraisalDataLookupList:()=> Promise<AppraisalDataLookup[]>
     fetchOverallPerformanceHeadCount:(id:number)=>Promise<OverallPerformanceHeadCountRs[]>,
-    fetchPerformanceFunctionHeadCount:(id:number)=> Promise<PerformanceFunctionHeadCountRs>,
-    fetchPerformanceEvaluationPaging: (params: FetchPagingParams<SearchParams>) => Promise<Paging<AppraisalEmp>>
+    fetchPerformanceFunctionHeadCount:(data: PerformanceFunctionHeadCountCriter)=> Promise<PerformanceFunctionHeadCountRs>,
+    fetchPerformanceEvaluationPaging: (params: FetchPagingParams<SearchParams>) => Promise<Paging<AppraisalEmp>>,
+    fetchPerformanceEvaluationAccess: (id: number) =>Promise<PerformanceEvaluationAccessRs>,
+    
 } => {
     return {
         fetchPaging: async (params: FetchPagingParams<SearchParams>) =>
@@ -147,7 +150,7 @@ export const createService = ({ request }: { request: SimpleRequestActions; }): 
             endpoint: 'HR',
             payload: {id: id}
         }).query(request),
-        findAppraisalEmpStatusTotal: async(id: number) => fetchDataItemService<AppraisalEmpStatusTotal,{id:number}>({
+        findAppraisalEmpStatusTotal: async(id?: number) => fetchDataItemService<AppraisalEmpStatusTotal,{id?:number}>({
             actionName: "fetch-appraisal-emp-status-total",
             endpoint: 'HR',
             payload: {id: id}
@@ -157,10 +160,10 @@ export const createService = ({ request }: { request: SimpleRequestActions; }): 
             endpoint: 'HR',
             payload: {id: id}
         }).query(request),
-        fetchPerformanceFunctionHeadCount: async(id:number) => fetchDataItemService<PerformanceFunctionHeadCountRs,{id:number}>({
+        fetchPerformanceFunctionHeadCount: async(data: PerformanceFunctionHeadCountCriter) => fetchDataItemService<PerformanceFunctionHeadCountRs,PerformanceFunctionHeadCountCriter>({
             actionName: "fetch-performance-function-head-count",
             endpoint: 'HR',
-            payload: {id: id}
+            payload: data
         }).query(request),
         findDraftedAppraisalEmpList: async()=> fetchDataListService<AppraisalEmp>({
             actionName: 'fetch-drafted-appraisal-emp',
@@ -177,7 +180,13 @@ export const createService = ({ request }: { request: SimpleRequestActions; }): 
             fetchDataListService<AppraisalDataLookup>({
                 actionName: 'fetch-appraisal-data-lookup-list',
                 endpoint: 'HR'
-            }).query(request)    
-    ,
+            }).query(request),
+        fetchPerformanceEvaluationAccess: async (id: number) =>
+            fetchDataItemService<PerformanceEvaluationAccessRs, { id: number }>({
+                actionName: 'fetch-performance-evaluation-access',
+                endpoint: 'HR',
+                payload: { id }
+            }).query(request),     
+    
     }
 }

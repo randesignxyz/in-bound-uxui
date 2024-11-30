@@ -28,7 +28,7 @@ export default ({ title, form, onlyCurrentUser, onSetSubmitter }: {
   const [form1] = useForm<{requestorId: number;requestorBuId: number;}>()
 
   const fetchUser = async (userId?: number) => {
-    srvHR.fetchEmployeeInfo(userId||0).then(it=> {
+    srvHR.fetchProbationEmployeeInfo(userId||0).then(it=> {
       onSetSubmitter?.(it)
       setRequestor(it)
       if(firstInit) {
@@ -43,6 +43,7 @@ export default ({ title, form, onlyCurrentUser, onSetSubmitter }: {
   const onSearchHandler = async (type: AccountType, searchValue?: string) => {  
     const login =  currentUser.initialState?.currentUser?.login
     const it1 = await srvHR.fetchProbationEmpList( firstInit?login: searchValue)
+    // const it1 = await srvHR.fetchProbationEmpList(searchValue)
     if(firstInit && login) {
       let emp = (it1||[{id:0}]).at(0)       
       await fetchUser(emp?.id||0)

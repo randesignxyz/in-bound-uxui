@@ -83,6 +83,10 @@ export const formatterQty1 = new Intl.NumberFormat('en-US', {
     maximumFractionDigits: 2,
 });
 
+export const formatterPercentage0 = new Intl.NumberFormat('en-US', {
+    style: 'percent',
+    minimumFractionDigits: 0,
+});
 
 export const formatterKh = new Intl.NumberFormat('km-KH', {
     style: 'currency',

@@ -2,11 +2,11 @@ import TableView, { TableViewSearchParams } from "@/components/DataCrud/TableVie
 import { simpleRequestActions } from "@/services/model";
 import { ActionType } from "@ant-design/pro-table";
 import { useSafeState } from "ahooks"; 
-import { message, Radio, Space, Spin, Dropdown, Modal } from "antd";
+import { message, Radio, Space, Spin, Dropdown, Modal, Button } from "antd";
 import { useEffect, useRef,useState } from "react";
 import { OpenEssDataItem,OpenAdvanceSearchParams } from "../data_ess"; 
 import { ServicesEss } from '../service_ess_tran';   
-import { EyeOutlined, ExclamationCircleOutlined, CheckOutlined, EllipsisOutlined } from "@ant-design/icons";
+import { EyeOutlined, ExclamationCircleOutlined, CheckOutlined, EllipsisOutlined, FileExcelOutlined } from "@ant-design/icons";
 import Status from "@/components/Status";
 import { Divider, MenuProps } from "rc-menu";
 import { ProfileServicesEss } from "@/pages/profile/service_ess";
@@ -15,6 +15,8 @@ import { ProFormTextArea } from "@ant-design/pro-components";
 import Omit from "omit.js";
 import AdvanceOpenItemSearch from "./AdvanceOpenItemSearch";
 import { useAccess } from '@umijs/max'; 
+import { downloadGenericReport } from "@/services/apiGateway";
+import moment from "moment";
 
 
 interface Props {
@@ -36,6 +38,7 @@ export default ({ profile }: Props) =>{
     const [advanceSearchParams, setAdvanceSearchParams] = useState<OpenAdvanceSearchParams>({
         status: 3,
     });
+    const [downloading, setDownloading] = useSafeState(false)
     
     const access = useAccess();   
     var _valueText = "";
@@ -55,6 +58,32 @@ export default ({ profile }: Props) =>{
             message.error(error.message)
             return Promise.reject()
         }
+    }
+
+    const onExportAll=async ()=>{
+        try {
+            setDownloading(true)
+            await downloadGenericReport(requestActions)({
+                fileName: `Self-Service Progress Status Report-${moment().format()}.xls`,
+                type: 'EXCEL',
+                data: {
+                    reportName: 'hr_ess_self_serice_progress_status_report',
+                    reportPath: '/Reports/qa/hrm/ess',
+                    data: [
+                        { key: 'id', value: 1 },
+                        // { key: 'dateFrom', value: dataForm.dateRange[0] },
+                        // { key: 'dateTo', value: dataForm.dateRange[1] },
+                        // ...(dataForm.sourceIds || []).map(it => ({ key: 'sourceIds', value: it })),
+                        // ...(dataForm.driverIds || []).map(it => ({ key: 'driverIds', value: it })),
+                    ]
+                }
+            }).then(()=>{
+                setDownloading(false)
+            })
+        } catch (error: any) {
+            message.error(error.message || "Failed to generate report.")
+            setDownloading(false)
+        }                    
     }
  
     // const setAdanceSearchItem = (id:number)=>{
@@ -261,7 +290,14 @@ export default ({ profile }: Props) =>{
                     }}
                 />
                 </Space>
-            }   
+            } 
+            extraRightFilter = {access.canAccessHrSelfServiceProgressStatusExportAll && <Space>
+                <Button loading={downloading} icon={<FileExcelOutlined/>}
+                    onClick={onExportAll}
+                >Export All</Button>
+            </Space>}
+
+              
         />
         
         {/*  advance search */}

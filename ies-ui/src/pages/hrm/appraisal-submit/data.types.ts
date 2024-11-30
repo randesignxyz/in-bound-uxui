@@ -269,10 +269,10 @@ export type ValidatorMsg = {
 export type AppraisalOverallPerformanceRating = {
     id: number
     appraisalPerformaceId: number
-    decription:string
-    decription1?:string
+    description:string
+    description1?:string
     startedScore: number
-    endedScrore: number
+    endedScore: number
     rating: number
 }
 /**
@@ -324,4 +324,27 @@ export type AppraisalDataLookup = {
     code: string
     value: string
     value1?: string
+}
+
+
+export interface AppraisalAdvanceParams {    
+    bu?: number[];
+    department?: number[];
+    appraisalPeriodId?: number;
+}
+
+export type OverallPerformanceHeadCountRs = {
+    id: number;
+    appraisalPerformanceId: number;
+    description: string;
+    rating: number;
+    targetPercent: number;
+    targetHeadCount: number;
+    actualPercent: number;
+    actualHeadCount: number;
+    variancePercent: number;
+}
+export type PerformanceFunctionHeadCountRs = {
+    totalHeadCount: number;
+    data: OverallPerformanceHeadCountRs[];
 }

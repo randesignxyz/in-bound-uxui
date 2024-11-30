@@ -115,7 +115,8 @@ const AppraisalFormQuickView=({appraisalEmp, open, onOpenModalChange, refreshTab
     const rated3 = appraisalEmp?.rated3  
 
     const isSaveDraft = ((currentAssign1 && (currentDrafted || !rated1)) || (currentAssign2 && (currentDrafted || !rated2)) || (currentAssign3 && (currentDrafted || !rated3)))
-    const isSubmitForm = ((currentAssign1 && (currentDrafted || !rated1)) || (currentAssign2 && (currentDrafted || !rated2)) || (currentAssign3 && (currentDrafted || !rated3)))
+    const isSubmitForm = (currentAssign1 && (currentDrafted || !rated1))
+    // const isSubmitForm = ((currentAssign1 && (currentDrafted || !rated1)) || (currentAssign2 && (currentDrafted || !rated2)) || (currentAssign3 && (currentDrafted || !rated3)))
 
     const onSetRatingScoreHandler=(status:string,appraisalDimensionId: number,appraisalBehaviorId:number,rating:number)=>{   
         setAppraisal(v=> { 

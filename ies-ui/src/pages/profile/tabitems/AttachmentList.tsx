@@ -68,8 +68,6 @@ export default ({ profile, step, is_admin }: Props) => {
                                 switch (r.fileType) {
                                     case "text/csv":
                                         return <FileOutlined />;
-                                    case "application/msword":
-                                        return <FileWordOutlined />;
                                     case "application/pdf":
                                         return <FilePdfOutlined />;
                                     case "application/vnd.ms-excel":
@@ -99,7 +97,6 @@ export default ({ profile, step, is_admin }: Props) => {
                             render: (_, r) => {
                                 // 
                                 if (r.fileType == "text/csv" ||
-                                    r.fileType == "application/msword" ||
                                     r.fileType == "application/pdf" ||
                                     r.fileType == "application/vnd.ms-excel" ||
                                     r.fileType == "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||

@@ -144,8 +144,8 @@ export default (props: ActionDataFormProps) => {
                         return
                     }
 
-                    if(files.length==0) {
-                        message.error("Attachment file is required.")
+                    if(files.length<=1) {
+                        message.error("Atless two attachment files is required.")
                         return
                     }
                     const dataForm = await form.validateFields() 
@@ -197,7 +197,7 @@ export default (props: ActionDataFormProps) => {
             }}
             uploadProps= {{
                 required: true,
-                message: 'Attachment fils is required.'
+                message: 'Atless two attachment fils is required.'
             }}
         >
              <ProForm form={form}  submitter={false}>

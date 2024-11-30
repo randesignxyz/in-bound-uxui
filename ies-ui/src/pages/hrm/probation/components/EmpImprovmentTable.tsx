@@ -16,6 +16,8 @@ export default({editableFormRef,addedItems,onSetAddedItems,editable}: Props) => 
     
     const defaultEmpAchievments = [
         {id:0, key:'default-emp-ach-1', description:''},
+        {id:0, key:'default-emp-ach-2', description:''},
+        {id:0, key:'default-emp-ach-3', description:''},
     ]
 
     useEffect(()=>{
@@ -39,7 +41,7 @@ export default({editableFormRef,addedItems,onSetAddedItems,editable}: Props) => 
             type: 'multiple',
             editableKeys: addedItems?.map((it) => it.key),
             actionRender: (row, config) => [ 
-                (editable && !defaultEmpAchievments.find(r => r.key== row.key) 
+                (editable && (!defaultEmpAchievments.find(r => r.key== row.key) || ['default-emp-ach-2','default-emp-ach-3'].find(key => key== row.key))
                 && <Button
                     type="link"
                     danger

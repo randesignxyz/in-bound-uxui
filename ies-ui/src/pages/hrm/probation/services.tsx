@@ -1,5 +1,5 @@
 import { SimpleRequestActions } from "@/services/model";
-import { RequestItem,  SearchParams,  ProbationEvaluationEmpList,  AppraisalEmpSubmissionResult, AppraisalEmPayload, AppraisalDimension, UpdateAppraisalEmPayload, CurrentAppraisalEmpSearch, AppraisalAttachmentFile, AppraisalEmpSubmitAllPayload, AppraisalOverallPerformanceRating, AppraisalMapping, EmployeeInfResult, AppraisalInstructionItem, AppraisalDataLookup, ProbationEvaluationResources, ProbationEvaluationResourcesSupport, ProbationEvaluationDetailRs, ProbationEvaluationPayload, ProbationFormType, ProbationEvaluationRef, ProbationEmpStatusTotal, ProbationEvaluationHrRevievPayload } from "./data.types";
+import { RequestItem,  SearchParams,  ProbationEvaluationEmpList,  AppraisalEmpSubmissionResult, AppraisalEmPayload, AppraisalDimension, UpdateAppraisalEmPayload, CurrentAppraisalEmpSearch, AppraisalAttachmentFile, AppraisalEmpSubmitAllPayload, AppraisalOverallPerformanceRating, AppraisalMapping, EmployeeInfResult, AppraisalInstructionItem, AppraisalDataLookup, ProbationEvaluationResources, ProbationEvaluationResourcesSupport, ProbationEvaluationDetailRs, ProbationEvaluationPayload, ProbationFormType, ProbationEvaluationRef, ProbationEmpStatusTotal, ProbationEvaluationHrRevievPayload, ProbationAssessmentList } from "./data.types";
 import { CrudBaseServices } from "@/services/CrudBaseSevices";
 import { FetchPagingParams } from "@/components/DataCrud/TableView";
 import { execDataService, execDataService0, fetchDataItemService, fetchDataListService, fetchDataPagingService } from "@/services/apiGateway";
@@ -23,6 +23,7 @@ ProbationEvaluationEmpList,
     mboAssessment:(data: TaskActionDataParam<ProbationEvaluationHrRevievPayload>)=> Promise<any>,
     fetchProbationFormTypeList:()=> Promise<ProbationFormType[]>,
     fetchProbationEvaluationRefList:(empId: number)=> Promise<ProbationEvaluationRef[]>,
+    fetchProbationAssessmentEmpList:(empId: number)=> Promise<ProbationAssessmentList[]>,
 
     fetchActivityList:(id: number) => Promise<Activity[]>
     fetchAppraisalDimensionList:(id: number) => Promise<AppraisalEmpSubmissionResult[]>
@@ -37,7 +38,7 @@ ProbationEvaluationEmpList,
     submitAllAppraisalEmps:(ids?: AppraisalEmpSubmitAllPayload[])=> Promise<{ok:string}>,
     fetchAppraisalOveralRating:(id:number)=>Promise<AppraisalOverallPerformanceRating[]>,
     fetchProbationEmpList:(searchValue?:string)=>Promise<AppraisalMapping[]>,
-    fetchEmployeeInfo:(id:number)=> Promise<EmployeeInfResult>,
+    fetchProbationEmployeeInfo:(id:number)=> Promise<EmployeeInfResult>,
     fetchAppraisalIntructionList:(id:number)=> Promise<AppraisalInstructionItem[]>,
     fetchAppraisalDataLookupList:()=> Promise<AppraisalDataLookup[]>,
     fetchProbationEvaluationResourcesList:()=> Promise<ProbationEvaluationResources[]>,
@@ -79,7 +80,14 @@ ProbationEvaluationEmpList,
             fetchDataListService<ProbationFormType>({
                 actionName: 'fetch-probation-form-type-list',
                 endpoint: 'HR'
-            }).query(request),            
+            }).query(request), 
+
+        fetchProbationAssessmentEmpList: async (empId: number) =>
+            fetchDataListService<ProbationAssessmentList,{id: number}>({
+                actionName: 'fetch-probation-assessment-emp-list',
+                endpoint: 'HR',
+                payload: {id:empId},
+            }).query(request),                 
         fetchProbationEvaluationRefList: async (empId: number) =>
                 fetchDataListService<ProbationEvaluationRef,{id: number}>({
                     actionName: 'fetch_probation_evaluation_ref_list',
@@ -187,8 +195,8 @@ ProbationEvaluationEmpList,
             endpoint: 'HR',
             // payload: {id: id}
         }).query(request),
-        fetchEmployeeInfo: async(id:number) => fetchDataItemService<EmployeeInfResult,{id:number}>({
-            actionName: "fetch-employee-info",
+        fetchProbationEmployeeInfo: async(id:number) => fetchDataItemService<EmployeeInfResult,{id:number}>({
+            actionName: "fetch-probation-employee-info",
             endpoint: 'HR',
             payload: {id: id}
         }).query(request),

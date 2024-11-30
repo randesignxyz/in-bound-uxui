@@ -59,6 +59,7 @@ export type ProbationEvaluationData = {
   empId: number;
   attachedFiles?: string[];
   remarks?: string;
+  preparationUserId?: number;
 }
 
 export type StaffRequisitionRequestCancel = {

@@ -174,3 +174,29 @@ export type AppraisalRequestReportParams = {
     requestTypeId?: number[],
     appraisalPeriodId?: number[]
 }  
+
+export type PerformanceEvaluationAccessRs = {
+    access: boolean;
+    appraiser?: AppraiserEvaluationRs[];
+    company?: AppraiserCompanyRs[]
+    function?: AppraiserFunctionRs[]
+}
+export type AppraiserEvaluationRs ={
+    id: string
+    appraiser1Id: number
+    appraiser1No: String
+    appraiser1: string
+    appraisalPerformanceId: number
+}
+export type AppraiserCompanyRs = {
+    id: string
+    appraiser1Id: number
+    company: string
+    appraisalPerformanceId: number
+}
+export type AppraiserFunctionRs = {
+    id: string
+    appraiser1Id: number
+    func: string
+    appraisalPerformanceId: number
+}

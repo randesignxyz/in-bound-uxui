@@ -68,7 +68,7 @@ export default ({ profile }: Props) =>{
                 type: 'EXCEL',
                 data: {
                     reportName: 'hr_ess_self_serice_progress_status_report',
-                    reportPath: '/Reports/qa/hrm/ess',
+                    reportPath: '/Reports/hrm/ess',
                     data: [
                         { key: 'id', value: 1 },
                         // { key: 'dateFrom', value: dataForm.dateRange[0] },

@@ -333,6 +333,13 @@ export interface AppraisalAdvanceParams {
     appraisalPeriodId?: number;
 }
 
+export interface AppraisalEvaluationAdvanceParams {   
+    appraiser?: number;
+    company?: number[];
+    function?: number[];
+    appraisalPeriodId?: number;
+}
+
 export type OverallPerformanceHeadCountRs = {
     id: number;
     appraisalPerformanceId: number;
@@ -347,4 +354,11 @@ export type OverallPerformanceHeadCountRs = {
 export type PerformanceFunctionHeadCountRs = {
     totalHeadCount: number;
     data: OverallPerformanceHeadCountRs[];
+}
+
+export type PerformanceFunctionHeadCountCriter = {
+    id?:number;
+    appraise?:number;
+    company?: number;
+    function?: number[]
 }

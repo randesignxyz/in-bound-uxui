@@ -84,7 +84,7 @@ export default ({ trigger }: { trigger?: JSX.Element}) => {
                 type: 'EXCEL',
                 data: {
                     reportName: e.key+raw,
-                    reportPath: '/Reports/qa/hrm/ess',
+                    reportPath: '/Reports/hrm/ess',
                     data: [      
                        {key:'empSearch', value: dataForm.empSearch},
                         ...(dataForm.empStatus || []).map(it => ({ key: 'empStatus', value: it })),                

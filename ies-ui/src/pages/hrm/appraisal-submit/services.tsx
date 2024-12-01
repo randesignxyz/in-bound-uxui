@@ -31,7 +31,7 @@ export const createService = ({ request }: { request: SimpleRequestActions; }): 
     fetchEmployeeInfo:(id:number)=> Promise<EmployeeInfResult>,
     fetchAppraisalIntructionList:(id:number)=> Promise<AppraisalInstructionItem[]>,
     fetchAppraisalDataLookupList:()=> Promise<AppraisalDataLookup[]>
-    fetchOverallPerformanceHeadCount:(id:number)=>Promise<OverallPerformanceHeadCountRs[]>,
+    // fetchOverallPerformanceHeadCount:(id:number)=>Promise<OverallPerformanceHeadCountRs[]>,
     fetchPerformanceFunctionHeadCount:(data: PerformanceFunctionHeadCountCriter)=> Promise<PerformanceFunctionHeadCountRs>,
     fetchPerformanceEvaluationPaging: (params: FetchPagingParams<SearchParams>) => Promise<Paging<AppraisalEmp>>,
     fetchPerformanceEvaluationAccess: (id: number) =>Promise<PerformanceEvaluationAccessRs>,
@@ -116,12 +116,12 @@ export const createService = ({ request }: { request: SimpleRequestActions; }): 
                 endpoint: 'HR',
                 payload: {id}
             }).query(request),
-        fetchOverallPerformanceHeadCount: async(id: number) =>
-                fetchDataListService<OverallPerformanceHeadCountRs, {id: number}>({
-                    actionName: 'fetch-overall-performance-head-count',
-                    endpoint: 'HR',
-                    payload: {id}
-                }).query(request),    
+        // fetchOverallPerformanceHeadCount: async(id: number) =>
+        //         fetchDataListService<OverallPerformanceHeadCountRs, {id: number}>({
+        //             actionName: 'fetch-overall-performance-head-count',
+        //             endpoint: 'HR',
+        //             payload: {id}
+        //         }).query(request),    
         fetchItem: async (id: number) =>
             fetchDataItemService<AppraisalEmp, { id: number }>({
                 actionName: 'fetch-appraisal-emp-by-id',

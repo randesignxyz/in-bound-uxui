@@ -708,7 +708,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                     </Space>
                     </Flex>
                     {perfEvaluationAccess && <AdvancePerformanceEvaluationSearch
-                        title="Advance Search1"
+                        title="Advance Search"
                         closable
                         dataDS={perfEvaluationAccess}
                         open={advanceEvaluationSearch?.visible} 

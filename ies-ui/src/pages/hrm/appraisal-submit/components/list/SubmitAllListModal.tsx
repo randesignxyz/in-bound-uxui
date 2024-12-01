@@ -23,7 +23,6 @@ export default ({open, onOpenModalChange,refreshTable}:Props) =>{
                 srv.findDraftedAppraisalEmpList().then(it=>{
                     setAppraisalEmp(it.filter(it=>{
                         var msg = data.validationMsgList(it)
-                        console.log(msg)
                         return msg.length==0
                     }).map(i=> {
                         var status = actions.getStatus('DONE',i)
@@ -97,7 +96,7 @@ export default ({open, onOpenModalChange,refreshTable}:Props) =>{
     }
 
     return <ModalForm
-        title='Appraisal Form List'        
+        title='Performance Evaluation List'        
         width={'85%'}
         open={open}
         onOpenChange={onOpenModalChange}
@@ -120,46 +119,7 @@ export default ({open, onOpenModalChange,refreshTable}:Props) =>{
             fullScreen:false
             
         }}                
-        dataSource={appraisalEmp}
-        // request = {async (page) => {
-        //     return srv.findDraftedAppraisalEmpList().then(it => {
-        //         setAppraisalEmp(it.filter(it=>{
-        //             var msg = data.validationMsgList(it)
-        //             return msg.length==0
-        //         }).map(i=> {
-        //             var status = actions.getStatus('DONE',i)
-        //             return {...i,
-        //                 status:status.status,
-        //                 actionStatus:status.actionStatus,
-        //                 rated1: status.rated1,
-        //                 rated2: status.rated2,
-        //                 rated3: status.rated3,
-        //                 rated4: status.rated4,
-        //                 rated5: status.rated5
-        //             }
-        //         }))
-        //             return{
-        //                 success: true, 
-        //                 total: it?.length,
-        //                 data: it.filter(it=>{
-        //                     var msg = data.validationMsgList(it)
-        //                     return msg.length==0
-        //                 }).map(i=> {
-        //                     var status = actions.getStatus('DONE',i)
-        //                     return {...i,
-        //                         status:status.status,
-        //                         actionStatus:status.actionStatus,
-        //                         rated1: status.rated1,
-        //                         rated2: status.rated2,
-        //                         rated3: status.rated3,
-        //                         rated4: status.rated4,
-        //                         rated5: status.rated5
-        //                     }
-        //                 })
-        //             }
-        //         }) as Promise<AppraisalEmp> 
-        //     }
-        // }
+        dataSource={appraisalEmp}       
         columns={[
             {
                 title: 'Employee',
@@ -178,14 +138,14 @@ export default ({open, onOpenModalChange,refreshTable}:Props) =>{
             {title: 'Job Title', dataIndex: 'jobTitle', sorter : 'jobTitle' },
             {title: 'Self- Rating', dataIndex: 'rating1', sorter: 'rating1' },
             {title: 'FM Rating', dataIndex: 'rating2', sorter: 'rating2' },
-            {title: 'Agreed Rating', dataIndex: 'rating3', sorter: 'rating3' },
+            // {title: 'Agreed Rating', dataIndex: 'rating3', sorter: 'rating3' },
             
-            {
-                 title: 'Action',
-                 width:'180px', 
-                render: (_, r) =>  <a onClick={()=>removeHandler(r)}>Remove</a>
+            // {
+            //      title: 'Action',
+            //      width:'180px', 
+            //     render: (_, r) =>  <a onClick={()=>removeHandler(r)}>Remove</a>
             
-            }
+            // }
         ]} 
        />
     </ModalForm>

@@ -196,21 +196,23 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
     }
 
 
-    const dowloandData = (): DownloadData<{ searchValue?: string; advanceSearch?: AppraisalEmpAdvanceSearchParams }> => {
-        var direct = 'Direct'
-        var issued = 'Issued'
-        var reportName = replace('SettlementIncentive@@##Report', '@@', direct)
+    const dowloandData = (reportName: string,fileName: string): DownloadData<{ searchValue?: string; advanceSearch?: AppraisalEmpAdvanceSearchParams }> => {
+        // var direct = 'Direct'
+        // var issued = 'Issued'
+        // var reportName = replace('performance-review@@-list-report', '@@', reportName)
         var params = { ...criteria, searchValue: criteria?.searchValue, advanceSearch: criteria?.advanceSearch || advanceSearchParams }
-        reportName = replace(reportName, '##', issued)
+        // reportName = replace(reportName, '##', issued)
         return {
-            reportName: 'performance-review-list-report',
-            fileName: `Performance-Review-List_${moment().toDate().toDateString()}`,
+            reportName: reportName,
+            fileName: fileName,
             type: 'EXCEL',
             data: params
         }
     }
-    const dowloandExcelHandler = () => {
-        return downloadReport<{ searchValue?: string; advanceSearch?: AppraisalEmpAdvanceSearchParams }>(requestActions)(dowloandData())
+    const dowloandExcelHandler = (fileType: string) => {
+        const reportName = fileType=='Detail'? 'performance-review-detail-list-report':'performance-review-list-report'
+        const fileName = fileType=='Detail'? `Performance-Review-Detail-List_${moment().toDate().toDateString()}`:`Performance-Review-List_${moment().toDate().toDateString()}`
+        return downloadReport<{ searchValue?: string; advanceSearch?: AppraisalEmpAdvanceSearchParams }>(requestActions)(dowloandData(reportName,fileName))
     }
     const cols = [
         {
@@ -305,11 +307,19 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
     }
 
     /**  Performance Targert View ---------------------------------------------------------------------------------------------------------------------*/
+    const [refreashEvaluationData, setRefreashEvaluationData] = useState<number>(0)
     useEffect(()=>{
-        if(forceChange>0 || (overalPerfHeadCount.length<=0 && activeTab=="2")){
+        if(forceChange==0 || (overalPerfHeadCount.length<=0 && activeTab=="2")){
             onDataLoad( period?.[0].value||0)
         }
     },[forceChange,(overalPerfHeadCount.length<=0 && activeTab=="2")])
+
+    useEffect(()=>{
+        if(refreashEvaluationData>0 && activeTab=="2"){
+            const perfId = advanceSearchPerformEvaluationParams.appraisalPeriodId||-1
+            onDataLoad(perfId)
+        }
+    },[refreashEvaluationData])
 
     const onDataLoad=(perfId: number)=>{
         const adSearch = {appraisalPeriodId:perfId, 
@@ -488,13 +498,17 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
 
                                 </LightFilter>}
                             {advanceSearchParams?.status === 'PENDING' && <Checkbox name="drafted" checked={advanceSearchParams?.drafted} onChange={onDraftedHandler}>Drafted{(total?.drafted || 0 > 0) && supTitle(total?.drafted || 0)}</Checkbox>}
-                            {(advanceSearchParams?.status === 'PENDING' && (total?.drafted || 0) > 1) && <Space>
+                            {/*(advanceSearchParams?.status === 'PENDING' && (total?.drafted || 0) > 1) && <Space>
                                 <Button type="primary" onClick={submitAllHandler}>Submit All</Button>
-                            </Space>}
+                            </Space>*/}
                         </Space>
 
                     }
-                    extraRightFilter={<Tooltip placement="bottom" title="Dowload Excel File"><Button icon={<FileExcelOutlined />} onClick={dowloandExcelHandler} /></Tooltip>}
+                    extraRightFilter={<Flex gap={5}>
+                         <Tooltip placement="bottom" title="Dowload Excel File Detail"><Button icon={<FileExcelOutlined />} onClick={()=>dowloandExcelHandler('Detail')} /></Tooltip>
+                        <Tooltip placement="bottom" title="Dowload Excel File"><Button icon={<FileExcelOutlined />} onClick={()=>dowloandExcelHandler('')} /></Tooltip>
+                        </Flex>
+                    }
                     actionHandlers={{
                         onAdvanceSearchClicked: () => setAdvanceSearch({ visible: true }),
                         // onAdd: createAppraisalFormHandler,
@@ -590,7 +604,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                                                                       
                                     <ProTable<OverallPerformanceHeadCountRs>
                                     size="small"                                        
-                                        headerTitle = {<Space direction="horizontal" style={{width:400}}><div style={{float:'left'}}>Total Function Head Count: {overalPerfTotalHeadCount}</div><div style={{float:'right'}}><Button>Submit All</Button></div></Space>}
+                                        headerTitle = {<Flex gap={120} ><div style={{float:'left', width: 250}}>Total Function Head Count: {overalPerfTotalHeadCount}</div><div style={{float:'right',}}><Button type="primary" onClick={submitAllHandler}>Submit All</Button></div></Flex>}
                                         style={{width: 500}}
                                         pagination = {false}
                                         options={false}
@@ -618,8 +632,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                                 
                                    <Card size="small" style={{width: 690}}>
                                             {/* <Line {...config} /> */}
-                                    <Line
-                                      
+                                    <Line                                      
                                         height={300}                                    
                                         data={overalPerfHeadCount.flatMap( it => ([{
                                             score: it.rating,
@@ -635,9 +648,30 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                                         yField="value"
                                         shapeField = 'smooth'
                                         colorField= 'category'
-                                        legend={{
-                                            position: "bottom"
+                                        legend= {{
+                                            color: {
+                                              title: true,
+                                              position: 'top',
+                                              rowPadding: 5,
+                                            },
                                         }}
+                                        labels={ [
+                                            // { text: 'value', style: { fontSize: 10, fontWeight: 'bold' } },
+                                            {
+                                              text: (d:any, i:any, data:any) => (formatterPercentage0.format(d.value/100)),
+                                              style: {
+                                                fontSize: 9,
+                                                dy: -10,
+                                                dx: 0
+                                              },
+                                            },
+                                          ]}
+                                        // label= {{
+                                        //     text: 'value',
+                                        //     style: {
+                                        //       fontWeight: 'bold',
+                                        //     },
+                                        // }}
                                         smooth={true}
                                         // animation={{
                                         //     appear: {
@@ -674,7 +708,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                     </Space>
                     </Flex>
                     {perfEvaluationAccess && <AdvancePerformanceEvaluationSearch
-                        title="Advance Search1"
+                        title="Advance Search"
                         closable
                         dataDS={perfEvaluationAccess}
                         open={advanceEvaluationSearch?.visible} 
@@ -689,8 +723,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                                 company: undefined,
                                 function: undefined
                             }))
-                            actionTargetRef.current?.reloadAndRest?.();
-                            onDataLoad(advanceSearchPerformEvaluationParams.appraisalPeriodId||-1) 
+                            setRefreashEvaluationData(v=> v+1)
                         }}
                         onSearch={(data) => { 
                             setAdvanceSearchPerformEvaluationParams((v) => ({
@@ -699,8 +732,9 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                                 company: data.company,
                                 function: data.function
                             }))
-                            onDataLoad(advanceSearchPerformEvaluationParams.appraisalPeriodId||-1) 
-                            actionTargetRef.current?.reloadAndRest?.();
+                            setRefreashEvaluationData(v=> v+1)
+                            // onDataLoad(advanceSearchPerformEvaluationParams.appraisalPeriodId||-1) 
+                            // actionTargetRef.current?.reloadAndRest?.();
                         }}
                     />}
             </Tabs.TabPane>

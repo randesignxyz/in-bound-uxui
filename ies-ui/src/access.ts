@@ -250,6 +250,9 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           'ROLE_DELIVERY_SYS_ADMIN',
           'ROLE_DELIVERY_REVIEW',
           'ROLE_LOADING_OFFICER',
+          'ROLE_DELIVERY_REPORT_DELIVERY_TIME_REPORT',
+          'ROLE_DELIVERY_REPORT_TRANSPORTATION_TIME_REPORT'
+
         ].some((it) => it === item),
       ) || false,
 

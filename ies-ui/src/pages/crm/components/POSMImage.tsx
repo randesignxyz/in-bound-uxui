@@ -17,7 +17,8 @@ const POSMImage: React.FC<Props> = ({ imageId, version, pomsInfo, ...props }) =>
             width={700}
             title={"Posm"}
         >
-            <Image.PreviewGroup>
+            <Image.PreviewGroup
+            >
                 {
                     pomsInfo?.attachment?.map(p => {
                         return <ImageViewer

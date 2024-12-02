@@ -2,7 +2,7 @@ import { simpleRequestActions } from '@/services/model';
 import { ReloadOutlined } from '@ant-design/icons';
 import type { ActionType } from '@ant-design/pro-components';
 import { ProList } from '@ant-design/pro-components';
-import { Button, message, Modal, Spin, Tag, Typography } from 'antd';
+import { Button, Drawer, message, Modal, Spin, Tag, Typography } from 'antd';
 import { useRef, useState } from 'react';
 import { AccessoriesDTO, AddVehicleAccessory } from '../../accessory/data';
 import { AccessoryServiceAPI } from '../../accessory/service';

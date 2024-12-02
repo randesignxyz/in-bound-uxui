@@ -1,4 +1,4 @@
-import { Affix, Button, Divider, Flex, FloatButton } from "antd"
+import { Affix, Button, Divider, Flex, FloatButton, theme } from "antd"
 import FolderViewList from "./components/FolderViewList";
 import { useEffect, useState } from "react";
 import { DMSPaths } from ".";
@@ -15,6 +15,8 @@ const APPDMS: React.FC = () => {
     const view = param["view"];
     const [paramByFolder, setParamByFolder] = useState<DocumentationAdvanceSearch>();
     const [sidbarState, setSidbarState] = useState<boolean>(false);
+
+    
     const [menuStyleState, setMenuStyleState] = useState<React.CSSProperties>(
         {
             height: "90%",

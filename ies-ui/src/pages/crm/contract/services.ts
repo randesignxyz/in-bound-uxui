@@ -112,6 +112,11 @@ export const ContractServices = {
         actionName: 'apply-location-to-contract',
         endpoint: 'CRM',
         payload: { contractId, customerAddressIds}
-    })
+    }),
 
+    listPOSMByCustomer :(id:number) =>fetchDataListService({
+        actionName:"list-posm-by-customer",
+        endpoint:"CRM",
+        payload:{id},
+    })
 }

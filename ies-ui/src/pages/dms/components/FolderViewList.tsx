@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Affix, Button, Dropdown, Flex, MenuProps, Space, message } from 'antd';
+import { Affix, Button, Dropdown, Flex, MenuProps, Space, Tree, message } from 'antd';
 import { FolderServiceAPI } from '../folder/service';
 import { simpleRequestActions } from '@/services/model';
 import { BankFilled, DeleteOutlined, EditOutlined, FileTextOutlined, FolderAddOutlined, FolderFilled, UserOutlined } from '@ant-design/icons';
@@ -17,7 +17,8 @@ interface Props {
     activeKey?: boolean;
     moveDoc?: boolean;
     onMove?: () => void;
-    onFolderSelected: () => void
+    onFolderSelected: () => void;
+
 }
 const updateTreeData = (list: DataNode[], key: React.Key, children: DataNode[]): DataNode[] => list.map((node) => {
     if (node.key === key) {
@@ -76,14 +77,14 @@ export default ({ onSearch, activeKey, moveDoc, onMove, onFolderSelected, ...pro
             type: o.type
         })));
         setTreeFolderList(dd);
-        if (access.canAccessDMSAdminMenu) {
-            onSearch({ libraryId: 0 })
-        }
-        else {
-            const lId = folder.find((o) => o.code == "LIBRARY" && o.type == "personal")
-            onSearch({ libraryId: lId?.id });
-            setFolderSelected(`${lId?.id}`)
-        }
+        // if (access.canAccessDMSAdminMenu) {
+            onSearch({ libraryId: 0,filterType:access.canAccessDMSAdminMenu?"ADMIN":"USER" })
+        // }
+        // else {
+        //     const lId = folder.find((o) => o.code == "LIBRARY" && o.type == "personal")
+        //     onSearch({ libraryId: lId?.id,filterType:access.canAccessDMSAdminMenu?"ADMIN":"USER" });
+        //     // setFolderSelected(`${lId?.id}`)
+        // }
     }
     const [folderState, setFolderState] = useState<{
         visible?: {
@@ -160,22 +161,22 @@ export default ({ onSearch, activeKey, moveDoc, onMove, onFolderSelected, ...pro
         <>
             <Spin spinning={requestAction.request?.loading}>
                 <Affix offsetTop={70}>
-                    {access.canAccessDMSAdminMenu && <Button
+                   <Button
                         onClick={() => {
                             onFolderSelected?.();
                             setFolderSelected("")
                             onSearch({
                                 libraryId: 0,
                                 folderId: 0,
-                                folderType: ""
+                                folderType: "",
+                                filterType:access.canAccessDMSAdminMenu?"ADMIN":"USER"
                             })
                         }}
                         type={folderSelected ? "default" : "primary"}
-                        style={{ width: "100%", margin: "10px 0" }} icon={<FileTextOutlined />}>All Documents</Button>}
+                        style={{ width: "100%", margin: "10px 0" }} icon={<FileTextOutlined />}>All Documents</Button>
                 </Affix>
-
                 {treeFolderList.length != 0 &&
-                    <DirectoryTree
+                    <Tree
                         key={"doprdown-1"}
                         defaultExpandAll
                         blockNode
@@ -188,7 +189,8 @@ export default ({ onSearch, activeKey, moveDoc, onMove, onFolderSelected, ...pro
                             onSearch({
                                 libraryId: selectedNodes[0]?.libraryId,
                                 folderId: parseInt(selectedNodes[0]?.key),
-                                folderType: selectedNodes[0]?.code
+                                folderType: selectedNodes[0]?.code,
+                                filterType:access.canAccessDMSAdminMenu?"ADMIN":"USER"
                             });
                         }}
                         treeData={treeFolderList}

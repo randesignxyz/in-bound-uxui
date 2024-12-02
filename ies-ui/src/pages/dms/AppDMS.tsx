@@ -1,4 +1,4 @@
-import { Affix, Button, Divider, Flex } from "antd"
+import { Affix, Button, Divider, Flex, FloatButton } from "antd"
 import FolderViewList from "./components/FolderViewList";
 import { useEffect, useState } from "react";
 import { DMSPaths } from ".";
@@ -21,7 +21,7 @@ const APPDMS: React.FC = () => {
             width: "300px",
             position: "fixed",
             zIndex: "1",
-            left: 30,
+            // left: 30,
             backgroundColor: "white",
             overflow: "auto",
             borderRadius: 5,
@@ -35,7 +35,6 @@ const APPDMS: React.FC = () => {
         },
     );
     useEffect(() => {
-
     }, [paramByFolder])
 
     return (
@@ -45,7 +44,10 @@ const APPDMS: React.FC = () => {
                 onContextMenu={(e)=>e.preventDefault()}
             >
                 <FolderViewList activeKey={view == "library" ? true : false}
-                    onSearch={(param: DocumentationSearchByFolder) => setParamByFolder(param)}
+                    onSearch={(param: DocumentationSearchByFolder) => setParamByFolder({
+                        ...param,
+                        filterType:access.canAccessDMSAdminMenu?"ADMIN":"USER"
+                    })}
                     onFolderSelected={() => {
                         history.push(`${DMSPaths.dms}`);
                     }}
@@ -74,9 +76,9 @@ const APPDMS: React.FC = () => {
                 {
                     (view === "team" && <TeamsViewList isCurrentUser={true} actionKey={view} />) ||
                     (view === "share" && <ShareListView actionKey={view} />) ||
-                    (view === undefined && <DocumentMainPage paramSearch={paramByFolder} />)
+                    (view === undefined && paramByFolder && <DocumentMainPage paramSearch={paramByFolder} />)
                 }
-
+                   <FloatButton.BackTop/>
             </div>
         </>
     )

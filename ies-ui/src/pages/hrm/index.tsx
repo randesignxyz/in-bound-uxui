@@ -12,7 +12,8 @@ export const HrmPaths = {
     newStaffRequest: '/hrm/new-staff',
     staffProposalRequest: '/hrm/staff-proposal',
     appraisalSubmit: '/hrm/appraisal-submit',
-    appraisalRequest: '/hrm/appraisal-request'
+    appraisalRequest: '/hrm/appraisal-request',
+    probationEvaluation: '/hrm/probation-evaluation',
 }
 
 export default () => {
@@ -61,7 +62,14 @@ export default () => {
             menu: {
                 items: [{ label: <PerformanceReport trigger={<a >Export</a>} />, key: 'exportContract', icon: <ExportOutlined style={{ fontSize: '16px', color: '#08c' }} /> }]
             }
-        }
+        },{
+            id: 'probation_evaluation',
+            name: 'Probation Evaluation',
+            description: 'Probation Evaluation Form',
+            visible: access.canAccessProbationEvaluation,
+            link: `${HrmPaths.probationEvaluation}/list`,
+            icon: requisitionIcon,
+        },
     ]
 
     return (

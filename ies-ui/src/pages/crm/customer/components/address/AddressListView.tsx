@@ -13,7 +13,7 @@ const DEFAULT_ADDRESS_TYPE_ID = 14033;
 export interface AddressListViewProps {
   addressReadonly?: boolean;
   data: {
-    // list: AddresssView[];
+    list: AddresssView[];
     init: {
       lookupDataList?: LookupData[];
       provinceList?: Locations[];
@@ -49,8 +49,7 @@ const AddressListView: React.FC<AddressListViewProps> = ({
   const [modal, setModal] = useState<{ visible: boolean; data?: AddressDataForm }>({
     visible: false,
   });
-  const [list, setList] = useState<AddresssView[]>([]);
-
+  const { list } = data
   useEffect(() => {
     if (modal.visible) {
       actionHandlers.onLoadMultiLocations?.([
@@ -66,13 +65,9 @@ const AddressListView: React.FC<AddressListViewProps> = ({
   }, [modal.visible]);
 
   useEffect(() => {
-    initDataList();
+    actionHandlers.loadData?.();
   }, []);
 
-  const initDataList = async () => {
-    const rs = await actionHandlers.loadData?.();
-    setList(rs);
-  };
   const onEdit = (item: AddresssView) => {
     setModal({
       visible: true,
@@ -198,14 +193,14 @@ const AddressListView: React.FC<AddressListViewProps> = ({
           onAdd: (data) =>
             actionHandlers.onAdd(data, (success) => {
               if (success) {
-                initDataList();
+                actionHandlers.loadData?.();
                 setModal({ visible: false });
               }
             }),
           onEdit: (data) =>
             actionHandlers.onEdit(data, (success) => {
               if (success) {
-                initDataList();
+                actionHandlers.loadData?.();
                 setModal({ visible: false });
               }
             }),

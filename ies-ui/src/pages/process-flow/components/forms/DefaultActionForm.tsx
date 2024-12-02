@@ -10,7 +10,7 @@ const DefaultActionForm: React.FC<ActionDataFormProps> = (props) => {
 
   const [form] = Form.useForm<{ comment?: string }>();
 
-  useEffect(()=> {
+  useEffect(() => {
     return () => {
       form.resetFields()
     }
@@ -18,7 +18,7 @@ const DefaultActionForm: React.FC<ActionDataFormProps> = (props) => {
 
   return (
     <ActionFormWrapper
-      title= {props.activityData?.activity}
+      title={props.activityData?.activity}
       instanceData={props.ProcessInstanceData}
       {...props}
       actionHandlers={{
@@ -48,12 +48,12 @@ const DefaultActionForm: React.FC<ActionDataFormProps> = (props) => {
           }
         },
       }}>
-          
+
       <ProCard size='small'>
-        <ProForm form={form} submitter = {false} >
+        <ProForm form={form} submitter={false} >
           <ProFormTextArea
             rules={[{ required: true }]}
-            label = "Comment"
+            label="Comment"
             name="comment"
           />
         </ProForm>

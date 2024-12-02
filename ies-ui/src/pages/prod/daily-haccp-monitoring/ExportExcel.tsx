@@ -1,0 +1,139 @@
+import FormModalComp, { FormModalProps } from '@/components/FormModal';
+import { ProFormDateRangePicker, ProFormDateTimeRangePicker, ProFormSelect } from '@ant-design/pro-components';
+import ProForm from '@ant-design/pro-form';
+import { Card, Col, Row } from 'antd';
+import { useForm } from 'antd/lib/form/Form';
+import { useEffect, useState } from 'react';
+import { simpleRequestActions } from '@/services/model';
+
+interface Props extends FormModalProps {
+  // id: string;
+  // transfer_id:string,
+  loading: boolean
+  onSave: (duration: string, line: string) => void;
+}
+export default ({ loading, onSave, ...props }: Props) => {
+  const [form] = useForm<{ line: string; duration: any }>();
+  const [line, setLine] = useState('')
+  const [disabledOptions, setDisabledOptions] = useState({
+    Line2: false,
+    Line3: false,
+    Line4: false,
+    Line5: false,
+    Line6: false,
+    LineBarrel:false
+  });
+
+  useEffect(() => {
+    if (props.open) {
+      form.resetFields();
+      setLine('')
+      setDisabledOptions({
+        Line2: false,
+        Line3: false,
+        Line4: false,
+        Line5: false,
+        Line6: false,
+        LineBarrel:false
+      })
+    }
+  }, [props.open]);
+
+  const handleLineChange = (value: string[]) => {
+    const disableGroup1 = value.includes('Line 2') || value.includes('Line 3');
+    const disableGroup2 = value.includes('Line 4') || value.includes('Line 5') || value.includes('Line 6');
+    const disableAllExceptBarrel = value.includes('Line Barrel');
+
+    setDisabledOptions({
+      Line2: disableGroup2 || disableAllExceptBarrel,
+      Line3: disableGroup2 || disableAllExceptBarrel,
+      Line4: disableGroup1 || disableAllExceptBarrel,
+      Line5: disableGroup1 || disableAllExceptBarrel,
+      Line6: disableGroup1 || disableAllExceptBarrel,
+      LineBarrel: (disableGroup1 || disableGroup2)
+    });
+
+    const lineString = value.join(',');
+    const finalValues = { line: lineString };
+    setLine(finalValues.line);
+  };
+
+  return (
+    <FormModalComp
+      width="550px"
+      {...props}
+      confirmLoading={loading}
+      onResetForm={() => form.resetFields()}
+      onSubmit={async () => {
+        const dataForm = await form.validateFields();
+        onSave(dataForm.duration, line);
+      }}
+    >
+      <Card>
+        <ProForm form={form} submitter={false}>
+          <Row gutter={6}>
+            <Col span={23}>
+              <ProFormSelect
+                options={[
+                  {
+                    value: 'Line Barrel',
+                    label: 'Line Barrel',
+                    disabled: disabledOptions.LineBarrel,
+                  },
+                  {
+                    value: 'Line 2',
+                    label: 'Line 2',
+                    disabled: disabledOptions.Line2,
+                  },
+                  {
+                    value: 'Line 3',
+                    label: 'Line 3',
+                    disabled: disabledOptions.Line3,
+                  },
+                  {
+                    value: 'Line 4',
+                    label: 'Line 4',
+                    disabled: disabledOptions.Line4,
+                  },
+                  {
+                    value: 'Line 5',
+                    label: 'Line 5',
+                    disabled: disabledOptions.Line5,
+                  },
+                  {
+                    value: 'Line 6',
+                    label: 'Line 6',
+                    disabled: disabledOptions.Line6,
+                  },
+                ]}
+                name="line"
+                label="Line"
+                mode="multiple"
+                fieldProps={{
+                  onChange: handleLineChange,
+                }}
+                rules={[{ required: true }]}
+              />
+            </Col>
+          </Row>
+          <Row gutter={6}>
+            <Col span={24}>
+              <ProFormDateRangePicker
+                width={'lg'}
+                name="duration"
+                label="Duration (Assign Date)"
+                placeholder={['start', 'end']}
+                fieldProps={{
+                  format: 'YYYY-MM-DD',
+                }}
+                rules={[{ required: true }]}
+              />
+            </Col>
+          </Row>
+          {/* <Text>{id}</Text>
+          <Text>{transfer_id}</Text> */}
+        </ProForm>
+      </Card>
+    </FormModalComp>
+  );
+};

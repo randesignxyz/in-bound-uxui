@@ -31,20 +31,21 @@ import {
   ProFormTextArea,
 } from '@ant-design/pro-components';
 import { history } from '@umijs/max';
-import { Button, Flex, FloatButton, message, Modal, Popconfirm, Space, Spin, Table } from 'antd';
+import { Button, message, Modal, Popconfirm, Space, Spin } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { round, uniqueId } from 'lodash';
 import { Moment } from 'moment';
 import React, { useEffect, useRef, useState } from 'react';
 import { createVendorService } from '../vendor/services';
 import AddService from './AddService';
-import { PrItem, QuotationDetail, QuotationListItem, QuotationSavePayload, SaveQuotationItem } from './data';
+import { QuotationDetail, QuotationListItem, QuotationSavePayload, SaveQuotationItem } from './data';
 
 import _ from 'lodash';
 import { VendorDetail } from '../vendor/vendor';
 import QuotationItemFinder from './QuotationItemFinder';
 import { createQuotationService } from './services';
 import { useInView } from 'react-intersection-observer';
+import RelatedObjectItems from '../components/RelatedObjectItems';
 
 type DataFormType = {
   vendorId?: number;
@@ -144,34 +145,6 @@ export default ({
     }));
   };
 
-  const linkPR = (records: SaveQuotationItem) => {
-    return (
-      <Table<PrItem>
-        size="small"
-        rowKey={'id'}
-        pagination={false}
-        dataSource={records?.item?.prItems?.filter((it) =>
-          records.prLinked.some((i) => i == it.id),
-        )}
-        columns={
-          isService
-            ? [
-              { title: 'Form No', render: (_, r) => <Space>{r.formNo}</Space> },
-              { title: 'Doc No', render: (_, r) => r.docNo },
-              { title: 'Requested By', render: (_, r) => r.requestedBy },
-            ]
-            : [
-              { title: 'Form No', render: (_, r) => <Space>{r.formNo}</Space> },
-              { title: 'Doc No', render: (_, r) => r.docNo },
-              { title: 'Requested By', render: (_, r) => r.requestedBy },
-              { title: 'Qty', align: 'right', render: (_, r) => r.qty },
-              { title: 'uom', render: (_, r) => r.uom },
-            ]
-        }
-      />
-    );
-  };
-
   const getVendorId = (dataForm: DataFormType) => {
     if (dataForm.vendorId) return dataForm.vendorId;
 
@@ -246,7 +219,7 @@ export default ({
                 discountAmount: it.amount - it.amountAfterDiscount,
                 amountAfterDiscount: it.amountAfterDiscount,
                 remarks: it.remarks,
-                prLinked: it.prLinked,
+                prLinked: it.relatedObjects?.flatMap(it1 => it1.items.map(it2 => it2.id)) || [],
               })),
               service: isService,
               totalAmount: dataForm.amount,
@@ -338,7 +311,7 @@ export default ({
         remarks: rs.remarks,
       });
       setIsService(rs.service);
-      const itemList = rs.items.map((it) => ({
+      const itemList: SaveQuotationItem[] = rs.items.map((it) => ({
         no: it.no,
         id: it.id,
         key: uniqueId('item'),
@@ -355,6 +328,7 @@ export default ({
         amount: it.amount,
         discount: it.discountPercentage,
         amountAfterDiscount: it.amountAfterDiscount,
+        relatedObjects: it.relatedObjects,
         item: it.item,
         prLinked: it.prLinked,
       }));
@@ -372,18 +346,44 @@ export default ({
     }
   };
 
-  const onSaveHandler = (data: SaveQuotationItem) => {
-    const isNew = !items.some((it) => it.key == data.key);
+  const onSaveHandler = async (data: SaveQuotationItem) => {
+    const savedItem = {
+      ...data, relatedObjects: data.item?.prItems?.map(it => (
+        {
+          id: it.prId,
+          code: it.formNo,
+          type: 'PR',
+          instanceId: it.processInstId,
+          requester: '',
+          description: it.description,
+          items: [{
+            id: it.id,
+            itemCode: it.itemCode,
+            itemName: it.itemName,
+            itemId: it.id,
+            itemDescription: it.description,
+            price: it.unitPrice,
+            qty: it.qty,
+            orderedQty: it.orderedQty,
+            purchasedQty: it.purchasedQty,
+            availableQty: it.availableQty,
+            uom: it.uom,
+          }]
+        }
+      ))
+    }
+
+    const isNew = !items.some((it) => it.key == savedItem.key);
     if (isNew) {
       if (isService) {
-        setServices((v) => [...v, data].map((it, index) => ({ ...it, no: index + 1 })));
+        setServices((v) => [...v, savedItem].map((it, index) => ({ ...it, no: index + 1 })));
       } else {
-        setItems((v) => [...v, data].map((it, index) => ({ ...it, no: index + 1 })));
+        setItems((v) => [...v, savedItem].map((it, index) => ({ ...it, no: index + 1 })));
       }
     } else {
       const newItems = items.map((it) => {
-        if (it.key == data.key) {
-          return { ...it, ...data };
+        if (it.key == savedItem.key) {
+          return { ...it, ...savedItem };
         } else return it;
       });
       if (isService) {
@@ -392,7 +392,6 @@ export default ({
         setItems(newItems);
       }
     }
-
     setForceUpdate((v) => v + 1);
   };
 
@@ -416,12 +415,13 @@ export default ({
                   ...removeItems.flatMap((i1) => i1.item?.prItems || []),
                 ],
               },
+              relatedObjects: [],
+
               prLinked: [...it.prLinked, ...removeItems.flatMap((i1) => i1.prLinked)],
             }
             : it,
         ),
     );
-
     setMergeItemEnabled(undefined);
     setMergeItems([]);
     setForceUpdate((v) => v + 1);
@@ -471,8 +471,6 @@ export default ({
       </Button>
     )
   )
-
-
 
   const content = <Space ref={ref} direction="vertical" style={{ width: '100%' }}>
     <ProForm
@@ -833,8 +831,8 @@ export default ({
             },
           }}
           expandable={{
-            expandedRowRender: linkPR,
-            rowExpandable: (record) => record.prLinked.length > 0,
+            expandedRowRender: record => <RelatedObjectItems mainId={record.id || 0} items={record.relatedObjects || []} />, // relatedObjectRender,
+            rowExpandable: (record) => (record.relatedObjects?.length || 0) > 0,
           }}
           columns={[
             {
@@ -978,8 +976,8 @@ export default ({
           editableFormRef={editableFormRef}
           controlled
           expandable={{
-            expandedRowRender: linkPR,
-            rowExpandable: (record) => record.prLinked.length > 0,
+            expandedRowRender: record => <RelatedObjectItems mainId={record.id || 0} items={record.relatedObjects || []} />, // relatedObjectRender,
+            rowExpandable: (record) => (record.relatedObjects?.length || 0) > 0,
           }}
           editable={{
             type: 'multiple',
@@ -1282,7 +1280,11 @@ export default ({
           return items.find((it) => it.itemId == id);
         }
       }}
-      onSave={(record, isService) => {
+      onSave={async (record, isService) => {
+
+
+        // const itemList = (await Promise.all(data.map(it => getRelatedItms(it.refId, it.refType, isService).query().then(items => ({ itemId: it.refId, type: it.refType, items: items }))))).flatMap(it => it)
+
         if (isService) {
           setServices((v) => [...v, record].map((it, index) => ({ ...it, no: index + 1 })));
         } else {

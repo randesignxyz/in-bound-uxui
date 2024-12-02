@@ -1,35 +1,68 @@
 import FormModalComp, { FormModalProps } from '@/components/FormModal';
-import { ProFormDateTimeRangePicker, ProFormSelect } from '@ant-design/pro-components';
+import { ProFormDateRangePicker, ProFormDateTimeRangePicker, ProFormSelect } from '@ant-design/pro-components';
 import ProForm from '@ant-design/pro-form';
 import { Card, Col, Row } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { useEffect, useState } from 'react';
+import { TransferRequestServiceAPI } from './inventory-transfer-request/service';
+import { simpleRequestActions } from '@/services/model';
 
 interface Props extends FormModalProps {
   // id: string;
   // transfer_id:string,
-  onSave: (id: string, remarks: string, transfer_id: string) => void;
+  loading: boolean
+  type:string
+  onSave: (duration: string, line: string, shift: string, state: string, request_type: string) => void;
 }
-export default ({ onSave, ...props }: Props) => {
-  const [form] = useForm<{ line: string; duration: any; shift: string }>();
+export default ({ loading, onSave,type, ...props }: Props) => {
+  const [form] = useForm<{ line: string; duration: any; shift: string, state: string, request_type: string }>();
   const [shift, setShift] = useState('')
+  const [state, setState] = useState('')
+  const requestActions = simpleRequestActions();
   const [line, setLine] = useState('')
   useEffect(() => {
-    if (props.open){
+    if (props.open) {
       form.resetFields();
       setLine('')
       setShift('')
-    } 
+      setState('')
+    }
   }, [props.open]);
 
+  const request = [
+    {
+      value: 'in-progress',
+      label: 'In Progress',
+    },
+    {
+      value: 'completed',
+      label: 'Completed',
+    },
+    {
+      value: 'rejected',
+      label: 'Rejected',
+    },
+  ]
+
+  const transfer = [
+    {
+      value: 'pending',
+      label: 'Pending',
+    },
+    {
+      value: 'completed',
+      label: 'Completed',
+    },
+  ]
   return (
     <FormModalComp
       width="550px"
       {...props}
+      confirmLoading={loading}
       onResetForm={() => form.resetFields()}
       onSubmit={async () => {
         const dataForm = await form.validateFields();
-        onSave(dataForm.duration, line, shift);
+        onSave(dataForm.duration, line, shift, state, dataForm.request_type);
       }}
     >
       <Card>
@@ -37,40 +70,22 @@ export default ({ onSave, ...props }: Props) => {
           <Row gutter={6}>
             <Col span={12}>
               <ProFormSelect
-                options={[
-                  {
-                    value: 'Line 1',
-                    label: 'Line 1',
-                  },
-                  {
-                    value: 'Line 2',
-                    label: 'Line 2',
-                  },
-                  {
-                    value: 'Line 3',
-                    label: 'Line 3',
-                  },
-                  {
-                    value: 'Line 4',
-                    label: 'Line 4',
-                  },
-                  {
-                    value: 'Line 5',
-                    label: 'Line 5',
-                  },
-                  {
-                    value: 'Line 6',
-                    label: 'Line 6',
-                  },
-                ]}
                 name="line"
                 label="Line"
                 mode="multiple"
+                request={async () => {
+                  const line = await TransferRequestServiceAPI(requestActions).get_line()
+                  return line.map((obj) => ({
+                    value: obj.prdname,
+                    label: obj.prdname
+                  }))
+                }}
                 fieldProps={{
-                  onChange: (value:any) => {
-                      const lineString = value.join(',');
-                      const finalValues = { ...value, line: lineString };
-                      setLine(finalValues.line)},
+                  onChange: (value: any) => {
+                    const lineString = value.join(',');
+                    const finalValues = { ...value, line: lineString };
+                    setLine(finalValues.line)
+                  },
                 }}
               />
             </Col>
@@ -90,23 +105,57 @@ export default ({ onSave, ...props }: Props) => {
                 label="Shift"
                 mode="multiple"
                 fieldProps={{
-                  onChange: (value:any) => {
-                      const shiftString = value.join(',');
-                      const finalValues = { ...value, shift: shiftString };
-                      setShift(finalValues.shift)},
+                  onChange: (value: any) => {
+                    const shiftString = value.join(',');
+                    const finalValues = { ...value, shift: shiftString };
+                    setShift(finalValues.shift)
+                  },
                 }}
               />
             </Col>
           </Row>
           <Row gutter={6}>
-            <Col>
-              <ProFormDateTimeRangePicker
+            <Col span={12}>
+              <ProFormSelect
+                options={[
+                  {
+                    value: 'PM/RM',
+                    label: 'PM/RM',
+                  },
+                  {
+                    value: 'FG',
+                    label: 'FG',
+                  },
+                ]}
+                name="request_type"
+                label="Type"
+              />
+            </Col>
+            <Col span={11}>
+              <ProFormSelect
+                options={type == 'request' ? request : type == 'transfer' ? transfer : []}
+                name="state"
+                label="Status"
+                mode="multiple"
+                fieldProps={{
+                  onChange: (value: any) => {
+                    const stateString = value.join(',');
+                    const finalValues = { ...value, state: stateString };
+                    setState(finalValues.state)
+                  },
+                }}
+              />
+            </Col>
+          </Row>
+          <Row gutter={6}>
+            <Col span={24}>
+              <ProFormDateRangePicker
                 width={'lg'}
                 name="duration"
-                label="Duration"
+                label="Duration (Posting Date)"
                 placeholder={['start', 'end']}
                 fieldProps={{
-                  format: 'YYYY-MM-DD HH:mm:ss',
+                  format: 'YYYY-MM-DD',
                 }}
                 rules={[{ required: true }]}
               />

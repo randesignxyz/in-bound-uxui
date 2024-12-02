@@ -16,7 +16,8 @@
     "@ant-design/pro-components": "^2.4.4",
     "@phannyngoun1/truths-ui": "^0.0.2",
     "@umijs/max": "^4.1.1",
-    "antd": "^5.4.0"
+    "antd": "^5.4.0",
+    "delivery": "file:"
   },
   "devDependencies": {
     "@types/react": "^18.0.33",

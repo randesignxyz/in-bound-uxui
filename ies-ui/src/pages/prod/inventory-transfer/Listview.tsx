@@ -1,6 +1,6 @@
 import TableView, { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { simpleRequestActions } from '@/services/model';
-import { Button, Flex, Modal, Progress, Radio, Space, Tag, message } from 'antd';
+import { Button, Col, DatePicker, Flex, Modal, Progress, Radio, Row, Select, Space, Tabs, Tag, Tooltip, message } from 'antd';
 import Omit from 'omit.js';
 import { useRef, useState } from 'react';
 // import { TransferServiceAPI } from "../service";
@@ -9,13 +9,19 @@ import { ActionType } from '@ant-design/pro-components';
 import { ReceiveStatusChange, Transfer, TransferAdvanceParams, TransferCreate } from './data';
 // import DetailView from "../DetailView";
 import BreadCrumbCom from '@/pages/fleet/components/BreadCrumbCom';
-import { PlusOutlined } from '@ant-design/icons';
+import { FileExcelOutlined, PlusOutlined } from '@ant-design/icons';
 import { useModel } from '@umijs/max';
 import { ProdPaths } from '..';
 import DetailView from './DetailView';
 import ModelForm from './ModelForm';
 import { TransferServiceAPI } from './service';
 import { history } from 'umi'
+import ExportExcel from '../ExportExcel';
+import { downloadReport } from '@/services/apiGateway';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+import moment from 'moment';
 
 interface Props {
   onDetail?: (id: string) => void;
@@ -24,22 +30,30 @@ interface Props {
   data?: string;
 }
 
-export default ({}: Props) => {
+export default ({ }: Props) => {
+  dayjs.extend(utc);
+  dayjs.extend(timezone);
   const [state, setSate] = useState<{
     visible?: { name: 'modal'; type: 'ADD' | 'Edit'; payload?: { data: Transfer } };
   }>({});
+  const [exportModel, setExportModal] = useState<{ visible: boolean }>({
+    visible: false,
+  });
+  const [excelLoading, setExcelLoading] = useState(false)
   const requestActions = simpleRequestActions();
   const services = TransferServiceAPI(requestActions);
   // const [advanceSearch, setAdvanceSearch] = useState<{ visible: boolean }>();
   const [advanceSearchParams, setAdvanceSearchParams] = useState<TransferAdvanceParams>({
     transfer_type: 'ALL',
     transfer_request: '',
+    status: 'ALL'
   });
   const [viewDetail, setViewDetail] = useState<{ visible: boolean; data?: Transfer }>({
     visible: false,
   });
   const actionRef = useRef<ActionType>();
   const cacheList = useModel('dataList');
+  const [activeTab, setActiveTab] = useState('1');
   const routes = [
     {
       path: ProdPaths.prod,
@@ -50,18 +64,57 @@ export default ({}: Props) => {
       label: 'Inventory Transfer',
     },
   ];
-  const onRequestHandler = async (params: TableViewSearchParams<TransferAdvanceParams>) => {
+  const onRequestHandler1 = async (params: TableViewSearchParams<TransferAdvanceParams>) => {
     try {
-      return services.page(params).then((it) => {
+      const data = services.page(params).then((it) => {
         return cacheList.cacheDataList({
           type: 'transfer-request-list',
           criteria: params,
           data: it,
         });
       }) as Promise<Paging<Transfer>>;
+      return data
     } catch (error: any) {
       message.error(error.message);
       return Promise.reject();
+    }
+  };
+
+  const onRequestHandler2 = async (params: TableViewSearchParams<TransferAdvanceParams>) => {
+    try {
+      const data = services.pageFianl(params).then((it) => {
+        return cacheList.cacheDataList({
+          type: 'transfer-request-final-list',
+          criteria: params,
+          data: it,
+        });
+      }) as Promise<Paging<Transfer>>;
+      return data
+    } catch (error: any) {
+      message.error(error.message);
+      return Promise.reject();
+    }
+  };
+
+  const handleTabChange = (key: string) => {
+    setActiveTab(key);
+    actionRef.current?.reloadAndRest?.();
+  };
+
+  const handleRequest = (criteria, pagination, sort) => {
+    const params = {
+      criteria: {
+        ...criteria,
+        advanceSearch: advanceSearchParams,
+        sort,
+      },
+      pagination,
+    };
+
+    if (activeTab === '1') {
+      return onRequestHandler1(params);
+    } else {
+      return onRequestHandler2(params);
     }
   };
 
@@ -140,20 +193,73 @@ export default ({}: Props) => {
               <Radio.Button value="PM/RM">PM/RM</Radio.Button>
               <Radio.Button value="FG">FG</Radio.Button>
             </Radio.Group>
-            {/* :''} */}
+            <Radio.Group
+              value={advanceSearchParams.status}
+              onChange={(e) => {
+                setAdvanceSearchParams((v) => ({
+                  ...v,
+                  status: e.target.value,
+                }));
+
+                actionRef.current?.reloadAndRest?.();
+              }}
+            >
+              <Radio.Button value="ALL">All</Radio.Button>
+              <Radio.Button value='pending'>Pending</Radio.Button>
+              <Radio.Button value="completed">Completed</Radio.Button>
+            </Radio.Group>
+            <DatePicker
+              style={{ width: 165 }}
+              onChange={(v => {
+                const dateWithoutTime = v?.format("YYYY-MM-DD")
+                setAdvanceSearchParams((v) => ({
+                  ...v,
+                  postingDate: dateWithoutTime,
+                }));
+                actionRef.current?.reloadAndRest?.();
+              })}
+              placeholder='Posting date'
+            />
+            <DatePicker
+              style={{ width: 165 }}
+              onChange={(v => {
+                const dateWithoutTime = v?.format("YYYY-MM-DD")
+                setAdvanceSearchParams((v) => ({
+                  ...v,
+                  docDueDate: dateWithoutTime,
+                }));
+                actionRef.current?.reloadAndRest?.();
+              })}
+              placeholder='Doc Due date'
+            />
           </Space>
         }
         tableProps={{
           actionRef: actionRef,
           toolbar: {
             actions: [
-              <Button
-                key="add-button"
-                type="link"
-                icon={<PlusOutlined />}
-                // onClick={() => onAddHandler()}
-                onClick={()=>history.push(`/prod/inventory-transfer/create`)}
-              />,
+              <div style={{ width: '100%' }}>
+                <Row style={{ alignItems: 'center' }}>
+                  <Tabs
+                    style={{ marginRight: 20 }}
+                    activeKey={activeTab}
+                    onChange={handleTabChange}
+                    items={[
+                      { label: 'Transaction Movement', key: '1' },
+                      { label: 'Transaction', key: '2' },
+                    ]}
+                  />
+                  <Col>
+                    <Button
+                      key="add-button"
+                      type="link"
+                      icon={<PlusOutlined />}
+                      onClick={() => history.push(`/prod/inventory-transfer/create`)}
+                    />
+                  </Col>
+                  <Tooltip title="Dowload Excel File"><Button type="link" icon={<FileExcelOutlined />} onClick={() => setExportModal({ visible: true })} /></Tooltip>
+                </Row>
+              </div>
             ],
           },
         }}
@@ -181,7 +287,7 @@ export default ({}: Props) => {
             dataIndex: 'transfer_type',
           },
           {
-            width: 80,
+            width: 150,
             key: 'line',
             title: 'Line',
             dataIndex: 'line',
@@ -205,8 +311,9 @@ export default ({}: Props) => {
             render: (_, r) => r.to_warehouse.map((w) => w.whsCode),
           },
           {
+            width: 80,
             key: 'tendency',
-            title: 'Business Unit',
+            title: 'BU',
             dataIndex: 'tendency',
             render: (_, r) => r.business_unit,
           },
@@ -315,15 +422,16 @@ export default ({}: Props) => {
         ]}
         actionHandlers={{
           // onAdvanceSearchClicked: () => setAdvanceSearch({ visible: true }),
-          onRequest: (criteria, pagination, sort) =>
-            onRequestHandler({
-              criteria: {
-                ...criteria,
-                advanceSearch: advanceSearchParams,
-                sort,
-              },
-              pagination,
-            }),
+          // onRequest: (criteria, pagination, sort) =>
+          //   onRequestHandler2({
+          //     criteria: {
+          //       ...criteria,
+          //       advanceSearch: advanceSearchParams,
+          //       sort,
+          //     },
+          //     pagination,
+          //   }),
+          onRequest: handleRequest,
           onFirstLoad: () =>
             cacheList.fetchDataList('paging-testing').then((v) => {
               if (v) {
@@ -334,7 +442,7 @@ export default ({}: Props) => {
                 });
                 return v.dataList;
               } else {
-                return onRequestHandler({
+                return onRequestHandler1({
                   criteria: {
                     advanceSearch: advanceSearchParams,
                   },
@@ -347,54 +455,46 @@ export default ({}: Props) => {
         open={state.visible?.name === 'modal'}
         onCancel={() => setSate((v) => ({ ...v, visible: undefined }))}
         onSave={onSaveActionHandler}
-        close={() => {setSate((v) => ({ ...v, visible: undefined })),actionRef.current?.reloadAndRest?.();}}
+        close={() => { setSate((v) => ({ ...v, visible: undefined })), actionRef.current?.reloadAndRest?.(); }}
       />
       <DetailView
         open={viewDetail.visible}
         data={viewDetail.data}
         onVisibleChange={(v) => v === false && setViewDetail({ visible: false })}
       />
-      {/* <ReceiveForm
-                open={open.visible}
-                data={dataItem}
-                onCancel={() => setOpen((v) => ({...v,visible:false}))}
-                onSave={onSaveActionHandler}
-            /> */}
+      <ExportExcel
+        title="Export Excel"
+        open={exportModel.visible}
+        loading={excelLoading}
+        type='transfer'
+        onCancel={() => setExportModal({ visible: false })}
+        onSave={async (duration, line, shift, state, request_type) => {
+          const result = {
+            line: line,
+            shift: shift,
+            startDate: dayjs(duration[0]).format('YYYY-MM-DD'),
+            endDate: dayjs(duration[1]).format('YYYY-MM-DD'),
+            state: state,
+            type: 'transfer',
+            request_type: request_type || ''
+          };
+          try {
+            setExcelLoading(true)
+            await downloadReport(requestActions)({
+              fileName: `invantory-transfer-report-${moment().toDate().toDateString()}`,
+              reportName: 'prod-transfer-request-report',
+              data: result,
+              type: 'EXCEL',
+              // target: '_blank'
+            });
+          } catch (error) {
+            message.error('Failed to download.');
+          } finally {
+            setExcelLoading(false)
+          }
+          setExportModal({ visible: false });
+        }}
+      />
     </>
   );
 };
-// import BreadCrumbCom from '@/pages/sale/retailer/components/BreadCrumbCom';
-// import { Tabs } from 'antd';
-// import { ProdPaths } from '..';
-// import ProductionTransferListView from './production-transfer/ProductionTransferListView';
-// import WarehouseTransferListView from './warehouse-transfer/WarehouseTransferListView';
-
-// export default () => {
-//   const routes = [
-//     {
-//       path: ProdPaths.prod,
-//       label: 'Prod',
-//     },
-//     {
-//       path: '',
-//       label: 'Inventory Transfer',
-//     },
-//   ];
-
-//   return (
-//     <>
-//       <BreadCrumbCom separator=">" routes={routes} />
-//       <Tabs
-//         items={[
-//           {
-//             label: 'PM/RM',
-//             key: '1',
-//             children: <ProductionTransferListView />,
-//           },
-//           {
-//             label: 'FG',
-//             key: '2',
-//             children: <WarehouseTransferListView />,
-//           },
-//         ]}
-//       />

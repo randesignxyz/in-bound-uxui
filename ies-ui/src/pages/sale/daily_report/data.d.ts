@@ -33,7 +33,7 @@ export interface StockControlARLess {
 
   items?: StockDetailItemLess[];
   invoices?: SalesInvoiceAR[];
-  adjustmentItems?: StockAdjustmentDto[] = [];
+  adjustmentItems?: StockAdjustmentDto[];
 }
 
 export interface SalesInvoiceAR {

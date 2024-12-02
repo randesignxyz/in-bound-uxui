@@ -133,7 +133,7 @@ export default ({ onAdd }: Props) => {
             options: [
               { label: 'All', value: 'ALL' },
               { label: 'Pending', value: 'PENDING' },
-              { label: 'In Process', value: 'IN_PROGRESS' },
+              { label: 'In Progress', value: 'IN_PROGRESS' },
               { label: 'Approved', value: 'APPROVED' },
               { label: 'Rejected', value: 'REJECTED' },
             ],

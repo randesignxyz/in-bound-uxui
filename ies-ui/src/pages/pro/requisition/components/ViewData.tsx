@@ -1,4 +1,4 @@
-import { formatDate, formatDateTime, formatter } from '@/pages/utils';
+import { formatDate, formatDateTime, formatter1 } from '@/pages/utils';
 import {
   RequisitionDetailResponse,
   RequisitionItemDetailResponse,
@@ -34,6 +34,7 @@ export default ({ data }: Props) => {
         <Descriptions.Item label="Created Date">
           {data?.createdDate && formatDateTime(data?.createdDate)}
         </Descriptions.Item>
+        <Descriptions.Item label="BU">{data?.buName}</Descriptions.Item>
         <Descriptions.Item label="Created By">{data?.createdBy}</Descriptions.Item>
         {data?.lastModifiedDate && (
           <Descriptions.Item label="Last Modified Date">
@@ -68,8 +69,8 @@ export default ({ data }: Props) => {
             { title: 'Description', dataIndex: 'description' },
             { title: 'Quantity', dataIndex: 'qty' },
             { title: 'UoM', dataIndex: 'uom' },
-            { title: 'Unit Price', render: (_, r) => formatter.format(r.unitPrice) },
-            { title: 'Amount', render: (_, r) => formatter.format(r.amount) },
+            { title: 'Unit Price', align: 'right', render: (_, r) => formatter1.format(r.unitPrice) },
+            { title: 'Amount', align: 'right', render: (_, r) => formatter1.format(r.amount) },
             { title: 'Budget Code', dataIndex: 'budgetCode' },
             { title: 'Remarks', dataIndex: 'remarks' },
           ]}
@@ -92,7 +93,7 @@ export default ({ data }: Props) => {
             { title: 'No', dataIndex: 'seqNo' }, //render: (_, r, index) => ++index},
             { title: 'Service Name', dataIndex: 'serviceName' },
             { title: 'Description', dataIndex: 'description' },
-            { title: 'Amount', render: (_, r) => formatter.format(r.amount) },
+            { title: 'Amount', align: 'right', render: (_, r) => formatter1.format(r.amount) },
             { title: 'Budget Code', dataIndex: 'budgetCode' },
             { title: 'Remarks', dataIndex: 'remarks' },
           ]}
@@ -107,7 +108,7 @@ export default ({ data }: Props) => {
             }
           }}>
             <ProDescriptions.Item label="Total Amount" style={{ fontWeight: 'bolder' }}>
-              {formatter.format(data?.totalAmount || 0)}
+              {formatter1.format(data?.totalAmount || 0)}
             </ProDescriptions.Item>
           </ProDescriptions>
         </Col>

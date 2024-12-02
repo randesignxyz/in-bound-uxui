@@ -19,6 +19,8 @@ import DataDetailView from "./DataDetailView";
 import DataEntryView from "./DataEntryView";
 import { uniqueId } from "lodash";
 
+export const openPQ = (id: number) => window.open(`/external${ProPaths.quotation}/detail/${id} `, '_blank')?.focus()
+
 export default () => {
 
     const srv = createQuotationService();
@@ -61,7 +63,7 @@ export default () => {
                         refetch()
                     }}
                     openInTab onBack={() => { onCloseTab?.() }} type="CREATE" />,
-                tabLabel: "New QP",
+                tabLabel: "New PQ",
             }, {
                 action: 'edit',
                 panel: ({ onUpdateTab, key }) => <DataEntryView
@@ -114,7 +116,7 @@ export default () => {
                     ]
                 },
                 { option: { label: 'Pending', value: 'PENDING' }, subOptions: [] },
-                { option: { label: 'In Process', value: 'IN_PROGRESS' } },
+                { option: { label: 'In Progress', value: 'IN_PROGRESS' } },
                 {
                     option: { label: 'Selected', value: 'SELECTED' }, subOptions: [
                         { label: 'ALL', value: 'ALL', default: true },
@@ -162,7 +164,7 @@ export default () => {
                     {
                         tooltip: 'View data in new browser tab',
                         type: 'link', size: 'small', icon: <ExportOutlined />,
-                        onClick: () => window.open(`/external${ProPaths.quotation}/detail/${item.id} `, '_blank')?.focus()
+                        onClick: () => { openPQ(item.id) }
                     },
                     {
                         tooltip: 'Copy', type: 'link', size: 'small', icon: <CopyFilled />,
@@ -221,9 +223,9 @@ export default () => {
                 },
                 {
                     title: 'SAP Info',
-                    hideInTable: !['ALL', 'SELECTED', 'REJECTED'].some((it) => it == filter?.criteria?.advanceSearch?.status),
+                    hideInTable: !['ALL', 'SELECTED', 'REJECTED'].some((it) => it == filter?.criteria?.advanceSearch?.status || 'ALL'),
                     children: [
-                        { title: 'Doc #', dataIndex: 'integratedDoc' },
+                        { title: 'Doc#', dataIndex: 'integratedDoc' },
                         { title: 'Posted Date', sorter: 'postedDate', dataIndex: 'postedDate' },
                         { title: 'Status', render: (_, r) => r.integratedStatus && <Status text={r.integratedStatus} /> }],
                 },

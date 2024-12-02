@@ -19,6 +19,7 @@ export const getPoRequestForms = (): DataForm[] => [
       PoRequestFormNames.finFunction,
       PoRequestFormNames.dmbo1,
       PoRequestFormNames.dmbo2,
+      PoRequestFormNames.dmbo,
       PoRequestFormNames.mbo,
       PoRequestFormNames.smFin,
       PoRequestFormNames.mdDmd,

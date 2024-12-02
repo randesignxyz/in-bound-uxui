@@ -12,7 +12,7 @@ import { Card, Descriptions, Space, Table, Image, Row, Col } from 'antd';
 import moment from 'moment';
 import PaymentListView from '../../cash-collection/payment-list-view';
 
-export default ({ data }: { data: FreightDetail }) => {
+export default ({ data, fromMap }: { data: FreightDetail, fromMap?: true; }) => {
   const renderChangeLocation = () => {
     return (
       <Card size="small" title={"Change Shipping Location"} style={{ marginBottom: 10 }}>
@@ -173,9 +173,10 @@ export default ({ data }: { data: FreightDetail }) => {
 
   return (
     <>
-      <Descriptions>
+      {!fromMap && <Descriptions>
         <Descriptions.Item label="Customer"> {[data.customerCode, data.customerName].join(' ')}</Descriptions.Item>
-      </Descriptions>
+      </Descriptions>}
+
       {!!data.shippingLocation && renderChangeLocation()}
       {data.deliveryNotes.map((it) => renderDeliveryNote(it))}
 

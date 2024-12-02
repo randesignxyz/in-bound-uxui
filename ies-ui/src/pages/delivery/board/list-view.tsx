@@ -9,13 +9,14 @@ import {
     Affix,
     Badge,
     Button, Checkbox, Col, Descriptions, Input,
-    message, Popconfirm, Row, Space, Spin, Tag,
+    message, Row, Space, Tag,
 } from 'antd';
 import forkLift from '@/assets/fork-lift.png';
 import slipIcon from '@/assets/packing-list.png';
 import shippingIcon from '@/assets/shipping.png';
 import {
     CheckCircleOutlined, ClockCircleOutlined,
+    EnvironmentOutlined,
     ExclamationCircleOutlined,
     HistoryOutlined, HourglassOutlined, InfoCircleOutlined, LoginOutlined,
     LogoutOutlined, PauseCircleOutlined, PlayCircleOutlined,
@@ -57,7 +58,7 @@ export default ({
     },
 }: ViewController) => {
 
-    const [status, setStatus] = useState<{ loading?: number; delivery?: number }>();
+    // const [status, setStatus] = useState<{ loading?: number; delivery?: number }>();
     const [operatorCheckIn, setOperatorCheckIn] = useState<OperatorCheckIn>()
     const [statusFilter, setStatusFilter] = useState<string>('NONE_DN')
     const [list, setList] = useState<InstanceListItem[]>()
@@ -80,10 +81,10 @@ export default ({
     const onRequestHandler = async (params: TableViewSearchParams<InstanceAdvanceSearchParams>) => {
         try {
             const rs = (await singleRequest(InstanceSrvParams.listBoard(params))(requestActions)) as InstanceListItem[];
-            setStatus({
-                loading: rs.filter((it) => params.criteria?.advanceSearch?.activity === 'LOADING' && !it.delivery).length,
-                delivery: rs.filter((it) => params.criteria?.advanceSearch?.activity === 'DELIVERY' && it.delivery).length,
-            });
+            // setStatus({
+            //     loading: rs.filter((it) => params.criteria?.advanceSearch?.activity === 'LOADING' && !it.delivery).length,
+            //     delivery: rs.filter((it) => params.criteria?.advanceSearch?.activity === 'DELIVERY' && it.delivery).length,
+            // });
 
             const result = rs
                 .filter(it =>
@@ -377,6 +378,7 @@ export default ({
                         >
                             Transanction
                         </Button>
+                        <Button onClick={() => history.push(DeliveryPaths.locationTracking)} icon={<EnvironmentOutlined />} >Tracking</Button>
                         <Button
                             type="link"
                             onClick={() => actionRef.current?.reloadAndRest?.()}

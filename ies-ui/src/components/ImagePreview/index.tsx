@@ -1,4 +1,3 @@
-import { kc } from '@/auth';
 import { getUploadFileObjectUrl, getUploadFileObjectUrlV2 } from '@/services/apiGateway';
 import { getServiceUrl } from '@/services/ApiUrl';
 import { PlusOutlined } from '@ant-design/icons';

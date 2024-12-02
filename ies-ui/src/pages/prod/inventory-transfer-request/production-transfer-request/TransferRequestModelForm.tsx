@@ -28,6 +28,12 @@ import {
 } from '../data';
 import { TransferRequestServiceAPI, WarehouseServiceAPI } from '../service';
 import SelectItemTab from './SelectItemTab';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 interface Props extends FormModalProps {
   data?: TransferRequest;
@@ -51,7 +57,8 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
   const [getToWarehouse, setGetToWarehouse] = useState('');
   const [itemTabVisible, setItemTabVisible] = useState(false);
   const [getqty, setGetQty] = useState<string>('');
- const [postingDate, setPostingDate] = useState(moment());
+  const [dueDate,setDueDate] = useState(moment().format('YYYY-MM-DD'))
+  const [postingDate, setPostingDate] = useState(moment().format('YYYY-MM-DD'));
   const [getRemark, setGetRmark] = useState<string | undefined>(undefined);
   const [advanceSearchParams, setAdvanceSearchParams] = useState<WarehouseAdvanceParams>({
     tendency: 'NVC',
@@ -82,7 +89,7 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
       },
     ]);
   }, [state === true, getRemark]);
-
+  
   useEffect(() => {
     // props.open && initFormData();
     form.resetFields();
@@ -91,8 +98,8 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
     setGetRmark(undefined);
     setGetTendency('');
     setGetQty('');
-    setPostingDate(moment())
-    // if (access.canAccessNVCItem) {
+    setPostingDate(moment().format('YYYY-MM-DD'))
+    setDueDate(moment().format('YYYY-MM-DD'))
     //   setAdvanceSearchParams((v: any) => ({ ...v, tendency: 'NVC' }));
     //   actionRef.current?.reloadAndRest?.();
     // } else if (access.canAccessOFLItem) {
@@ -115,6 +122,7 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
     form.setFieldValue('business_unit', getTendency);
   }, [getTendency, warehouse]);
 
+
   return (
     <FormModalComp
       title="Inventory Transfer Request"
@@ -122,7 +130,7 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
       // width={"400px"}
       onSubmit={async () => {
         const dataForm = await form.validateFields();
-        if (items.map(v=>v.quantity).some(quantity => parseFloat(quantity) === 0)) {
+        if (items.map(v => v.quantity).some(quantity => parseFloat(quantity) === 0)) {
           message.error("Quantity can't be 0");
           return;
         }
@@ -132,7 +140,9 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
           items: items.map((v) => ({ ...v })),
           item_count: items.length,
           activities: act,
-          taxDate:postingDate
+          taxDate: postingDate,
+          postingDate:postingDate,
+          docDueDate:dueDate
           // fromWarehouse: getFromWarehouse,
           // toWarehouse: getToWarehouse,
           // apiReferenceNo: '20240223-12ddbb1',
@@ -211,11 +221,11 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
                 //     label: 'Line 6',
                 //   },
                 // ]}
-                request={async()=>{
+                request={async () => {
                   const line = await TransferRequestServiceAPI(requestActions).get_line()
-                  return line.map((obj)=>({
+                  return line.map((obj) => ({
                     value: obj.prdname,
-                    label :obj.prdname
+                    label: obj.prdname
                   }))
                 }}
                 // initialValue="PM/RM"
@@ -311,20 +321,16 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
                 rules={[
                   {
                     required: true,
-                    // validator: (rules, value) => {
-                    //   // if ((value as Moment).startOf('day').isBefore(moment().startOf('day'))) {
-                    //   //   return Promise.reject('Request date cannot be back date.');
-                    //   // } else {
-                    //     return Promise.resolve();
-                    //   // }
-                    // },
+                    message: 'Posting date is required',
                   },
                 ]}
                 label="Posting Date"
-                name={'postingDate'}
+                name="postingDate"
                 fieldProps={{
-                  onChange: ((e,date)=>{setPostingDate(moment(date))}) // Capture selected date
-              }}
+                  onChange: (e,date) => {
+                    setPostingDate(date);
+                  },
+                }}
               />
             </Col>
             {/* <Col span={4} style={{ display: 'none' }}>
@@ -348,22 +354,29 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
             </Col> */}
             <Col span={4}>
               <ProFormDatePicker
-              initialValue={moment(postingDate)}
+                initialValue={postingDate}
                 rules={[
                   {
                     required: true,
-                   
+                    message: 'Due date is required',
+                  },
+                  {
                     validator: async (rule, value) => {
-                      if ((value as Moment).startOf('day').isBefore(moment(postingDate).startOf('day'))) {
-                          return Promise.reject('Due date cannot be before posting date.');
+                      // Ensure due date is not before posting date
+                      if (dayjs(value).startOf('day').isBefore(postingDate)) {
+                        return Promise.reject('Due date cannot be before posting date.');
                       }
                       return Promise.resolve();
-                  },
+                    },
                   },
                 ]}
-                
                 label="Due Date"
-                name={'docDueDate'}
+                name="docDueDate"
+                fieldProps={{
+                  onChange: (e,date) => {
+                    setDueDate(date);
+                  },
+                }}
               />
             </Col>
             <Col span={8}>
@@ -418,12 +431,12 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
             recordCreatorProps={
               getTendency !== ''
                 ? {
-                    creatorButtonText: 'Add Item ',
-                    onClick: () => {
-                      setItemTabVisible(true);
-                    },
-                    record: () => ({} as TransferRequestItem),
-                  }
+                  creatorButtonText: 'Add Item ',
+                  onClick: () => {
+                    setItemTabVisible(true);
+                  },
+                  record: () => ({} as TransferRequestItem),
+                }
                 : false
             }
             columns={[
@@ -526,7 +539,7 @@ const TransferRequestModelForm: React.FC<Props> = ({ onSave, data, ...props }) =
               // quantity: item.childItem.map(v => v.quantity) || 0
               quantity: item.childItem
                 ? item.childItem.reduce((total, v) => total + parseFloat(v.quantity), 0) *
-                  parseFloat(getqty)
+                parseFloat(getqty)
                 : 0,
             })),
           ];

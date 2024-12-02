@@ -2,7 +2,7 @@
 export type ExportType = 'PDF' | 'EXCEL'
 
 
-export type Endpoint = 'INVENTORY' | 'SAP' | 'WORK_FLOW' | 'CRM' | 'SALE' | 'SETTING' | 'DELIVERY' | 'FILE' | 'PRO' | 'ICT' | 'HR' | 'RETAILER' | 'FLEET' | 'SAP_SOURCE' | 'DLV_EXPENSE' | 'PROD' | 'DMS'
+export type Endpoint = 'INVENTORY' | 'SAP' | 'WORK_FLOW' | 'CRM' | 'SALE' | 'SETTING' | 'DELIVERY' | 'FILE' | 'PRO' | 'ICT' | 'HR' | 'RETAILER' | 'FLEET' | 'SAP_SOURCE' | 'DLV_EXPENSE' | 'PROD' | 'DMS' | 'FMA'
 
 
 // export interface ServiceType {
@@ -143,4 +143,16 @@ export interface Pagination {
   page?: number,
   current?: number, // used in some component, it's the same to page. 
   pageSize?: number = 20
+}
+
+type ParamData = {
+  key: string;
+  // type: 'int' | 'double' | 'float' | 'string' | 'boolean' | 'date' | 'dateTime';
+  value?: any;
+}
+
+export type GenericReportParams = {
+  reportName: string;
+  reportPath: string;
+  data: ParamData[]
 }

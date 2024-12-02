@@ -1,16 +1,21 @@
 import { formatDate } from "@/pages/utils";
 import { simpleRequestActions } from "@/services/model";
 import { ProCard, ProDescriptions, ProList } from "@ant-design/pro-components"
-import { Checkbox, message, Space, Spin } from "antd"
+import { Button, Checkbox, message, Space, Spin } from "antd"
 import { useEffect, useState } from "react";
 import { StaffRequisitionRequest } from "../../data";
 import { EmployeeServices } from "../../services";
 import { AttachmentFile } from "@/services/data";
 import { FileServiceAPI } from "@/services/files/service";
 import { downloadUploadFileV2 } from "@/services/apiGateway";
-import { FileOutlined } from "@ant-design/icons";
+import { EyeFilled, FileOutlined } from "@ant-design/icons";
+import FilePreview from "@/components/Attachment/FilePreview";
 
-export default ({ processInstanceId, setAttachFiles }: { processInstanceId: string, setAttachFiles: (files: string[]) => void }) => {
+export default ({ processInstanceId, setAttachFiles, onSetStatus }: {
+    processInstanceId: string,
+    onSetStatus: (status: string) => void;
+    setAttachFiles: (files: string[]) => void
+}) => {
 
     const requestActions = simpleRequestActions();
     const [data, setData] = useState<StaffRequisitionRequest>()
@@ -23,6 +28,7 @@ export default ({ processInstanceId, setAttachFiles }: { processInstanceId: stri
     const loadData = async () => {
         try {
             const rs = await EmployeeServices.fetchStaffRequisitionRequest(processInstanceId).query(requestActions)
+            onSetStatus(rs.status)
             setData(rs)
             if (rs.attachedFiles) {
                 setAttachFiles(rs.attachedFiles || [])
@@ -85,11 +91,13 @@ export default ({ processInstanceId, setAttachFiles }: { processInstanceId: stri
                         loading={requestActions.request?.loading}
                         metas={{
                             avatar: {
-                                render: ()=> <FileOutlined />
+                                render: () => <FileOutlined />
                             },
                             title: {
-                                render: (_, r) => (
-                                    <a onClick={() => downloadUploadFileV2()(r.id, r.fileName)}>{r.fileName}</a>
+                                render: (_, r) => (<Space>
+                                    <a title='Download the file' onClick={() => downloadUploadFileV2()(r.id, r.fileName)}>{r.fileName}</a>
+                                    {(r.fileType.includes("image", 0) || r.fileType.includes("application/pdf", 0)) && <FilePreview fileInfo={r} trigger={<Button title='Preview the file' type='link' icon={<EyeFilled />} />} />}
+                                </Space>
                                 ),
                             },
                         }}

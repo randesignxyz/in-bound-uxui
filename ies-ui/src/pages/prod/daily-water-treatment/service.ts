@@ -49,6 +49,12 @@ const DailyWaterTreatmentMachineAction = {
         endpoint:"PROD",
         type:'EXEC',
         payload:{id,action,treatment_id}
+    }),
+    unassign:(treatment_id:string):ServiceApiType<{treatment_id:string}>=>({
+        actionName:"unassign",
+        endpoint:"PROD",
+        type:'EXEC',
+        payload:{treatment_id}
     })
 }
 
@@ -83,6 +89,10 @@ export const DailyWaterTreatmentMachineServiceAPI = (requestAction: RequestActio
             ),
         assign_self:(id: number,action: string,treatment_id: string)=>
             singleRequest<AssignDailyWaterTreatment>(DailyWaterTreatmentMachineAction.assign_self(id,action,treatment_id))(
+                requestAction
+            ),
+        unassign:(treatment_id:string)=>
+            singleRequest<DailyWaterTreatmentItem>(DailyWaterTreatmentMachineAction.unassign(treatment_id))(
                 requestAction
             )
     }

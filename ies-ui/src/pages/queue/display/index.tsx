@@ -30,8 +30,8 @@ import LayoutConfigList from './LayoutConfigList';
 import { useFullscreen } from 'ahooks';
 import styles from './style.less';
 import { history } from '@umijs/max';
-import Login from '@/pages/User/Login';
 import { ProDescriptions, ProList } from '@ant-design/pro-components';
+import Login from '@/pages/User/Login';
 
 const { Title } = Typography;
 

@@ -232,9 +232,6 @@ export default () => {
 
 
     const loadTaskList = (params: TableViewSearchParams<TaskListAdvanceSearchParams>) => {
-
-        console.log(params);
-
         return workflowServices.findTaskList({
             filter: params.criteria?.advanceSearch?.status || '',
             latest: params.criteria?.advanceSearch?.latest || false,
@@ -281,6 +278,10 @@ export default () => {
 
         }
 
+    }
+
+    const cancelAction = () => {
+        actions.showModalAction('cancel')
     }
 
     const showUserDest = async (taskId: string) => {
@@ -353,6 +354,7 @@ export default () => {
             showUserDest: showUserDest,
             startWorkflow: startWorkflow,
             completeTask: completeTask,
+            cancelAction: cancelAction,
             loadDiagram: loadDiagram,
             openActionForm: openActionForm,
             loadInstanceData: loadInstanceData,

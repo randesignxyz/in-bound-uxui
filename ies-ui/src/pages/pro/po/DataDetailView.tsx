@@ -2,8 +2,9 @@ import { formatDate, formatter, formatterPercentage, formatterQty } from '@/page
 import { ProCard, ProDescriptions, ProTable } from '@ant-design/pro-components';
 import { Checkbox, Flex, Space } from 'antd';
 import { useEffect, useState } from 'react';
-import { PoLinkedItem, PoRequestDetail, PoRequestItemDetail } from './data';
+import { PoRequestDetail, PoRequestItemDetail } from './data';
 import { createPoService } from './services';
+import RelatedObjectItems from '../components/RelatedObjectItems';
 
 export default ({
   instanceId,
@@ -33,31 +34,6 @@ export default ({
     if ((forceReload || 0) > 0)
       init();
   }, [forceReload]);
-
-  const linkedObject = (item: PoRequestItemDetail) => {
-    return (
-      <ProTable<PoLinkedItem & { key: string }>
-        dataSource={item.linkedItems?.map((it) => ({ ...it, key: `${it.type}-${it.id}` }))}
-        rowKey={'key'}
-        pagination={false}
-        options={false}
-        size="small"
-        search={false}
-        columns={[
-          { title: 'Type', dataIndex: 'type' },
-          { title: 'Code', dataIndex: 'code' },
-          { title: 'Qty', hideInTable: data?.isService, dataIndex: 'qty' },
-          { title: 'UoM', hideInTable: data?.isService, dataIndex: 'uomName' },
-          { title: 'Price', dataIndex: 'price', renderText: (_, r) => formatter.format(r.price) },
-          {
-            title: 'amount',
-            dataIndex: 'amount',
-            renderText: (_, r) => formatter.format(r.amount),
-          },
-        ]}
-      />
-    );
-  };
 
   return (
     <Flex vertical>
@@ -117,8 +93,8 @@ export default ({
             pagination={false}
             dataSource={data?.items}
             expandable={{
-              expandedRowRender: linkedObject,
-              rowExpandable: (record) => (record.linkedItems?.length || 0) > 0,
+              expandedRowRender: (record) => record.relatedObjects && <RelatedObjectItems mainId={record.id} items={record.relatedObjects} />,
+              rowExpandable: (record) => (record.relatedObjects?.length || 0) > 0,
             }}
             options={{
               setting: false,
@@ -174,7 +150,8 @@ export default ({
             <Flex>
               <ProDescriptions<PoRequestDetail>
                 column={1}
-                columns={[{ title: 'Remarks', dataIndex: 'remarks' }]}
+                dataSource={data}
+                columns={[{ title: 'Owner Function', dataIndex: 'ownerFunction' }, { title: 'Remarks', dataIndex: 'remarks' }]}
               />
             </Flex>
             <Flex>

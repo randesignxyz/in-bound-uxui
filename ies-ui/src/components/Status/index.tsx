@@ -4,9 +4,8 @@ import Badge from 'antd/lib/badge';
 
 export default ({ text, value, ...rest }: { text: string; value?: string } & BadgeProps) => {
   const getColor = () => {
-    const status = (value || text).toUpperCase();
-
-    if (['ACTIVE', 'APPROVED', 'POSTED', 'COMPLETED', 'SELECTED', 'DONE', 'ISSUED', 'ACHIEVED'].some((it) => it == status))
+    const status = (value || text).toUpperCase(); 
+    if (['ACTIVE', 'APPROVED', 'POSTED', 'COMPLETED', 'SELECTED', 'DONE', 'ISSUED', 'ACHIEVED','OPEN'].some((it) => it == status)) 
       return 'success';
 
     if (
@@ -21,7 +20,10 @@ export default ({ text, value, ...rest }: { text: string; value?: string } & Bad
         'IN_PROGRESS',
         'CONFIRMED',
         'LOADING',
-        'PENDING'
+        'PENDING',
+        'REVIEWING',
+        'SETTING',
+        'FORM'
       ].some((it) => it == status)
     )
       return 'processing';
@@ -37,6 +39,7 @@ export default ({ text, value, ...rest }: { text: string; value?: string } & Bad
         'UPDATE_STATUS',
         'NEW',
         'IN_ACTIVE',
+        'CLOSED',
         'EXPIRED',
         'ON_HOLD'
       ].some((it) => it == status)

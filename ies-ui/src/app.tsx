@@ -24,7 +24,7 @@ export async function getInitialState(): Promise<{
   loading?: boolean;
 }> {
 
-  const isSidebarEnabled = (localStorage.getItem('sidebarEnabled') || 'true') === 'true';
+  const isSidebarEnabled = (localStorage.getItem('sidebarEnabled') || (defaultSettings.layout == "mix" ? 'true' : 'false')) === 'true';
   moment.locale('en');
   if (getLocale() !== 'en-US') {
     setLocale('en-US');

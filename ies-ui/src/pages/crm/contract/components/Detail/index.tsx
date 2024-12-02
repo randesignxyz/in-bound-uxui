@@ -1,14 +1,12 @@
-import { Space, Spin, Tag, message, Button } from 'antd';
+import { Space, Spin, message, Button } from 'antd';
 import { useEffect, useState } from 'react';
-import { history } from "@umijs/max";
 import { EditFilled, StopOutlined } from '@ant-design/icons';
-import { CrmPaths } from '@/pages/crm';
 import { PageContainer, ProCard, ProDescriptions } from '@ant-design/pro-components';
 import { simpleRequestActions } from '@/services/model';
 import { useSafeState } from 'ahooks';
 import { ContractServices } from '../../services';
 import { ContractViewData } from '../../types';
-import { formatDate, getColorStatus } from '@/pages/utils';
+import { formatDate } from '@/pages/utils';
 import Term from './Term';
 import PosmView from '@/pages/crm/components/PosmView';
 import ActivityLog from '@/components/ActivityLog';
@@ -46,7 +44,6 @@ const ContactDetailView: React.FC<{
   }
 
   const [activeTab, setActiveTab] = useState<string>('term')
-
   const onApplyLocation = async (ids: number[]) => {
     try {
       if (!!data) {
@@ -71,7 +68,6 @@ const ContactDetailView: React.FC<{
         }
 
         subTitle={data?.contractNo || 'n/a'}
-
         extra={access.crmAdmin && <Space>
           {data?.status != "TERMINATED" && <Button type='link' onClick={() => {
             data && onEdit(data.id, () => {
@@ -146,7 +142,6 @@ const ContactDetailView: React.FC<{
           if (activeTab == 'activityLog' && data?.id) {
             return <ActivityLog objectName='CONTRACT' forceUpdate={forceUpdate} objectId={data.id} endpoint='CRM' />
           }
-
         })()}
 
       </PageContainer>

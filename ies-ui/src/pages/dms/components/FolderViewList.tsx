@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Affix, Button, Dropdown, Flex, MenuProps, Space, message } from 'antd';
+import { Affix, Button, Dropdown, Flex, MenuProps, Space, Tree, message } from 'antd';
 import { FolderServiceAPI } from '../folder/service';
 import { simpleRequestActions } from '@/services/model';
 import { BankFilled, DeleteOutlined, EditOutlined, FileTextOutlined, FolderAddOutlined, FolderFilled, UserOutlined } from '@ant-design/icons';
@@ -176,7 +176,7 @@ export default ({ onSearch, activeKey, moveDoc, onMove, onFolderSelected, ...pro
                         style={{ width: "100%", margin: "10px 0" }} icon={<FileTextOutlined />}>All Documents</Button>
                 </Affix>
                 {treeFolderList.length != 0 &&
-                    <DirectoryTree
+                    <Tree
                         key={"doprdown-1"}
                         defaultExpandAll
                         blockNode

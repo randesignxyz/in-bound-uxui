@@ -21,7 +21,7 @@ const APPDMS: React.FC = () => {
             width: "300px",
             position: "fixed",
             zIndex: "1",
-            left: 30,
+            // left: 30,
             backgroundColor: "white",
             overflow: "auto",
             borderRadius: 5,
@@ -37,8 +37,6 @@ const APPDMS: React.FC = () => {
     useEffect(() => {
     }, [paramByFolder])
 
-
-    
     return (
         <>
             <div
@@ -81,7 +79,6 @@ const APPDMS: React.FC = () => {
                     (view === undefined && paramByFolder && <DocumentMainPage paramSearch={paramByFolder} />)
                 }
                    <FloatButton.BackTop/>
-
             </div>
         </>
     )

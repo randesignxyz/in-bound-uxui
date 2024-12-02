@@ -34,7 +34,7 @@ export type ContractPOSMItem = {
   itemId: number;
   qty: number;
   remarks?: string;
-
+  attachment?:string[];
 }
 
 export type Terms = {

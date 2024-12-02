@@ -17,6 +17,8 @@ export default ({ id }: Props) => {
   const services = AccessoryServiceAPI(requestAction);
   const [accessories, setAccessories] = useState<AccessoriesDTO[]>([]);
   const actionRef = useRef<ActionType>();
+  const [open, setOpen] = useState(false);
+  const [detail, setDetail] = useState<AccessoriesDTO | null>();
   const [accessorieState, setAccessorieSate] = useState<{
     visible?: {
       name: 'modal';
@@ -25,22 +27,6 @@ export default ({ id }: Props) => {
     };
   }>({});
 
-  const onSave = (data: AddVehicleAccessory) => {
-    Modal.confirm({
-      title: 'Save Accessories Selected',
-      content: 'are you sure?',
-      onOk: async () => {
-        services.addAccessoriesToVehicle(data);
-        setAccessorieSate((v) => ({
-          ...v,
-          visible: undefined,
-        }));
-        message.success('success');
-        actionRef.current?.reloadAndRest?.();
-      },
-    });
-  };
-
   const onRequest = async () => {
     const response = await services.list(id);
     setAccessories(response);
@@ -48,6 +34,28 @@ export default ({ id }: Props) => {
       data: response,
       success: true,
     });
+  };
+  const onSave = (data: AddVehicleAccessory) => {
+    Modal.confirm({
+      title: 'Save Accessories Selected',
+      content: 'are you sure?',
+      onOk: async () => {
+        await services.addAccessoriesToVehicle(data);
+        setAccessorieSate((v) => ({
+          ...v,
+          visible: undefined,
+        }));
+        message.success('success');
+        actionRef.current?.reloadAndRest?.();
+        await onRequest()
+      },
+    });
+  };
+
+  const showDrawer = (r: AccessoriesDTO) => {
+    setOpen(true);
+    setDetail(r);
+    console.log(r);
   };
 
   return (
@@ -79,7 +87,11 @@ export default ({ id }: Props) => {
           metas={{
             title: {
               render: (_, r) => {
-                return `${r.name}`;
+                return (
+                  <>
+                    <span onClick={() => showDrawer(r)}>{r.name}</span>
+                  </>
+                );
               },
             },
             description: {
@@ -92,10 +104,15 @@ export default ({ id }: Props) => {
       <AccessoriesModalForm
         id={id}
         onSave={onSave}
-        open={accessorieState.visible?.name == 'modal'}
+        open={accessorieState.visible?.name == 'modal' }
         onCancel={() => setAccessorieSate((v) => ({ ...v, visible: undefined }))}
         data={accessorieState.visible?.payload?.enity}
       />
+      <Drawer title={detail?.name} onClose={() => setOpen(false)} open={open}>
+        <p>
+          <strong>Description:</strong> {detail?.description}
+        </p>
+      </Drawer>
     </>
   );
 };

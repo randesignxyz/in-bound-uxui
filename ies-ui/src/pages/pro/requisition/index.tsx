@@ -10,7 +10,6 @@ export default () => {
         {(view, id, navigate) => {
             switch (view) {
                 case 'list':
-                    // return <ListView onAdd={id => navigate?.goToCreate?.({id})} onEdit={id =>navigate?.gotoEdit?.({id})}/>
                     return <MainPage />
                 case 'create':
                     return <DataEntryView onBack={() => navigate?.gotToListHandler?.()} type="CREATE" id={id as number} />

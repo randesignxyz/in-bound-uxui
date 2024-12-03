@@ -86,6 +86,7 @@ export default ({ open, onOpenModalChange, refreshTable }: Props) => {
         rating4: it.rating4,
         rating5: it.rating5,
         weight: it.weight,
+        sort: it.sort
       } as AppraisalEmSubmissionPayLoad;
     });
     var empPayload = {
@@ -134,6 +135,7 @@ export default ({ open, onOpenModalChange, refreshTable }: Props) => {
           title1: it.title1,
           rating1: it?.rating1,
           weight: it?.weight,
+          sort: it.sort
         } as AppraisalRating);
       }
       return;

@@ -3,8 +3,12 @@ import { ModalForm, ProTable } from "@ant-design/pro-components"
 import { useEffect, useState } from "react"
 import { createService } from "../../services";
 import { AppraisalEmSubmissionPayLoad, AppraisalEmp, AppraisalEmpSubmitAllPayload, ValidatorMsg } from "../../data.types";
-import { Modal, message} from "antd";
+import { Button, Flex, Modal, message} from "antd";
 import { Model } from "../../model";
+import EmpReport from "@/pages/ess/reports/EmpReport";
+import { ExportOutlined } from "@ant-design/icons";
+import ConfirmSubmitModal from "./ConfirmSubmitModal";
+import { useRafState } from "ahooks";
 
 interface Props{
     open?: boolean
@@ -12,33 +16,32 @@ interface Props{
     refreshTable:()=>void
 }
 export default ({open, onOpenModalChange,refreshTable}:Props) =>{
+    
     const requestActions = simpleRequestActions();
     const srv = createService({ request: requestActions })
     const [appraisalEmp,setAppraisalEmp] = useState<AppraisalEmp[]>()
-    const { actions, data } = Model();
+    const { actions, data, modals } = Model();
+    const [loading,setLoading] = useState<boolean>(false)
     
     useEffect(() => {
         try {
-            // async()=>{
-                srv.findDraftedAppraisalEmpList().then(it=>{
-                    setAppraisalEmp(it.filter(it=>{
-                        var msg = data.validationMsgList(it)
-                        return msg.length==0
-                    }).map(i=> {
-                        var status = actions.getStatus('DONE',i)
-                        return {...i,
-                            status:status.status,
-                            actionStatus:status.actionStatus,
-                            rated1: status.rated1,
-                            rated2: status.rated2,
-                            rated3: status.rated3,
-                            rated4: status.rated4,
-                            rated5: status.rated5
-                        }
-                    }))
-                })
-            // }
-
+            srv.findDraftedAppraisalEmpList().then(it=>{
+                setAppraisalEmp(it.filter(it=>{
+                    var msg = data.validationMsgList(it)
+                    return msg.length==0
+                }).map(i=> {
+                    var status = actions.getStatus('DONE',i)
+                    return {...i,
+                        status:status.status,
+                        actionStatus:status.actionStatus,
+                        rated1: status.rated1,
+                        rated2: status.rated2,
+                        rated3: status.rated3,
+                        rated4: status.rated4,
+                        rated5: status.rated5
+                    }
+                }))
+            })
         }catch(error: any){
             message.error(error.message || 'Failed to load data.')
         }
@@ -64,35 +67,34 @@ export default ({open, onOpenModalChange,refreshTable}:Props) =>{
                 width: '50%',
                 content: <div>{validtor.map(it=> it.msg?.map(i=> <div><b style={{color:'orange'}}>{it.title}: </b><span>{i.title} {i.msg}</span></div>))}</div>
             })
-            return
+            return 
         }
-        Modal.confirm({
-            title: 'Submit All',
-            content: 'Are you sure to submit all this forms.',
-            onOk: async () => {
-                try {
-                    await srv.submitAllAppraisalEmps(appraisalEmp?.map(
-                        it=> {
-                        return {
-                            id:it.id,
-                            status:it.status,
-                            actionStatus:it.actionStatus,
-                            rated1: it.rated1,
-                            rated2: it.rated2,
-                            rated3: it.rated3,
-                            rated4: it.rated4,
-                            rated5: it.rated5
-                        } as AppraisalEmpSubmitAllPayload
-                    }))
-                    message.success(`Appraisal forms're submitted`)
-                    onOpenModalChange(false)
-                    refreshTable()
-                } catch (error: any) {
-                    message.error(error.message || 'Failed')                       
-                }
-            }
-        })
-       
+        modals.showModal('ConfirmPerformanceEvaluationSubmit')        
+    }
+    const onFinishHandler=async ()=>{
+        try {
+            setLoading(true)
+            await srv.submitAllAppraisalEmps(appraisalEmp?.map(
+                it=> {
+                return {
+                    id:it.id,
+                    status:it.status,
+                    actionStatus:it.actionStatus,
+                    rated1: it.rated1,
+                    rated2: it.rated2,
+                    rated3: it.rated3,
+                    rated4: it.rated4,
+                    rated5: it.rated5
+                } as AppraisalEmpSubmitAllPayload
+            })).then(rs=>{
+                message.success(`submitted`)
+                setLoading(false)
+                onOpenModalChange(false)
+                refreshTable()
+            })
+        } catch (error: any) {
+            message.error(error.message || 'Failed')                       
+        }
     }
 
     return <ModalForm
@@ -104,10 +106,13 @@ export default ({open, onOpenModalChange,refreshTable}:Props) =>{
             searchConfig: {
               submitText: 'Submit All',
             },
+            submitButtonProps:{
+               loading: loading
+            }    
         }}
         onFinish={()=>onSubmitAllHandler()}
     >
-    <ProTable<AppraisalEmp>
+    {appraisalEmp&&<ProTable<AppraisalEmp>
         loading = {requestActions.request?.loading}
         pagination={false}  
         search={false}
@@ -147,6 +152,8 @@ export default ({open, onOpenModalChange,refreshTable}:Props) =>{
             
             // }
         ]} 
-       />
+       />}
+       {modals.isVisible('ConfirmPerformanceEvaluationSubmit') && <ConfirmSubmitModal onFinish={onFinishHandler}  open={modals.isVisible('ConfirmPerformanceEvaluationSubmit')} onOpenModalChange={(v: any) => !v && modals.hideModal('ConfirmPerformanceEvaluationSubmit')} />}
+
     </ModalForm>
 }

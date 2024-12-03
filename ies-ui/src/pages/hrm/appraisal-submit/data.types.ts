@@ -137,7 +137,7 @@ export type AppraisalEmpSubmissionResult = {
     behaviorDescription: string
     behaviorDescription1?: string
     behaviorRate: number
-    sort:string
+    sort:number
     gsort: number
     gtotal: number
     attachedFiles?: string[]
@@ -153,6 +153,7 @@ export type AppraisalRating = {
     rating4?: number
     rating5?: number 
     weight: number 
+    sort: number
 }
 export type AppraisalDimension = {
     id: number
@@ -176,6 +177,7 @@ export type AppraisalEmSubmissionPayLoad = {
     rating4: number
     rating5: number
     weight:number
+    sort: number
 }
 export type AppraisalEmPayload = {
     id: number

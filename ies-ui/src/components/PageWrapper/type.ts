@@ -1,7 +1,7 @@
 
 import { ParamsType, ProColumns, ProTableProps } from "@ant-design/pro-components";
 import { ButtonProps } from "antd";
-import { MenuItemType } from "antd/lib/menu/hooks/useItems"
+import { MenuItemType } from "antd/lib/menu/interface";
 import { SegmentedLabeledOption } from "antd/lib/segmented";
 import { SortOrder } from "antd/lib/table/interface";
 import React from "react";

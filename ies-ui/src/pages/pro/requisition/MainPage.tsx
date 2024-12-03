@@ -10,8 +10,8 @@ import {
     FileOutlined, PartitionOutlined, PlusCircleOutlined, UploadOutlined
 } from "@ant-design/icons"
 import { useQuery } from "@umijs/max"
-import { Button, Flex, Modal, Spin, Typography, message } from "antd"
-import { useRef, useState } from "react"
+import { Button, Flex, Modal, Spin, Tooltip, Typography, message } from "antd"
+import { useEffect, useRef, useState } from "react"
 import Form from "@/pages/process-flow/form"
 import DataDetailView from "./DataDetailView"
 import AdvanceSearch from "./components/AdvanceSearch"
@@ -58,6 +58,17 @@ export default () => {
             message.error(error.message);
         }
     };
+
+    const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+    console.log('windowWidth', windowWidth);
+    // Add useEffect to handle window resize
+    useEffect(() => {
+        
+        const handleResize = () => setWindowWidth(window.innerWidth);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
 
     return <Spin spinning={false}>
         <PageWrapper<RequisitionListItem, RequisitionAdvanceSearchParams, {}>
@@ -140,6 +151,7 @@ export default () => {
                     dataSource: data?.items,
                     pagination: { total: data?.total },
                     loading: isFetching,
+                    scroll: { x: 'max-content' },
                     bordered: true,
                     actionRef: actionRef,
                     actionButtonsColumnRender: (item) => ([
@@ -157,17 +169,35 @@ export default () => {
                     ]),
                     columns: [
                         {
-                            title: 'Form No', sorter: 'formNo', width: 100,
+                            title: 'Form No', sorter: 'formNo', 
+                            width: 100,
                             actionProps: (item) => ({ type: 'view', label: item.formNo || "n/a" })
                         },
                         {
                             title: 'Reason',
-                            render: (_, r) => <Typography.Paragraph style={{ fontWeight: 350 }} ellipsis={{
-                                rows: 2,
-                                defaultExpanded: false,
-                                expandable: true,
-                                symbol: 'more'
-                            }} >{r.reason}</Typography.Paragraph>,
+                            // width: 200,
+                            render: ( dom , r) => 
+                            //     <Typography.Paragraph style={{ fontWeight: 350 }} ellipsis={{
+                            //     rows: 2,
+                            //     defaultExpanded: false,
+                            //     expandable: true,
+                            //     symbol: 'more'
+                            // }} >
+                            //     {r.reason}
+                            // </Typography.Paragraph>,
+                            {
+       
+                            return <Tooltip title={r.reason}>
+                                    <Typography.Text style={{ 
+                                        maxWidth: '250px',
+                                        display: 'block',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap'
+                                    }}>
+                                        {r.reason}
+                                    </Typography.Text>
+                                </Tooltip>},
                             dataIndex: 'reason',
                         },
                         {
@@ -177,13 +207,13 @@ export default () => {
                                     title: 'Expected Dt',
                                     align: 'right',
                                     sorter: 'acquisitionDate',
-                                    width: 120,
+                                    width: 110,
                                     render: (_, r) => formatDate(r.acquisitionDate),
                                 },
                                 {
                                     title: 'Total Amt.',
                                     align: 'right',
-                                    width: 120,
+                                    width: 100,
                                     sorter: 'totalAmount',
                                     render: (_, r) => formatter1.format(r.totalAmount || 0),
                                 },
@@ -215,7 +245,7 @@ export default () => {
                                     title: 'Requested Dt',
                                     align: 'right',
                                     sorter: 'createdDate',
-                                    width: 130,
+                                    width: 120,
                                     render: (_, r) => formatDate(r.createdDate),
                                 },
                                 {

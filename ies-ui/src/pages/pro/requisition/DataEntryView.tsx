@@ -89,8 +89,9 @@ export default ({
   const initData = async () => {
     const buList = [
       access.hasProOflAccess && { id: 1, name: 'OFL', description: 'Onefraternity' },
-      access.hasProNvcAccess && { id: 2, name: 'NVC', description: 'Vital' },
-      access.hasProOmmAccess && { id: 3, name: 'OMM', description: 'OMM' }
+      access.hasProNvcAccess && { id: 2, name: 'NVC', description: 'Vital Premium Water' },
+      access.hasProOmmAccess && { id: 3, name: 'OMM', description: 'One More Manufaturing' },
+      access.hasProOmcAccess && { id: 7, name: 'OMC', description: 'OMC' }
     ].filter(it => it) as BU[]
     setBu(buList)
     if (id && id > 0) {

@@ -130,6 +130,11 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
         ['ROLE_ADMIN', 'ROLE_PRO_ADMIN', 'ROLE_PRO_OMM_ACCESS'].some((it) => it === item),
       ) || false,
 
+      hasProOmcAccess:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_PRO_ADMIN', 'ROLE_PRO_OMC_ACCESS'].some((it) => it === item),
+      ) || false,
+
     canAccessSaleMenuItem:
       currentUser?.authorities.some((item) =>
         [

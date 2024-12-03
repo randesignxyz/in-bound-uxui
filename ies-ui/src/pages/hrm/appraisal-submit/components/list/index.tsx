@@ -8,7 +8,7 @@ import { createService } from "../../services";
 import { Paging } from "@/services/API";
 import { formatDateTime, formatterPercentage0} from "@/pages/utils";
 import Status from "@/components/Status";
-import { ExportOutlined, EyeOutlined, FileExcelOutlined, FilterOutlined, PicRightOutlined, PlusOutlined, UnorderedListOutlined } from "@ant-design/icons";
+import { BankOutlined, ExportOutlined, EyeOutlined, FileExcelOutlined, FilterOutlined, PicRightOutlined, PlusOutlined, TeamOutlined, UnorderedListOutlined } from "@ant-design/icons";
 import AppraisalFormQuickView from "../quick-view/index";
 import { useEffect, useRef, useState } from "react";
 import AppraisalRequestForm from "../../AppraisalSubmitForm";
@@ -92,6 +92,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
     const [advanceSearchPerformEvaluationParams, setAdvanceSearchPerformEvaluationParams] = useState<PerformanceEvaluationAdvanceSearchParams>({status: 'ALL'})
     const [accessPerfEvaluation,setAccessPerfEvaluation] = useState<boolean>(false)
     const [perfEvaluationAccess,setPerfEvaluationAccess] = useState<PerformanceEvaluationAccessRs>()
+    const [isSubmitAllBtn,setIsSubmitAllBtn] = useState<boolean>(true)
 
     useEffect(() => {
         onLoadData()
@@ -101,7 +102,11 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
     }, [forceRefresh])
 
     const onLoadData =() =>{
-        srvRequest.fetchAppraisalPeriodList().then(year=>{setPeriod(year)})
+        srvRequest.fetchAppraisalPeriodList().then(year=>{
+            setPeriod(year)
+            setIsSubmitAllBtn(year?.[0].status||false)
+        })
+       
         onStatusTotal(period?.[0].value||-1)
         srv.fetchPerformanceEvaluationAccess(period?.[0].value||-1).then(rs=>{
             setAccessPerfEvaluation(rs.access)
@@ -321,6 +326,18 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
         }
     },[refreashEvaluationData])
 
+    const quickViewPerformanceEvaluationHandler = (appEmp: AppraisalEmp) => {
+        modals.showModal('QuickViewPerformanceEvaluationForm');
+        setAppraisalEmp(appEmp)
+    }
+    const refeshPerformanceEvaluationTable = () => {
+        setRefreashEvaluationData(v=> v+1)
+        modals.hideModal('QuickViewPerformanceEvaluationForm');
+    }
+    const refeshTagertTable = () => {
+        setRefreashEvaluationData(v=> v+1)
+    }
+
     const onDataLoad=(perfId: number)=>{
         const adSearch = {appraisalPeriodId:perfId, 
             appraiser: advanceSearchPerformEvaluationParams.appraiser,
@@ -361,6 +378,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
             ...v,
             appraisalPeriodId: value
         }))
+        setIsSubmitAllBtn(period?.find(rs=> (rs.value==value))?.status||false)
         onDataLoad(value)        
     }
 
@@ -396,8 +414,13 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
     const ListContent = ({ data }: { data: AppraisalEmp }) => (
         <Row justify="end">
         <Col flex={1}></Col>
-        <Col flex={'400px'}>
-            <Row><b>{data.empName}</b></Row>
+        <Col flex={'420px'}>
+            <Row>
+                {/* <Flex gap={5}> */}
+                    <b>{data.empName}</b>
+                   {/* <b style={{fontSize:12}}>- <BankOutlined style={{fontSize:10}}/>{data.buName}  <TeamOutlined style={{fontSize:10}}/>{data.departmentName}</b> */}
+                {/* </Flex> */}
+            </Row>
             <Row>Self-Rating:<b style={{paddingLeft:5}}>{data.rating1}</b></Row>
             <Row>FM Rating:<b style={{paddingLeft:5}}>{data.rating2}</b></Row>
             <Row>Agreed Rating: <b style={{paddingLeft:5}}>{data.rating3}</b></Row>
@@ -526,7 +549,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                 {modals.isVisible('SubmitAllListView') && <SubmitAllListModal
                     open={modals.isVisible('SubmitAllListView')}
                     onOpenModalChange={(v: any) => !v && modals.hideModal('SubmitAllListView')}
-                    refreshTable={refeshTable}
+                    refreshTable={refeshTagertTable}
                 />
                 }
                 {/*  advance search */}
@@ -567,23 +590,55 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                             columns={[{ title: 'test', dataIndex: 'id' }]}
                             metas={{
                                 title: {
-                                    render: (_, r) => (
-                                        <Flex align='baseline'>
+                                    render: (_, r) => {
+                                        var vali = data.validationMsgList(r)
+                                        return (<Space size={1}>
                                             <Button
                                                 type="link"
                                                 size="small"
                                                 icon={<EyeOutlined />}
-                                                onClick={() => quickViewHandler(r)}
+                                                onClick={() => quickViewPerformanceEvaluationHandler(r)}
                                             />
-                                            <Button type='link' onClick={() => {
+                                            <Button
+                                                size="small"
+                                                type="link"
+                                                icon={<ExportOutlined />}
+                                                onClick={async () => {
                                                     window.open(`/external/hrm/appraisal-submit/detail/${r.id}`, '_blank')?.focus();
-                                                }} title='Open in new tab' icon={<ExportOutlined size={5} />} />
-                                                <a onClick={(e) =>  onDetail?.(r)}>
-                                                    {' '}
-                                                    {r.empNo}
+                                                }}
+                                            />
+                                            <Flex justify='space-between' gap={8}  style={{width: 180}}>
+                                                <a onClick={() => { onDetail?.(r) }}>
+                                                    <Link type={(vali.length > 0) ? 'danger' : undefined}>
+                                                        <Tooltip
+                                                            title={(vali.length > 0) && vali.map(it => <div><b style={{ color: 'orange' }}>{it.title}: </b>{it.msg}</div>)}
+                                                            overlayStyle={{ maxWidth: '500px' }}
+                                                        >
+                                                            {r.empNo}
+                                                        </Tooltip>
+                                                    </Link>
                                                 </a>
-                                        </Flex>
-                                    )
+                                                <div style={{fontSize:10,color:'rgba(0, 0, 0, 0.45)'}}><BankOutlined style={{fontSize:10}}/>{r.buName}  <TeamOutlined style={{fontSize:10}}/>{r.departmentName}</div>
+                                            </Flex>
+                                            
+                                        </Space>)
+                                    
+                                        // return (<Flex align='baseline'>
+                                        //     <Button
+                                        //         type="link"
+                                        //         size="small"
+                                        //         icon={<EyeOutlined />}
+                                        //         onClick={() => quickViewPerformanceEvaluationHandler(r)}
+                                        //     />
+                                        //     <Button type='link' onClick={() => {
+                                        //             window.open(`/external/hrm/appraisal-submit/detail/${r.id}`, '_blank')?.focus();
+                                        //         }} title='Open in new tab' icon={<ExportOutlined size={5} />} />
+                                        //         <a onClick={(e) =>  onDetail?.(r)}>
+                                        //             {' '}
+                                        //             {r.empNo}
+                                        //         </a>
+                                        // </Flex>)
+                                    }
                                 },
                                 // subTitle: { render: (_, r) => <Space> {r.empName}</Space>},
                                 description: {
@@ -604,7 +659,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                                                                       
                                     <ProTable<OverallPerformanceHeadCountRs>
                                     size="small"                                        
-                                        headerTitle = {<Flex gap={120} ><div style={{float:'left', width: 250}}>Total Function Head Count: {overalPerfTotalHeadCount}</div><div style={{float:'right',}}><Button type="primary" onClick={submitAllHandler}>Submit All</Button></div></Flex>}
+                                        headerTitle = {<Flex gap={120} ><div style={{float:'left', width: 250}}>Total Function Head Count: {overalPerfTotalHeadCount}</div><div style={{float:'right',}}>{isSubmitAllBtn&&<Button type="primary" onClick={submitAllHandler}>Submit All</Button>}</div></Flex>}
                                         style={{width: 500}}
                                         pagination = {false}
                                         options={false}
@@ -707,6 +762,12 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                             </Flex>
                     </Space>
                     </Flex>
+                    {appraisalEmp && modals.isVisible('QuickViewPerformanceEvaluationForm') && <AppraisalFormQuickView 
+                        refreshTable={refeshPerformanceEvaluationTable} 
+                        appraisalEmp={appraisalEmp} 
+                        open={modals.isVisible('QuickViewPerformanceEvaluationForm')} 
+                        onOpenModalChange={(v: any) => !v && modals.hideModal('QuickViewPerformanceEvaluationForm')} 
+                    />}
                     {perfEvaluationAccess && <AdvancePerformanceEvaluationSearch
                         title="Advance Search"
                         closable

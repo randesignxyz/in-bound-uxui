@@ -9,7 +9,7 @@ import {
     CheckOutlined, CopyFilled, ExportOutlined, EyeFilled,
     FileOutlined, PartitionOutlined, PlusCircleOutlined, UploadOutlined
 } from "@ant-design/icons"
-import { useAccess, useQuery, QueryClient, useQueryClient } from "@umijs/max"
+import { useAccess, useQuery, useQueryClient } from "@umijs/max"
 import { Button, Flex, Modal, Spin, Tooltip, Typography, message } from "antd"
 import { useEffect, useRef, useState } from "react"
 import Form from "@/pages/process-flow/form"

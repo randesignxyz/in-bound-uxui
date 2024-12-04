@@ -1,3 +1,4 @@
+import { BU } from '@/pages/hrm/data';
 import { ProDepartment } from '@/services/pro/data';
 import { RequisitionAdvanceSearchParams } from '@/services/pro/req-params';
 import ProForm, {
@@ -14,10 +15,11 @@ export interface AdvanceSearchProps extends DrawerProps {
 
   onSearch: (params: RequisitionAdvanceSearchParams) => void;
   onReset: () => void;
+  buList?: BU[];
   listDepts?: ProDepartment[];
 }
 
-const AdvanceSearch: React.FC<AdvanceSearchProps> = ({ initData, onReset, onSearch, ...props }) => {
+const AdvanceSearch: React.FC<AdvanceSearchProps> = ({ initData, onReset, onSearch, buList, listDepts, ...props }) => {
   const [form] = useForm<RequisitionAdvanceSearchParams>();
 
   useEffect(() => {
@@ -37,11 +39,12 @@ const AdvanceSearch: React.FC<AdvanceSearchProps> = ({ initData, onReset, onSear
           },
         }}
       >
+        <ProFormSelect mode="multiple" allowClear name="buIds" label="Company" options={buList?.map(it => ({ label: it.name, value: it.id }))} />
         <ProFormSelect
           mode="multiple"
           name="deptIds"
           label="Department"
-          options={props.listDepts?.map((it) => {
+          options={listDepts?.map((it) => {
             return { value: it.id, label: it.name };
           })}
         />
@@ -55,21 +58,3 @@ const AdvanceSearch: React.FC<AdvanceSearchProps> = ({ initData, onReset, onSear
 };
 
 export default AdvanceSearch;
-// export default ({onSearch, ...rest}: Props) => {
-
-//     const [form] = useForm<RequisitionAdvanceSearchFormData>()
-
-//     return <DrawerForm {...rest} form = {form}  onFinish = {async () => {
-//         const formData = await form.validateFields()
-
-//         // return await onSearch?.() //(data: {formData.acquiredDate, formData.requestedDate, formData.service})
-//     }}>
-//         <ProFormDateRangePicker label="Expected Date" name="acquiredDate" />
-//         <ProFormDateRangePicker label="Requested Date" name="requestedDate" />
-//         <ProFormCheckbox
-//                 labelAlign="left"
-//                 label="Service"
-//                 name="service"
-//               />
-//     </DrawerForm>
-// }

@@ -9,7 +9,7 @@ import {
     CheckOutlined, CopyFilled, ExportOutlined, EyeFilled,
     FileOutlined, PartitionOutlined, PlusCircleOutlined, UploadOutlined
 } from "@ant-design/icons"
-import { useQuery } from "@umijs/max"
+import { useAccess, useQuery } from "@umijs/max"
 import { Button, Flex, Modal, Spin, Tooltip, Typography, message } from "antd"
 import { useEffect, useRef, useState } from "react"
 import Form from "@/pages/process-flow/form"
@@ -18,11 +18,14 @@ import AdvanceSearch from "./components/AdvanceSearch"
 import Flow from "../flow"
 import DataEntryView from "./DataEntryView"
 import { uniqueId } from "lodash"
-import { ActionType } from "@ant-design/pro-components"
+import { ActionType, LightFilter, ProCard, ProFormCheckbox, ProFormDateRangePicker, ProFormSelect } from "@ant-design/pro-components"
+import { BU } from "@/pages/hrm/data"
+import moment from "moment"
 
 export const openPR = (instanceId: string) => window.open(`/external/data-form/requisition_request_process/${instanceId}`, '_blank')?.focus()
 
 export default () => {
+    const access = useAccess()
     const services = RequisitionServiceAPI();
     const [viewDetail, setViewDetail] = useState<{
         visible: boolean;
@@ -51,6 +54,8 @@ export default () => {
     };
 
     const listDepts = async () => {
+
+				if(listDepartment.length > 0) return	
         try {
             const depts = await services.listProDepartment();
             setListDepartment(depts);
@@ -58,17 +63,53 @@ export default () => {
             message.error(error.message);
         }
     };
-
-    const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-    console.log('windowWidth', windowWidth);
     // Add useEffect to handle window resize
     useEffect(() => {
-        
-        const handleResize = () => setWindowWidth(window.innerWidth);
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
+			listDepts()
     }, []);
 
+    const buList = [
+        access.hasProOflAccess && { id: 1, name: 'OFL', description: 'Onefraternity' },
+        access.hasProNvcAccess && { id: 2, name: 'NVC', description: 'Vital Premium Water' },
+        access.hasProOmmAccess && { id: 3, name: 'OMM', description: 'One More Manufaturing' },
+        access.hasProOmcAccess && { id: 7, name: 'OMC', description: 'OMC' }
+    ].filter(it => it) as BU[]
+    const extraFilter = <div>
+        <ProCard size="small">
+            <LightFilter<RequisitionAdvanceSearchParams> 
+							onValuesChange={(_, values) => {
+								setFilter(v => ({
+									...v,
+									criteria: {
+										...v.criteria,
+										advanceSearch: { ...v.criteria?.advanceSearch, 
+											...values,
+											acquiredDate: values.acquiredDate?.map(it => moment(it)),
+											requestedDate: values.requestedDate?.map(it => moment(it)),
+											buIds: values.buIds,
+											deptIds: values.deptIds,
+										
+										}
+									}
+								}))
+								console.log('filter', filter)
+							}}
+							>
+                <ProFormSelect mode="multiple" allowClear name="buIds" label="Company" options={buList.map(it => ({ label: it.name, value: it.id }))} />
+                <ProFormSelect
+                    mode="multiple"
+                    name="deptIds"
+                    label="Department"
+										showSearch
+                    options={listDepartment?.map((it) => {
+                        return { value: it.id, label: it.name };
+                    })}
+                />
+                <ProFormDateRangePicker allowClear label="Expected Date" name="acquiredDate" />
+                <ProFormDateRangePicker allowClear label="Requested Date" name="requestedDate" />
+            </LightFilter>
+        </ProCard>
+    </div>
 
     return <Spin spinning={false}>
         <PageWrapper<RequisitionListItem, RequisitionAdvanceSearchParams, {}>
@@ -102,6 +143,7 @@ export default () => {
                 }
             ]}
             listView={{
+                onExtraFilterRender: () => extraFilter,
                 actionButtons: [{
                     icon: <PlusCircleOutlined />,
                     type: 'link',
@@ -339,7 +381,6 @@ export default () => {
             open={advanceSearch?.visible}
             initData={filter.criteria?.advanceSearch}
             onClose={() => {
-                console.log('advance search in pro visible ', advanceSearch);
                 setAdvanceSearch({ visible: false });
             }}
             onReset={() => {
@@ -367,6 +408,7 @@ export default () => {
                             status: v.criteria?.advanceSearch?.status || 'ALL',
                             deptIds: data.deptIds,
                             service: data.service,
+                            buIds: data.buIds,
                             requestedDate: data.requestedDate,
                             acquiredDate: data.acquiredDate
                         }
@@ -375,6 +417,7 @@ export default () => {
                 }));
 
             }}
+						buList={buList}
             listDepts={listDepartment}
         />
 

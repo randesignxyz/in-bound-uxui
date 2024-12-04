@@ -9,7 +9,7 @@ import {
     CheckOutlined, CopyFilled, ExportOutlined, EyeFilled,
     FileOutlined, PartitionOutlined, PlusCircleOutlined, UploadOutlined
 } from "@ant-design/icons"
-import { useAccess, useQuery } from "@umijs/max"
+import { useAccess, useQuery, QueryClient, useQueryClient } from "@umijs/max"
 import { Button, Flex, Modal, Spin, Tooltip, Typography, message } from "antd"
 import { useEffect, useRef, useState } from "react"
 import Form from "@/pages/process-flow/form"
@@ -21,6 +21,7 @@ import { uniqueId } from "lodash"
 import { ActionType, LightFilter, ProCard, ProFormCheckbox, ProFormDateRangePicker, ProFormSelect } from "@ant-design/pro-components"
 import { BU } from "@/pages/hrm/data"
 import moment from "moment"
+import { useForm } from "antd/lib/form/Form"
 
 export const openPR = (instanceId: string) => window.open(`/external/data-form/requisition_request_process/${instanceId}`, '_blank')?.focus()
 
@@ -38,9 +39,11 @@ export default () => {
         criteria: { advanceSearch: { status: 'ALL' } }
     })
 
-    const { data, isFetching, refetch } = useQuery(['fetch-customer-list', filter], () => services.list(filter), {
+    const { data, isLoading, refetch } = useQuery(['fetch-customer-list', filter], () => services.list(filter), {
         refetchOnWindowFocus: false
     })
+
+		const queryClient = useQueryClient()
 
     const actionRef = useRef<ActionType>();
 
@@ -68,6 +71,8 @@ export default () => {
 			listDepts()
     }, []);
 
+
+		const [form] = useForm<RequisitionAdvanceSearchParams>()
     const buList = [
         access.hasProOflAccess && { id: 1, name: 'OFL', description: 'Onefraternity' },
         access.hasProNvcAccess && { id: 2, name: 'NVC', description: 'Vital Premium Water' },
@@ -77,6 +82,7 @@ export default () => {
     const extraFilter = <div>
         <ProCard size="small">
             <LightFilter<RequisitionAdvanceSearchParams> 
+							form={form}
 							onValuesChange={(_, values) => {
 								setFilter(v => ({
 									...v,
@@ -88,12 +94,14 @@ export default () => {
 											requestedDate: values.requestedDate?.map(it => moment(it)),
 											buIds: values.buIds,
 											deptIds: values.deptIds,
-										
+											forceUodate: (v.criteria?.forceUodate || 0) + 1 
 										}
 									}
 								}))
-								console.log('filter', filter)
+								
+								queryClient.invalidateQueries(['fetch-customer-list', filter])	
 							}}
+							
 							>
                 <ProFormSelect mode="multiple" allowClear name="buIds" label="Company" options={buList.map(it => ({ label: it.name, value: it.id }))} />
                 <ProFormSelect
@@ -192,7 +200,7 @@ export default () => {
                 props: {
                     dataSource: data?.items,
                     pagination: { total: data?.total },
-                    loading: isFetching,
+                    loading: isLoading,
                     scroll: { x: 'max-content' },
                     bordered: true,
                     actionRef: actionRef,
@@ -393,9 +401,9 @@ export default () => {
                         advanceSearch: {
                             status: v.criteria?.advanceSearch?.status || 'ALL',
                         }
-
                     }
                 }));
+								form.resetFields()
             }}
             onSearch={(data) => {
                 setFilter(v => ({
@@ -412,9 +420,15 @@ export default () => {
                             requestedDate: data.requestedDate,
                             acquiredDate: data.acquiredDate
                         }
-
                     }
                 }));
+
+								form.setFieldsValue({
+									deptIds: data.deptIds,
+									buIds: data.buIds,
+									requestedDate: data.requestedDate,
+									acquiredDate: data.acquiredDate
+								})
 
             }}
 						buList={buList}

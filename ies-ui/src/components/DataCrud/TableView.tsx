@@ -25,6 +25,7 @@ export interface TableViewSearchParams<T> {
     advanceSearch?: T;
     sort?: Record<string, SortOrder>;
     permissionLevel?: string;
+    forceUodate?: number;
   };
   pagination?: {
     pageSize?: number;

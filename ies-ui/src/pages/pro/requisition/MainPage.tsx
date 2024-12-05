@@ -43,7 +43,7 @@ export default () => {
         refetchOnWindowFocus: false
     })
 
-		const queryClient = useQueryClient()
+    const queryClient = useQueryClient()
 
     const actionRef = useRef<ActionType>();
 
@@ -58,7 +58,7 @@ export default () => {
 
     const listDepts = async () => {
 
-				if(listDepartment.length > 0) return	
+        if (listDepartment.length > 0) return
         try {
             const depts = await services.listProDepartment();
             setListDepartment(depts);
@@ -68,11 +68,11 @@ export default () => {
     };
     // Add useEffect to handle window resize
     useEffect(() => {
-			listDepts()
+        listDepts()
     }, []);
 
 
-		const [form] = useForm<RequisitionAdvanceSearchParams>()
+    const [form] = useForm<RequisitionAdvanceSearchParams>()
     const buList = [
         access.hasProOflAccess && { id: 1, name: 'OFL', description: 'Onefraternity' },
         access.hasProNvcAccess && { id: 2, name: 'NVC', description: 'Vital Premium Water' },
@@ -81,34 +81,35 @@ export default () => {
     ].filter(it => it) as BU[]
     const extraFilter = <div>
         <ProCard size="small">
-            <LightFilter<RequisitionAdvanceSearchParams> 
-							form={form}
-							onValuesChange={(_, values) => {
-								setFilter(v => ({
-									...v,
-									criteria: {
-										...v.criteria,
-										advanceSearch: { ...v.criteria?.advanceSearch, 
-											...values,
-											acquiredDate: values.acquiredDate?.map(it => moment(it)),
-											requestedDate: values.requestedDate?.map(it => moment(it)),
-											buIds: values.buIds,
-											deptIds: values.deptIds,
-											forceUodate: (v.criteria?.forceUodate || 0) + 1 
-										}
-									}
-								}))
-								
-								queryClient.invalidateQueries(['fetch-customer-list', filter])	
-							}}
-							
-							>
+            <LightFilter<RequisitionAdvanceSearchParams>
+                form={form}
+                onValuesChange={(_, values) => {
+                    setFilter(v => ({
+                        ...v,
+                        criteria: {
+                            ...v.criteria,
+                            advanceSearch: {
+                                ...v.criteria?.advanceSearch,
+                                ...values,
+                                acquiredDate: values.acquiredDate?.map(it => moment(it)),
+                                requestedDate: values.requestedDate?.map(it => moment(it)),
+                                buIds: values.buIds,
+                                deptIds: values.deptIds,
+                                forceUodate: (v.criteria?.forceUodate || 0) + 1
+                            }
+                        }
+                    }))
+
+                    queryClient.invalidateQueries(['fetch-customer-list', filter])
+                }}
+
+            >
                 <ProFormSelect mode="multiple" allowClear name="buIds" label="Company" options={buList.map(it => ({ label: it.name, value: it.id }))} />
                 <ProFormSelect
                     mode="multiple"
                     name="deptIds"
                     label="Department"
-										showSearch
+                    showSearch
                     options={listDepartment?.map((it) => {
                         return { value: it.id, label: it.name };
                     })}
@@ -219,14 +220,14 @@ export default () => {
                     ]),
                     columns: [
                         {
-                            title: 'Form No', sorter: 'formNo', 
+                            title: 'Form No', sorter: 'formNo',
                             width: 100,
                             actionProps: (item) => ({ type: 'view', label: item.formNo || "n/a" })
                         },
                         {
                             title: 'Reason',
                             // width: 200,
-                            render: ( dom , r) => 
+                            render: (dom, r) =>
                             //     <Typography.Paragraph style={{ fontWeight: 350 }} ellipsis={{
                             //     rows: 2,
                             //     defaultExpanded: false,
@@ -236,9 +237,9 @@ export default () => {
                             //     {r.reason}
                             // </Typography.Paragraph>,
                             {
-       
-                            return <Tooltip title={r.reason}>
-                                    <Typography.Text style={{ 
+
+                                return <Tooltip title={r.reason}>
+                                    <Typography.Text style={{
                                         maxWidth: '250px',
                                         display: 'block',
                                         overflow: 'hidden',
@@ -247,7 +248,8 @@ export default () => {
                                     }}>
                                         {r.reason}
                                     </Typography.Text>
-                                </Tooltip>},
+                                </Tooltip>
+                            },
                             dataIndex: 'reason',
                         },
                         {
@@ -403,7 +405,7 @@ export default () => {
                         }
                     }
                 }));
-								form.resetFields()
+                form.resetFields()
             }}
             onSearch={(data) => {
                 setFilter(v => ({
@@ -423,15 +425,15 @@ export default () => {
                     }
                 }));
 
-								form.setFieldsValue({
-									deptIds: data.deptIds,
-									buIds: data.buIds,
-									requestedDate: data.requestedDate,
-									acquiredDate: data.acquiredDate
-								})
+                form.setFieldsValue({
+                    deptIds: data.deptIds,
+                    buIds: data.buIds,
+                    requestedDate: data.requestedDate,
+                    acquiredDate: data.acquiredDate
+                })
 
             }}
-						buList={buList}
+            buList={buList}
             listDepts={listDepartment}
         />
 

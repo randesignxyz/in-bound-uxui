@@ -264,18 +264,19 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                 return r.internalName
             },
         },
-        { title: 'Business Unit', dataIndex: 'buName', sorter: 'buName' },
+        { title: 'Business Unit', width: 50, dataIndex: 'buName', sorter: 'buName' },
         { title: 'Function', dataIndex: 'departmentName', sorter: 'function' },
         { title: 'Job Title', dataIndex: 'jobTitle', sorter: 'jobTitle' },
-        { title: 'Self- Rating', dataIndex: 'rating1', sorter: 'rating1' },
+        { title: 'Self- Rating', width: 50, dataIndex: 'rating1', sorter: 'rating1' },
         {
-            title: 'FM Rating', dataIndex: 'rating2', sorter: 'rating2',
+            title: "Manager's Rating", dataIndex: 'rating2', sorter: 'rating2',
+            width: 50,
             render: (_: any, r: any) => {
                 return (r?.rating2 == 0 ? '-' : r?.rating2 == -1.0 ? '-' : r.rating2)
             }
         },
         {
-            title: 'Agreed Rating', dataIndex: 'rating5', sorter: 'rating5',
+            title: 'Final Score', width: 50, dataIndex: 'rating5', sorter: 'rating5',
             render: (_: any, r: any) => !r?.rating5 || r?.rating5 == 0 ? '-' : r?.rating5
         },
         { title: 'Modified By', sorter: 'modifiedBy', dataIndex: 'modifiedBy' },
@@ -461,8 +462,10 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
             <Tabs.TabPane icon={<UnorderedListOutlined/>} tab="Performance Submission" key="1">
                 <Spin spinning={requestActions.request?.loading} >
                 <TableView<AppraisalEmp, { searchValue?: string; advanceSearch?: AppraisalEmpAdvanceSearchParams }>
-                    cache     
+                    cache 
+                    scrollX    
                     tableProps={{
+                        
                         actionRef: actionRef,
                         options: { reload: true, density: false, fullScreen: false, setting: false },
                         toolbar: {actions: [
@@ -527,9 +530,9 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                         </Space>
 
                     }
-                    extraRightFilter={<Flex gap={5}>
-                         <Tooltip placement="bottom" title="Dowload Excel File Detail"><Button icon={<FileExcelOutlined />} onClick={()=>dowloandExcelHandler('Detail')} /></Tooltip>
-                        <Tooltip placement="bottom" title="Dowload Excel File"><Button icon={<FileExcelOutlined />} onClick={()=>dowloandExcelHandler('')} /></Tooltip>
+                    extraRightFilter={<Flex gap={0}>
+                         <Tooltip placement="bottom" title="Dowload Performance Review Detail"><Button type="link" icon={<FileExcelOutlined />} onClick={()=>dowloandExcelHandler('Detail')}>Detail</Button></Tooltip>
+                        <Tooltip placement="bottom" title="Dowload Performance Review Summary"><Button type="link" icon={<FileExcelOutlined />} onClick={()=>dowloandExcelHandler('')}>Summary</Button></Tooltip>
                         </Flex>
                     }
                     actionHandlers={{

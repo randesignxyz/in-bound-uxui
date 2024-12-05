@@ -2,10 +2,10 @@ import { simpleRequestActions } from "@/services/model"
 import { createService } from "./services"
 import { useEffect, useRef, useState } from "react"
 import { AppraisalRequestDetail, ApprovalAppraisalRequestItem, ReviewerMember, ReviewerMemberPayload } from "./data.types"
-import { Alert, Button, Descriptions, Popconfirm, Radio, Space, Spin, Tooltip, message } from "antd"
+import { Alert, Button, Descriptions, Flex, Popconfirm, Radio, Space, Spin, Tooltip, message } from "antd"
 import { ActionType, ProCard, ProTable } from "@ant-design/pro-components"
 import { AppraisalEmp } from "../appraisal-submit/data.types"
-import { CheckOutlined, DeleteOutlined, EyeOutlined, LoadingOutlined, PlusOutlined, } from "@ant-design/icons"
+import { CheckOutlined, DeleteOutlined, DownloadOutlined, ExceptionOutlined, EyeOutlined, FileExcelOutlined, ImportOutlined, LoadingOutlined, PlusOutlined, UploadOutlined, } from "@ant-design/icons"
 import { Model } from "../appraisal-submit/model"
 import AppraisalQuickView from "./components/AppraisalQuickView"
 import Status from "@/components/Status"
@@ -15,6 +15,9 @@ import { AppraisalEmpAdvanceSearchParams } from "../appraisal-submit/components/
 import { Paging } from "@/services/API"
 import { SortOrder } from "antd/es/table/interface"
 import PopconfirmMe from "@/pages/expense/delivery/components/PopconfirmMe"
+import ImportFileButton from "@/components/ImportFileButton"
+import { ImportDataItem, ImportDataResponse } from "@/services/shared/data"
+import UploadData from "./components/upload-data"
 
 export default ({ processInstaceId, forceReload,formStarted,taskCompleted,showRating5,editable }: { 
     processInstaceId: string, 
@@ -33,6 +36,8 @@ export default ({ processInstaceId, forceReload,formStarted,taskCompleted,showRa
     const [advanceSearchParams, setAdvanceSearchParams ] = useState<AppraisalEmpAdvanceSearchParams>({
         status: 'ALL',
     })
+    const [importData, setImportData] = useState<ImportDataResponse>()
+    const [loading, setLoading] = useState(false);
    
     useEffect(() => {
         (async () => {
@@ -144,6 +149,24 @@ export default ({ processInstaceId, forceReload,formStarted,taskCompleted,showRa
                             </Radio.Group>
                         </Space>                        
                     }
+                    // extraRightFilter={
+                    //     <Flex gap={2}>
+                    //         <ImportFileButton<ImportDataItem>
+                    //             importedKey="PERFORMANCE_REVIEW_REQUEST"
+                    //             onDataResponse={data => {
+                    //                 setImportData(data)
+                    //             }}
+                    //             key={'PERFORMANCE-REVIEW-REQUEST'}
+                    //             onHandleChange={(status) => {
+                    //                 setLoading(status == 'uploading');
+                    //                 if (status == 'done') {
+                    //                     message.info('Data uploaded.');
+                    //                 }
+                    //             }}
+                    //         />
+                    //         <Button type="link"  icon={<DownloadOutlined/>}>Export</Button>
+                    //     </Flex>
+                    // }
                     actionHandlers={{
                         onRequest:onRequestHandler
                     }}
@@ -261,5 +284,6 @@ export default ({ processInstaceId, forceReload,formStarted,taskCompleted,showRa
                  checkList={dataDetail?.members}
             />}
         </Space>
+        <UploadData title="Import Performance Review Request" onCancel={() => setImportData(undefined)} open={!!importData} data={importData} onFinish={()=> {message.error('Hello')}} />
     </Spin>
 }

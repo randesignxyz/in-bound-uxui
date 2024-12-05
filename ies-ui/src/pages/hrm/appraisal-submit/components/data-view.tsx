@@ -151,7 +151,7 @@ export default ({
     // if(currentAssign3 || (rated3 && !isDrafted)){
     if(currentAssign3){
       columns.push({
-        title: getLable('TBL_RATING5'),
+        title: getLable('TBL_RATING3'),
         width: '8%',     
         render:(r:any)=> <Radio value={r.behaviorRate}  checked={r.behaviorRate===r.rating3}  onChange={(e)=> rating3Editable&&onChange3(e,r)}/>,
         onCell:(record:any)=>({style: record.sort%2===0?{ background:rowColr, textAlign:'center',border:border}:{ textAlign:'center',border:border}})

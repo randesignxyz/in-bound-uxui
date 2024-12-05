@@ -97,14 +97,14 @@ export const Model = () => {
             if(size3>0){
                 validtor.push({
                     id: r.id,
-                    title:'Agreed Rating',
+                    title:"Manager’s Rating",
                     msg:'is required'
                 })
             }
             if(!r.rating3Comment || r.rating3Comment==''){
                 validtor.push({
                     id: r.id,
-                    title:'Agreed Rating’s COMMENTS',
+                    title:'Manager’s COMMENTS',
                     msg:'is required'
                 })
             }
@@ -128,14 +128,14 @@ export const Model = () => {
             if(size2>0){
                 validtor.push({
                     id: r.id,
-                    title:`FM's Rating`,
+                    title:`Manager’s Rating`,
                     msg:'is required'
                 })
             }
             if((!r.rating2Comment || r.rating2Comment=='') ){
                 validtor.push({
                     id: r.id,
-                    title:`FUNCTION MANAGER’S COMMENTS`,
+                    title:`MANAGER’S COMMENTS`,
                     msg:'is required'
                 })
             }

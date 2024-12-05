@@ -2,13 +2,12 @@ import { simpleRequestActions } from "@/services/model";
 import { ModalForm, ProTable } from "@ant-design/pro-components"
 import { useEffect, useState } from "react"
 import { createService } from "../../services";
-import { AppraisalEmSubmissionPayLoad, AppraisalEmp, AppraisalEmpSubmitAllPayload, ValidatorMsg } from "../../data.types";
-import { Button, Flex, Modal, message} from "antd";
+import { AppraisalEmp, AppraisalEmpSubmitAllPayload, ValidatorMsg } from "../../data.types";
+import { Button, Modal, Tooltip, Typography, message} from "antd";
 import { Model } from "../../model";
-import EmpReport from "@/pages/ess/reports/EmpReport";
-import { ExportOutlined } from "@ant-design/icons";
 import ConfirmSubmitModal from "./ConfirmSubmitModal";
-import { useRafState } from "ahooks";
+import { DeleteOutlined } from "@ant-design/icons";
+const { Link } = Typography;
 
 interface Props{
     open?: boolean
@@ -27,8 +26,9 @@ export default ({open, onOpenModalChange,refreshTable}:Props) =>{
         try {
             srv.findDraftedAppraisalEmpList().then(it=>{
                 setAppraisalEmp(it.filter(it=>{
-                    var msg = data.validationMsgList(it)
-                    return msg.length==0
+                    // var msg = data.validationMsgList(it)
+                    // return msg.length==0
+                    return true
                 }).map(i=> {
                     var status = actions.getStatus('DONE',i)
                     return {...i,
@@ -102,12 +102,13 @@ export default ({open, onOpenModalChange,refreshTable}:Props) =>{
         width={'85%'}
         open={open}
         onOpenChange={onOpenModalChange}
-        submitter={((appraisalEmp?.length||0)>0)&&{
+        submitter={{
             searchConfig: {
               submitText: 'Submit All',
             },
             submitButtonProps:{
-               loading: loading
+               loading: loading,
+               disabled: ((appraisalEmp?.length||0)==0 || appraisalEmp?.some(it => data.validationMsgList(it).length > 0 ))
             }    
         }}
         onFinish={()=>onSubmitAllHandler()}
@@ -130,8 +131,17 @@ export default ({open, onOpenModalChange,refreshTable}:Props) =>{
                 title: 'Employee',
                 sorter: 'formNo', 
                 width:'150px',
-                render(_, r) {                        
-                    return `${r.empNo}- ${r.empName}`
+                render(_, r) {     
+                    var vali = data.validationMsgList(r)                   
+                    // return `${r.empNo}- ${r.empName}`
+                    return <Link type={(vali.length > 0) ? 'danger' : undefined}>
+                    <Tooltip
+                        title={(vali.length > 0) && vali.map(it => <div><b style={{ color: 'orange' }}>{it.title}: </b>{it.msg}</div>)}
+                        overlayStyle={{ maxWidth: '500px' }}
+                    >
+                        {`${r.empNo}- ${r.empName}`}
+                    </Tooltip>
+                </Link>
                 },
             },
             {
@@ -142,15 +152,15 @@ export default ({open, onOpenModalChange,refreshTable}:Props) =>{
             {title: 'Function', dataIndex: 'departmentName', sorter : 'function' },
             {title: 'Job Title', dataIndex: 'jobTitle', sorter : 'jobTitle' },
             {title: 'Self- Rating', dataIndex: 'rating1', sorter: 'rating1' },
-            {title: 'FM Rating', dataIndex: 'rating2', sorter: 'rating2' },
-            // {title: 'Agreed Rating', dataIndex: 'rating3', sorter: 'rating3' },
+            // {title: 'FM Rating', dataIndex: 'rating2', sorter: 'rating2' },
+            {title: "Manager's Rating", dataIndex: 'rating3', sorter: 'rating3' },
             
-            // {
-            //      title: 'Action',
-            //      width:'180px', 
-            //     render: (_, r) =>  <a onClick={()=>removeHandler(r)}>Remove</a>
+            {
+                 title: '',
+                 width:'5px', 
+                render: (_, r) => <Button danger type='link' icon={<DeleteOutlined/>} onClick={()=>removeHandler(r)}/>
             
-            // }
+            }
         ]} 
        />}
        {modals.isVisible('ConfirmPerformanceEvaluationSubmit') && <ConfirmSubmitModal onFinish={onFinishHandler}  open={modals.isVisible('ConfirmPerformanceEvaluationSubmit')} onOpenModalChange={(v: any) => !v && modals.hideModal('ConfirmPerformanceEvaluationSubmit')} />}

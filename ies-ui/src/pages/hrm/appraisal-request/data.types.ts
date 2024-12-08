@@ -183,6 +183,8 @@ export type PerformanceEvaluationAccessRs = {
 }
 export type AppraiserEvaluationRs ={
     id: string
+    company: string
+    func: string
     appraiser1Id: number
     appraiser1No: String
     appraiser1: string
@@ -190,13 +192,12 @@ export type AppraiserEvaluationRs ={
 }
 export type AppraiserCompanyRs = {
     id: string
-    appraiser1Id: number
     company: string
     appraisalPerformanceId: number
 }
 export type AppraiserFunctionRs = {
     id: string
-    appraiser1Id: number
+    company: string
     func: string
     appraisalPerformanceId: number
 }

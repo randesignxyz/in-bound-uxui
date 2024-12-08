@@ -128,14 +128,14 @@ export const Model = () => {
             if(size2>0){
                 validtor.push({
                     id: r.id,
-                    title:`Manager’s Rating`,
+                    title:`FM’s Rating`,
                     msg:'is required'
                 })
             }
             if((!r.rating2Comment || r.rating2Comment=='') ){
                 validtor.push({
                     id: r.id,
-                    title:`MANAGER’S COMMENTS`,
+                    title:`FM’S COMMENTS`,
                     msg:'is required'
                 })
             }

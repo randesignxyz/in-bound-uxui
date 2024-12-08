@@ -35,6 +35,7 @@ export const createService = ({ request }: { request: SimpleRequestActions; }): 
     fetchPerformanceFunctionHeadCount:(data: PerformanceFunctionHeadCountCriter)=> Promise<PerformanceFunctionHeadCountRs>,
     fetchPerformanceEvaluationPaging: (params: FetchPagingParams<SearchParams>) => Promise<Paging<AppraisalEmp>>,
     fetchPerformanceEvaluationAccess: (id: number) =>Promise<PerformanceEvaluationAccessRs>,
+    fetchPerformanceEvaluationHeadCountList: (params: FetchPagingParams<SearchParams>) => Promise<AppraisalEmp[]>,
     
 } => {
     return {
@@ -58,6 +59,13 @@ export const createService = ({ request }: { request: SimpleRequestActions; }): 
                     page: params.pagination?.current,
                     pageSize: params.pagination?.pageSize
                 }
+            }).query(request)
+        ,
+        fetchPerformanceEvaluationHeadCountList:(params: FetchPagingParams<SearchParams>) =>
+            fetchDataListService<AppraisalEmp,FetchPagingParams<SearchParams>>({
+                actionName: 'fetch-performance-evaluation-headcount-list',
+                endpoint: 'HR',
+                payload: params
             }).query(request)
         ,
 

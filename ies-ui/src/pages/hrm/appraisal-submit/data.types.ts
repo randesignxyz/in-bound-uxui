@@ -34,6 +34,7 @@ export type AppraisalEmp = {
     rating3?: number
     rating4?: number
     rating5?: number
+    agreeRating?: number
     hasRating2: boolean
     currentAssign1:boolean
     currentAssign2:boolean
@@ -336,7 +337,7 @@ export interface AppraisalAdvanceParams {
 }
 
 export interface AppraisalEvaluationAdvanceParams {   
-    appraiser?: number;
+    appraiser?: number[];
     company?: number[];
     function?: number[];
     appraisalPeriodId?: number;

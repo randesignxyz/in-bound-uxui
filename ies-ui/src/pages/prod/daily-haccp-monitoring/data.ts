@@ -63,3 +63,10 @@ export type HACCPMonitoringInstruction={
     lastModifiedDate?: Moment,
     active?:number
 }
+
+export interface ProductionLine {
+    id?: number,
+    prdcode: string,
+    prdname: string,
+    active?:number
+  }

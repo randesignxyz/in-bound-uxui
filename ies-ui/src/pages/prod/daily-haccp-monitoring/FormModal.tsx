@@ -45,12 +45,11 @@ export default ({ onSave, ...props }: Props) => {
         { name: '17:00' },
         { name: '19:00' },
         { name: '21:00' },
-        { name: '23:00' }, 
+        { name: '23:00' },
     ]
 
     return (
         <FormModalComp
-            title="Inventory Transfer"
             {...props}
             width={'800px'}
             onSubmit={async () => {
@@ -72,16 +71,32 @@ export default ({ onSave, ...props }: Props) => {
                     //     }
                     //     item.push(entity)
                     // }
+                    var li
                     for (let i = 0; i < line.length; i++) {
                         // Create the entity without the haccpList first
-                        const entity = {
-                            ...dataForm,
-                            assign_date: current.clone().format('YYYY-MM-DD'), // Keep date only
-                            assign_to: assignTo,
-                            line: line[i],
-                            activities: [{ action: "Assign to " + `${dataForm.assign_to}` }],
-                            haccpList: [] // Initialize haccpList as an empty array
-                        };
+                        if (line[i] == "Barrel 01") {
+                            li = 'Line Barrel'
+                        } else if (line[i] == "Production Line 02") {
+                            li = 'Line 2'
+                        } else if (line[i] == "Production Line 03"){
+                            li='Line 3'
+                        }else if(line[i]=="Production Line 04"){
+                            li='Line 4'
+                        }else if(line[i]=="Production Line 05"){
+                            li='Line 5'
+                        }else if(line[i]=="Production Line 06"){
+                            li='Line 6'
+                        }else{
+                            li=line[i]
+                        }
+                            const entity = {
+                                ...dataForm,
+                                assign_date: current.clone().format('YYYY-MM-DD'), // Keep date only
+                                assign_to: assignTo,
+                                line: li,
+                                activities: [{ action: "Assign to " + `${dataForm.assign_to}` }],
+                                haccpList: [] // Initialize haccpList as an empty array
+                            };
 
                         // Now, loop through the time array to push the time values into the haccpList
                         for (let j = 0; j < time.length; j++) {
@@ -102,35 +117,35 @@ export default ({ onSave, ...props }: Props) => {
                     <Row gutter={6}>
                         <Col span={12}>
                             <ProFormSelect
-                                 request={async ({ keyWords }) => {
-                                    const data = await EmployeeServices.list({
-                                        criteria: {
-                                            searchValue: keyWords,
-                                            advanceSearch: {
-                                                status: 'ACTIVE',
-                                            },
-                                        }, pagination: { pageSize: 2000 }
-                                    }).query(requestActions);
-                                    const filteredData = data.items.filter((obj) => obj.department === 'PRD' && obj.userId != null);
-                                    return filteredData.map((obj) => ({
-                                        value: `${obj.userId}`,
-                                        label: `${obj.firstName + ' ' + obj.lastName}`,
-                                    }));
-                                }}
-                                // options={[
-                                //     {
-                                //         value: 'prodadm',
-                                //         label: 'prodadm',
-                                //     },
-                                //     {
-                                //         value: 'prod1',
-                                //         label: 'prod1',
-                                //     },
-                                //     {
-                                //         value: 'prod2',
-                                //         label: 'prod2',
-                                //     }
-                                // ]}
+                                //  request={async ({ keyWords }) => {
+                                //     const data = await EmployeeServices.list({
+                                //         criteria: {
+                                //             searchValue: keyWords,
+                                //             advanceSearch: {
+                                //                 status: 'ACTIVE',
+                                //             },
+                                //         }, pagination: { pageSize: 2000 }
+                                //     }).query(requestActions);
+                                //     const filteredData = data.items.filter((obj) => obj.department === 'PRD' && obj.userId != null);
+                                //     return filteredData.map((obj) => ({
+                                //         value: `${obj.userId}`,
+                                //         label: `${obj.firstName + ' ' + obj.lastName}`,
+                                //     }));
+                                // }}
+                                options={[
+                                    {
+                                        value: 'prodadm',
+                                        label: 'prodadm',
+                                    },
+                                    {
+                                        value: 'prod1',
+                                        label: 'prod1',
+                                    },
+                                    {
+                                        value: 'prod2',
+                                        label: 'prod2',
+                                    }
+                                ]}
                                 showSearch
                                 mode="multiple"
                                 name="assign_to"
@@ -147,41 +162,45 @@ export default ({ onSave, ...props }: Props) => {
                         </Col>
                         <Col span={12}>
                             <ProFormSelect
-                                options={[
-                                    {
-                                        value: 'Line Barrel',
-                                        label: 'Line Barrel'
-                                    },
-                                    {
-                                        value: 'Line 2',
-                                        label: 'Line 2',
-                                    },
-                                    {
-                                        value: 'Line 3',
-                                        label: 'Line 3',
-                                    },
-                                    {
-                                        value: 'Line 4',
-                                        label: 'Line 4',
-                                    },
-                                    {
-                                        value: 'Line 5',
-                                        label: 'Line 5',
-                                    },
-                                    {
-                                        value: 'Line 6',
-                                        label: 'Line 6'
-                                    }
-                                ]}
+                                // options={[
+                                //     {
+                                //         value: 'Line Barrel',
+                                //         label: 'Line Barrel'
+                                //     },
+                                //     {
+                                //         value: 'Line 2',
+                                //         label: 'Line 2',
+                                //     },
+                                //     {
+                                //         value: 'Line 3',
+                                //         label: 'Line 3',
+                                //     },
+                                //     {
+                                //         value: 'Line 4',
+                                //         label: 'Line 4',
+                                //     },
+                                //     {
+                                //         value: 'Line 5',
+                                //         label: 'Line 5',
+                                //     },
+                                //     {
+                                //         value: 'Line 6',
+                                //         label: 'Line 6'
+                                //     }
+                                // ]}
+                                request={async () => {
+                                    const data = await services.get_line()
+                                    const activeLines = data.filter((item: { active: string }) => item.active === "1");
+                                    return activeLines.map((obj) => ({
+                                        value: `${obj.prdname}`,
+                                        label: `${obj.prdname}`,
+                                    }));
+                                }}
                                 fieldProps={{
                                     onChange: async (e: string) => {
                                         setLine(e)
-                                        // const dateWithoutTime = date?.format("YYYY-MM-DD");
-                                        // const data= await services.get_treatment_by_date(dateWithoutTime, e)
-                                        // setExited(data.length)
                                     }
                                 }}
-                                // initialValue="PM/RM"
                                 mode="multiple"
                                 name="line"
                                 label="Line"

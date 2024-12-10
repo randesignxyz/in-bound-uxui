@@ -288,5 +288,6 @@ export interface closeParams {
 export interface ProductionLine {
   id?: number,
   prdcode: string,
-  prdname: string
+  prdname: string,
+  active?:number
 }

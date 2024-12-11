@@ -32,6 +32,7 @@ export type ApprovalAppraisalRequestItem= {
     rating3?:number
     rating4?: number
     rating5?: number
+    finalScore?: number
     status: string,
 }
 

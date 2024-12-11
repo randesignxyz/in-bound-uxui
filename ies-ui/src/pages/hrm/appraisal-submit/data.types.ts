@@ -40,6 +40,7 @@ export type AppraisalEmp = {
     currentAssign2:boolean
     currentAssign3:boolean
     currentDrafted:boolean
+    appraisalAdmin?:boolean
     rated1:boolean
     rated2:boolean
     rated3:boolean

@@ -149,24 +149,24 @@ export default ({ processInstaceId, forceReload,formStarted,taskCompleted,showRa
                             </Radio.Group>
                         </Space>                        
                     }
-                    // extraRightFilter={
-                    //     <Flex gap={2}>
-                    //         <ImportFileButton<ImportDataItem>
-                    //             importedKey="PERFORMANCE_REVIEW_REQUEST"
-                    //             onDataResponse={data => {
-                    //                 setImportData(data)
-                    //             }}
-                    //             key={'PERFORMANCE-REVIEW-REQUEST'}
-                    //             onHandleChange={(status) => {
-                    //                 setLoading(status == 'uploading');
-                    //                 if (status == 'done') {
-                    //                     message.info('Data uploaded.');
-                    //                 }
-                    //             }}
-                    //         />
-                    //         <Button type="link"  icon={<DownloadOutlined/>}>Export</Button>
-                    //     </Flex>
-                    // }
+                    extraRightFilter={
+                        <Flex gap={2}>
+                            <ImportFileButton<ImportDataItem>
+                                importedKey="PERFORMANCE_REVIEW_REQUEST"
+                                onDataResponse={data => {
+                                    setImportData(data)
+                                }}
+                                key={'PERFORMANCE-REVIEW-REQUEST'}
+                                onHandleChange={(status) => {
+                                    setLoading(status == 'uploading');
+                                    if (status == 'done') {
+                                        message.info('Data uploaded.');
+                                    }
+                                }}
+                            />
+                            <Button type="link"  icon={<DownloadOutlined/>}>Export</Button>
+                        </Flex>
+                    }
                     actionHandlers={{
                         onRequest:onRequestHandler
                     }}
@@ -198,13 +198,13 @@ export default ({ processInstaceId, forceReload,formStarted,taskCompleted,showRa
                         {title: 'Function', dataIndex: 'departmentName',sorter:'departmentName'},                    
                         {title: 'Job Title', dataIndex: 'jobTitle',sorter:'jobTitle'},
                         {title: 'Self- Rating', dataIndex: 'rating1',sorter:'rating1'},
-                        {title: 'FM Rating', dataIndex: 'rating3',sorter:'rating3',
+                        {title: "Manager's Rating", dataIndex: 'rating3',sorter:'rating3',
                             render:(_,r)=> {
                                 return (r?.rating3==0 ?'-':  r?.rating3==-1.0 ?'-': r.rating3)
                             }
                         },
-                        {title: 'Agreed Rating', dataIndex: 'rating5',sorter:'rating5',
-                            render:(_,r)=>  (dataDetail?.status=='REJECT' ||(dataDetail?.status!='COMPLETED' && formStarted)) || !r?.rating5||r?.rating5==0 ?'-': r?.rating5
+                        {title: 'Final Score', dataIndex: 'rating5',sorter:'finalScore',
+                            render:(_,r)=>  (dataDetail?.status=='REJECT' ||(dataDetail?.status!='COMPLETED' && formStarted)) || !r?.finalScore||r?.finalScore==0 ?'-': r?.finalScore
                         },
                         {
                             title:'',dataIndex:'status',
@@ -214,7 +214,7 @@ export default ({ processInstaceId, forceReload,formStarted,taskCompleted,showRa
                                 saveItemConfirmDoneHandler(r)
                             }}
                             >
-                                <Button type="default" icon={<CheckOutlined/>}>Done</Button>
+                                <Button type="link" icon={<CheckOutlined/>}/>
                                 </PopconfirmMe>
                                 : <Status text={r.status}/>
                         }
@@ -284,6 +284,6 @@ export default ({ processInstaceId, forceReload,formStarted,taskCompleted,showRa
                  checkList={dataDetail?.members}
             />}
         </Space>
-        <UploadData title="Import Performance Review Request" onCancel={() => setImportData(undefined)} open={!!importData} data={importData} onFinish={()=> {message.error('Hello')}} />
+        <UploadData title="Import Performance Review Request" onCancel={() => setImportData(undefined)} open={!!importData} datasources={importData} onFinish={()=> {message.error('Hello')}} />
     </Spin>
 }

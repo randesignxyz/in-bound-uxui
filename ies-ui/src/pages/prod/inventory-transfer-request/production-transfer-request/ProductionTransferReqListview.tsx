@@ -476,7 +476,7 @@ export default ({ onAdd }: Props) => {
               vendorName: '',
               fromWarehouse: data.from_warehouse.map((i: any) => (i.whsCode)).toString(),
               toWarehouse: data.to_warehouse.map((i: any) => (i.whsCode)).toString(),
-              apiReferenceNo: '',
+              apiReferenceNo: id,
               comments: data.line + ', ' + data.shift,
               transferRequestDetails: data.item.map((v: any) => ({
                 ...v,

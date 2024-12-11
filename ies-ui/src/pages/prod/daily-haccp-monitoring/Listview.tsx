@@ -9,7 +9,7 @@ import { ActionType, ProForm, ProFormSelect, ProTable } from '@ant-design/pro-co
 import { Badge, Button, Card, Col, DatePicker, Flex, Modal, Progress, Row, Space, Tag, Tooltip, Typography, message } from 'antd';
 import { ArrowRightOutlined, EditOutlined, EllipsisOutlined, FileDoneOutlined, FileExcelOutlined, PlusOutlined, RedoOutlined, SettingOutlined } from '@ant-design/icons';
 import { DailyHACCPMonitoringServiceAPI } from './service';
-import { HACCPMonitoring } from './data';
+import { HACCPMonitoring, ProductionLine } from './data';
 import FormModal from './FormModal';
 import { history } from 'umi'
 import ExportExcel from './ExportExcel';
@@ -29,6 +29,7 @@ export default () => {
   const services = DailyHACCPMonitoringServiceAPI(requestActions);
   const actionRef = useRef<ActionType>();
   const [data, setData] = useState<HACCPMonitoring[]>([])
+  const [line, setLine] = useState<ProductionLine[]>([])
   const { Text } = Typography;
   const [excelLoading, setExcelLoading] = useState(false)
   const [exportModel, setExportModal] = useState<{ visible: boolean }>({
@@ -45,31 +46,51 @@ export default () => {
     },
   ];
 
-  const line = [
-    {
-      name: 'Line Barrel'
-    },
-    {
-      name: 'Line 2'
-    },
-    {
-      name: 'Line 3'
-    },
-    {
-      name: 'Line 4'
-    },
-    {
-      name: 'Line 5'
-    },
-    {
-      name: 'Line 6'
-    }
-  ]
+  // const line = [
+  //   {
+  //     name: 'Line Barrel'
+  //   },
+  //   {
+  //     name: 'Line 2'
+  //   },
+  //   {
+  //     name: 'Line 3'
+  //   },
+  //   {
+  //     name: 'Line 4'
+  //   },
+  //   {
+  //     name: 'Line 5'
+  //   },
+  //   {
+  //     name: 'Line 6'
+  //   }
+  // ]
 
   useEffect(() => {
     const getData = async () => {
       const dateWithoutTime = date?.format("YYYY-MM-DD");
       const data = await services.getHaccpByDate(dateWithoutTime)
+      const line = await services.get_line()
+      const activeLines = line
+        .filter((item: { active: string }) => item.active === "1")
+        .map((item: { active: string; prdname: string }) => {
+          if (item.prdname === "Barrel 01") {
+            return { ...item, prdname: "Line Barrel" };
+          } else if (item.prdname === "Production Line 02") {
+            return { ...item, prdname: "Line 2" };
+          } else if (item.prdname === "Production Line 03") {
+            return { ...item, prdname: "Line 3" };
+          } else if (item.prdname === "Production Line 04") {
+            return { ...item, prdname: "Line 4" };
+          } else if (item.prdname === "Production Line 05") {
+            return { ...item, prdname: "Line 5" };
+          } else if (item.prdname === "Production Line 06") {
+            return { ...item, prdname: "Line 6" };
+          }
+          return item; // Return the item unchanged if no match
+        });
+      setLine(activeLines);
       setData(data)
     }
     getData()
@@ -113,7 +134,7 @@ export default () => {
 
           {line.map((item, index) => {
             // Filter data based on the current line name
-            const filteredData = data.filter(i => i.line === item.name).map(i => ({
+            const filteredData = data.filter(i => i.line === item.prdname).map(i => ({
               ...i,
               haccplist: i.haccplist?.filter(haccp => haccp.status !== 'unassigned') // Filter haccplist by status
             }));
@@ -125,8 +146,7 @@ export default () => {
             return (
               <Col span={8} key={index}>
                 <Card
-                  title={'Production ' + item.name}
-                  extra={filteredData[0] ? <a
+                  title={item.prdname.includes("Production") ? item.prdname : `Production ${item.prdname}`} extra={filteredData[0] ? <a
                     onClick={() => (filteredData[0] ? (history.push(`/prod/daily-haccp-monitoring/detail/${filteredData[0]?.assign_date}/${filteredData[0]?.line}/${filteredData[0]?.haccp_id}`))
                       : {})
                     }>

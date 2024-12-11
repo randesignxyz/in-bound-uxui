@@ -5,6 +5,7 @@ import { Card, Col, Row } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { useEffect, useState } from 'react';
 import { simpleRequestActions } from '@/services/model';
+import { DailyHACCPMonitoringServiceAPI } from './service';
 
 interface Props extends FormModalProps {
   // id: string;
@@ -15,13 +16,16 @@ interface Props extends FormModalProps {
 export default ({ loading, onSave, ...props }: Props) => {
   const [form] = useForm<{ line: string; duration: any }>();
   const [line, setLine] = useState('')
+  const requestActions = simpleRequestActions();
+  const services = DailyHACCPMonitoringServiceAPI(requestActions);
+  const [allLine, setAllLine] = useState([])
   const [disabledOptions, setDisabledOptions] = useState({
     Line2: false,
     Line3: false,
     Line4: false,
     Line5: false,
     Line6: false,
-    LineBarrel:false
+    LineBarrel: false
   });
 
   useEffect(() => {
@@ -34,10 +38,42 @@ export default ({ loading, onSave, ...props }: Props) => {
         Line4: false,
         Line5: false,
         Line6: false,
-        LineBarrel:false
+        LineBarrel: false
       })
     }
   }, [props.open]);
+
+  useEffect(() => {
+    const getData = async () => {
+      const line = await services.get_line();
+      const activeLines = line
+        .filter((item: { active: string }) => item.active === "1")
+        .map((item: { active: string; prdname: string }) => {
+          let label = item.prdname; // Default label
+          if (item.prdname === "Barrel 01") {
+            return { ...item, value: 'Line Barrel', label: 'Line Barrel', disabled: disabledOptions.LineBarrel };
+          } else if (item.prdname === "Production Line 02") {
+            return { ...item, value: 'Line 2', label: 'Line 2', disabled: disabledOptions.Line2 };
+          } else if (item.prdname === "Production Line 03") {
+            return { ...item, value: 'Line 3', label: 'Line 3', disabled: disabledOptions.Line3 };
+          } else if (item.prdname === "Production Line 04") {
+            return { ...item, value: 'Line 4', label: 'Line 4', disabled: disabledOptions.Line4 };
+          } else if (item.prdname === "Production Line 05") {
+            return { ...item, value: 'Line 5', label: 'Line 5', disabled: disabledOptions.Line5 };
+          } else if (item.prdname === "Production Line 06") {
+            return { ...item, value: 'Line 6', label: 'Line 6', disabled: disabledOptions.Line6 };
+
+          }
+          return {
+            label,
+            value: label,
+            disabled: true,
+          };
+        });
+      setAllLine(activeLines);
+    };
+    getData();
+  }, [disabledOptions]);
 
   const handleLineChange = (value: string[]) => {
     const disableGroup1 = value.includes('Line 2') || value.includes('Line 3');
@@ -74,38 +110,7 @@ export default ({ loading, onSave, ...props }: Props) => {
           <Row gutter={6}>
             <Col span={23}>
               <ProFormSelect
-                options={[
-                  {
-                    value: 'Line Barrel',
-                    label: 'Line Barrel',
-                    disabled: disabledOptions.LineBarrel,
-                  },
-                  {
-                    value: 'Line 2',
-                    label: 'Line 2',
-                    disabled: disabledOptions.Line2,
-                  },
-                  {
-                    value: 'Line 3',
-                    label: 'Line 3',
-                    disabled: disabledOptions.Line3,
-                  },
-                  {
-                    value: 'Line 4',
-                    label: 'Line 4',
-                    disabled: disabledOptions.Line4,
-                  },
-                  {
-                    value: 'Line 5',
-                    label: 'Line 5',
-                    disabled: disabledOptions.Line5,
-                  },
-                  {
-                    value: 'Line 6',
-                    label: 'Line 6',
-                    disabled: disabledOptions.Line6,
-                  },
-                ]}
+                options={allLine}
                 name="line"
                 label="Line"
                 mode="multiple"

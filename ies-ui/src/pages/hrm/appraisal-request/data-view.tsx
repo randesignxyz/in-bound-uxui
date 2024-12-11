@@ -149,24 +149,24 @@ export default ({ processInstaceId, forceReload,formStarted,taskCompleted,showRa
                             </Radio.Group>
                         </Space>                        
                     }
-                    extraRightFilter={
-                        <Flex gap={2}>
-                            <ImportFileButton<ImportDataItem>
-                                importedKey="PERFORMANCE_REVIEW_REQUEST"
-                                onDataResponse={data => {
-                                    setImportData(data)
-                                }}
-                                key={'PERFORMANCE-REVIEW-REQUEST'}
-                                onHandleChange={(status) => {
-                                    setLoading(status == 'uploading');
-                                    if (status == 'done') {
-                                        message.info('Data uploaded.');
-                                    }
-                                }}
-                            />
-                            <Button type="link"  icon={<DownloadOutlined/>}>Export</Button>
-                        </Flex>
-                    }
+                    // extraRightFilter={
+                    //     <Flex gap={2}>
+                    //         <ImportFileButton<ImportDataItem>
+                    //             importedKey="PERFORMANCE_REVIEW_REQUEST"
+                    //             onDataResponse={data => {
+                    //                 setImportData(data)
+                    //             }}
+                    //             key={'PERFORMANCE-REVIEW-REQUEST'}
+                    //             onHandleChange={(status) => {
+                    //                 setLoading(status == 'uploading');
+                    //                 if (status == 'done') {
+                    //                     message.info('Data uploaded.');
+                    //                 }
+                    //             }}
+                    //         />
+                    //         <Button type="link"  icon={<DownloadOutlined/>}>Export</Button>
+                    //     </Flex>
+                    // }
                     actionHandlers={{
                         onRequest:onRequestHandler
                     }}

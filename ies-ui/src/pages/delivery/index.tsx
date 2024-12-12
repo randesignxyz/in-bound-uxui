@@ -109,14 +109,15 @@ export default () => {
       id: 'dashboard',
       name: 'Loading Board',
       description: 'Manage Loading',
-      link: `${QueuePaths.loadingBoard}`,
+      link: access.canAccessDeliveryLoading ? `${QueuePaths.loadingBoard}` : undefined,
       icon: forkLift,
-      visible: access.canAccessDeliveryLoading,
+      visible: access.canAccessDeliveryLoading || access.canAccessLoadingTimeReport,
       menu: {
         items: [{
           label: 'Loading History',
           icon: <HistoryOutlined style={{ fontSize: '16px', color: '#08c' }} />,
           key: 'loading-list',
+          disabled: !access.canAccessDeliveryLoading,
           onClick: () => history.push(DeliveryPaths.loadingHistory),
         },
         {
@@ -126,6 +127,7 @@ export default () => {
           label: 'Loading Time Report',
           icon: <AreaChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
           key: 'loading-time-report',
+          disabled: !access.canAccessLoadingTimeReport,
           onClick: () => setModal({
             type: 'LOADING_TIME'
           }),

@@ -251,7 +251,8 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           'ROLE_DELIVERY_REVIEW',
           'ROLE_LOADING_OFFICER',
           'ROLE_DELIVERY_REPORT_DELIVERY_TIME_REPORT',
-          'ROLE_DELIVERY_REPORT_TRANSPORTATION_TIME_REPORT'
+          'ROLE_DELIVERY_REPORT_TRANSPORTATION_TIME_REPORT',
+          'ROLE_DELIVERY_REPORT_LOADING_TIME_REPORT'
 
         ].some((it) => it === item),
       ) || false,
@@ -301,6 +302,12 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canAccessDeliveryLoading:
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_DELIVERY_LOADING_ADMIN', 'ROLE_LOADING_OFFICER'].some(
+          (it) => it === item,
+        ),
+      ) || false,
+      canAccessLoadingTimeReport:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_DELIVERY_LOADING_ADMIN', 'ROLE_LOADING_OFFICER','ROLE_DELIVERY_REPORT_LOADING_TIME_REPORT'].some(
           (it) => it === item,
         ),
       ) || false,

@@ -10,7 +10,7 @@ import MoreInfo from "./MoreInfo";
 export const getAppraisalRequestForms = (): DataForm[] => [
     {
         formKey: [AppraisalRequestFormNames.processDefKey],
-        dataViewForm: (props: DataViewProps) => <Detail {...props} type="inst" contributor={{editable:false,showRating5:false}} />,
+        dataViewForm: (props: DataViewProps) => <Detail {...props} type="inst" contributor={{editable:false,showRating5:false, showImport: false}} />,
         actionDataForm: (props: ActionDataFormProps) => <DefaultStartForm {...props} />,
         // quickView: (task: UserTask) => <MoreInfo {...task} />,
     },
@@ -20,7 +20,7 @@ export const getAppraisalRequestForms = (): DataForm[] => [
             AppraisalRequestFormNames.performance_review_dmbo_mbo_review,
             AppraisalRequestFormNames.performance_review_dmd_review            
         ],
-        dataViewForm: (props: DataViewProps) => <Detail {...props} contributor={{editable:true,showRating5:true}} />,
+        dataViewForm: (props: DataViewProps) => <Detail {...props} contributor={{editable:true,showRating5:true, showImport: true}} />,
         actionDataForm: (props: ActionDataFormProps) => {
             if (props.action.toLowerCase() == 'rejected')
                 return <DefaultActionForm {...props} />
@@ -34,7 +34,7 @@ export const getAppraisalRequestForms = (): DataForm[] => [
             AppraisalRequestFormNames.performance_review_dmd_approval,
             AppraisalRequestFormNames.performance_review_md_ed_approval
         ],
-        dataViewForm: (props: DataViewProps) => <Detail {...props}  contributor={{editable:false,showRating5:true}}/>,
+        dataViewForm: (props: DataViewProps) => <Detail {...props}  contributor={{editable:false,showRating5:true, showImport: false}}/>,
         actionDataForm: (props: ActionDataFormProps) => <DefaultActionForm {...props} />,
     },
 ]

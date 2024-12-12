@@ -125,25 +125,7 @@ export default ({ trigger }: { trigger?: JSX.Element}) => {
                 // return [dom[0], ...bnts , dom[1]]
                 return [dom[0], ...bnts]
             }
-        }}      
-        // onFinish={async(dataForm: DataFormType)=>{
-        //     await downloadGenericReport(requestActions)({
-        //         fileName: `transportation-time-tracking-report-${moment().format()}.xls`,
-        //         type: 'EXCEL',
-        //         data: {
-        //             reportName: 'hr_ess_employee_info_report',
-        //             reportPath: '/Reports/qa/hr',
-        //             data: [
-        //                 { key: 'id', value: 1 },
-        //                 // { key: 'dateFrom', value: dataForm.dateRange[0] },
-        //                 // { key: 'dateTo', value: dataForm.dateRange[1] },
-        //                 // ...(dataForm.sourceIds || []).map(it => ({ key: 'sourceIds', value: it })),
-        //                 // ...(dataForm.driverIds || []).map(it => ({ key: 'driverIds', value: it })),
-        //             ]
-        //         }
-        //     })        
-        //     return true
-        // }}
+        }}
     >
         <Row>
             <Col><ProFormText label='Employee ID/Name' name='empSearch'/></Col>

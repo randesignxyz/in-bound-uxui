@@ -18,13 +18,17 @@ import PopconfirmMe from "@/pages/expense/delivery/components/PopconfirmMe"
 import ImportFileButton from "@/components/ImportFileButton"
 import { ImportDataItem, ImportDataResponse } from "@/services/shared/data"
 import UploadData from "./components/upload-data"
+import { downloadGenericReport } from "@/services/apiGateway"
+import moment from "moment"
 
-export default ({ processInstaceId, forceReload,formStarted,taskCompleted,showRating5,editable }: { 
+export default ({ processInstaceId,processDefKey, forceReload,formStarted,taskCompleted,showRating5, showImport,editable }: { 
     processInstaceId: string, 
+    processDefKey: string,
     forceReload?: number,
     formStarted?:boolean,
     taskCompleted?:boolean,
     showRating5?:boolean,
+    showImport?:boolean,
     editable?:boolean
 }) => {
     const requestActions = simpleRequestActions()
@@ -105,6 +109,29 @@ export default ({ processInstaceId, forceReload,formStarted,taskCompleted,showRa
         })
     }
 
+    const handleDownload= async() => {
+        try {
+            setLoading(true)
+            await downloadGenericReport(requestActions)({
+                fileName: `Performance Evalutaion Request-${dataDetail?.formNo}-${moment().format()}.xls`,
+                type: 'EXCEL',
+                data: {
+                    reportName:'performance_evaluation_request',
+                    reportPath: '/Reports/hrm',
+                    data: [      
+                       {key:'processInstaceId', value: processInstaceId},
+                       {key:'formNo', value: dataDetail?.formNo},
+                    ]
+                }
+            }).then(()=>{
+                setLoading(false)
+            })
+        } catch (error: any) {
+            message.error(error.message || "Failed to generate report.")
+            setLoading(false)
+        }            
+    };
+
     return <Spin spinning={requestActions.request?.loading}>
         <Space direction="vertical" style={{ width: '100%' }}>       
             <Descriptions size='small' column={1}>
@@ -131,7 +158,7 @@ export default ({ processInstaceId, forceReload,formStarted,taskCompleted,showRa
                         }
                     }}
                     extraFilter={               
-                        <Space align="baseline" style={{right:'12px'}}>
+                       <Space align="baseline" style={{right:'12px'}}>
                             <Radio.Group
                                   value={advanceSearchParams?.status || 'ALL'}
                                   onChange={(e) => {                           
@@ -149,24 +176,24 @@ export default ({ processInstaceId, forceReload,formStarted,taskCompleted,showRa
                             </Radio.Group>
                         </Space>                        
                     }
-                    // extraRightFilter={
-                    //     <Flex gap={2}>
-                    //         <ImportFileButton<ImportDataItem>
-                    //             importedKey="PERFORMANCE_REVIEW_REQUEST"
-                    //             onDataResponse={data => {
-                    //                 setImportData(data)
-                    //             }}
-                    //             key={'PERFORMANCE-REVIEW-REQUEST'}
-                    //             onHandleChange={(status) => {
-                    //                 setLoading(status == 'uploading');
-                    //                 if (status == 'done') {
-                    //                     message.info('Data uploaded.');
-                    //                 }
-                    //             }}
-                    //         />
-                    //         <Button type="link"  icon={<DownloadOutlined/>}>Export</Button>
-                    //     </Flex>
-                    // }
+                    extraRightFilter={
+                        showImport && <Flex gap={2}>
+                            <ImportFileButton<ImportDataItem>
+                                importedKey="PERFORMANCE_REVIEW_REQUEST"
+                                onDataResponse={data => {
+                                    setImportData(data)
+                                }}
+                                key={'PERFORMANCE-REVIEW-REQUEST'}
+                                onHandleChange={(status) => {
+                                    setLoading(status == 'uploading');
+                                    if (status == 'done') {
+                                        message.info('Data uploaded.');
+                                    }
+                                }}
+                            />
+                            <Button type="link"  icon={<DownloadOutlined/>} onClick={handleDownload}>Export{processDefKey}</Button>
+                        </Flex>
+                    }
                     actionHandlers={{
                         onRequest:onRequestHandler
                     }}

@@ -66,6 +66,7 @@ export type SavePayLoad = {
 
 export type AppraisalRequestDetail = {
     id: number
+    formNo: string
     title?:string
     empName: string
     jobTitle: LookupDataItem

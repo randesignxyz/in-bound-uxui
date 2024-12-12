@@ -311,6 +311,6 @@ export default ({ processInstaceId,processDefKey, forceReload,formStarted,taskCo
                  checkList={dataDetail?.members}
             />}
         </Space>
-        <UploadData title="Import Performance Review Request" onCancel={() => setImportData(undefined)} open={!!importData} datasources={importData} onFinish={()=> {message.error('Hello')}} />
+        <UploadData title="Import Performance Review Request" onCancel={() => setImportData(undefined)} open={!!importData} datasources={importData} onFinish={()=> {actionRef.current?.reloadAndRest?.()}} />
     </Spin>
 }

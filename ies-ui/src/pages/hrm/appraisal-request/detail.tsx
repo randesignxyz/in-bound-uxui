@@ -7,7 +7,7 @@ import { downloadReport } from "@/services/apiGateway"
 import { ProcessInstanceData } from "@/services/process-workflow/data"
 import moment from "moment"
 
-export default (props: DataViewProps & {contributor?: {editable: boolean,showRating5: boolean}}) => {
+export default (props: DataViewProps & {contributor?: {editable: boolean,showRating5: boolean, showImport: boolean}}) => {
    const [processData, setProcessData] = useState<ProcessInstanceData<{ id: number }>>()
     return <ViewFormWrapper<{ id: number }>
          workflowProp={props}
@@ -40,15 +40,17 @@ export default (props: DataViewProps & {contributor?: {editable: boolean,showRat
          //     },
          // }]}
       >
-         {(data, forceReload) => {           
+         {(data, forceReload) => {      
             if(!data?.processInstance?.procInstId) return <Spin spinning = {true}/>
             return <DataView 
                taskCompleted={data?.task?.completed||false} 
                formStarted ={props?.type=='inst'?true:false}
                editable={(props.contributor?.editable||false)} 
-               showRating5={(props.contributor?.showRating5||false)} 
+               showRating5={(props.contributor?.showRating5||false)}
+               showImport = {(props.contributor?.showImport||false)}
                forceReload={forceReload} 
                processInstaceId= {data.processInstance.procInstId} 
+               processDefKey={processData?.processInstance?.currTaskName||''}
             />
          }}
       </ViewFormWrapper>

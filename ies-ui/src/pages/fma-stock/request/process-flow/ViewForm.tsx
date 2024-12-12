@@ -7,15 +7,14 @@ import { useEffect, useState } from "react";
 import { StockRequestDetailResponse } from "../data.types";
 import ProcessFlowModel from "@/models/ProcessFlowModel";
 import { createService } from "../services";
-import { ProCard } from "@ant-design/pro-components";
-import { formatDateTime } from "@/pages/utils";
+import { useAccess } from '@umijs/max';
 
 export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
     const workflowModel = ProcessFlowModel();
     const requestActions = simpleRequestActions();
     const services = createService(requestActions);
     const [stockRequest, setStockRequest] = useState<StockRequestDetailResponse>();
-
+    const access = useAccess()
     useEffect(() => {
         loadData();
     }, [workflowModel.state.instanceData]);
@@ -35,6 +34,7 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
     <ViewFormWrapper<{ id: number }>
         workflowModel={workflowModel}
         workflowProp={props}
+        hideExport = {!access.isAccessNCMExportReport}
         attachedFiles={stockRequest?.fileIds?.map(it => ({ fileId: it, activity: 'Start' }))}
     >
         {(data) => {

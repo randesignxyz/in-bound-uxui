@@ -60,8 +60,6 @@ export default ({
   }
   const getDataForm = async () => {
     const dataForm = await form.validateFields();
-
-    console.log('dataForm', dataForm)
     await editableFormRef.current?.validateFields();
     if ((addedItems.length || 0) == 0) {
       message.error('Please add some request items.');

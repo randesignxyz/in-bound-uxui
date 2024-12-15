@@ -1,6 +1,6 @@
-import { Button, Checkbox, Radio, Space, Spin, Tabs, Tooltip, Typography, Splitter, Flex, Row, Col, Input, Card } from "antd"
-import { AppraisalAdvanceParams, AppraisalEmp, AppraisalEmpStatusTotal, AppraisalOverallPerformanceRating, OverallPerformanceHeadCountRs, PerformanceFunctionHeadCountCriter } from "../../data.types"
-import { useModel } from 'umi'
+import { Button, Checkbox, Radio, Space, Spin, Tabs, Tooltip, Typography, Splitter, Flex, Row, Col, Input, Card, message } from "antd"
+import { AccessCurrentPerformanceEvaluationTotalHeadCountRs, AppraisalAdvanceParams, AppraisalEmp, AppraisalEmpStatusTotal, AppraisalOverallPerformanceRating, OverallPerformanceHeadCountRs, PerformanceFunctionHeadCountCriter } from "../../data.types"
+import { useAccess, useModel } from 'umi'
 import TableView from "@/components/DataCrud/TableView";
 import { SortOrder } from "antd/es/table/interface";
 import { simpleRequestActions } from "@/services/model";
@@ -8,7 +8,7 @@ import { createService } from "../../services";
 import { Paging } from "@/services/API";
 import { formatDateTime, formatterPercentage0} from "@/pages/utils";
 import Status from "@/components/Status";
-import { BankOutlined, ExportOutlined, EyeOutlined, FileExcelOutlined, FilterOutlined, PicRightOutlined, PlusOutlined, TeamOutlined, UnorderedListOutlined } from "@ant-design/icons";
+import { BankOutlined, DownloadOutlined, ExportOutlined, EyeOutlined, FileExcelOutlined, FilterOutlined, PicRightOutlined, PlusOutlined, TeamOutlined, UnorderedListOutlined } from "@ant-design/icons";
 import AppraisalFormQuickView from "../quick-view/index";
 import { useEffect, useRef, useState } from "react";
 import AppraisalRequestForm from "../../AppraisalSubmitForm";
@@ -17,7 +17,7 @@ import ProTable, { ActionType } from '@ant-design/pro-table';
 import SubmitAllListModal from "./SubmitAllListModal";
 import { CheckboxChangeEvent } from "antd/es/checkbox";
 import { Model } from "../../model";
-import { DownloadData, downloadReport } from '@/services/apiGateway';
+import { DownloadData, downloadGenericReport, downloadReport } from '@/services/apiGateway';
 import moment from "moment";
 import AdvanceApprasialSubmitSearch from "../AdvanceApprasialSubmitSearch";
 import { AppraisalLookupData, PerformanceEvaluationAccessRs } from "@/pages/hrm/appraisal-request/data.types";
@@ -25,6 +25,9 @@ import { createService as screateServiceRequesst } from "@/pages/hrm/appraisal-r
 import styles from '@/pages/hrm/style.less';
 import { Line } from "@ant-design/plots";
 import AdvancePerformanceEvaluationSearch from "../AdvancePerformanceEvaluationSearch";
+import ImportFileButton from "@/components/ImportFileButton";
+import { ImportDataItem, ImportDataResponse } from "@/services/shared/data";
+import UploadData from "../upload-data";
 
 const { Link } = Typography;
 
@@ -70,8 +73,10 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
     const [criteria, setCriteria] = useState<{ searchValue?: string; advanceSearch?: AppraisalEmpAdvanceSearchParams }>()
     const [modalVisible, setModalVisible] = useState< { type: 'ADD'; payload: AppraisalAdvanceParams } | { type: 'EDIT'; payload: AppraisalAdvanceParams } >();
     const [advanceSearch, setAdvanceSearch] = useState<{ visible: boolean }>();
-    // const [modalEvaluatioVisible, setModalEvaluatioVisible] = useState< { type: 'ADD'; payload: AppraisalAdvanceParams } | { type: 'EDIT'; payload: AppraisalAdvanceParams } >();
     const [advanceEvaluationSearch, setAdvanceEvaluationSearch] = useState<{ visible: boolean }>();
+    const [isImportExportBtn,setIsImportExportBtn] = useState<boolean>(true)
+    const [importData, setImportData] = useState<ImportDataResponse>()
+     const access = useAccess()
     
     
     /** Performance Target View ------------------------------------------------------------------------------------------------------------------------------- */
@@ -82,10 +87,11 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
     const [overalPerfHeadCount, setOveralPerfHeadCount] = useState<OverallPerformanceHeadCountRs[]>([])
     const [overalPerfTotalHeadCount, setOveralPerfTotalHeadCount] = useState<number>(0)
     const [advanceSearchPerformEvaluationParams, setAdvanceSearchPerformEvaluationParams] = useState<PerformanceEvaluationAdvanceSearchParams>({status: 'ALL'})
-    const [accessPerfEvaluation,setAccessPerfEvaluation] = useState<boolean>(false)
+    const [accessCurrentPerfEvaluation,setAccessCurrentPerfEvaluation] = useState<AccessCurrentPerformanceEvaluationTotalHeadCountRs>()
     const [perfEvaluationAccess,setPerfEvaluationAccess] = useState<PerformanceEvaluationAccessRs>()
     const [forceResetAdvPerformanceEvalution, setForceResetAdvPerformanceEvalution] = useState<number>(0)
     const [isSubmitAllBtn,setIsSubmitAllBtn] = useState<boolean>(true)
+   
 
     useEffect(() => {
         onLoadData()
@@ -97,12 +103,15 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
     const onLoadData =() =>{
         srvRequest.fetchAppraisalPeriodList().then(year=>{
             setPeriod(year)
-            setIsSubmitAllBtn(year?.[0].status||false)
+            setIsImportExportBtn(year?.[0].status||false)
         })
-       
-        onStatusTotal(period?.[0].value||-1)
-        srv.fetchPerformanceEvaluationAccess(period?.[0].value||-1).then(rs=>{
-            setAccessPerfEvaluation(rs.access)
+        const perfId = period?.[0].value||-1
+        onStatusTotal(perfId)
+        srv.fetchAccessCurrentPerformanceEvaluationTotalHeadCount(perfId).then(rs=>{
+            setAccessCurrentPerfEvaluation(rs)
+        })
+        srv.fetchPerformanceEvaluationAccess(perfId).then(rs=>{
+           
             setPerfEvaluationAccess(rs)
         })
     }
@@ -170,6 +179,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
             appraisalPeriodId: value
         }))
         onStatusTotal(value)
+        setIsImportExportBtn(period?.find(r=> r.value==value)?.status||false)
         actionRef.current?.reloadAndRest?.();
     }
 
@@ -267,8 +277,8 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
             }
         },
         {
-            title: 'Final Score', width: 50, dataIndex: 'rating5', sorter: 'rating5',
-            render: (_: any, r: any) => !r?.rating5 || r?.rating5 == 0 ? '-' : r?.rating5
+            title: 'Final Score', width: 50, dataIndex: 'finalScore', sorter: 'finalScore',
+            render: (_: any, r: any) => !r?.finalScore || r?.finalScore == 0 ? '-' : r?.finalScore
         },
         { title: 'Modified By', sorter: 'modifiedBy', dataIndex: 'modifiedBy' },
         {
@@ -438,7 +448,13 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
             data: rs?.items,
           };
     }
-   
+
+    const handleDownload = () => {
+        const currentYear = period?.find(rs=>rs.status==true)?.label
+        const reportName ='performance-review-list-export'
+        const fileName = `Performance Review List Export-${currentYear}_${moment().toDate().toDateString()}`
+        return downloadReport<{ searchValue?: string; advanceSearch?: AppraisalEmpAdvanceSearchParams }>(requestActions)(dowloandData(reportName,fileName))
+    }
 
     return <>
         <Tabs onChange={key => setActiveTab(key)} defaultActiveKey="1" style={{marginTop: -30}}>
@@ -512,8 +528,23 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
 
                     }
                     extraRightFilter={<Flex gap={0}>
-                         <Tooltip placement="bottom" title="Dowload Performance Review Detail"><Button type="link" icon={<FileExcelOutlined />} onClick={()=>dowloandExcelHandler('Detail')}>Detail</Button></Tooltip>
-                        <Tooltip placement="bottom" title="Dowload Performance Review Summary"><Button type="link" icon={<FileExcelOutlined />} onClick={()=>dowloandExcelHandler('')}>Summary</Button></Tooltip>
+                            {access.isAccessPerformanceReviewImportExport && isImportExportBtn && <>
+                                <ImportFileButton<ImportDataItem>
+                                importedKey="PERFORMANCE_REVIEW_LIST"
+                                onDataResponse={data => {
+                                    setImportData(data)
+                                }}
+                                key={'PERFORMANCE-REVIEW-LIST'}
+                                onHandleChange={(status) => {
+                                    if (status == 'done') {
+                                        message.info('Data uploaded.');
+                                    }
+                                }}
+                            />
+                            <Button type="link" icon={<DownloadOutlined/>} onClick={handleDownload}>Export</Button>
+                            </>}                            
+                            <Tooltip placement="bottom" title="Dowload Performance Review Detail"><Button type="link" icon={<FileExcelOutlined />} onClick={()=>dowloandExcelHandler('Detail')}>Detail</Button></Tooltip>
+                            <Tooltip placement="bottom" title="Dowload Performance Review Summary"><Button type="link" icon={<FileExcelOutlined />} onClick={()=>dowloandExcelHandler('')}>Summary</Button></Tooltip>
                         </Flex>
                     }
                     actionHandlers={{
@@ -554,7 +585,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                 />
                 </Spin>
             </Tabs.TabPane>
-           { accessPerfEvaluation && <Tabs.TabPane icon={<PicRightOutlined />} tab="Performance Evaluation" key="2">
+           { accessCurrentPerfEvaluation?.access && <Tabs.TabPane icon={<PicRightOutlined />} tab="Performance Evaluation" key="2">
                 <Flex>
                     <ProCard
                         size="small"
@@ -624,7 +655,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                                                                       
                                     <ProTable<OverallPerformanceHeadCountRs>
                                     size="small"                                        
-                                        headerTitle = {<Flex gap={120} ><div style={{float:'left', width: 250}}>Total Function Head Count: {overalPerfTotalHeadCount}</div><div style={{float:'right',}}>{isSubmitAllBtn&&<Button type="primary" onClick={submitAllHandler}>Submit All</Button>}</div></Flex>}
+                                        headerTitle = {<Flex gap={120} ><div style={{float:'left', width: 250}}>Total Function Head Count: {overalPerfTotalHeadCount}</div><div style={{float:'right',}}>{ (isSubmitAllBtn && accessCurrentPerfEvaluation.totalHeadCount>0) &&<Button type="primary" onClick={submitAllHandler}>Submit All</Button>}</div></Flex>}
                                         style={{width: 500}}
                                         pagination = {false}
                                         options={false}
@@ -749,7 +780,10 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                     />}
             </Tabs.TabPane>
             }
-        </Tabs></>
+        </Tabs>
+         <UploadData title="Import Performance Review List" onCancel={() => setImportData(undefined)} open={!!importData} datasources={importData} onFinish={()=> {actionRef.current?.reloadAndRest?.()}} />
+        
+        </>
 }
 
 export default AppraisalList

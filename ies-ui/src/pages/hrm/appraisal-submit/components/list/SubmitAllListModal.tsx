@@ -19,13 +19,15 @@ export default ({open, onOpenModalChange,refreshTable}:Props) =>{
     const requestActions = simpleRequestActions();
     const srv = createService({ request: requestActions })
     const [appraisalEmp,setAppraisalEmp] = useState<AppraisalEmp[]>()
+    const [totalHeadCount,setTotalHeadCount] = useState<number>(0)
     const { actions, data, modals } = Model();
     const [loading,setLoading] = useState<boolean>(false)
     
     useEffect(() => {
         try {
             srv.findDraftedAppraisalEmpList().then(it=>{
-                setAppraisalEmp(it.filter(it=>{
+                setTotalHeadCount(it.totalHeadCount)
+                setAppraisalEmp(it.items.filter(it=>{
                     // var msg = data.validationMsgList(it)
                     // return msg.length==0
                     return true
@@ -98,7 +100,7 @@ export default ({open, onOpenModalChange,refreshTable}:Props) =>{
     }
 
     return <ModalForm
-        title='Performance Evaluation List'        
+        title={`Performance Evaluation List - ${(appraisalEmp?.length||0)}/${totalHeadCount}`}     
         width={'85%'}
         open={open}
         onOpenChange={onOpenModalChange}
@@ -108,7 +110,7 @@ export default ({open, onOpenModalChange,refreshTable}:Props) =>{
             },
             submitButtonProps:{
                loading: loading,
-               disabled: ((appraisalEmp?.length||0)==0 || appraisalEmp?.some(it => data.validationMsgList(it).length > 0 ))
+               disabled: ( appraisalEmp?.length != totalHeadCount ||  (appraisalEmp?.length||0)==0 || appraisalEmp?.some(it => data.validationMsgList(it).length > 0 ))
             }    
         }}
         onFinish={()=>onSubmitAllHandler()}
@@ -155,12 +157,12 @@ export default ({open, onOpenModalChange,refreshTable}:Props) =>{
             // {title: 'FM Rating', dataIndex: 'rating2', sorter: 'rating2' },
             {title: "Manager's Rating", dataIndex: 'rating3', sorter: 'rating3' },
             
-            {
-                 title: '',
-                 width:'5px', 
-                render: (_, r) => <Button danger type='link' icon={<DeleteOutlined/>} onClick={()=>removeHandler(r)}/>
+            // {
+            //      title: '',
+            //      width:'5px', 
+            //     render: (_, r) => <Button danger type='link' icon={<DeleteOutlined/>} onClick={()=>removeHandler(r)}/>
             
-            }
+            // }
         ]} 
        />}
        {modals.isVisible('ConfirmPerformanceEvaluationSubmit') && <ConfirmSubmitModal onFinish={onFinishHandler}  open={modals.isVisible('ConfirmPerformanceEvaluationSubmit')} onOpenModalChange={(v: any) => !v && modals.hideModal('ConfirmPerformanceEvaluationSubmit')} />}

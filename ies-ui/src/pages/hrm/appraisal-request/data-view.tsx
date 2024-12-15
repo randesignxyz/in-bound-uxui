@@ -35,7 +35,7 @@ export default ({ processInstaceId,processDefKey, forceReload,formStarted,taskCo
     const services = createService(requestActions)
     const [dataDetail, setDataDetail] = useState<AppraisalRequestDetail>()
     const { modals } = Model();
-    const [appraisalEmp,setAppraisalEmp] = useState<ApprovalAppraisalRequestItem>()
+    const [appraisalRequestItem,setAppraisalRequestItem] = useState<ApprovalAppraisalRequestItem>()
     const actionRef = useRef<ActionType>();
     const [advanceSearchParams, setAdvanceSearchParams ] = useState<AppraisalEmpAdvanceSearchParams>({
         status: 'ALL',
@@ -57,9 +57,9 @@ export default ({ processInstaceId,processDefKey, forceReload,formStarted,taskCo
             message.error(error.message || 'Failed to load data.')
         }
     }
-    const quickViewHandler = (appEmp: ApprovalAppraisalRequestItem) => {
+    const quickViewHandler = (appRequestItem: ApprovalAppraisalRequestItem) => {
         modals.showModal('QuickViewAppraisalForm');       
-        setAppraisalEmp(appEmp)
+        setAppraisalRequestItem(appRequestItem)
     }
     const memberHander = ()=>{
         modals.showModal('ReviewMemberForm')
@@ -177,7 +177,7 @@ export default ({ processInstaceId,processDefKey, forceReload,formStarted,taskCo
                         </Space>                        
                     }
                     extraRightFilter={
-                        showImport && <Flex gap={2}>
+                        (showImport && !taskCompleted) && <Flex gap={2}>
                             <ImportFileButton<ImportDataItem>
                                 importedKey="PERFORMANCE_REVIEW_REQUEST"
                                 onDataResponse={data => {
@@ -191,7 +191,7 @@ export default ({ processInstaceId,processDefKey, forceReload,formStarted,taskCo
                                     }
                                 }}
                             />
-                            <Button type="link"  icon={<DownloadOutlined/>} onClick={handleDownload}>Export{processDefKey}</Button>
+                            <Button type="link" loading={loading}  icon={<DownloadOutlined/>} onClick={handleDownload}>Export</Button>
                         </Flex>
                     }
                     actionHandlers={{
@@ -243,7 +243,7 @@ export default ({ processInstaceId,processDefKey, forceReload,formStarted,taskCo
                             >
                                 <Button type="link" icon={<CheckOutlined/>}/>
                                 </PopconfirmMe>
-                                : <Status text={r.status}/>
+                                : <Status text={r.status=='IMPORTED'?'DONE': r.status}/>
                         }
                     ]}
                 />
@@ -290,13 +290,14 @@ export default ({ processInstaceId,processDefKey, forceReload,formStarted,taskCo
                     onClick={memberHander}
                 >Add More {taskCompleted}</Button>}
             </ProCard>}
-            {appraisalEmp && dataDetail && modals.isVisible('QuickViewAppraisalForm') && <AppraisalQuickView
+            {appraisalRequestItem && dataDetail && modals.isVisible('QuickViewAppraisalForm') && <AppraisalQuickView
                 taskCompleted={ taskCompleted}
                 edit={editable}
                 showRating5={showRating5}
                 refeshTable={refeshTable} 
-                appraisalRequestItemId={appraisalEmp.id||0}
-                appraisalEmpId={appraisalEmp.appraisalEmpId} 
+                appraisalRequestItem={ appraisalRequestItem}
+                // appraisalRequestItemId={appraisalRequestItem.id||0}
+                // appraisalEmpId={appraisalRequestItem.appraisalEmpId} 
                 open={modals.isVisible('QuickViewAppraisalForm')}  
                 onOpenModalChange={(v: any) => !v && modals.hideModal('QuickViewAppraisalForm')}
               />}
@@ -311,6 +312,6 @@ export default ({ processInstaceId,processDefKey, forceReload,formStarted,taskCo
                  checkList={dataDetail?.members}
             />}
         </Space>
-        <UploadData title="Import Performance Review Request" onCancel={() => setImportData(undefined)} open={!!importData} datasources={importData} onFinish={()=> {message.error('Hello')}} />
+        <UploadData title="Import Performance Review Request" onCancel={() => setImportData(undefined)} open={!!importData} datasources={importData} onFinish={()=> {actionRef.current?.reloadAndRest?.()}} />
     </Spin>
 }

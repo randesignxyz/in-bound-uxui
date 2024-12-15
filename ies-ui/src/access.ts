@@ -972,5 +972,9 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_NCM_EXPORT_REPORT'].some((it) => it === item),
       ) || false,    
+      isAccessPerformanceReviewImportExport:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_HR_APPRAISAL_REVIEW_IMPORT_EXPORT'].some((it) => it === item),
+      ) || false,    
   };
 }

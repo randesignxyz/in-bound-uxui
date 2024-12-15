@@ -34,6 +34,7 @@ export type AppraisalEmp = {
     rating3?: number
     rating4?: number
     rating5?: number
+    finalScore?: number
     agreeRating?: number
     hasRating2: boolean
     currentAssign1:boolean
@@ -69,6 +70,11 @@ export type AppraisalEmp = {
         devAction?: number  
         remark?: string
     }
+}
+
+export type DraftedAppraisalEmpRs={
+    totalHeadCount: number
+    items: AppraisalEmp[]
 }
 
 export type AppraisalEmpSubmission={
@@ -358,6 +364,11 @@ export type OverallPerformanceHeadCountRs = {
 export type PerformanceFunctionHeadCountRs = {
     totalHeadCount: number;
     data: OverallPerformanceHeadCountRs[];
+}
+
+export type AccessCurrentPerformanceEvaluationTotalHeadCountRs = {
+    access: boolean;
+    totalHeadCount: number;
 }
 
 export type PerformanceFunctionHeadCountCriter = {

@@ -178,7 +178,7 @@ export type AppraisalRequestReportParams = {
 }  
 
 export type PerformanceEvaluationAccessRs = {
-    access: boolean;
+    // access: boolean;
     appraiser?: AppraiserEvaluationRs[];
     company?: AppraiserCompanyRs[]
     function?: AppraiserFunctionRs[]

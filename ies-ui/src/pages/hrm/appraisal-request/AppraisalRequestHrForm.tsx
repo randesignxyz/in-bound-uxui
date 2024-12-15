@@ -42,7 +42,7 @@ export default (props: ActionDataFormProps) => {
             onCompleted: async () => {
                 const formData = await form.validateFields()
                 var validator = Array<string>()
-                if((data?.items.filter(it=> it.status!='DONE')||[]).length>0){
+                if((data?.items.filter(it=> !(it.status=='DONE' || it.status=='IMPORTED'))||[]).length>0){
                     validator.push('There are some Appraisal Form not yet review.')
                 }
                 if(data?.members?.length==0){

@@ -12,17 +12,19 @@ import OveralPerformance from "../../appraisal-submit/components/OveralPerforman
 import AttachedFileListCRUD from "@/components/Attachment/AttachedFileListCRUD";
 import { Model } from "../../appraisal-submit/model";
 import { round } from "lodash";
-import { AppraisalRequestItemPayload } from "../data.types";
+import { AppraisalRequestItemPayload, ApprovalAppraisalRequestItem } from "../data.types";
 import { useForm } from "antd/es/form/Form";
 
 interface Props{
     open?: boolean;
     onOpenModalChange:(v:boolean)=>void
-    appraisalRequestItemId: number
-    appraisalEmpId: number
+    appraisalRequestItem: ApprovalAppraisalRequestItem
+    // appraisalRequestItemId: number
+    // appraisalEmpId: number
     refeshTable:(isClose:()=>boolean)=>void
     taskCompleted?: boolean
     showRating5?:boolean,
+    // finalScore?:number,
     edit?: boolean
 }
 type DataFormType = {
@@ -30,7 +32,7 @@ type DataFormType = {
     devAction?: number  
     remark?: string
 }
-const AppraisalQuickView = ({open,onOpenModalChange,appraisalRequestItemId,appraisalEmpId,refeshTable,taskCompleted,showRating5,edit}:Props) => {
+const AppraisalQuickView = ({open,onOpenModalChange,appraisalRequestItem,refeshTable,taskCompleted,showRating5,edit}:Props) => {
     const rowColr = AppraisalStyle.color1
     const color3 = AppraisalStyle.color3
     const border = `solid ${color3} 1px`
@@ -51,9 +53,9 @@ const AppraisalQuickView = ({open,onOpenModalChange,appraisalRequestItemId,appra
       
     },[])
     const loadData = ()=> {
-        services.fetchItemDetail(appraisalRequestItemId).then(rs=> {
+        services.fetchItemDetail(appraisalRequestItem.id).then(rs=> {
             setAppraisalEmp(rs)
-            services.fetchAppraisalDimensionList(appraisalEmpId).then(list=>{                         
+            services.fetchAppraisalDimensionList(appraisalRequestItem.appraisalEmpId).then(list=>{                         
                 setAppraisal(list) 
            })
         })
@@ -122,7 +124,7 @@ const AppraisalQuickView = ({open,onOpenModalChange,appraisalRequestItemId,appra
     const saveItem = (status: string,list: AppraisalRating[],cb:()=>void) => {
         const formData = form.getFieldsValue()        
         var payLoad = {
-            id: appraisalRequestItemId,           
+            id: appraisalRequestItem.id,           
             submissionList: list.map((it:AppraisalRating) => {
                 return {
                     id: it.id,
@@ -249,6 +251,8 @@ const AppraisalQuickView = ({open,onOpenModalChange,appraisalRequestItemId,appra
                       rating3 = rating3+ round(it.rating3*it.weight,2)
                       rating5 = rating5+ round(it.rating5*it.weight,2)
                     }) 
+                    rating5 = (appraisalRequestItem.status=='IMPORTED' && rating5==0) ? (appraisalRequestItem?.finalScore||0): rating5
+                    
                    
                     return <Table.Summary.Row style={{ textAlign: 'right', fontWeight: 'bold',border:border }}>
                       <Table.Summary.Cell colSpan={2} index={2}>{getLable('LABEL_TOTAL_SCORE')}</Table.Summary.Cell>

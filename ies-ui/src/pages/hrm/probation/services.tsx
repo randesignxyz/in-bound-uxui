@@ -34,7 +34,7 @@ ProbationEvaluationEmpList,
     
     findProbationEmpStatusTotal:()=> Promise<ProbationEmpStatusTotal>,
 
-    findDraftedAppraisalEmpList:()=> Promise<ProbationEvaluationEmpList[]>,
+    // findDraftedAppraisalEmpList:()=> Promise<ProbationEvaluationEmpList[]>,
     submitAllAppraisalEmps:(ids?: AppraisalEmpSubmitAllPayload[])=> Promise<{ok:string}>,
     fetchAppraisalOveralRating:(id:number)=>Promise<AppraisalOverallPerformanceRating[]>,
     fetchProbationEmpList:(searchValue?:string)=>Promise<AppraisalMapping[]>,
@@ -200,11 +200,11 @@ ProbationEvaluationEmpList,
             endpoint: 'HR',
             payload: {id: id}
         }).query(request),
-        findDraftedAppraisalEmpList: async()=> fetchDataListService<ProbationEvaluationEmpList>({
-            actionName: 'fetch-drafted-appraisal-emp',
-            endpoint: 'HR',
-            // payload: {id}
-        }).query(request),
+        // findDraftedAppraisalEmpList: async()=> fetchDataListService<ProbationEvaluationEmpList>({
+        //     actionName: 'fetch-drafted-appraisal-emp',
+        //     endpoint: 'HR',
+        //     // payload: {id}
+        // }).query(request),
         fetchAppraisalIntructionList: async (id: number) =>
             fetchDataListService<AppraisalInstructionItem, {id: number}>({
                 actionName: 'appraisal-instruction-list',

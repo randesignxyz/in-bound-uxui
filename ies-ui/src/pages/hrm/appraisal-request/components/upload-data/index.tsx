@@ -36,12 +36,6 @@ export default ({ datasources,onFinish, ...rest }: ModalProps & { datasources?: 
         init()
       }, [rest.open]);
 
-    // useEffect(() => {
-    //     if (!rest.open) return
-    //     setDataValidation(data?.items?.filter(it => it.fieldInfoList.some(i => i.isFailed))?.length || 0)
-    //     setCommited(false)
-    // }, [rest.open])
-
     const renderCol = (title: string, fixed?: boolean): ProColumns<ImportDataItem> => ({
         title: title,
         fixed: fixed,
@@ -50,20 +44,14 @@ export default ({ datasources,onFinish, ...rest }: ModalProps & { datasources?: 
             if (field?.isFailed) {
                 return <Tooltip color="red" title={field.message}><Text type="danger" >{field?.fieldValue || 'N/A'}</Text></Tooltip>
             }
-
             return field?.fieldValue
         }
     })
-
-    const displayFields = [
-        "Form No", "Employee ID", "Full Name", "Final Score"
-    ]
-
-
-   
+    const displayFields = [ "Form No", "Employee ID", "Full Name", "Final Score"]   
 
     return <Modal width={1500} {...rest}
         okText="Submit"
+        cancelText = {'Close'}
         maskClosable= {false}
         onOk={() => {
             if (submited) {
@@ -89,6 +77,7 @@ export default ({ datasources,onFinish, ...rest }: ModalProps & { datasources?: 
                         }
 
                     } catch (error: any) {
+                        setCommited(false)
                         message.error(error.message)
                     }
                 }
@@ -101,7 +90,6 @@ export default ({ datasources,onFinish, ...rest }: ModalProps & { datasources?: 
         <Space direction='vertical' style={{ width: '100%' }}>
             {dataValidation > 0 && <Alert type='error' message={`${dataValidation} record${dataValidation > 1 ? 's' : ''} is invalid to import.`} showIcon action={[
                 <Checkbox onChange={e => {
-                    // setFailedOnly(e.target.checked)
                     if (e.target.checked) {
                         setData(importedData?.items?.filter(it => it.fieldInfoList.some(it1 => it1.isFailed)))
                       } else {
@@ -118,13 +106,11 @@ export default ({ datasources,onFinish, ...rest }: ModalProps & { datasources?: 
                     render: (_, r) => { 
                         const failed = r.fieldInfoList.some(it => it.isFailed)
                         return <Text type={failed ? "danger" : 'success'} >{ commited?"Commited":failed ? "Error" : r.action}</Text>
-                        // return toReadable(r.action)
                         
                     }
                 },
                 { title: 'Message', render: (_, r) => r.fieldInfoList.filter(it => it.isFailed).map(it => `${it.fieldDisplay}: ${it.message}`).join(", ") },
             ]}
-            // dataSource={data?.filter(it => !failedOnly || it.fieldInfoList.some(i => i.isFailed))}
             dataSource={data}
             search={false}
             options={false}

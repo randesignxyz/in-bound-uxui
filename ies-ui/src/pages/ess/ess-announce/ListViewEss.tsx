@@ -2,11 +2,11 @@ import TableView, { TableViewSearchParams } from "@/components/DataCrud/TableVie
 import { simpleRequestActions } from "@/services/model";
 import { ActionType } from "@ant-design/pro-table";
 import { useSafeState } from "ahooks"; 
-import { message, Radio, Space, Spin, Dropdown, Modal } from "antd";
+import { message, Radio, Space, Spin, Dropdown, Modal, Button } from "antd";
 import { useEffect, useRef,useState } from "react";
 import { OpenEssDataItem,OpenAdvanceSearchParams } from "../data_ess"; 
 import { ServicesEss } from '../service_ess_tran';   
-import { EyeOutlined, ExclamationCircleOutlined, CheckOutlined, EllipsisOutlined } from "@ant-design/icons";
+import { EyeOutlined, ExclamationCircleOutlined, CheckOutlined, EllipsisOutlined, FileExcelOutlined } from "@ant-design/icons";
 import Status from "@/components/Status";
 import { Divider, MenuProps } from "rc-menu";
 import { ProfileServicesEss } from "@/pages/profile/service_ess";
@@ -15,6 +15,8 @@ import { ProFormTextArea } from "@ant-design/pro-components";
 import Omit from "omit.js";
 import AdvanceOpenItemSearch from "./AdvanceOpenItemSearch";
 import { useAccess } from '@umijs/max'; 
+import { downloadGenericReport } from "@/services/apiGateway";
+import moment from "moment";
 
 
 interface Props {
@@ -34,8 +36,9 @@ export default ({ profile }: Props) =>{
     // canAccessHrViewEmployeeMenuItem
     const [advanceSearch, setAdvanceSearch] = useState<{ visible: boolean }>();
     const [advanceSearchParams, setAdvanceSearchParams] = useState<OpenAdvanceSearchParams>({
-        status: '3',
+        status: 3,
     });
+    const [downloading, setDownloading] = useSafeState(false)
     
     const access = useAccess();   
     var _valueText = "";
@@ -56,6 +59,32 @@ export default ({ profile }: Props) =>{
             return Promise.reject()
         }
     }
+
+    const onExportAll=async ()=>{
+        try {
+            setDownloading(true)
+            await downloadGenericReport(requestActions)({
+                fileName: `Self-Service Progress Status Report-${moment().format()}.xls`,
+                type: 'EXCEL',
+                data: {
+                    reportName: 'hr_ess_self_serice_progress_status_report',
+                    reportPath: '/Reports/hrm/ess',
+                    data: [
+                        { key: 'id', value: 1 },
+                        // { key: 'dateFrom', value: dataForm.dateRange[0] },
+                        // { key: 'dateTo', value: dataForm.dateRange[1] },
+                        // ...(dataForm.sourceIds || []).map(it => ({ key: 'sourceIds', value: it })),
+                        // ...(dataForm.driverIds || []).map(it => ({ key: 'driverIds', value: it })),
+                    ]
+                }
+            }).then(()=>{
+                setDownloading(false)
+            })
+        } catch (error: any) {
+            message.error(error.message || "Failed to generate report.")
+            setDownloading(false)
+        }                    
+    }
  
     // const setAdanceSearchItem = (id:number)=>{
     //     setStatusItem(id);
@@ -71,24 +100,24 @@ export default ({ profile }: Props) =>{
             key: "1",
             label: "Review Updates",
             itemIcon: <EyeOutlined />,
-            disabled:([3,4,5,6].find((element) => element == record.stepId))?false:true,
+            disabled:([3,4,5,6].find((element) => element == record.essOpenItem.stepId))?false:true,
             onClick: async () => {
-                window.open(`/profile/1/${record.empId}`,)?.focus();
+                window.open(`/profile/1/${record.id}`,)?.focus();
             }
         },
         {
             key: "2",
             label: "Approve",
             itemIcon: <CheckOutlined />,
-            disabled:([4,3,5].find((element) => element == record.stepId))?access.canAccessHrESSApprovalProfile==false?true:false:true,
+            disabled:([4,3,5].find((element) => element == record.essOpenItem.stepId))?access.canAccessHrESSApprovalProfile==false?true:false:true,
             onClick: async () => { 
                 Modal.confirm({
                     title: 'Approve',
                     content: 'Do you want to approve?',
                     onOk: async () => {
                       try {  
-                        const rs = await ServicesEss.essInfoDetail(record.empId,profile.id).query(requestActions);  
-                        await ProfileServicesEss.approvalEssProfile({...rs?.profile_draft,id: record.empId, empId: record.empId,step:6,openEssId:profile.id,otherFile:[],remark:'',status:true})(requestActions);
+                        const rs = await ServicesEss.essInfoDetail(record.id,profile.id).query(requestActions);  
+                        await ProfileServicesEss.approvalEssProfile({...rs?.profile_draft,id: record.id, empId: record.id,step:6,openEssId:profile.id,otherFile:[],remark:'',status:true})(requestActions);
                         actionRefItem?.current?.reloadAndRest?.();
                       } catch (error: any) {
                         message.error(error.message || 'Failed to created.');
@@ -101,16 +130,16 @@ export default ({ profile }: Props) =>{
             key: "3",
             label: "Reject",
             itemIcon: <ExclamationCircleOutlined />,
-            style:{color:[3].find((element) => element == record.stepId)?'red':''},
-            disabled:([3].find((element) => element == record.stepId))?access.canAccessHrESSApprovalProfile==false?true:false:true,
+            style:{color:[3].find((element) => element == record.essOpenItem.stepId)?'red':''},
+            disabled:([3].find((element) => element == record.essOpenItem.stepId))?access.canAccessHrESSApprovalProfile==false?true:false:true,
             onClick: async () => {
                 Modal.confirm({
                 title: 'Reject', 
                 content: <div><ProFormTextArea name={"comment"} fieldProps={{onChange: (e) => {onTextChange(e.currentTarget.value);}}} placeholder={"Entry Message"} /></div>,
                 onOk: async () => {
                   try {  
-                    const rs = await ServicesEss.essInfoDetail(record.empId,profile.id).query(requestActions);  
-                    await ProfileServicesEss.approvalEssProfile({...rs?.profile_draft,id: record.empId, empId: record.empId,step:4,openEssId:profile.id,otherFile:[],remark:_valueText,status:true})(requestActions);
+                    const rs = await ServicesEss.essInfoDetail(record.id,profile.id).query(requestActions);  
+                    await ProfileServicesEss.approvalEssProfile({...rs?.profile_draft,id: record.id, empId: record.id,step:4,openEssId:profile.id,otherFile:[],remark:_valueText,status:true})(requestActions);
                     actionRefItem?.current?.reloadAndRest?.();
                   } catch (error: any) {
                     message.error(error.message || 'Failed to created.');
@@ -177,31 +206,31 @@ export default ({ profile }: Props) =>{
             columns={[
             { width   :'10%',
                 title   : "Employee ID", 
-                dataIndex : 'empNo',
+                dataIndex : 'employeeCode',
                 sorter    : false,
                 hideInForm: false, 
             }, 
-            { title: "Full Name (KH)",dataIndex: 'internalName'},   
+            { title: "Full Name (KH)",dataIndex: 'employeeLocalName'},   
             { width:'12%',title: "Full Name (EN)",dataIndex:'firstName',search: false,render:(_,r) =>{return(r.lastName+" "+r.firstName)}}, 
             // { width:'12%',title: "Last Name",dataIndex:'lastName',search: false}, 
             // { width:'7%',title: "Integrated ID",dataIndex:'integratedId',search: false}, 
             { width:'12%',title: "Position",dataIndex:'jobTitle',search: false}, 
-            { width:'12%',title: "Function",dataIndex:'departmentName',search: false}, 
-            { width:'12%',title: "Company",dataIndex: 'buName' },
+            { width:'12%',title: "Function",dataIndex:'department',search: false}, 
+            { width:'12%',title: "Company",dataIndex: 'bu' },
             {title: 'Status',width: 120, render:(_,r) =>{
                     var _status = 'Pending';
-                    if (r.stepId==2){
+                    if (r.essOpenItem.stepId==2){
                         _status = "Started";
-                    } else if (r.stepId==4){
+                    } else if (r.essOpenItem.stepId==4){
                         _status = "Rejected";
-                    } else if (r.stepId==3){
+                    } else if (r.essOpenItem.stepId==3){
                         _status = "Reviewing";
-                    } else if (r.stepId==6){
+                    } else if (r.essOpenItem.stepId==6){
                         _status = "Approved";
-                    }else if (r.stepId==8){
+                    }else if (r.essOpenItem.stepId==8){
                         _status = "Cancelled Update";
                     }
-                    else if (r.stepId==7){
+                    else if (r.essOpenItem.stepId==7){
                         _status = "Re-Submit Updated";
                     }
                     return <div><Status text={_status}/></div>;
@@ -240,13 +269,13 @@ export default ({ profile }: Props) =>{
             }}
             extraFilter={
                 <Space > 
-                <Radio.Group optionType="button" defaultValue={"3"}
+                <Radio.Group optionType="button" defaultValue={3}
                     options={[
-                        { label: "All", value: "0" },
-                        { label: "Started", value: "2" },
-                        { label: "Review", value: "3" },
-                        { label: "Rejected", value: "4" },
-                        { label: "Approved", value: "6" },
+                        { label: "All", value: 0 },
+                        { label: "Started", value: 2 },
+                        { label: "Review", value: 3 },
+                        { label: "Rejected", value: 4 },
+                        { label: "Approved", value: 6 },
                         // { label: "Cancel Update", value: "8" }
                     ]}
                     // onChange={(e) => {setAdanceSearchItem(e.target.value);}}
@@ -261,7 +290,14 @@ export default ({ profile }: Props) =>{
                     }}
                 />
                 </Space>
-            }   
+            } 
+            extraRightFilter = {access.canAccessHrSelfServiceProgressStatusExportAll && <Space>
+                <Button loading={downloading} icon={<FileExcelOutlined/>}
+                    onClick={onExportAll}
+                >Export All</Button>
+            </Space>}
+
+              
         />
         
         {/*  advance search */}

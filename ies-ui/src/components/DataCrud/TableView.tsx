@@ -25,6 +25,7 @@ export interface TableViewSearchParams<T> {
     advanceSearch?: T;
     sort?: Record<string, SortOrder>;
     permissionLevel?: string;
+    forceUodate?: number;
   };
   pagination?: {
     pageSize?: number;
@@ -45,6 +46,7 @@ interface Props<T extends { id: number }, C> {
   rowKey?: string;
   bordered?: boolean;
   // title?: string;
+  scrollX?: boolean;
   addButtonLabel?: string;
   displayOnly?: boolean;
   disableSearch?: true;
@@ -104,6 +106,7 @@ const TableView = <T extends { id: any }, C extends { searchValue?: string }>(
   const {
     columns,
     // title,
+    scrollX,
     addButtonLabel,
     displayOnly,
     cache,
@@ -157,6 +160,7 @@ const TableView = <T extends { id: any }, C extends { searchValue?: string }>(
     <ProTable<T>
       actionRef={innerActionRef}
       columns={columns}
+      scroll= { scrollX? {x: 'max-content' }: undefined }
       bordered
       rowKey={props.rowKey || 'id'}
       tableExtraRender={() =>

@@ -14,19 +14,21 @@ export const getFmaStockRequestForms = (): DataForm[] => [
     ),
   },
   {
-    formKey: [     
-      StockRequestFormNames.functionRequest,
-      StockRequestFormNames.marketingReview,
-      StockRequestFormNames.functionApproval,
-    ],
-    dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,
-    actionDataForm: (props: ActionDataFormProps) => <DefaultActionForm {...props} />,
-  },
-  {
     formKey: [
       StockRequestFormNames.physicalStock
     ],
     dataViewForm: (props: DataViewProps) => <ViewForm {...props} contribute={{formNo: 1}} />,
     actionDataForm: (props: ActionDataFormProps) => <CheckStockControlForm {...props} />,
   },
+  {
+    formKey: [     
+      StockRequestFormNames.functionRequest,
+      StockRequestFormNames.marketingReview,
+      StockRequestFormNames.functionApproval,
+      StockRequestFormNames.warehouseTransferComplet
+    ],
+    dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,
+    actionDataForm: (props: ActionDataFormProps) => <DefaultActionForm {...props} />,
+  },
+ 
 ];

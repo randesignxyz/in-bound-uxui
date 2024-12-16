@@ -19,7 +19,6 @@ const DiagramModal: React.FC<DiagramModalProps> = ({ loading, visible, userDestL
         if (type == 'bpmn:UserTask') {
             const taskId = diagramData?.drawing?.activities?.find(it => it.id == id)?.taskId
             taskId && onShowUserDest?.(taskId)
-
         }
     }
     return <>

@@ -67,6 +67,14 @@ export const formatter = new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 2,
 });
 
+export const formatter1 = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 6
+});
+
+
 export const formatterQty = new Intl.NumberFormat('en-US', {
     compactDisplay: 'short',
 });
@@ -75,6 +83,10 @@ export const formatterQty1 = new Intl.NumberFormat('en-US', {
     maximumFractionDigits: 2,
 });
 
+export const formatterPercentage0 = new Intl.NumberFormat('en-US', {
+    style: 'percent',
+    minimumFractionDigits: 0,
+});
 
 export const formatterKh = new Intl.NumberFormat('km-KH', {
     style: 'currency',
@@ -335,6 +347,8 @@ const readableWords = [
     { REMOVED: 'Removed' },
     { NEW_REQUEST: 'New Request' },
     { UPDATED: 'Updated' },
+    { REVIEWING: 'Reviewing' },
+    { SETTING: 'Setting' },
     { NONE: 'NA' },
 ];
 export const toReadable = (word?: string) => {

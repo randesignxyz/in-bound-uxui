@@ -469,6 +469,7 @@ const VisitScheduleDetailView: React.FC<DetailProps> = ({ id, openInTab, onBack 
           checkingDate={state.data?.detail?.scheduleDate}
           customerId={state.data?.detail?.customer.id}
           onRefresh={() => actions.detail(state.data?.detail?.id || 0)}
+          customerAddressId={state.data?.detail?.customerAddressId}
           visitId={state.data?.detail.id}
         />
       )}

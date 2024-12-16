@@ -32,6 +32,7 @@ export type ApprovalAppraisalRequestItem= {
     rating3?:number
     rating4?: number
     rating5?: number
+    finalScore?: number
     status: string,
 }
 
@@ -65,6 +66,7 @@ export type SavePayLoad = {
 
 export type AppraisalRequestDetail = {
     id: number
+    formNo: string
     title?:string
     empName: string
     jobTitle: LookupDataItem
@@ -174,3 +176,30 @@ export type AppraisalRequestReportParams = {
     requestTypeId?: number[],
     appraisalPeriodId?: number[]
 }  
+
+export type PerformanceEvaluationAccessRs = {
+    // access: boolean;
+    appraiser?: AppraiserEvaluationRs[];
+    company?: AppraiserCompanyRs[]
+    function?: AppraiserFunctionRs[]
+}
+export type AppraiserEvaluationRs ={
+    id: string
+    company: string
+    func: string
+    appraiser1Id: number
+    appraiser1No: String
+    appraiser1: string
+    appraisalPerformanceId: number
+}
+export type AppraiserCompanyRs = {
+    id: string
+    company: string
+    appraisalPerformanceId: number
+}
+export type AppraiserFunctionRs = {
+    id: string
+    company: string
+    func: string
+    appraisalPerformanceId: number
+}

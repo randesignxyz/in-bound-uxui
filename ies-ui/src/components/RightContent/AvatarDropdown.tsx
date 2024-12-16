@@ -1,4 +1,4 @@
-import { LogoutOutlined, UserOutlined } from '@ant-design/icons';
+import { LogoutOutlined, MenuUnfoldOutlined, UserOutlined } from '@ant-design/icons';
 import { history, useAccess, useModel } from '@umijs/max';
 import { Avatar, Modal, Spin } from 'antd';
 import { createStyles } from 'antd-style';
@@ -77,6 +77,10 @@ export const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu, childre
 
   const { initialState, setInitialState } = useModel('@@initialState');
 
+  useEffect(() => {
+    localStorage.setItem('sidebarEnabled', `${initialState?.settings?.layout === 'mix'}`);
+  }, [initialState?.settings?.layout]);
+
   const onMenuClick = useCallback(
     (event: MenuInfo) => {
       const { key } = event;
@@ -85,6 +89,14 @@ export const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu, childre
           setInitialState((s) => ({ ...s, currentUser: undefined }));
         });
         initialState?.logout?.()
+        return;
+      }
+
+      if (key === 'sidebar') {
+        const isSidebarEnabled = localStorage.getItem('sidebarEnabled') ?? 'true' === 'true';
+        console.log('isSidebarEnabled', isSidebarEnabled);
+        localStorage.setItem('sidebarEnabled', `${!isSidebarEnabled}`);
+        setInitialState((s) => ({ ...s, settings: { ...s?.settings, layout: s?.settings?.layout != 'mix' ? 'mix' : 'top' } }));
         return;
       }
       history.push(`/${key}/0/0`);
@@ -114,24 +126,28 @@ export const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu, childre
     return loading;
   }
 
-  const menuItems = [
-    ...(menu
-      ? [
-        {
-          key: 'profile',
-          icon: <UserOutlined />,
-          label: 'User Profile',
-        },
-        {
-          type: 'divider' as const,
-        },
-      ]
-      : []),
-    {
-      key: 'logout',
-      icon: <LogoutOutlined />,
-      label: 'Logout',
-    },
+  const menuItems = [{
+    key: 'sidebar',
+    icon: <MenuUnfoldOutlined />,
+    label: initialState.settings?.layout === 'mix' ? 'Disable Sidebar Menu' : 'Enable Sidebar Menu',
+  },
+  ...(menu
+    ? [
+      {
+        key: 'profile',
+        icon: <UserOutlined />,
+        label: 'User Profile',
+      },
+      {
+        type: 'divider' as const,
+      },
+    ]
+    : []),
+  {
+    key: 'logout',
+    icon: <LogoutOutlined />,
+    label: 'Logout',
+  },
   ];
 
   return (

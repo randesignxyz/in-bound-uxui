@@ -5,6 +5,8 @@ import ViewForm from './ViewForm';
 import { ProbationEvaluationRequestFormNames } from '.';
 import AssessmentPreparationForm from './AssessmentPreparationForm';
 import AssessmentSubmissionForm from './AssessmentSubmissionForm';
+import HrReviewForm from './HrReviewForm';
+import MboApprovalForm from './MboApprovalForm';
 
 export const getProbationEvaluationRequestForms = (): DataForm[] => [
   {
@@ -29,12 +31,26 @@ export const getProbationEvaluationRequestForms = (): DataForm[] => [
     actionDataForm: (props: ActionDataFormProps) => props.action =='Rejected'? <DefaultActionForm {...props} />: <AssessmentSubmissionForm {...props} />,
   },
   {
-    formKey: [  
+    formKey: [     
       ProbationEvaluationRequestFormNames.hrbp,
-      ProbationEvaluationRequestFormNames.hrm,
-      ProbationEvaluationRequestFormNames.mbo,
+      ProbationEvaluationRequestFormNames.hrm,    
     ],
     dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,
-    actionDataForm: (props: ActionDataFormProps) => <DefaultActionForm {...props} />,
-  }
+    actionDataForm: (props: ActionDataFormProps) => {
+      const title= props.formKey== ProbationEvaluationRequestFormNames.hrbp?'HRB, Review':'HR Manager, Review'
+      props = {...props,title}
+     return <HrReviewForm {...props} />
+    }
+  },
+  {
+    formKey: [     
+      ProbationEvaluationRequestFormNames.mbo,  
+    ],
+    dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,
+    actionDataForm: (props: ActionDataFormProps) => {
+      const title= 'MBO/ Approval'
+      props = {...props,title}
+     return <MboApprovalForm {...props} />
+    }
+  },
 ];

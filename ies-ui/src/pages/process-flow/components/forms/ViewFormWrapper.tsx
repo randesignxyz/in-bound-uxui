@@ -15,6 +15,8 @@ import InstanceInfoComp from '../InstanceInfo';
 import { ProcessFlowModalMngt } from '../ProcessFlowModalWrapper';
 import ActivityView from './ActivityView';
 import { FormOutlined, PaperClipOutlined, UnorderedListOutlined } from '@ant-design/icons';
+import DefaultActionForm from './DefaultActionForm';
+import { UploadFile } from 'antd/lib';
 
 
 interface Tab extends Omit<TabPaneProps, 'tab'> {
@@ -33,9 +35,11 @@ interface Props<T> {
   payload?: (instanceData: ProcessInstanceData<T>) => any;
   onSetProcessData?: (instanceData: ProcessInstanceData<T>) => void;
   hideExport?: boolean;
+  cancelActionEnabled?: boolean;
   actionHandlers?: {
     onActionInterceptor?: (action: string, requestActions: SimpleRequestActions, cb?: () => void) => Promise<boolean>;
     onValidate?: (action: String, task?: UserTask) => boolean;
+    onCancel?: (remarks: string, files: UploadFile[]) => Promise<void>
     onRefresh?: () => void;
   };
   children: (instanceData?: ProcessInstanceData<T>, forceReload?: number) => React.ReactNode;
@@ -46,9 +50,10 @@ interface Props<T> {
 const ViewFormWrapper = <T extends { id: number }>(props: Props<T>) => {
 
   const workflowModel = props.workflowModel || ProcessFlowModel();
-  const { state, actions } = workflowModel
+  const { state, actions, modals } = workflowModel
   const [forceReload, setForceReload] = useState(0)
   const requestActions = simpleRequestActions();
+  const [uploadFiles, setUploadFiles] = useState<UploadFile[]>()
 
   const {
     // workflowModel: { state, actions },
@@ -59,6 +64,7 @@ const ViewFormWrapper = <T extends { id: number }>(props: Props<T>) => {
     attachedFiles,
     moreActions,
     children,
+    cancelActionEnabled,
     onUpdateFileIds,
     enabledUplodFile
   } = props;
@@ -82,9 +88,12 @@ const ViewFormWrapper = <T extends { id: number }>(props: Props<T>) => {
     <>
       {
         <ActionBtn
-          key="action"
+          key="cancel"
           hideExport={hideExport}
           item={userTask}
+          processEnded={state.instanceData?.processInstance?.completed}
+          // processEnded={true}
+          cancelActionEnabled={cancelActionEnabled && !!actionHandlers?.onCancel}
           taskActions={taskActions}
           onValidate={actionHandlers?.onValidate}
           actionHandler={actionHandler}
@@ -109,6 +118,7 @@ const ViewFormWrapper = <T extends { id: number }>(props: Props<T>) => {
       const skip = await actionHandlers?.onActionInterceptor(action, requestActions, () => { })
       if (skip) return
     }
+
     if ('flow' == action) {
       if (!state.instanceData?.processInstance?.procInstId) return;
 
@@ -143,9 +153,9 @@ const ViewFormWrapper = <T extends { id: number }>(props: Props<T>) => {
         message.error(error.message || 'Failed to export data.')
       }
 
-    }
-
-    else {
+    } else if ('cancel' == action) {
+      actions.cancelAction()
+    } else {
       actions.openActionForm(
         state.instanceData?.task?.taskName || '',
         workflowProp.formKey,
@@ -234,36 +244,29 @@ const ViewFormWrapper = <T extends { id: number }>(props: Props<T>) => {
 
   return (
     <Spin spinning={(state.loading || false) || (requestActions.request?.loading || false)}>
-
-
       {props.workflowProp.openInTab ? notPageContainer : pageContainer}
-
-      {/* <Spin spinning={(state.loading || false)}>
-          {contentType == 'dataForm' && state.instanceData && children(state.instanceData, forceReload)}
-          {contentType == 'activities' && (
-            <ActivityView activityList={state.instanceData?.activities || []} />
-          )}
-          {
-            contentType == 'attachment' &&
-            <AttachedFileList readonly={!enabledUplodFile}
-              removeButton={false}
-              onSetUploadFile={files =>
-                //Save file
-                files.length > 0 && onUpdateFileIds?.(
-                  state?.instanceData?.processInstance?.procInstId || '',
-                  files.map(it => it.response!!))
-
-
-              }
-              initFiles={[...(attachedFiles || []), ...(state.instanceData?.attachmentFiles || [])]} />}
-        </Spin> */}
-
-      {/* 
-      </PageContainer> */}
       <ProcessFlowModalMngt
         onRefresh={refreshData}
         workflowModel={workflowModel}
       />
+
+      <DefaultActionForm title='Process Cancellation' loading={false}
+        actionHandlers={{
+          onCancel: () => modals.hideModal('cancel'),
+          onSetFiles: setUploadFiles,
+          async onCompletedTask(_, comment) {
+            try {
+              await actionHandlers?.onCancel?.(comment || '', uploadFiles || [])
+              modals.hideModal('cancel')
+              refreshData()
+            } catch (error) {
+              throw error
+            }
+            return Promise.resolve()
+          },
+        }} activityData={state.activityData} ProcessInstanceData={
+          state.instanceData
+        } visible={modals.isVisible('cancel')} formKey={state.instanceData?.processInstance?.procDefKey || ''} action={"cancel"} />
 
     </Spin>
   );

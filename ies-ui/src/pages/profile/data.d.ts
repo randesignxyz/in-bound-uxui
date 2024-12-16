@@ -54,6 +54,8 @@ export interface ProfileData {
   location    : string;
   functions   : string;
   position    : string; 
+  reportToName    : string; 
+  reportToId    : number; 
   email       : string;
   dateJoined? : moment.Moment;
   gender?     : string;

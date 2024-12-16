@@ -34,11 +34,14 @@ export type AppraisalEmp = {
     rating3?: number
     rating4?: number
     rating5?: number
+    finalScore?: number
+    agreeRating?: number
     hasRating2: boolean
     currentAssign1:boolean
     currentAssign2:boolean
     currentAssign3:boolean
     currentDrafted:boolean
+    appraisalAdmin?:boolean
     rated1:boolean
     rated2:boolean
     rated3:boolean
@@ -67,6 +70,11 @@ export type AppraisalEmp = {
         devAction?: number  
         remark?: string
     }
+}
+
+export type DraftedAppraisalEmpRs={
+    totalHeadCount: number
+    items: AppraisalEmp[]
 }
 
 export type AppraisalEmpSubmission={
@@ -137,7 +145,7 @@ export type AppraisalEmpSubmissionResult = {
     behaviorDescription: string
     behaviorDescription1?: string
     behaviorRate: number
-    sort:string
+    sort:number
     gsort: number
     gtotal: number
     attachedFiles?: string[]
@@ -153,6 +161,7 @@ export type AppraisalRating = {
     rating4?: number
     rating5?: number 
     weight: number 
+    sort: number
 }
 export type AppraisalDimension = {
     id: number
@@ -176,6 +185,7 @@ export type AppraisalEmSubmissionPayLoad = {
     rating4: number
     rating5: number
     weight:number
+    sort: number
 }
 export type AppraisalEmPayload = {
     id: number
@@ -269,10 +279,10 @@ export type ValidatorMsg = {
 export type AppraisalOverallPerformanceRating = {
     id: number
     appraisalPerformaceId: number
-    decription:string
-    decription1?:string
+    description:string
+    description1?:string
     startedScore: number
-    endedScrore: number
+    endedScore: number
     rating: number
 }
 /**
@@ -324,4 +334,46 @@ export type AppraisalDataLookup = {
     code: string
     value: string
     value1?: string
+}
+
+
+export interface AppraisalAdvanceParams {    
+    bu?: number[];
+    department?: number[];
+    appraisalPeriodId?: number;
+}
+
+export interface AppraisalEvaluationAdvanceParams {   
+    appraiser?: number[];
+    company?: number[];
+    function?: number[];
+    appraisalPeriodId?: number;
+}
+
+export type OverallPerformanceHeadCountRs = {
+    id: number;
+    appraisalPerformanceId: number;
+    description: string;
+    rating: number;
+    targetPercent: number;
+    targetHeadCount: number;
+    actualPercent: number;
+    actualHeadCount: number;
+    variancePercent: number;
+}
+export type PerformanceFunctionHeadCountRs = {
+    totalHeadCount: number;
+    data: OverallPerformanceHeadCountRs[];
+}
+
+export type AccessCurrentPerformanceEvaluationTotalHeadCountRs = {
+    access: boolean;
+    totalHeadCount: number;
+}
+
+export type PerformanceFunctionHeadCountCriter = {
+    id?:number;
+    appraise?:number;
+    company?: number;
+    function?: number[]
 }

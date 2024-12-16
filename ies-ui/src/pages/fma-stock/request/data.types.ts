@@ -69,6 +69,7 @@ export interface StockRequest {
   id?: number;
   reason: string;
   remarks?: string;
+  delivery?: boolean;
   items: StockRequestItem[];
   fileIds: string[];
 }
@@ -143,6 +144,7 @@ export interface StockRequestDetailResponse {
   groupId: number;
   groupName: string;
   warehouseFrom?: string;
+  delivery?: boolean;
   createdDate: Moment;
   createdBy: string;
   items: StockRequestItemDetailResponse[];

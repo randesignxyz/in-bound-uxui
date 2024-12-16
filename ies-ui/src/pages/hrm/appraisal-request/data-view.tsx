@@ -2,10 +2,10 @@ import { simpleRequestActions } from "@/services/model"
 import { createService } from "./services"
 import { useEffect, useRef, useState } from "react"
 import { AppraisalRequestDetail, ApprovalAppraisalRequestItem, ReviewerMember, ReviewerMemberPayload } from "./data.types"
-import { Alert, Button, Descriptions, Popconfirm, Radio, Space, Spin, Tooltip, message } from "antd"
+import { Alert, Button, Descriptions, Flex, Popconfirm, Radio, Space, Spin, Tooltip, message } from "antd"
 import { ActionType, ProCard, ProTable } from "@ant-design/pro-components"
 import { AppraisalEmp } from "../appraisal-submit/data.types"
-import { CheckOutlined, DeleteOutlined, EyeOutlined, LoadingOutlined, PlusOutlined, } from "@ant-design/icons"
+import { CheckOutlined, DeleteOutlined, DownloadOutlined, ExceptionOutlined, EyeOutlined, FileExcelOutlined, ImportOutlined, LoadingOutlined, PlusOutlined, UploadOutlined, } from "@ant-design/icons"
 import { Model } from "../appraisal-submit/model"
 import AppraisalQuickView from "./components/AppraisalQuickView"
 import Status from "@/components/Status"
@@ -15,24 +15,33 @@ import { AppraisalEmpAdvanceSearchParams } from "../appraisal-submit/components/
 import { Paging } from "@/services/API"
 import { SortOrder } from "antd/es/table/interface"
 import PopconfirmMe from "@/pages/expense/delivery/components/PopconfirmMe"
+import ImportFileButton from "@/components/ImportFileButton"
+import { ImportDataItem, ImportDataResponse } from "@/services/shared/data"
+import UploadData from "./components/upload-data"
+import { downloadGenericReport } from "@/services/apiGateway"
+import moment from "moment"
 
-export default ({ processInstaceId, forceReload,formStarted,taskCompleted,showRating5,editable }: { 
+export default ({ processInstaceId,processDefKey, forceReload,formStarted,taskCompleted,showRating5, showImport,editable }: { 
     processInstaceId: string, 
+    processDefKey: string,
     forceReload?: number,
     formStarted?:boolean,
     taskCompleted?:boolean,
     showRating5?:boolean,
+    showImport?:boolean,
     editable?:boolean
 }) => {
     const requestActions = simpleRequestActions()
     const services = createService(requestActions)
     const [dataDetail, setDataDetail] = useState<AppraisalRequestDetail>()
     const { modals } = Model();
-    const [appraisalEmp,setAppraisalEmp] = useState<ApprovalAppraisalRequestItem>()
+    const [appraisalRequestItem,setAppraisalRequestItem] = useState<ApprovalAppraisalRequestItem>()
     const actionRef = useRef<ActionType>();
     const [advanceSearchParams, setAdvanceSearchParams ] = useState<AppraisalEmpAdvanceSearchParams>({
         status: 'ALL',
     })
+    const [importData, setImportData] = useState<ImportDataResponse>()
+    const [loading, setLoading] = useState(false);
    
     useEffect(() => {
         (async () => {
@@ -48,9 +57,9 @@ export default ({ processInstaceId, forceReload,formStarted,taskCompleted,showRa
             message.error(error.message || 'Failed to load data.')
         }
     }
-    const quickViewHandler = (appEmp: ApprovalAppraisalRequestItem) => {
+    const quickViewHandler = (appRequestItem: ApprovalAppraisalRequestItem) => {
         modals.showModal('QuickViewAppraisalForm');       
-        setAppraisalEmp(appEmp)
+        setAppraisalRequestItem(appRequestItem)
     }
     const memberHander = ()=>{
         modals.showModal('ReviewMemberForm')
@@ -100,6 +109,29 @@ export default ({ processInstaceId, forceReload,formStarted,taskCompleted,showRa
         })
     }
 
+    const handleDownload= async() => {
+        try {
+            setLoading(true)
+            await downloadGenericReport(requestActions)({
+                fileName: `Performance Evalutaion Request-${dataDetail?.formNo}-${moment().format()}.xls`,
+                type: 'EXCEL',
+                data: {
+                    reportName:'performance_evaluation_request',
+                    reportPath: '/Reports/hrm',
+                    data: [      
+                       {key:'processInstaceId', value: processInstaceId},
+                       {key:'formNo', value: dataDetail?.formNo},
+                    ]
+                }
+            }).then(()=>{
+                setLoading(false)
+            })
+        } catch (error: any) {
+            message.error(error.message || "Failed to generate report.")
+            setLoading(false)
+        }            
+    };
+
     return <Spin spinning={requestActions.request?.loading}>
         <Space direction="vertical" style={{ width: '100%' }}>       
             <Descriptions size='small' column={1}>
@@ -126,7 +158,7 @@ export default ({ processInstaceId, forceReload,formStarted,taskCompleted,showRa
                         }
                     }}
                     extraFilter={               
-                        <Space align="baseline" style={{right:'12px'}}>
+                       <Space align="baseline" style={{right:'12px'}}>
                             <Radio.Group
                                   value={advanceSearchParams?.status || 'ALL'}
                                   onChange={(e) => {                           
@@ -143,6 +175,24 @@ export default ({ processInstaceId, forceReload,formStarted,taskCompleted,showRa
                                 <Radio.Button value="DONE">Done</Radio.Button>
                             </Radio.Group>
                         </Space>                        
+                    }
+                    extraRightFilter={
+                        (showImport && !taskCompleted) && <Flex gap={2}>
+                            <ImportFileButton<ImportDataItem>
+                                importedKey="PERFORMANCE_REVIEW_REQUEST"
+                                onDataResponse={data => {
+                                    setImportData(data)
+                                }}
+                                key={'PERFORMANCE-REVIEW-REQUEST'}
+                                onHandleChange={(status) => {
+                                    setLoading(status == 'uploading');
+                                    if (status == 'done') {
+                                        message.info('Data uploaded.');
+                                    }
+                                }}
+                            />
+                            <Button type="link" loading={loading}  icon={<DownloadOutlined/>} onClick={handleDownload}>Export</Button>
+                        </Flex>
                     }
                     actionHandlers={{
                         onRequest:onRequestHandler
@@ -175,13 +225,13 @@ export default ({ processInstaceId, forceReload,formStarted,taskCompleted,showRa
                         {title: 'Function', dataIndex: 'departmentName',sorter:'departmentName'},                    
                         {title: 'Job Title', dataIndex: 'jobTitle',sorter:'jobTitle'},
                         {title: 'Self- Rating', dataIndex: 'rating1',sorter:'rating1'},
-                        {title: 'FM Rating', dataIndex: 'rating3',sorter:'rating3',
+                        {title: "Manager's Rating", dataIndex: 'rating3',sorter:'rating3',
                             render:(_,r)=> {
                                 return (r?.rating3==0 ?'-':  r?.rating3==-1.0 ?'-': r.rating3)
                             }
                         },
-                        {title: 'Agreed Rating', dataIndex: 'rating5',sorter:'rating5',
-                            render:(_,r)=>  (dataDetail?.status=='REJECT' ||(dataDetail?.status!='COMPLETED' && formStarted)) || !r?.rating5||r?.rating5==0 ?'-': r?.rating5
+                        {title: 'Final Score', dataIndex: 'rating5',sorter:'finalScore',
+                            render:(_,r)=>  (dataDetail?.status=='REJECT' ||(dataDetail?.status!='COMPLETED' && formStarted)) || !r?.finalScore||r?.finalScore==0 ?'-': r?.finalScore
                         },
                         {
                             title:'',dataIndex:'status',
@@ -191,9 +241,9 @@ export default ({ processInstaceId, forceReload,formStarted,taskCompleted,showRa
                                 saveItemConfirmDoneHandler(r)
                             }}
                             >
-                                <Button type="default" icon={<CheckOutlined/>}>Done</Button>
+                                <Button type="link" icon={<CheckOutlined/>}/>
                                 </PopconfirmMe>
-                                : <Status text={r.status}/>
+                                : <Status text={r.status=='IMPORTED'?'DONE': r.status}/>
                         }
                     ]}
                 />
@@ -240,13 +290,14 @@ export default ({ processInstaceId, forceReload,formStarted,taskCompleted,showRa
                     onClick={memberHander}
                 >Add More {taskCompleted}</Button>}
             </ProCard>}
-            {appraisalEmp && dataDetail && modals.isVisible('QuickViewAppraisalForm') && <AppraisalQuickView
+            {appraisalRequestItem && dataDetail && modals.isVisible('QuickViewAppraisalForm') && <AppraisalQuickView
                 taskCompleted={ taskCompleted}
                 edit={editable}
                 showRating5={showRating5}
                 refeshTable={refeshTable} 
-                appraisalRequestItemId={appraisalEmp.id||0}
-                appraisalEmpId={appraisalEmp.appraisalEmpId} 
+                appraisalRequestItem={ appraisalRequestItem}
+                // appraisalRequestItemId={appraisalRequestItem.id||0}
+                // appraisalEmpId={appraisalRequestItem.appraisalEmpId} 
                 open={modals.isVisible('QuickViewAppraisalForm')}  
                 onOpenModalChange={(v: any) => !v && modals.hideModal('QuickViewAppraisalForm')}
               />}
@@ -261,5 +312,6 @@ export default ({ processInstaceId, forceReload,formStarted,taskCompleted,showRa
                  checkList={dataDetail?.members}
             />}
         </Space>
+        <UploadData title="Import Performance Review Request" onCancel={() => setImportData(undefined)} open={!!importData} datasources={importData} onFinish={()=> {actionRef.current?.reloadAndRest?.()}} />
     </Spin>
 }

@@ -162,7 +162,7 @@ export const RequisitionServiceAPI = (requestActions?: RequestActions) => {
     post: (id: number) => singleRequest(RequisitionParams.post(id))(requestActions) as Promise<RequisitionResponse>,
 
     listBudgetCode: (buId?: number) => singleRequest(RequisitionParams.listBudgetCode(buId))(requestActions) as Promise<BudgetCodeListItem[]>,
-    listBudgetCodeByDept: (deptId: number, buId?: number) => singleRequest(RequisitionParams.listBudgetCodeByDept(deptId))(requestActions) as Promise<BudgetCodeListItem[]>,
+    listBudgetCodeByDept: (deptId: number, buId?: number) => singleRequest(RequisitionParams.listBudgetCodeByDept(deptId, buId))(requestActions) as Promise<BudgetCodeListItem[]>,
     saveBudgetCodeReviews: (data: TaskActionDataParam<RequisitionBudgetCodeReviewParams>) => singleRequest(RequisitionParams.saveBudgetCodeReview(data))(requestActions),
     listProEmplyee: () => singleRequest(RequisitionParams.listProEmployee())(requestActions) as Promise<ProEmployee[]>,
     saveProReview: (data: TaskActionDataParam<RequisitionProReviewparams>) => singleRequest(RequisitionParams.saveProReview(data))(requestActions),

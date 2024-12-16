@@ -1,6 +1,6 @@
 import FileUploader from '@/components/Attachment/FileUploader';
 import { ProcessFlowModalWrapper } from '@/pages/process-flow/components/ProcessFlowModalWrapper';
-import { formatter } from '@/pages/utils';
+import { formatter1 } from '@/pages/utils';
 import { simpleRequestActions } from '@/services/model';
 import {
   BudgetCodeListItem,
@@ -66,7 +66,7 @@ export default ({
   const requestActions = simpleRequestActions();
   const services = RequisitionServiceAPI(requestActions);
   const [isService, setIsService] = useState<boolean>(false);
-  const [requiredBudgetCode, setRequiredBudgetCode] = useState<boolean>(false);
+  const [requiredBudgetCode, setRequiredBudgetCode] = useState<boolean>(true);
   const [budgetCodeList, setBudgetCodesList] = useState<BudgetCodeListItem[]>([]);
   const [itemUomList, setItemUomList] = useState<{ itemCode: string; uom: string, buId: number }[]>([]);
   const access = useAccess()
@@ -74,6 +74,7 @@ export default ({
   const [fileIds, setFileIds] = useState<string[]>([]);
   const [bu, setBu] = useState<BU[]>([])
   const [selectedBu, setSelectedBu] = useState(0)
+  const [selector, setSelector] = useState<string>()
   const { ref, inView } = useInView({});
 
   const clear = () => {
@@ -88,8 +89,9 @@ export default ({
   const initData = async () => {
     const buList = [
       access.hasProOflAccess && { id: 1, name: 'OFL', description: 'Onefraternity' },
-      access.hasProNvcAccess && { id: 2, name: 'NVC', description: 'Vital' },
-      access.hasProOmmAccess && { id: 3, name: 'OMM', description: 'OMM' }
+      access.hasProNvcAccess && { id: 2, name: 'NVC', description: 'Vital Premium Water' },
+      access.hasProOmmAccess && { id: 3, name: 'OMM', description: 'One More Manufaturing' },
+      access.hasProOmcAccess && { id: 7, name: 'OMC', description: 'OMC' }
     ].filter(it => it) as BU[]
     setBu(buList)
     if (id && id > 0) {
@@ -98,6 +100,7 @@ export default ({
       initFormData(data);
     } else {
       setSelectedBu(buList.find(it => it)?.id || 1)
+      form.setFieldsValue({ budgetCodeRequired: requiredBudgetCode });
     }
   };
 
@@ -113,7 +116,6 @@ export default ({
   useEffect(() => {
     if (selectedBu > 0) {
       setItemUomList([])
-      console.log('selectedBu', selectedBu);
       changeBu(selectedBu)
     }
 
@@ -190,7 +192,6 @@ export default ({
     form={form}
     onValuesChange={(changeValue, values) => {
       const { budgetCodeRequired, service } = changeValue;
-
       if ('service' in changeValue) {
         setIsService(service);
       }
@@ -285,6 +286,8 @@ export default ({
         <Col flex={'400px'}>
           <ProFormCheckbox
             labelAlign="left"
+            disabled
+
             label="Budget Code Required"
             name={'budgetCodeRequired'}
           />
@@ -328,7 +331,9 @@ export default ({
                 type="link"
                 danger
                 onClick={() => {
-                  setAddedItems((v) => v.filter((it) => it.key != row.key));
+                  const newList = addedItems.filter((it) => it.key != row.key)
+                  setAddedItems((v) => newList);
+                  newList.length == 0 && setSelector(undefined)
                   form.setFieldsValue({
                     totalAmount: addedItems
                       .filter((it) => it.key != row.key)
@@ -356,7 +361,6 @@ export default ({
           }}
           recordCreatorProps={{
             creatorButtonText: 'Add Item ',
-
             onClick: () => {
               setSearcVisible(true);
             },
@@ -399,22 +403,23 @@ export default ({
               title: 'Unit Price',
               dataIndex: 'unitPrice',
               width: 130,
+              valueType: 'digit',
               fieldProps: { style: { width: 120 } },
-              valueType: 'money',
-              formItemProps: { rules: [{ required: true }], style: { width: '130px' } },
+              formItemProps: { rules: [{ required: true }], style: { width: '130px' }, },
             },
             {
               title: 'Amount',
               width: 130,
               align: 'right',
               editable: false,
-              renderText: (_, record) => formatter.format(record.qty * record.unitPrice),
+              renderText: (_, record) => formatter1.format(record.qty * record.unitPrice),
             },
             {
               title: 'Budget.Code',
               width: 150,
               dataIndex: 'budgetCode',
               fieldProps: { showSearch: true },
+              formItemProps: { rules: [{ required: requiredBudgetCode }] },
               valueType: 'select',
               valueEnum: (_) =>
                 budgetCodeList.reduce((acc, cur) => ({ ...acc, [cur.code]: cur.code }), {}),
@@ -528,7 +533,11 @@ export default ({
         <Col flex={'200px'}>
           <ProFormMoney
             placeholder={''}
-            fieldProps={{ readOnly: true }}
+
+            fieldProps={{
+              readOnly: true,
+              formatter: (value) => formatter1.format(value || 0),
+            }}
             name={'totalAmount'}
           />
         </Col>
@@ -553,11 +562,13 @@ export default ({
       </PageContainer>}
       <SearchItemList
         buId={selectedBu}
+        selector={selector}
         width={1000}
         open={searchVisible}
         onOpenChange={setSearcVisible}
         addedItems={addedItems?.map((it) => it.itemId)}
         onAddItem={(item) => {
+          setSelector(item.itemGroup.selector || 'N/A')
           if (!itemUomList.some((it) => it.itemCode == item.itemCode)) {
             const newItems = item.uomList.map((it1) => ({ itemCode: item.itemCode, uom: it1, buId: item.buId ?? 1 }));
             setItemUomList((v) => [...(v.filter(it1 => it1.itemCode != item.itemCode)), ...newItems]);

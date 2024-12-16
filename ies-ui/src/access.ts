@@ -130,6 +130,11 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
         ['ROLE_ADMIN', 'ROLE_PRO_ADMIN', 'ROLE_PRO_OMM_ACCESS'].some((it) => it === item),
       ) || false,
 
+      hasProOmcAccess:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_PRO_ADMIN', 'ROLE_PRO_OMC_ACCESS'].some((it) => it === item),
+      ) || false,
+
     canAccessSaleMenuItem:
       currentUser?.authorities.some((item) =>
         [
@@ -616,10 +621,18 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         ['ROLE_HR_ESS_APPROVAL_PROFILE'].some((it) => it === item),
       ) || false, 
+    canAccessHrSelfServiceProgressStatusExportAll:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_HR_ESS_SELF_SERVICE_PROGRESS_STATUS_EXPORT_ALL'].some((it) => it === item),
+      ) || false,   
     canAccessHrESSAddEditProfile:
       currentUser?.authorities.some((item) =>
         ['ROLE_HR_ESS_ADD_EDIT_PROFILE'].some((it) => it === item),
       ) || false, 
+    canAccessHrESSEmpMenuReport:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_HR_ESS_EMP_REPORT'].some((it) => it === item),
+      ) || false,   
     canAccessHrVissibleTraining:
       currentUser?.authorities.some((item) =>
         ['ROLE_HR_VISSIBLE_TRAINING'].some((it) => it === item),
@@ -888,8 +901,8 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         [
           'ROLE_ADMIN',
-          // 'ROLE_NCM_INVENTORY_TRANSFER_SUPPORT',
-          // 'ROLE_NCM_STOCK_REQUEST_SUPPORT',
+          'ROLE_NCM_INVENTORY_TRANSFER_SUPPORT',
+          'ROLE_NCM_STOCK_REQUEST_SUPPORT',
           'ROLE_NCM_INVENTORY_ITEM_ADMIN',
           'ROLE_NCM_INVENTORY_WH_EMP_MAPPING_ADMIN',
           'ROLE_NCM_STOCK_REQUEST',
@@ -950,6 +963,18 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       false,       
     canCreateHrProbationEvaluationRequest:
       currentUser?.authorities.some((item) => ['ROLE_ADMIN','ROLE_HR_PROBATION_EVALUATION_REQUEST'].some((it) => it === item)) ||
-      false,        
+      false,      
+    isAccessHRProbationEvaluationSupport:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_HR_PROBATION_EVALUATION_SUBMIT', 'ROLE_HR_PROBATION_EVALUATION_SUPPORT'].some((it) => it === item),
+      ) || false,  
+      isAccessNCMExportReport:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_NCM_EXPORT_REPORT'].some((it) => it === item),
+      ) || false,    
+      isAccessPerformanceReviewImportExport:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_HR_APPRAISAL_REVIEW_IMPORT_EXPORT'].some((it) => it === item),
+      ) || false,    
   };
 }

@@ -20,7 +20,10 @@ export default ({ text, value, ...rest }: { text: string; value?: string } & Bad
         'IN_PROGRESS',
         'CONFIRMED',
         'LOADING',
-        'PENDING'
+        'PENDING',
+        'REVIEWING',
+        'SETTING',
+        'FORM'
       ].some((it) => it == status)
     )
       return 'processing';

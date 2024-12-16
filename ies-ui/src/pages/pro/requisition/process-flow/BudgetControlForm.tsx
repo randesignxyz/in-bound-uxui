@@ -1,6 +1,6 @@
 import ActionFormWrapper from '@/pages/process-flow/components/forms/ActionFormWrapper';
 import { ActionDataFormProps } from '@/pages/process-flow/data';
-import { formatter } from '@/pages/utils';
+import { formatter1 } from '@/pages/utils';
 import { simpleRequestActions } from '@/services/model';
 import {
   BudgetCodeListItem,
@@ -165,8 +165,8 @@ export default (props: ActionDataFormProps) => {
               { title: 'Description', editable: false, valueType: 'textarea', fieldProps: { rows: 1 }, dataIndex: 'description' },
               { title: 'Qty', align: 'right', width: 50, dataIndex: 'qty', editable: false, valueType: 'digit' },
               { title: 'UoM', width: 70, dataIndex: 'uom', editable: false },
-              { title: 'Unit Price', align: 'right', width: 90, dataIndex: 'unitPrice', editable: false, renderText: (_, record,) => formatter.format(record.unitPrice) },
-              { title: 'Amount', width: 100, align: 'right', editable: false, renderText: (_, record,) => formatter.format(record.amount) },
+              { title: 'Unit Price', align: 'right', width: 90, dataIndex: 'unitPrice', editable: false, renderText: (_, record,) => formatter1.format(record.unitPrice) },
+              { title: 'Amount', width: 100, align: 'right', editable: false, renderText: (_, record,) => formatter1.format(record.amount) },
               {
                 title: 'Budget.Code', width: 150, fieldProps: { showSearch: true }, dataIndex: 'budgetCode', valueType: 'select',
                 valueEnum: _ => budgetCodeList.reduce((acc, cur) => ({ ...acc, [cur.code]: cur.code }), {}),
@@ -196,7 +196,7 @@ export default (props: ActionDataFormProps) => {
               { title: 'No', width: 50, editable: false, dataIndex: 'seqNo' },
               { title: 'Service Name', editable: false, dataIndex: 'serviceName' },
               { title: 'Description', editable: false, valueType: 'text', dataIndex: 'description' },
-              { title: 'Amount', align: 'right', editable: false, renderText: (_, record,) => formatter.format(record.amount), width: 155, fieldProps: { style: { width: 150 } } },
+              { title: 'Amount', align: 'right', editable: false, renderText: (_, record,) => formatter1.format(record.amount), width: 155, fieldProps: { style: { width: 150 } } },
               {
                 title: 'Budget.Code', width: 150, fieldProps: { showSearch: true, size: 'small' }, dataIndex: 'budgetCode', valueType: 'select',
                 valueEnum: _ => budgetCodeList.reduce((acc, cur) => ({ ...acc, [cur.code]: cur.code }), {}),

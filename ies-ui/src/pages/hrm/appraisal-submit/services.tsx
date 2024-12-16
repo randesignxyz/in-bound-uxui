@@ -1,10 +1,12 @@
 import { SimpleRequestActions } from "@/services/model";
-import { RequestItem,  SearchParams,  AppraisalEmp,  AppraisalEmpSubmissionResult, AppraisalEmPayload, AppraisalDimension, UpdateAppraisalEmPayload, CurrentAppraisalEmpSearch, AppraisalAttachmentFile, AppraisalEmpStatusTotal, AppraisalEmpSubmitAllPayload, AppraisalOverallPerformanceRating, AppraisalMapping, EmployeeInfResult, AppraisalInstructionItem, AppraisalDataLookup } from "./data.types";
+import { RequestItem,  SearchParams,  AppraisalEmp,  AppraisalEmpSubmissionResult, AppraisalEmPayload, AppraisalDimension, UpdateAppraisalEmPayload, CurrentAppraisalEmpSearch, AppraisalAttachmentFile, AppraisalEmpStatusTotal, AppraisalEmpSubmitAllPayload, AppraisalOverallPerformanceRating, AppraisalMapping, EmployeeInfResult, AppraisalInstructionItem, AppraisalDataLookup, OverallPerformanceHeadCountRs, PerformanceFunctionHeadCountRs, PerformanceFunctionHeadCountCriter, DraftedAppraisalEmpRs, AccessCurrentPerformanceEvaluationTotalHeadCountRs } from "./data.types";
 import { CrudBaseServices } from "@/services/CrudBaseSevices";
 import { FetchPagingParams } from "@/components/DataCrud/TableView";
 import { execDataService, execDataService0, fetchDataItemService, fetchDataListService, fetchDataPagingService } from "@/services/apiGateway";
 import { TaskActionDataParam } from "@/services/process-workflow/params";
 import { Activity } from "@/services/process-workflow/data";
+import { Paging } from "@/services/API";
+import { PerformanceEvaluationAccessRs } from "../appraisal-request/data.types";
 
 
 export const createService = ({ request }: { request: SimpleRequestActions; }): CrudBaseServices<
@@ -21,14 +23,20 @@ export const createService = ({ request }: { request: SimpleRequestActions; }): 
     findCurrentAppraisalEmp:(id: number)=> Promise<CurrentAppraisalEmpSearch>
     removeAttachmentList:(id: string)=> Promise<{data: string}>
     addAppraisalAttachment: (appraisalEmpId:number,list: string[]) =>Promise<AppraisalAttachmentFile[]>
-    findAppraisalEmpStatusTotal:()=> Promise<AppraisalEmpStatusTotal>,
-    findDraftedAppraisalEmpList:()=> Promise<AppraisalEmp[]>,
+    findAppraisalEmpStatusTotal:(id?: number)=> Promise<AppraisalEmpStatusTotal>,
+    findDraftedAppraisalEmpList:()=> Promise<DraftedAppraisalEmpRs>,
     submitAllAppraisalEmps:(ids?: AppraisalEmpSubmitAllPayload[])=> Promise<{ok:string}>,
     fetchAppraisalOveralRating:(id:number)=>Promise<AppraisalOverallPerformanceRating[]>,
     fetchAppraisalList:(searchValue?:string)=>Promise<AppraisalMapping[]>,
     fetchEmployeeInfo:(id:number)=> Promise<EmployeeInfResult>,
     fetchAppraisalIntructionList:(id:number)=> Promise<AppraisalInstructionItem[]>,
     fetchAppraisalDataLookupList:()=> Promise<AppraisalDataLookup[]>
+    fetchAccessCurrentPerformanceEvaluationTotalHeadCount:(id:number)=>Promise<AccessCurrentPerformanceEvaluationTotalHeadCountRs>,
+    fetchPerformanceFunctionHeadCount:(data: PerformanceFunctionHeadCountCriter)=> Promise<PerformanceFunctionHeadCountRs>,
+    fetchPerformanceEvaluationPaging: (params: FetchPagingParams<SearchParams>) => Promise<Paging<AppraisalEmp>>,
+    fetchPerformanceEvaluationAccess: (id: number) =>Promise<PerformanceEvaluationAccessRs>,
+    fetchPerformanceEvaluationHeadCountList: (params: FetchPagingParams<SearchParams>) => Promise<AppraisalEmp[]>,
+    
 } => {
     return {
         fetchPaging: async (params: FetchPagingParams<SearchParams>) =>
@@ -42,6 +50,25 @@ export const createService = ({ request }: { request: SimpleRequestActions; }): 
                 }
             }).query(request)
         ,
+        fetchPerformanceEvaluationPaging:(params: FetchPagingParams<SearchParams>) =>
+            fetchDataPagingService<AppraisalEmp, FetchPagingParams<SearchParams>>({
+                actionName: 'fetch-paging-performance-evaluation',
+                endpoint: 'HR',
+                payload: params,
+                 pagination: {
+                    page: params.pagination?.current,
+                    pageSize: params.pagination?.pageSize
+                }
+            }).query(request)
+        ,
+        fetchPerformanceEvaluationHeadCountList:(params: FetchPagingParams<SearchParams>) =>
+            fetchDataListService<AppraisalEmp,FetchPagingParams<SearchParams>>({
+                actionName: 'fetch-performance-evaluation-headcount-list',
+                endpoint: 'HR',
+                payload: params
+            }).query(request)
+        ,
+
         fetchActivityList: async (id: number) =>
             fetchDataListService<Activity, {id:number}>({
                 actionName: 'fetch-appraisal-submit-activity',
@@ -97,6 +124,12 @@ export const createService = ({ request }: { request: SimpleRequestActions; }): 
                 endpoint: 'HR',
                 payload: {id}
             }).query(request),
+        // fetchOverallPerformanceHeadCount: async(id: number) =>
+        //         fetchDataListService<OverallPerformanceHeadCountRs, {id: number}>({
+        //             actionName: 'fetch-overall-performance-head-count',
+        //             endpoint: 'HR',
+        //             payload: {id}
+        //         }).query(request),    
         fetchItem: async (id: number) =>
             fetchDataItemService<AppraisalEmp, { id: number }>({
                 actionName: 'fetch-appraisal-emp-by-id',
@@ -125,17 +158,27 @@ export const createService = ({ request }: { request: SimpleRequestActions; }): 
             endpoint: 'HR',
             payload: {id: id}
         }).query(request),
-        findAppraisalEmpStatusTotal: async() => fetchDataItemService<AppraisalEmpStatusTotal>({
+        findAppraisalEmpStatusTotal: async(id?: number) => fetchDataItemService<AppraisalEmpStatusTotal,{id?:number}>({
             actionName: "fetch-appraisal-emp-status-total",
             endpoint: 'HR',
-            // payload: {id: id}
+            payload: {id: id}
         }).query(request),
         fetchEmployeeInfo: async(id:number) => fetchDataItemService<EmployeeInfResult,{id:number}>({
             actionName: "fetch-employee-info",
             endpoint: 'HR',
             payload: {id: id}
         }).query(request),
-        findDraftedAppraisalEmpList: async()=> fetchDataListService<AppraisalEmp>({
+        fetchPerformanceFunctionHeadCount: async(data: PerformanceFunctionHeadCountCriter) => fetchDataItemService<PerformanceFunctionHeadCountRs,PerformanceFunctionHeadCountCriter>({
+            actionName: "fetch-performance-function-head-count",
+            endpoint: 'HR',
+            payload: data
+        }).query(request),
+        fetchAccessCurrentPerformanceEvaluationTotalHeadCount: async(id: number) => fetchDataItemService<AccessCurrentPerformanceEvaluationTotalHeadCountRs,{id: number}>({
+            actionName: "fetch-access-current-performance-evaluation-total-head-count",
+            endpoint: 'HR',
+            payload: {id}
+        }).query(request),
+        findDraftedAppraisalEmpList: async()=> fetchDataItemService<DraftedAppraisalEmpRs>({
             actionName: 'fetch-drafted-appraisal-emp',
             endpoint: 'HR',
             // payload: {id}
@@ -150,7 +193,13 @@ export const createService = ({ request }: { request: SimpleRequestActions; }): 
             fetchDataListService<AppraisalDataLookup>({
                 actionName: 'fetch-appraisal-data-lookup-list',
                 endpoint: 'HR'
-            }).query(request)    
-    ,
+            }).query(request),
+        fetchPerformanceEvaluationAccess: async (id: number) =>
+            fetchDataItemService<PerformanceEvaluationAccessRs, { id: number }>({
+                actionName: 'fetch-performance-evaluation-access',
+                endpoint: 'HR',
+                payload: { id }
+            }).query(request),     
+    
     }
 }

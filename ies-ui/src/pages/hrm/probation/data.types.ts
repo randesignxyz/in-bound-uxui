@@ -69,8 +69,9 @@ export class AppraisalStyle {
 //     }
 // }
 export type ProbationEvaluationEmpList = {
-    id: number
+    id: number  
     formNo: string
+    instanceId: string
     requestedDate?: Moment
     empId: number
     empNo: string
@@ -89,12 +90,12 @@ export type ProbationEvaluationEmpList = {
     jobTitle?: string
     hodId?: number
     hodName?: string
-    jointedDate?: Moment
+    joinedDate?: Moment
     processInstId: string
-    parentId?: number
+    parentId?: number    
     formTypeCode: string
     workflowStatus: string
-    status: String
+    status: string
     processStatus: string
     lastModifiedBy?: string
     lastModifiedDate?: Moment
@@ -271,12 +272,8 @@ export type AppraisalAttachmentFile = {
     id: number
     fileId: string
 }
-export type AppraisalEmpStatusTotal = {
-    all: number
+export type ProbationEmpStatusTotal = {    
     pending?: number
-    completed?:number
-    drafted?:number
-    accessRequest:boolean
 }
 
 export type AppraisalEmpStatus = {
@@ -350,6 +347,9 @@ export type EmployeeInfResult = {
     reportTo?: string
     hodId?: number
     hodName?: string
+    jobLevelId?: number
+    jobLevelName?: string
+    jobLevelCode?: string
 }
 export type AppraisalInstructionItem = {
     id: number
@@ -378,8 +378,21 @@ export type ProbationFormType = {
     description?: string
     status: boolean
 }
+export type ProbationAssessmentList = {
+    id: number
+    userId: string
+    empNo: string
+    empName: string
+    internalName?: string
+    firstName?: string
+    lastName?: string
+    jobLevelId: number
+    jobLevelName: string
+    jobLevelCode: string
+}
 export type ProbationEvaluationRs = {
     id: number  
+    ref?:ProbationEvaluationRs
     formNo: string
     empId: number
     empNo: string
@@ -403,6 +416,8 @@ export type ProbationEvaluationRs = {
     status: string
     workflowStatus: string
     processStatus: string
+    confirmedStatus?: string
+    extendedDate?: Moment
 
 
 }
@@ -496,7 +511,12 @@ export type ProbationEvaluationPayload = {
     section4: ProbationEvaluationResourcesSupport[]
     empAchievement: ProbationEmpImprovement[]
     empImprovement: ProbationEmpImprovement[]
+    confirmedStatus?: string
+    extendedDate?: Moment
 
+}
+export type ProbationEvaluationHrRevievPayload = {
+    instId: string
 }
 export type ProbationEvaluationRef ={
     id: string

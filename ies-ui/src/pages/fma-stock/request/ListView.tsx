@@ -90,8 +90,11 @@ export default ({ onAdd, onEdit }: Props) => {
                 >
                     <Radio.Button value="ALL">All</Radio.Button>
                     <Radio.Button value="PENDING">Pending</Radio.Button>                      
-                    <Badge size="small" offset={[-20, 0]} count={0}>
+                    {/* <Badge size="small" offset={[-20, 0]} count={0}>
                         <Radio.Button value="APPROVED">Approved</Radio.Button>
+                    </Badge> */}
+                    <Badge size="small" offset={[-20, 0]} count={0}>
+                        <Radio.Button value="COMPLETED">Completed</Radio.Button>
                     </Badge>
                     <Badge size="small" offset={[-20, 0]} count={0}>
                         <Radio.Button value="REJECTED">Rejected</Radio.Button>
@@ -100,7 +103,7 @@ export default ({ onAdd, onEdit }: Props) => {
             </Space>
         }
         columns={[
-          {
+          /*{
             title: '',
             width: 10,
             render: (_, r) => (
@@ -113,12 +116,20 @@ export default ({ onAdd, onEdit }: Props) => {
                   />
                 </Tooltip>
             ),
-          },{
+          },*/{
             title: 'Form No',
             sorter: 'formNo',
-            width: 100,
+            width: 170,
             render: (_, r) => (
               <Flex gap={5}>
+                <Tooltip title="View Data">
+                  <Button
+                    size="small"
+                    type="link"
+                    icon={<EyeFilled />}
+                    onClick={() => onDetailhandler(r)}
+                  />
+                </Tooltip>
                 <Button
                   size="small"
                   type="link"
@@ -137,6 +148,12 @@ export default ({ onAdd, onEdit }: Props) => {
               </Flex>
 
             ),
+          },
+          {
+            title: 'Reason',
+            // width: 130,
+            sorter: 'reason',
+            render: (_, r) => r.reason,
           },
           {
             title: 'Expected Dt',
@@ -161,7 +178,7 @@ export default ({ onAdd, onEdit }: Props) => {
           {
             title: 'Status',
             dataIndex: 'workflowStatus',
-            width: 70,
+            width: 100,
             render: (_, r) => r.workflowStatus && <Status text={r.workflowStatus} />,
           }
         ]}

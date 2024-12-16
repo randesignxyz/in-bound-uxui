@@ -2,9 +2,12 @@ import { simpleRequestActions } from "@/services/model";
 import { ModalForm, ProTable } from "@ant-design/pro-components"
 import { useEffect, useState } from "react"
 import { createService } from "../../services";
-import { AppraisalEmSubmissionPayLoad, AppraisalEmp, AppraisalEmpSubmitAllPayload, ValidatorMsg } from "../../data.types";
-import { Modal, message} from "antd";
+import { AppraisalEmp, AppraisalEmpSubmitAllPayload, ValidatorMsg } from "../../data.types";
+import { Button, Modal, Tooltip, Typography, message} from "antd";
 import { Model } from "../../model";
+import ConfirmSubmitModal from "./ConfirmSubmitModal";
+import { DeleteOutlined } from "@ant-design/icons";
+const { Link } = Typography;
 
 interface Props{
     open?: boolean
@@ -12,34 +15,35 @@ interface Props{
     refreshTable:()=>void
 }
 export default ({open, onOpenModalChange,refreshTable}:Props) =>{
+    
     const requestActions = simpleRequestActions();
     const srv = createService({ request: requestActions })
     const [appraisalEmp,setAppraisalEmp] = useState<AppraisalEmp[]>()
-    const { actions, data } = Model();
+    const [totalHeadCount,setTotalHeadCount] = useState<number>(0)
+    const { actions, data, modals } = Model();
+    const [loading,setLoading] = useState<boolean>(false)
     
     useEffect(() => {
         try {
-            // async()=>{
-                srv.findDraftedAppraisalEmpList().then(it=>{
-                    setAppraisalEmp(it.filter(it=>{
-                        var msg = data.validationMsgList(it)
-                        console.log(msg)
-                        return msg.length==0
-                    }).map(i=> {
-                        var status = actions.getStatus('DONE',i)
-                        return {...i,
-                            status:status.status,
-                            actionStatus:status.actionStatus,
-                            rated1: status.rated1,
-                            rated2: status.rated2,
-                            rated3: status.rated3,
-                            rated4: status.rated4,
-                            rated5: status.rated5
-                        }
-                    }))
-                })
-            // }
-
+            srv.findDraftedAppraisalEmpList().then(it=>{
+                setTotalHeadCount(it.totalHeadCount)
+                setAppraisalEmp(it.items.filter(it=>{
+                    // var msg = data.validationMsgList(it)
+                    // return msg.length==0
+                    return true
+                }).map(i=> {
+                    var status = actions.getStatus('DONE',i)
+                    return {...i,
+                        status:status.status,
+                        actionStatus:status.actionStatus,
+                        rated1: status.rated1,
+                        rated2: status.rated2,
+                        rated3: status.rated3,
+                        rated4: status.rated4,
+                        rated5: status.rated5
+                    }
+                }))
+            })
         }catch(error: any){
             message.error(error.message || 'Failed to load data.')
         }
@@ -65,50 +69,53 @@ export default ({open, onOpenModalChange,refreshTable}:Props) =>{
                 width: '50%',
                 content: <div>{validtor.map(it=> it.msg?.map(i=> <div><b style={{color:'orange'}}>{it.title}: </b><span>{i.title} {i.msg}</span></div>))}</div>
             })
-            return
+            return 
         }
-        Modal.confirm({
-            title: 'Submit All',
-            content: 'Are you sure to submit all this forms.',
-            onOk: async () => {
-                try {
-                    await srv.submitAllAppraisalEmps(appraisalEmp?.map(
-                        it=> {
-                        return {
-                            id:it.id,
-                            status:it.status,
-                            actionStatus:it.actionStatus,
-                            rated1: it.rated1,
-                            rated2: it.rated2,
-                            rated3: it.rated3,
-                            rated4: it.rated4,
-                            rated5: it.rated5
-                        } as AppraisalEmpSubmitAllPayload
-                    }))
-                    message.success(`Appraisal forms're submitted`)
-                    onOpenModalChange(false)
-                    refreshTable()
-                } catch (error: any) {
-                    message.error(error.message || 'Failed')                       
-                }
-            }
-        })
-       
+        modals.showModal('ConfirmPerformanceEvaluationSubmit')        
+    }
+    const onFinishHandler=async ()=>{
+        try {
+            setLoading(true)
+            await srv.submitAllAppraisalEmps(appraisalEmp?.map(
+                it=> {
+                return {
+                    id:it.id,
+                    status:it.status,
+                    actionStatus:it.actionStatus,
+                    rated1: it.rated1,
+                    rated2: it.rated2,
+                    rated3: it.rated3,
+                    rated4: it.rated4,
+                    rated5: it.rated5
+                } as AppraisalEmpSubmitAllPayload
+            })).then(rs=>{
+                message.success(`submitted`)
+                setLoading(false)
+                onOpenModalChange(false)
+                refreshTable()
+            })
+        } catch (error: any) {
+            message.error(error.message || 'Failed')                       
+        }
     }
 
     return <ModalForm
-        title='Appraisal Form List'        
+        title={`Performance Evaluation List - ${(appraisalEmp?.length||0)}/${totalHeadCount}`}     
         width={'85%'}
         open={open}
         onOpenChange={onOpenModalChange}
-        submitter={((appraisalEmp?.length||0)>0)&&{
+        submitter={{
             searchConfig: {
               submitText: 'Submit All',
             },
+            submitButtonProps:{
+               loading: loading,
+               disabled: ( appraisalEmp?.length != totalHeadCount ||  (appraisalEmp?.length||0)==0 || appraisalEmp?.some(it => data.validationMsgList(it).length > 0 ))
+            }    
         }}
         onFinish={()=>onSubmitAllHandler()}
     >
-    <ProTable<AppraisalEmp>
+    {appraisalEmp&&<ProTable<AppraisalEmp>
         loading = {requestActions.request?.loading}
         pagination={false}  
         search={false}
@@ -120,53 +127,23 @@ export default ({open, onOpenModalChange,refreshTable}:Props) =>{
             fullScreen:false
             
         }}                
-        dataSource={appraisalEmp}
-        // request = {async (page) => {
-        //     return srv.findDraftedAppraisalEmpList().then(it => {
-        //         setAppraisalEmp(it.filter(it=>{
-        //             var msg = data.validationMsgList(it)
-        //             return msg.length==0
-        //         }).map(i=> {
-        //             var status = actions.getStatus('DONE',i)
-        //             return {...i,
-        //                 status:status.status,
-        //                 actionStatus:status.actionStatus,
-        //                 rated1: status.rated1,
-        //                 rated2: status.rated2,
-        //                 rated3: status.rated3,
-        //                 rated4: status.rated4,
-        //                 rated5: status.rated5
-        //             }
-        //         }))
-        //             return{
-        //                 success: true, 
-        //                 total: it?.length,
-        //                 data: it.filter(it=>{
-        //                     var msg = data.validationMsgList(it)
-        //                     return msg.length==0
-        //                 }).map(i=> {
-        //                     var status = actions.getStatus('DONE',i)
-        //                     return {...i,
-        //                         status:status.status,
-        //                         actionStatus:status.actionStatus,
-        //                         rated1: status.rated1,
-        //                         rated2: status.rated2,
-        //                         rated3: status.rated3,
-        //                         rated4: status.rated4,
-        //                         rated5: status.rated5
-        //                     }
-        //                 })
-        //             }
-        //         }) as Promise<AppraisalEmp> 
-        //     }
-        // }
+        dataSource={appraisalEmp}       
         columns={[
             {
                 title: 'Employee',
                 sorter: 'formNo', 
                 width:'150px',
-                render(_, r) {                        
-                    return `${r.empNo}- ${r.empName}`
+                render(_, r) {     
+                    var vali = data.validationMsgList(r)                   
+                    // return `${r.empNo}- ${r.empName}`
+                    return <Link type={(vali.length > 0) ? 'danger' : undefined}>
+                    <Tooltip
+                        title={(vali.length > 0) && vali.map(it => <div><b style={{ color: 'orange' }}>{it.title}: </b>{it.msg}</div>)}
+                        overlayStyle={{ maxWidth: '500px' }}
+                    >
+                        {`${r.empNo}- ${r.empName}`}
+                    </Tooltip>
+                </Link>
                 },
             },
             {
@@ -177,16 +154,18 @@ export default ({open, onOpenModalChange,refreshTable}:Props) =>{
             {title: 'Function', dataIndex: 'departmentName', sorter : 'function' },
             {title: 'Job Title', dataIndex: 'jobTitle', sorter : 'jobTitle' },
             {title: 'Self- Rating', dataIndex: 'rating1', sorter: 'rating1' },
-            {title: 'FM Rating', dataIndex: 'rating2', sorter: 'rating2' },
-            {title: 'Agreed Rating', dataIndex: 'rating3', sorter: 'rating3' },
+            // {title: 'FM Rating', dataIndex: 'rating2', sorter: 'rating2' },
+            {title: "Manager's Rating", dataIndex: 'rating3', sorter: 'rating3' },
             
-            {
-                 title: 'Action',
-                 width:'180px', 
-                render: (_, r) =>  <a onClick={()=>removeHandler(r)}>Remove</a>
+            // {
+            //      title: '',
+            //      width:'5px', 
+            //     render: (_, r) => <Button danger type='link' icon={<DeleteOutlined/>} onClick={()=>removeHandler(r)}/>
             
-            }
+            // }
         ]} 
-       />
+       />}
+       {modals.isVisible('ConfirmPerformanceEvaluationSubmit') && <ConfirmSubmitModal onFinish={onFinishHandler}  open={modals.isVisible('ConfirmPerformanceEvaluationSubmit')} onOpenModalChange={(v: any) => !v && modals.hideModal('ConfirmPerformanceEvaluationSubmit')} />}
+
     </ModalForm>
 }

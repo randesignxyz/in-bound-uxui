@@ -1,9 +1,7 @@
 import CrudWrapper from "@/components/DataCrud/CrudWrapper"
-import { Spin, message } from "antd"
-import AppraisalViewDetail from "./components/detail"
+import { Spin } from "antd"
 import { HrmPaths } from ".."
 import { useState } from "react"
-// import DataEntryView from "./DataEntryView"
 import ProbationList from "./components/list"
 
 export default () => {
@@ -25,12 +23,12 @@ export default () => {
                         )
                         // case 'create':
                         //     return <DataEntryView onBack={()=> navigate?.gotToListHandler?.()} type="CREATE" id={id as number}/>
-                        case 'detail': return id ? <AppraisalViewDetail id={Number(id) || 0} 
-                                onBack={()=>{                                  
-                                    navigate?.gotToListHandler?.()
-                                    refresh()
-                                }}
-                            /> : <Spin />
+                        // case 'detail': return id ? <AppraisalViewDetail id={Number(id) || 0} 
+                        //         onBack={()=>{                                  
+                        //             navigate?.gotToListHandler?.()
+                        //             refresh()
+                        //         }}
+                        //     /> : <Spin />
                         default: throw Error('Not compatible view')
                     }
                 }

@@ -1,5 +1,5 @@
 import { SimpleRequestActions } from "@/services/model";
-import { RequestItem, SavePayLoad, SearchParams, StaffProposalDetail, StaffProposalListItem } from "./data.types";
+import { RequestItem, SavePayLoad, SearchParams, StaffProposalDetail, StaffProposalListItem, StaffProposalRequestCancel } from "./data.types";
 import { CrudBaseServices } from "@/services/CrudBaseSevices";
 import { FetchPagingParams } from "@/components/DataCrud/TableView";
 import { execDataService, execDataService0, fetchDataItemService, fetchDataListService, fetchDataPagingService } from "@/services/apiGateway";
@@ -12,8 +12,9 @@ export const createService = (request: SimpleRequestActions): CrudBaseServices<
     SearchParams,
     SavePayLoad
 > & {
-    actionHR: (data: TaskActionDataParam<{id: number; items: RequestItem[]}>) => Promise<void>,
-    findByInstId: (instId: string) => Promise<StaffProposalDetail>
+    actionHR: (data: TaskActionDataParam<{ id: number; items: RequestItem[] }>) => Promise<void>,
+    findByInstId: (instId: string) => Promise<StaffProposalDetail>,
+    cancelRequest: (data: StaffProposalRequestCancel) => Promise<void>
 } => {
     return {
         fetchPaging: async (params: FetchPagingParams<SearchParams>) =>
@@ -21,7 +22,7 @@ export const createService = (request: SimpleRequestActions): CrudBaseServices<
                 actionName: 'fetch-paging-staff-proposal-request',
                 endpoint: 'HR',
                 payload: params,
-                 pagination: {
+                pagination: {
                     page: params.pagination?.current,
                     pageSize: params.pagination?.pageSize
                 }
@@ -43,23 +44,29 @@ export const createService = (request: SimpleRequestActions): CrudBaseServices<
             }).query(request)
         ,
         saveItem: async (data: SavePayLoad) =>
-            execDataService<{data: string}, SavePayLoad>({
+            execDataService<{ data: string }, SavePayLoad>({
                 actionName: 'make-staff-proposal-request',
                 endpoint: 'HR',
                 payload: data
             })(request)
         ,
-        findByInstId: async(instId: string) => fetchDataItemService<StaffProposalDetail, {id: string}>({
+        findByInstId: async (instId: string) => fetchDataItemService<StaffProposalDetail, { id: string }>({
             actionName: "fetch-item-staff-proposal-request_by_instanceId",
             endpoint: 'HR',
-            payload: {id: instId}
+            payload: { id: instId }
         }).query(request),
 
-        
-        actionHR: async(data: TaskActionDataParam<{id: number; items: RequestItem[]}>) => execDataService0<TaskActionDataParam<{id: number; items: RequestItem[]}>>({
+
+        actionHR: async (data: TaskActionDataParam<{ id: number; items: RequestItem[] }>) => execDataService0<TaskActionDataParam<{ id: number; items: RequestItem[] }>>({
             actionName: 'action-hr-staff-proposal-request',
             endpoint: 'HR',
             payload: data
-        })(request)
+        })(request),
+
+        cancelRequest: async (data: StaffProposalRequestCancel) => execDataService0<StaffProposalRequestCancel>({
+            actionName: 'staff-proposal-request-cancel',
+            endpoint: 'HR',
+            payload: data
+        })(request),
     }
 }

@@ -121,7 +121,8 @@ const AppraisalViewDetail=(props: Props) => {
     const rated2 = dataDetail?.rated2
     const rated3 = dataDetail?.rated3
     const isSaveDraft = ((currentAssign1 && (currentDrafted || !rated1)) || (currentAssign2 && (currentDrafted || !rated2)) || (currentAssign3 && (currentDrafted || !rated3)))
-    const isSubmitForm = ((currentAssign1 && (currentDrafted || !rated1)) || (currentAssign2 && (currentDrafted || !rated2)) || (currentAssign3 && (currentDrafted || !rated3)))
+    const isSubmitForm = (currentAssign1 && (currentDrafted || !rated1))  
+    // const isSubmitForm = ((currentAssign1 && (currentDrafted || !rated1)) || (currentAssign2 && (currentDrafted || !rated2)) || (currentAssign3 && (currentDrafted || !rated3)))
     
     
     const saveDraftHandler =async () =>{       

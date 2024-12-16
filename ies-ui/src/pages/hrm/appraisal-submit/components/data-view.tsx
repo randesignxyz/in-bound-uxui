@@ -69,6 +69,8 @@ export default ({
     const fielServices = FileServiceAPI(requestActions);
     const currentUser =  useModel('@@initialState');
 
+    const statusCompleted = appraisalEmp?.status==='COMPLETED'?true:false
+    const appraisalAdmin = appraisalEmp?.appraisalAdmin||false
     const currentDrafted = appraisalEmp?.currentDrafted
     const isDrafted = appraisalEmp?.actionStatus==='DRAFTED'?true:false
     const currentAssign1 = appraisalEmp?.currentAssign1||false
@@ -151,7 +153,7 @@ export default ({
     // if(currentAssign3 || (rated3 && !isDrafted)){
     if(currentAssign3){
       columns.push({
-        title: getLable('TBL_RATING5'),
+        title: getLable('TBL_RATING3'),
         width: '8%',     
         render:(r:any)=> <Radio value={r.behaviorRate}  checked={r.behaviorRate===r.rating3}  onChange={(e)=> rating3Editable&&onChange3(e,r)}/>,
         onCell:(record:any)=>({style: record.sort%2===0?{ background:rowColr, textAlign:'center',border:border}:{ textAlign:'center',border:border}})
@@ -301,7 +303,7 @@ export default ({
                   }}
                 />
               </ProCard>} 
-              {(rating3Editable || rated3)&&<ProCard size="small" style={{height:'100%'}} headerBordered bordered title={<b>{getLable('TITLE_AGREED_COMMENT')}<span style={{color:'red'}}>*</span></b>}>
+              {(rating3Editable || (currentAssign3 || appraisalAdmin) || statusCompleted )&&<ProCard size="small" style={{height:'100%'}} headerBordered bordered title={<b>{getLable('TITLE_AGREED_COMMENT')}<span style={{color:'red'}}>*</span></b>}>
                 <ProFormTextArea name={'rating3Comment'} readonly={!rating3Editable}  rules={[{ required: true }]}/>
                 {!hasRating2&&<EditableProTable<AppraisalEmpImprovement & {key:string}> 
                   style={{padding:0,margin:0}}

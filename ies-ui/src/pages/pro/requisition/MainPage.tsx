@@ -1,7 +1,7 @@
 import { TableViewSearchParams } from "@/components/DataCrud/TableView"
 import PageWrapper from "@/components/PageWrapper"
 import Status from "@/components/Status"
-import { formatDate, formatter } from "@/pages/utils"
+import { formatDate, formatter1 } from "@/pages/utils"
 import { ProDepartment, RequisitionDetailResponse, RequisitionListItem } from "@/services/pro/data"
 import { RequisitionAdvanceSearchParams } from "@/services/pro/req-params"
 import { RequisitionServiceAPI } from "@/services/pro/services"
@@ -9,20 +9,24 @@ import {
     CheckOutlined, CopyFilled, ExportOutlined, EyeFilled,
     FileOutlined, PartitionOutlined, PlusCircleOutlined, UploadOutlined
 } from "@ant-design/icons"
-import { useQuery } from "@umijs/max"
-import { Button, Flex, Modal, Spin, Typography, message } from "antd"
-import { useRef, useState } from "react"
+import { useAccess, useQuery, useQueryClient } from "@umijs/max"
+import { Button, Flex, Modal, Spin, Tooltip, Typography, message } from "antd"
+import { useEffect, useRef, useState } from "react"
 import Form from "@/pages/process-flow/form"
 import DataDetailView from "./DataDetailView"
 import AdvanceSearch from "./components/AdvanceSearch"
 import Flow from "../flow"
 import DataEntryView from "./DataEntryView"
 import { uniqueId } from "lodash"
-import { ActionType } from "@ant-design/pro-components"
+import { ActionType, LightFilter, ProCard, ProFormCheckbox, ProFormDateRangePicker, ProFormSelect } from "@ant-design/pro-components"
+import { BU } from "@/pages/hrm/data"
+import moment from "moment"
+import { useForm } from "antd/lib/form/Form"
 
 export const openPR = (instanceId: string) => window.open(`/external/data-form/requisition_request_process/${instanceId}`, '_blank')?.focus()
 
 export default () => {
+    const access = useAccess()
     const services = RequisitionServiceAPI();
     const [viewDetail, setViewDetail] = useState<{
         visible: boolean;
@@ -35,9 +39,11 @@ export default () => {
         criteria: { advanceSearch: { status: 'ALL' } }
     })
 
-    const { data, isFetching, refetch } = useQuery(['fetch-customer-list', filter], () => services.list(filter), {
+    const { data, isLoading, refetch } = useQuery(['fetch-customer-list', filter], () => services.list(filter), {
         refetchOnWindowFocus: false
     })
+
+    const queryClient = useQueryClient()
 
     const actionRef = useRef<ActionType>();
 
@@ -51,6 +57,8 @@ export default () => {
     };
 
     const listDepts = async () => {
+
+        if (listDepartment.length > 0) return
         try {
             const depts = await services.listProDepartment();
             setListDepartment(depts);
@@ -58,6 +66,59 @@ export default () => {
             message.error(error.message);
         }
     };
+    // Add useEffect to handle window resize
+    useEffect(() => {
+        listDepts()
+    }, []);
+
+
+    const [form] = useForm<RequisitionAdvanceSearchParams>()
+    const buList = [
+        access.hasProOflAccess && { id: 1, name: 'OFL', description: 'Onefraternity' },
+        access.hasProNvcAccess && { id: 2, name: 'NVC', description: 'Vital Premium Water' },
+        access.hasProOmmAccess && { id: 3, name: 'OMM', description: 'One More Manufaturing' },
+        access.hasProOmcAccess && { id: 7, name: 'OMC', description: 'OMC' }
+    ].filter(it => it) as BU[]
+    const extraFilter = <div>
+        <ProCard size="small">
+            <LightFilter<RequisitionAdvanceSearchParams>
+                form={form}
+                onValuesChange={(_, values) => {
+                    setFilter(v => ({
+                        ...v,
+                        criteria: {
+                            ...v.criteria,
+                            advanceSearch: {
+                                ...v.criteria?.advanceSearch,
+                                ...values,
+                                acquiredDate: values.acquiredDate?.map(it => moment(it)),
+                                requestedDate: values.requestedDate?.map(it => moment(it)),
+                                buIds: values.buIds,
+                                deptIds: values.deptIds,
+                                forceUodate: (v.criteria?.forceUodate || 0) + 1
+                            }
+                        }
+                    }))
+
+                    queryClient.invalidateQueries(['fetch-customer-list', filter])
+                }}
+
+            >
+                <ProFormSelect mode="multiple" allowClear name="buIds" label="Company" options={buList.map(it => ({ label: it.name, value: it.id }))} />
+                <ProFormSelect
+                    mode="multiple"
+                    name="deptIds"
+                    label="Department"
+                    showSearch
+                    options={listDepartment?.map((it) => {
+                        return { value: it.id, label: it.name };
+                    })}
+                />
+                <ProFormDateRangePicker allowClear label="Expected Date" name="acquiredDate" />
+                <ProFormDateRangePicker allowClear label="Requested Date" name="requestedDate" />
+            </LightFilter>
+        </ProCard>
+    </div>
 
     return <Spin spinning={false}>
         <PageWrapper<RequisitionListItem, RequisitionAdvanceSearchParams, {}>
@@ -91,6 +152,7 @@ export default () => {
                 }
             ]}
             listView={{
+                onExtraFilterRender: () => extraFilter,
                 actionButtons: [{
                     icon: <PlusCircleOutlined />,
                     type: 'link',
@@ -139,7 +201,8 @@ export default () => {
                 props: {
                     dataSource: data?.items,
                     pagination: { total: data?.total },
-                    loading: isFetching,
+                    loading: isLoading,
+                    scroll: { x: 'max-content' },
                     bordered: true,
                     actionRef: actionRef,
                     actionButtonsColumnRender: (item) => ([
@@ -157,17 +220,36 @@ export default () => {
                     ]),
                     columns: [
                         {
-                            title: 'Form No', sorter: 'formNo', width: 100,
+                            title: 'Form No', sorter: 'formNo',
+                            width: 100,
                             actionProps: (item) => ({ type: 'view', label: item.formNo || "n/a" })
                         },
                         {
                             title: 'Reason',
-                            render: (_, r) => <Typography.Paragraph style={{ fontWeight: 350 }} ellipsis={{
-                                rows: 2,
-                                defaultExpanded: false,
-                                expandable: true,
-                                symbol: 'more'
-                            }} >{r.reason}</Typography.Paragraph>,
+                            // width: 200,
+                            render: (dom, r) =>
+                            //     <Typography.Paragraph style={{ fontWeight: 350 }} ellipsis={{
+                            //     rows: 2,
+                            //     defaultExpanded: false,
+                            //     expandable: true,
+                            //     symbol: 'more'
+                            // }} >
+                            //     {r.reason}
+                            // </Typography.Paragraph>,
+                            {
+
+                                return <Tooltip title={r.reason}>
+                                    <Typography.Text style={{
+                                        maxWidth: '250px',
+                                        display: 'block',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap'
+                                    }}>
+                                        {r.reason}
+                                    </Typography.Text>
+                                </Tooltip>
+                            },
                             dataIndex: 'reason',
                         },
                         {
@@ -177,15 +259,15 @@ export default () => {
                                     title: 'Expected Dt',
                                     align: 'right',
                                     sorter: 'acquisitionDate',
-                                    width: 120,
+                                    width: 110,
                                     render: (_, r) => formatDate(r.acquisitionDate),
                                 },
                                 {
                                     title: 'Total Amt.',
                                     align: 'right',
-                                    width: 120,
+                                    width: 100,
                                     sorter: 'totalAmount',
-                                    render: (_, r) => formatter.format(r.totalAmount || 0),
+                                    render: (_, r) => formatter1.format(r.totalAmount || 0),
                                 },
                                 {
                                     title: 'Srv',
@@ -215,7 +297,7 @@ export default () => {
                                     title: 'Requested Dt',
                                     align: 'right',
                                     sorter: 'createdDate',
-                                    width: 130,
+                                    width: 120,
                                     render: (_, r) => formatDate(r.createdDate),
                                 },
                                 {
@@ -309,7 +391,6 @@ export default () => {
             open={advanceSearch?.visible}
             initData={filter.criteria?.advanceSearch}
             onClose={() => {
-                console.log('advance search in pro visible ', advanceSearch);
                 setAdvanceSearch({ visible: false });
             }}
             onReset={() => {
@@ -322,9 +403,9 @@ export default () => {
                         advanceSearch: {
                             status: v.criteria?.advanceSearch?.status || 'ALL',
                         }
-
                     }
                 }));
+                form.resetFields()
             }}
             onSearch={(data) => {
                 setFilter(v => ({
@@ -337,14 +418,22 @@ export default () => {
                             status: v.criteria?.advanceSearch?.status || 'ALL',
                             deptIds: data.deptIds,
                             service: data.service,
+                            buIds: data.buIds,
                             requestedDate: data.requestedDate,
                             acquiredDate: data.acquiredDate
                         }
-
                     }
                 }));
 
+                form.setFieldsValue({
+                    deptIds: data.deptIds,
+                    buIds: data.buIds,
+                    requestedDate: data.requestedDate,
+                    acquiredDate: data.acquiredDate
+                })
+
             }}
+            buList={buList}
             listDepts={listDepartment}
         />
 

@@ -1,6 +1,6 @@
-import { ActionType, ProCard, ProColumns, ProTable } from "@ant-design/pro-components";
+import { ActionType, CheckCard, ProCard, ProColumns, ProTable } from "@ant-design/pro-components";
 import { StockRequestDetailResponse, StockRequestItemDetailResponse } from "../data.types";
-import { Descriptions } from "antd";
+import { Checkbox, Descriptions } from "antd";
 import { formatDate, formatDateTime } from "@/pages/utils";
 import { useForm } from "antd/es/form/Form";
 import { useEffect, useRef, useState } from "react";
@@ -96,12 +96,12 @@ export default ({title,instId, forceRefresh }: Props) => {
             <Descriptions.Item style={{ fontWeight: 'bolder' }} label="Group">
                 {stockRequest?.groupName}{' '}
             </Descriptions.Item>               
-            <Descriptions.Item style={{ fontWeight: 'bolder' }} label="Reason">{stockRequest?.reason} </Descriptions.Item> 
+            <Descriptions.Item label="Remark">{stockRequest?.remarks}</Descriptions.Item> 
             <Descriptions.Item label="Created By">{stockRequest?.createdBy}</Descriptions.Item> 
             <Descriptions.Item style={{ fontWeight: 'bolder' }} label="From Warehouse">
-                {stockRequest?.warehouseFrom}{' '}
-            </Descriptions.Item> 
-            <Descriptions.Item label="Remark">{stockRequest?.remarks}</Descriptions.Item>                
+                {`${stockRequest?.warehouseFrom} `} {stockRequest?.delivery&&<Checkbox style={{paddingLeft:15}} checked={stockRequest?.delivery}>Delivery</Checkbox>}
+            </Descriptions.Item>                
+            <Descriptions.Item style={{ fontWeight: 'bolder' }} label="Reason">{stockRequest?.reason} </Descriptions.Item>             
             {stockRequest?.lastModifiedDate && (
                 <Descriptions.Item label="Last Modified Date">
                 {formatDateTime(stockRequest?.lastModifiedDate)}

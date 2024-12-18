@@ -4,6 +4,7 @@ import type { AddressInfo } from '../crm/data';
 import type { LookupData, LookupDataItem } from '../data';
 
 export type SaleServiceName =
+  | 'list-offer-code'
   | 'list-so'
   | 'find-so'
   | 'new-so'
@@ -461,7 +462,7 @@ export interface MMAAprovalEntity {
   description?: string;
   referenceNo?: string;
   receivedBy?: string;
-  items?: MMAApprovalStockItemDto[];
+  items?: EditableStockItem[];
   distributorCode?: string;
   distributorName?: string;
   distributorPhone?: string;
@@ -469,7 +470,8 @@ export interface MMAAprovalEntity {
   addressId?: number;
   latitude?: string;
   longitude?: string;
-  addressInfo?: string;
+  shippingAddressId?: number;
+  address?: string;
 }
 
 export interface MMAApprovalStockItemDto {
@@ -635,6 +637,8 @@ export interface StockDetailLess {
   pendingQty?: number;
   currentQty: number;
   soldQty?: number;
+  categoryName?: string;
+  sequence?: number;
   lastModifiedDate: moment.Moment;
   typeId: number;
   items: StockDetailItemLess[];
@@ -731,6 +735,24 @@ export interface So {
   budgetCode?: string;
   distributorId?: number;
   attachments?: { id: number; imageId: string; status: string }[];
+}
+
+export interface OfferCodeInfo {
+  offerCode: string;
+  itemsIds: number[];
+  saleType: string;
+}
+
+export interface OfferCodeParam {
+  soItemId: number;
+  itemId: number;
+  description: string;
+  itemCode: string;
+  quantity: number;
+  type: string;
+  uom: string;
+  offerCode?: string;
+  isChecked: boolean;
 }
 
 export interface SoDetail {
@@ -933,6 +955,7 @@ export interface SoItemDetail {
   parentKey?: string;
   budgetCode?: string;
   index?: number;
+  offerCode?: string;
 }
 
 export interface Distributor {
@@ -1071,6 +1094,7 @@ interface ProductItem {
   barcode: string;
   name: string;
   uomId: number;
+  uom?: stirng;
   price: number;
   cost?: number;
   discountPercent?: number;

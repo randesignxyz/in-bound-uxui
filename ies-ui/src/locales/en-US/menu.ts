@@ -161,5 +161,8 @@ export default {
   'menu.queue-dashboard': 'Queue Board',
   'menu.term': 'Term',
   'menu.fleet_accessory': 'Fleet Accessory',
-
+  'menu.sale_mpu_stock': 'Sales MPU Stock',
+  'menu.sale_mpu_count_stock': 'Sales MPU Count Stock',
+  'menu.sale_rsm_request': 'Sales RSM Request',
+  'menu.sale_mpu_purchase_order': 'Sales MPU Purchase Order',
 };

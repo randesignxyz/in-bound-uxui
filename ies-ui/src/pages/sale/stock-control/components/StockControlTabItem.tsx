@@ -1,17 +1,15 @@
 import vital from '@/assets/logo.svg';
 import mee from '@/assets/mee.png';
 import posm from '@/assets/stock.png';
-import type { DescriptionDisplayDataItem } from '@/components/Descriptions';
-import DescriptionDisplay from '@/components/Descriptions';
 import { formatDate, formatDateTime } from '@/pages/utils';
 import type { LookupDataItem } from '@/services/data';
-import type {
-  StockAdjustmentItem,
-  StockControlDetail,
-  StockDetailItemLess,
-  StockDetailLess,
-} from '@/services/sale/data';
-import { SyncOutlined, CheckCircleOutlined, ExclamationCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
+import type { StockControlDetail, StockDetailItemLess } from '@/services/sale/data';
+import {
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  ExclamationCircleOutlined,
+  SyncOutlined,
+} from '@ant-design/icons';
 import { ProDescriptions } from '@ant-design/pro-components';
 import type { ActionType } from '@ant-design/pro-table';
 import ProTable from '@ant-design/pro-table';
@@ -27,7 +25,6 @@ type Props = {
     details?: StockControlDetail;
     types?: LookupDataItem[];
     // loading: boolean | undefined;
-    listStockDetailItem?: StockDetailLess[];
   };
   // actionHandlers?: {
   //   onTransferMoney?: () => void;
@@ -39,137 +36,159 @@ const StockControlTabItem: React.FC<Props> = ({ data, forceUpdate }) => {
   const actionRef = useRef<ActionType>();
   const { Text } = Typography;
 
+  const stockCategoryItems = data.details?.items ?? [];
+  const pendingStockCategroyItems = data.details?.pendingItems ?? [];
+  const itemTypeIds = stockCategoryItems
+    .concat(...pendingStockCategroyItems)
+    .map((e) => e.typeId)
+    .filter((value, index, array) => array.indexOf(value) === index);
+
+  // new Set<number>(
+  //   stockCategoryItems.concat(pendingStockCategroyItems).map((e) => e.typeId),
+  // );
   useEffect(() => {
     if (forceUpdate) actionRef.current?.reloadAndRest?.();
   }, [forceUpdate]);
 
   return (
     <>
-      <Flex vertical gap={24} >
-        <Card size="small" title="General" >
+      <Flex vertical gap={24}>
+        <Card size="small" title="General">
           {/* <DescriptionDisplay data={generalInfo} /> */}
           <ProDescriptions<StockControlDetail>
             column={3}
             dataSource={data.details}
             loading={data ? false : true}
             contentStyle={{
-              fontWeight: 500
+              fontWeight: 500,
             }}
             columns={[
               {
-                title: "Store Name",
-                dataIndex: "stockName"
+                title: 'Store Name',
+                dataIndex: 'stockName',
               },
               {
-                title: "Owner",
-                dataIndex: "stockName",
-                render: (_, r) => [r.owner?.salespersonCode, r.owner?.salespersonName].filter(o => o).join(" - ")
+                title: 'Owner',
+                dataIndex: 'stockName',
+                render: (_, r) =>
+                  [r.owner?.salespersonCode, r.owner?.salespersonName].filter((o) => o).join(' - '),
               },
               {
-                title: "Description",
-                dataIndex: "description",
+                title: 'Description',
+                dataIndex: 'description',
               },
               {
-                title: "Serial",
-                dataIndex: "serialNumber",
-              },
-
-              {
-                title: "PlateNumber",
-                dataIndex: "plateNumber",
-              },
-              {
-                title: "Status",
-                dataIndex: "Status",
-                render: (_, r) => <Tag
-                  bordered={false}
-                  color={
-                    r.status == "pending" ? "processing"
-                      : r.status == "open" || r.status == "approved" ? "success"
-                        : r.status == "settled" || r.status == "count stock" ? "magenta"
-                          : "error"
-                  }
-                  icon={
-                    r.status === "pending" ? <SyncOutlined spin />
-                      : r.status === "open" ? <CheckCircleOutlined />
-                        : r.status === "canceled" ? <CloseCircleOutlined />
-                          : r.status == "closed" ? <CheckCircleOutlined />
-                            : <ExclamationCircleOutlined />
-                  }
-                >{r.status}</Tag>
-              },
-              {
-                title: "Received By",
-                dataIndex: "",
-                render: (_, r) => [r.receivedBy?.salespersonCode, r.receivedBy?.salespersonName].filter(o => o).join(" - ")
-              },
-              {
-                title: "Approved By",
-                dataIndex: "",
-                render: (_, r) => [r.approvedBy?.salespersonCode, r.approvedBy?.salespersonName].filter(o => o).join(" - ")
-              },
-              {
-                title: "Approved Date",
-                render: (_, r) => formatDateTime(r.approvedDate)
+                title: 'Serial',
+                dataIndex: 'serialNumber',
               },
 
               {
-                title: "Keep Forwarding",
-                render: (_, r) => <Typography.Text type={r.isKeepForwarding ? "success" : "warning"}>{r.isKeepForwarding ? "YES" : "NO"}</Typography.Text>
-              }
+                title: 'PlateNumber',
+                dataIndex: 'plateNumber',
+              },
+              {
+                title: 'Status',
+                dataIndex: 'Status',
+                render: (_, r) => (
+                  <Tag
+                    bordered={false}
+                    color={
+                      r.status === 'pending'
+                        ? 'processing'
+                        : r.status === 'open' || r.status === 'approved'
+                        ? 'success'
+                        : r.status === 'settled' || r.status === 'count stock'
+                        ? 'magenta'
+                        : 'error'
+                    }
+                    icon={
+                      r.status === 'pending' ? (
+                        <SyncOutlined spin />
+                      ) : r.status === 'open' ? (
+                        <CheckCircleOutlined />
+                      ) : r.status === 'canceled' ? (
+                        <CloseCircleOutlined />
+                      ) : r.status === 'closed' ? (
+                        <CheckCircleOutlined />
+                      ) : (
+                        <ExclamationCircleOutlined />
+                      )
+                    }
+                  >
+                    {r.status}
+                  </Tag>
+                ),
+              },
+              {
+                title: 'Received By',
+                dataIndex: '',
+                render: (_, r) =>
+                  [r.receivedBy?.salespersonCode, r.receivedBy?.salespersonName]
+                    .filter((o) => o)
+                    .join(' - '),
+              },
+              {
+                title: 'Approved By',
+                dataIndex: '',
+                render: (_, r) =>
+                  [r.approvedBy?.salespersonCode, r.approvedBy?.salespersonName]
+                    .filter((o) => o)
+                    .join(' - '),
+              },
+              {
+                title: 'Approved Date',
+                render: (_, r) => formatDateTime(r.approvedDate),
+              },
+
+              {
+                title: 'Keep Forwarding',
+                render: (_, r) => (
+                  <Typography.Text type={r.isKeepForwarding ? 'success' : 'warning'}>
+                    {r.isKeepForwarding ? 'YES' : 'NO'}
+                  </Typography.Text>
+                ),
+              },
             ]}
           />
         </Card>
 
-        {data?.listStockDetailItem && data?.listStockDetailItem.length > 0 && (
-          <Card size="small" title="Stock Detail" >
-            <Tabs>
-              {data?.listStockDetailItem?.map((it) => {
-                const objType = data.types?.find((it1) => it1.id === it.typeId);
-                const tran = data.details?.transactions.find((it1) => it1.itemType === objType?.id);
-                return (
-                  objType && (
-                    <Tabs.TabPane
-                      tab={
-                        <Space size={0}>
-                          <Image
-                            preview={false}
-                            src={objType.id === 131 ? vital : objType.id === 132 ? mee : posm}
-                            height={30}
-                          />
-                          <span>&nbsp;{objType.name}&nbsp;&nbsp;</span>
-                          {tran && (
-                            <Tag color={'processing'}>
-                              {tran.quantity + (tran.beginningQty || 0) - (tran.soldQty || 0)}
-                            </Tag>
-                          )}
-                        </Space>
-                      }
-                      key={`${objType.code}-product`}
-                    >
-                      <Tabs>
-                        <Tabs.TabPane tab={<Text>Line Items</Text>} key={`line-items`}>
-                          <ProTable<StockDetailItemLess>
-                            size="small"
-                            sortDirections={['ascend']}
-                            showSorterTooltip={false}
-                            key="id"
-                            actionRef={actionRef}
-                            rowKey={(r) => {
-                              return r.batchNo + '-' + r.itemId;
-                            }}
-                            pagination={false}
-                            search={false}
-                            options={{
-                              setting: false,
-                              density: false,
-                              fullScreen: false,
-                              reload: false,
-                            }}
-                            dataSource={it.items}
-                            columns={
-                              it.typeId === 132
-                                ? [
+        {data.types && data.types.length > 0 && (
+          <Card size="small" title="Stock Detail">
+            <Tabs
+              items={data.types
+                .filter((e) => itemTypeIds.indexOf(e.id) > -1)
+                .map((category) => {
+                  const id = category.id;
+                  const it = stockCategoryItems.find((e) => e.typeId === id);
+                  const tran = data.details?.transactions.find((it1) => it1.itemType === id);
+                  const pendingItem = pendingStockCategroyItems.find((e) => e.typeId === id);
+                  const itemTabs = [];
+                  if (it)
+                    itemTabs.push({
+                      key: 'line-items',
+                      label: <Text>Line Items</Text>,
+                      children: (
+                        <ProTable<StockDetailItemLess>
+                          size="small"
+                          sortDirections={['ascend']}
+                          showSorterTooltip={false}
+                          key="id"
+                          actionRef={actionRef}
+                          rowKey={(r) => {
+                            return r.batchNo + '-' + r.itemId;
+                          }}
+                          pagination={false}
+                          search={false}
+                          options={{
+                            setting: false,
+                            density: false,
+                            fullScreen: false,
+                            reload: false,
+                          }}
+                          dataSource={it.items}
+                          columns={
+                            it.typeId === 132
+                              ? [
                                   {
                                     title: 'Batch #',
                                     dataIndex: 'batchNo',
@@ -228,7 +247,7 @@ const StockControlTabItem: React.FC<Props> = ({ data, forceUpdate }) => {
                                     },
                                   },
                                 ]
-                                : [
+                              : [
                                   {
                                     title: 'Code',
                                     dataIndex: 'itemCode',
@@ -256,138 +275,76 @@ const StockControlTabItem: React.FC<Props> = ({ data, forceUpdate }) => {
                                   },
                                   { title: 'UOM', dataIndex: 'uom' },
                                 ]
-                            }
-                          />
-                        </Tabs.TabPane>
-                        (
-                        {data.details?.pendingItems !== undefined &&
-                          data.details?.pendingItems?.length > 0 && (
-                            <Tabs.TabPane tab={<Text>Pending Items</Text>} key={`pending-items`}>
-                              <ProTable<StockDetailItemLess>
-                                size="small"
-                                sortDirections={['ascend']}
-                                showSorterTooltip={false}
-                                key="id"
-                                actionRef={actionRef}
-                                rowKey={(r) => {
-                                  return r.batchNo + '-' + r.itemId;
-                                }}
-                                pagination={false}
-                                search={false}
-                                options={{
-                                  setting: false,
-                                  density: false,
-                                  fullScreen: false,
-                                  reload: false,
-                                }}
+                          }
+                        />
+                      ),
+                    });
+                  if (pendingItem)
+                    itemTabs.push({
+                      key: 'pending-items',
+                      label: <Text>Pending Items</Text>,
+                      children: (
+                        <ProTable<StockDetailItemLess>
+                          size="small"
+                          sortDirections={['ascend']}
+                          showSorterTooltip={false}
+                          key="id"
+                          actionRef={actionRef}
+                          rowKey={(r) => {
+                            return r.batchNo + '-' + r.itemId;
+                          }}
+                          pagination={false}
+                          search={false}
+                          options={{
+                            setting: false,
+                            density: false,
+                            fullScreen: false,
+                            reload: false,
+                          }}
+                          dataSource={pendingItem.items}
+                          columns={[
+                            {
+                              title: 'Description',
+                              render: (_, r) => join([r.itemCode, r.itemName], ' - '),
+                              key: 'itemId',
+                            },
+                            {
+                              title: 'SKU',
+                              dataIndex: 'description',
+                              width: 80,
+                            },
+                            {
+                              title: 'Request',
+                              align: 'right',
+                              dataIndex: 'quantity',
+                              width: 100,
+                            },
 
-                                dataSource={data.details.pendingItems.flatMap((e) => e.items)}
-                                columns={[
-                                  {
-                                    title: 'Description',
-                                    render: (_, r) => join([r.itemCode, r.itemName], ' - '),
-                                    key: 'itemId',
-                                  },
-                                  {
-                                    title: 'SKU',
-                                    dataIndex: 'description',
-                                    width: 80
-                                  },
-                                  {
-                                    title: 'Request',
-                                    align: 'right',
-                                    dataIndex: 'quantity',
-                                    width: 100,
-                                  },
-
-                                  { title: 'UOM', dataIndex: 'uom', align: 'center' },
-
-                                ]}
-                              />
-                            </Tabs.TabPane>
-                          )}
-                        )
-                      </Tabs>
-                    </Tabs.TabPane>
-                  )
-                );
-              })}
-            </Tabs>
-          </Card>
-        )}
-        {(data.details?.pendingItems?.length || 0 > 0) && (data.details?.items?.length <= 0) && (
-          <Card title={"Pending Request"} size='small'>
-            <ProTable<StockDetailItemLess>
-              size="small"
-              sortDirections={['ascend']}
-              showSorterTooltip={false}
-              key="id"
-              actionRef={actionRef}
-              rowKey={(r) => {
-                return [r.batchNo, r.itemId].filter(p => p).join(" - ");
-              }}
-              pagination={false}
-              search={false}
-              options={{
-                setting: false,
-                density: false,
-                fullScreen: false,
-                reload: false,
-              }}
-              dataSource={data?.details?.pendingItems.flatMap((e) => e.items)}
-              columns={[
-                {
-                  title: 'Description',
-                  render: (_, r) => join([r.itemCode, r.itemName].filter(p => p), ' - '),
-                  key: 'itemId',
-                },
-                {
-                  title: 'SKU',
-                  dataIndex: 'description',
-                  width: 80
-                },
-                {
-                  title: 'Request',
-                  align: 'right',
-                  dataIndex: 'quantity',
-                  width: 100,
-                  render: (_, r) => <Typography.Text type='success'>{r.quantity}</Typography.Text>
-                },
-                { title: 'UOM', dataIndex: 'uom', align: 'center' },
-              ]}
-            />
-          </Card>
-        )
-        }
-        {data.details?.settlement?.stockAdjusts && (
-          <Card title={"Free of Charge"} size='small' styles={{ body: { padding: 0 } }}>
-            <ProTable<StockAdjustmentItem>
-              size='small'
-              dataSource={data.details?.settlement?.stockAdjusts.items || []}
-              search={false}
-              options={false}
-              columns={[
-                {
-                  title: "Batch No",
-                  dataIndex: "batchNo"
-                },
-                {
-                  title: "Items Name",
-                  dataIndex: "itemName"
-                },
-                {
-                  title: "Quantity",
-                  dataIndex: "quantity"
-                },
-                {
-                  title: "UOM",
-                  dataIndex: "uom"
-                },
-                {
-                  title: "Remark",
-                  dataIndex: "remark"
-                }
-              ]}
+                            { title: 'UOM', dataIndex: 'uom', align: 'center' },
+                          ]}
+                        />
+                      ),
+                    });
+                  return {
+                    key: `${category.code}-product`,
+                    label: (
+                      <Space size={0}>
+                        <Image
+                          preview={false}
+                          src={id === 131 ? vital : id === 132 ? mee : posm}
+                          height={30}
+                        />
+                        <span>&nbsp;{category.name}&nbsp;&nbsp;</span>
+                        {tran && (
+                          <Tag color={'processing'}>
+                            {tran.quantity + (tran.beginningQty || 0) - (tran.soldQty || 0)}
+                          </Tag>
+                        )}
+                      </Space>
+                    ),
+                    children: <Tabs items={itemTabs} />,
+                  };
+                })}
             />
           </Card>
         )}

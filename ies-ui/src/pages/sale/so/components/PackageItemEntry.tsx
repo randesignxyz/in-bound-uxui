@@ -86,9 +86,10 @@ const PackageItemEntry: React.FC<Props> = ({ data, loading, actionHandlers, ...p
 
   //Loading offer
   useEffect(() => {
-    data.packageOffers &&
-      form.setFieldsValue({
-        offerLineItems: head(data.packageOffers)?.offerList.map((it) => ({
+    const extra = data.packageOffers
+      ?.filter((it) => it.offerList.some((e) => e.offerType !== 'TDO'))
+      .flatMap((e) =>
+        e.offerList.flatMap((it) => ({
           id: it.itemItem.id,
           uomId: 1,
           qty: it.qty,
@@ -99,6 +100,28 @@ const PackageItemEntry: React.FC<Props> = ({ data, loading, actionHandlers, ...p
           budgetCode: '',
           discountPercent: 0,
         })),
+      );
+    const original = data.packageOffers?.filter((it) =>
+      it.offerList.some((e) => e.offerType === 'TDO'),
+    );
+    const items =
+      original && original.length > 0
+        ? head(original)!.offerList.map((it) => ({
+            id: it.itemItem.id,
+            uomId: 1,
+            qty: it.qty,
+            price: 0,
+            amount: 0,
+            type: it.offerType,
+            main: false,
+            budgetCode: '',
+            discountPercent: 0,
+          }))
+        : [];
+
+    data.packageOffers &&
+      form.setFieldsValue({
+        offerLineItems: [...items, ...extra],
       });
   }, [data.packageOffers]);
 

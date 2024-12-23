@@ -14,7 +14,7 @@ import { createService } from '@/pages/hrm/appraisal-submit/services';
 
 export default ({ title, form, onlyCurrentUser, onSetSubmitter }: {
     form: FormInstance<{
-    requestorId: number;
+    requestorId: string;
     requestorBuId: number;
   } >
   title?: React.ReactNode;
@@ -35,7 +35,7 @@ export default ({ title, form, onlyCurrentUser, onSetSubmitter }: {
       onSetSubmitter?.(it)
       setRequestor(it)
       if(firstInit) {
-        form.setFieldsValue({requestorId: userId})  
+        form.setFieldsValue({requestorId: it.empName+''})  
       } 
       form.setFieldsValue({requestorBuId: it.buId})
     })  

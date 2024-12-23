@@ -76,7 +76,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
     const [advanceEvaluationSearch, setAdvanceEvaluationSearch] = useState<{ visible: boolean }>();
     const [isImportExportBtn,setIsImportExportBtn] = useState<boolean>(true)
     const [importData, setImportData] = useState<ImportDataResponse>()
-     const access = useAccess()
+    const access = useAccess()
     
     
     /** Performance Target View ------------------------------------------------------------------------------------------------------------------------------- */
@@ -517,6 +517,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                                         options={[
                                             { label: 'Submitting', value: 'SUBMITTING' },
                                             { label: 'Submitted', value: 'SUBMITTED' },
+                                            { label: 'Reviewing', value: 'REVIEWING' },
                                             { label: 'Reviewed', value: 'REVIEWED' }
                                         ]}
                                     />

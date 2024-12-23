@@ -42,6 +42,7 @@ export interface TableViewProps<T extends { id?: number }> {
 
 interface Props<T extends { id: number }, C> {
   columns: ProColumns<T>[];
+  summary?: (data: readonly T[]) => React.ReactNode;
   rowKey?: string;
   bordered?: boolean;
   // title?: string;
@@ -104,6 +105,7 @@ const TableView = <T extends { id: any }, C extends { searchValue?: string }>(
 ) => {
   const {
     columns,
+    summary,
     // title,
     scrollX,
     addButtonLabel,
@@ -217,6 +219,7 @@ const TableView = <T extends { id: any }, C extends { searchValue?: string }>(
       request={onRequestHandler}
       pagination={pagination}
       expandable={expandable}
+      summary={summary}
     />
   );
 };

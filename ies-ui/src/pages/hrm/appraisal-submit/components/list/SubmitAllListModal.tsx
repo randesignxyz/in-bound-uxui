@@ -1,5 +1,5 @@
 import { simpleRequestActions } from "@/services/model";
-import { ModalForm, ProTable } from "@ant-design/pro-components"
+import { ModalForm, ProColumns, ProTable } from "@ant-design/pro-components"
 import { useEffect, useState } from "react"
 import { createService } from "../../services";
 import { AppraisalEmp, AppraisalEmpSubmitAllPayload, ValidatorMsg } from "../../data.types";
@@ -7,6 +7,7 @@ import { Button, Modal, Tooltip, Typography, message} from "antd";
 import { Model } from "../../model";
 import ConfirmSubmitModal from "./ConfirmSubmitModal";
 import { DeleteOutlined } from "@ant-design/icons";
+import { useAccess } from "@umijs/max";
 const { Link } = Typography;
 
 interface Props{
@@ -15,7 +16,7 @@ interface Props{
     refreshTable:()=>void
 }
 export default ({open, onOpenModalChange,refreshTable}:Props) =>{
-    
+    const access = useAccess()
     const requestActions = simpleRequestActions();
     const srv = createService({ request: requestActions })
     const [appraisalEmp,setAppraisalEmp] = useState<AppraisalEmp[]>()
@@ -98,6 +99,44 @@ export default ({open, onOpenModalChange,refreshTable}:Props) =>{
             message.error(error.message || 'Failed')                       
         }
     }
+    const cols: ProColumns<AppraisalEmp>[] = [
+        {
+            title: 'Employee',
+            sorter: 'formNo', 
+            width:'150px',
+            render(_: any, r: any) {     
+                var vali = data.validationMsgList(r)                   
+                // return `${r.empNo}- ${r.empName}`
+                return <Link type={(vali.length > 0) ? 'danger' : undefined}>
+                <Tooltip
+                    title={(vali.length > 0) && vali.map(it => <div><b style={{ color: 'orange' }}>{it.title}: </b>{it.msg}</div>)}
+                    overlayStyle={{ maxWidth: '500px' }}
+                >
+                    {`${r.empNo}- ${r.empName}`}
+                </Tooltip>
+            </Link>
+            },
+        },
+        {
+            title: 'Employee(KH)', sorter: 'internalName', render(_: any, entity: any) {
+                return entity.internalName
+            },
+        },
+        {title: 'Function', dataIndex: 'departmentName', sorter : 'function' },
+        {title: 'Job Title', dataIndex: 'jobTitle', sorter : 'jobTitle' },
+        {title: 'Self- Rating', dataIndex: 'rating1', sorter: 'rating1' },
+        // {title: 'FM Rating', dataIndex: 'rating2', sorter: 'rating2' },
+        {title: "Manager's Rating", dataIndex: 'rating3', sorter: 'rating3' }
+    ]
+    if(access.isAccessHrAppraisalAllowSubmitPartial){
+        cols.push( {
+            title: '',
+            dataIndex: 'departmentName', sorter : 'function',
+            width:'5px', 
+           render: (_: any, r: any) => <Button danger type='link' icon={<DeleteOutlined/>} onClick={()=>removeHandler(r)}/>
+       
+       })
+    }
 
     return <ModalForm
         title={`Performance Evaluation List - ${(appraisalEmp?.length||0)}/${totalHeadCount}`}     
@@ -110,7 +149,7 @@ export default ({open, onOpenModalChange,refreshTable}:Props) =>{
             },
             submitButtonProps:{
                loading: loading,
-               disabled: ( appraisalEmp?.length != totalHeadCount ||  (appraisalEmp?.length||0)==0 || appraisalEmp?.some(it => data.validationMsgList(it).length > 0 ))
+               disabled:  ((appraisalEmp?.length||0)==0 || appraisalEmp?.some(it => data.validationMsgList(it).length > 0 ) || (access.isAccessHrAppraisalAllowSubmitPartial? false: (appraisalEmp?.length||0) < totalHeadCount))
             }    
         }}
         onFinish={()=>onSubmitAllHandler()}
@@ -128,42 +167,7 @@ export default ({open, onOpenModalChange,refreshTable}:Props) =>{
             
         }}                
         dataSource={appraisalEmp}       
-        columns={[
-            {
-                title: 'Employee',
-                sorter: 'formNo', 
-                width:'150px',
-                render(_, r) {     
-                    var vali = data.validationMsgList(r)                   
-                    // return `${r.empNo}- ${r.empName}`
-                    return <Link type={(vali.length > 0) ? 'danger' : undefined}>
-                    <Tooltip
-                        title={(vali.length > 0) && vali.map(it => <div><b style={{ color: 'orange' }}>{it.title}: </b>{it.msg}</div>)}
-                        overlayStyle={{ maxWidth: '500px' }}
-                    >
-                        {`${r.empNo}- ${r.empName}`}
-                    </Tooltip>
-                </Link>
-                },
-            },
-            {
-                title: 'Employee(KH)', sorter: 'internalName', render(_, entity) {
-                    return entity.internalName
-                },
-            },
-            {title: 'Function', dataIndex: 'departmentName', sorter : 'function' },
-            {title: 'Job Title', dataIndex: 'jobTitle', sorter : 'jobTitle' },
-            {title: 'Self- Rating', dataIndex: 'rating1', sorter: 'rating1' },
-            // {title: 'FM Rating', dataIndex: 'rating2', sorter: 'rating2' },
-            {title: "Manager's Rating", dataIndex: 'rating3', sorter: 'rating3' },
-            
-            // {
-            //      title: '',
-            //      width:'5px', 
-            //     render: (_, r) => <Button danger type='link' icon={<DeleteOutlined/>} onClick={()=>removeHandler(r)}/>
-            
-            // }
-        ]} 
+        columns={cols} 
        />}
        {modals.isVisible('ConfirmPerformanceEvaluationSubmit') && <ConfirmSubmitModal onFinish={onFinishHandler}  open={modals.isVisible('ConfirmPerformanceEvaluationSubmit')} onOpenModalChange={(v: any) => !v && modals.hideModal('ConfirmPerformanceEvaluationSubmit')} />}
 

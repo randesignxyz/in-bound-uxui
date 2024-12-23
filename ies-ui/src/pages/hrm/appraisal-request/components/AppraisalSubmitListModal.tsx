@@ -15,6 +15,8 @@ interface Props extends ModalFormProps<{}>{
     requestType?: AppraisalLookupData
     onAdd:(selected: AppraisalEmp[])=>void
     dataFilter?:AppraisalEmp[]
+    onBuSelectedHandler: (bu: string)=> void
+    buSelected?: string
 }
 // interface SearchCriteria {
 //     searchValue?:string;
@@ -22,7 +24,7 @@ interface Props extends ModalFormProps<{}>{
 //     deptName?:string[];
 // }
 
-const AppraisalSubmitListModal=({requestType, onAdd,dataFilter,...rest}:Props)=>{
+const AppraisalSubmitListModal=({requestType, onAdd,dataFilter,onBuSelectedHandler, buSelected,...rest}:Props)=>{
     const requestActions = simpleRequestActions()
     const services = createService(requestActions)
     const [form] = useForm<SearchCriteria>() 
@@ -43,8 +45,20 @@ const AppraisalSubmitListModal=({requestType, onAdd,dataFilter,...rest}:Props)=>
                 services.listAppraisalFunction()
             ])(requestActions)
             setLookupData(rs)
+            const lookupDataFirst = rs.appraisalBuLookup?.[0]
+            if(lookupDataFirst && (!buSelected || buSelected=='')){
+                const bu = lookupDataFirst.code||''
+                onBuSelectedHandler(bu)
+                setCriteria(v=>{return {...v, buName: bu}})
+                actionRef.current?.reload()
+            }
         })()
     },[])
+
+    useEffect(()=>{
+        form.setFieldValue('buName',buSelected)
+        setCriteria(v=>{return {...v, buName: buSelected}})
+    },[buSelected])
     return <ModalForm
         form={form}
         title="Appraisal List"
@@ -81,7 +95,7 @@ const AppraisalSubmitListModal=({requestType, onAdd,dataFilter,...rest}:Props)=>
         <ProCard boxShadow size="small" >
             <ProFormGroup size={'small'}>
                 <ProFormText label='Search' name={'searchValue'}/>
-                <ProFormSelect label='Business Unit' name={'buName'} width={'sm'} mode="multiple" options={lookupData?.appraisalBuLookup?.map(it => ({ label: it.name, value: it.code }))}/>
+                <ProFormSelect label='Business Unit' name={'buName'} width={'sm'} mode="single" disabled={(dataFilter?.length ||0)>0} onChange={onBuSelectedHandler} options={lookupData?.appraisalBuLookup?.map(it => ({ label: it.name, value: it.code }))}/>
                 <ProFormSelect label='Function' name={'deptName'} width={'sm'} mode="multiple" options={lookupData?.appraisalFunctionLookup?.map(it => ({ label: it.name, value: it.code }))}/>
             </ProFormGroup>
         </ProCard>
@@ -135,14 +149,14 @@ const AppraisalSubmitListModal=({requestType, onAdd,dataFilter,...rest}:Props)=>
                 {title: 'Function', dataIndex: 'departmentName'},
                 {title: 'Job Title', dataIndex: 'jobTitle'},
                 {title: 'Self- Rating', dataIndex: 'rating1',sorter:'rating1'},
-                {title: 'FM Rating', dataIndex: 'rating3',
+                {title: "Manager's Rating", dataIndex: 'rating3',
                     render:(_,r)=> {
                         return (r?.rating3==0 ?'-':  r?.rating3==-1.0 ?'-': r.rating3)
                     }
                 },
-                {title: 'Agreed Rating', dataIndex: 'rating5',
-                    render:(_,r)=>  !r?.rating5||r?.rating5==0 ?'-': r?.rating5
-                },
+                // {title: 'Agreed Rating', dataIndex: 'rating5',
+                //     render:(_,r)=>  !r?.agreeRating||r?.agreeRating==0 ?'-': r?.agreeRating
+                // },
             ]}
         />        
      </Space></ModalForm>

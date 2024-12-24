@@ -94,7 +94,7 @@ export default ({ open, onOpenModalChange, refreshTable }: Props) => {
       empId: submitter?.empId || 0,
       empEmail: '',
       submissionList: submissionList,
-      improvementRated1List: improvementRated1List.map((it) => ({
+      improvementRated1List: getAppraisalEmpImprovementList().map((it) => ({
         id: it.id,
         appraisalEmpId: it.appraisalEmpId,
         improvement: it.improvement,
@@ -178,21 +178,14 @@ export default ({ open, onOpenModalChange, refreshTable }: Props) => {
       var areaImprovementMsgCode = 'TITLE_EMP_EM_MY_AREA_IMPROVEMENT';
       var improvementActionMsgCode = 'TITLE_EMP_EM_MY_IMPROVEMENT_ACTION';
       var requireMsgCode = 'MSG_IS_REQUIRED';
-
-      if (!validateField?.empComment) {
+      const improValidate = getAppraisalEmpImprovementList()
+      if (!validateField?.empComment || validateField?.empComment.trim()=='') {
         requireFields.push({ title: 'TITLE_EMP_COMMENT', msg: 'MSG_IS_REQUIRED' });
       }
-      if (
-        improvementRated1List?.length == 0 ||
-        (improvementRated1List?.filter((it) => !it.improvement || it.improvement == '') || [])
-          .length > 0
-      ) {
+      if (improValidate?.length== 0 || (improValidate.filter(r=> (r.improvement==undefined || r.improvement.trim()=='')).length>0)) {
         requireFields.push({ title: areaImprovementMsgCode, msg: requireMsgCode });
       }
-      if (
-        improvementRated1List?.length == 0 ||
-        (improvementRated1List?.filter((it) => !it.propose || it.propose == '') || []).length > 0
-      ) {
+      if (improValidate?.length == 0 ||(improValidate?.filter((it) => (it.propose==undefined || it.propose.trim() == '')).length > 0)) {
         requireFields.push({ title: improvementActionMsgCode, msg: requireMsgCode });
       }
       if (requireFields.length > 0) {
@@ -213,10 +206,9 @@ export default ({ open, onOpenModalChange, refreshTable }: Props) => {
           ),
         });
         await formRemark.validateFields();
+        editableFormRef.current?.validateFields();
         return;
       }
-      var title = 'Appraisal Form';
-      var contentMsg = 'Are you sure to submit the form?';
     }
     Modal.confirm({
       title: title,
@@ -251,7 +243,7 @@ export default ({ open, onOpenModalChange, refreshTable }: Props) => {
       setImprovementRated1List([
         {
           key: uniqueId().toString(),
-          id: 1,
+          id: 0,
           appraisalEmpId: 0,
           improvement: null,
           propose: null,
@@ -292,6 +284,30 @@ export default ({ open, onOpenModalChange, refreshTable }: Props) => {
     var label = dataLookup?.find((it) => it.code === key);
     return lang == 'KH' ? label?.value1 : label?.value;
   };
+
+
+  const addNewRowImprovementRated1 = (newItem: (AppraisalEmpImprovement & { key: string }))=>{
+        const list= getDataImprovementRated1Items()
+        list.push(newItem)  
+        setImprovementRated1List(list)
+    }
+  const getDataImprovementRated1Items = (): (AppraisalEmpImprovement & { key: string })[] =>{
+      const fieldsVaule = editableFormRef?.current?.getFieldsValue()
+      const list: (AppraisalEmpImprovement & { key: string })[] = []
+      for (var key in fieldsVaule) {
+          const item = fieldsVaule[key]
+          item.key = key
+          list.push(item)
+      }      
+      return list
+  }
+  const getAppraisalEmpImprovementList=(): AppraisalEmpImprovement[]=>{
+    const fieldsVaule = editableFormRef?.current?.getFieldsValue()
+    const list:AppraisalEmpImprovement[]  = Object.values(fieldsVaule)
+    return list
+  }
+
+
   return (
     <ModalForm
       modalProps={{
@@ -456,11 +472,12 @@ export default ({ open, onOpenModalChange, refreshTable }: Props) => {
                 </span>
               }
             >
-              <ProFormTextArea name={'empComment'} rules={[{ required: true }]} />
+              <ProFormTextArea name={'empComment'} rules={[{ required: true, whitespace: true, message:'please enter' }]} />
               <Space direction="vertical" style={{ width: '100%' }}>
                 <EditableProTable<AppraisalEmpImprovement & { key: string }>
-                  style={{ padding: 0, margin: 0 }}
+                  // style={{ padding: 0, margin: 0 }}
                   cardProps={false}
+                  pagination={false}
                   size="small"
                   rowKey="key"
                   controlled
@@ -476,18 +493,9 @@ export default ({ open, onOpenModalChange, refreshTable }: Props) => {
                         </div>
                       ),
                       valueType: 'textarea',
-                      width: 300,
+                      width: '300',
                       dataIndex: 'improvement',
-                      formItemProps: {
-                        rules: [
-                          {
-                            required: true,
-                            transform: (v) => {
-                              return v;
-                            },
-                          },
-                        ],
-                      },
+                      formItemProps: {rules: [{ required: true, whitespace: true, message:'please enter'}] },
                     },
                     {
                       title: (
@@ -497,22 +505,13 @@ export default ({ open, onOpenModalChange, refreshTable }: Props) => {
                         </div>
                       ),
                       valueType: 'textarea',
-                      width: 300,
+                      width: '300',
                       dataIndex: 'propose',
-                      formItemProps: {
-                        rules: [
-                          {
-                            required: true,
-                            transform: (v) => {
-                              return v;
-                            },
-                          },
-                        ],
-                      },
+                      formItemProps: {rules: [{ required: true, whitespace: true, message:'please enter'}] },
                     },
                     {
                       valueType: 'option',
-                      width: 18,
+                      width: 50,
                       render: () => {
                         return null;
                       },
@@ -520,6 +519,10 @@ export default ({ open, onOpenModalChange, refreshTable }: Props) => {
                   ]}
                   recordCreatorProps={{
                     creatorButtonText: getLable('BTN_ADD_MORE'),
+                    onClick: () => {
+                        const newitem = {id: 0, key: uniqueId().toString(), appraisalEmpId: 0, improvement: null, propose: null} as any
+                        addNewRowImprovementRated1(newitem)
+                    },
                     newRecordType: 'dataSource',
                     record: (index) => {
                       const key = uniqueId('appraisal_emp_improvement_rating1');
@@ -527,7 +530,7 @@ export default ({ open, onOpenModalChange, refreshTable }: Props) => {
                         key: key + index,
                         id: 0,
                         appraisalEmpId: 0,
-                        implement: null,
+                        improvement: null,
                         propose: null,
                       } as any;
                     },
@@ -539,25 +542,29 @@ export default ({ open, onOpenModalChange, refreshTable }: Props) => {
                       improvementRated1List?.find((it) => it)?.key != row.key && (
                         <Button
                           onClick={() => {
-                            config.onDelete?.(config.recordKey, row);
+                            // config.onDelete?.(config.recordKey, row);
+                            const list= getDataImprovementRated1Items()?.filter((it) => it.key != row.key)
+                            setImprovementRated1List?.(list)
                           }}
                           type="link"
+                          danger
+                          size='small'
                           key={`del-${row.id}`}
                           icon={<DeleteOutlined />}
                         />
                       ),
                     ],
                     onValuesChange(record, data) {
-                      const changeCateRecord = improvementRated1List?.find(
-                        (it) => it.key == record?.key && it.id != record?.id,
-                      );
-                      setImprovementRated1List(
-                        data.map((it) =>
-                          it.key == changeCateRecord?.key
-                            ? ({ ...it, itemId: null } as any)
-                            : { ...it },
-                        ),
-                      );
+                      // const changeCateRecord = improvementRated1List?.find(
+                      //   (it) => it.key == record?.key && it.id != record?.id,
+                      // );
+                      // setImprovementRated1List(
+                      //   data.map((it) =>
+                      //     it.key == changeCateRecord?.key
+                      //       ? ({ ...it, itemId: null } as any)
+                      //       : { ...it },
+                      //   ),
+                      // );
                     },
                   }}
                 />

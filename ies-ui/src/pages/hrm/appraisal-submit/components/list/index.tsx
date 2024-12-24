@@ -8,7 +8,7 @@ import { createService } from "../../services";
 import { Paging } from "@/services/API";
 import { formatDateTime, formatterPercentage0} from "@/pages/utils";
 import Status from "@/components/Status";
-import { BankOutlined, DownloadOutlined, ExportOutlined, EyeOutlined, FileExcelOutlined, FilterOutlined, PicRightOutlined, PlusOutlined, TeamOutlined, UnorderedListOutlined } from "@ant-design/icons";
+import { BankOutlined, DownloadOutlined, ExportOutlined, EyeOutlined, FileExcelOutlined, FilterOutlined, PicRightOutlined, PlusOutlined, SelectOutlined, TeamOutlined, UnorderedListOutlined } from "@ant-design/icons";
 import AppraisalFormQuickView from "../quick-view/index";
 import { useEffect, useRef, useState } from "react";
 import AppraisalRequestForm from "../../AppraisalSubmitForm";
@@ -76,7 +76,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
     const [advanceEvaluationSearch, setAdvanceEvaluationSearch] = useState<{ visible: boolean }>();
     const [isImportExportBtn,setIsImportExportBtn] = useState<boolean>(true)
     const [importData, setImportData] = useState<ImportDataResponse>()
-     const access = useAccess()
+    const access = useAccess()
     
     
     /** Performance Target View ------------------------------------------------------------------------------------------------------------------------------- */
@@ -391,6 +391,11 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
         setAdvanceEvaluationSearch({ visible: true })
     }
     
+    const filterIcon = advanceSearchPerformEvaluationParams.company || advanceSearchPerformEvaluationParams.function || advanceSearchPerformEvaluationParams.appraiser ? (
+        <FilterOutlined style={{ color: 'red' }} />
+      ) : (
+        <SelectOutlined />
+      )
     const extraContent = (<>
         <Flex gap={1} style={{marginTop: 0, padding:0}}>
            <Col style={{padding:0, margin: 0}}>           
@@ -401,7 +406,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                         options={period?.map(it => ({label: it.label, value: it.value}))}
                         onChange={onYearTargetAppraisal}
                     />
-                <Button icon={<FilterOutlined/>} style={{marginLeft:2}} onClick={onFilterEvaluationHandler}></Button>
+                <Button  icon={filterIcon} style={{marginLeft:2}} onClick={onFilterEvaluationHandler}></Button>
             </Row>
             <Row style={{padding:0, marginTop:0}}>
                     <Input.Search allowClear  style={{ width: '240px' }} placeholder="Search" onSearch={ onSearch} />
@@ -463,8 +468,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                 <TableView<AppraisalEmp, { searchValue?: string; advanceSearch?: AppraisalEmpAdvanceSearchParams }>
                     cache 
                     scrollX    
-                    tableProps={{
-                        
+                    tableProps={{                        
                         actionRef: actionRef,
                         options: { reload: true, density: false, fullScreen: false, setting: false },
                         toolbar: {actions: [
@@ -485,6 +489,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                         ],}
                     }}
                     advanceSearch
+                    hasCriteria = {advanceSearchParams.bu || advanceSearchParams.department? true: false}
                     extraFilter={
                         <Space align="baseline" style={{ right: '12px' }}>
                             <Radio.Group
@@ -517,6 +522,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                                         options={[
                                             { label: 'Submitting', value: 'SUBMITTING' },
                                             { label: 'Submitted', value: 'SUBMITTED' },
+                                            { label: 'Reviewing', value: 'REVIEWING' },
                                             { label: 'Reviewed', value: 'REVIEWED' }
                                         ]}
                                     />

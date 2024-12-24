@@ -65,6 +65,7 @@ export const Model = () => {
         const currentAssign2 = r?.currentAssign2||false
         const currentAssign3 = r?.currentAssign3||false
         const hasRating2 = r?.hasRating2||false
+        const reviewed = r?.status=='REVIEWED'? true:false
         var rated1 = r?.rated1||false
         var rated2 = r?.rated2||false
         var rated3 = r?.rated3||false
@@ -74,19 +75,24 @@ export const Model = () => {
         if(currentAssign1){
             status =actionStatus=='DRAFTED'?'SUBMITTING':status
             checkRating = 'r1'
-        }else if(hasRating2 && (rated1 && currentAssign2)){
-            status = actionStatus=='DRAFTED'?'SUBMITTED':'REVIEWED'
+        }else if(hasRating2 && (rated1 && currentAssign2)){           
+            status = actionStatus=='DRAFTED'?'SUBMITTING': reviewed?'COMPLETED':'SUBMITTED'
             rated2 = true
             checkRating = 'r2'
+        }else if(hasRating2 && (rated1 && rated2 && currentAssign3)){
+                status = actionStatus=='DRAFTED'?'REVIEWING':'REVIEWED'
+                rated3 = true
+                checkRating = 'r3'
         }else if(!hasRating2 && (rated1 && currentAssign3)){
             status = actionStatus=='DRAFTED'?'SUBMITTED':'COMPLETED' 
             rated3 = true
             checkRating = 'r3'
-        }else if(rated2 && currentAssign3){
+        }
+        /*else if(rated2 && currentAssign3){
             status = actionStatus=='DRAFTED'?'REVIEWED':'COMPLETED'
             rated3=true
             checkRating = 'r3'
-        }   
+        } */  
         return {status,actionStatus,checkRating,rated1,rated2,rated3} as AppraisalEmpStatusChecking
     }
     const getValidationMsgList=(r:AppraisalEmp): ValidatorMsg[]=>{
@@ -297,9 +303,9 @@ export const Model = () => {
         currentAssign3:boolean,
         dataForm: AppraisalRemark,
         appraisalList: AppraisalEmpSubmissionResult[],
-        improvementRated1List?: (AppraisalEmpImprovement & {key:string})[],
-        improvementRated2List?: (AppraisalEmpImprovement & {key:string})[],
-        improvementRated3List?: (AppraisalEmpImprovement & {key:string})[],
+        improvementRated1List?: (AppraisalEmpImprovement)[],
+        improvementRated2List?: (AppraisalEmpImprovement)[],
+        improvementRated3List?: (AppraisalEmpImprovement)[],
         onValidation?:(requireFields:ValidatorMsg[],requireRating:AppraisalRating[]
     )=>void) =>{
         var requireFields = Array<ValidatorMsg>()
@@ -310,11 +316,11 @@ export const Model = () => {
         if(!dataForm?.empComment && currentAssign1){
             requireFields.push({id:0,title:'TITLE_EMP_COMMENT',msg:requireMsgCode})
         }
-        if(((improvementRated1List?.length==0)||(improvementRated1List?.filter(it=>(!it.improvement||it.improvement==''))||[]).length>0) && currentAssign1){
+        if(((improvementRated1List?.length==0)||(improvementRated1List?.filter(it=>(!it.improvement||it.improvement.trim()==''))||[]).length>0) && currentAssign1){
            
             requireFields.push({id:0,title:areaImprovementMsgCode,msg:requireMsgCode})
         }  
-        if(((improvementRated1List?.length==0)||(improvementRated1List?.filter(it=>(!it.propose || it.propose==''))||[]).length>0) && currentAssign1){
+        if(((improvementRated1List?.length==0)||(improvementRated1List?.filter(it=>(!it.propose || it.propose.trim()==''))||[]).length>0) && currentAssign1){
            
             requireFields.push({id:0,title:improvementActionMsgCode,msg:requireMsgCode})
         }                  
@@ -322,11 +328,11 @@ export const Model = () => {
         if(((!dataForm?.rating2Comment || dataForm.rating2Comment==''))&& currentAssign2){           
             requireFields.push({id:0,title:`TITLE_FM_COMMENT`,msg:requireMsgCode})
         }
-        if(((improvementRated2List?.length==0)||(improvementRated2List?.filter(it=>(!it.improvement||it.improvement==''))||[]).length>0)&& currentAssign2){
+        if(((improvementRated2List?.length==0)||(improvementRated2List?.filter(it=>(!it.improvement||it.improvement.trim()==''))||[]).length>0)&& currentAssign2){
            
             requireFields.push({id:0,title: areaImprovementMsgCode,msg:requireMsgCode})
         }  
-        if(((improvementRated2List?.length==0)||(improvementRated2List?.filter(it=>(!it.propose || it.propose==''))||[]).length>0)&& currentAssign2){
+        if(((improvementRated2List?.length==0)||(improvementRated2List?.filter(it=>(!it.propose || it.propose.trim()==''))||[]).length>0)&& currentAssign2){
            
             requireFields.push({id:0,title: improvementActionMsgCode,msg:requireMsgCode})
         }  
@@ -334,11 +340,11 @@ export const Model = () => {
         if(((!dataForm?.rating3Comment || dataForm.rating3Comment==''))&& currentAssign3){           
             requireFields.push({id:0,title: `TITLE_AGREED_COMMENT`,msg:requireMsgCode})
         }
-        if(((improvementRated3List?.length==0)||(improvementRated3List?.filter(it=>(!it.improvement||it.improvement==''))||[]).length>0)&& currentAssign3 && !hasRating2){
+        if(((improvementRated3List?.length==0)||(improvementRated3List?.filter(it=>(!it.improvement||it.improvement.trim()==''))||[]).length>0)&& currentAssign3 && !hasRating2){
            
             requireFields.push({id:0,title: areaImprovementMsgCode,msg:requireMsgCode})
         }  
-        if(((improvementRated3List?.length==0)||(improvementRated3List?.filter(it=>(!it.propose || it.propose==''))||[]).length>0)&& currentAssign3 && !hasRating2){
+        if(((improvementRated3List?.length==0)||(improvementRated3List?.filter(it=>(!it.propose || it.propose.trim()==''))||[]).length>0)&& currentAssign3 && !hasRating2){
            
             requireFields.push({id:0,title: improvementActionMsgCode,msg:requireMsgCode})
         }  

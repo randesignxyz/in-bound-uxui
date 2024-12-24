@@ -119,8 +119,7 @@ export default (props: ActionDataFormProps) => {
                         if(!props.activityData?.taskId) {
                             message.error("Task Id is not found")
                             return
-                        }
-                        // const saveItems = items?.map(v => ({id:v.id,stockRemarks: v.stockRemarks}))                   
+                        }                  
                         const data = {                      
                             taskId: props.activityData?.taskId || '',
                             actionName: props.action,
@@ -134,10 +133,10 @@ export default (props: ActionDataFormProps) => {
                             content: 'Are you sure?',
                             onOk: async () => {
                                 try {
-                                    const rs = await srv.insertAssessment(data).then(rs=>{
+                                    await srv.insertAssessment(data).then(rs=>{
                                         actionRef.current?.reload()
-                                    })
-                                    props.actionHandlers?.onCancel?.(true)
+                                        props.actionHandlers?.onCancel?.(true)
+                                    })                                   
                                 } catch (error: any) {
                                 message.error(error.message || 'Failed to submit.');
                                 }
@@ -158,45 +157,15 @@ export default (props: ActionDataFormProps) => {
         >
              <ProForm form={form}  submitter={false}>
               {props.action !='Rejected' && <div>
-                <ProCard title="EVALUATION" 
+                <ProCard title="PERFORMANCE" 
                     collapsible  
                     size="small"
                     bordered headerBordered 
                 >
-                    
-                    {/* <div>
-                        <span>Please choose rating of each criterion that describes best of your employee’s performance compares to the job expectations and goals/work priorities.</span>
-                        <div style={{paddingTop:5}}>
-                        <div><b>SECTION I. PERFORMANCE (Weightage: 50%)</b></div>
-                        <div>What employee is expected to do/achieved during probation period.</div>
-                        <div><span style={{color:'red'}}>*</span> At least 3 items are required.</div>
-                        </div>
-                    </div> */}
-                    <Section1Table editable={true} editableRating={false} editableFormRef={editableFormRef1} addedItems={addedSection1} onSetAddedItems={setAddedSection1} />
-                    {/*---------------------------- SECTION II. JOB KNOWLEDGE AND SKILLS (Weightage: 20%)----------------------------------*/}
-                    {/* <div>
-                        <div style={{paddingTop:5}}>
-                        <div><b>SECTION II. JOB KNOWLEDGE AND SKILLS (Weightage: 20%)</b></div>
-                        <div>What relevant knowledge and skills that employee possesses and applies effectively in the job</div>
-                        </div>
-                    </div> */}
-                    <Section2Card editable={true} editableRating={false} editableFormRef={editableFormRef2} addedItems={addedSection2} onSetAddedItems={setAddedSection2} />
-                    {/*---------------------------- SECTION III. BEHAVIOR (Weightage: 30%)-------------------------------------------------*/}
-                    {/* <div>
-                        <div style={{paddingTop:5}}>
-                        <div><b>SECTION III. BEHAVIOR (Weightage: 30%)</b></div>
-                        <div>How employee is expected to behave in a proper manner.</div>
-                        </div>
-                    </div> */}
-                    <Section3Card editable={false} editableRating={false} editableFormRef={editableFormRef3} addedItems={addedSection3} onSetAddedItems={setAddedSection3} />
-                    {/*---------------------------- SECTION IV. SUPPORT / RESOURCES NEEDED-------------------------------------------------*/}
-                    {/* <div>
-                        <div style={{paddingTop:5}}>
-                        <div><b>SECTION IV. SUPPORT / RESOURCES NEEDED</b></div>
-                        <div>What Line Manager provides/facilitates employee during probation period.</div>
-                        </div>
-                    </div> */}
-                    <Section4Card editable={false} editableRating={false} editableFormRef={editableFormRef4} addedItems={addedSection4} onSetAddedItems={setAddedSection4} />
+                    <Section1Table showRating={false} editable={true} editableRating={false} editableFormRef={editableFormRef1} addedItems={addedSection1} onSetAddedItems={setAddedSection1} />                   
+                    <Section2Card showRating={false} editable={true} editableRating={false} editableFormRef={editableFormRef2} addedItems={addedSection2} onSetAddedItems={setAddedSection2} />                    
+                    <Section3Card  showRating={false} editable={false} editableRating={false} editableFormRef={editableFormRef3} addedItems={addedSection3} onSetAddedItems={setAddedSection3} />                   
+                    <Section4Card showRating={false} editable={false} editableRating={false} editableFormRef={editableFormRef4} addedItems={addedSection4} onSetAddedItems={setAddedSection4} />
 
                 </ProCard>
                 </div>}

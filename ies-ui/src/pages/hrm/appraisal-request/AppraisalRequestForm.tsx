@@ -32,6 +32,7 @@ export default ({ visisble, formKey, onClose, cb }: ActionCompProps & { formKey:
     const requestActions = simpleRequestActions();
     const srv = createService(requestActions)
     const [appraisalSelected, setAppraisalSelected] = useState<AppraisalEmp[]>([])    
+    const [buSelected, setBuSelected] = useState<string>() 
     const [appraisalSubmitListModal,setAppraisalSubmitListModal] = useState<{
         type: 'appraisal-submit-list',
         required: boolean,
@@ -50,32 +51,39 @@ export default ({ visisble, formKey, onClose, cb }: ActionCompProps & { formKey:
        
     },[])
 
+    const onBuSelectedHandler=(bu: string) => {
+        setBuSelected(bu)
+    }
+
     const onSaveHandler = async () => {
         const dataForm = await form.validateFields()
         if(appraisalSelected.length ==0){
             message.error("Performance Appraisal List is required.")
             return
         }
-        Modal.confirm({
-            title: 'Appraisal Request Form',
-            content: "Are you sure to submit the request?",
-            onOk: async () => {
-                try {
-                    await srv.saveItem({
-                        requester: dataForm.requestorId,
-                        title: dataForm.title,
-                        requestorBuId: dataForm.requestorBuId,
-                        requestTypeId: dataForm.requestTypeId,
-                        uploadedFiles: uploadFiles,
-                        items: appraisalSelected.map(it => it.id)
-                    })
-                    onClose?.()
-                    cb?.()
-                } catch (error: any) {
-                    message.error(error.message || 'Failed to submit request.')
+        if(buSelected){
+            Modal.confirm({
+                title: 'Appraisal Request Form',
+                content: "Are you sure to submit the request?",
+                onOk: async () => {
+                    try {
+                        await srv.saveItem({
+                            requester: dataForm.requestorId,
+                            title: dataForm.title,
+                            requestorBuId: dataForm.requestorBuId,
+                            requestTypeId: dataForm.requestTypeId,
+                            uploadedFiles: uploadFiles,
+                            items: appraisalSelected.map(it => it.id),
+                            buCode: buSelected
+                        })
+                        onClose?.()
+                        cb?.()
+                    } catch (error: any) {
+                        message.error(error.message || 'Failed to submit request.')
+                    }
                 }
-            }
-        })
+            })
+        }
     }
     const addItemHandler=()=>{
         setAppraisalSubmitListModal({
@@ -134,7 +142,7 @@ export default ({ visisble, formKey, onClose, cb }: ActionCompProps & { formKey:
     >
         <Space direction="vertical" style={{ width: '100%' }}>
             <Requestor onlyCurrentUser={true}  form={form} title="Requestor" />
-            <ProFormText label= {<b>Title</b>} name='title' rules={[{required:true,message:'Title is required, and must be up to 150 characters',whitespace:true, max:255}]}/>
+            <ProFormText label= {<b>Title</b>} name='title' rules={[{required:true,message:'Title is required, and must be up to 250 characters',whitespace:true, max:255}]}/>
            {requestSessions&&<><ProFormRadio.Group disabled={(appraisalSelected?.length||0)>0} name={'requestTypeId'} label={<b>Request Type</b>} options={requestSessions} />           
             <Alert type="info" message={requestType?.description} />
             </>}
@@ -169,14 +177,14 @@ export default ({ visisble, formKey, onClose, cb }: ActionCompProps & { formKey:
                         {title: 'Function', dataIndex: 'departmentName'},                    
                         {title: 'Job Title', dataIndex: 'jobTitle'},
                         {title: 'Self- Rating', dataIndex: 'rating1'},
-                        {title: 'FM Rating', dataIndex: 'rating3',
+                        {title: "Manager's Rating", dataIndex: 'rating3',
                             render:(_,r)=> {
                             return (r?.rating3==0 ?'-':  r?.rating3==-1.0 ?'-': r.rating3)
                         }
                         },
-                        {title: 'Agreed Rating', dataIndex: 'rating5',
-                            render:(_,r)=>  !r?.rating5||r?.rating5==0 ?'-': r?.rating5
-                        },
+                        // {title: 'Agreed Rating', dataIndex: 'rating5',
+                        //     render:(_,r)=>  !r?.rating5||r?.rating5==0 ?'-': r?.rating5
+                        // },
                         {
                             title:'Action',
                             render:(_,r)=> <Button type="link" size="small" onClick={(v)=> setAppraisalSelected(v=> v.filter(it => it.id!=r.id))} icon ={<DeleteOutlined style={{width:14,color:"red"}}/>}></Button>
@@ -202,6 +210,8 @@ export default ({ visisble, formKey, onClose, cb }: ActionCompProps & { formKey:
             open={true}
             onAdd={appraisalSubmitListModal.cb}
             dataFilter={appraisalSelected}
+            onBuSelectedHandler={onBuSelectedHandler}
+            buSelected={buSelected}
             onOpenChange={visible => !visible && setAppraisalSubmitListModal(undefined)}
         />
         }

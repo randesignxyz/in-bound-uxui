@@ -14,8 +14,9 @@ interface Props {
     editable: boolean|false;
     editableRating: boolean|false
     totalScore?: number
+    showRating?: boolean
 }
-export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable, editableRating, totalScore }: Props) => {
+export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable, editableRating, totalScore,showRating=true }: Props) => {
 
     const setRatingScore=(key?: string, rating1?: number, rating2?: number, rating3?: number, rating4?: number, rating5?: number)=>{
       onSetAddedItems?.(
@@ -52,8 +53,10 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
             )}
           </div>)
         },
-      },    
-      {
+      }
+    ]
+    if(showRating){
+      cols.push({
         title: 'RATING SCORE',
         children:[{
           title: <span style={{fontSize:11}}>1- Unsatisfactory</span>,                
@@ -192,15 +195,15 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
           fieldProps: { rows: 1, maxLength: 200 },
         }]
       
-      }, 
-      {
-        valueType: 'option',
-        width: 50,
-        render: () => {
-          return null;
-        },
-      },  
-    ]
+      })
+    }
+    // cols.push({
+    //   valueType: 'option',
+    //   width: 50,
+    //   render: () => {
+    //     return null;
+    //   }
+    // })
 
   return (<>
   <div>
@@ -255,7 +258,7 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
         rating += (it.rating1||0) +  (it.rating2||0) +  (it.rating3||0) +  (it.rating4||0) +  (it.rating5||0)
       });
       rating = (rating / data.length)*0.3
-      return (
+      return showRating &&(
         <Table.Summary.Row style={{ textAlign: 'right', fontWeight: 'bold' }}>
           <Table.Summary.Cell colSpan={7} index={7}>
             {'SECTION III. BEHAVIOR (Weightage: 30%)'}

@@ -976,5 +976,9 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_HR_APPRAISAL_REVIEW_IMPORT_EXPORT'].some((it) => it === item),
       ) || false,    
+      isAccessHrAppraisalAllowSubmitPartial:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_HR_APPRAISAL_ALLOW_SUBMIT_PARTIAL'].some((it) => it === item),
+      ) || false, 
   };
 }

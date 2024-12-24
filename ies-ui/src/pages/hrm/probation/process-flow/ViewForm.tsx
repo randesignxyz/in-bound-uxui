@@ -13,10 +13,10 @@ import Section4Card from "../components/Section4Card";
 import { useForm } from "antd/lib/form/Form";
 import { createService } from "../services";
 import { uniqueId } from "lodash";
-import { formatDate, formatterQty, formatterQty1 } from "@/pages/utils";
+import { formatDate } from "@/pages/utils";
 import EmpImprovmentTable1 from "../components/EmpImprovmentTable1";
 import EmpImprovmentTable from "../components/EmpImprovmentTable";
-import { FileExcelOutlined, FilePdfOutlined } from "@ant-design/icons";
+import {FilePdfOutlined } from "@ant-design/icons";
 import { DownloadData, downloadReport } from "@/services/apiGateway";
 import { ProbationEvaluationRequestFormNames } from ".";
 import InstructionCard from "../components/InstructionCard";
@@ -45,13 +45,6 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
       {status:'TERMINATED', desc:'Terminated'}
     ]
     
-    const clear = () => {
-        form.resetFields();
-        setAddedSection2([])
-    }
-    const validationSection2=()=>{
-
-    }
     useEffect(()=>{
       loadData()
     },[workflowModel.state.instanceData])
@@ -145,7 +138,7 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
                 </ProCard>}
               
                 <InstructionCard/>
-                {probaRequest &&<RatingScaleCard probaRequest={probaRequest}/>}
+                {probaRequest &&  <RatingScaleCard probaRequest={probaRequest}/>}
                 <ProCard title="EVALUATION" 
                     collapsible  
                     size="small"
@@ -169,8 +162,8 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
                         </div>
                     </div>
                     <Space direction="vertical" style={{ width: '100%' }}>
-                      {probaRequest?.empAchievement&&<EmpImprovmentTable editable={false} addedItems={probaRequest?.empAchievement.map(it => ({...it,key: uniqueId().toString()}))} />}
-                      {probaRequest?.empImprovement&&<EmpImprovmentTable1  editable={false} addedItems={probaRequest?.empImprovement.map(it => ({...it,key: uniqueId().toString()}))} />}
+                      {probaRequest?.empAchievement&&<EmpImprovmentTable editable={false} initDataItems={probaRequest?.empAchievement.map(it => ({...it,key: uniqueId().toString()}))} />}
+                      {probaRequest?.empImprovement&&<EmpImprovmentTable1  editable={false} initDataItems={probaRequest?.empImprovement.map(it => ({...it,key: uniqueId().toString()}))} />}
                     </Space>                    
                 </ProCard>
                 {probaRequest &&<SummaryCard probaRequest={probaRequest} initialValue={{status:probaRequest.probationEvaluation?.confirmedStatus||'', extendedDate: probaRequest.probationEvaluation?.extendedDate}}/>}

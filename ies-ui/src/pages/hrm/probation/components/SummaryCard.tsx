@@ -1,6 +1,6 @@
 import { ProCard, ProForm, ProFormDatePicker, ProFormRadio, ProTable } from "@ant-design/pro-components";
 import { ProbationEvaluationDetailRs } from "../data.types"
-import { Col, FormInstance, Radio, RadioChangeEvent, Row, Space } from "antd";
+import { Col, Flex, FormInstance, Radio, RadioChangeEvent, Row, Space } from "antd";
 import { formatDate, formatterQty1 } from "@/pages/utils";
 import { useEffect, useState } from "react";
 import { Moment } from "moment";
@@ -34,14 +34,16 @@ export default({probaRequest, totalScore, form, setConfirmStatus, readonly=true,
     collapsible  
     size="small"
     bordered headerBordered 
+    defaultCollapsed ={(totalScore||0)>0?true:false}
   >
     <ProForm form={form} submitter={false} readonly={readonly}>
       <Space direction="vertical" style={{ width: '100%' }}>
         <div style={{paddingBottom:20}}><b>FINAL SCORE </b> <span style={{paddingRight:20, borderRadius:'9px', padding:'8px', border:'solid 1.5px black'}}><b>{`${formatterQty1.format(totalScore||probaRequest?.totalScore)} / ${formatterQty1.format(probaRequest?.maxScore||0)}`}</b></span> 
         {/* <Input style={{width:150}} value={`${formatterQty1.format(probaRequest?.totalScore||0)} / ${formatterQty1.format(probaRequest?.maxScore||0)}`} /> */}
         </div>
-        <Row>
-          <Col style={{paddingRight:25}}>
+        {/* <Row> */}
+        <Flex gap={25}>
+          <div >
             <div><b>OVERALL PROBATION RATING</b></div>
             {probaRequest?.overallRating&&<ProTable
               pagination={false}  
@@ -68,18 +70,19 @@ export default({probaRequest, totalScore, form, setConfirmStatus, readonly=true,
                 }
               ]}
             />} 
-          </Col>
-          <Col >
+          </div>
+          <div style={{width:450}}>
             <div><b>DECISION BY FUNCTION MANAGER</b></div>
-            <Radio.Group  name='confirmedStatus' onChange={onChange} value={value} style={{paddingTop:15}}>
+            <Radio.Group  name='confirmedStatus' onChange={onChange} value={value}  style={{paddingTop:5}}>
               <Space direction="vertical" style={{paddingLeft:5}}>
                 <Radio value={'CONFIRMED'} >Passed Probation</Radio>      
                 <Radio value={'EXTENDED'} > <Space>Extended Probation { value==='EXTENDED' && !readonly?<> Until: <ProFormDatePicker readonly={readonly} initialValue={initialValue?.extendedDate} name={'extendedDate'} rules={[{required: true}]}/></>:<>Until: {formatDate(initialValue?.extendedDate)}</>} </Space></Radio>
                 <Radio value={'TERMINATED'}>Failed Probation</Radio>
               </Space>
           </Radio.Group>
-          </Col>
-        </Row>
+          </div>
+        {/* </Row>*/}
+        </Flex> 
       </Space>  
     </ProForm>                  
   </ProCard>     

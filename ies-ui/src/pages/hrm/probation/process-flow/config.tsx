@@ -28,7 +28,9 @@ export const getProbationEvaluationRequestForms = (): DataForm[] => [
       ProbationEvaluationRequestFormNames.lineManagerSubmission,    
     ],
     dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,
-    actionDataForm: (props: ActionDataFormProps) => props.action =='Rejected'? <DefaultActionForm {...props} />: <AssessmentSubmissionForm {...props} />,
+    actionDataForm: (props: ActionDataFormProps) => {
+      return props.action =='Rejected'? <DefaultActionForm {...props} />: <AssessmentSubmissionForm {...props} />
+    },
   },
   {
     formKey: [     

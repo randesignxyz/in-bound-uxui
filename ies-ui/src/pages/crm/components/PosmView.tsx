@@ -8,10 +8,12 @@ import { ContractServices } from "../contract/services"
 import { ContractPOSMItem, POSM } from "../contract/types"
 import { CrmServices } from "../services"
 import { AddresssView } from "@/services/crm/data"
-import { PaperClipOutlined, UploadOutlined } from "@ant-design/icons"
+import { PaperClipOutlined } from "@ant-design/icons"
 import POSMUploadImage from "./POSMUploadImage"
 import { CrmServiceAPI } from "@/services/crm/services"
 import POSMImage from "./POSMImage"
+import moment from "moment"
+import remarks from "@/components/remarks"
 
 export type PosmDataType = {
     key: string
@@ -19,18 +21,18 @@ export type PosmDataType = {
     categoryId: number
     itemId: string
     qty: number
-    remarks?: string
+    remarks?: string;
+    installedDate?:moment.Moment;
     attachment?: string[]
 }
-
 
 export default ({ addresList, requestActions, readOnly, listPosm, onSave, onDelete }: {
     addresList: AddresssView[]
     requestActions: SimpleRequestActions,
     readOnly?: Boolean | undefined,
     initAddressList: () => Promise<void>;
-    listPosm: () => Promise<[]>
-    onSave: (itemId: number, qty: number, id?: number, remarks?: string) => Promise<{ data: number }>
+    listPosm: () => Promise<PosmDataType[]>
+    onSave: (itemId: number, qty: number, id?: number, remarks?: string, installedDate?:moment.Moment) => Promise<{ data: number }>
     onDelete: (id: number) => Promise<void>
 }) => {
 
@@ -46,30 +48,38 @@ export default ({ addresList, requestActions, readOnly, listPosm, onSave, onDele
     const [attachmentState, setAttachmentState] = useState<{ visible?: { name: "MODAL", posmId?: number; } }>();
     const [viewImageState, setViewImageState] = useState<{ visible?: { name: "DRAWER", posmInfo?: ContractPOSMItem } }>();
 
-    const loadData = async ()=>{
+    const loadData = async () => {
         const rs = await CrmServices.listLookupData(['POSM_CATEGORY']).query(requestActions)
         setLookupData(rs)
         const posmList = await ContractServices.listPOSM.query(requestActions)
         setPosmList(posmList)
         const contarctPosmList = await listPosm();
-        const list = contarctPosmList.map(it => ({
-            key: uniqueId(),
-            id: it.id,
-            categoryId: posmList.find(i => i.id == it.itemId)?.categoryId || 0,
-            itemId: it.itemId.toString(),
-            qty: it.qty,
-            remarks: it.remarks,
+        const list = contarctPosmList.map(it=>({
+            key:uniqueId(),
+            id:it.id,
+            categoryId:posmList.find(i=>i.id ==parseInt(it.itemId))?.categoryId ||0,
+            itemId:it.itemId.toString(),
+            qty:it.qty,
+            remarks:it.remarks,
+            installedDate:it.installedDate,
             attachment: it.attachment
         }))
+        // const list = contarctPosmList.map(it => ({
+        //     key: uniqueId(),
+        //     id: it.id,
+        //     categoryId: posmList.find(i => i.id == it.itemId)?.categoryId || 0,
+        //     itemId: it.itemId.toString(),
+        //     qty: it.qty,
+        //     remarks: it.remarks,
+        //     attachment: it.attachment
+        // // }))
         setData(list)
-        setSavIds(list.map(it => ({ key: it.key, id: it.id })))
+        setSavIds(list.map(it => ({ key: it.key, id: it.id||0 })))
     }
     useEffect(() => {
         loadData?.()
     }, []);
-
     return <ProCard>
-
         <Spin spinning={requestActions.request?.loading}>
             <EditableProTable<PosmDataType>
                 rowKey="key"
@@ -90,11 +100,9 @@ export default ({ addresList, requestActions, readOnly, listPosm, onSave, onDele
                     {
                         title: "Item",
                         dataIndex: 'itemId',
-                        // width: 200,
                         valueType: 'select',
                         formItemProps: {
                             style: {
-                                //  width: 200 
                             },
                             rules: [{ required: true }]
                         },
@@ -107,13 +115,16 @@ export default ({ addresList, requestActions, readOnly, listPosm, onSave, onDele
                         valueEnum: (r) => posmList.filter(it => it.categoryId == r.categoryId).reduce((acc, cur) => ({ ...acc, [cur.id]: cur.name }), {})
                     },
                     {
-                        title: "Qty",
+                        title: "Quantity",
                         dataIndex: 'qty',
                         valueType: 'digit',
-                        //  width: 100, 
                         formItemProps: { rules: [{ required: true }], },
                     },
-
+                    {
+                        title: "Date Installed",
+                        dataIndex: 'installedDate',
+                        valueType: 'date',
+                    },
                     // {
                     //     title: "Address", dataIndex: 'customerAddressId', width: 200, valueType: 'select',
                     //     formItemProps: { style: { width: 200 } },
@@ -148,7 +159,7 @@ export default ({ addresList, requestActions, readOnly, listPosm, onSave, onDele
                         width: 200,
                         render: (text, record, _, action) => [
                             <Space>
-                                {readOnly?"":<a
+                                {readOnly ? "" : <a
                                     key="editable"
                                     onClick={() => {
                                         setOri(record)
@@ -157,20 +168,8 @@ export default ({ addresList, requestActions, readOnly, listPosm, onSave, onDele
                                 >
                                     Edit
                                 </a>}
-
-                                {readOnly?"":<Button
-                                    key="uploadImage"
-                                    onClick={() => {
-                                        setAttachmentState({ visible: { name: "MODAL", posmId: record.id } })
-                                        // setOri(record)
-                                        // action?.startEditable?.(record.key);
-                                    }}
-                                    icon={<UploadOutlined />}
-                                    type="link"
-                                />}
                                 <Button
                                     type="link"
-                                    disabled={record?.attachment?.length ? false : true}
                                     icon={<PaperClipOutlined />}
                                     onClick={() => {
                                         setViewImageState({
@@ -200,19 +199,21 @@ export default ({ addresList, requestActions, readOnly, listPosm, onSave, onDele
                     onlyOneLineEditorAlertMessage: "Please save current item before adding another item.",
                     onSave: async (key, record,) => {
                         try {
-
-                            const rs = await onSave(toInteger(record.itemId), record.qty, saveIds.find(it => it.key == key)?.id, record.remarks)
-
+                            const rs = await onSave(
+                                toInteger(record.itemId), 
+                                record.qty,
+                                 saveIds.find(it => it.key == key)?.id,
+                                  record.remarks,
+                                  record.installedDate
+                                )
                             setSavIds([...saveIds.filter(it => it.key != key), { key: key.toString(), id: rs.data }])
                             setOri(undefined)
                             loadData()
                             return true
-                            
                         } catch (error: any) {
                             message.error(error.message || 'Failed to save.')
                             throw Error(error.message || 'Failed to save.')
                         }
-
                     },
                     onDelete: async (key, record) => {
                         try {
@@ -224,9 +225,7 @@ export default ({ addresList, requestActions, readOnly, listPosm, onSave, onDele
                             message.error(error.message || 'Failed to delete.')
                             throw Error(error.message || 'Failed to save.')
                         }
-
                     },
-
                     onCancel: async (key, _) => {
                         const id = saveIds.find(it => it.key == key)?.id
                         if (!id) {
@@ -248,7 +247,6 @@ export default ({ addresList, requestActions, readOnly, listPosm, onSave, onDele
                 }}
             />
         </Spin>
-
         <POSMUploadImage
             onCancel={() => setAttachmentState({ visible: undefined })}
             open={attachmentState?.visible?.name === "MODAL"}
@@ -271,14 +269,13 @@ export default ({ addresList, requestActions, readOnly, listPosm, onSave, onDele
                         actionRef.current?.reload?.()
                     }
                 })
-
             }}
         />
         <POSMImage
+            source="POSM"
             open={viewImageState?.visible?.name == "DRAWER"}
             onClose={() => setViewImageState({ visible: undefined })}
             pomsInfo={viewImageState?.visible?.posmInfo}
         />
-
     </ProCard>
 }

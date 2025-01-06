@@ -3,6 +3,7 @@ import { ProCard } from "@ant-design/pro-components"
 import { Table } from "antd"
 
 export default ({ items }: { items: PosmCheckedDataView[] }) => {
+
     return <ProCard size="small">
         <Table<PosmCheckedDataView> columns={[
             {
@@ -18,15 +19,22 @@ export default ({ items }: { items: PosmCheckedDataView[] }) => {
                 ]
             },
             {
-                title: 'Status', children: [
-                    {title: "Item & Qty", render: (_,r ) => r.itemCheckedStatus.name},
-                    {title: "Verification", render: (_,r ) => r. checkedStatus.name},
-                ],
+                title:"Verification",
+                children:[
+                    {title: "Items Checked", render: (_,r ) => r.itemCheckedStatus.name},
+                    { title:"QTY Checked", dataIndex:"checkedQuantity" },
+                    {title: "Status", render: (_,r ) => r.checkedStatus.name}
+                ]
             },
+            // {
+            //     title: 'Status', children: [
+            //         {title: "Item & Qty", render: (_,r ) => r.itemCheckedStatus.name},
+            //         {title: "Verification", render: (_,r ) => r. checkedStatus.name},
+            //     ],
+            // },
             {
                 title: 'Remarks (SA)', dataIndex: 'remarks'
             }
-
         ]} bordered size = 'small' dataSource = {items} />
     </ProCard>
 }

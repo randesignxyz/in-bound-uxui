@@ -214,6 +214,7 @@ export default () => {
                         loading: isFetching,
                         dataSource: data?.items,
                         actionRef: actionRef,
+                        scroll:{x: 'min-content' },
                         pagination: {
                             total: data?.total
                         },

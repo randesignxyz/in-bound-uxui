@@ -31,7 +31,6 @@ export default ({ id }: Props) => {
   });
 
   const cacheList = useModel('dataList');
-
   const onRequestHandler = async (params: TableViewSearchParams<ServiceReminderSearchParam>) => {
     try {
       return services.page({ criteria: { searchValue: id } }).then((it) => {

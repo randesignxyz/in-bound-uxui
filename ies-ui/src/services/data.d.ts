@@ -2,6 +2,7 @@ export type LookupDataType =
   | 'CONTRACT_TYPE'
   | 'CONTACT_TYPE'
   | 'CONTRACT_STATUS'
+  | 'SPACE_RESERVED_ATTRIBUTE'
   | 'DAY_OF_WEEK'
   | 'DISPLAY_A'
   | 'DISPLAY_B'
@@ -45,6 +46,7 @@ export type LookupDataType =
   | 'ICT_FORM_SYSTEM_ACCESS'
   | 'ICT_FORM_WORKFLOW_ACCESS'
   | 'ICT_FORM_NETWORK_ACCESS'
+
 
 
 export interface LookupData {

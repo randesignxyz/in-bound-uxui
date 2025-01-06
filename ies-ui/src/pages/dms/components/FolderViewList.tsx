@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Affix, Button, Dropdown, Flex, MenuProps, Space, Tree, message } from 'antd';
+import { Affix, Button, Dropdown, Flex, MenuProps, Space, Tooltip, Tree, message } from 'antd';
 import { FolderServiceAPI } from '../folder/service';
 import { simpleRequestActions } from '@/services/model';
 import { BankFilled, DeleteOutlined, EditOutlined, FileTextOutlined, FolderAddOutlined, FolderFilled, UserOutlined } from '@ant-design/icons';
@@ -160,7 +160,7 @@ export default ({ onSearch, activeKey, moveDoc, onMove, onFolderSelected, ...pro
     return (
         <>
             <Spin spinning={requestAction.request?.loading}>
-                <Affix offsetTop={70}>
+          
                    <Button
                         onClick={() => {
                             onFolderSelected?.();
@@ -174,7 +174,8 @@ export default ({ onSearch, activeKey, moveDoc, onMove, onFolderSelected, ...pro
                         }}
                         type={folderSelected ? "default" : "primary"}
                         style={{ width: "100%", margin: "10px 0" }} icon={<FileTextOutlined />}>All Documents</Button>
-                </Affix>
+
+
                 {treeFolderList.length != 0 &&
                     <Tree
                         key={"doprdown-1"}
@@ -208,6 +209,7 @@ export default ({ onSearch, activeKey, moveDoc, onMove, onFolderSelected, ...pro
                         icon={<>{ }</>}
                         titleRender={(items: DataNode) => {
                             return (
+                                // <Tooltip title={"Right Click Create New Folder"}>
                                 <Dropdown
                                     key={"dropdoan"}
                                     trigger={["contextMenu"]}
@@ -223,6 +225,7 @@ export default ({ onSearch, activeKey, moveDoc, onMove, onFolderSelected, ...pro
                                         justify='space-between'
                                         align='baseline'
                                     >
+                                       
                                         <Space size={6} style={{ whiteSpace: "nowrap", padding: "3px 0" }} >
                                             {
                                                 (items.type == "department") && <BankFilled style={{ color: "#54aeff" }} /> ||
@@ -233,6 +236,7 @@ export default ({ onSearch, activeKey, moveDoc, onMove, onFolderSelected, ...pro
                                         </Space>
                                     </Flex>
                                 </Dropdown>
+                                // </Tooltip>
                             )
                         }}
                     />

@@ -92,7 +92,7 @@ export const AccessoryServiceAPI = (requestActions: RequestActions) => {
     deductAccessoryQTY: (data: AccessoriesCreate) =>singleRequest<{ data: string; message: string }>(AccessoryAction.deductAccessoryQTY(data))(requestActions),
     delete: (id: number) =>singleRequest<{ data: string; message: string }>(AccessoryAction.delete(id))(requestActions),
     addAccessoriesToVehicle: (params: AddVehicleAccessory) =>singleRequest<{ data: string; message: string }>(AccessoryAction.addAccessorieTovehicle(params))(requestActions),
-    list: (id: string) =>singleRequest<AccessoriesDTO>(AccessoryAction.listAccessoriesByVehicle(id))(requestActions) as Promise<AccessoriesDTO[]>,
+    list: (id: string) =>singleRequest(AccessoryAction.listAccessoriesByVehicle(id))(requestActions) as Promise<{quantity:number; accessory:AccessoriesDTO}[]>,
     pageCategory: (params: TableViewSearchParams<AccessoriesSearchParam>) =>singleRequest<CategoryDTO>(AccessoryAction.pageCategory(params))(requestActions) as Promise<Paging<CategoryDTO>>,
     pageActivityLog:(params:TableViewSearchParams<ActivityLogAdvanceSearchParam>) =>singleRequest<ActivityLogDTO>(AccessoryAction.pageActivityLog(params))(requestActions) as Promise<Page<ActivityLogDTO>>
   };

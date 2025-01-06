@@ -54,7 +54,6 @@ export default ({ vehicleId }: Props) => {
                 ...v,
                 status: e.target.value,
               }));
-
               actionRef.current?.reloadAndRest?.();
             }}
           >
@@ -87,14 +86,12 @@ export default ({ vehicleId }: Props) => {
           title: 'Type',
           dataIndex: 'inspectionType',
         },
-
         {
           key: 'item',
           title: 'Item',
           dataIndex: 'item',
           render: (_, r) => [r.checked, r.item].join('/'),
         },
-
         {
           key: 'percentage',
           title: 'Rate',
@@ -109,7 +106,6 @@ export default ({ vehicleId }: Props) => {
             </Tag>
           ),
         },
-
         {
           key: 'fail',
           title: 'Fail Item',

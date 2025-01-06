@@ -152,7 +152,7 @@ const TireVehicleAssignListView: React.FC<Props> = ({ vehicleId }) => {
               >
                 Add Tire Information
               </Button>
-              ,
+              
             </Space>
           </>,
         ]}

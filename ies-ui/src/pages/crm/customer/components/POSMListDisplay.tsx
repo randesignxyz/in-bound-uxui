@@ -8,6 +8,7 @@ import { Button } from "antd/lib";
 import POSMImage from "../../components/POSMImage";
 import { ContractPOSMItem } from "../../contract/types";
 import { formatDate } from "@/pages/utils";
+import moment from "moment";
 
 interface Props {
     customerId: number;
@@ -112,10 +113,14 @@ const POSMDisplayList: React.FC<Props> = ({ customerId, version }) => {
                                                 <Alert
                                                     showIcon
                                                     message={p.posmName.name}
-                                                    icon={<Avatar style={{ color: "white", backgroundColor: "#52c41a" }}>x{p.quantity}</Avatar>}
+                                                    icon={<Typography.Text type="warning">[ x{p.quantity} ]</Typography.Text>}
                                                     description={p.posmName.remark}
                                                     action={
-                                                        p.attachment.length > 0 ? <Button type="link" icon={<PaperClipOutlined />} onClick={() => setViewImage({ visible: { open: true, posmInfo: p } })} /> : ""
+                                                        <Space>
+                                                            <Typography.Text type="success">{p.installedDate ? moment(p.installedDate).format("DD-MM-YYYY"):""}</Typography.Text>
+                                                            {p.attachment.length > 0 ? <Button type="link" size="small" icon={<PaperClipOutlined />} onClick={() => setViewImage({ visible: { open: true, posmInfo: p } })} /> : ""}
+                                                        </Space>
+                                                        
                                                     }
                                                 />
                                             </>)
@@ -128,9 +133,11 @@ const POSMDisplayList: React.FC<Props> = ({ customerId, version }) => {
                 }}
             />
             <POSMImage
+                source="CUSTOMER"
                 open={viewImage?.visible?.open == true}
                 pomsInfo={viewImage?.visible?.posmInfo}
                 onClose={() => setViewImage({ visible: undefined })}
+             
             />
         </>
     )

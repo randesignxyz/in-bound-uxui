@@ -74,7 +74,6 @@ const AccessoriesModalForm: React.FC<Props> = ({ data, actionType, onSave, id, .
           .filter((it) => it.selected === true)
           .map((it) => ({ accessoryId: it.id, quantity: it.quantity })),
         };
-        
         onSave(entry);
         await editableFormRef.current?.validateFields();
         await onRequest()

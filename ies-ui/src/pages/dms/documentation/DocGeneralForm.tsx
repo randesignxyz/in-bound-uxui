@@ -21,7 +21,7 @@ export default ({ lookupData }: Props) => {
                         rules={[
                             {
                                 min: 4,
-                                max: 20
+                                max: 100
                             }
                         ]}
                     />

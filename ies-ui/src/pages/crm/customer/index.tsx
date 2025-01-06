@@ -31,12 +31,9 @@ export type CustomerActionController = {
 }
 
 export default () => {
-
     const { state, ops, actions, modals } = model();
     const access = useAccess();
-
     const [forceReload, setForceReload] = useState<{ cb?: () => void }>()
-
     const requestAction = simpleRequestActions()
     const initData = async () => {
         if (!state.initData) {
@@ -47,14 +44,11 @@ export default () => {
         type: 'remarks';
         required: boolean;
         cb: (remakrs: string) => void;
-    }>()
-
+    }>();
     const onCloseModalHandler = (visible?: boolean) => {
         if (!visible) setModal(undefined)
     }
-
     const onSaveBasicHandler = (data: BasicData) => {
-
         Modal.confirm({
             title: 'Edit Customer Information',
             content: 'Are you sure?',
@@ -106,7 +100,6 @@ export default () => {
                 } catch (error) {
 
                 }
-
             }
         })
     }
@@ -212,7 +205,6 @@ export default () => {
         ]
     }
 
-
     const actl: CustomerActionController = {
         getMenuItems: getMenuItems
     }
@@ -239,16 +231,13 @@ export default () => {
                         throw Error('Not supported')
                 }
             }}
-
         </CrudWrapper>
-
         <BasicEntryModal
             layoutConfig={{
                 supplySource:
                     state.data?.detail?.type?.id == 102 &&
                     !!state.data.detail.addressList.find((it) => it.province?.id !== 12),
             }}
-
             editData={state.data?.detail && {
                 id: state.data.detail.id,
                 internalName: state.data.detail.internalName,
@@ -261,26 +250,22 @@ export default () => {
                 supplySourceId: state.data.detail.supplySource?.id,
                 description: state.data.detail.description,
             }}
-
             init={{
                 outletTypeList: state.initData?.outletTypeList,
                 seList: state.initData?.seList,
                 lookupDataList: state.initData?.lookupDataList,
                 supplySourceList: state.initData?.supplySources,
             }}
-
             actionHandlers={{
                 onSave: onSaveBasicHandler,
             }}
             open={modals.isVisible('editBasicInfo')}
             onCancel={() => modals.hideModal('editBasicInfo')}
         />
-
         <Transfer
             seList={
                 state.initData?.seList?.filter((it) => it.id !== state.data?.detail?.sale?.id) || []
             }
-
             open={modals.isVisible('transfer-customer')}
             currentSe={[state.data?.detail?.code, state.data?.detail?.sale?.name].join("-")}
             onCancel={() => modals.hideModal('transfer-customer')}
@@ -306,22 +291,18 @@ export default () => {
                     }
                 })
             }} />}
-
         {
             modal?.type === 'remarks' && <Remarks open={true}
                 onOpenChange={onCloseModalHandler}
                 required={modal.required}
                 onSave={modal.cb} />
         }
-
         {state.data?.detail && <CustomerCodeTracking
             data={state.data?.detail}
             open={modals.isVisible('code-tracking')}
             onUpdate={onUpdateCustomerCodeHisHandler}
             onOpenChange={visible => !visible && modals.hideModal('code-tracking')}
-
         />}
-
         <VisitSchduleGeneratedModal
             open={modals.isVisible('visitScheduleGen')}
             onCancel={() => modals.hideModal('visitScheduleGen')}
@@ -362,6 +343,5 @@ export default () => {
                 },
             }}
         />
-
     </Spin>
 }

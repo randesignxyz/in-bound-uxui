@@ -1,9 +1,8 @@
 import { useRef, useState } from "react"
-import { CrmPaths } from ".."
 import ContractModal from "./components/ContractModal"
 import PageWrapper from "@/components/PageWrapper"
 import { ActionType } from "@ant-design/pro-components"
-import { useQuery, history, useAccess, useQueryClient } from "@umijs/max"
+import { useQuery, useAccess } from "@umijs/max"
 import { ContractServices } from "./services"
 import { FetchPagingParams } from "@/components/DataCrud/TableView"
 import { ContractAdvanceSearchParams, ImportedContract } from "./types"
@@ -21,7 +20,6 @@ import CustomerDetailView from "../customer/components/Detail"
 import ContactDetailView from "./components/Detail"
 
 export default () => {
-
     const [modalVisible, setModalVisible] = useState<{ type: 'ADD', id?: number, cb?: undefined } | { type: 'EDIT', id?: number, cb?: () => void }>()
     const actionRef = useRef<ActionType>();
     const access = useAccess()
@@ -42,7 +40,6 @@ export default () => {
             pageSize: filter.pagination?.pageSize,
             current: filter.pagination?.current
         }
-
     }).query(), {
         refetchOnWindowFocus: false,
         staleTime: 1000,
@@ -67,9 +64,11 @@ export default () => {
                 },
                 {
                     option: { label: 'Active', value: 'ACTIVE' },
-                }, {
+                }, 
+                {
                     option: { label: 'Expired', value: 'EXPIRED' },
-                }, {
+                }, 
+                {
                     option: { label: 'Terminated', value: 'TERMINATED' },
                 }],
                 advanceSearchButton: <AdvanceSearch onSearch={async (
@@ -77,7 +76,6 @@ export default () => {
                     startedDateFrom, startedDateTo,
                     endedDateFrom, endedDateTo
                 ) => {
-
                     setFilter(v => ({
                         ...v,
                         criteria: {
@@ -91,14 +89,10 @@ export default () => {
                             startedDateTo: startedDateTo, endedDateFrom,
                             endedDateTo: endedDateTo,
                         },
-
                         pagination: {
                         },
                     }))
-
-
                     actionRef.current?.reload?.(true)
-
                 }} trigger={<Button icon={<FileSearchOutlined />} />} />,
                 onRefresh: refetch,
                 actionButtons: [

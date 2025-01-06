@@ -160,7 +160,7 @@ export default ({ onSearch, activeKey, moveDoc, onMove, onFolderSelected, ...pro
     return (
         <>
             <Spin spinning={requestAction.request?.loading}>
-                <Affix offsetTop={70}>
+          
                    <Button
                         onClick={() => {
                             onFolderSelected?.();
@@ -174,7 +174,8 @@ export default ({ onSearch, activeKey, moveDoc, onMove, onFolderSelected, ...pro
                         }}
                         type={folderSelected ? "default" : "primary"}
                         style={{ width: "100%", margin: "10px 0" }} icon={<FileTextOutlined />}>All Documents</Button>
-                </Affix>
+
+
                 {treeFolderList.length != 0 &&
                     <Tree
                         key={"doprdown-1"}
@@ -208,7 +209,7 @@ export default ({ onSearch, activeKey, moveDoc, onMove, onFolderSelected, ...pro
                         icon={<>{ }</>}
                         titleRender={(items: DataNode) => {
                             return (
-                                <Tooltip title={"Right Click Create New Folder"}>
+                                // <Tooltip title={"Right Click Create New Folder"}>
                                 <Dropdown
                                     key={"dropdoan"}
                                     trigger={["contextMenu"]}
@@ -235,7 +236,7 @@ export default ({ onSearch, activeKey, moveDoc, onMove, onFolderSelected, ...pro
                                         </Space>
                                     </Flex>
                                 </Dropdown>
-                                </Tooltip>
+                                // </Tooltip>
                             )
                         }}
                     />

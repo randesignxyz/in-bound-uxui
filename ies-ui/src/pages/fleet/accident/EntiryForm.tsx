@@ -23,11 +23,7 @@ const AccidentModalForm: React.FC<Props> = ({ onSave,vehicleId, data, ...props }
     const [vehicleBasicinfo, setVehicleBasicInfo] = useState<VehicleListItem>();
     const [lookupData, setLookupData] = useState<LookUpDataDTO[]>([]);
     const [uploadFileIds, setUploadFileIds] = useState<string[]>([]);
-    useEffect(() => {
-        props.open && initFormData();
-        props.open && dataLoad()
-        props.open && truckLoadData()
-    }, [props.open]);
+
     const dataLoad = async () => {
         setLookupData(
             await FleetServiceAPI(requestActions).lookupData({ type: "ACCIDENT" })
@@ -45,16 +41,15 @@ const AccidentModalForm: React.FC<Props> = ({ onSave,vehicleId, data, ...props }
             criteria: { searchValue: value },
             pagination: { pageSize: 20 }
         });
-        const data = response.items.map((obj) => ({
+        response.items.map((obj) => ({
             value: obj.id,
             label: (
                 <>
                     <Space>
                         <CarOutlined twoToneColor={"#eb2f96"} />
                         {`${obj.plateNumber}`}
-                        {`${obj.make.name}`}-{`${obj.weight.name}`}
+                        {`${obj?.make?.name}`}-{`${obj?.weight?.name}`}
                     </Space>
-
                 </>
             ),
             key: Math.random().toString()
@@ -70,6 +65,12 @@ const AccidentModalForm: React.FC<Props> = ({ onSave,vehicleId, data, ...props }
             driverName:data?.driverName?.id,
         });
     };
+    useEffect(() => {
+        props.open && initFormData();
+        props.open && dataLoad()
+        props.open && truckLoadData()
+    }, [props.open]);
+
     return (
         <FormModalComp
             title="Create Service Task"

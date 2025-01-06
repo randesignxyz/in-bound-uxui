@@ -33,5 +33,6 @@ export type SavePosmItemCheckedParams = {
     actualQty: number;
     itemCheckedStatus: number;
     checkedStatus: number;
+    checkedQuantity?: number;
     remarks?: string;
 }

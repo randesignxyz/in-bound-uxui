@@ -6,7 +6,7 @@ import { formatDate } from '@/pages/utils';
 import { CrmServiceAPI } from '@/services/crm/services';
 import type { ApprovalStockControlDto, StockControlLess } from '@/services/sale/data';
 import { CopyOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
-import { EditableFormInstance, ProDescriptions, ProForm, ProFormSelect } from '@ant-design/pro-components';
+import { ProDescriptions, ProForm, ProFormSelect } from '@ant-design/pro-components';
 import type { ActionType } from '@ant-design/pro-table';
 import { EditableProTable } from '@ant-design/pro-table';
 import { Button, Card, Flex, Tag, Tooltip, Typography } from 'antd';
@@ -168,7 +168,6 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...pr
       };
     });
     const item: ApprovalStockControlDto = {
- 
       stockControlId: data?.id || -1,
       description: data?.description,
       receivedBy: data?.receivedBy,
@@ -179,10 +178,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...pr
     if (actionHandlers.onAddItem) {
       actionHandlers.onAddItem(item);
     }
-    
   };
-
-
 
   return (
     <FormModalComp
@@ -194,7 +190,6 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...pr
       onResetForm={onResetActionHandler}
       okText={'Update'}
       title="Issue Stock"
-    
     >
       <Flex vertical gap={12}>
         <Card size={"small"}>
@@ -305,6 +300,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...pr
                   record.expiredDate = moment(record.batchNo).add(6, 'M');
                 }
                 await waitTime(100);
+                return record
               },
               onChange: setEditableRowKeys,
               actionRender: (_row, _config, dom) => [dom.save, dom.cancel],

@@ -1022,7 +1022,7 @@ export default [
   },
   {
     path: '/fleet/vehicle/:view/*',
-    name: 'fleet_vehicle',
+    name: 'fleet-vehicle', 
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
     access: 'canAccessFleetMenu',

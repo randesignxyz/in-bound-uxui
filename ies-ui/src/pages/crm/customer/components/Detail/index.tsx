@@ -1,5 +1,5 @@
 import { CrmPaths } from '@/pages/crm';
-import { AddresssView, BasicData, SettlementPlan } from '@/services/crm/data';
+import { AddressInfo, AddresssView, BasicData, SettlementPlan } from '@/services/crm/data';
 import { useState } from 'react';
 import { Card, message, Modal, Space, Spin, Tabs, Typography } from 'antd';
 import { useEffect } from 'react';
@@ -29,6 +29,7 @@ import { CustomerServices } from '../../services';
 import ActionBar from '@/components/ActionBar';
 import { CustomerActionController } from '../..';
 import POSMDisplayList from '../POSMListDisplay';
+import SpaceReservedView from '@/pages/crm/contract/space-reserve/DetailView';
 
 interface Props {
   id?: number;
@@ -143,8 +144,9 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
         </Tabs.TabPane>
         <Tabs.TabPane key={"posm"} tab="POSM">
           <POSMDisplayList
-            customerId={state.data?.detail?.id ||0}
+            customerId={state.data?.detail?.id || 0}
           />
+         
           {/* <PosmView addresList={addressList || []} requestActions={requestActions}
             readOnly
             initAddressList={async () => { } }
@@ -180,6 +182,11 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
             // onDelete={(id) => CustomerServices.deleteCustomerPosm(id)(requestActions)}
           /> */}
         </Tabs.TabPane>
+        <Tabs.TabPane key="space" tab="Space Reserve">
+            {state.data?.detail?.contracts?.map(p=>{
+              return <SpaceReservedView contractCode={p.contractNo} address={state.data?.detail?.addressList as AddressInfo[]} contractId={p.id} source='CUSTOMER'/>
+            })}
+          </Tabs.TabPane>
         {state.data?.detail?.id && <Tabs.TabPane key="supplySource" tab="Supply Source">
           <SupplySource customerId={state.data?.detail?.id} />
         </Tabs.TabPane>}

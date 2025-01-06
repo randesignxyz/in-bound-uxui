@@ -3,8 +3,8 @@ import { execDataService, execDataService0, fetchDataItemService, fetchDataListS
 import { ContractLess } from "@/services/crm/contract";
 import { LookupDataItem, LookupDataItem3 } from "@/services/data";
 import { ContractAdvanceSearchParams, ContractPOSMItem, ContractViewData, EditContractCheck, POSM, SaveContactData, SaveContractCheckList, SavePosmParams } from "./types";
-import moment, { Moment } from "moment";
-import { AddressInfo, AddresssView } from "@/services/crm/data";
+import { Moment } from "moment";
+import { AddressInfo } from "@/services/crm/data";
 
 export const ContractServices = {
 
@@ -114,9 +114,36 @@ export const ContractServices = {
         payload: { contractId, customerAddressIds}
     }),
 
+    // =======REACH=======
     listPOSMByCustomer :(id:number) =>fetchDataListService({
         actionName:"list-posm-by-customer",
         endpoint:"CRM",
         payload:{id},
+    }),
+    listPOSMAttachment :(id:number) =>fetchDataListService({
+        actionName:"list-file-posm",
+        endpoint:"CRM",
+        payload:{id},
+    }),
+    saveSpaceReserved:(data:SpaceReserveItem) =>execDataService0<SpaceReserveItem>({
+        actionName:"save-space-reserved",
+        endpoint:"CRM",
+        payload:data
+    }),
+    listSpaceReserved:(param:{id:number}) =>fetchDataListService({
+        actionName:"list-space-reserved",
+        endpoint:"CRM",
+        payload:param,
+    }),
+    deleteSpaceReserved:(param:{id:number}) =>execDataService0<{id:number}>({
+        actionName:"delete-space-reserved",
+        endpoint:"CRM",
+        payload:param,
+    }),
+    deleteAttachmentPosm:(param:{id:number}) =>execDataService0<{id:number}>({
+        actionName:"delete-attachment-posm",
+        endpoint:"CRM",
+        payload:param
     })
+
 }

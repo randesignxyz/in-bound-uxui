@@ -15,6 +15,8 @@ import RemarkModalV2 from '@/components/remark-modal-v2';
 import Address from './Address';
 import { AddressInfo } from '@/services/crm/data';
 import Status from '@/components/Status';
+import SpaceReservedView from '../../space-reserve/DetailView';
+import moment from 'moment';
 
 const ContactDetailView: React.FC<{
   id: number,
@@ -107,6 +109,7 @@ const ContactDetailView: React.FC<{
         tabList={[
           { tab: "Terms", key: 'term', tabKey: 'term', },
           { tab: "POSM", key: "posm", tabKey: "posm" },
+          { tab: "Space Reserved", key: "spaceReserve", tabKey: "spaceReserve" },
           { tab: "Shipping Address", key: "shppingAddress", tabKey: "shppingAddress" },
           { tab: "Activity Log", key: "activityLog", tabKey: "activityLog", }
         ]}
@@ -123,17 +126,26 @@ const ContactDetailView: React.FC<{
           }
           if (activeTab == "posm") {
             return data?.id && <PosmView requestActions={requestActions} listPosm={() => ContractServices.listContractPOSM(data.id).query(requestActions)}
-              onSave={(itemId, qty, id, remarks) => ContractServices.savePOSM({
+              onSave={(itemId, qty, id, remarks, installedDate) => ContractServices.savePOSM({
                 id: id,
                 contractId: data.id,
                 itemId: itemId,
                 qty: qty,
-                remarks: remarks
+                remarks: remarks,
+                installedDate:installedDate?moment(installedDate):undefined
               })(requestActions)}
               onDelete={(id: number) => ContractServices.deletePOSM(id)(requestActions)}
               addresList={[]}
-              initAddressList={async()=>{}}
-               />
+              initAddressList={async () => { }}
+            />
+          }
+
+          if (activeTab == "spaceReserve" && data) {
+            return <SpaceReservedView
+              contractId={data?.id}
+              address={addressList} 
+              source='CONTRACT'
+              />
           }
 
           if (activeTab == 'shppingAddress' && data) {

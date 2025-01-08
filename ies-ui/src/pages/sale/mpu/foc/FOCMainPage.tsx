@@ -6,7 +6,7 @@ interface Props{
 }
 
 const FOCMainPage:React.FC<Props> =()=>{
-
+    
     return (
         <PageWrapper
             listView={{

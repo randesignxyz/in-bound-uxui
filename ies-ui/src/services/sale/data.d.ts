@@ -4,6 +4,7 @@ import type { AddressInfo } from '../crm/data';
 import type { LookupData, LookupDataItem } from '../data';
 
 export type SaleServiceName =
+  | 'list-offer-code'
   | 'list-so'
   | 'find-so'
   | 'new-so'
@@ -171,7 +172,7 @@ export interface StockDetail1Less extends StockDetailLess {
   receivedBy?: SalesTeamWorkLess;
   approval?: SalesTeamWorkLess;
   isKeepForwarding?: boolean;
-  approvedBy?:SalesTeamWorkLess;
+  approvedBy?: SalesTeamWorkLess;
 }
 
 export interface StockStoreDetail extends StockStoreLess {
@@ -189,7 +190,7 @@ export interface StockControlDetailDto {
   soldAmount: number;
   transactions: StockQuantity[];
   isKeepForwarding: boolean;
-  requestDate?:moment.Moment
+  requestDate?: moment.Moment;
 }
 
 export interface TeamWorkLess {
@@ -269,7 +270,7 @@ export interface LeadInfo extends LeadLess {
 
 export interface LeadDetail {
   id: number;
-  leadCode?:string;
+  leadCode?: string;
   lastName?: string;
   firstName?: string;
   internalName?: string;
@@ -357,14 +358,14 @@ export interface SaleInvoiceLess {
   createdDate: moment.Moment;
   salesperson: SalesTeamWorkLess;
   salespersonCode: string;
-  internalId:string;
-  storeId?:number;
+  internalId: string;
+  storeId?: number;
   customer?: LeadLess;
   customerId?: string;
   discount: number = 0.0;
   stockControlId?: number;
   items: SaleInvoiceItemLess[];
-  exchangeRate:number;
+  exchangeRate: number;
 }
 
 export interface SaleItem {
@@ -373,7 +374,7 @@ export interface SaleItem {
   code: string;
   qty: number;
   price: number;
-  batchNo?:string;
+  batchNo?: string;
 }
 
 export interface SaleInvoiceItemLess {
@@ -389,7 +390,7 @@ export interface SaleInvoiceItemLess {
   unitPrice: number;
   amount: number;
   stockCategoryId?: number;
-  batchNo?:string
+  batchNo?: string;
 }
 
 export interface TopupLess {
@@ -429,7 +430,15 @@ export interface StockControlDetail {
   stockName: string;
   description?: string;
   isActive: number;
-  status: string |"pending"|"canceled"|"open"|"approved"|"closed"|"settled"|"count stock";
+  status:
+    | string
+    | 'pending'
+    | 'canceled'
+    | 'open'
+    | 'approved'
+    | 'closed'
+    | 'settled'
+    | 'count stock';
   owner: SalesTeamWorkLess;
   approvedBy?: SalesTeamWorkLess;
   receivedBy?: SalesTeamWorkLess;
@@ -453,23 +462,24 @@ export interface ApprovalStockControlDto {
   referenceNo?: string;
   receivedBy?: string;
   items?: ApprovalStockItemDto[];
-  distributorCode?:string;
+  distributorCode?: string;
 }
 
-export interface MMAAprovalEntity{
+export interface MMAAprovalEntity {
   stockControlId?: number;
   description?: string;
   referenceNo?: string;
   receivedBy?: string;
-  items?: MMAApprovalStockItemDto[];
-  distributorCode?:string;
-  distributorName?:string;
-  distributorPhone?:string;
-  distributorId?:number;
-  addressId?:number;
-  latitude?:string;
-  longitude?:string;
-  addressInfo?:string;
+  items?: EditableStockItem[];
+  distributorCode?: string;
+  distributorName?: string;
+  distributorPhone?: string;
+  distributorId?: number;
+  addressId?: number;
+  latitude?: string;
+  longitude?: string;
+  shippingAddressId?: number;
+  address?: string;
 }
 
 export interface MMAApprovalStockItemDto {
@@ -482,11 +492,10 @@ export interface MMAApprovalStockItemDto {
   isSplit: boolean;
   stockCategoryId?: number;
   internalId?: string;
-  price:number;
-  itemId:number;
-  itemName:string;
-  division:string;
-
+  price: number;
+  itemId: number;
+  itemName: string;
+  division: string;
 }
 
 export interface ApprovalStockItemDto {
@@ -494,7 +503,7 @@ export interface ApprovalStockItemDto {
   itemCode: string;
   quantity: number;
   isBeginning: boolean;
-  batchNo: string;
+  batchNo?: string;
   expiredDate?: moment.Moment;
   isSplit: boolean;
   stockCategoryId?: number;
@@ -511,7 +520,7 @@ export interface SettlementLessDto {
   isKeepForwarding: boolean;
   remark: string;
   adjustMentItems?: StockAdjustmentDto[] = [];
-  stockAdjusts?:StockAjust;
+  stockAdjusts?: StockAjust;
 }
 
 export interface StockQuantity {
@@ -555,6 +564,7 @@ export interface StockControlLess {
   description: string;
   isActive: number;
   owner: string;
+  requestedBy?: SalesTeamWorkLess;
   approvedBy?: string;
   approvedDate?: moment.Moment;
   requestedDate?: moment.Moment;
@@ -567,41 +577,46 @@ export interface StockControlLess {
   items?: StockDetailItemLess[];
   invoices?: SaleInvoiceLess[];
   adjustmentItems?: StockAdjustmentDto[] = [];
-  beginningQty:number;
-  comments?:Comments[];
-  stockAdjusts?:StockAjust;
-  stockCountId?:number;
-  isKeepForwarding?:boolean;
-  storeId?:number;
-  description?:string;
+  beginningQty: number;
+  comments?: Comments[];
+  stockAdjusts?: StockAjust;
+  stockCountId?: number;
+  isKeepForwarding?: boolean;
+  storeId?: number;
+  description?: string;
 }
 
-interface Comments{
-  id :number;
-  description:string;
+interface Comments {
+  id: number;
+  description: string;
 }
 
-interface StockAjust{
-  adjustBy:string;
-  adjustDate:moment.Moment;
-  approvedBy?:string;
-  approvedDate?:moment.Moment;
-  remark?:string;
-  status:string;
-  stockControlId:number;
-  stockStoreId:number;
-  items:StockAdjustmentItem[];
+interface Comments {
+  id: number;
+  description: string;
 }
-interface StockAdjustmentItem{
-  batchNo:string;
-  itemCode:string;
-  itemId:number;
-  itemName:stirng;
-  quantity:number;
-  remark:string;
-  sequence:number;
-  status:string;
-  uom:string
+
+interface StockAjust {
+  adjustBy: string;
+  adjustDate: moment.Moment;
+  approvedBy?: string;
+  approvedDate?: moment.Moment;
+  remark?: string;
+  status: string;
+  stockControlId: number;
+  stockStoreId: number;
+  items: StockAdjustmentItem[];
+}
+interface StockAdjustmentItem {
+  batchNo: string;
+  itemCode: string;
+  itemId: number;
+  itemName: stirng;
+  quantity: number;
+  remark: string;
+  sequence: number;
+  status: string;
+  uom: string;
 }
 
 export interface StockAdjustmentDto {
@@ -630,6 +645,8 @@ export interface StockDetailLess {
   pendingQty?: number;
   currentQty: number;
   soldQty?: number;
+  categoryName?: string;
+  sequence?: number;
   lastModifiedDate: moment.Moment;
   typeId: number;
   items: StockDetailItemLess[];
@@ -726,6 +743,24 @@ export interface So {
   budgetCode?: string;
   distributorId?: number;
   attachments?: { id: number; imageId: string; status: string }[];
+}
+
+export interface OfferCodeInfo {
+  offerCode: string;
+  itemsIds: number[];
+  saleType: string;
+}
+
+export interface OfferCodeParam {
+  soItemId: number;
+  itemId: number;
+  description: string;
+  itemCode: string;
+  quantity: number;
+  type: string;
+  uom: string;
+  offerCode?: string;
+  isChecked: boolean;
 }
 
 export interface SoDetail {
@@ -928,6 +963,7 @@ export interface SoItemDetail {
   parentKey?: string;
   budgetCode?: string;
   index?: number;
+  offerCode?: string;
 }
 
 export interface Distributor {
@@ -1066,6 +1102,7 @@ interface ProductItem {
   barcode: string;
   name: string;
   uomId: number;
+  uom?: stirng;
   price: number;
   cost?: number;
   discountPercent?: number;
@@ -1341,8 +1378,8 @@ export interface SoAdvanceSearchParams {
 
 export interface StockStoreAdvanceSearchParams {
   status?: string;
-  searchValue?:string;
-  role?:string;
+  searchValue?: string;
+  role?: string;
 }
 
 export interface StockAdvanceSearchParams {
@@ -1379,129 +1416,129 @@ export interface DeliveryAdvanceSearchParams {
 
 export type InitSuggestionParam =
   | {
-    actionName: 'exchange-rate';
-    responseKey: string;
-    payload: {};
-  }
+      actionName: 'exchange-rate';
+      responseKey: string;
+      payload: {};
+    }
   | {
-    actionName: 'exchange-rate-dsd';
-    responseKey: string;
-    payload: {};
-  };
+      actionName: 'exchange-rate-dsd';
+      responseKey: string;
+      payload: {};
+    };
 
 export type InitSaleInvoiceParam =
   | {
-    actionName: 'look-up-data';
-    responseKey: string;
-    payload: {
-      list: string[];
-    };
-  }
+      actionName: 'look-up-data';
+      responseKey: string;
+      payload: {
+        list: string[];
+      };
+    }
   | {
-    actionName: 'list-stock-category';
-    responseKey: 'types';
-    payload: {};
-  }
+      actionName: 'list-stock-category';
+      responseKey: 'types';
+      payload: {};
+    }
   | {
-    actionName: 'list-type-product-items';
-    responseKey: 'typeProductItems';
-    payload: {};
-  }
+      actionName: 'list-type-product-items';
+      responseKey: 'typeProductItems';
+      payload: {};
+    }
   // | {
   //     actionName: 'list-sale-invoices';
   //     responseKey: 'saleInvoiceList';
   //     payload: { id: number };
   //   }
   | {
-    actionName: 'list-sales-team-work';
-    responseKey: string;
-    payload: {};
-  };
+      actionName: 'list-sales-team-work';
+      responseKey: string;
+      payload: {};
+    };
 
 export type InitSoParamsType =
   | {
-    actionName: 'list-payment-term';
-    responseKey: 'paymentTermList';
-    payload: {};
-  }
+      actionName: 'list-payment-term';
+      responseKey: 'paymentTermList';
+      payload: {};
+    }
   | {
-    actionName: 'list-shipping-method';
-    responseKey: string;
-    payload: {};
-  }
+      actionName: 'list-shipping-method';
+      responseKey: string;
+      payload: {};
+    }
   | {
-    actionName: 'list-shipping-method';
-    responseKey: 'shippingMethodList';
-    payload: {};
-  }
+      actionName: 'list-shipping-method';
+      responseKey: 'shippingMethodList';
+      payload: {};
+    }
   | {
-    actionName: 'list-store-location';
-    responseKey: 'storeLocationList';
-    payload: {};
-  }
+      actionName: 'list-store-location';
+      responseKey: 'storeLocationList';
+      payload: {};
+    }
   | {
-    actionName: 'look-up-data';
-    responseKey: string;
-    payload: {
-      list: string[];
+      actionName: 'look-up-data';
+      responseKey: string;
+      payload: {
+        list: string[];
+      };
+    }
+  | {
+      actionName: 'list-product-item-by-type';
+      responseKey: 'itemList';
+      payload: {
+        id: number;
+      };
+    }
+  | {
+      actionName: 'listCustomer';
+      responseKey: string;
+      payload: {};
+    }
+  | {
+      actionName: 'listSalesperson';
+      responseKey: string;
+      payload: {};
+    }
+  | {
+      actionName: 'list-budget';
+      responseKey: string;
+      payload: {};
     };
-  }
-  | {
-    actionName: 'list-product-item-by-type';
-    responseKey: 'itemList';
-    payload: {
-      id: number;
-    };
-  }
-  | {
-    actionName: 'listCustomer';
-    responseKey: string;
-    payload: {};
-  }
-  | {
-    actionName: 'listSalesperson';
-    responseKey: string;
-    payload: {};
-  }
-  | {
-    actionName: 'list-budget';
-    responseKey: string;
-    payload: {};
-  };
 
 export type initProductParamsType =
   | {
-    actionName: 'list-uom';
-    responseKey: 'uomList';
-    payload: {};
-  }
+      actionName: 'list-uom';
+      responseKey: 'uomList';
+      payload: {};
+    }
   | {
-    actionName: 'list-brand';
-    responseKey: 'brandList';
-    payload: {};
-  }
+      actionName: 'list-brand';
+      responseKey: 'brandList';
+      payload: {};
+    }
   | {
-    actionName: 'list-category';
-    responseKey: 'categoryList';
-    payload: {};
-  }
+      actionName: 'list-category';
+      responseKey: 'categoryList';
+      payload: {};
+    }
   | {
-    actionName: 'list-group';
-    responseKey: 'groupList';
-    payload: {};
-  };
+      actionName: 'list-group';
+      responseKey: 'groupList';
+      payload: {};
+    };
 
 export type InitTradeOfferParamsType =
   | {
-    actionName: 'list-item-category';
-    responseKey: 'categories';
-    payload: {};
-  }
+      actionName: 'list-item-category';
+      responseKey: 'categories';
+      payload: {};
+    }
   | {
-    actionName: 'list-customer-group';
-    responseKey: 'customerGroup';
-    payload: {};
-  };
+      actionName: 'list-customer-group';
+      responseKey: 'customerGroup';
+      payload: {};
+    };
 
 export interface SoSummary {
   pendingMCDirect: number;

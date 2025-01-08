@@ -1,6 +1,6 @@
-import { Endpoint } from "./API"
+import { Endpoint } from './API';
 
-export const WORKFLOW_API = '/services/workflow/api/v1/workflow'
+export const WORKFLOW_API = '/services/workflow/api/v1/workflow';
 // export const SAP_API = '/services/sapintegration/api/v1/sap'
 export const SAP_API = '/services/deliveryexpense/api/v1/sap'
 export const INVENTORY_API = '/services/inventory/api'

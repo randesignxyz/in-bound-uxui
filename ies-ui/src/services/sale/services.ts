@@ -1,3 +1,4 @@
+import { StatusActionForm } from '@/pages/sale/mpu/settlement/data';
 import type { SortOrder } from 'antd/lib/table/interface';
 import type { Moment } from 'moment';
 import type { ServiceType } from '../API';
@@ -28,6 +29,7 @@ import type {
   LeadDetail,
   LeadLess,
   MpuStockControlItemLess,
+  OfferCodeInfo,
   OfferParams,
   PackageOffer,
   PackagesLess,
@@ -176,6 +178,12 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
   closeSo: (id: number, data: CloseIndirectSoParams) => exec(ReqParams.closeSo(id, data))(actions),
 
   findSo: findService<{ id: number }, SoDetail>(SaleService('find-so'), actions),
+
+  listOfferCodes: findAllService<{ id: number }, OfferCodeInfo>(
+    SaleService('list-offer-code'),
+    actions,
+  ),
+
   listAttachments: findAllService<{ id: number }, { id: number; imageId: string }>(
     SaleService('list-attachment'),
     actions,
@@ -238,10 +246,11 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
     actions,
   ),
 
-  postSoToSAP: execService<{ soId: number; remarks?: string }, { data: any; message: string }>(
-    SaleService('post-so'),
-    actions,
-  ),
+  postSoToSAP: execService<
+    { soId: number; remarks?: string; offerCodes?: { soItemId: number; offerCode?: string }[] },
+    { data: any; message: string }
+  >(SaleService('post-so'), actions),
+
   cancelSo: execService<{ soId: number; remarks: string }, { data: string; message: string }>(
     SaleService('cancel-so'),
     actions,
@@ -448,7 +457,10 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
     actions,
   ),
   findExchangeRate: findService<{}, ExchangeRate>(SaleService('exchange-rate'), actions),
-  findDSDExchangeRate: findService<{}, ExchangeRate>(SaleService('exchange-rate-dsd-only'), actions),
+  findDSDExchangeRate: findService<{}, ExchangeRate>(
+    SaleService('exchange-rate-dsd-only'),
+    actions,
+  ),
 
   pageLead: findPagingService<{ id?: string; sort?: Record<string, SortOrder> }, LeadDetail>(
     SaleService('page-lead'),

@@ -10,7 +10,7 @@ import type { ModalFormProps } from '@ant-design/pro-form';
 import { ModalForm, ProFormCheckbox } from '@ant-design/pro-form';
 import type { ActionType } from '@ant-design/pro-table';
 import { EditableProTable } from '@ant-design/pro-table';
-import { Button, Flex, Tooltip, Typography } from 'antd';
+import { Button, Flex, Tooltip, Typography, Divider } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 interface Props extends ModalFormProps {
   data?: StockControlLess;
@@ -59,7 +59,7 @@ const CountStockModal: React.FC<Props> = ({ data, actionHandlers, ...props }) =>
       actionRef.current?.reload();
     };
     onResetActionHandler();
-    return () => {};
+    return () => { };
   }, [data, props.open]);
 
   return (
@@ -104,8 +104,8 @@ const CountStockModal: React.FC<Props> = ({ data, actionHandlers, ...props }) =>
           rowKey="id"
           recordCreatorProps={false}
           value={dataSource}
-          tableLayout="auto"
-          size="small"
+          tableLayout='auto'
+          size='small'
           onValuesChange={setDataSource}
           editable={{
             onlyOneLineEditorAlertMessage:
@@ -140,7 +140,7 @@ const CountStockModal: React.FC<Props> = ({ data, actionHandlers, ...props }) =>
               title: 'Product Name',
               dataIndex: 'itemName',
               readonly: true,
-              fixed: true,
+              fixed: true
             },
             {
               title: 'Beginning',
@@ -183,7 +183,7 @@ const CountStockModal: React.FC<Props> = ({ data, actionHandlers, ...props }) =>
               valueType: 'digit',
               width: 110,
               fixed: true,
-              align: 'right',
+              align: "right",
               formItemProps: {
                 rules: [
                   {
@@ -249,41 +249,42 @@ const CountStockModal: React.FC<Props> = ({ data, actionHandlers, ...props }) =>
             },
           ]}
         />
-        {data?.stockAdjusts && (
-          <>
-            <ProTable
-              search={false}
-              size="small"
-              options={false}
-              dataSource={data?.stockAdjusts?.items}
-              pagination={false}
-              headerTitle={'Free Of Charge'}
-              columns={[
-                {
-                  title: 'Batch',
-                  dataIndex: 'batchNo',
-                },
-                {
-                  title: 'Product Name',
-                  dataIndex: 'itemName',
-                  render: (_, r) => [r.itemCode, r.itemName].filter((p) => p).join(' - '),
-                },
-                {
-                  title: 'Quantity',
-                  dataIndex: 'quantity',
-                },
-                {
-                  title: 'Uom',
-                  dataIndex: 'uom',
-                },
-                {
-                  title: 'Remark',
-                  dataIndex: 'remark',
-                },
-              ]}
-            />
-          </>
-        )}
+        {
+          data?.stockAdjusts &&  
+         <>
+           <ProTable
+            search={false}
+            size='small'
+            options={false}
+            dataSource={data?.stockAdjusts?.items}
+            pagination={false}
+            headerTitle={"Free Of Charge"}
+            columns={[
+              {
+                title: "Batch",
+                dataIndex: "batchNo"
+              },
+              {
+                title: "Product Name",
+                dataIndex: "itemName",
+                render:(_,r)=>[r.itemCode, r.itemName].filter(p=>p).join(" - ")
+              },
+              {
+                title: "Quantity",
+                dataIndex: "quantity"
+              },
+              {
+                title: "Uom",
+                dataIndex: "uom"
+              },
+              {
+                title: "Remark",
+                dataIndex: "remark"
+              },
+            ]}
+          />
+         </>
+        }
       </Flex>
 
       <ProFormCheckbox name="isKeepForwarding" label="Stock balance is to be carried Forward" />

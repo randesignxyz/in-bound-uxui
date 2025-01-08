@@ -20,7 +20,6 @@ const SapPosting: React.FC<Props> = ({onPosting, ...props}) => {
             <ProFormTextArea label = 'Remarks' name = 'remarks'/>
         </ProForm>
     </FormModalComp>
+}
 
-};
-
-export default SapPosting;
+export default SapPosting

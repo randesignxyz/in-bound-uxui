@@ -55,7 +55,9 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       ) || false,
     canAccessDeliverySetupPriceList:
       currentUser?.authorities.some((item) =>
-        ['ROLE_DELIVERY_EXPENSE_ADMIN', 'ROLE_DELIVERY_EXPENSE_USER'].some((it) => it === item),
+        [
+          'ROLE_DELIVERY_EXPENSE_ADMIN', 'ROLE_DELIVERY_EXPENSE_USER'
+        ].some((it) => it === item),
       ) || false,
 
     canAccessDeliveryReports:
@@ -138,6 +140,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           'ROLE_CASHIER',
           'ROLE_WAREHOUSE',
           'ROLE_AR',
+          'ROLE_SALE_INDIVIDUAL',
           'ROLE_DSD_REPORT',
         ].some((it) => it === item),
       ) || false,

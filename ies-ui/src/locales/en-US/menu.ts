@@ -169,8 +169,4 @@ export default {
   'menu.whm_inventory_item': 'Item',
   'menu.whm_inventory_empwhs': 'EMployee Warehouse',
   'menu.probation_evaluation': 'Probation Evaluation',
-  'menu.sale_mpu_stock': 'Sales MPU Stock',
-  'menu.sale_mpu_count_stock': 'Sales MPU Count Stock',
-  'menu.sale_rsm_request': 'Sales RSM Request',
-  'menu.sale_mpu_purchase_order': 'Sales MPU Purchase Order',
 };

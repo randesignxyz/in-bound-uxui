@@ -72,7 +72,8 @@ export const SalePaths = {
   order: '/retailer/order/list',
   user: '/sale/user',
   pricing: '/sale/pricing',
-  purchaseOrder: "/sale/purchase-order"
+  purchaseOrder: "/sale/purchase-order",
+
 };
 
 export default () => {
@@ -329,13 +330,13 @@ export default () => {
       // visible: access.canAccessAllMenuDSD,
       link: `${MPUPath.mpuCountStock}/list`,
     }, 
-    // {
-    //   id: 'free-of-charge',
-    //   name: 'Free Of Charge',
-    //   description: '',
-    //   icon: FOC,
-    //   link: `${MPUPath.mpuCountStock}/list`,
-    // }, 
+    {
+      id: 'free-of-charge',
+      name: 'Free Of Charge',
+      description: '',
+      icon: FOC,
+      link: `${MPUPath.mpuFOC}/list`,
+    }, 
   ];
 
   const items: ListMenuItem[] = [

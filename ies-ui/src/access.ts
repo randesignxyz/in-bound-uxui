@@ -732,7 +732,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
 
     canAccessDSD:
       currentUser?.authorities.some((item) =>
-        ['ROLE_CASHIER', 'ROLE_WAREHOUSE', 'ROLE_DSD_ADMIN', 'ROLE_ADMIN'].some(
+        ['ROLE_CASHIER', 'ROLE_WAREHOUSE', 'ROLE_DSD_ADMIN', 'ROLE_ADMIN',"ROLE_MPU_ADMIN"].some(
           (it) => it === item,
         ),
       ) || false,

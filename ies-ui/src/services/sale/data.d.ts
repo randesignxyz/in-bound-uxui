@@ -555,6 +555,7 @@ export interface StockControlLess {
   description: string;
   isActive: number;
   owner: string;
+  requestedBy?: SalesTeamWorkLess;
   approvedBy?: string;
   approvedDate?: moment.Moment;
   requestedDate?: moment.Moment;
@@ -567,13 +568,13 @@ export interface StockControlLess {
   items?: StockDetailItemLess[];
   invoices?: SaleInvoiceLess[];
   adjustmentItems?: StockAdjustmentDto[] = [];
-  beginningQty:number;
-  comments?:Comments[];
-  stockAdjusts?:StockAjust;
-  stockCountId?:number;
-  isKeepForwarding?:boolean;
-  storeId?:number;
-  description?:string;
+  beginningQty: number;
+  comments?: Comments[];
+  stockAdjusts?: StockAjust;
+  stockCountId?: number;
+  isKeepForwarding?: boolean;
+  storeId?: number;
+  description?: string;
 }
 
 interface Comments{

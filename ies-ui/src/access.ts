@@ -674,7 +674,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     /** Start Stock Control */
     // new by reach modified 
     canAccessSaleTaskList: currentUser?.authorities.some((items) =>
-      ['ROLE_CASHIER', 'ROLE_WAREHOUSE', 'ROLE_DSD_ADMIN', 'ROLE_ADMIN'].some((it) => it === items)
+      ['ROLE_CASHIER', 'ROLE_WAREHOUSE', 'ROLE_DSD_ADMIN', 'ROLE_ADMIN', 'ROLE_MPU_ADMIN'].some((it) => it === items)
     ) || false,
 
     canAccessSaleStore: currentUser?.authorities.some((items) =>
@@ -721,7 +721,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
 
     canAccessARMenuItem:
       currentUser?.authorities.some((item) =>
-        ['ROLE_AR', 'ROLE_DSD_ADMIN', 'ROLE_ADMIN', 'ROLE_SALE_INDIVIDUAL', "ROLE_DSD_REPORT"].some((it) => it === item),
+        ['ROLE_AR', 'ROLE_DSD_ADMIN', 'ROLE_ADMIN', 'ROLE_SALE_INDIVIDUAL', "ROLE_DSD_REPORT", ].some((it) => it === item),
       ) || false,
 
     canAccessTabWarehouse:

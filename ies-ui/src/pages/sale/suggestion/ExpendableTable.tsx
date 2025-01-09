@@ -60,7 +60,7 @@ const ExpendableTable: React.FC<Props> = ({
 
   const onApprove = (id?: number) => {
     Modal.confirm({
-      title: 'Accept Suggestion.',
+      title: 'Accept Request.',
       content: 'Are you sure?',
       onOk: async () => {
         await services
@@ -94,7 +94,7 @@ const ExpendableTable: React.FC<Props> = ({
                       onClick={async () => {
                         // setRemarkState({ visible: { open: true, carryData: parent } });
                         Modal.confirm({
-                          title: 'Reject Suggestion.',
+                          title: 'Reject Request.',
                           content: 'Are you sure?',
                           onOk: async () => {
                             services

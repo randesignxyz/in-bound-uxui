@@ -68,6 +68,11 @@ const StockControlTabItem: React.FC<Props> = ({ data, forceUpdate }) => {
                 dataIndex: 'stockName',
               },
               {
+                title: 'Requested Date',
+                //dataIndex: 'stockName',
+                render: (_, r) => formatDateTime(r.approvedDate),
+              },
+              {
                 title: 'Owner',
                 dataIndex: 'stockName',
                 render: (_, r) =>
@@ -77,14 +82,30 @@ const StockControlTabItem: React.FC<Props> = ({ data, forceUpdate }) => {
                 title: 'Description',
                 dataIndex: 'description',
               },
-              {
-                title: 'Serial',
-                dataIndex: 'serialNumber',
-              },
+              // {
+              //   title: 'Serial',
+              //   dataIndex: 'serialNumber',
+              // },
 
               {
                 title: 'PlateNumber',
                 dataIndex: 'plateNumber',
+              },
+              {
+                title: 'Approved By',
+                dataIndex: '',
+                render: (_, r) =>
+                  [r.approvedBy?.salespersonCode, r.approvedBy?.salespersonName]
+                    .filter((o) => o)
+                    .join(' - '),
+              },
+              {
+                title: 'Received By',
+                dataIndex: '',
+                render: (_, r) =>
+                  [r.receivedBy?.salespersonCode, r.receivedBy?.salespersonName]
+                    .filter((o) => o)
+                    .join(' - '),
               },
               {
                 title: 'Status',
@@ -119,22 +140,15 @@ const StockControlTabItem: React.FC<Props> = ({ data, forceUpdate }) => {
                   </Tag>
                 ),
               },
-              {
-                title: 'Received By',
-                dataIndex: '',
-                render: (_, r) =>
-                  [r.receivedBy?.salespersonCode, r.receivedBy?.salespersonName]
-                    .filter((o) => o)
-                    .join(' - '),
-              },
-              {
-                title: 'Approved By',
-                dataIndex: '',
-                render: (_, r) =>
-                  [r.approvedBy?.salespersonCode, r.approvedBy?.salespersonName]
-                    .filter((o) => o)
-                    .join(' - '),
-              },
+
+              // {
+              //   title: 'Approved By',
+              //   dataIndex: '',
+              //   render: (_, r) =>
+              //     [r.approvedBy?.salespersonCode, r.approvedBy?.salespersonName]
+              //       .filter((o) => o)
+              //       .join(' - '),
+              // },
               {
                 title: 'Approved Date',
                 render: (_, r) => formatDateTime(r.approvedDate),
@@ -186,96 +200,67 @@ const StockControlTabItem: React.FC<Props> = ({ data, forceUpdate }) => {
                             reload: false,
                           }}
                           dataSource={it.items}
-                          columns={
-                            it.typeId === 132
-                              ? [
-                                  {
-                                    title: 'Batch #',
-                                    dataIndex: 'batchNo',
-                                  },
-                                  {
-                                    title: 'Description',
-                                    render: (_, r) => join([r.itemCode, r.itemName], ' - '),
-                                    key: 'itemId',
-                                  },
+                          columns={[
+                            {
+                              title: 'Batch #',
+                              dataIndex: 'batchNo',
+                              hideInTable: category.id !== 132,
+                            },
+                            {
+                              title: 'Description',
+                              render: (_, r) => join([r.itemCode, r.itemName], ' - '),
+                              key: 'itemId',
+                            },
 
-                                  { title: 'SKU', dataIndex: 'description', width: 80 },
+                            { title: 'SKU', dataIndex: 'description', width: 80 },
 
-                                  {
-                                    title: 'Begin',
-                                    align: 'right',
-                                    dataIndex: 'beginningQty',
-                                    width: 100,
-                                  },
-                                  {
-                                    title: 'Request',
-                                    align: 'right',
-                                    dataIndex: 'quantity',
-                                    width: 100,
-                                  },
-                                  {
-                                    title: 'Current',
-                                    align: 'right',
-                                    render: (_, r) => {
-                                      return r.beginningQty + r.quantity;
-                                    },
-                                    width: 100,
-                                  },
-                                  {
-                                    title: 'Sold',
-                                    align: 'right',
-                                    render: (_, r) => {
-                                      return <Text type="danger">{`( ${r.soldQty} )`}</Text>;
-                                    },
-                                    width: 100,
-                                  },
-                                  {
-                                    title: 'End',
-                                    align: 'right',
-                                    render: (_, r) => {
-                                      return r.beginningQty + r.quantity - r.soldQty;
-                                    },
-                                    width: 100,
-                                  },
+                            {
+                              title: 'Begin',
+                              align: 'right',
+                              dataIndex: 'beginningQty',
+                              width: 100,
+                            },
+                            {
+                              title: 'Request',
+                              align: 'right',
+                              dataIndex: 'quantity',
+                              width: 100,
+                            },
+                            {
+                              title: 'Current',
+                              align: 'right',
+                              render: (_, r) => {
+                                return r.beginningQty + r.quantity;
+                              },
+                              width: 100,
+                            },
+                            {
+                              title: 'Sold',
+                              align: 'right',
+                              render: (_, r) => {
+                                return <Text type="danger">{`( ${r.soldQty} )`}</Text>;
+                              },
+                              width: 100,
+                            },
+                            {
+                              title: 'End',
+                              align: 'right',
+                              render: (_, r) => {
+                                return r.beginningQty + r.quantity - r.soldQty;
+                              },
+                              width: 100,
+                            },
 
-                                  { title: 'UOM', dataIndex: 'uom', align: 'center' },
-                                  {
-                                    title: 'Expired Date',
-                                    align: 'right',
-                                    render: (_, r) => {
-                                      return r.expiredDate ? formatDate(r.expiredDate) : '-';
-                                    },
-                                  },
-                                ]
-                              : [
-                                  {
-                                    title: 'Code',
-                                    dataIndex: 'itemCode',
-                                  },
-                                  {
-                                    title: 'Description',
-                                    dataIndex: 'itemName',
-                                    key: 'itemId',
-                                  },
-
-                                  { title: 'SKU', dataIndex: 'description' },
-                                  {
-                                    title: 'Quantity',
-                                    align: 'right',
-                                    render: (_, r) => {
-                                      return r.beginningQty + r.quantity;
-                                    },
-                                  },
-                                  {
-                                    title: 'Sold Quantity',
-                                    align: 'right',
-                                    render: (_, r) => {
-                                      return r.soldQty;
-                                    },
-                                  },
-                                  { title: 'UOM', dataIndex: 'uom' },
-                                ]
-                          }
+                            { title: 'UOM', dataIndex: 'uom', align: 'center' },
+                            {
+                              title: 'Expired Date',
+                              align: 'right',
+                              hideInTable: category.id !== 132,
+                              render: (_, r) => {
+                                return r.expiredDate ? formatDate(r.expiredDate) : '-';
+                              },
+                            },
+                          ]}
                         />
                       ),
                     });

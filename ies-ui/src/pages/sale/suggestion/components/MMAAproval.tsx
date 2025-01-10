@@ -3,8 +3,8 @@ import RemoteSelectBox from '@/components/RemoteSelectBox';
 import { AddressInfo } from '@/services/crm/data';
 import { CrmService, CrmServiceAPI } from '@/services/crm/services';
 import { simpleRequestActions } from '@/services/model';
-import { CustomerLookup, MMAAprovalEntity, StockControlLess } from '@/services/sale/data';
-import { DeleteOutlined, EditOutlined, PlusCircleOutlined } from '@ant-design/icons';
+import { CustomerLookup, StockControlLess } from '@/services/sale/data';
+import { DeleteOutlined, EditOutlined, PlusCircleOutlined, SyncOutlined } from '@ant-design/icons';
 import {
   ActionType,
   EditableFormInstance,
@@ -21,15 +21,17 @@ import {
   Flex,
   Form,
   InputNumber,
+  Modal,
   Row,
+  Space,
   Spin,
   Table,
+  Tag,
   Tooltip,
   Typography,
 } from 'antd';
 import { useForm } from 'antd/es/form/Form';
-import { head } from 'lodash';
-import moment from 'moment';
+import { head, remove } from 'lodash';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ProductItemsServiceAPI } from '../../product/services';
 
@@ -45,29 +47,48 @@ interface Props extends FormModalProps {
 //   item: any[];
 // }
 
+export interface MMAAprovalEntity {
+  stockRquestId?: number;
+  description?: string;
+  items?: EditableStockItem[];
+  distributorCode?: string;
+  distributorName?: string;
+  // distributorPhone?: string;
+  distributorId?: number;
+  addressId?: number;
+  latitude?: string;
+  longitude?: string;
+  address?: string;
+}
+
 interface EditableStockItem {
   id?: number;
   key: React.Key;
-  batchNo?: moment.Moment;
+  index: number;
   itemName: string;
   itemCode: string;
   uom: string;
-  beginningQty: number;
   quantity: number;
-  expiredDate?: moment.Moment;
   isSplit: boolean;
-  stockCategoryId?: number;
+  stockCategoryId: number;
   status: string;
   internalId?: string;
-  division?: string;
-  itemType?: number;
+  // division?: string;
+  itemType: string;
   price?: number;
   itemId?: number;
   itemInfo?: string;
+  focType?: string;
+}
+
+interface MMAForm {
+  address: string;
+  customerId: string;
+  addressId?: number;
 }
 
 const MMAApproval: React.FC<Props> = ({ data, onSave, ...props }) => {
-  const [form] = useForm<MMAAprovalEntity>();
+  const [form] = useForm<MMAForm>();
   const requestActions = simpleRequestActions();
   const actionRef = useRef<ActionType>();
   // const [distributor, setDistributor] = useState<DistributorCreate>();
@@ -99,59 +120,60 @@ const MMAApproval: React.FC<Props> = ({ data, onSave, ...props }) => {
   };
 
   const onResetActionHandler = useCallback(() => {
+    setLoading(false);
     if (data) {
       setDataSource(
         data.items
           ?.filter((it) => it.status !== 'rejected')
-          .map((it) => {
+          .map((it, index) => {
             const itemEdit: EditableStockItem = {
               id: it.id,
               itemId: it.itemId,
               key: (Math.random() * 1000000).toFixed(0),
-              beginningQty: it.beginningQty,
-              expiredDate: it.expiredDate,
               itemName: it.itemName,
-              division: 'STD',
+              // division: 'STD',
               quantity: it.quantity,
               uom: it.uom || '',
               itemCode: it.itemCode,
               isSplit: false,
-              stockCategoryId: it.itemType,
+              stockCategoryId: it.itemType!!,
               status: it.status,
               internalId: it.internalId,
-              itemType: it.itemType,
+              itemType: 'STD',
               itemInfo: it.itemName,
+              price: undefined,
+              index: index + 1,
+              focType: undefined,
             };
             return itemEdit;
           }) || [],
       );
     }
-    setEditableRowKeys([]);
+    remove(editableKeys);
+    form.resetFields();
     actionRef.current?.reload();
+    setAddressList([]);
   }, [data]);
 
   useEffect(() => {
     if (!props.open) return;
     onResetActionHandler();
-    setLoading(false);
-    form.resetFields();
-    setAddressList([]);
     return () => {};
-  }, [onResetActionHandler, props.open]);
+  }, [props.open]);
 
   const disabledButton = useCallback(() => {
     return dataSource.some((o) => o.price === undefined);
   }, [dataSource]);
 
   const onFormvalueChanged = (changedValues: any) => {
-    const { distributorId, shippingAddressId } = changedValues;
-    if (distributorId && 'distributorId' in changedValues) {
-      setCustomerId(distributorId);
+    const { customerId, addressId } = changedValues;
+    if (customerId && 'customerId' in changedValues) {
+      setCustomerId(customerId);
     }
     // shippingAddressId
-    if (shippingAddressId && 'shippingAddressId' in changedValues) {
+    if (addressId && 'addressId' in changedValues) {
       form.setFieldsValue({
-        address: getAddress(shippingAddressId),
+        address: getAddress(addressId),
       });
     }
   };
@@ -175,7 +197,7 @@ const MMAApproval: React.FC<Props> = ({ data, onSave, ...props }) => {
     const defaultAddress = head(addressList);
     const address = getAddress(defaultAddress?.id || 0);
     form.setFieldsValue({
-      shippingAddressId: defaultAddress?.id,
+      addressId: defaultAddress?.id,
       address: address,
     });
     setLoading(false);
@@ -187,24 +209,27 @@ const MMAApproval: React.FC<Props> = ({ data, onSave, ...props }) => {
         title="Stock Issue"
         disabled={disabledButton()}
         {...props}
+        onResetForm={() => {
+          onResetActionHandler();
+        }}
         onSubmit={async () => {
-          // const dataEntity = await form.validateFields();
-          // await editableFormRef?.current?.validateFields();
-          // const addressInfo = dataEntity.addressInfo?.toString()?.split(',');
-          // const entity: MMAAprovalEntity = {
-          //   ...dataEntity,
-          //   distributorCode: distributor?.code,
-          //   distributorId: distributor?.id,
-          //   distributorName: distributor?.name,
-          //   distributorPhone: distributor?.phone,
-          //   stockControlId: data?.id,
-          //   addressId: parseInt(addressInfo?.[0] || ''),
-          //   latitude: addressInfo?.[1],
-          //   longitude: addressInfo?.[2],
-          //   items: dataSource.map((o) => ({ ...o, batchNo: 'n/a' })),
-          // };
-          // console.log(entity);
-          // onSave(entity);
+          const dataEntity = await form.validateFields();
+          const address = addressList?.find((e) => e.id === dataEntity.addressId);
+          if (address !== undefined) {
+            const customer: CustomerLookup = JSON.parse(dataEntity.customerId);
+            const entity: MMAAprovalEntity = {
+              address: dataEntity.address,
+              addressId: address.id,
+              distributorId: customer.id,
+              distributorCode: customer.code,
+              distributorName: customer.name,
+              latitude: address.latitude?.toString(),
+              longitude: address.longitude?.toString(),
+              stockRquestId: data?.id,
+              items: dataSource,
+            };
+            onSave(entity);
+          }
         }}
       >
         <ProForm
@@ -214,7 +239,7 @@ const MMAApproval: React.FC<Props> = ({ data, onSave, ...props }) => {
           layout="horizontal"
         >
           <Flex vertical gap={12}>
-            <Card>
+            <Card size="small" title={<Typography.Text>Request Info</Typography.Text>}>
               <ProDescriptions
                 size={'small'}
                 dataSource={data}
@@ -247,7 +272,17 @@ const MMAApproval: React.FC<Props> = ({ data, onSave, ...props }) => {
                   },
                   {
                     title: 'Status',
-                    dataIndex: 'status',
+                    render: (_, r) => {
+                      const capitalizeFirstLetter = (name: string): string => {
+                        return `${name.charAt(0).toUpperCase()}${name.slice(1)}`;
+                      };
+                      return (
+                        <Tag color="processing" bordered={false} icon={<SyncOutlined spin />}>
+                          {capitalizeFirstLetter(r.status)}
+                        </Tag>
+                      );
+                    },
+                    // dataIndex: 'status',
                   },
                 ]}
               />
@@ -258,7 +293,7 @@ const MMAApproval: React.FC<Props> = ({ data, onSave, ...props }) => {
                   <Col flex={100}>
                     <Form.Item
                       help={<span />}
-                      name="distributorId"
+                      name="customerId"
                       label="Customer"
                       rules={[{ required: true }]}
                     >
@@ -286,8 +321,8 @@ const MMAApproval: React.FC<Props> = ({ data, onSave, ...props }) => {
                   <Col flex={100}>
                     <ProFormSelect
                       help={<span />}
-                      label="Ship To Code"
-                      name="shippingAddressId"
+                      label="Address Code"
+                      name="addressId"
                       rules={[{ required: true }]}
                       showSearch
                       // width={280}
@@ -311,7 +346,7 @@ const MMAApproval: React.FC<Props> = ({ data, onSave, ...props }) => {
                     <ProFormTextArea
                       readonly
                       help={<span />}
-                      label="Ship to Address"
+                      label="Address"
                       disabled={true}
                       name="address"
                     />
@@ -333,18 +368,17 @@ const MMAApproval: React.FC<Props> = ({ data, onSave, ...props }) => {
               summary={(record) => {
                 return (
                   <Table.Summary.Row>
-                    <Table.Summary.Cell index={0} align="center" colSpan={5}>
+                    <Table.Summary.Cell index={0} align="center" colSpan={7}>
                       {/* <Typography.Text type="secondary">Total</Typography.Text> */}
                       <Button
                         icon={<PlusCircleOutlined />}
                         type="dashed"
                         block
                         onClick={() => {
-                          const id = Math.random() * 1000000;
+                          const id = -(Math.random() * 1000000);
                           const key = id.toFixed(0);
                           const first: EditableStockItem = {
                             id: id,
-                            beginningQty: 0,
                             itemId: 0,
                             itemName: record[0].itemName!,
                             itemCode: record[0].itemName!,
@@ -353,12 +387,14 @@ const MMAApproval: React.FC<Props> = ({ data, onSave, ...props }) => {
                             uom: record[0].uom!,
                             isSplit: true,
                             status: record[0].status!,
-                            division: 'FOC',
+                            // division: 'FOC',
                             stockCategoryId: record[0].stockCategoryId!,
                             internalId: record[0].internalId!,
-                            itemType: record[0].itemType!,
+                            itemType: 'FOC',
+                            focType: 'distributor',
                             key: key,
                             price: 0,
+                            index: dataSource.length + 1,
                           };
                           actionRef.current?.addEditRecord?.(first);
                         }}
@@ -375,12 +411,8 @@ const MMAApproval: React.FC<Props> = ({ data, onSave, ...props }) => {
                   'Please save the editing record, before start edit a new record.',
                 type: 'single',
                 editableKeys,
-                onSave: async (_, record: EditableStockItem, originRow: EditableStockItem) => {
-                  if (record.batchNo) {
-                    record.batchNo = moment(originRow.batchNo);
-                    record.expiredDate = moment(record.batchNo).add(6, 'M');
-                  }
-                  record.price = record.division === 'FOC' ? 0 : record.price;
+                onSave: async (_, record: EditableStockItem) => {
+                  record.price = record.itemType === 'FOC' ? 0 : record.price;
                   const itInfo = record.itemInfo?.split('~');
                   if (itInfo && itInfo?.length > 1) {
                     const categoryId = parseInt(itInfo[3]);
@@ -388,7 +420,7 @@ const MMAApproval: React.FC<Props> = ({ data, onSave, ...props }) => {
                     record.itemId = parseInt(itInfo[0]);
                     record.itemName = itInfo[1];
                     record.stockCategoryId = categoryId === 1 ? 131 : categoryId === 2 ? 132 : 133;
-                    record.itemType = categoryId === 1 ? 131 : categoryId === 2 ? 132 : 133;
+                    record.itemType = 'FOC';
                     record.uom = itInfo[4];
                   }
                 },
@@ -396,6 +428,11 @@ const MMAApproval: React.FC<Props> = ({ data, onSave, ...props }) => {
                 actionRender: (_row, _config, dom) => [dom.save, dom.cancel],
               }}
               columns={[
+                {
+                  title: '#',
+                  readonly: true,
+                  dataIndex: 'index',
+                },
                 {
                   title: 'Product Name',
                   dataIndex: 'itemInfo',
@@ -425,7 +462,7 @@ const MMAApproval: React.FC<Props> = ({ data, onSave, ...props }) => {
                       allowClear: true,
                       ...config,
                       // disabled:true
-                      disabled: config.entity.division === 'STD' ? true : false,
+                      disabled: config.entity.itemType === 'STD' ? true : false,
                     };
                   },
                   valueType: 'select',
@@ -449,8 +486,8 @@ const MMAApproval: React.FC<Props> = ({ data, onSave, ...props }) => {
                   },
                 },
                 {
-                  title: 'Items Division',
-                  dataIndex: 'division',
+                  title: 'Items Type',
+                  dataIndex: 'itemType',
                   readonly: true,
                 },
                 {
@@ -485,6 +522,30 @@ const MMAApproval: React.FC<Props> = ({ data, onSave, ...props }) => {
                   hideInTable: true,
                 },
                 {
+                  title: 'FOC Type',
+                  dataIndex: 'focType',
+                  valueType: 'select',
+                  fieldProps: (_, config) => {
+                    return {
+                      ...config,
+                      allowClear: false,
+                      disabled: config.entity.itemType === 'STD' ? true : false,
+                    };
+                  },
+                  valueEnum: {
+                    distributor: {
+                      text: 'Distributor',
+                    },
+                    warehouse: {
+                      text: 'Warehouse',
+                    },
+                  },
+
+                  // renderFormItem: (_, {record}) => {
+                  //   return (</>);
+                  // },
+                },
+                {
                   dataIndex: 'price',
                   title: 'Unit Price',
                   align: 'right',
@@ -492,7 +553,7 @@ const MMAApproval: React.FC<Props> = ({ data, onSave, ...props }) => {
                   initialValue: 0,
                   renderFormItem: (_, { record }) => {
                     return (
-                      <InputNumber disabled={record?.division === 'FOC' ? true : false} min={0} />
+                      <InputNumber disabled={record?.itemType === 'FOC' ? true : false} min={0} />
                     );
                   },
                   formItemProps: {
@@ -504,7 +565,7 @@ const MMAApproval: React.FC<Props> = ({ data, onSave, ...props }) => {
                   align: 'right',
                   width: 120,
                   render: (_text, record, _, action) => [
-                    <>
+                    <Space key={`action_${record.id}`}>
                       <Tooltip title="Edit" key={`editable-${record.key}`}>
                         <Button
                           type="link"
@@ -514,35 +575,69 @@ const MMAApproval: React.FC<Props> = ({ data, onSave, ...props }) => {
                           }}
                         />
                       </Tooltip>
-
-                      {record.division === 'FOC' && (
-                        <Tooltip title="Delete" key={`delete-${record.key}`}>
-                          <Button
-                            type="link"
-                            danger
-                            icon={<DeleteOutlined />}
-                            onClick={() => {
+                      <Tooltip title="Delete" key={`delete-${record.key}`}>
+                        <Button
+                          type="link"
+                          danger
+                          icon={<DeleteOutlined />}
+                          onClick={() => {
+                            const deletedItem = () => {
                               const dataSourceItems = dataSource.filter(
                                 (it) => it.key !== record.key,
                               );
+                              dataSourceItems.map((e, index) => {
+                                e.index = index + 1;
+                                return e;
+                              });
                               setDataSource(dataSourceItems);
                               actionRef.current?.reload();
-                              // Modal.confirm({
-                              //   title: 'Delete Item ',
-                              //   content: 'are you sure ?',
-                              //   onOk: () => {
-                              //     const dataSourceItems = dataSource.filter(
-                              //       (it) => it.key !== record.key,
-                              //     );
-                              //     setDataSource(dataSourceItems);
-                              //     actionRef.current?.reload();
-                              //   },
-                              // });
-                            }}
-                          />
-                        </Tooltip>
-                      )}
-                    </>,
+                            };
+
+                            if (record.itemType === 'FOC') {
+                              deletedItem();
+                            } else {
+                              Modal.confirm({
+                                title: 'Delete Item ',
+                                content: 'are you sure ?',
+                                onOk: () => {
+                                  deletedItem();
+                                },
+                              });
+                            }
+                          }}
+                        />
+                      </Tooltip>
+                    </Space>,
+                    // <>
+
+                    //   {record.division === 'FOC' && (
+                    //     <Tooltip title="Delete" key={`delete-${record.key}`}>
+                    //       <Button
+                    //         type="link"
+                    //         danger
+                    //         icon={<DeleteOutlined />}
+                    //         onClick={() => {
+                    //           const dataSourceItems = dataSource.filter(
+                    //             (it) => it.key !== record.key,
+                    //           );
+                    //           setDataSource(dataSourceItems);
+                    //           actionRef.current?.reload();
+                    //           // Modal.confirm({
+                    //           //   title: 'Delete Item ',
+                    //           //   content: 'are you sure ?',
+                    //           //   onOk: () => {
+                    //           //     const dataSourceItems = dataSource.filter(
+                    //           //       (it) => it.key !== record.key,
+                    //           //     );
+                    //           //     setDataSource(dataSourceItems);
+                    //           //     actionRef.current?.reload();
+                    //           //   },
+                    //           // });
+                    //         }}
+                    //       />
+                    //     </Tooltip>
+                    //   )}
+                    // </>,
                   ],
                 },
               ]}

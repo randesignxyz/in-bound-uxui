@@ -32,9 +32,15 @@ const SapPosting: React.FC<Props> = ({ onPosting, items, offerCodes, ...props })
   };
 
   const isDuplicated = () => {
+    // const allTypes = items.map((e) => e.type!);
+    // console.log(allTypes);
+    // const t = offerCodes.filter((e) => allTypes.some((it) => it === e.saleType));
+    // console.log(t);
     return (
-      offerCodes.map((e) => e.saleType).filter((it, index, self) => self.indexOf(it) !== index)
-        .length > 0
+      offerCodes
+        // .filter((e) => allTypes.some((it) => it === e.saleType))
+        .map((e) => e.saleType)
+        .filter((it, index, self) => self.indexOf(it) !== index).length > 0
     );
   };
 
@@ -158,7 +164,7 @@ const SapPosting: React.FC<Props> = ({ onPosting, items, offerCodes, ...props })
                 },
                 {
                   key: 'offerCode',
-                  title: 'SAP Code',
+                  title: 'Offer Code',
                   dataIndex: 'offerCode',
                   valueType: 'select',
                   width: 200,

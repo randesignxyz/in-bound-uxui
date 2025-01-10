@@ -92,22 +92,22 @@ const ExpendableTable: React.FC<Props> = ({
                     <Button
                       danger
                       onClick={async () => {
-                        // setRemarkState({ visible: { open: true, carryData: parent } });
-                        Modal.confirm({
-                          title: 'Reject Suggestion.',
-                          content: 'Are you sure?',
-                          onOk: async () => {
-                            services
-                              .reject(data?.id)
-                              .then((p) => {
-                                message.success('The stock request was rejected.');
-                                onReload?.();
-                              })
-                              .catch((p) => {
-                                message.error(p.message);
-                              });
-                          },
-                        });
+                        setRemarkState({ visible: { open: true, carryData: data } });
+                        // Modal.confirm({
+                        //   title: 'Reject Suggestion.',
+                        //   content: 'Are you sure?',
+                        //   onOk: async () => {
+                        //     services
+                        //       .reject(data?.id)
+                        //       .then((p) => {
+                        //         message.success('The stock request was rejected.');
+                        //         onReload?.();
+                        //       })
+                        //       .catch((p) => {
+                        //         message.error(p.message);
+                        //       });
+                        //   },
+                        // });
                       }}
                       // onClick={()=>onReject?.()}
                     >
@@ -139,7 +139,8 @@ const ExpendableTable: React.FC<Props> = ({
                             data.requestedBy?.teamType === 'MMA' &&
                             data.requestedBy?.role === 'ROLE_VAN_SALE_LEADER'
                           ) {
-                            setModalApproveState({ state: { visible: true, data } });
+                            //setModalApproveState({ state: { visible: true, data } });
+                            message.error('Something went wrong with multiple roles.');
                             return;
                           }
                           onApprove(data.id);
@@ -335,7 +336,11 @@ const ExpendableTable: React.FC<Props> = ({
                 data?.comments?.length && (
                   <Card size="small">
                     {data?.comments?.map((p) => {
-                      return <Typography.Text type="secondary">{p?.description}</Typography.Text>;
+                      return (
+                        <Typography.Text type="secondary" key={p.id}>
+                          {p?.description}
+                        </Typography.Text>
+                      );
                     })}
                   </Card>
                 )
@@ -348,7 +353,7 @@ const ExpendableTable: React.FC<Props> = ({
               const requestQty = childData.reduce((p, c) => {
                 return p + c.quantity;
               }, 0);
-              const solQty = childData.reduce((p, c) => p + c.soldQty, 0);
+              // const solQty = childData.reduce((p, c) => p + c.soldQty, 0);
               return (
                 <Table.Summary.Row>
                   <Table.Summary.Cell index={0} align="right" colSpan={5}>
@@ -369,9 +374,7 @@ const ExpendableTable: React.FC<Props> = ({
                 title: 'Batch No',
                 // dataIndex: 'batchNo',
                 render: (_, r) => {
-                  return r.batchNo === undefined || r.batchNo === null
-                    ? '-'
-                    : r.batchNo === 'n/a'
+                  return r.batchNo === undefined || r.batchNo === null || r.batchNo === 'n/a'
                     ? '-'
                     : r.batchNo;
                 },
@@ -425,16 +428,23 @@ const ExpendableTable: React.FC<Props> = ({
         showAlertInfo
         onCancel={() => setRemarkState({ visible: undefined })}
         status="reject"
-        onSave={async (data) => {
-          services
-            .reject({
-              id: remarkState?.visible?.carryData?.id,
-              ...data,
-            })
-            .then((o) => {
-              message.success('Your rejection request was a success!');
-            });
+        onSave={async (remark) => {
+          const payload = {
+            ...remark,
+            id: data!.id,
+          };
           setRemarkState({ visible: undefined });
+          try {
+            const response = await services.reject(payload);
+            if (response.message.toLowerCase() === 'ok') {
+              message.success('Your rejection request was successful.');
+            } else {
+              message.error('Your rejection request was unsuccessful.');
+            }
+            onReload?.();
+          } catch (_) {
+            message.error('Something went worong');
+          }
         }}
       />
       <Modal
@@ -458,7 +468,9 @@ const ExpendableTable: React.FC<Props> = ({
           </Button>
           <Button
             onClick={() => {
-              modalApproveState?.state?.data && onApprove(modalApproveState?.state?.data.id);
+              if (modalApproveState?.state?.data) {
+                onApprove(modalApproveState?.state?.data.id);
+              }
               setModalApproveState({ state: undefined });
             }}
           >

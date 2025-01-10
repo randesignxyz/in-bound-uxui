@@ -122,6 +122,7 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({}) => {
       : access.canAccessTabCashier
       ? 'cashier'
       : 'admin';
+      
     return actions.loadListItem?.({ role: role, ...criteria }, pagination, sort).then((it) => {
       return cacheList.cacheDataList({
         type: 'stock',
@@ -450,7 +451,7 @@ const SuggestionListView: React.FC<TableViewProps<StockControlLess>> = ({}) => {
   };
 
   const expandedRowRender = (parent: StockControlLess) => {
-    // const isCountStock = parent.status === 'count stock';
+    const isCountStock = parent.status === 'count stock';
 
     return (parent.items && parent.items.length > 0) ||
       (parent.invoices && parent.invoices.length > 0) ? (

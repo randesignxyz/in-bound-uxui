@@ -5,8 +5,8 @@ import { DriverDTO } from '@/pages/fleet/driver/data';
 import { FuelDTO } from '@/pages/fleet/fuel/data';
 import { InspectionDTO } from '@/pages/fleet/inspection/data';
 import { MaintenneceDTO } from '@/pages/fleet/maintenance/data';
-import { ServiceReminderDTO } from '@/pages/fleet/servicereminder/data';
 import { ServiceTasksDTO } from '@/pages/fleet/serviceTask/data';
+import { ServiceReminderDTO } from '@/pages/fleet/servicereminder/data';
 import { MeterHistoryDTO, VehicleListItem } from '@/pages/fleet/vehicle/data';
 import { StaffRequisitionRequest } from '@/pages/hrm/data';
 import type { CategoryDto } from '@/pages/sale/retailer/category/data';
@@ -41,254 +41,260 @@ import {
 import { useState } from 'react';
 import { Paging } from '../services/API';
 
+import { Term } from '@/pages/crm/term/types';
+import { DocumentationDTO } from '@/pages/dms/documentation/data';
+import { CategoryDTO } from '@/pages/dms/setting/components/category/data';
+import { ShareDTO } from '@/pages/dms/share/data';
 import { TankTransactionDTO } from '@/pages/fleet/fuelStock/data';
 import { AppraisalEmp } from '@/pages/hrm/appraisal-submit/data.types';
-import { CategoryDTO } from '@/pages/dms/setting/components/category/data';
-import { DocumentationDTO } from '@/pages/dms/documentation/data';
-import { ShareDTO } from '@/pages/dms/share/data';
-import { Term } from '@/pages/crm/term/types';
 import { TransferRequest } from '@/pages/prod/inventory-transfer-request/data';
 
 type DataList =
   | {
-    type: 'sales-product-item';
-    criteria?: any;
-    data: Paging<ProductItem>;
-  }
+      type: 'sales-product-item';
+      criteria?: any;
+      data: Paging<ProductItem>;
+    }
   | {
-    type: 'list-notification';
-    criteria?: any;
-    data: Paging<NotificationLess>;
-  }
+      type: 'list-notification';
+      criteria?: any;
+      data: Paging<NotificationLess>;
+    }
   | {
-    type: 'visit-schedule';
-    criteria?: any;
-    data: Paging<VisitScheduleItem>;
-  }
+      type: 'visit-schedule';
+      criteria?: any;
+      data: Paging<VisitScheduleItem>;
+    }
   | {
-    type: 'visit-plan';
-    criteria?: any;
-    data: Paging<VisitPlanListItem>;
-  }
+      type: 'visit-plan';
+      criteria?: any;
+      data: Paging<VisitPlanListItem>;
+    }
   | {
-    type: 'customer';
-    criteria?: any;
-    data: Paging<CustomerItemLess>;
-  }
+      type: 'customer';
+      criteria?: any;
+      data: Paging<CustomerItemLess>;
+    }
   | {
-    type: 'contract';
-    criteria?: any;
-    data: Paging<ContractLess>;
-  }
+      type: 'contract';
+      criteria?: any;
+      data: Paging<ContractLess>;
+    }
   | {
-    type: 'sale-order';
-    criteria?: any;
-    data: Paging<SoItemLess>;
-  }
+      type: 'sale-order';
+      criteria?: any;
+      data: Paging<SoItemLess>;
+    }
   | {
-    type: 'sale-order-delivery';
-    criteria?: any;
-    data: Paging<SoDeliveryDetail>;
-  }
+      type: 'sale-order-delivery';
+      criteria?: any;
+      data: Paging<SoDeliveryDetail>;
+    }
   | {
-    type: 'registration-form';
-    criteria?: any;
-    data: Paging<RegistrationForm>;
-  }
+      type: 'registration-form';
+      criteria?: any;
+      data: Paging<RegistrationForm>;
+    }
   | {
-    type: 'trade-offer';
-    criteria?: any;
-    data: Paging<PackagesLess>;
-  }
+      type: 'trade-offer';
+      criteria?: any;
+      data: Paging<PackagesLess>;
+    }
   | {
-    type: 'stock-control';
-    criteria?: any;
-    data: Paging<StockControlLess>;
-  }
+      type: 'stock-control';
+      criteria?: any;
+      data: Paging<StockControlLess>;
+    }
   | {
-    type: 'sale-invoice';
-    criteria?: any;
-    data: Paging<SaleInvoiceLess>;
-  }
+      type: 'sale-invoice';
+      criteria?: any;
+      data: Paging<SaleInvoiceLess>;
+    }
   | {
-    type: 'team-work';
-    criteria?: any;
-    data?: Paging<TeamWorkLess>;
-  }
+      type: 'team-work';
+      criteria?: any;
+      data?: Paging<TeamWorkLess>;
+    }
   | {
-    type: 'stockStore';
-    criteria?: any;
-    data?: Paging<StockStoreLess>;
-  }
+      type: 'stockStore';
+      criteria?: any;
+      data?: Paging<StockStoreLess>;
+    }
   | {
-    type: 'settlement';
-    criteria?: any;
-    data?: Paging<SettlementLess>;
-  }
+      type: 'settlement';
+      criteria?: any;
+      data?: Paging<SettlementLess>;
+    }
   | {
-    type: 'ticket-incident';
-    criteria?: any;
-    data?: Paging<IncidentLess>;
-  }
+      type: 'ticket-incident';
+      criteria?: any;
+      data?: Paging<IncidentLess>;
+    }
   | {
-    type: 'pro-pr';
-    criteria?: any;
-    data?: Paging<RequisitionLess>;
-  }
+      type: 'pro-pr';
+      criteria?: any;
+      data?: Paging<RequisitionLess>;
+    }
   | {
-    type: 'lead-ld';
-    criteria?: any;
-    data?: Paging<LeadDetail>;
-  }
+      type: 'lead-ld';
+      criteria?: any;
+      data?: Paging<LeadDetail>;
+    }
   | {
-    type: 'retailer-product';
-    criteria?: any;
-    data?: Paging<ProductDto>;
-  }
+      type: 'retailer-product';
+      criteria?: any;
+      data?: Paging<ProductDto>;
+    }
   | {
-    type: 'retailer-category';
-    criteria?: any;
-    data?: Paging<CategoryDto>;
-  }
+      type: 'retailer-category';
+      criteria?: any;
+      data?: Paging<CategoryDto>;
+    }
   | {
-    type: 'retailer-ingredient';
-    criteria?: any;
-    data?: Paging<IngredientDto>;
-  }
+      type: 'retailer-ingredient';
+      criteria?: any;
+      data?: Paging<IngredientDto>;
+    }
   | {
-    type: 'retailer-pricing';
-    criteria?: any;
-    data?: Paging<ItemsPricing>;
-  }
+      type: 'retailer-pricing';
+      criteria?: any;
+      data?: Paging<ItemsPricing>;
+    }
   | {
-    type: 'retailer-group-customer';
-    criteria?: any;
-    data?: Paging<GroupCustomer>;
-  }
+      type: 'retailer-group-customer';
+      criteria?: any;
+      data?: Paging<GroupCustomer>;
+    }
   | {
-    type: 'retailer-customer';
-    criteria?: any;
-    data?: Paging<CustomerDto>;
-  }
+      type: 'retailer-customer';
+      criteria?: any;
+      data?: Paging<CustomerDto>;
+    }
   | {
-    type: 'retailer-order';
-    criteria?: any;
-    data?: Paging<PurchaseOrderDto>;
-  }
+      type: 'retailer-order';
+      criteria?: any;
+      data?: Paging<PurchaseOrderDto>;
+    }
   | {
-    type: 'fleet-vehicle';
-    criteria?: any;
-    data?: Paging<VehicleListItem>;
-  }
+      type: 'fleet-vehicle';
+      criteria?: any;
+      data?: Paging<VehicleListItem>;
+    }
   | {
-    type: 'staff-requisition';
-    criteria?: any;
-    data?: Paging<StaffRequisitionRequest>;
-  }
+      type: 'staff-requisition';
+      criteria?: any;
+      data?: Paging<StaffRequisitionRequest>;
+    }
   | {
-    type: 'fleet-vehicle';
-    criteria?: any;
-    data?: Paging<VehicleListItem>;
-  }
+      type: 'fleet-vehicle';
+      criteria?: any;
+      data?: Paging<VehicleListItem>;
+    }
   | {
-    type: 'fleet-inspection';
-    criteria?: any;
-    data?: Paging<InspectionDTO>;
-  }
+      type: 'fleet-inspection';
+      criteria?: any;
+      data?: Paging<InspectionDTO>;
+    }
   | {
-    type: 'fleet-maintenance';
-    criteria?: any;
-    data?: Paging<MaintenneceDTO>;
-  }
+      type: 'fleet-maintenance';
+      criteria?: any;
+      data?: Paging<MaintenneceDTO>;
+    }
   | {
-    type: 'fleet-fuel';
-    criteria?: any;
-    data?: Paging<FuelDTO>;
-  }
+      type: 'fleet-fuel';
+      criteria?: any;
+      data?: Paging<FuelDTO>;
+    }
   | {
-    type: 'fleet-driver';
-    criteria?: any;
-    data?: Paging<DriverDTO>;
-  }
+      type: 'fleet-driver';
+      criteria?: any;
+      data?: Paging<DriverDTO>;
+    }
   | {
-    type: 'fleet-accident';
-    criteria?: any;
-    data?: Paging<AccidentDTO>;
-  }
+      type: 'fleet-accident';
+      criteria?: any;
+      data?: Paging<AccidentDTO>;
+    }
   | {
-    type: 'fleet-accessories';
-    criteria?: any;
-    data?: Paging<AccessoriesDTO>;
-  }
+      type: 'fleet-accessories';
+      criteria?: any;
+      data?: Paging<AccessoriesDTO>;
+    }
   | {
-    type: 'fleet-service-task';
-    criteria?: any;
-    data?: Paging<ServiceTasksDTO>;
-  }
+      type: 'fleet-service-task';
+      criteria?: any;
+      data?: Paging<ServiceTasksDTO>;
+    }
   | {
-    type: 'fleet-meter-history';
-    criteria?: any;
-    data?: Paging<MeterHistoryDTO>;
-  }
+      type: 'fleet-meter-history';
+      criteria?: any;
+      data?: Paging<MeterHistoryDTO>;
+    }
   | {
-    type: 'fleet-service-task';
-    criteria?: any;
-    data?: Paging<ServiceTasksDTO>;
-  }
+      type: 'fleet-service-task';
+      criteria?: any;
+      data?: Paging<ServiceTasksDTO>;
+    }
   | {
-    type: 'fleet-fuel-transaction';
-    criteria?: any;
-    data?: Paging<TankTransactionDTO>;
-  }
+      type: 'fleet-fuel-transaction';
+      criteria?: any;
+      data?: Paging<TankTransactionDTO>;
+    }
   | {
-    type: 'fleet-vendor';
-    criteria?: any;
-    data?: Paging<VendorDTO>;
-  }
+      type: 'fleet-vendor';
+      criteria?: any;
+      data?: Paging<VendorDTO>;
+    }
   | {
-    type: 'fleet-maintenance-plan';
-    criteria?: any;
-    data?: Paging<ServiceReminderDTO>;
-  }
+      type: 'fleet-maintenance-plan';
+      criteria?: any;
+      data?: Paging<ServiceReminderDTO>;
+    }
   | {
-    type: 'dms-category';
-    criteria?: any;
-    data?: Paging<CategoryDTO>;
-  }
+      type: 'dms-category';
+      criteria?: any;
+      data?: Paging<CategoryDTO>;
+    }
   | {
-    type: 'dms-document';
-    criteria?: any;
-    data?: Paging<DocumentationDTO>;
-  }
+      type: 'dms-document';
+      criteria?: any;
+      data?: Paging<DocumentationDTO>;
+    }
   | {
-    type: 'dms-department';
-    criteria?: any;
-    data?: Paging<DepartmentDTO>;
-  }
+      type: 'dms-department';
+      criteria?: any;
+      data?: Paging<DepartmentDTO>;
+    }
   | {
-    type: 'dms-share';
-    criteria?: any;
-    data?: Paging<ShareDTO>;
-  }
+      type: 'dms-share';
+      criteria?: any;
+      data?: Paging<ShareDTO>;
+    }
   | {
-    type: 'incentive-settlement';
-    criteria?: any;
-    data: Paging<IncentiveSettlement>;
-  }
+      type: 'incentive-settlement';
+      criteria?: any;
+      data: Paging<IncentiveSettlement>;
+    }
   | {
-    type: 'appraisal-submit';
-    criteria?: any;
-    data: Paging<AppraisalEmp>;
-  }| {
-    type: 'term';
-    criteria?: any;
-    data: Paging<Term>;
-  }
+      type: 'appraisal-submit';
+      criteria?: any;
+      data: Paging<AppraisalEmp>;
+    }
   | {
-    type: 'transfer-request-list';
-    criteria?: any;
-    data: Paging<TransferRequest>;
-  };
+      type: 'term';
+      criteria?: any;
+      data: Paging<Term>;
+    }
+  | {
+      type: 'transfer-request-list';
+      criteria?: any;
+      data: Paging<TransferRequest>;
+    }
+  | {
+      type: 'stock';
+      criteria?: any;
+      data: Paging<StockControlLess>;
+    };
 
 type MomainType =
   | 'sales-product-item'
@@ -336,7 +342,8 @@ type MomainType =
   | 'dms-share'
   | 'dms-document'
   | 'term'
-  | 'transfer-request-list';
+  | 'transfer-request-list'
+  | 'stock';
 
 export default () => {
   const [cacheData, seCacheData] = useState<DataList>();

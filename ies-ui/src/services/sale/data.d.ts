@@ -457,39 +457,6 @@ export interface ApprovalStockControlDto {
   distributorCode?: string;
 }
 
-export interface MMAAprovalEntity {
-  stockControlId?: number;
-  description?: string;
-  referenceNo?: string;
-  receivedBy?: string;
-  items?: EditableStockItem[];
-  distributorCode?: string;
-  distributorName?: string;
-  distributorPhone?: string;
-  distributorId?: number;
-  addressId?: number;
-  latitude?: string;
-  longitude?: string;
-  shippingAddressId?: number;
-  address?: string;
-}
-
-export interface MMAApprovalStockItemDto {
-  id: number;
-  itemCode: string;
-  quantity: number;
-  isBeginning: boolean;
-  batchNo: string;
-  expiredDate?: moment.Moment;
-  isSplit: boolean;
-  stockCategoryId?: number;
-  internalId?: string;
-  price: number;
-  itemId: number;
-  itemName: string;
-  division: string;
-}
-
 export interface ApprovalStockItemDto {
   id: number;
   itemCode: string;

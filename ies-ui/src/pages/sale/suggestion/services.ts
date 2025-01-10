@@ -36,11 +36,11 @@ const SuggestionActions = {
     actionName: 'exchange-rate',
     payload: {},
   }),
-  reject: (id?: number): ServiceApiType<{ id?: number }> => ({
+  reject: (param: RemarkParam): ServiceApiType<RemarkParam> => ({
     type: 'EXEC',
     actionName: 'reject-request-stock',
     endpoint: 'SALE',
-    payload: { id },
+    payload: param,
   }),
   aceptedRequest: (id?: number): ServiceApiType<{ id?: number }> => ({
     type: 'EXEC',
@@ -122,7 +122,10 @@ export const SuggestionServiceAPI = (requestActions: RequestActions) => {
       singleRequest<ExchangeRate>(SuggestionActions.exchangeRage())(
         requestActions,
       ) as Promise<ExchangeRate>,
-    reject: (id?: number) => singleRequest(SuggestionActions.reject(id))(requestActions),
+    reject: (payload: RemarkParam) =>
+      singleRequest<{ id: number; message: string }>(SuggestionActions.reject(payload))(
+        requestActions,
+      ) as Promise<{ id: number; message: string }>,
     aceptRequestStock: (id?: number) =>
       singleRequest(SuggestionActions.aceptedRequest(id))(requestActions),
     approveStockRequest: (param: ApprovalStockControlDto) =>

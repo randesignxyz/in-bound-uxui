@@ -93,6 +93,23 @@ export interface GratisVerifyItem {
   actionCode: string;
   invoices?: GratisInvoice[];
 }
+export interface GratisVerifyItemDetail {
+  id: number;
+  docNum: string;
+  canceled: string;
+  docDate:  moment.Moment;
+  itemCode: string;
+  qty: number;
+  itemName: string;
+  description: string;
+  uomCode: string;
+  customerCode: string;
+  customerId: number;
+  contractVerifyId: number;
+  gContractId: number;
+  incentiveSettlementId: number;
+  dataSource: string
+}
 export interface GratisVerifySchedule {
   id: number,
   scheduledDate: moment.Moment;
@@ -174,9 +191,9 @@ export interface GratisContractViewData {
   posmItems?: POSMView[]
 }
 
-export interface SettlementSearchDate {
-  contractTypeId?: number[];
+export interface SettlementSearchDate { 
   contractTypeGroupCode?: string;
+  contractTypeId?: number[];
   dateFrom?: moment.Moment;
   dateTo?: moment.Moment;
   frenquency?: string;
@@ -278,6 +295,7 @@ export interface SearchCriteria {
   filter?: string;
   dateFrom?: moment.Moment;
   dateTo?: moment.Moment;
+  suggestFields?: string[];
 }
 export interface GratisVisitScheduleParams {
   gVerifyId?: number;
@@ -377,6 +395,11 @@ export type ApprovalRequestPayload = {
   requesterBuId: number;
 }
 
+export type GratisSuggestionItem = {
+  ds: string;
+  value: number
+}
+
 export type GratisSuggestedCustomer = {
   id: number;
   incentiveSettlementId: number;
@@ -400,6 +423,7 @@ export type GratisSuggestedCustomer = {
   soInvQty: number;
   totalQty: number;
   gratisSettlementConfigId?: number;
+  items?: GratisSuggestionItem[];
 }
 export interface GratisSuggestedCustomerVisit {
   id: number,

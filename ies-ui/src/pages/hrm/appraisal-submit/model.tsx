@@ -80,7 +80,7 @@ export const Model = () => {
             rated2 = true
             checkRating = 'r2'
         }else if(hasRating2 && (rated1 && rated2 && currentAssign3)){
-                status = actionStatus=='DRAFTED'?'REVIEWING':'REVIEWED'
+                status = actionStatus=='DRAFTED'?'REVIEWING':'COMPLETED'
                 rated3 = true
                 checkRating = 'r3'
         }else if(!hasRating2 && (rated1 && currentAssign3)){

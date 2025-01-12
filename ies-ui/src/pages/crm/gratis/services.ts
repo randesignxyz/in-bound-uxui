@@ -2,7 +2,7 @@ import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { execDataService, execDataService0, fetchDataItemService, fetchDataListService, fetchDataPagingService } from "@/services/apiGateway";
 import { ContractLess } from "@/services/crm/contract";
 // import { LookupDataItem, LookupDataItem3 } from "@/services/data";
-import { AdjustItem, AdjustInfoOn, CreateSettlemenDate, GratisContract, GratisContractViewData, GratisVerifyItem, HistoryItem, IncentiveSettlement, LookupDataItem,  SaveChangeStatusData,  SaveGratisContractCheckListData, SearchCriteria, SettlementCycle, SettlementCycleActivity, SettlementCycleAdvanceSearchParams, SettlementSearchDate, VerifyGratisContact, ItemSAP, GratisVerifySchedule, ApprovalRequestPayload, GratisSuggestedCustomer, GratisSuggestedCustomerVisit, GratisVisitScheduleParams, GratisAdvanceSearchParams } from "./types";
+import { AdjustItem, AdjustInfoOn, CreateSettlemenDate, GratisContract, GratisContractViewData, GratisVerifyItem, HistoryItem, IncentiveSettlement, LookupDataItem,  SaveChangeStatusData,  SaveGratisContractCheckListData, SearchCriteria, SettlementCycle, SettlementCycleActivity, SettlementCycleAdvanceSearchParams, SettlementSearchDate, VerifyGratisContact, ItemSAP, GratisVerifySchedule, ApprovalRequestPayload, GratisSuggestedCustomer, GratisSuggestedCustomerVisit, GratisVisitScheduleParams, GratisAdvanceSearchParams, GratisVerifyItemDetail } from "./types";
 import moment from "moment";
 
 export const GratisServices = {
@@ -120,6 +120,12 @@ export const GratisServices = {
         responseKey: 'contractTypesByGroupCode',
         endpoint: 'CRM',
     }),
+    gratisSuggestFields: () => fetchDataListService<LookupDataItem>({
+        actionName: 'lookupDataList',
+        responseKey: 'gratisSuggestFields',
+        endpoint: 'CRM',
+        payload: {list: ['GRATIS_SUGGESTION_FIELD']}
+    }),
     listLookupTarget: () => fetchDataListService<LookupDataItem>({       
         actionName: 'list-gratis-target',
         responseKey: 'gratisTarget',
@@ -163,6 +169,11 @@ export const GratisServices = {
     }),
     fetchGratisVerifyItemList: (criteria:SearchCriteria) => fetchDataListService<GratisVerifyItem, any>({
         actionName: 'list-gratis-verify-item',
+        endpoint: 'CRM',
+        payload: criteria
+    }),
+    fetchGratisVerifyItemDetailList: (criteria:SearchCriteria) => fetchDataListService<GratisVerifyItemDetail, any>({
+        actionName: 'list-gratis-verify-item-detail',
         endpoint: 'CRM',
         payload: criteria
     }),
@@ -213,6 +224,11 @@ export const GratisServices = {
         actionName: 'remove-g-contract-verify-tran',
         endpoint: 'CRM',
         payload: {id:id},
+    }),
+    removeGContractVerifyTranIds: (items:number[]) => execDataService0<{items:number[]}>({
+        actionName: 'remove-g-contract-verify-tran-ids',
+        endpoint: 'CRM',
+        payload: {items},
     }),
     fetchHistoryGratisTransList: (criteria:SearchCriteria) => fetchDataListService<HistoryItem, any>({
         actionName: 'list-gratis-history-trans',

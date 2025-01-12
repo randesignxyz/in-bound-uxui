@@ -149,7 +149,7 @@ export default (props: ActionDataFormProps) => {
                     }
 
                     if(files.length<=1) {
-                        message.error("Atless two attachment files is required.")
+                        message.error("At least two attachment files is required.")
                         return
                     }
                     const dataForm = await form.validateFields() 
@@ -200,11 +200,11 @@ export default (props: ActionDataFormProps) => {
             }}
             uploadProps= {{
                 required: true,
-                message: 'Atless two attachment fils is required.'
+                message: 'Please attach 1. Employee’s self-evaluation and 2. Onboarding Checklist'
             }}
         >
              <ProForm form={form}  submitter={false}>
-                <ProCard title="PERFORMANCE" 
+                <ProCard title="EVALUATION" 
                     collapsible  
                     size="small"
                     bordered headerBordered 

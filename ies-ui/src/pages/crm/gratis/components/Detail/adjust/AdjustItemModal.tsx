@@ -37,7 +37,7 @@ const AdjustItemModal= ({trigger, initData, addHandler}:Props)=>{
     >
         <ProCard bordered direction="row">
             <Descriptions column={2}>                
-                <Descriptions.Item label='Invoice/SO' >{initData?.docNum}</Descriptions.Item>
+                <Descriptions.Item label='Doc Num' >{initData?.docNum}</Descriptions.Item>
                 <Descriptions.Item label='Description' span={2}>{initData?.dscription}</Descriptions.Item>
                 <Descriptions.Item label='Item Code' >{initData?.itemCode}</Descriptions.Item>
                 <Descriptions.Item label='Item Name' >{initData?.itemName}</Descriptions.Item>

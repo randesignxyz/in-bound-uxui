@@ -1,5 +1,5 @@
 import { ActionType, CheckCard, ProCard, ProFormDateRangePicker, ProTable } from "@ant-design/pro-components"
-import { Button, Descriptions, Input, Modal, Radio, Space, Spin, Table, Tag, Tooltip, message } from "antd"
+import { Button, Descriptions, Flex, Input, Modal, Radio, Space, Spin, Table, Tag, Tooltip, message } from "antd"
 import { AdjustCustomerVisitSchedule, AdjustItem, GratisContract, GratisVerifyItem, GratisVerifySchedule, SearchCriteria, VerifyGratisContact } from "../../types"
 import { GratisServices } from "../../services"
 import { simpleRequestActions } from "@/services/model"
@@ -8,13 +8,14 @@ import GratisVerifytemList from "./GratisVerifytemList"
 import { useEffect, useRef, useState } from "react"
 import { formatDate, getColorStatus, toReadable } from "@/pages/utils"
 import HistoryAdjustmentTransactionList from "./HistoryAdjustmentTransactionList"
-import { EditOutlined, SelectOutlined } from "@ant-design/icons"
+import { DeleteOutlined, EditOutlined, SelectOutlined } from "@ant-design/icons"
 import Status from "@/components/Status"
 import Icon from "@ant-design/icons/lib/components/Icon"
 import moment from "moment"
 import AdjDirectListItemSearchModal from "./adjust/AdjDirectListItemSearchModal"
 import { useSafeState } from "ahooks"
 import AdjOtherCustomerVisitSearchModal from "./adjust/AdjOtherCustomerVisitSearchModal"
+import RemoveAdjustTranModal from "./adjust/RemoveAdjustTranModal"
 
 interface Props{
     isVerify: boolean;
@@ -69,7 +70,11 @@ const VerifyContractByMonthView= ({isVerify,gSettledId,gContractId, groupTypeCod
     
     const toolBarRender=(id: number)=> 
         (isVerify) ? [            
-            isDirect&&<AdjustTranModal verifyId={id} customerCode={gContract?.customer.code} title={'Adjustment'} onSave={(status, remarks, adjItems, cb) => adjustHandler(id, adjItems, cb)} trigger={<Button type='link' icon={<EditOutlined/>}>Adjust</Button>} />,
+            isDirect&& <Flex gap={0}>
+                <RemoveAdjustTranModal verifyId={id} customerCode={gContract?.customer.code} title={'Remove Adjustment'} 
+                        onSave={(status, remarks, adjItems, cb) => removeadjustByIdsHandler(id, adjItems, cb)} trigger={<Button type='link' danger icon={<DeleteOutlined/>}>Remove</Button>} />
+                <AdjustTranModal verifyId={id} customerCode={gContract?.customer.code} title={'Add Adjustment'} onSave={(status, remarks, adjItems, cb) => adjustHandler(id, adjItems, cb)} trigger={<Button type='link' icon={<EditOutlined/>}>Add</Button>} />
+            </Flex>,
             isInDirect&&<AdjDirectListItemSearchModal verifyId={id} customerCode={gContract?.customer.code} addHandler={(adjItems, cb) => adjustHandler(id, adjItems, cb)}   trigger={<Button type='link' icon={<EditOutlined/>}>Adjust</Button>}/>,
             isOther&&<AdjOtherCustomerVisitSearchModal gSettledId={gSettledId} verifyId={id} customerCode={`${gContract?.customer.code} - ${gContract?.customer.name}`} addHandler={(adjItems, cb) => adjustCustomerVisitScheduleHandler(id, adjItems, cb)}   trigger={<Button type='link' icon={<EditOutlined/>}>Adjust {gContract?.contracts?.find(i=> i.id==id)?.totalCustomerVisitUpdated||0>0?supTitle(gContract?.contracts?.find(i=> i.id==id)?.totalCustomerVisitUpdated||0):''}</Button>}/>
         ] : []
@@ -87,8 +92,7 @@ const VerifyContractByMonthView= ({isVerify,gSettledId,gContractId, groupTypeCod
     const adjustHandler = (verifyId: number,adjItems: AdjustItem[]  , cb:(v: boolean)=>void)=>{       
         if(adjItems && adjItems.length==0) {
             message.warning('No data selected')
-        }else{
-            console.log('save adjs',adjItems)
+        }else{            
             Modal.confirm({
                 title: "", content: 'Are you sure?', 
                 onOk: async () => {
@@ -108,6 +112,26 @@ const VerifyContractByMonthView= ({isVerify,gSettledId,gContractId, groupTypeCod
     const removeHandler =() =>{  
         onFinish()
     } 
+    const removeadjustByIdsHandler = (verifyId: number,adjItems: number[]  , cb:(v: boolean)=>void)=>{  
+        if(adjItems && adjItems.length==0) {
+            message.warning('No data selected')
+        }else{            
+            Modal.confirm({
+                title: "", content: 'Are you sure?', 
+                onOk: async () => {
+                    try {
+                        await GratisServices.removeGContractVerifyTranIds(adjItems)(requestActions)                       
+                        cb(true)
+                        actionRef.current?.reload()
+                        onFinish()
+                        loadData()
+                    }catch (error: any) {
+                        message.error(error.message || 'Failed to remove.')
+                    }
+                }
+            })  
+        }      
+    }
     
     const onSearchHandler = (value: string) => {
         setCriteria(v => ({ ...v, searchValue: value }));
@@ -197,7 +221,7 @@ const VerifyContractByMonthView= ({isVerify,gSettledId,gContractId, groupTypeCod
                 setting: false,
             }} 
             request={ async(page: any)=>{
-                const rs = await GratisServices.fetchGratisVerifyScheduleList({...criteria,id:verifyContract.id}||{id:verifyContract.id}).query(requestActions)
+                const rs = await GratisServices.fetchGratisVerifyScheduleList({...criteria,id:verifyContract.id}).query(requestActions)               
                 return{               
                     success: true, 
                     total: rs.length || 0,
@@ -257,6 +281,7 @@ const VerifyContractByMonthView= ({isVerify,gSettledId,gContractId, groupTypeCod
         {groupTypeCode!='OTHER' &&<ProTable<GratisVerifyItem> search={false} 
             actionRef={actionRef}
             cardProps={false}
+            pagination={false}
             options={{
                 fullScreen: false,
                 density: false,
@@ -303,7 +328,7 @@ const VerifyContractByMonthView= ({isVerify,gSettledId,gContractId, groupTypeCod
                 </div>
             }
             request={ async(page: any)=>{
-                const rs = await GratisServices.fetchGratisVerifyItemList({...criteria,id:verifyContract.id}||{id:verifyContract.id}).query(requestActions)
+                const rs = await GratisServices.fetchGratisVerifyItemList({...criteria,id:verifyContract.id}).query(requestActions)
                 return{               
                     success: true, 
                     total: rs.length || 0,

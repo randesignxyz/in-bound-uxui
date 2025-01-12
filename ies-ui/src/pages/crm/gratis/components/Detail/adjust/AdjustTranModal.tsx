@@ -83,7 +83,7 @@ interface Props extends ModalFormProps<{status:string, remarks: string}>{
                         dataIndex:'dscription',
                         render:(_,r)=> toReadable(r.dscription)
                     },
-                    {title:'Invoice/SO', dataIndex:'docNum'},
+                    {title:'Doc Num', dataIndex:'docNum'},
                     {title:'Item Code', dataIndex:'itemCode'},
                     {title:'Item Name', dataIndex:'itemName'},
                     {title:'Qty', dataIndex:'qty'},

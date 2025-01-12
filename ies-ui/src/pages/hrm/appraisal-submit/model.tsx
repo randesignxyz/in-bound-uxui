@@ -79,12 +79,21 @@ export const Model = () => {
             status = actionStatus == 'DRAFTED' ? 'SUBMITTING' : reviewed ? 'COMPLETED' : 'SUBMITTED'
             rated2 = true
             checkRating = 'r2'
+<<<<<<< HEAD
         } else if (hasRating2 && (rated1 && rated2 && currentAssign3)) {
             status = actionStatus == 'DRAFTED' ? 'REVIEWING' : 'COMPLETED'
             rated3 = true
             checkRating = 'r3'
         } else if (!hasRating2 && (rated1 && currentAssign3)) {
             status = actionStatus == 'DRAFTED' ? 'SUBMITTED' : 'COMPLETED'
+=======
+        }else if(hasRating2 && (rated1 && rated2 && currentAssign3)){
+                status = actionStatus=='DRAFTED'?'REVIEWING':'COMPLETED'
+                rated3 = true
+                checkRating = 'r3'
+        }else if(!hasRating2 && (rated1 && currentAssign3)){
+            status = actionStatus=='DRAFTED'?'SUBMITTED':'COMPLETED' 
+>>>>>>> origin/skh-03
             rated3 = true
             checkRating = 'r3'
         }

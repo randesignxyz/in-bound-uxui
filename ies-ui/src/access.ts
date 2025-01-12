@@ -980,5 +980,9 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_HR_APPRAISAL_ALLOW_SUBMIT_PARTIAL'].some((it) => it === item),
       ) || false, 
+      isAccessNCMRequestCriteriaExportReport:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_NCM_REQUEST_CRITERIA_EXPORT_REPORT'].some((it) => it === item),
+      ) || false,   
   };
 }

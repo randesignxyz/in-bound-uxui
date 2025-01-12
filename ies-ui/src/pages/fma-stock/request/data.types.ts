@@ -26,6 +26,7 @@ export interface StockRequestListItem {
   status?: string
   returnDate?: Moment
   returnType?: string
+  warehouseFrom?: string
 } 
 export interface StockRequestLess {
   id: number;

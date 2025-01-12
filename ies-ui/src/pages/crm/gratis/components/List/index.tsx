@@ -90,7 +90,8 @@ const cols = (): ProColumns<IncentiveSettlement>[] => ([
         },{
         title: 'Status',
         render: (_, item) => {
-            const stausText = (item?.requestStatus=='NONE'||item?.status!='PENDING')?  item?.status: (item?.requestStatus=='COMPLETED'?'APPROVED':item?.requestStatus)
+            // const stausText = (item?.requestStatus=='NONE'||item?.status!='PENDING')?  item?.status: (item?.requestStatus=='COMPLETED'?'APPROVED':item?.requestStatus)
+            const stausText = item?.status
             return <Status value={stausText} text={stausText||'PENDING'}/>
         }
     }

@@ -126,6 +126,7 @@ const AppraisalViewDetail = (props: Props) => {
     // const isSubmitForm = ((currentAssign1 && (currentDrafted || !rated1)) || (currentAssign2 && (currentDrafted || !rated2)) || (currentAssign3 && (currentDrafted || !rated3)))
     const isSaveDraft = ((currentAssign1 && (currentDrafted || (!rated1 && !isDrafted))) || (currentAssign2 && (currentDrafted || (!rated2 && !isDrafted))) || (currentAssign3 && (currentDrafted || (!rated3 && !isDrafted))))
     const isSubmitForm = (
+<<<<<<< HEAD
         (currentAssign1 && (currentDrafted || (!rated1 && !isDrafted))) ||
         (hasRating2 && (
             (currentAssign2 && (currentDrafted || (!rated2 && !isDrafted))) ||
@@ -135,6 +136,16 @@ const AppraisalViewDetail = (props: Props) => {
 
 
     const saveDraftHandler = async () => {
+=======
+            (currentAssign1 && (currentDrafted || (!rated1 && !isDrafted))) || 
+            (hasRating2 &&  (
+                (currentAssign2 && (currentDrafted || (!rated2 && !isDrafted))) || 
+                (currentAssign3 && (currentDrafted || (!rated3 && !isDrafted)))
+            ))
+        )
+    
+    const saveDraftHandler =async () =>{       
+>>>>>>> origin/skh-03
         try {
             var status = actions.getStatus('DRAFTED', dataDetail)
             var validatorList = data.appraisalRatingValidation(lang, appraisal || [])

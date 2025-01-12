@@ -147,7 +147,7 @@ export interface Pagination {
 
 type ParamData = {
   key: string;
-  // type: 'int' | 'double' | 'float' | 'string' | 'boolean' | 'date' | 'dateTime';
+  type?: 'int' | 'double' | 'float' | 'string' | 'boolean' | 'date' | 'dateTime';
   value?: any;
 }
 

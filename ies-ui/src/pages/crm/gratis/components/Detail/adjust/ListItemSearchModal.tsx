@@ -26,16 +26,17 @@ const ListItemSearchModal = ({verifyId,trigger,selectedItems, addHandler, dataLo
 
     const onSearch=async (value:string)=>{
         try{
-            form.validateFields()            
-            // setDocNum(value)
-            if(value=='' || value.length<4) return
+            form.validateFields()      
+            // if(value=='' || value.length<4) return
             const rs = await GratisServices.getListItemAdjustment(verifyId,cusomterCode,value,selectedFrom?.dataSource,selectedFrom?.startedDate,selectedFrom?.endedDate).query(requestActions)             
             if(rs && rs.length>0){  
                 setSearchData(rs)
             }else{
                 message.warning('Not found')
+                setSearchData([])
             } 
         }catch(ex){
+            setSearchData([])
             message.error('Not found')
         }
     }
@@ -64,7 +65,6 @@ const ListItemSearchModal = ({verifyId,trigger,selectedItems, addHandler, dataLo
                 },
             }}
             onFinish={async dataForm=>{
-                console.log('selected',selected)
                 addHandler(selected||[])
                 setSearchData(v=> v?.filter((it:any)=> !!!selected?.find(i=>i.uuId===it.uuId)))
                 setSelected([])
@@ -94,7 +94,7 @@ const ListItemSearchModal = ({verifyId,trigger,selectedItems, addHandler, dataLo
                     <Space>
                         <ProFormSelect  width={220} allowClear={false}  rules={[{required:true, message:''  }]}  label='From'  name={'dscription'}
                             options={dataLookup?.map(it=> ({label: toReadable(it.dscription), value:it.dscription}))} />
-                        <Input.Search  loading={requestActions.request?.loading}   placeholder='Invoice/SO'allowClear={true}  style={{marginTop:15}} onSearch={(value,_)=>onSearch(value)}/>
+                        <Input.Search  loading={requestActions.request?.loading}   placeholder='Doc Num'allowClear={true}  style={{marginTop:15}} onSearch={(value,_)=>onSearch(value)}/>
                     </Space>  
                 }             
                 columns={[

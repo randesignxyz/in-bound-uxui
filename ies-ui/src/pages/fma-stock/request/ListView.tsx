@@ -1,9 +1,9 @@
 import { formatDate } from "@/pages/utils";
 import { simpleRequestActions } from "@/services/model"
-import { ExportOutlined, EyeFilled } from "@ant-design/icons";
+import { DownloadOutlined, ExportOutlined, EyeFilled, FileOutlined, PlusOutlined } from "@ant-design/icons";
 import { SearchParams, StockRequestAdvanceSearchParams,StockRequestDetailResponse,StockRequestListItem } from "./data.types";
 import { createService } from "./services";
-import { history, useModel } from 'umi';
+import { history, useAccess, useModel } from 'umi';
 import Status from "@/components/Status";
 import { Badge, Button, Flex, Radio, Space, Spin, Tooltip, message } from "antd";
 import { ActionType, PageContainer } from "@ant-design/pro-components";
@@ -11,6 +11,7 @@ import TableView, { FetchPagingParams } from "@/components/DataCrud/TableView";
 import { Paging } from '@/services/API';
 import { useRef, useState } from "react";
 import DataDetailView from "./DataDetailView";
+import NCMReportModalForm from "./reports/NCMReportModalForm";
 
 interface Props {
   onAdd?: (id?: number) => void;
@@ -19,6 +20,7 @@ interface Props {
 
   
 export default ({ onAdd, onEdit }: Props) => {
+  const access = useAccess();
   const cacheList = useModel('dataList');
   const actionRef = useRef<ActionType>();
   const requestActions = simpleRequestActions();
@@ -102,6 +104,10 @@ export default ({ onAdd, onEdit }: Props) => {
                 </Radio.Group>
             </Space>
         }
+        extraRightFilter={
+          access.isAccessNCMRequestCriteriaExportReport&&<NCMReportModalForm trigger={<Button type="link" icon={<ExportOutlined/>}>Export</Button>} />
+          
+        }
         columns={[
           /*{
             title: '',
@@ -156,11 +162,11 @@ export default ({ onAdd, onEdit }: Props) => {
             render: (_, r) => r.reason,
           },
           {
-            title: 'Expected Dt',
-            align: 'right',
-            sorter: 'requestedDate',
-            width: 130,
-            render: (_, r) => formatDate(r.requestedDate),
+            title: 'From Warehouse',
+            // align: 'right',
+            sorter: 'warehouseFrom',
+            width: 150,
+            render: (_, r) => r.warehouseFrom,
           },
           {
             title: 'Requested By',
@@ -196,8 +202,7 @@ export default ({ onAdd, onEdit }: Props) => {
                 pagination,
               }),
             onFirstLoad: (criteria, pagination) => cacheList.fetchDataList('fma-stock-request').then((v) => {
-                if (v) {
-                  console.log('arrived here???',criteria);
+                if (v) {                 
                   setAdvanceSearchParams({
                     ...v.creteria?.criteria,
                     searchValue: v.creteria?.criteria?.searchValue ?? '',

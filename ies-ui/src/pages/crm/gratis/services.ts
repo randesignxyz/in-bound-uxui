@@ -2,8 +2,9 @@ import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { execDataService, execDataService0, fetchDataItemService, fetchDataListService, fetchDataPagingService } from "@/services/apiGateway";
 import { ContractLess } from "@/services/crm/contract";
 // import { LookupDataItem, LookupDataItem3 } from "@/services/data";
-import { AdjustItem, AdjustInfoOn, CreateSettlemenDate, GratisContract, GratisContractViewData, GratisVerifyItem, HistoryItem, IncentiveSettlement, LookupDataItem,  SaveChangeStatusData,  SaveGratisContractCheckListData, SearchCriteria, SettlementCycle, SettlementCycleActivity, SettlementCycleAdvanceSearchParams, SettlementSearchDate, VerifyGratisContact, ItemSAP, GratisVerifySchedule, ApprovalRequestPayload, GratisSuggestedCustomer, GratisSuggestedCustomerVisit, GratisVisitScheduleParams, GratisAdvanceSearchParams, GratisVerifyItemDetail } from "./types";
+import { AdjustItem, AdjustInfoOn, CreateSettlemenDate, GratisContract, GratisContractViewData, GratisVerifyItem, HistoryItem, IncentiveSettlement, LookupDataItem,  SaveChangeStatusData,  SaveGratisContractCheckListData, SearchCriteria, SettlementCycle, SettlementCycleActivity, SettlementCycleAdvanceSearchParams, SettlementSearchDate, VerifyGratisContact, ItemSAP, GratisVerifySchedule, ApprovalRequestPayload, GratisSuggestedCustomer, GratisSuggestedCustomerVisit, GratisVisitScheduleParams, GratisAdvanceSearchParams, GratisVerifyItemDetail, ImportDirectIncentiveParams } from "./types";
 import moment from "moment";
+import { ImportDataItem } from "@/services/shared/data";
 
 export const GratisServices = {
 
@@ -97,6 +98,11 @@ export const GratisServices = {
     saveChangeStatusContractVerify: (data: SaveChangeStatusData) => execDataService0<SaveChangeStatusData>({
         actionName: 'save-change-status-contract-verify',
         endpoint: 'CRM',
+        payload: data,
+    }), 
+    commitImportedDataDireactIncentiveList: (data: ImportDirectIncentiveParams) => execDataService<{data:ImportDataItem[]},ImportDirectIncentiveParams>({
+        actionName: 'commit-import-gratis-settlement-direct-incentive-data',
+        endpoint: 'FILE',
         payload: data,
     }), 
     saveChangeStatusSettlementCycle: (data: SaveChangeStatusData) => execDataService0<SaveChangeStatusData>({

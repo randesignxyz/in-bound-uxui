@@ -535,7 +535,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                     }
                     extraRightFilter={<Flex gap={0}>
                             {access.isAccessPerformanceReviewImportExport && isImportExportBtn && <>
-                                <ImportFileButton<ImportDataItem>
+                            <ImportFileButton<ImportDataItem>
                                 importedKey="PERFORMANCE_REVIEW_LIST"
                                 onDataResponse={data => {
                                     setImportData(data)

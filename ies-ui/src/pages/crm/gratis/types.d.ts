@@ -35,6 +35,11 @@ export type SaveChangeStatusData = {
   remarks?: string;
 }
 
+export type ImportDirectIncentiveParams = {
+  id: number;
+  importedId: number;
+}
+
 export interface GratisContract {
   id: number;
   contractId: number;

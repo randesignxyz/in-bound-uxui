@@ -1,4 +1,4 @@
-import { Space, Spin, Tag, message, Button, Tooltip, Descriptions, Modal, Dropdown, Input, Radio } from 'antd';
+import { Space, Spin, Tag, message, Button, Tooltip, Descriptions, Modal, Dropdown, Input, Radio, Flex } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { history } from "@umijs/max";
 import { CaretDownOutlined, EditOutlined, EyeOutlined, FieldTimeOutlined, FileAddOutlined, FileDoneOutlined, FileExcelOutlined, FilePdfOutlined, MessageOutlined, PartitionOutlined, QuestionCircleOutlined, SelectOutlined, StopOutlined, SyncOutlined } from '@ant-design/icons';
@@ -14,7 +14,7 @@ import { Model } from '../../model';
 import VerifyContractQuickView from './VerifyContractQuickView';
 import moment from 'moment';
 import ConfirmModalForm from './ConfirmModalForm';
-import { DownloadData, downloadReport, MultiRequest } from '@/services/apiGateway';
+import { DownloadData, downloadGenericReport, downloadReport, MultiRequest } from '@/services/apiGateway';
 import { merge, replace } from 'lodash';
 import ApprovalRequestModalForm from './ApprovalRequestModalForm';
 import Status from '@/components/Status';
@@ -27,6 +27,9 @@ import Popconfirm from '@/components/Popconfirm';
 import AdjustTranModal from './adjust/AdjustTranModal';
 import SuggestionItemAdjustTranModal from './adjust/SuggestionItemAdjustTranModal';
 import { LookupData } from '@/services/data';
+import ImportFileButton from '@/components/ImportFileButton';
+import { ImportDataItem, ImportDataResponse } from '@/services/shared/data';
+import UploadData from '../upload-data';
 
 interface LightFilterProp {
   suggestFields?: string[]
@@ -47,7 +50,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
   const [isSuggested, setIsSuggested] = useState<boolean>(false)
   const [criteriaSuggested, setCriteriaSuggested] = useState<SearchCriteria>()
   const [isSynchAll, setIsSynchAll] = useState<boolean>(false)
-  // const [suggestionData, setSuggestionData] = useState<ItemSAP[]>()
+  const [importData, setImportData] = useState<ImportDataResponse>()
    const [lookupData, setLookupData] = useState<{
       gratisSuggestFields?: LookupData[]
       }>()
@@ -284,6 +287,32 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
 
   // }
 
+  const downloadDirectReport = async () => {
+          try {
+             
+              // setLoading(true)
+              await downloadGenericReport(requestActions)({
+                  fileName: `Settlement Trade Incentive Direct Detail Report-${moment().format()}.xls`,
+                  type: 'EXCEL',
+                  data: {
+                      reportName: 'SettlementIncentiveDirectDetailReport',
+                      reportPath: '/Reports/crm/gratis',
+                      data: [      
+                         {key:'id', value: id},
+                          // ...(dataForm.empStatus || []).map(it => ({ key: 'empStatus', value: it })),                
+                          // ...(dataForm.bu || []).map(it => ({ key: 'buIds', value: it })),
+                          // ...(dataForm.department || []).map(it => ({ key: 'deptIds', value: it })),
+                      ]
+                  }
+              }).then(()=>{
+                  // setLoading(false)
+              })
+          } catch (error: any) {
+              message.error(error.message || "Failed to generate report.")
+              // setLoading(false)
+          }            
+      };
+
   return (
     <Spin spinning={requestActions.request?.loading || false} tip={spinTip}>
       <PageContainer
@@ -340,7 +369,25 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
                     setIsSuggested(e?.toString() == 'suggestion' ? true : false)
                   }}
                 >
-                  {isPending && isRequestNA && <CheckCard avatar={<img src={suggestionIcon} style={{ height: 18, width: 21 }} />} title='Adjustable Customer' size='small' value="suggestion" style={{ width: '190px', borderStyle: 'dashed' }} />}
+                  {isPending && isRequestNA && 
+                    <Flex gap={5}>
+                      <CheckCard avatar={<img src={suggestionIcon} style={{ height: 18, width: 21 }} />} title='Adjustable Customer' size='small' value="suggestion" style={{ width: '190px', borderStyle: 'dashed' }} />
+                      {contractTypeDirect&&<ImportFileButton<ImportDataItem>
+                          importedKey="GRATIS_SETTLEMENT_DIRECT_INCENTIVE_LIST"
+                          onDataResponse={data => {                               
+                              setImportData(data)
+                          }}
+                          key={'GRATIS-SETTLEMENT-DIRECT-INCENTIVE-LIST'}
+                          onHandleChange={(status) => {
+                              if (status == 'done') {
+                                  message.info('Data uploaded.');
+                              }
+                          }}
+                      />}
+                      {contractTypeDirect&&<Tooltip placement="bottom" title="Dowload Trade Incetive Detail"><Button type='link' icon={<FileExcelOutlined />} onClick={downloadDirectReport}></Button></Tooltip>}
+
+                    </Flex>
+                  }
                 </CheckCard.Group>
               </Space>
             }
@@ -732,6 +779,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
         />}
         <ProcessFlowModalMngt workflowModel={model} />
       </PageContainer>
+      <UploadData title="Import Settlement Trade Incentive List" id={id} onCancel={() => setImportData(undefined)} open={!!importData} datasources={importData} onFinish={()=> {actionRef.current?.reloadAndRest?.()}} />
     </Spin>
   );
 };

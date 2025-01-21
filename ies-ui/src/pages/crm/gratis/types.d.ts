@@ -201,6 +201,7 @@ export interface SettlementSearchDate {
   contractTypeId?: number[];
   dateFrom?: moment.Moment;
   dateTo?: moment.Moment;
+  targetMethod?: string;
   frenquency?: string;
   searchValue?: string;
   target?: number[];
@@ -215,6 +216,7 @@ export interface CreateSettlemenDate {
   // contractTypeId?: number;
   dateFrom?: moment.Moment;
   dateTo?: moment.Moment;
+  targetMethod?: string;
   frequency?: string;
   contractTypeGroupCode?: string;
 }

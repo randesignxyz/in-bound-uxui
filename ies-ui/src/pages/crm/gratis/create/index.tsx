@@ -15,10 +15,12 @@ import ConfirmSaveSettlement from "./ConfirmSaveSettlement";
 import SettlementTransactionSearchModal from "./SettlementTransactionSearchModal";
 import { ClearOutlined, DeleteOutlined, ExportOutlined } from "@ant-design/icons";
 import { formatDate } from "@/pages/utils";
-import { values } from "lodash";
+// import { values } from "lodash";
 import Status from "@/components/Status";
 
 interface SettlemenSearchForm {
+    targetMethod?: string;
+    scheduleDateM?: moment.Moment;
     scheduleDateQ?: moment.Moment;
     scheduleDateS?: moment.Moment;
     yearS?: moment.Moment;
@@ -87,15 +89,17 @@ const SettlementView: React.FC<{}> = ({ }) => {
             form.setFieldValue('contractTypeGroup',contractTypeCode)
         }, 100)
     }
-    const filterAction = (contractTypeGroup: string, frequency: string, startedDate: moment.Moment, endedDate: moment.Moment) => {
+    const filterAction = (contractTypeGroup: string,targetMethod: string, frequency: string, startedDate: moment.Moment, endedDate: moment.Moment) => {
         if (contractTypeGroup && startedDate && endedDate) {           
             var data = {
                 contractTypeGroupCode: contractTypeGroup,
+                targetMethod: targetMethod,
                 frequency: frequency,
                 dateFrom: startedDate.startOf('month').add(1,'day'),
                 dateTo: endedDate.endOf('month')
             } as SettlementSearchDate
             setParams(data)
+            console.log('filterAction settlem data:',data)
             actionRef.current?.reloadAndRest
         }
     }
@@ -117,6 +121,7 @@ const SettlementView: React.FC<{}> = ({ }) => {
                         contracts: dataSettled?.map(it => { return { contractId: it.id, addressId: it.addressId } as ContractAddressPayload }),
                         dateFrom: params?.dateFrom,
                         dateTo: params?.dateTo,
+                        targetMethod: params?.targetMethod,
                         frequency: frequency,
                         contractTypeGroupCode: params?.contractTypeGroupCode
                     } as CreateSettlemenDate
@@ -280,13 +285,21 @@ const SettlementView: React.FC<{}> = ({ }) => {
             message.error('Not found')
         }
     }
+    const targetOptions = [  { label: 'Monthly', value: 'MONTH' },
+        // { label: 'Monthly Settlement', value: 'MONTH_SETTLE' },
+        { label: 'Quarterly', value: 'QUARTER' },
+        { label: 'Semesterly', value: 'SEMESTER' },
+        { label: 'Annually', value: 'YEAR' }]
+
     const onReset = async () => {
         resetContractTypeGroup()
+        form.setFieldValue('scheduleDateM',undefined)
         form.setFieldValue('scheduleDateQ',undefined)
         form.setFieldValue('scheduleDateS',undefined)
         form.setFieldValue('yearS',undefined)
         form.setFieldValue('scheduleDateY',undefined)
         form.setFieldValue('scheduleType',undefined)
+        form.setFieldValue('targetMethod',undefined)
         setDataSettled([])
     }
 
@@ -329,7 +342,8 @@ const SettlementView: React.FC<{}> = ({ }) => {
                         onFieldsChange={(changedFields, allFields) => {
                             clearTimeout(timeout)
                             const contractTypeGroup = allFields.find(it => it.name == 'contractTypeGroup')
-                            // const contractTypeId = allFields.find(it => it.name == 'contractTypeId')
+                            const targetMethod = allFields.find(it => it.name == 'targetMethod')?.value
+                            const scheduleDateM = allFields.find(it => it.name == 'scheduleDateM')
                             const scheduleDateQ = allFields.find(it => it.name == 'scheduleDateQ')
                             const scheduleDateS = allFields.find(it => it.name == 'scheduleDateS')
                             const scheduleDateY = allFields.find(it => it.name == 'scheduleDateY')
@@ -357,11 +371,12 @@ const SettlementView: React.FC<{}> = ({ }) => {
                                 startedDate1 = date.add(-1, "year").endOf("year").add(1, "day")
                                 endedDate1 = date.endOf("year")
                             }
-                            // if (contractTypeGroup?.value && contractTypeGroup?.value != contractType) {
-                            //     form.setFieldValue('contractTypeId', undefined)
-                            // }
+                            if (frequency == 'MONTH' && scheduleDateM?.value) {
+                                startedDate1 = scheduleDateM?.value
+                                endedDate1 = startedDate1.endOf("month")
+                            }
                             setTimeout(function () {
-                                filterAction(contractTypeGroup?.value, frequency, startedDate1, endedDate1)
+                                filterAction(contractTypeGroup?.value,targetMethod, frequency, startedDate1, endedDate1)
                                 setContractType(contractTypeGroup?.value)
                             }, 100)
                         }}
@@ -372,23 +387,34 @@ const SettlementView: React.FC<{}> = ({ }) => {
                                 <ProFormSelect label="Contract Type" disabled={dataSettled.length > 0} name={'contractTypeGroup'} rules={[{ required: true,message:'' }]} showSearch allowClear={false} width={'sm'} options={lookupData?.contractTypes?.map(it => ({ label: it.name, value: it.code }))} />
                                 {/* {contractType === 'OTHER' && <ProFormSelect label="" style={{ marginTop: '31px' }} name={'contractTypeId'} allowClear width={'sm'} mode="multiple" rules={[{ required: true,message:'' }]} disabled={dataSettled.length > 0} options={lookupData?.contractTypesByGroupCode?.filter(it => it.code == contractType).map(it => ({ label: it.name, value: it.id }))} />} */}
                                 {/* </ProFormGroup>
-                                <ProFormGroup size={'small'} align="center"> */}
-                                <ProFormSelect label={contractType == 'DIRECT' ? 'Target' : 'Settlement Period'} disabled={dataSettled.length > 0} name={"scheduleType"} rules={[{ required: true,message:'' }]} 
-                                    style={{width:120}}
-                                    options={[
-                                        { label: 'Monthly', value: 'MONTH' },
-                                        { label: 'Quarterly', value: 'QUARTER' },
-                                        { label: 'Semesterly', value: 'SEMESTER' },
-                                        { label: 'Annually', value: 'YEAR' }
-                                    ].filter(it => !(it.value == 'MONTH' && contractType != 'DIRECT'))}
+                                <ProFormGroup size={'small'} align="center"> */}                                
+                                 <ProFormSelect label={'Settlement Frequency'} disabled={dataSettled.length > 0} name={"scheduleType"} rules={[{ required: true,message:'' }]} 
+                                    style={{width:165}}
+                                    onChange={()=>{
+                                        form.setFieldValue('targetMethod',undefined)
+                                    }}
+                                    options={targetOptions}
+                                />
+                                {(frequency == 'MONTH') && <ProFormDatePicker.Month label={"Settlement Period"} disabled={dataSettled.length > 0} name={'scheduleDateM'} rules={[{ required: true,message:'' }]} />}
+                                {(frequency == 'QUARTER') && <ProFormDatePicker.Quarter label={"Settlement Period" } style={{ marginTop: (contractType == 'DIRECT' ? '0px' : '24px') }} disabled={dataSettled.length > 0} name={'scheduleDateQ'} rules={[{ required: true,message:'' }]} />}
+                                {frequency == 'SEMESTER' && <Flex gap={5}>
+                                    <ProFormDatePicker.Year label={"Settlement Period"} style={{ margin: 0 }} rules={[{ required: true,message:'' }]} disabled={dataSettled.length > 0} name={'yearS'} />
+                                    <ProFormSelect label="" style={{ marginTop: '31px', width: 120 }} disabled={dataSettled.length > 0} name={'scheduleDateS'} options={[{ label: 'Semester 1', value: 0 }, { label: 'Semester 2', value: 6 }]} />
+                                </Flex>}
+                                {frequency == 'YEAR' && <ProFormDatePicker.Year label={"Settlement Period"} addonAfter disabled={dataSettled.length > 0} name={'scheduleDateY'} rules={[{ required: true,message:'' }]} />}
+                                <ProFormSelect label={'Target'} disabled={dataSettled.length > 0} name={"targetMethod"} rules={[{ required: true,message:'' }]} 
+                                    style={{width:165}}
+                                    options={targetOptions.filter(it => (it.value=='MONTH' || it.value==frequency))}
+                                    // options={targetOptions.filter(it => !(it.value == 'MONTH' && contractType != 'DIRECT')).filter(it => !(it.value == 'MONTH_SETTLE' && contractType != 'DIRECT'))}
                                 />
 
+                                {/* {(frequency == 'MONTH_SETTLE') && <ProFormDatePicker.Month label={contractType == 'DIRECT' ? "Settlement Period" : ' '} disabled={dataSettled.length > 0} name={'monthlySettle'} rules={[{ required: true,message:'' }]} />}
                                 {(frequency == 'QUARTER' || frequency == 'MONTH') && <ProFormDatePicker.Quarter label={contractType == 'DIRECT' ? "Settlement Period" : ' '} style={{ marginTop: (contractType == 'DIRECT' ? '0px' : '24px') }} disabled={dataSettled.length > 0} name={'scheduleDateQ'} rules={[{ required: true,message:'' }]} />}
                                 {frequency == 'SEMESTER' && <Flex gap={5}>
                                     <ProFormDatePicker.Year label={contractType == 'DIRECT' ? "Settlement Period" : ' '} style={{ margin: 0 }} rules={[{ required: true,message:'' }]} disabled={dataSettled.length > 0} name={'yearS'} />
                                     <ProFormSelect label="" style={{ marginTop: '31px', width: 120 }} disabled={dataSettled.length > 0} name={'scheduleDateS'} options={[{ label: 'Semester 1', value: 0 }, { label: 'Semester 2', value: 6 }]} />
                                 </Flex>}
-                                {frequency == 'YEAR' && <ProFormDatePicker.Year label={contractType == 'DIRECT' ? "Settlement Period" : ' '} addonAfter disabled={dataSettled.length > 0} name={'scheduleDateY'} rules={[{ required: true,message:'' }]} />}
+                                {frequency == 'YEAR' && <ProFormDatePicker.Year label={contractType == 'DIRECT' ? "Settlement Period" : ' '} addonAfter disabled={dataSettled.length > 0} name={'scheduleDateY'} rules={[{ required: true,message:'' }]} />} */}
 
                                 <Flex gap={3} style={{ marginTop: '31px', marginLeft: 25 }}>
                                     <Button name="" onClick={onReset}> Reset</Button>

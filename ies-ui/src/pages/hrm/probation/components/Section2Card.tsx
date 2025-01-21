@@ -19,9 +19,9 @@ interface Props {
 export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable, editableRating, totalScore,showRating=true }: Props) => {
 
     const data = [
-      {id:0,key: 'default-1' , assessment:'',  target:'',},
-      {id:0,key: 'default-2' , assessment:'', target:'',},
-      {id:0,key: 'default-3' , assessment:'', target:'',}
+      {id:0,key: 'default-1' , assessment:'',  target:'',remark:''},
+      {id:0,key: 'default-2' , assessment:'', target:'',remark:''},
+      {id:0,key: 'default-3' , assessment:'', target:'',remark:''}
     ]
     useEffect(()=>{
       if(addedItems?.length==0){
@@ -55,7 +55,7 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
         valueType: 'textarea',
         editable:(_,r) => editable, 
         formItemProps: {rules: [{ required: true}] },
-        fieldProps: { rows: 1, maxLength: 200 },
+        fieldProps: { rows: 1, maxLength: 5000 },
       }  
        
     ]
@@ -194,11 +194,12 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
         {
           title: 'JUSTIFICATION',
           children:[{
-            width: '10%',
-            valueType: 'textarea',
             dataIndex: 'remark',
-            editable:(_,r) => editable, 
-            fieldProps: { rows: 1, maxLength: 200 },
+            width: '15%',
+            valueType: 'textarea',
+            editable:(_,r) => editableRating, 
+            formItemProps: {rules: [{ required: true}] },
+            fieldProps: { rows: 1, maxLength: 5000 },
           }]
         
         }
@@ -255,7 +256,7 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
             addedItems.map((it) => {
               const edit = recordList.find(r=> r.key==it.key)
               if(edit){
-                return {...it, assessment: edit.assessment,target: edit.target}
+                return {...it, assessment: edit.assessment,target: edit.target, remark: edit?.remark}
               }
               return it
             }),

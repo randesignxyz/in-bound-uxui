@@ -225,14 +225,18 @@ export default ({ processInstaceId,processDefKey, forceReload,formStarted,taskCo
                         {title: 'Business Unit', dataIndex: 'buName',sorter:'buName'},
                         {title: 'Function', dataIndex: 'departmentName',sorter:'departmentName'},                    
                         {title: 'Job Title', dataIndex: 'jobTitle',sorter:'jobTitle'},
-                        {title: 'Self- Rating', dataIndex: 'rating1',sorter:'rating1'},
+                        {title: 'Self- Rating', dataIndex: 'rating1',sorter:'rating1',
+                            render: (_: any, r: any) => {
+                                return formatterQty1.format(r.rating1)
+                            }
+                        },
                         {title: "Manager's Rating", dataIndex: 'rating3',sorter:'rating3',
                             render:(_,r)=> {
-                                return (r?.rating3==0 ?'-':  r?.rating3==-1.0 ?'-': r.rating3)
+                                return (r?.rating3==0 ?'-':  r?.rating3==-1.0 ?'-': formatterQty1.format(r?.rating3||0))
                             }
                         },
                         {title: 'Final Score', dataIndex: 'rating5',sorter:'finalScore',
-                            render:(_,r)=>  (dataDetail?.status=='REJECT' ||(dataDetail?.status!='COMPLETED' && formStarted)) || !r?.finalScore||r?.finalScore==0 ?'-': r?.finalScore
+                            render:(_,r)=>  (dataDetail?.status=='REJECT' ||(dataDetail?.status!='COMPLETED' && formStarted)) || !r?.finalScore||r?.finalScore==0 ?'-': formatterQty1.format(r?.finalScore)
                         },
                         {
                             title:'',dataIndex:'status',

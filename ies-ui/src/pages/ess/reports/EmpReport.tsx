@@ -10,6 +10,7 @@ import { EmployeeServices } from "@/pages/hrm/services"
 import { DownOutlined, FileExcelOutlined } from "@ant-design/icons"
 import { downloadGenericReport, MultiRequest } from "@/services/apiGateway";
 import { useSafeState } from "ahooks";
+import {getUrlReporting} from "@/pages/ReportUrl"
 
 type DataFormType = {
     empSearch?: string
@@ -84,7 +85,7 @@ export default ({ trigger }: { trigger?: JSX.Element}) => {
                 type: 'EXCEL',
                 data: {
                     reportName: e.key+raw,
-                    reportPath: '/Reports/hrm/ess',
+                    reportPath: getUrlReporting('hrm/ess'),
                     data: [      
                        {key:'empSearch', value: dataForm.empSearch},
                         ...(dataForm.empStatus || []).map(it => ({ key: 'empStatus', value: it })),                

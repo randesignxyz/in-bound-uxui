@@ -30,6 +30,7 @@ import { LookupData } from '@/services/data';
 import ImportFileButton from '@/components/ImportFileButton';
 import { ImportDataItem, ImportDataResponse } from '@/services/shared/data';
 import UploadData from '../upload-data';
+import {getUrlReporting} from "@/pages/ReportUrl"
 
 interface LightFilterProp {
   suggestFields?: string[]
@@ -296,7 +297,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
                   type: 'EXCEL',
                   data: {
                       reportName: 'SettlementIncentiveDirectDetailReport',
-                      reportPath: '/Reports/crm/gratis',
+                      reportPath: getUrlReporting('crm/gratis'),
                       data: [      
                          {key:'id', value: id},
                           // ...(dataForm.empStatus || []).map(it => ({ key: 'empStatus', value: it })),                
@@ -416,7 +417,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
                         })
                     }}
                   >
-                    <ProFormSelect  mode="multiple"  name="suggestFields"
+                    <ProFormSelect  mode="multiple"  name="suggestFields"  width={250}
                       options={lookupData?.gratisSuggestFields?.map(r=> ({label: r.name, value: r.code}))}
                     />
                   </LightFilter>                 
@@ -742,10 +743,14 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
                 }
               }
               ]}
-              expandable={!contractTypeDirect ? {
+              // expandable={!contractTypeDirect ? {
+              //   expandedRowRender: (record => <VerifyContractList quickViewHandler={quickViewHandler} item={record} />),
+              //   rowExpandable: record => true,
+              // } : {}}
+              expandable={ {
                 expandedRowRender: (record => <VerifyContractList quickViewHandler={quickViewHandler} item={record} />),
                 rowExpandable: record => true,
-              } : {}}
+              }}
             />}
           </ProCard>
           <ProCard title='Activities' defaultCollapsed collapsible headerBordered size='small'>

@@ -346,64 +346,6 @@ const AppraisalViewDetail = (props: Props) => {
                     { tab: 'Attachments', key: 'attachment', tabKey: 'attachment' },
                 ]}
             >
-                {dataDetail && appraisal && improvementRated1List && improvementRated2List && contentType == 'dataForm' && 
-                <DataView lang={lang} 
-                    loading={requestActions.request?.loading||false} 
-                    actions={{isSaveDraft,isSubmitForm}}
-                    onChangeLanglauge={onChangeLanglauge} 
-                    dataLookup={dataLookup}
-                    appraisalEmp={dataDetail} 
-                    editableImprovementRated1FormRef={editableImprovementRated1FormRef}
-                    initDataImprovementRated1={improvementRated1List}
-                    setImprovementRated1Updated={setImprovementRated1Updated}
-
-    return <PageContainer
-        loading={requestActions.request?.loading}
-        title={<Space>
-            <div>Performance Appraisal {dataDetail?.title} | {dataDetail?.empNo}- {dataDetail?.empName}</div>
-            <div>
-                <Tag><Typography.Text type={dataDetail?.status == 'COMPLETED' ? 'success' : 'warning'}> {toReadable(dataDetail?.status)}</Typography.Text></Tag>
-                {dataDetail?.actionStatus && dataDetail?.currentDrafted && <sup style={{
-                    zIndex: 'auto',
-                    minWidth: '20px',
-                    padding: '0px 6px 1px 6px',
-                    color: 'white',
-                    fontWeight: '400',
-                    fontSize: '10px',
-                    lineHeight: '20px',
-                    borderRadius: '10px',
-                    whiteSpace: 'nowrap',
-                    textAlign: 'center',
-                    backgroundColor: '#faad14fa',
-                }}>{toReadable(dataDetail?.actionStatus)}</sup>}
-            </div>
-        </Space>}
-        onBack={props.onBack}
-        breadcrumb={undefined}
-        footer={[
-            contentType == 'dataForm' && isSaveDraft && <Button key="1" icon={<SaveOutlined />} onClick={() => saveDraftHandler()}>Save Draft</Button>,
-            contentType == 'dataForm' && isSubmitForm && <Button type='primary' key="2" icon={<CheckOutlined />} onClick={() => saveSubmitHandler()}>{(currentAssign1 && rated1 && !isDrafted) ? 'Resubmit' : 'Submit'}</Button>
-        ]}
-    >
-        <SubmissionInfo dataDetail={dataDetail} />
-        <ProCard>
-            <PageContainer
-                header={{
-                    title: '',
-                    ghost: true,
-                    breadcrumb: {
-                        items: [],
-                    },
-                }}
-                breadcrumb={undefined}
-                onTabChange={setContentType}
-                tabActiveKey={contentType}
-                tabList={[
-                    { tab: 'Data Form', key: 'dataForm', tabKey: 'dataForm' },
-                    { tab: 'Activities', key: 'activities', tabKey: 'activities' },
-                    { tab: 'Attachments', key: 'attachment', tabKey: 'attachment' },
-                ]}
-            >
                 {dataDetail && appraisal && improvementRated1List && improvementRated2List && contentType == 'dataForm' &&
                     <DataView lang={lang}
                         loading={requestActions.request?.loading || false}
@@ -470,5 +412,5 @@ const AppraisalViewDetail = (props: Props) => {
             </PageContainer>
         </ProCard>
     </PageContainer>
-                }
-                export default AppraisalViewDetail
+}
+export default AppraisalViewDetail

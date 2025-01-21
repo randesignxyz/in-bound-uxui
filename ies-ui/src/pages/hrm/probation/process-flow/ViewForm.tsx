@@ -84,10 +84,11 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
     const downloadDataFile =async (exportType: 'PDF' | 'EXCEL',requestAction: SimpleRequestActions)=>{
         await downloadReport<CriteriaExportReport>(requestActions)(dataReport(exportType))
     }
+    const isRequestedStatus = probaRequest?.status=='REQUESTED'?true: false
     const isDownloadForm = [ProbationEvaluationRequestFormNames.assessmentPreparation ,ProbationEvaluationRequestFormNames.lineManagerSubmission].find(r=> r== props.formKey)
                           && ['SETTING','PREPARED'].find(r => r==probaRequest?.probationEvaluation?.status)? true:false
     const isPrepareStatus = [ProbationEvaluationRequestFormNames.assessmentPreparation ].find(r=> r== props.formKey)
-                          || ['PREPARED'].find(r => r==probaRequest?.probationEvaluation?.status)? true:false                      
+                          || isRequestedStatus || ['PREPARED'].find(r => r==probaRequest?.probationEvaluation?.status) ? true:false                      
   
     return(  
     <ViewFormWrapper<{ id: number }>
@@ -133,8 +134,8 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
                     <Descriptions.Item label='Function'>{probaRequest?.probationEvaluation.departmentName} </Descriptions.Item>
                     <Descriptions.Item label='Company'>{probaRequest?.probationEvaluation.buName}</Descriptions.Item>
                     <Descriptions.Item label='Position'>{probaRequest?.probationEvaluation.jobTitle}</Descriptions.Item>
-
-                    <Descriptions.Item label='Ref' span={2}>{probaRequest?.probationEvaluation?.ref?.formNo}</Descriptions.Item>
+                    <Descriptions.Item label='Ref' span={1}>{probaRequest?.probationEvaluation?.ref?.formNo}</Descriptions.Item>
+                    <Descriptions.Item label='Form Type' span={1}>{probaRequest?.probationEvaluation?.formTypeCode}</Descriptions.Item>
 
                     </Descriptions>
                 </ProCard>}
@@ -163,10 +164,10 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
                         <div>What employee has done, their strength, and further development need.</div>
                         </div>
                     </div>}
-                    <Space direction="vertical" style={{ width: '100%' }}>
-                      {!isPrepareStatus && probaRequest?.empAchievement&&<EmpImprovmentTable editable={false} initDataItems={probaRequest?.empAchievement.map(it => ({...it,key: uniqueId().toString()}))} />}
-                      {!isPrepareStatus && probaRequest?.empImprovement&&<EmpImprovmentTable1  editable={false} initDataItems={probaRequest?.empImprovement.map(it => ({...it,key: uniqueId().toString()}))} />}
-                    </Space>                
+                    {!isPrepareStatus && probaRequest?.empAchievement&&<Space direction="vertical" style={{ width: '100%' }}>
+                      <EmpImprovmentTable editable={false} initDataItems={probaRequest?.empAchievement.map(it => ({...it,key: uniqueId().toString()}))} />
+                      <EmpImprovmentTable1  editable={false} initDataItems={probaRequest?.empImprovement.map(it => ({...it,key: uniqueId().toString()}))} />
+                    </Space>  }              
                 </ProCard>
                 {probaRequest &&<SummaryCard probaRequest={probaRequest} initialValue={{status:probaRequest.probationEvaluation?.confirmedStatus||'', extendedDate: probaRequest.probationEvaluation?.extendedDate}}/>}
                 

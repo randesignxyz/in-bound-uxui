@@ -6,7 +6,7 @@ import { SortOrder } from "antd/es/table/interface";
 import { simpleRequestActions } from "@/services/model";
 import { createService } from "../../services";
 import { Paging } from "@/services/API";
-import { formatDateTime, formatterPercentage0} from "@/pages/utils";
+import { formatDateTime, formatterPercentage0, formatterQty1} from "@/pages/utils";
 import Status from "@/components/Status";
 import { BankOutlined, DownloadOutlined, ExportOutlined, EyeOutlined, FileExcelOutlined, FilterOutlined, PicRightOutlined, PlusOutlined, SelectOutlined, TeamOutlined, UnorderedListOutlined } from "@ant-design/icons";
 import AppraisalFormQuickView from "../quick-view/index";
@@ -267,18 +267,22 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
         { title: 'Business Unit', width: 50, dataIndex: 'buName', sorter: 'buName' },
         { title: 'Function', dataIndex: 'departmentName', sorter: 'function' },
         { title: 'Job Title', dataIndex: 'jobTitle', sorter: 'jobTitle' },
-        { title: 'Self- Rating', width: 50, dataIndex: 'rating1', sorter: 'rating1' },
+        { title: 'Self- Rating', width: 50, dataIndex: 'rating1', sorter: 'rating1',
+            render: (_: any, r: any) => {
+                return formatterQty1.format(r.rating1)
+            }
+        },
 
         {
             title: "Manager's Rating", dataIndex: 'rating3', sorter: 'rating3',
             width: 50,
             render: (_: any, r: any) => {
-                return (r?.rating3 == 0 ? '-' : r?.rating3 == -1.0 ? '-' : r.rating3)
+                return (r?.rating3 == 0 ? '-' : r?.rating3 == -1.0 ? '-' : formatterQty1.format(r.rating3))
             }
         },
         {
             title: 'Final Score', width: 50, dataIndex: 'finalScore', sorter: 'finalScore',
-            render: (_: any, r: any) => !r?.finalScore || r?.finalScore == 0 ? '-' : r?.finalScore
+            render: (_: any, r: any) => !r?.finalScore || r?.finalScore == 0 ? '-' : formatterQty1.format(r?.finalScore)
         },
         { title: 'Modified By', sorter: 'modifiedBy', dataIndex: 'modifiedBy' },
         {

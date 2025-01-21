@@ -9,7 +9,7 @@ import { Button, Card, Dropdown, Flex, MenuProps, message, Space } from "antd"
 import moment, { Moment } from "moment";
 import { DownOutlined, FileExcelOutlined } from "@ant-design/icons"
 import { downloadGenericReport } from "@/services/apiGateway"
-
+import {getUrlReporting} from "@/pages/ReportUrl"
 
 type DataFormType = {    
     requestedDate: moment.Moment[]
@@ -46,7 +46,7 @@ export default ({ trigger }: { trigger?: JSX.Element}) => {
                 type: 'EXCEL',
                 data: {
                     reportName: e.key,
-                    reportPath: '/Reports/whm',
+                    reportPath: getUrlReporting('whm'),
                     data: [    
                         {key:'dateFrom', value: dataForm.requestedDate?.[0], type:'dateTime'},  
                         {key:'dateTo', value: dataForm.requestedDate?.[1], type:'dateTime'},                       

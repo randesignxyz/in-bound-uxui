@@ -321,7 +321,10 @@ const AppraisalViewDetail=(props: Props) => {
     breadcrumb={undefined}
     footer={[
         contentType == 'dataForm' &&  isSaveDraft  &&  <Button key="1" icon={<SaveOutlined />} onClick={() => saveDraftHandler()}>Save Draft</Button>,
-        contentType == 'dataForm' && isSubmitForm&&<Button type='primary' key="2" icon={<CheckOutlined />} onClick={() => saveSubmitHandler()}>{(currentAssign1 && rated1 && !isDrafted)? 'Resubmit': 'Submit'}</Button>
+        contentType == 'dataForm' && 
+            isSubmitForm&&<Button type='primary' key="2" icon={<CheckOutlined />} onClick={() => saveSubmitHandler()}>
+                {(hasRating2 && currentAssign3 && rated1 && rated2 )?'Complet':(currentAssign1 && rated1 && !isDrafted)? 'Resubmit':'Submit'}
+            </Button>
       ]}
    >
     <SubmissionInfo dataDetail={dataDetail}/>    

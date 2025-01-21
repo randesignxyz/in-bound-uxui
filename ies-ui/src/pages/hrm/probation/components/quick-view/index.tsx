@@ -70,6 +70,9 @@ const ProbationEvaluationQuickView=({probationEmp, open, onOpenModalChange, refr
             message.error(error.message || 'Failed to load request.');
         }
     }
+
+    const isRequestedStatus = probaRequest?.status=='REQUESTED'?true: false
+    const isPrepareStatus = (probaRequest?.status=='PREPARED') || isRequestedStatus ?true: false
     
    
     return(<DrawerForm width={'80%'}
@@ -87,7 +90,7 @@ const ProbationEvaluationQuickView=({probationEmp, open, onOpenModalChange, refr
            return false
         }}
     ><Space direction="vertical">
-        {probationEmp&&<ProCard title="Employee Info" 
+        {probationEmp&&<ProCard title= {`Employee Info - ${probaRequest?.probationEvaluation?.formTypeCode}`}
                 collapsible ={false}  
                 size="small"
                 bordered headerBordered 
@@ -105,34 +108,35 @@ const ProbationEvaluationQuickView=({probationEmp, open, onOpenModalChange, refr
             <Descriptions.Item label='Company'>{probationEmp.buName}</Descriptions.Item>
             <Descriptions.Item label='Position'>{probationEmp.jobTitle}</Descriptions.Item>
 
-            <Descriptions.Item label='Ref' span={2}>{probaRequest?.probationEvaluation?.ref?.formNo}</Descriptions.Item>
+            <Descriptions.Item label='Ref' span={1}>{probaRequest?.probationEvaluation?.ref?.formNo}</Descriptions.Item>
+            <Descriptions.Item label='Form Type' span={1}>{probaRequest?.probationEvaluation?.formTypeCode}</Descriptions.Item>
 
 
             </Descriptions>
         </ProCard>}
         <InstructionCard/>
-        {probaRequest &&<RatingScaleCard probaRequest={probaRequest}/>}
-        <ProCard title="PERFORMANCE" 
+        {probaRequest && <RatingScaleCard probaRequest={probaRequest}/>}
+        {probaRequest &&<ProCard title={isPrepareStatus?'PERFORMANCE':'EVALUATION' }
             collapsible  
             size="small"
             bordered headerBordered 
         >            
-            <Section1Table editable={false} editableRating={false}  addedItems={addedSection1}  totalScore={probaRequest?.totalScore1}/>          
-            <Section2Card editable={false} editableRating={false}  addedItems={addedSection2} onSetAddedItems={setAddedSection2}  totalScore={probaRequest?.totalScore2}/>            
-            {probaResources&&<Section3Card editable={false} editableRating={false}  addedItems={probaResources} onSetAddedItems={setProbaResources}  totalScore={probaRequest?.totalScore3}/>}           
-            <Section4Card editable={false} editableRating={false}  addedItems={probaResourcesSupport} onSetAddedItems={setProbaResourcesSupport} />
-            <div>
+            <Section1Table showRating={!isPrepareStatus} editable={false} editableRating={false}  addedItems={addedSection1} onSetAddedItems={setAddedSection1}  totalScore={probaRequest?.totalScore1}/>          
+            <Section2Card showRating={!isPrepareStatus}  editable={false} editableRating={false}  addedItems={addedSection2} onSetAddedItems={setAddedSection2}  totalScore={probaRequest?.totalScore2}/>            
+            {probaResources&&<Section3Card showRating={!isPrepareStatus} editable={false} editableRating={false}  addedItems={probaResources} onSetAddedItems={setProbaResources}  totalScore={probaRequest?.totalScore3}/>}           
+            <Section4Card showRating={!isPrepareStatus} editable={false} editableRating={false}  addedItems={probaResourcesSupport} onSetAddedItems={setProbaResourcesSupport} />
+            {!isPrepareStatus &&<div>
                 <div style={{paddingTop:5}}>
                 <div><b>SECTION V. ADDITIONAL COMMENTS</b></div>
                 <div>What employee has done, their strength, and further development need.</div>
                 </div>
-            </div>
-            <Space direction="vertical" style={{ width: '100%' }}>
+            </div>}
+            {!isPrepareStatus && probaRequest?.empAchievement&&<Space direction="vertical" style={{ width: '100%' }}>
                 {probaRequest?.empAchievement&&<EmpImprovmentTable editable={false} initDataItems={probaRequest?.empAchievement.map(it => ({...it,key: uniqueId().toString()}))} />}
                 {probaRequest?.empImprovement&&<EmpImprovmentTable1  editable={false} initDataItems={probaRequest?.empImprovement.map(it => ({...it,key: uniqueId().toString()}))} />}
-            </Space>                    
-        </ProCard>
-        {probaRequest &&<SummaryCard probaRequest={probaRequest}/>}
+            </Space>}                   
+        </ProCard>}
+        {probaRequest && <SummaryCard probaRequest={probaRequest}/>}
     </Space>
     </DrawerForm>)
 }

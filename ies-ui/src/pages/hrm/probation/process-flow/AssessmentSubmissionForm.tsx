@@ -94,25 +94,28 @@ export default (props: ActionDataFormProps) => {
             width={'95%'}
             actionHandlers= {{...props.actionHandlers,
                 onCompleted: async ()=> { 
-                    const section1Valid = addedSection1.filter(r => ( r.rating1==undefined || r.rating2==undefined || r.rating3==undefined || r.rating4==undefined || r.rating5==undefined))
-                    const section2Valid = addedSection2.filter(r => ( r.rating1==undefined || r.rating2==undefined || r.rating3==undefined || r.rating4==undefined || r.rating5==undefined))
-                    const section3Valid = addedSection3.filter(r => ( r.rating1==undefined || r.rating2==undefined || r.rating3==undefined || r.rating4==undefined || r.rating5==undefined))
+                    const section1Valid = addedSection1.filter(r => ( r.rating1==undefined || r.rating2==undefined || r.rating3==undefined || r.rating4==undefined || r.rating5==undefined || r?.remark==undefined  || r?.remark==''))
+                    const section2Valid = addedSection2.filter(r => ( r.rating1==undefined || r.rating2==undefined || r.rating3==undefined || r.rating4==undefined || r.rating5==undefined || r?.remark==undefined || r?.remark==''))
+                    const section3Valid = addedSection3.filter(r => ( r.rating1==undefined || r.rating2==undefined || r.rating3==undefined || r.rating4==undefined || r.rating5==undefined || r?.remark==undefined || r?.remark==''))
                     const section4Valid = addedSection4.filter(r => ( r.fully==undefined || r.partial==undefined || r.no==undefined))
-                   
+                    
                     if(section1Valid.length>0) {
-                        message.error("SECTION I. PERFORMANCE, rating score is required.")
+                        message.error("SECTION I. PERFORMANCE: RATING SCORE, JUSTIFICATION is required.")
+                        await editableFormRef1.current?.validateFields()
                         return
                     }
                     if(section2Valid.length>0) {
-                        message.error("SECTION II. JOB KNOWLEDGE AND SKILLS, rating score is required.")
+                        message.error("SECTION II. JOB KNOWLEDGE AND SKILLS: RATING SCORE, JUSTIFICATION is required.")
+                        await editableFormRef2.current?.validateFields()
                         return
                     }                    
                     if(section3Valid.length>0) {
-                        message.error("SECTION III. BEHAVIOR, rating score is required.")
+                        message.error("SECTION III. BEHAVIOR: RATING SCORE is required.")
+                        await editableFormRef3.current?.validateFields()
                         return
                     }
                     if(section4Valid.length>0) {
-                        message.error("SECTION IV. SUPPORT / RESOURCES NEEDED, rating score is required.")
+                        message.error("SECTION IV. SUPPORT / RESOURCES NEEDED: RATING SCORE is required.")
                         return
                     }
                     const achFieldsValue = await editableEmpAchievForm.current?.getFieldsValue()
@@ -120,7 +123,7 @@ export default (props: ActionDataFormProps) => {
                     const empAchievement = achList.filter(r => ( r.description==undefined || r.description=='' ))
                     if(empAchievement.length>0) {
                         editableEmpAchievForm.current?.validateFields()
-                        message.error("SECTION V. ADDITIONAL COMMENTS, 1. achievment is required.")
+                        message.error("SECTION V. ADDITIONAL COMMENTS: 1. achievment is required.")
                         return
                     }
                     
@@ -129,7 +132,7 @@ export default (props: ActionDataFormProps) => {
                     const empImprovement = improList.filter(r => ( r.description==undefined || r.description=='' || r.description1==undefined || r.description1==''))                       
                     if(empImprovement.length>0) {  
                         editableEmpImprovementForm.current?.validateFields()                      
-                        message.error("SECTION V. ADDITIONAL COMMENTS, (2. Strength/ 3. Development Area) is required.")
+                        message.error("SECTION V. ADDITIONAL COMMENTS: (2. Strength/ 3. Development Area) is required.")
                         return
                     }
                     const dataStatus = formConfirmedStatus.getFieldsValue() 

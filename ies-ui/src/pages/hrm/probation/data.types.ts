@@ -394,6 +394,7 @@ export type ProbationEvaluationRs = {
     id: number  
     ref?:ProbationEvaluationRs
     formNo: string
+    formTypeCode: string
     empId: number
     empNo: string
     empName: string
@@ -449,6 +450,7 @@ export type ProbationEvaluationResources = {
     rating3?: number
     rating2?: number
     rating1?: number
+    remark?: string
     seqNo?: number
 }
 
@@ -494,6 +496,8 @@ export type ProbationEvaluationDetailRs = {
     section4: ProbationEvaluationResourcesSupport[]
     empAchievement: ProbationEmpImprovement[]
     empImprovement: ProbationEmpImprovement[]
+    status: string
+    processStatus?: string
 }
 export type ProbationEmpImprovement = {
     id: number

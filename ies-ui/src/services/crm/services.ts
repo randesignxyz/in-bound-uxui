@@ -719,7 +719,7 @@ export const CrmServiceAPI = (actions?: RequestActions) => ({
   ),
 
   listVisitSchedule: findPagingService<
-    { searchValue?: string; sort?: Record<string, SortOrder> },
+    {  criteria?: {status?: string};keywords?:string;searchValue?: string; sort?: Record<string, SortOrder> },
     VisitScheduleItem
   >(CrmService('list-visit-schedule'), actions),
 

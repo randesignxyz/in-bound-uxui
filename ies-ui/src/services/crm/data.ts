@@ -629,6 +629,7 @@ export interface VisitScheduleItem {
   attachments: { id: number; imageId: string }[];
   hasAttachment?: boolean;
   hasErrorAttachment?: boolean;
+  visit?:VisitDetail
 }
 
 /**********Incentive Scheme**********/

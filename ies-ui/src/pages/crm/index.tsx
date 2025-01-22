@@ -30,6 +30,7 @@ export const CrmPaths = {
   notification: '/crm/notification',
   gratisSettlement: '/crm/gratis',
   terms: '/crm/term',
+  locationTracking: '/crm/tracking',
 };
 const Crm: React.FC = () => {
   const access = useAccess();
@@ -334,7 +335,12 @@ const Crm: React.FC = () => {
               disabled: !access.crmAdmin
             }
           ]
-        }
+        }, {
+          label: 'Location Tracking',
+          key: 'tracking-location',
+          disabled: !access.crmAdmin,
+          onClick: () => history.push(CrmPaths.locationTracking)
+        },
         ]
       },
       icon: scheduleIcon,

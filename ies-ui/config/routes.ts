@@ -165,6 +165,14 @@ export default [
     access: 'canAccessCrmMenuItem',
     component: './crm/term',
   },
+  {
+    path: '/crm/tracking',
+    name: 'tracking-location',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessDeliveryTruck',
+    component: './crm/visit-schedule/components/tracking-location',
+  },
 
   /**********<<Pro**************/
   {

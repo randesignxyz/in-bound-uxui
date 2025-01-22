@@ -103,14 +103,12 @@ export default [
 
   {
     path: '/delivery/tracking',
-    name: 'delivery-tracking',
+    name: 'location-tracking',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessDeliveryMenuItem',
-    component: './delivery/tracking',
+    access: 'canAccessDeliveryTruck',
+    component: './delivery/location-tracking',
   },
-
-
 
   {
     path: '/delivery/review',

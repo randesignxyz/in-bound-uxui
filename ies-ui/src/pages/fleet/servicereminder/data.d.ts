@@ -11,13 +11,13 @@ export interface ServiceReminderDTO {
     meterInterval: number,
     nextDueAt: moment.Moment,
     nextDueMeter: number,
-    serviceTask: ServiceTasksDTO?,
+    serviceTask?: ServiceTasksDTO,
     timeFrequency: string,
     timeInterval: number,
     vehicleId: VehicleListItem,
     watcher?: string,
     meterHistory?: MeterHistory
-    createdBy: string?;
+    createdBy?: string;
     lastModifiedDate?: moment.Moment,
     status: string;
     statusCount: StatusCount;

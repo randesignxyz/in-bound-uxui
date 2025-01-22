@@ -31,6 +31,13 @@ export type RequestedItem = {
     remarks?: string;
 }
 
+
+export type StaffProposalRequestCancel = {
+    processInstanceId: string;
+    remarks: string;
+    fileIds?: string[];
+}
+
 export type SavePayLoad = {
     id?: number,
     requestor: string
@@ -74,7 +81,8 @@ export type StaffProposalDetail = {
     contractType: LookupDataItem,
     contractDateFrom?: Moment,
     contractDateTo?: Moment,
-    items: RequestedItem[]
+    items: RequestedItem[],
+    status: string;
 }
 
 

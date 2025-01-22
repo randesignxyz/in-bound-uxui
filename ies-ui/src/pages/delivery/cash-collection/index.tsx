@@ -13,7 +13,7 @@ import { InstanceDetail } from '@/services/delivery/instance.types';
 import { DeliveryCashCollectionParams } from '@/services/delivery/req-params';
 import { DeliveryServiceAPI } from '@/services/delivery/services';
 import { simpleRequestActions } from '@/services/model';
-import { CheckCircleTwoTone, EyeFilled, PrinterTwoTone } from '@ant-design/icons';
+import { CheckCircleTwoTone, DownloadOutlined, EyeFilled, PrinterTwoTone } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
 import { ActionType } from '@ant-design/pro-table';
 import { Badge, Button, FloatButton, message, Modal, Radio, Space, Spin, Tooltip } from 'antd';
@@ -25,6 +25,7 @@ import Settlement from './settlement-modal';
 import ViewData from './view-data';
 import { ReceiptPrint } from './ReceiptPrint';
 import ViewSettlementModal from './view-settlement-modal';
+import ModalMngt, { ModalName } from '../modal-mngt';
 
 export default () => {
   const requestActions = simpleRequestActions();
@@ -33,7 +34,7 @@ export default () => {
   const componentRef = useRef();
   const [forcePrint, setForcePrint] = useState(0)
   const [summary, setSummary] = useState<SettlementSummaryStatus>();
-
+  const [modalType, setModalType] = useState<ModalName>()
   const access = useAccess();
 
   const [state, setState] = useState<{
@@ -63,7 +64,6 @@ export default () => {
   });
 
   const actionRef = useRef<ActionType>();
-
   const hideModal = (visible?: boolean) => !visible && setState({ visible: undefined });
 
   const onRequestHandler = async (params: TableViewSearchParams<DeliveryCashCollectionParams>) => {
@@ -94,7 +94,6 @@ export default () => {
       message.error('No permission.');
       return;
     }
-
 
     const checkoutList = await services.listCheckout(data.id);
     setState({
@@ -192,6 +191,7 @@ export default () => {
               </Radio.Group>
             </Space>
           }
+          extraRightFilter={<Button type='link' icon={<DownloadOutlined />} onClick={() => setModalType('CASH_COLLECTION_REPORT')}>Export</Button>}
           displayOnly
           columns={[
             {
@@ -313,6 +313,7 @@ export default () => {
       </Spin>
       <FloatButton.BackTop />
       {state?.visible?.type == 'PRINT' && state.visible.payload.detail.id == printing && <ReceiptPrint {...state.visible.payload} ref={componentRef} />}
+      {modalType && <ModalMngt modal={{ type: modalType }} onClose={() => setModalType(undefined)} />}
     </PageContainer>
   );
 };

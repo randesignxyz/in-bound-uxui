@@ -215,6 +215,9 @@ export default <
           showHeader
           options={{
             search: false,
+            density: false,
+            fullScreen: false,
+            setting: false
           }}
           request={onRequestHandler}
         />

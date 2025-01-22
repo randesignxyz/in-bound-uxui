@@ -31,7 +31,8 @@ interface DocumentationDTO{
     termType?:LookupDataDTO,
     vendor?:VendorsDTO,
     currency?:LookupDataDTO,
-    opCo?:OrgUnitDTO
+    opCo?:OrgUnitDTO,
+    owner:boolean
     
 }
 
@@ -51,7 +52,7 @@ interface DocumentationCreate {
 interface DocumentationAdvanceSearch{
     status?:string;
     folderId?:number;
-    library?:number;
+    libraryId?:number;
     folderType?:string;
     division?:string;
     searchValue?:string;
@@ -59,6 +60,7 @@ interface DocumentationAdvanceSearch{
     expired?:string;
     shared?:string[];
     isDeleted?:boolean;
+    filterType:"ADMIN"|"USER" |undefined;
 }
 
 

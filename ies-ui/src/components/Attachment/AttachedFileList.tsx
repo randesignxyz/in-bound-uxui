@@ -2,13 +2,14 @@ import { downloadUploadFileV2 } from '@/services/apiGateway';
 import { AttachmentFile } from '@/services/data';
 import { FileServiceAPI } from '@/services/files/service';
 import { simpleRequestActions } from '@/services/model';
-import { DeleteOutlined, PaperClipOutlined, UpCircleFilled } from '@ant-design/icons';
+import { DeleteOutlined, EyeFilled, PaperClipOutlined, UpCircleFilled } from '@ant-design/icons';
 import { ProDescriptions } from '@ant-design/pro-components';
 import ProList from '@ant-design/pro-list';
-import { Button, Card, message } from 'antd';
+import { Button, Card, message, Space } from 'antd';
 import moment from 'moment';
 import { useEffect, useState } from 'react';
 import FileUploader, { UploadType } from './FileUploader';
+import FilePreview from './FilePreview';
 
 export interface Props {
   // initFiles?: string[];
@@ -86,12 +87,17 @@ export default ({
         extra={<Button type="link" icon={<UpCircleFilled />} />}
         metas={{
           title: {
-            render: (_, r) => (
-              <a onClick={() => downloadUploadFileV2()(r.id, r.fileName)}>{r.fileName}</a>
+            render: (_, r) => (<Space>
+              <a title='Download the file' onClick={() => downloadUploadFileV2()(r.id, r.fileName)}>{r.fileName}</a>
+              {(r.fileType.includes("image", 0) || r.fileType.includes("application/pdf", 0)) && <FilePreview fileInfo={r} trigger={<Button title='Preview the file' type='link' icon={<EyeFilled />} />} />}
+
+            </Space>
+
             ),
           },
           avatar: { render: (_, r) => <PaperClipOutlined /> },
           subTitle: { render: (_, r) => moment(r.createdDate).toNow() },
+
           description: {
             render: (_, r) => (
               <ProDescriptions>

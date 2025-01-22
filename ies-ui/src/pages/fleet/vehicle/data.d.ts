@@ -29,7 +29,7 @@ export interface VehicleListItem {
   normFuelConsumption?: NormFuelConsumptionDTO;
   ownership?: LookUpDataDTO;
   vehicleDriver?: VehicleDriverDTO;
-  businessUnit?:BusnessUnit;
+  businessUnit?: BusnessUnit;
 }
 
 export interface SaveVehicle {
@@ -103,7 +103,7 @@ export interface VehicleSearchParam {
 }
 
 export interface MeterHistoryDTO {
-  id: Int = 0;
+  id: Int;
 
   meterValue: Double;
   meterType?: String;
@@ -112,17 +112,17 @@ export interface MeterHistoryDTO {
   source: String;
 
   vehicleId: String;
-  type?:string;
+  type?: string;
   createdDate: moment.Moment;
   createdBy?: String;
-  
+
   updatedDate: moment.Moment;
   updatedBy?: String;
 }
 
 export interface MeterSearchParam {
   searchValue?: string;
-  status?:string;
+  status?: string;
 }
 
 
@@ -133,5 +133,5 @@ interface MeterFetchParam {
 
 interface MeterTypeParam {
   vehicleId: string,
-  meterType:string
+  meterType: string
 }

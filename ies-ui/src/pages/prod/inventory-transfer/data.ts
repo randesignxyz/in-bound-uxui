@@ -108,6 +108,7 @@ export type TransferAdvanceParams = {
   transfer_type?: string;
   business_unit?: string;
   transfer_request?: string;
+  status?:string
 };
 
 export interface Warehouse {

@@ -4,7 +4,6 @@ import type { AddressInfo } from '../crm/data';
 import type { LookupData, LookupDataItem } from '../data';
 
 export type SaleServiceName =
-  | 'list-offer-code'
   | 'list-so'
   | 'find-so'
   | 'new-so'
@@ -100,7 +99,14 @@ export type SaleServiceName =
   | 'close-stock-request'
   | 'settle-stock-request'
   | 'exchange-rate-dsd-only'
-  | 'reject-request-stock';
+  | 'reject-request-stock'
+  | 'list-rsm-request-mpu'
+  | 'find-rsm-request-mpu'
+  | 'save-store-request-mpu'
+  | 'list-sale-teamwork-mpu'
+  | 'find-by-salesperson-code'
+  | 'sync-posm'
+  | 'list-rsm-request-mpu-item';
 
 /** Stock */
 // export interface StockControl {
@@ -457,12 +463,49 @@ export interface ApprovalStockControlDto {
   distributorCode?: string;
 }
 
+// <<<<<<< HEAD
+// =======
+// export interface MMAAprovalEntity{
+//   stockControlId?: number;
+//   description?: string;
+//   referenceNo?: string;
+//   receivedBy?: string;
+//   items?: EditableStockItem[];
+//   distributorCode?: string;
+//   distributorName?: string;
+//   distributorPhone?: string;
+//   distributorId?: number;
+//   addressId?: number;
+//   latitude?: string;
+//   longitude?: string;
+//   shippingAddressId?: number;
+//   address?: string;
+// }
+
+// export interface MMAApprovalStockItemDto {
+//   id: number;
+//   itemCode: string;
+//   quantity: number;
+//   isBeginning: boolean;
+//   batchNo: string;
+//   expiredDate?: moment.Moment;
+//   isSplit: boolean;
+//   stockCategoryId?: number;
+//   internalId?: string;
+//   price:number;
+//   itemId:number;
+//   itemName:string;
+//   division:string;
+
+// }
+
+// >>>>>>> 9efce41f6d8d562258adeb799dd966c4c6afae07
 export interface ApprovalStockItemDto {
   id: number;
   itemCode: string;
   quantity: number;
   isBeginning: boolean;
-  batchNo?: string;
+  batchNo: string;
   expiredDate?: moment.Moment;
   isSplit: boolean;
   stockCategoryId?: number;
@@ -550,11 +593,6 @@ interface Comments {
   description: string;
 }
 
-interface Comments {
-  id: number;
-  description: string;
-}
-
 interface StockAjust {
   adjustBy: string;
   adjustDate: moment.Moment;
@@ -604,8 +642,6 @@ export interface StockDetailLess {
   pendingQty?: number;
   currentQty: number;
   soldQty?: number;
-  categoryName?: string;
-  sequence?: number;
   lastModifiedDate: moment.Moment;
   typeId: number;
   items: StockDetailItemLess[];
@@ -702,24 +738,6 @@ export interface So {
   budgetCode?: string;
   distributorId?: number;
   attachments?: { id: number; imageId: string; status: string }[];
-}
-
-export interface OfferCodeInfo {
-  offerCode: string;
-  itemsIds: number[];
-  saleType: string;
-}
-
-export interface OfferCodeParam {
-  soItemId: number;
-  itemId: number;
-  description: string;
-  itemCode: string;
-  quantity: number;
-  type: string;
-  uom: string;
-  offerCode?: string;
-  isChecked: boolean;
 }
 
 export interface SoDetail {
@@ -901,6 +919,24 @@ export interface CustomerPriceGroup {
   description?: string;
 }
 
+export interface OfferCodeInfo {
+  offerCode: string;
+  itemsIds: number[];
+  saleType: string;
+}
+
+export interface OfferCodeParam {
+  soItemId: number;
+  itemId: number;
+  description: string;
+  itemCode: string;
+  quantity: number;
+  type: string;
+  uom: string;
+  offerCode?: string;
+  isChecked: boolean;
+}
+
 export interface SoItemDetail {
   id: number;
   seq: number;
@@ -922,7 +958,6 @@ export interface SoItemDetail {
   parentKey?: string;
   budgetCode?: string;
   index?: number;
-  offerCode?: string;
 }
 
 export interface Distributor {
@@ -1056,12 +1091,12 @@ interface PackageOffer {
 // ---------------------------- END ----------------------
 
 interface ProductItem {
+  uom: string?;
   id: number;
   code: string;
   barcode: string;
   name: string;
   uomId: number;
-  uom?: stirng;
   price: number;
   cost?: number;
   discountPercent?: number;
@@ -1528,3 +1563,207 @@ export interface CloseIndirectSoParams {
   shippedItems: { deliveryItemId: number; shippedQty: number }[];
   distributor?: number;
 }
+
+// LH : RSM request to MPU
+export interface PoAdvanceSearchParams {
+  status?: string;
+  searchValue?: string;
+  role?: string;
+}
+
+export interface FetchStore {
+  id?: number;
+  name: string;
+  description?: string;
+  isActive: boolean;
+  memberIds?: string[];
+  vehicleIds?: string[];
+  teamWorkId?: number;
+  removeTeamWorkId?: number;
+  isInitialize: boolean;
+}
+
+export interface StockReceiptBalance {
+  poAllQuantity?: number;
+  receiptAllQuantity?: number;
+  netAllQuantity?: number;
+}
+
+export interface RsmRequestMpuDetail {
+  id?: number;
+  description?: string;
+  internalId?: string;
+  isActive?: number;
+  plateNumber?: string;
+  receivedBy?: string;
+  referenceNo?: string;
+  requestedDate?: moment.Moment;
+  status?: string;
+  stockName?: string;
+  storeId?: number;
+  isKeepForwarding?: number;
+  stockControlType?: string;
+  distributorCode?: string;
+  distributorName?: string;
+  distributorPhone?: string;
+  stockControlId?: number;
+  latitude?: string;
+  longitude?: string;
+  owner?: SalesTeamWorkLess;
+  distributor?: {
+    active?: stirng;
+    createdBy?: string;
+    createdDate?: moment.Moment;
+    currencyId?: numner;
+    customerCode?: string;
+    customerGroupId?: number;
+    customerId?: number;
+    customerInternalName?: string;
+    customerName?: string;
+    customerPriceGroupId?: number;
+    id?: number;
+    lastModifiedBy?: number;
+    lastModifiedDate?: moment.Moment;
+    paymentMethodId?: number;
+    paymentTermCode?: string;
+    paymentTermId?: number;
+    regionId?: number;
+    salespersonCode?: string;
+    salespersonId?: number;
+    salespersonName?: string;
+    shippingMethodId?: number;
+    subChannel?: number;
+    subDivisionId?: number;
+    territory?: string;
+    vatId?: number;
+  };
+  addressInfo?: {
+    id?: number;
+    address?: string;
+    addressKh?: string;
+    houseNo?: string;
+    streetName?: string;
+    streetNo?: string;
+    houseNoKh?: string;
+    streetNameKh?: string;
+    streetNoKh?: string;
+    village?: string;
+    commune?: string;
+    district?: string;
+    province?: string;
+    latitude?: string;
+    longitude?: string;
+    hotspot?: string;
+    direction?: string;
+    customerAddressId?: number;
+    region?: string;
+  };
+  createdDate?: moment.Moment;
+  createdBy?: string;
+  lastModifiedDate?: moment.Moment;
+  lastModifiedBy?: string;
+  // items: MpuStockDetailItemLess[];
+  items: MpuFleetStockReceiptItemLess[];
+  poItems: MpuStockDetailItemLess[];
+  balance?: StockReceiptBalance;
+  grandTotalAmount?: number;
+  totalAmount?: number;
+  discountAmount?: number;
+  discountPercent?: number;
+}
+
+export interface SaveRsmRequestMpu {
+  id?: number;
+  description?: string;
+  internalid: string;
+  isActive?: number;
+  owner?: string;
+  plateNumber?: string;
+  receivedBy?: string;
+  referenceNo: string;
+  requestedDate?: moment.Moment;
+  status?: string;
+  stockName?: string;
+  storeId?: number;
+  isKeepForwarding?: number;
+  stockControlType?: string;
+  distributorCode?: string;
+  item: MpuStockControlItemLess[];
+}
+
+export interface MpuStockControlItemLess {
+  pendingQty?: number;
+  currentQty: number;
+  soldQty?: number;
+  lastModifiedDate: moment.Moment;
+  typeId: number;
+  // items: MpuStockDetailItemLess[];
+  items: MpuFleetStockReceiptItemLess[];
+}
+
+export interface MpuFleetStockReceiptItemLess {
+  receiptNumber: string;
+  fleetReceiptPo: MpuStockDetailItemLess[];
+  balanceAmount: {
+    totalAmount: Double;
+    grandTotalAmount: Double;
+  };
+}
+
+export interface MpuStockDetailItemLess {
+  id?: number;
+  itemId: number;
+  itemName: string;
+  code: string;
+  uom?: string;
+  description?: string;
+  quantity: number;
+  pendingQty: number;
+  totalQuantity: number;
+  expiredDate?: moment.Moment;
+  beginningQty: number;
+  soldQty: number;
+  // batchNo?: string;
+  actualQty?: number;
+  itemType?: number;
+  price?: number;
+  isBeginning: boolean;
+  stockCategoryId: number;
+  batchNo: string;
+  haveBatchNo: number;
+}
+
+export interface MpuStockDetailItemSettle extends MpuStockDetailItemLess {
+  remark?: string;
+  isSettle?: boolean;
+  totalQty?: number;
+  endQty?: number;
+}
+
+export interface MpuStockControlDetail {
+  id: number;
+  stockName: string;
+  description?: string;
+  isActive: number;
+  status: string;
+  owner: SalesTeamWorkLess;
+  approvedBy?: SalesTeamWorkLess;
+  receivedBy?: SalesTeamWorkLess;
+  approvedDate?: moment.Moment;
+  cashOnHand?: number;
+  internalId: string;
+  referenceNo?: string;
+  plateNumber?: string;
+  soldAmount?: number;
+  transactions: StockQuantity[];
+  settlement?: SettlementLessDto;
+  createdDate?: moment.Moment;
+  createdBy?: string;
+  lastModifiedDate?: moment.Moment;
+  lastModifiedBy?: string;
+  discount?: number;
+}
+
+// ////////////////
+
+// LH : END //////////////

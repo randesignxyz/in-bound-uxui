@@ -1,5 +1,5 @@
-import { CrmServiceAPI, InitVisitScheduleParamsType } from '@/services/crm/services';
-import { commmonActions } from '@/services/model';
+import { useReducer } from 'react';
+import { DeliveryEntry, DeliveryItemEntry, reducer, SoItemEntry, State } from './reducer';
 import {
   CloseIndirectSoParams,
   CustomerSaleInfo,
@@ -9,12 +9,12 @@ import {
   So,
   SoDeliveryMethod,
 } from '@/services/sale/data';
-import { SaleServiceAPI } from '@/services/sale/services';
 import { message } from 'antd';
-import { SortOrder } from 'antd/lib/table/interface';
 import { groupBy, map, sortBy, sumBy, uniqueId } from 'lodash';
-import { useReducer } from 'react';
-import { DeliveryEntry, DeliveryItemEntry, SoItemEntry, State, reducer } from './reducer';
+import { SaleServiceAPI } from '@/services/sale/services';
+import { commmonActions } from '@/services/model';
+import { CrmServiceAPI, InitVisitScheduleParamsType } from '@/services/crm/services';
+import { SortOrder } from 'antd/lib/table/interface';
 
 export const Model = () => {
   const initState: State = {
@@ -125,7 +125,7 @@ export const Model = () => {
   };
 
   const loadListItem = async (
-    criteria?: { advanceSearch?: any; searchValue?: string },
+    criteria?: { advanceSearch?: any, searchValue?: string },
     pagination?: {
       pageSize?: number;
       current?: number;
@@ -230,11 +230,6 @@ export const Model = () => {
     }
   };
 
-  const fetchOfferCodes = async (id: number) => {
-    const offerCodes = await saleServices.listOfferCodes({ id: id });
-    dispatch({ type: 'fetchOfferCodes', payload: offerCodes });
-  };
-
   const getOffer = async (data: OfferParams) => {
     try {
       const rs = await saleServices.getPackageOffer(data);
@@ -248,9 +243,8 @@ export const Model = () => {
     if (data.length > 0) {
       const main = data.find((it) => !it.parentKey);
       const soItems = (
-        state.data?.soItems?.filter(
-          (it) => !(it.key === main?.key || it.parentKey === main?.key),
-        ) || []
+        state.data?.soItems?.filter((it) => !(it.key === main?.key || it.parentKey === main?.key)) ||
+        []
       )
         .concat(data)
         .sort((a, b) => (a.seq || 0) - (b.seq || 0));
@@ -393,10 +387,10 @@ export const Model = () => {
     const list = data.key
       ? state.data?.deliveryList?.map((it) => (it.key === data.key ? data : it))
       : state.data?.deliveryList?.concat({
-          ...data,
-          key: uniqueId('delivery'),
-          itemList: data.itemList.map((it) => ({ ...it, key: uniqueId('delivery') })),
-        });
+        ...data,
+        key: uniqueId('delivery'),
+        itemList: data.itemList.map((it) => ({ ...it, key: uniqueId('delivery') })),
+      });
     const soItems = getSoItems(state.data?.transportation || [], delivery);
     dispatch({
       type: 'setDeliveryList',
@@ -453,12 +447,8 @@ export const Model = () => {
     dispatch({ type: 'setDeliveryList', payload: deliveryList });
   };
 
-  const postSo = async (
-    soId: number,
-    offerCodes?: { soItemId: number; offerCode?: string }[],
-    remarks?: string,
-  ) => {
-    return await saleServices.postSoToSAP({ soId: soId, remarks: remarks, offerCodes: offerCodes });
+  const postSo = async (soId: number, remarks?: string) => {
+    return await saleServices.postSoToSAP({ soId: soId, remarks: remarks });
   };
 
   const cancelSo = async (soId: number, remarks: string) => {
@@ -489,28 +479,28 @@ export const Model = () => {
     return (
       (delivery && delivery?.id === 5
         ? state.data?.soItems?.concat(
-            rs.flatMap((it, index) => {
-              return it.offerList.map((ti) => {
-                return {
-                  id: 0,
-                  seq: (lastElement?.seq || 0) + (index + 1) * 1000,
-                  key: uniqueId('traItem'),
-                  itemId: ti.itemItem.id,
-                  itemCode: ti.itemItem.code || '',
-                  description: ti.itemItem.description || '',
-                  uomId: 1,
-                  uom: 'EACH',
-                  qty: ti.qty,
-                  price: ti.price,
-                  amount: 0,
-                  discountAmount: 0,
-                  totalAmount: 0,
-                  type: ti.offerType,
-                  categoryId: 0,
-                };
-              });
-            }) || [],
-          )
+          rs.flatMap((it, index) => {
+            return it.offerList.map((ti) => {
+              return {
+                id: 0,
+                seq: (lastElement?.seq || 0) + (index + 1) * 1000,
+                key: uniqueId('traItem'),
+                itemId: ti.itemItem.id,
+                itemCode: ti.itemItem.code || '',
+                description: ti.itemItem.description || '',
+                uomId: 1,
+                uom: 'EACH',
+                qty: ti.qty,
+                price: ti.price,
+                amount: 0,
+                discountAmount: 0,
+                totalAmount: 0,
+                type: ti.offerType,
+                categoryId: 0,
+              };
+            });
+          }) || [],
+        )
         : state.data?.soItems) || []
     );
   };
@@ -522,7 +512,6 @@ export const Model = () => {
       initData,
       findProductItem,
       fetchSo: doFetchSo,
-      fetchOfferCodes,
       saveSo: doSaveSo,
       saveSoItem,
       saveSoItems,

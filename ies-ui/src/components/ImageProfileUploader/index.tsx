@@ -14,7 +14,7 @@ export default ({ style, onSave, imageId }: { style?: CSSProperties, onSave: (fi
     const uploadButton = (
         <div>
             {loading ? <LoadingOutlined /> : <UploadOutlined />}
-            <div style={{ marginTop: 8 }}>Upload</div>
+            <div style={{ marginTop: 8 }}>Upload Photo</div>
         </div>
     );
 

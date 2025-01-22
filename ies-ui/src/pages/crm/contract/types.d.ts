@@ -34,7 +34,8 @@ export type ContractPOSMItem = {
   itemId: number;
   qty: number;
   remarks?: string;
-
+  installedDate?:moment.Moment;
+  attachment?:string[];
 }
 
 export type Terms = {
@@ -46,6 +47,7 @@ export type SavePosmParams = {
   contractId: number
   itemId: number
   qty: number
+  installedDate?:moment.Moment
   remarks?: string
 }
 
@@ -88,7 +90,7 @@ export interface ContractViewData {
   effectiveDate: moment.Moment;
   expireDate: moment.Moment;
   status: string;
-  terms: LookupDataItem?,
+  terms?: LookupDataItem,
   remarks?: string;
   posmItems?: POSMView[],
   customerAddressList: number[]
@@ -143,7 +145,7 @@ export type ContractCheckedDataView = {
 
 export type SaveCustomerPosmParams = {
   id?: number
-  contractId: number
+  customerId: number
   itemId: number
   qty: number
   remarks?: string

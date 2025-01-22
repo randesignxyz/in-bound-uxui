@@ -9,23 +9,23 @@ interface PurchaseRequestDTO {
     purchaseOrderDate: moment.Moment,
     ownerBy: string,
     ownerCode: string,
-    distributorId?:number;
-    distributorCode?:string;
-    distributorName?:string
-    distributorPhone?:string;
-    latitude?:string;
-    longitude?:string;
-    status: "pending"|"rejected"|"closed"|"partial",
+    distributorId?: number;
+    distributorCode?: string;
+    distributorName?: string
+    distributorPhone?: string;
+    latitude?: string;
+    longitude?: string;
+    status: "pending" | "rejected" | "closed" | "partial",
     grantAmount: number,
     discountAmount: number,
     totalAmount: number,
-    createdBy: string?,
+    createdBy?: string,
     createdDate?: moment.Moment
     lastModifiedBy?: string
     lastModifiedDate?: moment.Moment;
-    items:PurchaseRequestItemCreate[];
-    assignedToCode?:string;
-    assignedTo:string;
+    items: PurchaseRequestItemCreate[];
+    assignedToCode?: string;
+    assignedTo: string;
 }
 
 interface PurchaseRequestCreate {
@@ -36,7 +36,7 @@ interface PurchaseRequestCreate {
     totalAmount?: number,
     grantAmount?: number,
     discountAmount?: number,
-    items:PurchaseRequestItemCreate[]
+    items: PurchaseRequestItemCreate[]
 }
 
 interface PurchaseRequestItemCreate {
@@ -81,8 +81,8 @@ interface PurchaseRequestItemCreate {
     quantity: number,
     pricing: number,
     code: string,
-    uom: string?,
-    name: string,
+    uom: string,
+    name?: string,
     stockCategoryName: string,
 }
 

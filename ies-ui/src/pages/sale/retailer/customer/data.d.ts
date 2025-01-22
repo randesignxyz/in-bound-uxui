@@ -8,7 +8,7 @@ interface CustomerDto {
   points: number;
   phone: string;
   type: string;
-  imageId?: string = null;
+  imageId?: string;
   verifyCount: number;
   verifyCode: string;
   status: string;

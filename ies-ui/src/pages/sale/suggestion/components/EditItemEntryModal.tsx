@@ -304,8 +304,6 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...pr
               type: 'single',
               editableKeys,
               onSave: async (_, record: EditableStockItem, originRow: EditableStockItem) => {
-                console.log(record);
-                console.log(originRow);
                 if (record.batchNo) {
                   record.batchNo = moment(originRow.batchNo);
                   record.expiredDate = moment(originRow.batchNo).add(6, 'M');

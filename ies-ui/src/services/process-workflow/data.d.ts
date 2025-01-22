@@ -44,20 +44,19 @@ export interface ProcessInstanceDef extends MenuItem {
 }
 
 export type ProcessDefInfo = {
-  id: string
-  shortName?: string
-  description?: string
-  department?: LookupDataItem
-  urlPath?: string,
-  bizKeyFormat?: string
-  increment?: number,
-  startFormInNewPage: boolean,
-  liveDate?: Moment,
-  announcementDays?: number,
-  accessRole?: string
-
+  id: string;
+  shortName?: string;
+  description?: string;
+  department?: LookupDataItem;
+  urlPath?: string;
+  bizKeyFormat?: string;
+  increment?: number;
+  shownInEForms?: boolean;
+  startFormInNewPage: boolean;
+  liveDate?: Moment;
+  announcementDays?: number;
+  accessRole?: string;
 }
-
 
 export interface ProcessInstanceDefItem {
   id: string;

@@ -86,13 +86,13 @@ const POMainPage: React.FC<Props> = () => {
                 },
                 {
                     action: "view",
-                    tabKey:"view",
+                    tabKey:items?.id,
                     panel: ({ onAddTab, onUpdateTab, key }) => <MpuPoDetail
                         id={items?.id}
                         onEdit={() => onUpdateTab?.('edit', undefined, undefined, key)}
                         onAdd={() => onAddTab?.('add', undefined, key)}
                     />,
-                    tabLabel:`${ items?.purchaseRequestNo}`,
+                    tabLabel:`${ items?.purchaseOrderCode}`,
                 },
                 {
                     action: "edit",
@@ -106,7 +106,7 @@ const POMainPage: React.FC<Props> = () => {
                         }}
                         id={items?.id}
                     />,
-                    tabLabel: `Edit ${items?.purchaseRequestNo}`,
+                    tabLabel: `Edit ${items?.purchaseOrderCode}`,
                 },
             ]}
             listView={{
@@ -138,18 +138,21 @@ const POMainPage: React.FC<Props> = () => {
                         sort: sort
                     }))
                 },
+                
                 props: {
                     dataSource: data?.items,
                     actionRef: actionRef,
                     loading:isFetching,
-
+                    expandable:{
+                        
+                    },
                     columns: [
                         {
                             title: 'No',
                             dataIndex: "purchaseRequestNo",
                             actionProps: (item) => ({
                                 type: 'view',
-                                label: item.requestedCode || 'n/a',
+                                label: item.purchaseOrderCode || 'n/a',
                             }),
                         },
                         {

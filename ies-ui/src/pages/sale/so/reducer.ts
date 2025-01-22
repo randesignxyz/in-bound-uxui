@@ -1,10 +1,9 @@
 import { AddressInfo, CustomerItemLess, SalePerson } from '@/services/crm/data';
 import { BusinessUnit, LookupData, LookupDataItem } from '@/services/data';
-import { BaseActionType, StateType, baseReducer } from '@/services/model';
+import { BaseActionType, baseReducer, StateType } from '@/services/model';
 import {
   BudgetCodeLess,
   CustomerSaleInfo,
-  OfferCodeInfo,
   // CustomerTransportOfferDto,
   PackageOffer,
   ProductItem,
@@ -92,7 +91,6 @@ export interface State extends StateType<ModalName> {
     initData?: InitData;
     so?: So;
     soDetail?: SoDetail;
-    offerCodes?: OfferCodeInfo[];
     soItems?: SoItemEntry[];
     deliverySoItems?: DeliverySoItemEntry[];
     deliveryList?: DeliveryEntry[];
@@ -114,7 +112,6 @@ export type Action =
   | { type: 'setDeliverySoItems'; payload: DeliverySoItemEntry[] }
   | { type: 'removeSoItem'; payload: SoItemEntry[] }
   | { type: 'setSoDetail'; payload: SoDetail }
-  | { type: 'fetchOfferCodes'; payload: OfferCodeInfo[] }
   | { type: 'clearSoItem' }
   | { type: 'resetSoItem' }
   | { type: 'newSo' }
@@ -307,14 +304,6 @@ export const reducer = (state: State, action: Action): State => {
         data: {
           ...state.data,
           attachments: action.payload,
-        },
-      };
-    case 'fetchOfferCodes':
-      return {
-        ...state,
-        data: {
-          ...state.data,
-          offerCodes: action.payload,
         },
       };
     default:

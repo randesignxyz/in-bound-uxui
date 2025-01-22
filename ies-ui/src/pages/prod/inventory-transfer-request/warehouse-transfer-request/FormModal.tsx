@@ -28,7 +28,6 @@ export default ({ onSave, id, transfer_id, data, ...props }: Props) => {
       const getReceive = async () => {
         const itemcode = data?.item.map((it) => it.item_code);
         for (let i = 0; i < itemcode.length; i++) {
-          console.log('hiiii');
           const receive = await TransferRequestServiceAPI(requestActions).get_total_provide({
             transfer_request: transfer_id,
             item_code: itemcode[i]
@@ -50,7 +49,6 @@ export default ({ onSave, id, transfer_id, data, ...props }: Props) => {
       }
       getReceive()
     }
-
   }, [props.open]);
 
   return (

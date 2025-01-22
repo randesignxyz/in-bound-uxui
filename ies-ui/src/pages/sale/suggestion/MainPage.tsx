@@ -73,8 +73,7 @@ const TaskListMainPage: React.FC<Props> = () => {
     ['fetch-customer-list', filter],
     () => suggestionService.page(filter),
     {
-      refetchOnWindowFocus: false,
-      refetchInterval: 50000,
+      refetchOnWindowFocus: false
     },
   );
 

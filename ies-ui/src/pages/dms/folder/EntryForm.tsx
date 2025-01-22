@@ -23,7 +23,6 @@ const FolderEntryForm: React.FC<Props> = ({ code, libraryId, libraryData, data, 
         });
         !data && form.resetFields();
     }, [props.open]);   
-
     
     return (
         <FormModalComp
@@ -123,7 +122,7 @@ const FolderEntryForm: React.FC<Props> = ({ code, libraryId, libraryData, data, 
                             <ProFormText
                                 name="name"
                                 label="Folder Name"
-                                rules={[{ required: true }]}
+                                rules={[{ required: true },{max:100}]}
                             />
                             <ProFormText
                                 name={"location"}

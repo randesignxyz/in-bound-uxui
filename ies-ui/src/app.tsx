@@ -121,7 +121,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
       return (
         <>
           <App>
-            {children}
+            {children}  
           </App>
           {isDev && (
             <SettingDrawer

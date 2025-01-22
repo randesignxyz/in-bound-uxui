@@ -67,9 +67,22 @@ export const formatter = new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 2,
 });
 
+export const formatter1 = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 6
+});
+
+
 export const formatterQty = new Intl.NumberFormat('en-US', {
     compactDisplay: 'short',
 });
+export const formatterQty1 = new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+});
+
 
 export const formatterKh = new Intl.NumberFormat('km-KH', {
     style: 'currency',
@@ -83,21 +96,41 @@ let option = {
     maximumFractionDigits: 2,
 };
 
-export const formatterPercentage = new Intl.NumberFormat('en-US', option);
+export const formatterPercentage = new Intl.NumberFormat('en-US');
 
 export const formatConfig = {
+    year: 'YYYY',
     date: 'YYYY-MM-DD',
+    dateFull: 'DD-MMM-YYYY',
     dateTime: 'YYYY-MM-DD HH:mm:ss',
     month: 'YYYY-MM',
+    monthFull: 'MMM-YYYY',
     duration: 'HH:mm:ss', // 'HH:mm:ss.SSS',
 };
 
+export const formatYear = (date?: moment.Moment, format?: string): string | undefined => {
+    return (
+        date &&
+        moment(date)
+            // .utcOffset(0, true)
+            .format(format ?? formatConfig.year)
+    );
+};
 export const formatDate = (date?: moment.Moment, format?: string): string | undefined => {
     return (
         date &&
         moment(date)
             // .utcOffset(0)
             .format(format ?? formatConfig.date)
+    );
+};
+
+export const formatDATEFUll = (date?: moment.Moment, format?: string): string | undefined => {
+    return (
+        date &&
+        moment(date)
+            // .utcOffset(0)
+            .format(format ?? formatConfig.dateFull)
     );
 };
 
@@ -116,6 +149,14 @@ export const formatMonth = (date?: moment.Moment, format?: string): string | und
         moment(date)
             // .utcOffset(0, true)
             .format(format ?? formatConfig.month)
+    );
+};
+export const formatMonthFull = (date?: moment.Moment, format?: string): string | undefined => {
+    return (
+        date &&
+        moment(date)
+            // .utcOffset(0, true)
+            .format(format ?? formatConfig.monthFull)
     );
 };
 
@@ -241,7 +282,7 @@ const readableWords = [
     { HOLD: 'Hold' },
     { CANCELED: 'Canceled' },
     { DELIVERED: 'Delivered' },
-    { IN_PROGRESS: 'In Process' },
+    { IN_PROGRESS: 'In Progress' },
     { DELIVERY: 'Delivery' },
     { PICKING: 'Picking' },
     { QUEUE: 'Queue' },
@@ -302,6 +343,8 @@ const readableWords = [
     { REMOVED: 'Removed' },
     { NEW_REQUEST: 'New Request' },
     { UPDATED: 'Updated' },
+    { REVIEWING: 'Reviewing' },
+    { SETTING: 'Setting' },
     { NONE: 'NA' },
 ];
 export const toReadable = (word?: string) => {

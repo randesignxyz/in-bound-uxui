@@ -16,13 +16,17 @@ interface PurchaseOrderCreate{
 
 interface PurchaseOrderDTO{
     id:number;
+    purchaseOrderCode?:string;
     purchaseRequestId:number;
-    purchaseRequestNo:string;
+    requestedCode:string;
     referenceNumber?:string;
     purchaseOrderDate:string;
     // ownerBy:string;
     // ownerCode:string;
     requestedBy:string;
+    assignedTo?:string;
+    assignedToCode?:string;
+
     
     grantAmount:number;
     discountAmount:number;
@@ -34,7 +38,11 @@ interface PurchaseOrderDTO{
     distributorCode?:string;
     distributorName?:string;
     distributorPhone?:string;
-    foc?:{qty:number; itemName:string;itemCode:string}[]
+    distributorId?:number;
+    latitude?:string;
+    longitude?:string;
+    addressId?:number;
+    foc?:{qty:number; itemName:string;itemCode:string; uom?:string}[]
 }
 
 

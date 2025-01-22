@@ -120,6 +120,9 @@ export type PoRequestSavePayload = {
     paymentTermId?: number;
     paymentTerm?: string;
 
+    ownerFunctionId?: number;
+    ownerFunction?: string;
+
     totalAmount: number;
     discountPercentage?: number;
     discountAmount?: number;
@@ -168,6 +171,7 @@ export type PoRequestItemDetail = {
     amountAfterDiscount: number;
     description: string;
     linkedItems?: PoLinkedItem[];
+    relatedObjects?: RelatedObj[];
     remarks: string;
 
 }
@@ -206,6 +210,7 @@ export type PoRequestDetail = {
     status?: string;
     items: PoRequestItemDetail[];
     deliveredDate?: Moment;
+    ownerFunction?: string;
     integratedStatus?: string;
     files?: string[];
 }
@@ -236,6 +241,7 @@ export type PoItemSearch = {
     qty?: number;
     orderedQty?: number;
     purchasedQty?: number;
+    availableQty?: number;
     closed?: boolean;
     amount?: number;
     uomList: LookupDataItem[],

@@ -1,15 +1,16 @@
-import { CloseIndirectSoParams, OfferCodeParam } from '@/services/sale/data';
-import { CheckOutlined, CloudUploadOutlined, EditOutlined, StopOutlined } from '@ant-design/icons';
-import { PageContainer } from '@ant-design/pro-components';
-import { Button, Modal, Spin, message } from 'antd';
-import React, { useEffect } from 'react';
 import { useAccess } from 'umi';
+import { CheckOutlined, CloudUploadOutlined, EditOutlined, StopOutlined } from '@ant-design/icons';
+import { Button, Flex, Form, message, Modal, Spin } from 'antd';
+import React, { useEffect } from 'react';
 import { Model } from '../../model';
 import CancelSo from './CancelSo';
-import CloseSo from './CloseSo';
-import OrderFormView from './OrderFormView';
 import SapPosting from './SapPosting';
 import SoFormView from './SoFormView';
+import CloseSo from './CloseSo';
+import { CloseIndirectSoParams } from '@/services/sale/data';
+import { PageContainer, ProForm } from '@ant-design/pro-components';
+import OrderFormView from './OrderFormView';
+
 
 interface Props {
   id?: number;
@@ -25,16 +26,13 @@ const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
   const access = useAccess();
   useEffect(() => {
     try {
-      if (id) {
-        actions.fetchSo(id);
-        actions.fetchOfferCodes(id);
-      }
+      id && actions.fetchSo(id);
     } catch {
       message.error('Failed to load so.');
     }
   }, [id]);
 
-  const onSapPostingHandler = (comment?: string, offerCodes?: OfferCodeParam[]) => {
+  const onSapPostingHandler = (comment?: string) => {
     if (!id) {
       message.error('So not found.');
       return;
@@ -44,17 +42,8 @@ const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
       content: 'Are you sure?',
       onOk: async () => {
         try {
-          const rs = await actions.postSo(
-            id,
-            offerCodes?.map((e) => {
-              return {
-                soItemId: e.soItemId,
-                offerCode: e.offerCode,
-              };
-            }),
-            comment,
-          );
-          await actions.fetchSo(id);
+          const rs = await actions.postSo(id, comment);
+          actions.fetchSo(id);
           modals.hideModal('sap-posting');
           message.success(`So has been posted sucessfully. SAP Doc No: ${rs.data}.`);
         } catch (e) {
@@ -92,6 +81,7 @@ const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
       message.error('So cannot be found.');
       return;
     }
+
     Modal.confirm({
       title: 'Closing So',
       content: 'Are you sure?',
@@ -107,20 +97,6 @@ const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
         }
       },
     });
-  };
-
-  const getOfferItems = () => {
-    const checking = (id: number) =>
-      state.data?.offerCodes?.reduce((o, e) => {
-        if (e.itemsIds.findIndex((it) => it === id) > -1) o.push(e.offerCode);
-        return o;
-      }, new Array<string>());
-
-    return (
-      state.data?.soDetail?.items?.filter(
-        (e) => e.type !== 'STD' && checking(e.itemId)!.length > 0,
-      ) ?? []
-    );
   };
 
   const buttons = [
@@ -161,38 +137,33 @@ const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
         <CheckOutlined /> Close
       </Button>
     ),
-  ];
+  ]
 
   return (
     <Spin spinning={state.loading}>
-      {openInTab ? (
-        <>
-          <OrderFormView actionButtons={buttons} soDetail={state.data?.soDetail} />
-          <SoFormView data={state.data?.soDetail} />
-        </>
-      ) : (
-        <PageContainer
-          breadcrumb={undefined}
-          title={!openInTab && 'PO#'}
-          subTitle={!openInTab && state.data?.soDetail?.docEntryNum}
-          content={<OrderFormView soDetail={state.data?.soDetail} />}
-          extra={
-            access.canCreateEditSo &&
-            !openInTab &&
-            ['Pending', 'Failed'].some((it) => it === state.data?.soDetail?.status) &&
-            buttons
-          }
-        >
-          <SoFormView data={state.data?.soDetail} />
-        </PageContainer>
-      )}
+
+      {openInTab ? <>
+        <OrderFormView actionButtons={buttons} soDetail={state.data?.soDetail} />
+        <SoFormView data={state.data?.soDetail} />
+      </> : <PageContainer
+        breadcrumb={undefined}
+        title={!openInTab && "PO#"}
+        subTitle={!openInTab && state.data?.soDetail?.docEntryNum}
+        content={<OrderFormView soDetail={state.data?.soDetail} />}
+        extra={
+          access.canCreateEditSo && !openInTab &&
+          ['Pending', 'Failed'].some((it) => it === state.data?.soDetail?.status) && buttons
+        }
+      >
+        <SoFormView data={state.data?.soDetail} />
+
+      </PageContainer>}
+
 
       <SapPosting
         open={modals.isVisible('sap-posting')}
         onCancel={() => modals.hideModal('sap-posting')}
         onPosting={onSapPostingHandler}
-        items={getOfferItems() ?? []}
-        offerCodes={state.data?.offerCodes ?? []} //
       />
       <CancelSo
         open={modals.isVisible('cancel-so')}

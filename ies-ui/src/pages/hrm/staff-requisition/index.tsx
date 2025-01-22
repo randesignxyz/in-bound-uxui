@@ -83,6 +83,7 @@ export default () => {
           <Radio.Button value="PENDING">Pending</Radio.Button>
           <Radio.Button value="COMPLETED">Completed</Radio.Button>
           <Radio.Button value="REJECTED">Rejected</Radio.Button>
+          <Radio.Button value="CANCELED">Canceled</Radio.Button>
         </Radio.Group >}
         tableProps={{
           actionRef: actionRef,

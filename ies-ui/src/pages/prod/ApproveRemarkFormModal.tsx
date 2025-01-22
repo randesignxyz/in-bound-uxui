@@ -1,19 +1,21 @@
 import FormModalComp, { FormModalProps } from '@/components/FormModal';
 import ProForm, { ProFormTextArea } from '@ant-design/pro-form';
-import { Card } from 'antd';
+import { Card, message } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 interface Props extends FormModalProps {
   id: string;
   transfer_id: string;
-  data:any
-  onSave: (id: string, remarks: string, transfer_id: string,data:any) => void;
+  data: any,
+  loading:boolean
+  onSave: (id: string, remarks: string, transfer_id: string, data: any) => void;
 }
-export default ({ id, transfer_id, onSave,data, ...props }: Props) => {
+export default ({ id, transfer_id, onSave, data,loading, ...props }: Props) => {
   const [form] = useForm<{ remarks: string }>();
   useEffect(() => {
     if (props.open) form.resetFields();
+    
   }, [props.open]);
 
   return (
@@ -21,9 +23,10 @@ export default ({ id, transfer_id, onSave,data, ...props }: Props) => {
       width="600px"
       {...props}
       onResetForm={() => form.resetFields()}
+      confirmLoading={loading}
       onSubmit={async () => {
         const dataForm = await form.validateFields();
-        onSave(id, dataForm.remarks, transfer_id,data);
+        onSave(id, dataForm.remarks, transfer_id, data);
       }}
     >
       <Card>

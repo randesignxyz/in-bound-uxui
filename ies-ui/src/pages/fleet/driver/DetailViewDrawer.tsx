@@ -1,5 +1,5 @@
 import { ProDescriptions } from '@ant-design/pro-components';
-import { Card, Divider, Drawer, DrawerProps, Space } from 'antd';
+import { Card, Divider, Drawer, DrawerProps, Space, Typography } from 'antd';
 import { DriverDTO } from './data';
 import { formatDate } from '@/pages/utils';
 
@@ -25,6 +25,9 @@ export default ({ data, ...props }: Props) => {
           >
             <ProDescriptions<DriverDTO>
               dataSource={data}
+              contentStyle={{
+                fontWeight:500
+              }}
               columns={[
                 {
                   key: "1",
@@ -71,6 +74,7 @@ export default ({ data, ...props }: Props) => {
                   key: "9",
                   label: "Status",
                   dataIndex: "status",
+                  render:(_,r)=><Typography.Text type={r.status=="Active"?"success":"danger"}>{r.status}</Typography.Text>
                 },
                 {
                   key: "10",
@@ -95,7 +99,7 @@ export default ({ data, ...props }: Props) => {
               dataSource={data}
               column={2}
               contentStyle={{
-                fontWeight: "bold"
+                fontWeight:500
               }}
               columns={[
                 {
@@ -106,7 +110,7 @@ export default ({ data, ...props }: Props) => {
                 {
                   key: "2",
                   label: "Type",
-                  render: (_, r) => r.vehicleDriver?.driverType
+                  render: (_, r) =><Typography.Text type={ r.vehicleDriver?.driverType=="permanent"?"success":"warning"}>{ r.vehicleDriver?.driverType}</Typography.Text>
                 },
                 {
                   key: "3",

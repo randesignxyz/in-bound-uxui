@@ -8,21 +8,23 @@ import { DrawerForm } from '@ant-design/pro-components';
 import { ModalFormProps, ProFormCheckbox, ProFormRadio } from '@ant-design/pro-form';
 import ProList from '@ant-design/pro-list';
 import { ActionType } from '@ant-design/pro-table';
-import { Badge, Button, Col, Descriptions, Divider, Input, message, Row, Spin } from 'antd';
+import { Alert, Badge, Button, Col, Descriptions, Divider, Input, message, Row, Spin } from 'antd';
 import CheckableTag from 'antd/es/tag/CheckableTag';
 import { useEffect, useRef, useState } from 'react';
 
 interface Props extends ModalFormProps {
+  buId: number;
+  selector?: string;
   addedItems?: number[];
   onAddItem?: (data: ItemDetail) => void;
 }
 
-export default ({ addedItems, onAddItem, ...rest }: Props) => {
+export default ({ selector, buId, addedItems, onAddItem, ...rest }: Props) => {
   const requestActions = simpleRequestActions();
   const services = ItemServiceAPI(requestActions);
   const actionRef = useRef<ActionType>();
   const [searchValue, setSearchValue] = useState<string>();
-  const [searchParams, setSearchParams] = useState<ItemAdvanceSearchParams>({});
+  const [searchParams, setSearchParams] = useState<ItemAdvanceSearchParams>({ buId: buId });
   const [itemGroups, setItemGroups] = useState<ItemGroupListItem[]>([]);
   const onRequestHandler = async (params: TableViewSearchParams<ItemAdvanceSearchParams>) => {
     try {
@@ -45,16 +47,20 @@ export default ({ addedItems, onAddItem, ...rest }: Props) => {
   };
 
   useEffect(() => {
-    if (rest.open) initData();
-  }, [rest.open]);
+    if (rest.open) initData()
 
+  }, [rest.open]);
   const initData = async () => {
-    const data = await services.listAllItemGroup();
+    const data = await services.listAllItemGroupByBu(buId);
+    setSearchParams({ buId: buId })
     setItemGroups(data);
+    actionRef.current?.reloadAndRest?.();
   };
 
   return (
     <DrawerForm
+      clearOnDestroy
+
       onValuesChange={(changedValue) => {
         if ('itemType' in changedValue) {
           const { itemType } = changedValue;
@@ -118,10 +124,10 @@ export default ({ addedItems, onAddItem, ...rest }: Props) => {
             />
           </Col>
         </Row>
-
+        {selector && selector != 'N/A' && <Alert message={`${selector} item is allowed`} />}
+        {selector && selector == 'N/A' && <Alert message={`RM-PM item is not allowed`} />}
         <Divider />
         <ProList<ItemListItem>
-          // showActions="hover"
           actionRef={actionRef}
           key="id"
           pagination={{
@@ -160,7 +166,7 @@ export default ({ addedItems, onAddItem, ...rest }: Props) => {
                   style={{ top: -10 }}
                   count={addedItems?.filter((it) => it == row.id).length}
                 >
-                  <Button onClick={async () => {
+                  <Button disabled={(selector != undefined && (row.itemGroup.selector || "N/A") != selector)} onClick={async () => {
                     const item = await services.detail(row.id);
                     onAddItem?.(item);
                   }}

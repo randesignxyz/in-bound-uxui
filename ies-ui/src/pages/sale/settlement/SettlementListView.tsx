@@ -32,11 +32,13 @@ export default ({}: Props) => {
           size={'small'}
           style={{ backgroundColor: '#EEE' }}
           key={'id'}
+          ghost
           rowKey={(r) => {
             return r.id!!;
           }}
           columns={[
             {
+              width:50,
               render: (_, r) => (
                 <Button
                   type="link"

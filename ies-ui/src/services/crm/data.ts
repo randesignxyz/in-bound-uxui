@@ -426,8 +426,6 @@ export interface AddresssView {
   latitude: string;
   longitude: string;
   visitPlanOptionList?: number[];
-  // weekOfTheMonths?: number[];
-  // dayOfTheWeek?: number;
 }
 
 export interface SettlementInfo {

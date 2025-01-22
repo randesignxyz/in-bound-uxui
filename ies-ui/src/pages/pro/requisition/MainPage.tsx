@@ -1,7 +1,7 @@
 import { TableViewSearchParams } from "@/components/DataCrud/TableView"
 import PageWrapper from "@/components/PageWrapper"
 import Status from "@/components/Status"
-import { formatDate, formatter } from "@/pages/utils"
+import { formatDate, formatter1 } from "@/pages/utils"
 import { ProDepartment, RequisitionDetailResponse, RequisitionListItem } from "@/services/pro/data"
 import { RequisitionAdvanceSearchParams } from "@/services/pro/req-params"
 import { RequisitionServiceAPI } from "@/services/pro/services"
@@ -11,13 +11,16 @@ import {
 } from "@ant-design/icons"
 import { useQuery } from "@umijs/max"
 import { Button, Flex, Modal, Spin, Typography, message } from "antd"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import Form from "@/pages/process-flow/form"
 import DataDetailView from "./DataDetailView"
 import AdvanceSearch from "./components/AdvanceSearch"
 import Flow from "../flow"
 import DataEntryView from "./DataEntryView"
 import { uniqueId } from "lodash"
+import { ActionType } from "@ant-design/pro-components"
+
+export const openPR = (instanceId: string) => window.open(`/external/data-form/requisition_request_process/${instanceId}`, '_blank')?.focus()
 
 export default () => {
     const services = RequisitionServiceAPI();
@@ -35,6 +38,8 @@ export default () => {
     const { data, isFetching, refetch } = useQuery(['fetch-customer-list', filter], () => services.list(filter), {
         refetchOnWindowFocus: false
     })
+
+    const actionRef = useRef<ActionType>();
 
     const onDetailhandler = async (data: RequisitionListItem) => {
         try {
@@ -93,6 +98,7 @@ export default () => {
                 }],
                 type: 'Table',
                 title: "PR List",
+
                 onOpenAdvanceSearch: async () => {
                     await listDepts();
                     setAdvanceSearch({ visible: true });
@@ -135,11 +141,12 @@ export default () => {
                     pagination: { total: data?.total },
                     loading: isFetching,
                     bordered: true,
+                    actionRef: actionRef,
                     actionButtonsColumnRender: (item) => ([
                         {
                             tooltip: 'View data in new browser tab', type: 'link',
                             disabled: item.processStatus == 'DRAFT', size: 'small', icon: <ExportOutlined />,
-                            onClick: () => window.open(`/external/data-form/requisition_request_process/${item.instanceId}`, '_blank')?.focus()
+                            onClick: () => item.instanceId && openPR(item.instanceId)
                         },
                         { tooltip: 'Quick view', type: 'link', size: 'small', icon: <EyeFilled />, onClick: () => onDetailhandler(item) },
                         {
@@ -178,7 +185,7 @@ export default () => {
                                     align: 'right',
                                     width: 120,
                                     sorter: 'totalAmount',
-                                    render: (_, r) => formatter.format(r.totalAmount || 0),
+                                    render: (_, r) => formatter1.format(r.totalAmount || 0),
                                 },
                                 {
                                     title: 'Srv',
@@ -198,6 +205,11 @@ export default () => {
                                     width: 130,
                                     sorter: 'requestedBy',
                                     render: (_, r) => r.requestedBy,
+                                },
+                                {
+                                    title: 'BU',
+                                    width: 50,
+                                    dataIndex: 'buName'
                                 },
                                 {
                                     title: 'Requested Dt',
@@ -295,19 +307,43 @@ export default () => {
             title="Advance Search"
             closable
             open={advanceSearch?.visible}
-            // onVisibleChange = {v => setAdvanceSearch({visible: v})}
             initData={filter.criteria?.advanceSearch}
             onClose={() => {
                 console.log('advance search in pro visible ', advanceSearch);
                 setAdvanceSearch({ visible: false });
             }}
             onReset={() => {
-                // setAdvanceSearchParams({ status: 'ALL' });
-                // actionRef.current?.reloadAndRest?.();
+                setFilter(v => ({
+                    ...v,
+                    pagination: undefined,
+                    criteria: {
+                        ...v.criteria,
+                        sort: undefined,
+                        advanceSearch: {
+                            status: v.criteria?.advanceSearch?.status || 'ALL',
+                        }
+
+                    }
+                }));
             }}
             onSearch={(data) => {
-                // setAdvanceSearchParams((v) => ({ ...v, ...data, status: v.status }));
-                // actionRef.current?.reloadAndRest?.();
+                setFilter(v => ({
+                    ...v,
+                    pagination: undefined,
+                    criteria: {
+                        ...v.criteria,
+                        sort: undefined,
+                        advanceSearch: {
+                            status: v.criteria?.advanceSearch?.status || 'ALL',
+                            deptIds: data.deptIds,
+                            service: data.service,
+                            requestedDate: data.requestedDate,
+                            acquiredDate: data.acquiredDate
+                        }
+
+                    }
+                }));
+
             }}
             listDepts={listDepartment}
         />

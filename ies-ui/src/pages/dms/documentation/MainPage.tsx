@@ -1,22 +1,20 @@
 import PageWrapper from "@/components/PageWrapper"
-import { DocumentationAdvanceSearch, DocumentationCreate, DocumentationDTO, DocumentationSearchByFolder, MoveDocParams } from "./data";
+import { DocumentationAdvanceSearch, DocumentationCreate, DocumentationDTO, MoveDocParams } from "./data";
 import { DocumentServiceAPI } from "./service";
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { simpleRequestActions } from "@/services/model";
-import { history, useParams, useQuery } from "@umijs/max";
+import { useQuery } from "@umijs/max";
 import { useEffect, useRef, useState } from "react";
 import { formatDate } from "@/pages/utils";
-import { ArrowRightOutlined, AuditOutlined, BellOutlined, DeleteOutlined, DownloadOutlined, DownOutlined, EllipsisOutlined, FileAddOutlined, FilterOutlined, HeartOutlined, HistoryOutlined, PlusOutlined, ShareAltOutlined, SwapOutlined } from "@ant-design/icons";
-import { Button, Badge, Dropdown, MenuProps, message, Modal, Card, Typography, Space } from "antd";
-import { expriationStatus, StatusColor } from "../core";
+import { AuditOutlined, BellOutlined, DeleteOutlined, DownloadOutlined, EllipsisOutlined, FileAddOutlined, HeartOutlined, HistoryOutlined, PlusOutlined, ShareAltOutlined, SwapOutlined } from "@ant-design/icons";
+import { Button, Dropdown, MenuProps, message, Modal, Card, Typography, Space, FloatButton } from "antd";
+import { expriationStatus } from "../core";
 import DocumentationDetail from "./DetailView";
 import DocumentModalForm from "./EntryForm";
-import { ActionType, LightFilter, ProFormCheckbox, ProFormSelect, ProFormSlider, ProFormSwitch } from "@ant-design/pro-components";
+import { ActionType, LightFilter, ProFormSelect, ProFormSwitch } from "@ant-design/pro-components";
 import { downloadUploadFileV2 } from "@/services/apiGateway";
-import { DMSPaths } from "..";
 import { FavoriteServiceAPI } from "../favorite/service";
 import { HistoryServiceAPI } from "../history/service";
-import advanceSearch from "@/pages/delivery/history/advance-search";
 import AdvanceDocumentSearch from "../components/AdvanceSearch";
 import { ReminderCreate } from "../reminder/data";
 import ReminderModalForm from "../reminder/ModalFormEntry";
@@ -27,19 +25,17 @@ import { ShareServiceAPI } from "../share/service";
 import ShareDrawerForm from "../share/ShareDrawerForm";
 import HistoryDoc from "./HistoryDoc";
 import MoveDocumentModal from "./MoveDocument";
-import { Select } from "antd/lib";
 
 interface Props {
-    paramSearch?: DocumentationSearchByFolder
+    paramSearch?: DocumentationAdvanceSearch
 }
 
 const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
-    const param = useParams();
     const requestActions = simpleRequestActions();
     const actionRef = useRef<ActionType>();
     const services = DocumentServiceAPI(requestActions);
     const [filter, setFilter] = useState<TableViewSearchParams<DocumentationAdvanceSearch>>({
-        criteria: { advanceSearch: { status: 'ALL' } }
+        criteria: { advanceSearch: paramSearch }
     });
     const { data, isFetching, refetch } = useQuery(['fetch-customer-list', filter], () => services.page(filter), {
         refetchOnWindowFocus: false
@@ -61,14 +57,15 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
             key: "1",
             label: "New Document",
             icon: <FileAddOutlined />,
-            onClick: () => setDocumentState({
-                visible: {
-                    name: "MODAL",
-                    type: "ADD",
-                    folderId: parseInt(param["*"] || ""),
-                    division: "DOC",
-                }
-            }),
+            onClick: () => {
+                setDocumentState({
+                    visible: {
+                        name: "MODAL",
+                        type: "ADD",
+                        division: "DOC",
+                    }
+                });
+            }
         },
         {
             key: "2",
@@ -78,18 +75,19 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
                 visible: {
                     name: "MODAL",
                     type: "ADD",
-                    folderId: parseInt(param["*"] || ""),
+                    folderId: paramSearch?.folderId,
                     division: "CONTRACT",
                 }
             }),
         },
     ];
 
-
     useEffect(() => {
-        paramSearch && setFilter((v) => ({ criteria: { advanceSearch: {  ...paramSearch } } }))
+        paramSearch && setFilter((v) => ({ criteria: { advanceSearch: { ...paramSearch } } }))
     }, [paramSearch]);
-    
+    useEffect(()=>{
+
+    },[])
 
     const [shareDrawerState, setShareDrawerState] = useState<{
         visible?: {
@@ -124,9 +122,7 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
         }
     }>();
     const [advanceSearch, setAdvanceSearch] = useState<{ visible: boolean }>();
-    const [advanceSearchParams, setAdvanceSearchParams] = useState<DocumentationAdvanceSearch>({
-        status: "All",
-    });
+    const [advanceSearchParams, setAdvanceSearchParams] = useState<DocumentationAdvanceSearch>();
     const actionItem = (record: DocumentationDTO): MenuProps["items"] => [
 
         {
@@ -233,6 +229,7 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
             key: "8",
             label: "Delete",
             danger: true,
+            disabled: !record.owner,
             itemIcon: <DeleteOutlined />,
             onClick: () => {
                 Modal.confirm({
@@ -254,10 +251,20 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
             onClick: () => setHistoryState({ visible: { name: "DRAWER", docId: record.id } })
         },
     ];
-    
+
     const extractFilter = <Card size="small"><LightFilter
         onFinish={(value) => {
-            setFilter((v) => ({ criteria: { advanceSearch: { ...v.criteria?.advanceSearch,expired:value.expired,shared:value.shared,isDeleted:value.isDeleted   } } }));
+            setFilter((v) => ({
+                criteria: {
+                    advanceSearch: {
+                        ...v.criteria?.advanceSearch,
+                        expired: value.expired,
+                        shared: value.shared,
+                        isDeleted: value.isDeleted,
+                        filterType: paramSearch?.filterType
+                    }
+                }
+            }));
         }}
     >
         <ProFormSelect
@@ -302,16 +309,16 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
             />
         </Space>
     </LightFilter></Card>
-
     return (<>
         <PageWrapper<DocumentationDTO, DocumentationAdvanceSearch, {}>
             tabRender={items => [
                 {
-                    tabLabel: `View ${items?.documentation?.docNumber
+                    tabLabel: `${items?.documentation?.docNumber
                         ? items?.documentation?.docNumber
                         : items?.documentation?.docName
                         }`,
                     action: "view",
+                    tabKey: items?.id,
                     panel: ({ }) => <DocumentationDetail
                         id={items?.id || 0}
                     />
@@ -326,7 +333,8 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
                             items: itemCreateNew(),
                             style: {
                                 width: 200
-                            }
+                            },
+                           
                         }}
                     >
                         <Button
@@ -388,9 +396,9 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
                     },
 
                 ],
-                onExtraFilterRender:()=>extractFilter,
+                onExtraFilterRender: () => extractFilter,
                 onFilter: (params, page, sort) => {
-                    
+
                     setFilter(f => ({
                         ...f,
                         criteria: {
@@ -398,6 +406,7 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
                             advanceSearch: {
                                 ...f.criteria?.advanceSearch,
                                 ...params,
+                                filterType: paramSearch?.filterType,
                                 division: params?.subStatus,
                             },
                             sort
@@ -436,20 +445,6 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
                             render: (_, r) => <span style={{ color: expriationStatus(r.term?.expiryDate) > 0 ? "red" : "" }}>{formatDate(r?.term?.expiryDate)}</span>
                         },
                         {
-                            title: "Created",
-                            sorter: "createdDate",
-                            dataIndex: "createdDate",
-                            valueType: "date",
-                            fixed: true,
-                        },
-                        {
-                            title: "Updated",
-                            sorter: "lastModifiedDate",
-                            dataIndex: "lastModifiedDate",
-                            valueType: "date",
-                            fixed: true,
-                        },
-                        {
                             title: "Type",
                             render: (_, r) => r.division == "CONTRACT" ? "contract" : "document"
                         },
@@ -457,7 +452,20 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
                             title: "Status",
                             sorter: "status",
                             fixed: true,
-                            render: (_, r) => <Badge text={r.status} status={StatusColor.getColorStatus(r.status)} />
+                            render: (_, r) => <Typography.Text
+                                type={
+                                    r.status == "Inactive" ? "danger"
+                                        : r.status == "Active" ? "success"
+                                            : "warning"
+                                }
+                            >{r.status}</Typography.Text>
+                        },
+                        {
+                            title: "Created",
+                            sorter: "createdDate",
+                            dataIndex: "createdDate",
+                            valueType: "date",
+                            fixed: true,
                         },
                         {
                             title: "Shared",
@@ -488,12 +496,13 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
                 }
             }}
         />
+
         <AdvanceDocumentSearch
             initData={advanceSearchParams}
             open={advanceSearch?.visible}
             onClose={() => setAdvanceSearch({ visible: false })}
             onReset={() => {
-                setFilter((v) => ({ criteria: { advanceSearch: { ...v.criteria?.advanceSearch } } }));
+                setFilter((v) => ({ criteria: { advanceSearch: { ...v.criteria?.advanceSearch, filterType: paramSearch?.filterType } } }));
             }}
             onSearch={(data) => {
                 setAdvanceSearchParams(data);
@@ -547,7 +556,7 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
         < DocumentModalForm
             open={documentModalState?.visible?.name === "MODAL"}
             type={documentModalState?.visible?.type}
-            libraryId={documentModalState?.visible?.libraryId}
+            libraryId={paramSearch?.folderId}
             onCancel={() => setDocumentState(v => ({ ...v, visible: undefined }))}
             division={documentModalState?.visible?.division}
             onSave={(data: DocumentationCreate) => {
@@ -569,6 +578,5 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
         />
     </>)
 }
-
 
 export default DocumentMainPage

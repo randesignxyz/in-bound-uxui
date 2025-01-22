@@ -26,9 +26,7 @@ export default (props: DataViewProps) => {
           setForceReload(v => v + 1)
         } catch (error: any) {
           message.error(error.message || "Failed to post.")
-
         }
-
       }
     })
   }
@@ -46,7 +44,7 @@ export default (props: DataViewProps) => {
           key: 'postToSAP',
           name: "Post To SAP",
           action: onPostHandler
-        }, ,
+        },
         {
           icon: <PartitionOutlined />, key: 'view-flow', name: "Flow", action: () => {
             setOpenFlow(poRequestDetail?.id)

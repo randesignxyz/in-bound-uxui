@@ -41,6 +41,7 @@ const FileUploader: React.FC<{
 }) => {
     const [file, setFile] = useState<UploadFile>();
     const [fileList, setFileList] = useState<UploadType[]>([]);
+    // const token = kc.token  
     const token = localStorage.getItem('accessToken');
     const requestActions = simpleRequestActions();
     const [forceReload, setForceReload] = useState(1);
@@ -53,6 +54,7 @@ const FileUploader: React.FC<{
         return `${getServiceUrl('WORK_FLOW')}/uploader/upload`;
       }
     };
+
 
     useEffect(() => {
       (async () => {

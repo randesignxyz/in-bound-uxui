@@ -1,8 +1,5 @@
 import { fetchDataListService } from "@/services/apiGateway";
 
-
-
-
 export type RelatedObj = {
     id: number;
     type: string;
@@ -10,6 +7,7 @@ export type RelatedObj = {
     description: string;
     deptId?: number;
     requester: string;
+    instanceId?: string;
     items: RelatedItem[]
 }
 
@@ -29,11 +27,20 @@ export type RelatedItem = {
     price: number;
 }
 
-export const getRelatedItms = (itemId: number, objectTpe: string) => fetchDataListService<RelatedObj, { itemId: number, objectTpe: string }>({
+export const getRelatedItms = (
+    itemId: number,
+    objectTpe: string,
+    isService?: boolean
+) => fetchDataListService<RelatedObj, {
+    itemId: number,
+    objectTpe: string;
+    isService?: boolean
+}>({
     actionName: 'fetch-related-items',
     endpoint: 'PRO',
     payload: {
         itemId,
-        objectTpe
+        objectTpe,
+        isService
     }
 })

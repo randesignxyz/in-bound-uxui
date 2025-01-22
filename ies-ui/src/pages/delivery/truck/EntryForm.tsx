@@ -20,12 +20,12 @@ interface Props extends FormModalProps {
 const TruckEntryModal: React.FC<Props> = ({ companyList, loadingCapacityList, onSave, data, ...props }) => {
   const [form] = useForm<SaveTruck>();
 
-
   const initForm = () => {
     form.setFieldsValue({
       name: data?.name,
       code: data?.code,
       licensePlate: data?.licensePlate,
+      integratedTruckId:data?.integratedTruckId,
       loadingCapacityId: data?.loadingCapacity?.id,
       description: data?.description,
       companyId: data?.company.id,
@@ -60,6 +60,12 @@ const TruckEntryModal: React.FC<Props> = ({ companyList, loadingCapacityList, on
             rules={[{ required: true }]}
             name={'licensePlate'}
             label="License Plate"
+            help={<span />}
+          />
+          <ProFormText
+            // rules={[{ required: true }]}
+            name={'integratedTruckId'}
+            label="Intergrate ID"
             help={<span />}
           />
           <ProFormCheckbox label="Side Door" name={'isSideDoor'} />

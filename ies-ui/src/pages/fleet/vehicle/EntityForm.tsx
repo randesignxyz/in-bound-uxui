@@ -121,7 +121,6 @@ export default ({ type, id }: Props) => {
     }
   };
 
-
   return (
     <>
       <PageContainer
@@ -152,7 +151,6 @@ export default ({ type, id }: Props) => {
                     Clear
                   </Button>
                 )}
-
                 {type === 'edit' && (
                   <Button
                     onClick={() => {
@@ -243,7 +241,6 @@ export default ({ type, id }: Props) => {
                   options={weight}
                   rules={[{ required: true }]}
                 />
-
               </Col>
               <Col span={6}>
                 <ProFormText label="V.I.N" key={'vin'} name={'vin'} />
@@ -311,26 +308,6 @@ export default ({ type, id }: Props) => {
                   options={brandingType}
                 />
               </Col>
-              {/* <Col span={6}>
-                
-                <ProFormCascader
-                  name={'bu'}
-                  label="Group"
-                  
-                  fieldProps={{
-                    showSearch: true
-                  }}
-                  request={async (k) => {
-                    const data = await FleetServiceAPI(requestActions).buList();
-                    const items = data.filter(t => t.parentId == null).map((v) => ({
-                      label: v.name, value: v.id,
-                      children: data.filter(o => v.id == o.parentId).map((b => ({ label: b.name, value: b.id })))
-                    }));
-                    return items
-                  }}
-                />
-
-              </Col> */}
               <Col span={6}>
                 <ProFormSelect
                   key="ownership "

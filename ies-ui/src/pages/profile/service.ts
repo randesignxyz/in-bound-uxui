@@ -9,9 +9,10 @@ export async function queryAdvancedProfile() {
 
 
 export const ProfileServices = {
-  fetchProfile: fetchDataItemService<ProfileData>({
+  fetchProfile: (id: number) =>fetchDataItemService<ProfileData, { id: number }>({
     actionName: 'fetch-profile-by-user',
-    endpoint: 'HR'
+    endpoint: 'HR',
+    payload: { id: id}
   }),
 
   listLookupData: (list: string[]) => fetchDataListService<LookupDataItem2, { list: string[] }>({
@@ -20,10 +21,10 @@ export const ProfileServices = {
     payload: { list }
   }),
 
-  saveContact: (data: SaveContract) => execDataService0<SaveContract>({
+  saveContact: (data: SaveContract,isAdmin:number) => execDataService0<SaveContract>({
     actionName: 'save-contact',
     endpoint: 'HR',
-    payload: { ...data }
+    payload: { ...data,isAdmin:isAdmin }
   }),
 
   listContact: (id: number) => fetchDataListService<ContactData, { id: number }>({

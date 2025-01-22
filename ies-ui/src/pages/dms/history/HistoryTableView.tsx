@@ -6,7 +6,7 @@ import { simpleRequestActions } from "@/services/model";
 import { formatDateTime } from "@/pages/utils";
 import moment from "moment";
 import { useRef } from "react";
-import { Tag } from "antd";
+import { Typography } from "antd";
 
 interface Props {
     intantId?: number;
@@ -41,15 +41,11 @@ export default ({ intantId, source }: Props) => {
     }
     return (
         <ProList<HistoryDTO>
-            // pagination={{
-            //     pageSize: 10,
-            //     pageSizeOptions:[10]
-            // }}
-            
+            size="small"
             pagination={false}
             metas={{
                 avatar: {render: () => <FieldTimeOutlined style={{color:"#5081fd"}} />},
-                title: {render: (_,r )=> (<><Tag color="blue">{r.actionType}</Tag> <span style={{color:"gray"}}> by: {r.actionBy}</span></>)},
+                title: {render: (_,r )=> (<><Typography.Text type="warning"> {r.actionType}</Typography.Text> <span style={{color:"gray"}}> by: {r.actionBy}</span></>)},
                 subTitle: {render: (_,r )=> `${moment(moment(r.actionDate)).fromNow()}`},
                 description: {dataIndex: 'remark'},
                 actions:{

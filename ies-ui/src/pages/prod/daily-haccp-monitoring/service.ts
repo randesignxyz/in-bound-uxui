@@ -1,5 +1,5 @@
 import { RequestActions, ServiceApiType, singleRequest } from "@/services/apiGateway";
-import { HACCPMonitoring, HACCPMonitoringActivities } from "./data";
+import { HACCPMonitoring, HACCPMonitoringActivities, HACCPMonitoringInstruction, HACCPMonitoringList } from "./data";
 
 const DailyHACCPMonitoringAction = {
     get_haccp_by_date: (assign_date:string): ServiceApiType<{assign_date:string}> => ({
@@ -31,7 +31,31 @@ const DailyHACCPMonitoringAction = {
         endpoint: 'PROD',
         type: 'LIST_QUERY',
         payload: {haccp_id}
-    })
+    }),
+    post_haccp_monitoring_list:(data: HACCPMonitoringList): ServiceApiType<HACCPMonitoringList>=>({
+        actionName:'post-haccp-monitoring-list',
+        endpoint: "PROD",
+        type: "EXEC",
+        payload: data
+    }),
+    add_instruction:(data:HACCPMonitoringInstruction): ServiceApiType<HACCPMonitoringInstruction>=>({
+        actionName:'add-instruction',
+        endpoint: "PROD",
+        type: "EXEC",
+        payload: data
+    }),
+    get_instruction:(group_line:string):ServiceApiType<{group_line:string}>=>({
+        actionName:'get-instruction',
+        endpoint: 'PROD',
+        type: 'LIST_QUERY',
+        payload: {group_line}
+    }),
+    unassign_haccp:(id:number,line:string,haccp_id:string,activities: { action: string }[],haccp_type:string): ServiceApiType<{id:number,line:string,haccp_id:string,activities: { action: string }[],haccp_type:string}>=>({
+        actionName:'unassign-haccp',
+        endpoint: 'PROD',
+        type: 'EXEC',
+        payload: {id,line,haccp_id,activities,haccp_type}
+    }),
 }
 
 export const DailyHACCPMonitoringServiceAPI = (requestAction: RequestActions) => {
@@ -50,6 +74,18 @@ export const DailyHACCPMonitoringServiceAPI = (requestAction: RequestActions) =>
         ),
         get_haccp_activities:(haccp_id:string)=> singleRequest<HACCPMonitoringActivities>(DailyHACCPMonitoringAction.get_haccp_activities(haccp_id))(
             requestAction
-        )
+        ),
+        post_haccp_monitoring_list:(data:HACCPMonitoringList)=> singleRequest<{data: string; message: string}>(DailyHACCPMonitoringAction.post_haccp_monitoring_list(data))(
+            requestAction
+        ),
+        add_instruction:(data:HACCPMonitoringInstruction)=> singleRequest<{data: string; message: string}>(DailyHACCPMonitoringAction.add_instruction(data))(
+            requestAction
+        ),
+        get_instruction:(group_line:string)=> singleRequest<HACCPMonitoringInstruction>(DailyHACCPMonitoringAction.get_instruction(group_line))(
+            requestAction
+        ),
+        unassign_haccp:(id:number,line:string,haccp_id:string,activities: { action: string }[],haccp_type:string)=> singleRequest<{data: string; message: string}>(DailyHACCPMonitoringAction.unassign_haccp(id,line,haccp_id,activities,haccp_type))(
+            requestAction
+        ),
     }
 }

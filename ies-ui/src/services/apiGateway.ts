@@ -1,12 +1,12 @@
 import { request } from 'umi';
 import moment from 'moment';
 import { getServiceUrl, REPORT_API } from './ApiUrl';
-import { Endpoint, ExportType, Pagination, Paging, ServiceType } from './API';
+import { Endpoint, ExportType, GenericReportParams, Pagination, Paging, ServiceType } from './API';
 import { groupBy, map } from 'lodash';
 import { SortOrder } from 'antd/lib/table/interface';
 import { DataResponse } from './shared/data';
-import printJS from 'print-js';
 import { blobToBase64 } from '@/pages/utils';
+import printJS from 'print-js';
 
 /** Services methods */
 
@@ -127,6 +127,22 @@ export interface PrintPDFData<T> {
   reportName: string;
   data?: T;
 }
+
+export const downloadGenericReport =
+  (actions?: RequestActions) =>
+    async (param: Omit<DownloadData<GenericReportParams>, 'reportName'>) => {
+      try {
+        actions?.start?.();
+        await doDownloadReport({
+          ...param,
+          reportName: 'export-generic-report',
+        });
+        actions?.end?.('SUCCESS');
+      } catch (error) {
+        actions?.end?.('FAILED');
+        throw error;
+      }
+    };
 
 
 export const downloadReport =

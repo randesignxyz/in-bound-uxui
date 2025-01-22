@@ -6,6 +6,7 @@ export const PoRequestFormNames = {
     finFunction: 'po_request_fin_function',
     dmbo1: 'po_request_dmbo_1',
     dmbo2: 'po_request_dmbo_2',
+    dmbo: 'po_request_dmbo',
     mbo: 'po_request_mbo',
     smFin: 'po_request_sm_fin',
     mdDmd: 'md_dmd'

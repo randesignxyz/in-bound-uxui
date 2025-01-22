@@ -10,7 +10,7 @@ export default ({ document, actionRef }:Props)=>{
 
     return (
         <>
-            selse
+            This page is under construction
         </>
     )
 }

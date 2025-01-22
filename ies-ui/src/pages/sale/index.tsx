@@ -72,6 +72,8 @@ export const SalePaths = {
   order: '/retailer/order/list',
   user: '/sale/user',
   pricing: '/sale/pricing',
+  purchaseOrder: "/sale/purchase-order",
+
 };
 
 export default () => {
@@ -333,7 +335,7 @@ export default () => {
       name: 'Free Of Charge',
       description: '',
       icon: FOC,
-      link: `${MPUPath.mpuCountStock}/list`,
+      link: `${MPUPath.mpuFOC}/list`,
     }, 
   ];
 
@@ -464,9 +466,19 @@ export default () => {
   // },
 
   // ];
+  const purchaseOrder = [
+    {
+      id: "rsmRequest",
+      name: "Purchase Order" ,
+      description: "Rsm make Purchase Order for MMA",
+      link: `${SalePaths.purchaseOrder}/list`,
+      icon:purchaseOrderIcon,
+      // visible: access.canAccessRSMRequestToMPU,
+    }
+  ];
 
   return (
-    <PageContainer title={false}>
+    <PageContainer title={false} >
       {access.canAccessSaleMenuItems && <ListMenuComp items={items} />}
       {/* <ListMenuComp items={retailerMenuItems} /> */}
       <Reports reportName={report} onClose={() => setReport(undefined)} />
@@ -479,12 +491,18 @@ export default () => {
             <ListMenuComp items={stockMenuItems} />
           </>
         )}
-      {access.canAccessViewMpu && (
+      {/* {access.canAccessViewMpu && ( */}
         <>
-          <Divider plain orientation='left' >MPU</Divider>
+          <Divider plain orientation='left' >MMA</Divider>
           <ListMenuComp items={mpuMenuItems} />
         </>
-      )}
+      {/* )} */}
+        {/* {access.canAccessRSMRequestToMPU && ( */}
+        {/* <>
+          <Divider plain orientation='left'>MMA</Divider>
+          <ListMenuComp items={purchaseOrder} />
+        </> */}
+      {/* // )} */}
     </PageContainer>
   );
 };

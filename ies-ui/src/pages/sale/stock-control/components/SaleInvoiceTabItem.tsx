@@ -154,6 +154,13 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
           { title: 'Quantity', dataIndex: 'quantity' },
           { title: 'UOM', dataIndex: 'uom' },
           {
+            title: 'Type',
+            render: (_, r) => {
+              return <Tag color={r.itemType === 'FOC' ? 'error' : 'success'}>{r.itemType}</Tag>;
+              // return r.itemType;
+            },
+          },
+          {
             title: 'Sale Price',
             align: 'right',
             render: (_, r) => {

@@ -112,7 +112,7 @@ const StockControlTabItem: React.FC<Props> = ({ data, forceUpdate }) => {
                 dataIndex: 'Status',
                 render: (_, r) => (
                   <Tag
-                    bordered={false}
+                    // bordered={false}
                     color={
                       r.status === 'pending'
                         ? 'processing'

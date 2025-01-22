@@ -28,7 +28,13 @@ const CountStockAction = {
         endpoint:"SALE",
         type:"FETCH_QUERY",
         payload:{id}
-    })
+    }),
+    confirmStockCount:(param:{id?:number}):ServiceApiType<{id?:number}> =>({
+        actionName:"confirm-mma-count-stock",
+        endpoint:"SALE",
+        type:"EXEC",
+        payload:param
+    }),
 }
 
 
@@ -36,6 +42,7 @@ export const CountStockServiceAPI = (requestAction:RequestActions) =>{
     return {
         page :(param:TableViewSearchParams<CountStockAdvanceSearch>)=>singleRequest(CountStockAction.page(param))(requestAction) as Promise<Page<StockCountDto>>,
         detail:(id?:number) =>singleRequest(CountStockAction.detail(id))(requestAction) as Promise<StockCountDto>,
-        reject:(param:StatusActionForm)=>singleRequest(CountStockAction.reject(param))(requestAction)
+        reject:(param:StatusActionForm)=>singleRequest(CountStockAction.reject(param))(requestAction),
+        confirmStockCount:(param:{id?:number})=>singleRequest(CountStockAction.confirmStockCount(param))(requestAction)
     }
 }

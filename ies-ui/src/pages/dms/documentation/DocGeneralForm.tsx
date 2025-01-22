@@ -18,12 +18,6 @@ export default ({ lookupData }: Props) => {
                     <ProFormText
                         label={"Document Number"}
                         name={"docNumber"}
-                        rules={[
-                            {
-                                min: 4,
-                                max: 100
-                            }
-                        ]}
                     />
                 </Col>
                 <Col span={18}>

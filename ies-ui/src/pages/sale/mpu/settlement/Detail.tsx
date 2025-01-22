@@ -39,92 +39,93 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
             <Flex vertical gap={16}>
                 {/* <Row gutter={[16, 16]}>
                     <Col sm={24} lg={18}> */}
-                        <Card
-                            size="small"
-                            title={"General Infomation"}
-                            extra={[
-                                dataSource?.status == "Pending" && <Button
-                                    type="link"
-                                    icon={<CheckCircleOutlined />}
-                                    onClick={() => {
-                                        Modal.confirm({
-                                            title:"Confirm Message",
-                                            content:"This is a message inform warning; be careful before clicking OK. You really want to confirm the request?",
-                                            onOk:async()=>{
-                                                services.confirm({
-                                                    id:dataSource.id
-                                                }).then(() => {
-                                                    actionRef.current?.reload?.()
-                                                    loadData?.();
-                                                    message.success("Your confirmation request was a success!");
-                                                });
-                                            }
+                <Card
+                    size="small"
+                    title={"General Infomation"}
+                    extra={[
+                        dataSource?.status == "Pending" && <Button
+                            type="link"
+                            icon={<CheckCircleOutlined />}
+                            onClick={() => {
+                                Modal.confirm({
+                                    title: "Confirm Message",
+                                    content: "This is a message inform warning; be careful before clicking OK. You really want to confirm the request?",
+                                    onOk: async () => {
+                                        services.confirm({
+                                            id: dataSource.id
+                                        }).then(() => {
+                                            actionRef.current?.reload?.()
+                                            loadData?.();
+                                            message.success("Your confirmation request was a success!");
                                         });
-                                    }}
-                                >Confirm</Button>,
-                                dataSource?.status == "Pending" && <Button
-                                    type="link"
-                                    danger
-                                    icon={<CloseCircleOutlined />}
-                                    onClick={() => {
-                                        setActionState({
-                                            visible: { open: true, status: "Rejected", carryData: dataSource }
-                                        });
-                                    }}
-                                >Reject</Button>,
-                            ]}
-                        >
-                            <ProDescriptions
-                                dataSource={dataSource}
-                                actionRef={actionRef}
-                                loading={requestActions.request?.loading}
-                                columns={[
-                                    {
-                                        title: "Salesperson Code",
-                                        dataIndex: "salespersonCode"
-                                    },
-                                    {
-                                        title: "Cashier Name",
-                                        dataIndex: "cashierName",
-                                    },
-                                    {
-                                        title: "Satus",
-                                        render: (_, r) => <Tag
-                                            bordered={false}
-                                            icon={
-                                                r.status == "Pending" ? <SyncOutlined spin />
-                                                    : r.status == "Completed" ? <CheckCircleOutlined />
-                                                        : <CloseCircleOutlined />
-                                            }
-                                            color={
-                                                r.status == "Pending" ? "processing"
-                                                    : r.status == "Completed" ? "success"
-                                                        : "error"
-                                            }
+                                    }
+                                });
+                            }}
+                        >Confirm</Button>,
+                        dataSource?.status == "Pending" && <Button
+                            type="link"
+                            danger
+                            icon={<CloseCircleOutlined />}
+                            onClick={() => {
+                                setActionState({
+                                    visible: { open: true, status: "Rejected", carryData: dataSource }
+                                });
+                            }}
+                        >Reject</Button>,
+                    ]}
+                >
+                    <ProDescriptions
+                        dataSource={dataSource}
+                        actionRef={actionRef}
+                        loading={requestActions.request?.loading}
+                        columns={[
+                            {
+                                title: "Salesperson Code",
+                                dataIndex: "salespersonCode"
+                            },
+                            {
+                                title: "Cashier Name",
+                                dataIndex: "cashierName",
+                            },
+                            {
+                                title: "Satus",
+                                render: (_, r) => <Tag
+                                    bordered={false}
+                                    icon={
+                                        r.status == "Pending" ? <SyncOutlined spin />
+                                            : r.status == "Completed" ? <CheckCircleOutlined />
+                                                : <CloseCircleOutlined />
+                                    }
+                                    color={
+                                        r.status == "Pending" ? "processing"
+                                            : r.status == "Completed" ? "success"
+                                                : "error"
+                                    }
 
-                                        >{r.status}</Tag>
-                                    },
-                                    {
-                                        title: "Amount (USD)",
-                                        dataIndex: "amount",
-                                        valueType: "money",
-                                        render: (_, r) => <Text type="success">{formatCurrency(r.amount, "$")}</Text>
-                                    },
-                                    {
-                                        title: "Amount (KHR)",
-                                        dataIndex: "amountKH",
-                                        render: (_, r) => <Text type="success">{formatterQty.format(r.amountKH)}</Text>
-                                    },
-                                    {
-                                        title: "Remark",
-                                        dataIndex: "remark",
-                                    },
-                                ]}
-                            />
-                        </Card>
+                                >{r.status}</Tag>
+                            },
+                            {
+                                title: "Amount (USD)",
+                                dataIndex: "amount",
+                                valueType: "money",
+                                render: (_, r) => <Text type="success">{formatCurrency(r.amount, "$")}</Text>
+                            },
+                            {
+                                title: "Amount (KHR)",
+                                dataIndex: "amountKH",
+                                render: (_, r) => <Text type="success">{formatterQty.format(r.amountKH)}</Text>
+                            },
+                            {
+                                title: "Remark",
+                                dataIndex: "remark",
+                            },
+                        ]}
+                    />
+                </Card>
                 <Card size="small">
                     <ProTable
                         size="small"
+                        ghost
                         options={false}
                         search={false}
                         dataSource={dataSource?.items}
@@ -203,23 +204,23 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                 </Card>
                 <Card size="small" style={{ height: "100%" }}>
                     {
-                        dataSource?.comment?.length ?  (<>
+                        dataSource?.comment?.length ? (<>
                             <Timeline
                                 mode="left"
-                                items={dataSource.comment.map(p=>({
-                                    label:<Space><Typography.Text type="warning">{p.createdBy}</Typography.Text><Typography.Text italic>{formatDate(p.createdDate)}</Typography.Text></Space>, 
-                                    children:<Flex vertical justify="space-around">
+                                items={dataSource.comment.map(p => ({
+                                    label: <Space><Typography.Text type="warning">{p.createdBy}</Typography.Text><Typography.Text italic>{formatDate(p.createdDate)}</Typography.Text></Space>,
+                                    children: <Flex vertical justify="space-around">
                                         <Typography.Text type="danger">{p.type}</Typography.Text>
                                         <Space>
                                             <Typography.Text type="secondary">remark:</Typography.Text>
                                             <Typography.Text >{p.description}</Typography.Text>
                                         </Space>
-                                        
+
                                     </Flex>
                                 }))}
                             />
                         </>)
-                         :<Flex justify="center"><Text type="secondary">no remark</Text></Flex>
+                            : <Flex justify="center"><Text type="secondary">no remark</Text></Flex>
                     }
                 </Card>
             </Flex>

@@ -491,17 +491,17 @@ export default () => {
             <ListMenuComp items={stockMenuItems} />
           </>
         )}
-      {access.canAccessViewMpu && (
+      {/* {access.canAccessViewMpu && ( */}
         <>
-          <Divider plain orientation='left' >MPU</Divider>
+          <Divider plain orientation='left' >MMA</Divider>
           <ListMenuComp items={mpuMenuItems} />
         </>
-      )}
+      {/* )} */}
         {/* {access.canAccessRSMRequestToMPU && ( */}
-        <>
+        {/* <>
           <Divider plain orientation='left'>MMA</Divider>
           <ListMenuComp items={purchaseOrder} />
-        </>
+        </> */}
       {/* // )} */}
     </PageContainer>
   );

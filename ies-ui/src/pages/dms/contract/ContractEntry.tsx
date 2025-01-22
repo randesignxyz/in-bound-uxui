@@ -47,7 +47,7 @@ export default ({data}:Props) => {
             {({category})=>{
                 return category ==="GENERAL" &&(<ContractGeneral lookupData={lookupData} />)||
                 category==="PURCHASE" && (<ContractPurchase lookupData={lookupData}/>)||
-                category ==="SALSE" &&(<ContractSales/>)
+                category ==="SALES" &&(<ContractSales/>)
             }}
           </ProFormDependency>
     </>)

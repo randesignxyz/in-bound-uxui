@@ -91,6 +91,9 @@ export default ({ id }: Props) => {
               xxl:2,
               gutter: 12
             }}
+            style={{
+              backgroundColor:"transparent"
+            }}
             renderItem={(item) => {
               return (
                 <List.Item>

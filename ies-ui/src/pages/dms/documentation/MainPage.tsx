@@ -51,16 +51,13 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
             division: "DOC" | "CONTRACT"
         }
     }>();
+
     const itemCreateNew = (): MenuProps["items"] => [
         {
             key: "1",
             label: "New Document",
             icon: <FileAddOutlined />,
             onClick: () => {
-                if (paramSearch?.libraryId==0) {
-                    message.warning("Please Folder First!")
-                    return
-                }
                 setDocumentState({
                     visible: {
                         name: "MODAL",
@@ -88,6 +85,9 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
     useEffect(() => {
         paramSearch && setFilter((v) => ({ criteria: { advanceSearch: { ...paramSearch } } }))
     }, [paramSearch]);
+    useEffect(()=>{
+
+    },[])
 
     const [shareDrawerState, setShareDrawerState] = useState<{
         visible?: {
@@ -254,15 +254,17 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
 
     const extractFilter = <Card size="small"><LightFilter
         onFinish={(value) => {
-            setFilter((v) => ({ criteria: { 
-                advanceSearch: {
-                     ...v.criteria?.advanceSearch,
-                      expired: value.expired, 
-                      shared: value.shared,
-                       isDeleted: value.isDeleted ,
-                       filterType:paramSearch?.filterType
+            setFilter((v) => ({
+                criteria: {
+                    advanceSearch: {
+                        ...v.criteria?.advanceSearch,
+                        expired: value.expired,
+                        shared: value.shared,
+                        isDeleted: value.isDeleted,
+                        filterType: paramSearch?.filterType
                     }
-                     } }));
+                }
+            }));
         }}
     >
         <ProFormSelect
@@ -331,7 +333,8 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
                             items: itemCreateNew(),
                             style: {
                                 width: 200
-                            }
+                            },
+                           
                         }}
                     >
                         <Button
@@ -403,7 +406,7 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
                             advanceSearch: {
                                 ...f.criteria?.advanceSearch,
                                 ...params,
-                                filterType:paramSearch?.filterType,
+                                filterType: paramSearch?.filterType,
                                 division: params?.subStatus,
                             },
                             sort
@@ -493,13 +496,13 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
                 }
             }}
         />
-     
+
         <AdvanceDocumentSearch
             initData={advanceSearchParams}
             open={advanceSearch?.visible}
             onClose={() => setAdvanceSearch({ visible: false })}
             onReset={() => {
-                setFilter((v) => ({ criteria: { advanceSearch: { ...v.criteria?.advanceSearch,filterType:paramSearch?.filterType } } }));
+                setFilter((v) => ({ criteria: { advanceSearch: { ...v.criteria?.advanceSearch, filterType: paramSearch?.filterType } } }));
             }}
             onSearch={(data) => {
                 setAdvanceSearchParams(data);

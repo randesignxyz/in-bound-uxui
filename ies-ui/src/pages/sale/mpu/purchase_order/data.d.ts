@@ -38,8 +38,10 @@ interface PurchaseOrderDTO{
     distributorCode?:string;
     distributorName?:string;
     distributorPhone?:string;
+    distributorId?:number;
     latitude?:string;
     longitude?:string;
+    addressId?:number;
     foc?:{qty:number; itemName:string;itemCode:string; uom?:string}[]
 }
 

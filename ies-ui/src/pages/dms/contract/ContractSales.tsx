@@ -1,14 +1,24 @@
+import { Card, Typography } from "antd"
 
 
-interface Props{
+interface Props {
 
 }
 
-const ContractSales:React.FC<Props> = () =>{
+const ContractSales: React.FC<Props> = () => {
 
     return (
         <>
-            This page is under construction
+            <Card
+                styles={{
+                    body:{
+                        textAlign:"center"
+                    }
+                }}
+            >
+                <Typography.Title type="warning" level={5} >This page under construction</Typography.Title>
+            </Card>
+
         </>
     )
 }

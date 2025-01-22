@@ -60,7 +60,7 @@ const ExpendableTable: React.FC<Props> = ({
 
   const onApprove = (id?: number) => {
     Modal.confirm({
-      title: 'Accept Request.',
+      title: 'Accept Request .',
       content: 'Are you sure?',
       onOk: async () => {
         await services
@@ -82,6 +82,7 @@ const ExpendableTable: React.FC<Props> = ({
           search={false}
           options={false}
           pagination={false}
+          ghost
           dataSource={data?.items as StockDetailItemLess[]}
           size="small"
           footer={() => {
@@ -94,7 +95,7 @@ const ExpendableTable: React.FC<Props> = ({
                       onClick={async () => {
                         // setRemarkState({ visible: { open: true, carryData: parent } });
                         Modal.confirm({
-                          title: 'Reject Request.',
+                          title: 'Reject Suggestion.',
                           content: 'Are you sure?',
                           onOk: async () => {
                             services
@@ -129,7 +130,7 @@ const ExpendableTable: React.FC<Props> = ({
                       onClick={async () => {
                         if (data !== undefined && data !== null) {
                           if (
-                            data.requestedBy?.teamType === 'MPU' &&
+                            data.requestedBy?.teamType === 'MPU' ||
                             data.requestedBy?.role === 'ROLE_MPU_LEADER'
                           ) {
                             onMMAApprove?.(data, 'ROLE_MPU_LEADER');
@@ -177,7 +178,6 @@ const ExpendableTable: React.FC<Props> = ({
           columns={[
             {
               title: 'Batch No',
-              // dataIndex: "batchNo"
               render: (_, r) => {
                 return r.batchNo === undefined || r.batchNo === null
                   ? '-'

@@ -143,7 +143,7 @@ const SettlementModal: React.FC<Props> = ({ data, onSave, dsdExchangeRate, ...pr
                   label="Exchange Rate"
                   name={"exchangeRate"}
                   rules={[{ required: true }]}
-                  initialValue={dsdExchangeRate?.source_amount}
+                  initialValue={dsdExchangeRate?.target_amount}
                   fieldProps={{
                     onChange:(value) =>{
                       actionRef.current?.reload?.();
@@ -583,7 +583,6 @@ const SettlementModal: React.FC<Props> = ({ data, onSave, dsdExchangeRate, ...pr
   //               {
   //                 title: "",
   //                 dataIndex: "label",
-
   //               },
   //               {
   //                 title: "",
@@ -653,15 +652,12 @@ const SettlementModal: React.FC<Props> = ({ data, onSave, dsdExchangeRate, ...pr
   //                   const total = r.actionAmount + (r.actionAmountKHR / exchangeRate)
   //                   return <Typography.Text type='warning'>{numeral(total).format("$ 0,000.00")}</Typography.Text>
   //                 }
-
   //               }
   //             ]}
   //           />
   //         </Card>
   //       </Flex>
   //     </Space >
-
-
 
   //     {/* <Card size="small" >
   //       <Row>

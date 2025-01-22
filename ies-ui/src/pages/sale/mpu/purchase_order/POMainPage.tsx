@@ -138,11 +138,14 @@ const POMainPage: React.FC<Props> = () => {
                         sort: sort
                     }))
                 },
+                
                 props: {
                     dataSource: data?.items,
                     actionRef: actionRef,
                     loading:isFetching,
-
+                    expandable:{
+                        
+                    },
                     columns: [
                         {
                             title: 'No',

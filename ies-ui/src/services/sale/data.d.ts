@@ -461,15 +461,16 @@ export interface MMAAprovalEntity{
   description?: string;
   referenceNo?: string;
   receivedBy?: string;
-  items?: MMAApprovalStockItemDto[];
-  distributorCode?:string;
-  distributorName?:string;
-  distributorPhone?:string;
-  distributorId?:number;
-  addressId?:number;
-  latitude?:string;
-  longitude?:string;
-  addressInfo?:string;
+  items?: EditableStockItem[];
+  distributorCode?: string;
+  distributorName?: string;
+  distributorPhone?: string;
+  distributorId?: number;
+  addressId?: number;
+  latitude?: string;
+  longitude?: string;
+  shippingAddressId?: number;
+  address?: string;
 }
 
 export interface MMAApprovalStockItemDto {
@@ -1062,6 +1063,7 @@ interface PackageOffer {
 // ---------------------------- END ----------------------
 
 interface ProductItem {
+  uom: string?;
   id: number;
   code: string;
   barcode: string;

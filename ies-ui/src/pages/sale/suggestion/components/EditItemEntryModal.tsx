@@ -15,7 +15,6 @@ import moment from 'moment';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import RemarkModalForm from '../../component/RemarkModal';
 import { DistributorCreate } from '../../mpu/request/data';
-
 interface Props extends FormModalProps {
   data?: StockControlLess;
   actionHandlers: {
@@ -303,10 +302,10 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...pr
                 'Please save the editing record, before start edit a new record.',
               type: 'single',
               editableKeys,
-              onSave: async (_, record: EditableStockItem, originRow: EditableStockItem) => {
+              onSave: async (_, record: EditableStockItem) => {
                 if (record.batchNo) {
-                  record.batchNo = moment(originRow.batchNo);
-                  record.expiredDate = moment(originRow.batchNo).add(6, 'M');
+                  record.batchNo = moment(record.batchNo);
+                  record.expiredDate = moment(record.batchNo).add(6, 'M');
                 }
                 await waitTime(100);
               },
@@ -420,7 +419,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...pr
                             icon={<CopyOutlined />}
                             onClick={() => {
                               const key = Math.random() * 1000000;
-                              const batchNo = moment();
+                              // const batchNo = moment();
                               const first: EditableStockItem = {
                                 id: -key,
                                 beginningQty: record.beginningQty,
@@ -433,15 +432,15 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...pr
                                 stockCategoryId: record.stockCategoryId,
                                 internalId: uniqueId(),
                                 itemType: record.itemType,
-                                batchNo: batchNo,
-                                expiredDate: moment(batchNo).add(6, 'M'),
+                                batchNo: undefined,
+                                expiredDate: undefined,
                                 key: key,
                               };
-                              dataSource.push(first);
-                              setDataSource(dataSource);
-                              actionRef.current?.reload();
-                              action?.startEditable?.(key);
-                              // actionRef.current?.addEditRecord?.(first);
+                              // dataSource.push(first);
+                              // setDataSource(dataSource);
+                              // actionRef.current?.reload();
+
+                              actionRef.current?.addEditRecord?.(first);
                             }}
                           />
                         </Tooltip>

@@ -454,12 +454,29 @@ export interface StockControlDetail {
   pendingItems?: StockDetailLess[];
 }
 
+export interface EditableStockItem {
+  id?: number;
+  key: React.Key;
+  batchNo?: moment.Moment;
+  itemName: string;
+  itemCode: string;
+  uom: string;
+  beginningQty: number;
+  quantity: number;
+  expiredDate?: moment.Moment;
+  isSplit: boolean;
+  stockCategoryId?: number;
+  status: string;
+  internalId?: string;
+  itemType?: number;
+}
+
 export interface ApprovalStockControlDto {
   stockControlId: number;
   description?: string;
   referenceNo?: string;
   receivedBy?: string;
-  items?: ApprovalStockItemDto[];
+  items?: EditableStockItem[];
   distributorCode?: string;
 }
 

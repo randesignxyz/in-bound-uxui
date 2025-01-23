@@ -84,8 +84,8 @@ const SuggestionActions = {
   }),
   onMMAApprovalStockRequest: (param: MMAAprovalEntity): ServiceApiType<MMAAprovalEntity> => ({
     type: 'EXEC',
-    // actionName: 'mma-approve-stock-request',
-    actionName:"mma_approve_stock",
+    actionName: 'mma-approve-stock-request',
+    // actionName:"mma_approve_stock",
     endpoint: 'SALE',
     payload: param,
   }),

@@ -15,7 +15,6 @@ import { PurchaseOrderServiceAPI } from "./services";
 import numeral from "numeral";
 import { AddressInfo } from "@/services/crm/data";
 import moment from "moment";
-import { Space } from "antd/lib";
 
 interface Props {
   id?: number;
@@ -92,9 +91,8 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
       const data = await CrmServiceAPI(requestActions).listAddressByCustomer({
         id: distibutors?.distributorId || 0,
       });
-      
-      form.setFieldValue("shipAddressId", data?.[0]?.id);
       setAddressList(data);
+      form.setFieldValue("addressId", data?.[0]?.id);
     }
   };
 
@@ -132,7 +130,6 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
                       }
                       await PurchaseOrderServiceAPI(requestActions).save(entry);
                       setDataSourceItems([])
-
                     }
                   });
                 }}
@@ -159,7 +156,6 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
                       await PurchaseOrderServiceAPI(requestActions).save(entry).then(o => {
                         onView?.(o.data);
                       })
-                      
                     }
                   });
                 }}
@@ -207,20 +203,21 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
                 }}
               />
               <ProFormSelect
-                name={"shipAddressId"}
+                name={"addressId"}
                 label="Address"
                 width={"md"}
                 allowClear={false}
+                key={"address"}
                 showSearch
                 rules={[{ required: true }]}
                 options={addressList?.map((item) => {
                   return { value: item.id, label: item.address };
                 })}
               />
-              <ProFormDependency dependencies={["shipAddressId"]} name={["shipAddressId"]}>
-                {({ shipAddressId }) => {
-                  const address = addressList?.find((item) => item.id == shipAddressId);
-                  form.setFieldsValue({latitude:address?.latitude, longitude:address?.longitude})
+              <ProFormDependency dependencies={["addressId"]} name={["addressId"]}>
+                {({ addressId }) => {
+                  const address = addressList?.find((item) => item.id == addressId);
+                  
                   const aa = [
                     { name: 'Street', value: address?.streetNo },
                     { name: 'House#', value: address?.houseNo },
@@ -236,10 +233,11 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
                     .filter((it) => it.value)
                     .map((it) => `${it.name} ${it.value}`)
                     .join(', ')
-
+                  form.setFieldsValue({latitude:address?.latitude, longitude:address?.longitude, address:aa})
                   return <Flex gap={2}>
                     <ProFormText hidden  name={"latitude"}/>
                     <ProFormText hidden  name={"longitude"}  />
+                    <ProFormTextArea hidden  name={"address"}  />
                     <Typography.Text type="warning"><AimOutlined /></Typography.Text>
                     <Typography.Text type={"secondary"} >{aa}</Typography.Text>
                   </Flex>
@@ -335,7 +333,6 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
                   onChange: (e: number) => {
                     if (dataSourceItems?.filter(o => o.itemId === e).length) {
                       message.error("This Item was ready added!");
-                      console.log(config.entity.itemId == undefined);
                     }
                   },
                   showSearch: true,

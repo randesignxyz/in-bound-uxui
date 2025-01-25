@@ -17,6 +17,7 @@ interface PurchaseOrderCreate{
     distributorName?:string;
     distributorPhone?:string;
     distributorId?:number;
+    address?:string;
 }
 
 

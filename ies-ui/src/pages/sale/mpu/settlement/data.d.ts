@@ -1,4 +1,5 @@
-import { Comment } from "../count_stock/data";
+import { Comment, StockCountDto } from "../count_stock/data";
+import { PurchaseOrderDTO } from "../purchase_order/data";
 
 interface SettlementMethodDetailDTO{
     id:number;
@@ -18,6 +19,8 @@ interface SettlementMethodDetailDTO{
     attachments?:string[];
     status:string |"Completed"|"Pending"|"Rejected";
     comment?:Comment[];
+    purchaseOrder?:PurchaseOrderDTO[]
+    stockCount?:StockCountDto
 }
 
 interface SettlementMethodDto{
@@ -34,6 +37,7 @@ interface SettlementMethodAdvanceSearch{
     status?:string;
     startDate?:moment.Moment;
     endDate?:moment.Moment;
+    type:string
 }
 
 interface StatusActionForm{

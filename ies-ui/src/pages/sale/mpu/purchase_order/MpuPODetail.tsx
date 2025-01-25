@@ -1,13 +1,15 @@
 import { formatter } from "@/pages/utils";
-import { SyncOutlined, CheckCircleOutlined, CloseCircleOutlined, ExclamationCircleOutlined, EnvironmentOutlined } from "@ant-design/icons";
+import { SyncOutlined, CheckCircleOutlined, CloseCircleOutlined, ExclamationCircleOutlined, EnvironmentOutlined, DollarOutlined } from "@ant-design/icons";
 import { ProDescriptions, ProTable } from "@ant-design/pro-components";
-import { Flex, Card, Tag, Typography, Row } from "antd";
+import { Flex, Card, Tag, Typography, Row, Space } from "antd";
 import { PurchaseRequestItemCreate } from "../request/data";
 import { PurchaseOrderDTO } from "./data";
 import { simpleRequestActions } from "@/services/model";
 import { useState, useEffect } from "react";
 import { PurchaseOrderServiceAPI } from "./services";
 import { Col } from "antd/lib";
+import { AddressInfo } from "@/services/crm/data";
+import { CrmServiceAPI } from "@/services/crm/services";
 
 interface Props {
     id?: number;
@@ -19,9 +21,11 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
     const requestActions = simpleRequestActions();
     const services = PurchaseOrderServiceAPI(requestActions);
     const [dataSource, setDataSource] = useState<PurchaseOrderDTO>();
-
+    const [address, setAddress] = useState<AddressInfo>();
     const onLoad = async () => {
         const data = await services.detail(id);
+        const add = await CrmServiceAPI(requestActions).findAddress({ id: data.addressId||0 });
+        setAddress(add);
         setDataSource(data);
     }
     useEffect(() => {
@@ -32,11 +36,11 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
         <>
             <Flex vertical gap={18}>
                 <Card size="small" title="Information">
-                    <Row gutter={12} style={{marginLeft:20}}>
+                    <Row gutter={12} style={{ marginLeft: 20 }}>
                         <Col md={8} xs={24}>
                             <ProDescriptions
                                 column={1}
-                                contentStyle={{fontWeight:500}}
+                                contentStyle={{ fontWeight: 500 }}
                                 dataSource={dataSource}
                                 loading={requestActions.request?.loading}
                                 columns={[
@@ -58,19 +62,19 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                                         dataIndex: "status",
                                         render: (_, r) => <Tag
                                             icon={
-                                                r.status == "pending" ? <SyncOutlined spin />
-                                                    : r.status == "paid" ? <CheckCircleOutlined />
-                                                        : r.status == "rejected" ? <CloseCircleOutlined />
-                                                            : <ExclamationCircleOutlined />
+                                                r.status == "Pending" ? <SyncOutlined spin />
+                                                    : r.status == "Paid" ? <DollarOutlined />
+                                                        : r.status == "Rejected" ? <CloseCircleOutlined />
+                                                            : <CheckCircleOutlined />
                                             }
                                             bordered={false}
                                             color={
-                                                r.status == "pending"
+                                                r.status == "Pending"
                                                     ? "processing"
-                                                    : r.status == "paid" ? "success"
-                                                        : r.status == "rejected" ? "error"
-                                                            : "warning"
-                                            }>{r.status?.toUpperCase()}</Tag>
+                                                    : r.status == "Paid" ? "success"
+                                                        : r.status == "Rejected" ? "error"
+                                                            : "success"
+                                            }>{r.status}</Tag>
                                     },
                                 ]}
                             />
@@ -79,7 +83,7 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                             <ProDescriptions
                                 dataSource={dataSource}
                                 loading={requestActions.request?.loading}
-                                contentStyle={{fontWeight:500}}
+                                contentStyle={{ fontWeight: 500 }}
                                 column={1}
                                 columns={[
                                     {
@@ -96,7 +100,32 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                                     },
                                     {
                                         title: 'Checked In Location',
-                                        render:(_,r)=><a href={`https://www.google.com/maps/search/?api=1&query=${r.latitude?.replace(/[&\/[\]\#,+()$~%'":*?<>{}]/g, "")}%2C${r.longitude?.replace(/[&\/[\]\#,+()$~%'":*?<>{}]/g, "")}`} target="_blank" ><EnvironmentOutlined  /></a>
+                                        span: 3,
+                                        render: (_, r) => {
+                                            const aa = [
+                                                { name: 'Street', value: address?.streetNo },
+                                                { name: 'House#', value: address?.houseNo },
+                                                { name: 'Village', value: address?.village },
+                                                { name: 'Commune', value: address?.commune },
+                                                { name: 'District', value: address?.district },
+                                                { name: 'Province', value: address?.province },
+                                                { name: 'Latitude', value: address?.latitude },
+                                                { name: 'Longitude', value: address?.longitude },
+                                                { name: 'Direction', value: address?.direction },
+                                                { name: 'Hotspot', value: address?.hotspot },
+                                            ]
+                                                .filter((it) => it.value)
+                                                .map((it) => `${it.name} ${it.value}`)
+                                                .join(', ')
+
+                                            return <Space align="baseline">
+
+                                                <a href={`https://www.google.com/maps/search/?api=1&query=${address?.latitude?.replace(/[&\/[\]\#,+()$~%'":*?<>{}]/g, "")}%2C${address?.longitude?.replace(/[&\/[\]\#,+()$~%'":*?<>{}]/g, "")}`} target="_blank" ><EnvironmentOutlined /></a>
+                                                {aa}
+                                            </Space>
+
+                                        }
+
                                         // render: (_, r) => <Typography.Paragraph copyable>{[r.latitude, r.longitude].filter(p => p).join(",")}</Typography.Paragraph>
                                     },
                                 ]}
@@ -105,7 +134,7 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                         <Col md={8} xs={24}>
                             <ProDescriptions
                                 dataSource={dataSource}
-                                contentStyle={{fontWeight:500}}
+                                contentStyle={{ fontWeight: 500 }}
                                 loading={requestActions.request?.loading}
                                 column={1}
                                 columns={[
@@ -129,6 +158,7 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                         size="small"
                         pagination={false}
                         dataSource={dataSource?.items}
+                        ghost
                         columns={[
                             {
                                 title: "Product Name",
@@ -146,7 +176,7 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                             {
                                 title: "Unit Price",
                                 dataIndex: "pricing",
-                                valueType:"money"
+                                valueType: "money"
                             },
                             {
                                 title: "Total",
@@ -155,11 +185,11 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                         ]}
                     />
                 </Card>
-              
-                    {
-                        (dataSource?.foc?.length || 0) > 0 && (
-                            <>
-                              <Card size="small" title="Free of Charge">
+
+                {
+                    (dataSource?.foc?.length || 0) > 0 && (
+                        <>
+                            <Card size="small" title="Free of Charge">
                                 <ProTable
                                     search={false}
                                     options={false}
@@ -183,15 +213,15 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                                         {
                                             title: "Uom",
                                             dataIndex: "uom",
-                                            render:(_,r)=>r.uom?.toLowerCase()
+                                            render: (_, r) => r.uom?.toLowerCase()
                                         }
                                     ]}
                                 />
-                                </Card>
-                            </>
-                            
-                        )
-                    }
+                            </Card>
+                        </>
+
+                    )
+                }
                 <Card size='small'>
                     <Flex
                         justify='space-between'
@@ -211,23 +241,23 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                             dataSource={dataSource}
                             columns={[
                                 {
-                                    title: "Grand Amount",
-                                    dataIndex: "grandAmount",
+                                    title: "Total Amount",
+                                    dataIndex: "totalAmount",
                                     valueType: "money",
-                                    render: (_, r) =><Typography.Text type="warning">{ r.grantAmount ? formatter.format(r.grantAmount) : "$0.00"}</Typography.Text>
+                                    render: (_, r) => <Typography.Text type="warning">{r.totalAmount ? formatter.format(r.totalAmount,) : "$0.00"}</Typography.Text>
                                 },
                                 {
                                     title: "Discount Amount",
                                     dataIndex: "discountAmount",
                                     valueType: "percent",
-                                    render:(_,r)=> <Typography.Text type="warning">{r.discountAmount ? formatter.format(r.discountAmount) : "%0.00"}</Typography.Text>
-                              
+                                    render: (_, r) => <Typography.Text type="warning">{r.discountAmount ? formatter.format(r.discountAmount) : "%0.00"}</Typography.Text>
+
                                 },
                                 {
-                                    title: "Total Amount",
-                                    dataIndex: "totalAmount",
+                                    title: "Grand Amount",
+                                    dataIndex: "grandAmount",
                                     valueType: "money",
-                                    render: (_, r) => <Typography.Text type="warning">{r.totalAmount ? formatter.format(r.totalAmount,) : "$0.00"}</Typography.Text>
+                                    render: (_, r) => <Typography.Text type="warning">{r.grantAmount ? formatter.format(r.grantAmount) : "$0.00"}</Typography.Text>
                                 },
                             ]}
                         />

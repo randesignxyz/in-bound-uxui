@@ -204,7 +204,7 @@ export default () => {
       link: `${SalePaths.suggestion}/list`,
       icon: plannerIcon,
       // visible: access.canAcessStockControlMenuItem || access.canAccessSettlementMenuItem,
-      visible:access.canAccessSaleTaskList
+      visible: access.canAccessSaleTaskList
     },
     {
       id: 'store',
@@ -213,7 +213,7 @@ export default () => {
       link: `${SalePaths.store}/list`,
       icon: storeIcon,
       // visible: access.canAccessAllMenuDSD || access.canAccessTabWarehouse,
-      visible : access.canAccessSaleStore
+      visible: access.canAccessSaleStore
     },
     {
       id: 'stock',
@@ -329,14 +329,8 @@ export default () => {
       icon: stockCountId,
       // visible: access.canAccessAllMenuDSD,
       link: `${MPUPath.mpuCountStock}/list`,
-    }, 
-    {
-      id: 'free-of-charge',
-      name: 'Free Of Charge',
-      description: '',
-      icon: FOC,
-      link: `${MPUPath.mpuFOC}/list`,
-    }, 
+    },
+
   ];
 
   const items: ListMenuItem[] = [
@@ -410,35 +404,42 @@ export default () => {
       id: 'mpu_po',
       name: 'Purchase Order',
       description: 'make po for request stock',
-      link: `${MPUPath.mpuPurchaseOrder}/list`, 
+      link: `${MPUPath.mpuPurchaseOrder}/list`,
       icon: purchaseOrderIcon,
       visible: access.canAccessViewMpu,
     },
     {
-      id: 'mpu_stock',
-      name: 'MPU Stock',
+      id: 'free-of-charge',
+      name: 'Free Of Charge',
       description: '',
-      link: `${MPUPath.mpuStock}/list`,
-      icon: stockIcon,
-      visible: access.canAccessViewMpu,
+      icon: FOC,
+      link: `${MPUPath.mpuFOC}/list`,
     },
-    {
-      id: 'mpu_count_stock',
-      name: 'Daily Count Stock',
-      description: '',
-      link: `${MPUPath.mpuCountStock}/list`,
-      icon: complainIcon,
-      visible: access.canAccessViewMpu,
-    },
+    // {
+    //   id: 'mpu_stock',
+    //   name: 'MPU Stock',
+    //   description: '',
+    //   link: `${MPUPath.mpuStock}/list`,
+    //   icon: stockIcon,
+    //   visible: access.canAccessViewMpu,
+    // },
+    // {
+    //   id: 'mpu_count_stock',
+    //   name: 'Daily Count Stock',
+    //   description: '',
+    //   link: `${MPUPath.mpuCountStock}/list`,
+    //   icon: complainIcon,
+    //   visible: access.canAccessViewMpu,
+    // },
 
-    {
-      id: 'mpu_report',
-      name: 'MPU Report',
-      description: '',
-      link: `${MPUPath.mpuReport}/list`,
-      icon: reportIcon,
-      visible: access.canAccessViewMpu,
-    },
+    // {
+    //   id: 'mpu_report',
+    //   name: 'MPU Report',
+    //   description: '',
+    //   link: `${MPUPath.mpuReport}/list`,
+    //   icon: reportIcon,
+    //   visible: access.canAccessViewMpu,
+    // },
   ];
 
   // const retailerMenuItems = [
@@ -469,10 +470,10 @@ export default () => {
   const purchaseOrder = [
     {
       id: "rsmRequest",
-      name: "Purchase Order" ,
+      name: "Purchase Order",
       description: "Rsm make Purchase Order for MMA",
       link: `${SalePaths.purchaseOrder}/list`,
-      icon:purchaseOrderIcon,
+      icon: purchaseOrderIcon,
       // visible: access.canAccessRSMRequestToMPU,
     }
   ];
@@ -487,18 +488,18 @@ export default () => {
         access.canAccessSettlementMenuItem ||
         access.canAccessARMenuItem) && (
           <>
-            <Divider/>
+            <Divider />
             <ListMenuComp items={stockMenuItems} />
           </>
         )}
-      {/* {access.canAccessViewMpu && ( */}
+      {access.canAccessViewMpu && (
         <>
           <Divider plain orientation='left' >MMA</Divider>
           <ListMenuComp items={mpuMenuItems} />
         </>
-      {/* )} */}
-        {/* {access.canAccessRSMRequestToMPU && ( */}
-        {/* <>
+      )}
+      {/* {access.canAccessRSMRequestToMPU && ( */}
+      {/* <>
           <Divider plain orientation='left'>MMA</Divider>
           <ListMenuComp items={purchaseOrder} />
         </> */}

@@ -1,6 +1,6 @@
 import { simpleRequestActions } from "@/services/model";
 import { ActionType, ProDescriptions, ProTable } from "@ant-design/pro-components";
-import { Button, Card, Col, Flex, message, Modal, Row, Space, Spin, Tag, Timeline, Typography } from "antd";
+import { Button, Card, Col, Collapse, Flex, message, Modal, Row, Space, Spin, Table, Tag, Timeline, Typography } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { SettlementMethodServicAPI } from "./service";
 import { formatDate, formatterQty } from "@/pages/utils";
@@ -9,6 +9,9 @@ import ImagePreview from "@/components/ImagePreview";
 import { formatCurrency } from "../../sale";
 import RemarkModalForm from "../../component/RemarkModal";
 import { SettlementMethodDetailDTO } from "./data";
+import { PurchaseOrderDTO } from "../purchase_order/data";
+import numeral from "numeral";
+
 const { Text } = Typography;
 interface Props {
     id?: number;
@@ -19,6 +22,7 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
     const [dataSource, setDataSource] = useState<SettlementMethodDetailDTO>();
     const actionRef = useRef<ActionType>();
     const services = SettlementMethodServicAPI(requestActions);
+    // const [po, setPo] = useState<PurchaseOrderDTO>();
     const [actionState, setActionState] = useState<{
         visible?: {
             open: true;
@@ -37,8 +41,6 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
     return (
         <Spin spinning={requestActions.request?.loading}>
             <Flex vertical gap={16}>
-                {/* <Row gutter={[16, 16]}>
-                    <Col sm={24} lg={18}> */}
                 <Card
                     size="small"
                     title={"General Infomation"}
@@ -49,7 +51,14 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                             onClick={() => {
                                 Modal.confirm({
                                     title: "Confirm Message",
-                                    content: "This is a message inform warning; be careful before clicking OK. You really want to confirm the request?",
+                                    content: <Space direction="vertical">
+                                        <Typography.Text>
+                                            This is a message inform warning; be careful before clicking OK.
+                                        </Typography.Text>
+                                        <Typography.Text type="warning">
+                                            You really want to confirm the request?
+                                        </Typography.Text>
+                                    </Space>,
                                     onOk: async () => {
                                         services.confirm({
                                             id: dataSource.id
@@ -122,6 +131,173 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                         ]}
                     />
                 </Card>
+                {
+                    dataSource?.purchaseOrder?.map(p => {
+                        const totalItem = p.items?.reduce((p, c) => p + c.quantity, 0)
+                        const totalAmount = p.items?.reduce((p, c) => p + (c.quantity * c.pricing), 0)
+                        return <Card size="small">
+                            <Collapse
+                                size="small"
+                                ghost
+                                items={[
+                                    {
+                                        key: "s",
+                                        label: <ProDescriptions
+                                            dataSource={p}
+                                            contentStyle={{ fontWeight: 500 }}
+                                            size="small"
+                                            column={{ xs: 1, sm: 2, md: 3, lg: 5, xl: 5, xxl: 5 }}
+                                            columns={[
+                                                {
+                                                    title: "Distributor Name",
+                                                    dataIndex: "distributorCode",
+                                                    span:2,
+                                                    render: (_, r) => [r.distributorCode, r.distributorName].filter(po => po).join("-")
+                                                },
+                                                {
+                                                    title: "Date",
+                                                    dataIndex: "purchaseOrderDate",
+                                                    valueType:"date"
+                                                },
+                                                {
+                                                    title: "Total Amount",
+                                                    dataIndex: "grantAmount",
+                                                    render: (_, r) => <Typography.Text type="success">{totalItem}</Typography.Text>
+                                                },
+                                                {
+                                                    title: "Total Amount",
+                                                    dataIndex: "grantAmount",
+                                                    render: (_, r) => <Typography.Text type="success">{numeral(totalAmount).format("$ 0,000.00")}</Typography.Text>
+                                                },
+                                            ]}
+                                        />,
+                                        children: <ProTable
+                                            dataSource={p.items}
+                                            search={false}
+                                            options={false}
+                                            ghost
+                                            pagination={false}
+                                            size="small"
+                                            columns={[
+                                                {
+                                                    title: "Item Name",
+                                                    render: (_, r) => [r.itemCode, r.itemName].filter(h => h).join("-")
+                                                },
+                                                {
+                                                    title: "Category Name",
+                                                    dataIndex: "stockCategoryName"
+                                                },
+                                                {
+                                                    title: "Quantity",
+                                                    dataIndex: "quantity",
+                                                    align: "right"
+                                                },
+                                                {
+                                                    title: "Price",
+                                                    align: "right",
+                                                    render: (_, r) => numeral(r.pricing).format("$ 0,000.00")
+                                                },
+                                                {
+                                                    title: "Total",
+                                                    align: "right",
+                                                    render: (_, r) => <Typography.Text type="warning">{numeral(r.pricing * r.quantity).format("$ 0,000.00")}</Typography.Text>
+                                                }
+                                            ]}
+                                        />
+                                    }
+                                ]}
+                            />
+
+                        </Card>
+                    })
+                }
+                {(dataSource?.purchaseOrder?.length ?? 0) > 0 &&
+                    <Card
+                        size="small"
+                    >
+                        <Collapse
+                            ghost
+                            items={[
+                                {
+                                    key: "1a",
+                                    label: <ProDescriptions
+                                        size="small"
+                                        dataSource={dataSource?.stockCount}
+                                        contentStyle={{ fontWeight: 500 }}
+                                        columns={[
+                                            {
+                                                title: "Counted Number",
+                                                dataIndex: "countedNo",
+                                            },
+                                            {
+                                                title: "Count Date",
+                                                dataIndex: "countedDate",
+                                                valueType: "date"
+                                            },
+                                            {
+                                                title: "Saleperson",
+                                                render: (_, r) => [r.salespersonCode, r.salespersonName].filter(p => p).join("-")
+                                            },
+                                        ]}
+                                    />,
+                                    children: <ProTable
+                                        dataSource={dataSource?.stockCount?.items}
+                                        search={false}
+                                        options={false}
+                                        ghost
+                                        pagination={false}
+                                        size="small"
+                                        columns={[
+                                            {
+                                                title: "Item Name",
+                                                render: (_, r) => [r.itemCode, r.itemName].filter(y => y).join("-")
+                                            },
+                                            {
+                                                title: "Request Quantity",
+                                                dataIndex: "requestQuantity",
+                                                align: "right"
+                                            },
+                                            {
+                                                title: "Sold Quantity",
+                                                dataIndex: "soldQuantity",
+                                                align: "right"
+                                            },
+                                            {
+                                                title: "System Quantity",
+                                                dataIndex: "systemQuantity",
+                                                align: "right"
+                                            },
+                                            {
+                                                title: "ActualQuantity",
+                                                dataIndex: "actualQuantity",
+                                                align: "right"
+                                            },
+                                        ]}
+                                        summary={(items) => {
+                                            const rqty = items.reduce((p, c) => p + c.requestQuantity, 0)
+                                            const soldqty = items.reduce((p, c) => p + c.soldQuantity, 0)
+                                            const sysqty = items.reduce((p, c) => p + c.systemQuantity, 0)
+                                            const acqty = items.reduce((p, c) => p + c.actualQuantity, 0)
+                                            return (
+                                                <>
+                                                    <Table.Summary.Row>
+                                                        <Table.Summary.Cell index={1}>Total</Table.Summary.Cell>
+                                                        <Table.Summary.Cell index={1} align="right"><Typography.Text type="success">{rqty}</Typography.Text></Table.Summary.Cell>
+                                                        <Table.Summary.Cell index={1} align="right"><Typography.Text type="success">{soldqty}</Typography.Text></Table.Summary.Cell>
+                                                        <Table.Summary.Cell index={1} align="right"><Typography.Text type="success">{sysqty}</Typography.Text></Table.Summary.Cell>
+                                                        <Table.Summary.Cell index={1} align="right"><Typography.Text type="success">{acqty}</Typography.Text></Table.Summary.Cell>
+                                                    </Table.Summary.Row>
+                                                </>
+                                            )
+                                        }}
+                                    />
+                                }
+                            ]}
+                        />
+
+
+                    </Card>
+                }
                 <Card size="small">
                     <ProTable
                         size="small"
@@ -202,7 +378,7 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                         }
                     </Flex>
                 </Card>
-                <Card size="small" style={{ height: "100%" }}>
+                {/* <Card size="small" style={{ height: "100%" }}>
                     {
                         dataSource?.comment?.length ? (<>
                             <Timeline
@@ -222,7 +398,7 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                         </>)
                             : <Flex justify="center"><Text type="secondary">no remark</Text></Flex>
                     }
-                </Card>
+                </Card> */}
             </Flex>
             <RemarkModalForm
                 open={actionState?.visible?.open}

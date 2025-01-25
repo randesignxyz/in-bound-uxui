@@ -131,6 +131,9 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...pr
         isSplit: it.isSplit,
         internalId: it.internalId,
         status: it.status,
+        itemName: it.itemName,
+        key: it.key,
+        uom: it.uom,
       };
     });
     const item: ApprovalStockControlDto = {
@@ -426,7 +429,6 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...pr
                               // dataSource.push(first);
                               // setDataSource(dataSource);
                               // actionRef.current?.reload();
-
                               actionRef.current?.addEditRecord?.(first);
                             }}
                           />

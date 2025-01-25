@@ -1,4 +1,4 @@
-import { ActionType, EditableFormInstance, EditableProTable, FooterToolbar, ProDescriptions, ProForm, ProFormDatePicker, ProFormDependency, ProFormSelect, ProFormTextArea } from "@ant-design/pro-components";
+import { ActionType, EditableFormInstance, EditableProTable, FooterToolbar, ProDescriptions, ProForm, ProFormDatePicker, ProFormDependency, ProFormSelect, ProFormText, ProFormTextArea } from "@ant-design/pro-components";
 import { PurchaseOrderCreate, PurchaseOrderItem } from "./data";
 import { Button, Card, Flex, message, Modal, Typography } from "antd";
 import { DistributorCreate } from "../request/data";
@@ -36,7 +36,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
   const [dataSourceItems, setDataSourceItems] = useState<PurchaseOrderItem[]>();
   const [distributor, setDistributor] = useState<DistributorCreate>();
   const [saleperson, setSaleperson] = useState<{ assignedTo?: string; assignedToCode?: string }>();
-  const [distibutors, setDistributors] = useState<{ distributorId?: number; distributorCode?: string, distributorName?:string }>();
+  const [distibutors, setDistributors] = useState<{ distributorId?: number; distributorCode?: string, distributorName?: string }>();
   const actionRef = useRef<ActionType>();
   const [addressList, setAddressList] = useState<AddressInfo[]>();
   const [amount, setAmount] = useState<Amount>({
@@ -82,6 +82,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
   useEffect(() => {
     id && loadData();
   }, []);
+
   useEffect(() => {
     dataSourceItems?.length && onTotalAmoun?.()
   }, [dataSourceItems]);
@@ -89,17 +90,18 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
   const onFormvalueChanged = async (changedValues: any) => {
     if (changedValues.distributorId) {
       const data = await CrmServiceAPI(requestActions).listAddressByCustomer({
-        id: distibutors?.distributorId||0,
+        id: distibutors?.distributorId || 0,
       });
+      
+      form.setFieldValue("shipAddressId", data?.[0]?.id);
       setAddressList(data);
-      form.setFieldValue("shipAddressId", data?.[0].id)
     }
   };
 
   return (
     <ProForm
       layout='horizontal'
-      labelCol={{ sm: 8, md: 8 }}
+      labelCol={{ sm: 8, md: 8, }}
       labelAlign='left'
       onValuesChange={onFormvalueChanged}
       form={form}
@@ -107,9 +109,36 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
       submitter={{
         render: () => {
           return (
-            <FooterToolbar>
+            <FooterToolbar portalDom={false}>
               <Button onClick={onBack}>Cancel</Button>
               {type === 'CREATE' && <Button onClick={() => form.resetFields()}>Clear</Button>}
+              <Button
+                type="dashed"
+                disabled={dataSourceItems?.length ? false : true}
+                onClick={async () => {
+                  const dataForm = await form.validateFields();
+                  await editableFormRef.current?.validateFields();
+                  Modal.confirm({
+                    title: "Save Data into Database",
+                    content: "Are you sure ?",
+                    onOk: async () => {
+                      const entry = {
+                        id: id,
+                        ...dataForm,
+                        ...saleperson,
+                        items: dataSourceItems || [],
+                        ...distibutors,
+                        ...amount,
+                      }
+                      await PurchaseOrderServiceAPI(requestActions).save(entry);
+                      setDataSourceItems([])
+
+                    }
+                  });
+                }}
+              >
+                Save & New
+              </Button>
               <Button type="primary"
                 disabled={dataSourceItems?.length ? false : true}
                 onClick={async () => {
@@ -130,7 +159,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
                       await PurchaseOrderServiceAPI(requestActions).save(entry).then(o => {
                         onView?.(o.data);
                       })
-
+                      
                     }
                   });
                 }}
@@ -142,7 +171,6 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
         },
       }}
     >
-
       <Flex vertical gap={12}>
         <Card
           size='small'
@@ -162,27 +190,25 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
                 rules={[
                   { required: true }
                 ]}
-                onChange={(e:string)=>{
+                onChange={(e: string) => {
                   const distributor = e.split(",");
                   setDistributors({
-                    distributorCode:distributor?.[1],
-                    distributorId:distributor?.[0],
-                    distributorName:distributor?.[2],
+                    distributorCode: distributor?.[1],
+                    distributorId: parseInt(distributor?.[0]),
+                    distributorName: distributor?.[2],
                   })
-                  // assignedTo: assigned[1],
-                  //   assignedToCode: assigned[0]
                 }}
                 label={"Distributor"}
                 request={async (k: { keyWords: string }) => {
                   const data = await CrmServiceAPI(requestActions).findAllCustomer({
                     searchValue: k.keyWords
                   });
-                  return data.items.map(p => ({ value: [p.id, p.code, p.internalName].join(","), label: [p.code,p.name].filter(p=>p).join("-")}));
+                  return data.items.map(p => ({ value: [p.id, p.code, p.internalName].join(","), label: [p.code, p.name].filter(p => p).join("-") }));
                 }}
               />
               <ProFormSelect
                 name={"shipAddressId"}
-                label="Shipping Address"
+                label="Address"
                 width={"md"}
                 allowClear={false}
                 showSearch
@@ -192,9 +218,9 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
                 })}
               />
               <ProFormDependency dependencies={["shipAddressId"]} name={["shipAddressId"]}>
-                {({shipAddressId }) => {
+                {({ shipAddressId }) => {
                   const address = addressList?.find((item) => item.id == shipAddressId);
-             
+                  form.setFieldsValue({latitude:address?.latitude, longitude:address?.longitude})
                   const aa = [
                     { name: 'Street', value: address?.streetNo },
                     { name: 'House#', value: address?.houseNo },
@@ -210,8 +236,10 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
                     .filter((it) => it.value)
                     .map((it) => `${it.name} ${it.value}`)
                     .join(', ')
-                
+
                   return <Flex gap={2}>
+                    <ProFormText hidden  name={"latitude"}/>
+                    <ProFormText hidden  name={"longitude"}  />
                     <Typography.Text type="warning"><AimOutlined /></Typography.Text>
                     <Typography.Text type={"secondary"} >{aa}</Typography.Text>
                   </Flex>
@@ -296,10 +324,52 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
             ]
           }}
           columns={[
+
+            {
+              title: "Product Name",
+              dataIndex: "itemId",
+              width: 350,
+              fieldProps: (_, config) => {
+
+                return {
+                  onChange: (e: number) => {
+                    if (dataSourceItems?.filter(o => o.itemId === e).length) {
+                      message.error("This Item was ready added!");
+                      console.log(config.entity.itemId == undefined);
+                    }
+                  },
+                  showSearch: true,
+                  debounceTime: 500,
+                  allowClear: true,
+
+                  param: config.entity.stockCategoryId,
+                  ...config,
+                }
+              },
+              valueType: "select",
+              formItemProps: (form, config) => {
+                return {
+                  rules: [{ required: true }],
+                }
+              },
+
+              request: async (k: { keywords: string }) => {
+                const data = await ProductItemsServiceAPI(requestActions).pageProducts({
+                  criteria: {
+                    searchValue: k.keywords,
+                  }
+                });
+                return data.items.map(p => ({
+                  value: p.id,
+                  label: p.name,
+                  disabled: dataSourceItems?.some(ot => ot.itemId == p.id)
+                }));
+              }
+            },
             {
               title: 'Category',
               dataIndex: 'stockCategoryId',
-              width:200,
+              width: 200,
               fieldProps: {
                 showSearch: true,
                 debounceTime: 500,
@@ -312,43 +382,6 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
               request: async () => {
                 const data = await services.stockCategory();
                 return data.map(p => ({ value: p.id, label: p.name }));
-              }
-            },
-            {
-              title: "Product Name",
-              dataIndex: "itemId",
-              width: 350,
-              fieldProps: (_, config) => {
-                return {
-                  onChange: (e: number) => {
-                    if (dataSourceItems?.filter(o => o.itemId === e).length) {
-                      message.error("This Item was ready added!");
-                      console.log(config.entity.itemId == undefined);
-                    }
-                  },
-                  showSearch: true,
-                  debounceTime: 500,
-                  allowClear: true,
-                  ...config,
-                }
-              },
-              valueType: "select",
-              formItemProps: {
-                rules: [{
-                  required: true
-                }],
-              },
-              request: async (k: { keywords: string }) => {
-                const data = await ProductItemsServiceAPI(requestActions).pageProducts({
-                  criteria: {
-                    searchValue: k.keywords,
-                  }
-                });
-                return data.items.map(p => ({
-                  value: p.id,
-                  label: p.name,
-                  disabled: dataSourceItems?.some(ot => ot.itemId == p.id)
-                }));
               }
             },
             {

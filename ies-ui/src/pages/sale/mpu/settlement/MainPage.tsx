@@ -3,10 +3,10 @@ import { simpleRequestActions } from "@/services/model";
 import React, { useRef, useState } from "react"
 import { SettlementMethodServicAPI } from "./service";
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
-import { useQuery } from "@umijs/max";
+import { useAccess, useQuery } from "@umijs/max";
 import { ActionType } from "@ant-design/pro-components";
 import { formatDate } from "@/pages/utils";
-import SettlementMethodDetail from "./Detail";  
+import SettlementMethodDetail from "./Detail";
 import { formatCurrency } from "../../sale";
 import { Tag } from "antd";
 import { SyncOutlined, CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
@@ -17,12 +17,22 @@ interface Props {
 }
 
 const SettlementMianPage: React.FC<Props> = () => {
+    const access = useAccess()
     const requestActions = simpleRequestActions();
     const services = SettlementMethodServicAPI(requestActions);
     const actionRef = useRef<ActionType>();
+    const role = access.canAccessAllMenuDSD
+        ? 'sale_admin'
+        : access.canAccessTabWarehouse
+            ? 'warehouse'
+            : access.canAccessTabCashier
+                ? 'cashier'
+                : 'admin';
     const [filter, setFilter] = useState<TableViewSearchParams<SettlementMethodAdvanceSearch>>({
-        criteria: { advanceSearch: { status: 'ALL' } }
+        criteria: { advanceSearch: { status: 'ALL', type:role } }
     });
+
+
     const { data, isFetching, refetch } = useQuery(['fetch-settlement-list', filter], () => services.page(filter), {
         refetchOnWindowFocus: false,
     });
@@ -41,7 +51,7 @@ const SettlementMianPage: React.FC<Props> = () => {
                 type: "Table",
                 title: "Settlement",
                 statuses: [
-                    { option: { label: "All", value: "ALL", default:true } },
+                    { option: { label: "All", value: "ALL", default: true } },
                     { option: { label: "Pending", value: "Pending" } },
                     { option: { label: "Completed", value: "Completed" } },
                     { option: { label: "Rejected", value: "Rejected" } },
@@ -53,7 +63,8 @@ const SettlementMianPage: React.FC<Props> = () => {
                         criteria: {
                             searchValue: params?.searchValue,
                             advanceSearch: {
-                                status: params?.status || "ALL"
+                                status: params?.status || "ALL",
+                                type:role
                             },
                             sort: sort
                         },
@@ -88,17 +99,17 @@ const SettlementMianPage: React.FC<Props> = () => {
                         {
                             title: "Status",
                             dataIndex: "status",
-                            render:(_,r)=><Tag
+                            render: (_, r) => <Tag
                                 bordered={false}
                                 icon={
-                                    r.status=="Pending"?<SyncOutlined spin />
-                                    :r.status =="Completed"?<CheckCircleOutlined />
-                                    :<CloseCircleOutlined />
+                                    r.status == "Pending" ? <SyncOutlined spin />
+                                        : r.status == "Completed" ? <CheckCircleOutlined />
+                                            : <CloseCircleOutlined />
                                 }
                                 color={
-                                    r.status=="Pending"?"processing"
-                                    :r.status =="Completed"?"success"
-                                    :"error"
+                                    r.status == "Pending" ? "processing"
+                                        : r.status == "Completed" ? "success"
+                                            : "error"
                                 }
                             >{r.status}</Tag>
                         },
@@ -106,16 +117,16 @@ const SettlementMianPage: React.FC<Props> = () => {
                             title: "Amount",
                             dataIndex: "amount",
                             valueType: "money",
-                            align:"right",
-                            render:(_,r)=>{
-                                const total = r.amount + (r.amountKH/r.exchangeRate);
+                            align: "right",
+                            render: (_, r) => {
+                                const total = r.amount + (r.amountKH / r.exchangeRate);
                                 return `$ ${numeral(total).format("0,000.00")}`
                             }
                         },
                         {
                             title: "Exchange Rate",
                             dataIndex: "exchangeRate",
-                            align:"right",
+                            align: "right",
                             render: (_, r) => formatCurrency(r.exchangeRate, '៛'),
                         },
                     ]

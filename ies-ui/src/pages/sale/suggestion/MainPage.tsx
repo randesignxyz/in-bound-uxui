@@ -114,8 +114,8 @@ const TaskListMainPage: React.FC<Props> = () => {
           setMMASettlementState({ visible: { open: true, record: data } })
         }
         onMMAApprove={(data, role) => {
-            setApprovedState({ visible: { open: true, record: data } });
-        //   setAddNewModal({ open: true, record: data, role: role });
+          setApprovedState({ visible: { open: true, record: data } });
+          //   setAddNewModal({ open: true, record: data, role: role });
         }}
       />
     );
@@ -263,25 +263,23 @@ const TaskListMainPage: React.FC<Props> = () => {
         data={addNewModal.record}
         role={addNewModal.role}
         actionHandlers={{
-          onRejectItem: async (id: number, remark: string) => {
-            try {
-              const result = await suggestionService.doReject(id, remark);
-              message.success(result.message);
-            } catch (e: any) {
-              message.error(e.toString());
-            }
-            if (addNewModal.record?.items?.length === 1) {
-              setAddNewModal({
-                open: false,
-                record: undefined,
-              });
-            }
-          },
-          onReload: () => {
+          onCancel: () => setAddNewModal({ open: false, record: undefined }),
+          onRejectAll: async (payload) => {
             setAddNewModal({
               open: false,
               record: undefined,
             });
+            try {
+              const response = await suggestionService.reject(payload);
+              if (response.message.toLowerCase() === 'ok') {
+                message.success('Your rejection request was successful.');
+              } else {
+                message.error('Your rejection request was unsuccessful.');
+              }
+              actionRef.current?.reload?.();
+            } catch (_) {
+              message.error('Something went worong');
+            }
           },
           onAddItem: async (item) => {
             Modal.confirm({
@@ -290,13 +288,16 @@ const TaskListMainPage: React.FC<Props> = () => {
               onOk: async () => {
                 try {
                   const res = await suggestionService.onApprovalStockRequest(item);
-                  res &&
+                  if (res) {
                     setAddNewModal({
                       open: false,
                       record: undefined,
                     });
-                  res && message.success('Data was recorded!');
-                } catch (error) {}
+                    message.success('Data was recorded!');
+                  }
+                } catch (error) {
+                  message.error('Something went worong');
+                }
                 refetch();
               },
             });
@@ -314,7 +315,7 @@ const TaskListMainPage: React.FC<Props> = () => {
               id: remarkState?.visible?.carryData?.id,
               ...data,
             })
-            .then((o) => {
+            .then(() => {
               message.success('Your rejection request was a success!');
             });
           setRemarkState({ visible: undefined });
@@ -382,17 +383,18 @@ const TaskListMainPage: React.FC<Props> = () => {
         data={approvedState?.visible?.record}
         onSave={(data) => {
           Modal.confirm({
-            title: 'Make Approve Requested',
+            title: 'Make Approved Requested',
             content: 'are you sure?',
             onOk: async () => {
               try {
                 const res = await suggestionService.onMMAApprovalStockRequest(data);
-                res &&
+                if (res) {
                   setAddNewModal({
                     open: false,
                     record: undefined,
                   });
-                res && message.success('success approval!');
+                  message.success('success approval!');
+                }
               } catch (error) {}
               setApprovedState({ visible: undefined });
               refetch();

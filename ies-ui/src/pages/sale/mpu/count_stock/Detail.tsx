@@ -131,32 +131,6 @@ const CountStockDetail: React.FC<Props> = ({ id }) => {
                         ]}
                     />
                 </Card>
-                <Flex gap={12} vertical>
-                    {
-                        dataSource?.purchaseOrder?.map(p => {
-                            return <Card size="small"><ProDescriptions
-                                dataSource={p}
-                                contentStyle={{ fontWeight:500 }}
-                                columns={[
-                                    {
-                                        title: "Distributor Code",
-                                        dataIndex: "distributorCode"
-                                    },
-                                    {
-                                        title: "Distributor Name",
-                                        dataIndex: "distributorName"
-                                    },
-                                    {
-                                        title: "Total Amount",
-                                        dataIndex: "grantAmount",
-                                        render: (_, r) => <Typography.Text type="success">{numeral(r.grantAmount).format("$ 0,000.00")}</Typography.Text>
-                                    },
-                                ]}
-                            /></Card>
-                        })
-                    }
-
-                </Flex>
                 <Card size="small"
                 >
                     <ProDescriptions

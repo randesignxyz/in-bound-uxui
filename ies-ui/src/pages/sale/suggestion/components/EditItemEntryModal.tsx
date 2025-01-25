@@ -1,6 +1,5 @@
 import type { FormModalProps } from '@/components/FormModal';
 import FormModalComp from '@/components/FormModal';
-import RemarkModal from '@/components/remark-modal';
 import { formatDate } from '@/pages/utils';
 import { CrmServiceAPI } from '@/services/crm/services';
 import { simpleRequestActions } from '@/services/model';
@@ -9,18 +8,20 @@ import { CopyOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { ProDescriptions, ProForm, ProFormSelect } from '@ant-design/pro-components';
 import type { ActionType } from '@ant-design/pro-table';
 import { EditableProTable } from '@ant-design/pro-table';
-import { Button, Card, Flex, Modal, Tag, Tooltip, Typography } from 'antd';
+import { Button, Card, Flex, Tag, Tooltip, Typography } from 'antd';
 import { useForm } from 'antd/es/form/Form';
+import { uniqueId } from 'lodash';
 import moment from 'moment';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import RemarkModalForm from '../../component/RemarkModal';
 import { DistributorCreate } from '../../mpu/request/data';
-
+import dayjs from "dayjs";
 interface Props extends FormModalProps {
   data?: StockControlLess;
   actionHandlers: {
     onAddItem?: (item: ApprovalStockControlDto) => void;
-    onRejectItem: (id: number, remark: string) => void;
-    onReload?: () => void;
+    onCancel: () => void;
+    onRejectAll: (param: RemarkParam) => void;
   };
   role?: string;
 }
@@ -61,39 +62,38 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...pr
   const [form] = useForm<ApprovalStockControlDto>();
   const [isError, setIsError] = useState<boolean>(false);
 
-  const [showRemark, setShowRemark] = useState<{
-    record: EditableStockItem | undefined;
-    isOpen: boolean;
+  const [remarkState, setRemarkState] = useState<{
+    open: boolean;
+    carryData?: number;
   }>();
 
   const onResetActionHandler = useCallback(() => {
     if (data) {
+      //?.filter((it) => it.status !== 'rejected')
       setDataSource(
-        data.items
-          ?.filter((it) => it.status !== 'rejected')
-          .map((it) => {
-            const batchNo = moment(it.batchNo, formatStringDate);
-            const itemEdit: EditableStockItem = {
-              id: it.id,
-              key: (Math.random() * 1000000).toFixed(0),
-              batchNo:
-                it.batchNo === null || it.batchNo === '' || it.batchNo === 'n/a'
-                  ? undefined
-                  : batchNo,
-              beginningQty: it.beginningQty,
-              expiredDate: it.expiredDate,
-              itemName: it.itemName,
-              quantity: it.quantity,
-              uom: it.uom || '',
-              itemCode: it.itemCode,
-              isSplit: false,
-              stockCategoryId: it.itemType,
-              status: it.status,
-              internalId: it.internalId,
-              itemType: it.itemType,
-            };
-            return itemEdit;
-          }) || [],
+        data.items?.map((it) => {
+          const batchNo = moment(it.batchNo, formatStringDate);
+          const itemEdit: EditableStockItem = {
+            id: it.id,
+            key: (Math.random() * 1000000).toFixed(0),
+            batchNo:
+              it.batchNo === null || it.batchNo === '' || it.batchNo === 'n/a'
+                ? undefined
+                : batchNo,
+            beginningQty: it.beginningQty,
+            expiredDate: it.expiredDate,
+            itemName: it.itemName,
+            quantity: it.quantity,
+            uom: it.uom || '',
+            itemCode: it.itemCode,
+            isSplit: false,
+            stockCategoryId: it.itemType,
+            status: it.status,
+            internalId: it.internalId,
+            itemType: it.itemType,
+          };
+          return itemEdit;
+        }) || [],
       );
     }
     setEditableRowKeys([]);
@@ -165,10 +165,35 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...pr
       key={`FormModalComp-${data?.id}`}
       {...props}
       width="1000px"
-      disabled={disabledButton()}
-      onSubmit={onSubmitActionHandler}
-      onResetForm={onResetActionHandler}
-      okText={'Update'}
+      // disabled={disabledButton()}
+      // onSubmit={onSubmitActionHandler}
+      // onResetForm={onResetActionHandler}
+      // okText={'Update'}
+      footer={
+        <Flex gap="small" align="flex-start" justify="flex-end">
+          <Button type="default" onClick={() => actionHandlers.onCancel()}>
+            <Typography.Text type="secondary">Cancel</Typography.Text>
+          </Button>
+          <Button type="default" onClick={onResetActionHandler}>
+            Reset
+          </Button>
+          <Button
+            type="default"
+            danger
+            onClick={() => setRemarkState({ open: true, carryData: data?.id })}
+          >
+            Reject
+          </Button>
+          <Button
+            type="primary"
+            color="secondary"
+            disabled={disabledButton()}
+            onClick={onSubmitActionHandler}
+          >
+            Submit
+          </Button>
+        </Flex>
+      }
       title="Issue Stock"
     >
       <Flex vertical gap={12}>
@@ -279,9 +304,10 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...pr
               type: 'single',
               editableKeys,
               onSave: async (_, record: EditableStockItem, originRow: EditableStockItem) => {
+                
                 if (record.batchNo) {
-                  record.batchNo = moment(originRow.batchNo);
-                  record.expiredDate = moment(originRow.batchNo).add(6, 'M');
+                  record.batchNo = moment(record.batchNo);
+                  record.expiredDate = moment(record.batchNo).add(6, 'M');
                 }
                 await waitTime(100);
               },
@@ -374,6 +400,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...pr
                 align: 'right',
                 width: 120,
                 render: (_text, record, _, action) => [
+                  record.status === 'rejected' && <Text type="danger">{record.status}</Text>,
                   record.beginningQty === 0 && record.status !== 'rejected' && (
                     <>
                       <Tooltip title="Edit" key={`editable-${record.key}`}>
@@ -387,68 +414,54 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...pr
                         />
                       </Tooltip>
 
-                      <Tooltip title="Copy" key={`copy-${record.key}`}>
-                        <Button
-                          type="link"
-                          icon={<CopyOutlined />}
-                          onClick={() => {
-                            const key = (Math.random() * 1000000).toFixed(0);
-                            const batchNo = moment();
-                            const first: EditableStockItem = {
-                              id: record.id,
-                              beginningQty: record.beginningQty,
-                              itemCode: record.itemCode,
-                              itemName: record.itemName,
-                              quantity: record.quantity,
-                              uom: record.uom,
-                              isSplit: true,
-                              status: record.status,
-                              stockCategoryId: record.stockCategoryId,
-                              internalId: record.internalId,
-                              itemType: record.itemType,
-                              batchNo: batchNo,
-                              expiredDate: moment(batchNo).add(6, 'M'),
-                              key: key,
-                            };
-                            dataSource.push(first);
-                            setDataSource(dataSource);
-                            actionRef.current?.reload();
-                            action?.startEditable?.(key);
-                            // actionRef.current?.addEditRecord?.(first);
-                          }}
-                        />
-                      </Tooltip>
+                      {record.stockCategoryId === 132 && (
+                        <Tooltip title="Copy" key={`copy-${record.key}`}>
+                          <Button
+                            type="link"
+                            icon={<CopyOutlined />}
+                            onClick={() => {
+                              const key = Math.random() * 1000000;
+                              const batchNo = moment();
+                              const first: EditableStockItem = {
+                                id: -key,
+                                beginningQty: record.beginningQty,
+                                itemCode: record.itemCode,
+                                itemName: record.itemName,
+                                quantity: record.quantity,
+                                uom: record.uom,
+                                isSplit: true,
+                                status: record.status,
+                                stockCategoryId: record.stockCategoryId,
+                                internalId: uniqueId(),
+                                itemType: record.itemType,
+                                batchNo: undefined,
+                                expiredDate: undefined,
+                                key: key,
+                              };
+                              // dataSource.push(first);
+                              // setDataSource(dataSource);
+                              // actionRef.current?.reload();
+                            
+                              actionRef.current?.addEditRecord?.(first);
+                            }}
+                          />
+                        </Tooltip>
+                      )}
+
                       <Tooltip title="Delete" key={`delete-${record.key}`}>
                         <Button
                           type="link"
                           danger
                           icon={<DeleteOutlined />}
                           onClick={() => {
-                            if (record.internalId === undefined) {
+                            if (record.isSplit) {
                               const dataSourceItems = dataSource.filter(
-                                (it) =>
-                                  it.key !== record.key && it.internalId !== record.internalId,
+                                (it) => it.id !== record.id,
                               );
                               setDataSource(dataSourceItems);
-                              actionRef.current?.reload();
                             } else {
-                              Modal.confirm({
-                                title: `Delete ${record.itemName} `,
-                                content: 'Are you sure?',
-                                onOk: () => {
-                                  console.log(dataSource);
-                                  if (record.isSplit) {
-                                    const dataSourceItems = dataSource.filter(
-                                      (it) => it.key !== record.key,
-                                    );
-                                    console.log(dataSourceItems);
-                                    setDataSource(dataSourceItems);
-                                  } else {
-                                    record.status = 'rejected';
-                                    setDataSource([...dataSource]);
-                                  }
-                                },
-                              });
+                              record.status = 'rejected';
+                              setDataSource([...dataSource]);
                             }
                           }}
                         />
@@ -462,7 +475,22 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...pr
         </Card>
       </Flex>
 
-      <RemarkModal
+      <RemarkModalForm
+        open={remarkState?.open}
+        showAlertInfo
+        onCancel={() => setRemarkState({ open: false })}
+        status="reject"
+        onSave={async (remark) => {
+          const payload = {
+            ...remark,
+            id: data!.id,
+          };
+          setRemarkState({ open: false });
+          actionHandlers.onRejectAll?.(payload);
+        }}
+      />
+
+      {/* <RemarkModal
         title="Delete the item"
         open={showRemark?.isOpen}
         width="500px"
@@ -480,7 +508,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...pr
             actionHandlers.onRejectItem(id, remarks);
           }
         }}
-      />
+      /> */}
     </FormModalComp>
   );
 };

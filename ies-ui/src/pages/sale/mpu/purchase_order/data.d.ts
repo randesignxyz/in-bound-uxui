@@ -10,7 +10,13 @@ interface PurchaseOrderCreate{
     grantAmount:number;
     discountAmount:number;
     totalAmount:number;
-    
+    latitude?:string;
+    longitude?:string;
+    items?:PurchaseRequestItemCreate[];
+    distributorCode?:string;
+    distributorName?:string;
+    distributorPhone?:string;
+    distributorId?:number;
 }
 
 
@@ -31,7 +37,7 @@ interface PurchaseOrderDTO{
     grantAmount:number;
     discountAmount:number;
     totalAmount:number;
-    status: "pending"|"rejected"|"paid",
+    status: "Pending"|"Rejected"|"Paid",
     items?:PurchaseRequestItemCreate[];
     purchaseRequest:PurchaseRequestDTO;
     requestedCode:string;
@@ -65,4 +71,9 @@ interface PurchaseOrderItem extends PurchaseRequestItemCreate{
 interface PurchaseOrderAdvanceSearch{
     status?:string;
     searchValue?:string;
+}
+
+interface IdRemarkParam{
+    id:number;
+    remark?:string
 }

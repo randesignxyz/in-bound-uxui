@@ -10,8 +10,7 @@ import { DataNode, FolderCreate } from '../folder/data';
 import DocumentModalForm from '../documentation/EntryForm';
 import { DocumentServiceAPI } from '../documentation/service';
 import { DocumentationAdvanceSearch, DocumentationCreate } from '../documentation/data';
-import DirectoryTree from 'antd/es/tree/DirectoryTree';
-import { useAccess } from '@/.umi/plugin-access';
+import { useAccess } from '@umijs/max';
 interface Props {
     onSearch: (param: DocumentationAdvanceSearch) => void,
     activeKey?: boolean;

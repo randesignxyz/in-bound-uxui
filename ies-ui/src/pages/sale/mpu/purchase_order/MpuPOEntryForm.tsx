@@ -92,9 +92,9 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
       const data = await CrmServiceAPI(requestActions).listAddressByCustomer({
         id: distibutors?.distributorId || 0,
       });
-      
-      form.setFieldValue("shipAddressId", data?.[0]?.id);
       setAddressList(data);
+      form.setFieldValue("shipAddressId", data?.[0]?.id);
+      
     }
   };
 
@@ -211,6 +211,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
                 label="Address"
                 width={"md"}
                 allowClear={false}
+                key={"address"}
                 showSearch
                 rules={[{ required: true }]}
                 options={addressList?.map((item) => {
@@ -335,7 +336,6 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
                   onChange: (e: number) => {
                     if (dataSourceItems?.filter(o => o.itemId === e).length) {
                       message.error("This Item was ready added!");
-                      console.log(config.entity.itemId == undefined);
                     }
                   },
                   showSearch: true,

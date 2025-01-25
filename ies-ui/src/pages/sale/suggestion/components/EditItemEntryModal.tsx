@@ -3,7 +3,11 @@ import FormModalComp from '@/components/FormModal';
 import { formatDate } from '@/pages/utils';
 import { CrmServiceAPI } from '@/services/crm/services';
 import { simpleRequestActions } from '@/services/model';
-import type { ApprovalStockControlDto, StockControlLess } from '@/services/sale/data';
+import type {
+  ApprovalStockControlDto,
+  EditableStockItem,
+  StockControlLess,
+} from '@/services/sale/data';
 import { CopyOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { ProDescriptions, ProForm, ProFormSelect } from '@ant-design/pro-components';
 import type { ActionType } from '@ant-design/pro-table';
@@ -32,23 +36,6 @@ const waitTime = (time: number = 100) => {
     }, time);
   });
 };
-
-interface EditableStockItem {
-  id?: number;
-  key: React.Key;
-  batchNo?: moment.Moment;
-  itemName: string;
-  itemCode: string;
-  uom: string;
-  beginningQty: number;
-  quantity: number;
-  expiredDate?: moment.Moment;
-  isSplit: boolean;
-  stockCategoryId?: number;
-  status: string;
-  internalId?: string;
-  itemType?: number;
-}
 
 const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...props }) => {
   const requestActions = simpleRequestActions();
@@ -419,7 +406,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...pr
                             icon={<CopyOutlined />}
                             onClick={() => {
                               const key = Math.random() * 1000000;
-                              // const batchNo = moment();
+                              const batchNo = moment();
                               const first: EditableStockItem = {
                                 id: -key,
                                 beginningQty: record.beginningQty,

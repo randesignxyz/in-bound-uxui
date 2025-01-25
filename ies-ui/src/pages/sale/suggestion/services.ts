@@ -5,13 +5,13 @@ import { singleRequest } from '@/services/apiGateway';
 import type {
   ApprovalStockControlDto,
   ExchangeRate,
-  MMAAprovalEntity,
   StockControlLess,
   StockStoreAdvanceSearchParams,
 } from '@/services/sale/data';
 import { Page } from '@/services/shared/data';
 import { CountStockDto } from '../../../services/sale/data';
 import { PurchaseOrderDTO } from '../mpu/purchase_order/data';
+import { MMAAprovalEntity } from './components/MMAAproval';
 
 const SuggestionActions = {
   page: (

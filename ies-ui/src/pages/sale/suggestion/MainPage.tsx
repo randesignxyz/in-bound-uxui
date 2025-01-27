@@ -73,7 +73,7 @@ const TaskListMainPage: React.FC<Props> = () => {
     ['fetch-customer-list', filter],
     () => suggestionService.page(filter),
     {
-      refetchOnWindowFocus: false
+      refetchOnWindowFocus: false,
     },
   );
 
@@ -277,6 +277,7 @@ const TaskListMainPage: React.FC<Props> = () => {
                 message.error('Your rejection request was unsuccessful.');
               }
               actionRef.current?.reload?.();
+              refetch();
             } catch (_) {
               message.error('Something went worong');
             }

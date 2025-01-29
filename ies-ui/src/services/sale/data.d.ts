@@ -4,6 +4,7 @@ import type { AddressInfo } from '../crm/data';
 import type { LookupData, LookupDataItem } from '../data';
 
 export type SaleServiceName =
+  | 'list-offer-code'
   | 'list-so'
   | 'find-so'
   | 'new-so'
@@ -429,14 +430,14 @@ export interface StockControlDetail {
   description?: string;
   isActive: number;
   status:
-    | string
-    | 'pending'
-    | 'canceled'
-    | 'open'
-    | 'approved'
-    | 'closed'
-    | 'settled'
-    | 'count stock';
+  | string
+  | 'pending'
+  | 'canceled'
+  | 'open'
+  | 'approved'
+  | 'closed'
+  | 'settled'
+  | 'count stock';
   owner: SalesTeamWorkLess;
   approvedBy?: SalesTeamWorkLess;
   receivedBy?: SalesTeamWorkLess;
@@ -852,6 +853,24 @@ export interface CustomerPriceGroup {
   id: number;
   code: string;
   description?: string;
+}
+
+export interface OfferCodeInfo {
+  offerCode: string;
+  itemsIds: number[];
+  saleType: string;
+}
+
+export interface OfferCodeParam {
+  soItemId: number;
+  itemId: number;
+  description: string;
+  itemCode: string;
+  quantity: number;
+  type: string;
+  uom: string;
+  offerCode?: string;
+  isChecked: boolean;
 }
 
 export interface SoItem {
@@ -1427,129 +1446,129 @@ export interface DeliveryAdvanceSearchParams {
 
 export type InitSuggestionParam =
   | {
-      actionName: 'exchange-rate';
-      responseKey: string;
-      payload: {};
-    }
+    actionName: 'exchange-rate';
+    responseKey: string;
+    payload: {};
+  }
   | {
-      actionName: 'exchange-rate-dsd';
-      responseKey: string;
-      payload: {};
-    };
+    actionName: 'exchange-rate-dsd';
+    responseKey: string;
+    payload: {};
+  };
 
 export type InitSaleInvoiceParam =
   | {
-      actionName: 'look-up-data';
-      responseKey: string;
-      payload: {
-        list: string[];
-      };
-    }
+    actionName: 'look-up-data';
+    responseKey: string;
+    payload: {
+      list: string[];
+    };
+  }
   | {
-      actionName: 'list-stock-category';
-      responseKey: 'types';
-      payload: {};
-    }
+    actionName: 'list-stock-category';
+    responseKey: 'types';
+    payload: {};
+  }
   | {
-      actionName: 'list-type-product-items';
-      responseKey: 'typeProductItems';
-      payload: {};
-    }
+    actionName: 'list-type-product-items';
+    responseKey: 'typeProductItems';
+    payload: {};
+  }
   // | {
   //     actionName: 'list-sale-invoices';
   //     responseKey: 'saleInvoiceList';
   //     payload: { id: number };
   //   }
   | {
-      actionName: 'list-sales-team-work';
-      responseKey: string;
-      payload: {};
-    };
+    actionName: 'list-sales-team-work';
+    responseKey: string;
+    payload: {};
+  };
 
 export type InitSoParamsType =
   | {
-      actionName: 'list-payment-term';
-      responseKey: 'paymentTermList';
-      payload: {};
-    }
+    actionName: 'list-payment-term';
+    responseKey: 'paymentTermList';
+    payload: {};
+  }
   | {
-      actionName: 'list-shipping-method';
-      responseKey: string;
-      payload: {};
-    }
+    actionName: 'list-shipping-method';
+    responseKey: string;
+    payload: {};
+  }
   | {
-      actionName: 'list-shipping-method';
-      responseKey: 'shippingMethodList';
-      payload: {};
-    }
+    actionName: 'list-shipping-method';
+    responseKey: 'shippingMethodList';
+    payload: {};
+  }
   | {
-      actionName: 'list-store-location';
-      responseKey: 'storeLocationList';
-      payload: {};
-    }
+    actionName: 'list-store-location';
+    responseKey: 'storeLocationList';
+    payload: {};
+  }
   | {
-      actionName: 'look-up-data';
-      responseKey: string;
-      payload: {
-        list: string[];
-      };
-    }
-  | {
-      actionName: 'list-product-item-by-type';
-      responseKey: 'itemList';
-      payload: {
-        id: number;
-      };
-    }
-  | {
-      actionName: 'listCustomer';
-      responseKey: string;
-      payload: {};
-    }
-  | {
-      actionName: 'listSalesperson';
-      responseKey: string;
-      payload: {};
-    }
-  | {
-      actionName: 'list-budget';
-      responseKey: string;
-      payload: {};
+    actionName: 'look-up-data';
+    responseKey: string;
+    payload: {
+      list: string[];
     };
+  }
+  | {
+    actionName: 'list-product-item-by-type';
+    responseKey: 'itemList';
+    payload: {
+      id: number;
+    };
+  }
+  | {
+    actionName: 'listCustomer';
+    responseKey: string;
+    payload: {};
+  }
+  | {
+    actionName: 'listSalesperson';
+    responseKey: string;
+    payload: {};
+  }
+  | {
+    actionName: 'list-budget';
+    responseKey: string;
+    payload: {};
+  };
 
 export type initProductParamsType =
   | {
-      actionName: 'list-uom';
-      responseKey: 'uomList';
-      payload: {};
-    }
+    actionName: 'list-uom';
+    responseKey: 'uomList';
+    payload: {};
+  }
   | {
-      actionName: 'list-brand';
-      responseKey: 'brandList';
-      payload: {};
-    }
+    actionName: 'list-brand';
+    responseKey: 'brandList';
+    payload: {};
+  }
   | {
-      actionName: 'list-category';
-      responseKey: 'categoryList';
-      payload: {};
-    }
+    actionName: 'list-category';
+    responseKey: 'categoryList';
+    payload: {};
+  }
   | {
-      actionName: 'list-group';
-      responseKey: 'groupList';
-      payload: {};
-    };
+    actionName: 'list-group';
+    responseKey: 'groupList';
+    payload: {};
+  };
 
 export type InitTradeOfferParamsType =
   | {
-      actionName: 'list-item-category';
-      responseKey: 'categories';
-      payload: {};
-    }
+    actionName: 'list-item-category';
+    responseKey: 'categories';
+    payload: {};
+  }
   | {
-      actionName: 'list-customer-group';
-      responseKey: 'customerGroup';
-      payload: {};
-    };
+    actionName: 'list-customer-group';
+    responseKey: 'customerGroup';
+    payload: {};
+  };
 
 export interface SoSummary {
   pendingMCDirect: number;

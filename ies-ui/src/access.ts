@@ -2,8 +2,8 @@
  * @see https://umijs.org/docs/max/access#access
  * */
 export default function access(initialState: { currentUser?: API.CurrentUser } | undefined) {
-  const { currentUser } = initialState ?? {}; 
-  return { 
+  const { currentUser } = initialState ?? {};
+  return {
     isRequesterRole:
       currentUser?.authorities.some((item) =>
         ['ROLE_PRO_PR_USER', 'ROLE_TICKET_INCIDENT_USER'].some((it) => it === item),
@@ -130,7 +130,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
         ['ROLE_ADMIN', 'ROLE_PRO_ADMIN', 'ROLE_PRO_OMM_ACCESS'].some((it) => it === item),
       ) || false,
 
-      hasProOmcAccess:
+    hasProOmcAccess:
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_PRO_ADMIN', 'ROLE_PRO_OMC_ACCESS'].some((it) => it === item),
       ) || false,
@@ -310,9 +310,9 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           (it) => it === item,
         ),
       ) || false,
-      canAccessLoadingTimeReport:
+    canAccessLoadingTimeReport:
       currentUser?.authorities.some((item) =>
-        ['ROLE_ADMIN', 'ROLE_DELIVERY_LOADING_ADMIN', 'ROLE_LOADING_OFFICER','ROLE_DELIVERY_REPORT_LOADING_TIME_REPORT'].some(
+        ['ROLE_ADMIN', 'ROLE_DELIVERY_LOADING_ADMIN', 'ROLE_LOADING_OFFICER', 'ROLE_DELIVERY_REPORT_LOADING_TIME_REPORT'].some(
           (it) => it === item,
         ),
       ) || false,
@@ -336,21 +336,21 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
         ),
       ) || false,
 
-      canAccessDeliveryTimeReport:
+    canAccessDeliveryTimeReport:
       currentUser?.authorities.some((item) =>
-        ['ROLE_ADMIN', 'ROLE_DELIVERY_SYS_ADMIN','ROLE_DELIVERY_REPORT_DELIVERY_TIME_REPORT'].some(
+        ['ROLE_ADMIN', 'ROLE_DELIVERY_SYS_ADMIN', 'ROLE_DELIVERY_REPORT_DELIVERY_TIME_REPORT'].some(
           (it) => it === item,
         ),
       ) || false,
 
-      canAccessTransportationTimeReport:
+    canAccessTransportationTimeReport:
       currentUser?.authorities.some((item) =>
-        ['ROLE_ADMIN', 'ROLE_DELIVERY_SYS_ADMIN','ROLE_DELIVERY_REPORT_TRANSPORTATION_TIME_REPORT'].some(
+        ['ROLE_ADMIN', 'ROLE_DELIVERY_SYS_ADMIN', 'ROLE_DELIVERY_REPORT_TRANSPORTATION_TIME_REPORT'].some(
           (it) => it === item,
         ),
       ) || false,
 
-      
+
 
     /**** Prod */
     canAccessProdMenu:
@@ -497,7 +497,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           'ROLE_PROD_ADMIN'
         ].some((it) => it === item),
       ) || false,
-      canAccessDailyHACCPMonitoringOzoneMenuItem:
+    canAccessDailyHACCPMonitoringOzoneMenuItem:
       currentUser?.authorities.some((item) =>
         [
           'ROLE_ADMIN',
@@ -607,36 +607,36 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       ) || false,
     canAccessHrEmployeeMenuItem:
       currentUser?.authorities.some((item) =>
-        ['ROLE_HR_ADMIN','ROLE_HR_EMPLOYEE_VIEW'].some((it) => it === item),
-      ) || false, 
+        ['ROLE_HR_ADMIN', 'ROLE_HR_EMPLOYEE_VIEW'].some((it) => it === item),
+      ) || false,
     canAccessHrViewEmployeeMenuItem:
       currentUser?.authorities.some((item) =>
         ['ROLE_HR_MENU_VIEW'].some((it) => it === item),
-      ) || false, 
+      ) || false,
     canAccessHrESSViewOnly:
       currentUser?.authorities.some((item) =>
         ['ROLE_HR_ESS_VIEW_ONLY'].some((it) => it === item),
-      ) || false, 
+      ) || false,
     canAccessHrESSApprovalProfile:
       currentUser?.authorities.some((item) =>
         ['ROLE_HR_ESS_APPROVAL_PROFILE'].some((it) => it === item),
-      ) || false, 
+      ) || false,
     canAccessHrSelfServiceProgressStatusExportAll:
       currentUser?.authorities.some((item) =>
         ['ROLE_HR_ESS_SELF_SERVICE_PROGRESS_STATUS_EXPORT_ALL'].some((it) => it === item),
-      ) || false,   
+      ) || false,
     canAccessHrESSAddEditProfile:
       currentUser?.authorities.some((item) =>
         ['ROLE_HR_ESS_ADD_EDIT_PROFILE'].some((it) => it === item),
-      ) || false, 
+      ) || false,
     canAccessHrESSEmpMenuReport:
       currentUser?.authorities.some((item) =>
         ['ROLE_HR_ESS_EMP_REPORT'].some((it) => it === item),
-      ) || false,   
+      ) || false,
     canAccessHrVissibleTraining:
       currentUser?.authorities.some((item) =>
         ['ROLE_HR_VISSIBLE_TRAINING'].some((it) => it === item),
-      ) || false, 
+      ) || false,
 
     canAccessHrStaffRequisitionMenuItem:
       currentUser?.authorities.some((item) =>
@@ -733,7 +733,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     ) || false,
 
     canAccessSaleReport: currentUser?.authorities.some((items) =>
-      ['ROLE_DSD_ADMIN', 'ROLE_ADMIN',"ROLE_DSD_REPORT"].some((it) => it === items)
+      ['ROLE_DSD_ADMIN', 'ROLE_ADMIN', "ROLE_DSD_REPORT"].some((it) => it === items)
     ) || false,
     // canAccessSaleDailySettle :currentUser?.authorities.some((items)=>
     //  || false),
@@ -746,12 +746,12 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
 
     canAcessStockControlMenuItem:
       currentUser?.authorities.some((item) =>
-        ['ROLE_DSD_ADMIN', 'ROLE_WAREHOUSE', 'ROLE_ADMIN', "ROLE_DSD_REPORT","ROLE_MPU_ADMIN"].some((it) => it === item),
+        ['ROLE_DSD_ADMIN', 'ROLE_WAREHOUSE', 'ROLE_ADMIN', "ROLE_DSD_REPORT", "ROLE_MPU_ADMIN"].some((it) => it === item),
       ) || false,
 
     canAccessSettlementMenuItem:
       currentUser?.authorities.some((item) =>
-        ['ROLE_CASHIER', 'ROLE_DSD_ADMIN', 'ROLE_ADMIN',"ROLE_MPU_ADMIN"].some((it) => it === item),
+        ['ROLE_CASHIER', 'ROLE_DSD_ADMIN', 'ROLE_ADMIN', "ROLE_MPU_ADMIN"].some((it) => it === item),
       ) || false,
 
     canAccessARMenuItem:
@@ -767,7 +767,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
 
     canAccessDSD:
       currentUser?.authorities.some((item) =>
-        ['ROLE_CASHIER', 'ROLE_WAREHOUSE', 'ROLE_DSD_ADMIN', 'ROLE_ADMIN',"ROLE_MPU_ADMIN"].some(
+        ['ROLE_CASHIER', 'ROLE_WAREHOUSE', 'ROLE_DSD_ADMIN', 'ROLE_ADMIN', "ROLE_MPU_ADMIN"].some(
           (it) => it === item,
         ),
       ) || false,
@@ -942,7 +942,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           'ROLE_NCM_INVENTORY_TRANSFER_REQUEST',
         ].some((it) => it === item),
       ) || false,
-      canAccessWhmInventoryAdjRequestMenu:
+    canAccessWhmInventoryAdjRequestMenu:
       currentUser?.authorities.some((item) =>
         [
           'ROLE_ADMIN',
@@ -959,56 +959,53 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) => ['ROLE_ADMIN', 'ROLE_NCM_INVENTORY_TRANSFER_SUPPORT'].some((it) => it === item)) ||
       false,
     canCreateInventoryAdjRequest:
-      currentUser?.authorities.some((item) => ['ROLE_ADMIN','ROLE_NCM_INVENTORY_ADJUSTMENT_REQUEST'].some((it) => it === item)) ||
-      false,       
+      currentUser?.authorities.some((item) => ['ROLE_ADMIN', 'ROLE_NCM_INVENTORY_ADJUSTMENT_REQUEST'].some((it) => it === item)) ||
+      false,
     canCreateHrProbationEvaluationRequest:
-      currentUser?.authorities.some((item) => ['ROLE_ADMIN','ROLE_HR_PROBATION_EVALUATION_REQUEST'].some((it) => it === item)) ||
-      false,      
+      currentUser?.authorities.some((item) => ['ROLE_ADMIN', 'ROLE_HR_PROBATION_EVALUATION_REQUEST'].some((it) => it === item)) ||
+      false,
     isAccessHRProbationEvaluationSupport:
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_HR_PROBATION_EVALUATION_SUBMIT', 'ROLE_HR_PROBATION_EVALUATION_SUPPORT'].some((it) => it === item),
-      ) || false,  
-<<<<<<< HEAD
-      isAccessNCMExportReport:
+      ) || false,
+    isAccessNCMExportReport:
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_NCM_EXPORT_REPORT'].some((it) => it === item),
-      ) || false,    
-      isAccessPerformanceReviewImportExport:
+      ) || false,
+    isAccessPerformanceReviewImportExport:
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_HR_APPRAISAL_REVIEW_IMPORT_EXPORT'].some((it) => it === item),
-      ) || false,    
-      isAccessHrAppraisalAllowSubmitPartial:
+      ) || false,
+    isAccessHrAppraisalAllowSubmitPartial:
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_HR_APPRAISAL_ALLOW_SUBMIT_PARTIAL'].some((it) => it === item),
-      ) || false, 
-      isAccessNCMRequestCriteriaExportReport:
+      ) || false,
+    isAccessNCMRequestCriteriaExportReport:
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_NCM_REQUEST_CRITERIA_EXPORT_REPORT'].some((it) => it === item),
-      ) || false,   
-=======
-       /* LH: PURCHASE ORDER MMA  */
+      ) || false,
+    /* LH: PURCHASE ORDER MMA  */
     canAccessRSMRequestToMPU:
-    currentUser?.authorities.some((item) => 
-      [
-        'ROLE_SALE_ADMIN',
-        'ROLE_SALE_ADMIN',
-        'ROLE_MPU_LEADER',
-        'ROLE_ACTIVATION_LEADER',
-        'ROLE_CASHIER',
-        'ROLE_CRM_ADMIN',
-        'ROLE_CRM_SALE_ADMIN',
-        'ROLE_DEVELOPER',
-        'ROLE_MPU',
-        'ROLE_RETAILER_APP',
-        'ROLE_SALESPERSON',
-        'ROLE_VAN_SALE_LEADER',
-        'ROLE_VAN_SALES',
-        'ROLE_WHAREHOUSE'
-      ].some((it) => it === item)
-    ) || false,
+      currentUser?.authorities.some((item) =>
+        [
+          'ROLE_SALE_ADMIN',
+          'ROLE_SALE_ADMIN',
+          'ROLE_MPU_LEADER',
+          'ROLE_ACTIVATION_LEADER',
+          'ROLE_CASHIER',
+          'ROLE_CRM_ADMIN',
+          'ROLE_CRM_SALE_ADMIN',
+          'ROLE_DEVELOPER',
+          'ROLE_MPU',
+          'ROLE_RETAILER_APP',
+          'ROLE_SALESPERSON',
+          'ROLE_VAN_SALE_LEADER',
+          'ROLE_VAN_SALES',
+          'ROLE_WHAREHOUSE'
+        ].some((it) => it === item)
+      ) || false,
 
-  canCreateEditMpuRequest : true
-  /* LH : END */
->>>>>>> origin/chamroeun3
+    canCreateEditMpuRequest: true
+    /* LH : END */
   };
 }

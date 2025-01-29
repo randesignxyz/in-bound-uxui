@@ -11,7 +11,7 @@ import { LookupData } from "@/services/data"
 import { formatDate, formatDateTime, toReadable } from "@/pages/utils"
 import { CrmServiceAPI } from "@/services/crm/services"
 import {
-    CheckCircleOutlined, CheckOutlined, ExportOutlined,
+    CheckCircleOutlined, CheckOutlined, EnvironmentOutlined, ExportOutlined,
     EyeOutlined, PaperClipOutlined,
     ScheduleOutlined
 
@@ -24,6 +24,8 @@ import GenerateScheduleModal from "./components/GenerateScheduleModal"
 import Status from "@/components/Status"
 import { ActionType, LightFilter, ProCard, ProFormDatePicker, ProFormSelect, ProFormSwitch } from "@ant-design/pro-components"
 import { Moment } from "moment"
+import { history } from "@umijs/max";
+import { CrmPaths } from ".."
 
 type FilterType = VisitScheduleAdvanceSearchParams & { searchValue?: string; status?: string; }
 export default () => {
@@ -192,13 +194,20 @@ export default () => {
                     ],
                     onRefresh: refetch,
                     title: "Visit Schedule List",
-                    actionButtons: [<Tooltip key={'generate-visit-plan '} title="Genderate visit schedule">
-                        <Button
-                            type="link"
-                            onClick={() => modals.showModal('generate-schedule')}
-                            icon={<ScheduleOutlined />}
-                        />
-                    </Tooltip>],
+                    actionButtons: [
+                        <>
+                            <Tooltip key={'generate-visit-plan '} title="Tracking Loaction"><Button
+                                type="link"
+                                onClick={() => history.push(CrmPaths.locationTracking)}
+                                icon={<EnvironmentOutlined />}
+                            /></Tooltip>
+                            <Tooltip key={'generate-visit-plan '} title="Genderate visit schedule"><Button
+                                type="link"
+                                onClick={() => modals.showModal('generate-schedule')}
+                                icon={<ScheduleOutlined />}
+                            /></Tooltip >
+                        </>
+                    ],
                     onOpenAdvanceSearch: () => { modals.showModal('advanceSearch') },
                     type: 'Table',
                     onFilter(params, page, sort) {
@@ -337,7 +346,7 @@ export default () => {
 
                 }} />
 
-            <GenerateScheduleModal
+            < GenerateScheduleModal
                 seList={state.initData?.seList || []}
                 open={modals.isVisible('generate-schedule')}
                 onCancel={() => modals.hideModal('generate-schedule')}
@@ -364,7 +373,7 @@ export default () => {
                 }}
             />
 
-            <AdvanceSearch
+            < AdvanceSearch
                 width="600px"
                 placement="right"
                 initData={filter.criteria}
@@ -385,19 +394,21 @@ export default () => {
                 }}
             />
 
-            {modals.isVisible('quick-view') && (
-                <QuickView
-                    title="Vsisit Schedule Detail"
-                    open={modals.isVisible('quick-view')}
-                    submitter={false}
-                    detail={state.data?.detail}
-                    onRefresh={async () => {
-                        await actions.detail(state.data?.detail?.id || 0);
-                    }}
-                    onOpenChange={(v) => !v && modals.hideModal('quick-view')}
-                />
-            )}
-        </Spin>
+            {
+                modals.isVisible('quick-view') && (
+                    <QuickView
+                        title="Vsisit Schedule Detail"
+                        open={modals.isVisible('quick-view')}
+                        submitter={false}
+                        detail={state.data?.detail}
+                        onRefresh={async () => {
+                            await actions.detail(state.data?.detail?.id || 0);
+                        }}
+                        onOpenChange={(v) => !v && modals.hideModal('quick-view')}
+                    />
+                )
+            }
+        </Spin >
     )
 }
 

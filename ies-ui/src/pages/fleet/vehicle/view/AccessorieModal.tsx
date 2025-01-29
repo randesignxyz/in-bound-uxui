@@ -68,15 +68,15 @@ const AccessoriesModalForm: React.FC<Props> = ({ data, actionType, onSave, id, .
       {...props}
       width={'800px'}
       onOk={async () => {
-        await editableFormRef.current?.validateFields();
         const entry = {
           vehicleId: id,
           items: accessories
-            .filter((it) => it.selected === true)
-            .map((it) => ({ accessoryId: it.id, quantity: it.quantity })),
+          .filter((it) => it.selected === true)
+          .map((it) => ({ accessoryId: it.id, quantity: it.quantity })),
         };
-
         onSave(entry);
+        await editableFormRef.current?.validateFields();
+        await onRequest()
       }}
     >
       <hr />

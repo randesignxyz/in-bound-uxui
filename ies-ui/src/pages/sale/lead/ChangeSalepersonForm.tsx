@@ -142,7 +142,7 @@ const ChangeSalepersonForm: React.FC<Props> = ({ onSave, ...props }) => {
                                     render: (_, r) => [r.phone].join(" ")
                                 },
                                 {
-                                    title: "region",
+                                    title: "Region",
                                     render: (_, r) => r.region?.name
                                 },
                                 {

@@ -40,6 +40,8 @@ interface PurchaseRequestCreate {
 }
 
 interface PurchaseRequestItemCreate {
+    itemName: string;
+    itemCode?:string;
     id: any;
     key: string;
     itemId: number,

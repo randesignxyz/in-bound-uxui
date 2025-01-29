@@ -1,6 +1,6 @@
 import { simpleRequestActions } from "@/services/model";
 import { ActionType, ModalForm, ProDescriptions, ProFormTextArea, ProTable } from "@ant-design/pro-components";
-import { Alert, Button, Card, Col, Flex, message, Row, Space, Spin, Tag, Timeline, Typography } from "antd";
+import { Alert, Button, Card, Col, Flex, message, Modal, Row, Space, Spin, Table, Tag, Timeline, Typography } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { CountStockServiceAPI } from "./service";
 import numeral from 'numeral'
@@ -57,6 +57,20 @@ const CountStockDetail: React.FC<Props> = ({ id }) => {
                                 });
                             }}
                         >Reject</Button>,
+                        ((dataSource?.purchaseOrder?.length ?? 0) > 0) && dataSource?.status == "Pending" && <Button
+                            type="primary"
+                            onClick={() => {
+                                Modal.confirm({
+                                    title: "Approve Stock Count",
+                                    content: "are you sure?",
+                                    onOk: async() => {
+                                      await services.confirmStockCount({id:dataSource.id});
+                                      message.success("Sucess!");
+                                      actionRef.current?.reload?.();
+                                    }
+                                })
+                            }}
+                        >Approve</Button>
                     ]}
                 >
                     <ProDescriptions
@@ -109,7 +123,7 @@ const CountStockDetail: React.FC<Props> = ({ id }) => {
                                 >{r.status}</Tag>
                             },
                             {
-                                title: "remark",
+                                title: "Remark",
                                 dataIndex: "remark",
                                 span: 3,
                                 valueType: "text"
@@ -150,6 +164,8 @@ const CountStockDetail: React.FC<Props> = ({ id }) => {
                         options={false}
                         search={false}
                         dataSource={dataSource?.items}
+                        pagination={false}
+                        ghost
                         columns={[
                             {
                                 title: "Batch No",
@@ -188,33 +204,84 @@ const CountStockDetail: React.FC<Props> = ({ id }) => {
                             {
                                 title: "Actual  Quantity",
                                 dataIndex: "actualQuantity",
-                                render: (_, r) => <Text type="success">{r.actualQuantity}</Text>,
+                                render: (_, r) => <Text type="warning">{r.actualQuantity}</Text>,
                                 align: "right"
                             },
                         ]}
+                        summary={(item) => {
+                            const soleQty = item.reduce((p, c) => p + c.soldQuantity, 0)
+                            const systemQty = item.reduce((p, c) => p + c.systemQuantity, 0)
+                            const actQty = item.reduce((p, c) => p + c.actualQuantity, 0)
+                            return (
+                                <Table.Summary.Row>
+                                    <Table.Summary.Cell index={1} colSpan={5}></Table.Summary.Cell>
+                                    <Table.Summary.Cell index={1} colSpan={1} align="right"><Text type="success">( {numeral(soleQty).format("0,000")} )</Text></Table.Summary.Cell>
+                                    <Table.Summary.Cell index={1} colSpan={1} align="right"><Text type="success"> {numeral(systemQty).format("0,000")} </Text></Table.Summary.Cell>
+                                    <Table.Summary.Cell index={1} colSpan={1} align="right"><Text type="success"> {numeral(actQty).format("0,000")} </Text></Table.Summary.Cell>
+                                </Table.Summary.Row>
+                            )
+                        }}
                     />
                 </Card>
-                <Card size="small" style={{ height: "100%" }}>
+
+                <Card
+                    title="Free of Charge"
+                    hidden={(dataSource?.freeOfCharge?.length ?? 0) > 0 ? false : true}
+                    size="small"
+                >
+
+                    <ProTable
+                        search={false}
+                        size="small"
+                        ghost
+                        options={false}
+                        pagination={false}
+                        dataSource={dataSource?.freeOfCharge}
+                        columns={[
+                            {
+                                title: "Item Name",
+                                dataIndex: "itemName"
+                            },
+                            {
+                                title: "Requested Quantity",
+                                dataIndex: "quantity"
+                            },
+                            {
+                                title: "Used Quantity",
+                                dataIndex: "usingQty"
+                            },
+                            {
+                                title: "Source",
+                                dataIndex: "source"
+                            },
+                            // {
+                            //     title:"From",
+                            //     dataIndex:"borrowFrom"
+                            // }
+                        ]}
+                    />
+                </Card>
+                {/* <Card size="small" style={{ height: "100%" }}>
                     {
-                        dataSource?.comment?.length  ?  (<>
+                        dataSource?.comment?.length ? (<>
                             <Timeline
                                 mode="left"
-                                items={dataSource.comment.map(p=>({
-                                    label:<Space><Typography.Text type="warning">{p.createdBy}</Typography.Text><Typography.Text italic>{formatDate(p.createdDate)}</Typography.Text></Space>, 
-                                    children:<Flex vertical justify="space-around">
+                                items={dataSource.comment.map(p => ({
+                                    label: <Space><Typography.Text type="warning">{p.createdBy}</Typography.Text><Typography.Text italic>{formatDate(p.createdDate)}</Typography.Text></Space>,
+                                    children: <Flex vertical justify="space-around">
                                         <Typography.Text type="danger">{p.type}</Typography.Text>
                                         <Space>
                                             <Typography.Text type="secondary">remark:</Typography.Text>
                                             <Typography.Text >{p.description}</Typography.Text>
                                         </Space>
-                                        
+
                                     </Flex>
                                 }))}
                             />
                         </>)
-                         :<Flex justify="center"><Text type="secondary">no remark</Text></Flex>
+                            : <Flex justify="center"><Text type="secondary">no remark</Text></Flex>
                     }
-                </Card>
+                </Card> */}
             </Flex>
 
             <RemarkModalForm
@@ -232,7 +299,6 @@ const CountStockDetail: React.FC<Props> = ({ id }) => {
                         loadData();
                         message.info("Your rejection request was a success!")
                     });
-
                     setActionState({ visible: undefined });
                 }}
             />

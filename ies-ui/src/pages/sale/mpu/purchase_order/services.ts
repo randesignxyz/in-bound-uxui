@@ -1,7 +1,7 @@
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { RequestActions, ServiceApiType, singleRequest } from "@/services/apiGateway";
 import { Page } from "@/services/shared/data";
-import { PurchaseOrderAdvanceSearch, PurchaseOrderCreate, PurchaseOrderDTO, PurchaseOrderItem } from "./data";
+import { IdRemarkParam, PurchaseOrderAdvanceSearch, PurchaseOrderCreate, PurchaseOrderDTO, PurchaseOrderItem } from "./data";
 
 
 const PurchaseOrderAction ={
@@ -29,6 +29,12 @@ const PurchaseOrderAction ={
             pageSize:params.pagination?.pageSize,
         }
     }),
+    rejecting:(param:IdRemarkParam):ServiceApiType<{}>=>({
+        actionName:"reject-po",
+        endpoint:"SALE",
+        type:"EXEC",
+        payload:param
+    }),
     finOrderItem :(id:number):ServiceApiType<{id:number}> =>({
         actionName:"find-purchase-order-item",
         endpoint:"SALE",
@@ -42,7 +48,8 @@ export const PurchaseOrderServiceAPI = (requestActions:RequestActions) =>{
         save:(data:PurchaseOrderCreate)=>singleRequest(PurchaseOrderAction.save(data))(requestActions) as Promise<{message:string; data:PurchaseOrderCreate}>,
         detail:(id?:number) =>singleRequest(PurchaseOrderAction.detail(id))(requestActions) as Promise<PurchaseOrderDTO>,
         page:(params:TableViewSearchParams<PurchaseOrderAdvanceSearch>)=>singleRequest(PurchaseOrderAction.page(params))(requestActions) as Promise<Page<PurchaseOrderDTO>>,
-        findOrderItem:(id:number) =>singleRequest(PurchaseOrderAction.finOrderItem(id))(requestActions) as Promise<PurchaseOrderItem[]>
+        findOrderItem:(id:number) =>singleRequest(PurchaseOrderAction.finOrderItem(id))(requestActions) as Promise<PurchaseOrderItem[]>,
+        rejected:(param:IdRemarkParam) =>singleRequest(PurchaseOrderAction.rejecting(param))(requestActions)
 
     }
 }

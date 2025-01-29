@@ -6,10 +6,8 @@ import { simpleRequestActions } from "@/services/model";
 import { ActionType } from "@ant-design/pro-components";
 import { useQuery } from "@umijs/max";
 import { useRef, useState } from "react";
-import { formatterQty } from "@/pages/utils";
 import { Tag, Typography } from "antd";
 import { CheckCircleOutlined, CloseCircleOutlined, SyncOutlined } from "@ant-design/icons";
-import { formatCurrency } from "../../sale";
 import { CountStockAdvanceSearch, StockCountDto } from "./data";
 
 interface Props {

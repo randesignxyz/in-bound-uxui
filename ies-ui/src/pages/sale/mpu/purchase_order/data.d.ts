@@ -10,24 +10,46 @@ interface PurchaseOrderCreate{
     grantAmount:number;
     discountAmount:number;
     totalAmount:number;
-    
+    latitude?:string;
+    longitude?:string;
+    items?:PurchaseRequestItemCreate[];
+    distributorCode?:string;
+    distributorName?:string;
+    distributorPhone?:string;
+    distributorId?:number;
+    address?:string;
 }
 
 
 interface PurchaseOrderDTO{
     id:number;
+    purchaseOrderCode?:string;
     purchaseRequestId:number;
-    purchaseRequestNo:string;
+    requestedCode:string;
     referenceNumber?:string;
     purchaseOrderDate:string;
     // ownerBy:string;
     // ownerCode:string;
+    requestedBy:string;
+    assignedTo?:string;
+    assignedToCode?:string;
+
+    
     grantAmount:number;
     discountAmount:number;
     totalAmount:number;
-    status: "pending"|"rejected"|"paid",
+    status: "Pending"|"Rejected"|"Paid",
     items?:PurchaseRequestItemCreate[];
-    purchaseRequest:PurchaseRequestDTO
+    purchaseRequest:PurchaseRequestDTO;
+    requestedCode:string;
+    distributorCode?:string;
+    distributorName?:string;
+    distributorPhone?:string;
+    distributorId?:number;
+    latitude?:string;
+    longitude?:string;
+    addressId?:number;
+    foc?:{qty:number; itemName:string;itemCode:string; uom?:string}[]
 }
 
 
@@ -50,4 +72,9 @@ interface PurchaseOrderItem extends PurchaseRequestItemCreate{
 interface PurchaseOrderAdvanceSearch{
     status?:string;
     searchValue?:string;
+}
+
+interface IdRemarkParam{
+    id:number;
+    remark?:string
 }

@@ -21,7 +21,7 @@ const ContractPurchase: React.FC<Props> = ({ lookupData }) => {
                     <ProFormText
                         name={"docNumber"}
                         label="Contract Number"
-                        rules={[{ required: true, max: 20 }]}
+                        rules={[{ required: true }]}
                     />
                 </Col>
                 <Col span={18}>

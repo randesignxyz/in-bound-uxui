@@ -3,7 +3,7 @@ import { SaleStockTranferRequestFormNames } from "./data";
 import DefaultStartForm from "@/pages/process-flow/components/forms/DefaultStartForm";
 import DefaultActionForm from "@/pages/process-flow/components/forms/DefaultActionForm";
 import ViewForm from "./ViewForm";
-import StockTransfer from "../StockTransfer";
+import StockTransfer from "./StockTransfer";
 
 export const getSaleStockTransferRequestRequestForms = (): DataForm[] => [
     {

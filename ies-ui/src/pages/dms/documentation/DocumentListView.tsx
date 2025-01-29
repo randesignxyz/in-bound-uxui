@@ -335,6 +335,10 @@ export default ({ paramSearch, libraryId, folderId }: Props) => {
                                         label: "Contract",
                                         value: "CONTRACT"
                                     },
+                                    {
+                                        label: "Shared",
+                                        value: "shared"
+                                    },
                                 ]}
                             />
                             <Dropdown

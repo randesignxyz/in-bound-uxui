@@ -709,7 +709,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     /** Start Stock Control */
     // new by reach modified 
     canAccessSaleTaskList: currentUser?.authorities.some((items) =>
-      ['ROLE_CASHIER', 'ROLE_WAREHOUSE', 'ROLE_DSD_ADMIN', 'ROLE_ADMIN'].some((it) => it === items)
+      ['ROLE_CASHIER', 'ROLE_WAREHOUSE', 'ROLE_DSD_ADMIN', 'ROLE_ADMIN', 'ROLE_MPU_ADMIN'].some((it) => it === items)
     ) || false,
 
     canAccessSaleStore: currentUser?.authorities.some((items) =>
@@ -746,17 +746,17 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
 
     canAcessStockControlMenuItem:
       currentUser?.authorities.some((item) =>
-        ['ROLE_DSD_ADMIN', 'ROLE_WAREHOUSE', 'ROLE_ADMIN', "ROLE_DSD_REPORT"].some((it) => it === item),
+        ['ROLE_DSD_ADMIN', 'ROLE_WAREHOUSE', 'ROLE_ADMIN', "ROLE_DSD_REPORT","ROLE_MPU_ADMIN"].some((it) => it === item),
       ) || false,
 
     canAccessSettlementMenuItem:
       currentUser?.authorities.some((item) =>
-        ['ROLE_CASHIER', 'ROLE_DSD_ADMIN', 'ROLE_ADMIN'].some((it) => it === item),
+        ['ROLE_CASHIER', 'ROLE_DSD_ADMIN', 'ROLE_ADMIN',"ROLE_MPU_ADMIN"].some((it) => it === item),
       ) || false,
 
     canAccessARMenuItem:
       currentUser?.authorities.some((item) =>
-        ['ROLE_AR', 'ROLE_DSD_ADMIN', 'ROLE_ADMIN', 'ROLE_SALE_INDIVIDUAL', "ROLE_DSD_REPORT"].some((it) => it === item),
+        ['ROLE_AR', 'ROLE_DSD_ADMIN', 'ROLE_ADMIN', 'ROLE_SALE_INDIVIDUAL', "ROLE_DSD_REPORT", "ROLE_MPU_ADMIN"].some((it) => it === item),
       ) || false,
 
     canAccessTabWarehouse:
@@ -767,7 +767,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
 
     canAccessDSD:
       currentUser?.authorities.some((item) =>
-        ['ROLE_CASHIER', 'ROLE_WAREHOUSE', 'ROLE_DSD_ADMIN', 'ROLE_ADMIN'].some(
+        ['ROLE_CASHIER', 'ROLE_WAREHOUSE', 'ROLE_DSD_ADMIN', 'ROLE_ADMIN',"ROLE_MPU_ADMIN"].some(
           (it) => it === item,
         ),
       ) || false,
@@ -780,7 +780,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
 
     canAccessViewMpu:
       currentUser?.authorities.some((item) =>
-        ['ROLE_MPU_SUPPORT', 'ROLE_MPU_ADMIN', 'ROLE_ADMIN'].some((it) => it === item),
+        ['ROLE_MPU_SUPPORT', 'ROLE_MPU_ADMIN', 'ROLE_ADMIN', "ROLE_DSD_ADMIN"].some((it) => it === item),
       ) || false,
 
     /** Ending Stock Control */
@@ -855,7 +855,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     // Reach-2024-02-13 
     canAccessFleetMenu:
       currentUser?.authorities.some((item) =>
-        ['ROLE_FLEET_ADMIN', 'ROLE_FLEET'].some((it) => it === item),
+        ['ROLE_FLEET_ADMIN', 'ROLE_FLEET', 'ROLE_ADMIN'].some((it) => it === item),
       ) || false,
     canAccessDMSMenu:
       currentUser?.authorities.some((item) =>
@@ -968,6 +968,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_HR_PROBATION_EVALUATION_SUBMIT', 'ROLE_HR_PROBATION_EVALUATION_SUPPORT'].some((it) => it === item),
       ) || false,  
+<<<<<<< HEAD
       isAccessNCMExportReport:
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_NCM_EXPORT_REPORT'].some((it) => it === item),
@@ -984,5 +985,30 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_NCM_REQUEST_CRITERIA_EXPORT_REPORT'].some((it) => it === item),
       ) || false,   
+=======
+       /* LH: PURCHASE ORDER MMA  */
+    canAccessRSMRequestToMPU:
+    currentUser?.authorities.some((item) => 
+      [
+        'ROLE_SALE_ADMIN',
+        'ROLE_SALE_ADMIN',
+        'ROLE_MPU_LEADER',
+        'ROLE_ACTIVATION_LEADER',
+        'ROLE_CASHIER',
+        'ROLE_CRM_ADMIN',
+        'ROLE_CRM_SALE_ADMIN',
+        'ROLE_DEVELOPER',
+        'ROLE_MPU',
+        'ROLE_RETAILER_APP',
+        'ROLE_SALESPERSON',
+        'ROLE_VAN_SALE_LEADER',
+        'ROLE_VAN_SALES',
+        'ROLE_WHAREHOUSE'
+      ].some((it) => it === item)
+    ) || false,
+
+  canCreateEditMpuRequest : true
+  /* LH : END */
+>>>>>>> origin/chamroeun3
   };
 }

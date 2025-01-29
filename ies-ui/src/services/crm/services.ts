@@ -606,7 +606,7 @@ export const CrmServiceAPI = (actions?: RequestActions) => ({
     actions,
   ),
   attachFiles: execService<
-    { fileIdList: string[]; attachToId: number; attachTo: 'CUSTOMER' | 'CONTRACT' },
+    { fileIdList: string[]; attachToId?: number; attachTo: 'CUSTOMER' | 'CONTRACT' | 'POSM' },
     {}
   >(CrmService('attach'), actions),
 

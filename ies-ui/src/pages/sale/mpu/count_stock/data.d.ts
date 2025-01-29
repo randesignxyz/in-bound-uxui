@@ -1,4 +1,5 @@
 import { Moment } from "moment";
+import { PurchaseOrderDTO } from "../purchase_order/data";
 
 interface StockCountDto{
     id: number,
@@ -20,6 +21,8 @@ interface StockCountDto{
     status:"Pending"|"Rejected"|"Approved"|string;
     items?: StockCountItemDto[];
     comment?:Comment[];
+    freeOfCharge?:any[];
+    purchaseOrder?:PurchaseOrderDTO[];
 }
 
 interface StockCountItemDto{

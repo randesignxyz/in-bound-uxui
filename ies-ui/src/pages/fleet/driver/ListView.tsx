@@ -5,7 +5,7 @@ import { simpleRequestActions } from '@/services/model';
 import { ArrowRightOutlined, DashOutlined, EditOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import { ActionType } from '@ant-design/pro-components';
 import { useModel } from '@umijs/max';
-import { Badge, Button, Dropdown, message, Modal, Popover, Radio, Space, Spin, Tag } from 'antd';
+import { Badge, Button, Dropdown, message, Modal, Popover, Radio, Space, Spin, Tag, Typography } from 'antd';
 import moment from 'moment';
 import Omit from 'omit.js';
 import { useRef, useState } from 'react';
@@ -114,7 +114,7 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
         <TableView<DriverDTO, { searchValue?: string; advanceSearch: DriverSearchParam }>
           hasCriteria={Object.values(Omit(advanceSearchParams, ['status'])).some((v) => v)}
           cache
-          displayOnly
+          // displayOnly
           extraFilter={
             <Space size="large">
               <Radio.Group
@@ -210,12 +210,7 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
             {
               key: 'status',
               title: 'Status',
-              render: (_, r) =>
-                r.status === 'Active' ? (
-                  <Tag color="green">{r.status}</Tag>
-                ) : (
-                  <Tag color="red">{r.status}</Tag>
-                ),
+              render:(_,r)=><Typography.Text type={r.status=="Active"?"success":"danger"}>{r.status}</Typography.Text>
             },
             {
               key: 'action',
@@ -240,6 +235,7 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
             actionRef: actionRef,
           }}
           actionHandlers={{
+            onAdd:()=>setSate({visible:{name:"modal",type:"ADD"}}),
             onAdvanceSearchClicked: () => setAdvanceSearch({ visible: true }),
             onRequest: (criteria, pagination, sort) =>
               onRequestHandler({

@@ -55,6 +55,7 @@ const FileUploader: React.FC<{
       }
     };
 
+
     useEffect(() => {
       (async () => {
         if (initFiles && initFiles.length > 0) {

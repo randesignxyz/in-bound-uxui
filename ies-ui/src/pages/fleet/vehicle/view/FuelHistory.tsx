@@ -20,7 +20,6 @@ export type Member = {
 interface Props {
   id: string;
 }
-
 export default ({ id }: Props) => {
   const requestActions = simpleRequestActions();
   const [fuel, setFuel] = useState<FuelDTO[]>([]);
@@ -154,5 +153,3 @@ export default ({ id }: Props) => {
       />
   );
 };
-
-

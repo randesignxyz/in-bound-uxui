@@ -74,6 +74,7 @@ const TaskListMainPage: React.FC<Props> = () => {
     () => suggestionService.page(filter),
     {
       refetchOnWindowFocus: false,
+      refetchInterval: 50000,
     },
   );
 

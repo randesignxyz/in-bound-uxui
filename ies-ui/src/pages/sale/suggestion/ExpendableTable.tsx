@@ -60,7 +60,7 @@ const ExpendableTable: React.FC<Props> = ({
 
   const onApprove = (id?: number) => {
     Modal.confirm({
-      title: 'Accept Request .',
+      title: 'Accept Suggestion.',
       content: 'Are you sure?',
       onOk: async () => {
         await services
@@ -82,7 +82,6 @@ const ExpendableTable: React.FC<Props> = ({
           search={false}
           options={false}
           pagination={false}
-          ghost
           dataSource={data?.items as StockDetailItemLess[]}
           size="small"
           footer={() => {
@@ -130,14 +129,14 @@ const ExpendableTable: React.FC<Props> = ({
                       onClick={async () => {
                         if (data !== undefined && data !== null) {
                           if (
-                            data.requestedBy?.teamType === 'MPU' ||
+                            data.requestedBy?.teamType === 'MMA' &&
                             data.requestedBy?.role === 'ROLE_MPU_LEADER'
                           ) {
                             onMMAApprove?.(data, 'ROLE_MPU_LEADER');
                             return;
                           }
                           if (
-                            data.requestedBy?.teamType === 'MPU' &&
+                            data.requestedBy?.teamType === 'MMA' &&
                             data.requestedBy?.role === 'ROLE_VAN_SALE_LEADER'
                           ) {
                             //setModalApproveState({ state: { visible: true, data } });
@@ -179,6 +178,7 @@ const ExpendableTable: React.FC<Props> = ({
           columns={[
             {
               title: 'Batch No',
+              // dataIndex: "batchNo"
               render: (_, r) => {
                 return r.batchNo === undefined || r.batchNo === null
                   ? '-'
@@ -279,7 +279,7 @@ const ExpendableTable: React.FC<Props> = ({
                   <Table.Summary.Cell index={1} align="right">
                     <Typography.Text type="success">
                       {' '}
-                      {numeral(total).format('$ 0,000.00')}{' '}
+                      {numeral(total).format('$ 0,000.000')}{' '}
                     </Typography.Text>
                   </Table.Summary.Cell>
                 </Table.Summary.Row>
@@ -317,7 +317,7 @@ const ExpendableTable: React.FC<Props> = ({
                 render: (_, r) => {
                   if ('invoiceDate' in r) {
                     // const amount = (dsdExchangeRate?.target_amount ?? 0) * r.amount;
-                    return `$ ${numeral(r.amount).format('0,000.00')}`;
+                    return `$ ${numeral(r.amount).format('0,000.000')}`;
                   } else return '-';
                 },
               },

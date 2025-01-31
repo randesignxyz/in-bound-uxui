@@ -127,15 +127,15 @@ export default (props: ActionDataFormProps) => {
                                     dataIndex: "truckNo"
                                 },
                                 {
-                                    title:"Current Status",
-                                    render:(_,r)=><Tag color={"processing"}>{r.status}</Tag>
+                                    title: "Current Status",
+                                    render: (_, r) => <Tag color={"processing"}>{r.status}</Tag>
                                 },
                                 {
                                     title: "Remark",
                                     dataIndex: "remarks",
-                                    span:3
+                                    span: 3
                                 },
-                                
+
                             ]}
                         />
                     </Card>
@@ -169,17 +169,17 @@ export default (props: ActionDataFormProps) => {
                                 ellipsis: true,
                                 formItemProps: (form, _config) => {
                                     return (
-                                      {
-                                        ...form,
-                                        hidden: _config.entity.itemType == 132 ? false : true,
-                                        rules: [
-                                          {
-                                            required: _config.entity.itemType == 132 ? true : false
-                                          }
-                                        ],
-                                      } 
-                                    ) 
-                                  },
+                                        {
+                                            ...form,
+                                            hidden: _config.entity.itemType == 132 ? false : true,
+                                            rules: [
+                                                {
+                                                    required: _config.entity.itemType == 132 ? true : false
+                                                }
+                                            ],
+                                        }
+                                    )
+                                },
                             },
                             {
                                 title: 'Expired Date',

@@ -40,7 +40,9 @@ export type HACCPMonitoringList = {
     remark:string,
     opo:string | number | undefined,
     uv_lamp:string,
-    temperature:string
+    temperature:string,
+    uv:string,
+    air_pressure2: string,
 }
 
 export type HACCPMonitoringActivities = {

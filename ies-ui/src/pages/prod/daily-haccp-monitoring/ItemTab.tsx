@@ -10,6 +10,7 @@ import { CheckCircleOutlined, CheckOutlined, CloseCircleOutlined, DashOutlined, 
 import Line2Line3Model from "./Line2Line3Model";
 import Line4Line5Line6Model from "./Line4Line5Line6Model";
 import LineBarrelModel from "./LineBarrelModel";
+import Line7Line8Model from "./Line7Line8Model";
 
 interface Props extends DrawerFormProps {
     data?: HACCPMonitoringList[];
@@ -25,6 +26,7 @@ export default ({ data, refresh, type, line, assign_to, ...rest }: Props) => {
     const services = DailyHACCPMonitoringServiceAPI(requestActions);
     const [line2Line3ModelOpen, setLine2Line3ModelOpen] = useState<{ visible: boolean, data?: any }>({ visible: false })
     const [line4Line5Line6ModelOpen, setLine4Line5Line6ModelOpen] = useState<{ visible: boolean, data?: any }>({ visible: false })
+    const [line7Line8ModelOpen, setLine7Line8ModelOpen] = useState<{ visible: boolean, data?: any }>({ visible: false })
     const [lineBarrelModelOpen, setLineBarrelModelOpen] = useState<{ visible: boolean, data?: any }>({ visible: false })
     const hasWaterPressure = data && data.some(item => item.water_pressure !== undefined);
     const hasNozzlesRinser = data && data.some(item => item.nozzles_rinser !== undefined);
@@ -44,6 +46,7 @@ export default ({ data, refresh, type, line, assign_to, ...rest }: Props) => {
                     setLine2Line3ModelOpen({ visible: false, data: undefined })
                     setLine4Line5Line6ModelOpen({ visible: false, data: undefined })
                     setLineBarrelModelOpen({ visible: false, data: undefined })
+                    setLine7Line8ModelOpen({ visible: false, data: undefined })
                     refresh(true)
                     message.success('Success');
                 } catch (e) {
@@ -124,7 +127,7 @@ export default ({ data, refresh, type, line, assign_to, ...rest }: Props) => {
                     {
                         title: 'Time',
                         dataIndex: 'time',
-                        render: (_, r) => { return (r.status == 'unassigned' ? r.time : <a onClick={() => (line == 'Line 2' || line == 'Line 3') ? (setLine2Line3ModelOpen({ visible: true, data: r })) : (line == 'Line 4' || line == 'Line 5' || line == 'Line 6') ? setLine4Line5Line6ModelOpen({ visible: true, data: r }) : (line == 'Line Barrel') ? setLineBarrelModelOpen({ visible: true, data: r }) : ''}>{r.time}</a>) }
+                        render: (_, r) => { return (r.status == 'unassigned' ? r.time : <a onClick={() => (line == 'Line 2' || line == 'Line 3') ? (setLine2Line3ModelOpen({ visible: true, data: r })) : (line == 'Line 4' || line == 'Line 5' || line == 'Line 6') ? setLine4Line5Line6ModelOpen({ visible: true, data: r }) : (line == 'Line Barrel') ? setLineBarrelModelOpen({ visible: true, data: r }) :(line == 'Production Line 07' || line == 'Production Line 08') ? (setLine7Line8ModelOpen({ visible: true, data: r })) : ''}>{r.time}</a>) }
                     },
                     ...(line == 'Line Barrel' ? [{
                         title: 'UV Lamp',
@@ -172,9 +175,14 @@ export default ({ data, refresh, type, line, assign_to, ...rest }: Props) => {
                         dataIndex: 'temperature_preform',
                         render: (_: any, r: any) => r.temperature_preform ? r.temperature_preform + ` °C` : '-'
                     }] : []),
-                    ...(hasTreatedWaterPressure ? [{
+                    ...(line == 'Line 4' || line == 'Line 5' || line == 'Line 6' ? [{
                         title: 'Treated Water Pressure',
                         dataIndex: 'treated_water_pressure',
+                    }] : []),
+                    ...(line == 'Production Line 07' || line == 'Production Line 08' ? [{
+                        title: 'UV light intensity',
+                        dataIndex: 'uv',
+                        render: (_: any, r: any) => r.uv ? r.uv + ` %` : '-'
                     }] : []),
                     // ...(hasWaterPressure ? [{
                     //     title: 'Water Pressure',
@@ -191,6 +199,11 @@ export default ({ data, refresh, type, line, assign_to, ...rest }: Props) => {
                         dataIndex: 'fg',
                         render: (_: any, r: any) => r.fg ? r.fg + ` ppm` : '-'
                     },
+                    ...(line == 'Production Line 07' || line == 'Production Line 08' ? [{
+                        title: 'Air Pressure',
+                        dataIndex: 'air_pressure2',
+                        render: (_: any, r: any) => r.air_pressure2 ? r.air_pressure2 + ` bar` : '-'
+                    }] : []),
                     // ...(hasSmell ? [{
                     //     title: 'Smell',
                     //     dataIndex: 'smell',
@@ -275,6 +288,17 @@ export default ({ data, refresh, type, line, assign_to, ...rest }: Props) => {
                 data={line4Line5Line6ModelOpen.data ?? {}}
                 onCancel={() => {
                     setLine4Line5Line6ModelOpen({ visible: false, data: undefined });
+                }}
+            />
+             <Line7Line8Model
+                open={line7Line8ModelOpen.visible}
+                title={(('Monitoring ' + line))}
+                onSave={onSubmitHandaler}
+                line={line}
+                assign_to={assign_to}
+                data={line7Line8ModelOpen.data ?? {}}
+                onCancel={() => {
+                    setLine7Line8ModelOpen({ visible: false, data: undefined });
                 }}
             />
             <LineBarrelModel

@@ -8,7 +8,7 @@ import type {
   EditableStockItem,
   StockControlLess,
 } from '@/services/sale/data';
-import { CopyOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
+import { CopyOutlined, DeleteOutlined, EditOutlined, FieldBinaryOutlined } from '@ant-design/icons';
 import { ProDescriptions, ProForm, ProFormSelect } from '@ant-design/pro-components';
 import type { ActionType } from '@ant-design/pro-table';
 import { EditableProTable } from '@ant-design/pro-table';
@@ -59,6 +59,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...pr
       setDataSource(
         data.items?.map((it) => {
           const batchNo = moment(it.batchNo, formatStringDate);
+          console.log(batchNo);
           const itemEdit: EditableStockItem = {
             id: it.id,
             key: (Math.random() * 1000000).toFixed(0),
@@ -276,7 +277,11 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...pr
         )}
         <Card size="small">
           <EditableProTable<EditableStockItem>
-            title={() => <Text>Stock Items</Text>}
+            title={() => (
+              <Text>
+                Stock Items <FieldBinaryOutlined />
+              </Text>
+            )}
             rowKey={(r) => {
               return r.key;
             }}
@@ -309,6 +314,13 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...pr
                 dataIndex: 'batchNo',
                 valueType: 'date',
                 width: 140,
+                render: (_, r) => {
+                  if (r.batchNo === null || r.batchNo === undefined) {
+                    return '';
+                  } else {
+                    return formatDate(r.batchNo, formatStringDate);
+                  }
+                },
                 formItemProps: (form, _config) => {
                   // console.log('-------------------');
                   // console.log(_config);

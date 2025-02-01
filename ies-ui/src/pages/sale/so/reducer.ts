@@ -125,9 +125,9 @@ export type Action =
   | { type: 'setTransportations'; payload: PackageOffer[] }
   | { type: 'setSoSummary'; payload: SoSummary }
   | {
-    type: 'setAttachments';
-    payload: { id: number; imageId: string; status: string }[];
-  };
+      type: 'setAttachments';
+      payload: { id: number; imageId: string; status: string }[];
+    };
 
 export const reducer = (state: State, action: Action): State => {
   switch (action.type) {

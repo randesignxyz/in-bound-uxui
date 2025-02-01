@@ -1,4 +1,4 @@
-import { CloseIndirectSoParams, OfferCodeParam } from '@/services/sale/data';
+import { CloseIndirectSoParams } from '@/services/sale/data';
 import { CheckOutlined, CloudUploadOutlined, EditOutlined, StopOutlined } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
 import { Button, Modal, Spin, message } from 'antd';
@@ -34,7 +34,7 @@ const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
     }
   }, [id]);
 
-  const onSapPostingHandler = (comment?: string, offerCodes?: OfferCodeParam[]) => {
+  const onSapPostingHandler = (comment?: string) => {
     if (!id) {
       message.error('So not found.');
       return;
@@ -44,17 +44,8 @@ const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
       content: 'Are you sure?',
       onOk: async () => {
         try {
-          const rs = await actions.postSo(
-            id,
-            offerCodes?.map((e) => {
-              return {
-                soItemId: e.soItemId,
-                offerCode: e.offerCode,
-              };
-            }),
-            comment,
-          );
-          await actions.fetchSo(id);
+          const rs = await actions.postSo(id, comment);
+          actions.fetchSo(id);
           modals.hideModal('sap-posting');
           message.success(`So has been posted sucessfully. SAP Doc No: ${rs.data}.`);
         } catch (e) {
@@ -87,11 +78,26 @@ const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
     });
   };
 
+  const getOfferItems = () => {
+    const checking = (id: number) =>
+      state.data?.offerCodes?.reduce((o, e) => {
+        if (e.itemsIds.findIndex((it) => it === id) > -1) o.push(e.offerCode);
+        return o;
+      }, new Array<string>());
+
+    return (
+      state.data?.soDetail?.items?.filter(
+        (e) => e.type !== 'STD' && checking(e.itemId)!.length > 0,
+      ) ?? []
+    );
+  };
+
   const onCloseSoHandler = (data: CloseIndirectSoParams) => {
     if (!id) {
       message.error('So cannot be found.');
       return;
     }
+
     Modal.confirm({
       title: 'Closing So',
       content: 'Are you sure?',
@@ -107,20 +113,6 @@ const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
         }
       },
     });
-  };
-
-  const getOfferItems = () => {
-    const checking = (id: number) =>
-      state.data?.offerCodes?.reduce((o, e) => {
-        if (e.itemsIds.findIndex((it) => it === id) > -1) o.push(e.offerCode);
-        return o;
-      }, new Array<string>());
-
-    return (
-      state.data?.soDetail?.items?.filter(
-        (e) => e.type !== 'STD' && checking(e.itemId)!.length > 0,
-      ) ?? []
-    );
   };
 
   const buttons = [

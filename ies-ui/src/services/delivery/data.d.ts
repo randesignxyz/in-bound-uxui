@@ -745,6 +745,7 @@ export interface PickingSlipItem {
   licensePlate: string;
   shift: string;
   selected?: boolean;
+  createdDate?:Moment
 }
 
 export interface SettlementDetail {

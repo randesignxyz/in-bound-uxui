@@ -991,6 +991,11 @@ export default () => {
                   <ProDescriptions size='small' column={4} style={{ width: 'calc(100vh - 5px)' }}>
                     <ProDescriptions.Item label="License Plate #"> {r.truckNo || 'N/A'}</ProDescriptions.Item>
                     <ProDescriptions.Item label="Driver Name"> {r.driver || 'N/A'}</ProDescriptions.Item>
+                    {Array.isArray(r.pickingSlip) && r.status === "LOADING" && (
+                      <ProDescriptions.Item label="Loading Waiting time">
+                        {moment(r.pickingSlip?.[0]?.createdDate).toNow()}
+                      </ProDescriptions.Item>
+                    )}
                     {r.loadingStartedDate && !r?.loadingEndedDate && <ProDescriptions.Item label="Waiting Time"> {moment(r.loadingStartedDate).toNow()}</ProDescriptions.Item>}
                     {r.loadingEndedDate && r.status == 'LOADED' && <ProDescriptions.Item label="Loading Time"> {durationFormat(moment(r.loadingStartedDate), moment(r.loadingEndedDate))}</ProDescriptions.Item>}
                     {r.ownedTruckLoading && <ProDescriptions.Item label="Owned Truck Loading"> <Checkbox checked={r.ownedTruckLoading} /> </ProDescriptions.Item>}

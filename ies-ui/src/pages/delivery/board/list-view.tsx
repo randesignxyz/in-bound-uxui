@@ -443,11 +443,12 @@ export default ({
                                         <ProDescriptions size='small' column={4} style={{ width: 'calc(100vh - 5px)' }}>
                                             <ProDescriptions.Item label="Ticket No"> {r.ticketNo}</ProDescriptions.Item>
                                             <ProDescriptions.Item label="Loading Dock"> {r.loading.loadingDock}</ProDescriptions.Item>
-                                            {
-                                                r.loading.status == 'PENDING' && <ProDescriptions.Item label="Waiting time">{
-                                                    moment(r.loading.assignedDate).toNow()
-                                                }</ProDescriptions.Item>
-                                            }
+                                            {Array.isArray(r.pickingSlip) && r.loading.status === "LOADING" && (
+                                                <ProDescriptions.Item label="Waiting time">
+                                                    {moment(r.pickingSlip?.[0]?.createdDate).toNow()}
+                                                </ProDescriptions.Item>
+                                            )}
+
                                             {
                                                 r.loading.status == 'LOADING_STARTED' && r.loading.loadingStarted && <ProDescriptions.Item label="Loading time">{
                                                     moment(r.loading.loadingStarted).toNow()

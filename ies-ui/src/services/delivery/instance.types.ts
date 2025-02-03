@@ -6,6 +6,7 @@ import {
   LoadingDetail,
   LoadingListItem,
   Truck,
+  PickingSlipItem,
 } from './data';
 
 export type InstanceAdvanceSearchParams = { activeOnly?: boolean; canPick?: boolean; canAssignDocs?: boolean; } & (
@@ -50,7 +51,7 @@ export type InstanceBasic = {
   isOwner: boolean;
   holdBy: boolean;
   claimedBy?: string;
-  changeRequest?: boolean
+  changeRequest?: boolean;
 }
 
 export type InstanceDetail = {
@@ -61,8 +62,7 @@ export type InstanceDetail = {
 
 export type InstanceListItem = {
   ticketNo: string;
-  
   startedDate: Moment;
   endedDate?: Moment;
-  
+  pickingSlip:PickingSlipItem
 } & InstanceBasic

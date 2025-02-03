@@ -39,6 +39,7 @@ export type AllocatedLoadingDockBase = {
   autoAssigned: boolean;
   loadedChangeRequest?: LoadedChangeRequest;
   activities: activity[];
+  pickingSlip?:PickingSlipItem
 }
 
 

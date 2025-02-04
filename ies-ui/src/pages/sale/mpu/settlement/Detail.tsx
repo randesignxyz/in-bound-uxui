@@ -1,5 +1,5 @@
 import ImagePreview from '@/components/ImagePreview';
-import { formatterQty } from '@/pages/utils';
+import { displayDateTime } from '@/pages/utils';
 import { simpleRequestActions } from '@/services/model';
 import { CheckCircleOutlined, CloseCircleOutlined, SyncOutlined } from '@ant-design/icons';
 import { ActionType, ProDescriptions, ProTable } from '@ant-design/pro-components';
@@ -16,10 +16,10 @@ import {
   Typography,
   message,
 } from 'antd';
+import { max } from 'lodash';
 import numeral from 'numeral';
 import { useEffect, useRef, useState } from 'react';
 import RemarkModalForm from '../../component/RemarkModal';
-import { formatCurrency } from '../../sale';
 import { SettlementMethodDetailDTO } from './data';
 import { SettlementMethodServicAPI } from './service';
 
@@ -45,7 +45,9 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
     setDataSource(await services.detail(id));
   };
   useEffect(() => {
-    id && loadData();
+    if (id) {
+      loadData();
+    }
   }, [id]);
   return (
     <Spin spinning={requestActions.request?.loading}>
@@ -54,7 +56,7 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
           size="small"
           title={'General Infomation'}
           extra={[
-            dataSource?.status == 'Pending' && (
+            dataSource?.status === 'Pending' && (
               <Button
                 type="link"
                 icon={<CheckCircleOutlined />}
@@ -88,7 +90,7 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                 Confirm
               </Button>
             ),
-            dataSource?.status == 'Pending' && (
+            dataSource?.status === 'Pending' && (
               <Button
                 type="link"
                 danger
@@ -124,18 +126,18 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                   <Tag
                     bordered={false}
                     icon={
-                      r.status == 'Pending' ? (
+                      r.status === 'Pending' ? (
                         <SyncOutlined spin />
-                      ) : r.status == 'Completed' ? (
+                      ) : r.status === 'Completed' ? (
                         <CheckCircleOutlined />
                       ) : (
                         <CloseCircleOutlined />
                       )
                     }
                     color={
-                      r.status == 'Pending'
+                      r.status === 'Pending'
                         ? 'processing'
-                        : r.status == 'Completed'
+                        : r.status === 'Completed'
                         ? 'success'
                         : 'error'
                     }
@@ -148,12 +150,18 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                 title: 'Amount (USD)',
                 dataIndex: 'amount',
                 valueType: 'money',
-                render: (_, r) => <Text type="success">{formatCurrency(r.amount, '$')}</Text>,
+                render: (_, r) => (
+                  <Text type="success">{`$ ${numeral(r.amount).format('0,000.000')}`}</Text>
+                ),
               },
               {
                 title: 'Amount (KHR)',
                 dataIndex: 'amountKH',
-                render: (_, r) => <Text type="success">{formatterQty.format(r.amountKH)}</Text>,
+                render: (_, r) => (
+                  <Text type="success">{`${
+                    r.amountKH > 0 ? numeral(r.amountKH).format('0,000') : '-'
+                  } ៛`}</Text>
+                ),
               },
               {
                 title: 'Remark',
@@ -183,18 +191,21 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                           {
                             title: 'Distributor Name',
                             dataIndex: 'distributorCode',
-                            span: 2,
+                            //span: 2,
                             render: (_, r) =>
-                              [r.distributorCode, r.distributorName].filter((po) => po).join('-'),
+                              [r.distributorCode, r.distributorName].filter((po) => po).join(' - '),
                           },
+                          { title: 'P.O Number', dataIndex: 'purchaseOrderCode' },
                           {
                             title: 'Date',
-                            dataIndex: 'purchaseOrderDate',
-                            valueType: 'date',
+                            // dataIndex: 'purchaseOrderDate',
+                            // valueType: 'date',
+                            render: (_, r) => {
+                              return displayDateTime(r.purchaseOrderDate);
+                            },
                           },
                           {
-                            title: 'Total Amount',
-                            dataIndex: 'grantAmount',
+                            title: 'Request Quantity',
                             render: (_, r) => (
                               <Typography.Text type="success">{totalItem}</Typography.Text>
                             ),
@@ -222,11 +233,15 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                         columns={[
                           {
                             title: 'Item Name',
-                            render: (_, r) => [r.itemCode, r.itemName].filter((h) => h).join('-'),
+                            render: (_, r) => [r.itemCode, r.itemName].filter((h) => h).join(' - '),
                           },
                           {
-                            title: 'Category Name',
-                            dataIndex: 'stockCategoryName',
+                            title: 'Type',
+                            dataIndex: 'itemType',
+                          },
+                          {
+                            title: 'UOM',
+                            dataIndex: 'uom',
                           },
                           {
                             title: 'Quantity',
@@ -268,21 +283,47 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                       size="small"
                       dataSource={dataSource?.stockCount}
                       contentStyle={{ fontWeight: 500 }}
+                      column={{ xs: 1, sm: 2, md: 3, lg: 5, xl: 5, xxl: 5 }}
                       columns={[
                         {
                           title: 'Counted Number',
                           dataIndex: 'countedNo',
+                          span: 2,
                         },
                         {
                           title: 'Count Date',
-                          dataIndex: 'countedDate',
-                          valueType: 'date',
+                          // dataIndex: 'countedDate',
+                          // valueType: 'date',
+                          render: (_, r) => {
+                            return displayDateTime(r.countedDate);
+                          },
                         },
                         {
-                          title: 'Saleperson',
-                          render: (_, r) =>
-                            [r.salespersonCode, r.salespersonName].filter((p) => p).join('-'),
+                          title: 'Sold Quantity',
+
+                          render: (_, r) => {
+                            return (
+                              <Typography.Text type="warning">
+                                {r.items?.reduce((acc, it) => acc + it.soldQuantity, 0)}
+                              </Typography.Text>
+                            );
+                          },
                         },
+                        {
+                          title: 'Return Quantity',
+                          render: (_, r) => {
+                            return (
+                              <Typography.Text type="warning">
+                                {r.items?.reduce((acc, it) => acc + it.actualQuantity, 0)}
+                              </Typography.Text>
+                            );
+                          },
+                        },
+                        // {
+                        //   title: 'Saleperson',
+                        //   render: (_, r) =>
+                        //     [r.salespersonCode, r.salespersonName].filter((p) => p).join('-'),
+                        // },
                       ]}
                     />
                   ),
@@ -297,25 +338,33 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                       columns={[
                         {
                           title: 'Item Name',
-                          render: (_, r) => [r.itemCode, r.itemName].filter((y) => y).join('-'),
+                          render: (_, r) => [r.itemCode, r.itemName].filter((y) => y).join(' - '),
                         },
                         {
-                          title: 'Request Quantity',
+                          title: 'Type',
+                          dataIndex: 'itemType',
+                        },
+                        {
+                          title: 'UOM',
+                          dataIndex: 'uom',
+                        },
+                        {
+                          title: 'Req. Qty',
                           dataIndex: 'requestQuantity',
                           align: 'right',
                         },
                         {
-                          title: 'Sold Quantity',
+                          title: 'Sold Qty',
                           dataIndex: 'soldQuantity',
                           align: 'right',
                         },
                         {
-                          title: 'System Quantity',
+                          title: 'System Qty',
                           dataIndex: 'systemQuantity',
                           align: 'right',
                         },
                         {
-                          title: 'ActualQuantity',
+                          title: 'Actual Qty',
                           dataIndex: 'actualQuantity',
                           align: 'right',
                         },
@@ -328,7 +377,9 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                         return (
                           <>
                             <Table.Summary.Row>
-                              <Table.Summary.Cell index={1}>Total</Table.Summary.Cell>
+                              <Table.Summary.Cell index={0} colSpan={3} align="right">
+                                Total
+                              </Table.Summary.Cell>
                               <Table.Summary.Cell index={1} align="right">
                                 <Typography.Text type="success">{rqty}</Typography.Text>
                               </Table.Summary.Cell>
@@ -360,27 +411,6 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
             search={false}
             dataSource={dataSource?.items}
             pagination={false}
-            footer={(item) => {
-              let total = 0;
-              item.forEach((t) => {
-                if (t.currency != 'USD') {
-                  total += t.amount / t.exchangeRate;
-                } else {
-                  total += t.amount;
-                }
-              });
-              return (
-                <Flex justify="flex-end">
-                  <Space>
-                    <Text>Total:</Text>
-                    <Text type="success" strong>
-                      {' '}
-                      {numeral(total).format('$ 0,000.000')}
-                    </Text>
-                  </Space>
-                </Flex>
-              );
-            }}
             columns={[
               {
                 title: 'Settlement Method',
@@ -399,10 +429,17 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                 dataIndex: 'currency',
               },
               {
+                title: 'Exchange Rate',
+                align: 'right',
+                render: (_, r) =>
+                  r.exchangeRate === 1 ? '-' : `${numeral(r.exchangeRate).format('0,000')} ៛`,
+              },
+              {
                 title: 'Amount (KHR)',
                 dataIndex: 'amount',
                 align: 'right',
-                render: (_, r) => (r.currency === 'KHR' ? formatterQty.format(r.amount) : '-'),
+                render: (_, r) =>
+                  r.currency === 'KHR' ? `${numeral(r.amount).format('0,000')} ៛` : '-',
               },
               {
                 title: 'Amount (USD)',
@@ -411,11 +448,7 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                 render: (_, r) =>
                   r.currency !== 'KHR' ? `$ ${numeral(r.amount).format('0,000.000')}` : '-',
               },
-              {
-                title: 'Exchange Rate',
-                align: 'right',
-                render: (_, r) => (r.exchangeRate == 1 ? '-' : r.exchangeRate),
-              },
+
               {
                 title: 'Amount',
                 align: 'right',
@@ -428,6 +461,52 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                 ),
               },
             ]}
+            summary={(items) => {
+              const total = items.reduce(
+                (acc, it) =>
+                  it.currency !== 'USD' ? acc + it.amount / it.exchangeRate : acc + it.amount,
+                0.0,
+              );
+              const totalKh = items.reduce(
+                (acc, it) => acc + (it.currency !== 'USD' ? it.amount : 0.0),
+                0.0,
+              );
+              const totalUSD = items.reduce(
+                (acc, it) => acc + (it.currency === 'USD' ? it.amount : 0.0),
+                0.0,
+              );
+              return (
+                <>
+                  <Table.Summary.Row>
+                    <Table.Summary.Cell index={0} colSpan={4} align="right">
+                      Total
+                    </Table.Summary.Cell>
+                    <Table.Summary.Cell index={1} align="right">
+                      <Typography.Text type="success">
+                        {max(items.map((it) => it.exchangeRate)) === 1
+                          ? '-'
+                          : max(items.map((it) => it.exchangeRate))}
+                      </Typography.Text>
+                    </Table.Summary.Cell>
+                    <Table.Summary.Cell index={1} align="right">
+                      <Typography.Text type="success">{`${
+                        totalKh > 0 ? numeral(totalKh).format('0,000') : '-'
+                      } ៛`}</Typography.Text>
+                    </Table.Summary.Cell>
+                    <Table.Summary.Cell index={1} align="right">
+                      <Typography.Text type="success">{`$ ${numeral(totalUSD).format(
+                        '0,000.000',
+                      )}`}</Typography.Text>
+                    </Table.Summary.Cell>
+                    <Table.Summary.Cell index={1} align="right">
+                      <Typography.Text type="success">{`$ ${numeral(total).format(
+                        '0,000.000',
+                      )}`}</Typography.Text>
+                    </Table.Summary.Cell>
+                  </Table.Summary.Row>
+                </>
+              );
+            }}
           />
         </Card>
         <Card size="small" hidden={dataSource?.attachments?.length ? false : true}>

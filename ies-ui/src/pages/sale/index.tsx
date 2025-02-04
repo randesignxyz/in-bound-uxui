@@ -13,13 +13,12 @@ import dailyReportIcon from '@/assets/dsd-report-icon.png';
 
 // import soInvoiceIcon from '@/assets/sale-invoice.png';
 import agreementIcon from '@/assets/agreement.png';
-import complainIcon from '@/assets/complain.png';
 import purchaseOrderIcon from '@/assets/order-items.png';
 
 import saleIcon from '@/assets/shopping.png';
+import stockCountId from '@/assets/stock-count.png';
 import stockIcon from '@/assets/stock.png';
 import storeIcon from '@/assets/store.png';
-import stockCountId from '@/assets/stock-count.png';
 
 import FOC from '@/assets/free.png';
 
@@ -29,6 +28,7 @@ import {
   BarChartOutlined,
   PlusCircleOutlined,
   ScheduleOutlined,
+  ShoppingOutlined,
   TagsOutlined,
   TeamOutlined,
 } from '@ant-design/icons';
@@ -72,8 +72,7 @@ export const SalePaths = {
   order: '/retailer/order/list',
   user: '/sale/user',
   pricing: '/sale/pricing',
-  purchaseOrder: "/sale/purchase-order",
-
+  purchaseOrder: '/sale/purchase-order',
 };
 
 export default () => {
@@ -133,69 +132,6 @@ export default () => {
     />
   );
 
-  const reportsMenu = (
-    <Menu
-      onClick={(info) => {
-        switch (info.key) {
-          // case 'newSaleOrder':
-          //   history.push(`${SalePaths.so}/create`);
-          //   break;
-          case 'lead-reports':
-            setReport('dsd-lead-report');
-            break;
-          case 'dsd-reports':
-            setReport('dsd-reports');
-            break;
-          case 'visit-reports':
-            setReport('visit-report');
-            break;
-          default:
-            message.error('Something went wrong.');
-        }
-        return undefined;
-      }}
-      items={[
-        // getItem('Export Leads', 'lead-reports', <BarChartOutlined />),
-        // getItem('Sales Invoice Report', 'dsd-reports', <AuditOutlined />),
-        getItem(
-          'Reports',
-          'lead-report-menu',
-          null,
-          [
-            getItem('Export Leads', 'lead-reports', <TeamOutlined />),
-            getItem('Sales Invoice Report', 'dsd-reports', <TagsOutlined />),
-            getItem('Visit Report', 'visit-reports', <ScheduleOutlined />),
-          ],
-          'group',
-        ),
-      ]}
-    />
-  );
-
-  // const itemsMenu: MenuProps['items'] = [
-  //   getItem('Sales Invoice Report', 'sales-invoice-report', <BarChartOutlined />),
-  //   getItem('Sale Items Report', 'sale-items-report', <SlidersOutlined />),
-  // ];
-
-  // const reportMenus = (
-  //   <Menu
-  //     items={itemsMenu}
-  //     onClick={(info) => {
-  //       switch (info.key) {
-  //         case 'sales-invoice-report':
-  //           setReport('sales-invoice-report');
-  //           break;
-  //         case 'sale-items-report':
-  //           setReport('sale-items-report');
-  //           break;
-  //         default:
-  //           message.error('Something went wrong.');
-  //       }
-  //       return undefined;
-  //     }}
-  //   />
-  // );
-
   const stockMenuItems: ListMenuItem[] = [
     {
       id: 'suggestion',
@@ -204,7 +140,7 @@ export default () => {
       link: `${SalePaths.suggestion}/list`,
       icon: plannerIcon,
       // visible: access.canAcessStockControlMenuItem || access.canAccessSettlementMenuItem,
-      visible: access.canAccessSaleTaskList
+      visible: access.canAccessSaleTaskList,
     },
     {
       id: 'store',
@@ -213,7 +149,7 @@ export default () => {
       link: `${SalePaths.store}/list`,
       icon: storeIcon,
       // visible: access.canAccessAllMenuDSD || access.canAccessTabWarehouse,
-      visible: access.canAccessSaleStore
+      visible: access.canAccessSaleStore,
     },
     {
       id: 'stock',
@@ -237,7 +173,8 @@ export default () => {
       name: 'Cash Collection',
       description: 'Cash collection list',
       link: `${SalePaths.settlement}/list`,
-      icon: settlementIcon,
+      // icon: settlementIcon,
+      icon: agreementIcon,
       // visible: access.canAccessSettlementMenuItem,
       visible: access.canAccessSaleCash,
     },
@@ -280,6 +217,9 @@ export default () => {
             case 'visit-reports':
               setReport('visit-report');
               break;
+            case 'purchase-order-reports':
+              setReport('purchase-order-reports');
+              break;
             default:
               message.error('Something went wrong.');
           }
@@ -296,11 +236,12 @@ export default () => {
               getItem('Export Leads', 'lead-reports', <TeamOutlined />),
               getItem('Sales Invoice Report', 'dsd-reports', <TagsOutlined />),
               getItem('Visit Report', 'visit-reports', <ScheduleOutlined />),
+              getItem('Purchase Order Report', 'purchase-order-reports', <ShoppingOutlined />),
             ],
             'group',
           ),
-        ]
-      }
+        ],
+      },
       // overlay: reportsMenu,
       // onClick: () => {
       //   setReport('dsd-reports');
@@ -330,7 +271,6 @@ export default () => {
       // visible: access.canAccessAllMenuDSD,
       link: `${MPUPath.mpuCountStock}/list`,
     },
-
   ];
 
   const items: ListMenuItem[] = [
@@ -369,8 +309,8 @@ export default () => {
             [getItem('Sale Order Report', 'sale-order-report', <BarChartOutlined />)],
             'group',
           ),
-        ]
-      }
+        ],
+      },
       // overlay: soMenu,
     },
     {
@@ -469,17 +409,17 @@ export default () => {
   // ];
   const purchaseOrder = [
     {
-      id: "rsmRequest",
-      name: "Purchase Order",
-      description: "Rsm make Purchase Order for MMA",
+      id: 'rsmRequest',
+      name: 'Purchase Order',
+      description: 'Rsm make Purchase Order for MMA',
       link: `${SalePaths.purchaseOrder}/list`,
       icon: purchaseOrderIcon,
       // visible: access.canAccessRSMRequestToMPU,
-    }
+    },
   ];
 
   return (
-    <PageContainer title={false} >
+    <PageContainer title={false}>
       {access.canAccessSaleMenuItems && <ListMenuComp items={items} />}
       {/* <ListMenuComp items={retailerMenuItems} /> */}
       <Reports reportName={report} onClose={() => setReport(undefined)} />
@@ -487,14 +427,16 @@ export default () => {
       {(access.canAcessStockControlMenuItem ||
         access.canAccessSettlementMenuItem ||
         access.canAccessARMenuItem) && (
-          <>
-            <Divider />
-            <ListMenuComp items={stockMenuItems} />
-          </>
-        )}
+        <>
+          <Divider />
+          <ListMenuComp items={stockMenuItems} />
+        </>
+      )}
       {access.canAccessViewMpu && (
         <>
-          <Divider plain orientation='left' >MMA</Divider>
+          <Divider plain orientation="left">
+            MMA
+          </Divider>
           <ListMenuComp items={mpuMenuItems} />
         </>
       )}

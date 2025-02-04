@@ -1,4 +1,4 @@
-import { AddressInfo } from '@/services/crm/data';
+import { formatDateTime } from '@/pages/utils';
 import { simpleRequestActions } from '@/services/model';
 import {
   CheckCircleOutlined,
@@ -26,7 +26,7 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
   const requestActions = simpleRequestActions();
   const services = PurchaseOrderServiceAPI(requestActions);
   const [dataSource, setDataSource] = useState<PurchaseOrderDTO>();
-  const [address, setAddress] = useState<AddressInfo>();
+  //const [address, setAddress] = useState<AddressInfo>();
   const onLoad = async () => {
     const data = await services.detail(id);
     // const add = await CrmServiceAPI(requestActions).findAddress({ id: data.addressId||0 });
@@ -34,13 +34,15 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
     setDataSource(data);
   };
   useEffect(() => {
-    id && onLoad();
+    if (id) {
+      onLoad();
+    }
   }, [id]);
 
   return (
     <>
       <Flex vertical gap={18}>
-        <Card size="small" title="Information">
+        <Card size="small" title="Purchase Order">
           <Row gutter={12} style={{ marginLeft: 20 }}>
             <Col md={8} xs={24}>
               <ProDescriptions
@@ -53,45 +55,14 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                     title: 'Purchase Order',
                     dataIndex: 'purchaseOrderCode',
                   },
+
                   {
-                    title: 'Purchase Order Date',
-                    dataIndex: 'purchaseOrderDate',
-                    valueType: 'date',
-                  },
-                  {
-                    title: 'Requester',
+                    title: 'Request By',
                     render: (_, r) => [r.requestedCode, r.requestedBy].filter((p) => p).join(' - '),
                   },
                   {
-                    title: 'Status',
-                    dataIndex: 'status',
-                    render: (_, r) => (
-                      <Tag
-                        icon={
-                          r.status == 'Pending' ? (
-                            <SyncOutlined spin />
-                          ) : r.status == 'Paid' ? (
-                            <DollarOutlined />
-                          ) : r.status == 'Rejected' ? (
-                            <CloseCircleOutlined />
-                          ) : (
-                            <CheckCircleOutlined />
-                          )
-                        }
-                        bordered={false}
-                        color={
-                          r.status == 'Pending'
-                            ? 'processing'
-                            : r.status == 'Paid'
-                            ? 'success'
-                            : r.status == 'Rejected'
-                            ? 'error'
-                            : 'success'
-                        }
-                      >
-                        {r.status}
-                      </Tag>
-                    ),
+                    title: 'Assign To',
+                    render: (_, r) => [r.assignedToCode, r.assignedTo].filter((p) => p).join(' - '),
                   },
                 ]}
               />
@@ -104,37 +75,37 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                 column={1}
                 columns={[
                   {
-                    title: 'Distibutor Code',
-                    dataIndex: 'distributorCode',
+                    title: 'Purchase Order Date',
+                    // dataIndex: 'purchaseOrderDate',
+                    // valueType: 'date',
+                    render: (_, r) => {
+                      return formatDateTime(r.purchaseOrderDate);
+                    },
                   },
                   {
-                    title: 'Distributor Name',
-                    dataIndex: 'distributorName',
+                    title: 'Request By Date',
+                    // dataIndex: 'requestedDate',
+                    // valueType: 'date',
+                    render: (_, r) => {
+                      return formatDateTime(r.requestedDate);
+                    },
                   },
+                  // {
+                  //   title: 'Distibutor Code',
+                  //   dataIndex: 'distributorCode',
+                  // },
+                  // {
+                  //   title: 'Distributor Name',
+                  //   dataIndex: 'distributorName',
+                  // },
+                  // {
+                  //   title: 'Distributor Phone',
+                  //   dataIndex: 'distributorPhone',
+                  // },
                   {
-                    title: 'Distributor Phone',
-                    dataIndex: 'distributorPhone',
-                  },
-                  {
-                    title: 'Checked In Location',
+                    title: 'Address Location',
                     span: 3,
                     render: (_, r) => {
-                      // const aa = [
-                      //     { name: 'Street', value: address?.streetNo },
-                      //     { name: 'House#', value: address?.houseNo },
-                      //     { name: 'Village', value: address?.village },
-                      //     { name: 'Commune', value: address?.commune },
-                      //     { name: 'District', value: address?.district },
-                      //     { name: 'Province', value: address?.province },
-                      //     { name: 'Latitude', value: address?.latitude },
-                      //     { name: 'Longitude', value: address?.longitude },
-                      //     { name: 'Direction', value: address?.direction },
-                      //     { name: 'Hotspot', value: address?.hotspot },
-                      // ]
-                      //     .filter((it) => it.value)
-                      //     .map((it) => `${it.name} ${it.value}`)
-                      //     .join(', ')
-
                       return (
                         <Space align="baseline">
                           <a
@@ -151,8 +122,6 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                         </Space>
                       );
                     },
-
-                    // render: (_, r) => <Typography.Paragraph copyable>{[r.latitude, r.longitude].filter(p => p).join(",")}</Typography.Paragraph>
                   },
                 ]}
               />
@@ -165,19 +134,82 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                 column={1}
                 columns={[
                   {
-                    title: 'Assigned To Code',
-                    dataIndex: 'assignedToCode',
+                    title: 'Status',
+                    dataIndex: 'status',
+                    render: (_, r) => (
+                      <Tag
+                        icon={
+                          r.status === 'Pending' ? (
+                            <SyncOutlined spin />
+                          ) : r.status === 'Paid' ? (
+                            <DollarOutlined />
+                          ) : r.status === 'Rejected' ? (
+                            <CloseCircleOutlined />
+                          ) : (
+                            <CheckCircleOutlined />
+                          )
+                        }
+                        bordered={false}
+                        color={
+                          r.status === 'Pending'
+                            ? 'processing'
+                            : r.status === 'Paid'
+                            ? 'success'
+                            : r.status === 'Rejected'
+                            ? 'error'
+                            : 'success'
+                        }
+                      >
+                        {r.status}
+                      </Tag>
+                    ),
                   },
-                  {
-                    title: 'Assign To ',
-                    dataIndex: 'assignedTo',
-                  },
+                  // {
+                  //   title: 'Assigned To Code',
+                  //   dataIndex: 'assignedToCode',
+                  // },
+                  // {
+                  //   title: 'Assign To ',
+                  //   dataIndex: 'assignedTo',
+                  // },
                 ]}
               />
             </Col>
           </Row>
+          {/* <Row gutter={12} style={{ marginLeft: 20 }}>
+            <Col xs={24}>
+              <ProDescriptions
+                dataSource={dataSource}
+                loading={requestActions.request?.loading}
+                contentStyle={{ fontWeight: 500 }}
+                column={1}
+                columns={[
+                  {
+                    title: 'Address ',
+                    render: (_, r) => {
+                      return (
+                        <Space align="baseline">
+                          <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${r?.latitude?.replace(
+                              /[&\/[\]\#,+()$~%'":*?<>{}]/g,
+                              '',
+                            )}%2C${r?.longitude?.replace(/[&\/[\]\#,+()$~%'":*?<>{}]/g, '')}`}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            <EnvironmentOutlined />
+                          </a>
+                          {r.address}
+                        </Space>
+                      );
+                    },
+                  },
+                ]}
+              />
+            </Col>
+          </Row> */}
         </Card>
-        <Card title="Items" size="small">
+        <Card title="Purcase Order Item" size="small">
           <ProTable<PurchaseRequestItemCreate>
             search={false}
             options={false}
@@ -186,7 +218,7 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
             dataSource={dataSource?.items}
             columns={[
               {
-                title: 'Product Name',
+                title: 'Description',
                 dataIndex: 'itemName',
               },
               {
@@ -197,19 +229,20 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                 title: 'Type',
                 dataIndex: 'itemType',
               },
+              // {
+              //   title: 'Category',
+              //   dataIndex: 'stockCategoryName',
+              // },
               {
-                title: 'Category',
-                dataIndex: 'stockCategoryName',
+                title: 'UOM',
+                dataIndex: 'uom',
               },
               {
                 title: 'Quantity',
                 dataIndex: 'quantity',
                 align: 'right',
               },
-              {
-                title: 'UOM',
-                dataIndex: 'uom',
-              },
+
               {
                 title: 'Unit Price',
                 dataIndex: 'pricing',
@@ -227,11 +260,11 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                 ),
               },
             ]}
-            summary={(item) => {
+            summary={() => {
               return (
                 <>
                   <Table.Summary.Row>
-                    <Table.Summary.Cell index={1} colSpan={4} align="right">
+                    <Table.Summary.Cell index={1} colSpan={6} align="right">
                       Total Amount
                     </Table.Summary.Cell>
                     <Table.Summary.Cell index={1} align="right">
@@ -241,7 +274,7 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                     </Table.Summary.Cell>
                   </Table.Summary.Row>
                   <Table.Summary.Row>
-                    <Table.Summary.Cell index={1} colSpan={4} align="right">
+                    <Table.Summary.Cell index={1} colSpan={6} align="right">
                       Discount Amount
                     </Table.Summary.Cell>
                     <Table.Summary.Cell index={1} align="right">
@@ -251,7 +284,7 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                     </Table.Summary.Cell>
                   </Table.Summary.Row>
                   <Table.Summary.Row>
-                    <Table.Summary.Cell index={1} colSpan={4} align="right">
+                    <Table.Summary.Cell index={1} colSpan={6} align="right">
                       Grand Amount
                     </Table.Summary.Cell>
                     <Table.Summary.Cell index={1} align="right">

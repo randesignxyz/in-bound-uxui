@@ -12,12 +12,12 @@ import {
 import { ActionType } from '@ant-design/pro-components';
 import { useQuery } from '@umijs/max';
 import { Dropdown, MenuProps, Modal, Tag } from 'antd';
+import numeral from 'numeral';
 import { useEffect, useRef, useState } from 'react';
 import MpuPoDetail from './MpuPODetail';
 import MpuPoEntryForm from './MpuPOEntryForm';
 import { PurchaseOrderAdvanceSearch, PurchaseOrderDTO } from './data';
 import { PurchaseOrderServiceAPI } from './services';
-
 interface Props {}
 
 const POMainPage: React.FC<Props> = () => {
@@ -188,6 +188,11 @@ const POMainPage: React.FC<Props> = () => {
                 }),
               },
               {
+                title: 'Purchase Date',
+                dataIndex: 'purchaseOrderDate',
+                valueType: 'date',
+              },
+              {
                 title: 'Assigned To',
                 dataIndex: 'assignedTo',
               },
@@ -196,10 +201,7 @@ const POMainPage: React.FC<Props> = () => {
                 title: 'Distributor Name',
                 dataIndex: 'distributorName',
               },
-              {
-                title: 'Requester',
-                dataIndex: 'requestedBy',
-              },
+
               {
                 title: 'Status',
                 dataIndex: 'status',
@@ -232,14 +234,21 @@ const POMainPage: React.FC<Props> = () => {
                 ),
               },
               {
-                title: 'GrantAmount',
+                title: 'Amount',
                 dataIndex: 'grantAmount',
-                valueType: 'money',
+                render: (_, r) => {
+                  return `${numeral(r.grantAmount).format('$ 0,000.000')}`;
+                },
+                align: 'right',
               },
+              // {
+              //   title: 'Total Amount',
+              //   dataIndex: 'totalAmount',
+              //   valueType: 'money',
+              // },
               {
-                title: 'Total Amount',
-                dataIndex: 'totalAmount',
-                valueType: 'money',
+                title: 'Requested By',
+                dataIndex: 'requestedBy',
               },
               {
                 title: 'Requested Date',

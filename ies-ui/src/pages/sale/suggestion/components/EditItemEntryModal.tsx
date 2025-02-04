@@ -78,6 +78,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...pr
             status: it.status,
             internalId: it.internalId,
             itemType: it.itemType,
+            isBeginning: it.beginningQty > 0,
           };
           return itemEdit;
         }) || [],
@@ -133,6 +134,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...pr
         internalId: it.internalId,
         status: it.status,
         itemName: it.itemName,
+        pricing: 0.0,
         key: it.key,
         uom: it.uom,
       };
@@ -421,7 +423,6 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...pr
                             icon={<CopyOutlined />}
                             onClick={() => {
                               const key = Math.random() * 1000000;
-                              const batchNo = moment();
                               const first: EditableStockItem = {
                                 id: -key,
                                 beginningQty: record.beginningQty,
@@ -436,7 +437,7 @@ const EditItemEntryModal: React.FC<Props> = ({ data, actionHandlers, role, ...pr
                                 itemType: record.itemType,
                                 batchNo: undefined,
                                 expiredDate: undefined,
-                                key: key,
+                                key: -key,
                               };
                               // dataSource.push(first);
                               // setDataSource(dataSource);

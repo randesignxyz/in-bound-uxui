@@ -1,12 +1,11 @@
+import { displayDateTime } from '@/pages/utils';
 import { simpleRequestActions } from '@/services/model';
 import { CheckCircleOutlined, CloseCircleOutlined, SyncOutlined } from '@ant-design/icons';
 import { ActionType, ProDescriptions, ProTable } from '@ant-design/pro-components';
 import { Button, Card, Flex, Modal, Spin, Table, Tag, Typography, message } from 'antd';
-import { useForm } from 'antd/es/form/Form';
 import numeral from 'numeral';
 import { useEffect, useRef, useState } from 'react';
 import RemarkModalForm from '../../component/RemarkModal';
-import { StatusActionForm } from '../settlement/data';
 import { StockCountDto } from './data';
 import { CountStockServiceAPI } from './service';
 
@@ -19,7 +18,7 @@ interface Props {
 const CountStockDetail: React.FC<Props> = ({ id }) => {
   const requestActions = simpleRequestActions();
   const services = CountStockServiceAPI(requestActions);
-  const [actionForm] = useForm<StatusActionForm>();
+  // const [actionForm] = useForm<StatusActionForm>();
   const [dataSource, setDataSource] = useState<StockCountDto>();
   const actionRef = useRef<ActionType>();
   const [actionState, setActionState] = useState<{
@@ -32,7 +31,9 @@ const CountStockDetail: React.FC<Props> = ({ id }) => {
     setDataSource(await services.detail(id));
   };
   useEffect(() => {
-    id && loadData();
+    if (id) {
+      loadData();
+    }
   }, [id]);
 
   return (
@@ -40,9 +41,9 @@ const CountStockDetail: React.FC<Props> = ({ id }) => {
       <Flex gap={16} vertical>
         <Card
           size="small"
-          title="General Information {1}"
+          title="General Information"
           extra={[
-            dataSource?.status == 'Pending' && (
+            dataSource?.status === 'Pending' && (
               <Button
                 type="link"
                 danger
@@ -56,7 +57,7 @@ const CountStockDetail: React.FC<Props> = ({ id }) => {
                 Reject
               </Button>
             ),
-            (dataSource?.purchaseOrder?.length ?? 0) > 0 && dataSource?.status == 'Pending' && (
+            (dataSource?.purchaseOrder?.length ?? 0) > 0 && dataSource?.status === 'Pending' && (
               <Button
                 type="primary"
                 onClick={() => {
@@ -85,17 +86,20 @@ const CountStockDetail: React.FC<Props> = ({ id }) => {
             }}
             columns={[
               {
-                title: 'Counted No',
+                title: 'Stock Count No',
                 dataIndex: 'countedNo',
               },
               {
-                title: 'Date Counted',
-                dataIndex: 'countedDate',
-                valueType: 'date',
+                title: 'Stock Count Date',
+                render: (_, r) => {
+                  return displayDateTime(r.countedDate);
+                },
               },
               {
-                title: 'Counted Invoices',
-                dataIndex: 'countedInvoices',
+                title: 'Remark',
+                dataIndex: 'remark',
+                span: 3,
+                valueType: 'text',
               },
               {
                 title: 'Salesperson Code',
@@ -104,29 +108,32 @@ const CountStockDetail: React.FC<Props> = ({ id }) => {
               {
                 title: 'Salesperson Name',
                 dataIndex: 'salespersonName',
+                // render: (_, r) => {
+                //   return [r.salespersonCode, r.salespersonName].join(' - ');
+                // },
               },
-              {
-                title: 'Store Code',
-                dataIndex: 'storeCode',
-              },
+              // {
+              //   title: 'Store Code',
+              //   dataIndex: 'storeCode',
+              // },
               {
                 title: 'Status',
                 render: (_, r) => (
                   <Tag
                     bordered={false}
                     icon={
-                      r.status == 'Pending' ? (
+                      r.status === 'Pending' ? (
                         <SyncOutlined spin />
-                      ) : r.status == 'Rejected' ? (
+                      ) : r.status === 'Rejected' ? (
                         <CloseCircleOutlined />
                       ) : (
                         <CheckCircleOutlined />
                       )
                     }
                     color={
-                      r.status == 'Pending'
+                      r.status === 'Pending'
                         ? 'processing'
-                        : r.status == 'Rejected'
+                        : r.status === 'Rejected'
                         ? 'error'
                         : 'success'
                     }
@@ -135,16 +142,22 @@ const CountStockDetail: React.FC<Props> = ({ id }) => {
                   </Tag>
                 ),
               },
+
               {
-                title: 'Remark',
-                dataIndex: 'remark',
-                span: 3,
-                valueType: 'text',
+                title: 'Cnt. Invoices',
+                dataIndex: 'countedInvoices',
+              },
+              {
+                title: 'Amount',
+                // dataIndex: 'soldAmount',
+                render: (_, r) => (
+                  <Text type="success">$ {numeral(r.soldAmount).format('0,000.000')}</Text>
+                ),
               },
             ]}
           />
         </Card>
-        <Card size="small">
+        {/* <Card size="small">
           <ProDescriptions
             dataSource={dataSource}
             contentStyle={{
@@ -152,7 +165,7 @@ const CountStockDetail: React.FC<Props> = ({ id }) => {
             }}
             columns={[
               {
-                title: 'Quantity',
+                title: 'Sold Quantity',
                 dataIndex: 'soldQuantity',
                 render: (_, r) => (
                   <Text type="danger">( {numeral(r.soldQuantity).format('0,000')} )</Text>
@@ -161,9 +174,7 @@ const CountStockDetail: React.FC<Props> = ({ id }) => {
               {
                 title: 'Total Quantity',
                 dataIndex: 'totalQuantity',
-                render: (_, r) => (
-                  <Text type="success">{[r.totalQuantity, 'CASE'].filter((o) => o).join(' ')}</Text>
-                ),
+                render: (_, r) => <Text type="success">{r.totalQuantity}</Text>,
               },
               {
                 title: 'Sold Amount',
@@ -175,8 +186,8 @@ const CountStockDetail: React.FC<Props> = ({ id }) => {
               },
             ]}
           />
-        </Card>
-        <Card size="small">
+        </Card> */}
+        <Card size="small" title={'Product Item'}>
           <ProTable
             size="small"
             options={false}
@@ -187,29 +198,37 @@ const CountStockDetail: React.FC<Props> = ({ id }) => {
             columns={[
               {
                 title: 'Batch No',
-                dataIndex: 'batchNo',
+                // dataIndex: 'batchNo',
+                render: (_, r) => {
+                  return r.batchNo !== null ? (r.batchNo === 'n/a' ? '-' : r.batchNo) : '-';
+                },
               },
+              { title: 'Code', dataIndex: 'itemCode' },
               {
-                title: 'Item Name',
+                title: 'Description',
                 dataIndex: 'itemName',
               },
               {
-                title: 'Item Type',
+                title: 'Type',
                 dataIndex: 'itemType',
               },
               {
-                title: 'Begin Quantity',
+                title: 'UOM',
+                dataIndex: 'uom',
+              },
+              {
+                title: 'Begin Qty',
                 dataIndex: 'beginQuantity',
                 valueType: 'digit',
                 align: 'right',
               },
               {
-                title: 'Request Quantity',
+                title: 'Req. Qty',
                 dataIndex: 'requestQuantity',
                 align: 'right',
               },
               {
-                title: 'Sole Volume',
+                title: 'Sold Qty',
                 dataIndex: 'soldQuantity',
                 render: (_, r) => (
                   <>
@@ -219,26 +238,36 @@ const CountStockDetail: React.FC<Props> = ({ id }) => {
                 align: 'right',
               },
               {
-                title: 'System Quantity',
+                title: 'System Qty',
                 dataIndex: 'systemQuantity',
                 align: 'right',
               },
               {
-                title: 'Actual  Quantity',
+                title: 'Actual Qty',
                 dataIndex: 'actualQuantity',
                 render: (_, r) => <Text type="warning">{r.actualQuantity}</Text>,
                 align: 'right',
               },
             ]}
             summary={(item) => {
-              const soleQty = item.reduce((p, c) => p + c.soldQuantity, 0);
+              const begQty = item.reduce((p, c) => p + c.beginQuantity, 0);
+              const reqQty = item.reduce((p, c) => p + c.requestQuantity, 0);
+              const soldQty = item.reduce((p, c) => p + c.soldQuantity, 0);
               const systemQty = item.reduce((p, c) => p + c.systemQuantity, 0);
               const actQty = item.reduce((p, c) => p + c.actualQuantity, 0);
               return (
                 <Table.Summary.Row>
-                  <Table.Summary.Cell index={1} colSpan={5}></Table.Summary.Cell>
+                  <Table.Summary.Cell index={1} colSpan={5} align="right">
+                    <Text>Total</Text>
+                  </Table.Summary.Cell>
                   <Table.Summary.Cell index={1} colSpan={1} align="right">
-                    <Text type="success">( {numeral(soleQty).format('0,000')} )</Text>
+                    <Text>{numeral(begQty).format('0,000')}</Text>
+                  </Table.Summary.Cell>
+                  <Table.Summary.Cell index={1} colSpan={1} align="right">
+                    <Text>{numeral(reqQty).format('0,000')}</Text>
+                  </Table.Summary.Cell>
+                  <Table.Summary.Cell index={1} colSpan={1} align="right">
+                    <Text type="danger">( {numeral(soldQty).format('0,000')} )</Text>
                   </Table.Summary.Cell>
                   <Table.Summary.Cell index={1} colSpan={1} align="right">
                     <Text type="success"> {numeral(systemQty).format('0,000')} </Text>

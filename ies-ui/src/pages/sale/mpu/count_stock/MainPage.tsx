@@ -1,5 +1,6 @@
 import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import PageWrapper from '@/components/PageWrapper';
+import { displayDate } from '@/pages/utils';
 import { simpleRequestActions } from '@/services/model';
 import { CheckCircleOutlined, CloseCircleOutlined, SyncOutlined } from '@ant-design/icons';
 import { ActionType } from '@ant-design/pro-components';
@@ -10,7 +11,7 @@ import { useRef, useState } from 'react';
 import CountStockDetail from './Detail';
 import { CountStockAdvanceSearch, StockCountDto } from './data';
 import { CountStockServiceAPI } from './service';
-interface Props {}
+interface Props { }
 
 const CountStockMainPage: React.FC<Props> = () => {
   const requestActions = simpleRequestActions();
@@ -34,7 +35,7 @@ const CountStockMainPage: React.FC<Props> = () => {
           tabLabel: `${items?.countedNo}`,
           action: 'view',
           tabKey: `sc-${items?.id}`,
-          panel: ({}) => <CountStockDetail id={items?.id} />,
+          panel: ({ }) => <CountStockDetail id={items?.id} />,
         },
       ]}
       listView={{
@@ -77,16 +78,43 @@ const CountStockMainPage: React.FC<Props> = () => {
               }),
             },
             {
-              title: 'Saleperson',
-              dataIndex: 'type',
-              render: (_, r) => [r.salespersonCode, r.salespersonName].join('-'),
+              title: 'Counted Date',
+              // dataIndex: 'countedDate',
+              // valueType: 'date',
+              render: (_, r) => displayDate(r.countedDate),
             },
             {
-              title: 'Stock code',
-              dataIndex: 'storeCode',
+              title: 'Saleperson Name',
+              dataIndex: 'salespersonName',
             },
             {
-              title: 'Sales Volume',
+              title: 'Status',
+              render: (_, r) => (
+                <Tag
+                  bordered={false}
+                  icon={
+                    r.status === 'Pending' ? (
+                      <SyncOutlined spin />
+                    ) : r.status === 'Rejected' ? (
+                      <CloseCircleOutlined />
+                    ) : (
+                      <CheckCircleOutlined />
+                    )
+                  }
+                  color={
+                    r.status === 'Pending'
+                      ? 'processing'
+                      : r.status === 'Rejected'
+                        ? 'error'
+                        : 'success'
+                  }
+                >
+                  {r.status}
+                </Tag>
+              ),
+            },
+            {
+              title: 'Sold Quantity',
               dataIndex: 'soldQuantity',
               align: 'right',
               render: (_, r) => (
@@ -96,47 +124,21 @@ const CountStockMainPage: React.FC<Props> = () => {
               ),
             },
             {
-              title: 'Sales Amount',
-              dataIndex: 'soldAmount',
+              title: 'Total Quantity',
+              dataIndex: 'totalQuantity',
               align: 'right',
-              render: (_, r) => `$ ${numeral(r.soldAmount).format('0,000.000')}`,
-              // valueType: "money",
             },
             {
-              title: 'Counted Invoices',
+              title: 'Cnt. Invoices',
               dataIndex: 'countedInvoices',
               align: 'right',
             },
             {
-              title: 'Counted Date',
-              dataIndex: 'countedDate',
-              valueType: 'date',
-            },
-            {
-              title: 'Status',
-              render: (_, r) => (
-                <Tag
-                  bordered={false}
-                  icon={
-                    r.status == 'Pending' ? (
-                      <SyncOutlined spin />
-                    ) : r.status == 'Rejected' ? (
-                      <CloseCircleOutlined />
-                    ) : (
-                      <CheckCircleOutlined />
-                    )
-                  }
-                  color={
-                    r.status == 'Pending'
-                      ? 'processing'
-                      : r.status == 'Rejected'
-                      ? 'error'
-                      : 'success'
-                  }
-                >
-                  {r.status}
-                </Tag>
-              ),
+              title: 'Amount',
+              dataIndex: 'soldAmount',
+              align: 'right',
+              render: (_, r) => `$ ${numeral(r.soldAmount).format('0,000.000')}`,
+              // valueType: "money",
             },
           ],
         },

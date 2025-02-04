@@ -1,6 +1,6 @@
 import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import PageWrapper from '@/components/PageWrapper';
-import { formatDate } from '@/pages/utils';
+import { displayDate } from '@/pages/utils';
 import { simpleRequestActions } from '@/services/model';
 import { CheckCircleOutlined, CloseCircleOutlined, SyncOutlined } from '@ant-design/icons';
 import { ActionType } from '@ant-design/pro-components';
@@ -8,7 +8,6 @@ import { useAccess, useQuery } from '@umijs/max';
 import { Tag } from 'antd';
 import numeral from 'numeral';
 import React, { useRef, useState } from 'react';
-import { formatCurrency } from '../../sale';
 import SettlementMethodDetail from './Detail';
 import { SettlementMethodAdvanceSearch, SettlementMethodDetailDTO } from './data';
 import { SettlementMethodServicAPI } from './service';
@@ -42,7 +41,7 @@ const SettlementMianPage: React.FC<Props> = () => {
       <PageWrapper<SettlementMethodDetailDTO, SettlementMethodAdvanceSearch, {}>
         tabRender={(items) => [
           {
-            tabLabel: `${formatDate(items?.settlementDate)}-${items?.salespersonCode}`,
+            tabLabel: `${displayDate(items?.settlementDate)}-${items?.salespersonCode}`,
             action: 'view',
             tabKey: `${items?.id}`,
             panel: ({ onUpdateTab, onAddTab, onCloseTab, key }) => (
@@ -88,17 +87,17 @@ const SettlementMianPage: React.FC<Props> = () => {
                 valueType: 'date',
                 actionProps: (item) => ({
                   type: 'view',
-                  label: formatDate(item.settlementDate) || 'n/a',
+                  label: displayDate(item.settlementDate) || 'n/a',
                 }),
+              },
+              {
+                title: 'Cashier',
+                dataIndex: 'cashierName',
               },
               {
                 title: 'Salesperson',
                 render: (_, r) =>
                   [r?.salespersonCode, r?.salespersonName].filter((p) => p).join('-'),
-              },
-              {
-                title: 'Cashier Name',
-                dataIndex: 'cashierName',
               },
               {
                 title: 'Status',
@@ -107,18 +106,18 @@ const SettlementMianPage: React.FC<Props> = () => {
                   <Tag
                     bordered={false}
                     icon={
-                      r.status == 'Pending' ? (
+                      r.status === 'Pending' ? (
                         <SyncOutlined spin />
-                      ) : r.status == 'Completed' ? (
+                      ) : r.status === 'Completed' ? (
                         <CheckCircleOutlined />
                       ) : (
                         <CloseCircleOutlined />
                       )
                     }
                     color={
-                      r.status == 'Pending'
+                      r.status === 'Pending'
                         ? 'processing'
-                        : r.status == 'Completed'
+                        : r.status === 'Completed'
                         ? 'success'
                         : 'error'
                     }
@@ -141,7 +140,7 @@ const SettlementMianPage: React.FC<Props> = () => {
                 title: 'Exchange Rate',
                 dataIndex: 'exchangeRate',
                 align: 'right',
-                render: (_, r) => formatCurrency(r.exchangeRate, '៛'),
+                render: (_, r) => `៛ ${numeral(r.exchangeRate).format('0,000')}`,
               },
             ],
           },

@@ -4,8 +4,8 @@ import type { AddressInfo } from '../crm/data';
 import type { LookupData, LookupDataItem } from '../data';
 
 export type SaleServiceName =
-  | 'list-offer-code'
   | 'list-so'
+  | 'list-offer-code'
   | 'find-so'
   | 'new-so'
   | 'save-so'
@@ -462,6 +462,7 @@ export interface EditableStockItem {
   itemName: string;
   itemCode: string;
   uom: string;
+  isBeginning: boolean;
   beginningQty: number;
   quantity: number;
   expiredDate?: moment.Moment;
@@ -477,7 +478,7 @@ export interface ApprovalStockControlDto {
   description?: string;
   referenceNo?: string;
   receivedBy?: string;
-  items?: EditableStockItem[];
+  items?: ApprovalStockItemDto[];
   distributorCode?: string;
 }
 
@@ -528,6 +529,8 @@ export interface ApprovalStockItemDto {
   isSplit: boolean;
   stockCategoryId?: number;
   internalId?: string;
+  pricing?: number;
+  state: string;
 }
 
 export interface SettlementLessDto {
@@ -853,24 +856,6 @@ export interface CustomerPriceGroup {
   id: number;
   code: string;
   description?: string;
-}
-
-export interface OfferCodeInfo {
-  offerCode: string;
-  itemsIds: number[];
-  saleType: string;
-}
-
-export interface OfferCodeParam {
-  soItemId: number;
-  itemId: number;
-  description: string;
-  itemCode: string;
-  quantity: number;
-  type: string;
-  uom: string;
-  offerCode?: string;
-  isChecked: boolean;
 }
 
 export interface SoItem {

@@ -54,6 +54,7 @@ export default (props: Props) => {
       });
       message.success('Report generated successfully.');
     } catch (error) {
+      console.log(error);
       message.error('Failed to generated report.');
     } finally {
       setLoading(false);

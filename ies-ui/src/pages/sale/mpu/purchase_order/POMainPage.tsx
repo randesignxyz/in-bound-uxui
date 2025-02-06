@@ -118,7 +118,7 @@ const POMainPage: React.FC<Props> = () => {
             panel: ({ onAddTab, onUpdateTab, key }) => (
               <MpuPoDetail
                 id={items?.id}
-                onEdit={() => onUpdateTab?.('edit', undefined, undefined, key)}
+                onEdit={(po?: PurchaseOrderDTO) => onUpdateTab?.('edit', undefined, undefined, key)}
                 onAdd={() => onAddTab?.('add', undefined, key)}
               />
             ),

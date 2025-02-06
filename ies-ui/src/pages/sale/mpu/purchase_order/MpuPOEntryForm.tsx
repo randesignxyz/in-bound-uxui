@@ -39,7 +39,7 @@ interface Amount {
   discountAmount?: number;
   totalAmount?: number;
 }
-const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props }) => {
+const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
   const requestActions = simpleRequestActions();
   const [form] = useForm<PurchaseOrderCreate>();
   const services = PurChaseRequestAPIService(requestActions);
@@ -65,14 +65,21 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
         totalAmoun: o.pricing * o.quantity || 0,
       }))
       .reduce((p, c) => ({ totalAmoun: p.totalAmoun + c.totalAmoun || 0 }));
-    result
-      ? setAmount((t) => ({
-          ...t,
-          totalAmount: result.totalAmoun,
-          grantAmount: result.totalAmoun,
-          discountAmount: 0,
-        }))
-      : { totalAmount: 0, discountAmount: 0, grantAmount: 0 };
+
+    setAmount({
+      totalAmount: result ? result.totalAmoun : 0,
+      grantAmount: result ? result.totalAmoun : 0,
+      discountAmount: 0,
+    });
+
+    // result
+    //   ? setAmount((t) => ({
+    //       ...t,
+    //       totalAmount: result.totalAmoun,
+    //       grantAmount: result.totalAmoun,
+    //       discountAmount: 0,
+    //     }))
+    //   : { totalAmount: 0, discountAmount: 0, grantAmount: 0 };
   };
   const loadData = async () => {
     await services.fetchData(id).then((o) => {
@@ -98,15 +105,20 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
     });
   };
   useEffect(() => {
-    id && loadData();
+    if (id) {
+      loadData();
+    }
   }, []);
 
   useEffect(() => {
-    dataSourceItems?.length && onTotalAmoun?.();
+    if (dataSourceItems?.length) {
+      onTotalAmoun?.();
+    }
   }, [dataSourceItems]);
 
-  const onFormvalueChanged = async ({ distributorId }) => {
-    if (distributorId) {
+  const onFormvalueChanged = async (changeValues: any) => {
+    const { distributorId } = changeValues;
+    if ('distributorId' in changeValues) {
       const dd = distributorId?.split(',')?.[0];
 
       const data = await CrmServiceAPI(requestActions).listAddressByCustomer({
@@ -235,7 +247,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
               />
               <ProFormDependency dependencies={['addressId']} name={['addressId']}>
                 {({ addressId }) => {
-                  const address = addressList?.find((item) => item.id == addressId);
+                  const address = addressList?.find((item) => item.id === addressId);
 
                   const aa = [
                     { name: 'Street', value: address?.streetNo },
@@ -333,6 +345,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
             onlyAddOneLineAlertMessage: '',
             actionRender: (row, config) => [
               <Button
+                key={'bnt-delete'}
                 icon={<DeleteOutlined />}
                 type="link"
                 danger
@@ -363,7 +376,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
                 };
               },
               valueType: 'select',
-              formItemProps: (form, config) => {
+              formItemProps: () => {
                 return {
                   rules: [{ required: true }],
                 };
@@ -378,7 +391,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
                 return data.items.map((p) => ({
                   value: p.id,
                   label: p.name,
-                  disabled: dataSourceItems?.some((ot) => ot.itemId == p.id),
+                  disabled: dataSourceItems?.some((ot) => ot.itemId === p.id),
                 }));
               },
             },
@@ -485,7 +498,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type, ...props })
             <ProDescriptions<Amount>
               column={1}
               editable={{
-                onSave: (_, record, originRow, __) => {
+                onSave: (_, record, originRow) => {
                   const total =
                     (originRow.grantAmount as number) -
                     ((originRow.grantAmount as number) * (record.discountAmount || 0)) / 100;

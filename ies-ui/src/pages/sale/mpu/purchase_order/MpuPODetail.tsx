@@ -4,11 +4,12 @@ import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   DollarOutlined,
+  EditOutlined,
   EnvironmentOutlined,
   SyncOutlined,
 } from '@ant-design/icons';
 import { ProDescriptions, ProTable } from '@ant-design/pro-components';
-import { Card, Flex, Row, Space, Table, Tag, Typography } from 'antd';
+import { Button, Card, Flex, Row, Space, Table, Tag, Typography } from 'antd';
 import { Col } from 'antd/lib';
 import numeral from 'numeral';
 import { useEffect, useState } from 'react';
@@ -18,7 +19,7 @@ import { PurchaseOrderServiceAPI } from './services';
 
 interface Props {
   id?: number;
-  onEdit?: () => void;
+  onEdit?: (po?: PurchaseOrderDTO) => void;
   onAdd?: () => void;
 }
 
@@ -39,10 +40,25 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
     }
   }, [id]);
 
+  const onEditEvent = () => {
+    if (onEdit) {
+      onEdit(dataSource);
+    }
+  };
+
   return (
     <>
       <Flex vertical gap={18}>
-        <Card size="small" title="Purchase Order">
+        <Card
+          size="small"
+          title="Purchase Order"
+          extra={
+            <Button type="link" onClick={onEditEvent}>
+              <EditOutlined />
+              Edit
+            </Button>
+          }
+        >
           <Row gutter={12} style={{ marginLeft: 20 }}>
             <Col md={8} xs={24}>
               <ProDescriptions
@@ -209,7 +225,7 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
             </Col>
           </Row> */}
         </Card>
-        <Card title="Purcase Order Item" size="small">
+        <Card title="Purchase Order Item" size="small">
           <ProTable<PurchaseRequestItemCreate>
             search={false}
             options={false}
@@ -332,6 +348,13 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
             </Card>
           </>
         )}
+        <Card size="small">
+          <Flex justify="flex-end">
+            <Button type="primary" onClick={onEditEvent}>
+              Edit
+            </Button>
+          </Flex>
+        </Card>
         {/* <Card size='small'>
                     <Flex
                         justify='space-between'

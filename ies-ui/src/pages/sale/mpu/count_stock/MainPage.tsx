@@ -11,7 +11,7 @@ import { useRef, useState } from 'react';
 import CountStockDetail from './Detail';
 import { CountStockAdvanceSearch, StockCountDto } from './data';
 import { CountStockServiceAPI } from './service';
-interface Props { }
+interface Props {}
 
 const CountStockMainPage: React.FC<Props> = () => {
   const requestActions = simpleRequestActions();
@@ -35,7 +35,7 @@ const CountStockMainPage: React.FC<Props> = () => {
           tabLabel: `${items?.countedNo}`,
           action: 'view',
           tabKey: `sc-${items?.id}`,
-          panel: ({ }) => <CountStockDetail id={items?.id} />,
+          panel: ({}) => <CountStockDetail id={items?.id} />,
         },
       ]}
       listView={{
@@ -105,8 +105,8 @@ const CountStockMainPage: React.FC<Props> = () => {
                     r.status === 'Pending'
                       ? 'processing'
                       : r.status === 'Rejected'
-                        ? 'error'
-                        : 'success'
+                      ? 'error'
+                      : 'success'
                   }
                 >
                   {r.status}

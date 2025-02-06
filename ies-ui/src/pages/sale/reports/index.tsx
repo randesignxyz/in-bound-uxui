@@ -5,6 +5,7 @@ import DSDLeadReport from './DSDLeadReport';
 import DSDSalesInvoiceReport from './DSDSalesInvoiceReport';
 import PurchaseOrderReport from './PurchaseOrderReport';
 import { DSDReportAPI } from './service';
+import SaleOrderReport from './SaleOrderReport';
 
 interface Props {
   reportName?: ReportName;
@@ -12,8 +13,11 @@ interface Props {
 }
 
 export type ReportName =
-  // | 'sale-order-report'
-  'dsd-reports' | 'dsd-lead-report' | 'visit-report' | 'purchase-order-reports';
+  | 'sale-order-report'
+  | 'dsd-reports'
+  | 'dsd-lead-report'
+  | 'visit-report'
+  | 'purchase-order-reports';
 
 const Reports: React.FC<Props> = ({ reportName, onClose }) => {
   const requestActions = simpleRequestActions();
@@ -29,12 +33,12 @@ const Reports: React.FC<Props> = ({ reportName, onClose }) => {
 
   return (
     <div>
-      {/* <SaleOrderReport
+      <SaleOrderReport
         title="Sale Order Report"
         width="800px"
         open={reportName === 'sale-order-report'}
         onCancel={onClose}
-      /> */}
+      />
       <DSDSalesInvoiceReport
         salespersons={salesperson}
         title="Generate DSD Reports"

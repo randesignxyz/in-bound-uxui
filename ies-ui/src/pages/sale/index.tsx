@@ -24,15 +24,8 @@ import FOC from '@/assets/free.png';
 
 import type { ListMenuItem } from '@/components/ListMenu';
 import ListMenuComp from '@/components/ListMenu';
-import {
-  BarChartOutlined,
-  PlusCircleOutlined,
-  ScheduleOutlined,
-  ShoppingOutlined,
-  TagsOutlined,
-  TeamOutlined,
-} from '@ant-design/icons';
-import { Divider, Menu, message } from 'antd';
+import { BarChartOutlined, PlusCircleOutlined, ShoppingOutlined, TagsOutlined, TeamOutlined } from '@ant-design/icons';
+import { Divider, message } from 'antd';
 import { useState } from 'react';
 import { history, useAccess } from 'umi';
 import type { ReportName } from './reports';
@@ -97,40 +90,6 @@ export default () => {
       type,
     } as MenuItem;
   };
-
-  const soMenu = (
-    <Menu
-      onClick={(info) => {
-        switch (info.key) {
-          case 'newSaleOrder':
-            history.push(`${SalePaths.so}/create`);
-            break;
-          case 'sale-order-report':
-            setReport('sale-order-report');
-            break;
-          default:
-            message.error('Something went wrong.');
-        }
-        return undefined;
-      }}
-      items={[
-        getItem(
-          'Actions',
-          'action-menu',
-          null,
-          [getItem('New SO', 'newSaleOrder', <PlusCircleOutlined />)],
-          'group',
-        ),
-        getItem(
-          'Reports',
-          'report-menu',
-          null,
-          [getItem('Sale Order Report', 'sale-order-report', <BarChartOutlined />)],
-          'group',
-        ),
-      ]}
-    />
-  );
 
   const stockMenuItems: ListMenuItem[] = [
     {
@@ -235,7 +194,7 @@ export default () => {
             [
               getItem('Export Leads', 'lead-reports', <TeamOutlined />),
               getItem('Sales Invoice Report', 'dsd-reports', <TagsOutlined />),
-              getItem('Visit Report', 'visit-reports', <ScheduleOutlined />),
+              // getItem('Visit Report', 'visit-reports', <ScheduleOutlined />),
               getItem('Purchase Order Report', 'purchase-order-reports', <ShoppingOutlined />),
             ],
             'group',
@@ -354,67 +313,6 @@ export default () => {
       description: '',
       icon: FOC,
       link: `${MPUPath.mpuFOC}/list`,
-    },
-    // {
-    //   id: 'mpu_stock',
-    //   name: 'MPU Stock',
-    //   description: '',
-    //   link: `${MPUPath.mpuStock}/list`,
-    //   icon: stockIcon,
-    //   visible: access.canAccessViewMpu,
-    // },
-    // {
-    //   id: 'mpu_count_stock',
-    //   name: 'Daily Count Stock',
-    //   description: '',
-    //   link: `${MPUPath.mpuCountStock}/list`,
-    //   icon: complainIcon,
-    //   visible: access.canAccessViewMpu,
-    // },
-
-    // {
-    //   id: 'mpu_report',
-    //   name: 'MPU Report',
-    //   description: '',
-    //   link: `${MPUPath.mpuReport}/list`,
-    //   icon: reportIcon,
-    //   visible: access.canAccessViewMpu,
-    // },
-  ];
-
-  // const retailerMenuItems = [
-  //   {
-  //     id: 'retailer',
-  //     name: 'Retailer',
-  //     description: 'Retailer Back End.',
-  //     link: `${SalePaths.retailer}`,
-  //     icon: orderItemIcon,
-  //   },
-
-  // {
-  //   id: 'customer_retailer',
-  //   name: 'Customer',
-  //   description: 'Customers had order from retailer app.',
-  //   link: `${SalePaths.customer}/list`,
-  //   icon: customerIcon,
-  // },
-  // {
-  //   id: 'user_retailer',
-  //   name: 'User',
-  //   description: 'Users for retailer app.',
-  //   link: `${SalePaths.user}/list`,
-  //   icon: userIcon,
-  // },
-
-  // ];
-  const purchaseOrder = [
-    {
-      id: 'rsmRequest',
-      name: 'Purchase Order',
-      description: 'Rsm make Purchase Order for MMA',
-      link: `${SalePaths.purchaseOrder}/list`,
-      icon: purchaseOrderIcon,
-      // visible: access.canAccessRSMRequestToMPU,
     },
   ];
 

@@ -94,7 +94,7 @@ export default (props: Props) => {
               />
               <ProFormSelect
                 mode="multiple"
-                label="Salesperson"
+                label="Salespersons"
                 name="salespersonCode"
                 width="md"
                 showSearch

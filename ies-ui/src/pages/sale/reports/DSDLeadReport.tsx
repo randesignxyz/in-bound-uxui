@@ -6,7 +6,6 @@ import { ProForm, ProFormSelect } from '@ant-design/pro-components';
 import { Card, Spin, message } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { useState } from 'react';
-import { DSDReportAPI } from './service';
 
 // const layout = {
 //   labelCol: { span: 8 },
@@ -14,7 +13,7 @@ import { DSDReportAPI } from './service';
 // };
 
 interface Props extends FormModalProps {
-  salespersons?: SalesTeamWorkLess[];
+  salespersons: SalesTeamWorkLess[];
 }
 
 export default (props: Props) => {
@@ -59,18 +58,17 @@ export default (props: Props) => {
             <ProForm submitter={false} layout="horizontal" form={form}>
               <ProFormSelect
                 mode="multiple"
-                label="Salesperson"
+                label="Salespersons"
                 name="salespersonCode"
                 // width="md"
                 showSearch
                 debounceTime={500}
-                request={async () => {
-                  const data = await DSDReportAPI(requestActions).salespersonList();
-                  return data.map((p) => ({
-                    value: p.salespersonCode,
-                    label: p.salespersonCode.concat(' - ', p.salespersonName),
-                  }));
-                }}
+                options={props.salespersons.map((it) => {
+                  return {
+                    value: it.salespersonCode,
+                    label: it.salespersonCode.concat(' - ', it.salespersonName),
+                  };
+                })}
                 allowClear
               />
             </ProForm>

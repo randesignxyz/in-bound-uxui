@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import DSDLeadReport from './DSDLeadReport';
 import DSDSalesInvoiceReport from './DSDSalesInvoiceReport';
 import PurchaseOrderReport from './PurchaseOrderReport';
-import { DSDReportAPI } from './service';
 import SaleOrderReport from './SaleOrderReport';
+import VisitReports from './VisitReports';
+import { DSDReportAPI } from './service';
 
 interface Props {
   reportName?: ReportName;
@@ -33,6 +34,13 @@ const Reports: React.FC<Props> = ({ reportName, onClose }) => {
 
   return (
     <div>
+      <VisitReports
+        salespersons={salesperson}
+        title="Visit Outlets"
+        width="800px"
+        open={reportName === 'visit-report'}
+        onCancel={onClose}
+      />
       <SaleOrderReport
         title="Sale Order Report"
         width="800px"

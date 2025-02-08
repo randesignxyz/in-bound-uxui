@@ -158,7 +158,7 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
 
   donwloadDSDVisitReport: downloadReport<{
     visitedDates?: moment.Moment[];
-    salespersonCodes?: string[];
+    salespersonCode?: string[];
   }>(actions),
 
   fetchSoSummary: () => find<SoSummary>(ReqParams.fetchSoSummary())(actions),

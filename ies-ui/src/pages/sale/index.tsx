@@ -24,7 +24,14 @@ import FOC from '@/assets/free.png';
 
 import type { ListMenuItem } from '@/components/ListMenu';
 import ListMenuComp from '@/components/ListMenu';
-import { BarChartOutlined, PlusCircleOutlined, ShoppingOutlined, TagsOutlined, TeamOutlined } from '@ant-design/icons';
+import {
+  BarChartOutlined,
+  PlusCircleOutlined,
+  ScheduleOutlined,
+  ShoppingOutlined,
+  TagsOutlined,
+  TeamOutlined,
+} from '@ant-design/icons';
 import { Divider, message } from 'antd';
 import { useState } from 'react';
 import { history, useAccess } from 'umi';
@@ -194,7 +201,7 @@ export default () => {
             [
               getItem('Export Leads', 'lead-reports', <TeamOutlined />),
               getItem('Sales Invoice Report', 'dsd-reports', <TagsOutlined />),
-              // getItem('Visit Report', 'visit-reports', <ScheduleOutlined />),
+              getItem('Visit Report', 'visit-reports', <ScheduleOutlined />),
               getItem('Purchase Order Report', 'purchase-order-reports', <ShoppingOutlined />),
             ],
             'group',

@@ -91,13 +91,18 @@ const SettlementMianPage: React.FC<Props> = () => {
                 }),
               },
               {
-                title: 'Cashier',
-                dataIndex: 'cashierName',
-              },
-              {
                 title: 'Salesperson',
                 render: (_, r) =>
-                  [r?.salespersonCode, r?.salespersonName].filter((p) => p).join('-'),
+                  [r?.salespersonCode, r?.salespersonName].filter((p) => p).join(' - '),
+              },
+              {
+                title: 'P.O Number',
+                render: (_, r) => r.purchaseOrder?.map((e) => e.purchaseOrderCode).join(', '),
+                hidden: role === 'cashier',
+              },
+              {
+                title: 'Cashier',
+                dataIndex: 'cashierName',
               },
               {
                 title: 'Status',

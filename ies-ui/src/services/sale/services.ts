@@ -1,3 +1,4 @@
+import { StatusActionForm } from '@/pages/sale/mpu/settlement/data';
 import type { SortOrder } from 'antd/lib/table/interface';
 import type { Moment } from 'moment';
 import type { ServiceType } from '../API';
@@ -13,7 +14,9 @@ import {
   findPagingService,
   findService,
 } from '../apiGateway';
-import type { LookupDataItem } from '../data';
+import { CustomerItemLess } from '../crm/data';
+import { CrmService } from '../crm/services';
+import type { LookupData, LookupDataItem } from '../data';
 import type {
   AddProductItem,
   ApprovalStockControlDto,
@@ -27,14 +30,19 @@ import type {
   InitTradeOfferParamsType,
   LeadDetail,
   LeadLess,
+  MpuStockControlItemLess,
+  OfferCodeInfo,
   OfferParams,
   PackageOffer,
   PackagesLess,
   ProductItem,
   ProductItemDto,
+  RsmRequestMpuDetail,
   SaleInvoiceLess,
   SaleServiceName,
+  SalesTeamWorkLess,
   SaveProductItem,
+  SaveRsmRequestMpu,
   SaveStockStore,
   SaveTeamWork,
   SettlementLess,
@@ -60,7 +68,6 @@ import type {
   VehicleLess,
   initProductParamsType,
 } from './data';
-import { StatusActionForm } from '@/pages/sale/mpu/settlement/data';
 
 export const SaleService = (serviceName?: SaleServiceName): ServiceType => {
   return {
@@ -134,6 +141,11 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
     soStatus?: string[];
   }>(actions),
 
+  donwloadPOReport: downloadReport<{
+    salespersonCode?: string[];
+    requestedDate?: moment.Moment[];
+  }>(actions),
+
   donwloadDSDReport: downloadReport<{
     reportType: string;
     salespersonCode?: string[];
@@ -170,6 +182,12 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
   closeSo: (id: number, data: CloseIndirectSoParams) => exec(ReqParams.closeSo(id, data))(actions),
 
   findSo: findService<{ id: number }, SoDetail>(SaleService('find-so'), actions),
+
+  listOfferCodes: findAllService<{ id: number }, OfferCodeInfo>(
+    SaleService('list-offer-code'),
+    actions,
+  ),
+
   listAttachments: findAllService<{ id: number }, { id: number; imageId: string }>(
     SaleService('list-attachment'),
     actions,
@@ -442,10 +460,52 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
     actions,
   ),
   findExchangeRate: findService<{}, ExchangeRate>(SaleService('exchange-rate'), actions),
-  findDSDExchangeRate: findService<{}, ExchangeRate>(SaleService('exchange-rate-dsd-only'), actions),
+  findDSDExchangeRate: findService<{}, ExchangeRate>(
+    SaleService('exchange-rate-dsd-only'),
+    actions,
+  ),
 
   pageLead: findPagingService<{ id?: string; sort?: Record<string, SortOrder> }, LeadDetail>(
     SaleService('page-lead'),
+    actions,
+  ),
+
+  // LH: RSM Request
+
+  pageMpu: findPagingService<
+    { searchValue?: string; advanceSearch?: string; sort?: Record<string, SortOrder> },
+    RsmRequestMpuDetail
+  >(SaleService('list-rsm-request-mpu'), actions),
+
+  fetchMpu: findService<{ id: number }, RsmRequestMpuDetail>(
+    SaleService('find-rsm-request-mpu'),
+    actions,
+  ),
+
+  saveMpuRequest: execService<SaveRsmRequestMpu, { data: SaveRsmRequestMpu; message: string }>(
+    SaleService('save-store-request-mpu'),
+    actions,
+  ),
+
+  searchSaleTeamworkByMpu: findAllService<{ searchValue: string }, VehicleLess>(
+    SaleService('list-sale-teamwork-mpu'),
+    actions,
+  ),
+
+  findSaleTeamworkByCode: findAllService<{ code: string }, SalesTeamWorkLess>(
+    SaleService('find-by-salesperson-code'),
+    actions,
+  ),
+
+  searchDistributor: findAllService<{ searchValue: string }, CustomerItemLess>(
+    CrmService('find-distributor'),
+    actions,
+  ),
+
+  fetchPosm: findAllService<{ searchValue: string }, LookupData>(SaleService('sync-posm'), actions),
+
+  listMpuStockDetailItems: findAllService<{ id: number }, MpuStockControlItemLess>(
+    SaleService('list-rsm-request-mpu-item'),
     actions,
   ),
 });

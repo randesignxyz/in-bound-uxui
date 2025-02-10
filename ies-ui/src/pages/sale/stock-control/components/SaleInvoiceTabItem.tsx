@@ -7,9 +7,7 @@ import type {
   ExchangeRate,
   LeadLess,
   SaleInvoiceLess,
-  SaleItem,
   SalesTeamWorkLess,
-  StockControlDetail,
   StockDetailLess,
 } from '@/services/sale/data';
 import { EditOutlined, PlusOutlined } from '@ant-design/icons';
@@ -21,8 +19,8 @@ import { Button, Tag, Tooltip } from 'antd';
 import type { SortOrder } from 'antd/lib/table/interface';
 import numeral from 'numeral';
 import { useEffect, useRef } from 'react';
-import { Model } from '../model';
 import SaleInvoiceFormModal from '../SaleInvoiceFormModal';
+import { Model } from '../model';
 
 type Props = {
   forceUpdate: number;
@@ -33,7 +31,7 @@ type Props = {
     // saleTypes?: LookupData[];
     typeProductItems?: { type: number; value: LookupDataItem[] }[];
     //salespersonCode?: string;
-    owner?:SalesTeamWorkLess;
+    owner?: SalesTeamWorkLess;
     exchangeRate?: ExchangeRate;
     salespersonList?: SalesTeamWorkLess[];
     loading: boolean;
@@ -83,22 +81,24 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
   };
 
   const getProductItems = () => {
-    const result =data.listStockDetailItem?.flatMap((it) => {
+    const result =
+      data.listStockDetailItem?.flatMap((it) => {
         if (it.typeId !== 133) {
-          return it.items
-            // ?.filter((it1) => it1.beginningQty + it1.quantity > it1.soldQty)
-            .flatMap((it1) => ({
-              id: it1.itemId,
-              name: it1.itemName,
-              code: it1.itemCode,
-              qty: it1.quantity,
-              price: 3.75,
-              batchNo:it1.batchNo
-            }));
+          return (
+            it.items
+              // ?.filter((it1) => it1.beginningQty + it1.quantity > it1.soldQty)
+              .flatMap((it1) => ({
+                id: it1.itemId,
+                name: it1.itemName,
+                code: it1.itemCode,
+                qty: it1.quantity,
+                price: 3.75,
+                batchNo: it1.batchNo,
+              }))
+          );
         } else return [];
       }) || [];
 
-      
     // const items: SaleItem[] = [];
 
     // result.reduce((res, value) => {
@@ -116,9 +116,8 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
     //   return 0;
     // });
 
-    return result
+    return result;
   };
-
 
   const getTypes = () => {
     return data.typeProductItems?.flatMap((it) => {
@@ -143,26 +142,35 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
         rowKey={'id'}
         columns={[
           { title: '#', dataIndex: 'index', key: 'key' },
-          {  title: 'Batch No',
+          {
+            title: 'Batch No',
             render: (_, r) => {
               return r.batchNo === 'n/a' ? '-' : r.batchNo;
-            }, },
+            },
+          },
           { title: 'Code', dataIndex: 'itemCode' },
           { title: 'Description', dataIndex: 'itemName' },
           { title: 'Quantity', dataIndex: 'quantity' },
           { title: 'UOM', dataIndex: 'uom' },
           {
+            title: 'Type',
+            render: (_, r) => {
+              return <Tag color={r.itemType === 'FOC' ? 'error' : 'success'}>{r.itemType}</Tag>;
+              // return r.itemType;
+            },
+          },
+          {
             title: 'Sale Price',
             align: 'right',
             render: (_, r) => {
-              return `$ ${numeral(r.unitPrice).format('0,0.00')}`;
+              return `$ ${numeral(r.unitPrice).format('0,0.000')}`;
             },
           },
           {
             title: 'Amount',
             align: 'right',
             render: (_, r) => {
-              return `$ ${numeral(r.quantity * r.unitPrice ).format('0,0.00')}`;
+              return `$ ${numeral(r.quantity * r.unitPrice).format('0,0.000')}`;
             },
           },
           // {
@@ -215,7 +223,7 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
   };
 
   console.log(data);
-  
+
   return (
     <>
       <ProTable<SaleInvoiceLess, { stockControlId: number; searchValue?: string }>
@@ -260,9 +268,9 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
             title: 'Amount',
             dataIndex: 'amount',
             align: 'right',
-            valueType:"money",
+            valueType: 'money',
             render: (_, r) => {
-              return `$ ${numeral(r.amount).format('0,0.00')}`;
+              return `$ ${numeral(r.amount).format('0,0.000')}`;
             },
           },
 
@@ -280,10 +288,7 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
                   : 'warning';
               return (
                 <span>
-                  <Tag 
-                  color={color}
-                  
-                  >{r.status}</Tag>
+                  <Tag color={color}>{r.status}</Tag>
                 </span>
               );
             },
@@ -366,7 +371,7 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
           salespersonList: data.salespersonList,
           regionList: data.regionList,
           locations: data.locations,
-          owner:data.owner,
+          owner: data.owner,
           saleItems: getProductItems(),
           typeProductItems: getTypes(),
           detail: saleInvoiceModal.record,

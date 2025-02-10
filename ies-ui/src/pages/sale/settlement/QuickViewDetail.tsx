@@ -61,6 +61,7 @@ const QuickViewDetail: React.FC<Prop> = ({ settlement, soldExchangeRate, ...prop
           size={'small'}
           style={{ backgroundColor: '#EEE' }}
           key={'id'}
+          ghost
           rowKey={(r) => {
             return r.id!!;
           }}
@@ -141,6 +142,7 @@ const QuickViewDetail: React.FC<Prop> = ({ settlement, soldExchangeRate, ...prop
         maxWidth: window.innerWidth * 0.9,
         minWidth: 500,
       }}
+      submitter={false}
     >
       <Flex gap={10} vertical>
         <Card size='small'>

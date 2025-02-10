@@ -1,16 +1,15 @@
-import { useAccess } from 'umi';
+import { CloseIndirectSoParams } from '@/services/sale/data';
 import { CheckOutlined, CloudUploadOutlined, EditOutlined, StopOutlined } from '@ant-design/icons';
-import { Button, Flex, Form, message, Modal, Spin } from 'antd';
+import { PageContainer } from '@ant-design/pro-components';
+import { Button, Modal, Spin, message } from 'antd';
 import React, { useEffect } from 'react';
+import { useAccess } from 'umi';
 import { Model } from '../../model';
 import CancelSo from './CancelSo';
+import CloseSo from './CloseSo';
+import OrderFormView from './OrderFormView';
 import SapPosting from './SapPosting';
 import SoFormView from './SoFormView';
-import CloseSo from './CloseSo';
-import { CloseIndirectSoParams } from '@/services/sale/data';
-import { PageContainer, ProForm } from '@ant-design/pro-components';
-import OrderFormView from './OrderFormView';
-
 
 interface Props {
   id?: number;
@@ -26,7 +25,10 @@ const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
   const access = useAccess();
   useEffect(() => {
     try {
-      id && actions.fetchSo(id);
+      if (id) {
+        actions.fetchSo(id);
+        actions.fetchOfferCodes(id);
+      }
     } catch {
       message.error('Failed to load so.');
     }
@@ -74,6 +76,20 @@ const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
         }
       },
     });
+  };
+
+  const getOfferItems = () => {
+    const checking = (id: number) =>
+      state.data?.offerCodes?.reduce((o, e) => {
+        if (e.itemsIds.findIndex((it) => it === id) > -1) o.push(e.offerCode);
+        return o;
+      }, new Array<string>());
+
+    return (
+      state.data?.soDetail?.items?.filter(
+        (e) => e.type !== 'STD' && checking(e.itemId)!.length > 0,
+      ) ?? []
+    );
   };
 
   const onCloseSoHandler = (data: CloseIndirectSoParams) => {
@@ -137,33 +153,38 @@ const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
         <CheckOutlined /> Close
       </Button>
     ),
-  ]
+  ];
 
   return (
     <Spin spinning={state.loading}>
-
-      {openInTab ? <>
-        <OrderFormView actionButtons={buttons} soDetail={state.data?.soDetail} />
-        <SoFormView data={state.data?.soDetail} />
-      </> : <PageContainer
-        breadcrumb={undefined}
-        title={!openInTab && "PO#"}
-        subTitle={!openInTab && state.data?.soDetail?.docEntryNum}
-        content={<OrderFormView soDetail={state.data?.soDetail} />}
-        extra={
-          access.canCreateEditSo && !openInTab &&
-          ['Pending', 'Failed'].some((it) => it === state.data?.soDetail?.status) && buttons
-        }
-      >
-        <SoFormView data={state.data?.soDetail} />
-
-      </PageContainer>}
-
+      {openInTab ? (
+        <>
+          <OrderFormView actionButtons={buttons} soDetail={state.data?.soDetail} />
+          <SoFormView data={state.data?.soDetail} />
+        </>
+      ) : (
+        <PageContainer
+          breadcrumb={undefined}
+          title={!openInTab && 'PO#'}
+          subTitle={!openInTab && state.data?.soDetail?.docEntryNum}
+          content={<OrderFormView soDetail={state.data?.soDetail} />}
+          extra={
+            access.canCreateEditSo &&
+            !openInTab &&
+            ['Pending', 'Failed'].some((it) => it === state.data?.soDetail?.status) &&
+            buttons
+          }
+        >
+          <SoFormView data={state.data?.soDetail} />
+        </PageContainer>
+      )}
 
       <SapPosting
         open={modals.isVisible('sap-posting')}
         onCancel={() => modals.hideModal('sap-posting')}
         onPosting={onSapPostingHandler}
+        items={getOfferItems() ?? []}
+        offerCodes={state.data?.offerCodes ?? []} //
       />
       <CancelSo
         open={modals.isVisible('cancel-so')}

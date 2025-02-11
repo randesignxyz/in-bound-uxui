@@ -332,11 +332,11 @@ export default () => {
       {(access.canAcessStockControlMenuItem ||
         access.canAccessSettlementMenuItem ||
         access.canAccessARMenuItem) && (
-          <>
-            <Divider />
-            <ListMenuComp items={stockMenuItems} />
-          </>
-        )}
+        <>
+          <Divider />
+          <ListMenuComp items={stockMenuItems} />
+        </>
+      )}
       {access.canAccessViewMpu && (
         <>
           <Divider plain orientation="left">

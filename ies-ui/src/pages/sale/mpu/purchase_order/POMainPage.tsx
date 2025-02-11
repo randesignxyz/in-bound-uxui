@@ -56,7 +56,7 @@ const POMainPage: React.FC<Props> = () => {
       label: 'Reject',
       danger: true,
       itemIcon: <CloseCircleOutlined />,
-      disabled: items.status == 'Pending' ? false : true,
+      disabled: items.status === 'Pending' ? false : true,
       onClick: () => {
         Modal.confirm({
           title: 'Reject Purchase',

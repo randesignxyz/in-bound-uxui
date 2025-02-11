@@ -158,7 +158,7 @@ const MMAApproval: React.FC<Props> = ({ data, onSave, ...props }) => {
   useEffect(() => {
     if (!props.open) return;
     onResetActionHandler();
-    return () => { };
+    return () => {};
   }, [props.open]);
 
   const disabledButton = useCallback(() => {

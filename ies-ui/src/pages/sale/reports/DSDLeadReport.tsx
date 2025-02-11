@@ -4,7 +4,6 @@ import { SalesTeamWorkLess } from '@/services/sale/data';
 import { SaleServiceAPI } from '@/services/sale/services';
 import { ProForm, ProFormSelect } from '@ant-design/pro-components';
 import { Card, Spin, message } from 'antd';
-import { Card, Spin, message } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { useState } from 'react';
 
@@ -57,23 +56,22 @@ export default (props: Props) => {
         <Spin spinning={loading}>
           <Card>
             <ProForm submitter={false} layout="horizontal" form={form}>
-              <ProForm submitter={false} layout="horizontal" form={form}>
-                <ProFormSelect
-                  mode="multiple"
-                  label="Salespersons"
-                  name="salespersonCode"
-                  // width="md"
-                  showSearch
-                  debounceTime={500}
-                  options={props.salespersons.map((it) => {
-                    return {
-                      value: it.salespersonCode,
-                      label: it.salespersonCode.concat(' - ', it.salespersonName),
-                    };
-                  })}
-                  allowClear
-                />
-              </ProForm>
+              <ProFormSelect
+                mode="multiple"
+                label="Salespersons"
+                name="salespersonCode"
+                // width="md"
+                showSearch
+                debounceTime={500}
+                options={props.salespersons.map((it) => {
+                  return {
+                    value: it.salespersonCode,
+                    label: it.salespersonCode.concat(' - ', it.salespersonName),
+                  };
+                })}
+                allowClear
+              />
+            </ProForm>
           </Card>
         </Spin>
       </FormModalComp>

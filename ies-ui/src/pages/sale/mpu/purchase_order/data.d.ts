@@ -1,42 +1,77 @@
 import moment from 'moment';
 import { PurchaseRequestDTO, PurchaseRequestItemCreate } from '../request/data';
-import moment from 'moment';
-import { PurchaseRequestDTO, PurchaseRequestItemCreate } from '../request/data';
 
 interface PurchaseOrderCreate {
   id?: number;
-  purchaseRequestId: number;
-  purchaseRequestNo: string;
-  referenceNumber?: string;
+  assignedTo: string;
   purchaseOrderDate: string;
-  grantAmount: number;
-  discountAmount: number;
-  totalAmount: number;
-
+  latitude?: string;
+  longitude?: string;
+  items?: PurchaseRequestItemCreate[];
+  distributorId: string;
+  address?: string;
+  addressId?: number;
+  remark?: string;
 }
 
+interface PurchaseOrderDtoCreate {
+  id?: number;
+  assignedTo: string;
+  assignedToCode: string;
+  purchaseOrderDate: moment.Moment;
+
+  latitude?: string;
+  longitude?: string;
+
+  distributorId: string;
+  distributorCode: string;
+  distributorName: string;
+  address?: string;
+  addressId?: number;
+  remark?: string;
+
+  grantAmount?: number;
+  discountAmount?: number;
+  totalAmount?: number;
+  items?: PurchaseRequestItemCreate[];
+}
 
 interface PurchaseOrderDTO {
   id: number;
+  purchaseOrderCode?: string;
   purchaseRequestId: number;
-  purchaseRequestNo: string;
+  requestedCode: string;
   referenceNumber?: string;
-  purchaseOrderDate: string;
+  //   purchaseOrderDate: string;
+
+  requestedDate?: moment.Moment;
+  purchaseOrderDate?: moment.Moment;
   // ownerBy:string;
   // ownerCode:string;
+  requestedBy: string;
+  assignedTo?: string;
+  assignedToCode?: string;
+
   grantAmount: number;
   discountAmount: number;
   totalAmount: number;
-  status: "pending" | "rejected" | "paid",
+  status: 'Pending' | 'Rejected' | 'Paid';
   items?: PurchaseRequestItemCreate[];
-  purchaseRequest: PurchaseRequestDTO
+  purchaseRequest: PurchaseRequestDTO;
+  requestedCode: string;
+  distributorCode?: string;
+  distributorName?: string;
+  distributorPhone?: string;
+  distributorId?: number;
+  latitude?: string;
+  longitude?: string;
+  addressId?: number;
+  address?: string;
+  remark?: string;
+  foc?: { qty: number; itemName: string; itemCode: string; uom?: string }[];
 }
 
-
-interface PurchaseOrderItem extends PurchaseRequestItemCreate {
-  // purchaseOrderId:number;
-  // map(arg0: (r: any, index: any) => any): import("react").SetStateAction<PurchaseRequestItemCreate[] | undefined>;
-}
+type PurchaseOrderItem = PurchaseRequestItemCreate;
 // id:number;
 // itemId:number;
 // itemName:string;
@@ -57,4 +92,3 @@ interface IdRemarkParam {
   id: number;
   remark?: string;
 }
-

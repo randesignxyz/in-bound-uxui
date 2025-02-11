@@ -255,6 +255,14 @@ export default [
     access: 'canAccessCrmMenuItem',
     component: './crm/gratis',
   },
+  {
+    path: '/crm/gratis-config/:view/*',
+    name: 'gratisConfig',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessCrmMenuItem',
+    component: './crm/gratis-config',
+  },
   /**********Pro>>**************/
 
   /**********<<HRM**************/

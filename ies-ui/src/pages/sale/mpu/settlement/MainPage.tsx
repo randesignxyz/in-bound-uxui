@@ -11,7 +11,7 @@ import React, { useRef, useState } from 'react';
 import SettlementMethodDetail from './Detail';
 import { SettlementMethodAdvanceSearch, SettlementMethodDetailDTO } from './data';
 import { SettlementMethodServicAPI } from './service';
-interface Props {}
+interface Props { }
 
 const SettlementMianPage: React.FC<Props> = () => {
   const access = useAccess();
@@ -21,10 +21,10 @@ const SettlementMianPage: React.FC<Props> = () => {
   const role = access.canAccessAllMenuDSD
     ? 'sale_admin'
     : access.canAccessTabWarehouse
-    ? 'warehouse'
-    : access.canAccessTabCashier
-    ? 'cashier'
-    : 'admin';
+      ? 'warehouse'
+      : access.canAccessTabCashier
+        ? 'cashier'
+        : 'admin';
   const [filter, setFilter] = useState<TableViewSearchParams<SettlementMethodAdvanceSearch>>({
     criteria: { advanceSearch: { status: 'ALL', type: role } },
   });
@@ -123,8 +123,8 @@ const SettlementMianPage: React.FC<Props> = () => {
                       r.status === 'Pending'
                         ? 'processing'
                         : r.status === 'Completed'
-                        ? 'success'
-                        : 'error'
+                          ? 'success'
+                          : 'error'
                     }
                   >
                     {r.status}

@@ -984,28 +984,11 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_NCM_REQUEST_CRITERIA_EXPORT_REPORT'].some((it) => it === item),
       ) || false,
-    /* LH: PURCHASE ORDER MMA  */
-    canAccessRSMRequestToMPU:
+    canAccessGratisConfig:
       currentUser?.authorities.some((item) =>
-        [
-          'ROLE_SALE_ADMIN',
-          'ROLE_SALE_ADMIN',
-          'ROLE_MPU_LEADER',
-          'ROLE_ACTIVATION_LEADER',
-          'ROLE_CASHIER',
-          'ROLE_CRM_ADMIN',
-          'ROLE_CRM_SALE_ADMIN',
-          'ROLE_DEVELOPER',
-          'ROLE_MPU',
-          'ROLE_RETAILER_APP',
-          'ROLE_SALESPERSON',
-          'ROLE_VAN_SALE_LEADER',
-          'ROLE_VAN_SALES',
-          'ROLE_WHAREHOUSE'
-        ].some((it) => it === item)
+        ['ROLE_ADMIN', 'ROLE_CRM_GRATIS_CONFIG'].some(
+          (it) => it === item,
+        ),
       ) || false,
-
-    canCreateEditMpuRequest: true
-    /* LH : END */
   };
 }

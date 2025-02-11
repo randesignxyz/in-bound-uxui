@@ -1,6 +1,21 @@
-import type moment from 'moment';
+import { StatusActionForm } from '@/pages/sale/mpu/settlement/data';
+import type { SortOrder } from 'antd/lib/table/interface';
 import type { Moment } from 'moment';
-import type { AddressInfo } from '../crm/data';
+import type { ServiceType } from '../API';
+import type { RequestActions, ServiceApiType } from '../apiGateway';
+import {
+  downloadReport,
+  exec,
+  execService,
+  find,
+  findAll,
+  findAllService,
+  findMultiService,
+  findPagingService,
+  findService,
+} from '../apiGateway';
+import { CustomerItemLess } from '../crm/data';
+import { CrmService } from '../crm/services';
 import type { LookupData, LookupDataItem } from '../data';
 
 export type SaleServiceName =
@@ -430,14 +445,14 @@ export interface StockControlDetail {
   description?: string;
   isActive: number;
   status:
-    | string
-    | 'pending'
-    | 'canceled'
-    | 'open'
-    | 'approved'
-    | 'closed'
-    | 'settled'
-    | 'count stock';
+  | string
+  | 'pending'
+  | 'canceled'
+  | 'open'
+  | 'approved'
+  | 'closed'
+  | 'settled'
+  | 'count stock';
   owner: SalesTeamWorkLess;
   approvedBy?: SalesTeamWorkLess;
   receivedBy?: SalesTeamWorkLess;
@@ -1228,173 +1243,57 @@ type SavePromotionProposal = Omit<
 
 type ProductItemLess = Omit<
   ProductItem,
-  ['createdBy', 'createdDate', 'lastModifiedBy', 'lastModifiedDate', 'description', 'associatedTo']
->;
+  ProductItemDto,
+  RsmRequestMpuDetail,
+  SaleInvoiceLess,
+  SaleServiceName,
+  SalesTeamWorkLess,
+  SaveProductItem,
+  SaveRsmRequestMpu,
+  SaveStockStore,
+  SaveTeamWork,
+  SettlementLess,
+  SettlementModel,
+  So,
+  SoDeliveryDetail,
+  SoDetail,
+  SoItemLess,
+  SoSummary,
+  SoUploadLogAdvSearchParams,
+  StockControlDetail,
+  StockControlDetailDto,
+  StockControlLess,
+  StockDetailLess,
+  StockStoreDetail,
+  StockStoreLess,
+  TeamWorkDto,
+  TeamWorkLess,
+  TopupLess,
+  TranOfferParams,
+  TransactionDetail,
+  UpdateStockControlDto,
+  VehicleLess,
+  initProductParamsType,
+} from './data';
 
-type AddProductItem = Omit<
-  ProductItem,
-  ['id', 'createdBy', 'createdDate', 'lastModifiedBy', 'lastModifiedDate', 'associatedTo']
->;
-
-type SaveProductItem = Omit<
-  ProductItem,
-  ['createdBy', 'createdDate', 'lastModifiedBy', 'lastModifiedDate', 'associatedTo']
->;
-
-interface UoM {
-  id: number;
-  code: string;
-  name: string;
-  description?: string;
-  createdBy?: string;
-  createdDate?: moment.Moment;
-  lastModifiedBy?: string;
-  lastModifiedDate?: moment.Moment;
-}
-
-interface BCG {
-  id: number;
-  code: string;
-  description: string;
-}
-
-type BrandLess = Omit<
-  BCG,
-  ['createdBy', 'createdDate', 'lastModifiedBy', 'lastModifiedDate', 'description2']
->;
-
-type CategoryLess = Omit<
-  BCG,
-  ['createdBy', 'createdDate', 'lastModifiedBy', 'lastModifiedDate', 'description2']
->;
-
-type GroupLess = Omit<
-  BCG,
-  ['createdBy', 'createdDate', 'lastModifiedBy', 'lastModifiedDate', 'description2']
->;
-
-type UoMLess = Omit<
-  UoM,
-  ['createdBy', 'createdDate', 'lastModifiedBy', 'lastModifiedDate', 'description']
->;
-
-type AddUoM = Omit<UoM, ['id', 'createdBy', 'createdDate', 'lastModifiedBy', 'lastModifiedDate']>;
-
-type SaveUoM = Omit<UoM, ['createdBy', 'createdDate', 'lastModifiedBy', 'lastModifiedDate']>;
-
-export interface BudgetCodeLess {
-  saleType: number;
-  budgets: LookupDataItem[];
-}
-
-export interface CustomerSaleInfo {
-  id: number;
-  customerGroup?: LookupDataItem;
-  customerPriceGroup?: LookupDataItem;
-  vat?: { code: string; rate: number };
-  salesperson?: LookupDataItem;
-  transportationMOQ?: {};
-  isIndirectCustomer: boolean;
-  distributors: LookupDataItem[];
-}
-
-export interface ShippingAddress {
-  id: number;
-  type: 'shippingAddress';
-  addressCode: string;
-  addressName: string;
-  address: string;
-  province?: string;
-  commune?: string;
-  latitude?: string;
-  longitude?: string;
-  contactName: string;
-  contactNo: stirng;
-}
-
-export interface DeliveryEntry {
-  id?: number;
-  key?: string;
-  deliveryMethodId?: number;
-  deliveryDate?: moment.Moment;
-  shippingAddressId?: number;
-  shippingAddressCode?: string;
-  remarks?: string;
-  default?: boolean;
-  itemList: DeliveryItemEntry[];
-}
-
-export interface DeliveryItemEntry {
-  id?: number;
-  itemId: number;
-  key?: string;
-  itemCode: string;
-  itemDesc: string;
-  uomId: number;
-  uomName?: string;
-  type: string;
-  qty: number;
-}
-
-export interface DeliverySoItemEntry {
-  id?: number;
-  key?: string;
-  deliveryDate?: moment.Moment;
-  shippingAddressId?: number;
-  shippingAddressCode?: string;
-  itemId: number;
-  itemCode: string;
-  description: string;
-  type: string;
-  qty: number;
-  uomId: number;
-  uomName: string;
-  remarks?: string;
-  main?: boolean;
-  default?: boolean;
-  mainKey?: string;
-}
-
-export interface InitData {
-  paymentTermList?: SoPaymentTerm[];
-  deliveryMethodList?: SoDeliveryMethod[];
-  salePersonList?: SalePerson[];
-  buList?: BusinessUnit[];
-  status?: StatusLookup[];
-  transportOffers?: CustomerTransportOfferDto[];
-  itemList?: ProductItemLess[];
-  addressList?: AddressInfo[];
-}
-
-export interface State extends StateType<ModalName> {
-  data?: {
-    initData?: InitData;
-    so?: So;
-    soDetail?: SoDetail;
-    soItems?: SoItemEntry[];
-    deliverySoItems?: DeliverySoItemEntry[];
-    deliveryList?: DeliveryEntry[];
-    customerSaleInfo?: CustomerSaleInfo;
-    productItem?: ProductItem;
-    packageOffer?: PackageOffer[];
+export const SaleService = (serviceName?: SaleServiceName): ServiceType => {
+  return {
+    type: 'SALE',
+    name: serviceName,
   };
-}
+};
 
-export interface SoAdvanceSearchParams {
-  soNum?: string;
-  customerId?: number;
-  status?: string;
-  source?: string;
-  deliveryMethodId?: number;
-  salespersonId?: number;
-  customerType?: string;
-  hasAttachment?: boolean;
-}
+const ReqParams = {
+  fetchSoSummary: (): ServiceApiType<{}> => ({
+    type: 'FETCH_QUERY',
+    endpoint: 'SALE',
+    actionName: 'fetch-so-summary',
+  }),
 
-export interface StockStoreAdvanceSearchParams {
-  status?: string;
-  searchValue?: string;
-  role?: string;
+  export interface StockStoreAdvanceSearchParams {
+    status?: string;
+searchValue ?: string;
+role ?: string;
 }
 
 export interface StockAdvanceSearchParams {
@@ -1431,151 +1330,144 @@ export interface DeliveryAdvanceSearchParams {
 
 export type InitSuggestionParam =
   | {
-      actionName: 'exchange-rate';
-      responseKey: string;
-      payload: {};
-    }
+    actionName: 'exchange-rate';
+    responseKey: string;
+    payload: {};
+  }
   | {
-      actionName: 'exchange-rate-dsd';
-      responseKey: string;
-      payload: {};
-    };
+    actionName: 'exchange-rate-dsd';
+    responseKey: string;
+    payload: {};
+  };
 
 export type InitSaleInvoiceParam =
   | {
-      actionName: 'look-up-data';
-      responseKey: string;
-      payload: {
-        list: string[];
-      };
-    }
+    actionName: 'look-up-data';
+    responseKey: string;
+    payload: {
+      list: string[];
+    };
+  }
   | {
-      actionName: 'list-stock-category';
-      responseKey: 'types';
-      payload: {};
-    }
+    actionName: 'list-stock-category';
+    responseKey: 'types';
+    payload: {};
+  }
   | {
-      actionName: 'list-type-product-items';
-      responseKey: 'typeProductItems';
-      payload: {};
-    }
+    actionName: 'list-type-product-items';
+    responseKey: 'typeProductItems';
+    payload: {};
+  }
   // | {
   //     actionName: 'list-sale-invoices';
   //     responseKey: 'saleInvoiceList';
   //     payload: { id: number };
   //   }
   | {
-      actionName: 'list-sales-team-work';
-      responseKey: string;
-      payload: {};
-    };
+    actionName: 'list-sales-team-work';
+    responseKey: string;
+    payload: {};
+  };
 
 export type InitSoParamsType =
   | {
-      actionName: 'list-payment-term';
-      responseKey: 'paymentTermList';
-      payload: {};
-    }
+    actionName: 'list-payment-term';
+    responseKey: 'paymentTermList';
+    payload: {};
+  }
   | {
-      actionName: 'list-shipping-method';
-      responseKey: string;
-      payload: {};
-    }
+    actionName: 'list-shipping-method';
+    responseKey: string;
+    payload: {};
+  }
   | {
-      actionName: 'list-shipping-method';
-      responseKey: 'shippingMethodList';
-      payload: {};
-    }
+    actionName: 'list-shipping-method';
+    responseKey: 'shippingMethodList';
+    payload: {};
+  }
   | {
-      actionName: 'list-store-location';
-      responseKey: 'storeLocationList';
-      payload: {};
-    }
+    actionName: 'list-store-location';
+    responseKey: 'storeLocationList';
+    payload: {};
+  }
   | {
-      actionName: 'look-up-data';
-      responseKey: string;
-      payload: {
-        list: string[];
-      };
-    }
-  | {
-      actionName: 'list-product-item-by-type';
-      responseKey: 'itemList';
-      payload: {
-        id: number;
-      };
-    }
-  | {
-      actionName: 'listCustomer';
-      responseKey: string;
-      payload: {};
-    }
-  | {
-      actionName: 'listSalesperson';
-      responseKey: string;
-      payload: {};
-    }
-  | {
-      actionName: 'list-budget';
-      responseKey: string;
-      payload: {};
+    actionName: 'look-up-data';
+    responseKey: string;
+    payload: {
+      list: string[];
     };
+  }
+  | {
+    actionName: 'list-product-item-by-type';
+    responseKey: 'itemList';
+    payload: {
+      id: number;
+    };
+  }
+  | {
+    actionName: 'listCustomer';
+    responseKey: string;
+    payload: {};
+  }
+  | {
+    actionName: 'listSalesperson';
+    responseKey: string;
+    payload: {};
+  }
+  | {
+    actionName: 'list-budget';
+    responseKey: string;
+    payload: {};
+  };
 
 export type initProductParamsType =
   | {
-      actionName: 'list-uom';
-      responseKey: 'uomList';
-      payload: {};
-    }
+    actionName: 'list-uom';
+    responseKey: 'uomList';
+    payload: {};
+  }
   | {
-      actionName: 'list-brand';
-      responseKey: 'brandList';
-      payload: {};
-    }
+    actionName: 'list-brand';
+    responseKey: 'brandList';
+    payload: {};
+  }
   | {
-      actionName: 'list-category';
-      responseKey: 'categoryList';
-      payload: {};
-    }
+    actionName: 'list-category';
+    responseKey: 'categoryList';
+    payload: {};
+  }
   | {
-      actionName: 'list-group';
-      responseKey: 'groupList';
-      payload: {};
-    };
+    actionName: 'list-group';
+    responseKey: 'groupList';
+    payload: {};
+  };
 
 export type InitTradeOfferParamsType =
   | {
-      actionName: 'list-item-category';
-      responseKey: 'categories';
-      payload: {};
-    }
+    actionName: 'list-item-category';
+    responseKey: 'categories';
+    payload: {};
+  }
   | {
-      actionName: 'list-customer-group';
-      responseKey: 'customerGroup';
-      payload: {};
-    };
+    actionName: 'list-customer-group';
+    responseKey: 'customerGroup';
+    payload: {};
+  };
 
-export interface SoSummary {
-  pendingMCDirect: number;
-  pendingDirect: number;
-  pendingIndirect: number;
-  failed: number;
-}
+donwloadPOReport: downloadReport<{
+  salespersonCode?: string[];
+  requestedDate?: moment.Moment[];
+}>(actions),
 
-export interface SoUploadedLog {
-  id: number;
-  mobileInfo: string;
-  payload: string;
-  status: string;
-  createdBy: string;
-  createdDate: string;
-  completedDate: string;
-  trace?: string;
-}
+  donwloadDSDReport: downloadReport<{
+    reportType: string;
+    salespersonCode?: string[];
+    requestedDate?: moment.Moment[];
+  }>(actions),
 
-export interface SoUploadLogAdvSearchParams {
-  status?: string;
-}
+    donwloadDSDLeadReport: downloadReport<{
+      salespersonCode?: string[];
+    }>(actions),
 
 export interface CloseIndirectSoParams {
   invoiceNo: string;

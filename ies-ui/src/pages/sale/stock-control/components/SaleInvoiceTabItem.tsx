@@ -215,10 +215,10 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
       it?.internalName !== null
         ? it?.internalName
         : it?.firstName !== null && it?.lastName !== null
-        ? `${it?.firstName} ${it?.lastName}`
-        : it?.firstName !== null
-        ? it?.firstName
-        : it?.lastName || '';
+          ? `${it?.firstName} ${it?.lastName}`
+          : it?.firstName !== null
+            ? it?.firstName
+            : it?.lastName || '';
     return `${name} - ( ${it?.phone} )`;
   };
 
@@ -280,10 +280,10 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
                 r.status === 'Pending'
                   ? 'magenta'
                   : r.status === 'Paid'
-                  ? 'processing'
-                  : r.status === 'Own'
-                  ? 'success'
-                  : 'warning';
+                    ? 'processing'
+                    : r.status === 'Own'
+                      ? 'success'
+                      : 'warning';
               return (
                 <span>
                   <Tag color={color}>{r.status}</Tag>
@@ -358,7 +358,7 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
             data: result?.items.map((it: SaleInvoiceLess) => it).filter((it: any) => !!it),
           };
         }}
-        // pagination={pagination}
+      // pagination={pagination}
       />
       <SaleInvoiceFormModal
         title="Sale Invoice"

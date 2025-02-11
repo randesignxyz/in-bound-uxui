@@ -1,5 +1,7 @@
 import moment from 'moment';
 import { PurchaseRequestDTO, PurchaseRequestItemCreate } from '../request/data';
+import moment from 'moment';
+import { PurchaseRequestDTO, PurchaseRequestItemCreate } from '../request/data';
 
 interface PurchaseOrderCreate {
   id?: number;
@@ -10,52 +12,31 @@ interface PurchaseOrderCreate {
   grantAmount: number;
   discountAmount: number;
   totalAmount: number;
-  latitude?: string;
-  longitude?: string;
-  items?: PurchaseRequestItemCreate[];
-  distributorCode?: string;
-  distributorName?: string;
-  distributorPhone?: string;
-  distributorId?: number;
-  address?: string;
-  addressId?: number;
+
 }
+
 
 interface PurchaseOrderDTO {
   id: number;
-  purchaseOrderCode?: string;
   purchaseRequestId: number;
-  requestedCode: string;
+  purchaseRequestNo: string;
   referenceNumber?: string;
-  //   purchaseOrderDate: string;
-
-  requestedDate?: moment.Moment;
-  purchaseOrderDate?: moment.Moment;
+  purchaseOrderDate: string;
   // ownerBy:string;
   // ownerCode:string;
-  requestedBy: string;
-  assignedTo?: string;
-  assignedToCode?: string;
-
   grantAmount: number;
   discountAmount: number;
   totalAmount: number;
-  status: 'Pending' | 'Rejected' | 'Paid';
+  status: "pending" | "rejected" | "paid",
   items?: PurchaseRequestItemCreate[];
-  purchaseRequest: PurchaseRequestDTO;
-  requestedCode: string;
-  distributorCode?: string;
-  distributorName?: string;
-  distributorPhone?: string;
-  distributorId?: number;
-  latitude?: string;
-  longitude?: string;
-  addressId?: number;
-  address?: string;
-  foc?: { qty: number; itemName: string; itemCode: string; uom?: string }[];
+  purchaseRequest: PurchaseRequestDTO
 }
 
-type PurchaseOrderItem = PurchaseRequestItemCreate;
+
+interface PurchaseOrderItem extends PurchaseRequestItemCreate {
+  // purchaseOrderId:number;
+  // map(arg0: (r: any, index: any) => any): import("react").SetStateAction<PurchaseRequestItemCreate[] | undefined>;
+}
 // id:number;
 // itemId:number;
 // itemName:string;
@@ -76,3 +57,4 @@ interface IdRemarkParam {
   id: number;
   remark?: string;
 }
+

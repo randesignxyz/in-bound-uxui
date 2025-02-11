@@ -45,320 +45,342 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
       onEdit(dataSource);
     }
   };
+  const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
+    const requestActions = simpleRequestActions();
+    const services = PurchaseOrderServiceAPI(requestActions);
+    const [dataSource, setDataSource] = useState<PurchaseOrderDTO>();
+    //const [address, setAddress] = useState<AddressInfo>();
+    const onLoad = async () => {
+      const data = await services.detail(id);
+      // const add = await CrmServiceAPI(requestActions).findAddress({ id: data.addressId||0 });
+      // setAddress(add);
+      setDataSource(data);
+    };
+    useEffect(() => {
+      if (id) {
+        onLoad();
+      }
+    }, [id]);
 
-  return (
-    <>
-      <Flex vertical gap={18}>
-        <Card
-          size="small"
-          title="Purchase Order"
-          extra={
-            <Button type="link" onClick={onEditEvent}>
-              <EditOutlined />
-              Edit
-            </Button>
-          }
-        >
-          <Row gutter={12} style={{ marginLeft: 20 }}>
-            <Col md={8} xs={24}>
-              <ProDescriptions
-                column={1}
-                contentStyle={{ fontWeight: 500 }}
-                dataSource={dataSource}
-                loading={requestActions.request?.loading}
-                columns={[
-                  {
-                    title: 'Purchase Order',
-                    dataIndex: 'purchaseOrderCode',
-                  },
+    const onEditEvent = () => {
+      if (onEdit) {
+        onEdit(dataSource);
+      }
+    };
 
-                  {
-                    title: 'Request By',
-                    render: (_, r) => [r.requestedCode, r.requestedBy].filter((p) => p).join(' - '),
-                  },
-                  {
-                    title: 'Distributor Name',
-                    render: (_, r) =>
-                      [r.distributorCode, r.distributorName].filter((p) => p).join(' - '),
-                    // dataIndex: 'distributorName',
-                  },
-                ]}
-              />
-            </Col>
-            <Col md={8} xs={24}>
-              <ProDescriptions
-                dataSource={dataSource}
-                loading={requestActions.request?.loading}
-                contentStyle={{ fontWeight: 500 }}
-                column={1}
-                columns={[
-                  {
-                    title: 'Purchase Order Date',
-                    // dataIndex: 'purchaseOrderDate',
-                    // valueType: 'date',
-                    render: (_, r) => {
-                      return formatDate(r.purchaseOrderDate);
-                    },
-                  },
-                  {
-                    title: 'Request By Date',
-                    // dataIndex: 'requestedDate',
-                    // valueType: 'date',
-                    render: (_, r) => {
-                      return formatDateTime(r.requestedDate);
-                    },
-                  },
-                  {
-                    title: 'Distibutor Code',
-                    dataIndex: 'distributorCode',
-                  },
-
-                  // {
-                  //   title: 'Distributor Phone',
-                  //   dataIndex: 'distributorPhone',
-                  // },
-                  // {
-                  //   title: 'Address Location',
-                  //   span: 3,
-                  //   render: (_, r) => {
-                  //     return (
-                  //       <Space align="baseline">
-                  //         <a
-                  //           href={`https://www.google.com/maps/search/?api=1&query=${r?.latitude?.replace(
-                  //             /[&\/[\]\#,+()$~%'":*?<>{}]/g,
-                  //             '',
-                  //           )}%2C${r?.longitude?.replace(/[&\/[\]\#,+()$~%'":*?<>{}]/g, '')}`}
-                  //           target="_blank"
-                  //           rel="noreferrer"
-                  //         >
-                  //           <EnvironmentOutlined />
-                  //         </a>
-                  //         {r.address}
-                  //       </Space>
-                  //     );
-                  //   },
-                  // },
-                ]}
-              />
-            </Col>
-            <Col md={8} xs={24}>
-              <ProDescriptions
-                dataSource={dataSource}
-                contentStyle={{ fontWeight: 500 }}
-                loading={requestActions.request?.loading}
-                column={1}
-                columns={[
-                  {
-                    title: 'Status',
-                    dataIndex: 'status',
-                    render: (_, r) => (
-                      <Tag
-                        icon={
-                          r.status === 'Pending' ? (
-                            <SyncOutlined spin />
-                          ) : r.status === 'Paid' ? (
-                            <DollarOutlined />
-                          ) : r.status === 'Rejected' ? (
-                            <CloseCircleOutlined />
-                          ) : (
-                            <CheckCircleOutlined />
-                          )
-                        }
-                        bordered={false}
-                        color={
-                          r.status === 'Pending'
-                            ? 'processing'
-                            : r.status === 'Paid'
-                            ? 'success'
-                            : r.status === 'Rejected'
-                            ? 'error'
-                            : 'success'
-                        }
-                      >
-                        {r.status}
-                      </Tag>
-                    ),
-                  },
-                  {
-                    title: 'Assign To',
-                    render: (_, r) => [r.assignedToCode, r.assignedTo].filter((p) => p).join(' - '),
-                  },
-                  // {
-                  //   title: 'Assigned To Code',
-                  //   dataIndex: 'assignedToCode',
-                  // },
-                  // {
-                  //   title: 'Assign To ',
-                  //   dataIndex: 'assignedTo',
-                  // },
-                ]}
-              />
-            </Col>
-          </Row>
-          <Row gutter={12} style={{ marginLeft: 20, marginTop: 20 }}>
-            <Col xs={24}>
-              <ProDescriptions
-                dataSource={dataSource}
-                loading={requestActions.request?.loading}
-                contentStyle={{ fontWeight: 500 }}
-                column={1}
-                columns={[
-                  {
-                    title: 'Address Location',
-                    render: (_, r) => {
-                      return (
-                        <Space align="baseline">
-                          <a
-                            href={`https://www.google.com/maps/search/?api=1&query=${r?.latitude?.replace(
-                              /[&\/[\]\#,+()$~%'":*?<>{}]/g,
-                              '',
-                            )}%2C${r?.longitude?.replace(/[&\/[\]\#,+()$~%'":*?<>{}]/g, '')}`}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            <EnvironmentOutlined />
-                          </a>
-                          {r.address}
-                        </Space>
-                      );
-                    },
-                  },
-                ]}
-              />
-            </Col>
-          </Row>
-        </Card>
-        <Card title="Purchase Order Item" size="small">
-          <ProTable<PurchaseRequestItemCreate>
-            search={false}
-            options={false}
+    return (
+      <>
+        <Flex vertical gap={18}>
+          <Card
             size="small"
-            pagination={false}
-            dataSource={dataSource?.items}
-            columns={[
-              {
-                title: 'Description',
-                dataIndex: 'itemName',
-              },
-              {
-                title: 'Code',
-                dataIndex: 'itemCode',
-              },
-              {
-                title: 'Type',
-                dataIndex: 'itemType',
-              },
-              // {
-              //   title: 'Category',
-              //   dataIndex: 'stockCategoryName',
-              // },
-              {
-                title: 'UOM',
-                dataIndex: 'uom',
-              },
-              {
-                title: 'Quantity',
-                dataIndex: 'quantity',
-                align: 'right',
-              },
+            title="Purchase Order"
+            extra={
+              <Button type="link" onClick={onEditEvent}>
+                <EditOutlined />
+                Edit
+              </Button>
+            }
+          >
+            <Row gutter={12} style={{ marginLeft: 20 }}>
+              <Col md={8} xs={24}>
+                <ProDescriptions
+                  column={1}
+                  contentStyle={{ fontWeight: 500 }}
+                  dataSource={dataSource}
+                  loading={requestActions.request?.loading}
+                  columns={[
+                    {
+                      title: 'Purchase Order',
+                      dataIndex: 'purchaseOrderCode',
+                    },
 
-              {
-                title: 'Unit Price',
-                dataIndex: 'pricing',
-                align: 'right',
-                render: (_, r) => `$ ${numeral(r.pricing).format('0,000.000')}`,
-              },
-              {
-                title: 'Total',
-                align: 'right',
-                render: (_, r) => (
-                  <Typography.Text type="success">
-                    {' '}
-                    $ {numeral(r.quantity * r.pricing).format('0,000.000')}
-                  </Typography.Text>
-                ),
-              },
-            ]}
-            summary={() => {
-              return (
-                <>
-                  <Table.Summary.Row>
-                    <Table.Summary.Cell index={1} colSpan={6} align="right">
-                      Total Amount
-                    </Table.Summary.Cell>
-                    <Table.Summary.Cell index={1} align="right">
-                      <Typography.Text type="warning">
-                        $ {numeral(dataSource?.totalAmount).format('0,000.000')}
-                      </Typography.Text>
-                    </Table.Summary.Cell>
-                  </Table.Summary.Row>
-                  <Table.Summary.Row>
-                    <Table.Summary.Cell index={1} colSpan={6} align="right">
-                      Discount Amount
-                    </Table.Summary.Cell>
-                    <Table.Summary.Cell index={1} align="right">
-                      <Typography.Text type="warning">
-                        $ {numeral(dataSource?.discountAmount).format('0,000.000')}
-                      </Typography.Text>
-                    </Table.Summary.Cell>
-                  </Table.Summary.Row>
-                  <Table.Summary.Row>
-                    <Table.Summary.Cell index={1} colSpan={6} align="right">
-                      Grand Amount
-                    </Table.Summary.Cell>
-                    <Table.Summary.Cell index={1} align="right">
-                      <Typography.Text type="warning">
-                        $ {numeral(dataSource?.grantAmount).format('0,000.000')}
-                      </Typography.Text>
-                    </Table.Summary.Cell>
-                  </Table.Summary.Row>
-                </>
-              );
-            }}
-          />
-        </Card>
+                    {
+                      title: 'Request By',
+                      render: (_, r) => [r.requestedCode, r.requestedBy].filter((p) => p).join(' - '),
+                    },
+                    {
+                      title: 'Distributor Name',
+                      render: (_, r) =>
+                        [r.distributorCode, r.distributorName].filter((p) => p).join(' - '),
+                      // dataIndex: 'distributorName',
+                    },
+                  ]}
+                />
+              </Col>
+              <Col md={8} xs={24}>
+                <ProDescriptions
+                  dataSource={dataSource}
+                  loading={requestActions.request?.loading}
+                  contentStyle={{ fontWeight: 500 }}
+                  column={1}
+                  columns={[
+                    {
+                      title: 'Purchase Order Date',
+                      // dataIndex: 'purchaseOrderDate',
+                      // valueType: 'date',
+                      render: (_, r) => {
+                        return formatDate(r.purchaseOrderDate);
+                      },
+                    },
+                    {
+                      title: 'Request By Date',
+                      // dataIndex: 'requestedDate',
+                      // valueType: 'date',
+                      render: (_, r) => {
+                        return formatDateTime(r.requestedDate);
+                      },
+                    },
+                    {
+                      title: 'Distibutor Code',
+                      dataIndex: 'distributorCode',
+                    },
 
-        {(dataSource?.foc?.length || 0) > 0 && (
-          <>
-            <Card size="small" title="Free of Charge">
-              <ProTable
-                search={false}
-                options={false}
-                pagination={false}
-                size="small"
-                dataSource={dataSource?.foc || []}
-                columns={[
-                  {
-                    title: 'Item Code',
-                    dataIndex: 'itemCode',
-                  },
-                  {
-                    title: 'Item Name',
-                    dataIndex: 'itemName',
-                  },
-                  {
-                    title: 'Quantity',
-                    dataIndex: 'qty',
-                    render: (_, r) => <Typography.Text type="warning">{r.qty}</Typography.Text>,
-                  },
-                  {
-                    title: 'Uom',
-                    dataIndex: 'uom',
-                    render: (_, r) => r.uom?.toLowerCase(),
-                  },
-                ]}
-              />
-            </Card>
-          </>
-        )}
-        <Card size="small">
-          <Flex justify="flex-end">
-            <Button type="primary" onClick={onEditEvent}>
-              Edit
-            </Button>
-          </Flex>
-        </Card>
-        {/* <Card size='small'>
+                    // {
+                    //   title: 'Distributor Phone',
+                    //   dataIndex: 'distributorPhone',
+                    // },
+                    // {
+                    //   title: 'Address Location',
+                    //   span: 3,
+                    //   render: (_, r) => {
+                    //     return (
+                    //       <Space align="baseline">
+                    //         <a
+                    //           href={`https://www.google.com/maps/search/?api=1&query=${r?.latitude?.replace(
+                    //             /[&\/[\]\#,+()$~%'":*?<>{}]/g,
+                    //             '',
+                    //           )}%2C${r?.longitude?.replace(/[&\/[\]\#,+()$~%'":*?<>{}]/g, '')}`}
+                    //           target="_blank"
+                    //           rel="noreferrer"
+                    //         >
+                    //           <EnvironmentOutlined />
+                    //         </a>
+                    //         {r.address}
+                    //       </Space>
+                    //     );
+                    //   },
+                    // },
+                  ]}
+                />
+              </Col>
+              <Col md={8} xs={24}>
+                <ProDescriptions
+                  dataSource={dataSource}
+                  contentStyle={{ fontWeight: 500 }}
+                  loading={requestActions.request?.loading}
+                  column={1}
+                  columns={[
+                    {
+                      title: 'Status',
+                      dataIndex: 'status',
+                      render: (_, r) => (
+                        <Tag
+                          icon={
+                            r.status === 'Pending' ? (
+                              <SyncOutlined spin />
+                            ) : r.status === 'Paid' ? (
+                              <DollarOutlined />
+                            ) : r.status === 'Rejected' ? (
+                              <CloseCircleOutlined />
+                            ) : (
+                              <CheckCircleOutlined />
+                            )
+                          }
+                          bordered={false}
+                          color={
+                            r.status === 'Pending'
+                              ? 'processing'
+                              : r.status === 'Paid'
+                                ? 'success'
+                                : r.status === 'Rejected'
+                                  ? 'error'
+                                  : 'success'
+                          }
+                        >
+                          {r.status}
+                        </Tag>
+                      ),
+                    },
+                    {
+                      title: 'Assign To',
+                      render: (_, r) => [r.assignedToCode, r.assignedTo].filter((p) => p).join(' - '),
+                    },
+                    // {
+                    //   title: 'Assigned To Code',
+                    //   dataIndex: 'assignedToCode',
+                    // },
+                    // {
+                    //   title: 'Assign To ',
+                    //   dataIndex: 'assignedTo',
+                    // },
+                  ]}
+                />
+              </Col>
+            </Row>
+            <Row gutter={12} style={{ marginLeft: 20, marginTop: 20 }}>
+              <Col xs={24}>
+                <ProDescriptions
+                  dataSource={dataSource}
+                  loading={requestActions.request?.loading}
+                  contentStyle={{ fontWeight: 500 }}
+                  column={1}
+                  columns={[
+                    {
+                      title: 'Address Location',
+                      render: (_, r) => {
+                        return (
+                          <Space align="baseline">
+                            <a
+                              href={`https://www.google.com/maps/search/?api=1&query=${r?.latitude?.replace(
+                                /[&\/[\]\#,+()$~%'":*?<>{}]/g,
+                                '',
+                              )}%2C${r?.longitude?.replace(/[&\/[\]\#,+()$~%'":*?<>{}]/g, '')}`}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              <EnvironmentOutlined />
+                            </a>
+                            {r.address}
+                          </Space>
+                        );
+                      },
+                    },
+                  ]}
+                />
+              </Col>
+            </Row>
+          </Card>
+          <Card title="Purchase Order Item" size="small">
+            <ProTable<PurchaseRequestItemCreate>
+              search={false}
+              options={false}
+              size="small"
+              pagination={false}
+              dataSource={dataSource?.items}
+              columns={[
+                {
+                  title: 'Description',
+                  dataIndex: 'itemName',
+                },
+                {
+                  title: 'Code',
+                  dataIndex: 'itemCode',
+                },
+                {
+                  title: 'Type',
+                  dataIndex: 'itemType',
+                },
+                // {
+                //   title: 'Category',
+                //   dataIndex: 'stockCategoryName',
+                // },
+                {
+                  title: 'UOM',
+                  dataIndex: 'uom',
+                },
+                {
+                  title: 'Quantity',
+                  dataIndex: 'quantity',
+                  align: 'right',
+                },
+
+                {
+                  title: 'Unit Price',
+                  dataIndex: 'pricing',
+                  align: 'right',
+                  render: (_, r) => `$ ${numeral(r.pricing).format('0,000.000')}`,
+                },
+                {
+                  title: 'Total',
+                  align: 'right',
+                  render: (_, r) => (
+                    <Typography.Text type="success">
+                      {' '}
+                      $ {numeral(r.quantity * r.pricing).format('0,000.000')}
+                    </Typography.Text>
+                  ),
+                },
+              ]}
+              summary={() => {
+                return (
+                  <>
+                    <Table.Summary.Row>
+                      <Table.Summary.Cell index={1} colSpan={6} align="right">
+                        Total Amount
+                      </Table.Summary.Cell>
+                      <Table.Summary.Cell index={1} align="right">
+                        <Typography.Text type="warning">
+                          $ {numeral(dataSource?.totalAmount).format('0,000.000')}
+                        </Typography.Text>
+                      </Table.Summary.Cell>
+                    </Table.Summary.Row>
+                    <Table.Summary.Row>
+                      <Table.Summary.Cell index={1} colSpan={6} align="right">
+                        Discount Amount
+                      </Table.Summary.Cell>
+                      <Table.Summary.Cell index={1} align="right">
+                        <Typography.Text type="warning">
+                          $ {numeral(dataSource?.discountAmount).format('0,000.000')}
+                        </Typography.Text>
+                      </Table.Summary.Cell>
+                    </Table.Summary.Row>
+                    <Table.Summary.Row>
+                      <Table.Summary.Cell index={1} colSpan={6} align="right">
+                        Grand Amount
+                      </Table.Summary.Cell>
+                      <Table.Summary.Cell index={1} align="right">
+                        <Typography.Text type="warning">
+                          $ {numeral(dataSource?.grantAmount).format('0,000.000')}
+                        </Typography.Text>
+                      </Table.Summary.Cell>
+                    </Table.Summary.Row>
+                  </>
+                );
+              }}
+            />
+          </Card>
+
+          {(dataSource?.foc?.length || 0) > 0 && (
+            <>
+              <Card size="small" title="Free of Charge">
+                <ProTable
+                  search={false}
+                  options={false}
+                  pagination={false}
+                  size="small"
+                  dataSource={dataSource?.foc || []}
+                  columns={[
+                    {
+                      title: 'Item Code',
+                      dataIndex: 'itemCode',
+                    },
+                    {
+                      title: 'Item Name',
+                      dataIndex: 'itemName',
+                    },
+                    {
+                      title: 'Quantity',
+                      dataIndex: 'qty',
+                      render: (_, r) => <Typography.Text type="warning">{r.qty}</Typography.Text>,
+                    },
+                    {
+                      title: 'Uom',
+                      dataIndex: 'uom',
+                      render: (_, r) => r.uom?.toLowerCase(),
+                    },
+                  ]}
+                />
+              </Card>
+            </>
+          )}
+          <Card size="small">
+            <Flex justify="flex-end">
+              <Button type="primary" onClick={onEditEvent}>
+                Edit
+              </Button>
+            </Flex>
+          </Card>
+          {/* <Card size='small'>
                     <Flex
                         justify='space-between'
                     >
@@ -399,9 +421,9 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                         />
                     </Flex>
                 </Card> */}
-      </Flex>
-    </>
-  );
-};
+        </Flex>
+      </>
+    );
+  };
 
-export default MpuPoDetail;
+  export default MpuPoDetail;

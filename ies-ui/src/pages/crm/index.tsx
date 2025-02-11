@@ -4,6 +4,7 @@ import notificationIcon from '@/assets/megaphone.png';
 import planIcon from '@/assets/plan.png';
 import scheduleIcon from '@/assets/schedule.png';
 import agreementIcon from '@/assets/agreement.png'
+import settingsIcon from '@/assets/settings.png'
 import type { ListMenuItem } from '@/components/ListMenu';
 import ListMenuComp from '@/components/ListMenu';
 import '@/pages/index.less';
@@ -31,6 +32,7 @@ export const CrmPaths = {
   gratisSettlement: '/crm/gratis',
   terms: '/crm/term',
   locationTracking: '/crm/tracking',
+  gratisConfig: '/crm/gratis-config',
 };
 const Crm: React.FC = () => {
   const access = useAccess();
@@ -378,6 +380,18 @@ const Crm: React.FC = () => {
         ]
       },
       // overlay: GratistMenu
+    },
+    {
+      id: 'terms',
+      name: 'Gratis Configuration',
+      description: 'Gratis Configuration List',
+      //link: `${CrmPaths.settlement}/list`,
+      link: `${CrmPaths.gratisConfig}/list`,
+      icon: settingsIcon,
+      visible: access.canAccessGratisConfig,
+      // menu: {
+      //   items: [{ label: <TermReport trigger={<a >Export</a>} />, key: 'exportTerm', icon: <ExportOutlined style={{ fontSize: '16px', color: '#08c' }} /> }]
+      // }
     },
     {
       id: 'terms',

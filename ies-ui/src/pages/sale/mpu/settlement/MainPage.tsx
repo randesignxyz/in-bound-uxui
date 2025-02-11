@@ -141,12 +141,12 @@ const SettlementMianPage: React.FC<Props> = () => {
                   return `$ ${numeral(total).format('0,000.000')}`;
                 },
               },
-              {
-                title: 'Exchange Rate',
-                dataIndex: 'exchangeRate',
-                align: 'right',
-                render: (_, r) => `៛ ${numeral(r.exchangeRate).format('0,000')}`,
-              },
+              // {
+              //   title: 'Exchange Rate',
+              //   dataIndex: 'exchangeRate',
+              //   align: 'right',
+              //   render: (_, r) => `៛ ${numeral(r.exchangeRate).format('0,000')}`,
+              // },
             ],
           },
         }}

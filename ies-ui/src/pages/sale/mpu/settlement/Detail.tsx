@@ -1,6 +1,7 @@
 import ImagePreview from '@/components/ImagePreview';
-import { displayDateTime } from '@/pages/utils';
+import { displayDateTime, formatDate } from '@/pages/utils';
 import { simpleRequestActions } from '@/services/model';
+import { SaleInvoiceLess } from '@/services/sale/data';
 import { CheckCircleOutlined, CloseCircleOutlined, SyncOutlined } from '@ant-design/icons';
 import { ActionType, ProDescriptions, ProTable } from '@ant-design/pro-components';
 import {
@@ -49,6 +50,95 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
       loadData();
     }
   }, [id]);
+
+  const getCustomerName = (it?: LeadLess): string => {
+    const name =
+      it?.internalName !== null
+        ? it?.internalName
+        : it?.firstName !== null && it?.lastName !== null
+        ? `${it?.firstName} ${it?.lastName}`
+        : it?.firstName !== null
+        ? it?.firstName
+        : it?.lastName || '';
+    return `${name} - ( ${it?.phone} )`;
+  };
+
+  const expandedRowRender = (parent: SaleInvoiceLess) => {
+    return parent.items.length > 0 ? (
+      <ProTable
+        size={'small'}
+        style={{ backgroundColor: '#EEE' }}
+        key={'key'}
+        rowKey={'id'}
+        columns={[
+          { title: '#', dataIndex: 'index', key: 'key' },
+          {
+            title: 'Batch No',
+            render: (_, r) => {
+              return r.batchNo === 'n/a' ? '-' : r.batchNo;
+            },
+          },
+          { title: 'Code', dataIndex: 'itemCode' },
+          { title: 'Description', dataIndex: 'itemName' },
+          { title: 'Quantity', dataIndex: 'quantity' },
+          { title: 'UOM', dataIndex: 'uom' },
+          {
+            title: 'Type',
+            render: (_, r) => {
+              return <Tag color={r.itemType === 'FOC' ? 'error' : 'success'}>{r.itemType}</Tag>;
+              // return r.itemType;
+            },
+          },
+          {
+            title: 'Sale Price',
+            align: 'right',
+            render: (_, r) => {
+              return `$ ${numeral(r.unitPrice).format('0,0.000')}`;
+            },
+          },
+          {
+            title: 'Amount',
+            align: 'right',
+            render: (_, r) => {
+              return `$ ${numeral(r.quantity * r.unitPrice).format('0,0.000')}`;
+            },
+          },
+          // {
+          //   key: 'status',
+          //   title: 'Status',
+          //   dataIndex: 'status',
+          //   render: (_, r) => {
+          //     const color = r.status === 'approve' ? 'lime' : 'default';
+          //     const str = r.status === 'approve' ? 'Approve' : 'Pending';
+          //     return (
+          //       <span>
+          //         <Tag color={color}>{str}</Tag>
+          //       </span>
+          //     );
+          //   },
+          // },
+          // {
+          //   title: 'Action',
+          //   dataIndex: 'operation',
+          //   key: 'operation',
+          //   valueType: 'option',
+          //   render: () => [<a key="Pause">Pause</a>, <a key="Stop">Stop</a>],
+          // },
+        ]}
+        headerTitle={false}
+        search={false}
+        options={false}
+        dataSource={parent.items.sort((a, b) =>
+          parseInt(a.itemCode) < parseInt(b.itemCode) ? 1 : 0,
+        )}
+        pagination={false}
+      />
+    ) : (
+      <div key={parent.id} style={{ textAlign: 'center', fontWeight: 'bold', color: 'gray' }}>
+        No Data
+      </div>
+    );
+  };
   return (
     <Spin spinning={requestActions.request?.loading}>
       <Flex vertical gap={16}>
@@ -174,7 +264,7 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
           const totalItem = p.items?.reduce((p, c) => p + c.quantity, 0);
           const totalAmount = p.items?.reduce((p, c) => p + c.quantity * c.pricing, 0);
           return (
-            <Card size="small">
+            <Card key={p.id} size="small">
               <Collapse
                 size="small"
                 ghost
@@ -198,22 +288,19 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                           { title: 'P.O Number', dataIndex: 'purchaseOrderCode' },
                           {
                             title: 'Date',
-                            // dataIndex: 'purchaseOrderDate',
-                            // valueType: 'date',
-                            render: (_, r) => {
-                              return displayDateTime(r.purchaseOrderDate);
-                            },
+                            dataIndex: 'purchaseOrderDate',
+                            valueType: 'date',
                           },
                           {
                             title: 'Request Quantity',
-                            render: (_, r) => (
+                            render: () => (
                               <Typography.Text type="success">{totalItem}</Typography.Text>
                             ),
                           },
                           {
                             title: 'Total Amount',
                             dataIndex: 'grantAmount',
-                            render: (_, r) => (
+                            render: () => (
                               <Typography.Text type="success">
                                 {numeral(totalAmount).format('$ 0,000.000')}
                               </Typography.Text>
@@ -319,11 +406,6 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                             );
                           },
                         },
-                        // {
-                        //   title: 'Saleperson',
-                        //   render: (_, r) =>
-                        //     [r.salespersonCode, r.salespersonName].filter((p) => p).join('-'),
-                        // },
                       ]}
                     />
                   ),
@@ -395,6 +477,143 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                             </Table.Summary.Row>
                           </>
                         );
+                      }}
+                    />
+                  ),
+                },
+              ]}
+            />
+          </Card>
+        )}
+        {dataSource && dataSource.salesInvoices && dataSource.salesInvoices.length > 0 && (
+          <Card size="small">
+            <Collapse
+              ghost
+              key={'collapSalesInvoice'}
+              items={[
+                {
+                  key: 'ItemColSalesInvoice',
+                  label: (
+                    <ProDescriptions
+                      size="small"
+                      dataSource={{
+                        invoiceDates: formatDate(
+                          dataSource?.salesInvoices[dataSource?.salesInvoices.length - 1]
+                            .invoiceDate,
+                        ),
+                        countInvoices: dataSource?.salesInvoices.length,
+                        amount: dataSource?.salesInvoices.reduce((a, e) => a + e.amount, 0.0),
+                      }}
+                      contentStyle={{ fontWeight: 500 }}
+                      column={{ xs: 1, sm: 2, md: 3, lg: 5, xl: 5, xxl: 5 }}
+                      columns={[
+                        {
+                          title: 'Latest Invoice Date',
+                          dataIndex: 'invoiceDates',
+                          span: 2,
+                        },
+
+                        {
+                          title: 'Invoice Counts',
+                          dataIndex: 'countInvoices',
+                          span: 2,
+                        },
+                        {
+                          title: 'Total Amount',
+                          render: (_, r) => (
+                            <Typography.Text type="success">
+                              {numeral(r.amount).format('$ 0,000.000')}
+                            </Typography.Text>
+                          ),
+                        },
+                      ]}
+                    />
+                  ),
+                  children: (
+                    <ProTable<SaleInvoiceLess, { stockControlId: number; searchValue?: string }>
+                      // title={() => <Text>Helo</Text>}
+                      key={'saleInvoice'}
+                      rowKey={'id'}
+                      expandable={{ expandedRowRender }}
+                      dataSource={dataSource.salesInvoices}
+                      columns={[
+                        {
+                          title: 'Invoice #',
+                          dataIndex: 'invoiceNo',
+                        },
+                        {
+                          title: 'Salesperson',
+                          render: (_, r) => {
+                            return `${r.salesperson.salespersonCode} - ${r.salesperson.salespersonName}`;
+                          },
+                        },
+                        {
+                          title: 'Customer',
+                          render: (_, r) => {
+                            return getCustomerName(r.customer);
+                          },
+                        },
+                        {
+                          title: 'Total Quantity',
+                          align: 'right',
+                          render: (_, r) => {
+                            const total = r.items.reduce((acc, it) => acc + it.quantity, 0);
+                            return `${total} CASE${total > 1 ? 'S' : ''}`;
+                          },
+                        },
+                        {
+                          title: 'Invoice Date',
+                          //dataIndex: 'invoiceNo'
+                          render: (_, r) => {
+                            return formatDate(r.invoiceDate);
+                          },
+                        },
+                        {
+                          title: 'Amount',
+                          // dataIndex: 'amount',
+                          align: 'right',
+                          // valueType: 'money',
+                          render: (_, r) => {
+                            return `$ ${numeral(r.amount).format('0,0.000')}`;
+                          },
+                        },
+
+                        {
+                          title: 'Status',
+                          dataIndex: 'status',
+                          render: (_, r) => {
+                            const color =
+                              r.status === 'Pending'
+                                ? 'magenta'
+                                : r.status === 'Paid'
+                                ? 'processing'
+                                : r.status === 'Own'
+                                ? 'success'
+                                : 'warning';
+                            return (
+                              <span>
+                                <Tag color={color}>{r.status}</Tag>
+                              </span>
+                            );
+                          },
+                        },
+                      ]}
+                      toolBarRender={false}
+                      options={{
+                        density: false,
+                        setting: false,
+                        reload: false,
+                        search: false,
+                        // search: true ?? (
+                        //   <Space size={[1, 'small']}>
+                        //     <Input.Search allowClear onSearch={onSearchHandler} />
+                        //   </Space>
+                        // ),
+                      }}
+                      size="small"
+                      search={false}
+                      pagination={{
+                        pageSize: 50,
                       }}
                     />
                   ),
@@ -512,7 +731,7 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
         <Card size="small" hidden={dataSource?.attachments?.length ? false : true}>
           <Flex wrap gap="small">
             {dataSource?.attachments?.map((p) => {
-              return <ImagePreview fileId={p} width={150} version={1} />;
+              return <ImagePreview key={p} fileId={p} width={150} version={1} />;
             })}
           </Flex>
         </Card>
@@ -546,7 +765,7 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
             ...data,
             id: dataSource?.id,
           };
-          if (actionState?.visible?.status == 'Completed') {
+          if (actionState?.visible?.status === 'Completed') {
             services.confirm(entry).then(() => {
               actionRef.current?.reload?.();
               loadData?.();

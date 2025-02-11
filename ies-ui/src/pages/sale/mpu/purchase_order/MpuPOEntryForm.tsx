@@ -1,4 +1,3 @@
-import { formatter } from '@/pages/utils';
 import { AddressInfo } from '@/services/crm/data';
 import { CrmServiceAPI } from '@/services/crm/services';
 import { simpleRequestActions } from '@/services/model';
@@ -129,6 +128,14 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
     }
   };
 
+  const disabledButton = () => {
+    return !(
+      dataSourceItems &&
+      dataSourceItems.length > 0 &&
+      dataSourceItems.every((e) => e.pricing > 0.0)
+    );
+  };
+
   return (
     <ProForm
       layout="horizontal"
@@ -145,12 +152,12 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
               {type === 'CREATE' && <Button onClick={() => form.resetFields()}>Clear</Button>}
               <Button
                 type="dashed"
-                disabled={dataSourceItems?.length ? false : true}
+                disabled={disabledButton()}
                 onClick={async () => {
                   const dataForm = await form.validateFields();
                   await editableFormRef.current?.validateFields();
                   Modal.confirm({
-                    title: 'Save Data into Database',
+                    title: 'Make Purchase Order',
                     content: 'Are you sure ?',
                     onOk: async () => {
                       const entry = {
@@ -171,12 +178,12 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
               </Button>
               <Button
                 type="primary"
-                disabled={dataSourceItems?.length ? false : true}
+                disabled={disabledButton()}
                 onClick={async () => {
                   const dataForm = await form.validateFields();
                   await editableFormRef.current?.validateFields();
                   Modal.confirm({
-                    title: 'Save Data into Database',
+                    title: 'Make Purchase Order',
                     content: 'Are you sure ?',
                     onOk: async () => {
                       const entry = {
@@ -187,6 +194,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
                         ...distibutors,
                         ...amount,
                       };
+                      console.log(entry.purchaseOrderDate);
                       await PurchaseOrderServiceAPI(requestActions)
                         .save(entry)
                         .then((o) => {
@@ -395,46 +403,46 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
                 }));
               },
             },
-            {
-              title: 'Category',
-              dataIndex: 'stockCategoryId',
-              width: 200,
-              fieldProps: {
-                showSearch: true,
-                debounceTime: 500,
-              },
-              formItemProps: {
-                rules: [
-                  {
-                    required: true,
-                  },
-                ],
-              },
-              request: async () => {
-                const data = await services.stockCategory();
-                return data.map((p) => ({ value: p.id, label: p.name }));
-              },
-            },
-            {
-              title: 'UOM',
-              dataIndex: 'uom',
-              initialValue: 'CASE',
-              fieldProps: {
-                showSearch: true,
-                debounceTime: 500,
-              },
-              formItemProps: {
-                rules: [
-                  {
-                    required: true,
-                  },
-                ],
-              },
-              request: async () => {
-                const data = await services.uom();
-                return data.map((p) => ({ value: p.name, label: p.name }));
-              },
-            },
+            // {
+            //   title: 'Category',
+            //   dataIndex: 'stockCategoryId',
+            //   width: 200,
+            //   fieldProps: {
+            //     showSearch: true,
+            //     debounceTime: 500,
+            //   },
+            //   formItemProps: {
+            //     rules: [
+            //       {
+            //         required: true,
+            //       },
+            //     ],
+            //   },
+            //   request: async () => {
+            //     const data = await services.stockCategory();
+            //     return data.map((p) => ({ value: p.id, label: p.name }));
+            //   },
+            // },
+            // {
+            //   title: 'UOM',
+            //   dataIndex: 'uom',
+            //   initialValue: 'CASE',
+            //   fieldProps: {
+            //     showSearch: true,
+            //     debounceTime: 500,
+            //   },
+            //   formItemProps: {
+            //     rules: [
+            //       {
+            //         required: true,
+            //       },
+            //     ],
+            //   },
+            //   request: async () => {
+            //     const data = await services.uom();
+            //     return data.map((p) => ({ value: p.name, label: p.name }));
+            //   },
+            // },
             {
               title: 'Quantity',
               dataIndex: 'quantity',
@@ -453,7 +461,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
               },
             },
             {
-              title: 'Unit Price ',
+              title: 'Unit Price',
               dataIndex: 'pricing',
               valueType: 'digit',
               initialValue: 0,
@@ -467,16 +475,17 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
               },
             },
             {
-              title: 'Total',
+              title: 'Amount',
               dataIndex: 'total',
-              valueType: 'money',
+              // valueType: 'money',
               initialValue: 0,
               ellipsis: true,
               readonly: true,
               renderFormItem: (_, r) => {
                 const total = r.record ? r.record?.pricing * r.record?.quantity : 0;
                 r.value = total;
-                return <>{formatter.format(total)}</>;
+                // return <>{formatter.format(total)}</>;
+                return `$ ${numeral(total).format('0,000.000')}`;
               },
               formItemProps: {
                 rules: [

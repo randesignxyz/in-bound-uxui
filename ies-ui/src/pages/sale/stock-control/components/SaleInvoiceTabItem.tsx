@@ -222,8 +222,6 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
     return `${name} - ( ${it?.phone} )`;
   };
 
-  console.log(data);
-
   return (
     <>
       <ProTable<SaleInvoiceLess, { stockControlId: number; searchValue?: string }>

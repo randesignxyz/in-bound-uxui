@@ -1,4 +1,4 @@
-import { formatDateTime } from '@/pages/utils';
+import { formatDate, formatDateTime } from '@/pages/utils';
 import { simpleRequestActions } from '@/services/model';
 import {
   CheckCircleOutlined,
@@ -77,8 +77,10 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                     render: (_, r) => [r.requestedCode, r.requestedBy].filter((p) => p).join(' - '),
                   },
                   {
-                    title: 'Assign To',
-                    render: (_, r) => [r.assignedToCode, r.assignedTo].filter((p) => p).join(' - '),
+                    title: 'Distributor Name',
+                    render: (_, r) =>
+                      [r.distributorCode, r.distributorName].filter((p) => p).join(' - '),
+                    // dataIndex: 'distributorName',
                   },
                 ]}
               />
@@ -95,7 +97,7 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                     // dataIndex: 'purchaseOrderDate',
                     // valueType: 'date',
                     render: (_, r) => {
-                      return formatDateTime(r.purchaseOrderDate);
+                      return formatDate(r.purchaseOrderDate);
                     },
                   },
                   {
@@ -106,39 +108,36 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                       return formatDateTime(r.requestedDate);
                     },
                   },
-                  // {
-                  //   title: 'Distibutor Code',
-                  //   dataIndex: 'distributorCode',
-                  // },
-                  // {
-                  //   title: 'Distributor Name',
-                  //   dataIndex: 'distributorName',
-                  // },
+                  {
+                    title: 'Distibutor Code',
+                    dataIndex: 'distributorCode',
+                  },
+
                   // {
                   //   title: 'Distributor Phone',
                   //   dataIndex: 'distributorPhone',
                   // },
-                  {
-                    title: 'Address Location',
-                    span: 3,
-                    render: (_, r) => {
-                      return (
-                        <Space align="baseline">
-                          <a
-                            href={`https://www.google.com/maps/search/?api=1&query=${r?.latitude?.replace(
-                              /[&\/[\]\#,+()$~%'":*?<>{}]/g,
-                              '',
-                            )}%2C${r?.longitude?.replace(/[&\/[\]\#,+()$~%'":*?<>{}]/g, '')}`}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            <EnvironmentOutlined />
-                          </a>
-                          {r.address}
-                        </Space>
-                      );
-                    },
-                  },
+                  // {
+                  //   title: 'Address Location',
+                  //   span: 3,
+                  //   render: (_, r) => {
+                  //     return (
+                  //       <Space align="baseline">
+                  //         <a
+                  //           href={`https://www.google.com/maps/search/?api=1&query=${r?.latitude?.replace(
+                  //             /[&\/[\]\#,+()$~%'":*?<>{}]/g,
+                  //             '',
+                  //           )}%2C${r?.longitude?.replace(/[&\/[\]\#,+()$~%'":*?<>{}]/g, '')}`}
+                  //           target="_blank"
+                  //           rel="noreferrer"
+                  //         >
+                  //           <EnvironmentOutlined />
+                  //         </a>
+                  //         {r.address}
+                  //       </Space>
+                  //     );
+                  //   },
+                  // },
                 ]}
               />
             </Col>
@@ -180,6 +179,10 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                       </Tag>
                     ),
                   },
+                  {
+                    title: 'Assign To',
+                    render: (_, r) => [r.assignedToCode, r.assignedTo].filter((p) => p).join(' - '),
+                  },
                   // {
                   //   title: 'Assigned To Code',
                   //   dataIndex: 'assignedToCode',
@@ -192,7 +195,7 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
               />
             </Col>
           </Row>
-          {/* <Row gutter={12} style={{ marginLeft: 20 }}>
+          <Row gutter={12} style={{ marginLeft: 20, marginTop: 20 }}>
             <Col xs={24}>
               <ProDescriptions
                 dataSource={dataSource}
@@ -201,7 +204,7 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                 column={1}
                 columns={[
                   {
-                    title: 'Address ',
+                    title: 'Address Location',
                     render: (_, r) => {
                       return (
                         <Space align="baseline">
@@ -223,7 +226,7 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                 ]}
               />
             </Col>
-          </Row> */}
+          </Row>
         </Card>
         <Card title="Purchase Order Item" size="small">
           <ProTable<PurchaseRequestItemCreate>

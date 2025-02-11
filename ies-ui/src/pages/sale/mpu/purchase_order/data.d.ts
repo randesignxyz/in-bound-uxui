@@ -18,6 +18,7 @@ interface PurchaseOrderCreate {
   distributorPhone?: string;
   distributorId?: number;
   address?: string;
+  addressId?: number;
 }
 
 interface PurchaseOrderDTO {

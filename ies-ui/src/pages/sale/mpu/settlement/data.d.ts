@@ -1,3 +1,4 @@
+import { SaleInvoiceLess } from '@/services/sale/data';
 import { Comment, StockCountDto } from '../count_stock/data';
 import { PurchaseOrderDTO } from '../purchase_order/data';
 
@@ -22,6 +23,7 @@ interface SettlementMethodDetailDTO {
   comment?: Comment[];
   purchaseOrder?: PurchaseOrderDTO[];
   stockCount?: StockCountDto;
+  salesInvoices?: SaleInvoiceLess[];
 }
 
 interface SettlementMethodDto {

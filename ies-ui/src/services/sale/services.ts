@@ -4,7 +4,7 @@ import type { Moment } from 'moment';
 import type { ServiceType } from '../API';
 import type { RequestActions, ServiceApiType } from '../apiGateway';
 import {
-  downloadReport,
+  downloadSaleReport,
   exec,
   execService,
   find,
@@ -132,7 +132,7 @@ const ReqParams = {
 };
 
 export const SaleServiceAPI = (actions?: RequestActions) => ({
-  downloadSoReport: downloadReport<{
+  downloadSoReport: downloadSaleReport<{
     reportType: string;
     salespersonId?: number[];
     orderedDate?: moment.Moment[];
@@ -141,22 +141,22 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
     soStatus?: string[];
   }>(actions),
 
-  donwloadPOReport: downloadReport<{
+  donwloadPOReport: downloadSaleReport<{
     salespersonCode?: string[];
     requestedDate?: moment.Moment[];
   }>(actions),
 
-  donwloadDSDReport: downloadReport<{
+  donwloadDSDReport: downloadSaleReport<{
     reportType: string;
     salespersonCode?: string[];
     requestedDate?: moment.Moment[];
   }>(actions),
 
-  donwloadDSDLeadReport: downloadReport<{
+  donwloadDSDLeadReport: downloadSaleReport<{
     salespersonCode?: string[];
   }>(actions),
 
-  donwloadDSDVisitReport: downloadReport<{
+  donwloadDSDVisitReport: downloadSaleReport<{
     visitedDates?: moment.Moment[];
     salespersonCode?: string[];
   }>(actions),

@@ -21,6 +21,7 @@ export const AcquisitionFormNames = {
   dmbo: 'requisition_dmbo',
   smFinance: 'requisition_sm_fin',
   md_dmd: 'requisition_md_dmd',
+  srManagerApproval: 'requisition_sr_manager_approval',
 };
 
 export const AcquisitionNvcFormNames = {
@@ -96,6 +97,7 @@ export const AcquisitionForm: DataForm[] = [
       AcquisitionFormNames.dmbo1,
       AcquisitionFormNames.dmbo2,
       AcquisitionFormNames.md_dmd,
+      AcquisitionFormNames.srManagerApproval,
 
       AcquisitionNvcFormNames.sub,
       AcquisitionNvcFormNames.hod,

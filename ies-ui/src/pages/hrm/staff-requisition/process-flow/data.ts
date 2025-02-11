@@ -13,3 +13,13 @@ export const StaffRequisitionFormNames = {
   DMD: 'staff_requisition_dmd',
   HRA_SR_MANAGER: 'staff_requisition_hra_sr_manager'
 }
+
+export const StaffRequisitionOFLFormNames = {
+  processDefKey: 'staff_requisition_request_process_ofl',
+  start: 'staff_requisition_request_process_ofl',
+  HRBP: 'staff_requisition_ofl_hrbp',
+  HRM_MANAGER: 'staff_requisition_ofl_hrm_manager',
+  SR_MANAGER_APPROVAL: 'staff_requisition_ofl_sr_manager_approval',
+  DMD: 'staff_requisition_ofl_dmd',
+  HRA_SR_MANAGER: 'staff_requisition_ofl_hra_sr_manager'
+}

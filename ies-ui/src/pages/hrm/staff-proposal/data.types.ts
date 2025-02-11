@@ -99,7 +99,15 @@ export const StaffProposalFormNames = {
     staff_proposal_dmd: 'staff_proposal_dmd',
     staff_proposal_hra_sr_manager: 'staff_proposal_hra_sr_manager',
 }
-
+export const StaffProposalOFLFormNames = {
+    processDefKey: 'staff_proposal_request_process_ofl',
+    start: 'staff_proposal_request_process_ofl',
+    staff_proposal_hrbp: 'staff_proposal_ofl_hrbp',
+    staff_proposal_hrm_manager: 'staff_proposal_ofl_hrm_manager',
+    staff_proposal_sr_manager_approval: 'staff_proposal_ofl_sr_manager_approval',
+    staff_proposal_dmd: 'staff_proposal_ofl_dmd',
+    staff_proposal_hra_sr_manager: 'staff_proposal_ofl_hra_sr_manager',
+}
 export type RequestItem = {
     itemId: number
     itemName: string

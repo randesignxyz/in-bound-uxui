@@ -245,13 +245,39 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                 dataIndex: 'itemCode',
               },
               {
+                title: 'Status',
+                render: (_, r) => (
+                  <Tag
+                    icon={
+                      r.status === 'Pending' ? (
+                        <SyncOutlined spin />
+                      ) : r.status === 'Paid' ? (
+                        <DollarOutlined />
+                      ) : r.status === 'Rejected' ? (
+                        <CloseCircleOutlined />
+                      ) : (
+                        <CheckCircleOutlined />
+                      )
+                    }
+                    bordered={false}
+                    color={
+                      r.status === 'Pending'
+                        ? 'processing'
+                        : r.status === 'Paid'
+                        ? 'success'
+                        : r.status === 'Rejected'
+                        ? 'error'
+                        : 'success'
+                    }
+                  >
+                    {r.status}
+                  </Tag>
+                ),
+              },
+              {
                 title: 'Type',
                 dataIndex: 'itemType',
               },
-              // {
-              //   title: 'Category',
-              //   dataIndex: 'stockCategoryName',
-              // },
               {
                 title: 'UOM',
                 dataIndex: 'uom',

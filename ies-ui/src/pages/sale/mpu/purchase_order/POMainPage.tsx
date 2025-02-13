@@ -4,32 +4,40 @@ import { simpleRequestActions } from '@/services/model';
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
+  DeleteFilled,
   DollarOutlined,
-  EllipsisOutlined,
   PlusOutlined,
   SyncOutlined,
 } from '@ant-design/icons';
 import { ActionType } from '@ant-design/pro-components';
 import { useQuery } from '@umijs/max';
-import { Dropdown, MenuProps, Modal, Tag } from 'antd';
+import { Button, Modal, Tag } from 'antd';
 import numeral from 'numeral';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+import AdvanceSearch from './AdvanceSearch';
 import MpuPoDetail from './MpuPODetail';
 import MpuPoEntryForm from './MpuPOEntryForm';
 import { PurchaseOrderAdvanceSearch, PurchaseOrderDTO } from './data';
 import { PurchaseOrderServiceAPI } from './services';
-interface Props {}
+// interface Props {}
 
-const POMainPage: React.FC<Props> = () => {
+const POMainPage: React.FC = () => {
+  // const { state, actions, modals } = Model();
   const requestActions = simpleRequestActions();
   const services = PurchaseOrderServiceAPI(requestActions);
   const actionRef = useRef<ActionType>();
-  const [actionStatusState, setActionStatusState] = useState<{
-    visible?: {
-      type: 'open';
-      payloads?: PurchaseOrderDTO;
-    };
-  }>();
+  const [advanceSearch, setAdvanceSearch] = useState<{
+    isVisibled: boolean;
+    value?: PurchaseOrderAdvanceSearch;
+  }>({
+    isVisibled: false,
+  });
+  // const [actionStatusState, setActionStatusState] = useState<{
+  //   visible?: {
+  //     type: 'open';
+  //     payloads?: PurchaseOrderDTO;
+  //   };
+  // }>();
   const [filter, setFilter] = useState<TableViewSearchParams<PurchaseOrderAdvanceSearch>>({
     criteria: { advanceSearch: { status: 'ALL' } },
   });
@@ -41,64 +49,58 @@ const POMainPage: React.FC<Props> = () => {
       keepPreviousData: false,
     },
   );
-  const items = (items: PurchaseOrderDTO): MenuProps['items'] => [
-    // {
-    //     key: "action-status",
-    //     label: "Force Close",
-    //     itemIcon: <IssuesCloseOutlined />,
-    //     onClick: () => setActionStatusState({ visible: { type: "open", payloads: items } })
-    // },
-    // {
-    //     type: "divider"
-    // },
-    {
-      key: 'reject',
-      label: 'Reject',
-      danger: true,
-      itemIcon: <CloseCircleOutlined />,
-      disabled: items.status === 'Pending' ? false : true,
-      onClick: () => {
-        Modal.confirm({
-          title: 'Reject Purchase',
-          content: 'are you sure?',
-          onOk: async () => {
-            await services.rejected({
-              id: items.id,
-              remark: 'data was reject',
-            });
-            actionRef.current?.reload?.();
-            refetch();
-          },
+
+  const rejectedAction = (id: number) => {
+    Modal.confirm({
+      title: 'Reject Purchase',
+      content: 'are you sure?',
+      onOk: async () => {
+        await services.rejected({
+          id: id,
+          remark: 'Something went wrong',
         });
+        actionRef.current?.reload?.();
+        refetch();
       },
-    },
-    // {
-    //     key: "reject",
-    //     label: "Reject",
-    //     danger: true,
-    //     disabled: items.status != "Pending",
-    //     itemIcon: <DeleteOutlined />,
-    //     onClick: () => {
-    //         Modal.confirm({
-    //             title: "Reject Purchase",
-    //             content: "are you sure?",
-    //             onOk: async () => {
-    //                 // await services.updateStatus({
-    //                 //     id:items.id,
-    //                 //     status:"rejected",
-    //                 //     remark:"data was reject"
-    //                 // });
-    //                 // actionRef.current?.reload?.();
-    //                 // refetch();
-    //             }
-    //         })
-    //     },
-    // },
-  ];
-  useEffect(() => {}, [data]);
+    });
+  };
+
+  // const items = (items: PurchaseOrderDTO): MenuProps['items'] => [
+  // {
+  //     key: "action-status",
+  //     label: "Force Close",
+  //     itemIcon: <IssuesCloseOutlined />,
+  //     onClick: () => setActionStatusState({ visible: { type: "open", payloads: items } })
+  // },
+  // {
+  //     type: "divider"
+  // },
+  // {
+  //   key: 'reject',
+  //   label: 'Reject',
+  //   danger: true,
+  //   itemIcon: <CloseCircleOutlined />,
+  //   disabled: items.status === 'Pending' ? false : true,
+  //   onClick: () => {
+  //     Modal.confirm({
+  //       title: 'Reject Purchase',
+  //       content: 'are you sure?',
+  //       onOk: async () => {
+  //         await services.rejected({
+  //           id: items.id,
+  //           remark: 'data was reject',
+  //         });
+  //         actionRef.current?.reload?.();
+  //         refetch();
+  //       },
+  //     });
+  //   },
+  // },
+  // ];
+  // useEffect(() => {}, [data]);
   return (
     <>
-      <PageWrapper<PurchaseOrderDTO, PurchaseOrderAdvanceSearch, {}>
+      <PageWrapper<PurchaseOrderDTO, PurchaseOrderAdvanceSearch, ''>
         tabRender={(items) => [
           {
             action: 'add',
@@ -118,7 +120,7 @@ const POMainPage: React.FC<Props> = () => {
             panel: ({ onAddTab, onUpdateTab, key }) => (
               <MpuPoDetail
                 id={items?.id}
-                onEdit={(po?: PurchaseOrderDTO) => onUpdateTab?.('edit', undefined, undefined, key)}
+                onEdit={() => onUpdateTab?.('edit', undefined, undefined, key)}
                 onAdd={() => onAddTab?.('add', undefined, key)}
               />
             ),
@@ -127,7 +129,7 @@ const POMainPage: React.FC<Props> = () => {
           {
             action: 'edit',
             tabKey: 'edit',
-            panel: ({ onUpdateTab, onCloseTab, key }) => (
+            panel: ({ onUpdateTab, key }) => (
               <MpuPoEntryForm
                 type={'EDIT'}
                 onView={() => onUpdateTab?.('view', undefined, undefined, key)}
@@ -142,6 +144,7 @@ const POMainPage: React.FC<Props> = () => {
           },
         ]}
         listView={{
+          onOpenAdvanceSearch: () => setAdvanceSearch({ isVisibled: true }),
           statuses: [
             { option: { value: 'ALL', label: 'All' } },
             { option: { value: 'Pending', label: 'Pending' } },
@@ -160,7 +163,7 @@ const POMainPage: React.FC<Props> = () => {
             },
           ],
           onFilter(params, page, sort) {
-            setFilter((v) => ({
+            setFilter(() => ({
               criteria: {
                 searchValue: params?.searchValue,
                 advanceSearch: {
@@ -208,11 +211,11 @@ const POMainPage: React.FC<Props> = () => {
                 render: (_, r) => (
                   <Tag
                     icon={
-                      r.status == 'Pending' ? (
+                      r.status === 'Pending' ? (
                         <SyncOutlined spin />
-                      ) : r.status == 'Paid' ? (
+                      ) : r.status === 'Paid' ? (
                         <DollarOutlined />
-                      ) : r.status == 'Rejected' ? (
+                      ) : r.status === 'Rejected' ? (
                         <CloseCircleOutlined />
                       ) : (
                         <CheckCircleOutlined />
@@ -220,11 +223,11 @@ const POMainPage: React.FC<Props> = () => {
                     }
                     bordered={false}
                     color={
-                      r.status == 'Pending'
+                      r.status === 'Pending'
                         ? 'processing'
-                        : r.status == 'Paid'
+                        : r.status === 'Paid'
                         ? 'default'
-                        : r.status == 'Rejected'
+                        : r.status === 'Rejected'
                         ? 'error'
                         : 'success'
                     }
@@ -260,41 +263,67 @@ const POMainPage: React.FC<Props> = () => {
                 align: 'center',
                 render: (_, r) => {
                   return (
-                    <Dropdown
-                      menu={{
-                        items: items(r),
-                        style: {
-                          width: 200,
-                        },
-                      }}
-                    >
-                      <a>
-                        <EllipsisOutlined />
-                      </a>
-                    </Dropdown>
+                    <Button
+                      disabled={r.status !== 'Pending'}
+                      type="link"
+                      onClick={() => rejectedAction(r.id)}
+                      danger
+                      icon={<DeleteFilled />}
+                    />
                   );
+                  //   <Dropdown
+                  //     menu={{
+                  //       items: items(r),
+                  //       style: {
+                  //         width: 200,
+                  //       },
+                  //     }}
+                  //   >
+                  //     <a>
+                  //       <EllipsisOutlined />
+                  //     </a>
+                  //   </Dropdown>
                 },
               },
             ],
           },
         }}
       />
-      {/* <ActionStatusModalForm
-            open={actionStatusState?.visible?.type == "open"}
-            onCancel={() => setActionStatusState({ visible: undefined })}
-            data={actionStatusState?.visible?.payloads}
-            onSave={async(items:PurchaseOrderCreate)=>{
-                Modal.confirm({
-                    title: "force Close Purchase Order.",
-                    content: "are you sure?",
-                    onOk: async () => {
-                        await services.updateStatus(items);
-                        actionRef.current?.reload?.();
-                        refetch();
-                    }
-                })
-            }}
-        /> */}
+      <AdvanceSearch
+        width={500}
+        title="Advance Search"
+        open={advanceSearch.isVisibled}
+        onOpenChange={(visible) => {
+          // !visible && modals.hideModal('advanceSearch');
+          if (!visible) {
+            setAdvanceSearch({ isVisibled: false });
+          }
+          // setAdvanceSearch({ isVisibled: !visible });
+        }}
+        initData={filter.criteria}
+        // salespersons={[]}
+        onSearch={(data) => {
+          setFilter((v) => ({
+            ...v,
+            criteria: {
+              ...v.criteria,
+              advanceSearch: {
+                ...filter.criteria?.advanceSearch,
+                ...data,
+              },
+            },
+          }));
+        }}
+        onReset={() => {
+          setFilter((v) => ({
+            ...v,
+            criteria: {
+              ...filter.criteria,
+            },
+          }));
+          actionRef.current?.reload?.(true);
+        }}
+      />
     </>
   );
 };

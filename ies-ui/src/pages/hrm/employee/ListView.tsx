@@ -160,7 +160,7 @@ export default ({ onAdd, onEdit }: Props) => {
                 },
                 },
                 { title: 'Full Name (KH)', dataIndex: 'employeeLocalName' },
-                { title: 'Full Name (EN)', dataIndex: 'firstName', sorter: 'firstName', render(_, entity) { return (entity.firstName + " " + entity.lastName) } },
+                { title: 'Full Name (EN)', dataIndex: 'firstName', sorter: 'firstName', render(_, entity) { return ( entity.lastName+ " " +entity.firstName ) } },
                 // {title: 'Last Name', dataIndex: 'lastName', sorter: 'lastName'},
                 // {title: 'SAP ID', dataIndex:  'sapId', sorter: 'sapId'},
                 {title: 'Position', dataIndex: 'jobTitle', sorter: 'jobTitle'},

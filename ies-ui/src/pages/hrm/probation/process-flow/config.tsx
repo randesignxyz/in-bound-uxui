@@ -19,13 +19,15 @@ export const getProbationEvaluationRequestForms = (): DataForm[] => [
   {
     formKey: [     
       ProbationEvaluationRequestFormNames.assessmentPreparation,    
+      ProbationEvaluationRequestFormNames.srFunPreparation
     ],
     dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,
     actionDataForm: (props: ActionDataFormProps) => <AssessmentPreparationForm {...props} />,
   },
   {
     formKey: [     
-      ProbationEvaluationRequestFormNames.lineManagerSubmission,    
+      ProbationEvaluationRequestFormNames.lineManagerSubmission,  
+      ProbationEvaluationRequestFormNames.srFunSubmission  
     ],
     dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,
     actionDataForm: (props: ActionDataFormProps) => {
@@ -46,12 +48,19 @@ export const getProbationEvaluationRequestForms = (): DataForm[] => [
   },
   {
     formKey: [     
-      ProbationEvaluationRequestFormNames.mbo,  
+      ProbationEvaluationRequestFormNames.mbo, 
+      ProbationEvaluationRequestFormNames.srFunPropose,
+      ProbationEvaluationRequestFormNames.dmdReview,
+      ProbationEvaluationRequestFormNames.edMdApproval,
+
+      ProbationEvaluationRequestFormNames.srFunApproval,
+      ProbationEvaluationRequestFormNames.srFunReview,
+      ProbationEvaluationRequestFormNames.dmdApproval
     ],
     dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,
     actionDataForm: (props: ActionDataFormProps) => {
-      const title= 'MBO/ Approval'
-      props = {...props,title}
+      // const title= 'MBO/ Approval'
+      // props = {...props,title}
      return <MboApprovalForm {...props} />
     }
   },

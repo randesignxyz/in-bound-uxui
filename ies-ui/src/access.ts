@@ -603,6 +603,8 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           'ROLE_HR_APPRAISAL_REQUEST_ADMIN',
           'ROLE_HR_APPRAISAL_REQUEST_MANAGEMENT',
           'ROLE_HR_APPRAISAL_REQUEST_SM_EXECTIVE',
+          'ROLE_HR_PROBATION_EVALUATION_SUBMIT',
+          'ROLE_HR_PROBATION_EVALUATION_SUPPORT'
         ].some((it) => it === item),
       ) || false,
     canAccessHrEmployeeMenuItem:

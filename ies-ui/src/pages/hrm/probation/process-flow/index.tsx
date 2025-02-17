@@ -6,4 +6,14 @@ export const ProbationEvaluationRequestFormNames = {
     hrbp: 'probation_evaluation_form_hrbp',
     hrm: 'probation_evaluation_form_hrm',
     mbo: 'probation_evaluation_form_mbo',
+
+    srFunPreparation: 'probation_evaluation_form_sr_function_preparation',
+    srFunSubmission: 'probation_evaluation_form_sr_function_submission',
+    srFunPropose: 'probation_evaluation_form_sr_function_propose',
+    dmdReview: 'probation_evaluation_form_dmd_review',
+    edMdApproval: 'probation_evaluation_form_ed_md_approval',
+
+    srFunApproval: 'probation_evaluation_form_sr_function_approval',
+    srFunReview: 'probation_evaluation_form_sr_function_review',
+    dmdApproval: 'probation_evaluation_form_dmd_approval'
 };

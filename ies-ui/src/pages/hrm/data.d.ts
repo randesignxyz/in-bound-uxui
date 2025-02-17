@@ -54,7 +54,7 @@ export type ProbationEvaluationData = {
   requestorId: string;
   requestorBuId: number;
   jobId: number;
-  formType: string;
+  formTypeId: string;
   refId: number;
   empId: number;
   attachedFiles?: string[];

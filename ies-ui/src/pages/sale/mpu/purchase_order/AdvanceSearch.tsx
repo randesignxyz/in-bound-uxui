@@ -56,7 +56,6 @@ const AdvanceSarch: React.FC<AdvanceSearchProps> = ({
           help={<span />}
           name="salespersonId"
           label="Salesperson"
-          rules={[{ required: true }]}
           labelCol={{ sm: 8, md: 10, lg: 8, xl: 8, xxl: 6 }}
         >
           <RemoteSelectBox<SalesTeamWorkLess, { searchValue: any }>
@@ -70,7 +69,7 @@ const AdvanceSarch: React.FC<AdvanceSearchProps> = ({
               onOptionData: (item) => {
                 return {
                   label: [item.salespersonCode, item.salespersonName].join(' - '),
-                  value: [item.salespersonCode, item.salespersonName].join(','),
+                  value: item.salespersonCode,
                 };
               },
             }}

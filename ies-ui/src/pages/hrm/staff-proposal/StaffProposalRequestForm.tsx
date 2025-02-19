@@ -49,7 +49,7 @@ type DataFormType = {
   segmentId: number;
 };
 
-export default ({ visisble, formKey, onClose, cb }: ActionCompProps & { formKey: string }) => {
+export default ({ visisble, formKey, onClose, cb }: ActionCompProps & { formKey: string[] }) => {
   const [uploadFiles, setUploadFiles] = useState<string[]>([]);
   const [form] = useForm<DataFormType>();
   const [forceClearUpload, setForceClearUpload] = useState(0);

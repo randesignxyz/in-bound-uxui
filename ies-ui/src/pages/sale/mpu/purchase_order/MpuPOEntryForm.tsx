@@ -45,17 +45,21 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
   const [dataSourceItems, setDataSourceItems] = useState<PurchaseOrderItem[]>();
   const actionRef = useRef<ActionType>();
   const [addressList, setAddressList] = useState<AddressInfo[]>();
+  const [selectedAddress, setSelectedAddress] = useState<AddressInfo>();
   const [amount, setAmount] = useState<Amount>({
     discountAmount: 0,
     grantAmount: 0,
     totalAmount: 0,
   });
-  const onTotalAmoun = async () => {
-    const result = dataSourceItems
-      ?.map((o) => ({
-        totalAmoun: o.pricing * o.quantity || 0,
-      }))
-      .reduce((p, c) => ({ totalAmoun: p.totalAmoun + c.totalAmoun || 0 }));
+  const onTotalAmount = async () => {
+    const result =
+      dataSourceItems && dataSourceItems.length > 0
+        ? dataSourceItems
+            .map((o) => ({
+              totalAmoun: o.pricing * o.quantity || 0,
+            }))
+            .reduce((p, c) => ({ totalAmoun: p.totalAmoun + c.totalAmoun || 0 }))
+        : undefined;
 
     setAmount({
       totalAmount: result ? result.totalAmoun : 0,
@@ -69,6 +73,8 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
       id: purchaseOrder.distributorId || 0,
     });
     setAddressList(data);
+    const address = data.find((e) => e.customerAddressId === purchaseOrder.addressId);
+    setSelectedAddress(address);
 
     form.setFieldsValue({
       address: purchaseOrder.address,
@@ -81,6 +87,9 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
         purchaseOrder.distributorName,
       ].join(','),
       addressId: purchaseOrder.addressId,
+      addressCode: purchaseOrder.addressCode,
+      latitude: purchaseOrder.latitude,
+      longitude: purchaseOrder.longitude,
     });
     setDataSourceItems(
       purchaseOrder.items
@@ -114,9 +123,9 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
   }, [id]);
 
   useEffect(() => {
-    if (dataSourceItems?.length) {
-      onTotalAmoun?.();
-    }
+    //if (dataSourceItems?.length) {
+    onTotalAmount?.();
+    //}
   }, [dataSourceItems]);
 
   const getAddress = (address?: AddressInfo) => {
@@ -151,23 +160,19 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
       if (data.length > 0) {
         setAddressList(data);
         const address = data[0];
+        setSelectedAddress(address);
         form.setFieldsValue({
           addressId: address.id,
-          latitude: address.latitude,
-          longitude: address.longitude,
           address: getAddress(address),
         });
       }
     }
     if (addressId) {
       const address = addressList?.find((e) => e.id === addressId);
-
+      setSelectedAddress(address);
       const fullAddress = getAddress(address);
-      console.log(fullAddress);
       form.setFieldsValue({
         address: fullAddress,
-        latitude: address?.latitude,
-        longitude: address?.longitude,
       });
     }
   };
@@ -178,6 +183,40 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
       dataSourceItems.length > 0 &&
       dataSourceItems.every((e) => e.pricing > 0.0)
     );
+  };
+
+  const onSavePurchaseOrder = async (callback: (data: PurchaseOrderCreate) => void) => {
+    const dataForm = await form.validateFields();
+    const purchaseOrderDate = moment(dataForm.purchaseOrderDate).format('YYYY-MM-DD');
+    await editableFormRef.current?.validateFields();
+    Modal.confirm({
+      title: 'Make Purchase Order',
+      content: 'Are you sure',
+      onOk: async () => {
+        const assigner = dataForm.assignedTo.split(',');
+        const distributor = dataForm.distributorId.split(',');
+        console.log(dataForm.latitude, dataForm.longitude);
+        const entry: PurchaseOrderDtoCreate = {
+          id: id,
+          address: dataForm.address,
+          addressId: dataForm.addressId,
+          addressCode: selectedAddress?.address,
+          assignedToCode: assigner[0],
+          assignedTo: assigner[1],
+          distributorId: distributor[0],
+          distributorCode: distributor[1],
+          distributorName: distributor[2],
+          items: dataSourceItems,
+          latitude: selectedAddress?.latitude,
+          longitude: selectedAddress?.longitude,
+          remark: dataForm.remark,
+          purchaseOrderDate: moment(purchaseOrderDate).add(1, 'day'),
+          ...amount,
+        };
+        const response = await PurchaseOrderServiceAPI(mainRequestActions).save(entry);
+        callback(response.data);
+      },
+    });
   };
 
   return (
@@ -200,36 +239,10 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
                 type="dashed"
                 disabled={disabledButton()}
                 onClick={async () => {
-                  const dataForm = await form.validateFields();
-                  await editableFormRef.current?.validateFields();
-                  Modal.confirm({
-                    title: 'Make Purchase Order',
-                    content: 'Are you sure',
-                    onOk: async () => {
-                      const assigner = dataForm.assignedTo.split(',');
-                      const distributor = dataForm.distributorId.split(',');
-                      const entry: PurchaseOrderDtoCreate = {
-                        id: id,
-                        address: dataForm.address,
-                        addressId: dataForm.addressId,
-                        assignedToCode: assigner[0],
-                        assignedTo: assigner[1],
-                        distributorId: distributor[0],
-                        distributorCode: distributor[1],
-                        distributorName: distributor[2],
-                        items: dataSourceItems,
-                        latitude: dataForm.latitude,
-                        longitude: dataForm.longitude,
-                        remark: dataForm.remark,
-                        purchaseOrderDate:
-                          type === 'CREATE'
-                            ? moment(dataForm.purchaseOrderDate)
-                            : moment(dataForm.purchaseOrderDate).add(1, 'day'),
-                        ...amount,
-                      };
-                      await PurchaseOrderServiceAPI(mainRequestActions).save(entry);
-                      setDataSourceItems([]);
-                    },
+                  await onSavePurchaseOrder(() => {
+                    setSelectedAddress(undefined);
+                    setAddressList([]);
+                    setDataSourceItems([]);
                   });
                 }}
               >
@@ -239,39 +252,41 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
                 type="primary"
                 disabled={disabledButton()}
                 onClick={async () => {
-                  const dataForm = await form.validateFields();
-                  await editableFormRef.current?.validateFields();
-                  Modal.confirm({
-                    title: `${type === 'CREATE' ? 'Make' : 'Edit'} Purchase Order`,
-                    content: 'Are you sure',
-                    onOk: async () => {
-                      const assigner = dataForm.assignedTo.split(',');
-                      const distributor = dataForm.distributorId.split(',');
-                      const entry: PurchaseOrderDtoCreate = {
-                        id: id,
-                        address: dataForm.address,
-                        addressId: dataForm.addressId,
-                        assignedToCode: assigner[0],
-                        assignedTo: assigner[1],
-                        distributorId: distributor[0],
-                        distributorCode: distributor[1],
-                        distributorName: distributor[2],
-                        items: dataSourceItems,
-                        latitude: dataForm.latitude,
-                        longitude: dataForm.longitude,
-                        remark: dataForm.remark,
-                        purchaseOrderDate:
-                          type === 'CREATE'
-                            ? moment(dataForm.purchaseOrderDate)
-                            : moment(dataForm.purchaseOrderDate).add(1, 'day'),
-                        ...amount,
-                      };
-                      await PurchaseOrderServiceAPI(mainRequestActions)
-                        .save(entry)
-                        .then((o) => {
-                          onView?.(o.data);
-                        });
-                    },
+                  // const dataForm = await form.validateFields();
+                  // await editableFormRef.current?.validateFields();
+                  // Modal.confirm({
+                  //   title: `${type === 'CREATE' ? 'Make' : 'Edit'} Purchase Order`,
+                  //   content: 'Are you sure',
+                  //   onOk: async () => {
+                  //     const assigner = dataForm.assignedTo.split(',');
+                  //     const distributor = dataForm.distributorId.split(',');
+                  //     const entry: PurchaseOrderDtoCreate = {
+                  //       id: id,
+                  //       address: dataForm.address,
+                  //       addressId: dataForm.addressId,
+                  //       addressCode: selectedAddress?.address,
+                  //       assignedToCode: assigner[0],
+                  //       assignedTo: assigner[1],
+                  //       distributorId: distributor[0],
+                  //       distributorCode: distributor[1],
+                  //       distributorName: distributor[2],
+                  //       items: dataSourceItems,
+                  //       latitude: dataForm.latitude,
+                  //       longitude: dataForm.longitude,
+                  //       remark: dataForm.remark,
+                  //       purchaseOrderDate:
+                  //         type === 'CREATE'
+                  //           ? moment(dataForm.purchaseOrderDate)
+                  //           : moment(dataForm.purchaseOrderDate).add(1, 'day'),
+                  //       ...amount,
+                  //     };
+                  //     const response = await PurchaseOrderServiceAPI(mainRequestActions).save(
+                  //       entry,
+                  //     );
+                  //   },
+                  // });
+                  await onSavePurchaseOrder((data) => {
+                    onView?.(data);
                   });
                 }}
               >
@@ -321,7 +336,10 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
                 showSearch
                 rules={[{ required: true }]}
                 options={addressList?.map((item) => {
-                  return { value: item.id, label: item.address };
+                  return {
+                    value: item.customerAddressId,
+                    label: item.address,
+                  };
                 })}
               />
               <ProFormTextArea

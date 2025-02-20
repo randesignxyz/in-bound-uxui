@@ -8,12 +8,13 @@ import { useAccess, useQuery } from '@umijs/max';
 import { Tag } from 'antd';
 import numeral from 'numeral';
 import React, { useRef, useState } from 'react';
+import AdvanceSearch from '../components/AdvanceSearch';
 import SettlementMethodDetail from './Detail';
-import { SettlementMethodAdvanceSearch, SettlementMethodDetailDTO } from './data';
+import { SettlementMethodDetailDTO } from './data';
 import { SettlementMethodServicAPI } from './service';
-interface Props {}
+// interface Props {}
 
-const SettlementMianPage: React.FC<Props> = () => {
+const SettlementMianPage: React.FC<any> = () => {
   const access = useAccess();
   const requestActions = simpleRequestActions();
   const services = SettlementMethodServicAPI(requestActions);
@@ -25,8 +26,17 @@ const SettlementMianPage: React.FC<Props> = () => {
     : access.canAccessTabCashier
     ? 'cashier'
     : 'admin';
-  const [filter, setFilter] = useState<TableViewSearchParams<SettlementMethodAdvanceSearch>>({
+  const [filter, setFilter] = useState<
+    TableViewSearchParams<AdvanceSearchParam & { type: string }>
+  >({
     criteria: { advanceSearch: { status: 'ALL', type: role } },
+  });
+
+  const [advanceSearch, setAdvanceSearch] = useState<{
+    isVisibled: boolean;
+    value?: AdvanceSearchParam & { type: string };
+  }>({
+    isVisibled: false,
   });
 
   const { data, isFetching, refetch } = useQuery(
@@ -38,20 +48,20 @@ const SettlementMianPage: React.FC<Props> = () => {
   );
   return (
     <>
-      <PageWrapper<SettlementMethodDetailDTO, SettlementMethodAdvanceSearch, {}>
+      <PageWrapper<SettlementMethodDetailDTO, AdvanceSearchParam & { type: string }, ''>
         tabRender={(items) => [
           {
             tabLabel: `${displayDate(items?.settlementDate)}-${items?.salespersonCode}`,
             action: 'view',
             tabKey: `${items?.id}`,
-            panel: ({ onUpdateTab, onAddTab, onCloseTab, key }) => (
-              <SettlementMethodDetail id={items?.id} />
-            ),
+            //{ onUpdateTab, onAddTab, onCloseTab, key }
+            panel: () => <SettlementMethodDetail id={items?.id} />,
           },
         ]}
         listView={{
           type: 'Table',
           title: 'Settlement',
+          onOpenAdvanceSearch: () => setAdvanceSearch({ isVisibled: true }),
           statuses: [
             { option: { label: 'All', value: 'ALL', default: true } },
             { option: { label: 'Pending', value: 'Pending' } },
@@ -59,19 +69,19 @@ const SettlementMianPage: React.FC<Props> = () => {
             { option: { label: 'Rejected', value: 'Rejected' } },
           ],
           onRefresh: refetch,
-          onFilter: (params, page, sort) => {
-            setFilter((v) => ({
-              ...v,
+          onFilter(params, page, sort) {
+            setFilter({
               criteria: {
                 searchValue: params?.searchValue,
                 advanceSearch: {
-                  status: params?.status || 'ALL',
-                  type: role,
+                  searchValue: params?.searchValue,
+                  status: params?.status,
+                  type: params?.type || '',
                 },
                 sort: sort,
               },
               pagination: { ...page },
-            }));
+            });
           },
           props: {
             dataSource: data?.items,
@@ -150,6 +160,40 @@ const SettlementMianPage: React.FC<Props> = () => {
             ],
           },
         }}
+      />
+      <AdvanceSearch
+        width={500}
+        title="Advance Search"
+        open={advanceSearch.isVisibled}
+        entity="Settlement"
+        onOpenChange={(visible) => {
+          if (!visible) {
+            setAdvanceSearch({ isVisibled: false });
+          }
+        }}
+        onSearch={(data) => {
+          setFilter((v) => ({
+            ...v,
+            criteria: {
+              ...v.criteria,
+              advanceSearch: {
+                ...filter.criteria?.advanceSearch,
+                ...data,
+                type: filter.criteria?.advanceSearch?.type || '',
+              },
+            },
+          }));
+        }}
+        onReset={() => {
+          setFilter((v) => ({
+            ...v,
+            criteria: {
+              ...filter.criteria,
+            },
+          }));
+          actionRef.current?.reload?.(true);
+        }}
+        initData={filter.criteria}
       />
     </>
   );

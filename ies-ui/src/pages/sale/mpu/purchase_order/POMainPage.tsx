@@ -14,10 +14,10 @@ import { useQuery } from '@umijs/max';
 import { Button, Modal, Tag } from 'antd';
 import numeral from 'numeral';
 import { useRef, useState } from 'react';
-import AdvanceSearch from './AdvanceSearch';
+import AdvanceSearch from '../components/AdvanceSearch';
 import MpuPoDetail from './MpuPODetail';
 import MpuPoEntryForm from './MpuPOEntryForm';
-import { PurchaseOrderAdvanceSearch, PurchaseOrderDTO } from './data';
+import { PurchaseOrderDTO } from './data';
 import { PurchaseOrderServiceAPI } from './services';
 // interface Props {}
 
@@ -28,7 +28,7 @@ const POMainPage: React.FC = () => {
   const actionRef = useRef<ActionType>();
   const [advanceSearch, setAdvanceSearch] = useState<{
     isVisibled: boolean;
-    value?: PurchaseOrderAdvanceSearch;
+    value?: AdvanceSearchParam;
   }>({
     isVisibled: false,
   });
@@ -38,7 +38,7 @@ const POMainPage: React.FC = () => {
   //     payloads?: PurchaseOrderDTO;
   //   };
   // }>();
-  const [filter, setFilter] = useState<TableViewSearchParams<PurchaseOrderAdvanceSearch>>({
+  const [filter, setFilter] = useState<TableViewSearchParams<AdvanceSearchParam>>({
     criteria: { advanceSearch: { status: 'ALL' } },
   });
   const { data, isFetching, refetch } = useQuery(
@@ -100,7 +100,7 @@ const POMainPage: React.FC = () => {
   // useEffect(() => {}, [data]);
   return (
     <>
-      <PageWrapper<PurchaseOrderDTO, PurchaseOrderAdvanceSearch, ''>
+      <PageWrapper<PurchaseOrderDTO, AdvanceSearchParam, ''>
         tabRender={(items) => [
           {
             action: 'add',
@@ -293,15 +293,12 @@ const POMainPage: React.FC = () => {
         width={500}
         title="Advance Search"
         open={advanceSearch.isVisibled}
+        entity="Purchase Order"
         onOpenChange={(visible) => {
-          // !visible && modals.hideModal('advanceSearch');
           if (!visible) {
             setAdvanceSearch({ isVisibled: false });
           }
-          // setAdvanceSearch({ isVisibled: !visible });
         }}
-        initData={filter.criteria}
-        // salespersons={[]}
         onSearch={(data) => {
           setFilter((v) => ({
             ...v,
@@ -323,6 +320,7 @@ const POMainPage: React.FC = () => {
           }));
           actionRef.current?.reload?.(true);
         }}
+        initData={filter.criteria}
       />
     </>
   );

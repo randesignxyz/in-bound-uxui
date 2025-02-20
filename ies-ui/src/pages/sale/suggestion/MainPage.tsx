@@ -141,7 +141,7 @@ const TaskListMainPage: React.FC<Props> = () => {
             action: 'view',
             value: item?.stockName || 'n/a',
             tabLabel: item?.stockName || 'Draft',
-            panel: ({ onUpdateTab, onCloseTab }) => (
+            panel: ({ onCloseTab }) => (
               <TaskListDetailView
                 data={item}
                 onCountStock={(r) => setCountModal({ open: true, record: r })}

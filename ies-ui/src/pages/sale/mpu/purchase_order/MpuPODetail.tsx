@@ -23,7 +23,7 @@ interface Props {
   onAdd?: () => void;
 }
 
-const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
+const MpuPoDetail: React.FC<Props> = ({ id, onEdit }) => {
   const requestActions = simpleRequestActions();
   const services = PurchaseOrderServiceAPI(requestActions);
   const [dataSource, setDataSource] = useState<PurchaseOrderDTO>();
@@ -53,10 +53,12 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
           size="small"
           title="Purchase Order"
           extra={
-            <Button type="link" onClick={onEditEvent}>
-              <EditOutlined />
-              Edit
-            </Button>
+            dataSource?.status === 'Pending' && (
+              <Button type="link" onClick={onEditEvent}>
+                <EditOutlined />
+                Edit
+              </Button>
+            )
           }
         >
           <Row gutter={12} style={{ marginLeft: 20 }}>
@@ -75,12 +77,6 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                   {
                     title: 'Request By',
                     render: (_, r) => [r.requestedCode, r.requestedBy].filter((p) => p).join(' - '),
-                  },
-                  {
-                    title: 'Distributor Name',
-                    render: (_, r) =>
-                      [r.distributorCode, r.distributorName].filter((p) => p).join(' - '),
-                    // dataIndex: 'distributorName',
                   },
                 ]}
               />
@@ -107,10 +103,6 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                     render: (_, r) => {
                       return formatDateTime(r.requestedDate);
                     },
-                  },
-                  {
-                    title: 'Distibutor Code',
-                    dataIndex: 'distributorCode',
                   },
 
                   // {
@@ -184,10 +176,6 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                     render: (_, r) => [r.assignedToCode, r.assignedTo].filter((p) => p).join(' - '),
                   },
                   // {
-                  //   title: 'Assigned To Code',
-                  //   dataIndex: 'assignedToCode',
-                  // },
-                  // {
                   //   title: 'Assign To ',
                   //   dataIndex: 'assignedTo',
                   // },
@@ -196,7 +184,72 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
             </Col>
           </Row>
           <Row gutter={12} style={{ marginLeft: 20, marginTop: 20 }}>
-            <Col xs={24}>
+            <Col md={16} xs={24}>
+              <ProDescriptions
+                dataSource={dataSource}
+                loading={requestActions.request?.loading}
+                contentStyle={{ fontWeight: 500 }}
+                column={1}
+                columns={[
+                  {
+                    title: 'Remarks: ',
+                    dataIndex: 'remark',
+                  },
+                ]}
+              />
+            </Col>
+            <Col md={8} xs={24} />
+          </Row>
+        </Card>
+        <Card title="Distributor Info" size="small">
+          <Row gutter={12} style={{ marginLeft: 20 }}>
+            <Col md={8} xs={24}>
+              <ProDescriptions
+                dataSource={dataSource}
+                contentStyle={{ fontWeight: 500 }}
+                loading={requestActions.request?.loading}
+                column={1}
+                columns={[
+                  {
+                    title: 'Distributor Name',
+                    render: (_, r) =>
+                      [r.distributorCode, r.distributorName].filter((p) => p).join(' - '),
+                    // dataIndex: 'distributorName',
+                  },
+                ]}
+              />
+            </Col>
+            <Col md={8} xs={24}>
+              <ProDescriptions
+                dataSource={dataSource}
+                contentStyle={{ fontWeight: 500 }}
+                loading={requestActions.request?.loading}
+                column={1}
+                columns={[
+                  {
+                    title: 'Distributor Code',
+                    dataIndex: 'distributorCode',
+                  },
+                ]}
+              />
+            </Col>
+            <Col md={8} xs={24}>
+              <ProDescriptions
+                dataSource={dataSource}
+                contentStyle={{ fontWeight: 500 }}
+                loading={requestActions.request?.loading}
+                column={1}
+                columns={[
+                  {
+                    title: 'Ship Address',
+                    dataIndex: 'addressCode',
+                  },
+                ]}
+              />
+            </Col>
+          </Row>
+          <Row gutter={12} style={{ marginLeft: 20, marginTop: 20 }}>
+            <Col md={16} xs={24}>
               <ProDescriptions
                 dataSource={dataSource}
                 loading={requestActions.request?.loading}
@@ -226,6 +279,7 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                 ]}
               />
             </Col>
+            <Col md={8} xs={24} />
           </Row>
         </Card>
         <Card title="Purchase Order Item" size="small">
@@ -295,7 +349,7 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                 render: (_, r) => `$ ${numeral(r.pricing).format('0,000.000')}`,
               },
               {
-                title: 'Total',
+                title: 'Amount',
                 align: 'right',
                 render: (_, r) => (
                   <Typography.Text type="success">
@@ -309,7 +363,7 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
               return (
                 <>
                   <Table.Summary.Row>
-                    <Table.Summary.Cell index={1} colSpan={6} align="right">
+                    <Table.Summary.Cell index={1} colSpan={7} align="right">
                       Total Amount
                     </Table.Summary.Cell>
                     <Table.Summary.Cell index={1} align="right">
@@ -319,7 +373,7 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                     </Table.Summary.Cell>
                   </Table.Summary.Row>
                   <Table.Summary.Row>
-                    <Table.Summary.Cell index={1} colSpan={6} align="right">
+                    <Table.Summary.Cell index={1} colSpan={7} align="right">
                       Discount Amount
                     </Table.Summary.Cell>
                     <Table.Summary.Cell index={1} align="right">
@@ -329,7 +383,7 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
                     </Table.Summary.Cell>
                   </Table.Summary.Row>
                   <Table.Summary.Row>
-                    <Table.Summary.Cell index={1} colSpan={6} align="right">
+                    <Table.Summary.Cell index={1} colSpan={7} align="right">
                       Grand Amount
                     </Table.Summary.Cell>
                     <Table.Summary.Cell index={1} align="right">
@@ -377,13 +431,15 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit, onAdd }) => {
             </Card>
           </>
         )}
-        <Card size="small">
-          <Flex justify="flex-end">
-            <Button type="primary" onClick={onEditEvent}>
-              Edit
-            </Button>
-          </Flex>
-        </Card>
+        {dataSource?.status === 'Pending' && (
+          <Card size="small">
+            <Flex justify="flex-end">
+              <Button type="primary" onClick={onEditEvent}>
+                Edit
+              </Button>
+            </Flex>
+          </Card>
+        )}
         {/* <Card size='small'>
                     <Flex
                         justify='space-between'

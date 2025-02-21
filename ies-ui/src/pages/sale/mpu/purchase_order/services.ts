@@ -1,17 +1,11 @@
 import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { RequestActions, ServiceApiType, singleRequest } from '@/services/apiGateway';
 import { Page } from '@/services/shared/data';
-import {
-  IdRemarkParam,
-  PurchaseOrderAdvanceSearch,
-  PurchaseOrderCreate,
-  PurchaseOrderDTO,
-  PurchaseOrderDtoCreate,
-  PurchaseOrderItem,
-} from './data';
+import moment from 'moment';
+import { IdRemarkParam, PurchaseOrderDTO, PurchaseOrderDtoCreate, PurchaseOrderItem } from './data';
 
 const PurchaseOrderAction = {
-  save: (data: PurchaseOrderCreate): ServiceApiType<PurchaseOrderCreate> => ({
+  save: (data: PurchaseOrderDtoCreate): ServiceApiType<PurchaseOrderDtoCreate> => ({
     actionName: 'save-purchase-order',
     endpoint: 'SALE',
     type: 'EXEC',
@@ -24,20 +18,31 @@ const PurchaseOrderAction = {
     payload: { id },
   }),
   page: (
-    params: TableViewSearchParams<PurchaseOrderAdvanceSearch>,
-  ): ServiceApiType<{ searchValue?: string }> => ({
+    param: TableViewSearchParams<AdvanceSearchParam>,
+  ): ServiceApiType<{
+    searchValue?: string;
+    advanceSearch: { status?: string; salespersonId?: string; orderedDate?: moment.Moment[] };
+  }> => ({
     actionName: 'page-purchase-order',
     endpoint: 'SALE',
     type: 'PAGING_QUERY',
     payload: {
-      ...params.criteria,
+      ...param.criteria,
+      advanceSearch: {
+        status: param.criteria?.advanceSearch?.status,
+        salespersonId: param.criteria?.advanceSearch?.salespersonId,
+        orderedDate: param.criteria?.advanceSearch?.dates && [
+          moment(param.criteria.advanceSearch.dates[0]),
+          moment(param.criteria.advanceSearch.dates[1]),
+        ],
+      },
     },
     pagination: {
-      page: params.pagination?.current,
-      pageSize: params.pagination?.pageSize,
+      page: param.pagination?.current,
+      pageSize: param.pagination?.pageSize,
     },
   }),
-  rejecting: (param: IdRemarkParam): ServiceApiType<{}> => ({
+  rejecting: (param: IdRemarkParam): ServiceApiType<IdRemarkParam> => ({
     actionName: 'reject-po',
     endpoint: 'SALE',
     type: 'EXEC',
@@ -56,11 +61,11 @@ export const PurchaseOrderServiceAPI = (requestActions: RequestActions) => {
     save: (data: PurchaseOrderDtoCreate) =>
       singleRequest(PurchaseOrderAction.save(data))(requestActions) as Promise<{
         message: string;
-        data: PurchaseOrderCreate;
+        data: PurchaseOrderDtoCreate;
       }>,
     detail: (id?: number) =>
       singleRequest(PurchaseOrderAction.detail(id))(requestActions) as Promise<PurchaseOrderDTO>,
-    page: (params: TableViewSearchParams<PurchaseOrderAdvanceSearch>) =>
+    page: (params: TableViewSearchParams<AdvanceSearchParam>) =>
       singleRequest(PurchaseOrderAction.page(params))(requestActions) as Promise<
         Page<PurchaseOrderDTO>
       >,

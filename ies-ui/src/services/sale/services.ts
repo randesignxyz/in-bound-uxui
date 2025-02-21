@@ -4,6 +4,7 @@ import type { Moment } from 'moment';
 import type { ServiceType } from '../API';
 import type { RequestActions, ServiceApiType } from '../apiGateway';
 import {
+  downloadReport,
   downloadSaleReport,
   exec,
   execService,
@@ -132,7 +133,7 @@ const ReqParams = {
 };
 
 export const SaleServiceAPI = (actions?: RequestActions) => ({
-  downloadSoReport: downloadSaleReport<{
+  downloadSoReport: downloadReport<{
     reportType: string;
     salespersonId?: number[];
     orderedDate?: moment.Moment[];

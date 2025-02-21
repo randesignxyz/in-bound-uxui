@@ -88,18 +88,18 @@ export const findMultiService = <IN extends MuitlParams | undefined, OU>(
 
 export const execService =
   <IN, OU>(service: ServiceType, actions?: RequestActions) =>
-  async (params: IN) => {
-    try {
-      actions?.start?.();
-      const rs = await execData<IN, OU>(service, params);
-      if (!rs) throw Error('');
-      rs && actions?.end?.('SUCCESS');
-      return rs;
-    } catch (error) {
-      actions?.end?.('FAILED');
-      throw error;
-    }
-  };
+    async (params: IN) => {
+      try {
+        actions?.start?.();
+        const rs = await execData<IN, OU>(service, params);
+        if (!rs) throw Error('');
+        rs && actions?.end?.('SUCCESS');
+        return rs;
+      } catch (error) {
+        actions?.end?.('FAILED');
+        throw error;
+      }
+    };
 
 export const execDownloadForm =
   (service: ServiceType, actions?: RequestActions) => async (instId: string) => {
@@ -143,93 +143,92 @@ const doDownloadSalesReport = async <T>(params: DownloadData<T>): Promise<void> 
 
   if (params.target) element.target = '_blank';
   if (!params.target)
-    element.download = `${params.fileName}-${moment().format()}.${
-      params.type === 'EXCEL' ? 'xls' : 'pdf'
-    }`;
+    element.download = `${params.fileName}-${moment().format()}.${params.type === 'EXCEL' ? 'xls' : 'pdf'
+      }`;
   document.body.appendChild(element);
   element.click();
 };
 
 export const downloadGenericReport =
   (actions?: RequestActions) =>
-  async (param: Omit<DownloadData<GenericReportParams>, 'reportName'>) => {
-    try {
-      actions?.start?.();
-      await doDownloadReport({
-        ...param,
-        reportName: 'export-generic-report',
-      });
-      actions?.end?.('SUCCESS');
-    } catch (error) {
-      actions?.end?.('FAILED');
-      throw error;
-    }
-  };
+    async (param: Omit<DownloadData<GenericReportParams>, 'reportName'>) => {
+      try {
+        actions?.start?.();
+        await doDownloadReport({
+          ...param,
+          reportName: 'export-generic-report',
+        });
+        actions?.end?.('SUCCESS');
+      } catch (error) {
+        actions?.end?.('FAILED');
+        throw error;
+      }
+    };
 
 export const downloadReport =
   <T>(actions?: RequestActions) =>
-  async (param: DownloadData<T>) => {
-    try {
-      actions?.start?.();
-      await doDownloadReport<T>(param);
-      actions?.end?.('SUCCESS');
-    } catch (error) {
-      actions?.end?.('FAILED');
-      throw error;
-    }
-  };
+    async (param: DownloadData<T>) => {
+      try {
+        actions?.start?.();
+        await doDownloadReport<T>(param);
+        actions?.end?.('SUCCESS');
+      } catch (error) {
+        actions?.end?.('FAILED');
+        throw error;
+      }
+    };
 
 export const downloadSaleReport =
   <T>(actions?: RequestActions) =>
-  async (param: DownloadData<T>) => {
-    try {
-      actions?.start?.();
-      await doDownloadSalesReport(param);
-      actions?.end?.('SUCCESS');
-    } catch (error) {
-      actions?.end?.('FAILED');
-      throw error;
-    }
-  };
+    async (param: DownloadData<T>) => {
+      try {
+        actions?.start?.();
+        await doDownloadSalesReport(param);
+        actions?.end?.('SUCCESS');
+      } catch (error) {
+        actions?.end?.('FAILED');
+        throw error;
+      }
+    };
 
 export const downloadReport1 =
   <T>(actions?: RequestActions) =>
-  async (param: DownloadData<T>) => {
-    try {
-      actions?.start?.();
-      actions?.end?.('SUCCESS');
-      return await doDownloadReport1<T>(param);
-    } catch (error) {
-      actions?.end?.('FAILED');
-      throw error;
-    }
-  };
+    async (param: DownloadData<T>) => {
+      try {
+        actions?.start?.();
+        actions?.end?.('SUCCESS');
+        return await doDownloadReport1<T>(param);
+      } catch (error) {
+        actions?.end?.('FAILED');
+        throw error;
+      }
+    };
 
 export const printPdf =
   <T>(actions?: RequestActions) =>
-  async (params: PrintPDFData<T>, onPrintDialogClose?: () => void) => {
-    try {
-      actions?.start?.();
-      const blob = request<Blob>(`${REPORT_API}/export/report/${params.reportName}/type/PDF`, {
-        method: 'POST',
-        responseType: 'blob',
-        data: params.data,
-      });
-      const v = await blob;
-      blobToBase64(v, (base64) => {
-        printJS({
-          base64: true,
-          printable: base64,
-          type: 'pdf',
-          onPrintDialogClose: onPrintDialogClose,
+    async (params: PrintPDFData<T>, onPrintDialogClose?: () => void) => {
+      try {
+        actions?.start?.();
+        const blob = request<Blob>(`${REPORT_API}/export/report/${params.reportName}/type/PDF`, {
+          method: 'POST',
+          responseType: 'blob',
+          data: params.data,
         });
-      });
-    } catch (e: any) {
-      actions?.end?.('FAILED');
-    } finally {
-      actions?.end?.('SUCCESS');
-    }
-  };
+        const v = await blob;
+        blobToBase64(v, (base64) => {
+          printJS({
+            base64: true,
+            printable: base64,
+            type: 'pdf',
+            onPrintDialogClose: onPrintDialogClose,
+          });
+        });
+      } catch (e: any) {
+        actions?.end?.('FAILED');
+      } finally {
+        actions?.end?.('SUCCESS');
+      }
+    };
 
 export const downloadUploadFile =
   (actions?: RequestActions) => async (fileId: string, fileName: string) => {
@@ -305,20 +304,20 @@ export const getUploadFileObjectUrlV2 = (actions?: RequestActions) => async (fil
 
 export const downloadReportBlob =
   <T>(actions?: RequestActions) =>
-  async (params: DownloadData<T>) => {
-    try {
-      actions?.start?.();
-      const blob = request<Blob>(`/api/export/report/${params.reportName}/type/${params.type}`, {
-        method: 'POST',
-        data: params.data,
-      });
-      actions?.end?.('SUCCESS');
-      return await blob;
-    } catch (error) {
-      actions?.end?.('FAILED');
-      throw error;
-    }
-  };
+    async (params: DownloadData<T>) => {
+      try {
+        actions?.start?.();
+        const blob = request<Blob>(`/api/export/report/${params.reportName}/type/${params.type}`, {
+          method: 'POST',
+          data: params.data,
+        });
+        actions?.end?.('SUCCESS');
+        return await blob;
+      } catch (error) {
+        actions?.end?.('FAILED');
+        throw error;
+      }
+    };
 
 const execData = async <IN, OU>(service: ServiceType, params: IN): Promise<OU> => {
   const srvUrl = getServiceUrl(service.type);
@@ -330,24 +329,24 @@ const execData = async <IN, OU>(service: ServiceType, params: IN): Promise<OU> =
 
 export const commitImportedData =
   <OU extends { id: number }>(key: string, importId: number) =>
-  async (actions?: RequestActions) => {
-    actions?.start?.();
-    try {
-      const srvUrl = getServiceUrl('FILE');
-      const rs = await request<DataResponse<OU>>(`${srvUrl}/commit`, {
-        method: 'POST',
-        data: {
-          importedKey: key,
-          importedId: importId,
-        },
-      });
-      actions?.end?.('SUCCESS');
-      return rs;
-    } catch (error: any) {
-      actions?.end?.('FAILED');
-      throw error;
-    }
-  };
+    async (actions?: RequestActions) => {
+      actions?.start?.();
+      try {
+        const srvUrl = getServiceUrl('FILE');
+        const rs = await request<DataResponse<OU>>(`${srvUrl}/commit`, {
+          method: 'POST',
+          data: {
+            importedKey: key,
+            importedId: importId,
+          },
+        });
+        actions?.end?.('SUCCESS');
+        return rs;
+      } catch (error: any) {
+        actions?.end?.('FAILED');
+        throw error;
+      }
+    };
 
 const downloadForm = async (service: ServiceType, params: { instId: string }): Promise<Blob> => {
   const srvUrl = getServiceUrl(service.type);
@@ -375,9 +374,8 @@ const doDownloadReport = async <T>(params: DownloadData<T>): Promise<void> => {
 
   if (params.target) element.target = '_blank';
   if (!params.target)
-    element.download = `${params.fileName}-${moment().format()}.${
-      params.type === 'EXCEL' ? 'xls' : 'pdf'
-    }`;
+    element.download = `${params.fileName}-${moment().format()}.${params.type === 'EXCEL' ? 'xls' : 'pdf'
+      }`;
   document.body.appendChild(element);
   element.click();
 };
@@ -422,8 +420,7 @@ const findPagingData = async <IN, OU>(
 ): Promise<Paging<OU>> => {
   const srvUrl = getServiceUrl(service.type);
   return request<Paging<OU>>(
-    `${srvUrl}/name/${service.name}/list-paging/page/${pagination?.page || 0}/size/${
-      pagination?.pageSize || 20
+    `${srvUrl}/name/${service.name}/list-paging/page/${pagination?.page || 0}/size/${pagination?.pageSize || 20
     }`,
     {
       method: 'POST',
@@ -447,173 +444,172 @@ const findMulti = async <IN extends MuitlParams | undefined, OU>(
 
 export type ServiceApiType<IN> =
   | {
-      type: 'FETCH_QUERY';
-      actionName: string;
-      endpoint: Endpoint;
-      responseKey?: string;
-      payload?: IN;
-    }
+    type: 'FETCH_QUERY';
+    actionName: string;
+    endpoint: Endpoint;
+    responseKey?: string;
+    payload?: IN;
+  }
   | {
-      type: 'LIST_QUERY';
-      actionName: string;
-      endpoint: Endpoint;
-      responseKey?: string;
-      payload: IN;
-    }
+    type: 'LIST_QUERY';
+    actionName: string;
+    endpoint: Endpoint;
+    responseKey?: string;
+    payload: IN;
+  }
   | {
-      type: 'PAGING_QUERY';
-      actionName: string;
-      endpoint: Endpoint;
-      responseKey?: string;
-      payload: IN;
-      pagination?: Pagination;
-      sort?: Record<string, SortOrder>;
-    }
+    type: 'PAGING_QUERY';
+    actionName: string;
+    endpoint: Endpoint;
+    responseKey?: string;
+    payload: IN;
+    pagination?: Pagination;
+    sort?: Record<string, SortOrder>;
+  }
   | {
-      type: 'EXEC';
-      actionName: string;
-      endpoint: Endpoint;
-      responseKey?: string;
-      payload: IN;
-    };
+    type: 'EXEC';
+    actionName: string;
+    endpoint: Endpoint;
+    responseKey?: string;
+    payload: IN;
+  };
 
 export const MultiRequest =
   <OU>(datas: ServiceApiType<any>[]) =>
-  async (actions?: RequestActions): Promise<OU> => {
-    try {
-      actions?.start?.();
-      const group = groupBy(datas, (it) => it.endpoint);
-      const rs = map(group, async (values, key) => {
-        const srvUrl = getServiceUrl(key as Endpoint);
-        const params = values.map((it) => ({
-          actionName: it.actionName,
-          responseKey: it.responseKey,
-          type: it.type == 'LIST_QUERY' ? 'List' : 'Single',
-          payload: it.payload || {},
-        }));
-        return await request<OU>(`${srvUrl}/list-multi`, {
-          method: 'POST',
-          data: params,
+    async (actions?: RequestActions): Promise<OU> => {
+      try {
+        actions?.start?.();
+        const group = groupBy(datas, (it) => it.endpoint);
+        const rs = map(group, async (values, key) => {
+          const srvUrl = getServiceUrl(key as Endpoint);
+          const params = values.map((it) => ({
+            actionName: it.actionName,
+            responseKey: it.responseKey,
+            type: it.type == 'LIST_QUERY' ? 'List' : 'Single',
+            payload: it.payload || {},
+          }));
+          return await request<OU>(`${srvUrl}/list-multi`, {
+            method: 'POST',
+            data: params,
+          });
         });
-      });
 
-      const result = await rs.reduce(async (p, c) => ({ ...(await p), ...(await c) }));
-      actions?.end?.('SUCCESS');
-      return result;
-    } catch (error) {
-      actions?.end?.('FAILED');
-      throw error;
-    }
-  };
+        const result = await rs.reduce(async (p, c) => ({ ...(await p), ...(await c) }));
+        actions?.end?.('SUCCESS');
+        return result;
+      } catch (error) {
+        actions?.end?.('FAILED');
+        throw error;
+      }
+    };
 
 export const singleRequest =
   <OU>(data: ServiceApiType<any>) =>
-  async (actions?: RequestActions): Promise<OU | OU[] | Paging<OU>> => {
-    if (data.type == 'PAGING_QUERY') {
-      return await findPaging<OU>(data)(actions);
-    } else if (data.type == 'FETCH_QUERY') {
-      return await find<OU>(data)(actions);
-    } else if (data.type == 'LIST_QUERY') {
-      return await findAll<OU>(data)(actions);
-    } else if (data.type == 'EXEC') {
-      return await exec<OU>(data)(actions);
-    } else {
-      throw Error('Not support');
-    }
-  };
+    async (actions?: RequestActions): Promise<OU | OU[] | Paging<OU>> => {
+      if (data.type == 'PAGING_QUERY') {
+        return await findPaging<OU>(data)(actions);
+      } else if (data.type == 'FETCH_QUERY') {
+        return await find<OU>(data)(actions);
+      } else if (data.type == 'LIST_QUERY') {
+        return await findAll<OU>(data)(actions);
+      } else if (data.type == 'EXEC') {
+        return await exec<OU>(data)(actions);
+      } else {
+        throw Error('Not support');
+      }
+    };
 
 export const find =
   <OU>(data: ServiceApiType<any>) =>
-  async (actions?: RequestActions) => {
-    if (data.type == 'FETCH_QUERY') {
-      try {
-        actions?.start?.();
-        const srvUrl = getServiceUrl(data.endpoint);
-        const rs = await request<OU>(`${srvUrl}/name/${data.actionName}/find`, {
-          method: 'POST',
-          data: data.payload,
-        });
-        actions?.end?.('SUCCESS');
-        return rs;
-      } catch (error) {
-        actions?.end?.('FAILED');
-        throw error;
+    async (actions?: RequestActions) => {
+      if (data.type == 'FETCH_QUERY') {
+        try {
+          actions?.start?.();
+          const srvUrl = getServiceUrl(data.endpoint);
+          const rs = await request<OU>(`${srvUrl}/name/${data.actionName}/find`, {
+            method: 'POST',
+            data: data.payload,
+          });
+          actions?.end?.('SUCCESS');
+          return rs;
+        } catch (error) {
+          actions?.end?.('FAILED');
+          throw error;
+        }
+      } else {
+        throw TypeError('Fetch record only.');
       }
-    } else {
-      throw TypeError('Fetch record only.');
-    }
-  };
+    };
 
 export const findAll =
   <OU>(data: ServiceApiType<any>) =>
-  async (actions?: RequestActions) => {
-    if (data.type == 'LIST_QUERY') {
-      try {
-        actions?.start?.();
-        const srvUrl = getServiceUrl(data.endpoint);
-        const rs = await request<OU[]>(`${srvUrl}/name/${data.actionName}/list`, {
-          method: 'POST',
-          data: data.payload,
-        });
-        actions?.end?.('SUCCESS');
-        return rs;
-      } catch (error) {
-        actions?.end?.('FAILED');
-        throw error;
+    async (actions?: RequestActions) => {
+      if (data.type == 'LIST_QUERY') {
+        try {
+          actions?.start?.();
+          const srvUrl = getServiceUrl(data.endpoint);
+          const rs = await request<OU[]>(`${srvUrl}/name/${data.actionName}/list`, {
+            method: 'POST',
+            data: data.payload,
+          });
+          actions?.end?.('SUCCESS');
+          return rs;
+        } catch (error) {
+          actions?.end?.('FAILED');
+          throw error;
+        }
+      } else {
+        throw TypeError('List record only.');
       }
-    } else {
-      throw TypeError('List record only.');
-    }
-  };
+    };
 
 export const findPaging =
   <OU>(data: ServiceApiType<any>) =>
-  async (actions?: RequestActions) => {
-    if (data.type == 'PAGING_QUERY') {
-      try {
-        actions?.start?.();
-        const srvUrl = getServiceUrl(data.endpoint);
-        const rs = request<Paging<OU>>(
-          `${srvUrl}/name/${data.actionName}/list-paging/page/${
-            (data.pagination?.page || 1) - 1
-          }/size/${data.pagination?.pageSize || 20}`,
-          {
-            method: 'POST',
-            data: data.payload || {},
-          },
-        );
-        actions?.end?.('SUCCESS');
-        return rs;
-      } catch (error) {
-        actions?.end?.('FAILED');
-        throw error;
+    async (actions?: RequestActions) => {
+      if (data.type == 'PAGING_QUERY') {
+        try {
+          actions?.start?.();
+          const srvUrl = getServiceUrl(data.endpoint);
+          const rs = request<Paging<OU>>(
+            `${srvUrl}/name/${data.actionName}/list-paging/page/${(data.pagination?.page || 1) - 1
+            }/size/${data.pagination?.pageSize || 20}`,
+            {
+              method: 'POST',
+              data: data.payload || {},
+            },
+          );
+          actions?.end?.('SUCCESS');
+          return rs;
+        } catch (error) {
+          actions?.end?.('FAILED');
+          throw error;
+        }
+      } else {
+        throw TypeError('Paging record only.');
       }
-    } else {
-      throw TypeError('Paging record only.');
-    }
-  };
+    };
 
 export const exec =
   <OU>(data: ServiceApiType<any>) =>
-  async (actions?: RequestActions) => {
-    if (data.type == 'EXEC') {
-      try {
-        actions?.start?.();
-        const srvUrl = getServiceUrl(data.endpoint);
-        const rs = await request<OU>(`${srvUrl}/name/${data.actionName}/exec`, {
-          method: 'POST',
-          data: data.payload,
-        });
-        actions?.end?.('SUCCESS');
-        return rs;
-      } catch (error) {
-        actions?.end?.('FAILED');
-        throw error;
+    async (actions?: RequestActions) => {
+      if (data.type == 'EXEC') {
+        try {
+          actions?.start?.();
+          const srvUrl = getServiceUrl(data.endpoint);
+          const rs = await request<OU>(`${srvUrl}/name/${data.actionName}/exec`, {
+            method: 'POST',
+            data: data.payload,
+          });
+          actions?.end?.('SUCCESS');
+          return rs;
+        } catch (error) {
+          actions?.end?.('FAILED');
+          throw error;
+        }
+      } else {
+        throw TypeError('Save record only.');
       }
-    } else {
-      throw TypeError('Save record only.');
-    }
-  };
+    };
 
 /*************************** New try ********************************/
 
@@ -704,8 +700,7 @@ export const fetchDataPagingService = <OU = any, IN = any>(data: ServicePagingPa
       actions?.start?.();
       const srvUrl = getServiceUrl(data.endpoint);
       const rs = request<Paging<OU>>(
-        `${srvUrl}/name/${data.actionName}/list-paging/page/${
-          (data.pagination?.page || data.pagination?.current || 1) - 1
+        `${srvUrl}/name/${data.actionName}/list-paging/page/${(data.pagination?.page || data.pagination?.current || 1) - 1
         }/size/${data.pagination?.pageSize || 20}`,
         {
           method: 'POST',
@@ -723,36 +718,36 @@ export const fetchDataPagingService = <OU = any, IN = any>(data: ServicePagingPa
 
 export const execDataService =
   <OU = any, IN = any>(data: ServiceExecParams<IN>) =>
-  async (actions?: RequestActions) => {
-    try {
-      actions?.start?.();
-      const srvUrl = getServiceUrl(data.endpoint);
-      const rs = await request<OU>(`${srvUrl}/name/${data.actionName}/exec`, {
-        method: 'POST',
-        data: data.payload,
-      });
-      actions?.end?.('SUCCESS');
-      return rs;
-    } catch (error) {
-      actions?.end?.('FAILED');
-      throw error;
-    }
-  };
+    async (actions?: RequestActions) => {
+      try {
+        actions?.start?.();
+        const srvUrl = getServiceUrl(data.endpoint);
+        const rs = await request<OU>(`${srvUrl}/name/${data.actionName}/exec`, {
+          method: 'POST',
+          data: data.payload,
+        });
+        actions?.end?.('SUCCESS');
+        return rs;
+      } catch (error) {
+        actions?.end?.('FAILED');
+        throw error;
+      }
+    };
 
 export const execDataService0 =
   <IN = any>(data: ServiceExecParams<IN>) =>
-  async (actions?: RequestActions) => {
-    try {
-      actions?.start?.();
-      const srvUrl = getServiceUrl(data.endpoint);
-      const rs = await request<void>(`${srvUrl}/name/${data.actionName}/exec`, {
-        method: 'POST',
-        data: data.payload,
-      });
-      actions?.end?.('SUCCESS');
-      return rs;
-    } catch (error) {
-      actions?.end?.('FAILED');
-      throw error;
-    }
-  };
+    async (actions?: RequestActions) => {
+      try {
+        actions?.start?.();
+        const srvUrl = getServiceUrl(data.endpoint);
+        const rs = await request<void>(`${srvUrl}/name/${data.actionName}/exec`, {
+          method: 'POST',
+          data: data.payload,
+        });
+        actions?.end?.('SUCCESS');
+        return rs;
+      } catch (error) {
+        actions?.end?.('FAILED');
+        throw error;
+      }
+    };

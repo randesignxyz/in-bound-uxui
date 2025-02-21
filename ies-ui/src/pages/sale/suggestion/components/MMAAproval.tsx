@@ -59,6 +59,7 @@ export interface MMAAprovalEntity {
   latitude?: string;
   longitude?: string;
   address?: string;
+  addressCode?: string;
 }
 
 interface EditableStockItem {
@@ -188,7 +189,7 @@ const MMAApproval: React.FC<Props> = ({ data, onSave, ...props }) => {
       });
       setAddressList(listAddress);
       console.log(listAddress);
-      form.resetFields(['address', 'shippingAddressId']);
+      form.resetFields(['address', 'addressId', 'customerId']);
     };
     fetchAddress();
   }, [customerId]);
@@ -219,7 +220,8 @@ const MMAApproval: React.FC<Props> = ({ data, onSave, ...props }) => {
             const customer: CustomerLookup = JSON.parse(dataEntity.customerId);
             const entity: MMAAprovalEntity = {
               address: dataEntity.address,
-              addressId: address.id,
+              addressId: address.customerAddressId,
+              addressCode: address.address,
               distributorId: customer.id,
               distributorCode: customer.code,
               distributorName: customer.name,

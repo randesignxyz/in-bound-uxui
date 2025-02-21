@@ -11,6 +11,7 @@ interface PurchaseOrderCreate {
   distributorId: string;
   address?: string;
   addressId?: number;
+  addressCode?: string;
   remark?: string;
 }
 
@@ -28,6 +29,7 @@ interface PurchaseOrderDtoCreate {
   distributorName: string;
   address?: string;
   addressId?: number;
+  addressCode?: string;
   remark?: string;
 
   grantAmount?: number;
@@ -67,6 +69,7 @@ interface PurchaseOrderDTO {
   longitude?: string;
   addressId?: number;
   address?: string;
+  addressCode?: string;
   remark?: string;
   foc?: { qty: number; itemName: string; itemCode: string; uom?: string }[];
 }
@@ -83,10 +86,12 @@ type PurchaseOrderItem = PurchaseRequestItemCreate;
 // pricing:string;
 // status?:string;
 
-interface PurchaseOrderAdvanceSearch {
-  status?: string;
-  searchValue?: string;
-}
+// interface PurchaseOrderAdvanceSearch {
+//   status?: string;
+//   orderedDate?: string[];
+//   searchValue?: string;
+//   salespersonId?: number;
+// }
 
 interface IdRemarkParam {
   id: number;

@@ -30,7 +30,7 @@ import { PurchaseOrderServiceAPI } from './services';
 interface Props {
   id?: number;
   type: 'CREATE' | 'EDIT';
-  onView?: (data?: PurchaseOrderCreate) => void;
+  onView?: (data?: PurchaseOrderDtoCreate) => void;
   onBack?: () => void;
 }
 interface Amount {
@@ -40,49 +40,32 @@ interface Amount {
 }
 const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
   const mainRequestActions = simpleRequestActions();
-  // const requestActions = simpleRequestActions();
   const [form] = useForm<PurchaseOrderCreate>();
-  //const services = PurChaseRequestAPIService(mainRequestActions);
   const editableFormRef = useRef<EditableFormInstance>();
   const [dataSourceItems, setDataSourceItems] = useState<PurchaseOrderItem[]>();
-  // const [distributor, setDistributor] = useState<DistributorCreate>();
-
-  // const [salespersons, setsalespersons] = useState<SalesTeamWorkLess[]>([]);
-
-  // const [saleperson, setSaleperson] = useState<{ assignedTo?: string; assignedToCode?: string }>();
-  // const [distibutors, setDistributors] = useState<{
-  //   distributorId?: number;
-  //   distributorCode?: string;
-  //   distributorName?: string;
-  // }>();
   const actionRef = useRef<ActionType>();
   const [addressList, setAddressList] = useState<AddressInfo[]>();
+  const [selectedAddress, setSelectedAddress] = useState<AddressInfo>();
   const [amount, setAmount] = useState<Amount>({
     discountAmount: 0,
     grantAmount: 0,
     totalAmount: 0,
   });
-  const onTotalAmoun = async () => {
-    const result = dataSourceItems
-      ?.map((o) => ({
-        totalAmoun: o.pricing * o.quantity || 0,
-      }))
-      .reduce((p, c) => ({ totalAmoun: p.totalAmoun + c.totalAmoun || 0 }));
+  const onTotalAmount = async () => {
+    const result =
+      dataSourceItems && dataSourceItems.length > 0
+        ? dataSourceItems
+            .map((o) => ({
+              totalAmoun: o.pricing * o.quantity || 0,
+            }))
+            .reduce((p, c) => ({ totalAmoun: p.totalAmoun + c.totalAmoun || 0 }))
+        : undefined;
 
     setAmount({
       totalAmount: result ? result.totalAmoun : 0,
       grantAmount: result ? result.totalAmoun : 0,
       discountAmount: 0,
     });
-
-    // result
-    //   ? setAmount((t) => ({
-    //       ...t,
-    //       totalAmount: result.totalAmoun,
-    //       grantAmount: result.totalAmoun,
-    //       discountAmount: 0,
-    //     }))
-    //   : { totalAmount: 0, discountAmount: 0, grantAmount: 0 };
   };
   const loadData = async () => {
     const purchaseOrder = await PurchaseOrderServiceAPI(mainRequestActions).detail(id);
@@ -90,29 +73,8 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
       id: purchaseOrder.distributorId || 0,
     });
     setAddressList(data);
-    // .then((o) => {
-    //   // setDistributor({
-    //   //   id: o.distributorId,
-    //   //   code: o.distributorCode,
-    //   //   latitude: o.latitude,
-    //   //   longitude: o.longitude,
-    //   //   name: o.distributorName,
-    //   //   phone: o.distributorPhone,
-    //   // });
-    //   // setSaleperson({
-    //   //   assignedTo: o.assignedTo,
-    //   //   assignedToCode: o.assignedToCode,
-    //   // });
-    //   if (o.items) {
-    //     setDataSourceItems(
-    //       o?.items.map((r, index) => ({
-    //         ...r,
-    //         total: r.quantity * r.pricing,
-    //         key: uniqueId().toString() + index,
-    //       })),
-    //     );
-    //   }
-    // });
+    const address = data.find((e) => e.customerAddressId === purchaseOrder.addressId);
+    setSelectedAddress(address);
 
     form.setFieldsValue({
       address: purchaseOrder.address,
@@ -125,8 +87,18 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
         purchaseOrder.distributorName,
       ].join(','),
       addressId: purchaseOrder.addressId,
+      addressCode: purchaseOrder.addressCode,
+      latitude: purchaseOrder.latitude,
+      longitude: purchaseOrder.longitude,
     });
-    setDataSourceItems(purchaseOrder.items);
+    setDataSourceItems(
+      purchaseOrder.items
+        ? purchaseOrder.items.map((e) => {
+            e.key = e.itemCode!;
+            return e;
+          })
+        : [],
+    );
   };
 
   useEffect(() => {
@@ -150,16 +122,10 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
     // })();
   }, [id]);
 
-  // useEffect(() => {
-  //   if (id) {
-  //     loadData();
-  //   }
-  // }, [id]);
-
   useEffect(() => {
-    if (dataSourceItems?.length) {
-      onTotalAmoun?.();
-    }
+    //if (dataSourceItems?.length) {
+    onTotalAmount?.();
+    //}
   }, [dataSourceItems]);
 
   const getAddress = (address?: AddressInfo) => {
@@ -194,23 +160,19 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
       if (data.length > 0) {
         setAddressList(data);
         const address = data[0];
+        setSelectedAddress(address);
         form.setFieldsValue({
           addressId: address.id,
-          latitude: address.latitude,
-          longitude: address.longitude,
           address: getAddress(address),
         });
       }
     }
     if (addressId) {
       const address = addressList?.find((e) => e.id === addressId);
-
+      setSelectedAddress(address);
       const fullAddress = getAddress(address);
-      console.log(fullAddress);
       form.setFieldsValue({
         address: fullAddress,
-        latitude: address?.latitude,
-        longitude: address?.longitude,
       });
     }
   };
@@ -221,6 +183,40 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
       dataSourceItems.length > 0 &&
       dataSourceItems.every((e) => e.pricing > 0.0)
     );
+  };
+
+  const onSavePurchaseOrder = async (callback: (data: PurchaseOrderDtoCreate) => void) => {
+    const dataForm = await form.validateFields();
+    const purchaseOrderDate = moment(dataForm.purchaseOrderDate).format('YYYY-MM-DD');
+    await editableFormRef.current?.validateFields();
+    Modal.confirm({
+      title: 'Make Purchase Order',
+      content: 'Are you sure',
+      onOk: async () => {
+        const assigner = dataForm.assignedTo.split(',');
+        const distributor = dataForm.distributorId.split(',');
+        console.log(dataForm.latitude, dataForm.longitude);
+        const entry: PurchaseOrderDtoCreate = {
+          id: id,
+          address: dataForm.address,
+          addressId: dataForm.addressId,
+          addressCode: selectedAddress?.address,
+          assignedToCode: assigner[0],
+          assignedTo: assigner[1],
+          distributorId: distributor[0],
+          distributorCode: distributor[1],
+          distributorName: distributor[2],
+          items: dataSourceItems,
+          latitude: selectedAddress?.latitude,
+          longitude: selectedAddress?.longitude,
+          remark: dataForm.remark,
+          purchaseOrderDate: moment(purchaseOrderDate).add(1, 'day'),
+          ...amount,
+        };
+        const response = await PurchaseOrderServiceAPI(mainRequestActions).save(entry);
+        callback(response.data);
+      },
+    });
   };
 
   return (
@@ -243,33 +239,10 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
                 type="dashed"
                 disabled={disabledButton()}
                 onClick={async () => {
-                  const dataForm = await form.validateFields();
-                  await editableFormRef.current?.validateFields();
-                  Modal.confirm({
-                    title: 'Make Purchase Order',
-                    content: 'Are you sure',
-                    onOk: async () => {
-                      const assigner = dataForm.assignedTo.split(',');
-                      const distributor = dataForm.distributorId.split(',');
-                      const entry: PurchaseOrderDtoCreate = {
-                        id: id,
-                        address: dataForm.address,
-                        addressId: dataForm.addressId,
-                        assignedToCode: assigner[0],
-                        assignedTo: assigner[1],
-                        distributorId: distributor[0],
-                        distributorCode: distributor[1],
-                        distributorName: distributor[2],
-                        items: dataSourceItems,
-                        latitude: dataForm.latitude,
-                        longitude: dataForm.longitude,
-                        remark: dataForm.remark,
-                        purchaseOrderDate: moment(dataForm.purchaseOrderDate).add(1, 'day'),
-                        ...amount,
-                      };
-                      await PurchaseOrderServiceAPI(mainRequestActions).save(entry);
-                      setDataSourceItems([]);
-                    },
+                  await onSavePurchaseOrder(() => {
+                    setSelectedAddress(undefined);
+                    setAddressList([]);
+                    setDataSourceItems([]);
                   });
                 }}
               >
@@ -279,36 +252,41 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
                 type="primary"
                 disabled={disabledButton()}
                 onClick={async () => {
-                  const dataForm = await form.validateFields();
-                  await editableFormRef.current?.validateFields();
-                  Modal.confirm({
-                    title: `${type === 'CREATE' ? 'Make' : 'Edit'} Purchase Order`,
-                    content: 'Are you sure',
-                    onOk: async () => {
-                      const assigner = dataForm.assignedTo.split(',');
-                      const distributor = dataForm.distributorId.split(',');
-                      const entry: PurchaseOrderDtoCreate = {
-                        id: id,
-                        address: dataForm.address,
-                        addressId: dataForm.addressId,
-                        assignedToCode: assigner[0],
-                        assignedTo: assigner[1],
-                        distributorId: distributor[0],
-                        distributorCode: distributor[1],
-                        distributorName: distributor[2],
-                        items: dataSourceItems,
-                        latitude: dataForm.latitude,
-                        longitude: dataForm.longitude,
-                        remark: dataForm.remark,
-                        purchaseOrderDate: moment(dataForm.purchaseOrderDate).add(1, 'day'),
-                        ...amount,
-                      };
-                      await PurchaseOrderServiceAPI(mainRequestActions)
-                        .save(entry)
-                        .then((o) => {
-                          onView?.(o.data);
-                        });
-                    },
+                  // const dataForm = await form.validateFields();
+                  // await editableFormRef.current?.validateFields();
+                  // Modal.confirm({
+                  //   title: `${type === 'CREATE' ? 'Make' : 'Edit'} Purchase Order`,
+                  //   content: 'Are you sure',
+                  //   onOk: async () => {
+                  //     const assigner = dataForm.assignedTo.split(',');
+                  //     const distributor = dataForm.distributorId.split(',');
+                  //     const entry: PurchaseOrderDtoCreate = {
+                  //       id: id,
+                  //       address: dataForm.address,
+                  //       addressId: dataForm.addressId,
+                  //       addressCode: selectedAddress?.address,
+                  //       assignedToCode: assigner[0],
+                  //       assignedTo: assigner[1],
+                  //       distributorId: distributor[0],
+                  //       distributorCode: distributor[1],
+                  //       distributorName: distributor[2],
+                  //       items: dataSourceItems,
+                  //       latitude: dataForm.latitude,
+                  //       longitude: dataForm.longitude,
+                  //       remark: dataForm.remark,
+                  //       purchaseOrderDate:
+                  //         type === 'CREATE'
+                  //           ? moment(dataForm.purchaseOrderDate)
+                  //           : moment(dataForm.purchaseOrderDate).add(1, 'day'),
+                  //       ...amount,
+                  //     };
+                  //     const response = await PurchaseOrderServiceAPI(mainRequestActions).save(
+                  //       entry,
+                  //     );
+                  //   },
+                  // });
+                  await onSavePurchaseOrder((data) => {
+                    onView?.(data);
                   });
                 }}
               >
@@ -349,25 +327,6 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
                   service={CrmService('search-basic-customer')}
                 />
               </Form.Item>
-              {/* <ProFormSelect
-                showSearch
-                labelCol={{ sm: 4, md: 6, lg: 6, xl: 4, xxl: 4 }}
-                debounceTime={500}
-                name={'distributorId'}
-                rules={[{ required: true }]}
-                label={'Distributor'}
-                request={async (k: { keyWords: string }) => {
-                  const data = await CrmServiceAPI(requestActions).findAllCustomer({
-                    searchValue: k.keyWords,
-                  });
-                  return Promise.resolve(
-                    data.items.map((p) => ({
-                      value: [p.id, p.code, p.name].join(','),
-                      label: [p.code, p.name].filter((p) => p).join('-'),
-                    })),
-                  );
-                }}
-              /> */}
               <ProFormSelect
                 name={'addressId'}
                 label="Address"
@@ -377,17 +336,12 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
                 showSearch
                 rules={[{ required: true }]}
                 options={addressList?.map((item) => {
-                  return { value: item.id, label: item.address };
+                  return {
+                    value: item.customerAddressId,
+                    label: item.address,
+                  };
                 })}
               />
-              {/* <Flex gap={2}>
-                <Typography.Text type="warning">
-                  <AimOutlined />
-                </Typography.Text>
-                <Typography.Text type={'secondary'}>
-                  {form.getFieldValue('address')}
-                </Typography.Text>
-              </Flex> */}
               <ProFormTextArea
                 readonly
                 //help={<AimOutlined />}
@@ -395,43 +349,6 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
                 disabled={true}
                 name="address"
               />
-              {/* <ProFormDependency dependencies={['addressId']} name={['addressId']}>
-                {({ addressId }) => {
-                  const address = addressList?.find((item) => item.id === addressId);
-
-                  const aa = [
-                    { name: 'Street', value: address?.streetNo },
-                    { name: 'House#', value: address?.houseNo },
-                    { name: 'Village', value: address?.village },
-                    { name: 'Commune', value: address?.commune },
-                    { name: 'District', value: address?.district },
-                    { name: 'Province', value: address?.province },
-                    { name: 'Latitude', value: address?.latitude },
-                    { name: 'Longitude', value: address?.longitude },
-                    { name: 'Direction', value: address?.direction },
-                    { name: 'Hotspot', value: address?.hotspot },
-                  ]
-                    .filter((it) => it.value)
-                    .map((it) => `${it.name} ${it.value}`)
-                    .join(', ');
-                  form.setFieldsValue({
-                    latitude: address?.latitude,
-                    longitude: address?.longitude,
-                    address: aa,
-                  });
-                  return (
-                    <Flex gap={2}>
-                      <ProFormText hidden name={'latitude'} />
-                      <ProFormText hidden name={'longitude'} />
-                      <ProFormTextArea hidden name={'address'} />
-                      <Typography.Text type="warning">
-                        <AimOutlined />
-                      </Typography.Text>
-                      <Typography.Text type={'secondary'}>{aa}</Typography.Text>
-                    </Flex>
-                  );
-                }}
-              </ProFormDependency> */}
             </Col>
             <Col xs={24} sm={24} md={12} lg={12} xl={12} xxl={12}>
               <Form.Item
@@ -459,54 +376,6 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
                   service={SaleService('list-sales-team-work-1')}
                 />
               </Form.Item>
-              {/* <ProFormSelect
-                  help={<span />}
-                  label="Salesperson"
-                  name="assignedTo"
-                  rules={[{ required: true }]}
-                  allowClear={false}
-                  showSearch
-                  fieldProps={{
-                    filterOption: (input, option) =>
-                      (option?.label?.toString() || '')
-                        .toLowerCase()
-                        .indexOf(input.toLowerCase()) >= 0,
-                  }}
-                  options={salespersons?.map((item) => {
-                    return {
-                      value: item.id,
-                      label: [item.salespersonCode, item.salespersonName].join('-'),
-                    };
-                  })}
-                /> */}
-              {/* <ProFormSelect
-                name={'assignedTo'}
-                label={'Saleperson'}
-                labelCol={{ sm: 8, md: 10, lg: 8, xl: 8, xxl: 6 }}
-                debounceTime={500}
-                rules={[{ required: true }]}
-                showSearch
-                // onChange={(e: string) => {
-                //   const assigned = e.split(',');
-                //   setSaleperson({
-                //     assignedTo: assigned[1],
-                //     assignedToCode: assigned[0],
-                //   });
-                // }}
-                request={async (k: { keyWords: string }) => {
-                  const data = await services.salespersonList({
-                    searchValue: k.keyWords,
-                  });
-                  return Promise.resolve(
-                    data
-                      .filter((t) => t.isRequester === true)
-                      .map((p) => ({
-                        value: [p.salespersonCode, p.salespersonName].join(','),
-                        label: [p.salespersonCode, p.salespersonName].join('-'),
-                      })),
-                  );
-                }}
-              /> */}
               <ProFormDatePicker
                 name={'purchaseOrderDate'}
                 labelCol={{ sm: 8, md: 10, lg: 8, xl: 8, xxl: 6 }}
@@ -534,14 +403,12 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
             setDataSourceItems(e);
           }}
           value={dataSourceItems}
-          recordCreatorProps={
-            type === 'CREATE' && {
-              newRecordType: 'dataSource',
-              record: (index) => ({ key: uniqueId().toString() + index } as any),
-              creatorButtonText: 'New Item',
-            }
-          }
-          controlled
+          recordCreatorProps={{
+            newRecordType: 'dataSource',
+            record: (index) => ({ key: uniqueId().toString() + index } as any),
+            creatorButtonText: ' New Item',
+          }}
+          // controlled
           editable={{
             type: 'multiple',
             editableKeys: dataSourceItems?.map((t) => t.key),
@@ -591,55 +458,17 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
                     searchValue: k.keywords,
                   },
                 });
+                // const disabledSelected = type === 'CREATE' ? dataSourceItems?.some((ot) => ot.itemId === p.id) : false;
+
                 return Promise.resolve(
                   data.items.map((p) => ({
                     value: p.id,
                     label: p.name,
-                    disabled: dataSourceItems?.some((ot) => ot.itemId === p.id),
+                    // disabled: dataSourceItems?.some((ot) => ot.itemId === p.id),
                   })),
                 );
               },
             },
-            // {
-            //   title: 'Category',
-            //   dataIndex: 'stockCategoryId',
-            //   width: 200,
-            //   fieldProps: {
-            //     showSearch: true,
-            //     debounceTime: 500,
-            //   },
-            //   formItemProps: {
-            //     rules: [
-            //       {
-            //         required: true,
-            //       },
-            //     ],
-            //   },
-            //   request: async () => {
-            //     const data = await services.stockCategory();
-            //     return data.map((p) => ({ value: p.id, label: p.name }));
-            //   },
-            // },
-            // {
-            //   title: 'UOM',
-            //   dataIndex: 'uom',
-            //   initialValue: 'CASE',
-            //   fieldProps: {
-            //     showSearch: true,
-            //     debounceTime: 500,
-            //   },
-            //   formItemProps: {
-            //     rules: [
-            //       {
-            //         required: true,
-            //       },
-            //     ],
-            //   },
-            //   request: async () => {
-            //     const data = await services.uom();
-            //     return data.map((p) => ({ value: p.name, label: p.name }));
-            //   },
-            // },
             {
               title: 'Quantity',
               dataIndex: 'quantity',
@@ -703,27 +532,23 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
             <div></div>
             <ProDescriptions<Amount>
               column={1}
-              editable={
-                type === 'CREATE'
-                  ? {
-                      onSave: (_, record, originRow) => {
-                        const total =
-                          (originRow.grantAmount as number) -
-                          ((originRow.grantAmount as number) * (record.discountAmount || 0)) / 100;
-                        setAmount((c) => ({
-                          ...c,
-                          ...record,
-                          discountAmount: record.discountAmount,
-                          totalAmount: total,
-                        }));
-                        return Promise.resolve({
-                          data: record,
-                          sucess: true,
-                        });
-                      },
-                    }
-                  : undefined
-              }
+              editable={{
+                onSave: (_, record, originRow) => {
+                  const total =
+                    (originRow.grantAmount as number) -
+                    ((originRow.grantAmount as number) * (record.discountAmount || 0)) / 100;
+                  setAmount((c) => ({
+                    ...c,
+                    ...record,
+                    discountAmount: record.discountAmount,
+                    totalAmount: total,
+                  }));
+                  return Promise.resolve({
+                    data: record,
+                    sucess: true,
+                  });
+                },
+              }}
               style={{
                 width: '300px',
               }}

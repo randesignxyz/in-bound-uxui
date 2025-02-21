@@ -25,6 +25,7 @@ import {
   AddressInfo,
   AddresssView,
   BasicData,
+  CancelMultiVisitScheduleStatusParams,
   ContractDetail,
   ContractTerm,
   ContractTermData,
@@ -175,6 +176,8 @@ export type CrmServiceName =
   | 'list-visit-plan-by-customer-id'
   | 'list-address-detail-by-customer-id'
   | 'promote-customer'
+  // REACH 02/220/2025
+  | 'cancel-multi-visit-schedule'
 
 export const CrmService = (serviceName?: CrmServiceName): ServiceType => {
   return {
@@ -761,4 +764,10 @@ export const CrmServiceAPI = (actions?: RequestActions) => ({
     CrmService('cancel-visit-schedule'),
     actions,
   ),
+
+    // REACH PHEUN 02/12/2025
+    cancelMultiVisitSchedule: execService<CancelMultiVisitScheduleStatusParams, {}>(
+      CrmService('cancel-multi-visit-schedule'),
+      actions,
+    ),
 });

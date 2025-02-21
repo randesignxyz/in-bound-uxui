@@ -105,7 +105,7 @@ export default ({
   const onChangeSubmitterHandler = async (data: EmployeeInfResult) => {
     setProbationEmp(data)
     form.setFieldValue('refId',undefined)
-    form.setFieldValue('formType',data.jobLevelCode)
+    form.setFieldValue('formTypeId',probationFormType?.find(r => r.code==data.jobLevelCode)?.id||'')
     form.setFieldValue('preparationUserId',undefined)
     formSubmittor.setFieldValue('requestorBuId',undefined)
     srv.fetchProbationEvaluationRefList(data.empId).then(rs=> {
@@ -167,11 +167,11 @@ export default ({
             />
              <ProFormSelect
               shouldUpdate
-              name={'formType'}
+              name={'formTypeId'}
               rules={[{ required: true }]}
               width={'sm'}
               label="Form Type"
-              options={probationFormType?.map((it) => ({ label: it.description, value: it.code }))}
+              options={probationFormType?.map((it) => ({ label: it.description, value: it.id }))}
             />
 
             <ProFormSelect

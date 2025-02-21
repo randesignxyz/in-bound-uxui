@@ -1,9 +1,9 @@
 import workflowIcon from '@/assets/workflow.png';
 import { FMANewStaffFormNames } from '@/pages/fma/new-staff/data.types';
 import FMANewStaffRequestForm from '@/pages/fma/new-staff/FMANewStaffRequestForm';
-import { StaffProposalFormNames } from '@/pages/hrm/staff-proposal/data.types';
+import { StaffProposalFormNames, StaffProposalOFLFormNames } from '@/pages/hrm/staff-proposal/data.types';
 import StaffProposalRequestForm from '@/pages/hrm/staff-proposal/StaffProposalRequestForm';
-import { StaffRequisitionFormNames } from '@/pages/hrm/staff-requisition/process-flow/data';
+import { StaffRequisitionFormNames, StaffRequisitionOFLFormNames } from '@/pages/hrm/staff-requisition/process-flow/data';
 import RequestModal from '@/pages/hrm/staff-requisition/RequestModal';
 import AnalystIncidentTicketModal from '@/pages/ict/incident/AnalystIncidentTicketModal';
 import { IncidentFormNames } from '@/pages/ict/incident/data.type';
@@ -50,9 +50,9 @@ export default () => {
     if (key == FMANewStaffFormNames.processDefKey && access.canRequestFMANewStaffRequest)
       return true;
 
-    if (key == StaffRequisitionFormNames.processDefKey && access.canRequestHrStaffRequisition)
+    if ((key == StaffRequisitionFormNames.processDefKey|| key == StaffRequisitionOFLFormNames.processDefKey) && access.canRequestHrStaffRequisition)
       return true;
-    if (key == StaffProposalFormNames.processDefKey && access.canRequestHrStaffProposal)
+    if ((key == StaffProposalFormNames.processDefKey || key == StaffProposalOFLFormNames.processDefKey) && access.canRequestHrStaffProposal)
       return true;
     if (key == IncidentFormNames.processDefKey && access.canCreateIncidentTicket) return true;
     if (key == 'requisition_request_process' && access.canCreatePR) return true;
@@ -203,7 +203,7 @@ export default () => {
         dataSource={filterData}
       />
       {(() => {
-        if (modalVisible?.type == StaffRequisitionFormNames.processDefKey) {
+        if (modalVisible?.type == StaffRequisitionFormNames.processDefKey || modalVisible?.type == StaffRequisitionOFLFormNames.processDefKey) {
           return <RequestModal open={true} onOpenChange={onCloseModalHandler} width="1000px" />;
         } if (modalVisible?.type == ProbationEvaluationRequestFormNames.processDefKey) {
           return <ProbationRequestModal open={true} onOpenChange={onCloseModalHandler} width="1000px" />;
@@ -244,10 +244,10 @@ export default () => {
               onClose={() => onCloseModalHandler(false)}
             />
           );
-        } else if (modalVisible?.type == StaffProposalFormNames.processDefKey) {
+        } else if (modalVisible?.type == StaffProposalFormNames.processDefKey || modalVisible?.type == StaffProposalOFLFormNames.processDefKey) {
           return (
             <StaffProposalRequestForm
-              formKey={StaffProposalFormNames.processDefKey}
+              formKey={modalVisible?.type}
               visisble={true}
               onClose={() => onCloseModalHandler(false)}
             />

@@ -48,3 +48,16 @@ interface StatusActionForm {
   status?: string;
   remark?: string;
 }
+
+interface PurchaseOrderDistributorDto {
+  id: number;
+  distributorCode?: string;
+  distributorName?: string;
+  distributorPhone?: string;
+  distributorId?: number;
+  latitude?: string;
+  longitude?: string;
+  addressId?: number;
+  address?: string;
+  addressCode?: string;
+}

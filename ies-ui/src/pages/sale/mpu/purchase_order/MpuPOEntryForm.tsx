@@ -30,7 +30,7 @@ import { PurchaseOrderServiceAPI } from './services';
 interface Props {
   id?: number;
   type: 'CREATE' | 'EDIT';
-  onView?: (data?: PurchaseOrderCreate) => void;
+  onView?: (data?: PurchaseOrderDtoCreate) => void;
   onBack?: () => void;
 }
 interface Amount {
@@ -185,7 +185,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
     );
   };
 
-  const onSavePurchaseOrder = async (callback: (data: PurchaseOrderCreate) => void) => {
+  const onSavePurchaseOrder = async (callback: (data: PurchaseOrderDtoCreate) => void) => {
     const dataForm = await form.validateFields();
     const purchaseOrderDate = moment(dataForm.purchaseOrderDate).format('YYYY-MM-DD');
     await editableFormRef.current?.validateFields();

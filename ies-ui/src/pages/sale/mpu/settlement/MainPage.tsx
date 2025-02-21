@@ -61,7 +61,14 @@ const SettlementMianPage: React.FC<any> = () => {
         listView={{
           type: 'Table',
           title: 'Settlement',
-          onOpenAdvanceSearch: () => setAdvanceSearch({ isVisibled: true }),
+          onOpenAdvanceSearch: () =>
+            setAdvanceSearch({
+              isVisibled: true,
+              value: {
+                ...filter.criteria,
+                type: filter.criteria?.advanceSearch?.type ?? role,
+              },
+            }),
           statuses: [
             { option: { label: 'All', value: 'ALL', default: true } },
             { option: { label: 'Pending', value: 'Pending' } },
@@ -70,16 +77,37 @@ const SettlementMianPage: React.FC<any> = () => {
           ],
           onRefresh: refetch,
           onFilter(params, page, sort) {
+            console.log(params);
+            console.log(data);
+            console.log(filter);
+            console.log(advanceSearch.value);
             setFilter({
               criteria: {
                 searchValue: params?.searchValue,
                 advanceSearch: {
                   searchValue: params?.searchValue,
                   status: params?.status,
-                  type: params?.type || '',
+                  type:
+                    filter.criteria?.advanceSearch?.type ||
+                    advanceSearch.value?.type ||
+                    params?.type ||
+                    role,
+                  dates: advanceSearch.value?.dates,
+                  salespersonId: filter.criteria?.advanceSearch?.salespersonId,
                 },
                 sort: sort,
               },
+
+              // criteria: {
+              //   searchValue: filter.criteria?.searchValue,
+              //   advanceSearch: {
+              //     ...advanceSearch,
+              //     type: advanceSearch.value?.type ?? role,
+              //     salespersonId: data.salespersonId,
+              //     dates: data.dates,
+              //   },
+              //   //advanceSearch
+              // },
               pagination: { ...page },
             });
           },
@@ -168,27 +196,53 @@ const SettlementMianPage: React.FC<any> = () => {
         entity="Settlement"
         onOpenChange={(visible) => {
           if (!visible) {
-            setAdvanceSearch({ isVisibled: false });
+            setAdvanceSearch({
+              isVisibled: false,
+              value: {
+                ...filter,
+                type: filter.criteria?.advanceSearch?.type ?? role,
+              },
+            });
           }
         }}
         onSearch={(data) => {
-          setFilter((v) => ({
-            ...v,
-            criteria: {
-              ...v.criteria,
-              advanceSearch: {
-                ...filter.criteria?.advanceSearch,
-                ...data,
-                type: filter.criteria?.advanceSearch?.type || '',
+          setFilter(
+            {
+              criteria: {
+                searchValue: filter.criteria?.searchValue,
+                advanceSearch: {
+                  ...advanceSearch.value,
+                  type: advanceSearch.value?.type ?? role,
+                  salespersonId: data.salespersonId,
+                  dates: data.dates,
+                },
+                //advanceSearch
               },
             },
-          }));
+
+            //   (v) => ({
+            //   ...v,
+            //   criteria: {
+            //     ...v.criteria,
+            //     advanceSearch: {
+            //       ...filter.criteria?.advanceSearch,
+            //       ...data,
+            //       type: filter.criteria?.advanceSearch?.type || '',
+            //     },
+            //   },
+            // })
+          );
         }}
         onReset={() => {
           setFilter((v) => ({
             ...v,
             criteria: {
               ...filter.criteria,
+              advanceSearch: {
+                salespersonId: undefined,
+                type: filter.criteria?.advanceSearch?.type ?? role,
+                dates: undefined,
+              },
             },
           }));
           actionRef.current?.reload?.(true);

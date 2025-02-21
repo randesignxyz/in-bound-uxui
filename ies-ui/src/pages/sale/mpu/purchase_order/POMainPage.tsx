@@ -168,6 +168,8 @@ const POMainPage: React.FC = () => {
                 searchValue: params?.searchValue,
                 advanceSearch: {
                   status: params?.status,
+                  dates: advanceSearch.value?.dates,
+                  salespersonId: advanceSearch.value?.salespersonId,
                 },
               },
               pagination: { ...page },
@@ -203,6 +205,10 @@ const POMainPage: React.FC = () => {
               {
                 title: 'Distributor Name',
                 dataIndex: 'distributorName',
+              },
+              {
+                title: 'Address',
+                dataIndex: 'addressCode',
               },
 
               {
@@ -300,25 +306,40 @@ const POMainPage: React.FC = () => {
           }
         }}
         onSearch={(data) => {
-          setFilter((v) => ({
-            ...v,
+          // setFilter((v) => ({
+          //   ...v,
+          //   criteria: {
+          //     ...v.criteria,
+          //     advanceSearch: {
+          //       ...filter.criteria?.advanceSearch,
+          //       ...data,
+          //     },
+          //   },
+          // }));
+
+          setFilter({
             criteria: {
-              ...v.criteria,
+              searchValue: filter.criteria?.searchValue,
               advanceSearch: {
-                ...filter.criteria?.advanceSearch,
-                ...data,
+                ...advanceSearch.value,
+                salespersonId: data.salespersonId,
+                dates: data.dates,
               },
+              //advanceSearch
             },
-          }));
+          });
         }}
         onReset={() => {
           setFilter((v) => ({
             ...v,
             criteria: {
               ...filter.criteria,
+              advanceSearch: {
+                salespersonId: undefined,
+                dates: undefined,
+              },
             },
           }));
-          actionRef.current?.reload?.(true);
         }}
         initData={filter.criteria}
       />

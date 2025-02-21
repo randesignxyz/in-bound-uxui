@@ -222,12 +222,12 @@ export default () => {
       link: `${SalePaths.pricing}/list`,
     },
     {
-      id: 'settlement',
-      name: 'Settlement',
-      description: '',
-      icon: settlementIcon,
-      // visible: access.canAccessAllMenuDSD,
-      link: `${MPUPath.mpuSettlement}/list`,
+      id: 'mpu_po',
+      name: 'Purchase Order',
+      description: 'make po for request stock',
+      link: `${MPUPath.mpuPurchaseOrder}/list`,
+      icon: purchaseOrderIcon,
+      visible: access.canAccessViewMpu,
     },
     {
       id: 'stock-count',
@@ -236,6 +236,21 @@ export default () => {
       icon: stockCountId,
       // visible: access.canAccessAllMenuDSD,
       link: `${MPUPath.mpuCountStock}/list`,
+    },
+    {
+      id: 'settlement',
+      name: 'Settlement',
+      description: '',
+      icon: settlementIcon,
+      // visible: access.canAccessAllMenuDSD,
+      link: `${MPUPath.mpuSettlement}/list`,
+    },
+    {
+      id: 'free-of-charge',
+      name: 'Free Of Charge',
+      description: '',
+      icon: FOC,
+      link: `${MPUPath.mpuFOC}/list`,
     },
   ];
 
@@ -296,32 +311,17 @@ export default () => {
     },
   ];
 
-  const mpuMenuItems = [
-    // {
-    //   id: 'rsm_request',
-    //   // name: 'RSM Request',
-    //   name: 'Purchase Request',
-    //   description: 'Order Items',
-    //   link: `${MPUPath.rsmRequest}/list`,
-    //   icon: agreementIcon,
-    //   visible: access.canAccessViewMpu,
-    // },
-    {
-      id: 'mpu_po',
-      name: 'Purchase Order',
-      description: 'make po for request stock',
-      link: `${MPUPath.mpuPurchaseOrder}/list`,
-      icon: purchaseOrderIcon,
-      visible: access.canAccessViewMpu,
-    },
-    {
-      id: 'free-of-charge',
-      name: 'Free Of Charge',
-      description: '',
-      icon: FOC,
-      link: `${MPUPath.mpuFOC}/list`,
-    },
-  ];
+  // const mpuMenuItems = [
+  // {
+  //   id: 'rsm_request',
+  //   // name: 'RSM Request',
+  //   name: 'Purchase Request',
+  //   description: 'Order Items',
+  //   link: `${MPUPath.rsmRequest}/list`,
+  //   icon: agreementIcon,
+  //   visible: access.canAccessViewMpu,
+  // },
+  // ];
 
   return (
     <PageContainer title={false}>
@@ -331,20 +331,21 @@ export default () => {
 
       {(access.canAcessStockControlMenuItem ||
         access.canAccessSettlementMenuItem ||
-        access.canAccessARMenuItem) && (
+        access.canAccessARMenuItem ||
+        access.canAccessViewMpu) && (
         <>
           <Divider />
           <ListMenuComp items={stockMenuItems} />
         </>
       )}
-      {access.canAccessViewMpu && (
+      {/* {access.canAccessViewMpu && (
         <>
           <Divider plain orientation="left">
             MMA
           </Divider>
           <ListMenuComp items={mpuMenuItems} />
         </>
-      )}
+      )} */}
       {/* {access.canAccessRSMRequestToMPU && ( */}
       {/* <>
           <Divider plain orientation='left'>MMA</Divider>

@@ -70,7 +70,7 @@ const AdvanceSearch: React.FC<AdvanceSearchProps> = ({
             service={SaleService('list-sales-team-work-1')}
           />
         </Form.Item>
-        <ProFormDateRangePicker label={`${entity} Date Start - ${entity} End`} name="orderedDate" />
+        <ProFormDateRangePicker label={`${entity} Date Start - ${entity} End`} name="dates" />
       </ProForm>
     </DrawerForm>
   );

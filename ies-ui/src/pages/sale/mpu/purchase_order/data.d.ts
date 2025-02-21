@@ -86,12 +86,12 @@ type PurchaseOrderItem = PurchaseRequestItemCreate;
 // pricing:string;
 // status?:string;
 
-interface PurchaseOrderAdvanceSearch {
-  status?: string;
-  orderedDate?: string[];
-  searchValue?: string;
-  salespersonId?: number;
-}
+// interface PurchaseOrderAdvanceSearch {
+//   status?: string;
+//   orderedDate?: string[];
+//   searchValue?: string;
+//   salespersonId?: number;
+// }
 
 interface IdRemarkParam {
   id: number;

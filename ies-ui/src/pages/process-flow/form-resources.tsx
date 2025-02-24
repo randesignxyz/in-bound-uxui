@@ -18,6 +18,7 @@ import { getInventoryTransferRequestForms } from '../fma-stock/transfer/process-
 // import { getSaleStockTransferRequestRequestForms } from '../sale/stock-control/stock-transfer-request/process-flow/config';
 import { getInventoryAdjustmentRequestForms } from '../fma-stock/adjustment/process-flow/config';
 import { getProbationEvaluationRequestForms } from '../hrm/probation/process-flow/config'
+import { getSaleStockTransferRequestRequestForms } from '../sale/workflow_integration/stock_request/config';
 // import { getSaleStockTransferRequestRequestForms } from '../sale/workflow_integration/stock_request/config';
 
 

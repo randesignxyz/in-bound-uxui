@@ -18,7 +18,7 @@ import EmpImprovmentTable1 from "../components/EmpImprovmentTable1";
 import EmpImprovmentTable from "../components/EmpImprovmentTable";
 import {FilePdfOutlined } from "@ant-design/icons";
 import { DownloadData, downloadReport } from "@/services/apiGateway";
-import { ProbationEvaluationRequestFormNames } from ".";
+import { ProbationEvaluationRequestFormNames, ProbationEvaluationRequestOFLFormNames } from ".";
 import InstructionCard from "../components/InstructionCard";
 import RatingScaleCard from "../components/RatingScaleCard";
 import SummaryCard from "../components/SummaryCard";
@@ -85,9 +85,13 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
         await downloadReport<CriteriaExportReport>(requestActions)(dataReport(exportType))
     }
     const isRequestedStatus = probaRequest?.status=='REQUESTED'?true: false
-    const isDownloadForm = [ProbationEvaluationRequestFormNames.assessmentPreparation ,ProbationEvaluationRequestFormNames.lineManagerSubmission].find(r=> r== props.formKey)
+    const isDownloadForm = [
+                            ProbationEvaluationRequestFormNames.assessmentPreparation ,ProbationEvaluationRequestFormNames.lineManagerSubmission,
+                            ProbationEvaluationRequestOFLFormNames.srFunPreparation,ProbationEvaluationRequestOFLFormNames.lineManagerSubmission
+
+                          ].find(r=> r== props.formKey)
                           && ['SETTING','PREPARED'].find(r => r==probaRequest?.probationEvaluation?.status)? true:false
-    const isPrepareStatus = [ProbationEvaluationRequestFormNames.assessmentPreparation ].find(r=> r== props.formKey)
+    const isPrepareStatus = [ProbationEvaluationRequestFormNames.assessmentPreparation, ProbationEvaluationRequestOFLFormNames.srFunPreparation ].find(r=> r== props.formKey)
                           || isRequestedStatus || ['PREPARED'].find(r => r==probaRequest?.probationEvaluation?.status) ? true:false                      
   
     return(  

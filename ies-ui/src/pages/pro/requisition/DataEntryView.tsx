@@ -28,7 +28,7 @@ import ProForm, {
 } from '@ant-design/pro-form';
 import {
   Button, Card, Col,
-  Divider, Form, message,
+  Divider, Flex, Form, message,
   Modal, Row, Space, Spin
 } from 'antd';
 import { uniqueId } from 'lodash';
@@ -76,7 +76,7 @@ export default ({
   const [selectedBu, setSelectedBu] = useState(0)
   const [selector, setSelector] = useState<string>()
   const { ref, inView } = useInView({});
-
+  const isFleetRepair = history.location.pathname.includes(`fleet/requisition/create`)
   const clear = () => {
     form.resetFields();
     setAddedItems([]);
@@ -188,6 +188,13 @@ export default ({
     };
   };
 
+  const getWfSelector=() :{buId: number, wfSelector?: string}=> {
+    return {
+      buId: isFleetRepair? 1:selectedBu,
+      wfSelector: isFleetRepair?'fleet:repair_maintenance':undefined
+    } 
+  }
+
   const layout = <div ref={ref}><ProForm
     form={form}
     onValuesChange={(changeValue, values) => {
@@ -221,7 +228,8 @@ export default ({
                 content: 'Are you sure?',
                 onOk: async () => {
                   try {
-                    await services.save({ ...dataForm, buId: selectedBu });
+                    const wfSelector = getWfSelector()
+                    await services.save({ ...dataForm, ...wfSelector});
                     message.success('Save successfully.');
 
                     !openInTab && clear();
@@ -251,10 +259,10 @@ export default ({
     <Card title="General" size="small">
       <Row gutter={20}>
         <Col flex={1}>
-          {bu.length > 0 && <CheckCard.Group key={`bu_${selectedBu}`} disabled={addedItems.length > 0 || bu.length == 1} onChange={v => setSelectedBu(v?.valueOf() as number)} defaultValue={selectedBu} size='small' >
+          {!isFleetRepair? bu.length > 0 && <CheckCard.Group key={`bu_${selectedBu}`} disabled={addedItems.length > 0 || bu.length == 1} onChange={v => setSelectedBu(v?.valueOf() as number)} defaultValue={selectedBu} size='small' >
             {bu.map(it => (<CheckCard key={`bu-${it.id}`} size='small' title={it.name} description={it.description} value={it.id} />))}
 
-          </CheckCard.Group>}
+          </CheckCard.Group>: <Flex gap={5} align='middle' style={{padding: 10, fontSize:16,backgroundColor:'#dbd6691a'}}><b>Vehicle repair and maintenance request only</b></Flex>}
         </Col>
       </Row>
       <Row gutter={20}>
@@ -604,13 +612,14 @@ export default ({
         actionHandlers={{
           onStartWorkflow: async (processDef, formKey, _, requestor, comment) => {
             const dataForm = await getDataForm();
+            const wfSelector = getWfSelector()
             const data: StartWorkFlowParam<Requistion> = {
               processDef: processDef,
               formKey: formKey,
-              buId: selectedBu,
+              buId: wfSelector.buId,
               requestor: requestor.id,
               comment: comment,
-              payload: dataForm,
+              payload: {...dataForm, ...wfSelector},
             };
 
             try {

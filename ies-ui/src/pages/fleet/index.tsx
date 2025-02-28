@@ -8,7 +8,10 @@ import fuelStock from '@/assets/oil-tank.png';
 import vehicletool from '@/assets/vehicle-tools.png';
 import maintenancePlan from '@/assets/web-maintenance.png';
 import ListMenuComp from '@/components/ListMenu';
+import requisitionIcon from '@/assets/requisition.png';
+import vehicleMaintenance from '@/assets/vehicle-maintenance.png';
 import { useId } from 'react';
+import { useAccess } from '@umijs/max';
 
 export const FleetPaths = {
   fleet: '/fleet',
@@ -19,6 +22,7 @@ export const FleetPaths = {
   serviceTasks: '/fleet/service-tasks',
 };
 export default () => {
+  const access = useAccess();
   const items = [
     {
       id: 'vehicle',
@@ -107,9 +111,20 @@ export default () => {
       icon: addon,
       isMenu: true,
     },
+   
   ];
+  if(access.canAccessFleetPurchaseRequisitionMenuItem){
+    items.push( {
+      id: 'fleetRepairMaintenanceRequest',
+      name: 'Repair & Maintenance',
+      description: 'Repair & Maintenance Request',
+      link: `/fleet/requisition/create`,
+      icon: vehicleMaintenance,
+      isMenu: true,
+    },)
+  }
 
   return (
       <ListMenuComp items={items} />
   );
-};
+}

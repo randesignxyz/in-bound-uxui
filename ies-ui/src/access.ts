@@ -530,8 +530,16 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           'ROLE_PRO_QC_APPROVER',
           'ROLE_PRO_PO_APPROVER',
           'ROLE_PRO_SUPPORT',
+          'ROLE_FLEET_PRO_PR_REQUESTER'
         ].some((it) => it === item),
       ) || false,
+      canAccessFleetPurchaseRequisitionMenuItem:
+      currentUser?.authorities.some((item) =>
+        [
+          'ROLE_FLEET_PRO_PR_REQUESTER',
+          'ROLE_ADMIN'
+        ].some((it) => it === item),
+      ) || false,  
 
     canAccessProSettingMenuItem: currentUser?.authorities.some((item) =>
       [

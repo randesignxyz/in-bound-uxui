@@ -10,9 +10,11 @@ import {
   PartitionOutlined,
   SelectOutlined,
   StopOutlined,
+  UnorderedListOutlined,
   UserSwitchOutlined,
 } from '@ant-design/icons';
 import { Button, Space } from 'antd';
+import { history} from 'umi';
 
 const ActionIcons = {
   flow: <PartitionOutlined style={{ fontSize: '16px', color: '#08c' }} />,
@@ -119,11 +121,12 @@ export const ActionBtn: React.FC<ActionBtnProps> = ({
     item?.createSubTask ? { value: 'createSubTask', name: 'Create Sub Task', groupName: '' } : undefined,
     ...(item && taskActions ? item.actions : []),
   ];
-
+  const isExternal = () => history.location.pathname.includes("/external/data-form/");
   return (
     <Space size="large">
 
       <Space>
+        {isExternal() && <Button icon={<UnorderedListOutlined/>} type='link'  onClick={() => history.push(`/task-list`)}>Task List</Button>}
         <MoreActionsButtons moreActions={moreActions} />
         {actionList.filter(action => action).map(action => (
           <ActionButton key={action?.value} action={action} item={item} actionHandler={actionHandler} />
@@ -141,6 +144,7 @@ export const ActionBtn: React.FC<ActionBtnProps> = ({
           </Button>
         )}
         <TaskActionButtons item={item} taskActions={taskActions} actionHandler={actionHandler} />
+        
       </Space>
     </Space>
   );

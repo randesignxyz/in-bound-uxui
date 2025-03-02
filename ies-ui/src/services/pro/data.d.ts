@@ -51,6 +51,7 @@ export interface ItemGroupListItem {
 export interface Requistion {
   id?: number;
   buId: number;
+  wfSelector?:string;
   acquisitionDate: Moment;
   budgetCodeRequired: boolean;
   reason: string;

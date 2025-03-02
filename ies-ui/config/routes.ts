@@ -201,6 +201,14 @@ export default [
     access: 'canAccessProMenuItem',
     component: './pro/requisition',
   },
+  {
+    path: '/fleet/requisition/:view/*',
+    name: 'requisition',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessFleetPurchaseRequisitionMenuItem',
+    component: './pro/requisition',
+  },
 
   {
     path: '/pro/quotation/:view/*',

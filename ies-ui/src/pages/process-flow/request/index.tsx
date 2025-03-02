@@ -25,7 +25,7 @@ import { ProcessRequestItem } from './data.type';
 import { StockRequestFormNames } from '@/pages/fma-stock/request/process-flow';
 import { TransferRequestFormNames } from '@/pages/fma-stock/transfer/process-flow';
 import { AdjustmentRequestFormNames } from '@/pages/fma-stock/adjustment/process-flow';
-import { ProbationEvaluationRequestFormNames } from '@/pages/hrm/probation/process-flow';
+import { ProbationEvaluationRequestFormNames, ProbationEvaluationRequestOFLFormNames } from '@/pages/hrm/probation/process-flow';
 import ProbationRequestModal from '@/pages/hrm/probation/ProbationRequestModal';
 
 export default () => {
@@ -61,7 +61,7 @@ export default () => {
     if (key == StockRequestFormNames.processDefKey && access.canCreateNCMRequest) return true;
     if (key == TransferRequestFormNames.processDefKey && access.canCreateInventoryTransferRequest) return true;
     if (key == AdjustmentRequestFormNames.processDefKey && access.canCreateInventoryAdjRequest) return true;
-    if (key == ProbationEvaluationRequestFormNames.processDefKey && access.canCreateHrProbationEvaluationRequest) return true;
+    if ((key == ProbationEvaluationRequestFormNames.processDefKey || key == ProbationEvaluationRequestOFLFormNames.processDefKey)&& access.canCreateHrProbationEvaluationRequest) return true;
 
     return false;
   };
@@ -205,7 +205,7 @@ export default () => {
       {(() => {
         if (modalVisible?.type == StaffRequisitionFormNames.processDefKey || modalVisible?.type == StaffRequisitionOFLFormNames.processDefKey) {
           return <RequestModal open={true} onOpenChange={onCloseModalHandler} width="1000px" />;
-        } if (modalVisible?.type == ProbationEvaluationRequestFormNames.processDefKey) {
+        } if (modalVisible?.type == ProbationEvaluationRequestFormNames.processDefKey || modalVisible?.type == ProbationEvaluationRequestOFLFormNames.processDefKey) {
           return <ProbationRequestModal open={true} onOpenChange={onCloseModalHandler} width="1000px" />;
         } else if (modalVisible?.type == ITRequestFormNames.processDefKey) {
           return (

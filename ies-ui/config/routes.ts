@@ -263,6 +263,15 @@ export default [
     access: 'canAccessCrmMenuItem',
     component: './crm/gratis-config',
   },
+  // REACH 2/25/2025
+  {
+    path: '/crm/salesperson/:view/*',
+    name: 'Salesperson',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessCrmMenuItem',
+    component: './crm/salesperson',
+  },
   /**********Pro>>**************/
 
   /**********<<HRM**************/

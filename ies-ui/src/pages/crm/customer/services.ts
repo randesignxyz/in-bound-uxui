@@ -1,4 +1,4 @@
-import { execDataService, execDataService0, fetchDataListService, fetchDataPagingService } from "@/services/apiGateway";
+import { execDataService, execDataService0, fetchDataListService, fetchDataPagingService, singleRequest } from "@/services/apiGateway";
 import { CustomerItemLess, SalePerson } from "@/services/crm/data";
 import { LookupDataItem } from "@/services/shared/data";
 import { SaveCustomerPosmParams } from "../contract/types";
@@ -94,6 +94,12 @@ export const CustomerServices = {
       visitId,
       items
     }
+  }),
+
+  syncCustomer:()=>execDataService0({
+    actionName:"sync-customer-auto",
+    endpoint:"CRM",
+    payload:{}
   })
 
 }

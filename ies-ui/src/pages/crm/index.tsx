@@ -18,6 +18,8 @@ import PosmMonitoring from './reports/PosmMonitoring';
 import AgreementCompliant from './reports/AgreementCompliant';
 import ContractReport from './contract/components/ContractReport';
 import TermReport from './term/components/TermReport';
+import salesperson from "@/assets/salesman.png";
+
 
 export const CrmPaths = {
   contact: '/crm/contact',
@@ -33,6 +35,7 @@ export const CrmPaths = {
   terms: '/crm/term',
   locationTracking: '/crm/tracking',
   gratisConfig: '/crm/gratis-config',
+  salesperson: '/crm/salesperson',
 };
 const Crm: React.FC = () => {
   const access = useAccess();
@@ -403,6 +406,14 @@ const Crm: React.FC = () => {
       menu: {
         items: [{ label: <TermReport trigger={<a >Export</a>} />, key: 'exportTerm', icon: <ExportOutlined style={{ fontSize: '16px', color: '#08c' }} /> }]
       }
+    },
+    {
+      id: 'salesperson',
+      name: 'Salesperson Org Unit',
+      description: '',
+      //link: `${CrmPaths.settlement}/list`,
+      link: `${CrmPaths.salesperson}/list`,
+      icon: salesperson,
     }
   ];
 

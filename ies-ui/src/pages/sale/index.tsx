@@ -26,6 +26,7 @@ import type { ListMenuItem } from '@/components/ListMenu';
 import ListMenuComp from '@/components/ListMenu';
 import {
   BarChartOutlined,
+  FundOutlined,
   PlusCircleOutlined,
   ScheduleOutlined,
   ShoppingOutlined,
@@ -111,7 +112,7 @@ export default () => {
     {
       id: 'store',
       name: 'Store',
-      description: 'Store for Van Sale and MPU',
+      description: '',
       link: `${SalePaths.store}/list`,
       icon: storeIcon,
       // visible: access.canAccessAllMenuDSD || access.canAccessTabWarehouse,
@@ -128,7 +129,7 @@ export default () => {
     {
       id: 'sales-visit',
       name: 'Visit',
-      description: 'DSD Visit',
+      description: 'CnD Visit',
       link: `${SalePaths.visit}/list`,
       icon: scheduleIcon,
       // visible: access.canAccessAllMenuDSD,
@@ -147,7 +148,7 @@ export default () => {
     {
       id: 'lead',
       name: 'Lead',
-      description: 'DSD Customers',
+      description: 'CnD Customers',
       link: `${SalePaths.lead}/list`,
       //overlay: leadReportMenu,
       icon: userIcon,
@@ -165,7 +166,7 @@ export default () => {
     {
       id: 'dsdReport',
       name: 'Reports',
-      description: 'All Reports in DSD.',
+      description: 'All Reports in CnD.',
       icon: reportIcon,
       visible: access.canAccessSaleReport,
       menu: {
@@ -180,12 +181,15 @@ export default () => {
             case 'dsd-reports':
               setReport('dsd-reports');
               break;
-            case 'visit-reports':
+            case 'visit-reports': 
               setReport('visit-report');
               break;
             case 'purchase-order-reports':
               setReport('purchase-order-reports');
               break;
+            case 'performance-po-report':
+                setReport('performance-po-report');
+                break;
             default:
               message.error('Something went wrong.');
           }
@@ -203,6 +207,7 @@ export default () => {
               getItem('Sales Invoice Report', 'dsd-reports', <TagsOutlined />),
               getItem('Visit Report', 'visit-reports', <ScheduleOutlined />),
               getItem('Purchase Order Report', 'purchase-order-reports', <ShoppingOutlined />),
+              getItem('Performance P.O Report', 'performance-po-report', <FundOutlined />),
             ],
             'group',
           ),
@@ -216,7 +221,7 @@ export default () => {
     {
       id: 'item-sales-line-price',
       name: 'Pricing',
-      description: 'Setting Pricing for DSD',
+      description: 'Setting Pricing for CnD',
       icon: pricingIcon,
       visible: access.canAccessAllMenuDSD,
       link: `${SalePaths.pricing}/list`,

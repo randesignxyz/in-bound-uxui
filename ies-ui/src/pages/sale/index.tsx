@@ -168,7 +168,7 @@ export default () => {
       name: 'Reports',
       description: 'All Reports',
       icon: reportIcon,
-      visible: access.canAccessSaleReport,
+      visible: access.canAccessSaleReport || access.canAccessSaleDailyReport,
       menu: {
         onClick: (info) => {
           switch (info.key) {
@@ -247,7 +247,10 @@ export default () => {
       name: 'Settlement',
       description: 'Daily Settlement Review',
       icon: settlementIcon,
-      visible: access.canAccessAllMenuDSD || access.canAccessSaleDailyReport,
+      visible:
+        access.canAccessAllMenuDSD ||
+        access.canAccessSaleDailyReport ||
+        access.canAccessSettlementMenuItem,
       link: `${MPUPath.mpuSettlement}/list`,
     },
     {
@@ -317,22 +320,11 @@ export default () => {
     },
   ];
 
-  // const mpuMenuItems = [
-  // {
-  //   id: 'rsm_request',
-  //   // name: 'RSM Request',
-  //   name: 'Purchase Request',
-  //   description: 'Order Items',
-  //   link: `${MPUPath.rsmRequest}/list`,
-  //   icon: agreementIcon,
-  //   visible: access.canAccessViewMpu,
-  // },
-  // ];
-
   return (
     <PageContainer title={false}>
       {access.canAccessSaleMenuItems && <ListMenuComp items={items} />}
       {/* <ListMenuComp items={retailerMenuItems} /> */}
+
       <Reports reportName={report} onClose={() => setReport(undefined)} />
 
       {(access.canAcessStockControlMenuItem ||
@@ -344,20 +336,6 @@ export default () => {
           <ListMenuComp items={stockMenuItems} />
         </>
       )}
-      {/* {access.canAccessViewMpu && (
-        <>
-          <Divider plain orientation="left">
-            MMA
-          </Divider>
-          <ListMenuComp items={mpuMenuItems} />
-        </>
-      )} */}
-      {/* {access.canAccessRSMRequestToMPU && ( */}
-      {/* <>
-          <Divider plain orientation='left'>MMA</Divider>
-          <ListMenuComp items={purchaseOrder} />
-        </> */}
-      {/* // )} */}
     </PageContainer>
   );
 };

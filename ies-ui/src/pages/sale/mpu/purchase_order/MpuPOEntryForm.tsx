@@ -452,10 +452,11 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
                 };
               },
 
-              request: async (k: { keywords: string }) => {
+              request: async (k: { keyWords: string }) => {
+                console.log(k);
                 const data = await ProductItemsServiceAPI(mainRequestActions).pageProducts({
                   criteria: {
-                    searchValue: k.keywords,
+                    searchValue: k.keyWords,
                   },
                 });
                 // const disabledSelected = type === 'CREATE' ? dataSourceItems?.some((ot) => ot.itemId === p.id) : false;

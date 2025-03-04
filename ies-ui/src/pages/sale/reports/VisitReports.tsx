@@ -20,6 +20,7 @@ interface Props extends FormModalProps {
 export default (props: Props) => {
   const requestActions = simpleRequestActions();
   const saleServices = SaleServiceAPI(requestActions);
+
   const [loading, setLoading] = useState<boolean>(false);
 
   const [form] = useForm<{
@@ -46,7 +47,7 @@ export default (props: Props) => {
         type: 'EXCEL',
         data: {
           visitedDates: dataForm.visitedDates,
-          salespersonCodes: dataForm.salespersonCodes,
+          salespersonCode: dataForm.salespersonCodes,
         },
       });
       message.success('Report generated successfully.');
@@ -80,7 +81,7 @@ export default (props: Props) => {
               />
               <ProFormSelect
                 mode="multiple"
-                label="Salesperson"
+                label="Salespersons"
                 name="salespersonCodes"
                 width="md"
                 showSearch

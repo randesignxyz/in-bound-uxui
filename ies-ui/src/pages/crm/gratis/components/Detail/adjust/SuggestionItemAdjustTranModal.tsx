@@ -1,47 +1,54 @@
-import { EditableFormInstance,  ModalForm, ModalFormProps, ProCard, ProTable } from "@ant-design/pro-components";
+import { EditableFormInstance,  ModalForm, ModalFormProps, ProCard, ProFormText, ProTable } from "@ant-design/pro-components";
 import { useEffect, useRef, useState } from "react";
 import { GratisServices } from "../../../services";
 import { simpleRequestActions } from "@/services/model";
 import { AdjustItem, AdjustInfoOn, AdjustInfoItemDetail, ItemSAP } from "../../../types";
 import { formatDate, toReadable } from "@/pages/utils";
-import { Button,Space, Table, message } from "antd";
+import { Button,Flex,Input,Space, Table, message } from "antd";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import AdjustItemModal from "./AdjustItemModal";
 import ListItemSearchModal from "./ListItemSearchModal";
+import { set } from "lodash";
 
 interface Props extends ModalFormProps<{status:string, remarks: string}>{
-    loading?: boolean;
+    // loading?: boolean;
     incentiveSettlementId: number;
     verifyId: number;
     customerCode?: string;
     required?: boolean
     onSave: (status: string ,remarks: string,adjItems: AdjustItem[], cb:(v: boolean)=>void) => void;
     trigger?: JSX.Element;
-    data?:ItemSAP[]
+    total: number;
+    targetNum: number;
+    // data?:ItemSAP[]
 }
 
- const SuggestionItemAdjustTranModal= ( {loading,incentiveSettlementId,verifyId,customerCode,trigger,required, onSave,data, ...rest} : Props) => {
+ const SuggestionItemAdjustTranModal= ( {incentiveSettlementId,verifyId,customerCode,trigger, total, targetNum ,required, onSave, ...rest} : Props) => {
     const requestActions = simpleRequestActions()
     const [open,setOpen] = useState<boolean>(false)
-    // const [data, setData] = useState<AdjustInfoOn[]>()
     const editableFormRef = useRef<EditableFormInstance>();
-    // const [data, setData] = useState<ItemSAP[]>()
+    const [data, setData] = useState<ItemSAP[]>()
     const [selected, setSelected] = useState<AdjustItem[]>([])
-    const [modalSearch, setModalSearch] = useState<{
-        type: 'itemSearch';
-        cb: (item:ItemSAP) => void;
-    }>()
+    const [loading,setLoading] = useState<boolean>(false)
+    const [searchText,setSearchText] = useState<string>()
    
-    // useEffect(()=>{
-    //     if(verifyId>0) loadData()
-    // },[verifyId])
-    // const loadData = async ()=>{
-    //     // const rs = await GratisServices.gratisSaleOrderList(verifyId).query(requestActions)    
-    //     // setData(rs)
-    //     // const itemAdjList = await GratisServices.getListSuggestionItemAdjustment(incentiveSettlementId,verifyId).query(requestActions)
-    //     // console.log('item adj',itemAdjList)
-    //     // setData(itemAdjList)
-    // }
+    useEffect(()=>{       
+        if(verifyId>0 && open) loadData()
+    },[open])
+    const loadData = async ()=>{
+        setLoading(true)
+        await GratisServices.getListSuggestionItemAdjustment(incentiveSettlementId, verifyId, undefined).query(requestActions).then(it => {
+            setData(it)
+            setSelected([])
+            setLoading(false)
+          })
+      
+        // const rs = await GratisServices.gratisSaleOrderList(verifyId).query(requestActions)    
+        // setData(rs)
+        // const itemAdjList = await GratisServices.getListSuggestionItemAdjustment(incentiveSettlementId,verifyId).query(requestActions)
+        // console.log('item adj',itemAdjList)
+        // setData(itemAdjList)
+    }
     
     return <ModalForm trigger={trigger} width={'70%'}
         loading={loading}
@@ -85,7 +92,18 @@ interface Props extends ModalFormProps<{status:string, remarks: string}>{
                     setting: false,
                 }} 
                 pagination={false}
-                dataSource={data}
+                headerTitle={[
+                    <Flex gap={3} style={{width:'100%'}}>
+                        <Input.Search allowClear
+                            onSearch={(value: string) => {
+                            setSearchText(value)
+                            }}
+                        />
+                    </Flex>
+                    
+                ]}
+                dataSource={data?.filter(r=>(searchText==undefined || searchText=='' ||  (r.quantity+'').indexOf(searchText)!== -1 ||  r.docNum.indexOf(searchText)!== -1 ||  r.itemCode.indexOf(searchText)!== -1 
+                    ||  r.itemName.indexOf(searchText)!== -1 || (r?.ds||'').indexOf(searchText)!== -1))}
                 columns={[
                     {title:'#',dataIndex:'ds'},
                     {
@@ -97,7 +115,7 @@ interface Props extends ModalFormProps<{status:string, remarks: string}>{
                         dataIndex:'docDate',
                         render:(_,r)=> formatDate(r.docDate)
                     },
-                    {title:'Invoice/SO', dataIndex:'docNum'},
+                    {title:'Doc Num', dataIndex:'docNum'},
                     {title:'Item Code', dataIndex:'itemCode'},
                     {title:'Item Name', dataIndex:'itemName'},
                     {title:'Qty', dataIndex:'quantity'},
@@ -155,6 +173,30 @@ interface Props extends ModalFormProps<{status:string, remarks: string}>{
                             )
                         }
                     },
+                }}
+                summary={(data) => {
+                    var total1=0
+                    selected?.forEach(r=> {
+                        total1+= (r?.qty||0)
+                    })
+                    return ([
+                        <Table.Summary.Row style={{ textAlign: 'right', fontWeight: 'bold' }}>
+                            <Table.Summary.Cell colSpan={7} index={7}>
+                                {'Total'}
+                            </Table.Summary.Cell>
+                            <Table.Summary.Cell colSpan={1} index={7} align="left">
+                                {total1} 
+                            </Table.Summary.Cell>
+                        </Table.Summary.Row>,
+                        <Table.Summary.Row style={{ textAlign: 'right', fontWeight: 'bold' }}>
+                        <Table.Summary.Cell colSpan={7} index={7}>
+                            {'Grand Total/Targert'}
+                        </Table.Summary.Cell>
+                        <Table.Summary.Cell colSpan={1} index={7} align="left">
+                            {total1 + total}/{targetNum}
+                        </Table.Summary.Cell>
+                    </Table.Summary.Row>
+                ])
                 }}
             />
             {/* <ListItemSearchModal    

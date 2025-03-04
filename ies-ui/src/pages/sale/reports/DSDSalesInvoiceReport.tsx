@@ -8,7 +8,7 @@ import {
   ProFormRadio,
   ProFormSelect,
 } from '@ant-design/pro-components';
-import { Card, message, Spin } from 'antd';
+import { Card, Spin, message } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { useState } from 'react';
 
@@ -94,12 +94,12 @@ export default (props: Props) => {
               />
               <ProFormDateRangePicker
                 rules={[{ required: true }]}
-                label="Requested Date Start-End"
+                label="Invoiced Date Start-End"
                 name="requestedDate"
               />
               <ProFormSelect
                 mode="multiple"
-                label="Salesperson"
+                label="Salespersons"
                 name="salespersonCode"
                 width="md"
                 showSearch

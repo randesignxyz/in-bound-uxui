@@ -87,6 +87,8 @@ export interface ContractLess {
     status?: string;
     addressId?: number;
     address?: string;
+    inGratis?:boolean;
+    gratisInfo?: string
 }
 
 

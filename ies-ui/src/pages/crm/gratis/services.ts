@@ -2,8 +2,9 @@ import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { execDataService, execDataService0, fetchDataItemService, fetchDataListService, fetchDataPagingService } from "@/services/apiGateway";
 import { ContractLess } from "@/services/crm/contract";
 // import { LookupDataItem, LookupDataItem3 } from "@/services/data";
-import { AdjustItem, AdjustInfoOn, CreateSettlemenDate, GratisContract, GratisContractViewData, GratisVerifyItem, HistoryItem, IncentiveSettlement, LookupDataItem,  SaveChangeStatusData,  SaveGratisContractCheckListData, SearchCriteria, SettlementCycle, SettlementCycleActivity, SettlementCycleAdvanceSearchParams, SettlementSearchDate, VerifyGratisContact, ItemSAP, GratisVerifySchedule, ApprovalRequestPayload, GratisSuggestedCustomer, GratisSuggestedCustomerVisit, GratisVisitScheduleParams, GratisAdvanceSearchParams } from "./types";
+import { AdjustItem, AdjustInfoOn, CreateSettlemenDate, GratisContract, GratisContractViewData, GratisVerifyItem, HistoryItem, IncentiveSettlement, LookupDataItem,  SaveChangeStatusData,  SaveGratisContractCheckListData, SearchCriteria, SettlementCycle, SettlementCycleActivity, SettlementCycleAdvanceSearchParams, SettlementSearchDate, VerifyGratisContact, ItemSAP, GratisVerifySchedule, ApprovalRequestPayload, GratisSuggestedCustomer, GratisSuggestedCustomerVisit, GratisVisitScheduleParams, GratisAdvanceSearchParams, GratisVerifyItemDetail, ImportDirectIncentiveParams } from "./types";
 import moment from "moment";
+import { ImportDataItem } from "@/services/shared/data";
 
 export const GratisServices = {
 
@@ -99,6 +100,11 @@ export const GratisServices = {
         endpoint: 'CRM',
         payload: data,
     }), 
+    commitImportedDataDireactIncentiveList: (data: ImportDirectIncentiveParams) => execDataService<{data:ImportDataItem[]},ImportDirectIncentiveParams>({
+        actionName: 'commit-import-gratis-settlement-direct-incentive-data',
+        endpoint: 'FILE',
+        payload: data,
+    }), 
     saveChangeStatusSettlementCycle: (data: SaveChangeStatusData) => execDataService0<SaveChangeStatusData>({
         actionName: 'save-change-status-settlement-cycle',
         endpoint: 'CRM',
@@ -119,6 +125,12 @@ export const GratisServices = {
         actionName: 'list-gratis-contract_type_group_by_code',
         responseKey: 'contractTypesByGroupCode',
         endpoint: 'CRM',
+    }),
+    gratisSuggestFields: () => fetchDataListService<LookupDataItem>({
+        actionName: 'lookupDataList',
+        responseKey: 'gratisSuggestFields',
+        endpoint: 'CRM',
+        payload: {list: ['GRATIS_SUGGESTION_FIELD']}
     }),
     listLookupTarget: () => fetchDataListService<LookupDataItem>({       
         actionName: 'list-gratis-target',
@@ -163,6 +175,11 @@ export const GratisServices = {
     }),
     fetchGratisVerifyItemList: (criteria:SearchCriteria) => fetchDataListService<GratisVerifyItem, any>({
         actionName: 'list-gratis-verify-item',
+        endpoint: 'CRM',
+        payload: criteria
+    }),
+    fetchGratisVerifyItemDetailList: (criteria:SearchCriteria) => fetchDataListService<GratisVerifyItemDetail, any>({
+        actionName: 'list-gratis-verify-item-detail',
         endpoint: 'CRM',
         payload: criteria
     }),
@@ -213,6 +230,11 @@ export const GratisServices = {
         actionName: 'remove-g-contract-verify-tran',
         endpoint: 'CRM',
         payload: {id:id},
+    }),
+    removeGContractVerifyTranIds: (items:number[]) => execDataService0<{items:number[]}>({
+        actionName: 'remove-g-contract-verify-tran-ids',
+        endpoint: 'CRM',
+        payload: {items},
     }),
     fetchHistoryGratisTransList: (criteria:SearchCriteria) => fetchDataListService<HistoryItem, any>({
         actionName: 'list-gratis-history-trans',

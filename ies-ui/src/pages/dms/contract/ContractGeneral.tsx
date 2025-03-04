@@ -129,7 +129,7 @@ export default ({ lookupData }: Props) => {
                 <ProFormText
                     name={"docNumber"}
                     label="Contract Number"
-                    rules={[{ required: true, max: 20 }]}
+                    rules={[{ required: true }]}
                 />
             </Col>
             <Col span={18}>

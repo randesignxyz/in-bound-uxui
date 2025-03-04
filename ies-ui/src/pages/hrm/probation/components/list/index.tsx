@@ -119,7 +119,7 @@ const ProbationList: React.FC<Props> = ({ onAdd, forceRefresh, onDetail }) => {
             title: 'Form No #',
             sorter: 'formNo',
             flex: 1,
-            width: 150,
+            width: 180,
             render: (_: any, r: any) => {
                 return (<Space size={1}>
                     <Button

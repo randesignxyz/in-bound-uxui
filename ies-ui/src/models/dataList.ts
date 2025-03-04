@@ -5,8 +5,8 @@ import { DriverDTO } from '@/pages/fleet/driver/data';
 import { FuelDTO } from '@/pages/fleet/fuel/data';
 import { InspectionDTO } from '@/pages/fleet/inspection/data';
 import { MaintenneceDTO } from '@/pages/fleet/maintenance/data';
-import { ServiceReminderDTO } from '@/pages/fleet/servicereminder/data';
 import { ServiceTasksDTO } from '@/pages/fleet/serviceTask/data';
+import { ServiceReminderDTO } from '@/pages/fleet/servicereminder/data';
 import { MeterHistoryDTO, VehicleListItem } from '@/pages/fleet/vehicle/data';
 import { StaffRequisitionRequest } from '@/pages/hrm/data';
 import type { CategoryDto } from '@/pages/sale/retailer/category/data';
@@ -41,18 +41,18 @@ import {
 import { useState } from 'react';
 import { Paging } from '../services/API';
 
-import { TankTransactionDTO } from '@/pages/fleet/fuelStock/data';
-import { AppraisalEmp } from '@/pages/hrm/appraisal-submit/data.types';
-import { CategoryDTO } from '@/pages/dms/setting/components/category/data';
-import { DocumentationDTO } from '@/pages/dms/documentation/data';
-import { ShareDTO } from '@/pages/dms/share/data';
 import { Term } from '@/pages/crm/term/types';
+import { DocumentationDTO } from '@/pages/dms/documentation/data';
+import { CategoryDTO } from '@/pages/dms/setting/components/category/data';
+import { ShareDTO } from '@/pages/dms/share/data';
+import { TankTransactionDTO } from '@/pages/fleet/fuelStock/data';
+import { StockRequestListItem } from '@/pages/fma-stock/request/data.types';
+import { AppraisalEmp } from '@/pages/hrm/appraisal-submit/data.types';
 import { TransferRequest } from '@/pages/prod/inventory-transfer-request/data';
-import { StockRequestLess, StockRequestListItem } from '@/pages/fma-stock/request/data.types';
+import { GratisConfigurationList } from '@/pages/crm/gratis-config/types';
 import { ItemList } from '@/pages/fma-stock/item/data.types';
 import { TransferRequestListItem } from '@/pages/fma-stock/transfer/data.types';
 import { EmpWhsMappingList } from '@/pages/fma-stock/emp-whs/data.types';
-import { AdjRequestListItem } from '@/pages/fma-stock/adjustment/data.types';
 import { ProbationEvaluationEmpList } from '@/pages/hrm/probation/data.types';
 
 type DataList =
@@ -314,11 +314,15 @@ type DataList =
     type: 'transfer-request-final-list';
     criteria?: any;
     data: Paging<TransferRequest>;
-  }| {
+  } | {
     type: 'probation-evaluation-emp';
     criteria?: any;
     data: Paging<ProbationEvaluationEmpList>;
-  } ;
+  } | {
+    type: 'fetch-gratis-configuration-paging';
+    criteria?: any;
+    data: Paging<GratisConfigurationList>;
+  };
 
 type MomainType =
   | 'sales-product-item'
@@ -367,10 +371,12 @@ type MomainType =
   | 'dms-document'
   | 'term'
   | 'transfer-request-list'
+  | 'stock'
   | 'fma-stock-request'
   | 'whh-inventory-transfer-request'
   | 'fma-emp-whs-mapping-list'
-  | 'transfer-request-final-list';
+  | 'transfer-request-final-list'
+  | 'fetch-gratis-configuration-paging';
 
 export default () => {
   const [cacheData, seCacheData] = useState<DataList>();

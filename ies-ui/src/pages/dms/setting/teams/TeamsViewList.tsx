@@ -1,5 +1,5 @@
 import { ActionType, ProList } from "@ant-design/pro-components"
-import { Button, Flex, Modal, Tag, message } from "antd"
+import { Avatar, Button, Flex, Modal, Tag, Typography, message } from "antd"
 import { TeamsServiceAPI } from "./service"
 import { simpleRequestActions } from "@/services/model"
 import { EditOutlined, DeleteOutlined, TeamOutlined, PlusOutlined, ReloadOutlined } from "@ant-design/icons"
@@ -36,6 +36,19 @@ export default ({ actionKey, isCurrentUser }: Props) => {
         <>
             <ProList<TeamsDTO>
                 headerTitle={"Your Teams"}
+                grid={{
+                    gutter:12,
+                    column:2,
+                }}
+                size="small"
+                itemCardProps={{
+                    size:"small",
+                    bodyStyle:{
+                        marginTop:0,
+                        paddingTop:0
+                    }
+                }}
+               
                 toolBarRender={() => [
                     <Button
                         type="link"
@@ -48,7 +61,8 @@ export default ({ actionKey, isCurrentUser }: Props) => {
                     />
                 ]}
                 pagination={{
-                    pageSize: 20
+                    pageSize: 20,
+                    size:"small",
                 }}
                 options={false}
                 request={async (param) => {
@@ -81,20 +95,17 @@ export default ({ actionKey, isCurrentUser }: Props) => {
                 },
                 avatar: {
                     search:false,
-                    render: (_, r) => (<TeamOutlined />)
+                    render: (_, r) => <Avatar style={{ backgroundColor: '#87d068', marginRight:10 }} icon={<TeamOutlined />} size={48} />
                 },
-                description: {
-                    search:false,
-                    render: (_, r) => {
-                        return (
-                            <Flex vertical>
-                                <p>{r.description}</p>
-                                <Flex  wrap="wrap" gap={"small"}>
+                content:{
+                    render:(_,r)=>{
+                        return <Flex vertical gap={0}>
+                        <Typography.Paragraph type="secondary" ellipsis={{ rows:1, expandable:true, symbol:"more" }}>{r.description}</Typography.Paragraph>
+                        <Flex  wrap="wrap" gap={"small"}>
 
-                                    {r.memberList?.map(it => (<Tag color="gold">{it.userName}</Tag>))}
-                                </Flex>
-                            </Flex>
-                        )
+                            {r.memberList?.map(it => (<Tag color="gold">{it.userName}</Tag>))}
+                        </Flex>
+                    </Flex>
                     }
                 },
                 actions: {
@@ -130,10 +141,17 @@ export default ({ actionKey, isCurrentUser }: Props) => {
                 onCancel={() => setState({ visible: undefined })}
                 data={state?.visible?.payload}
                 onSave={async (data: TeamsCreate) => {
-                    services.save(data);
-                    setState((v) => ({ ...v, visible: undefined }))
-                    actionRef.current?.reloadAndRest?.();
-                    message.success("Success!")
+                    Modal.confirm({
+                        title:"Save Team ",
+                        content:"are you sure?",
+                        onOk:async()=>{
+                            services.save(data);
+                            setState((v) => ({ ...v, visible: undefined }))
+                            actionRef.current?.reloadAndRest?.();
+                            message.success("Success!")
+                        }
+                    })
+                    
                 }}
             />
             <TeamsDetail

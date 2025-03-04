@@ -1,7 +1,7 @@
 import { ActionDataFormProps } from '@/pages/process-flow/data';
 import ActionFormWrapper from '@/pages/process-flow/components/forms/ActionFormWrapper';
-import { ActionType, EditableFormInstance, EditableProTable, ProCard, ProForm, ProFormTextArea } from "@ant-design/pro-components";
-import { Button, Card, Col, message, Modal, Row, Space, UploadFile } from "antd";
+import { ActionType, EditableFormInstance, ProCard, ProForm, ProFormTextArea } from "@ant-design/pro-components";
+import { Card, message, Modal, Space, UploadFile } from "antd";
 import { ProbationEmpImprovement, ProbationEvaluation, ProbationEvaluationDetailRs, ProbationEvaluationPayload, ProbationEvaluationResources, ProbationEvaluationResourcesSupport } from '../data.types';
 import { useForm } from 'antd/es/form/Form';
 import { simpleRequestActions } from '@/services/model';
@@ -13,11 +13,10 @@ import Section2Card from '../components/Section2Card';
 import Section3Card from '../components/Section3Card';
 import Section4Card from '../components/Section4Card';
 import { TaskActionDataParam } from '@/services/process-workflow/params';
-import { MinusCircleOutlined } from '@ant-design/icons';
 import EmpImprovmentTable1 from '../components/EmpImprovmentTable1';
 import EmpImprovmentTable from '../components/EmpImprovmentTable';
 import SummaryCard from '../components/SummaryCard';
-import moment, { Moment } from 'moment';
+import { Moment } from 'moment';
 
 export default (props: ActionDataFormProps) => {
 
@@ -34,8 +33,6 @@ export default (props: ActionDataFormProps) => {
     const [addedSection2, setAddedSection2] = useState<ProbationEvaluation[]>([]);
     const [addedSection3,setAddedSection3] = useState<ProbationEvaluationResources[]>([])
     const [addedSection4,setAddedSection4] = useState<ProbationEvaluationResourcesSupport[]>([])
-    const [addedEmpAchievement,setAddedEmpAchievement] = useState<ProbationEmpImprovement[]>([])
-    const [addedEmpImprovement,setAddedEmpImprovement] = useState<ProbationEmpImprovement[]>([])
 
     const editableFormRef1 = useRef<EditableFormInstance>();
     const editableFormRef2 = useRef<EditableFormInstance>();
@@ -45,7 +42,7 @@ export default (props: ActionDataFormProps) => {
     const editableEmpImprovementForm = useRef<EditableFormInstance>();
     const [probaRequest,setProbaRequest] = useState<ProbationEvaluationDetailRs>()
     const [formConfirmedStatus] = useForm<{extendedDate?: Moment;}>();
-    const [confirmStatus,setConfirmStatus] = useState<string>('CONFIRMED')
+    const [confirmStatus,setConfirmStatus] = useState<string>('')
 
     useEffect(()=>{
         loadData()
@@ -89,52 +86,62 @@ export default (props: ActionDataFormProps) => {
         rating3 = (rating3 / addedSection3.length)*0.3
         return rating1 + rating2 + rating3
     }
- 
     
     return (
         <ActionFormWrapper
-           title="Assessment, Submission"
+           title="Assessment, Evaluation"
             {...props}
             width={'95%'}
             actionHandlers= {{...props.actionHandlers,
-                onCompleted: async ()=> {                     
-                    const f1 = await editableFormRef1.current?.validateFields()
-                    const f2 = await editableFormRef2.current?.validateFields()                            
-                    const section1Valid = addedSection1.filter(r => ( r.rating1==undefined || r.rating2==undefined || r.rating3==undefined || r.rating4==undefined || r.rating5==undefined))
-                    const section2Valid = addedSection2.filter(r => ( r.rating1==undefined || r.rating2==undefined || r.rating3==undefined || r.rating4==undefined || r.rating5==undefined))
-                    const section3Valid = addedSection3.filter(r => ( r.rating1==undefined || r.rating2==undefined || r.rating3==undefined || r.rating4==undefined || r.rating5==undefined))
+                onCompleted: async ()=> { 
+                    const section1Valid = addedSection1.filter(r => ( r.rating1==undefined || r.rating2==undefined || r.rating3==undefined || r.rating4==undefined || r.rating5==undefined || r?.remark==undefined  || r?.remark==''))
+                    const section2Valid = addedSection2.filter(r => ( r.rating1==undefined || r.rating2==undefined || r.rating3==undefined || r.rating4==undefined || r.rating5==undefined || r?.remark==undefined || r?.remark==''))
+                    const section3Valid = addedSection3.filter(r => ( r.rating1==undefined || r.rating2==undefined || r.rating3==undefined || r.rating4==undefined || r.rating5==undefined || r?.remark==undefined || r?.remark==''))
                     const section4Valid = addedSection4.filter(r => ( r.fully==undefined || r.partial==undefined || r.no==undefined))
-                    const empAchievement = addedEmpAchievement.filter(r => ( r.description==undefined || r.description=='' ))
-                    const empImprovement = addedEmpImprovement.filter(r => ( r.description==undefined || r.description=='' || r.description1==undefined || r.description1==''))
                     
                     if(section1Valid.length>0) {
-                        message.error("SECTION I. PERFORMANCE, rating score is required.")
+                        message.error("SECTION I. PERFORMANCE: RATING SCORE, JUSTIFICATION is required.")
+                        await editableFormRef1.current?.validateFields()
                         return
                     }
                     if(section2Valid.length>0) {
-                        message.error("SECTION II. JOB KNOWLEDGE AND SKILLS, rating score is required.")
+                        message.error("SECTION II. JOB KNOWLEDGE AND SKILLS: RATING SCORE, JUSTIFICATION is required.")
+                        await editableFormRef2.current?.validateFields()
                         return
-                    }
-                    console.log('section3Valid: ', section3Valid)
+                    }                    
                     if(section3Valid.length>0) {
-                        message.error("SECTION III. BEHAVIOR, rating score is required.")
+                        message.error("SECTION III. BEHAVIOR: RATING SCORE is required.")
+                        await editableFormRef3.current?.validateFields()
                         return
                     }
                     if(section4Valid.length>0) {
-                        message.error("SECTION IV. SUPPORT / RESOURCES NEEDED, rating score is required.")
+                        message.error("SECTION IV. SUPPORT / RESOURCES NEEDED: RATING SCORE is required.")
                         return
                     }
+                    const achFieldsValue = await editableEmpAchievForm.current?.getFieldsValue()
+                    const achList: ProbationEmpImprovement[] = Object.values(achFieldsValue)
+                    const empAchievement = achList.filter(r => ( r.description==undefined || r.description=='' ))
                     if(empAchievement.length>0) {
-                        message.error("SECTION V. ADDITIONAL COMMENTS, 1. achievment is required.")
+                        editableEmpAchievForm.current?.validateFields()
+                        message.error("SECTION V. ADDITIONAL COMMENTS: 1. achievment is required.")
                         return
                     }
-                    if(empImprovement.length>0) {
-                        message.error("SECTION V. ADDITIONAL COMMENTS, (2. Strength/ 3. Development Area) is required.")
+                    
+                    const improFieldsValue = await editableEmpImprovementForm.current?.getFieldsValue()
+                    const improList: ProbationEmpImprovement[] = Object.values(improFieldsValue)
+                    const empImprovement = improList.filter(r => ( r.description==undefined || r.description=='' || r.description1==undefined || r.description1==''))                       
+                    if(empImprovement.length>0) {  
+                        editableEmpImprovementForm.current?.validateFields()                      
+                        message.error("SECTION V. ADDITIONAL COMMENTS: (2. Strength/ 3. Development Area) is required.")
                         return
                     }
-                    const dataStatus = formConfirmedStatus.getFieldsValue()     
-                    if(confirmStatus=='EXTENDED' && (!dataStatus || dataStatus.extendedDate==undefined))  {                        
-                        message.error("CONFIRMED PROBATION: extened date is required.")
+                    const dataStatus = formConfirmedStatus.getFieldsValue() 
+                    if(confirmStatus=='') {
+                        message.error("DECISION BY FUNCTION MANAGER is required.")
+                        return
+                    }
+                    if(confirmStatus=='EXTENDED' && (!dataStatus || dataStatus.extendedDate==undefined)) {                        
+                        message.error("DECISION BY FUNCTION MANAGER: Extened Probation Until is required.")
                         await formConfirmedStatus.validateFields()  
                         return   
                     } 
@@ -145,7 +152,7 @@ export default (props: ActionDataFormProps) => {
                     }
 
                     if(files.length<=1) {
-                        message.error("Atless two attachment files is required.")
+                        message.error("At least two attachment files is required.")
                         return
                     }
                     const dataForm = await form.validateFields() 
@@ -155,13 +162,12 @@ export default (props: ActionDataFormProps) => {
                         section2: addedSection2.map((v, index) => ({ ...v, seqNo: index + 1 })),
                         section3: addedSection3.map((v, index) => ({ ...v, seqNo: index + 1 })),
                         section4: addedSection4.map((v, index) => ({ ...v, seqNo: index + 1 })),
-                        empAchievement: addedEmpAchievement.map((v, index) => ({ ...v, seqNo: index + 1 })),
-                        empImprovement: addedEmpImprovement.map((v, index) => ({ ...v, seqNo: index + 1 })),
+                        empAchievement: achList.map((v, index) => ({ ...v, seqNo: index + 1 })),
+                        empImprovement: improList.map((v, index) => ({ ...v, seqNo: index + 1 })),
                         confirmedStatus: confirmStatus,
                         extendedDate: dataStatus?.extendedDate
 
                     } as ProbationEvaluationPayload
-                            
                     const data = {                      
                         taskId: props.activityData?.taskId || '',
                         actionName: props.action,
@@ -171,14 +177,15 @@ export default (props: ActionDataFormProps) => {
                     } as TaskActionDataParam<ProbationEvaluationPayload>
                     console.log('data form: ', payload)
                     Modal.confirm({
-                        title: 'Assessment, Submission',
+                        title: 'Assessment, Evaluation',
                         content: 'Are you sure?',
                         onOk: async () => {
                             try {
-                                const rs = await srv.updateAssessment(data).then(rs=>{
+                                await srv.updateAssessment(data).then(rs=>{
                                     actionRef.current?.reload()
+                                    props.actionHandlers?.onCancel?.(true)
                                 })
-                                props.actionHandlers?.onCancel?.(true)
+                               
                             } catch (error: any) {
                             message.error(error.message || 'Failed to submit.');
                             }
@@ -189,15 +196,14 @@ export default (props: ActionDataFormProps) => {
                 onRemoveFile: file => setFiles(v=> v.filter(it=> it.uid !== file.uid)),
                 onReset: ()=> {
                   loadData()
-                  form.setFieldsValue({
-                      comment: undefined
-                    })
-                    setFiles([])
+                  form.setFieldsValue({comment: undefined})
+                  setFiles([])                
+                  
                 }
             }}
             uploadProps= {{
                 required: true,
-                message: 'Atless two attachment fils is required.'
+                message: 'Please attach 1. Employee’s self-evaluation and 2. Onboarding Checklist'
             }}
         >
              <ProForm form={form}  submitter={false}>
@@ -206,39 +212,9 @@ export default (props: ActionDataFormProps) => {
                     size="small"
                     bordered headerBordered 
                 >
-                    
-                    {/* <div>
-                        <span>Please choose rating of each criterion that describes best of your employee’s performance compares to the job expectations and goals/work priorities.</span>
-                        <div style={{paddingTop:5}}>
-                        <div><b>SECTION I. PERFORMANCE (Weightage: 50%)</b></div>
-                        <div>What employee is expected to do/achieved during probation period.</div>
-                        <div><span style={{color:'red'}}>*</span> At least 3 items are required.</div>
-                        </div>
-                    </div> */}
-                    <Section1Table editable={false} editableRating={true} editableFormRef={editableFormRef1} addedItems={addedSection1} onSetAddedItems={setAddedSection1} />
-                    {/*---------------------------- SECTION II. JOB KNOWLEDGE AND SKILLS (Weightage: 20%)----------------------------------*/}
-                    {/* <div>
-                        <div style={{paddingTop:5}}>
-                        <div><b>SECTION II. JOB KNOWLEDGE AND SKILLS (Weightage: 20%)</b></div>
-                        <div>What relevant knowledge and skills that employee possesses and applies effectively in the job</div>
-                        </div>
-                    </div> */}
-                    <Section2Card editable={false} editableRating={true} editableFormRef={editableFormRef2} addedItems={addedSection2} onSetAddedItems={setAddedSection2} />
-                    {/*---------------------------- SECTION III. BEHAVIOR (Weightage: 30%)-------------------------------------------------*/}
-                    {/* <div>
-                        <div style={{paddingTop:5}}>
-                        <div><b>SECTION III. BEHAVIOR (Weightage: 30%)</b></div>
-                        <div>How employee is expected to behave in a proper manner.</div>
-                        </div>
-                    </div> */}
-                    <Section3Card editable={false} editableRating={true} editableFormRef={editableFormRef3} addedItems={addedSection3} onSetAddedItems={setAddedSection3} />
-                    {/*---------------------------- SECTION IV. SUPPORT / RESOURCES NEEDED-------------------------------------------------*/}
-                    {/* <div>
-                        <div style={{paddingTop:5}}>
-                        <div><b>SECTION IV. SUPPORT / RESOURCES NEEDED</b></div>
-                        <div>What Line Manager provides/facilitates employee during probation period.</div>
-                        </div>
-                    </div> */}
+                    <Section1Table editable={false} editableRating={true} editableFormRef={editableFormRef1} addedItems={addedSection1} onSetAddedItems={setAddedSection1} />                    
+                    <Section2Card editable={false} editableRating={true} editableFormRef={editableFormRef2} addedItems={addedSection2} onSetAddedItems={setAddedSection2} />                   
+                    <Section3Card editable={false} editableRating={true} editableFormRef={editableFormRef3} addedItems={addedSection3} onSetAddedItems={setAddedSection3} />                    
                     <Section4Card editable={false} editableRating={true} editableFormRef={editableFormRef4} addedItems={addedSection4} onSetAddedItems={setAddedSection4} />
 
                 </ProCard>
@@ -250,10 +226,10 @@ export default (props: ActionDataFormProps) => {
                     </div>
                 </div>
                 <Space direction="vertical" style={{ width: '100%' }}>
-                    <EmpImprovmentTable editableFormRef={editableEmpAchievForm} editable={true} addedItems={addedEmpAchievement} onSetAddedItems={setAddedEmpAchievement}/>
-                    <EmpImprovmentTable1 editableFormRef={editableEmpImprovementForm} editable={true} addedItems={addedEmpImprovement} onSetAddedItems={setAddedEmpImprovement}/>
+                    <EmpImprovmentTable editableFormRef={editableEmpAchievForm} editable={true} initDataItems={[]}/>
+                    <EmpImprovmentTable1 editableFormRef={editableEmpImprovementForm} editable={true} initDataItems={[]} />
                 </Space>
-                {probaRequest && <SummaryCard probaRequest={probaRequest} totalScore={finalTotal()} form={formConfirmedStatus} setConfirmStatus={setConfirmStatus} readonly={false} initialValue={{status:'EXTENDED'}}/>}
+                {probaRequest && <SummaryCard probaRequest={probaRequest} totalScore={finalTotal()} form={formConfirmedStatus} setConfirmStatus={setConfirmStatus} readonly={false} initialValue={{status:''}}/>}
                 
                 <Card style={{ marginTop: 10, marginBottom: 10 }}>
                     <ProFormTextArea rules={[{required: props.action =='Rejected'}]} label="Comment" name="comment" />

@@ -650,3 +650,9 @@ export interface Commant {
   objectId: number;
   objectTypeId: number;
 }
+
+//REACH 02/20/2025
+export interface CancelMultiVisitScheduleStatusParams{
+  ids: number[],
+  remarks?: String,
+}   

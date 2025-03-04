@@ -75,7 +75,7 @@ export default ({ trigger, onSearch }: { trigger?: JSX.Element, onSearch?: (
     >
         <Spin spinning = {requestActions.request?.loading || false}>
             <ProFormSelect showSearch allowClear mode="multiple" name={"brandId"} label = "Brand" options={lookupData?.brandList?.map(it => ({label: it.name, value: it.id}))}/>
-            <ProFormSelect showSearch allowClear mode="multiple" name={"contractTypeId"} label = "Contract Tyoe" options={lookupData?.contractTypes?.map(it =>({label: it.name, value: it.id}))}/>
+            <ProFormSelect showSearch allowClear mode="multiple" name={"contractTypeId"} label = "Contract Type" options={lookupData?.contractTypes?.map(it =>({label: it.name, value: it.id}))}/>
             <ProFormSelect showSearch allowClear mode="multiple" name = "termId" label ="Terms" options={lookupData?.terms?.map(it => ({label: it.name, value: it.id}))}/>
         </Spin>
     </DrawerForm>

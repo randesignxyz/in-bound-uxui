@@ -25,13 +25,10 @@ type FilterType = {
 } & CustomerAdvanceSearchParams
 
 export default ({ getMenuItems }: CustomerActionController) => {
-
     const [filter, setFilter] = useState<FetchPagingParams<FilterType>>()
     const [importData, setImportData] = useState<ImportDataResponse>()
     const [loading, setLoading] = useState(false);
-
     const actionRef = useRef<ActionType>();
-
     const { data, refetch, isFetching } = useQuery(['fetch-customer-list', filter], () => crmServices.findAllCustomer({
         searchValue: filter?.criteria?.searchValue,
         advanceSearch: { ...filter?.criteria },
@@ -39,10 +36,8 @@ export default ({ getMenuItems }: CustomerActionController) => {
     }, { page: filter?.pagination?.current, pageSize: filter?.pagination?.pageSize }), {
         refetchOnWindowFocus: false
     });
-
     const { state, ops, modals } = model();
     const access = useAccess();
-
     return <Spin spinning={loading}>
         <PageWrapper<CustomerItemLess, FilterType, {}>
             tabRender={item => [
@@ -50,7 +45,6 @@ export default ({ getMenuItems }: CustomerActionController) => {
                     action: 'view',
                     tabLabel: item?.code,
                     panel: (_) => <CustomerDetailView openInTab id={item?.id} getMenuItems={getMenuItems} />
-
                 }
             ]}
             listView={{
@@ -72,7 +66,6 @@ export default ({ getMenuItems }: CustomerActionController) => {
                         pagination: { ...page, current: (page?.current || 1) - 1 },
                         sort: sort
                     }))
-
                 },
                 onOpenAdvanceSearch: () => { modals.showModal('advanceSearch') },
                 onRefresh: refetch,
@@ -93,16 +86,6 @@ export default ({ getMenuItems }: CustomerActionController) => {
                                 label: item.code || '',
                                 actionButtons: [{ type: 'link', size: 'small', icon: <ExportOutlined />, onClick: () => window.open(`/external/crm/customer/detail/${item.id}`, '_blank')?.focus() }]
                             }),
-
-
-
-
-                            // tabRender: item => ({
-                            //     onOpenIconClick: () => window.open(`/external/crm/customer/detail/${item.id}`, '_blank')?.focus(),
-                            //     value: item.code,
-                            //     panel: (_) => <CustomerDetailView openInTab id={item.id} getMenuItems={getMenuItems} />,
-                            //     tabLabel: item?.code
-                            // })
                         },
                         {
                             title: 'Customer Name',
@@ -116,7 +99,6 @@ export default ({ getMenuItems }: CustomerActionController) => {
                         {
                             title: 'Region',
                             dataIndex: 'region',
-
                         },
                         { title: 'Saleperson', render: (_, r) => r.sale },
                         { title: 'Channel', render: (_, r) => r.channel },

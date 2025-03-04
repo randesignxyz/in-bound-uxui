@@ -76,6 +76,7 @@ const HistoryAdjustmentTransactionList=({verifyContractId}:Props)=>{
     return (
     <ProTable<DataType> search={false} size="small"
         actionRef={actionRef}
+        pagination={false}
         options={{
             fullScreen: false,
             density: false,
@@ -121,7 +122,7 @@ const HistoryAdjustmentTransactionList=({verifyContractId}:Props)=>{
         //     }
         // }}
         request={ async(page: any)=>{
-            const rs = await GratisServices.fetchHistoryGratisTransList({...criteria,id: verifyContractId}||{id: verifyContractId}).query(requestActions)
+            const rs = await GratisServices.fetchHistoryGratisTransList({...criteria,id: verifyContractId}).query(requestActions)
             return{               
                 success: true, 
                 total: rs.length || 0,

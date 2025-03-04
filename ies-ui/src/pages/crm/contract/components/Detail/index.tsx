@@ -1,14 +1,12 @@
-import { Space, Spin, Tag, message, Button } from 'antd';
+import { Space, Spin, message, Button } from 'antd';
 import { useEffect, useState } from 'react';
-import { history } from "@umijs/max";
 import { EditFilled, StopOutlined } from '@ant-design/icons';
-import { CrmPaths } from '@/pages/crm';
 import { PageContainer, ProCard, ProDescriptions } from '@ant-design/pro-components';
 import { simpleRequestActions } from '@/services/model';
 import { useSafeState } from 'ahooks';
 import { ContractServices } from '../../services';
 import { ContractViewData } from '../../types';
-import { formatDate, getColorStatus } from '@/pages/utils';
+import { formatDate } from '@/pages/utils';
 import Term from './Term';
 import PosmView from '@/pages/crm/components/PosmView';
 import ActivityLog from '@/components/ActivityLog';
@@ -17,6 +15,8 @@ import RemarkModalV2 from '@/components/remark-modal-v2';
 import Address from './Address';
 import { AddressInfo } from '@/services/crm/data';
 import Status from '@/components/Status';
+import SpaceReservedView from '../../space-reserve/DetailView';
+import moment from 'moment';
 
 const ContactDetailView: React.FC<{
   id: number,
@@ -46,7 +46,6 @@ const ContactDetailView: React.FC<{
   }
 
   const [activeTab, setActiveTab] = useState<string>('term')
-
   const onApplyLocation = async (ids: number[]) => {
     try {
       if (!!data) {
@@ -71,7 +70,6 @@ const ContactDetailView: React.FC<{
         }
 
         subTitle={data?.contractNo || 'n/a'}
-
         extra={access.crmAdmin && <Space>
           {data?.status != "TERMINATED" && <Button type='link' onClick={() => {
             data && onEdit(data.id, () => {
@@ -111,6 +109,7 @@ const ContactDetailView: React.FC<{
         tabList={[
           { tab: "Terms", key: 'term', tabKey: 'term', },
           { tab: "POSM", key: "posm", tabKey: "posm" },
+          { tab: "Space Reserved", key: "spaceReserve", tabKey: "spaceReserve" },
           { tab: "Shipping Address", key: "shppingAddress", tabKey: "shppingAddress" },
           { tab: "Activity Log", key: "activityLog", tabKey: "activityLog", }
         ]}
@@ -127,14 +126,26 @@ const ContactDetailView: React.FC<{
           }
           if (activeTab == "posm") {
             return data?.id && <PosmView requestActions={requestActions} listPosm={() => ContractServices.listContractPOSM(data.id).query(requestActions)}
-              onSave={(itemId, qty, id, remarks) => ContractServices.savePOSM({
+              onSave={(itemId, qty, id, remarks, installedDate) => ContractServices.savePOSM({
                 id: id,
                 contractId: data.id,
                 itemId: itemId,
                 qty: qty,
-                remarks: remarks
+                remarks: remarks,
+                installedDate:installedDate?moment(installedDate):undefined
               })(requestActions)}
-              onDelete={(id: number) => ContractServices.deletePOSM(id)(requestActions)} />
+              onDelete={(id: number) => ContractServices.deletePOSM(id)(requestActions)}
+              addresList={[]}
+              initAddressList={async () => { }}
+            />
+          }
+
+          if (activeTab == "spaceReserve" && data) {
+            return <SpaceReservedView
+              contractId={data?.id}
+              address={addressList} 
+              source='CONTRACT'
+              />
           }
 
           if (activeTab == 'shppingAddress' && data) {
@@ -143,7 +154,6 @@ const ContactDetailView: React.FC<{
           if (activeTab == 'activityLog' && data?.id) {
             return <ActivityLog objectName='CONTRACT' forceUpdate={forceUpdate} objectId={data.id} endpoint='CRM' />
           }
-
         })()}
 
       </PageContainer>

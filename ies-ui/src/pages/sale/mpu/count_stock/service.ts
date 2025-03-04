@@ -1,41 +1,66 @@
-import { TableViewSearchParams } from "@/components/DataCrud/TableView";
-import { RequestActions, ServiceApiType, singleRequest } from "@/services/apiGateway";
-import { CountStockDto } from "@/services/sale/data";
-import { Page } from "@/services/shared/data";
+import { TableViewSearchParams } from '@/components/DataCrud/TableView';
+import { RequestActions, ServiceApiType, singleRequest } from '@/services/apiGateway';
+import { Page } from '@/services/shared/data';
+import moment from 'moment';
+import { StatusActionForm } from '../settlement/data';
+import { StockCountDto } from './data';
 
 const CountStockAction = {
-    reject:(param:StatusActionForm):ServiceApiType<StatusActionForm>=>({
-        actionName:"reject-stock-count",
-        endpoint:"SALE",
-        type:"EXEC",
-        payload:param
-    }),
-    page :(param:TableViewSearchParams<CountStockAdvanceSearch>):ServiceApiType<{searchValue?:string}> =>({
-        actionName:"page-for-stock-count",
-        endpoint:"SALE",
-        type:"PAGING_QUERY",
-        payload:{
-            ...param.criteria
-        },
-        pagination:{
-            page:param.pagination?.current,
-            pageSize:param.pagination?.pageSize
-        }
-    }),
+  reject: (param: StatusActionForm): ServiceApiType<StatusActionForm> => ({
+    actionName: 'reject-stock-count',
+    endpoint: 'SALE',
+    type: 'EXEC',
+    payload: param,
+  }),
+  page: (
+    param: TableViewSearchParams<AdvanceSearchParam>,
+  ): ServiceApiType<{
+    searchValue?: string;
+    advanceSearch: { status?: string; salespersonId?: string; orderedDate?: moment.Moment[] };
+  }> => ({
+    actionName: 'page-for-stock-count',
+    endpoint: 'SALE',
+    type: 'PAGING_QUERY',
+    payload: {
+      ...param.criteria,
+      advanceSearch: {
+        status: param.criteria?.advanceSearch?.status,
+        salespersonId: param.criteria?.advanceSearch?.salespersonId,
+        orderedDate: param.criteria?.advanceSearch?.dates && [
+          moment(param.criteria.advanceSearch.dates[0]),
+          moment(param.criteria.advanceSearch.dates[1]),
+        ],
+      },
+    },
+    pagination: {
+      page: param.pagination?.current,
+      pageSize: param.pagination?.pageSize,
+    },
+  }),
 
-    detail:(id?:number):ServiceApiType<{id?:number}> =>({
-        actionName:"detail-stock-count",
-        endpoint:"SALE",
-        type:"FETCH_QUERY",
-        payload:{id}
-    })
-}
+  detail: (id?: number): ServiceApiType<{ id?: number }> => ({
+    actionName: 'detail-stock-count',
+    endpoint: 'SALE',
+    type: 'FETCH_QUERY',
+    payload: { id },
+  }),
+  confirmStockCount: (param: { id?: number }): ServiceApiType<{ id?: number }> => ({
+    actionName: 'confirm-mma-count-stock',
+    endpoint: 'SALE',
+    type: 'EXEC',
+    payload: param,
+  }),
+};
 
-
-export const CountStockServiceAPI = (requestAction:RequestActions) =>{
-    return {
-        page :(param:TableViewSearchParams<CountStockAdvanceSearch>)=>singleRequest(CountStockAction.page(param))(requestAction) as Promise<Page<StockCountDto>>,
-        detail:(id?:number) =>singleRequest(CountStockAction.detail(id))(requestAction) as Promise<StockCountDto>,
-        reject:(param:StatusActionForm)=>singleRequest(CountStockAction.reject(param))(requestAction)
-    }
-}
+export const CountStockServiceAPI = (requestAction: RequestActions) => {
+  return {
+    page: (param: TableViewSearchParams<AdvanceSearchParam>) =>
+      singleRequest(CountStockAction.page(param))(requestAction) as Promise<Page<StockCountDto>>,
+    detail: (id?: number) =>
+      singleRequest(CountStockAction.detail(id))(requestAction) as Promise<StockCountDto>,
+    reject: (param: StatusActionForm) =>
+      singleRequest(CountStockAction.reject(param))(requestAction),
+    confirmStockCount: (param: { id?: number }) =>
+      singleRequest(CountStockAction.confirmStockCount(param))(requestAction),
+  };
+};

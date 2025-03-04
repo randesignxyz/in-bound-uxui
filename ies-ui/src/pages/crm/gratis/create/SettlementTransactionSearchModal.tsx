@@ -16,12 +16,14 @@ interface Props extends ModalFormProps<{label:string, remarks: string}>{
     loading?:boolean;
     params: SettlementSearchDate;
     dataFilter?: ContractLess[];
-    gratisTarget?: LookupData[],
-    skuSettled?: LookupData[],
-    gratisIncentive?: LookupData[]
+    gratisTarget?: LookupData[];
+    skuSettled?: LookupData[];
+    gratisIncentive?: LookupData[];
+    contractTypeDs?: LookupData[],
 }
 interface SearchCriteria {   
     searchValue?:string;
+    contractTypeId?: number[];
     target?: number[];
     incentiveRate?:number[];
     skuSettled?:string[];
@@ -34,13 +36,18 @@ const cols: ProColumns<ContractLess>[] = [{
     title:'Agreement Name',
     width: 150,
     dataIndex:'contractNo',
-    render: (_, r) => r?.contractNo
+    render: (_, r) => {
+        return r?.inGratis? <Tooltip title={r?.gratisInfo}><span style={{color:'red'}}>{r?.contractNo}</span></Tooltip>: r?.contractNo
+    }
 },{
     title:'Contract Type',
     render: (_, r) => `${r.contractType}`
 },{
     title:'Customer Code',
-    render: (_, r) => `${r.customer?.code}`
+    // render: (_, r) => `${r.customer?.code}`
+    render: (_, r) => {
+        return r?.inGratis? <Tooltip title={r?.gratisInfo}><span style={{color:'red'}}>{r?.customer?.code}</span></Tooltip>: r?.customer?.code
+    }
 },{
     title:'Customer Namne',
     render: (_, r) => <div>
@@ -49,6 +56,7 @@ const cols: ProColumns<ContractLess>[] = [{
     </div>
 },{
     title:'Budget Code',
+    width: 120,
     dataIndex:'budgetCode'
 },{
     title:'Brand',
@@ -64,7 +72,7 @@ const cols: ProColumns<ContractLess>[] = [{
 
 ]
 
-export default ( { key,required, onSave,loading, params, dataFilter, gratisTarget, skuSettled, gratisIncentive, ...rest} : Props) => {
+export default ( { key,required, onSave,loading, params, dataFilter, gratisTarget, skuSettled, gratisIncentive, contractTypeDs, ...rest} : Props) => {
     const requestActions = simpleRequestActions()
     const [selected, setSelected] = useState<ContractLess[]>()
     const actionRef = useRef<ActionType>();
@@ -74,10 +82,6 @@ export default ( { key,required, onSave,loading, params, dataFilter, gratisTarge
     useEffect(()=>{
         actionRef.current?.reload()
     },[dataFilter])
-    const loadDate =()=>{
-
-    }
-    // const directHidden = params.contractTypeGroupCode=='DIRECT'?true:false
     const inDirectHidden = params.contractTypeGroupCode=='IN_DIRECT'?true:false
     const otherHidden = params.contractTypeGroupCode=='OTHER'?true:false
 
@@ -91,11 +95,14 @@ export default ( { key,required, onSave,loading, params, dataFilter, gratisTarge
         submitter={{
             searchConfig: {
                 submitText: 'Add',
-            }
+            },
+            submitButtonProps:{disabled: ((selected?.length || 0)==0)}
         }}
         
         onFinish = {dataForm => {
             onSave(selected||[])
+            actionRef.current?.reload()
+            setSelected([])
             return Promise.resolve()
         }} 
         onFieldsChange={(changedFields, allFields) => {
@@ -107,6 +114,7 @@ export default ( { key,required, onSave,loading, params, dataFilter, gratisTarge
          <ProCard boxShadow size="small" direction="row">
             <ProFormGroup size={'small'}>
             <ProFormText label='Customer' name={'searchValue'}/>
+            <ProFormSelect label='Contract Type' name={'contractTypeId'} hidden={!otherHidden} allowClear width={'sm'} mode="multiple" options={contractTypeDs?.map(it => ({ label: it.name, value: it.id }))}/>
             <ProFormSelect label="Target" hidden={otherHidden}  name={'target'} mode="multiple" rules={[{ required: false }]} showSearch allowClear width={'sm'} options={gratisTarget?.map(it => ({ label: it.name, value: it.code }))}/>  
             <ProFormSelect label="Incentive Rate" hidden={otherHidden || inDirectHidden}  name={'incentiveRate'}  mode="multiple" rules={[{ required: false }]} showSearch allowClear width={'sm'} options={gratisIncentive?.map(it => ({ label: it.name, value: it.code }))}/>
             <ProFormSelect label="SKU to be settled" hidden={otherHidden} name={'skuSettled'}  mode="multiple" rules={[{ required: false }]} showSearch allowClear width={'sm'} options={skuSettled?.map(it => ({ label: it.name, value: it.code }))}/>   
@@ -121,10 +129,10 @@ export default ( { key,required, onSave,loading, params, dataFilter, gratisTarge
                 fullScreen: false,
                 density: false,
                 reload: false,
-                setting: false
+                setting: false,
             }}             
             request={ async(page: any)=>{
-                return GratisServices.fetchContractToGratisContract({...params,searchValue:criteria.searchValue,target:criteria.target,incentiveRate:criteria.incentiveRate,skuSettled:criteria.skuSettled}).query(requestActions).then(it => {                    
+                return GratisServices.fetchContractToGratisContract({...params,contractTypeId: criteria.contractTypeId ,searchValue:criteria.searchValue,target:criteria.target,incentiveRate:criteria.incentiveRate,skuSettled:criteria.skuSettled}).query(requestActions).then(it => {                    
                     return {               
                         success: true, 
                         total: (it?.length - (dataFilter?.length||0)),
@@ -133,20 +141,24 @@ export default ( { key,required, onSave,loading, params, dataFilter, gratisTarge
                 }) //as Promise<Paging<ContractLess>>
             }} 
             rowKey='uuId' 
+            tableAlertRender={(props)=>{
+                return `Selected ${selected?.length || 0} Item`
+            }}
             rowSelection={{
+                alwaysShowAlert: true,
                 selections: ["SELECT_ALL", "SELECT_INVERT", "SELECT_NONE"],
-                checkStrictly: true,
-                getCheckboxProps: (data) => ({ disabled: !data.terms }),
+                checkStrictly: true,               
+                getCheckboxProps: (data) => ({ disabled: data.inGratis }),              
                 onSelect(item, selected1) {
                     if (selected1) {
                         setSelected(v => ([...(v || []), item]))
                     } else {
                         setSelected(v => v?.filter(it => it.uuId != item.uuId))
                     }
-                },
+                },               
                 onChange(_, selectedRows, info) {
                     if (info.type !== 'single') {
-                        setSelected(selectedRows)
+                        setSelected(selectedRows.filter(it=> (!it.inGratis)))
                     }
                 },
             }}

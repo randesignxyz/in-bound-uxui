@@ -114,8 +114,14 @@ const AppraisalFormQuickView=({appraisalEmp, open, onOpenModalChange, refreshTab
     const rated2 = appraisalEmp?.rated2
     const rated3 = appraisalEmp?.rated3  
 
-    const isSaveDraft = ((currentAssign1 && (currentDrafted || !rated1)) || (currentAssign2 && (currentDrafted || !rated2)) || (currentAssign3 && (currentDrafted || !rated3)))
-    const isSubmitForm = (currentAssign1 && (currentDrafted || !rated1))
+    const isSaveDraft = ((currentAssign1 && (currentDrafted || (!rated1 && !isDrafted))) || (currentAssign2 && (currentDrafted || (!rated2 && !isDrafted))) || (currentAssign3 && (currentDrafted || (!rated3 && !isDrafted))))
+    const isSubmitForm = (
+            (currentAssign1 && (currentDrafted || (!rated1 && !isDrafted))) || 
+            (hasRating2 &&  (
+                (currentAssign2 && (currentDrafted || (!rated2 && !isDrafted))) || 
+                (currentAssign3 && (currentDrafted || (!rated3 && !isDrafted)))
+            ))
+        )
     // const isSubmitForm = ((currentAssign1 && (currentDrafted || !rated1)) || (currentAssign2 && (currentDrafted || !rated2)) || (currentAssign3 && (currentDrafted || !rated3)))
 
     const onSetRatingScoreHandler=(status:string,appraisalDimensionId: number,appraisalBehaviorId:number,rating:number)=>{   
@@ -123,19 +129,19 @@ const AppraisalFormQuickView=({appraisalEmp, open, onOpenModalChange, refreshTab
                 return v?.map(it=> data.setAppraisalRating(it,status,appraisalDimensionId,appraisalBehaviorId,rating)) 
         })
     }
-    const onSetImprovementRated1=(list:(AppraisalEmpImprovement&{key:string})[])=>{
-        setImprovementRated1List(list)     
-        setImprovementRated1Updated(true)  
-    }
+    // const onSetImprovementRated1=(list:(AppraisalEmpImprovement&{key:string})[])=>{
+    //     setImprovementRated1List(list)     
+    //     setImprovementRated1Updated(true)  
+    // }
 
-    const onSetImprovementRated2=(list:(AppraisalEmpImprovement&{key:string})[])=>{
-        setImprovementRated2List(list)     
-        setImprovementRated2Updated(true)  
-    }
-    const onSetImprovementRated3=(list:(AppraisalEmpImprovement&{key:string})[])=>{
-        setImprovementRated3List(list)     
-        setImprovementRated3Updated(true)  
-    }
+    // const onSetImprovementRated2=(list:(AppraisalEmpImprovement&{key:string})[])=>{
+    //     setImprovementRated2List(list)     
+    //     setImprovementRated2Updated(true)  
+    // }
+    // const onSetImprovementRated3=(list:(AppraisalEmpImprovement&{key:string})[])=>{
+    //     setImprovementRated3List(list)     
+    //     setImprovementRated3Updated(true)  
+    // }
 
     const saveDraftHandler =async () => {
         try {               
@@ -149,11 +155,11 @@ const AppraisalFormQuickView=({appraisalEmp, open, onOpenModalChange, refreshTab
                 validatorList,
                 appraisal,
                 improvementRated1Updated,
-                improvementRated1List?.filter(it=>!(!it.improvement && !it.propose)).map(it=> ({id:it.id,appraisalEmpId:it.appraisalEmpId,improvement:it.improvement,propose:it.propose,refCode:'r1'})),
+                getAppraisalEmpImprovementRated1List()?.filter(it=>!(!it.improvement && !it.propose)).map(it=> ({id:it.id,appraisalEmpId:it.appraisalEmpId,improvement:it.improvement,propose:it.propose,refCode:'r1'})),
                 improvementRated2Updated,
-                improvementRated2List?.filter(it=>!(!it.improvement && !it.propose)).map(it=> ({id:it.id,appraisalEmpId:it.appraisalEmpId,improvement:it.improvement,propose:it.propose,refCode:'r2'})),
+                getAppraisalEmpImprovementRated2List()?.filter(it=>!(!it.improvement && !it.propose)).map(it=> ({id:it.id,appraisalEmpId:it.appraisalEmpId,improvement:it.improvement,propose:it.propose,refCode:'r2'})),
                 improvementRated3Updated,
-                improvementRated3List?.map(it=> ({id:it.id,appraisalEmpId:it.appraisalEmpId,improvement:it.improvement,propose:it.propose,refCode:'r3'})),
+                getAppraisalEmpImprovementRated3List()?.map(it=> ({id:it.id,appraisalEmpId:it.appraisalEmpId,improvement:it.improvement,propose:it.propose,refCode:'r3'})),
                 attachedUpdated,
                 attachedFiles
             )
@@ -166,11 +172,27 @@ const AppraisalFormQuickView=({appraisalEmp, open, onOpenModalChange, refreshTab
             message.error(error.message || 'Failed to submit.')
         }
     }
+    const getAppraisalEmpImprovementRated1List=(): AppraisalEmpImprovement[]=>{
+        const fieldsVaule = editableImprovementRated1FormRef?.current?.getFieldsValue()
+        const list:AppraisalEmpImprovement[]  = fieldsVaule?Object.values(fieldsVaule):[]
+        return list.map(r=> ({...r, refCode:'r1'}))
+    }
+    const getAppraisalEmpImprovementRated2List=(): AppraisalEmpImprovement[]=>{
+        const fieldsVaule = editableImprovementRated2FormRef?.current?.getFieldsValue()
+        const list:AppraisalEmpImprovement[]  = fieldsVaule?Object.values(fieldsVaule):[]
+        return list.map(r=> ({...r, refCode:'r2'}))
+    }
+    const getAppraisalEmpImprovementRated3List=(): AppraisalEmpImprovement[]=>{
+        const fieldsVaule = editableImprovementRated3FormRef?.current?.getFieldsValue()
+        console.log('fieldsVaule',fieldsVaule)
+        const list:AppraisalEmpImprovement[]  = fieldsVaule!= undefined?Object.values(fieldsVaule):[]
+        return list.map(r=> ({...r, refCode:'r3'}))
+    }
    
     const saveSubmitHandler =async ()=> {
         var status = actions.getStatus('DONE',appraisalEmp) 
         var dataForm = await form.getFieldsValue()
-        data.onAppraisalFormDataValidator(lang,hasRating2,currentAssign1,currentAssign2,currentAssign3,dataForm, appraisal||[],improvementRated1List,improvementRated2List,improvementRated3List, async (requireFields,requireRating)=>{
+        data.onAppraisalFormDataValidator(lang,hasRating2,currentAssign1,currentAssign2,currentAssign3,dataForm, appraisal||[],getAppraisalEmpImprovementRated1List(),getAppraisalEmpImprovementRated2List(),getAppraisalEmpImprovementRated3List(), async (requireFields,requireRating)=>{
             var title= 'Appraisal Form'        
             var content= `Are you sure to submit this form?`
             if(status.checkRating==='r1'){
@@ -195,7 +217,7 @@ const AppraisalFormQuickView=({appraisalEmp, open, onOpenModalChange, refreshTab
                     return
                 }
             }
-            if(requireFields.length>0) {
+            if(requireFields.length>0) {  
                 Modal.warning({
                     title: getLable('TITTLE_REQUIRE_FIELD'),
                     width: '45%',
@@ -224,11 +246,11 @@ const AppraisalFormQuickView=({appraisalEmp, open, onOpenModalChange, refreshTab
                                     requireRating,
                                     appraisal,
                                     improvementRated1Updated,
-                                    improvementRated1List?.map(it=> ({id:it.id,appraisalEmpId:it.appraisalEmpId,improvement:it.improvement,propose:it.propose,refCode:'r1'})),
+                                    getAppraisalEmpImprovementRated1List()?.map(it=> ({id:it.id,appraisalEmpId:it.appraisalEmpId,improvement:it.improvement,propose:it.propose,refCode:'r1'})),
                                     improvementRated2Updated,
-                                    improvementRated2List?.map(it=> ({id:it.id,appraisalEmpId:it.appraisalEmpId,improvement:it.improvement,propose:it.propose,refCode:'r2'})),
+                                    getAppraisalEmpImprovementRated2List()?.map(it=> ({id:it.id,appraisalEmpId:it.appraisalEmpId,improvement:it.improvement,propose:it.propose,refCode:'r2'})),
                                     improvementRated3Updated,
-                                    improvementRated3List?.map(it=> ({id:it.id,appraisalEmpId:it.appraisalEmpId,improvement:it.improvement,propose:it.propose,refCode:'r3'})),
+                                    getAppraisalEmpImprovementRated3List()?.map(it=> ({id:it.id,appraisalEmpId:it.appraisalEmpId,improvement:it.improvement,propose:it.propose,refCode:'r3'})),
                                     attachedUpdated,
                                     attachedFiles
                                 )
@@ -259,7 +281,7 @@ const AppraisalFormQuickView=({appraisalEmp, open, onOpenModalChange, refreshTab
 
     const submitter = {
         searchConfig: {
-            submitText: (currentAssign1 && rated1 && !isDrafted)?'Resubmit':'Submit',
+            submitText: (hasRating2 && currentAssign3 && rated1 && rated2 )?'Complet':'Submit',
             resetText:'Close'            
         },
         render: (_, defaultDoms) => {
@@ -318,16 +340,19 @@ const AppraisalFormQuickView=({appraisalEmp, open, onOpenModalChange, refreshTab
             dataLookup={dataLookup}
             appraisalEmp={dataDetail}
             editableImprovementRated1FormRef={editableImprovementRated1FormRef}
-            improvementRated1={improvementRated1List}
-            onSetImprovementRated1={onSetImprovementRated1}
+            initDataImprovementRated1={improvementRated1List}
+            setImprovementRated1Updated = {setImprovementRated1Updated}
+            // onSetImprovementRated1={onSetImprovementRated1}
 
             editableImprovementRated2FormRef={editableImprovementRated2FormRef}
-            improvementRated2={improvementRated2List}
-            onSetImprovementRated2={onSetImprovementRated2}
+            initDataImprovementRated2={improvementRated2List}
+            setImprovementRated2Updated={setImprovementRated2Updated}
+            // onSetImprovementRated2={onSetImprovementRated2}
 
             editableImprovementRated3FormRef={editableImprovementRated3FormRef}
-            improvementRated3={improvementRated3List}
-            onSetImprovementRated3={onSetImprovementRated3}
+            initDataImprovementRated3={improvementRated3List}
+            setImprovementRated3Updated={setImprovementRated3Updated}
+            // onSetImprovementRated3={onSetImprovementRated3}
 
             form={form}
             initialValues={{

@@ -201,6 +201,14 @@ export default [
     access: 'canAccessProMenuItem',
     component: './pro/requisition',
   },
+  {
+    path: '/fleet/requisition/:view/*',
+    name: 'requisition',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessFleetPurchaseRequisitionMenuItem',
+    component: './pro/requisition',
+  },
 
   {
     path: '/pro/quotation/:view/*',
@@ -255,6 +263,14 @@ export default [
     access: 'canAccessCrmMenuItem',
     component: './crm/gratis',
   },
+  {
+    path: '/crm/gratis-config/:view/*',
+    name: 'gratisConfig',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessCrmMenuItem',
+    component: './crm/gratis-config',
+  },
   /**********Pro>>**************/
 
   /**********<<HRM**************/
@@ -264,7 +280,7 @@ export default [
     icon: 'FormOutlined',
     access: 'canAccessHrMenu',
     component: './hrm',
-  }, 
+  },
   {
     path: '/hrm/employee/:view/*',
     name: 'employee',
@@ -378,6 +394,17 @@ export default [
     access: 'canAccessSaleMenuItems',
     component: './sale/product',
   },
+
+  /******************* PURCHASEORDER MMA *******************/
+  {
+    path: '/sale/purchase-order/:view/*',
+    name: 'mpu',
+    icon: 'packingList',
+    hideInMenu: 'true',
+    // access: 'canAccessRSMRequestToMPU',
+    component: './sale/purchase-order',
+  },
+
   /******************* DSD *******************/
   {
     path: '/sale/stock/:view/*',
@@ -539,7 +566,14 @@ export default [
     // access: 'canAccessViewMpu',
     component: './sale/mpu/count_stock',
   },
-
+  {
+    path: '/sale/sale-mma-foc/:view/*',
+    name: 'sale-mma-foc',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    // access: 'canAccessViewMpu',
+    component: './sale/mpu/foc',
+  },
   /******************* MPU *******************/
 
   /******************* Retailer *******************/
@@ -1019,7 +1053,7 @@ export default [
   },
   {
     path: '/fleet/vehicle/:view/*',
-    name: 'fleet_vehicle',
+    name: 'fleet-vehicle',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
     access: 'canAccessFleetMenu',
@@ -1059,7 +1093,7 @@ export default [
   {
     path: '/external/fleet/inspection/:view/*',
     name: 'inspection',
-    layout:false,
+    layout: false,
     hideInMenu: 'true',
     access: 'canAccessFleetMenu',
     component: './fleet/inspection/',
@@ -1152,8 +1186,17 @@ export default [
     icon: 'FileSearchOutlined',
     component: './dms',
     access: 'canAccessDMSMenu',
-    redirect: '/dms/workspace/library',
+    // redirect: '/dms/workspace/library',
   },
+  {
+    path: '/dms/:view/*',
+    name: 'dms',
+    icon: 'FileSearchOutlined',
+    component: './dms',
+    access: 'canAccessDMSMenu',
+    hideInMenu: 'true',
+  },
+
 
   {
     path: '/dms/workspace/:view/*',
@@ -1209,13 +1252,13 @@ export default [
     access: "canAccessDMSMenu",
     hideInMenu: 'true',
   },
-  {
-    path: "/dms/share/:view/:id",
-    name: "dms",
-    component: "./dms/share",
-    access: "canAccessDMSMenu",
-    hideInMenu: 'true',
-  },
+  // {
+  //   path: "/dms/share",
+  //   name: "dms",
+  //   component: "./dms/share",
+  //   access: "canAccessDMSMenu",
+  //   hideInMenu: 'true',
+  // },
   {
     path: "/dms/company/:view/*",
     name: "dms",
@@ -1345,9 +1388,9 @@ export default [
     access: 'canAccessWhmInventoryAdjRequestMenu',
     component: './fma-stock/adjustment',
   },
-  
+
   //  ================= END In-house Stock ================
-  
+
   //  ================= Setting =================
   /**
    * ESS Management
@@ -1363,10 +1406,10 @@ export default [
   {
     path: '/ess',
     name: 'ess',
-    icon: 'TeamOutlined', 
+    icon: 'TeamOutlined',
     access: 'canAccessHrViewEmployeeMenuItem',
     component: './ess'
-  },{
+  }, {
     path: '/ess/:view/*',
     name: 'ess',
     icon: 'UnorderedListOutlined',
@@ -1374,7 +1417,7 @@ export default [
     // access: 'canAccessHrEmployeeMenuItem',
     component: './ess/ess-announce',
   },
-  
+
   {
     path: '/ess/details/:id',
     name: 'Ess Annountment Details',
@@ -1386,14 +1429,14 @@ export default [
   {
     path: '/feedback',
     name: 'feedback',
-    icon: 'TeamOutlined', 
+    icon: 'TeamOutlined',
     hideInMenu: 'true',
     component: './ess'
   },
   {
     path: 'fleet/carbooking',
     name: 'bookingcar',
-    icon: 'TeamOutlined', 
+    icon: 'TeamOutlined',
     hideInMenu: 'true',
     component: './fleet/carbooking'
   },
@@ -1404,21 +1447,21 @@ export default [
   {
     path: 'fleet/booking/rqblist',
     name: 'booking',
-    icon: 'TeamOutlined', 
+    icon: 'TeamOutlined',
     hideInMenu: 'true',
     component: './fleet/carbooking/bookinglist'
   },
   {
     path: 'fleet/booking/ocplist',
     name: 'booking',
-    icon: 'TeamOutlined', 
+    icon: 'TeamOutlined',
     hideInMenu: 'true',
     component: './fleet/carbooking/occupylist'
   },
   {
     path: 'fleet/booking/bknew',
     name: 'booking',
-    icon: 'TeamOutlined', 
+    icon: 'TeamOutlined',
     hideInMenu: 'true',
     component: './fleet/carbooking/occupylist'
   },

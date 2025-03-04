@@ -34,7 +34,8 @@ export type ContractPOSMItem = {
   itemId: number;
   qty: number;
   remarks?: string;
-
+  installedDate?:moment.Moment;
+  attachment?:string[];
 }
 
 export type Terms = {
@@ -46,6 +47,7 @@ export type SavePosmParams = {
   contractId: number
   itemId: number
   qty: number
+  installedDate?:moment.Moment
   remarks?: string
 }
 

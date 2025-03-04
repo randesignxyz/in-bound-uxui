@@ -1,5 +1,5 @@
 import { ProForm, ProFormTextArea } from "@ant-design/pro-components";
-import { Alert, Modal, ModalProps } from "antd";
+import { Alert, Modal, ModalProps, Space, Typography } from "antd";
 import { useForm } from "antd/es/form/Form";
 import React from "react";
 
@@ -35,7 +35,11 @@ const RemarkModalForm: React.FC<Props> = ({ onSave,status, showAlertInfo, ...pro
                 {showAlertInfo && <Alert
                     type="warning"
                     showIcon
-                    message={`This is a message inform warning; be careful before clicking OK. You really want to ${status} the request?`}
+                    message= {<Space direction="vertical">
+                        <Typography.Text>This is a message inform warning; be careful before clicking OK.</Typography.Text>
+                        <Typography.Text> You really want to {status} the request?</Typography.Text>
+                    </Space>}
+                    // message={``}
                 />}
 
             </ProForm>

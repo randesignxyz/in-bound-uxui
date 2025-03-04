@@ -14,8 +14,9 @@ interface Props {
     editable: boolean|false;
     editableRating: boolean|false
     totalScore?: number
+    showRating?: boolean
 }
-export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable, editableRating, totalScore }: Props) => {
+export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable, editableRating, totalScore,showRating=true }: Props) => {
 
     const setRatingScore=(key?: string, rating1?: number, rating2?: number, rating3?: number, rating4?: number, rating5?: number)=>{
       onSetAddedItems?.(
@@ -43,7 +44,7 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
         valueType: 'textarea',
         editable:(_,r) => editable, 
         formItemProps: {rules: [{ required: true}] },
-        fieldProps: { rows: 1, maxLength: 200 },
+        fieldProps: { rows: 1, maxLength: 5000 },
         render: (_, r) => {
           return (<div>
             <div>{r?.title}</div>
@@ -52,8 +53,10 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
             )}
           </div>)
         },
-      },    
-      {
+      }
+    ]
+    if(showRating){
+      cols.push({
         title: 'RATING SCORE',
         children:[{
           title: <span style={{fontSize:11}}>1- Unsatisfactory</span>,                
@@ -185,22 +188,23 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
       {
         title: 'JUSTIFICATION',
         children:[{
+          dataIndex: 'remark',
           width: '10%',
           valueType: 'textarea',
-          dataIndex: 'remark',
-          editable:(_,r) => editable, 
-          fieldProps: { rows: 1, maxLength: 200 },
+          editable:(_,r) => editableRating, 
+          formItemProps: {rules: [{ required: true}] },
+          fieldProps: { rows: 1, maxLength: 5000 },
         }]
       
-      }, 
-      {
-        valueType: 'option',
-        width: 50,
-        render: () => {
-          return null;
-        },
-      },  
-    ]
+      })
+    }
+    // cols.push({
+    //   valueType: 'option',
+    //   width: 50,
+    //   render: () => {
+    //     return null;
+    //   }
+    // })
 
   return (<>
   <div>
@@ -219,26 +223,30 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
     editable={{
       type: 'multiple',
       editableKeys: addedItems?.map((it) => it.key||uniqueId.toString()),
-      actionRender: (row) => [
-        (!addedItems.find(r => r.key== row.key) &&
-        <Button
-          type="link"
-          danger
-          onClick={() => {
-            // const list =addedItems?.filter((it) => it.key != row.key)
-            // onSetAddedItems?.(list)
-            console.log('assessment list',addedItems)
-          }}
-          size="small"
-          icon={<MinusCircleOutlined />}
-        />),
-      ],
+      // actionRender: (row) => [
+      //   (!addedItems.find(r => r.key== row.key) &&
+      //   <Button
+      //     type="link"
+      //     danger
+      //     onClick={() => {
+      //       // const list =addedItems?.filter((it) => it.key != row.key)
+      //       // onSetAddedItems?.(list)
+      //       console.log('assessment list',addedItems)
+      //     }}
+      //     size="small"
+      //     icon={<MinusCircleOutlined />}
+      //   />),
+      // ],
       onValuesChange: (_, recordList) => {           
-        // onSetAddedItems?.(
-        //   recordList.map((it) => ({
-        //     ...it,                   
-        //   })),
-        // );
+        onSetAddedItems?.(
+          addedItems.map((it) => {
+            const edit = recordList.find(r=> r.key==it.key)
+            if(edit){
+              return {...it, remark: edit?.remark}
+            }
+            return it
+          }),
+        );
       },
     }}
     // recordCreatorProps={{
@@ -255,7 +263,7 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
         rating += (it.rating1||0) +  (it.rating2||0) +  (it.rating3||0) +  (it.rating4||0) +  (it.rating5||0)
       });
       rating = (rating / data.length)*0.3
-      return (
+      return showRating &&(
         <Table.Summary.Row style={{ textAlign: 'right', fontWeight: 'bold' }}>
           <Table.Summary.Cell colSpan={7} index={7}>
             {'SECTION III. BEHAVIOR (Weightage: 30%)'}

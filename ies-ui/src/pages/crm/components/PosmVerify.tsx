@@ -19,6 +19,7 @@ type PosmVerify = {
     actualQty: number;
     itemChekedStatus?: number;
     checkedStatus?: number;
+    checkedQuantity?: number;
     remarks?: string;
 }
 
@@ -35,10 +36,8 @@ export default ({ customerId, visitId, posmItems, posmReviewList, onRefresh, ...
     const editableFormRef = useRef<EditableFormInstance>();
     const [lookupData, setLookupData] = useState<LookupData[]>()
 
-
     useEffect(() => {
-
-        (async()=> {
+        (async () => {
             const rs = await CrmServices.listLookupData(['POSM_ITEM_REVIEWED', 'POSM_REVIEWED_STATUS']).query(requestActions)
             setLookupData(rs)
         })()
@@ -48,13 +47,13 @@ export default ({ customerId, visitId, posmItems, posmReviewList, onRefresh, ...
             ...posmReviewList.map(it => ({ id: it.posm.id, category: it.category, name: it.posm.name }))
         ]
 
-        setData( _.uniqBy(combine, 'id').map(it => ({
+        setData(_.uniqBy(combine, 'id').map(it => ({
             id: it.id,
             category: it.category,
             name: it.name,
-            qty:  posmItems.find(i => i.item.id == it.id)?.qty || 0 ,
+            qty: posmItems.find(i => i.item.id == it.id)?.qty || 0,
             actualQty: posmReviewList.find(i => i.posm.id == it.id)?.quantity || 0,
-            
+
 
         })))
     }, [])
@@ -62,7 +61,7 @@ export default ({ customerId, visitId, posmItems, posmReviewList, onRefresh, ...
     return <ModalForm
         width={1200}
         form={form}
-        onFinish = { async() => {
+        onFinish={async () => {
             await editableFormRef.current?.validateFields()
             Modal.confirm({
                 title: "POSM Checked",
@@ -75,11 +74,12 @@ export default ({ customerId, visitId, posmItems, posmReviewList, onRefresh, ...
                             actualQty: it.actualQty,
                             itemCheckedStatus: it.itemChekedStatus || 0,
                             checkedStatus: it.checkedStatus || 0,
+                            checkedQuantity:it.checkedQuantity,
                             remarks: it.remarks
-                        })) )(requestActions) 
+                        })))(requestActions)
                         message.success("Submitted Successfully.")
-                        onRefresh?.() 
-                        rest.onOpenChange?.(false)  
+                        onRefresh?.()
+                        rest.onOpenChange?.(false)
                     } catch (error: any) {
                         message.error(error.message || 'Failed to save.')
                     }
@@ -89,22 +89,46 @@ export default ({ customerId, visitId, posmItems, posmReviewList, onRefresh, ...
         title="POSM Review Verification" {...rest}>
 
         <EditableProTable<PosmVerify>
-            editableFormRef = {editableFormRef}
+            editableFormRef={editableFormRef}
             columns={[
-                { title: "POSM", children: [{ title: "Category", width: 80 , readonly: true , dataIndex: 'category' }, { title: 'Name' , readonly: true , dataIndex: "name" }] },
-                { title: "Qty", children: [{ title: 'Current', align: 'right', width: 80 , readonly: true, dataIndex: 'qty' }, { title: 'Reviwed', width: 80 , align: 'right', readonly: true, dataIndex: 'actualQty' }] },
-                { title: "Status", children: [
-                    { title: 'Item & Qty', dataIndex: 'itemChekedStatus' , valueType: 'select', formItemProps: {rules: [{required: true}]} , fieldProps: {options: lookupData?.filter(it => it.type == 'POSM_ITEM_REVIEWED').map(it => ({label: it.name, value: it.id}))}  }, 
-                    { title: "Verification", dataIndex: 'checkedStatus', valueType: 'select',formItemProps: {rules: [{required: true}]} , fieldProps: {options: lookupData?.filter(it => it.type == 'POSM_REVIEWED_STATUS').map(it => ({label: it.name, value: it.id}))}  }, 
-                    { title: "Remarks (SA)", dataIndex: 'remarks', valueType: 'textarea', fieldProps: {rows:1} }
-                ] }
+                {
+                    title: "POSM",
+                    children: [
+                        { title: "Category", width: 80, readonly: true, dataIndex: 'category' },
+                        { title: 'Name', readonly: true, dataIndex: "name" }
+                    ]
+                },
+                {
+                    title: "Qty",
+                    children: [
+                        { title: 'Current', align: 'right', width: 80, readonly: true, dataIndex: 'qty' },
+                        { title: 'Reviwed', width: 80, align: 'right', readonly: true, dataIndex: 'actualQty' }
+                    ]
+                },
+                {
+                    title: "Verification",
+                    children: [
+                        { title: 'Item Check', dataIndex: 'itemChekedStatus', valueType: 'select', formItemProps: { rules: [{ required: true }] }, fieldProps: { options: lookupData?.filter(it => it.type == 'POSM_ITEM_REVIEWED').map(it => ({ label: it.name, value: it.id })) } },
+                        { title: "QTY Check", dataIndex: "checkedQuantity", valueType:"digit", fieldProps:{ placeholder:"QTY" } },
+                        { title: "Status", dataIndex: 'checkedStatus', valueType: 'select', formItemProps: { rules: [{ required: true }] }, fieldProps: { options: lookupData?.filter(it => it.type == 'POSM_REVIEWED_STATUS').map(it => ({ label: it.name, value: it.id })) } },
+                        { title: "Remarks (SA)", dataIndex: 'remarks', valueType: 'textarea', fieldProps: { rows: 1 } }
+                    ]
+                }
+                // {
+                //     title: "Status", 
+                //     children: [
+                //         { title: 'Item & Qty', dataIndex: 'itemChekedStatus', valueType: 'select', formItemProps: { rules: [{ required: true }] }, fieldProps: { options: lookupData?.filter(it => it.type == 'POSM_ITEM_REVIEWED').map(it => ({ label: it.name, value: it.id })) } },
+                //         { title: "Verification", dataIndex: 'checkedStatus', valueType: 'select', formItemProps: { rules: [{ required: true }] }, fieldProps: { options: lookupData?.filter(it => it.type == 'POSM_REVIEWED_STATUS').map(it => ({ label: it.name, value: it.id })) } },
+                //         { title: "Remarks (SA)", dataIndex: 'remarks', valueType: 'textarea', fieldProps: { rows: 1 } }
+                //     ]
+                // }
             ]}
-            rowKey = 'id'
+            rowKey='id'
             size='small'
             bordered
             value={data}
-            recordCreatorProps = {false}
-            editable = {{
+            recordCreatorProps={false}
+            editable={{
                 type: 'multiple',
                 editableKeys: data.map(it => it.id),
                 onValuesChange: (_, records) => {

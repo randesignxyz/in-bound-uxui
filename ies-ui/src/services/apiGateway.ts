@@ -1,12 +1,12 @@
-import { request } from 'umi';
-import moment from 'moment';
-import { getServiceUrl, REPORT_API } from './ApiUrl';
-import { Endpoint, ExportType, GenericReportParams, Pagination, Paging, ServiceType } from './API';
-import { groupBy, map } from 'lodash';
-import { SortOrder } from 'antd/lib/table/interface';
-import { DataResponse } from './shared/data';
 import { blobToBase64 } from '@/pages/utils';
+import { SortOrder } from 'antd/lib/table/interface';
+import { groupBy, map } from 'lodash';
+import moment from 'moment';
 import printJS from 'print-js';
+import { request } from 'umi';
+import { Endpoint, ExportType, GenericReportParams, Pagination, Paging, ServiceType } from './API';
+import { REPORT_API, SALE_API, getServiceUrl } from './ApiUrl';
+import { DataResponse } from './shared/data';
 
 /** Services methods */
 
@@ -19,7 +19,7 @@ export interface MuitlParams {
 
 export type RequestActions = {
   start?: (serviceName?: string) => void;
-  request?: { loading?: boolean, failed?: boolean, message?: string };
+  request?: { loading?: boolean; failed?: boolean; message?: string };
   end?: (status: 'SUCCESS' | 'FAILED', reason?: string) => void;
 };
 
@@ -122,11 +122,32 @@ export interface DownloadData<T> {
   target?: string;
 }
 
-
 export interface PrintPDFData<T> {
   reportName: string;
   data?: T;
 }
+
+const doDownloadSalesReport = async <T>(params: DownloadData<T>): Promise<void> => {
+  const blob = request<Blob>(`${SALE_API}/export/report/${params.reportName}/type/${params.type}`, {
+    method: 'POST',
+    responseType: 'blob',
+    data: params.data,
+  });
+
+  const v = await blob;
+  const element = document.createElement('a');
+  element.target = '_blank';
+  const file = new Blob([v], { type: 'application/pdf' });
+  console.log('new Blob([v]', URL.createObjectURL(file));
+  element.href = URL.createObjectURL(file);
+
+  if (params.target) element.target = '_blank';
+  if (!params.target)
+    element.download = `${params.fileName}-${moment().format()}.${params.type === 'EXCEL' ? 'xls' : 'pdf'
+      }`;
+  document.body.appendChild(element);
+  element.click();
+};
 
 export const downloadGenericReport =
   (actions?: RequestActions) =>
@@ -144,13 +165,25 @@ export const downloadGenericReport =
       }
     };
 
-
 export const downloadReport =
   <T>(actions?: RequestActions) =>
     async (param: DownloadData<T>) => {
       try {
         actions?.start?.();
         await doDownloadReport<T>(param);
+        actions?.end?.('SUCCESS');
+      } catch (error) {
+        actions?.end?.('FAILED');
+        throw error;
+      }
+    };
+
+export const downloadSaleReport =
+  <T>(actions?: RequestActions) =>
+    async (param: DownloadData<T>) => {
+      try {
+        actions?.start?.();
+        await doDownloadSalesReport(param);
         actions?.end?.('SUCCESS');
       } catch (error) {
         actions?.end?.('FAILED');
@@ -171,28 +204,31 @@ export const downloadReport1 =
       }
     };
 
-export const printPdf = <T>(actions?: RequestActions) =>
-  async (params: PrintPDFData<T>, onPrintDialogClose?: () => void) => {
-    try {
-      actions?.start?.()
-      const blob = request<Blob>(
-        `${REPORT_API}/export/report/${params.reportName}/type/PDF`,
-        {
+export const printPdf =
+  <T>(actions?: RequestActions) =>
+    async (params: PrintPDFData<T>, onPrintDialogClose?: () => void) => {
+      try {
+        actions?.start?.();
+        const blob = request<Blob>(`${REPORT_API}/export/report/${params.reportName}/type/PDF`, {
           method: 'POST',
           responseType: 'blob',
           data: params.data,
-        },
-      );
-      const v = await blob;
-      blobToBase64(v, base64 => {
-        printJS({ base64: true, printable: base64, type: 'pdf', onPrintDialogClose: onPrintDialogClose })
-      })
-    } catch (e: any) {
-      actions?.end?.('FAILED')
-    } finally {
-      actions?.end?.('SUCCESS')
-    }
-  }
+        });
+        const v = await blob;
+        blobToBase64(v, (base64) => {
+          printJS({
+            base64: true,
+            printable: base64,
+            type: 'pdf',
+            onPrintDialogClose: onPrintDialogClose,
+          });
+        });
+      } catch (e: any) {
+        actions?.end?.('FAILED');
+      } finally {
+        actions?.end?.('SUCCESS');
+      }
+    };
 
 export const downloadUploadFile =
   (actions?: RequestActions) => async (fileId: string, fileName: string) => {
@@ -283,8 +319,6 @@ export const downloadReportBlob =
       }
     };
 
-
-
 const execData = async <IN, OU>(service: ServiceType, params: IN): Promise<OU> => {
   const srvUrl = getServiceUrl(service.type);
   return request<OU>(`${srvUrl}/name/${service.name}/exec`, {
@@ -293,25 +327,26 @@ const execData = async <IN, OU>(service: ServiceType, params: IN): Promise<OU> =
   });
 };
 
-export const commitImportedData = <OU extends { id: number }>(key: string, importId: number) => async (actions?: RequestActions) => {
-  actions?.start?.()
-  try {
-    const srvUrl = getServiceUrl('FILE');
-    const rs = await request<DataResponse<OU>>(`${srvUrl}/commit`, {
-      method: 'POST',
-      data: {
-        importedKey: key,
-        importedId: importId
-      },
-    });
-    actions?.end?.('SUCCESS')
-    return rs
-  } catch (error: any) {
-    actions?.end?.('FAILED')
-    throw error
-  }
-
-}
+export const commitImportedData =
+  <OU extends { id: number }>(key: string, importId: number) =>
+    async (actions?: RequestActions) => {
+      actions?.start?.();
+      try {
+        const srvUrl = getServiceUrl('FILE');
+        const rs = await request<DataResponse<OU>>(`${srvUrl}/commit`, {
+          method: 'POST',
+          data: {
+            importedKey: key,
+            importedId: importId,
+          },
+        });
+        actions?.end?.('SUCCESS');
+        return rs;
+      } catch (error: any) {
+        actions?.end?.('FAILED');
+        throw error;
+      }
+    };
 
 const downloadForm = async (service: ServiceType, params: { instId: string }): Promise<Blob> => {
   const srvUrl = getServiceUrl(service.type);
@@ -334,7 +369,7 @@ const doDownloadReport = async <T>(params: DownloadData<T>): Promise<void> => {
   const element = document.createElement('a');
   element.target = '_blank';
   const file = new Blob([v], { type: 'application/pdf' });
-  console.log('new Blob([v]', URL.createObjectURL(file))
+  console.log('new Blob([v]', URL.createObjectURL(file));
   element.href = URL.createObjectURL(file);
 
   if (params.target) element.target = '_blank';
@@ -344,7 +379,6 @@ const doDownloadReport = async <T>(params: DownloadData<T>): Promise<void> => {
   document.body.appendChild(element);
   element.click();
 };
-
 
 const doDownloadReport1 = async <T>(params: DownloadData<T>): Promise<string> => {
   const blob = request<Blob>(
@@ -438,8 +472,7 @@ export type ServiceApiType<IN> =
     endpoint: Endpoint;
     responseKey?: string;
     payload: IN;
-  }
-  ;
+  };
 
 export const MultiRequest =
   <OU>(datas: ServiceApiType<any>[]) =>

@@ -16,6 +16,8 @@ import EmployeeModal from './EmployeeModal';
 import { history, useAccess,useModel } from '@umijs/max';
 import AdvanceEmployeeSearch from "./AdvanceEmployeeSearch";
 import Omit from "omit.js";
+import { ImportDataItem, ImportDataResponse } from "@/services/shared/data";
+import UploadData from "./upload-data";
 
 interface Props {
     onAdd?: (id?: number) => void;
@@ -34,10 +36,11 @@ export default ({ onAdd, onEdit }: Props) => {
     const [loading, setLoading] = useSafeState(false)
     const actionRef = useRef<ActionType>();       
     
-  const [advanceSearch, setAdvanceSearch] = useState<{ visible: boolean }>();
-  const [advanceSearchParams, setAdvanceSearchParams] = useState<EmployeeAdvanceSearchParams>({
-    status: 'ACTIVE',
-  });
+    const [advanceSearch, setAdvanceSearch] = useState<{ visible: boolean }>();
+    const [advanceSearchParams, setAdvanceSearchParams] = useState<EmployeeAdvanceSearchParams>({
+        status: 'ACTIVE',
+    });
+    const [importData, setImportData] = useState<ImportDataResponse>()
      
     const onRequestHandler = async (params: TableViewSearchParams<EmployeeAdvanceSearchParams>) => {
         try { 
@@ -86,8 +89,20 @@ export default ({ onAdd, onEdit }: Props) => {
                                     message.info("upload completed.")
                                 }
                             }} />
-                    </Tooltip> : '',
-
+                        </Tooltip> : '',
+                        <ImportFileButton<ImportDataItem>
+                            label='Imort Training'
+                            importedKey="ESS_IMPORT_TRAINING_LIST"
+                            onDataResponse={data => {
+                                setImportData(data)
+                            }}
+                            key={'ESS-IMPORT-TRAINING-LIST'}
+                            onHandleChange={(status) => {
+                                if (status == 'done') {
+                                    message.info('Data uploaded.');
+                                }
+                            }}
+                        />
                     ],
                   },
             }} 
@@ -145,7 +160,7 @@ export default ({ onAdd, onEdit }: Props) => {
                 },
                 },
                 { title: 'Full Name (KH)', dataIndex: 'employeeLocalName' },
-                { title: 'Full Name (EN)', dataIndex: 'firstName', sorter: 'firstName', render(_, entity) { return (entity.firstName + " " + entity.lastName) } },
+                { title: 'Full Name (EN)', dataIndex: 'firstName', sorter: 'firstName', render(_, entity) { return ( entity.lastName+ " " +entity.firstName ) } },
                 // {title: 'Last Name', dataIndex: 'lastName', sorter: 'lastName'},
                 // {title: 'SAP ID', dataIndex:  'sapId', sorter: 'sapId'},
                 {title: 'Position', dataIndex: 'jobTitle', sorter: 'jobTitle'},
@@ -198,5 +213,6 @@ export default ({ onAdd, onEdit }: Props) => {
                 return saveEmployeeHandler({ ...data,employeeId:modalVisible?.payload.id||0});
             }}
         />
+        <UploadData title="ESS Training List" onCancel={() => setImportData(undefined)} open={!!importData} datasources={importData} onFinish={()=> {actionRef.current?.reloadAndRest?.()}} />
     </Spin>
 }

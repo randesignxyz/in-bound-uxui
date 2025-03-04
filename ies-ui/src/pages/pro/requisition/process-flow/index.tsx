@@ -21,6 +21,7 @@ export const AcquisitionFormNames = {
   dmbo: 'requisition_dmbo',
   smFinance: 'requisition_sm_fin',
   md_dmd: 'requisition_md_dmd',
+  srManagerApproval: 'requisition_sr_manager_approval',
 };
 
 export const AcquisitionNvcFormNames = {
@@ -57,12 +58,29 @@ export const AcquisitionOmmFormNames = {
 };
 
 
+export const AcquisitionOmcFormNames = {
+  processDefKey: 'requisition_request_process_omc',
+  start: 'requisition_request_process_omc',
+  sub: 'requisition_omc_sub',
+  hod: 'requisition_omc_hod',
+  budgetControoler: 'requisition_omc_budget_controller',
+  finMngApproval: 'requisition_omc_fin',
+  pro: 'requisition_omc_pro',
+  mbo: 'requisition_omc_mbo',
+  dmbo1: 'requisition_omc_dmbo_1',
+  dmbo2: 'requisition_omc_dmbo_2',
+  dmbo: 'requisition_omc_dmbo',
+  smFinance: 'requisition_omc_sm_fin',
+  md_dmd: 'requisition_omc_md_dmd',
+};
+
 export const AcquisitionForm: DataForm[] = [
   {
     formKey: [
       AcquisitionFormNames.start,
       AcquisitionNvcFormNames.start,
-      AcquisitionOmmFormNames.start
+      AcquisitionOmmFormNames.start,
+      AcquisitionOmcFormNames.start
     ],
     dataViewForm: (props: DataViewProps) => <ViewForm {...props} type="inst" />,
     actionDataForm: (props: ActionDataFormProps) => <DefaultStartForm {...props} />,
@@ -79,6 +97,7 @@ export const AcquisitionForm: DataForm[] = [
       AcquisitionFormNames.dmbo1,
       AcquisitionFormNames.dmbo2,
       AcquisitionFormNames.md_dmd,
+      AcquisitionFormNames.srManagerApproval,
 
       AcquisitionNvcFormNames.sub,
       AcquisitionNvcFormNames.hod,
@@ -99,6 +118,16 @@ export const AcquisitionForm: DataForm[] = [
       AcquisitionOmmFormNames.dmbo1,
       AcquisitionOmmFormNames.dmbo2,
       AcquisitionOmmFormNames.md_dmd,
+
+      AcquisitionOmcFormNames.sub,
+      AcquisitionOmcFormNames.hod,
+      AcquisitionOmcFormNames.finMngApproval,
+      AcquisitionOmcFormNames.mbo,
+      AcquisitionOmcFormNames.dmbo,
+      AcquisitionOmcFormNames.smFinance,
+      AcquisitionOmcFormNames.dmbo1,
+      AcquisitionOmcFormNames.dmbo2,
+      AcquisitionOmcFormNames.md_dmd,
     ],
     dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,
     actionDataForm: (props: ActionDataFormProps) => <DefaultActionForm {...props} />,
@@ -107,7 +136,8 @@ export const AcquisitionForm: DataForm[] = [
     formKey: [
       AcquisitionFormNames.budgetControoler,
       AcquisitionNvcFormNames.budgetControoler,
-      AcquisitionOmmFormNames.budgetControoler
+      AcquisitionOmmFormNames.budgetControoler,
+      AcquisitionOmcFormNames.budgetControoler
     ],
     dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,
     actionDataForm: (props: ActionDataFormProps) => <BudgetControlForm {...props} />,

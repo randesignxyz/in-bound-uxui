@@ -2,7 +2,7 @@ import { simpleRequestActions } from "@/services/model"
 import { createService } from "./services"
 import { useEffect, useRef, useState } from "react"
 import { AppraisalRequestDetail, ApprovalAppraisalRequestItem, ReviewerMember, ReviewerMemberPayload } from "./data.types"
-import { Alert, Button, Descriptions, Flex, Popconfirm, Radio, Space, Spin, Tooltip, message } from "antd"
+import { Alert, Button, Descriptions, Flex, Popconfirm, Radio, Space, Spin, Table, Tooltip, message } from "antd"
 import { ActionType, ProCard, ProTable } from "@ant-design/pro-components"
 import { AppraisalEmp } from "../appraisal-submit/data.types"
 import { CheckOutlined, DeleteOutlined, DownloadOutlined, ExceptionOutlined, EyeOutlined, FileExcelOutlined, ImportOutlined, LoadingOutlined, PlusOutlined, UploadOutlined, } from "@ant-design/icons"
@@ -20,6 +20,7 @@ import { ImportDataItem, ImportDataResponse } from "@/services/shared/data"
 import UploadData from "./components/upload-data"
 import { downloadGenericReport } from "@/services/apiGateway"
 import moment from "moment"
+import { formatterQty1 } from "@/pages/utils"
 
 export default ({ processInstaceId,processDefKey, forceReload,formStarted,taskCompleted,showRating5, showImport,editable }: { 
     processInstaceId: string, 
@@ -97,7 +98,7 @@ export default ({ processInstaceId,processDefKey, forceReload,formStarted,taskCo
         return services.fetchApprovalAppraisalRequestItemPaging({
             criteria: params,
             sort:sort,
-            pagination:{...pagination,pageSize:100}
+            pagination:{...pagination,pageSize:200}
         }).then(it => {
             return it
         }) as Promise<Paging<ApprovalAppraisalRequestItem>>
@@ -224,14 +225,18 @@ export default ({ processInstaceId,processDefKey, forceReload,formStarted,taskCo
                         {title: 'Business Unit', dataIndex: 'buName',sorter:'buName'},
                         {title: 'Function', dataIndex: 'departmentName',sorter:'departmentName'},                    
                         {title: 'Job Title', dataIndex: 'jobTitle',sorter:'jobTitle'},
-                        {title: 'Self- Rating', dataIndex: 'rating1',sorter:'rating1'},
+                        {title: 'Self- Rating', dataIndex: 'rating1',sorter:'rating1',
+                            render: (_: any, r: any) => {
+                                return formatterQty1.format(r.rating1)
+                            }
+                        },
                         {title: "Manager's Rating", dataIndex: 'rating3',sorter:'rating3',
                             render:(_,r)=> {
-                                return (r?.rating3==0 ?'-':  r?.rating3==-1.0 ?'-': r.rating3)
+                                return (r?.rating3==0 ?'-':  r?.rating3==-1.0 ?'-': formatterQty1.format(r?.rating3||0))
                             }
                         },
                         {title: 'Final Score', dataIndex: 'rating5',sorter:'finalScore',
-                            render:(_,r)=>  (dataDetail?.status=='REJECT' ||(dataDetail?.status!='COMPLETED' && formStarted)) || !r?.finalScore||r?.finalScore==0 ?'-': r?.finalScore
+                            render:(_,r)=>  (dataDetail?.status=='REJECT' ||(dataDetail?.status!='COMPLETED' && formStarted)) || !r?.finalScore||r?.finalScore==0 ?'-': formatterQty1.format(r?.finalScore)
                         },
                         {
                             title:'',dataIndex:'status',
@@ -246,6 +251,32 @@ export default ({ processInstaceId,processDefKey, forceReload,formStarted,taskCo
                                 : <Status text={r.status=='IMPORTED'?'DONE': r.status}/>
                         }
                     ]}
+                    summary={(data) => {
+                        const totalRow = data.length || 1
+                        var rating = 0;
+                        var finalScore = 0
+                        if(data.length> 0){
+                            data?.forEach((it) => {
+                                rating += (it.rating3||0)
+                                finalScore += (it.finalScore||0)
+                            });
+                        }
+                        const avgMRating = (rating / totalRow)
+                        const avgFinalScore = (finalScore / totalRow)
+                        return (
+                            <Table.Summary.Row style={{ textAlign: 'right', fontWeight: 'bold' }}>
+                              <Table.Summary.Cell colSpan={7} index={7}>
+                                {'AVG'}
+                              </Table.Summary.Cell>
+                              <Table.Summary.Cell colSpan={1} index={7} align="left">
+                                {avgMRating==0.00?'-':formatterQty1.format(avgMRating)} 
+                              </Table.Summary.Cell>
+                              <Table.Summary.Cell colSpan={2} index={8} align="left">
+                                {(dataDetail?.status=='REJECT' ||(dataDetail?.status!='COMPLETED' && formStarted)) || avgFinalScore==0.00?'-':formatterQty1.format(avgFinalScore)} 
+                              </Table.Summary.Cell>
+                            </Table.Summary.Row>
+                          )
+                    }}
                 />
             </ProCard>
             {((dataDetail?.members||[]).length>0 || !formStarted) &&<ProCard  size="small" bordered title="Board Member List">                

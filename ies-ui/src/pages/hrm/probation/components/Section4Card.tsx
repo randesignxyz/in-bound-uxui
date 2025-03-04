@@ -12,8 +12,9 @@ interface Props {
     onSetAddedItems?: (v: ProbationEvaluationResourcesSupport[]) => void;
     editable: boolean|false;
     editableRating: boolean|false
+    showRating?: boolean
 }
-export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable, editableRating }: Props) => {
+export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable, editableRating,showRating=true }: Props) => {
 
   const setScore=(key?: string, fully?: number, partial?: number, no?: number)=>{
     onSetAddedItems?.(
@@ -48,8 +49,11 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
           )}
         </div>)
       },
-    },    
-    {
+    }
+  ]
+
+  if(showRating){
+    cols.push({
       title: 'RATING SCORE',
       children:[{
         title: <span style={{fontSize:11}}>Fully Done</span>,
@@ -121,8 +125,8 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
           />):(<Radio checked={(config.record?.no==1)}/>)
         },
       }]              
-    },
-  ]
+    },)
+  }
 
   return (<>
   <div>

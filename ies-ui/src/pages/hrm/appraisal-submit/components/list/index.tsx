@@ -6,9 +6,9 @@ import { SortOrder } from "antd/es/table/interface";
 import { simpleRequestActions } from "@/services/model";
 import { createService } from "../../services";
 import { Paging } from "@/services/API";
-import { formatDateTime, formatterPercentage0} from "@/pages/utils";
+import { formatDateTime, formatterPercentage0, formatterQty1} from "@/pages/utils";
 import Status from "@/components/Status";
-import { BankOutlined, DownloadOutlined, ExportOutlined, EyeOutlined, FileExcelOutlined, FilterOutlined, PicRightOutlined, PlusOutlined, TeamOutlined, UnorderedListOutlined } from "@ant-design/icons";
+import { BankOutlined, DownloadOutlined, ExportOutlined, EyeOutlined, FileExcelOutlined, FilterOutlined, PicRightOutlined, PlusOutlined, SelectOutlined, TeamOutlined, UnorderedListOutlined } from "@ant-design/icons";
 import AppraisalFormQuickView from "../quick-view/index";
 import { useEffect, useRef, useState } from "react";
 import AppraisalRequestForm from "../../AppraisalSubmitForm";
@@ -76,7 +76,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
     const [advanceEvaluationSearch, setAdvanceEvaluationSearch] = useState<{ visible: boolean }>();
     const [isImportExportBtn,setIsImportExportBtn] = useState<boolean>(true)
     const [importData, setImportData] = useState<ImportDataResponse>()
-     const access = useAccess()
+    const access = useAccess()
     
     
     /** Performance Target View ------------------------------------------------------------------------------------------------------------------------------- */
@@ -267,18 +267,22 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
         { title: 'Business Unit', width: 50, dataIndex: 'buName', sorter: 'buName' },
         { title: 'Function', dataIndex: 'departmentName', sorter: 'function' },
         { title: 'Job Title', dataIndex: 'jobTitle', sorter: 'jobTitle' },
-        { title: 'Self- Rating', width: 50, dataIndex: 'rating1', sorter: 'rating1' },
+        { title: 'Self- Rating', width: 50, dataIndex: 'rating1', sorter: 'rating1',
+            render: (_: any, r: any) => {
+                return formatterQty1.format(r.rating1)
+            }
+        },
 
         {
             title: "Manager's Rating", dataIndex: 'rating3', sorter: 'rating3',
             width: 50,
             render: (_: any, r: any) => {
-                return (r?.rating3 == 0 ? '-' : r?.rating3 == -1.0 ? '-' : r.rating3)
+                return (r?.rating3 == 0 ? '-' : r?.rating3 == -1.0 ? '-' : formatterQty1.format(r.rating3))
             }
         },
         {
             title: 'Final Score', width: 50, dataIndex: 'finalScore', sorter: 'finalScore',
-            render: (_: any, r: any) => !r?.finalScore || r?.finalScore == 0 ? '-' : r?.finalScore
+            render: (_: any, r: any) => !r?.finalScore || r?.finalScore == 0 ? '-' : formatterQty1.format(r?.finalScore)
         },
         { title: 'Modified By', sorter: 'modifiedBy', dataIndex: 'modifiedBy' },
         {
@@ -391,6 +395,11 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
         setAdvanceEvaluationSearch({ visible: true })
     }
     
+    const filterIcon = advanceSearchPerformEvaluationParams.company || advanceSearchPerformEvaluationParams.function || advanceSearchPerformEvaluationParams.appraiser ? (
+        <FilterOutlined style={{ color: 'red' }} />
+      ) : (
+        <SelectOutlined />
+      )
     const extraContent = (<>
         <Flex gap={1} style={{marginTop: 0, padding:0}}>
            <Col style={{padding:0, margin: 0}}>           
@@ -401,7 +410,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                         options={period?.map(it => ({label: it.label, value: it.value}))}
                         onChange={onYearTargetAppraisal}
                     />
-                <Button icon={<FilterOutlined/>} style={{marginLeft:2}} onClick={onFilterEvaluationHandler}></Button>
+                <Button  icon={filterIcon} style={{marginLeft:2}} onClick={onFilterEvaluationHandler}></Button>
             </Row>
             <Row style={{padding:0, marginTop:0}}>
                     <Input.Search allowClear  style={{ width: '240px' }} placeholder="Search" onSearch={ onSearch} />
@@ -463,8 +472,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                 <TableView<AppraisalEmp, { searchValue?: string; advanceSearch?: AppraisalEmpAdvanceSearchParams }>
                     cache 
                     scrollX    
-                    tableProps={{
-                        
+                    tableProps={{                        
                         actionRef: actionRef,
                         options: { reload: true, density: false, fullScreen: false, setting: false },
                         toolbar: {actions: [
@@ -485,6 +493,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                         ],}
                     }}
                     advanceSearch
+                    hasCriteria = {advanceSearchParams.bu || advanceSearchParams.department? true: false}
                     extraFilter={
                         <Space align="baseline" style={{ right: '12px' }}>
                             <Radio.Group
@@ -517,6 +526,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                                         options={[
                                             { label: 'Submitting', value: 'SUBMITTING' },
                                             { label: 'Submitted', value: 'SUBMITTED' },
+                                            { label: 'Reviewing', value: 'REVIEWING' },
                                             { label: 'Reviewed', value: 'REVIEWED' }
                                         ]}
                                     />
@@ -529,7 +539,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                     }
                     extraRightFilter={<Flex gap={0}>
                             {access.isAccessPerformanceReviewImportExport && isImportExportBtn && <>
-                                <ImportFileButton<ImportDataItem>
+                            <ImportFileButton<ImportDataItem>
                                 importedKey="PERFORMANCE_REVIEW_LIST"
                                 onDataResponse={data => {
                                     setImportData(data)

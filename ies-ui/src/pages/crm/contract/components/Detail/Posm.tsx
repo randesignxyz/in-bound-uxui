@@ -1,5 +1,4 @@
 import { CrmServices } from "@/pages/crm/services"
-import { LookUpDataDTO } from "@/pages/fleet/lookupData/data"
 import { LookupData } from "@/services/data"
 import { simpleRequestActions } from "@/services/model"
 import { EditableFormInstance, EditableProTable, ProCard } from "@ant-design/pro-components"

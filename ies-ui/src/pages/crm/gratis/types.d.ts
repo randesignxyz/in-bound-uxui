@@ -35,6 +35,11 @@ export type SaveChangeStatusData = {
   remarks?: string;
 }
 
+export type ImportDirectIncentiveParams = {
+  id: number;
+  importedId: number;
+}
+
 export interface GratisContract {
   id: number;
   contractId: number;
@@ -92,6 +97,23 @@ export interface GratisVerifyItem {
   customerCode: string;
   actionCode: string;
   invoices?: GratisInvoice[];
+}
+export interface GratisVerifyItemDetail {
+  id: number;
+  docNum: string;
+  canceled: string;
+  docDate:  moment.Moment;
+  itemCode: string;
+  qty: number;
+  itemName: string;
+  description: string;
+  uomCode: string;
+  customerCode: string;
+  customerId: number;
+  contractVerifyId: number;
+  gContractId: number;
+  incentiveSettlementId: number;
+  dataSource: string
 }
 export interface GratisVerifySchedule {
   id: number,
@@ -174,11 +196,12 @@ export interface GratisContractViewData {
   posmItems?: POSMView[]
 }
 
-export interface SettlementSearchDate {
-  contractTypeId?: number[];
+export interface SettlementSearchDate { 
   contractTypeGroupCode?: string;
+  contractTypeId?: number[];
   dateFrom?: moment.Moment;
   dateTo?: moment.Moment;
+  targetMethod?: string;
   frenquency?: string;
   searchValue?: string;
   target?: number[];
@@ -193,6 +216,7 @@ export interface CreateSettlemenDate {
   // contractTypeId?: number;
   dateFrom?: moment.Moment;
   dateTo?: moment.Moment;
+  targetMethod?: string;
   frequency?: string;
   contractTypeGroupCode?: string;
 }
@@ -278,6 +302,7 @@ export interface SearchCriteria {
   filter?: string;
   dateFrom?: moment.Moment;
   dateTo?: moment.Moment;
+  suggestFields?: string[];
 }
 export interface GratisVisitScheduleParams {
   gVerifyId?: number;
@@ -377,6 +402,11 @@ export type ApprovalRequestPayload = {
   requesterBuId: number;
 }
 
+export type GratisSuggestionItem = {
+  ds: string;
+  value: number
+}
+
 export type GratisSuggestedCustomer = {
   id: number;
   incentiveSettlementId: number;
@@ -400,6 +430,7 @@ export type GratisSuggestedCustomer = {
   soInvQty: number;
   totalQty: number;
   gratisSettlementConfigId?: number;
+  items?: GratisSuggestionItem[];
 }
 export interface GratisSuggestedCustomerVisit {
   id: number,

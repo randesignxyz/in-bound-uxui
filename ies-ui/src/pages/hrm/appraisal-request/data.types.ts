@@ -61,6 +61,7 @@ export type SavePayLoad = {
     requestorBuId: number
     uploadedFiles: string[]
     items: number[]
+    buCode: string
     remarks?: string
 }
 
@@ -91,16 +92,36 @@ export type AppraisalRequestDetail = {
 }
 
 
+// export const AppraisalRequestFormNames = {
+//     processDefKey: 'performance_review_request_process',
+//     start: 'performance_review_request_process',
+//     performance_review_hr_review: 'performance_review_hrm_review',
+//     performance_review_dmbo_mbo_approval: 'performance_review_dmbo_mbo_approval',
+//     performance_review_dmbo_mbo_review: 'performance_review_dmbo_mbo_review',
+//     performance_review_sm_hrm_consent: 'performance_review_sm_hrm_consent',
+//     performance_review_dmd_approval:'performance_review_dmd_approval',
+//     performance_review_dmd_review:'performance_review_dmd_review',
+//     performance_review_md_ed_approval:'performance_review_md_ed_approval'
+// }
+
+
 export const AppraisalRequestFormNames = {
     processDefKey: 'performance_review_request_process',
     start: 'performance_review_request_process',
-    performance_review_hr_review: 'performance_review_hrm_review',
-    performance_review_dmbo_mbo_approval: 'performance_review_dmbo_mbo_approval',
-    performance_review_dmbo_mbo_review: 'performance_review_dmbo_mbo_review',
-    performance_review_sm_hrm_consent: 'performance_review_sm_hrm_consent',
-    performance_review_dmd_approval:'performance_review_dmd_approval',
-    performance_review_dmd_review:'performance_review_dmd_review',
-    performance_review_md_ed_approval:'performance_review_md_ed_approval'
+    performance_review_hrbp_review: 'performance_review_request_hrbp_review',
+    performance_review_management_sm_hrm_review: 'performance_review_request_m_sm_hrm_review',
+    performance_review_ex_sm_hrm_review: 'performance_review_request_ex_sm_hrm_review',
+    performance_review_mbo_approval: 'performance_review_request_mbo_approval',
+    performance_review_dmd_approval: 'performance_review_request_dmd_approval',
+    performance_review_ex_dmd_approval: 'performance_review_request_ex_dmd_approval',
+    performance_review_md_approval: 'performance_review_request_md_approval',
+
+    // performance_review_dmbo_mbo_approval: 'performance_review_dmbo_mbo_approval',
+    // performance_review_dmbo_mbo_review: 'performance_review_dmbo_mbo_review',
+    // performance_review_sm_hrm_consent: 'performance_review_sm_hrm_consent',
+    // performance_review_dmd_approval:'performance_review_dmd_approval',
+    // performance_review_dmd_review:'performance_review_dmd_review',
+    // performance_review_md_ed_approval:'performance_review_md_ed_approval'
 }
 
 export type RequestItem = {
@@ -114,7 +135,7 @@ export type RequestItem = {
 export type SearchCriteria ={
     requestTypeId: number;
     searchValue?:string;
-    buName?: string[];
+    buName?: string
     deptName?:string[];
 }
 export type EmpSubmissionParams = {

@@ -13,12 +13,12 @@ import Section4Card from "../components/Section4Card";
 import { useForm } from "antd/lib/form/Form";
 import { createService } from "../services";
 import { uniqueId } from "lodash";
-import { formatDate, formatterQty, formatterQty1 } from "@/pages/utils";
+import { formatDate } from "@/pages/utils";
 import EmpImprovmentTable1 from "../components/EmpImprovmentTable1";
 import EmpImprovmentTable from "../components/EmpImprovmentTable";
-import { FileExcelOutlined, FilePdfOutlined } from "@ant-design/icons";
+import {FilePdfOutlined } from "@ant-design/icons";
 import { DownloadData, downloadReport } from "@/services/apiGateway";
-import { ProbationEvaluationRequestFormNames } from ".";
+import { ProbationEvaluationRequestFormNames, ProbationEvaluationRequestOFLFormNames } from ".";
 import InstructionCard from "../components/InstructionCard";
 import RatingScaleCard from "../components/RatingScaleCard";
 import SummaryCard from "../components/SummaryCard";
@@ -45,13 +45,6 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
       {status:'TERMINATED', desc:'Terminated'}
     ]
     
-    const clear = () => {
-        form.resetFields();
-        setAddedSection2([])
-    }
-    const validationSection2=()=>{
-
-    }
     useEffect(()=>{
       loadData()
     },[workflowModel.state.instanceData])
@@ -91,8 +84,15 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
     const downloadDataFile =async (exportType: 'PDF' | 'EXCEL',requestAction: SimpleRequestActions)=>{
         await downloadReport<CriteriaExportReport>(requestActions)(dataReport(exportType))
     }
-    const isDownloadForm = [ProbationEvaluationRequestFormNames.assessmentPreparation ,ProbationEvaluationRequestFormNames.lineManagerSubmission].find(r=> r== props.formKey)
+    const isRequestedStatus = probaRequest?.status=='REQUESTED'?true: false
+    const isDownloadForm = [
+                            ProbationEvaluationRequestFormNames.assessmentPreparation ,ProbationEvaluationRequestFormNames.lineManagerSubmission,
+                            ProbationEvaluationRequestOFLFormNames.srFunPreparation,ProbationEvaluationRequestOFLFormNames.lineManagerSubmission
+
+                          ].find(r=> r== props.formKey)
                           && ['SETTING','PREPARED'].find(r => r==probaRequest?.probationEvaluation?.status)? true:false
+    const isPrepareStatus = [ProbationEvaluationRequestFormNames.assessmentPreparation, ProbationEvaluationRequestOFLFormNames.srFunPreparation ].find(r=> r== props.formKey)
+                          || isRequestedStatus || ['PREPARED'].find(r => r==probaRequest?.probationEvaluation?.status) ? true:false                      
   
     return(  
     <ViewFormWrapper<{ id: number }>
@@ -138,40 +138,40 @@ export default (props: DataViewProps & {contribute?:{formNo:number}}) => {
                     <Descriptions.Item label='Function'>{probaRequest?.probationEvaluation.departmentName} </Descriptions.Item>
                     <Descriptions.Item label='Company'>{probaRequest?.probationEvaluation.buName}</Descriptions.Item>
                     <Descriptions.Item label='Position'>{probaRequest?.probationEvaluation.jobTitle}</Descriptions.Item>
-
-                    <Descriptions.Item label='Ref' span={2}>{probaRequest?.probationEvaluation?.ref?.formNo}</Descriptions.Item>
+                    <Descriptions.Item label='Ref' span={1}>{probaRequest?.probationEvaluation?.ref?.formNo}</Descriptions.Item>
+                    <Descriptions.Item label='Form Type' span={1}>{probaRequest?.probationEvaluation?.formTypeCode}</Descriptions.Item>
 
                     </Descriptions>
                 </ProCard>}
               
                 <InstructionCard/>
-                {probaRequest &&<RatingScaleCard probaRequest={probaRequest}/>}
-                <ProCard title="EVALUATION" 
+                {probaRequest &&  <RatingScaleCard probaRequest={probaRequest}/>}
+                <ProCard title= {isPrepareStatus?'PERFORMANCE':'EVALUATION' }
                     collapsible  
                     size="small"
                     bordered headerBordered 
                 >
                    
-                    <Section1Table editable={false} editableRating={false} editableFormRef={editableFormRef1} addedItems={addedSection1} onSetAddedItems={setAddedSection1} totalScore={probaRequest?.totalScore1}/>
+                    <Section1Table showRating={!isPrepareStatus} editable={false} editableRating={false} editableFormRef={editableFormRef1} addedItems={addedSection1} onSetAddedItems={setAddedSection1} totalScore={probaRequest?.totalScore1}/>
                     
-                    <Section2Card editable={false} editableRating={false} editableFormRef={editableFormRef2} addedItems={addedSection2} onSetAddedItems={setAddedSection2}  totalScore={probaRequest?.totalScore2}/>
+                    <Section2Card showRating={!isPrepareStatus} editable={false} editableRating={false} editableFormRef={editableFormRef2} addedItems={addedSection2} onSetAddedItems={setAddedSection2}  totalScore={probaRequest?.totalScore2}/>
                     {/*---------------------------- SECTION III. BEHAVIOR (Weightage: 30%)-------------------------------------------------*/}
                    
-                    {probaResources&&<Section3Card editable={false} editableRating={false} editableFormRef={editableFormRef3} addedItems={probaResources} onSetAddedItems={setProbaResources}  totalScore={probaRequest?.totalScore3}/>}
+                    {probaResources&&<Section3Card showRating={!isPrepareStatus} editable={false} editableRating={false} editableFormRef={editableFormRef3} addedItems={probaResources} onSetAddedItems={setProbaResources}  totalScore={probaRequest?.totalScore3}/>}
                     {/*---------------------------- SECTION IV. SUPPORT / RESOURCES NEEDED-------------------------------------------------*/}
                     
-                    <Section4Card editable={false} editableRating={false} editableFormRef={editableFormRef4} addedItems={probaResourcesSupport} onSetAddedItems={setProbaResourcesSupport} />
+                    <Section4Card showRating={!isPrepareStatus} editable={false} editableRating={false} editableFormRef={editableFormRef4} addedItems={probaResourcesSupport} onSetAddedItems={setProbaResourcesSupport} />
                     {/*---------------------------- SECTION V. ADDITIONAL COMMENTS-------------------------------------------------*/}
-                    <div>
+                    {!isPrepareStatus && <div>
                         <div style={{paddingTop:5}}>
                         <div><b>SECTION V. ADDITIONAL COMMENTS</b></div>
                         <div>What employee has done, their strength, and further development need.</div>
                         </div>
-                    </div>
-                    <Space direction="vertical" style={{ width: '100%' }}>
-                      {probaRequest?.empAchievement&&<EmpImprovmentTable editable={false} addedItems={probaRequest?.empAchievement.map(it => ({...it,key: uniqueId().toString()}))} />}
-                      {probaRequest?.empImprovement&&<EmpImprovmentTable1  editable={false} addedItems={probaRequest?.empImprovement.map(it => ({...it,key: uniqueId().toString()}))} />}
-                    </Space>                    
+                    </div>}
+                    {!isPrepareStatus && probaRequest?.empAchievement&&<Space direction="vertical" style={{ width: '100%' }}>
+                      <EmpImprovmentTable editable={false} initDataItems={probaRequest?.empAchievement.map(it => ({...it,key: uniqueId().toString()}))} />
+                      <EmpImprovmentTable1  editable={false} initDataItems={probaRequest?.empImprovement.map(it => ({...it,key: uniqueId().toString()}))} />
+                    </Space>  }              
                 </ProCard>
                 {probaRequest &&<SummaryCard probaRequest={probaRequest} initialValue={{status:probaRequest.probationEvaluation?.confirmedStatus||'', extendedDate: probaRequest.probationEvaluation?.extendedDate}}/>}
                 

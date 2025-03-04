@@ -11,7 +11,7 @@ import { LookupData } from "@/services/data"
 import { formatDate, formatDateTime, toReadable } from "@/pages/utils"
 import { CrmServiceAPI } from "@/services/crm/services"
 import {
-    CheckCircleOutlined, CheckOutlined, EnvironmentOutlined, ExportOutlined,
+    CheckCircleOutlined, CheckOutlined, CloseSquareOutlined, EnvironmentOutlined, ExportOutlined,
     EyeOutlined, PaperClipOutlined,
     ScheduleOutlined
 
@@ -26,6 +26,7 @@ import { ActionType, LightFilter, ProCard, ProFormDatePicker, ProFormSelect, Pro
 import { Moment } from "moment"
 import { history } from "@umijs/max";
 import { CrmPaths } from ".."
+import CancelModalForm from "./components/CancelModalForm"
 
 type FilterType = VisitScheduleAdvanceSearchParams & { searchValue?: string; status?: string; }
 export default () => {
@@ -47,7 +48,13 @@ export default () => {
         month?: Moment;
         divisionIds?: number[];
     }
-
+    const [cancelState, setCancelStatus] = useState<{
+        visible?: {
+            name: "MODAL",
+            payloads?: any;
+            filter?: VisitScheduleAdvanceSearchParams
+        }
+    }>();
     const lookup = useQuery(['visit-schedule-lookup-data'], () => MultiRequest<{
         contractTypes: LookupData[];
         lookupDataList: LookupData[];
@@ -196,6 +203,15 @@ export default () => {
                     title: "Visit Schedule List",
                     actionButtons: [
                         <>
+                            <Tooltip key={'generate-visit-plan '} title="Cancel Visit Schedule">
+                                <Button
+                                    type="link"
+                                    danger
+                                    key={"cancel"}
+                                    onClick={() => setCancelStatus({ visible: { name: "MODAL" } })}
+                                    icon={<CloseSquareOutlined />}
+                                />
+                            </Tooltip>
                             <Tooltip key={'generate-visit-plan '} title="Tracking Loaction"><Button
                                 type="link"
                                 onClick={() => history.push(CrmPaths.locationTracking)}
@@ -223,6 +239,7 @@ export default () => {
                         loading: isFetching,
                         dataSource: data?.items,
                         actionRef: actionRef,
+                        scroll: { x: 'min-content' },
                         pagination: {
                             total: data?.total
                         },
@@ -408,6 +425,24 @@ export default () => {
                     />
                 )
             }
+
+            <CancelModalForm
+                open={cancelState?.visible?.name == "MODAL"}
+                onCancel={() => setCancelStatus({ visible: undefined })}
+                filterParam={filter}
+                onSave={(data) => {
+                    Modal.confirm({
+                        title: "Cancel Visit Schedule",
+                        content: "are you sure?",
+                        onOk: async () => {
+                            await crmServices.cancelMultiVisitSchedule(data);
+                            refetch();
+                            setCancelStatus({ visible: undefined });
+                            message.success("Success!")
+                        }
+                    })
+                }}
+            />
         </Spin >
     )
 }

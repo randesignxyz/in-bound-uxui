@@ -1,4 +1,4 @@
-import { ProFormText, ProFormSelect, ProFormTextArea } from "@ant-design/pro-components";
+import { ProFormText, ProFormSelect, ProFormTextArea, ProFormDatePicker } from "@ant-design/pro-components";
 import { Row, Col, Space } from "antd";
 import { CoreServiceAPI } from "../service";
 import { DepartmentServiceAPI } from "../setting/components/department/service";
@@ -18,12 +18,6 @@ export default ({ lookupData }: Props) => {
                     <ProFormText
                         label={"Document Number"}
                         name={"docNumber"}
-                        rules={[
-                            {
-                                min: 4,
-                                max: 20
-                            }
-                        ]}
                     />
                 </Col>
                 <Col span={18}>
@@ -33,7 +27,6 @@ export default ({ lookupData }: Props) => {
                         rules={[{ required: true }]}
                     />
                 </Col>
-
                 <Col span={12}>
                     <ProFormSelect
                         rules={[{ required: true }]}
@@ -41,11 +34,11 @@ export default ({ lookupData }: Props) => {
                         name={"opCo"}
                         showSearch
                         fieldProps={{
-                            filterOption:false
+                            filterOption: false
                         }}
                         request={async () => {
                             const data = await CoreServiceAPI(requestAction).orgUnitList();
-                            return data.map(v => ({ label: <Space  size={"small"}><span>{v.name}</span><span style={{color:"gray"}}>{v.description}</span></Space>, value: v.id }))
+                            return data.map(v => ({ label: <Space size={"small"}><span>{v.name}</span><span style={{ color: "gray" }}>{v.description}</span></Space>, value: v.id }))
                         }}
                     />
                 </Col>
@@ -56,7 +49,7 @@ export default ({ lookupData }: Props) => {
                         label="Department"
                         showSearch
                         fieldProps={{
-                            filterOption:false
+                            filterOption: false
                         }}
                         request={async (k: { keyWords: string }) => {
                             const data = await DepartmentServiceAPI(requestAction).page({
@@ -64,8 +57,22 @@ export default ({ lookupData }: Props) => {
                                     searchValue: k.keyWords || ""
                                 }
                             });
-                            return data.items?.map(v => ({ label: <Space  size={"small"}><span>{v.name}</span><span style={{color:"gray"}}>{v.description}</span></Space>, value: v.id }))
+                            return data.items?.map(v => ({ label: <Space size={"small"}><span>{v.name}</span><span style={{ color: "gray" }}>{v.description}</span></Space>, value: v.id }))
                         }}
+                    />
+                </Col>
+                <Col span={12}>
+                    <ProFormDatePicker
+                        name={"effectiveDate"}
+                        label="Effective Date"
+                        width={"md"}
+                    />
+                </Col>
+                <Col span={12}>
+                    <ProFormDatePicker
+                        name={"expiryDate"}
+                        label="Expiry Date"
+                        width={"md"}
                     />
                 </Col>
                 <Col span={24}>

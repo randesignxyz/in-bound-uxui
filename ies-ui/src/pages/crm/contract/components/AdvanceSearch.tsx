@@ -100,7 +100,7 @@ export default ({ trigger, onSearch }: {
                     label="Brand"
                     options={lookupData?.brandList?.map(it => ({ label: it.name, value: it.id }))} />
                 <ProFormSelect showSearch allowClear mode="multiple"
-                    name={"contractTypeId"} label="Contract Tyoe"
+                    name={"contractTypeId"} label="Contract Type"
                     options={lookupData?.contractTypes?.map(it => ({ label: it.name, value: it.id }))} />
                 <ProFormSelect showSearch
                     allowClear mode="multiple"

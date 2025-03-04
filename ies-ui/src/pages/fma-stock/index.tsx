@@ -3,6 +3,8 @@ import ListMenuComp, { ListMenuItem } from "@/components/ListMenu"
 import { PageContainer } from "@ant-design/pro-components"
 import { useAccess } from "@umijs/max";
 import { useEffect } from "react";
+import NCMReportModalForm from "./request/reports/NCMReportModalForm";
+import { ExportOutlined } from "@ant-design/icons";
 
 
 export const WHMPaths = {
@@ -22,7 +24,10 @@ export default () => {
                 id: 'whm_issue_request',
                 name: 'NCM Request',
                 description: 'NCM Request Management',
-                link: `${WHMPaths.request}/list`
+                link: `${WHMPaths.request}/list`,
+                menu:access.isAccessNCMRequestCriteriaExportReport?{
+                   items:[{label: <NCMReportModalForm trigger={<a>Export NCM Report</a>} />, key: 'exportNCMRequestReport', icon: <ExportOutlined style={{ fontSize: '16px', color: '#08c' }}/>}]
+                }: undefined
             });
         }
         if (access.canAccessWhmInventoryTransferRequestMenu) {

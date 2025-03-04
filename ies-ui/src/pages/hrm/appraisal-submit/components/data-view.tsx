@@ -27,15 +27,21 @@ export interface Props{
   initialValues?:AppraisalRemark
   appraisal?:AppraisalEmpSubmissionResult[] 
   onSetRatingScoreHandler:(status:string,appraisalDimensionId: number,appraisalBehaviorId:number,rating:number)=>void
-  editableImprovementRated1FormRef?:  React.Ref<EditableFormInstance<AppraisalEmpImprovement&{key:string}> | undefined>
-  improvementRated1?:(AppraisalEmpImprovement & {key:string})[]
-  onSetImprovementRated1?:(list:(AppraisalEmpImprovement&{key:string})[])=>void
-  editableImprovementRated2FormRef?:  React.Ref<EditableFormInstance<AppraisalEmpImprovement&{key:string}> | undefined>
-  improvementRated2?:(AppraisalEmpImprovement & {key:string})[]
-  onSetImprovementRated2?:(list:(AppraisalEmpImprovement&{key:string})[])=>void
-  editableImprovementRated3FormRef?:  React.Ref<EditableFormInstance<AppraisalEmpImprovement&{key:string}> | undefined>
-  improvementRated3?:(AppraisalEmpImprovement & {key:string})[]
-  onSetImprovementRated3?:(list:(AppraisalEmpImprovement&{key:string})[])=>void
+  editableImprovementRated1FormRef?:  React.MutableRefObject<EditableFormInstance | undefined>|undefined
+  // React.RefObject<EditableFormInstance | undefined>
+  initDataImprovementRated1?:(AppraisalEmpImprovement & {key:string})[]
+  setImprovementRated1Updated:(value:boolean)=>void
+  // onSetImprovementRated1?:(list:(AppraisalEmpImprovement&{key:string})[])=>void
+  editableImprovementRated2FormRef?: React.MutableRefObject<EditableFormInstance | undefined>|undefined
+  // React.Ref<EditableFormInstance<AppraisalEmpImprovement&{key:string}> | undefined>
+  initDataImprovementRated2?:(AppraisalEmpImprovement & {key:string})[]
+  setImprovementRated2Updated:(value:boolean)=>void
+  // onSetImprovementRated2?:(list:(AppraisalEmpImprovement&{key:string})[])=>void
+  editableImprovementRated3FormRef?: React.MutableRefObject<EditableFormInstance | undefined>|undefined
+  // React.Ref<EditableFormInstance<AppraisalEmpImprovement&{key:string}> | undefined>
+  initDataImprovementRated3?:(AppraisalEmpImprovement & {key:string})[]
+  setImprovementRated3Updated:(value:boolean)=>void
+  // onSetImprovementRated3?:(list:(AppraisalEmpImprovement&{key:string})[])=>void
   attachedFiles?:string[]
   onUploadFileIdHandler?: (fileId: string) => void;
   onRemoveFileIdHandler?: (fileId: string) => void;
@@ -50,16 +56,19 @@ export default ({
   appraisalEmp, 
   form,initialValues,
   appraisal,
-  improvementRated1,
+  initDataImprovementRated1,
   editableImprovementRated1FormRef,
-  onSetImprovementRated1,
+  // onSetImprovementRated1,
+  setImprovementRated1Updated,
   onSetRatingScoreHandler,
-  improvementRated2,
+  initDataImprovementRated2,
   editableImprovementRated2FormRef,
-  onSetImprovementRated2,
-  improvementRated3,
+  setImprovementRated2Updated,
+  // onSetImprovementRated2,
+  initDataImprovementRated3,
   editableImprovementRated3FormRef,
-  onSetImprovementRated3,
+  setImprovementRated3Updated,
+  // onSetImprovementRated3,
   attachedFiles,
   onUploadFileIdHandler,
   onRemoveFileIdHandler
@@ -70,6 +79,7 @@ export default ({
     const currentUser =  useModel('@@initialState');
 
     const statusCompleted = appraisalEmp?.status==='COMPLETED'?true:false
+    const statusReviewed = appraisalEmp?.status==='REVIEWED'?true:false
     const appraisalAdmin = appraisalEmp?.appraisalAdmin||false
     const currentDrafted = appraisalEmp?.currentDrafted
     const isDrafted = appraisalEmp?.actionStatus==='DRAFTED'?true:false
@@ -81,9 +91,9 @@ export default ({
     const rated2 = appraisalEmp?.rated2
     const rated3 = appraisalEmp?.rated3
 
-    const rating1Editable = (currentAssign1 && (currentDrafted || !rated1)) ? true:false
-    const rating2Editable = (currentAssign2 && (currentDrafted || !rated2)) ? true:false
-    const rating3Editable = (currentAssign3 && (currentDrafted || !rated3))? true:false
+    const rating1Editable = (currentAssign1 && (currentDrafted || (!rated1 && !isDrafted))) ? true:false
+    const rating2Editable = (currentAssign2 && (currentDrafted || (!rated2 && !isDrafted))) ? true:false
+    const rating3Editable = (currentAssign3 && (currentDrafted || (!rated3 && !isDrafted)))? true:false
    
     
     const onChange1 = (e: RadioChangeEvent,r:AppraisalEmpSubmissionResult) => {
@@ -151,7 +161,7 @@ export default ({
 
     //MBO's Rating
     // if(currentAssign3 || (rated3 && !isDrafted)){
-    if(currentAssign3){
+    if(currentAssign3 || (hasRating2 && currentAssign2 && statusReviewed)){
       columns.push({
         title: getLable('TBL_RATING3'),
         width: '8%',     
@@ -159,6 +169,63 @@ export default ({
         onCell:(record:any)=>({style: record.sort%2===0?{ background:rowColr, textAlign:'center',border:border}:{ textAlign:'center',border:border}})
       })
     }
+    /**--- Employee Improvment , Propose --------------------- */
+    const [improvementRated1, setImprovementRated1] = useState<(AppraisalEmpImprovement & {key:string})[]>([])
+    const [improvementRated2, setImprovementRated2] = useState<(AppraisalEmpImprovement & {key:string})[]>([])
+    const [improvementRated3, setImprovementRated3] = useState<(AppraisalEmpImprovement & {key:string})[]>([])
+
+  useEffect(()=>{      
+      setImprovementRated1(initDataImprovementRated1||[])
+  },[initDataImprovementRated1])
+
+  useEffect(()=>{      
+    setImprovementRated2(initDataImprovementRated2||[])
+  },[initDataImprovementRated2])
+
+  useEffect(()=>{      
+    setImprovementRated3(initDataImprovementRated3||[])
+  },[initDataImprovementRated3])
+
+  const addNewRowImprovementRated1 = (newItem: (AppraisalEmpImprovement & { key: string }))=>{
+      const list= getDataImprovementRated1Items()
+      list.push(newItem)  
+      setImprovementRated1(list)
+  }
+  const addNewRowImprovementRated2 = (newItem: (AppraisalEmpImprovement & { key: string }))=>{
+    const list= getDataImprovementRated2Items()
+    list.push(newItem)  
+    setImprovementRated2(list)
+  }
+  const addNewRowImprovementRated3 = (newItem: (AppraisalEmpImprovement & { key: string }))=>{
+    const list= getDataImprovementRated3Items()
+    list.push(newItem)  
+    setImprovementRated3(list)
+  }
+  const getDataImprovementRated1Items = (): (AppraisalEmpImprovement & {key:string})[] =>{
+      const list = getDataFormInst(editableImprovementRated1FormRef)
+      return list
+  }
+  const getDataImprovementRated2Items = (): (AppraisalEmpImprovement & {key:string})[] =>{
+    const list = getDataFormInst(editableImprovementRated2FormRef)
+    return list
+  }
+  const getDataImprovementRated3Items = (): (AppraisalEmpImprovement & {key:string})[] =>{
+    const list = getDataFormInst(editableImprovementRated3FormRef)
+    return list
+  }
+
+  const getDataFormInst = (formRef: React.MutableRefObject<EditableFormInstance | undefined>|undefined): (AppraisalEmpImprovement & {key:string})[] =>{
+    const fieldsVaule = formRef?.current?.getFieldsValue()
+    const list: (AppraisalEmpImprovement & { key: string })[] = []
+    for (var key in fieldsVaule) {
+        const item = fieldsVaule[key]
+        item.key = key
+        list.push(item)
+    }      
+    return list
+}
+  
+    
 
     return <Spin spinning={loading}>
         <Space direction="vertical" style={{ width: '100%' }}>
@@ -208,8 +275,8 @@ export default ({
           > 
             <Space direction="vertical" style={{ width: '100%' }}>  
               <ProCard size="small" style={{height:'100%'}} headerBordered bordered title={<b>{getLable('TITLE_EMP_COMMENT')}<span style={{color:'red'}}>*</span></b>}>
-                <ProFormTextArea name={'empComment'} readonly={!rating1Editable}  rules={[{ required: true }]}/>               
-                  {improvementRated1&&<EditableProTable<AppraisalEmpImprovement & {key:string}> 
+                <ProFormTextArea name={'empComment'} readonly={!rating1Editable}  rules={[{ required: true, message: 'please enter', whitespace: true }]}/>               
+                  {improvementRated1&&<EditableProTable<(AppraisalEmpImprovement & {key:string})> 
                         style={{padding:0,margin:0}}
                         cardProps = {false}
                         size="small"
@@ -222,21 +289,25 @@ export default ({
                           {
                             title: <b>{currentAssign1? getLable('TITLE_EMP_EM_MY_AREA_IMPROVEMENT'):getLable('TITLE_EMP_EM_HIS_AREA_IMPROVEMENT')}<span style={{color:'red'}}>*</span></b>, valueType: 'textarea', width: 300, dataIndex: 'improvement',
                             formItemProps: {                                                       
-                              rules: [{ required: true, message: undefined, whitespace: true, transform:(v)=>v.trim()}], 
+                              rules: [{ required: true, message: 'please enter', whitespace: true, transform:(v)=>v.trim()}], 
                             },
                             fieldProps:{placeholder:'', maxLength: 500,}
                           },{
                             title: <b>{currentAssign1? getLable('TITLE_EMP_EM_MY_IMPROVEMENT_ACTION'):getLable('TITLE_EMP_EM_HIS_IMPROVEMENT_ACTION')}<span style={{color:'red'}}>*</span></b>, valueType: 'textarea', width: 300, dataIndex: 'propose',
                             formItemProps: {                                
-                              rules: [{ required: true, message: undefined, whitespace: true, transform:(v)=>v.trim()}], 
+                              rules: [{ required: true, message: 'please enter', whitespace: true, transform:(v)=>v.trim()}], 
                             },
                             fieldProps:{placeholder:'', maxLength: 500,}
                           },
-                          { valueType: 'option', width: 18, render: () => { return null; }, },
+                          { valueType: 'option', width: 50, render: () => { return null; }, },
                         ]}
                         recordCreatorProps={{
                           hidden: !rating1Editable,
                           creatorButtonText:  getLable('BTN_ADD_MORE'), 
+                          onClick: () => {
+                            const newitem = {id: 0, key: uniqueId().toString(), appraisalEmpId: 0, improvement: null, propose: null} as any
+                            addNewRowImprovementRated1(newitem)
+                          },
                           newRecordType: 'dataSource',
                           record: (index) => {
                             const key = uniqueId('appraisal_emp_improvement_rating1')
@@ -245,18 +316,22 @@ export default ({
                         }}
                         editable={{
                           type: 'multiple',
-                          editableKeys: rating1Editable?improvementRated1?.map(it => it.key):[],
+                          editableKeys: rating1Editable? improvementRated1?.map(it => it.key):[],
                           actionRender: (row, config) => [  improvementRated1?.find(it => it)?.key != row.key && <Button  size='small' danger onClick={() => {                            
-                            config.onDelete?.(config.recordKey, row)
+                            // config.onDelete?.(config.recordKey, row)
+                            const list= getDataImprovementRated1Items()?.filter((it) => it.key != row.key)
+                            setImprovementRated1?.(list)
                           }} type="link" key={`del-${row.id}`} icon={<DeleteOutlined size={3}/>}/>],
                           onValuesChange(record, data) {
-                            onSetImprovementRated1?.(data)
+                            // onSetImprovementRated1?.(data)
+                            setImprovementRated1Updated(true)
                           },
                         }}
                       />}
               </ProCard> 
-              {hasRating2 && (currentAssign2 || currentAssign3 || (rated3 && !isDrafted)) &&<ProCard size="small" style={{height:'100%'}} headerBordered bordered title={<b>{getLable('TITLE_FM_COMMENT')}<span style={{color:'red'}}>*</span></b>}>
-                <ProFormTextArea name={'rating2Comment'} readonly={!rating2Editable}  rules={[{ required: true }]}/>
+              {hasRating2 && (currentAssign2 || currentAssign3 || (rated3 && !isDrafted)) &&
+              <ProCard size="small" style={{height:'100%'}} headerBordered bordered title={<b>{getLable('TITLE_FM_COMMENT')}<span style={{color:'red'}}>*</span></b>}>
+                <ProFormTextArea name={'rating2Comment'} readonly={!rating2Editable}  rules={[{ required: true, message: 'please enter', whitespace: true }]}/>
                 <EditableProTable<AppraisalEmpImprovement & {key:string}> 
                   style={{padding:0,margin:0}}
                   cardProps = {false}
@@ -270,13 +345,13 @@ export default ({
                     {
                       title: <b>{currentAssign1?getLable('TITLE_EMP_EM_MY_AREA_IMPROVEMENT'):getLable('TITLE_EMP_EM_HIS_AREA_IMPROVEMENT')} <span style={{color:'red'}}>*</span></b>, valueType: 'textarea', width: 300, dataIndex: 'improvement',
                       formItemProps: {                                                       
-                        rules: [{ required: true, message: undefined, whitespace: true, transform:(v)=>v.trim()}], 
+                        rules: [{ required: true, message: 'please enter', whitespace: true, transform:(v)=>v.trim()}], 
                       },
                       fieldProps:{placeholder:'', maxLength: 500,}
                     },{
                       title: <b>{currentAssign1?getLable('TITLE_EMP_EM_MY_IMPROVEMENT_ACTION'):getLable('TITLE_EMP_EM_HIS_IMPROVEMENT_ACTION')}<span style={{color:'red'}}>*</span></b>, valueType: 'textarea', width: 300, dataIndex: 'propose',
                       formItemProps: {                                
-                        rules: [{ required: true, message: undefined, whitespace: true, transform:(v)=>v.trim()}], 
+                        rules: [{ required: true, message: 'please enter', whitespace: true, transform:(v)=>v.trim()}], 
                       },
                       fieldProps:{placeholder:'', maxLength: 500,}
                     },
@@ -285,6 +360,10 @@ export default ({
                   recordCreatorProps={{
                     hidden: !rating2Editable,
                     creatorButtonText: getLable('BTN_ADD_MORE'), 
+                    onClick: () => {
+                      const newitem = {id: 0, key: uniqueId().toString(), appraisalEmpId: 0, improvement: null, propose: null} as any
+                      addNewRowImprovementRated2(newitem)
+                    },
                     newRecordType: 'dataSource',
                     record: (index) => {
                       const key = uniqueId('appraisal_emp_improvement_rating1')
@@ -293,18 +372,22 @@ export default ({
                   }}
                   editable={{
                     type: 'multiple',
-                    editableKeys: rating2Editable?improvementRated2?.map(it => it.key):[],
+                    editableKeys: rating2Editable? improvementRated2?.map(it => it.key):[],
                     actionRender: (row, config) => [  improvementRated2?.find(it => it)?.key != row.key && <Button  size='small' danger onClick={() => {                            
-                      config.onDelete?.(config.recordKey, row)
+                      // config.onDelete?.(config.recordKey, row)
+                      const list= getDataImprovementRated2Items()?.filter((it) => it.key != row.key)
+                            setImprovementRated2?.(list)
                     }} type="link" key={`del-${row.id}`} icon={<DeleteOutlined size={3}/>}/>],
                     onValuesChange(record, data) {
-                      onSetImprovementRated2?.(data)
+                      // onSetImprovementRated2?.(data)
+                      setImprovementRated2Updated(true)
                   },
                   }}
                 />
               </ProCard>} 
-              {(rating3Editable || (currentAssign3 || appraisalAdmin) || statusCompleted )&&<ProCard size="small" style={{height:'100%'}} headerBordered bordered title={<b>{getLable('TITLE_AGREED_COMMENT')}<span style={{color:'red'}}>*</span></b>}>
-                <ProFormTextArea name={'rating3Comment'} readonly={!rating3Editable}  rules={[{ required: true }]}/>
+              {(rating3Editable || (currentAssign3 || appraisalAdmin) || statusCompleted || statusReviewed)&&
+              <ProCard size="small" style={{height:'100%'}} headerBordered bordered title={<b>{getLable('TITLE_AGREED_COMMENT')}<span style={{color:'red'}}>*</span></b>}>
+                <ProFormTextArea name={'rating3Comment'} readonly={!rating3Editable}  rules={[{ required: true, message: 'please enter',  whitespace: true, transform:(v)=>v.trim() }]}/>
                 {!hasRating2&&<EditableProTable<AppraisalEmpImprovement & {key:string}> 
                   style={{padding:0,margin:0}}
                   cardProps = {false}
@@ -318,13 +401,13 @@ export default ({
                     {
                       title: <b>{currentAssign1?getLable('TITLE_EMP_EM_MY_AREA_IMPROVEMENT'):getLable('TITLE_EMP_EM_HIS_AREA_IMPROVEMENT')}<span style={{color:'red'}}>*</span></b>, valueType: 'textarea', width: 300, dataIndex: 'improvement',
                       formItemProps: {                                                       
-                        rules: [{ required: true, message: undefined,  whitespace: true, transform:(v)=>v.trim()}], 
+                        rules: [{ required: true, message: 'please enter',  whitespace: true, transform:(v)=>v.trim()}], 
                       },
                       fieldProps:{placeholder:'', maxLength: 500,}
                     },{
                       title: <b>{currentAssign1?getLable('TITLE_EMP_EM_MY_IMPROVEMENT_ACTION'):getLable('TITLE_EMP_EM_HIS_IMPROVEMENT_ACTION')}<span style={{color:'red'}}>*</span></b>, valueType: 'textarea', width: 300, dataIndex: 'propose',
                       formItemProps: {                                
-                        rules: [{ required: true, message: undefined,  whitespace: true, transform:(v)=>v.trim()}], 
+                        rules: [{ required: true, message: 'please enter',  whitespace: true, transform:(v)=>v.trim()}], 
                       },
                       fieldProps:{placeholder:'', maxLength: 500,}
                     },
@@ -333,6 +416,10 @@ export default ({
                   recordCreatorProps={{
                     hidden: !rating3Editable,
                     creatorButtonText:  getLable('BTN_ADD_MORE'), 
+                    onClick: () => {
+                      const newitem = {id: 0, key: uniqueId().toString(), appraisalEmpId: 0, improvement: null, propose: null} as any
+                      addNewRowImprovementRated3(newitem)
+                    },
                     newRecordType: 'dataSource',
                     record: (index) => {
                       const key = uniqueId('appraisal_emp_improvement_rating1')
@@ -343,10 +430,13 @@ export default ({
                     type: 'multiple',
                     editableKeys: rating3Editable?improvementRated3?.map(it => it.key):[],
                     actionRender: (row, config) => [  improvementRated3?.find(it => it)?.key != row.key && <Button  size='small' danger onClick={() => {                            
-                      config.onDelete?.(config.recordKey, row)
+                      // config.onDelete?.(config.recordKey, row)
+                      const list= getDataImprovementRated3Items()?.filter((it) => it.key != row.key)
+                            setImprovementRated3?.(list)
                     }} type="link" key={`del-${row.id}`} icon={<DeleteOutlined size={3}/>}/>],
                     onValuesChange(record, data) {
-                      onSetImprovementRated3?.(data)
+                      // onSetImprovementRated3?.(data)
+                      setImprovementRated3Updated(true)
                   },
                   }}
                 />}

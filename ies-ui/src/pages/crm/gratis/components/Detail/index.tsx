@@ -1,9 +1,9 @@
-import { Space, Spin, Tag, message, Button, Tooltip, Descriptions, Modal, Dropdown, Input, Radio } from 'antd';
+import { Space, Spin, Tag, message, Button, Tooltip, Descriptions, Modal, Dropdown, Input, Radio, Flex } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { history } from "@umijs/max";
 import { CaretDownOutlined, EditOutlined, EyeOutlined, FieldTimeOutlined, FileAddOutlined, FileDoneOutlined, FileExcelOutlined, FilePdfOutlined, MessageOutlined, PartitionOutlined, QuestionCircleOutlined, SelectOutlined, StopOutlined, SyncOutlined } from '@ant-design/icons';
 import { CrmPaths } from '@/pages/crm';
-import { ActionType, CheckCard, PageContainer, ProCard, ProList, ProTable } from '@ant-design/pro-components';
+import { ActionType, CheckCard, LightFilter, PageContainer, ProCard, ProFormSelect, ProList, ProTable } from '@ant-design/pro-components';
 import { simpleRequestActions } from '@/services/model';
 import { useSafeState } from 'ahooks';
 import { GratisServices } from '../../services';
@@ -14,7 +14,7 @@ import { Model } from '../../model';
 import VerifyContractQuickView from './VerifyContractQuickView';
 import moment from 'moment';
 import ConfirmModalForm from './ConfirmModalForm';
-import { DownloadData, downloadReport } from '@/services/apiGateway';
+import { DownloadData, downloadGenericReport, downloadReport, MultiRequest } from '@/services/apiGateway';
 import { merge, replace } from 'lodash';
 import ApprovalRequestModalForm from './ApprovalRequestModalForm';
 import Status from '@/components/Status';
@@ -26,6 +26,15 @@ import '../../../gratis/style.less'
 import Popconfirm from '@/components/Popconfirm';
 import AdjustTranModal from './adjust/AdjustTranModal';
 import SuggestionItemAdjustTranModal from './adjust/SuggestionItemAdjustTranModal';
+import { LookupData } from '@/services/data';
+import ImportFileButton from '@/components/ImportFileButton';
+import { ImportDataItem, ImportDataResponse } from '@/services/shared/data';
+import UploadData from '../upload-data';
+import {getUrlReporting} from "@/pages/ReportUrl"
+
+interface LightFilterProp {
+  suggestFields?: string[]
+}
 
 const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: (id: number, cb?: () => void) => void }> = ({ id, onEdit }) => {
   const requestActions = simpleRequestActions()
@@ -42,7 +51,10 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
   const [isSuggested, setIsSuggested] = useState<boolean>(false)
   const [criteriaSuggested, setCriteriaSuggested] = useState<SearchCriteria>()
   const [isSynchAll, setIsSynchAll] = useState<boolean>(false)
-  const [suggestionData, setSuggestionData] = useState<ItemSAP[]>()
+  const [importData, setImportData] = useState<ImportDataResponse>()
+   const [lookupData, setLookupData] = useState<{
+      gratisSuggestFields?: LookupData[]
+      }>()
 
   const model = ProcessFlowModel()
   const { actions } = model
@@ -56,6 +68,14 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
   const loadData = async () => {
     const rs = await GratisServices.fetchSettlementDetail(id).query(requestActions)
     const action = await GratisServices.fetchSettlementCycleActivityList(id).query(requestActions)
+    const lookup = await MultiRequest<{
+        gratisSuggestFields: LookupData[]
+      }>(
+          [
+            GratisServices.gratisSuggestFields().queryParams
+          ]
+    )(requestActions)
+    setLookupData(lookup)
     setData(rs)
     setActivity(action)
     setspinTip('')
@@ -159,6 +179,10 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
     setCriteriaSuggested(v => ({ ...v, searchValue: value }));
     cb?.(true)
   };
+  const onFilterSuggestFieldsHandler = (value: string[], cb: (v: boolean) => void) => {
+    setCriteriaSuggested(v => ({ ...v, suggestFields: value }));
+    cb?.(true)
+  };
   const onSearchStatusHandler = (value: string) => {
     setCriteria(v => ({ ...v, status: value }));
     actionRef.current?.reloadAndRest?.();
@@ -204,7 +228,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
   const isRequestNA = data?.requestStatus == 'NONE' ? true : false
   const isRequestPending = data?.requestStatus == 'PENDING' ? true : false
 
-  const stausText = (data?.requestStatus == 'NONE' || data?.status != 'PENDING') ? data?.status : (data?.requestStatus == 'COMPLETED' ? 'APPROVED' : data?.requestStatus)
+  const stausText = data?.status||'PENDING'//(data?.requestStatus == 'NONE' || data?.status != 'PENDING') ? data?.status : (data?.requestStatus == 'COMPLETED' ? 'APPROVED' : data?.requestStatus)
   const contractTypeDirect = data?.contractType?.code == 'DIRECT' ? true : false
   const groupTypeOther = data?.contractType?.code == 'OTHER' ? true : false
   const optionsStatus = [
@@ -256,13 +280,39 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
       })
     }
   }
-  const initailSuggestionData = async (incentiveSettlementId: number, verifyId: number, gratisSettlementConfigId?: number) => {
-    setSuggestionData(undefined)
-    await GratisServices.getListSuggestionItemAdjustment(incentiveSettlementId, verifyId, gratisSettlementConfigId).query(requestActions).then(it => {
-      setSuggestionData(it)
-    })
+  // const initailSuggestionData = async (incentiveSettlementId: number, verifyId: number, gratisSettlementConfigId?: number) => {
+  //   setSuggestionData(undefined)
+  //   await GratisServices.getListSuggestionItemAdjustment(incentiveSettlementId, verifyId, gratisSettlementConfigId).query(requestActions).then(it => {
+  //     setSuggestionData(it)
+  //   })
 
-  }
+  // }
+
+  const downloadDirectReport = async () => {
+          try {
+             
+              // setLoading(true)
+              await downloadGenericReport(requestActions)({
+                  fileName: `Settlement Trade Incentive Direct Detail Report-${moment().format()}.xls`,
+                  type: 'EXCEL',
+                  data: {
+                      reportName: 'SettlementIncentiveDirectDetailReport',
+                      reportPath: getUrlReporting('crm/gratis'),
+                      data: [      
+                         {key:'id', value: id},
+                          // ...(dataForm.empStatus || []).map(it => ({ key: 'empStatus', value: it })),                
+                          // ...(dataForm.bu || []).map(it => ({ key: 'buIds', value: it })),
+                          // ...(dataForm.department || []).map(it => ({ key: 'deptIds', value: it })),
+                      ]
+                  }
+              }).then(()=>{
+                  // setLoading(false)
+              })
+          } catch (error: any) {
+              message.error(error.message || "Failed to generate report.")
+              // setLoading(false)
+          }            
+      };
 
   return (
     <Spin spinning={requestActions.request?.loading || false} tip={spinTip}>
@@ -320,12 +370,30 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
                     setIsSuggested(e?.toString() == 'suggestion' ? true : false)
                   }}
                 >
-                  {isPending && isRequestNA && <CheckCard avatar={<img src={suggestionIcon} style={{ height: 18, width: 21 }} />} title='Adjustable Customer' size='small' value="suggestion" style={{ width: '190px', borderStyle: 'dashed' }} />}
+                  {isPending && isRequestNA && 
+                    <Flex gap={5}>
+                      <CheckCard avatar={<img src={suggestionIcon} style={{ height: 18, width: 21 }} />} title='Adjustable Customer' size='small' value="suggestion" style={{ width: '190px', borderStyle: 'dashed' }} />
+                      {contractTypeDirect&&<ImportFileButton<ImportDataItem>
+                          importedKey="GRATIS_SETTLEMENT_DIRECT_INCENTIVE_LIST"
+                          onDataResponse={data => {                               
+                              setImportData(data)
+                          }}
+                          key={'GRATIS-SETTLEMENT-DIRECT-INCENTIVE-LIST'}
+                          onHandleChange={(status) => {
+                              if (status == 'done') {
+                                  message.info('Data uploaded.');
+                              }
+                          }}
+                      />}
+                      {contractTypeDirect&&<Tooltip placement="bottom" title="Dowload Trade Incetive Detail"><Button type='link' icon={<FileExcelOutlined />} onClick={downloadDirectReport}></Button></Tooltip>}
+
+                    </Flex>
+                  }
                 </CheckCard.Group>
               </Space>
             }
           >
-            {!groupTypeOther && isSuggested && <ProTable<GratisSuggestedCustomer>
+            {!groupTypeOther && isSuggested && lookupData && <ProTable<GratisSuggestedCustomer>
               actionRef={actionSuggestedRef}
               search={false}
               size='small'
@@ -342,6 +410,17 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
                       actionSuggestedRef.current?.reloadAndRest?.();
                     })}
                   />
+                  <LightFilter<LightFilterProp>
+                    onValuesChange={(_, values) => {                        
+                        onFilterSuggestFieldsHandler(values.suggestFields||[], (c: boolean) => {
+                          actionSuggestedRef.current?.reloadAndRest?.();
+                        })
+                    }}
+                  >
+                    <ProFormSelect  mode="multiple"  name="suggestFields"  width={250}
+                      options={lookupData?.gratisSuggestFields?.map(r=> ({label: r.name, value: r.code}))}
+                    />
+                  </LightFilter>                 
                 </Space>
               }
               request={async (paging) => {
@@ -380,21 +459,34 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
               }, {
                 title: '+Qty',
                 dataIndex: 'percentLess',
-                render: (_, r) => {
-                  const so = r?.soQty > 0 ? `SO: ${r?.soQty}` : ''
-                  const inv = r.soInvQty > 0 ? `INV: ${r?.soInvQty}` : ''
+                render: (_, r) => {                  
                   return r?.percentLess ? <div>
                     <span>{`${r?.percentLess}%`}</span>
                     <div style={{ padding: 2, fontSize: 13, color: '#b49900', borderRadius: 5 }}>
-                      {`(${r?.qtyLess}/${r?.targets}) ${so} ${inv}`}
+                      {`(${r?.qtyLess}/${r?.targets})`}
                     </div>
                   </div> : '-'
                 }
-              },/* {
-                  title: 'Customer Code',
-                  dataIndex: 'gcontractId',
-                  render: (_, r) => r?.customer?.code
-                },*/ {
+              }, {
+                title: 'Suggestion Qty',
+                dataIndex: 'percentLess',
+                render: (_, r) => {
+                  var total= 0
+                  var list = ''
+                  r.items?.forEach((o)=>{
+                    if(o.value>0){
+                    list += o.ds+'('+o.value+') '
+                    total += o.value
+                    }
+                  })
+                  return r?.percentLess ? <div>
+                    <span>{`Total: ${total}`}</span>
+                    <div style={{ padding: 2, fontSize: 13, color: '#b49900', borderRadius: 5 }}>
+                      {`${list}`}
+                    </div>
+                  </div> : '-'
+                }
+              }, {
                 title: 'Customer',
                 render: (_, r) => <span>{r.customer?.code} - {r.customer?.name}</span>
               }, {
@@ -409,9 +501,14 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
                 align: 'center',
                 width: 15,
                 render: (_, r) => //<Button type='link' icon={<EditOutlined/>}>Adjust</Button>
-                  <SuggestionItemAdjustTranModal loading={requestActions.request?.loading} data={suggestionData || []} incentiveSettlementId={r.incentiveSettlementId} verifyId={r.gcontractVerifyId} customerCode={r.customer?.code} title={'Adjustment'}
+                  <SuggestionItemAdjustTranModal title={`Adjustment | ${r.customer.code} - ${r.customer.name} | Total: ${r?.qty}/${r?.targets}`} 
+                    total={r.qty}
+                    targetNum={r.targets}
+                    loading={requestActions.request?.loading} incentiveSettlementId={r.incentiveSettlementId} verifyId={r.gcontractVerifyId} customerCode={r.customer?.code} 
                     onSave={(status, remarks, adjItems, cb) => adjustHandler(r.gcontractVerifyId, adjItems, cb)}
-                    trigger={<Button type='link' icon={<EditOutlined />} onClick={() => initailSuggestionData(r.incentiveSettlementId, r.gcontractVerifyId, r.gratisSettlementConfigId)}>Adjust</Button>}
+                    trigger={<Button type='link' icon={<EditOutlined />} 
+                    // onClick={() => initailSuggestionData(r.incentiveSettlementId, r.gcontractVerifyId, r.gratisSettlementConfigId)}
+                    >Adjust</Button>}
                   />
               }
               ]}
@@ -646,10 +743,14 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
                 }
               }
               ]}
-              expandable={!contractTypeDirect ? {
+              // expandable={!contractTypeDirect ? {
+              //   expandedRowRender: (record => <VerifyContractList quickViewHandler={quickViewHandler} item={record} />),
+              //   rowExpandable: record => true,
+              // } : {}}
+              expandable={ {
                 expandedRowRender: (record => <VerifyContractList quickViewHandler={quickViewHandler} item={record} />),
                 rowExpandable: record => true,
-              } : {}}
+              }}
             />}
           </ProCard>
           <ProCard title='Activities' defaultCollapsed collapsible headerBordered size='small'>
@@ -683,6 +784,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
         />}
         <ProcessFlowModalMngt workflowModel={model} />
       </PageContainer>
+      <UploadData title="Import Settlement Trade Incentive List" id={id} onCancel={() => setImportData(undefined)} open={!!importData} datasources={importData} onFinish={()=> {actionRef.current?.reloadAndRest?.()}} />
     </Spin>
   );
 };

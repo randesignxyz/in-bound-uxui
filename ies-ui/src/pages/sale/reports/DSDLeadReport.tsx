@@ -3,18 +3,17 @@ import { simpleRequestActions } from '@/services/model';
 import { SalesTeamWorkLess } from '@/services/sale/data';
 import { SaleServiceAPI } from '@/services/sale/services';
 import { ProForm, ProFormSelect } from '@ant-design/pro-components';
-import { Card, message, Spin } from 'antd';
+import { Card, Spin, message } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { useState } from 'react';
-import { DSDReportAPI } from './service';
 
-const layout = {
-  labelCol: { span: 8 },
-  wrapperCol: { span: 18 },
-};
+// const layout = {
+//   labelCol: { span: 8 },
+//   wrapperCol: { span: 18 },
+// };
 
 interface Props extends FormModalProps {
-  salespersons?: SalesTeamWorkLess[];
+  salespersons: SalesTeamWorkLess[];
 }
 
 export default (props: Props) => {
@@ -56,24 +55,20 @@ export default (props: Props) => {
       >
         <Spin spinning={loading}>
           <Card>
-            <ProForm
-              submitter={false} layout="horizontal"
-              form={form}
-            >
+            <ProForm submitter={false} layout="horizontal" form={form}>
               <ProFormSelect
                 mode="multiple"
-                label="Salesperson"
+                label="Salespersons"
                 name="salespersonCode"
                 // width="md"
                 showSearch
                 debounceTime={500}
-                request={async () => {
-                  const data = await DSDReportAPI(requestActions).salespersonList();
-                  return data.map(p => ({
-                    value: p.salespersonCode,
-                    label: p.salespersonCode.concat(' - ', p.salespersonName),
-                  }))
-                }}
+                options={props.salespersons.map((it) => {
+                  return {
+                    value: it.salespersonCode,
+                    label: it.salespersonCode.concat(' - ', it.salespersonName),
+                  };
+                })}
                 allowClear
               />
             </ProForm>

@@ -112,6 +112,26 @@ export const formatConfig = {
     duration: 'HH:mm:ss', // 'HH:mm:ss.SSS',
 };
 
+
+export const displayDateTime = (date?: moment.Moment): string | undefined => {
+    if (date !== undefined) {
+        const str = date.toString();
+        const index = str.lastIndexOf('.');
+        return str.substring(0, index).replace('T', ' ');
+    }
+    return '';
+};
+
+export const displayDate = (date?: moment.Moment): string | undefined => {
+    if (date !== undefined) {
+        const str = date.toString();
+        const index = str.lastIndexOf('T');
+        return str.substring(0, index);
+    }
+    return undefined;
+};
+
+
 export const formatYear = (date?: moment.Moment, format?: string): string | undefined => {
     return (
         date &&

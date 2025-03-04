@@ -988,7 +988,7 @@ export default () => {
               },
               description: {
                 render: (_, r) => (
-                  <ProDescriptions size='small' column={4} style={{ width: 'calc(100vh - 5px)' }}>
+                  <ProDescriptions size='small' column={4} style={{ width: 'calc(120vh - 5px)' }}>
                     <ProDescriptions.Item label="License Plate #"> {r.truckNo || 'N/A'}</ProDescriptions.Item>
                     <ProDescriptions.Item label="Driver Name"> {r.driver || 'N/A'}</ProDescriptions.Item>
                     {Array.isArray(r.pickingSlip) && r.status === "LOADING" && (

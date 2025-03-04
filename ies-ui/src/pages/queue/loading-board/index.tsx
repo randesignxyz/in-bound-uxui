@@ -985,7 +985,7 @@ export default () => {
                     {(vc.view.getActions?.('LIST', r) || []).filter(it => it.visible && it.main)?.map(it => it.label).find(it => it) || <ClockCircleOutlined spin />}
                   </DropdownButton>
                 }
-              },
+              }, 
               description: {
                 render: (_, r) => (
                   <ProDescriptions size='small' column={4} style={{ width: 'calc(120vh - 5px)' }}>

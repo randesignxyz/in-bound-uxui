@@ -7,6 +7,7 @@ import ProForm, {
   ProFormText,
   ProFormTextArea,
 } from '@ant-design/pro-form';
+import { useAccess } from '@umijs/max';
 import { Card, Col, Row } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { useEffect, useState } from 'react';
@@ -20,7 +21,7 @@ interface Props extends FormModalProps {
 
 const TruckEntryModal: React.FC<Props> = ({ companyList, truckList, onSave, data, ...props }) => {
   const [form] = useForm<SaveDriver>();
-
+  const access = useAccess();
   const [availableTrucks, setAvailableTrucks] = useState<Truck[]>([]);
 
   useEffect(() => {
@@ -144,7 +145,7 @@ const TruckEntryModal: React.FC<Props> = ({ companyList, truckList, onSave, data
                   value: it.id || 0,
                 }))}
               />
-              <ProFormCheckbox name={'multiTicket'} label="Issued Multi Ticket" />
+              <ProFormCheckbox name={'multiTicket'} label="Issued Multi Ticket" disabled={!access.canAccessIssuedMultiTicket} />
               <ProFormCheckbox name={'deliveryTracking'} label="Delivery Tracking" />
               <ProFormTextArea name={'description'} label="Description" />
             </Col>

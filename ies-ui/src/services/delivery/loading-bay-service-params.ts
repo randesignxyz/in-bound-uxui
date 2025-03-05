@@ -67,6 +67,7 @@ export type AllocatedLoadingDockDetail = AllocatedLoadingDockBase & {
     items: PickingSlipItem[];
     newItems?: PickingSlipItem[];
   }
+  loadingType?:number
 };
 
 export const LoadingServiceParams = {

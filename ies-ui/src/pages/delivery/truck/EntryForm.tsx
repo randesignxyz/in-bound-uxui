@@ -6,6 +6,7 @@ import ProForm, {
   ProFormText,
   ProFormTextArea,
 } from '@ant-design/pro-form';
+import { useAccess } from '@umijs/max';
 import { Card } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { useEffect } from 'react';
@@ -19,6 +20,7 @@ interface Props extends FormModalProps {
 
 const TruckEntryModal: React.FC<Props> = ({ companyList, loadingCapacityList, onSave, data, ...props }) => {
   const [form] = useForm<SaveTruck>();
+  const access = useAccess();
 
   const initForm = () => {
     form.setFieldsValue({
@@ -67,7 +69,7 @@ const TruckEntryModal: React.FC<Props> = ({ companyList, loadingCapacityList, on
             label="Intergrate ID"
             help={<span />}
           />
-          <ProFormCheckbox label="Side Door" name={'isSideDoor'} />
+          <ProFormCheckbox label="Side Door" name={'isSideDoor'} disabled={!access.canAccessEnableSideDoor}/>
           <ProFormSelect
             rules={[{ required: true }]}
             showSearch

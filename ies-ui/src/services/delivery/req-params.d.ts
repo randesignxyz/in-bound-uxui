@@ -38,6 +38,7 @@ export type startLoadingParam = {
   id: number;
   loadingTeamId?: number;
   remarks?: string;
+  loadingType?:number | null
 };
 
 export type ChangeRequestParam = {

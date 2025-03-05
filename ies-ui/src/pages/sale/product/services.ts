@@ -12,7 +12,7 @@ const ProductItemActions = {
     actionName: 'list-product-item',
     payload: { ...params.criteria },
     pagination: {
-      pageSize: params.pagination?.pageSize,
+      pageSize: 100, //params.pagination?.pageSize,
       page: params.pagination?.current,
     },
   }),

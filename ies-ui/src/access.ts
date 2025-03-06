@@ -847,7 +847,10 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_ICT_WF_IT_REQUEST_REQUESTER'].some((it) => it === item),
       ) || false,
-
+    canAccessITRequestReport:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_ICT_WF_IT_REQUEST_SUPPORT'].some((it) => it === item),
+      ) || false,
     canAccessFMANewStaffMenuITem:
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_FMA_WF_NEW_STAFF_VIEW'].some((it) => it === item),

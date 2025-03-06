@@ -116,8 +116,8 @@ export default () => {
   if(access.canAccessFleetPurchaseRequisitionMenuItem){
     items.push( {
       id: 'fleetRepairMaintenanceRequest',
-      name: 'Repair & Maintenance',
-      description: 'Repair & Maintenance Request',
+      name: 'PR - Repair & Maintenance​',
+      description: 'PR - Repair & Maintenance Request',
       link: `/fleet/requisition/create`,
       icon: vehicleMaintenance,
       isMenu: true,

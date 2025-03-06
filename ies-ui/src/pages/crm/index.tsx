@@ -414,6 +414,7 @@ const Crm: React.FC = () => {
       //link: `${CrmPaths.settlement}/list`,
       link: `${CrmPaths.salesperson}/list`,
       icon: salesperson,
+      visible:access.saleAdmin
     }
   ];
 

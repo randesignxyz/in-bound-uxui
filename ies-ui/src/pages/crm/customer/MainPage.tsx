@@ -152,17 +152,14 @@ export default ({ getMenuItems }: CustomerActionController) => {
                         icon:<SyncOutlined/>,
                         onClick:()=>{
                             try{
-                               CustomerServices.syncCustomer()(requestAction).then(()=>{
+                               CustomerServices.syncExecStoreProcedureCustomer()(requestAction).then(()=>{
                                 message.success("Success!")
                                }).catch((err)=>{
                                 message.error("Something went wrong!")
-                               })
-                                
+                               });
                             }
                             catch(e){
-                                
                             }
-                            
                         }
                     },
                     { key: 'TRANSFER', label: 'Transfer SE', onClick: () => modals.showModal('transfer-customers'), icon: <SwapOutlined style={{ fontSize: '16px', color: '#08c' }} /> }

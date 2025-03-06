@@ -7,7 +7,7 @@ import PurchaseOrderReport from './PurchaseOrderReport';
 import SaleOrderReport from './SaleOrderReport';
 import VisitReports from './VisitReports';
 import { DSDReportAPI } from './service';
-import SalePerformanceOverviewReport from './SalePerformanceOverviewReport';
+import PerformancePurchaseOrderReport from './PerformancePurchaseOrderReport';
 
 interface Props {
   reportName?: ReportName;
@@ -70,7 +70,7 @@ const Reports: React.FC<Props> = ({ reportName, onClose }) => {
         open={reportName === 'purchase-order-reports'}
         onCancel={onClose}
       />
-      <SalePerformanceOverviewReport
+      <PerformancePurchaseOrderReport
         salespersons={salesperson}
         title="Performance P.O Reports"
         width="700px"

@@ -10,10 +10,18 @@ interface CustomDataNode extends DataNode {
 
 interface SalespersonOrg {
     position: string;
-    name: string | null;
+    name?: string;
     id: number;
     path: string;
-    parentId: number | null;
+    parentId?: number;
     saleId: number;
-    empNo: string | null;
+    empNo?: string;
+  }
+
+  interface AddSalesperonOrg{
+
+    parentId:number,
+    saleId:number;
+    position:string
+    path?:string
   }

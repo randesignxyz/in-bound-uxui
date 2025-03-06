@@ -1,10 +1,13 @@
 import FormModalComp, { FormModalProps } from '@/components/FormModal';
+import { getUrlReporting } from '@/pages/ReportUrl';
+import { downloadGenericReport, downloadReport } from '@/services/apiGateway';
 import { simpleRequestActions } from '@/services/model';
 import { SalesTeamWorkLess } from '@/services/sale/data';
 import { SaleServiceAPI } from '@/services/sale/services';
 import { ProForm, ProFormDateRangePicker, ProFormSelect } from '@ant-design/pro-components';
 import { Card, Spin, message } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
+import moment from 'moment';
 import { useState } from 'react';
 
 const layout = {
@@ -31,35 +34,32 @@ export default (props: Props) => {
     requestedDate?: moment.Moment[];
   }>();
 
-  //   const onFormvalueChanged = (changedValues: any) => {
-  // const { reportType } = changedValues;
-  // if (reportType && 'reportType' in changedValues) {
-  //   setSelectedReportType(reportType);
-  // }
-  //   };
-
   const onDowloadReportHandler = async () => {
     try {
-      setLoading(true);
-      const dataForm = await form.validateFields();
-      console.log(dataForm);
-      await saleServices.donwloadPOReport({
-        fileName: 'performance-po-report',
-        reportName: 'performance-po-report',
+      const dataForm = await form.validateFields()
+      const reportName = 'performance-po-report'
+      setLoading(true)
+      await downloadGenericReport(requestActions)({
+        fileName: `${reportName}-${moment().format()}.xls`,
         type: 'EXCEL',
         data: {
-          requestedDate: dataForm.requestedDate,
-          salespersonCode: dataForm.salespersonCode,
-        },
-      });
-      message.success('Report generated successfully.');
-    } catch (error) {
-      console.log(error);
-      message.error('Failed to generated report.');
-    } finally {
-      setLoading(false);
+          reportName: reportName,
+          reportPath: getUrlReporting('sale/dsd-reports'),
+          data: [
+            { key: 'startDate', value: dataForm.requestedDate?.[0], type: 'dateTime' },
+            { key: 'endDate', value: dataForm.requestedDate?.[1], type: 'dateTime' },
+            {key: 'salespersonCode', value: dataForm.salespersonCode?.join(',')}
+          ]
+        }
+      }).then(() => {
+        setLoading(false)
+      })
+    } catch (error: any) {
+      message.error(error.message || "Failed to generate report.")
+      setLoading(false)
     }
-  };
+  }
+
   return (
     <>
       <FormModalComp
@@ -75,18 +75,7 @@ export default (props: Props) => {
               layout="horizontal"
               {...layout}
               form={form}
-              //   onValuesChange={onFormvalueChanged}
             >
-              {/* <ProFormRadio.Group
-                label="Report Type"
-                name="reportType"
-                rules={[{ required: true }]}
-                initialValue={selectedReportType}
-                options={[
-                  { value: 'sales_invoice', label: 'Sales Invoice' },
-                  { value: 'sales_items', label: 'Sold Items' },
-                ]}
-              /> */}
               <ProFormDateRangePicker
                 rules={[{ required: true }]}
                 label="Requested Date Start-End"

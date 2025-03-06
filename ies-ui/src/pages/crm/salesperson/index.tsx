@@ -1,15 +1,9 @@
 import { simpleRequestActions } from "@/services/model"
-import { SalespersonAPI } from "./service"
+import { SalespersonOrgAPI } from "./service"
 import React, { useEffect, useState } from "react";
-import OrgChart from "./OrgChart";
-import { Avatar, Button, Card, Space, Tree, Typography } from "antd";
-import { DataNode } from "antd/es/tree";
-import { DownOutlined, PlusOutlined, UserOutlined } from "@ant-design/icons";
+import { Button, Card, Space, Spin, Tooltip } from "antd";
 import SalePersonTree from "./SalePersonTree";
-import Search from "antd/es/input/Search";
-import App from "./VerticalTree";
-import DemoOrganizationChart from "./OrganizationChart";
-import SalespersonHeirarchyForm from "./component/SalespersonHeirarchyForm";
+import { SyncOutlined, PlusOutlined } from "@ant-design/icons";
 
 interface Employee {
     id: number;
@@ -69,34 +63,17 @@ const mapDataToEmployeeHierarchy = (data: any[]): Employee[] => {
     return rootEmployees;
 };
 
-
-
-
-
-interface TreeNode {
-    key: string | number;
-    title: string;
-    children?: TreeNode[];
-}
-
-
 export default () => {
     const requestActions = simpleRequestActions();
     const [SaleOrgDataList, setSlaeOrgDataList] = useState<SalespersonOrg[]>();
     const [employees, setEmployees] = useState<Employee[]>([]);
-    const [treeData, setTreeData] = useState<CustomDataNode[]>([]);
-    const [direction, setDirection] = useState<{ dir: "vertical" | "horizontal" }>({ dir: "vertical" });
     const [salespersonState, setSalesperonState] = useState<{ visible?: { name: "MODAL", payloads?: SalespersonOrg } }>();
-   
     const loadData = async () => {
-        const salesOrg = await SalespersonAPI(requestActions).salesOrgList({});
-   
+        const salesOrg = await SalespersonOrgAPI(requestActions).salesOrgList({});
         const employeeHierarchy = mapDataToEmployeeHierarchy(salesOrg);
         setEmployees(employeeHierarchy);
-
         setSlaeOrgDataList(salesOrg);
     }
-
 
     useEffect(() => {
         loadData()
@@ -108,24 +85,21 @@ export default () => {
                 title={"Salesperson Organization Unit"}
                 size="small"
                 extra={[
-                    <Button onClick={() => setSalesperonState({ visible: { name: "MODAL" } })}>Add</Button>
+                    <Space>
+                        <Tooltip title={"Sync Salesperson"}>
+                            <Button type="link" onClick={()=>SalespersonOrgAPI(requestActions).syncExecStoreProcedureSalesperson()} size="small" icon={<SyncOutlined />} />
+                        </Tooltip>
+                        <Button type="link" onClick={() => setSalesperonState({ visible: { name: "MODAL" } })} size="small" icon={<PlusOutlined />} />
+                    </Space>
                 ]}
             >
-
-                <SalePersonTree
-                    data={SaleOrgDataList}
-                />
-
-
+                <Spin spinning={requestActions.request?.loading}>
+                    <SalePersonTree
+                        data={SaleOrgDataList}
+                        onLoadData={()=>loadData()}
+                    />
+                </Spin>
             </Card>
-
-            {/* <SalespersonHeirarchyForm
-                title={"Salesperson"}
-                open={salespersonState?.visible?.name == "MODAL"}
-                modalProps={{
-                    onCancel: () => setSalesperonState({ visible: undefined })
-                }}
-            /> */}
         </>
     )
 }

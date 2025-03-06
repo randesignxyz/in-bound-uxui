@@ -96,8 +96,8 @@ export const CustomerServices = {
     }
   }),
 
-  syncCustomer:()=>execDataService0({
-    actionName:"sync-customer-auto",
+  syncExecStoreProcedureCustomer:()=>execDataService0({
+    actionName:"sync-execute-store-procedure-customer-auto",
     endpoint:"CRM",
     payload:{}
   })

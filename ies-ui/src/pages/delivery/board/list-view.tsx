@@ -448,6 +448,11 @@ export default ({
                                                     {moment(r.pickingSlip?.[0]?.createdDate).toNow()}
                                                 </ProDescriptions.Item>
                                             )}
+                                            {
+                                                r.loading.status == 'PENDING' && <ProDescriptions.Item label="Waiting time">{
+                                                    moment(r.loading.assignedDate).toNow()
+                                                }</ProDescriptions.Item>
+                                            }
 
                                             {
                                                 r.loading.status == 'LOADING_STARTED' && r.loading.loadingStarted && <ProDescriptions.Item label="Loading time">{

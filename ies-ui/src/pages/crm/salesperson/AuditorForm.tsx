@@ -3,18 +3,13 @@ import { SalespersonOrgAPI } from "./service";
 import { simpleRequestActions } from "@/services/model";
 import { useForm } from "antd/es/form/Form";
 import { useEffect } from "react";
-import { Alert, Typography } from "antd";
-
-
 interface Props extends ModalFormProps {
     data?: any;
     onSave: (data: { saleId: number; targetSaleId: number; remark?: string }) => void
 }
-
 const AuditorForm: React.FC<Props> = ({ data, onSave, ...props }) => {
     const requestAction = simpleRequestActions();
     const [form] = useForm<{ saleId: number; targetSaleId: number; remark?: string }>();
-
     useEffect(() => {
         props.open && form.resetFields();
     }, [props.open]);
@@ -55,6 +50,5 @@ const AuditorForm: React.FC<Props> = ({ data, onSave, ...props }) => {
         </>
     )
 }
-
 
 export default AuditorForm

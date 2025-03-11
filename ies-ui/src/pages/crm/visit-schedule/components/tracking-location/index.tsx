@@ -33,7 +33,7 @@ export default () => {
     //     refetchInterval: 60000
     // })
     const [selectedItem, setSelectedItem] = useState<VisitScheduleItem>()
-    const [criteria, setCriteria] = useState<{ status?: string, dates?: string[], searchValue?: string }>({ status: "PENDING", dates: [dayjs().toISOString(), dayjs().toISOString()] })
+    const [criteria, setCriteria] = useState<{ status?: string, dates?: string[], searchValue?: string }>({ status: "COMPLETED", dates: [dayjs().toISOString(), dayjs().toISOString()] })
     const [onSearch, setOnSearch] = useState('')
     const [scheduleData, setScheduleData] = useState<VisitScheduleDetail>();
     const [allData, setAllData] = useState<VisitScheduleItem[]>([]);
@@ -49,7 +49,7 @@ export default () => {
             // sort: filter?.sort,
         }, {
             page: filter?.pagination?.current,
-            pageSize: 20
+            pageSize: 200
         }), {
         refetchOnWindowFocus: false,
         enabled: !!criteria,
@@ -105,7 +105,7 @@ console.log(criteria)
                 try {
                     let allFetchedData = [...data.items]; // Start with the initial fetched data
                     const totalItems = data.total || 0;
-                    const pageSize = filter?.pagination?.pageSize || 20;
+                    const pageSize = filter?.pagination?.pageSize || 200;
                     const totalPages = Math.ceil(totalItems / pageSize);
                     let currentPage = filter?.pagination?.current || 1;
 

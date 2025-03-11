@@ -54,7 +54,7 @@ export default ({ data, onZoom, onView, onSelectDate, onSearchSE, onFilterStatus
                 style={{
                     marginLeft: '5px',
                 }}
-                defaultValue="PENDING"
+                defaultValue="COMPLETED"
                 onChange={(e) => {
                     onFilterStatus(e.target.value);
                 }}

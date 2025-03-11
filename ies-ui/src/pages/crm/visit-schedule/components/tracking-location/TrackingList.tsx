@@ -49,13 +49,27 @@ export default ({ data, onZoom, onView, onSelectDate, onSearchSE, onFilterStatus
                     }
                 }}
             />
+           
+            <Radio.Group
+                style={{
+                    marginLeft: '5px',
+                }}
+                defaultValue="PENDING"
+                onChange={(e) => {
+                    onFilterStatus(e.target.value);
+                }}
+            >
+                <Radio.Button value="ALL">All</Radio.Button>
+                <Radio.Button value="PENDING">Pending</Radio.Button>
+                <Radio.Button value="COMPLETED">Completed</Radio.Button>
+            </Radio.Group>
             <ProFormSelect
                 style={{
-                    overflowY: 'auto',
-                    height: '32px',
-                    lineHeight: '32px', // Ensures the text inside aligns vertically
+                    // overflowY: 'auto',
+                    // height: '32px',
+                    // lineHeight: '32px',
                     padding: 0, // Removes extra padding
-                    marginTop: 17,
+                    marginTop: 12,
                     width: 300
                 }}
                 request={async () => {
@@ -75,21 +89,8 @@ export default ({ data, onZoom, onView, onSelectDate, onSearchSE, onFilterStatus
                     },
                 }}
             />
-            <Radio.Group
-                style={{
-                    marginLeft: '5px',
-                }}
-                defaultValue="PENDING"
-                onChange={(e) => {
-                    onFilterStatus(e.target.value);
-                }}
-            >
-                <Radio.Button value="ALL">All</Radio.Button>
-                <Radio.Button value="PENDING">Pending</Radio.Button>
-                <Radio.Button value="COMPLETED">Completed</Radio.Button>
-            </Radio.Group>
         </div>
-
+        
 
         {/* <Input.Search
                 onChange={(e) => onSearchSE(e.target.value)}

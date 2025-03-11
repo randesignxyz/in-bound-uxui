@@ -33,7 +33,7 @@ export default () => {
     //     refetchInterval: 60000
     // })
     const [selectedItem, setSelectedItem] = useState<VisitScheduleItem>()
-    const [criteria, setCriteria] = useState<{ status?: string, dates?: string[], searchValue?: string }>({ status: "PENDING", dates: [dayjs().startOf("day").format("YYYY-MM-DD"), dayjs().startOf("day").format("YYYY-MM-DD")] })
+    const [criteria, setCriteria] = useState<{ status?: string, dates?: string[], searchValue?: string }>({ status: "PENDING", dates: [dayjs().toISOString(), dayjs().toISOString()] })
     const [onSearch, setOnSearch] = useState('')
     const [scheduleData, setScheduleData] = useState<VisitScheduleDetail>();
     const [allData, setAllData] = useState<VisitScheduleItem[]>([]);
@@ -55,7 +55,7 @@ export default () => {
         enabled: !!criteria,
     }
     );
-
+console.log(criteria)
     const loadDetail = async (id: number) => {
         try {
             setLoading(true)
@@ -172,7 +172,7 @@ export default () => {
                 onSelectDate={(selectedDates: dayjs.Dayjs[]) => {
                     setCriteria((prev) => ({
                         ...prev,
-                        dates: selectedDates.map((date) => date.format("YYYY-MM-DD")),
+                        dates: selectedDates.map((date) => date.toISOString()),
                     }));
                 }}
                 // onSearchSE={(e) => (setOnSearch(e), setCriteria((prev) => ({ ...prev, searchValue: e })))}

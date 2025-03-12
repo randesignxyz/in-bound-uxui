@@ -53,7 +53,8 @@ export default ({ trigger }: { trigger?: JSX.Element}) => {
                         {key:'dateTo', value: dataForm.requestedDate?.[1], type:'dateTime'},                       
                         ...(dataForm.status || []).map(it => ({ key: 'status', value: it })),                
                         ...(dataForm.warehouseFrom || []).map(it => ({ key: 'warehouseFrom', value: it })),
-                        {key:'delivery', value: dataForm.delivery||false}
+                        {key:'delivery', value: dataForm.delivery||false},
+                        {key:'startWithRole', value: 'ROLE_WHM_NCM_REQUEST_DEPT'}
                     ]
                 }
             }).then(()=>{

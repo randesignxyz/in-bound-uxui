@@ -293,8 +293,7 @@ export default ({
               comment: comment,
               payload: dataForm,
             };
-            try {
-              console.log('NCM Request: ', data)
+            try {             
               const rs = await services.request(data);
               message.success(
                 `Your request is submitted. Please track the request with form no ${rs.formNo} `,

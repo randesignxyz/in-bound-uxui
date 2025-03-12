@@ -863,6 +863,7 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
           addressInfo,
         ) => {
           if (addressInfo !== undefined) {
+            setModal({ visible: undefined });
             await services.changeDistributor({
               id: purchaseOrderId,
               distributorCode: distributorCode,

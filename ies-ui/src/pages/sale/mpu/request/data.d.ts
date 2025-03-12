@@ -75,6 +75,7 @@ interface DistributorCreate {
 }
 
 interface PurchaseRequestItemCreate {
+  id?: number;
   itemId: number;
   stockCategoryId: number;
   quantity: number;

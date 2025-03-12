@@ -14,7 +14,7 @@ import { ActionType } from '@ant-design/pro-table';
 import { Model } from "../../model";
 import ProbationRequestModal from "../../ProbationRequestModal";
 import { ProbationEvaluationRequestFormNames } from "../../process-flow";
-import { history, useModel } from 'umi';
+import { history, useAccess, useModel } from 'umi';
 import ProbationEvaluationQuickView from "../quick-view";
 
 interface Props {
@@ -32,6 +32,7 @@ interface LightFilterProp {
 }
 
 const ProbationList: React.FC<Props> = ({ onAdd, forceRefresh, onDetail }) => {
+    const access = useAccess()
     const { modals } = Model();
     const actionRef = useRef<ActionType>();
     const cacheList = useModel('dataList');
@@ -183,6 +184,7 @@ const ProbationList: React.FC<Props> = ({ onAdd, forceRefresh, onDetail }) => {
             cache
             scrollX
             addButtonLabel={'New Probation Evaluation Form'}
+            displayOnly={!access.canCreateHrProbationEvaluationRequest}
             tableProps={{
                 actionRef: actionRef,
                 options: { reload: true, density: false, fullScreen: false, setting: false }

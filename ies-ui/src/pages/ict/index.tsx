@@ -41,7 +41,7 @@ export default () => {
             menu: {
                 items: [
                     {
-                        label: <ItRequestRpt trigger={<a>Incident Report</a>} />,
+                        label: <ItRequestRpt trigger={<a>IT Request Report</a>} />,
                         key: 'it-request-report',
                         icon: <BarChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
                         disabled: !access.canAccessITRequestReport

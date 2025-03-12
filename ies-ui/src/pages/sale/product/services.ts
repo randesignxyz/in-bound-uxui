@@ -17,10 +17,17 @@ const ProductItemActions = {
     },
   }),
 
-  //   listProductItem: findPagingService<{ searchText?: string }, ProductItem>(
-  //     SaleService('list-product-item'),
-  //     actions,
-  //   ),
+  listProducts: (): ServiceApiType<any> => ({
+    type: 'LIST_QUERY',
+    endpoint: 'SALE',
+    actionName: 'list-product-item-by-type',
+    payload: {},
+  }),
+
+  // listProductItem: findPagingService<{ searchText?: string }, ProductItem>(
+  //   SaleService('list-product-item'),
+  //   actions,
+  // ),
 
   // listProducts: (
   //   params: TableViewSearchParams<ProductAdvanceSearchParams>,
@@ -74,6 +81,11 @@ const ProductItemActions = {
 
 export const ProductItemsServiceAPI = (requestActions: RequestActions) => {
   return {
+    listProducts: () =>
+      singleRequest<ProductItem>(ProductItemActions.listProducts())(requestActions) as Promise<
+        ProductItem[]
+      >,
+
     pageProducts: (params: TableViewSearchParams<null>) =>
       singleRequest<ProductItem>(ProductItemActions.pageProducts(params))(
         requestActions,

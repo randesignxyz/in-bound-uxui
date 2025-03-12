@@ -34,7 +34,8 @@ export default ({ trigger }: { trigger?: JSX.Element}) => {
     }, []);
     const reportList = [
         {name:'NCM Request Summary', value: 'whm_ncm_request_summary_report'},
-        {name:'NCM Request Detail', value: 'whm_ncm_request_detail_report'}
+        {name:'NCM Request Detail', value: 'whm_ncm_request_detail_report'},
+        {name:'NCM Request Summary By Item', value: 'whm_ncm_request_summary_by_item_report'}
     ]
     const handleMenuClick: MenuProps['onClick'] = async (e) => {
         try {           

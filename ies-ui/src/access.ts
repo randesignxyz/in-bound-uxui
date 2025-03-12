@@ -612,7 +612,9 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           'ROLE_HR_APPRAISAL_REQUEST_MANAGEMENT',
           'ROLE_HR_APPRAISAL_REQUEST_SM_EXECTIVE',
           'ROLE_HR_PROBATION_EVALUATION_SUBMIT',
-          'ROLE_HR_PROBATION_EVALUATION_SUPPORT'
+          'ROLE_HR_PROBATION_EVALUATION_SUPPORT',
+          'ROLE_HR_PROBATION_EVALUATION_VIEW',
+          'ROLE_HR_PROBATION_EVALUATION_REQUESTER',
         ].some((it) => it === item),
       ) || false,
     canAccessHrEmployeeMenuItem:
@@ -849,7 +851,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       ) || false,
     canAccessITRequestReport:
       currentUser?.authorities.some((item) =>
-        ['ROLE_ADMIN', 'ROLE_ICT_WF_IT_REQUEST_SUPPORT'].some((it) => it === item),
+        ['ROLE_ADMIN', 'ROLE_ICT_WF_IT_REQUEST_REPORT'].some((it) => it === item),
       ) || false,
     canAccessFMANewStaffMenuITem:
       currentUser?.authorities.some((item) =>
@@ -910,7 +912,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       ) || false,
     canAccessProbationEvaluation:
       currentUser?.authorities.some((item) =>
-        ['ROLE_ADMIN', 'ROLE_HR_PROBATION_EVALUATION_SUBMIT', 'ROLE_HR_PROBATION_EVALUATION_SUPPORT'].some(
+        ['ROLE_ADMIN','ROLE_HR_PROBATION_EVALUATION_REQUESTER', 'ROLE_HR_PROBATION_EVALUATION_SUBMIT', 'ROLE_HR_PROBATION_EVALUATION_SUPPORT','ROLE_HR_PROBATION_EVALUATION_VIEW'].some(
           (it) => it === item,
         ),
       ) || false,

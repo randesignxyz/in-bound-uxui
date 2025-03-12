@@ -3,7 +3,7 @@ import { formatDate } from '@/pages/utils';
 import { AddressInfo } from '@/services/crm/data';
 import { CrmService, CrmServiceAPI } from '@/services/crm/services';
 import { simpleRequestActions } from '@/services/model';
-import { CustomerLookup, SalesTeamWorkLess } from '@/services/sale/data';
+import { CustomerLookup, ProductItem, SalesTeamWorkLess } from '@/services/sale/data';
 import { SaleService } from '@/services/sale/services';
 import { AimOutlined, DeleteOutlined } from '@ant-design/icons';
 import {
@@ -40,12 +40,15 @@ interface Amount {
 }
 const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
   const mainRequestActions = simpleRequestActions();
+  const productService = ProductItemsServiceAPI(mainRequestActions);
   const [form] = useForm<PurchaseOrderCreate>();
   const editableFormRef = useRef<EditableFormInstance>();
   const [dataSourceItems, setDataSourceItems] = useState<PurchaseOrderItem[]>();
   const actionRef = useRef<ActionType>();
   const [addressList, setAddressList] = useState<AddressInfo[]>();
   const [selectedAddress, setSelectedAddress] = useState<AddressInfo>();
+  const [productItems, setProductItems] = useState<ProductItem[]>();
+
   const [amount, setAmount] = useState<Amount>({
     discountAmount: 0,
     grantAmount: 0,
@@ -115,11 +118,10 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
     if (id) {
       loadData();
     }
-    // (async () => {
-    //   console.log('Hello222');
-    //   const data = await services.salespersonList({ searchValue: undefined });
-    //   setsalespersons(data.filter((t) => t.isRequester === true));
-    // })();
+    (async () => {
+      const data = await productService.listProducts();
+      setProductItems(data);
+    })();
   }, [id]);
 
   useEffect(() => {
@@ -471,6 +473,16 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
               },
             },
             {
+              title: 'UOM',
+              initialValue: '',
+              ellipsis: true,
+              readonly: true,
+              renderFormItem: (_, config) => {
+                const product = productItems?.find((e) => e.id === config.record?.itemId);
+                return product === undefined ? '' : product!.uom;
+              },
+            },
+            {
               title: 'Quantity',
               dataIndex: 'quantity',
               valueType: 'digit',
@@ -487,8 +499,9 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
                 ],
               },
             },
+
             {
-              title: 'Unit Price',
+              title: 'Unit Price (USD)',
               dataIndex: 'pricing',
               valueType: 'digit',
               initialValue: 0,
@@ -502,16 +515,26 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
               },
             },
             {
-              title: 'Amount',
+              title: 'Unit Price (KHR)',
+              initialValue: 0,
+              ellipsis: true,
+              readonly: true,
+              align: 'right',
+              renderFormItem: (_, config) => {
+                const pricing = config.record?.pricing ?? 0.0;
+                return `៛ ${numeral(pricing * 4000.0).format('0,000')}`;
+              },
+            },
+            {
+              title: 'Amount (USD)',
               dataIndex: 'total',
-              // valueType: 'money',
+              align: 'right',
               initialValue: 0,
               ellipsis: true,
               readonly: true,
               renderFormItem: (_, r) => {
                 const total = r.record ? r.record?.pricing * r.record?.quantity : 0;
                 r.value = total;
-                // return <>{formatter.format(total)}</>;
                 return `$ ${numeral(total).format('0,000.000')}`;
               },
               formItemProps: {

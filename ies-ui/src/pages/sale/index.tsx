@@ -107,7 +107,7 @@ export default () => {
       link: `${SalePaths.suggestion}/list`,
       icon: plannerIcon,
       // visible: access.canAcessStockControlMenuItem || access.canAccessSettlementMenuItem,
-      visible: access.canAccessSaleTaskList,
+      visible: access.canAcessStockControlMenuItem,
     },
     {
       id: 'store',

@@ -3,7 +3,7 @@ import { downloadGenericReport, downloadReport } from "@/services/apiGateway";
 import { simpleRequestActions } from "@/services/model";
 import { ModalForm, ProFormDateRangePicker, ProFormSelect } from "@ant-design/pro-components"
 import { useSafeState } from "ahooks";
-import { message } from "antd";
+import { Flex, message } from "antd";
 import { useForm } from "antd/lib/form/Form";
 import moment from "moment";
 import { Moment } from "moment";
@@ -50,7 +50,7 @@ export default ({ trigger }: { trigger?: JSX.Element }) => {
     }
   }, [])
 
-  return <ModalForm
+  return <ModalForm width={500}
     trigger={trigger}
     form={form}
     title="IT Request Report"
@@ -58,9 +58,9 @@ export default ({ trigger }: { trigger?: JSX.Element }) => {
       await onDowloadReportHandler()
     }}
   >
-    <ProFormDateRangePicker width={'lg'} label="Request Date" name={'requestDates'} rules={[{ required: true }]} />
-    <ProFormSelect mode="multiple"  label="Status" name={'status'} showSearch  allowClear
-                    options={empStatusDS?.map((it) => ({ label: it.name, value: it.value }))}
-                />  
+    <Flex vertical gap={5}>      
+      <ProFormDateRangePicker width={'lg'} label="Request Date" name={'requestDates'} rules={[{ required: true }]} />
+      <ProFormSelect width={'lg'} mode="multiple"  label="Status" name={'status'} showSearch  allowClear options={empStatusDS?.map((it) => ({ label: it.name, value: it.value }))} />  
+    </Flex>
   </ModalForm>
 }

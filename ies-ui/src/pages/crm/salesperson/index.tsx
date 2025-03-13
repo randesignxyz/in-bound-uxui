@@ -5,15 +5,6 @@ import { Button, Card, Space, Spin, Tooltip } from "antd";
 import SalePersonTree from "./SalePersonTree";
 import { SyncOutlined } from "@ant-design/icons";
 
-interface Employee {
-    id: number;
-    name: string;
-    title: string;
-    image?: string; // URL or path to employee image
-    path?: string;
-    subordinates?: Employee[];
-}
-
 export default () => {
     const requestActions = simpleRequestActions();
     const [SaleOrgDataList, setSlaeOrgDataList] = useState<SalespersonOrg[]>();
@@ -21,7 +12,6 @@ export default () => {
         const salesOrg = await SalespersonOrgAPI(requestActions).salesOrgList({});
         setSlaeOrgDataList(salesOrg);
     }
-
     useEffect(() => {
         loadData()
     }, []);
@@ -34,7 +24,7 @@ export default () => {
                 extra={[
                     <Space>
                         <Tooltip title={"Sync Salesperson"}>
-                            <Button type="link" onClick={()=>SalespersonOrgAPI(requestActions).syncExecStoreProcedureSalesperson()} size="small" icon={<SyncOutlined />} />
+                            <Button type="link" onClick={()=>SalespersonOrgAPI(requestActions).syncExecStoreProcedureSalesperson()} size="small" icon={<SyncOutlined />} >Sync Salesperson</Button>
                         </Tooltip>
                         {/* <Button type="link" onClick={() => setSalesperonState({ visible: { name: "MODAL" } })} size="small" icon={<PlusOutlined />} /> */}
                     </Space>

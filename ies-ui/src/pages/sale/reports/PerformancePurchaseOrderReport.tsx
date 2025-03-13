@@ -1,6 +1,6 @@
 import FormModalComp, { FormModalProps } from '@/components/FormModal';
 import { getUrlReporting } from '@/pages/ReportUrl';
-import { downloadGenericReport, downloadReport } from '@/services/apiGateway';
+import { downloadGenericReport } from '@/services/apiGateway';
 import { simpleRequestActions } from '@/services/model';
 import { SalesTeamWorkLess } from '@/services/sale/data';
 import { SaleServiceAPI } from '@/services/sale/services';

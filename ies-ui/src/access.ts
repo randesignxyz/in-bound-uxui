@@ -350,6 +350,20 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
         ),
       ) || false,
 
+    canAccessIssuedMultiTicket:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_DELIVERY_ISSUED_MULTI_TICKET'].some(
+          (it) => it === item,
+        ),
+      ) || false,
+    canAccessEnableSideDoor:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_DELIVERY_ENALE_SIDE_DOOR'].some(
+          (it) => it === item,
+        ),
+      ) || false,
+
+
 
 
     /**** Prod */
@@ -533,13 +547,13 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           'ROLE_FLEET_PRO_PR_REQUESTER'
         ].some((it) => it === item),
       ) || false,
-      canAccessFleetPurchaseRequisitionMenuItem:
+    canAccessFleetPurchaseRequisitionMenuItem:
       currentUser?.authorities.some((item) =>
         [
           'ROLE_FLEET_PRO_PR_REQUESTER',
           'ROLE_ADMIN'
         ].some((it) => it === item),
-      ) || false,  
+      ) || false,
 
     canAccessProSettingMenuItem: currentUser?.authorities.some((item) =>
       [

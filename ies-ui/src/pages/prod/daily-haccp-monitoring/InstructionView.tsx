@@ -95,6 +95,11 @@ export default () => {
                             key: '3',
                             children: <InstructionListTab group_line='3' refresh={onRefresh} onRefresh={(a)=>{a==true?setOnRefresh(true):setOnRefresh(false)}}/>,
                         },
+                        {
+                            label: 'Line 7 and 8',
+                            key: '4',
+                            children: <InstructionListTab group_line='4' refresh={onRefresh} onRefresh={(a)=>{a==true?setOnRefresh(true):setOnRefresh(false)}}/>,
+                        },
                     ]}
                 />
             </Card>

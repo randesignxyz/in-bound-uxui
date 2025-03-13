@@ -46,6 +46,10 @@ export default ({ onSave,isEdit,defaultVal, ...props }: Props) => {
                                         value: '3',
                                         label: 'Line Barrel',
                                     },
+                                    {
+                                        value: '4',
+                                        label: 'Line 7 and 8',
+                                    },
                                 ]}
                                 name="group_line"
                                 label="For Line"

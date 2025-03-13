@@ -5,7 +5,8 @@ import DSDLeadReport from './DSDLeadReport';
 import DSDSalesInvoiceReport from './DSDSalesInvoiceReport';
 import PurchaseOrderReport from './PurchaseOrderReport';
 import SaleOrderReport from './SaleOrderReport';
-import SalesPerformanceOverviewReport from './SalesPerformanceOverviewReport';
+// import SalesPerformanceOverviewReport from './SalesPerformanceOverviewReport';
+import PerformancePurchaseOrderReport from './PerformancePurchaseOrderReport';
 import VisitReports from './VisitReports';
 import { DSDReportAPI } from './service';
 
@@ -70,7 +71,7 @@ const Reports: React.FC<Props> = ({ reportName, onClose }) => {
         open={reportName === 'purchase-order-reports'}
         onCancel={onClose}
       />
-      <SalesPerformanceOverviewReport
+      <PerformancePurchaseOrderReport
         salespersons={salesperson}
         title="Performance P.O Reports"
         width="700px"

@@ -21,7 +21,12 @@ const PurchaseOrderAction = {
     param: TableViewSearchParams<AdvanceSearchParam>,
   ): ServiceApiType<{
     searchValue?: string;
-    advanceSearch: { status?: string; salespersonId?: string; orderedDate?: moment.Moment[] };
+    advanceSearch: {
+      status?: string;
+      salespersonId?: string;
+      orderedDate?: moment.Moment[];
+      distributorType?: string;
+    };
   }> => ({
     actionName: 'page-purchase-order',
     endpoint: 'SALE',
@@ -29,6 +34,7 @@ const PurchaseOrderAction = {
     payload: {
       ...param.criteria,
       advanceSearch: {
+        distributorType: param.criteria?.advanceSearch?.distributorType,
         status: param.criteria?.advanceSearch?.status,
         salespersonId: param.criteria?.advanceSearch?.salespersonId,
         orderedDate: param.criteria?.advanceSearch?.dates && [

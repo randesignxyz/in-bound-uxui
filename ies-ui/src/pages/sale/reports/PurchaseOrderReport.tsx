@@ -94,6 +94,15 @@ export default (props: Props) => {
               />
               <ProFormSelect
                 mode="multiple"
+                label="Status"
+                name="status"
+                width="md"
+                showSearch
+                allowClear
+                options={['Pending', 'Loaded', 'Paid', 'Rejected']}
+              />
+              <ProFormSelect
+                mode="multiple"
                 label="Salespersons"
                 name="salespersonCode"
                 width="md"

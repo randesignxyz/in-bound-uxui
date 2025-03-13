@@ -6,14 +6,16 @@ import {
   CloseCircleOutlined,
   DeleteFilled,
   DollarOutlined,
+  InfoCircleOutlined,
   PlusOutlined,
   SyncOutlined,
 } from '@ant-design/icons';
 import { ActionType } from '@ant-design/pro-components';
 import { useQuery } from '@umijs/max';
-import { Button, Modal, Tag } from 'antd';
+import { Button, Modal, Space, Tag, Tooltip } from 'antd';
 import numeral from 'numeral';
 import { useRef, useState } from 'react';
+import RemarkModalForm from '../../component/RemarkModal';
 import AdvanceSearch from '../components/AdvanceSearch';
 import MpuPoDetail from './MpuPODetail';
 import MpuPoEntryForm from './MpuPOEntryForm';
@@ -32,6 +34,11 @@ const POMainPage: React.FC = () => {
   }>({
     isVisibled: false,
   });
+
+  const [remarkModal, setRemarkModal] = useState<{ isVisibled: boolean; data?: PurchaseOrderDTO }>({
+    isVisibled: false,
+  });
+
   // const [actionStatusState, setActionStatusState] = useState<{
   //   visible?: {
   //     type: 'open';
@@ -50,14 +57,14 @@ const POMainPage: React.FC = () => {
     },
   );
 
-  const rejectedAction = (id: number) => {
+  const rejectedAction = (id: number, remark: string) => {
     Modal.confirm({
-      title: 'Reject Purchase',
+      title: 'Reject Purchase Order',
       content: 'are you sure?',
       onOk: async () => {
         await services.rejected({
           id: id,
-          remark: 'Something went wrong',
+          remark: remark,
         });
         actionRef.current?.reload?.();
         refetch();
@@ -170,6 +177,7 @@ const POMainPage: React.FC = () => {
                   status: params?.status,
                   dates: advanceSearch.value?.dates,
                   salespersonId: advanceSearch.value?.salespersonId,
+                  distributorType: advanceSearch.value?.distributorType,
                 },
               },
               pagination: { ...page },
@@ -215,31 +223,38 @@ const POMainPage: React.FC = () => {
                 title: 'Status',
                 dataIndex: 'status',
                 render: (_, r) => (
-                  <Tag
-                    icon={
-                      r.status === 'Pending' ? (
-                        <SyncOutlined spin />
-                      ) : r.status === 'Paid' ? (
-                        <DollarOutlined />
-                      ) : r.status === 'Rejected' ? (
-                        <CloseCircleOutlined />
-                      ) : (
-                        <CheckCircleOutlined />
-                      )
-                    }
-                    bordered={false}
-                    color={
-                      r.status === 'Pending'
-                        ? 'processing'
-                        : r.status === 'Paid'
-                        ? 'default'
-                        : r.status === 'Rejected'
-                        ? 'error'
-                        : 'success'
-                    }
-                  >
-                    {r.status}
-                  </Tag>
+                  <Space>
+                    <Tag
+                      icon={
+                        r.status === 'Pending' ? (
+                          <SyncOutlined spin />
+                        ) : r.status === 'Paid' ? (
+                          <DollarOutlined />
+                        ) : r.status === 'Rejected' ? (
+                          <CloseCircleOutlined />
+                        ) : (
+                          <CheckCircleOutlined />
+                        )
+                      }
+                      bordered={false}
+                      color={
+                        r.status === 'Pending'
+                          ? 'processing'
+                          : r.status === 'Paid'
+                          ? 'default'
+                          : r.status === 'Rejected'
+                          ? 'error'
+                          : 'success'
+                      }
+                    >
+                      {r.status}
+                    </Tag>
+                    {r.status === 'Rejected' && (
+                      <Tooltip placement="top" title={r.remark ?? 'N/A'}>
+                        <InfoCircleOutlined style={{ color: '#EB5E5A' }} />
+                      </Tooltip>
+                    )}
+                  </Space>
                 ),
               },
               {
@@ -272,7 +287,7 @@ const POMainPage: React.FC = () => {
                     <Button
                       disabled={r.status !== 'Pending'}
                       type="link"
-                      onClick={() => rejectedAction(r.id)}
+                      onClick={() => setRemarkModal({ isVisibled: true, data: r })}
                       danger
                       icon={<DeleteFilled />}
                     />
@@ -295,6 +310,31 @@ const POMainPage: React.FC = () => {
           },
         }}
       />
+
+      <RemarkModalForm
+        showAlertInfo
+        open={remarkModal.isVisibled}
+        status="reject"
+        onCancel={() => setRemarkModal({ isVisibled: false, data: undefined })}
+        onSave={(data) => {
+          if (remarkModal.data !== undefined) {
+            rejectedAction(remarkModal.data.id, data.remark);
+            setRemarkModal({ isVisibled: false, data: undefined });
+          }
+        }}
+      />
+
+      {/* <RemarkModal
+        title="Exclude Order"
+        width="500px"
+        open={remarkModal.isVisibled}
+        onCancel={() => setRemarkModal({ isVisibled: false, data: undefined })}
+        id={remarkModal.data?.id}
+        onSave={(id, remarks) => {
+          rejectedAction(id, remarks);
+          setRemarkModal({ isVisibled: false, data: undefined });
+        }}
+      /> */}
       <AdvanceSearch
         width={500}
         title="Advance Search"
@@ -316,7 +356,7 @@ const POMainPage: React.FC = () => {
           //     },
           //   },
           // }));
-
+          console.log(data);
           setFilter({
             criteria: {
               searchValue: filter.criteria?.searchValue,
@@ -324,6 +364,7 @@ const POMainPage: React.FC = () => {
                 ...advanceSearch.value,
                 salespersonId: data.salespersonId,
                 dates: data.dates,
+                distributorType: data.distributorType,
               },
               //advanceSearch
             },
@@ -337,6 +378,7 @@ const POMainPage: React.FC = () => {
               advanceSearch: {
                 salespersonId: undefined,
                 dates: undefined,
+                distributorType: 'all',
               },
             },
           }));

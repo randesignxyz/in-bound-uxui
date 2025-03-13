@@ -181,7 +181,7 @@ export default () => {
             case 'dsd-reports':
               setReport('dsd-reports');
               break;
-            case 'visit-reports':
+            case 'visit-reports': 
               setReport('visit-report');
               break;
             case 'purchase-order-reports':

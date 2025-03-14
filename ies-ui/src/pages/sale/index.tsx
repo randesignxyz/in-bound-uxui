@@ -103,25 +103,25 @@ export default () => {
     {
       id: 'suggestion',
       name: 'Task List',
-      description: 'Task list of stock control',
+      description: 'All suggestions from Salesperson.',
       link: `${SalePaths.suggestion}/list`,
       icon: plannerIcon,
       // visible: access.canAcessStockControlMenuItem || access.canAccessSettlementMenuItem,
-      visible: access.canAccessSaleTaskList,
+      visible: access.canAcessStockControlMenuItem,
     },
     {
       id: 'store',
       name: 'Store',
-      description: '',
+      description: 'Store for Salespersons',
       link: `${SalePaths.store}/list`,
       icon: storeIcon,
       // visible: access.canAccessAllMenuDSD || access.canAccessTabWarehouse,
-      visible: access.canAccessSaleStore,
+      visible: access.canAcessStockControlMenuItem,
     },
     {
       id: 'stock',
       name: 'Stock Control',
-      description: 'Van Sale',
+      description: 'Daily Stock Control',
       link: `${SalePaths.stock}/list`,
       icon: stockIcon,
       visible: access.canAcessStockControlMenuItem,
@@ -129,7 +129,7 @@ export default () => {
     {
       id: 'sales-visit',
       name: 'Visit',
-      description: 'CnD Visit',
+      description: 'Visit without plan.',
       link: `${SalePaths.visit}/list`,
       icon: scheduleIcon,
       // visible: access.canAccessAllMenuDSD,
@@ -148,7 +148,7 @@ export default () => {
     {
       id: 'lead',
       name: 'Lead',
-      description: 'CnD Customers',
+      description: 'Outlet Information',
       link: `${SalePaths.lead}/list`,
       //overlay: leadReportMenu,
       icon: userIcon,
@@ -166,9 +166,9 @@ export default () => {
     {
       id: 'dsdReport',
       name: 'Reports',
-      description: 'All Reports in CnD.',
+      description: 'All Reports',
       icon: reportIcon,
-      visible: access.canAccessSaleReport,
+      visible: access.canAccessSaleReport || access.canAccessSaleDailyReport,
       menu: {
         onClick: (info) => {
           switch (info.key) {
@@ -181,15 +181,15 @@ export default () => {
             case 'dsd-reports':
               setReport('dsd-reports');
               break;
-            case 'visit-reports': 
+            case 'visit-reports':
               setReport('visit-report');
               break;
             case 'purchase-order-reports':
               setReport('purchase-order-reports');
               break;
             case 'performance-po-report':
-                setReport('performance-po-report');
-                break;
+              setReport('performance-po-report');
+              break;
             default:
               message.error('Something went wrong.');
           }
@@ -221,26 +221,53 @@ export default () => {
     {
       id: 'item-sales-line-price',
       name: 'Pricing',
-      description: 'Setting Pricing for CnD',
+      description: 'Pricing for Sales Invoice',
       icon: pricingIcon,
       visible: access.canAccessAllMenuDSD,
       link: `${SalePaths.pricing}/list`,
     },
     {
-      id: 'settlement',
-      name: 'Settlement',
-      description: '',
-      icon: settlementIcon,
-      // visible: access.canAccessAllMenuDSD,
-      link: `${MPUPath.mpuSettlement}/list`,
+      id: 'mpu_po',
+      name: 'Purchase Order',
+      description: 'Make P.O for Stock Receive.',
+      link: `${MPUPath.mpuPurchaseOrder}/list`,
+      icon: purchaseOrderIcon,
+      visible: access.canAccessViewMpu || access.canAccessSaleDailyReport,
     },
     {
       id: 'stock-count',
       name: 'Stock Counts',
-      description: '',
+      description: 'Daily Stock Count Review',
       icon: stockCountId,
-      // visible: access.canAccessAllMenuDSD,
+      visible: access.canAccessAllMenuDSD || access.canAccessSaleDailyReport,
       link: `${MPUPath.mpuCountStock}/list`,
+    },
+    {
+      id: 'settlement',
+      name: 'Settlement',
+      description: 'Daily Settlement Review',
+      icon: settlementIcon,
+      visible:
+        access.canAccessAllMenuDSD ||
+        access.canAccessSaleDailyReport ||
+        access.canAccessSettlementMenuItem,
+      link: `${MPUPath.mpuSettlement}/list`,
+    },
+    {
+      id: 'free-of-charge',
+      name: 'Free Of Charge',
+      description: '',
+      icon: FOC,
+      visible: access.canAccessAllMenuDSD,
+      link: `${MPUPath.mpuFOC}/list`,
+    },
+    {
+      id: 'mpu_po',
+      name: 'Purchase Order',
+      description: 'Under warehouse review.',
+      link: `${MPUPath.warehousePOPortal}/list`,
+      icon: purchaseOrderIcon,
+      visible: access.canAccessTabWarehouse,
     },
   ];
 
@@ -286,7 +313,7 @@ export default () => {
     },
     {
       id: 'deliveryPlan',
-      name: 'Delviery Preview',
+      name: 'Delivery Preview',
       description: 'Delivery SO related Preview',
       link: `${SalePaths.delivery}/list`,
       icon: deliveryIcon,
@@ -301,61 +328,22 @@ export default () => {
     },
   ];
 
-  const mpuMenuItems = [
-    // {
-    //   id: 'rsm_request',
-    //   // name: 'RSM Request',
-    //   name: 'Purchase Request',
-    //   description: 'Order Items',
-    //   link: `${MPUPath.rsmRequest}/list`,
-    //   icon: agreementIcon,
-    //   visible: access.canAccessViewMpu,
-    // },
-    {
-      id: 'mpu_po',
-      name: 'Purchase Order',
-      description: 'make po for request stock',
-      link: `${MPUPath.mpuPurchaseOrder}/list`,
-      icon: purchaseOrderIcon,
-      visible: access.canAccessViewMpu,
-    },
-    {
-      id: 'free-of-charge',
-      name: 'Free Of Charge',
-      description: '',
-      icon: FOC,
-      link: `${MPUPath.mpuFOC}/list`,
-    },
-  ];
-
   return (
     <PageContainer title={false}>
       {access.canAccessSaleMenuItems && <ListMenuComp items={items} />}
       {/* <ListMenuComp items={retailerMenuItems} /> */}
+
       <Reports reportName={report} onClose={() => setReport(undefined)} />
 
       {(access.canAcessStockControlMenuItem ||
         access.canAccessSettlementMenuItem ||
-        access.canAccessARMenuItem) && (
+        access.canAccessARMenuItem ||
+        access.canAccessViewMpu) && (
         <>
           <Divider />
           <ListMenuComp items={stockMenuItems} />
         </>
       )}
-      {access.canAccessViewMpu && (
-        <>
-          <Divider plain orientation="left">
-            MMA
-          </Divider>
-          <ListMenuComp items={mpuMenuItems} />
-        </>
-      )}
-      {/* {access.canAccessRSMRequestToMPU && ( */}
-      {/* <>
-          <Divider plain orientation='left'>MMA</Divider>
-          <ListMenuComp items={purchaseOrder} />
-        </> */}
-      {/* // )} */}
     </PageContainer>
   );
 };

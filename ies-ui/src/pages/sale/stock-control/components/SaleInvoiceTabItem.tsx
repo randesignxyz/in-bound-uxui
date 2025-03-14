@@ -150,8 +150,6 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
           },
           { title: 'Code', dataIndex: 'itemCode' },
           { title: 'Description', dataIndex: 'itemName' },
-          { title: 'Quantity', dataIndex: 'quantity' },
-          { title: 'UOM', dataIndex: 'uom' },
           {
             title: 'Type',
             render: (_, r) => {
@@ -159,8 +157,10 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
               // return r.itemType;
             },
           },
+          { title: 'Quantity', dataIndex: 'quantity' },
+          { title: 'UOM', dataIndex: 'uom' },
           {
-            title: 'Sale Price',
+            title: 'Unit Price',
             align: 'right',
             render: (_, r) => {
               return `$ ${numeral(r.unitPrice).format('0,0.000')}`;
@@ -236,9 +236,10 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
             dataIndex: 'invoiceNo',
           },
           {
-            title: 'Salesperson',
+            title: 'Invoice Date',
+            //dataIndex: 'invoiceNo'
             render: (_, r) => {
-              return `${r.salesperson.salespersonCode} - ${r.salesperson.salespersonName}`;
+              return formatDate(r.invoiceDate);
             },
           },
           {
@@ -247,31 +248,6 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
               return getCustomerName(r.customer);
             },
           },
-          {
-            title: 'Total Quantity',
-            align: 'right',
-            render: (_, r) => {
-              const total = r.items.reduce((acc, it) => acc + it.quantity, 0);
-              return `${total} CASE${total > 1 ? 'S' : ''}`;
-            },
-          },
-          {
-            title: 'Invoice Date',
-            //dataIndex: 'invoiceNo'
-            render: (_, r) => {
-              return formatDate(r.invoiceDate);
-            },
-          },
-          {
-            title: 'Amount',
-            dataIndex: 'amount',
-            align: 'right',
-            valueType: 'money',
-            render: (_, r) => {
-              return `$ ${numeral(r.amount).format('0,0.000')}`;
-            },
-          },
-
           {
             title: 'Status',
             dataIndex: 'status',
@@ -289,6 +265,30 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
                   <Tag color={color}>{r.status}</Tag>
                 </span>
               );
+            },
+          },
+          {
+            title: 'Total Quantity',
+            align: 'right',
+            render: (_, r) => {
+              const total = r.items.reduce((acc, it) => acc + it.quantity, 0);
+              return `${total} CASE${total > 1 ? 'S' : ''}`;
+            },
+          },
+          {
+            title: 'Amount',
+            dataIndex: 'amount',
+            align: 'right',
+            valueType: 'money',
+            render: (_, r) => {
+              return `$ ${numeral(r.amount).format('0,0.000')}`;
+            },
+          },
+
+          {
+            title: 'Salesperson',
+            render: (_, r) => {
+              return `${r.salesperson.salespersonCode} - ${r.salesperson.salespersonName}`;
             },
           },
           {

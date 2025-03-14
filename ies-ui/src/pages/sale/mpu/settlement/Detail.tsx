@@ -1,8 +1,15 @@
 import ImagePreview from '@/components/ImagePreview';
 import { displayDateTime, formatDate } from '@/pages/utils';
+import { AddressInfo } from '@/services/crm/data';
+import { CrmServiceAPI } from '@/services/crm/services';
 import { simpleRequestActions } from '@/services/model';
-import { SaleInvoiceLess } from '@/services/sale/data';
-import { CheckCircleOutlined, CloseCircleOutlined, SyncOutlined } from '@ant-design/icons';
+import { LeadLess, SaleInvoiceLess } from '@/services/sale/data';
+import {
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  EditOutlined,
+  SyncOutlined,
+} from '@ant-design/icons';
 import { ActionType, ProDescriptions, ProTable } from '@ant-design/pro-components';
 import {
   Button,
@@ -21,8 +28,13 @@ import { max } from 'lodash';
 import numeral from 'numeral';
 import { useEffect, useRef, useState } from 'react';
 import RemarkModalForm from '../../component/RemarkModal';
-import { SettlementMethodDetailDTO } from './data';
+import { PurchaseOrderDTO } from '../purchase_order/data';
+import { PurchaseOrderDistributorDto, SettlementMethodDetailDTO } from './data';
+import DistributorModal from './DistributorModal';
 import { SettlementMethodServicAPI } from './service';
+import { getUrlReporting } from '@/pages/ReportUrl';
+import { downloadGenericReport } from '@/services/apiGateway';
+import moment from 'moment';
 
 const { Text } = Typography;
 interface Props {
@@ -42,6 +54,15 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
       carryData?: SettlementMethodDetailDTO;
     };
   }>();
+
+  const [modal, setModal] = useState<{
+    visible?: {
+      open: boolean;
+      addressList: AddressInfo[];
+      purchaseOrder?: PurchaseOrderDistributorDto;
+    };
+  }>();
+
   const loadData = async () => {
     setDataSource(await services.detail(id));
   };
@@ -50,6 +71,32 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
       loadData();
     }
   }, [id]);
+
+  const onChangedDistributor = async (purchaseOrder: PurchaseOrderDTO) => {
+    const purchaseOrderId = purchaseOrder.id;
+    const data = await CrmServiceAPI(requestActions).listAddressByCustomer({
+      id: purchaseOrderId,
+    });
+    setModal({
+      visible: {
+        open: true,
+        // id: purchaseOrderId,
+        addressList: data,
+        purchaseOrder: {
+          distributorId: purchaseOrder.distributorId,
+          distributorName: purchaseOrder.distributorName,
+          distributorCode: purchaseOrder.distributorCode,
+          distributorPhone: purchaseOrder.distributorPhone,
+          id: purchaseOrderId,
+          latitude: purchaseOrder.latitude,
+          longitude: purchaseOrder.longitude,
+          addressId: purchaseOrder.addressId,
+          address: purchaseOrder.address,
+          addressCode: purchaseOrder.addressCode,
+        },
+      },
+    });
+  };
 
   const getCustomerName = (it?: LeadLess): string => {
     const name =
@@ -62,6 +109,30 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
         : it?.lastName || '';
     return `${name} - ( ${it?.phone} )`;
   };
+
+  const onDowloadReportHandler = async (id?:number) => {
+      try {
+        // const dataForm = await form.validateFields()
+        const reportName = 'stock-request-settlement-report-form'
+        // setLoading(true)
+        await downloadGenericReport(requestActions)({
+          fileName: `${reportName}-${moment().format()}.pdf`,
+          type: 'PDF',
+          data: {
+            reportName: reportName,
+            reportPath: getUrlReporting('sale/forms'),
+            data: [
+              { key: 'stockControlId', value: id, type: 'string' },
+            ]
+          }
+        }).then(() => {
+          // setLoading(false)
+        })
+      } catch (error: any) {
+        message.error(error.message || "Failed to generate report.")
+        // setLoading(false)
+      }
+    }
 
   const expandedRowRender = (parent: SaleInvoiceLess) => {
     return parent.items.length > 0 ? (
@@ -173,6 +244,8 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                           loadData?.();
                           message.success('Your confirmation request was a success!');
                         });
+
+                      onDowloadReportHandler(dataSource.stockControlId)
                     },
                   });
                 }}
@@ -264,7 +337,7 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
           const totalItem = p.items?.reduce((p, c) => p + c.quantity, 0);
           const totalAmount = p.items?.reduce((p, c) => p + c.quantity * c.pricing, 0);
           return (
-            <Card key={p.id} size="small">
+            <Card key={p.id} size="small" title={'Purchase Order'}>
               <Collapse
                 size="small"
                 ghost
@@ -276,16 +349,18 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                         dataSource={p}
                         contentStyle={{ fontWeight: 500 }}
                         size="small"
-                        column={{ xs: 1, sm: 2, md: 3, lg: 5, xl: 5, xxl: 5 }}
                         columns={[
+                          {
+                            title: 'P.O Number',
+                            dataIndex: 'purchaseOrderCode',
+                          },
                           {
                             title: 'Distributor Name',
                             dataIndex: 'distributorCode',
-                            //span: 2,
                             render: (_, r) =>
                               [r.distributorCode, r.distributorName].filter((po) => po).join(' - '),
                           },
-                          { title: 'P.O Number', dataIndex: 'purchaseOrderCode' },
+                          { title: 'Address', dataIndex: 'addressCode' },
                           {
                             title: 'Date',
                             dataIndex: 'purchaseOrderDate',
@@ -316,6 +391,23 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                         options={false}
                         ghost
                         pagination={false}
+                        tableExtraRender={() => {
+                          if (dataSource.status === 'Pending') {
+                            return (
+                              <Flex flex={1} justify="end">
+                                <Button
+                                  type="primary"
+                                  icon={<EditOutlined />}
+                                  onClick={async () => {
+                                    await onChangedDistributor(p);
+                                  }}
+                                >
+                                  Change Distributor
+                                </Button>
+                              </Flex>
+                            );
+                          }
+                        }}
                         size="small"
                         columns={[
                           {
@@ -359,7 +451,7 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
           );
         })}
         {(dataSource?.purchaseOrder?.length ?? 0) > 0 && (
-          <Card size="small">
+          <Card size="small" title="Stock Count">
             <Collapse
               ghost
               items={[
@@ -370,20 +462,13 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                       size="small"
                       dataSource={dataSource?.stockCount}
                       contentStyle={{ fontWeight: 500 }}
-                      column={{ xs: 1, sm: 2, md: 3, lg: 5, xl: 5, xxl: 5 }}
+                      // column={{ xs: 1, sm: 2, md: 3, lg: 5, xl: 5, xxl: 5 }}
+                      // column={2}
                       columns={[
                         {
                           title: 'Counted Number',
                           dataIndex: 'countedNo',
-                          span: 2,
-                        },
-                        {
-                          title: 'Count Date',
-                          // dataIndex: 'countedDate',
-                          // valueType: 'date',
-                          render: (_, r) => {
-                            return displayDateTime(r.countedDate);
-                          },
+                          // span: 2,
                         },
                         {
                           title: 'Sold Quantity',
@@ -404,6 +489,12 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                                 {r.items?.reduce((acc, it) => acc + it.actualQuantity, 0)}
                               </Typography.Text>
                             );
+                          },
+                        },
+                        {
+                          title: 'Count Date',
+                          render: (_, r) => {
+                            return displayDateTime(r.countedDate);
                           },
                         },
                       ]}
@@ -486,7 +577,7 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
           </Card>
         )}
         {dataSource && dataSource.salesInvoices && dataSource.salesInvoices.length > 0 && (
-          <Card size="small">
+          <Card size="small" title="Sales Invoice">
             <Collapse
               ghost
               key={'collapSalesInvoice'}
@@ -505,18 +596,19 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                         amount: dataSource?.salesInvoices.reduce((a, e) => a + e.amount, 0.0),
                       }}
                       contentStyle={{ fontWeight: 500 }}
-                      column={{ xs: 1, sm: 2, md: 3, lg: 5, xl: 5, xxl: 5 }}
+                      // column={{ xs: 1, sm: 2, md: 3, lg: 5, xl: 5, xxl: 5 }}
+                      // column={3}
                       columns={[
                         {
                           title: 'Latest Invoice Date',
                           dataIndex: 'invoiceDates',
-                          span: 2,
+                          // span: 2,
                         },
 
                         {
                           title: 'Invoice Counts',
                           dataIndex: 'countInvoices',
-                          span: 2,
+                          // span: 2,
                         },
                         {
                           title: 'Total Amount',
@@ -781,6 +873,41 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
           setActionState({ visible: undefined });
         }}
         status={actionState?.visible?.status}
+      />
+      <DistributorModal
+        addressList={modal?.visible?.addressList ?? []}
+        purchaseOrder={modal?.visible?.purchaseOrder}
+        open={modal && modal.visible?.open}
+        onCancel={() => setModal({ visible: undefined })}
+        // onSubmit={(address, ) => {
+        //   message.info('Hello');
+        // }}
+        onSubmitClick={async (
+          purchaseOrderId,
+          address,
+          distributorId,
+          distributorName,
+          distributorCode,
+          distributorPhone,
+          addressInfo,
+        ) => {
+          if (addressInfo !== undefined) {
+            setModal({ visible: undefined });
+            await services.changeDistributor({
+              id: purchaseOrderId,
+              distributorCode: distributorCode,
+              distributorName: distributorName,
+              distributorPhone: distributorPhone,
+              distributorId: distributorId,
+              latitude: addressInfo?.latitude,
+              longitude: addressInfo?.longitude,
+              addressId: addressInfo?.customerAddressId,
+              address: address,
+              addressCode: addressInfo?.address,
+            });
+            await loadData();
+          }
+        }}
       />
     </Spin>
   );

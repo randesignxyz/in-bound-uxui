@@ -58,6 +58,8 @@ const CountStockMainPage: React.FC<any> = () => {
                 searchValue: params?.searchValue,
                 advanceSearch: {
                   status: params?.status,
+                  dates: advanceSearch.value?.dates,
+                  salespersonId: advanceSearch.value?.salespersonId,
                 },
               },
               pagination: { ...page },
@@ -164,22 +166,27 @@ const CountStockMainPage: React.FC<any> = () => {
           }
         }}
         onSearch={(data) => {
-          setFilter((v) => ({
-            ...v,
+          setFilter({
             criteria: {
-              ...v.criteria,
+              searchValue: filter.criteria?.searchValue,
               advanceSearch: {
-                ...filter.criteria?.advanceSearch,
-                ...data,
+                ...advanceSearch.value,
+                salespersonId: data.salespersonId,
+                dates: data.dates,
               },
+              //advanceSearch
             },
-          }));
+          });
         }}
         onReset={() => {
           setFilter((v) => ({
             ...v,
             criteria: {
               ...filter.criteria,
+              advanceSearch: {
+                salespersonId: undefined,
+                dates: undefined,
+              },
             },
           }));
           actionRef.current?.reload?.(true);

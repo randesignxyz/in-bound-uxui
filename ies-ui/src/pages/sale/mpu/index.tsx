@@ -7,7 +7,8 @@ export const MPUPath = {
   mpuReport: '/sale/mpu_report',
   mpuCountStock: '/sale/mpu_count_stock',
   mpuSettlement: '/sale/mpu_settlement',
-  mpuFOC: "/sale/sale-mma-foc"
+  mpuFOC: "/sale/sale-mma-foc",
+  warehousePOPortal: "/sale/warehouse-po-portal"
   //   productItem: '/retailer/products',
   //   customer: '/retailer/customers',
   //   customergroup: '/retailer/group/customer',

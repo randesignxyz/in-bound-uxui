@@ -9,7 +9,6 @@ import SaleOrderReport from './SaleOrderReport';
 import PerformancePurchaseOrderReport from './PerformancePurchaseOrderReport';
 import VisitReports from './VisitReports';
 import { DSDReportAPI } from './service';
-import PerformancePurchaseOrderReport from './PerformancePurchaseOrderReport';
 
 interface Props {
   reportName?: ReportName;

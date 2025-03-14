@@ -170,7 +170,7 @@ export default [
     name: 'tracking-location',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessDeliveryTruck',
+    access: 'canAccessCrmMenuItem',
     component: './crm/visit-schedule/components/tracking-location',
   },
 

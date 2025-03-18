@@ -1,9 +1,9 @@
 import PageWrapper from "@/components/PageWrapper"
 import { CustomerAdvanceSearchParams, CustomerItemLess } from "@/services/crm/data"
-import { DashOutlined, DownloadOutlined, ExportOutlined, SwapOutlined } from "@ant-design/icons"
+import { DashOutlined, DownloadOutlined, ExportOutlined, SwapOutlined, SyncOutlined } from "@ant-design/icons"
 import { useAccess, useQuery } from "@umijs/max"
 import { CrmServiceAPI } from "@/services/crm/services";
-import { Dropdown, Space, Spin, Typography, message } from "antd";
+import { Dropdown, Modal, Space, Spin, Typography, message } from "antd";
 import Status from "@/components/Status";
 import { toReadable } from "@/pages/utils";
 import { useRef, useState } from "react";
@@ -18,6 +18,9 @@ import ImportFileButton from "@/components/ImportFileButton";
 import { ActionType } from "@ant-design/pro-components";
 import { CustomerActionController } from ".";
 import CustomerDetailView from "./components/Detail";
+import { CrmServices } from "../services";
+import { CustomerServices } from "./services";
+import { simpleRequestActions } from "@/services/model";
 const crmServices = CrmServiceAPI();
 type FilterType = {
     searchValue?: string;
@@ -28,6 +31,7 @@ export default ({ getMenuItems }: CustomerActionController) => {
     const [filter, setFilter] = useState<FetchPagingParams<FilterType>>()
     const [importData, setImportData] = useState<ImportDataResponse>()
     const [loading, setLoading] = useState(false);
+    const requestAction= simpleRequestActions();
     const actionRef = useRef<ActionType>();
     const { data, refetch, isFetching } = useQuery(['fetch-customer-list', filter], () => crmServices.findAllCustomer({
         searchValue: filter?.criteria?.searchValue,
@@ -136,9 +140,26 @@ export default ({ getMenuItems }: CustomerActionController) => {
                     />] : []
                 ,
                 actions: [
+                    
                     {
                         key: 'EXPORT', label: 'Export', icon: <DownloadOutlined />, onClick: () => {
                             modals.showModal('export-customer')
+                        }
+                    },
+                    {
+                        key:"SYNC",
+                        label:"Sync",
+                        icon:<SyncOutlined/>,
+                        onClick:()=>{
+                            try{
+                               CustomerServices.syncExecStoreProcedureCustomer()(requestAction).then(()=>{
+                                message.success("Success!")
+                               }).catch((err)=>{
+                                message.error("Something went wrong!")
+                               });
+                            }
+                            catch(e){
+                            }
                         }
                     },
                     { key: 'TRANSFER', label: 'Transfer SE', onClick: () => modals.showModal('transfer-customers'), icon: <SwapOutlined style={{ fontSize: '16px', color: '#08c' }} /> }

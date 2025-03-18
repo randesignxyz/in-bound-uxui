@@ -453,7 +453,6 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
               },
 
               request: async (k: { keyWords: string }) => {
-                console.log(k);
                 const data = await ProductItemsServiceAPI(mainRequestActions).pageProducts({
                   criteria: {
                     searchValue: k.keyWords,

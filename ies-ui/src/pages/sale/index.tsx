@@ -112,7 +112,7 @@ export default () => {
     {
       id: 'store',
       name: 'Store',
-      description: 'Store for Salespersons',
+      description: '',
       link: `${SalePaths.store}/list`,
       icon: storeIcon,
       // visible: access.canAccessAllMenuDSD || access.canAccessTabWarehouse,
@@ -129,7 +129,7 @@ export default () => {
     {
       id: 'sales-visit',
       name: 'Visit',
-      description: 'Visit without plan.',
+      description: 'DSD Visit',
       link: `${SalePaths.visit}/list`,
       icon: scheduleIcon,
       // visible: access.canAccessAllMenuDSD,
@@ -148,7 +148,7 @@ export default () => {
     {
       id: 'lead',
       name: 'Lead',
-      description: 'Outlet Information',
+      description: 'CnD Customers',
       link: `${SalePaths.lead}/list`,
       //overlay: leadReportMenu,
       icon: userIcon,
@@ -166,7 +166,7 @@ export default () => {
     {
       id: 'dsdReport',
       name: 'Reports',
-      description: 'All Reports',
+      description: 'All Reports in DSD.',
       icon: reportIcon,
       visible: access.canAccessSaleReport || access.canAccessSaleDailyReport,
       menu: {
@@ -181,15 +181,15 @@ export default () => {
             case 'dsd-reports':
               setReport('dsd-reports');
               break;
-            case 'visit-reports':
+            case 'visit-reports': 
               setReport('visit-report');
               break;
             case 'purchase-order-reports':
               setReport('purchase-order-reports');
               break;
             case 'performance-po-report':
-              setReport('performance-po-report');
-              break;
+                setReport('performance-po-report');
+                break;
             default:
               message.error('Something went wrong.');
           }
@@ -221,7 +221,7 @@ export default () => {
     {
       id: 'item-sales-line-price',
       name: 'Pricing',
-      description: 'Pricing for Sales Invoice',
+      description: 'Setting Pricing for CnD',
       icon: pricingIcon,
       visible: access.canAccessAllMenuDSD,
       link: `${SalePaths.pricing}/list`,

@@ -2,7 +2,7 @@ import TableView, { TableViewSearchParams } from '@/components/DataCrud/TableVie
 import { formatDate } from '@/pages/utils';
 import { Paging } from '@/services/API';
 import { simpleRequestActions } from '@/services/model';
-import { ArrowRightOutlined, DashOutlined, EditOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
+import { ArrowRightOutlined, DashOutlined, EditOutlined, PlayCircleOutlined, PlusOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import { ActionType } from '@ant-design/pro-components';
 import { useModel } from '@umijs/max';
 import { Badge, Button, Dropdown, message, Modal, Popover, Radio, Space, Spin, Tag, Typography } from 'antd';
@@ -233,6 +233,27 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
           ]}
           tableProps={{
             actionRef: actionRef,
+            toolbar: {
+              actions: [
+                <>
+                  <Button
+                    type="link"
+                    onClick={async () => {
+                      setSate({visible:{name:"modal",type:"ADD"}})
+                    }}
+                    icon={<PlusOutlined />}
+                  />
+                  <Button
+                    type="link"
+                    onClick={async () => {
+                      await services.syncDriver()
+                      actionRef.current?.reloadAndRest?.();
+                    }}
+                    icon={<PlayCircleOutlined />}
+                  />
+                </>
+              ],
+            },
           }}
           actionHandlers={{
             onAdd:()=>setSate({visible:{name:"modal",type:"ADD"}}),

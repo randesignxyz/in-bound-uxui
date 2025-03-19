@@ -1,5 +1,7 @@
 import ImagePreview from '@/components/ImagePreview';
+import { getUrlReporting } from '@/pages/ReportUrl';
 import { displayDateTime, formatDate } from '@/pages/utils';
+import { downloadGenericReport } from '@/services/apiGateway';
 import { AddressInfo } from '@/services/crm/data';
 import { CrmServiceAPI } from '@/services/crm/services';
 import { simpleRequestActions } from '@/services/model';
@@ -7,6 +9,8 @@ import { LeadLess, SaleInvoiceLess } from '@/services/sale/data';
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
+  DollarOutlined,
+  DownloadOutlined,
   EditOutlined,
   SyncOutlined,
 } from '@ant-design/icons';
@@ -21,10 +25,12 @@ import {
   Spin,
   Table,
   Tag,
+  Tooltip,
   Typography,
   message,
 } from 'antd';
 import { max } from 'lodash';
+import moment from 'moment';
 import numeral from 'numeral';
 import { useEffect, useRef, useState } from 'react';
 import RemarkModalForm from '../../component/RemarkModal';
@@ -183,6 +189,29 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
       </div>
     );
   };
+
+  const onDowloadReportHandler = async (id?: number) => {
+    try {
+      //     // const dataForm = await form.validateFields()
+      const reportName = 'stock-request-settlement-report-form';
+      //     // setLoading(true)
+      await downloadGenericReport(requestActions)({
+        fileName: `${reportName}-${moment().format()}.pdf`,
+        type: 'PDF',
+        data: {
+          reportName: reportName,
+          reportPath: getUrlReporting('sale/forms'),
+          data: [{ key: 'stockControlId', value: id, type: 'string' }],
+        },
+      }).then(() => {
+        // setLoading(false)
+      });
+    } catch (error: any) {
+      message.error(error.message || 'Failed to generate report.');
+      // setLoading(false)
+    }
+  };
+
   return (
     <Spin spinning={requestActions.request?.loading}>
       <Flex vertical gap={16}>
@@ -238,6 +267,17 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                 Reject
               </Button>
             ),
+            <Tooltip key={'tooltip'} title="Download Report">
+              <Button
+                key={'download'}
+                icon={<DownloadOutlined />}
+                size="small"
+                type="link"
+                onClick={() => onDowloadReportHandler(dataSource?.stockControlId)}
+              >
+                Report Form
+              </Button>
+            </Tooltip>,
           ]}
         >
           <ProDescriptions
@@ -386,13 +426,40 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                             render: (_, r) => [r.itemCode, r.itemName].filter((h) => h).join(' - '),
                           },
                           {
-                            title: 'Type',
-                            dataIndex: 'itemType',
-                          },
-                          {
                             title: 'UOM',
                             dataIndex: 'uom',
                           },
+                          {
+                            title: 'Status',
+                            render: (_, r) => (
+                              <Tag
+                                icon={
+                                  r.status === 'Pending' ? (
+                                    <SyncOutlined spin />
+                                  ) : r.status === 'Paid' ? (
+                                    <DollarOutlined />
+                                  ) : r.status === 'Rejected' ? (
+                                    <CloseCircleOutlined />
+                                  ) : (
+                                    <CheckCircleOutlined />
+                                  )
+                                }
+                                bordered={false}
+                                color={
+                                  r.status === 'Pending'
+                                    ? 'processing'
+                                    : r.status === 'Paid'
+                                    ? 'success'
+                                    : r.status === 'Rejected'
+                                    ? 'error'
+                                    : 'success'
+                                }
+                              >
+                                {r.status}
+                              </Tag>
+                            ),
+                          },
+
                           {
                             title: 'Quantity',
                             dataIndex: 'quantity',

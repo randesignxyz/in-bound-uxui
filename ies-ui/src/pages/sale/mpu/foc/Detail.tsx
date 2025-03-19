@@ -1,12 +1,10 @@
 import { simpleRequestActions } from "@/services/model";
 import { ProDescriptions, ProTable } from "@ant-design/pro-components"
-import { Button, Card, Col, Flex, Modal, Row, Space, Tag, Typography } from "antd"
+import { Button, Card, Col, Flex, message, Row, Tag, Typography } from "antd"
 import { useEffect, useState } from "react";
 import { FOCServiceAPI } from "./service";
-import { PurchaseOrderServiceAPI } from "../purchase_order/services";
-import { EnvironmentOutlined, RotateRightOutlined } from "@ant-design/icons";
-import { CustomerServiceAPI } from "../../retailer/customer/services";
-import { CrmServiceAPI } from "@/services/crm/services";
+import { RotateRightOutlined } from "@ant-design/icons";
+import UpdateStatusModal from "./UpdateStatusModal";
 
 interface Props {
     id?: number;
@@ -15,23 +13,23 @@ interface Props {
 const FOCDetail: React.FC<Props> = ({ id }) => {
     const requestActions = simpleRequestActions();
     const [dataSource, setDataSource] = useState<any>();
-    const [customerDetail, setCustomerDetail] = useState<any>();
+    const [focData, setFocData] = useState<FreeOfChargeTrackingDTO>();
+    const [updateModalState, setUpdateModalState] = useState<{ visible?: { name: "MODAL", payloads?: FreeOfChargeTrackingDTO } }>();
     const loadData = async () => {
-        const data = await PurchaseOrderServiceAPI(requestActions).detail(id)
-        setDataSource(data);
-        const dd = await CrmServiceAPI(requestActions).findAddress({ id: data.addressId || 0 })
-        setCustomerDetail(dd);
+        const foc = await FOCServiceAPI(requestActions).fetch({ id: id });
+        setFocData(foc);
+
     }
 
     useEffect(() => {
         loadData()
     }, []);
-
     return (
         <>
             <Flex gap={12} vertical>
                 <Card
                     size="small"
+                    title={"General Information"}
                     styles={{
                         header: {
                             border: "none"
@@ -39,20 +37,8 @@ const FOCDetail: React.FC<Props> = ({ id }) => {
                     }}
                     extra={
                         <Button size="small"
-                            hidden={dataSource?.foc?.[0]?.status == "Completed" ? true : false}
-                            onClick={() => {
-                                Modal.confirm({
-                                    title: `Return FOC To ${dataSource.distributorCode}`,
-                                    content: <Space direction="vertical">
-                                        <Typography.Text>Make return stock to distrubutor for closed foc.</Typography.Text>
-                                        <Typography.Text type="warning">are you sure?</Typography.Text>
-                                    </Space>,
-                                    onOk: async () => {
-                                        FOCServiceAPI(requestActions).closedFOC({ id: dataSource.id });
-                                        // actionRef.current?.reload?.();
-                                    }
-                                })
-                            }}
+                            hidden={focData?.status == "Completed" ? true : false}
+                            onClick={() =>setUpdateModalState({visible:{name:"MODAL",payloads:focData}})}
                             type="link" icon={<RotateRightOutlined />}>Close</Button>
                     }
                 >
@@ -63,27 +49,26 @@ const FOCDetail: React.FC<Props> = ({ id }) => {
                                 contentStyle={{
                                     fontWeight: 500
                                 }}
-                                dataSource={dataSource}
+                                dataSource={focData}
                                 column={{ md: 2, sm: 1, xs: 1, lg: 2, xl: 2, xxl: 2 }}
                                 columns={[
                                     {
                                         title: "Receiver Code",
-                                        dataIndex: "assignedToCode"
+                                        dataIndex: "salespersonCode"
                                     },
                                     {
                                         title: "Receiver Name",
-                                        dataIndex: "assignedTo"
+                                        dataIndex: "salespersonName"
                                     },
                                     {
                                         title: "Received Date",
-                                        dataIndex: "requestedDate",
+                                        dataIndex: "receivedDate",
                                         valueType: "date"
                                     },
                                     {
                                         title: "Status",
-                                        render: (_, r) => <Tag color={r.foc?.[0]?.status == "Pending" ? "processing" : "success"} bordered={false} >{r.foc?.[0]?.status}</Tag>
+                                        render: (_, r) => <Tag color={r?.status == "Pending" ? "processing" : "success"} bordered={false} >{r?.status}</Tag>
                                     }
-
                                 ]}
                             />
                         </Col>
@@ -91,7 +76,7 @@ const FOCDetail: React.FC<Props> = ({ id }) => {
                             <ProDescriptions
                                 loading={requestActions.request?.loading}
                                 column={{ md: 2, sm: 1, xs: 1, lg: 2, xl: 2, xxl: 2 }}
-                                dataSource={dataSource}
+                                dataSource={focData}
                                 contentStyle={{
                                     fontWeight: 500
                                 }}
@@ -104,40 +89,12 @@ const FOCDetail: React.FC<Props> = ({ id }) => {
                                         title: "Distributor Name",
                                         dataIndex: "distributorName"
                                     },
-                                    // {
-                                    //     title: "Distributor Phone",
-                                    //     span: 2,
-                                    //     dataIndex: "distributorPhone"
-                                    // },
-                                    {
-                                        title: "Shiped Address",
-                                        span: 2,
-                                        render: (_, r) => {
-                                            const aa = [
-                                                { name: 'Street:', value: customerDetail?.streetNo },
-                                                { name: 'House:', value: customerDetail?.houseNo },
-                                                { name: 'Village:', value: customerDetail?.village },
-                                                { name: 'Commune:', value: customerDetail?.commune },
-                                                { name: 'District:', value: customerDetail?.district },
-                                                { name: 'Province:', value: customerDetail?.province },
-                                                { name: 'Latitude:', value: customerDetail?.latitude },
-                                                { name: 'Longitude:', value: customerDetail?.longitude },
-                                                { name: 'Direction:', value: customerDetail?.direction },
-                                                { name: 'Hotspot:', value: customerDetail?.hotspot },
-                                            ]
-                                                .filter((it) => it.value)
-                                                .map((it) => `${it.name} ${it.value}`)
-                                                .join(', ')
-
-                                            return aa
-                                        }
-                                    },
                                 ]}
                             />
                         </Col>
                     </Row>
                 </Card>
-                <Card size="small">
+                <Card size="small" title={"Item "}>
                     <ProTable
                         options={false}
                         search={false}
@@ -145,7 +102,7 @@ const FOCDetail: React.FC<Props> = ({ id }) => {
                         ghost
                         loading={requestActions.request?.loading}
                         size="small"
-                        dataSource={dataSource?.foc?.filter((p: { source: string; })=>p.source =="OFL")}
+                        dataSource={focData?.items}
                         columns={[
                             {
                                 title: "Item Code",
@@ -158,25 +115,42 @@ const FOCDetail: React.FC<Props> = ({ id }) => {
                             {
                                 title: "Quantity",
                                 dataIndex: "quantity",
-                                render: (_, r) => <Typography.Text>{r.quantity}</Typography.Text>
+                                render: (_, r) => <Typography.Text type="warning">{r.quantity}</Typography.Text>
                             },
                             {
-                                title: "Used",
-                                dataIndex: "usingQty",
-                                render: (_, r) => <Typography.Text>{r.usingQty}</Typography.Text>
+                                title: "UoM",
+                                dataIndex: "uom",
+
                             },
+                            // {
+                            //     title: "Used",
+                            //     dataIndex: "usingQty",
+                            //     render: (_, r) => <Typography.Text>{r.usingQty}</Typography.Text>
+                            // },
                             // {
                             //     title:"Remainder",
                             //     render:(_,r)=>
                             // },
-                            {
-                                title: "Return",
-                                render: (_, r) => <Typography.Text>{0}</Typography.Text>
-                            }
+                            // {
+                            //     title: "Return",
+                            //     render: (_, r) => <Typography.Text>{0}</Typography.Text>
+                            // }
                         ]}
                     />
                 </Card>
             </Flex>
+
+            <UpdateStatusModal
+                open={updateModalState?.visible?.name == "MODAL"}
+                data={updateModalState?.visible?.payloads}
+                onCancel={()=>setUpdateModalState({visible:undefined})}
+                onSave={async (data) => {
+                    await FOCServiceAPI(requestActions).updateStatus(data);
+                    loadData?.();
+                    setUpdateModalState({visible:undefined});
+                    message.success("Done!")
+                }}
+            />
         </>
     )
 }

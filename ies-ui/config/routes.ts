@@ -523,7 +523,13 @@ export default [
     // access: 'canAccessAllMenuDSD',
     component: './sale/mpu/settlement',
   },
-
+  {
+    path: '/sale/warehouse-po-portal/:view/*',
+    name: 'warehouse-po-portal',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    component: './sale/warehouse',
+  },
   /******************* MPU *******************/
 
   // {

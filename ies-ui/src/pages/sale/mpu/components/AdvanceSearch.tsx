@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react';
 
 export interface AdvanceSearchProps extends DrawerFormProps {
   initData?: AdvanceSearchParam;
-  entity: string;
+  entity: 'Purchase Order' | 'Settlement' | 'Stock Count';
   onSearch: (params: AdvanceSearchParam) => void;
   onReset: () => void;
 }
@@ -28,9 +28,6 @@ const AdvanceSearch: React.FC<AdvanceSearchProps> = ({
   useEffect(() => {
     if (!props.open) return;
     form.setFieldsValue({ ...initData });
-    (() => {
-      form.resetFields();
-    })();
   }, [props.open]);
 
   return (
@@ -52,17 +49,20 @@ const AdvanceSearch: React.FC<AdvanceSearchProps> = ({
           },
         }}
       >
-        <Form.Item label="Source of Supply" name="distributorType">
-          <Segmented
-            value={distributor}
-            onChange={(e) => setDistributor(e)}
-            options={[
-              { label: 'All', value: 'all' },
-              { label: 'Wareshoue OFL', value: 'L911154' },
-              { label: 'Distributor', value: 'distributor' },
-            ]}
-          />
-        </Form.Item>
+        {entity === 'Purchase Order' && (
+          <Form.Item label="Source of Supply" name="distributorType">
+            <Segmented
+              value={distributor}
+              onChange={(e) => setDistributor(e)}
+              options={[
+                { label: 'All', value: 'all' },
+                { label: 'Wareshoue OFL', value: 'warehouse' },
+                { label: 'Distributor', value: 'distributor' },
+              ]}
+            />
+          </Form.Item>
+        )}
+
         <Form.Item
           help={<span />}
           name="salespersonId"
@@ -72,7 +72,7 @@ const AdvanceSearch: React.FC<AdvanceSearchProps> = ({
           <RemoteSelectBox<SalesTeamWorkLess, { searchValue: any }>
             width={'300px'}
             // CH: need to change mobile
-            // mode="multiple"
+            mode="multiple"
             transforms={{
               onCriteria: (value) => {
                 return { searchValue: value };

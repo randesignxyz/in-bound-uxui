@@ -20,8 +20,6 @@ import stockCountId from '@/assets/stock-count.png';
 import stockIcon from '@/assets/stock.png';
 import storeIcon from '@/assets/store.png';
 
-import FOC from '@/assets/free.png';
-
 import type { ListMenuItem } from '@/components/ListMenu';
 import ListMenuComp from '@/components/ListMenu';
 import {
@@ -181,7 +179,7 @@ export default () => {
             case 'dsd-reports':
               setReport('dsd-reports');
               break;
-            case 'visit-reports': 
+            case 'visit-reports':
               setReport('visit-report');
               break;
             case 'purchase-order-reports':
@@ -239,7 +237,7 @@ export default () => {
       name: 'Stock Counts',
       description: 'Daily Stock Count Review',
       icon: stockCountId,
-      visible: access.canAccessAllMenuDSD || access.canAccessSaleDailyReport,
+      visible: access.canAcessStockControlMenuItem || access.canAccessSaleDailyReport,
       link: `${MPUPath.mpuCountStock}/list`,
     },
     {
@@ -253,13 +251,21 @@ export default () => {
         access.canAccessSettlementMenuItem,
       link: `${MPUPath.mpuSettlement}/list`,
     },
+    // {
+    //   id: 'free-of-charge',
+    //   name: 'Free Of Charge',
+    //   description: '',
+    //   icon: FOC,
+    //   visible: access.canAcessStockControlMenuItem,
+    //   link: `${MPUPath.mpuFOC}/list`,
+    // },
     {
-      id: 'free-of-charge',
-      name: 'Free Of Charge',
-      description: '',
-      icon: FOC,
-      visible: access.canAccessAllMenuDSD,
-      link: `${MPUPath.mpuFOC}/list`,
+      id: 'mpu_po',
+      name: 'Purchase Order',
+      description: 'Under warehouse review.',
+      link: `${MPUPath.warehousePOPortal}/list`,
+      icon: purchaseOrderIcon,
+      visible: access.canAccessTabWarehouse,
     },
   ];
 

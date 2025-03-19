@@ -29,6 +29,7 @@ export default (props: Props) => {
     reportType?: string;
     salespersonCode?: string[];
     requestedDate?: moment.Moment[];
+    status?: string[];
   }>();
 
   //   const onFormvalueChanged = (changedValues: any) => {
@@ -50,6 +51,7 @@ export default (props: Props) => {
         data: {
           requestedDate: dataForm.requestedDate,
           salespersonCode: dataForm.salespersonCode,
+          status: dataForm.status,
         },
       });
       message.success('Report generated successfully.');

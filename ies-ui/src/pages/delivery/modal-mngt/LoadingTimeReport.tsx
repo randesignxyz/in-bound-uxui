@@ -1,4 +1,4 @@
-import { MultiRequest, downloadReport } from "@/services/apiGateway";
+import { MultiRequest, downloadGenericReport, downloadReport } from "@/services/apiGateway";
 import { Company, LoadingBay, LoadingDock, LoadingTeam } from "@/services/delivery/data";
 import { DeliveryParams } from "@/services/delivery/delivery-params";
 import { LoadingServiceParams } from "@/services/delivery/loading-bay-service-params";
@@ -28,6 +28,7 @@ type FormDataType = {
     loadingBayIds?: number[];
     loadingDockIds?: number[];
     truckIds?: number[];
+    loadingType?: number[];
 
 }
 
@@ -50,6 +51,11 @@ export default ({ ...rest }: ModalFormProps) => {
         { value: "CANCELED", label: "Canceled" },
     ]
 
+    const loadingTypeData = [
+        { value: 1, label: "Pallet" },
+        { value: 0, label: "Manual" },
+    ]
+
     const init = async () => {
         const initData = await MultiRequest<initDataType>([
             DeliveryParams.listAllCompany(),
@@ -61,14 +67,42 @@ export default ({ ...rest }: ModalFormProps) => {
         setData(initData)
     }
 
+    // const onDownload = async () => {
+
+    //     try {
+    //         await downloadReport<FormDataType>(requestActions)({
+    //             reportName: 'export-truck-loading-time',
+    //             fileName: `truck-loading-time-report-${moment().format()}.xls`,
+    //             type: 'EXCEL',
+    //             data: { ...form.getFieldsValue() }
+    //         });
+    //     } catch (error: any) {
+    //         message.error(error.message || "Failed to generate report.")
+    //     }
+    // }
+
     const onDownload = async () => {
 
         try {
-            await downloadReport<FormDataType>(requestActions)({
-                reportName: 'export-truck-loading-time',
+            const dataForm = await form.validateFields()
+            await downloadGenericReport(requestActions)({
                 fileName: `truck-loading-time-report-${moment().format()}.xls`,
                 type: 'EXCEL',
-                data: { ...form.getFieldsValue() }
+                data: {
+                    reportName: "export-truck-loading-time-1",
+                    reportPath: "/Reports/qa/delivery",
+                    data: [{ key: 'dateFrom', value: dataForm.dateRange[0] },
+                    { key: 'dateTo', value: dataForm.dateRange[1] },
+                    ...(dataForm.loadingTeamIds || []).map(it => ({ key: 'loadingTeamIds', value: it })),
+                    ...(dataForm.statuses || []).map(it => ({ key: 'statuses', value: it })),
+                    ...(dataForm.loadingBayIds || []).map(it => ({ key: 'loadingBayIds', value: it })),
+                    ...(dataForm.sourceIds || []).map(it => ({ key: 'sourceIds', value: it })),
+                    ...(dataForm.loadingDockIds || []).map(it => ({ key: 'loadingDockIds', value: it })),
+                    ...(dataForm.driverIds || []).map(it => ({ key: 'driverIds', value: it })),
+                    ...(dataForm.truckIds || []).map(it => ({ key: 'truckIds', value: it })),
+                    ...(dataForm.loadingType || []).map(it => ({ key: 'loadingType', value: it })),
+                    ]
+                }
             });
         } catch (error: any) {
             message.error(error.message || "Failed to generate report.")
@@ -129,6 +163,7 @@ export default ({ ...rest }: ModalFormProps) => {
             </Flex>
 
         </Flex>
+        <ProFormSelect name={"loadingType"} label="Loading Type" allowClear mode="multiple" options={loadingTypeData} />
 
     </ModalForm>
 }

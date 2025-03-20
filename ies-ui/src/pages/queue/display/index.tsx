@@ -30,7 +30,7 @@ import LayoutConfigList from './LayoutConfigList';
 import { useFullscreen } from 'ahooks';
 import styles from './style.less';
 import { history } from '@umijs/max';
-import { ProDescriptions, ProList } from '@ant-design/pro-components';
+import { ActionType, ProDescriptions, ProList } from '@ant-design/pro-components';
 import Login from '@/pages/User/Login';
 
 const { Title } = Typography;
@@ -52,7 +52,7 @@ export default () => {
   const ref = useRef<any>();
   const [isFullscreen, { enterFullscreen, exitFullscreen }] = useFullscreen(ref);
   const [ticketList, setTicketList] = useState<QueueDisplay[]>([]);
-
+  const actionRef = useRef<ActionType>();
   const [dispayGrid, setDisplayGrid] = useState<{ index: number, data?: QueueDisplay }[]>()
   const requestActions = simpleRequestActions();
   const services = DeliveryServiceAPI(requestActions);
@@ -118,6 +118,15 @@ export default () => {
     }
   }, [selectedLayout, auth]);
 
+  const getColor = (item: QueueDisplay) => {
+    if (!item.createdDate) return 'default-color';
+
+    const now = new Date();
+    const createdDate = new Date(item.createdDate);
+    const timeDiff = (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60); // Convert to hours
+
+    return timeDiff <= 1 ? 'green-bg' : 'red-bg';
+  };
 
   useEffect(() => {
     if (selectedLayout && auth) {
@@ -167,9 +176,11 @@ export default () => {
     ]);
   };
 
+
   const gridRender = (item: { index: number, data?: QueueDisplay }) => {
     const ticket = ticketList.length > item.index ? ticketList[item.index] : undefined
     const color = ticket?.loadingDock ? '#ffbe6d' : '#dcdbd6';
+
 
     return (
       <List.Item
@@ -287,7 +298,9 @@ export default () => {
             />}
 
             {!isFullscreen && viewType == 'list' && <ProList<QueueDisplay> dataSource={ticketList}
-
+              actionRef={actionRef}
+              rowKey='id'
+              rowClassName={(item: QueueDisplay) => item ? styles.color1:styles.color2}
 
               metas={{
                 avatar: {

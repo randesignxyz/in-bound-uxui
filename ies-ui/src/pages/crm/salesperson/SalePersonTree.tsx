@@ -1,11 +1,12 @@
-import { UserAddOutlined, UserSwitchOutlined, UserDeleteOutlined } from "@ant-design/icons";
-import { Avatar, Button, Card, Dropdown, Input, MenuProps, message, Modal, Space, Tree, Typography } from "antd";
+import { UserAddOutlined, UserSwitchOutlined, UserDeleteOutlined, DeleteOutlined, UsbOutlined } from "@ant-design/icons";
+import { Avatar, Button, Card, Descriptions, Divider, Dropdown, Flex, Input, List, MenuProps, message, Modal, Space, Tree, Typography } from "antd";
 import { DataNode } from "antd/es/tree";
 import { useCallback, useMemo, useState } from "react";
 import { simpleRequestActions } from "@/services/model";
 import SalespersonHeirarchyForm from "./SalespersonHeirarchyForm";
 import { SalespersonOrgAPI } from "./service";
 import AuditorForm from "./AuditorForm";
+import _ from "lodash";
 
 interface Props {
   data?: SalespersonOrg[];
@@ -166,9 +167,8 @@ const TitleRenderer = ({ item, itemsAction }: { item: SalesOrgDataNode; itemsAct
 
 export default ({ data, onLoadData }: Props) => {
   const requestAction = simpleRequestActions();
-  const [salespersonState, setSalespersonState] = useState<{
-    visible?: { name: "MODAL"; payloads?: SalesOrgDataNode };
-  }>();
+  const [salespersonState, setSalespersonState] = useState<{ visible?: { name: "MODAL"; payloads?: SalesOrgDataNode } }>();
+  const [saleOrgInfo, setSaleOrgInfo] = useState<any>();
   const originalTree = useMemo(() => buildTree(data), [data]);
   const allKeys = useMemo(() => getAllKeys(originalTree), [originalTree]);
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -237,36 +237,97 @@ export default ({ data, onLoadData }: Props) => {
     <TitleRenderer item={item} itemsAction={itemsAction} />
   ), [itemsAction]);
 
+  const onTabItemSeleted = async (_: any, info: any) => {
+    const data = await SalespersonOrgAPI(requestAction).fetchSaleOrg({ saleId: info.node?.saleId, parentId: info.node?.parentId });
+    setSaleOrgInfo(data);
+  }
+
   return (
     <>
-      <Card
-        size="small"
-        title={
-          <Space direction="horizontal">
-            <Input.Search
-              placeholder="Search"
-              value={searchQuery}
-              onChange={handleSearch}
-              allowClear
-              style={{ width: 200 }}
-            />
-            <Button onClick={handleExpandAll}>Expand All</Button>
-            <Button onClick={handleCollapseAll}>Collapse All</Button>
-          </Space>
-        }
-      >
-        <Tree
-          showLine
-          expandedKeys={expandedKeys}
-          onExpand={onExpand}
-          itemHeight={10}
-          treeData={filteredTree}
-          titleRender={titleRender}
-          // virtual // Enable virtualization
-          height={700} // Set a fixed height for virtualization
+      <Flex justify="space-between" wrap>
+        <Card
+          size="small"
+          style={{ border: "none" }}
+          title={
+            <Space direction="horizontal">
+              <Input.Search
+                placeholder="Search"
+                value={searchQuery}
+                onChange={handleSearch}
+                allowClear
+                style={{ width: 300 }}
+              />
+              <Button onClick={handleExpandAll}>Expand All</Button>
+              <Button onClick={handleCollapseAll}>Collapse All</Button>
+            </Space>
+          }
+        >
+          <Tree
+            showLine
+            expandedKeys={expandedKeys}
+            onExpand={onExpand}
+            itemHeight={10}
+            treeData={filteredTree}
+            onSelect={onTabItemSeleted}
+            titleRender={titleRender}
+            // virtual // Enable virtualization
+            height={700} // Set a fixed height for virtualization
+          />
 
-        />
-      </Card>
+        </Card>
+        {
+          saleOrgInfo && (
+            <Card size="small" title="Salesperson Information">
+              <>
+                <Descriptions style={{ width: 300 }} size="small" column={1}>
+                  <Descriptions.Item label="Name">{saleOrgInfo.saleInfo?.name}</Descriptions.Item>
+                  <Descriptions.Item label="Code">{saleOrgInfo.saleInfo?.code}</Descriptions.Item>
+                </Descriptions>
+                {/* <Descriptions style={{ width: 200 }} title="Direct Superior" column={1}>
+                    <Descriptions.Item label="Name">{saleOrgInfo.parentInfo?.name}</Descriptions.Item>
+                    <Descriptions.Item label="Code">{saleOrgInfo.parentInfo?.code}</Descriptions.Item>
+                  </Descriptions> */}
+                <Divider />
+                <List<SalespersonOrg>
+                  style={{ padding: 0, margin: 0 }}
+                  header={"Auditor"}
+                  size="small"
+                  dataSource={saleOrgInfo?.auditor}
+                  renderItem={(item, index) => {
+                    return (
+                      <List.Item
+                        actions={[
+                          <Button type="link"
+                            onClick={() =>{
+                              Modal.confirm({
+                                title:"Remove Auditor",
+                                content:"are you sure?",
+                                onOk:async()=>{
+                                  await SalespersonOrgAPI(requestAction).deleteAuditor({id:item.id});
+                                  onTabItemSeleted?.(_,{ saleId:item.saleId, parentId:item.parentId });
+                                  message.success("Done!")
+                                }
+                              })
+                            }}
+                            danger icon={<DeleteOutlined />}
+                          />
+                        ]}
+                      >
+                        <List.Item.Meta
+                          avatar={<Avatar icon={<UsbOutlined />} />}
+                          title={<Typography.Link>{item.name}</Typography.Link>}
+                          description={item.remark}
+                        />
+                      </List.Item>
+                    )
+                  }}
+                />
+              </>
+            </Card>
+          )
+        }
+      </Flex>
+
       <SalespersonHeirarchyForm
         open={salespersonState?.visible?.name === "MODAL"}
         data={salespersonState?.visible?.payloads as unknown as SalespersonOrg}
@@ -298,7 +359,7 @@ export default ({ data, onLoadData }: Props) => {
             title: "",
             onOk: async () => {
               await SalespersonOrgAPI(requestAction).saveSaleOrgAuditor(data);
-              setAuditorState({visible:undefined});
+              setAuditorState({ visible: undefined });
               message.success("Success!")
             }
           })

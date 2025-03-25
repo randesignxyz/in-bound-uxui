@@ -7,6 +7,7 @@ import { LeadLess, SaleInvoiceLess } from '@/services/sale/data';
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
+  DownloadOutlined,
   EditOutlined,
   SyncOutlined,
 } from '@ant-design/icons';
@@ -21,6 +22,7 @@ import {
   Spin,
   Table,
   Tag,
+  Tooltip,
   Typography,
   message,
 } from 'antd';
@@ -103,36 +105,36 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
       it?.internalName !== null
         ? it?.internalName
         : it?.firstName !== null && it?.lastName !== null
-        ? `${it?.firstName} ${it?.lastName}`
-        : it?.firstName !== null
-        ? it?.firstName
-        : it?.lastName || '';
+          ? `${it?.firstName} ${it?.lastName}`
+          : it?.firstName !== null
+            ? it?.firstName
+            : it?.lastName || '';
     return `${name} - ( ${it?.phone} )`;
   };
 
-  const onDowloadReportHandler = async (id?:number) => {
-      try {
-        // const dataForm = await form.validateFields()
-        const reportName = 'stock-request-settlement-report-form'
-        // setLoading(true)
-        await downloadGenericReport(requestActions)({
-          fileName: `${reportName}-${moment().format()}.pdf`,
-          type: 'PDF',
-          data: {
-            reportName: reportName,
-            reportPath: getUrlReporting('sale/forms'),
-            data: [
-              { key: 'stockControlId', value: id, type: 'string' },
-            ]
-          }
-        }).then(() => {
-          // setLoading(false)
-        })
-      } catch (error: any) {
-        message.error(error.message || "Failed to generate report.")
+  const onDowloadReportHandler = async (id?: number) => {
+    try {
+      // const dataForm = await form.validateFields()
+      const reportName = 'stock-request-settlement-report-form'
+      // setLoading(true)
+      await downloadGenericReport(requestActions)({
+        fileName: `${reportName}-${moment().format()}.pdf`,
+        type: 'PDF',
+        data: {
+          reportName: reportName,
+          reportPath: getUrlReporting('sale/forms'),
+          data: [
+            { key: 'stockControlId', value: id, type: 'string' },
+          ]
+        }
+      }).then(() => {
         // setLoading(false)
-      }
+      })
+    } catch (error: any) {
+      message.error(error.message || "Failed to generate report.")
+      // setLoading(false)
     }
+  }
 
   const expandedRowRender = (parent: SaleInvoiceLess) => {
     return parent.items.length > 0 ? (
@@ -244,8 +246,7 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                           loadData?.();
                           message.success('Your confirmation request was a success!');
                         });
-
-                      onDowloadReportHandler(dataSource.stockControlId)
+                      // onDowloadReportHandler(dataSource.stockControlId)
                     },
                   });
                 }}
@@ -267,6 +268,13 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                 Reject
               </Button>
             ),
+            <Tooltip title="Download Report">
+              <Button icon={<DownloadOutlined />}
+                size='small'
+                type='link'
+                onClick={() => onDowloadReportHandler(dataSource?.stockControlId)}
+              >Report Form</Button>
+            </Tooltip>
           ]}
         >
           <ProDescriptions
@@ -301,8 +309,8 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                       r.status === 'Pending'
                         ? 'processing'
                         : r.status === 'Completed'
-                        ? 'success'
-                        : 'error'
+                          ? 'success'
+                          : 'error'
                     }
                   >
                     {r.status}
@@ -321,9 +329,8 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                 title: 'Amount (KHR)',
                 dataIndex: 'amountKH',
                 render: (_, r) => (
-                  <Text type="success">{`${
-                    r.amountKH > 0 ? numeral(r.amountKH).format('0,000') : '-'
-                  } ៛`}</Text>
+                  <Text type="success">{`${r.amountKH > 0 ? numeral(r.amountKH).format('0,000') : '-'
+                    } ៛`}</Text>
                 ),
               },
               {
@@ -678,10 +685,10 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                               r.status === 'Pending'
                                 ? 'magenta'
                                 : r.status === 'Paid'
-                                ? 'processing'
-                                : r.status === 'Own'
-                                ? 'success'
-                                : 'warning';
+                                  ? 'processing'
+                                  : r.status === 'Own'
+                                    ? 'success'
+                                    : 'warning';
                             return (
                               <span>
                                 <Tag color={color}>{r.status}</Tag>
@@ -800,9 +807,8 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                       </Typography.Text>
                     </Table.Summary.Cell>
                     <Table.Summary.Cell index={1} align="right">
-                      <Typography.Text type="success">{`${
-                        totalKh > 0 ? numeral(totalKh).format('0,000') : '-'
-                      } ៛`}</Typography.Text>
+                      <Typography.Text type="success">{`${totalKh > 0 ? numeral(totalKh).format('0,000') : '-'
+                        } ៛`}</Typography.Text>
                     </Table.Summary.Cell>
                     <Table.Summary.Cell index={1} align="right">
                       <Typography.Text type="success">{`$ ${numeral(totalUSD).format(

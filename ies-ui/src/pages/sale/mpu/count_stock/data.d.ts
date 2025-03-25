@@ -22,6 +22,7 @@ interface StockCountDto {
   items?: StockCountItemDto[];
   comment?: Comment[];
   freeOfCharge?: any[];
+  stockControlId:number;
   purchaseOrder?: PurchaseOrderDTO[];
 }
 

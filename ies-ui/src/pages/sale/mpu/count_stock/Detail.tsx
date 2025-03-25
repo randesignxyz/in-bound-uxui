@@ -1,13 +1,16 @@
 import { displayDateTime } from '@/pages/utils';
 import { simpleRequestActions } from '@/services/model';
-import { CheckCircleOutlined, CloseCircleOutlined, SyncOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, CloseCircleOutlined, DownloadOutlined, SyncOutlined } from '@ant-design/icons';
 import { ActionType, ProDescriptions, ProTable } from '@ant-design/pro-components';
-import { Button, Card, Flex, Modal, Spin, Table, Tag, Typography, message } from 'antd';
+import { Button, Card, Flex, Modal, Spin, Table, Tag, Tooltip, Typography, message } from 'antd';
 import numeral from 'numeral';
 import { useEffect, useRef, useState } from 'react';
 import RemarkModalForm from '../../component/RemarkModal';
 import { StockCountDto } from './data';
 import { CountStockServiceAPI } from './service';
+import { getUrlReporting } from '@/pages/ReportUrl';
+import { downloadGenericReport } from '@/services/apiGateway';
+import moment from 'moment';
 
 const { Text } = Typography;
 
@@ -35,6 +38,30 @@ const CountStockDetail: React.FC<Props> = ({ id }) => {
       loadData();
     }
   }, [id]);
+
+   const onDowloadReportHandler = async (id?: number) => {
+      try {
+        // const dataForm = await form.validateFields()
+        const reportName = 'stock-request-settlement-report-form'
+        // setLoading(true)
+        await downloadGenericReport(requestActions)({
+          fileName: `${reportName}-${moment().format()}.pdf`,
+          type: 'PDF',
+          data: {
+            reportName: reportName,
+            reportPath: getUrlReporting('sale/forms'),
+            data: [
+              { key: 'stockControlId', value: id, type: 'string' },
+            ]
+          }
+        }).then(() => {
+          // setLoading(false)
+        })
+      } catch (error: any) {
+        message.error(error.message || "Failed to generate report.")
+        // setLoading(false)
+      }
+    }
 
   return (
     <Spin spinning={requestActions.request?.loading}>
@@ -75,6 +102,13 @@ const CountStockDetail: React.FC<Props> = ({ id }) => {
                 Approve
               </Button>
             ),
+            <Tooltip title="Download Report">
+              <Button icon={<DownloadOutlined />}
+                size='small'
+                type='link'
+                onClick={() => onDowloadReportHandler(dataSource?.stockControlId)}
+              >Report Form</Button>
+            </Tooltip>
           ]}
         >
           <ProDescriptions
@@ -134,8 +168,8 @@ const CountStockDetail: React.FC<Props> = ({ id }) => {
                       r.status === 'Pending'
                         ? 'processing'
                         : r.status === 'Rejected'
-                        ? 'error'
-                        : 'success'
+                          ? 'error'
+                          : 'success'
                     }
                   >
                     {r.status}

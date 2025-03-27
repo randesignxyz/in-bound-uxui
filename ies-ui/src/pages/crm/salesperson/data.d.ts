@@ -15,6 +15,7 @@ interface SalespersonOrg {
     path: string;
     parentId?: number;
     saleId: number;
+    remark?:string;
     empNo?: string;
   }
 
@@ -24,4 +25,10 @@ interface SalespersonOrg {
     saleId:number;
     position:string
     path?:string
+  }
+
+  interface SaleOrgAuditor{
+    saleInfo?:SalespersonOrg
+    parentInfo?:SalespersonOrg
+    auditor?:SalespersonOrg[]
   }

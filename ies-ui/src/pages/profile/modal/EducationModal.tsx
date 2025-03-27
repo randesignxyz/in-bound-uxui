@@ -2,14 +2,15 @@ import { LookupDataItem2 } from "@/services/data"
 import { ModalForm, ModalFormProps, ProCard, ProForm, ProFormDateYearRangePicker, ProFormDigit, ProFormSelect, ProFormText } from "@ant-design/pro-components"
 import { useForm } from "antd/lib/form/Form"
 import { EducationData, EssLookupData, FilesData, MarjorData } from "../data.ess"
-import { Flex, Space, Typography, Row, Col, Image,List, Modal, message, Button,} from 'antd';
-import { useEffect,useState } from 'react';
+import { Flex, Space, Typography, Row, Col, Image,List, Modal, message, Button, Select, Divider, Input, InputRef, Form,} from 'antd';
+import { useEffect,useRef,useState } from 'react';
 import FileUploader , { UploadType } from '@/components/Attachment/FileUploader';
 import ImagePreview from "@/components/ImagePreview";
 import { ProfileServicesEss } from "../service_ess";
 import { ProfileData } from "../data";
 import { simpleRequestActions } from "@/services/model";
-import { ProfileOutlined,SaveOutlined,CloseSquareOutlined } from "@ant-design/icons";
+import { ProfileOutlined,SaveOutlined,CloseSquareOutlined, PlusOutlined } from "@ant-design/icons";
+import { set } from "lodash";
 
 interface Props extends ModalFormProps<EducationData> { 
     profile: ProfileData;
@@ -30,6 +31,10 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb, ...rest }: Pr
     const requestActions = simpleRequestActions();
     const [imageList, setImageList] = useState<FilesData[]>([]);
     const [createFileOther, selectedFileOther] = useState<any>();  
+    const [items, setItems] = useState<MarjorData[]>([]);
+    const [name, setName] = useState('');
+    const [searchName, setSearchName] = useState('');
+    const inputRef = useRef<InputRef>(null);
 
     useEffect(() => {
         initData();
@@ -54,7 +59,10 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb, ...rest }: Pr
     }
     // 
     const onAdminSubmit = async ()=>{
+
+        console.log('bmform--------------------------')
         const bmForm = await form.validateFields(); 
+        console.log('bmform',bmForm)
         // attachment files
         // if(type=="ADD"){ 
         //     if(createFileOther.length==0){  
@@ -89,6 +97,25 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb, ...rest }: Pr
             },
         });
     }
+    const onNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setName(event.target.value);
+    };
+    const addItem = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
+        // e.preventDefault();
+        // setItems([...items, name || `New item ${index++}`]);
+        if(name && (name!='' || name!= undefined)){
+            setItems(v=> [...v,{id: (-1*(items.length+1))||-1,majorName:name,description:name,status: 1}]);
+            setName('');
+            setTimeout(() => {
+              inputRef.current?.focus();
+            }, 0);
+        }
+    };
+    const handleSearch = (value: string) => {
+        setSearchName(value);
+    };
+    
+
     return <ModalForm   {...rest} form={form} width={'40%'} title={!!data?<><ProfileOutlined /> Edit Education</>:<><ProfileOutlined /> Add Education</>}
         // onOpenChange={visible => {
         //     form.resetFields(); 
@@ -107,7 +134,7 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb, ...rest }: Pr
             submitter={isAdmin==2&&empId>0?
                 {
                     render: () => { 
-                    return <><Button onClick={()=>{onAdminSubmit();}}><SaveOutlined /> Save</Button></>
+                        return <><Button onClick={()=>{onAdminSubmit();}}><SaveOutlined /> Save11</Button></>
                     }
                 }
                 :{
@@ -127,7 +154,45 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb, ...rest }: Pr
                 options={marjor?.map((it) => {
                     return { value: it.id, label: it.majorName };
                 })} 
-            />    
+            />
+            {/* <Form.Item name="majorSubject1"  label = "Major/Subject"  rules={[{ required: true }]}>
+            <Select 
+                style={{ width: '100%' }}
+                // required={true} 
+                allowClear={true}
+                // id={'marjorSubject1'}
+                filterOption={false}
+                showSearch
+                onSearch={handleSearch}
+                onChange={(value:any)=> {
+                    console.log('onchange===',[...marjor,...items].find(i=> (i.id==value))  )
+                    setSearchName('')
+                }}
+                dropdownRender={(menu) => (
+                <>
+                    {menu}
+                    <Divider style={{ margin: '8px 0' }} />
+                    <Flex gap={2} >
+                    <Input
+                        placeholder="Please enter major/subject"
+                        ref={inputRef}
+                        value={name}
+                        onChange={onNameChange}
+                        onKeyDown={(e) => e.stopPropagation()}
+                    />
+                    <Button type="text" size="middle" icon={<PlusOutlined />} onClick={addItem}></Button>
+                    </Flex>
+                </>)}
+                //  options={[...marjor,...items]?.map((it) => {
+                //     return { value: it.id, label: it.majorName };
+                // })} 
+                options={[...marjor,...items]?.filter(i=> (searchName=='' || (i.majorName.toLowerCase().includes(searchName.toLowerCase()))))?.map((it) => {
+                    return { value: it.id, label: it.majorName };
+                })} 
+            />   
+            </Form.Item>  */}
+            
+           
             <Row>
                 <Col span={12} style={{padding:'3px'}}>
                     <ProFormSelect rules={[{ required: true }]} allowClear={true} 

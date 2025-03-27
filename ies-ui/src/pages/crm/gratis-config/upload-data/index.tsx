@@ -30,6 +30,7 @@ export default ({ datasources,onFinish, ...rest }: ModalProps & { datasources?: 
         setData(itemList?.map(it => ({ ...it, key: uniqueId() })) || []);
         setDataValidation(itemList?.filter(it => it.fieldInfoList.some(it1 => it1.isFailed))?.length || 0)
         setCommited(false)
+        message.error("Please resolve all remaining issues"+ itemList?.length)
     }
     useEffect(() => {
         if (!rest.open) return
@@ -84,10 +85,11 @@ export default ({ datasources,onFinish, ...rest }: ModalProps & { datasources?: 
             })
         }}
         okButtonProps={{
-            disabled: dataValidation > 0 || commited || submited,
+            disabled: (data?.length||0)> 2000 || dataValidation > 0 || commited || submited,
         }}>
 
         <Space direction='vertical' style={{ width: '100%' }}>
+            {(data?.length||0)> 2000 && <Alert type="error" message={`Total rows ${data?.length||0} records over limit(2100).`} />}
             {dataValidation > 0 && <Alert type='error' message={`${dataValidation} record${dataValidation > 1 ? 's' : ''} is invalid to import.`} showIcon action={[
                 <Checkbox onChange={e => {
                     if (e.target.checked) {

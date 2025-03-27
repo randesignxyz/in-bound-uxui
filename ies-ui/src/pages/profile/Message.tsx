@@ -4,6 +4,7 @@ import { ContactData, SaveContract } from "./data"
 import { useEffect,useState } from 'react';
 import { Alert, Button, Space, Switch } from "antd";
 import { HistoryOutlined } from "@ant-design/icons";
+import { history } from "@umijs/max";
 
 import { Typography } from 'antd';
 import { SaveEssProfile } from "./data.ess";
@@ -61,7 +62,7 @@ export default ({visible,message,description,opentitle,type,step,cb,data,is_admi
                     </Paragraph>
                 </ProCard>
                 {/*  */}
-                <Button danger size={'large'} style={{display:step==1?'':'none',width:"150px"}} onClick={()=>cb.onStartModify(2)}><HistoryOutlined /> Start Modifying</Button>  
+                <Button danger size={'large'} style={{display:step==1?'':'none',width:"150px"}} /*onClick={()=> history.push(`/profile-tc-confirm/${0}`)} */onClick={()=>cb.onStartModify(2)}><HistoryOutlined /> Start Modifying</Button>  
                 <Button danger size={'large'} style={{display:step==4?'':'none',width:"150px"}} onClick={()=>cb.onStartModify(5)}><HistoryOutlined /> Re-Edit Info</Button>   
             </Space> }
             type={type||"info"} 

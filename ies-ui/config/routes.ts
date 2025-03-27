@@ -706,6 +706,14 @@ export default [
     hideInMenu: 'true',
     component: './profile',
   },
+  {
+    path: '/profile-tc-confirm/:id',
+    name: 'account',
+    // icon: 'DeliveredProcedureOutlined',
+    // access: 'canAccesDeliveyMenu',
+    hideInMenu: 'true',
+    component: './profile/agree',
+  },
 
   /************************ Delivery Tracking  ******************/
 

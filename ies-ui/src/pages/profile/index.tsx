@@ -49,12 +49,14 @@ function Profile() {
   } 
   // start modified on profiles 
   const onStartModify = (step_id : number,sms:string)=>{ 
+    console.log({...profile?.profile, empId: profile?.id,step:step_id,openEssId:profile?.ess.id,otherFile:[],remark:'',status:true})
     //
     Modal.confirm({
       title: sms,
       content: 'Do you want to '+sms+' data?',
       onOk: async () => {
         try {  
+         
           if(step_id==2){ 
             await ProfileServicesEss.saveEssProfile({...profile?.profile, empId: profile?.id,step:step_id,openEssId:profile?.ess.id,otherFile:[],remark:'',status:true})(requestActions); 
           }
@@ -293,7 +295,7 @@ function Profile() {
         checking open announcement expiry
       */}  
       {profile?.ess.id!!<=0?'': profile?.ess.empClosed==2?'': profile?.ess.stag==8?'':
-            <Message visible={(step==6&&Number(id)==0)?true:false}
+            profile && <Message visible={(step==6&&Number(id)==0)?true:false}
               message={_stag[step]}
               description={_stag_message[step]}
               opentitle = {profile?.ess.description!!}
@@ -309,7 +311,7 @@ function Profile() {
             /> 
       }
       {/*  */}
-      {profile && <PageContainer
+      {profile && step!=1 && <PageContainer
         title={`Employee No: ${profile?.empNo}`}
         className={styles.pageHeader}
         content={description(profile)}

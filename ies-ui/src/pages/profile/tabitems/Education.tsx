@@ -74,6 +74,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
         }
     };
     const saveEducationHandler = async (data: EducationData) => {
+        console.log(data)
         // attachment files
         if(createFileOther.length==0){  
             message.error('Please do select attachment files.');

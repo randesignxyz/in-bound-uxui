@@ -259,6 +259,7 @@ export interface TrainingData {
   status      : Boolean;
   openId:number;
   otherFile   : AttachmentFile[];
+  dataSource  : string;
 }
 export interface ProfileTrainingData { 
   data            : TrainingData[];  
@@ -393,7 +394,7 @@ export interface FilesData {
   createdDate: moment.Moment; 
 } 
 export interface MarjorData {
-  id?: string;  
+  id?: number;  
   majorName:string;
   description: string;   
   status:number;

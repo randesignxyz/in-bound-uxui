@@ -1,7 +1,8 @@
 import { simpleRequestActions } from "@/services/model";
+import Requestor from '@/pages/process-flow/components/Requestor/Requestor';
 import { EditableFormInstance, EditableProTable, FooterToolbar, PageContainer, ProForm, ProFormCheckbox, ProFormDatePicker, ProFormSelect, ProFormTextArea } from "@ant-design/pro-components";
-import { Button, Card, Col, Form, Row, Space, Spin, message } from "antd";
-import { history } from 'umi';
+import { Button, Card, Col, Form, Modal, Row, Space, Spin, message } from "antd";
+import { history, useAccess } from 'umi';
 import { StockRequest, StockRequestItem, WarehouseGroup } from "./data.types";
 import { useEffect, useRef, useState } from "react";
 import SearchItemList from "./SearchItemList";
@@ -14,6 +15,12 @@ import { StartWorkFlowParam } from "@/services/process-workflow/params";
 import { createService as createServiceAdj } from "@/pages/fma-stock/adjustment/services";
 import { BudgetCodeListItem } from "@/services/pro/data";
 import { createService } from "./services";
+import { Moment } from "moment";
+
+type DataRequestor = {
+  requestorId: string;
+  requestorBuId: number;    
+};
 
 export default ({
   id,
@@ -24,11 +31,13 @@ export default ({
   type: 'CREATE' | 'EDIT';
   onBack: () => void;
 }) => {
+  const access = useAccess();
   const requestActions = simpleRequestActions();
   const services = createService(requestActions);
   const servicesAdj = createServiceAdj(requestActions);
   const editableFormRef = useRef<EditableFormInstance>();
   const [form] = Form.useForm<StockRequest>();
+  // const [formRequestor] = Form.useForm<DataRequestor>();
   const [searchVisible, setSearcVisible] = useState(false);
   const [addedItems, setAddedItems] = useState<StockRequestItem[]>([]);
   const [itemUomList, setItemUomList] = useState<{ itemCode: string; uom: string }[]>([]);
@@ -40,6 +49,8 @@ export default ({
   const [warehouseGroupList, setWarehouseGroup] = useState<WarehouseGroup[]>([]);
 
 
+
+  
   const initData = async () => {
     services.listWarehouseGroup().then(whg => setWarehouseGroup(whg));
   };
@@ -47,7 +58,9 @@ export default ({
     initData();
   }, [id]);
   const clear = () => {
-    form.resetFields();
+    form.setFieldValue('reason',undefined)
+    form.setFieldValue('warehouseFrom',undefined)
+    form.setFieldValue('delivery',false)
     setAddedItems([]);
     setFileIds([]);
     setForceClearUpload((v) => v + 1);
@@ -94,8 +107,26 @@ export default ({
               <Button
                 type="primary"
                 onClick={async () => {
-                  await getDataForm();
-                  setStartFormVisible(true);
+                  const dataForm = await getDataForm();
+                  console.log('NCM data form:',dataForm)
+                  // setStartFormVisible(true);
+                  Modal.confirm({
+                    title: 'NCM Stock request',
+                    content: 'Are you sure?',
+                    onOk: async () => {
+                      try {             
+                        const rs = await services.submitRequest(dataForm);
+                        message.success(
+                          `Your request is submitted. Please track the request with form no ${rs.formNo} `,
+                        );
+                        clear();
+                        return Promise.resolve();
+                      } catch (error: any) {
+                        message.error(error.message || 'Failed to submit.');
+                        Promise.reject();
+                      }
+                    }
+                  })
                 }}
               >
                 Submit
@@ -104,143 +135,146 @@ export default ({
           ),
         }}
       >
-        <Card title="General" size="small">
-          <Row gutter={20}>
-            <Col flex={'400px'}>
-              <ProFormTextArea
-                hasFeedback={false}
-                help={<span />}
-                rules={[{ required: true, whitespace: true }]}
-                label="Requesting Purpose"
-                name={'reason'}
-              />
-            </Col>
-            <Col flex={'200px'}>
-              <Row>
-                {warehouseGroupList &&
-                  <ProFormSelect
-                    options={warehouseGroupList.map(i => ({ label: i.name, value: i.code }))}
-                    rules={[{ required: true, whitespace: true }]}
-                    label="From Warehouse"
-                    name={'warehouseFrom'}
-                  />}
-              </Row>
-              <Row>
-                <ProFormCheckbox name={'delivery'}>Delivery</ProFormCheckbox>
-              </Row>
-            </Col>
-          </Row>
-        </Card>
-        <Card
-          title="Line Items"
-          extra={
-            <Space>
-              <Button danger disabled={addedItems.length == 0} icon={<ClearOutlined />}
-                onClick={() => {
-                  setAddedItems([])
-                  setGroupId(-1)
-                  setBudgetCodesList([])
-                }}
-              />
-            </Space>
-          }
-          size="small"
-          style={{ marginTop: 10, marginBottom: 10 }}
-        />
-        <EditableProTable<StockRequestItem>
-          value={addedItems}
-          editableFormRef={editableFormRef}
-          rowKey="key"
-          size="small"
-          editable={{
-            type: 'multiple',
-            editableKeys: addedItems.map((it) => it.key),
-            actionRender: (row) => [
-              <Button
-                type="link"
-                danger
-                onClick={() => {
-                  setAddedItems((v) => {
-                    if (v.length == 1) {
-                      setGroupId(-1)
-                      setBudgetCodesList([])
-                    }
-                    return v.filter((it) => it.key != row.key)
-                  })
-                }}
-                size="small"
-                icon={<MinusCircleOutlined />}
-              />,
-            ],
-            onValuesChange: (_, recordList) => {
-              setAddedItems(
-                recordList.map((it) => ({
-                  ...it,
-                })),
-              );
-            },
-          }}
-          recordCreatorProps={{
-            creatorButtonText: 'Add Item ',
-            onClick: () => {
-              setSearcVisible(true);
-            },
-            record: () => ({} as StockRequestItem),
-          }}
-          columns={[
-            { title: 'No', width: 50, editable: false, render: (_, __, index) => index + 1 },
-            { title: 'Item Code', width: 100, editable: false, dataIndex: 'itemCode' },
-            { title: 'Item Name', editable: false, dataIndex: 'itemName' },
-            {
-              title: 'Quantity Requested',
-              width: 100,
-              dataIndex: 'qty',
-              fieldProps: { style: { width: 80 }, min: 1 },
-              valueType: 'digit',
-              formItemProps: { rules: [{ required: true }] },
-            },
-            {
-              title: 'UoM',
-              width: 130,
-              dataIndex: 'uom',
-              valueType: 'select',
-              formItemProps: { rules: [{ required: true }] },
-              valueEnum: (r) => itemUomList.filter(it => it.itemCode == r.itemCode).reduce((acc, cur) => ({ ...acc, [cur.uom]: cur.uom }), {})
-            }, {
-              title: 'Budget.Code',
-              width: 150,
-              dataIndex: 'budgetCode',
-              fieldProps: { showSearch: true },
-              formItemProps: { rules: [{ required: true }] },
-              valueType: 'select',
-              // request: async (_, r: any) => {
-              //   return budgetCodeList.map((it) => ({ label: it.code, value: it.code }));
-              // },
-              valueEnum: (r) => budgetCodeList.reduce((acc, cur) => ({ ...acc, [cur.code]: cur.code }), {})
-            },
-            {
-              title: 'Remarks',
-              valueType: 'textarea',
-              dataIndex: 'remarks',
-              fieldProps: { rows: 1, maxLength: 200 },
-            },
-            {
-              valueType: 'option',
-              width: 50,
-              render: () => {
-                return null;
+        <Space direction="vertical" style={{ width: '100%' }}>
+          <Requestor onlyCurrentUser={!access.canAccessNCMStoctRequestSalAdmin} form={form} />
+          <Card title="General" size="small">
+            <Row gutter={20}>
+              <Col flex={'400px'}>
+                <ProFormTextArea
+                  hasFeedback={false}
+                  help={<span />}
+                  rules={[{ required: true, whitespace: true }]}
+                  label="Requesting Purpose"
+                  name={'reason'}
+                />
+              </Col>
+              <Col flex={'200px'}>
+                <Row>
+                  {warehouseGroupList &&
+                    <ProFormSelect
+                      options={warehouseGroupList.map(i => ({ label: i.name, value: i.code }))}
+                      rules={[{ required: true, whitespace: true }]}
+                      label="From Warehouse"
+                      name={'warehouseFrom'}
+                    />}
+                </Row>
+                <Row>
+                  <ProFormCheckbox name={'delivery'}>Delivery</ProFormCheckbox>
+                </Row>
+              </Col>
+            </Row>
+          </Card>
+          <Card
+            title="Line Items"
+            extra={
+              <Space>
+                <Button danger disabled={addedItems.length == 0} icon={<ClearOutlined />}
+                  onClick={() => {
+                    setAddedItems([])
+                    setGroupId(-1)
+                    setBudgetCodesList([])
+                  }}
+                />
+              </Space>
+            }
+            size="small"
+            style={{ marginTop: 10, marginBottom: 10 }}
+          />
+          <EditableProTable<StockRequestItem>
+            value={addedItems}
+            editableFormRef={editableFormRef}
+            rowKey="key"
+            size="small"
+            editable={{
+              type: 'multiple',
+              editableKeys: addedItems.map((it) => it.key),
+              actionRender: (row) => [
+                <Button
+                  type="link"
+                  danger
+                  onClick={() => {
+                    setAddedItems((v) => {
+                      if (v.length == 1) {
+                        setGroupId(-1)
+                        setBudgetCodesList([])
+                      }
+                      return v.filter((it) => it.key != row.key)
+                    })
+                  }}
+                  size="small"
+                  icon={<MinusCircleOutlined />}
+                />,
+              ],
+              onValuesChange: (_, recordList) => {
+                setAddedItems(
+                  recordList.map((it) => ({
+                    ...it,
+                  })),
+                );
               },
-            },
-          ]}
-        />
-        <FileUploader
-          multiple
-          key={`uoloadfile${forceClearUpload}`}
-          service="FILE"
-          onSetFiles={(files) => {
-            setFileIds(files.map((it) => it.response));
-          }}
-        />
+            }}
+            recordCreatorProps={{
+              creatorButtonText: 'Add Item ',
+              onClick: () => {
+                setSearcVisible(true);
+              },
+              record: () => ({} as StockRequestItem),
+            }}
+            columns={[
+              { title: 'No', width: 50, editable: false, render: (_, __, index) => index + 1 },
+              { title: 'Item Code', width: 100, editable: false, dataIndex: 'itemCode' },
+              { title: 'Item Name', editable: false, dataIndex: 'itemName' },
+              {
+                title: 'Quantity Requested',
+                width: 100,
+                dataIndex: 'qty',
+                fieldProps: { style: { width: 80 }, min: 1 },
+                valueType: 'digit',
+                formItemProps: { rules: [{ required: true }] },
+              },
+              {
+                title: 'UoM',
+                width: 130,
+                dataIndex: 'uom',
+                valueType: 'select',
+                formItemProps: { rules: [{ required: true }] },
+                valueEnum: (r) => itemUomList.filter(it => it.itemCode == r.itemCode).reduce((acc, cur) => ({ ...acc, [cur.uom]: cur.uom }), {})
+              }, {
+                title: 'Budget.Code',
+                width: 150,
+                dataIndex: 'budgetCode',
+                fieldProps: { showSearch: true },
+                formItemProps: { rules: [{ required: true }] },
+                valueType: 'select',
+                // request: async (_, r: any) => {
+                //   return budgetCodeList.map((it) => ({ label: it.code, value: it.code }));
+                // },
+                valueEnum: (r) => budgetCodeList.reduce((acc, cur) => ({ ...acc, [cur.code]: cur.code }), {})
+              },
+              {
+                title: 'Remarks',
+                valueType: 'textarea',
+                dataIndex: 'remarks',
+                fieldProps: { rows: 1, maxLength: 200 },
+              },
+              {
+                valueType: 'option',
+                width: 50,
+                render: () => {
+                  return null;
+                },
+              },
+            ]}
+          />
+          <FileUploader
+            multiple
+            key={`uoloadfile${forceClearUpload}`}
+            service="FILE"
+            onSetFiles={(files) => {
+              setFileIds(files.map((it) => it.response));
+            }}
+          />
+        </Space>
       </ProForm>
       <SearchItemList
         width={1200}
@@ -258,9 +292,6 @@ export default ({
             // setItemUomList((v) => [...v, ...newItems,{itemCode: 'UN00000001',uom: 'Set1' }]);
             setItemUomList((v) => [...v, ...newItems]);
           }
-
-          console.log('itemUomList', itemUomList)
-
           const itemList = [
             ...addedItems,
             {
@@ -275,7 +306,7 @@ export default ({
           setAddedItems(itemList);
         }}
       />
-      <ProcessFlowModalWrapper
+      {/* <ProcessFlowModalWrapper
         type="action"
         action="Start"
         loading={false}
@@ -309,7 +340,7 @@ export default ({
             setStartFormVisible(false);
           },
         }}
-      />
+      /> */}
     </PageContainer>
   </Spin>
 };

@@ -146,6 +146,7 @@ export interface RequisitionServiceItemDetailResponse {
 export interface BudgetCodeListItem {
   code: string;
   name: string;
+  groupCode?: string;
 }
 
 export interface ProEmployee {

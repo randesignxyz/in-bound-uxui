@@ -34,6 +34,7 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb, ...rest }: Pr
     const [items, setItems] = useState<MarjorData[]>([]);
     const [name, setName] = useState('');
     const [searchName, setSearchName] = useState('');
+    const [selectedMajor, setSelectedMajor] = useState<MarjorData>();
     const inputRef = useRef<InputRef>(null);
 
     useEffect(() => {
@@ -155,42 +156,38 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb, ...rest }: Pr
                     return { value: it.id, label: it.majorName };
                 })} 
             />
-            {/* <Form.Item name="majorSubject1"  label = "Major/Subject"  rules={[{ required: true }]}>
-            <Select 
-                style={{ width: '100%' }}
-                // required={true} 
-                allowClear={true}
-                // id={'marjorSubject1'}
-                filterOption={false}
-                showSearch
-                onSearch={handleSearch}
-                onChange={(value:any)=> {
-                    console.log('onchange===',[...marjor,...items].find(i=> (i.id==value))  )
-                    setSearchName('')
-                }}
-                dropdownRender={(menu) => (
-                <>
-                    {menu}
-                    <Divider style={{ margin: '8px 0' }} />
-                    <Flex gap={2} >
-                    <Input
-                        placeholder="Please enter major/subject"
-                        ref={inputRef}
-                        value={name}
-                        onChange={onNameChange}
-                        onKeyDown={(e) => e.stopPropagation()}
-                    />
-                    <Button type="text" size="middle" icon={<PlusOutlined />} onClick={addItem}></Button>
-                    </Flex>
-                </>)}
-                //  options={[...marjor,...items]?.map((it) => {
-                //     return { value: it.id, label: it.majorName };
-                // })} 
-                options={[...marjor,...items]?.filter(i=> (searchName=='' || (i.majorName.toLowerCase().includes(searchName.toLowerCase()))))?.map((it) => {
-                    return { value: it.id, label: it.majorName };
-                })} 
-            />   
-            </Form.Item>  */}
+            <Form.Item name="majorSubject1"  label = "Major/Subject"  rules={[{ required: true }]}>
+                <Select 
+                    style={{ width: '100%' }}
+                    allowClear={true}
+                    filterOption={false}
+                    showSearch
+                    onSearch={handleSearch}
+                    onChange={(value:any)=> {
+                        console.log('onchange===',[...marjor,...items].find(i=> (i.id==value))  )
+                        setSelectedMajor([...marjor,...items].find(i=> (i.id==value)))
+                        setSearchName('')
+                    }}
+                    dropdownRender={(menu) => (
+                    <>
+                        {menu}
+                        <Divider style={{ margin: '8px 0' }} />
+                        <Flex gap={2} >
+                        <Input
+                            placeholder="Please enter major/subject"
+                            ref={inputRef}
+                            value={name}
+                            onChange={onNameChange}
+                            onKeyDown={(e) => e.stopPropagation()}
+                        />
+                        <Button type="text" size="middle" icon={<PlusOutlined />} onClick={addItem}></Button>
+                        </Flex>
+                    </>)}
+                    options={[...marjor,...items]?.filter(i=> (searchName=='' || (i.majorName.toLowerCase().includes(searchName.toLowerCase()))))?.map((it) => {
+                        return { value: it.id, label: it.majorName };
+                    })} 
+                />   
+            </Form.Item> 
             
            
             <Row>

@@ -5,13 +5,18 @@ import { ItemDetail, ItemGroupListItem, ItemListItem,  SearchParams,  StockReque
 import { StartWorkFlowParam, TaskActionDataParam } from "@/services/process-workflow/params";
 
 export const createService = (request: SimpleRequestActions) => {
-    return {       
-        request: (params: StartWorkFlowParam<StockRequest>) => 
-            execDataService<StockRequestResponse,StartWorkFlowParam<StockRequest>>({
-                actionName: 'fma-stock-request',
-                endpoint: 'FMA',
-                payload: params
-            })(request),
+    return {  
+    submitRequest: async (data: StockRequest) => execDataService<{ formNo: string }, StockRequest>({
+            actionName: 'fma-stock-request',
+            endpoint: 'FMA',
+            payload: data
+        })(request) ,    
+        // request: (params: StartWorkFlowParam<StockRequest>) => 
+        //     execDataService<StockRequestResponse,StartWorkFlowParam<StockRequest>>({
+        //         actionName: 'fma-stock-request',
+        //         endpoint: 'FMA',
+        //         payload: params
+        //     })(request),
         fetchPaging: async (params: FetchPagingParams<SearchParams>) =>
             fetchDataPagingService<StockRequestListItem, FetchPagingParams<SearchParams>>({
                 actionName: 'fetch-paging-stock-request',

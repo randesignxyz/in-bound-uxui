@@ -251,13 +251,13 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                 }
             }}
             onFinishFailed={(error) => {
-            message.error(
-                <Space direction="vertical" align="start">
-                {error.errorFields.map((it) => (
-                    <div>{it.errors.join(', ')}</div>
-                ))}
-                </Space>,
-            );
+                message.error(
+                    <Space direction="vertical" align="start">
+                    {error.errorFields.map((it) => (
+                        <div>{it.errors.join(', ')}</div>
+                    ))}
+                    </Space>,
+                );
             }}
             onFinish={(data) => {
                 return saveEducationHandler({ ...data, id: modalVisible?.type=='EDIT'?modalVisible?.payload?.educationId==null?modalVisible?.payload?.id:modalVisible?.payload?.educationId:(modalVisible?.payload?.id||0), empId: profile.id,type:modalVisible?.type });

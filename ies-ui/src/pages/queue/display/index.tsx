@@ -64,6 +64,7 @@ export default () => {
   const [auth, setAuth] = useState(true);
   const [forceUpdate, setForceUpdate] = useState<{ increase: number, loadingId?: number }>({ increase: 1 })
   const [viewType, setViewType] = useState<'list' | 'grid'>('list')
+  const [filter, setFilter] = useState("all");
 
   useEffect(() => {
 
@@ -120,13 +121,13 @@ export default () => {
 
   const getColor = (item: QueueDisplay) => {
     if (!item.createdDate) return 'default-color';
-
     const now = new Date();
-    const createdDate = new Date(item.createdDate);
-    const timeDiff = (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60); // Convert to hours
-
-    return timeDiff <= 1 ? 'green-bg' : 'red-bg';
-  };
+    const createdDate = moment.isMoment(item.createdDate) 
+      ? item.createdDate.toDate() 
+      : new Date(item.createdDate)
+    const timeDiff = (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60)
+    return timeDiff <= 1 ? styles.color1 : styles.color5
+  }
 
   useEffect(() => {
     if (selectedLayout && auth) {
@@ -175,6 +176,17 @@ export default () => {
       ...list.filter((it) => !it.assignedDate),
     ]);
   };
+
+  const filteredData = ticketList.filter((item) => {
+    const now = moment();
+    const createdDate = moment(item.createdDate);
+    const diffInHours = now.diff(createdDate, "hours", true);
+
+    if (filter === "30") return diffInHours < 0.5;
+    if (filter === "less") return diffInHours < 1; 
+    if (filter === "more") return diffInHours > 1; 
+    return true; // Show all when "all" is selected
+  });
 
 
   const gridRender = (item: { index: number, data?: QueueDisplay }) => {
@@ -230,7 +242,13 @@ export default () => {
           <Col flex="Auto" />
           <Col>
             <Space size={2}>
-              <Radio.Group defaultValue="list" onChange={e => setViewType(e.target.value)} buttonStyle="solid">
+            <Radio.Group defaultValue="all" onChange={(e) => setFilter(e.target.value)} buttonStyle="solid" style={{marginRight:10}}>
+                <Radio.Button value="all">ALL</Radio.Button>
+                {/* <Radio.Button value="30">&lt; 30 minutes</Radio.Button> */}
+                <Radio.Button value="less">&lt; 1 hour</Radio.Button>
+                <Radio.Button value="more">&gt; 1 hour</Radio.Button>
+              </Radio.Group>
+            <Radio.Group defaultValue="list" onChange={e => setViewType(e.target.value)} buttonStyle="solid">
                 <Radio.Button value="list">List</Radio.Button>
                 <Radio.Button value="grid">Grid</Radio.Button>
               </Radio.Group>
@@ -297,11 +315,11 @@ export default () => {
               renderItem={gridRender}
             />}
 
-            {!isFullscreen && viewType == 'list' && <ProList<QueueDisplay> dataSource={ticketList}
+            {!isFullscreen && viewType == 'list' && <ProList<QueueDisplay> dataSource={filteredData}
               actionRef={actionRef}
               rowKey='id'
-              rowClassName={(item: QueueDisplay) => item ? styles.color1:styles.color2}
-
+              rowClassName={(item: QueueDisplay) => getColor(item)
+              }
               metas={{
                 avatar: {
                   render: () => <FieldTimeOutlined />

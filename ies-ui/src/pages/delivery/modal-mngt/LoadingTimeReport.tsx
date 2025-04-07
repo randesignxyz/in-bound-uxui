@@ -89,7 +89,7 @@ export default ({ ...rest }: ModalFormProps) => {
                 fileName: `truck-loading-time-report-${moment().format()}.xls`,
                 type: 'EXCEL',
                 data: {
-                    reportName: "export-truck-loading-time-1",
+                    reportName: "export-truck-loading-time",
                     reportPath: "/Reports/qa/delivery",
                     data: [{ key: 'dateFrom', value: dataForm.dateRange[0] },
                     { key: 'dateTo', value: dataForm.dateRange[1] },

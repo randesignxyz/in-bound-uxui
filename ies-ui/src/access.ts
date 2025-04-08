@@ -1027,5 +1027,9 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           (it) => it === item,
         ),
       ) || false,
+    canAccessHRProbationEvaluationExportReport:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_HR_PROBATION_EVALUATION_EXPORT_REPORT'].some((it) => it === item),
+      ) || false,
   };
 }

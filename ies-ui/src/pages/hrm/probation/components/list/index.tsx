@@ -16,6 +16,7 @@ import ProbationRequestModal from "../../ProbationRequestModal";
 import { ProbationEvaluationRequestFormNames } from "../../process-flow";
 import { history, useAccess, useModel } from 'umi';
 import ProbationEvaluationQuickView from "../quick-view";
+import ProbationReportModalForm from "../../reports/ProbationReportModalForm";
 
 interface Props {
     onAdd?: (id?: number) => void;
@@ -229,6 +230,9 @@ const ProbationList: React.FC<Props> = ({ onAdd, forceRefresh, onDetail }) => {
 
                         </LightFilter>}
                 </Space>
+            }
+            extraRightFilter={
+                access.canAccessHRProbationEvaluationExportReport&&<ProbationReportModalForm trigger={<Button type="link" icon={<ExportOutlined/>}>Export</Button>} />
             }
             actionHandlers={{
                 onAdd: createAppraisalFormHandler,

@@ -124,7 +124,7 @@ export default ({ trigger }: { trigger?: JSX.Element}) => {
               mode="multiple" 
               rules={[{ required: false }]}
               width={'sm'}
-              label="Form Type"
+              label="Job Level"
               options={probationFormType?.map((it) => ({ label: it.description, value: it.id }))}
             />            
             {/* {warehouseGroupList&&

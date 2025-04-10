@@ -174,10 +174,7 @@ const POMainPage: React.FC = () => {
               criteria: {
                 searchValue: params?.searchValue,
                 advanceSearch: {
-                  status: params?.status,
-                  dates: advanceSearch.value?.dates,
-                  salespersonId: advanceSearch.value?.salespersonId,
-                  distributorType: advanceSearch.value?.distributorType,
+                  ...filter.criteria?.advanceSearch,
                 },
               },
               pagination: { ...page },
@@ -361,10 +358,11 @@ const POMainPage: React.FC = () => {
             criteria: {
               searchValue: filter.criteria?.searchValue,
               advanceSearch: {
-                ...advanceSearch.value,
-                salespersonId: data.salespersonId,
-                dates: data.dates,
-                distributorType: data.distributorType,
+                ...data,
+                // ...advanceSearch.value,
+                // salespersonId: data.salespersonId,
+                // dates: data.dates,
+                // distributorType: data.distributorType,
               },
               //advanceSearch
             },
@@ -383,7 +381,7 @@ const POMainPage: React.FC = () => {
             },
           }));
         }}
-        initData={filter.criteria}
+        initData={filter.criteria?.advanceSearch}
       />
     </>
   );

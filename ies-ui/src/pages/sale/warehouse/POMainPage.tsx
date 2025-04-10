@@ -6,28 +6,24 @@ import { simpleRequestActions } from '@/services/model';
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
-  DeleteFilled,
   DollarOutlined,
   DownloadOutlined,
   PlusOutlined,
-  PrinterOutlined,
   SyncOutlined,
 } from '@ant-design/icons';
 import { ActionType } from '@ant-design/pro-components';
 import { useQuery } from '@umijs/max';
-import { Button, message, Modal, Tag, Tooltip } from 'antd';
+import { Button, message, Tag, Tooltip } from 'antd';
 import numeral from 'numeral';
 import { useRef, useState } from 'react';
 import { PurchaseOrderDTO } from '../mpu/purchase_order/data';
-import MpuPoDetail from '../mpu/purchase_order/MpuPODetail';
 import MpuPoEntryForm from '../mpu/purchase_order/MpuPOEntryForm';
 import { PurchaseOrderServiceAPI } from '../mpu/purchase_order/services';
-import AdvanceSearch from '../stock-control/List/AdvanceSearch';
 import { getUrlReporting } from '@/pages/ReportUrl';
 import { downloadGenericReport } from '@/services/apiGateway';
-import form from 'antd/es/form';
 import moment from 'moment';
 import POPrintModal from './POPrintModal';
+import MpuPoDetail from './MpuPODetail';
 const POMainPage: React.FC = () => {
   const requestActions = simpleRequestActions();
   const services = PurchaseOrderServiceAPI(requestActions);

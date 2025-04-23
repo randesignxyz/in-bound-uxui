@@ -74,7 +74,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
         }
     };
     const saveEducationHandler = async (data: EducationData) => {
-        console.log(data)
+        // console.log('please data: ',data)
         // attachment files
         if(createFileOther.length==0){  
             message.error('Please do select attachment files.');
@@ -259,7 +259,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                     </Space>,
                 );
             }}
-            onFinish={(data) => {
+            onFinishSubmit={(data) => {
                 return saveEducationHandler({ ...data, id: modalVisible?.type=='EDIT'?modalVisible?.payload?.educationId==null?modalVisible?.payload?.id:modalVisible?.payload?.educationId:(modalVisible?.payload?.id||0), empId: profile.id,type:modalVisible?.type });
             }}
         />

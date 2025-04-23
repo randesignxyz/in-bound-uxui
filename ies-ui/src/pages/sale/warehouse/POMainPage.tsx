@@ -1,7 +1,7 @@
-
-
 import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import PageWrapper from '@/components/PageWrapper';
+import { getUrlReporting } from '@/pages/ReportUrl';
+import { downloadGenericReport } from '@/services/apiGateway';
 import { simpleRequestActions } from '@/services/model';
 import {
   CheckCircleOutlined,
@@ -14,16 +14,14 @@ import {
 import { ActionType } from '@ant-design/pro-components';
 import { useQuery } from '@umijs/max';
 import { Button, message, Tag, Tooltip } from 'antd';
+import moment from 'moment';
 import numeral from 'numeral';
 import { useRef, useState } from 'react';
 import { PurchaseOrderDTO } from '../mpu/purchase_order/data';
+import MpuPoDetail from '../mpu/purchase_order/MpuPODetail';
 import MpuPoEntryForm from '../mpu/purchase_order/MpuPOEntryForm';
 import { PurchaseOrderServiceAPI } from '../mpu/purchase_order/services';
-import { getUrlReporting } from '@/pages/ReportUrl';
-import { downloadGenericReport } from '@/services/apiGateway';
-import moment from 'moment';
 import POPrintModal from './POPrintModal';
-import MpuPoDetail from './MpuPODetail';
 const POMainPage: React.FC = () => {
   const requestActions = simpleRequestActions();
   const services = PurchaseOrderServiceAPI(requestActions);
@@ -47,13 +45,13 @@ const POMainPage: React.FC = () => {
   );
 
   const [printModalState, setPrintModalState] = useState<{
-    visible?:{name:'Modal',payloads:number}
+    visible?: { name: 'Modal'; payloads: number };
   }>();
 
-  const onDowloadReportHandler = async (id?:number) => {
+  const onDowloadReportHandler = async (id?: number) => {
     try {
       // const dataForm = await form.validateFields()
-      const reportName = 'stock-request-report-form'
+      const reportName = 'stock-request-report-form';
       // setLoading(true)
       await downloadGenericReport(requestActions)({
         fileName: `${reportName}-${moment().format()}.pdf`,
@@ -61,18 +59,16 @@ const POMainPage: React.FC = () => {
         data: {
           reportName: reportName,
           reportPath: getUrlReporting('sale/forms'),
-          data: [
-            { key: 'purchaseId', value: id, type: 'string' },
-          ]
-        }
+          data: [{ key: 'purchaseId', value: id, type: 'string' }],
+        },
       }).then((edit) => {
         // setLoading(false)
-      })
+      });
     } catch (error: any) {
-      message.error(error.message || "Failed to generate report.")
+      message.error(error.message || 'Failed to generate report.');
       // setLoading(false)
     }
-  }
+  };
 
   return (
     <>
@@ -144,7 +140,7 @@ const POMainPage: React.FC = () => {
                 searchValue: params?.searchValue,
                 advanceSearch: {
                   status: params?.status,
-                  distributorType: "L911154"
+                  distributorType: 'L911154',
                 },
               },
               pagination: { ...page },
@@ -203,10 +199,10 @@ const POMainPage: React.FC = () => {
                       r.status === 'Pending'
                         ? 'processing'
                         : r.status === 'Paid'
-                          ? 'default'
-                          : r.status === 'Rejected'
-                            ? 'error'
-                            : 'success'
+                        ? 'default'
+                        : r.status === 'Rejected'
+                        ? 'error'
+                        : 'success'
                     }
                   >
                     {r.status}
@@ -245,12 +241,11 @@ const POMainPage: React.FC = () => {
                     <Tooltip title="Print Data From Report">
                       <Button
                         icon={<DownloadOutlined />}
-                        type='link'
-                        onClick={async()=>onDowloadReportHandler(r.id)}
+                        type="link"
+                        onClick={async () => onDowloadReportHandler(r.id)}
                         // onClick={()=>setPrintModalState({visible:{name:"Modal", payloads:r.id}})}
                       />
                     </Tooltip>
-
                   );
                 },
               },
@@ -259,9 +254,9 @@ const POMainPage: React.FC = () => {
         }}
       />
       <POPrintModal
-         open={printModalState?.visible?.name=="Modal"}
-         id ={printModalState?.visible?.payloads}
-         onCancel={()=>setPrintModalState({visible:undefined})}
+        open={printModalState?.visible?.name == 'Modal'}
+        id={printModalState?.visible?.payloads}
+        onCancel={() => setPrintModalState({ visible: undefined })}
       />
       {/* <AdvanceSearch
         width={500}

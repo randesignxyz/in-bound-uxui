@@ -1,6 +1,7 @@
 import { StatusActionForm } from '@/pages/sale/mpu/settlement/data';
 import type { SortOrder } from 'antd/lib/table/interface';
 import type { Moment } from 'moment';
+import moment from 'moment';
 import type { ServiceType } from '../API';
 import type { RequestActions, ServiceApiType } from '../apiGateway';
 import {
@@ -145,6 +146,7 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
   donwloadPOReport: downloadSaleReport<{
     salespersonCode?: string[];
     requestedDate?: moment.Moment[];
+    status?: string[];
   }>(actions),
 
   donwloadDSDReport: downloadSaleReport<{
@@ -155,6 +157,7 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
 
   donwloadDSDLeadReport: downloadSaleReport<{
     salespersonCode?: string[];
+    openedDate?: moment.Moment[];
   }>(actions),
 
   donwloadDSDVisitReport: downloadSaleReport<{

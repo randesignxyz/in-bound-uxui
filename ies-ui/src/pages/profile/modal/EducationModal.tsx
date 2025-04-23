@@ -24,9 +24,10 @@ interface Props extends ModalFormProps<EducationData> {
         onLoadMenu: (tid:UploadType[]) => void;  
         onReload:()=>void;
     };
+    onFinishSubmit?:(data:any)=> Promise<boolean | void> | void;
 }
 
-export default ({ profile,data,files,type,isAdmin,empId,marjor,cb, ...rest }: Props) => { 
+export default ({ profile,data,files,type,isAdmin,empId,marjor,cb,onFinishSubmit, ...rest }: Props) => { 
     const [form] = ProForm.useForm<EducationData>(); 
     const requestActions = simpleRequestActions();
     const [imageList, setImageList] = useState<FilesData[]>([]);
@@ -60,10 +61,7 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb, ...rest }: Pr
     }
     // 
     const onAdminSubmit = async ()=>{
-
-        console.log('bmform--------------------------')
         const bmForm = await form.validateFields(); 
-        console.log('bmform',bmForm)
         // attachment files
         // if(type=="ADD"){ 
         //     if(createFileOther.length==0){  
@@ -145,6 +143,10 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb, ...rest }: Pr
                     }
                 }
             } 
+            onFinish={(data) => {   
+                // console.log('please data111: ',data)                 
+                return Promise.resolve(onFinishSubmit?.({...data,selectedMajor}));
+            }}
         >
         <ProCard bordered>
             <ProFormText label="Education Institution" name={'educationCenter'} rules={[{ required: true }]}/> 
@@ -156,7 +158,7 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb, ...rest }: Pr
                     return { value: it.id, label: it.majorName };
                 })} 
             />
-            <Form.Item name="majorSubject1"  label = "Major/Subject"  rules={[{ required: true }]}>
+            {/* <Form.Item name="majorSubject1"  label = "Major/Subject"  rules={[{ required: true }]}>
                 <Select 
                     style={{ width: '100%' }}
                     allowClear={true}
@@ -187,7 +189,7 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb, ...rest }: Pr
                         return { value: it.id, label: it.majorName };
                     })} 
                 />   
-            </Form.Item> 
+            </Form.Item>  */}
             
            
             <Row>

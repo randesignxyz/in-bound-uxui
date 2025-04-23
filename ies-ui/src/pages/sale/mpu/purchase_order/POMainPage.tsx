@@ -176,9 +176,9 @@ const POMainPage: React.FC = () => {
                 advanceSearch: {
                   ...filter.criteria?.advanceSearch,
                 },
+                sort: sort,
               },
               pagination: { ...page },
-              sort: sort,
             }));
           },
 
@@ -196,15 +196,24 @@ const POMainPage: React.FC = () => {
                   type: 'view',
                   label: item.purchaseOrderCode || 'n/a',
                 }),
+                sorter: {
+                  multiple: 1,
+                },
               },
               {
                 title: 'Purchase Date',
                 dataIndex: 'purchaseOrderDate',
                 valueType: 'date',
+                sorter: {
+                  multiple: 2,
+                },
               },
               {
                 title: 'Assigned To',
                 dataIndex: 'assignedTo',
+                sorter: {
+                  multiple: 3,
+                },
               },
 
               {
@@ -356,7 +365,7 @@ const POMainPage: React.FC = () => {
           console.log(data);
           setFilter({
             criteria: {
-              searchValue: filter.criteria?.searchValue,
+              ...filter.criteria,
               advanceSearch: {
                 ...data,
                 // ...advanceSearch.value,

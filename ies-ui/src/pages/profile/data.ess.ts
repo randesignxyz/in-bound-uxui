@@ -335,7 +335,8 @@ export interface EducationData {
   educationYear    : moment.Moment[]; 
   fromYear    : moment.Moment; 
   toYear      : moment.Moment; 
-  marjorSubject: string;  
+  marjorSubject: number; 
+  marjorSubjectName?: number;  
   type        : string; 
   gpa        :  number; 
   status      : boolean;

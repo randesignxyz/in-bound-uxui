@@ -2,7 +2,7 @@ import FormModalComp, { FormModalProps } from '@/components/FormModal';
 import { simpleRequestActions } from '@/services/model';
 import { SalesTeamWorkLess } from '@/services/sale/data';
 import { SaleServiceAPI } from '@/services/sale/services';
-import { ProForm, ProFormSelect } from '@ant-design/pro-components';
+import { ProForm, ProFormDateRangePicker, ProFormSelect } from '@ant-design/pro-components';
 import { Card, Spin, message } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { useState } from 'react';
@@ -23,6 +23,7 @@ export default (props: Props) => {
 
   const [form] = useForm<{
     salespersonCode?: string[];
+    openedDate?: moment.Moment[];
   }>();
 
   const onDowloadReportHandler = async () => {
@@ -36,6 +37,7 @@ export default (props: Props) => {
         type: 'EXCEL',
         data: {
           salespersonCode: dataForm.salespersonCode,
+          openedDate: dataForm.openedDate,
         },
       });
       message.success('Report generated successfully.');
@@ -70,6 +72,11 @@ export default (props: Props) => {
                   };
                 })}
                 allowClear
+              />
+              <ProFormDateRangePicker
+                rules={[{ required: true }]}
+                label="Opened Date Start-End"
+                name="openedDate"
               />
             </ProForm>
           </Card>

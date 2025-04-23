@@ -47,10 +47,10 @@ export default (props: Props) => {
     try {
       setLoading(true);
       const dataForm = await form.validateFields();
-      console.log(dataForm);
+      // console.log(dataForm);
       await saleServices.donwloadDSDReport({
         fileName: 'dsd-reports',
-        reportName: 'dsd-reports',
+        reportName: selectedReportType,
         type: 'EXCEL',
         data: {
           reportType: dataForm.reportType!!,
@@ -88,6 +88,7 @@ export default (props: Props) => {
                 rules={[{ required: true }]}
                 initialValue={selectedReportType}
                 options={[
+                  { value: 'raw', label: 'Raw Sales Invoice' },
                   { value: 'sales_invoice', label: 'Sales Invoice' },
                   { value: 'sales_items', label: 'Sold Items' },
                 ]}

@@ -58,6 +58,11 @@ export default (props: Props) => {
         <Spin spinning={loading}>
           <Card>
             <ProForm submitter={false} layout="horizontal" form={form}>
+              <ProFormDateRangePicker
+                rules={[{ required: true }]}
+                label="Opened Date Start-End"
+                name="openedDate"
+              />
               <ProFormSelect
                 mode="multiple"
                 label="Salespersons"
@@ -72,11 +77,6 @@ export default (props: Props) => {
                   };
                 })}
                 allowClear
-              />
-              <ProFormDateRangePicker
-                rules={[{ required: true }]}
-                label="Opened Date Start-End"
-                name="openedDate"
               />
             </ProForm>
           </Card>

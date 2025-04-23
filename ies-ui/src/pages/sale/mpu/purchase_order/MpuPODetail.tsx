@@ -1,16 +1,21 @@
+import { getUrlReporting } from '@/pages/ReportUrl';
 import { formatDate, formatDateTime } from '@/pages/utils';
+import { downloadGenericReport } from '@/services/apiGateway';
 import { simpleRequestActions } from '@/services/model';
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   DollarOutlined,
+  DownloadOutlined,
   EditOutlined,
   EnvironmentOutlined,
   SyncOutlined,
 } from '@ant-design/icons';
 import { ProDescriptions, ProTable } from '@ant-design/pro-components';
-import { Button, Card, Flex, Row, Space, Table, Tag, Typography } from 'antd';
+import { useAccess } from '@umijs/max';
+import { Button, Card, Flex, message, Row, Space, Table, Tag, Typography } from 'antd';
 import { Col } from 'antd/lib';
+import moment from 'moment';
 import numeral from 'numeral';
 import { useEffect, useState } from 'react';
 import { PurchaseRequestItemCreate } from '../request/data';
@@ -27,6 +32,7 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit }) => {
   const requestActions = simpleRequestActions();
   const services = PurchaseOrderServiceAPI(requestActions);
   const [dataSource, setDataSource] = useState<PurchaseOrderDTO>();
+  const access = useAccess();
   //const [address, setAddress] = useState<AddressInfo>();
   const onLoad = async () => {
     const data = await services.detail(id);
@@ -46,6 +52,28 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit }) => {
     }
   };
 
+  const onDowloadReportHandler = async (id?: number) => {
+    try {
+      // const dataForm = await form.validateFields()
+      const reportName = 'stock-request-report-form';
+      // setLoading(true)
+      await downloadGenericReport(requestActions)({
+        fileName: `${reportName}-${moment().format()}.pdf`,
+        type: 'PDF',
+        data: {
+          reportName: reportName,
+          reportPath: getUrlReporting('sale/forms'),
+          data: [{ key: 'purchaseId', value: id, type: 'string' }],
+        },
+      }).then(() => {
+        // setLoading(false)
+      });
+    } catch (error: any) {
+      message.error(error.message || 'Failed to generate report.');
+      // setLoading(false)
+    }
+  };
+
   return (
     <>
       <Flex vertical gap={18}>
@@ -53,14 +81,24 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit }) => {
           size="small"
           title="Purchase Order"
           extra={
-            dataSource?.status === 'Pending' && (
-              <Button type="link" onClick={onEditEvent}>
-                <EditOutlined />
-                Edit
-              </Button>
-            )
+            <Space>
+              {dataSource?.status === 'Pending' && (
+                <Button type="link" onClick={onEditEvent}>
+                  <EditOutlined />
+                  Edit
+                </Button>
+              )}
+              {access.canAccessTabWarehouse && (
+                <Button
+                  icon={<DownloadOutlined />}
+                  type="link"
+                  onClick={async () => onDowloadReportHandler(dataSource?.id)}
+                />
+              )}
+            </Space>
           }
         >
+          {/*  */}
           <Row gutter={12} style={{ marginLeft: 20 }}>
             <Col md={8} xs={24}>
               <ProDescriptions

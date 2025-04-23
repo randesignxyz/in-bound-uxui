@@ -49,8 +49,8 @@ export default (props: Props) => {
       const dataForm = await form.validateFields();
       // console.log(dataForm);
       await saleServices.donwloadDSDReport({
-        fileName: 'dsd-reports',
-        reportName: selectedReportType,
+        fileName: selectedReportType,
+        reportName: 'dsd-reports',
         type: 'EXCEL',
         data: {
           reportType: dataForm.reportType!!,

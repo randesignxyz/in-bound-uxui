@@ -1,18 +1,22 @@
 import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import PageWrapper from '@/components/PageWrapper';
+import { getUrlReporting } from '@/pages/ReportUrl';
+import { downloadGenericReport } from '@/services/apiGateway';
 import { simpleRequestActions } from '@/services/model';
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   DeleteFilled,
   DollarOutlined,
+  DownloadOutlined,
   InfoCircleOutlined,
   PlusOutlined,
   SyncOutlined,
 } from '@ant-design/icons';
 import { ActionType } from '@ant-design/pro-components';
-import { useQuery } from '@umijs/max';
-import { Button, Modal, Space, Tag, Tooltip } from 'antd';
+import { useAccess, useQuery } from '@umijs/max';
+import { Button, message, Modal, Space, Tag, Tooltip } from 'antd';
+import moment from 'moment';
 import numeral from 'numeral';
 import { useRef, useState } from 'react';
 import RemarkModalForm from '../../component/RemarkModal';
@@ -21,10 +25,8 @@ import MpuPoDetail from './MpuPODetail';
 import MpuPoEntryForm from './MpuPOEntryForm';
 import { PurchaseOrderDTO } from './data';
 import { PurchaseOrderServiceAPI } from './services';
-// interface Props {}
 
 const POMainPage: React.FC = () => {
-  // const { state, actions, modals } = Model();
   const requestActions = simpleRequestActions();
   const services = PurchaseOrderServiceAPI(requestActions);
   const actionRef = useRef<ActionType>();
@@ -35,18 +37,19 @@ const POMainPage: React.FC = () => {
     isVisibled: false,
   });
 
+  const access = useAccess();
+
   const [remarkModal, setRemarkModal] = useState<{ isVisibled: boolean; data?: PurchaseOrderDTO }>({
     isVisibled: false,
   });
 
-  // const [actionStatusState, setActionStatusState] = useState<{
-  //   visible?: {
-  //     type: 'open';
-  //     payloads?: PurchaseOrderDTO;
-  //   };
-  // }>();
   const [filter, setFilter] = useState<TableViewSearchParams<AdvanceSearchParam>>({
-    criteria: { advanceSearch: { status: 'ALL' } },
+    criteria: {
+      advanceSearch: {
+        status: 'ALL',
+        distributorType: access.canAccessTabWarehouse ? 'warehouse' : undefined,
+      },
+    },
   });
   const { data, isFetching, refetch } = useQuery(
     ['fetch-po-list', filter],
@@ -72,39 +75,22 @@ const POMainPage: React.FC = () => {
     });
   };
 
-  // const items = (items: PurchaseOrderDTO): MenuProps['items'] => [
-  // {
-  //     key: "action-status",
-  //     label: "Force Close",
-  //     itemIcon: <IssuesCloseOutlined />,
-  //     onClick: () => setActionStatusState({ visible: { type: "open", payloads: items } })
-  // },
-  // {
-  //     type: "divider"
-  // },
-  // {
-  //   key: 'reject',
-  //   label: 'Reject',
-  //   danger: true,
-  //   itemIcon: <CloseCircleOutlined />,
-  //   disabled: items.status === 'Pending' ? false : true,
-  //   onClick: () => {
-  //     Modal.confirm({
-  //       title: 'Reject Purchase',
-  //       content: 'are you sure?',
-  //       onOk: async () => {
-  //         await services.rejected({
-  //           id: items.id,
-  //           remark: 'data was reject',
-  //         });
-  //         actionRef.current?.reload?.();
-  //         refetch();
-  //       },
-  //     });
-  //   },
-  // },
-  // ];
-  // useEffect(() => {}, [data]);
+  const onDowloadReportHandler = async (id?: number) => {
+    try {
+      const reportName = 'stock-request-report-form';
+      await downloadGenericReport(requestActions)({
+        fileName: `${reportName}-${moment().format()}.pdf`,
+        type: 'PDF',
+        data: {
+          reportName: reportName,
+          reportPath: getUrlReporting('sale/forms'),
+          data: [{ key: 'purchaseId', value: id, type: 'string' }],
+        },
+      }).then(() => {});
+    } catch (error: any) {
+      message.error(error.message || 'Failed to generate report.');
+    }
+  };
   return (
     <>
       <PageWrapper<PurchaseOrderDTO, AdvanceSearchParam, ''>
@@ -170,11 +156,13 @@ const POMainPage: React.FC = () => {
             },
           ],
           onFilter(params, page, sort) {
+            console.log(params);
             setFilter(() => ({
               criteria: {
                 searchValue: params?.searchValue,
                 advanceSearch: {
                   ...filter.criteria?.advanceSearch,
+                  status: params?.status,
                 },
                 sort: sort,
               },
@@ -271,11 +259,6 @@ const POMainPage: React.FC = () => {
                 },
                 align: 'right',
               },
-              // {
-              //   title: 'Total Amount',
-              //   dataIndex: 'totalAmount',
-              //   valueType: 'money',
-              // },
               {
                 title: 'Requested By',
                 dataIndex: 'requestedBy',
@@ -289,7 +272,16 @@ const POMainPage: React.FC = () => {
                 title: 'Action',
                 align: 'center',
                 render: (_, r) => {
-                  return (
+                  return access.canAccessTabWarehouse ? (
+                    <Tooltip title="Print Data From Report">
+                      <Button
+                        icon={<DownloadOutlined />}
+                        type="link"
+                        onClick={async () => onDowloadReportHandler(r.id)}
+                        // onClick={()=>setPrintModalState({visible:{name:"Modal", payloads:r.id}})}
+                      />
+                    </Tooltip>
+                  ) : (
                     <Button
                       disabled={r.status !== 'Pending'}
                       type="link"
@@ -298,18 +290,6 @@ const POMainPage: React.FC = () => {
                       icon={<DeleteFilled />}
                     />
                   );
-                  //   <Dropdown
-                  //     menu={{
-                  //       items: items(r),
-                  //       style: {
-                  //         width: 200,
-                  //       },
-                  //     }}
-                  //   >
-                  //     <a>
-                  //       <EllipsisOutlined />
-                  //     </a>
-                  //   </Dropdown>
                 },
               },
             ],
@@ -329,51 +309,24 @@ const POMainPage: React.FC = () => {
           }
         }}
       />
-
-      {/* <RemarkModal
-        title="Exclude Order"
-        width="500px"
-        open={remarkModal.isVisibled}
-        onCancel={() => setRemarkModal({ isVisibled: false, data: undefined })}
-        id={remarkModal.data?.id}
-        onSave={(id, remarks) => {
-          rejectedAction(id, remarks);
-          setRemarkModal({ isVisibled: false, data: undefined });
-        }}
-      /> */}
       <AdvanceSearch
         width={500}
         title="Advance Search"
         open={advanceSearch.isVisibled}
         entity="Purchase Order"
+        showingBar={access.canAccessTabWarehouse ? false : true}
         onOpenChange={(visible) => {
           if (!visible) {
             setAdvanceSearch({ isVisibled: false });
           }
         }}
         onSearch={(data) => {
-          // setFilter((v) => ({
-          //   ...v,
-          //   criteria: {
-          //     ...v.criteria,
-          //     advanceSearch: {
-          //       ...filter.criteria?.advanceSearch,
-          //       ...data,
-          //     },
-          //   },
-          // }));
-          console.log(data);
           setFilter({
             criteria: {
               ...filter.criteria,
               advanceSearch: {
                 ...data,
-                // ...advanceSearch.value,
-                // salespersonId: data.salespersonId,
-                // dates: data.dates,
-                // distributorType: data.distributorType,
               },
-              //advanceSearch
             },
           });
         }}
@@ -385,7 +338,7 @@ const POMainPage: React.FC = () => {
               advanceSearch: {
                 salespersonId: undefined,
                 dates: undefined,
-                distributorType: 'all',
+                distributorType: access.canAccessTabWarehouse ? 'warehouse' : undefined,
               },
             },
           }));

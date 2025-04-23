@@ -13,6 +13,7 @@ export interface AdvanceSearchProps extends DrawerFormProps {
   entity: 'Purchase Order' | 'Settlement' | 'Stock Count';
   onSearch: (params: AdvanceSearchParam) => void;
   onReset: () => void;
+  showingBar: boolean;
 }
 
 const AdvanceSearch: React.FC<AdvanceSearchProps> = ({
@@ -20,10 +21,11 @@ const AdvanceSearch: React.FC<AdvanceSearchProps> = ({
   onReset,
   onSearch,
   entity,
+  showingBar,
   ...props
 }) => {
   const [form] = useForm<AdvanceSearchParam>();
-  const [distributor, setDistributor] = useState<string>('all');
+  const [distributor, setDistributor] = useState<string | undefined>();
 
   useEffect(() => {
     if (!props.open) return;
@@ -49,13 +51,13 @@ const AdvanceSearch: React.FC<AdvanceSearchProps> = ({
           },
         }}
       >
-        {entity === 'Purchase Order' && (
+        {showingBar && entity === 'Purchase Order' && (
           <Form.Item label="Source of Supply" name="distributorType">
             <Segmented
               value={distributor}
               onChange={(e) => setDistributor(e)}
               options={[
-                { label: 'All', value: 'all' },
+                { label: 'All', value: undefined },
                 { label: 'Wareshoue OFL', value: 'warehouse' },
                 { label: 'Distributor', value: 'distributor' },
               ]}

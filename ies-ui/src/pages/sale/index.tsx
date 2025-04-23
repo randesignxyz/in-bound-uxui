@@ -230,7 +230,8 @@ export default () => {
       description: 'Make P.O for Stock Receive.',
       link: `${MPUPath.mpuPurchaseOrder}/list`,
       icon: purchaseOrderIcon,
-      visible: access.canAccessViewMpu || access.canAccessSaleDailyReport,
+      visible:
+        access.canAccessViewMpu || access.canAccessSaleDailyReport || access.canAccessTabWarehouse,
     },
     {
       id: 'stock-count',
@@ -259,14 +260,14 @@ export default () => {
     //   visible: access.canAcessStockControlMenuItem,
     //   link: `${MPUPath.mpuFOC}/list`,
     // },
-    {
-      id: 'mpu_po',
-      name: 'Purchase Order',
-      description: 'Under warehouse review.',
-      link: `${MPUPath.warehousePOPortal}/list`,
-      icon: purchaseOrderIcon,
-      visible: access.canAccessTabWarehouse,
-    },
+    // {
+    //   id: 'mpu_po',
+    //   name: 'Purchase Order',
+    //   description: 'Under warehouse review.',
+    //   link: `${MPUPath.warehousePOPortal}/list`,
+    //   icon: purchaseOrderIcon,
+    //   visible: access.canAccessTabWarehouse,
+    // },
   ];
 
   const items: ListMenuItem[] = [

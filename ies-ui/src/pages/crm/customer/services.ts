@@ -100,6 +100,13 @@ export const CustomerServices = {
     actionName:"sync-execute-store-procedure-customer-auto",
     endpoint:"CRM",
     payload:{}
+  }),
+
+  // PHEUN REACH 05/05/2025
+  customerPOSMContract:(data:any)=>execDataService0({
+    actionName:"customer-posm-contract",
+    endpoint:"CRM",
+    payload:data,
   })
 
 }

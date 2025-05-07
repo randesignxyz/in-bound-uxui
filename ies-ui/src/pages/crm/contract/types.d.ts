@@ -66,6 +66,9 @@ export type POSMView = {
   item: LookupDataItem
   qty: number
   remarks?: string
+  effectiveDate?:moment.Moment;
+  installedDate?:moment.Moment;
+  expiryDate?:moment.Moment;
 }
 
 export type POSMItemCheck = {

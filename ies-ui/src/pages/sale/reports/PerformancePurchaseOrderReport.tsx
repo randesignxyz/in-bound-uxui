@@ -80,6 +80,15 @@ export default (props: Props) => {
                 label="Requested Date Start-End"
                 name="requestedDate"
               />
+               <ProFormSelect
+                mode="multiple"
+                label="Status"
+                name="status"
+                width="md"
+                showSearch
+                allowClear
+                options={['Pending', 'Loaded', 'Paid', 'Rejected']}
+              />
               <ProFormSelect
                 mode="multiple"
                 label="Salespersons"

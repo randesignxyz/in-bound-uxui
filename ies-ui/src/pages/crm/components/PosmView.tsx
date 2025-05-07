@@ -13,7 +13,6 @@ import POSMUploadImage from "./POSMUploadImage"
 import { CrmServiceAPI } from "@/services/crm/services"
 import POSMImage from "./POSMImage"
 import moment from "moment"
-import remarks from "@/components/remarks"
 
 export type PosmDataType = {
     key: string
@@ -22,7 +21,9 @@ export type PosmDataType = {
     itemId: string
     qty: number
     remarks?: string;
-    installedDate?:moment.Moment;
+    installedDate?: moment.Moment;
+    effectiveDate?: moment.Moment,
+    expiryDate?: moment.Moment
     attachment?: string[]
 }
 
@@ -32,7 +33,7 @@ export default ({ addresList, requestActions, readOnly, listPosm, onSave, onDele
     readOnly?: Boolean | undefined,
     initAddressList: () => Promise<void>;
     listPosm: () => Promise<PosmDataType[]>
-    onSave: (itemId: number, qty: number, id?: number, remarks?: string, installedDate?:moment.Moment) => Promise<{ data: number }>
+    onSave: (data: { itemId: number, qty: number, id?: number, remarks?: string, installedDate?: moment.Moment, effectiveDate?: moment.Moment, expiryDate?: moment.Moment }) => Promise<{ data: number }>
     onDelete: (id: number) => Promise<void>
 }) => {
 
@@ -54,16 +55,21 @@ export default ({ addresList, requestActions, readOnly, listPosm, onSave, onDele
         const posmList = await ContractServices.listPOSM.query(requestActions)
         setPosmList(posmList)
         const contarctPosmList = await listPosm();
-        const list = contarctPosmList.map(it=>({
-            key:uniqueId(),
-            id:it.id,
-            categoryId:posmList.find(i=>i.id ==parseInt(it.itemId))?.categoryId ||0,
-            itemId:it.itemId.toString(),
-            qty:it.qty,
-            remarks:it.remarks,
-            installedDate:it.installedDate,
+        
+        const list = contarctPosmList.map(it => ({
+            key: uniqueId(),
+            id: it.id,
+            categoryId: posmList.find(i => i.id == parseInt(it.itemId))?.categoryId || 0,
+            itemId: it.itemId.toString(),
+            qty: it.qty,
+            remarks: it.remarks,
+            installedDate: it.installedDate,
+            effectiveDate:it.effectiveDate,
+            expiryDate:it.expiryDate,
             attachment: it.attachment
-        }))
+        }));
+
+
         // const list = contarctPosmList.map(it => ({
         //     key: uniqueId(),
         //     id: it.id,
@@ -74,11 +80,12 @@ export default ({ addresList, requestActions, readOnly, listPosm, onSave, onDele
         //     attachment: it.attachment
         // // }))
         setData(list)
-        setSavIds(list.map(it => ({ key: it.key, id: it.id||0 })))
+        setSavIds(list.map(it => ({ key: it.key, id: it.id || 0 })))
     }
     useEffect(() => {
         loadData?.()
     }, []);
+
     return <ProCard>
         <Spin spinning={requestActions.request?.loading}>
             <EditableProTable<PosmDataType>
@@ -138,20 +145,20 @@ export default ({ addresList, requestActions, readOnly, listPosm, onSave, onDele
                     //     },
                     //     valueEnum: (r) => addresList?.reduce((acc, cur) => ({ ...acc, [cur.id || 0]: cur.address }), {})
                     // },
-                    // {
-                    //     title: 'Effective Date',
-                    //     dataIndex: 'effectiveDate',
-                    //     width: 120,
-                    //     formItemProps: { style: { width: 120 } },
-                    //     valueType: 'date'
-                    // },
-                    // {
-                    //     title: 'Expiry Date',
-                    //     width: 120,
-                    //     formItemProps: { style: { width: 120 } },
-                    //     dataIndex: 'expiryDate',
-                    //     valueType: 'date'
-                    // },
+                    {
+                        title: 'Effective Date',
+                        dataIndex: 'effectiveDate',
+                        width: 120,
+                        formItemProps: { style: { width: 120 } },
+                        valueType: 'date'
+                    },
+                    {
+                        title: 'Expiry Date',
+                        width: 120,
+                        formItemProps: { style: { width: 120 } },
+                        dataIndex: 'expiryDate',
+                        valueType: 'date'
+                    },
                     { title: "Remarks ", dataIndex: 'remarks' },
                     {
                         title: 'Actions',
@@ -199,16 +206,25 @@ export default ({ addresList, requestActions, readOnly, listPosm, onSave, onDele
                     onlyOneLineEditorAlertMessage: "Please save current item before adding another item.",
                     onSave: async (key, record,) => {
                         try {
-                            const rs = await onSave(
-                                toInteger(record.itemId), 
-                                record.qty,
-                                 saveIds.find(it => it.key == key)?.id,
-                                  record.remarks,
-                                  record.installedDate
-                                )
+                            // const rs = await onSave(
+                            //     , 
+                            //     record.qty,
+                            //      saveIds.find(it => it.key == key)?.id,
+                            //       record.remarks,
+                            //       record.installedDate,
+                            //       
+                            //         record.expiryDate?moment(record?.expiryDate):undefined
+                            //     )
+                            const rs = await onSave({
+                                ...record,
+                                itemId: toInteger(record.itemId),
+                                id: saveIds.find(it => it.key == key)?.id,
+                                installedDate: record?.installedDate ? moment(record.installedDate) : undefined,
+                                effectiveDate: record?.effectiveDate ? moment(record.effectiveDate) : undefined,
+                                expiryDate: record?.expiryDate ? moment(record.expiryDate) : undefined,
+                            })
                             setSavIds([...saveIds.filter(it => it.key != key), { key: key.toString(), id: rs.data }])
                             setOri(undefined)
-                            loadData()
                             return true
                         } catch (error: any) {
                             message.error(error.message || 'Failed to save.')

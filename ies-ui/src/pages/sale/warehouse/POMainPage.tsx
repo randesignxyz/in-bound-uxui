@@ -24,6 +24,7 @@ import { downloadGenericReport } from '@/services/apiGateway';
 import moment from 'moment';
 import POPrintModal from './POPrintModal';
 import MpuPoDetail from './MpuPODetail';
+import AdvanceSearch from '../mpu/components/AdvanceSearch';
 const POMainPage: React.FC = () => {
   const requestActions = simpleRequestActions();
   const services = PurchaseOrderServiceAPI(requestActions);
@@ -78,18 +79,18 @@ const POMainPage: React.FC = () => {
     <>
       <PageWrapper<PurchaseOrderDTO, AdvanceSearchParam, ''>
         tabRender={(items) => [
-          {
-            action: 'add',
-            tabKey: 'add',
-            panel: ({ onCloseTab, onUpdateTab, key }) => (
-              <MpuPoEntryForm
-                type={'CREATE'}
-                onBack={onCloseTab}
-                onView={(items) => onUpdateTab('view', items, undefined, key)}
-              />
-            ),
-            tabLabel: 'Add New',
-          },
+          // {
+          //   action: 'add',
+          //   tabKey: 'add',
+          //   panel: ({ onCloseTab, onUpdateTab, key }) => (
+          //     <MpuPoEntryForm
+          //       type={'CREATE'}
+          //       onBack={onCloseTab}
+          //       onView={(items) => onUpdateTab('view', items, undefined, key)}
+          //     />
+          //   ),
+          //   tabLabel: 'Add New',
+          // },
           {
             action: 'view',
             tabKey: items?.id,
@@ -144,7 +145,6 @@ const POMainPage: React.FC = () => {
                 searchValue: params?.searchValue,
                 advanceSearch: {
                   status: params?.status,
-                  distributorType: "L911154"
                 },
               },
               pagination: { ...page },
@@ -263,7 +263,7 @@ const POMainPage: React.FC = () => {
          id ={printModalState?.visible?.payloads}
          onCancel={()=>setPrintModalState({visible:undefined})}
       />
-      {/* <AdvanceSearch
+      <AdvanceSearch
         width={500}
         title="Advance Search"
         open={advanceSearch.isVisibled}
@@ -295,7 +295,7 @@ const POMainPage: React.FC = () => {
           actionRef.current?.reload?.(true);
         }}
         initData={filter.criteria}
-      /> */}
+      />
     </>
   );
 };

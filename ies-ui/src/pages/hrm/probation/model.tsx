@@ -1,6 +1,7 @@
 import { BaseActionType, baseReducer, commmonActions, StateType } from "@/services/model";
 import { useReducer } from "react"
-import {AppraisalEmp, AppraisalEmPayload, AppraisalEmpImprovement, AppraisalEmpStatus, AppraisalEmpStatusChecking, AppraisalEmpSubmissionResult, AppraisalEmSubmissionPayLoad, AppraisalRating, AppraisalRemark, ValidatorMsg} from "./data.types";
+import { AppraisalEmPayload, AppraisalEmpImprovement, AppraisalEmpStatus, AppraisalEmpStatusChecking, AppraisalEmpSubmissionResult, AppraisalEmSubmissionPayLoad, AppraisalRating, AppraisalRemark, ValidatorMsg} from "./data.types";
+import { AppraisalEmp } from "../appraisal-submit/data.types";
 export type ModalName = 'CreateAppraisalForm'|'QuickViewAppraisalForm'|'SubmitAllListView' |'ReviewMemberForm' | 'CreateProbationForm' |undefined
 
 export interface InitData { id?:number }

@@ -604,7 +604,10 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         ['ROLE_PRO_PR_SUPPORT', 'ROLE_PRO_ADMIN', 'ROLE_PRO_PR_ADMIN'].some((it) => it === item),
       ) || false,
-
+    canAccessPRReport:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_PRO_PR_REPORT', 'ROLE_PRO_PR_SUPPORT', 'ROLE_PRO_ADMIN', 'ROLE_PRO_PR_ADMIN'].some((it) => it === item),
+      ) || false,
     canPostPoReport:
       currentUser?.authorities.some((item) =>
         ['ROLE_PRO_PO_SUPPORT', 'ROLE_PRO_ADMIN', 'ROLE_PRO_PR_ADMIN'].some((it) => it === item),

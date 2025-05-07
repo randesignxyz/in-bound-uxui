@@ -11,6 +11,10 @@ import { simpleRequestActions } from '@/services/model';
 import EducationView from "../view/EducationView";
 import { useAccess } from '@umijs/max'; 
 import { formatYear } from "@/pages/utils";
+import _ from "lodash";
+import { Model } from "@/pages/ess/model";
+import EducationQuickView from "../quick-view/EducationQuickView";
+import dataView from "@/pages/hrm/staff-proposal/data-view";
 
 interface Props {
     profile: ProfileData;
@@ -48,6 +52,8 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
     useEffect(() => {
         initData(); 
     }, [profile]);
+    const { modals } = Model();
+    const [educationData, setEducationData] = useState<EducationData>();
     //
     const initData = async () => { 
         try {
@@ -74,7 +80,7 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
         }
     };
     const saveEducationHandler = async (data: EducationData) => {
-        // console.log('please data: ',data)
+        console.log('please data: ',data)
         // attachment files
         if(createFileOther.length==0){  
             message.error('Please do select attachment files.');
@@ -152,8 +158,14 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
  
     // open form emergency
     const onOpenForm = async (data:EducationData,_type:string,)=>{
+        message.warning(_type  )
         setModalVisible({ type: _type, payload: data });
         hideEducationViewModal(false);
+    }
+    const quickViewHandler = (data:EducationData,) => {
+        // setModalVisible({ type: 'EDIT', payload: data})
+        modals.showModal('EducationQuickView');
+        setEducationData(data)
     }
     return <div>
         <Card>
@@ -193,7 +205,18 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
  
                     columns={[
                         {
-                            title: "Degree", dataIndex: "degreeName" 
+                            title: "Degree", dataIndex: "degreeName" ,
+                            render: (_: any, r: any) => {
+                                return (<Space size={1}>
+                                    <Button
+                                        type="link"
+                                        size="small"
+                                        icon={<EyeOutlined />}
+                                        onClick={() => quickViewHandler(r)}
+                                    />
+                                        {r.degreeName}
+                                </Space>)
+                            }
                         },{
                             title: "Major/Subject", dataIndex: "majorName"
                         },{
@@ -290,7 +313,13 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                     </Space>,
                 );
             }} 
-        /> 
+        />
+        {educationData && <EducationQuickView 
+            open={modals.isVisible('EducationQuickView')} 
+            onOpenModalChange={(v: any) => !v && modals.hideModal('EducationQuickView')}
+            profile={profile}
+            data={educationData}
+        />}
 
     </div>
 }

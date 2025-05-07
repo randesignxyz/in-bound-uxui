@@ -1,14 +1,14 @@
 import { LookupDataItem2 } from "@/services/data"
 import { ModalForm, ModalFormProps,ProCard, ProFormTextArea, ProFormSelect, ProFormText, ProForm } from "@ant-design/pro-components"
-import { FilesData, LanguageData, SaveLanguage } from "../data.ess" 
-import { useEffect,useState } from 'react';
+import { EssLookupData, FilesData, LanguageData, SaveLanguage } from "../data.ess" 
+import { useEffect,useRef,useState } from 'react';
 import FileUploader , { UploadType } from '@/components/Attachment/FileUploader';
-import { Space, Typography, Image,List, Modal, message, Button} from "antd";
+import { Space, Typography, Image,List, Modal, message, Button, Form, Divider, Flex, Select, Input, InputRef} from "antd";
 import ImagePreview from "@/components/ImagePreview";
 import { ProfileData } from "../data";
 import { simpleRequestActions } from "@/services/model";
 import { ProfileServicesEss } from "../service_ess";
-import { ProfileOutlined,SaveOutlined,CloseSquareOutlined } from "@ant-design/icons";
+import { ProfileOutlined,SaveOutlined,CloseSquareOutlined, PlusOutlined } from "@ant-design/icons";
 
 interface Props extends ModalFormProps<LanguageData> { 
     profile: ProfileData;
@@ -21,14 +21,20 @@ interface Props extends ModalFormProps<LanguageData> {
         onLoadMenu: (tid:UploadType[]) => void; 
         onReload:()=>void; 
     };
+    onFinishSubmit?:(data:any)=> Promise<boolean | void> | void;
 }
 
-export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) => {
+export default ({ profile,data,files,type,isAdmin,empId,cb,onFinishSubmit, ...rest }: Props) => {
     const requestActions = simpleRequestActions(); 
  
     const [form] = ProForm.useForm<LanguageData>(); 
     const [imageList, setImageList] = useState<FilesData[]>([]); 
-    const [createFileOther, selectedFileOther] = useState<any>();   
+    const [createFileOther, selectedFileOther] = useState<any>();  
+    const [searchName, setSearchName] = useState('');
+    const [name, setName] = useState('');
+    const inputRef = useRef<InputRef>(null);
+    const [items, setItems] = useState<EssLookupData[]>([]); 
+      const [selectedLanguage, setSelectedLanguage] = useState<EssLookupData>();
     
     useEffect(() => {
         initData();
@@ -43,6 +49,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
         else{
             form.resetFields();
         }
+        setItems([])
     };
 
     //    
@@ -53,6 +60,8 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
     // 
     const onAdminSubmit = async ()=>{
         const bmForm = await form.validateFields(); 
+        console.log('data admin: ' ,bmForm)
+        // attachment files 
         Modal.confirm({
             title: 'Save Lanuage',
             content: 'Are you sure?',
@@ -64,6 +73,7 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
                 bmForm.status=true;
                 bmForm.isDelete=0;
                 bmForm.openId = profile.ess.id||0;
+                bmForm.languageName = selectedLanguage?.titleName||'';
                 await ProfileServicesEss.saveLanguageAdmin(bmForm)(requestActions); 
                 // call back fun
                 cb.onReload(); 
@@ -73,6 +83,30 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
             },
         });
     }
+
+    const onNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setName(event.target.value);
+    };
+    const handleSearch = (value: string) => {
+        setSearchName(value);
+    };
+    const addItem = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
+        // e.preventDefault();
+        // setItems([...items, name || `New item ${index++}`]);
+        if(name && (name!='' || name!= undefined)){
+            const id = (-1*(items.length+1))||-1
+            var item = {id: id, titleName:name, description:name, type:7} as EssLookupData
+            setItems(v=> [...v,item]);
+            setName('');
+            setTimeout(() => {
+              inputRef.current?.focus();
+              form.setFieldValue('languageId',id)
+              setSelectedLanguage(item)
+            }, 0);
+        }
+    };
+   
+
     return <ModalForm  {...rest} form={form} width={'40%'} title={!!data?<><ProfileOutlined /> Edit Language</>:<><ProfileOutlined /> Add Language</>}
             onOpenChange={visible => {
                 form.resetFields()
@@ -91,17 +125,52 @@ export default ({ profile,data,files,type,isAdmin,empId,cb, ...rest }: Props) =>
                         resetText: <div><CloseSquareOutlined /> Cancel</div>,
                     }
                 }
-            } 
+            }
+            onFinish={(data) => {   
+                // console.log('please data111: ',data)                 
+                return Promise.resolve(onFinishSubmit?.({...data,languageName: selectedLanguage?.titleName}));
+            }} 
         >  
         <ProCard bordered>
-            <ProFormSelect rules={[{ required: true }]} allowClear={true}  
+            {/* <ProFormSelect rules={[{ required: true }]} allowClear={true}  
                 name="languageId" label = "Language" placeholder="Language"  
                 showSearch 
                 mode="single" 
                 options={profile.language?.map((it) => {
                     return { value: it.id, label: it.titleName };
                 })}  
-            /> 
+            />  */}
+            <Form.Item name="languageId"  label = "Language"  rules={[{ required: true }]}>
+                <Select 
+                    style={{ width: '100%' }}
+                    allowClear={true}
+                    filterOption={false}
+                    showSearch
+                    onSearch={handleSearch}
+                    onChange={(value:any)=> {
+                        setSelectedLanguage([...profile.language,...items].find(i=> (i.id==value)))
+                        setSearchName('')
+                    }}
+                    dropdownRender={(menu) => (
+                    <>
+                        {menu}
+                        <Divider style={{ margin: '8px 0' }} />
+                        <Flex gap={2} >
+                        <Input
+                            placeholder="Language"
+                            ref={inputRef}
+                            value={name}
+                            onChange={onNameChange}
+                            onKeyDown={(e) => e.stopPropagation()}
+                        />
+                        <Button type="text" size="middle" icon={<PlusOutlined />} onClick={addItem}></Button>
+                        </Flex>
+                    </>)}
+                    options={[...items,...profile.language]?.filter(i=> (searchName=='' || (i.titleName.toLowerCase().includes(searchName.toLowerCase()))))?.map((it) => {
+                        return { value: it.id, label: it.titleName };
+                    })} 
+                />   
+            </Form.Item> 
             <ProFormSelect rules={[{ required: true }]} allowClear={true}  
                 name="typeId" label = "Type" placeholder="Type"  
                 showSearch 

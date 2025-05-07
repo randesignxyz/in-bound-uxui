@@ -51,7 +51,9 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb,onFinishSubmit
         }
         else{
             form.resetFields();
+            setImageList([]);
         }
+        setItems([])
     };
 
     //    
@@ -86,8 +88,9 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb,onFinishSubmit
                 bmForm.fromYear = educationYear[0];
                 bmForm.toYear = educationYear[1]; 
                 bmForm.openId = profile.ess.id||0;
-
-                await ProfileServicesEss.saveEducationAdmin(bmForm)(requestActions); 
+              
+ 
+                await ProfileServicesEss.saveEducationAdmin({...bmForm, marjorSubjectName: selectedMajor?.majorName})(requestActions); 
                 // call back fun
                 cb.onReload(); 
               } catch (error: any) {
@@ -103,10 +106,14 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb,onFinishSubmit
         // e.preventDefault();
         // setItems([...items, name || `New item ${index++}`]);
         if(name && (name!='' || name!= undefined)){
-            setItems(v=> [...v,{id: (-1*(items.length+1))||-1,majorName:name,description:name,status: 1}]);
+            const id =(-1*(items.length+1))||-1
+            const item = {id: id,majorName:name,description:name,status: 1}
+            setItems(v=> [...v,item]);
             setName('');
             setTimeout(() => {
               inputRef.current?.focus();
+              form.setFieldValue('marjorSubject',id)
+              setSelectedMajor(item)
             }, 0);
         }
     };
@@ -133,7 +140,7 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb,onFinishSubmit
             submitter={isAdmin==2&&empId>0?
                 {
                     render: () => { 
-                        return <><Button onClick={()=>{onAdminSubmit();}}><SaveOutlined /> Save11</Button></>
+                        return <><Button onClick={()=>{onAdminSubmit();}}><SaveOutlined /> Save</Button></>
                     }
                 }
                 :{
@@ -145,20 +152,20 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb,onFinishSubmit
             } 
             onFinish={(data) => {   
                 // console.log('please data111: ',data)                 
-                return Promise.resolve(onFinishSubmit?.({...data,selectedMajor}));
+                return Promise.resolve(onFinishSubmit?.({...data,marjorSubjectName: selectedMajor?.majorName}));
             }}
         >
         <ProCard bordered>
             <ProFormText label="Education Institution" name={'educationCenter'} rules={[{ required: true }]}/> 
-            <ProFormSelect rules={[{ required: true }]} allowClear={true}
-                name={'marjorSubject'} label = "Major/Subject"  
+            {/* <ProFormSelect rules={[{ required: true }]} allowClear={true}
+                name={'marjorSubject1'} label = "Major/Subject"  
                 showSearch  
                 mode="single" 
                 options={marjor?.map((it) => {
                     return { value: it.id, label: it.majorName };
                 })} 
-            />
-            {/* <Form.Item name="majorSubject1"  label = "Major/Subject"  rules={[{ required: true }]}>
+            /> */}
+            <Form.Item name="marjorSubject"  label = "Major/Subject"  rules={[{ required: true }]}>
                 <Select 
                     style={{ width: '100%' }}
                     allowClear={true}
@@ -166,7 +173,6 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb,onFinishSubmit
                     showSearch
                     onSearch={handleSearch}
                     onChange={(value:any)=> {
-                        console.log('onchange===',[...marjor,...items].find(i=> (i.id==value))  )
                         setSelectedMajor([...marjor,...items].find(i=> (i.id==value)))
                         setSearchName('')
                     }}
@@ -185,11 +191,11 @@ export default ({ profile,data,files,type,isAdmin,empId,marjor,cb,onFinishSubmit
                         <Button type="text" size="middle" icon={<PlusOutlined />} onClick={addItem}></Button>
                         </Flex>
                     </>)}
-                    options={[...marjor,...items]?.filter(i=> (searchName=='' || (i.majorName.toLowerCase().includes(searchName.toLowerCase()))))?.map((it) => {
+                    options={[...items,...marjor]?.filter(i=> (searchName=='' || (i.majorName.toLowerCase().includes(searchName.toLowerCase()))))?.map((it) => {
                         return { value: it.id, label: it.majorName };
                     })} 
                 />   
-            </Form.Item>  */}
+            </Form.Item> 
             
            
             <Row>

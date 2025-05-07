@@ -44,7 +44,13 @@ const DriverAction  =  {
         endpoint:"FLEET",
         type:"EXEC",
         payload:data,
-    })
+    }),
+    syncDriver: (): ServiceApiType<{}> => ({
+        type: 'EXEC',
+        endpoint: 'FLEET',
+        actionName: 'sync_driver',
+        payload: {}
+    }),
 }
 
 
@@ -55,6 +61,7 @@ export const DriverServiceAPI = (requestActions: RequestActions) => {
        list               :(params: DriverSearchParam)=>singleRequest<DriverDTO>(DriverAction.list(params))(requestActions) as Promise<DriverDTO[]>,
        save               : (data: DriverCreate) =>singleRequest<{data:string, message:string}>(DriverAction.save(data))(requestActions),
        removeVehicleDriver: (id:number) =>singleRequest<{data:string, message:string}>(DriverAction.removeVehicleDriver(id))(requestActions),
+       syncDriver         : () =>singleRequest<{data:string, message:string}>(DriverAction.syncDriver())(requestActions),
 
     }
 };

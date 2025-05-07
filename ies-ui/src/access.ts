@@ -793,7 +793,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       ) || false,
 
     canAccessTabWarehouse:
-      currentUser?.authorities.some((item) => ['ROLE_WAREHOUSE'].some((it) => it === item)) ||
+      currentUser?.authorities.some((item) => ['ROLE_WAREHOUSE','ROLE_ADMIN'].some((it) => it === item)) ||
       false,
     canAccessTabCashier:
       currentUser?.authorities.some((item) => ['ROLE_CASHIER'].some((it) => it === item)) || false,

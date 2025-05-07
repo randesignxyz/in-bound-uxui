@@ -12,6 +12,9 @@ import moment from 'moment';
 import { endpoint, kc, keycloak } from './auth';
 import { queryCurrent } from './services/user';
 import { isOffline } from './pages/utils';
+
+
+
 const isDev = process.env.NODE_ENV === 'development';
 const loginPath = '/user/auth';
 /**

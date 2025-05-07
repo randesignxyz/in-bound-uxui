@@ -1,4 +1,4 @@
-import { UserAddOutlined, UserSwitchOutlined, UserDeleteOutlined, DeleteOutlined, UsbOutlined } from "@ant-design/icons";
+import { UserAddOutlined, UserSwitchOutlined, UserDeleteOutlined, DeleteOutlined, UsbOutlined, SwapOutlined } from "@ant-design/icons";
 import { Avatar, Button, Card, Descriptions, Divider, Dropdown, Flex, Input, List, MenuProps, message, Modal, Space, Tree, Typography } from "antd";
 import { DataNode } from "antd/es/tree";
 import { useCallback, useMemo, useState } from "react";
@@ -167,7 +167,7 @@ const TitleRenderer = ({ item, itemsAction }: { item: SalesOrgDataNode; itemsAct
 
 export default ({ data, onLoadData }: Props) => {
   const requestAction = simpleRequestActions();
-  const [salespersonState, setSalespersonState] = useState<{ visible?: { name: "MODAL"; payloads?: SalesOrgDataNode } }>();
+  const [salespersonState, setSalespersonState] = useState<{ visible?: { name: "MODAL"; type:"ADD"|"MOVE";payloads?: SalesOrgDataNode } }>();
   const [saleOrgInfo, setSaleOrgInfo] = useState<any>();
   const originalTree = useMemo(() => buildTree(data), [data]);
   const allKeys = useMemo(() => getAllKeys(originalTree), [originalTree]);
@@ -182,7 +182,15 @@ export default ({ data, onLoadData }: Props) => {
       label: "Add",
       icon: <UserAddOutlined />,
       onClick: () => {
-        setSalespersonState({ visible: { name: "MODAL", payloads: item } })
+        setSalespersonState({ visible: { name: "MODAL", type:"ADD", payloads: item } })
+      }
+    },
+    {
+      key: "move",
+      label: "Move",
+      icon: <SwapOutlined />,
+      onClick: () => {
+        setSalespersonState({ visible: { name: "MODAL", type:"MOVE", payloads: item } })
       }
     },
     {
@@ -273,7 +281,6 @@ export default ({ data, onLoadData }: Props) => {
             // virtual // Enable virtualization
             height={700} // Set a fixed height for virtualization
           />
-
         </Card>
         {
           saleOrgInfo && (
@@ -331,15 +338,37 @@ export default ({ data, onLoadData }: Props) => {
       <SalespersonHeirarchyForm
         open={salespersonState?.visible?.name === "MODAL"}
         data={salespersonState?.visible?.payloads as unknown as SalespersonOrg}
+        type={salespersonState?.visible?.type}
+        onMove={(data)=>{
+          Modal.confirm({
+            title: "Save Confirmation",
+            content: "do you want move This salsperson?",
+            onOk: async () => {
+              try{
+              const res =await SalespersonOrgAPI(requestAction).moveSalespersonOrg(data);
+              setSalespersonState({ visible: undefined });
+              message.success("success");
+              onLoadData();
+            }catch(err){
+              message.error(err.message);
+            }
+            }
+          });
+        }}
         onSave={(data1) => {
           Modal.confirm({
             title: "Add Salesperson",
             content: "are you sure?",
             onOk: async () => {
-              await SalespersonOrgAPI(requestAction).addSalespersonOrg(data1);
-              setSalespersonState({ visible: undefined });
-              message.success("success");
-              onLoadData();
+              try{
+                await SalespersonOrgAPI(requestAction).addSalespersonOrg(data1);
+                setSalespersonState({ visible: undefined });
+                message.success("success");
+                onLoadData();
+              }
+              catch(err){
+                message.error(err.message);
+              }
             }
           });
         }}
@@ -347,7 +376,6 @@ export default ({ data, onLoadData }: Props) => {
           onCancel: () => setSalespersonState({ visible: undefined })
         }}
       />
-
       <AuditorForm
         open={auditorState?.visible?.name == "MODAL"}
         modalProps={{

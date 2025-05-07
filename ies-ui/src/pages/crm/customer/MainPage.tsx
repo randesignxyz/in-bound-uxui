@@ -153,6 +153,7 @@ export default ({ getMenuItems }: CustomerActionController) => {
                         onClick:()=>{
                             try{
                                CustomerServices.syncExecStoreProcedureCustomer()(requestAction).then(()=>{
+                                actionRef.current?.reload?.();
                                 message.success("Success!")
                                }).catch((err)=>{
                                 message.error("Something went wrong!")

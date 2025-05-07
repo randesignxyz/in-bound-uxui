@@ -589,6 +589,13 @@ export default [
     // access: 'canAccessViewMpu',
     component: './sale/mpu/foc',
   },
+  {
+    path: '/sale/warehouse-po-portal/:view/*',
+    name: 'warehouse-po-portal',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    component: './sale/warehouse',
+  },
   /******************* MPU *******************/
 
   /******************* Retailer *******************/

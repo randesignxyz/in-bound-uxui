@@ -87,7 +87,7 @@ const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
 
     return (
       state.data?.soDetail?.items?.filter(
-        (e) => e.type !== 'STD' && checking(e.itemId)!.length > 0,
+        (e) => e.type !== 'STD' && (checking(e.itemId)?.length ?? 0) > 0,
       ) ?? []
     );
   };

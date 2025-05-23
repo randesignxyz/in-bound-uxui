@@ -160,7 +160,7 @@ const MpuPurchaseOrderDetail: React.FC<Props> = ({ id }) => {
                 dataSource={dataSource}
                 columns={[
                   {
-                    title: 'Grand Amount',
+                    title: 'Grant Amount',
                     dataIndex: 'grandAmount',
                     valueType: 'money',
                     render: (_, r) => (r.grantAmount ? formatter.format(r.grantAmount) : '$0.00'),

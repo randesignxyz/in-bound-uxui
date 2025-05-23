@@ -632,10 +632,15 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                         ),
                         countInvoices: dataSource?.salesInvoices.length,
                         amount: dataSource?.salesInvoices.reduce((a, e) => a + e.amount, 0.0),
+                        discount: dataSource?.salesInvoices.reduce((a, e) => a + e.discount, 0.0),
+                        grandTotal: dataSource?.salesInvoices.reduce(
+                          (a, e) => a + e.subAmount,
+                          0.0,
+                        ),
                       }}
-                      contentStyle={{ fontWeight: 500 }}
-                      // column={{ xs: 1, sm: 2, md: 3, lg: 5, xl: 5, xxl: 5 }}
-                      // column={3}
+                      // contentStyle={{ fontWeight: 500 }}
+                      column={{ xs: 1, sm: 2, md: 3, lg: 5, xl: 5, xxl: 5 }}
+                      // column={4}
                       columns={[
                         {
                           title: 'Latest Invoice Date',
@@ -653,6 +658,22 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                           render: (_, r) => (
                             <Typography.Text type="success">
                               {numeral(r.amount).format('$ 0,000.000')}
+                            </Typography.Text>
+                          ),
+                        },
+                        {
+                          title: 'Discount',
+                          render: (_, r) => (
+                            <Typography.Text type="danger">
+                              {numeral(r.discount).format('$ 0,000.000')}
+                            </Typography.Text>
+                          ),
+                        },
+                        {
+                          title: 'Grand Amount',
+                          render: (_, r) => (
+                            <Typography.Text type="success">
+                              {numeral(r.grandTotal).format('$ 0,000.000')}
                             </Typography.Text>
                           ),
                         },

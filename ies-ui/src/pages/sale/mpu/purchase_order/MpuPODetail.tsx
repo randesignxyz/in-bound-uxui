@@ -422,7 +422,7 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit }) => {
                   </Table.Summary.Row>
                   <Table.Summary.Row>
                     <Table.Summary.Cell index={1} colSpan={7} align="right">
-                      Grand Amount
+                      Grand Total
                     </Table.Summary.Cell>
                     <Table.Summary.Cell index={1} align="right">
                       <Typography.Text type="warning">

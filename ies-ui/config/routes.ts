@@ -1497,6 +1497,16 @@ export default [
   },
 
   /* En request car */
+  /*Start Register Customer */
+   {
+    path: '/crm/register-customer/:view/*',
+    name: 'view-register-customer',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessCrmRegisterCustomerMenuItem',
+    component: './crm/register',
+  },
+  /*End Register Customer */
 
 
   {

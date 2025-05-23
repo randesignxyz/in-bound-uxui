@@ -587,7 +587,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
               dataSource={amount}
               columns={[
                 {
-                  title: 'Grand Amount',
+                  title: 'Total Amount',
                   dataIndex: 'grandAmount',
                   valueType: 'money',
                   editable: false,
@@ -600,7 +600,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
                   valueType: 'percent',
                 },
                 {
-                  title: 'Total Amount',
+                  title: 'Grand Amount',
                   dataIndex: 'totalAmount',
                   valueType: 'money',
                   editable: false,

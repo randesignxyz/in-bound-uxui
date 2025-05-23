@@ -1034,5 +1034,12 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_HR_PROBATION_EVALUATION_EXPORT_REPORT'].some((it) => it === item),
       ) || false,
+    canAccessCrmRegisterCustomerMenuItem:
+      currentUser?.authorities.some((item) =>
+        [         
+          'ROLE_CRM_REGISTER_CUSTOMER',  
+          'ROLE_ADMIN',
+        ].some((it) => it === item),
+      ) || false,  
   };
 }

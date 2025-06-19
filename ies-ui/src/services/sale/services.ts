@@ -147,6 +147,7 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
     salespersonCode?: string[];
     requestedDate?: moment.Moment[];
     status?: string[];
+    reportType?: string;
   }>(actions),
 
   donwloadDSDReport: downloadSaleReport<{
@@ -197,6 +198,7 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
     actions,
   ),
   initSoData: findMultiService<InitSoParamsType, {}>(SaleService(), actions),
+  initProductData: findMultiService<initProductParamsType, {}>(SaleService(), actions),
 
   // customerTransportOfferSrv: findAllService<{id: number}, CustomerTransportOfferDto>(SaleService('customer_transport_offer'), actions),
   getPackageOffer: findAllService<OfferParams, PackageOffer>(SaleService('get-offer'), actions),

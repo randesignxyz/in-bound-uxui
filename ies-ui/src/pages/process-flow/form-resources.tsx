@@ -18,6 +18,7 @@ import { getInventoryTransferRequestForms } from '../fma-stock/transfer/process-
 import { getInventoryAdjustmentRequestForms } from '../fma-stock/adjustment/process-flow/config';
 import { getProbationEvaluationRequestForms } from '../hrm/probation/process-flow/config'
 import { getSaleStockTransferRequestRequestForms } from '../sale/workflow_integration/stock_request/config';
+import { getRegisterCustomerRequestForms } from '../crm/register/process-flow/config';
 // import { getSaleStockTransferRequestRequestForms } from '../sale/workflow_integration/stock_request/config';
 
 
@@ -50,7 +51,8 @@ const dataFormResources: DataForm[] = [
   ...getInventoryTransferRequestForms(),
   ...getSaleStockTransferRequestRequestForms(),
   ...getInventoryAdjustmentRequestForms(),
-  ...getProbationEvaluationRequestForms()
+  ...getProbationEvaluationRequestForms(),
+  ...getRegisterCustomerRequestForms()
 ];
 
 export const getActionForm = (props: ActionDataFormProps) =>

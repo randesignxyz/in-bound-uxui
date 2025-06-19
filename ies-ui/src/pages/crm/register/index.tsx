@@ -11,7 +11,7 @@ export default () => {
                 case 'list':
                     return <MainPage />
                 case 'create':
-                    return <DataEntryView onBack={() => navigate?.gotToListHandler?.()}/>
+                    return <DataEntryView id={0} type="CREATE" onCloseTab={() => navigate?.gotToListHandler?.()}/>
                 case 'edit':
                     return <div>Main</div>
                 default:

@@ -1,11 +1,9 @@
 import reportIcon from '@/assets/clipboard.png';
 import userIcon from '@/assets/customer.png';
 import deliveryIcon from '@/assets/delivery.png';
-import plannerIcon from '@/assets/planner.png';
 import productIcon from '@/assets/product.png';
 import scheduleIcon from '@/assets/schedule.png';
 
-import pricingIcon from '@/assets/price-64.png';
 // import customerIcon from '@/assets/people.png';
 import settlementIcon from '@/assets/receive-cash.png';
 // import orderItemIcon from '@/assets/requisition.png';
@@ -15,6 +13,7 @@ import dailyReportIcon from '@/assets/dsd-report-icon.png';
 import agreementIcon from '@/assets/agreement.png';
 import purchaseOrderIcon from '@/assets/order-items.png';
 
+import salesInvoiceIcon from '@/assets/invoice.png';
 import saleIcon from '@/assets/shopping.png';
 import stockCountId from '@/assets/stock-count.png';
 import stockIcon from '@/assets/stock.png';
@@ -98,15 +97,15 @@ export default () => {
   };
 
   const stockMenuItems: ListMenuItem[] = [
-    {
-      id: 'suggestion',
-      name: 'Task List',
-      description: 'All suggestions from Salesperson.',
-      link: `${SalePaths.suggestion}/list`,
-      icon: plannerIcon,
-      // visible: access.canAcessStockControlMenuItem || access.canAccessSettlementMenuItem,
-      visible: access.canAcessStockControlMenuItem,
-    },
+    // {
+    //   id: 'suggestion',
+    //   name: 'Task List',
+    //   description: 'All suggestions from Salesperson.',
+    //   link: `${SalePaths.suggestion}/list`,
+    //   icon: plannerIcon,
+    //   // visible: access.canAcessStockControlMenuItem || access.canAccessSettlementMenuItem,
+    //   visible: access.canAcessStockControlMenuItem,
+    // },
     {
       id: 'store',
       name: 'Store',
@@ -216,14 +215,14 @@ export default () => {
       //   setReport('dsd-reports');
       // },
     },
-    {
-      id: 'item-sales-line-price',
-      name: 'Pricing',
-      description: 'Pricing for Sales Invoice',
-      icon: pricingIcon,
-      visible: access.canAccessAllMenuDSD,
-      link: `${SalePaths.pricing}/list`,
-    },
+    // {
+    //   id: 'item-sales-line-price',
+    //   name: 'Pricing',
+    //   description: 'Pricing for Sales Invoice',
+    //   icon: pricingIcon,
+    //   visible: access.canAccessAllMenuDSD,
+    //   link: `${SalePaths.pricing}/list`,
+    // },
     {
       id: 'mpu_po',
       name: 'Purchase Order',
@@ -252,6 +251,19 @@ export default () => {
         access.canAccessSettlementMenuItem,
       link: `${MPUPath.mpuSettlement}/list`,
     },
+
+    {
+      id: 'invoice',
+      name: 'Sales Invoice',
+      description: 'Daily Sales Invoice',
+      icon: salesInvoiceIcon,
+      visible:
+        access.canAccessAllMenuDSD ||
+        access.canAccessSaleDailyReport ||
+        access.canAccessSettlementMenuItem,
+      link: `${MPUPath.salesInvoice}/list`,
+    },
+
     // {
     //   id: 'free-of-charge',
     //   name: 'Free Of Charge',

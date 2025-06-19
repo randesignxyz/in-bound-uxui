@@ -14,7 +14,7 @@ import { message } from 'antd';
 import { SortOrder } from 'antd/lib/table/interface';
 import { groupBy, map, sortBy, sumBy, uniqueId } from 'lodash';
 import { useReducer } from 'react';
-import { DeliveryEntry, DeliveryItemEntry, SoItemEntry, State, reducer } from './reducer';
+import { DeliveryEntry, DeliveryItemEntry, reducer, SoItemEntry, State } from './reducer';
 
 export const Model = () => {
   const initState: State = {
@@ -108,13 +108,16 @@ export const Model = () => {
         responseKey: 'listBudget',
         payload: {},
       },
+      {
+        actionName: 'list-uom',
+        responseKey: 'uomList',
+        payload: {},
+      },
     ];
-
     try {
       const rs = await saleServices.initSoData({
         ...initParams,
       });
-
       dispatch({
         type: 'initialData',
         payload: { ...rs, ...salePersonRs },

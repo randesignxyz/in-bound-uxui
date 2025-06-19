@@ -173,6 +173,15 @@ export default [
     access: 'canAccessCrmMenuItem',
     component: './crm/visit-schedule/components/tracking-location',
   },
+  //  PHEUN REACH 5/28/2025
+  {
+    path: '/crm/shipping-address/:view',
+    name: 'shipping-address',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessCrmMenuItem',
+    component: './crm/shipping_address',
+  },
 
   /**********<<Pro**************/
   {
@@ -482,6 +491,14 @@ export default [
     component: './sale/settlement',
   },
   {
+    path: '/sale/sales_invoice/:view/*',
+    name: 'sales_invoice',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessAllMenuDSD',
+    component: './sale/invoice',
+  },
+  {
     path: '/sale/lead/:view/*',
     name: 'lead',
     icon: 'UnorderedListOutlined',
@@ -578,7 +595,7 @@ export default [
     name: 'sale_mpu_count_stock',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    // access: 'canAccessViewMpu',
+    access: 'canAcessStockControlMenuItem',
     component: './sale/mpu/count_stock',
   },
   {

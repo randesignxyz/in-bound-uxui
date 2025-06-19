@@ -33,7 +33,7 @@ const AddressEntryForm: React.FC<AddressEntryFormProps> = ({
     <div>
       {!addressReadonly && (
         <Card style={{ marginBottom: 10 }} size="small">
-          {!defaultAddress && !isEdit && <ProFormSelect
+          {/* {!defaultAddress && !isEdit && <ProFormSelect
             label="Type"
             name="typeId"
             width="md"
@@ -43,7 +43,7 @@ const AddressEntryForm: React.FC<AddressEntryFormProps> = ({
             options={UIBuilder.toOption(
               initData?.lookupDataList?.filter((it) => it.type == 'ADDRESS_TYPE'),
             )}
-          />}
+          />} */}
           <ProFormText
             name="address"
             width="md"

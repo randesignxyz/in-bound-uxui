@@ -1,7 +1,7 @@
 import { LocationType } from '@/services/crm/services';
 import { AddressData, AddresssView, Locations } from '@/services/crm/data';
 import { LookupData } from '@/services/data';
-import { AimOutlined, DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
+import { AimOutlined, DeleteOutlined, EditOutlined, MinusCircleOutlined, MinusOutlined, PlusOutlined } from '@ant-design/icons';
 import { Button, Col, List, Row, Space, Tag } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { useEffect, useState } from 'react';
@@ -95,7 +95,8 @@ const AddressListView: React.FC<AddressListViewProps> = ({
   };
 
   return (
-    <div className={styles.standardList}>
+    // <div className={styles.standardList}>
+    <div>
       <List<AddresssView>
         size="small"
         locale={{ emptyText: 'No Address added' }}
@@ -113,7 +114,7 @@ const AddressListView: React.FC<AddressListViewProps> = ({
                   key="b2"
                   onClick={() => actionHandlers.onRemove?.(item)}
                   type="link"
-                  icon={<DeleteOutlined />}
+                  icon={<MinusCircleOutlined />}
                 />
               ),
             ]}
@@ -122,7 +123,7 @@ const AddressListView: React.FC<AddressListViewProps> = ({
               title={
                 <Space>
                   {' '}
-                  <AimOutlined /> {item.address} <Tag>{item.type?.name}</Tag>{' '}
+                  <AimOutlined /> {item.address} {/*<Tag>{item.type?.name}</Tag>{' '}*/}
                 </Space>
               }
               description={
@@ -193,14 +194,14 @@ const AddressListView: React.FC<AddressListViewProps> = ({
           onAdd: (data) =>
             actionHandlers.onAdd(data, (success) => {
               if (success) {
-                actionHandlers.loadData?.();
+                // actionHandlers.loadData?.();
                 setModal({ visible: false });
               }
             }),
           onEdit: (data) =>
             actionHandlers.onEdit(data, (success) => {
               if (success) {
-                actionHandlers.loadData?.();
+                // actionHandlers.loadData?.();
                 setModal({ visible: false });
               }
             }),

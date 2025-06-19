@@ -1,408 +1,585 @@
-import { AimOutlined, PlusOutlined } from "@ant-design/icons";
-import { ProCard, ProForm, ProFormDatePicker, ProFormGroup, ProFormRadio, ProFormSelect, ProFormText, ProFormTextArea } from "@ant-design/pro-components"
-import { Button, Col, Flex, List, Row, Space, Spin, Tag } from "antd"
-import { AddresssView } from "./data";
-import { useState } from "react";
-import { AddressDataForm } from "./components/AddressListView";
-import AddressModalEntry from "./components/AddressModalEntry";
-// import { AddresssView } from "@/services/crm/data";
+import { EditableFormInstance, EditableProTable, FooterToolbar, ProCard, ProForm, ProFormGroup, ProFormRadio, ProFormSelect, ProFormText, ProTable } from "@ant-design/pro-components"
+import { Button, Checkbox, Flex, Form, message, Modal, Space, Spin } from "antd"
+import { AddresssView, DocRequirementCustomerParams, DoRequireCustomerList, PurchasingPerformanceItem, RegisterCustomer, RegisterCustomerDetailResponse } from "./data";
+import { useEffect, useRef, useState } from "react";
+import AddressListView from "./components/AddressListView";
+import { model } from "../customer/model";
+import { RegisterCustomerServiceAPI } from "./services";
+import { useInView } from "react-intersection-observer";
+import PurchasingPerformanceView from "./components/PurchasingPerformanceView";
+import { uniqueId } from "lodash";
+import FileUploader from "@/components/Attachment/FileUploader";
+import AttachedFileList from "@/components/Attachment/AttachedFileList";
+import DocmentRequire from "./components/DocmentRequire";
+import RemarkCard from "./components/RemarkCard";
 
-export default({}:{
-      onBack?: () => void;
+export default({
+  id,
+  type,
+  onCloseTab,
+  readOnly
+}:{
+  id?: number;
+  type: 'CREATE' | 'EDIT';
+  onCloseTab?: () => void;
+   readOnly?: boolean | undefined,
 })=>{
+  const service = RegisterCustomerServiceAPI()
+  const [form] = Form.useForm<RegisterCustomerDetailResponse>();
+    const { ref, inView } = useInView({});
+  const { state, ops, actions, modals } = model(0);
 
-    const [modal, setModal] = useState<{ visible: boolean; data?: AddressDataForm }>({
-      visible: false,
+  const [addressList, setAddressList] = useState<AddresssView[]>()
+  const [shippingAddressList, setShippingAddressList] = useState<AddresssView[]>()
+  const editablePPItemFormRef = useRef<EditableFormInstance>();
+  const [ppItems, setPPItems] = useState<PurchasingPerformanceItem[]>([])
+
+  const [uploadFileIds, setUploadFileIds] = useState<(string|undefined)[]>([]);
+  const[attachedFiles, setAttachedFiles]  = useState<{fileId: string, activity: string}[]>([]); 
+  const [personalList, setPersonaList] = useState<DoRequireCustomerList[]>([])
+  const [coporateList, setcoporateList] = useState<DoRequireCustomerList[]>([]) 
+
+  useEffect(() => {   
+    initData()
+  }, [id]);
+
+  const initData = async () =>{   
+    // initAddress()
+    await ops.initData('Detail');
+    if (id && id > 0) {
+      const data = await  service.detail(id)
+      initFormData(data)
+      setPPItems(data?.ppItems?.map((it) => ({...it,key: uniqueId().toString(),itemId: it?.itemId?.toString()}))||[])
+      setAddressList(data?.billing?.map(it=>({...it,key: uniqueId().toString()})))
+      setShippingAddressList(data?.shipping?.map(it=>({...it,key: uniqueId().toString()})))
+      setPersonaList(data?.docPersonalList||[])
+      setcoporateList(data?.docCorporateList||[])
+      // setUploadFileIds(data?.attachedFiles||[])
+      setAttachedFiles(data?.attachedFiles?.map(it => ({ fileId: it, activity: 'Start' })) || [])
+    }else{
+      service.listDocRequirement().then(r=>{
+        setPersonaList(r.filter(it => it.docSource==='PERSONAL'))
+        setcoporateList(r.filter(it => it.docSource==='CORPORATE'))
+      })
+    }
+  }
+  const initFormData = (data: RegisterCustomerDetailResponse) =>{
+    form.setFieldsValue(data);
+  }    
+    
+  const getPayload = async () => {
+    const dataForm = await form.validateFields(); 
+    const dataPayload = { ...dataForm,
+      id: id||0,
+      customerCode: dataForm.customerCode,
+      ppItems:ppItems,
+      billing: addressList?.map(it=>({
+        id: it.id ||0,
+        address: it.address,
+        houseNo: it.houseNo,
+        houseNoKh: it.houseNoKh,
+        streetNo: it.streetNo,
+        streetNoKh: it.streetNoKh,
+        streetName: it.streetName,
+        streetNameKh: it.streetNameKh,
+        latitude: it.latitude,
+        longitude: it.longitude,
+        provinceId: it.province?.id || 0,
+        districtId: it.district?.id || 0,
+        communeId: it.commune?.id || 0,
+        villageId: it.village?.id,
+        hotspot: it.hotspot,
+        direction: it.direction,
+      }))||[],
+      shipping: shippingAddressList?.map(it=>({
+        id: it.id ||0,
+        address: it.address,
+        houseNo: it.houseNo,
+        houseNoKh: it.houseNoKh,
+        streetNo: it.streetNo,
+        streetNoKh: it.streetNoKh,
+        streetName: it.streetName,
+        streetNameKh: it.streetNameKh,
+        latitude: it.latitude,
+        longitude: it.longitude,
+        provinceId: it.province?.id || 0,
+        districtId: it.district?.id || 0,
+        communeId: it.commune?.id || 0,
+        villageId: it.village?.id,
+        hotspot: it.hotspot,
+        direction: it.direction,
+      }))||[],
+      docPersonalList: personalList.map(it => ({
+        id:it.id,
+        reCustomerId: it.reCustomerId||0,
+        reDocRequireId:it.reDocRequireId||0,
+        checkList:it.checkList
+      } as DocRequirementCustomerParams)),
+      docCorporateList: coporateList.map(it => ({
+        id:it.id,
+        reCustomerId: it.reCustomerId||0,
+        reDocRequireId:it.reDocRequireId||0,
+        checkList:it.checkList
+      } as DocRequirementCustomerParams)),
+      attachedFiles: uploadFileIds
+    } //as AddressParams    
+    return dataPayload;
+  }
+
+  const onCancelHandler = () => { 
+    Modal.confirm({
+      title: 'Cancel Register Customer',
+      content: 'Are you sure?',
+      onOk: async () => {
+        try {
+          await service.cancelForm(id||0)
+          message.success('Cancel successfully.');
+          onCloseTab?.()
+        } catch (error: any) {
+          message.error(error.message || 'Failed to save requisition.');
+        }
+      },
+    });  
+    
+  };
+  const onSaveDraftHandler = async () => {   
+    const dataPayload = await getPayload();
+    console.log('dataPayload:  ', dataPayload)
+    
+    await editablePPItemFormRef.current?.validateFields()
+    console.log('tablePPItemFormRef:  ', ppItems)
+    Modal.confirm({
+      title: 'Save Register Customer',
+      content: 'Are you sure?',
+      onOk: async () => {
+        try {
+          await service.save(dataPayload)
+          message.success('Save successfully.');
+          onCloseTab?.()
+        } catch (error: any) {
+          message.error(error.message || 'Failed to save requisition.');
+        }
+      },
     });
+  }
 
-  return (<Spin spinning={false} >
-    <ProForm dir="horizontal">
+  const onSubmitHandler = async () => {
+    const dataPayload = await getPayload();
+    Modal.confirm({
+      title: 'Submit Register Customer',
+      content: 'Are you sure?',
+      onOk: async () => {
+        try {
+          await service.submit(dataPayload)
+          message.success('Submit successfully.');
+          onCloseTab?.()
+        } catch (error: any) {
+          message.error(error.message || 'Failed to save requisition.');
+        }
+      },
+    });
+  }   
+
+  const onRemoveShippingAddressHandler = (data: AddresssView) => {
+    Modal.confirm({
+      title: 'Remove Address',
+      content: 'Are you sure?',
+      onOk: async () => {
+        try {
+          setAddressList((prev)=>{
+                const list = prev || []
+                return list.filter(it=>it.key!==data.key)
+          })
+          setShippingAddressList((prev)=>{
+                const list = prev || []
+                return list.filter(it=>it.key!==data.key)
+          })
+
+          message.success('Removed successfully.');
+        } catch (error) {
+          message.error('Failed to delete.');
+        }
+      },
+    });
+  }; 
+  
+  const onSaveShippingAddressHandler = (
+      data: AddresssView,
+      addressType: string,
+      isNew: boolean = true,
+      cb?: (sucess: boolean) => void,
+    ) => {
+      Modal.confirm({
+        title: isNew ? 'Add Address' : 'Edit Address',
+        content: 'Are you sure?',
+        onOk: async () => {
+          try {
+            if(addressType=='S') {
+              setShippingAddressList((prev)=>{
+                const list = prev || []
+                if(isNew){
+                  return [...list,{id:0,key: uniqueId().toString(),...data}]
+                }else{
+                  return list.map(it=> {
+                    if(it.key===data.key){
+                      return data
+                    }else{
+                      return it
+                    }                  
+                  })
+                }
+              })
+            }
+            if(addressType=='B') {
+              setAddressList((prev)=>{
+                const list = prev || []
+                if(isNew){
+                  return [...list,{id:0,key: uniqueId().toString(),...data}]
+                }else{
+                  return list.map(it=> {
+                    if(it.key===data.key){
+                      return data
+                    }else{
+                      return it
+                    }                  
+                  })
+                }
+              })
+            }
+            cb?.(true);
+            // initAddress()            
+            message.success('Updated successfully.');
+          } catch (error) {
+            cb?.(false);
+            message.error('Failed to update');
+          }
+        },
+      });
+    };
+
+
+ 
+
+  return (<div ref={ref}>
+  <Spin spinning={false} >
+    <ProForm dir="vertical"
+      form={form}
+      submitter={{
+        render: () => 
+           inView && !readOnly ?<FooterToolbar>
+            <Button
+                onClick={() => {
+                  onCancelHandler();
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={onSaveDraftHandler}
+            >
+              Save Draft
+            </Button>      
+            <Button
+                onClick={() => {
+                  onSubmitHandler();
+                }}
+              >
+                Submit
+              </Button>  
+        </FooterToolbar> : <></>
+      }}  
+    >
       <Space direction="vertical" style={{ width: '100%' }}>
-        <ProCard size="small"
-          bordered
+        <ProCard size="small"                  
           headerBordered
-          title='Customer Infomation'
-          style={{ marginBlockStart: 8 }}
-          gutter={8}
-          direction="row"
+          title='General Infomation'
+          // style={{ marginBlockStart: 8 }}
+          // gutter={8}
+          // direction="row"
         >
-          <Flex justify="space-between">
-              <Flex vertical>
-                <ProCard size="small"
-                  bordered
+          <ProFormGroup >
+            <ProFormText
+              label="Customer's ID"
+              // rules={[{ required: true }]}
+              name={'customerCode'}
+              allowClear
+              width={470}
+            />
+            <ProFormRadio.Group
+              name="vatInv"
+              label="VAT Invoice"
+              options={[
+                {
+                  label: 'Yes',
+                  value: 'Y',
+                },
+                {
+                  label: 'No',
+                  value: 'N',
+                }
+              ]}
+            />
+          </ProFormGroup>
+          <ProFormGroup>
+            <ProFormSelect
+              label="Purpose"
+              name={'purpose'}
+              placeholder={'Purpose'}
+              options={[{
+                label: 'New Account',
+                value: 'New Account',
+              },{
+                label: 'Add Shipping Address',
+                value: 'Add Shipping Address',
+              }]}
+              width={470}
+            />
+          
+            <ProFormSelect
+              label="Price & Trade Offer"
+              name={'priceTradeOffer'}
+              placeholder={'Price & Trade Offer'}
+              options={[{
+                label: 'Wholsale',
+                value: 'Wholsale',
+              },{
+                label: 'Standard',
+                value: 'Standard',
+              },{
+                label: 'Special(Enclose Sales Terms)',
+                value: 'Special(Enclose Sales Terms)',
+              }]}
+              width={470}
+            />
+            <ProFormSelect
+              label="Payment Term"
+              name={'paymentTerm'}
+              placeholder={'Payment Term'}
+              options={[{
+                label: 'Cashon-Delivery',
+                value: 'Cashon-Delivery',
+              },{
+                label: 'Pre-Payment',
+                value: 'Pre-Payment',
+              },{
+                label: 'Credit (enclose Credit Appliction form',
+                value: 'Credit (enclose Credit Appliction form',
+              }]}
+              width={470}
+            />
+              <ProFormSelect
+              label="Outlet Type"
+              name={'outletTypeId'}
+              placeholder={'Outlet Type'}
+              options={state.initData?.outletTypeList?.map((it) => ({
+                label: it.name,
+                value: it.id,
+              }))}
+              width={470}
+            />
+            <ProFormSelect
+              label="Region"
+              name={'regionId'}
+              placeholder={'Region'}
+              options={state.initData?.regionList?.map((it) => ({
+                label: it.name,
+                value: it.id,
+              }))}
+              width={470}
+            />
+              <ProFormSelect
+              label="Division"
+              name={'divisionId'}
+              placeholder={'Division'}
+              options={state.initData?.lookupDataList?.filter((it) => it.type === 'CUSTOMER_DIVISION')?.map((it) => ({
+                label: it.name,
+                value: it.id,
+              }))}
+              width={470}
+            />
+            <ProFormSelect
+              label="Channel"
+              name={'channelId'}
+              placeholder={'Channel'}
+              options={state.initData?.lookupDataList?.filter((it) => it.type === 'SALE_SUB_CHANNEL')?.map((it) => ({
+                label: it.name,
+                value: it.id,
+              }))}
+              width={470}
+            />               
+            <ProFormText readonly name={'createdBy'} label="Sale Executive"  width={470}/>     
+          </ProFormGroup>     
+        </ProCard>
+        <ProCard size="small"                  
+          headerBordered
+          title='Business Name'
+        >
+          <ProFormGroup >
+            <ProFormText
+              label="Business Name(Khmer)"
+              // rules={[{ required: true }]}
+              name={'buNameKh'}
+              allowClear
+              width={470}
+            />
+            <ProFormText
+              label="Business Name(English)"
+              rules={[{ required: true }]}
+              name={'buName'}
+              allowClear
+              width={470}
+            />           
+          </ProFormGroup>
+          <ProFormGroup >
+            <ProFormText
+              label="Owner Name(Khmer)"
+              // rules={[{ required: true }]}
+              name={'ownerNameKh'}
+              allowClear
+              width={470}
+            />
+            <ProFormText
+              label="Owner Name(English)"
+              rules={[{ required: true }]}
+              name={'ownerName'}
+              allowClear
+              width={470}
+            />
+            <ProFormText
+              label="Owner Phone Number"
+              rules={[{ required: true }]}
+              name={'ownerPhone'}
+              allowClear
+              width={470}
+            />
+          </ProFormGroup>
+          <ProFormGroup >
+            <ProFormText
+              label="Purchase Name(Khmer)"
+              // rules={[{ required: true }]}
+              name={'purchaseNameKh'}
+              allowClear
+              width={470}
+            />
+            <ProFormText
+              label="Purchase Name(English)"
+              // rules={[{ required: true }]}
+              name={'purchaseName'}
+              allowClear
+              width={470}
+            />
+            <ProFormText
+              label="Purchase Phone Number"
+              // rules={[{ required: true }]}
+              name={'purchasePhone'}
+              allowClear
+              width={470}
+            />
+          </ProFormGroup>
+        </ProCard>
+        { <ProCard size="small">
+          <Flex vertical>
+            <Flex justify="flex-start" gap={25}>
+              <Flex vertical style={{width:'100%'}}>
+                <ProCard
+                  title='Billing Address'
                   headerBordered
-                  title='General Infomation'
-                  style={{ marginBlockStart: 8 }}
-                  gutter={8}
-                  direction="row"
+                  // style={{ marginBlockStart: 8 }}
+                  // gutter={8}
                 >
-                  <ProFormText
-                    // width={470}
-                    // disabled={items.length > 0 && form.getFieldValue('vendorId')}
+                  <AddressListView  addressReadonly={readOnly||false}
+                      data={{
+                        list: addressList || [],
+                        init: {
+                          lookupDataList: state.initData?.lookupDataList,
+                          provinceList: state.initData?.provinceList,
+                        },
+                        locations: { ...state.data?.locations },
+                      }} actionHandlers={{
+                        loadData: async function (): Promise<AddresssView[]> {
+                          // throw new Error("Function not implemented.");
+                          // const rs = await ops.listAddressDetailByCustomerId({ id: state.data?.detail?.id || 0 })
+                          // setAddressList(rs)
+                          return []
+                        },
+                        onAdd: (data, cb) => onSaveShippingAddressHandler(data,'B', true, cb),
+                        onEdit:(data, cb) => onSaveShippingAddressHandler(data,'B', false, cb),
+                        onRemove: onRemoveShippingAddressHandler,
+                        onCleaLocation: actions.clearLocations,               
+                        onLoadLocations: ops.loadLocations,
+                        onLoadMultiLocations: ops.loadMultiLocations,
+                      }}
+                  />
+                  
 
-                    // key={`vendor${forceReloadVendorList}`}
-                    label="Customer's ID"
-                    rules={[{ required: true }]}
-                    name={'customerNo'}
-                    fieldProps={{
-                      // popupMatchSelectWidth: 500, onClear() {
-                      //   setVendor(undefined)
-                      //   form.resetFields(['billToAddress'])
-                      // },
-                    }}
-                    allowClear
-                    // showSearch
-                    // request={onFindVendorHandler}
-                  />
-                  <ProFormRadio.Group
-                    name="vatInvoice"
-                    label="VAT Invoice"
-                    options={[
-                      {
-                        label: 'Yes',
-                        value: 'Y',
-                      },
-                      {
-                        label: 'No',
-                        value: 'N',
-                      }
-                    ]}
-                  />
-                  <ProFormSelect
-                      label="Purpose"
-                      name={'purpose'}
-                      placeholder={'Purpose'}
-                      options={[{
-                        label: 'New Account',
-                        value: 'newAccount',
-                      },{
-                        label: 'Add Shipping Address',
-                        value: 'addShippingAddress',
-                      }]}
-                      width={470}
-                    />
-                    <ProFormSelect
-                      label="Price & Trade Offer"
-                      name={'priceTradeOffer'}
-                      placeholder={'Price & Trade Offer'}
-                      options={[{
-                        label: 'Wholsale',
-                        value: 'Wholsale',
-                      },{
-                        label: 'Standard',
-                        value: 'Standard',
-                      },{
-                        label: 'Special(Enclose Sales Terms)',
-                        value: 'Special(Enclose Sales Terms)',
-                      }]}
-                      width={470}
-                    />
-                    <ProFormSelect
-                      label="Payment Term"
-                      name={'paymentTerm'}
-                      placeholder={'Payment Term'}
-                      options={[{
-                        label: 'Wholsale',
-                        value: 'Wholsale',
-                      },{
-                        label: 'Standard',
-                        value: 'Standard',
-                      },{
-                        label: 'Special(Enclose Sales Terms)',
-                        value: 'Special(Enclose Sales Terms)',
-                      }]}
-                      width={470}
-                    />
-                  {/* <ProFormGroup>
-                    <ProFormSelect
-                      label="Contact Person"
-                      name={'contactPersonId'}
-                      placeholder={'Contact Person'}
-                      // options={vendor?.contactList.map((it) => ({
-                      //   label: it.contactName,
-                      //   value: it.id,
-                      // }))}
-                      width={470}
-                    />
-                  </ProFormGroup>
-                  <ProFormGroup>
-                    <ProFormText
-                      rules={[{ required: true }]}
-                      name={'phone1'}
-                      label="Phone1"
-                      width={'sm'}
-                    />
-                    <ProFormText name={'phone2'} label="Phone2" width={'sm'} />
-                  </ProFormGroup>
-                  <ProFormText width={470} name={'mail'} label="E-Mail" />
-                  <ProFormTextArea
-                    name={'address'}
-                    fieldProps={{ rows: 1, maxLength: 300 }}
-                    width={500}
-                    label="Address"
-                  /> */}
                 </ProCard>
               </Flex>
-
-              <Flex vertical>
-                <Flex justify="space-between" gap={0}>
-                  <Flex vertical>
-                    <ProCard
-                       title='Billing Address'
-                        style={{ marginBlockStart: 8 }}
-                        gutter={8}
-                    >
-                      <List<AddresssView> style={{width:'450px'}}
-                        size="small"
-                        locale={{ emptyText: 'No Address added' }}
-                        // dataSource={list}
-                        itemLayout="horizontal"
-                        rowKey="key"
-                        renderItem={(item) => (
-                          <List.Item
-                            // extra={[
-                            //   !addressReadonly && (
-                            //     <Button key="b1" onClick={() => onEdit(item)} type="link" icon={<EditOutlined />} />
-                            //   ),
-                            //   !addressReadonly && item.type?.id !== DEFAULT_ADDRESS_TYPE_ID && (
-                            //     <Button
-                            //       key="b2"
-                            //       onClick={() => actionHandlers.onRemove?.(item)}
-                            //       type="link"
-                            //       icon={<DeleteOutlined />}
-                            //     />
-                            //   ),
-                            // ]}
-                          >
-                            <List.Item.Meta
-                              title={
-                                <Space>
-                                  {' '}
-                                  <AimOutlined /> {item.address} <Tag>{item.type?.name}</Tag>{' '}
-                                </Space>
-                              }
-                              description={
-                                <div>
-                                  <Row>
-                                    <Col>
-                                      {[
-                                        { name: 'Street Name', value: item?.streetName },
-                                        { name: 'Street No', value: item?.streetNo },
-                                        { name: 'House', value: item?.houseNo },
-                                        { name: 'Village', value: item?.village?.name },
-                                        { name: 'Commune', value: item?.commune?.name },
-                                        { name: 'District', value: item?.district?.name },
-                                        { name: 'Province', value: item?.province?.name },
-                                      ]
-                                        .filter((it) => it.value)
-                                        .map((it) => `${it.name} ${it.value}`)
-                                        .join(', ')}
-                                    </Col>
-                                  </Row>
-                                  <Row>
-                                    <Col>
-                                      {' '}
-                                      Hotspot: {item.hotspot || 'N/A'}, Direction: {item.direction || 'N/A'}{' '}
-                                    </Col>
-                                  </Row>
-                                  <Row>
-                                    <Col>
-                                      {' '}
-                                      Latitute: {item.latitude || 'N/A'}, Longitude: {item.longitude || 'N/A'}
-                                    </Col>
-                                  </Row>
-                                </div>
-                              }
-                            />
-
-                            {/* {(item.visitPlanOptionList || []).length > 0 && <ListContent item={item} />} */}
-                          </List.Item>
-                        )}
-                      />
-                      <Button
-                        size="small"
-                        style={{ width: '100%', marginBottom: 8 }}
-                        type="dashed"
-                        onClick={() => setModal({ visible: true })}
-                        icon={<PlusOutlined />}
-                      />
-                      {/* <ProFormSelect
-                        width={'md'}
-                        name={'billToAddressId'}
-                        rules={[{ required: true }]}
-                        // options={vendor?.billingAddressList.map((it) => ({
-                        //   label: it.address,
-                        //   value: it.id,
-                        // }))}
-                        label="Bill to Address"
-                      />
-                      <ProFormTextArea
-                        name={'billToAddress'}
-                        placeholder={''}
-                        fieldProps={{ rows: 7, readOnly: true }}
-                        width={'md'}
-                      />
-                      <ProFormDatePicker width={'md'} rules={[{ required: true }]} label="Delivery Date" name={"deliveredDate"} /> */}
-
-                    </ProCard>
-                  </Flex>
-                  <Flex vertical>
-                    <ProCard
-                       title='Shipping Address'
-                        style={{ marginBlockStart: 8 }}
-                        gutter={8}
-                    >
-                      <List<AddresssView> style={{width:'450px'}}
-                        size="small"
-                        locale={{ emptyText: 'No Address added' }}
-                        // dataSource={list}
-                        itemLayout="horizontal"
-                        rowKey="key"
-                        renderItem={(item) => (
-                          <List.Item
-                            // extra={[
-                            //   !addressReadonly && (
-                            //     <Button key="b1" onClick={() => onEdit(item)} type="link" icon={<EditOutlined />} />
-                            //   ),
-                            //   !addressReadonly && item.type?.id !== DEFAULT_ADDRESS_TYPE_ID && (
-                            //     <Button
-                            //       key="b2"
-                            //       onClick={() => actionHandlers.onRemove?.(item)}
-                            //       type="link"
-                            //       icon={<DeleteOutlined />}
-                            //     />
-                            //   ),
-                            // ]}
-                          >
-                            <List.Item.Meta
-                              title={
-                                <Space>
-                                  {' '}
-                                  <AimOutlined /> {item.address} <Tag>{item.type?.name}</Tag>{' '}
-                                </Space>
-                              }
-                              description={
-                                <div>
-                                  <Row>
-                                    <Col>
-                                      {[
-                                        { name: 'Street Name', value: item?.streetName },
-                                        { name: 'Street No', value: item?.streetNo },
-                                        { name: 'House', value: item?.houseNo },
-                                        { name: 'Village', value: item?.village?.name },
-                                        { name: 'Commune', value: item?.commune?.name },
-                                        { name: 'District', value: item?.district?.name },
-                                        { name: 'Province', value: item?.province?.name },
-                                      ]
-                                        .filter((it) => it.value)
-                                        .map((it) => `${it.name} ${it.value}`)
-                                        .join(', ')}
-                                    </Col>
-                                  </Row>
-                                  <Row>
-                                    <Col>
-                                      {' '}
-                                      Hotspot: {item.hotspot || 'N/A'}, Direction: {item.direction || 'N/A'}{' '}
-                                    </Col>
-                                  </Row>
-                                  <Row>
-                                    <Col>
-                                      {' '}
-                                      Latitute: {item.latitude || 'N/A'}, Longitude: {item.longitude || 'N/A'}
-                                    </Col>
-                                  </Row>
-                                </div>
-                              }
-                            />
-
-                            {/* {(item.visitPlanOptionList || []).length > 0 && <ListContent item={item} />} */}
-                          </List.Item>
-                        )}
-                      />
-                      <Button
-                        size="small"
-                        style={{ width: '100%', marginBottom: 8 }}
-                        type="dashed"
-                        // onClick={() => setModal({ visible: true })}
-                        icon={<PlusOutlined />}
-                      />
-                      {/* <ProFormSelect
-                        width={'md'}
-                        name={'billToAddressId'}
-                        rules={[{ required: true }]}
-                        // options={vendor?.billingAddressList.map((it) => ({
-                        //   label: it.address,
-                        //   value: it.id,
-                        // }))}
-                        label="Bill to Address"
-                      />
-                      <ProFormTextArea
-                        name={'billToAddress'}
-                        placeholder={''}
-                        fieldProps={{ rows: 7, readOnly: true }}
-                        width={'md'}
-                      />
-                      <ProFormDatePicker width={'md'} rules={[{ required: true }]} label="Delivery Date" name={"deliveredDate"} /> */}
-
-                    </ProCard>
-                  </Flex>
-                </Flex>
+              <Flex vertical style={{width:'100%'}}>
+                <ProCard
+                  title='Shipping Address'
+                  headerBordered
+                >
+                  <AddressListView addressReadonly={readOnly||false}
+                      data={{
+                        list: shippingAddressList || [],
+                        init: {
+                          lookupDataList: state.initData?.lookupDataList,
+                          provinceList: state.initData?.provinceList,
+                        },
+                        locations: { ...state.data?.locations },
+                      }} actionHandlers={{
+                        loadData: async function (): Promise<AddresssView[]> {
+                          // throw new Error("Function not implemented.");
+                          // const rs = await ops.listAddressDetailByCustomerId({ id: state.data?.detail?.id || 0 })
+                          // setAddressList(rs)
+                          return []
+                        },
+                        onAdd: (data, cb) => onSaveShippingAddressHandler(data,'S', true, cb),
+                        onEdit:(data, cb) => onSaveShippingAddressHandler(data,'S', false, cb),
+                        onRemove: onRemoveShippingAddressHandler,
+                        onCleaLocation: actions.clearLocations,               
+                        onLoadLocations: ops.loadLocations,
+                        onLoadMultiLocations: ops.loadMultiLocations,
+                      }}
+                  />
+                </ProCard>
               </Flex>
             </Flex>
-        </ProCard>
-        <ProCard size="small"
-          title='Billing Address'
+          </Flex>
+        </ProCard>}   
+        <ProCard size="small"                  
           headerBordered
-          bordered
+          title='Purchasing Performance'
         >
-          <div>Customer Inf</div>
-        </ProCard>
-        <AddressModalEntry
-          title="Address"
-          open={modal.visible}
-          // addressReadonly={addressR?eadonly}
-          onCancel={() => setModal({ visible: false })}
-          data={modal.data}
-          initData={{
-            // lookupDataList: data.init.lookupDataList?.filter(
-            //   (it) =>
-            //     it.type !== 'ADDRESS_TYPE' ||
-            //     !list?.some((i) => i.type?.id == 14033) ||
-            //     it.id !== 14033,
-            // ),
-            // provinceList: data.init.provinceList,
-          }} actionHandlers={{
-            onAdd: function (address: AddresssView, cb?: (sucess: boolean) => void): void {
-              throw new Error("Function not implemented.");
-            },
-            onEdit: function (address: AddresssView, cb?: (sucess: boolean) => void): void {
-              throw new Error("Function not implemented.");
-            },
-            onLoadLocations: undefined,
-            onLoadMultiLocations: undefined,
-            onCleaLocation: undefined
-          }}        // locations={data.locations}
-        // actionHandlers={{
-          // onAdd: (data) =>
-            // actionHandlers.onAdd(data, (success) => {
-            //   if (success) {
-            //     actionHandlers.loadData?.();
-            //     setModal({ visible: false });
-            //   }
-            // }),
-          // onEdit: (data) =>
-          //   actionHandlers.onEdit(data, (success) => {
-          //     if (success) {
-          //       actionHandlers.loadData?.();
-          //       setModal({ visible: false });
-          //     }
-          //   }),
-          // onLoadLocations: actionHandlers.onLoadLocations,
-          // onLoadMultiLocations: actionHandlers.onLoadMultiLocations,
-          // onCleaLocation: actionHandlers.onCleaLocation,
-        // }}
-      />
+          {ppItems && <PurchasingPerformanceView editableFormRef={editablePPItemFormRef} addedItems={ppItems} onSetAddedItems={setPPItems} readOnly={readOnly} />}
+        </ProCard>   
+        <ProCard size="small"                  
+          headerBordered
+          title='Document Requirment'
+        >
+          <Space direction="vertical" style={{ width: '90%' }}>
+            <DocmentRequire readOnly={readOnly} title="1. Persal Identification Documents (ONE OF THE FOLLOWING)" itemList={personalList} onSetItemList={setPersonaList}/>
+            <DocmentRequire readOnly={readOnly} title="2. Corporate Ducuments" itemList={coporateList} onSetItemList={setcoporateList}/>    
+            <RemarkCard/>   
+          </Space>
+        </ProCard>   
+        <ProCard size="small"                  
+          headerBordered
+          title='Attachments'
+        >
+         {!readOnly&& <FileUploader
+            required={false}
+            showTitle
+            title="Please upload necessary documents."
+            onSetFiles={(files) => setUploadFileIds(files.map((it) => it.response))}
+          />}
+          <AttachedFileList readonly={true}
+            removeButton={false}
+            onSetUploadFile={files => {}}
+            initFiles={[...(attachedFiles || [])]} 
+          />
+        </ProCard>  
       </Space>
     </ProForm>
-  </Spin>);
+  </Spin></div>);
 }

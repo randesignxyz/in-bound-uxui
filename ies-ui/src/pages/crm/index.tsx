@@ -20,6 +20,7 @@ import ContractReport from './contract/components/ContractReport';
 import TermReport from './term/components/TermReport';
 import salesperson from "@/assets/salesman.png";
 import RegisterCustomerIcon from '@/assets/register-customer.png';
+import customerShipping  from "@/assets/courier_14234908.png";
 
 
 export const CrmPaths = {
@@ -38,6 +39,7 @@ export const CrmPaths = {
   gratisConfig: '/crm/gratis-config',
   salesperson: '/crm/salesperson',
   registerCustomer: '/crm/register-customer',
+  shippingAddress: '/crm/shipping-address',
 };
 
 const Crm: React.FC = () => {
@@ -442,6 +444,16 @@ const Crm: React.FC = () => {
       // }
       // overlay: customerMenu,
     },
+     {
+      id: 'customer-shipping-address',
+      name: 'Shipping Address',
+      description: '',
+      //link: `${CrmPaths.settlement}/list`,
+      link: `${CrmPaths.shippingAddress}/list`,
+      icon: customerShipping,
+      visible:access.saleAdmin
+    }
+
   ];
 
   return (

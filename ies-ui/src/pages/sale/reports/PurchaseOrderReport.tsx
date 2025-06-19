@@ -2,7 +2,12 @@ import FormModalComp, { FormModalProps } from '@/components/FormModal';
 import { simpleRequestActions } from '@/services/model';
 import { SalesTeamWorkLess } from '@/services/sale/data';
 import { SaleServiceAPI } from '@/services/sale/services';
-import { ProForm, ProFormDateRangePicker, ProFormSelect } from '@ant-design/pro-components';
+import {
+  ProForm,
+  ProFormDateRangePicker,
+  ProFormRadio,
+  ProFormSelect,
+} from '@ant-design/pro-components';
 import { Card, Spin, message } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { useState } from 'react';
@@ -22,7 +27,7 @@ export default (props: Props) => {
   const saleServices = SaleServiceAPI(requestActions);
   // const [salesperson, setSalesperson] = useState<SalesTeamWorkLess[]>([]);
 
-  //   const [selectedReportType, setSelectedReportType] = useState('sales_invoice');
+  const [selectedReportType, setSelectedReportType] = useState('purchase_order');
   const [loading, setLoading] = useState<boolean>(false);
 
   const [form] = useForm<{
@@ -32,12 +37,12 @@ export default (props: Props) => {
     status?: string[];
   }>();
 
-  //   const onFormvalueChanged = (changedValues: any) => {
-  // const { reportType } = changedValues;
-  // if (reportType && 'reportType' in changedValues) {
-  //   setSelectedReportType(reportType);
-  // }
-  //   };
+  const onFormvalueChanged = (changedValues: any) => {
+    const { reportType } = changedValues;
+    if (reportType && 'reportType' in changedValues) {
+      setSelectedReportType(reportType);
+    }
+  };
 
   const onDowloadReportHandler = async () => {
     try {
@@ -45,13 +50,14 @@ export default (props: Props) => {
       const dataForm = await form.validateFields();
       console.log(dataForm);
       await saleServices.donwloadPOReport({
-        fileName: 'pos-reports',
+        fileName: selectedReportType,
         reportName: 'po-reports',
         type: 'EXCEL',
         data: {
           requestedDate: dataForm.requestedDate,
           salespersonCode: dataForm.salespersonCode,
           status: dataForm.status,
+          reportType: selectedReportType,
         },
       });
       message.success('Report generated successfully.');
@@ -77,18 +83,18 @@ export default (props: Props) => {
               layout="horizontal"
               {...layout}
               form={form}
-              //   onValuesChange={onFormvalueChanged}
+              onValuesChange={onFormvalueChanged}
             >
-              {/* <ProFormRadio.Group
+              <ProFormRadio.Group
                 label="Report Type"
                 name="reportType"
                 rules={[{ required: true }]}
                 initialValue={selectedReportType}
                 options={[
-                  { value: 'sales_invoice', label: 'Sales Invoice' },
-                  { value: 'sales_items', label: 'Sold Items' },
+                  { value: 'raw_purchase_order', label: 'Raw Purchase Order' },
+                  { value: 'purchase_order', label: 'Purchase Order' },
                 ]}
-              /> */}
+              />
               <ProFormDateRangePicker
                 rules={[{ required: true }]}
                 label="Requested Date Start-End"

@@ -86,6 +86,7 @@ const AddressModalEntry: React.FC<Props> = ({
   return (
     <FormModalComp
       {...props}
+      okText="Update"
       onResetForm={() => form.setFieldsValue({ ...data })}
       onSubmit={async () => {
         const dataForm = await form.validateFields();

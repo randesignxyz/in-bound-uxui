@@ -276,12 +276,6 @@ const StockControlDetail: React.FC<Props> = ({ id, actionHandlers }) => {
                         // setSaleInvoiceModal({ visible: false });
                       }
                     },
-                    onSaveRemark:async(data:any)=>{
-                      await StockControlServiceAPI(requestActions).saveSaleInvoiceRemark(data);
-                      message.success("Success!")
-                      // await actions.detail(id)
-                      setForceUpdate(forceUpdate+1)
-                    }
                   }}
                 />
               </Tabs.TabPane>

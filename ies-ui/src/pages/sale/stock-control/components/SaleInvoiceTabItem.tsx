@@ -18,9 +18,12 @@ import { useSetState } from 'ahooks';
 import { Button, Tag, Tooltip } from 'antd';
 import type { SortOrder } from 'antd/lib/table/interface';
 import numeral from 'numeral';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import SaleInvoiceFormModal from '../SaleInvoiceFormModal';
 import { Model } from '../model';
+import Remarks from '@/components/remarks';
+import RemarkModalForm from '../../component/RemarkModal';
+import { StockControlServiceAPI } from '../services';
 
 type Props = {
   forceUpdate: number;
@@ -46,6 +49,7 @@ type Props = {
   actionHandlers: {
     onLoadLocations: (type: LocationType, isNotClearChild: boolean, parentId?: number) => void;
     onSaveSaleInvoice: (item: SaleInvoiceLess) => void;
+    onSaveRemark: (param:{id:number, remark:string}) => void;
   };
 };
 
@@ -215,12 +219,19 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
       it?.internalName !== null
         ? it?.internalName
         : it?.firstName !== null && it?.lastName !== null
-        ? `${it?.firstName} ${it?.lastName}`
-        : it?.firstName !== null
-        ? it?.firstName
-        : it?.lastName || '';
+          ? `${it?.firstName} ${it?.lastName}`
+          : it?.firstName !== null
+            ? it?.firstName
+            : it?.lastName || '';
     return `${name} - ( ${it?.phone} )`;
   };
+
+  const [remarkState, setRemarkState] = useState<{
+    visible?: {
+      name: "MODAL",
+      payloads?: SaleInvoiceLess
+    }
+  }>();
 
   return (
     <>
@@ -256,10 +267,10 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
                 r.status === 'Pending'
                   ? 'magenta'
                   : r.status === 'Paid'
-                  ? 'processing'
-                  : r.status === 'Own'
-                  ? 'success'
-                  : 'warning';
+                    ? 'processing'
+                    : r.status === 'Own'
+                      ? 'success'
+                      : 'warning';
               return (
                 <span>
                   <Tag color={color}>{r.status}</Tag>
@@ -292,21 +303,27 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
             },
           },
           {
+            title: "Remark",
+            dataIndex: "remark"
+          },
+          {
             title: '',
             align: 'center',
             render: (_, r) => {
-              return r.status === 'Pending' ? (
-                <Tooltip title="Edit" key="edit">
-                  <EditOutlined
-                    style={{ color: '#448DF7' }}
-                    onClick={() => {
-                      setSaleInvoiceModal({ visible: true, record: r });
-                    }}
-                  />
-                </Tooltip>
-              ) : (
-                <></>
-              );
+              // return r.status === 'Pending' ? (
+              return <Tooltip title="Remark" key="edit">
+                <EditOutlined
+                  style={{ color: '#448DF7' }}
+                  onClick={() => {
+                    setRemarkState({ visible: { name: "MODAL", payloads: r } })
+                    // setSaleInvoiceModal({ visible: true, record: r });
+                  }}
+                />
+              </Tooltip>
+              // ) 
+              // : (
+              //   <></>
+              // );
               // return <Checkbox defaultChecked={r.isActive ? true : false} disabled />;
             },
           },
@@ -358,7 +375,7 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
             data: result?.items.map((it: SaleInvoiceLess) => it).filter((it: any) => !!it),
           };
         }}
-        // pagination={pagination}
+      // pagination={pagination}
       />
       <SaleInvoiceFormModal
         title="Sale Invoice"
@@ -383,6 +400,19 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
           onLoadLocations: actionHandlers.onLoadLocations,
         }}
       />
+
+      <RemarkModalForm
+        open={remarkState?.visible?.name == "MODAL"}
+        onCancel={() => setRemarkState({ visible: undefined })}
+        onSave={(data) => {
+          const entry ={
+              ...data,
+              id :remarkState?.visible?.payloads?.id
+          }
+          actionHandlers.onSaveRemark(entry);
+          setRemarkState({ visible: undefined })
+        }}
+        showAlertInfo={false} />
     </>
   );
 };

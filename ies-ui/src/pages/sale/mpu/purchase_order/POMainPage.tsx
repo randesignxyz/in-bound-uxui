@@ -39,17 +39,11 @@ const POMainPage: React.FC = () => {
     isVisibled: false,
   });
 
-  // const [actionStatusState, setActionStatusState] = useState<{
-  //   visible?: {
-  //     type: 'open';
-  //     payloads?: PurchaseOrderDTO;
-  //   };
-  // }>();
   const [filter, setFilter] = useState<TableViewSearchParams<AdvanceSearchParam>>({
     criteria: { advanceSearch: { status: 'ALL' } },
   });
   const { data, isFetching, refetch } = useQuery(
-    ['fetch-po-list', filter],
+    ['fetch-invoice-list', filter],
     () => services.page(filter),
     {
       refetchOnWindowFocus: false,
@@ -71,40 +65,6 @@ const POMainPage: React.FC = () => {
       },
     });
   };
-
-  // const items = (items: PurchaseOrderDTO): MenuProps['items'] => [
-  // {
-  //     key: "action-status",
-  //     label: "Force Close",
-  //     itemIcon: <IssuesCloseOutlined />,
-  //     onClick: () => setActionStatusState({ visible: { type: "open", payloads: items } })
-  // },
-  // {
-  //     type: "divider"
-  // },
-  // {
-  //   key: 'reject',
-  //   label: 'Reject',
-  //   danger: true,
-  //   itemIcon: <CloseCircleOutlined />,
-  //   disabled: items.status === 'Pending' ? false : true,
-  //   onClick: () => {
-  //     Modal.confirm({
-  //       title: 'Reject Purchase',
-  //       content: 'are you sure?',
-  //       onOk: async () => {
-  //         await services.rejected({
-  //           id: items.id,
-  //           remark: 'data was reject',
-  //         });
-  //         actionRef.current?.reload?.();
-  //         refetch();
-  //       },
-  //     });
-  //   },
-  // },
-  // ];
-  // useEffect(() => {}, [data]);
   return (
     <>
       <PageWrapper<PurchaseOrderDTO, AdvanceSearchParam, ''>

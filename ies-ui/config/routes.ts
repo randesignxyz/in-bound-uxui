@@ -174,6 +174,16 @@ export default [
     component: './crm/visit-schedule/components/tracking-location',
   },
 
+  //  PHEUN REACH 5/28/2025
+  {
+    path: '/crm/shipping-address/:view',
+    name: 'shipping-address',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessCrmMenuItem',
+    component: './crm/shipping_address',
+  },
+
   /**********<<Pro**************/
   {
     path: '/pro',
@@ -266,6 +276,14 @@ export default [
   // REACH 2/25/2025
   {
     path: '/crm/salesperson/:view/*',
+    name: 'Salesperson',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessCrmMenuItem',
+    component: './crm/salesperson',
+  },
+  {
+    path: '/crm/sale-customer-/:view/*',
     name: 'Salesperson',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
@@ -515,7 +533,14 @@ export default [
     // access: 'canAccessAllMenuDSD',
     component: './sale/mpu/settlement',
   },
-
+  {
+    path: '/sale/invoice/:view/*',
+    name: 'sale-invoice',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    // access: 'canAccessAllMenuDSD',
+    component: './sale/invoice',
+  },
   /******************* MPU *******************/
 
   // {

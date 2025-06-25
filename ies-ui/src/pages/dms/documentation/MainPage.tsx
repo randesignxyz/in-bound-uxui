@@ -6,13 +6,13 @@ import { simpleRequestActions } from "@/services/model";
 import { useQuery } from "@umijs/max";
 import { useEffect, useRef, useState } from "react";
 import { formatDate } from "@/pages/utils";
-import { AuditOutlined, BellOutlined, DeleteOutlined, DownloadOutlined, EllipsisOutlined, FileAddOutlined, HeartOutlined, HistoryOutlined, PlusOutlined, ShareAltOutlined, SwapOutlined } from "@ant-design/icons";
+import { AuditOutlined, BellOutlined, DeleteOutlined, DownloadOutlined, EllipsisOutlined, ExportOutlined, FileAddOutlined, HeartOutlined, HistoryOutlined, PlusOutlined, ShareAltOutlined, SwapOutlined } from "@ant-design/icons";
 import { Button, Dropdown, MenuProps, message, Modal, Card, Typography, Space, FloatButton } from "antd";
 import { expriationStatus } from "../core";
 import DocumentationDetail from "./DetailView";
 import DocumentModalForm from "./EntryForm";
 import { ActionType, LightFilter, ProFormSelect, ProFormSwitch } from "@ant-design/pro-components";
-import { downloadUploadFileV2 } from "@/services/apiGateway";
+import { downloadGenericReport, downloadUploadFileV2 } from "@/services/apiGateway";
 import { FavoriteServiceAPI } from "../favorite/service";
 import { HistoryServiceAPI } from "../history/service";
 import AdvanceDocumentSearch from "../components/AdvanceSearch";
@@ -25,6 +25,9 @@ import { ShareServiceAPI } from "../share/service";
 import ShareDrawerForm from "../share/ShareDrawerForm";
 import HistoryDoc from "./HistoryDoc";
 import MoveDocumentModal from "./MoveDocument";
+import ReportModal from "../components/ReportModal";
+import moment from "moment";
+import { getUrlReporting } from "@/pages/ReportUrl";
 
 interface Props {
     paramSearch?: DocumentationAdvanceSearch
@@ -85,9 +88,9 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
     useEffect(() => {
         paramSearch && setFilter((v) => ({ criteria: { advanceSearch: { ...paramSearch } } }))
     }, [paramSearch]);
-    useEffect(()=>{
+    useEffect(() => {
 
-    },[])
+    }, [])
 
     const [shareDrawerState, setShareDrawerState] = useState<{
         visible?: {
@@ -123,6 +126,11 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
     }>();
     const [advanceSearch, setAdvanceSearch] = useState<{ visible: boolean }>();
     const [advanceSearchParams, setAdvanceSearchParams] = useState<DocumentationAdvanceSearch>();
+    const [modalReportState, setModalReportState] = useState<{
+        visible?: {
+            name: "MODAL",
+        }
+    }>()
     const actionItem = (record: DocumentationDTO): MenuProps["items"] => [
 
         {
@@ -328,13 +336,18 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
                 type: "Table",
                 title: "Documnets",
                 actionButtons: [
+                    <Button
+                        icon={<ExportOutlined />}
+                        type="link"
+                        onClick={() => setModalReportState({ visible: { name: "MODAL" } })}
+                    >Export</Button>,
                     <Dropdown
                         menu={{
                             items: itemCreateNew(),
                             style: {
                                 width: 200
                             },
-                           
+
                         }}
                     >
                         <Button
@@ -574,6 +587,40 @@ const DocumentMainPage: React.FC<Props> = ({ paramSearch }) => {
                         message.success("Success!");
                     }
                 });
+            }}
+        />
+        <ReportModal
+            open={modalReportState?.visible?.name == "MODAL"}
+            onDownload={async (data:any) => {
+                
+                try {
+                    // const dataForm = await form.validateFields()
+                    const reportName = 'document-report'
+                    // setLoading(true)
+                    await downloadGenericReport(requestActions)({
+                        fileName: `${reportName}-${moment().format()}.xlsx`,
+                        type: 'EXCEL',
+                        data: {
+                            reportName: reportName,
+                            reportPath: getUrlReporting('dms'),
+                            data: [
+                                { key: "startDate", value: data?.dates?.[0], type: "dateTime" },
+                                { key: "endDate", value: data?.datas?.[1], type: "dateTime" },
+                                { key: "category", value: data.category, type: "string" },
+                                { key: "department", value: data.department, type: "int" },
+                                { key: "type", value: data.type, type: "string" },
+                            ]
+                        }
+                    }).then((edit) => {
+                        // setLoading(false)
+                    })
+                } catch (error: any) {
+                    message.error(error.message || "Failed to generate report.")
+                    // setLoading(false)
+                }
+            }}
+            modalProps={{
+                onCancel: () => setModalReportState({ visible: undefined })
             }}
         />
     </>)

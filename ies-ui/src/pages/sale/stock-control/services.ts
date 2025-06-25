@@ -24,13 +24,14 @@ const StockControlActions = {
     },
   }),
 
-  fetchStockControl:(id?:string):ServiceApiType<{id?:string}> =>({
-    actionName:"fetch-stock-control",
-    type:"FETCH_QUERY",
-    endpoint:"SALE",
-    payload:{id},
-    
-  })
+  fetchStockControl: (id?: string): ServiceApiType<{ id?: string }> => ({
+    actionName: "fetch-stock-control",
+    type: "FETCH_QUERY",
+    endpoint: "SALE",
+    payload: { id },
+
+  }),
+
 };
 
 export const StockControlServiceAPI = (requestActions: RequestActions) => {
@@ -40,9 +41,9 @@ export const StockControlServiceAPI = (requestActions: RequestActions) => {
         requestActions,
       ) as Promise<Paging<StockControlLess>>,
 
-      fetchStockControl:(id?:string) =>singleRequest(StockControlActions.fetchStockControl(id))(requestActions) as Promise<StockControlLess>,
+    fetchStockControl: (id?: string) => singleRequest(StockControlActions.fetchStockControl(id))(requestActions) as Promise<StockControlLess>,
 
-      
+
     stockTransferAction: (data: TaskActionDataParam<StockTransfer>) => execDataService<{ data: string }, TaskActionDataParam<StockTransfer>>({
       actionName: 'stock-transfer',
       endpoint: 'SALE',
@@ -55,6 +56,12 @@ export const StockControlServiceAPI = (requestActions: RequestActions) => {
       payload: {
         id: processInstanceId
       }
-    }).query(requestActions)
+    }).query(requestActions),
+
+    saveSaleInvoiceRemark: (param: { id: number, remark: string }) => execDataService<StockTransferRequest, {}>({
+      actionName: "save-sale-invoice-remark",
+      endpoint: 'SALE',
+      payload: param
+    })(requestActions)
   };
 };

@@ -20,6 +20,7 @@ import StockControlTabItem from '../components/StockControlTabItem';
 import { Model } from '../model';
 import StockControlFormModal from '../StockControlFormModal';
 import SettlementTabItem from '../components/SettlementTabItem';
+import { StockControlServiceAPI } from '../services';
 
 type Props = {
   id: number;
@@ -266,6 +267,12 @@ const StockControlDetail: React.FC<Props> = ({ id, actionHandlers }) => {
                         // setSaleInvoiceModal({ visible: false });
                       }
                     },
+                    onSaveRemark:async(data:any)=>{
+                      await StockControlServiceAPI(requestActions).saveSaleInvoiceRemark(data);
+                      message.success("Success!")
+                      // await actions.detail(id)
+                      setForceUpdate(forceUpdate+1)
+                    }
                   }}
                 />
               </Tabs.TabPane>

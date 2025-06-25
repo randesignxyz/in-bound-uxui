@@ -41,6 +41,7 @@ export default ({ getMenuItems }: CustomerActionController) => {
         refetchOnWindowFocus: false
     });
     const { state, ops, modals } = model();
+
     const access = useAccess();
     return <Spin spinning={loading}>
         <PageWrapper<CustomerItemLess, FilterType, {}>

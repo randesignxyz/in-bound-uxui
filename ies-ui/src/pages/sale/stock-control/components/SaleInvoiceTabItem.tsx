@@ -15,7 +15,7 @@ import type { ActionType } from '@ant-design/pro-table';
 import ProTable from '@ant-design/pro-table';
 import { useAccess } from '@umijs/max';
 import { useSetState } from 'ahooks';
-import { Button, Tag, Tooltip } from 'antd';
+import { Button, Space, Tag, Tooltip, Typography } from 'antd';
 import type { SortOrder } from 'antd/lib/table/interface';
 import numeral from 'numeral';
 import { useEffect, useRef, useState } from 'react';
@@ -49,7 +49,7 @@ type Props = {
   actionHandlers: {
     onLoadLocations: (type: LocationType, isNotClearChild: boolean, parentId?: number) => void;
     onSaveSaleInvoice: (item: SaleInvoiceLess) => void;
-    onSaveRemark: (param:{id:number, remark:string}) => void;
+    onSaveRemark: (param: { id: number; remark: string }) => void;
   };
 };
 
@@ -65,7 +65,8 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
     visible: false,
   });
 
-  const exchangeRate = () => data.exchangeRate?.target_amount || 0.0;
+  // const exchangeRate = () => data.exchangeRate?.target_amount || 0.0;
+  const { Text } = Typography;
 
   const onSearchCriteria = (value: string | undefined) => {
     return { stockControlId: data.id, searchValue: value };
@@ -157,7 +158,15 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
           {
             title: 'Type',
             render: (_, r) => {
-              return <Tag color={r.itemType === 'FOC' ? 'error' : 'success'}>{r.itemType}</Tag>;
+              return (
+                <Tag
+                  color={
+                    r.itemType === 'STD' ? 'success' : r.itemType === 'FOC' ? 'default' : 'error'
+                  }
+                >
+                  {r.itemType}
+                </Tag>
+              );
               // return r.itemType;
             },
           },
@@ -167,6 +176,18 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
             title: 'Unit Price',
             align: 'right',
             render: (_, r) => {
+              if ((r.discountPrice ?? 0.0) > 0.0) {
+                return (
+                  <Space>
+                    <Text delete type="danger">
+                      ${r.unitPrice}
+                    </Text>
+                    <Text>
+                      ${numeral(r.unitPrice - (r.discountPrice ?? 0.0)).format('0,0.000')}
+                    </Text>
+                  </Space>
+                );
+              }
               return `$ ${numeral(r.unitPrice).format('0,0.000')}`;
             },
           },
@@ -174,7 +195,9 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
             title: 'Amount',
             align: 'right',
             render: (_, r) => {
-              return `$ ${numeral(r.quantity * r.unitPrice).format('0,0.000')}`;
+              return `$ ${numeral(r.quantity * (r.unitPrice - (r.discountPrice ?? 0.0))).format(
+                '0,0.000',
+              )}`;
             },
           },
           // {
@@ -228,9 +251,9 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
 
   const [remarkState, setRemarkState] = useState<{
     visible?: {
-      name: "MODAL",
-      payloads?: SaleInvoiceLess
-    }
+      name: 'MODAL';
+      payloads?: SaleInvoiceLess;
+    };
   }>();
 
   return (
@@ -295,7 +318,24 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
               return `$ ${numeral(r.amount).format('0,0.000')}`;
             },
           },
-
+          {
+            title: 'Discount',
+            dataIndex: 'discountAmount',
+            align: 'right',
+            valueType: 'money',
+            render: (_, r) => {
+              return `$ ${numeral(r.discount).format('0,0.000')}`;
+            },
+          },
+          {
+            title: 'Grand Amount',
+            // dataIndex: 'discountAmount',
+            align: 'right',
+            valueType: 'money',
+            render: (_, r) => {
+              return `$ ${numeral(r.amount - r.discount).format('0,0.000')}`;
+            },
+          },
           {
             title: 'Salesperson',
             render: (_, r) => {
@@ -303,27 +343,26 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
             },
           },
           {
-            title: "Remark",
-            dataIndex: "remark"
+            title: 'Remark',
+            dataIndex: 'remark',
           },
           {
             title: '',
             align: 'center',
             render: (_, r) => {
-              // return r.status === 'Pending' ? (
-              return <Tooltip title="Remark" key="edit">
-                <EditOutlined
-                  style={{ color: '#448DF7' }}
-                  onClick={() => {
-                    setRemarkState({ visible: { name: "MODAL", payloads: r } })
-                    // setSaleInvoiceModal({ visible: true, record: r });
-                  }}
-                />
-              </Tooltip>
-              // ) 
-              // : (
-              //   <></>
-              // );
+              return r.status === 'Pending' ? (
+                <Tooltip title="Edit" key="edit">
+                  <EditOutlined
+                    style={{ color: '#448DF7' }}
+                    onClick={() => {
+                      // setSaleInvoiceModal({ visible: true, record: r });
+                      setRemarkState({ visible: { name: 'MODAL', payloads: r } });
+                    }}
+                  />
+                </Tooltip>
+              ) : (
+                <></>
+              );
               // return <Checkbox defaultChecked={r.isActive ? true : false} disabled />;
             },
           },
@@ -402,17 +441,18 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
       />
 
       <RemarkModalForm
-        open={remarkState?.visible?.name == "MODAL"}
+        open={remarkState?.visible?.name === 'MODAL'}
         onCancel={() => setRemarkState({ visible: undefined })}
         onSave={(data) => {
-          const entry ={
-              ...data,
-              id :remarkState?.visible?.payloads?.id
-          }
+          const entry = {
+            ...data,
+            id: remarkState?.visible?.payloads?.id ?? -1,
+          };
           actionHandlers.onSaveRemark(entry);
-          setRemarkState({ visible: undefined })
+          setRemarkState({ visible: undefined });
         }}
-        showAlertInfo={false} />
+        showAlertInfo={false}
+      />
     </>
   );
 };

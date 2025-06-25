@@ -1,5 +1,7 @@
 import ImagePreview from '@/components/ImagePreview';
+import { getUrlReporting } from '@/pages/ReportUrl';
 import { displayDateTime, formatDate } from '@/pages/utils';
+import { downloadGenericReport } from '@/services/apiGateway';
 import { AddressInfo } from '@/services/crm/data';
 import { CrmServiceAPI } from '@/services/crm/services';
 import { simpleRequestActions } from '@/services/model';
@@ -7,6 +9,7 @@ import { LeadLess, SaleInvoiceLess } from '@/services/sale/data';
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
+  DollarOutlined,
   DownloadOutlined,
   EditOutlined,
   SyncOutlined,
@@ -27,6 +30,7 @@ import {
   message,
 } from 'antd';
 import { max } from 'lodash';
+import moment from 'moment';
 import numeral from 'numeral';
 import { useEffect, useRef, useState } from 'react';
 import RemarkModalForm from '../../component/RemarkModal';
@@ -34,9 +38,6 @@ import { PurchaseOrderDTO } from '../purchase_order/data';
 import { PurchaseOrderDistributorDto, SettlementMethodDetailDTO } from './data';
 import DistributorModal from './DistributorModal';
 import { SettlementMethodServicAPI } from './service';
-import { getUrlReporting } from '@/pages/ReportUrl';
-import { downloadGenericReport } from '@/services/apiGateway';
-import moment from 'moment';
 
 const { Text } = Typography;
 interface Props {
@@ -105,36 +106,12 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
       it?.internalName !== null
         ? it?.internalName
         : it?.firstName !== null && it?.lastName !== null
-          ? `${it?.firstName} ${it?.lastName}`
-          : it?.firstName !== null
-            ? it?.firstName
-            : it?.lastName || '';
+        ? `${it?.firstName} ${it?.lastName}`
+        : it?.firstName !== null
+        ? it?.firstName
+        : it?.lastName || '';
     return `${name} - ( ${it?.phone} )`;
   };
-
-  const onDowloadReportHandler = async (id?: number) => {
-    try {
-      // const dataForm = await form.validateFields()
-      const reportName = 'stock-request-settlement-report-form'
-      // setLoading(true)
-      await downloadGenericReport(requestActions)({
-        fileName: `${reportName}-${moment().format()}.pdf`,
-        type: 'PDF',
-        data: {
-          reportName: reportName,
-          reportPath: getUrlReporting('sale/forms'),
-          data: [
-            { key: 'stockControlId', value: id, type: 'string' },
-          ]
-        }
-      }).then(() => {
-        // setLoading(false)
-      })
-    } catch (error: any) {
-      message.error(error.message || "Failed to generate report.")
-      // setLoading(false)
-    }
-  }
 
   const expandedRowRender = (parent: SaleInvoiceLess) => {
     return parent.items.length > 0 ? (
@@ -212,6 +189,29 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
       </div>
     );
   };
+
+  const onDowloadReportHandler = async (id?: number) => {
+    try {
+      //     // const dataForm = await form.validateFields()
+      const reportName = 'stock-request-settlement-report-form';
+      //     // setLoading(true)
+      await downloadGenericReport(requestActions)({
+        fileName: `${reportName}-${moment().format()}.pdf`,
+        type: 'PDF',
+        data: {
+          reportName: reportName,
+          reportPath: getUrlReporting('sale/forms'),
+          data: [{ key: 'stockControlId', value: id, type: 'string' }],
+        },
+      }).then(() => {
+        // setLoading(false)
+      });
+    } catch (error: any) {
+      message.error(error.message || 'Failed to generate report.');
+      // setLoading(false)
+    }
+  };
+
   return (
     <Spin spinning={requestActions.request?.loading}>
       <Flex vertical gap={16}>
@@ -246,7 +246,6 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                           loadData?.();
                           message.success('Your confirmation request was a success!');
                         });
-                      // onDowloadReportHandler(dataSource.stockControlId)
                     },
                   });
                 }}
@@ -268,13 +267,17 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                 Reject
               </Button>
             ),
-            <Tooltip title="Download Report">
-              <Button icon={<DownloadOutlined />}
-                size='small'
-                type='link'
+            <Tooltip key={'tooltip'} title="Download Report">
+              <Button
+                key={'download'}
+                icon={<DownloadOutlined />}
+                size="small"
+                type="link"
                 onClick={() => onDowloadReportHandler(dataSource?.stockControlId)}
-              >Report Form</Button>
-            </Tooltip>
+              >
+                Report Form
+              </Button>
+            </Tooltip>,
           ]}
         >
           <ProDescriptions
@@ -309,8 +312,8 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                       r.status === 'Pending'
                         ? 'processing'
                         : r.status === 'Completed'
-                          ? 'success'
-                          : 'error'
+                        ? 'success'
+                        : 'error'
                     }
                   >
                     {r.status}
@@ -329,8 +332,9 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                 title: 'Amount (KHR)',
                 dataIndex: 'amountKH',
                 render: (_, r) => (
-                  <Text type="success">{`${r.amountKH > 0 ? numeral(r.amountKH).format('0,000') : '-'
-                    } ៛`}</Text>
+                  <Text type="success">{`${
+                    r.amountKH > 0 ? numeral(r.amountKH).format('0,000') : '-'
+                  } ៛`}</Text>
                 ),
               },
               {
@@ -422,13 +426,40 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                             render: (_, r) => [r.itemCode, r.itemName].filter((h) => h).join(' - '),
                           },
                           {
-                            title: 'Type',
-                            dataIndex: 'itemType',
-                          },
-                          {
                             title: 'UOM',
                             dataIndex: 'uom',
                           },
+                          {
+                            title: 'Status',
+                            render: (_, r) => (
+                              <Tag
+                                icon={
+                                  r.status === 'Pending' ? (
+                                    <SyncOutlined spin />
+                                  ) : r.status === 'Paid' ? (
+                                    <DollarOutlined />
+                                  ) : r.status === 'Rejected' ? (
+                                    <CloseCircleOutlined />
+                                  ) : (
+                                    <CheckCircleOutlined />
+                                  )
+                                }
+                                bordered={false}
+                                color={
+                                  r.status === 'Pending'
+                                    ? 'processing'
+                                    : r.status === 'Paid'
+                                    ? 'success'
+                                    : r.status === 'Rejected'
+                                    ? 'error'
+                                    : 'success'
+                                }
+                              >
+                                {r.status}
+                              </Tag>
+                            ),
+                          },
+
                           {
                             title: 'Quantity',
                             dataIndex: 'quantity',
@@ -601,10 +632,15 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                         ),
                         countInvoices: dataSource?.salesInvoices.length,
                         amount: dataSource?.salesInvoices.reduce((a, e) => a + e.amount, 0.0),
+                        discount: dataSource?.salesInvoices.reduce((a, e) => a + e.discount, 0.0),
+                        grandTotal: dataSource?.salesInvoices.reduce(
+                          (a, e) => a + e.subAmount,
+                          0.0,
+                        ),
                       }}
-                      contentStyle={{ fontWeight: 500 }}
-                      // column={{ xs: 1, sm: 2, md: 3, lg: 5, xl: 5, xxl: 5 }}
-                      // column={3}
+                      // contentStyle={{ fontWeight: 500 }}
+                      column={{ xs: 1, sm: 2, md: 3, lg: 5, xl: 5, xxl: 5 }}
+                      // column={4}
                       columns={[
                         {
                           title: 'Latest Invoice Date',
@@ -622,6 +658,22 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                           render: (_, r) => (
                             <Typography.Text type="success">
                               {numeral(r.amount).format('$ 0,000.000')}
+                            </Typography.Text>
+                          ),
+                        },
+                        {
+                          title: 'Discount',
+                          render: (_, r) => (
+                            <Typography.Text type="danger">
+                              {numeral(r.discount).format('$ 0,000.000')}
+                            </Typography.Text>
+                          ),
+                        },
+                        {
+                          title: 'Grand Amount',
+                          render: (_, r) => (
+                            <Typography.Text type="success">
+                              {numeral(r.grandTotal).format('$ 0,000.000')}
                             </Typography.Text>
                           ),
                         },
@@ -685,10 +737,10 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                               r.status === 'Pending'
                                 ? 'magenta'
                                 : r.status === 'Paid'
-                                  ? 'processing'
-                                  : r.status === 'Own'
-                                    ? 'success'
-                                    : 'warning';
+                                ? 'processing'
+                                : r.status === 'Own'
+                                ? 'success'
+                                : 'warning';
                             return (
                               <span>
                                 <Tag color={color}>{r.status}</Tag>
@@ -807,8 +859,9 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                       </Typography.Text>
                     </Table.Summary.Cell>
                     <Table.Summary.Cell index={1} align="right">
-                      <Typography.Text type="success">{`${totalKh > 0 ? numeral(totalKh).format('0,000') : '-'
-                        } ៛`}</Typography.Text>
+                      <Typography.Text type="success">{`${
+                        totalKh > 0 ? numeral(totalKh).format('0,000') : '-'
+                      } ៛`}</Typography.Text>
                     </Table.Summary.Cell>
                     <Table.Summary.Cell index={1} align="right">
                       <Typography.Text type="success">{`$ ${numeral(totalUSD).format(

@@ -220,7 +220,7 @@ export default ({ id, ...rest }: Props) => {
                 }}
             />
             <InstructionViewModal
-                group_line={(data?.line == 'Line 2' || data?.line == 'Line 3') ? '1' : (data?.line == 'Line 4' || data?.line == 'Line 5' || data?.line == 'Line 6') ? '2' : (data?.line == 'Line Barrel') ? '3' : ''}
+                group_line={(data?.line == 'Line 2' || data?.line == 'Line 3') ? '1' : (data?.line == 'Line 4' || data?.line == 'Line 5' || data?.line == 'Line 6') ? '2' : (data?.line == 'Line Barrel') ? '3' : (data?.line == 'Production Line 07' || data?.line == 'Production Line 08') ? '4': ''}
                 open={instructionModal}
                 onCancel={() => setInstructionModal(false)}
             />

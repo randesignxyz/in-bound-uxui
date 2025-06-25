@@ -1,9 +1,8 @@
 import { simpleRequestActions } from '@/services/model';
-import type { ExchangeRate, SaleInvoiceLess, SaveStockControl, StockDetailItemSettle } from '@/services/sale/data';
+import type { ExchangeRate, SaleInvoiceLess, SaveStockControl } from '@/services/sale/data';
 import {
   AuditOutlined,
   DashboardOutlined,
-  FileDoneOutlined,
   // FileDoneOutlined,
   ShopOutlined,
 } from '@ant-design/icons';
@@ -18,9 +17,8 @@ import SaleInvoiceTabItem from '../components/SaleInvoiceTabItem';
 // import SettlementTabItem from '../components/SettlementTabItem';
 import StockControlTabItem from '../components/StockControlTabItem';
 import { Model } from '../model';
-import StockControlFormModal from '../StockControlFormModal';
-import SettlementTabItem from '../components/SettlementTabItem';
 import { StockControlServiceAPI } from '../services';
+import StockControlFormModal from '../StockControlFormModal';
 
 type Props = {
   id: number;
@@ -126,7 +124,13 @@ const StockControlDetail: React.FC<Props> = ({ id, actionHandlers }) => {
   return (
     <>
       <PageContainer
-        title={[state.data?.detail?.stockName, state.data?.detail?.serialNumber,state.data?.detail?.serialNumber].filter(o=>o).join("-")}
+        title={[
+          state.data?.detail?.stockName,
+          state.data?.detail?.serialNumber,
+          state.data?.detail?.serialNumber,
+        ]
+          .filter((o) => o)
+          .join('-')}
         breadcrumb={undefined}
         onBack={actionHandlers?.onBack}
         // extra={
@@ -164,7 +168,6 @@ const StockControlDetail: React.FC<Props> = ({ id, actionHandlers }) => {
         //     </Button>,
         //   ]
         // }
-        
       >
         <Tabs defaultActiveKey="stockControl">
           <Tabs.TabPane
@@ -240,7 +243,7 @@ const StockControlDetail: React.FC<Props> = ({ id, actionHandlers }) => {
                     // ),
                     owner: state.data?.detail?.owner,
                     exchangeRate: dsdExchangeRate,
-                  
+
                     isOpen: isOpenStock(),
                     //salespersonCode: state.data?.detail?.owner.salespersonCode,
                     salespersonList: state.data?.initData?.salespersonList,
@@ -256,6 +259,12 @@ const StockControlDetail: React.FC<Props> = ({ id, actionHandlers }) => {
                   actionHandlers={{
                     onLoadLocations: async (type, isNotClearChild, parentId) => {
                       await actions.loadLocations(type, parentId, isNotClearChild);
+                    },
+                    onSaveRemark: async (data) => {
+                      await StockControlServiceAPI(requestActions).saveSaleInvoiceRemark(data);
+                      message.success('Success!');
+                      // await actions.detail(id)
+                      setForceUpdate(forceUpdate + 1);
                     },
                     onSaveSaleInvoice: async (item: SaleInvoiceLess) => {
                       const result = await actions.saveSaleInvoice(item);

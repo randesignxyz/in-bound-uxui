@@ -194,6 +194,7 @@ const SettlementMianPage: React.FC<any> = () => {
         title="Advance Search"
         open={advanceSearch.isVisibled}
         entity="Settlement"
+        showingBar={true}
         onOpenChange={(visible) => {
           if (!visible) {
             setAdvanceSearch({

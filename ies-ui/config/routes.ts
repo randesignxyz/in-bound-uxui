@@ -170,10 +170,9 @@ export default [
     name: 'tracking-location',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessDeliveryTruck',
+    access: 'canAccessCrmMenuItem',
     component: './crm/visit-schedule/components/tracking-location',
   },
-
   //  PHEUN REACH 5/28/2025
   {
     path: '/crm/shipping-address/:view',
@@ -209,6 +208,14 @@ export default [
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
     access: 'canAccessProMenuItem',
+    component: './pro/requisition',
+  },
+  {
+    path: '/fleet/requisition/:view/*',
+    name: 'requisition',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessFleetPurchaseRequisitionMenuItem',
     component: './pro/requisition',
   },
 
@@ -492,6 +499,14 @@ export default [
     component: './sale/settlement',
   },
   {
+    path: '/sale/sales_invoice/:view/*',
+    name: 'sales_invoice',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessAllMenuDSD',
+    component: './sale/invoice',
+  },
+  {
     path: '/sale/lead/:view/*',
     name: 'lead',
     icon: 'UnorderedListOutlined',
@@ -533,14 +548,7 @@ export default [
     // access: 'canAccessAllMenuDSD',
     component: './sale/mpu/settlement',
   },
-  {
-    path: '/sale/invoice/:view/*',
-    name: 'sale-invoice',
-    icon: 'UnorderedListOutlined',
-    hideInMenu: 'true',
-    // access: 'canAccessAllMenuDSD',
-    component: './sale/invoice',
-  },
+
   /******************* MPU *******************/
 
   // {
@@ -589,7 +597,7 @@ export default [
     name: 'sale_mpu_count_stock',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    // access: 'canAccessViewMpu',
+    access: 'canAcessStockControlMenuItem',
     component: './sale/mpu/count_stock',
   },
   {
@@ -723,6 +731,14 @@ export default [
     // access: 'canAccesDeliveyMenu',
     hideInMenu: 'true',
     component: './profile',
+  },
+  {
+    path: '/profile-tc-confirm/:id',
+    name: 'account',
+    // icon: 'DeliveredProcedureOutlined',
+    // access: 'canAccesDeliveyMenu',
+    hideInMenu: 'true',
+    component: './profile/agree',
   },
 
   /************************ Delivery Tracking  ******************/
@@ -1500,6 +1516,16 @@ export default [
   },
 
   /* En request car */
+  /*Start Register Customer */
+   {
+    path: '/crm/register-customer/:view/*',
+    name: 'view-register-customer',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessCrmRegisterCustomerMenuItem',
+    component: './crm/register',
+  },
+  /*End Register Customer */
 
 
   {

@@ -160,6 +160,7 @@ const CountStockMainPage: React.FC<any> = () => {
         title="Advance Search"
         open={advanceSearch.isVisibled}
         entity="Stock Count"
+        showingBar={true}
         onOpenChange={(visible) => {
           if (!visible) {
             setAdvanceSearch({ isVisibled: false });

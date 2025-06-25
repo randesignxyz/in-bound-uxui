@@ -230,7 +230,8 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                 </Space>,
             );
             }}
-            onFinish={(data) => {
+            onFinishSubmit={(data) => {
+                console.log('data languages: ', data)
                 return saveLanguageHandler({ ...data, id: modalVisible?.type=='EDIT'?modalVisible?.payload?.refId==null?modalVisible?.payload?.id: modalVisible?.payload?.refId :(modalVisible?.payload?.id||0), empId: profile.id,status:true,type:modalVisible?.type });
             }}
         />

@@ -88,6 +88,7 @@ export default ({
                   </Descriptions.Item>
                   <Descriptions.Item label="Owned Truck Loading"><Checkbox checked={item.ownedTruckLoading} /> </Descriptions.Item>
                   <Descriptions.Item label="Loading Team">{item?.loadingTeam?.name}</Descriptions.Item>
+                  <Descriptions.Item label="Loading Type">{item?.loadingType == 0 ? "By Manual":item?.loadingType == 1 ? "By Pallet":""}</Descriptions.Item>
                 </Descriptions>
               </Col>
             </Row>
@@ -194,4 +195,3 @@ export default ({
     </Drawer>
   );
 };
-

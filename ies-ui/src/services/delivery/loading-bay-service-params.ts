@@ -39,6 +39,7 @@ export type AllocatedLoadingDockBase = {
   autoAssigned: boolean;
   loadedChangeRequest?: LoadedChangeRequest;
   activities: activity[];
+  pickingSlip?:PickingSlipItem
 }
 
 
@@ -66,6 +67,7 @@ export type AllocatedLoadingDockDetail = AllocatedLoadingDockBase & {
     items: PickingSlipItem[];
     newItems?: PickingSlipItem[];
   }
+  loadingType?:number
 };
 
 export const LoadingServiceParams = {

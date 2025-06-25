@@ -9,7 +9,7 @@ import {
   ModalFormProps,
   ProFormTextArea,
 } from '@ant-design/pro-form';
-import { Card, Col, Row } from 'antd';
+import { Card, Checkbox, Col, Row } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { useEffect, useState } from 'react';
 
@@ -23,9 +23,11 @@ const StartLoadingModal: React.FC<Props> = ({ loaded, ownedTruckLoading, onSave,
 
   const requestActions = simpleRequestActions()
   const [loadingTeam, setLoadingTeam] = useState<LoadingTeam[]>()
-  const [form] = useForm<{
+  const [isPallet, setIsPallet] = useState<number | null>();
+    const [form] = useForm<{
     id: number;
     loadingTeamId?: number;
+    loadingType?: number;
     remarks?: string;
   }>();
 
@@ -33,6 +35,7 @@ const StartLoadingModal: React.FC<Props> = ({ loaded, ownedTruckLoading, onSave,
     if (!props.open) return;
     initData()
     initDataForm();
+    {!ownedTruckLoading? setIsPallet(0):setIsPallet(null)}
   }, [props.open]);
 
 
@@ -48,7 +51,7 @@ const StartLoadingModal: React.FC<Props> = ({ loaded, ownedTruckLoading, onSave,
       remarks: loaded.remarks,
     });
   };
-
+console.log(isPallet)
   const initData = async () => {
     const rs = await fetchDataListService<LoadingTeam>({
       actionName: 'fetch-all-loading-team',
@@ -57,9 +60,18 @@ const StartLoadingModal: React.FC<Props> = ({ loaded, ownedTruckLoading, onSave,
 
     }).query(requestActions)
 
+    // const type = await fetchDataListService<LoadingTeam>({
+    //   actionName: 'fetch-all-loading-type',
+    //   endpoint: 'DELIVERY',
+    //   payload: {}
+
+    // }).query(requestActions)
+
     setLoadingTeam(rs)
+    // setLoadingType(type)
   }
 
+  console.log(isPallet)
   return (
     <ModalForm
       form={form}
@@ -76,6 +88,7 @@ const StartLoadingModal: React.FC<Props> = ({ loaded, ownedTruckLoading, onSave,
         onSave({
           id: loaded.id,
           loadingTeamId: formData.loadingTeamId,
+          loadingType: isPallet,
           remarks: formData.remarks,
         });
       }}
@@ -113,7 +126,21 @@ const StartLoadingModal: React.FC<Props> = ({ loaded, ownedTruckLoading, onSave,
 
       <Card style={{ margin: 20 }} size="small" bordered={false}>
 
-        {!ownedTruckLoading && <ProFormSelect name={'loadingTeamId'} allowClear showSearch width={'md'} label="Loading Team" options={loadingTeam?.map(it => ({ label: it.name, value: it.id }))} />}
+        {!ownedTruckLoading && (
+          <Row>
+            <Col flex={'Auto'}>
+              <ProFormSelect name={'loadingTeamId'} allowClear showSearch width={'md'} label="Loading Team" options={loadingTeam?.map(it => ({ label: it.name, value: it.id }))} />
+            </Col>
+            <Col flex={'Auto'}>
+              {/* <ProFormSelect name={'loadingTypeId'} allowClear showSearch width={'md'} label="Loading Type" options={loadingType?.map(it => ({ label: it.name, value: it.id }))} /> */}
+              <Checkbox key={'loadingType'} 
+              // defaultChecked 
+              onChange={e => {
+                setIsPallet((e.target.checked && !ownedTruckLoading) ? 1 : (!ownedTruckLoading) ? 0: null);
+              }}>By Pallet </Checkbox>
+            </Col>
+          </Row>
+        )}
         <ProFormTextArea name={'loadedRemarks'} label="Remarks" />
       </Card>
     </ModalForm>

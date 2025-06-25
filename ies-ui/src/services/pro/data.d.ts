@@ -51,6 +51,7 @@ export interface ItemGroupListItem {
 export interface Requistion {
   id?: number;
   buId: number;
+  wfSelector?:string;
   acquisitionDate: Moment;
   budgetCodeRequired: boolean;
   reason: string;
@@ -145,6 +146,7 @@ export interface RequisitionServiceItemDetailResponse {
 export interface BudgetCodeListItem {
   code: string;
   name: string;
+  groupCode?: string;
 }
 
 export interface ProEmployee {

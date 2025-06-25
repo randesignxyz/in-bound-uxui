@@ -19,7 +19,7 @@ import AgreementCompliant from './reports/AgreementCompliant';
 import ContractReport from './contract/components/ContractReport';
 import TermReport from './term/components/TermReport';
 import salesperson from "@/assets/salesman.png";
-
+import RegisterCustomerIcon from '@/assets/register-customer.png';
 import customerShipping  from "@/assets/courier_14234908.png";
 
 export const CrmPaths = {
@@ -37,8 +37,10 @@ export const CrmPaths = {
   locationTracking: '/crm/tracking',
   gratisConfig: '/crm/gratis-config',
   salesperson: '/crm/salesperson',
+  registerCustomer: '/crm/register-customer',
   shippingAddress: '/crm/shipping-address',
 };
+
 const Crm: React.FC = () => {
   const access = useAccess();
   const [report, setReport] = useState<ReportName>();
@@ -417,8 +419,31 @@ const Crm: React.FC = () => {
       link: `${CrmPaths.salesperson}/list`,
       icon: salesperson,
       visible:access.saleAdmin
+    },{
+      id: 'registerCustomer',
+      name: 'Register Customer',
+      description: 'Register Customer List',
+      link: `${CrmPaths.registerCustomer}/list`,
+      icon: RegisterCustomerIcon,
+      visible: access.canAccessCrmRegisterCustomerMenuItem,
+      // menu: {
+      //   items: [{
+      //     type: 'group',
+      //     label: "Reports",
+      //     children: [
+      //       {
+      //         onClick: () => { setReport('customer-detail') },
+      //         icon: <BarChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+      //         label: 'Customer Detail',
+      //         key: "customer-detail-report"
+      //       }
+      //     ]
+
+      //   }]
+      // }
+      // overlay: customerMenu,
     },
-    {
+     {
       id: 'customer-shipping-address',
       name: 'Shipping Address',
       description: '',
@@ -427,6 +452,7 @@ const Crm: React.FC = () => {
       icon: customerShipping,
       visible:access.saleAdmin
     }
+
   ];
 
   return (

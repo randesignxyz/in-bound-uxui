@@ -120,7 +120,7 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
         {
             key     : '8',
             label   : 'Religion',
-            children: profile.religionObj.titleName,
+            children: profile?.religionObj?.titleName||'',
         },
         {
             key     : '9',
@@ -393,7 +393,8 @@ export default ({ profile,step,is_admin,empId,cb}: Props) => {
                 </Space>,
             );
             }}
-            onFinish={(data) => {
+            onFinishSubmit={(data) => {
+                console.log('personal data: ', data)
                 return saveEssProfileHandler({ ...data, essProfId: modalVisible?.payload?.id!!,openEssId:profile.ess.id!!, empId: profile.id,status:true,step:22,remark:'' });
             }}
         /> 

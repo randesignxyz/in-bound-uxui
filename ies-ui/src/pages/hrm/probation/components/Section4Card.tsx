@@ -153,7 +153,7 @@ export default({editableFormRef, dataDetail,addedItems, onSetAddedItems,editable
           onClick={() => {
             const list =addedItems?.filter((it) => it.key != row.key)
             // onSetAddedItems?.(list)
-            console.log('assessment list',addedItems)
+            // console.log('assessment list',addedItems)
           }}
           size="small"
           icon={<MinusCircleOutlined />}

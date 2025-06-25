@@ -37,14 +37,14 @@ export default ({ data, onOpen, reload, onView, zoomTo, ...rest }: GoogleMapProp
                     lat: Number(it.visit.actualLatitude),
                     lng: Number(it.visit.actualLongitude),
                 });
-                mapInstance.setZoom(13)
+                // mapInstance.setZoom(9)
             }
         })
     }, [data, mapInstance]);
 
     return <GoogleMap mapContainerStyle={containerStyle}
         center={center}
-        zoom={14}
+        zoom={9}
         onLoad={(map) => setMapInstance(map)}
         options={{
             styles: [

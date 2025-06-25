@@ -7,9 +7,9 @@ export const MPUPath = {
   mpuReport: '/sale/mpu_report',
   mpuCountStock: '/sale/mpu_count_stock',
   mpuSettlement: '/sale/mpu_settlement',
-  mpuFOC: "/sale/sale-mma-foc",
-  warehousePOPortal: "/sale/warehouse-po-portal",
-
+  salesInvoice: '/sale/sales_invoice',
+  warehousePOPortal: '/sale/warehouse-po-portal',
+  mpuFOC: '/sale/sale-mma-foc',
   //   productItem: '/retailer/products',
   //   customer: '/retailer/customers',
   //   customergroup: '/retailer/group/customer',
@@ -29,7 +29,7 @@ export default () => {
   //     {
   //       id: 'mpu_request',
   //       name: 'RSM Request',
-  //       description: '',cv 
+  //       description: '',cv
   //       link: `${MPUPath.rsmRequest}/list`,
   //       icon: agreementIcon,
   //       visible: access.canAccessViewMpu,

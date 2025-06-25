@@ -1,15 +1,15 @@
 import { ModalForm, ModalFormProps, ProFormDatePicker, ProFormSelect, ProFormText,ProCard, ProFormTextArea, ProFormCheckbox, ProFormDigit} from "@ant-design/pro-components"
 import { useForm } from "antd/lib/form/Form"
-import { SaveEssProfile,LocationData, FilesData, EssProfileData } from "../data.ess"
-import { Image, Flex, Spin, List,message, Button, Modal,InputNumber} from 'antd';
+import { SaveEssProfile,LocationData, FilesData, EssProfileData, EssLookupData } from "../data.ess"
+import { Image, Flex, Spin, List,message, Button, Modal,InputNumber, Form, Select, InputRef, Divider, Input} from 'antd';
 import { Space,Row, Col,Typography} from 'antd';
-import { useEffect,useState } from 'react'; 
+import { useEffect,useRef,useState } from 'react'; 
 import { simpleRequestActions } from '@/services/model';
 import { ProfileServicesEss } from '../service_ess';  
 import FileUploader , { UploadType } from '@/components/Attachment/FileUploader';
 import ImagePreview from "@/components/ImagePreview";
 import { ProfileData } from "../data";
-import { DeliveredProcedureOutlined,SaveOutlined,CloseSquareOutlined,ProfileOutlined, DeleteOutlined } from "@ant-design/icons";
+import { DeliveredProcedureOutlined,SaveOutlined,CloseSquareOutlined,ProfileOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 
 interface Props extends ModalFormProps<SaveEssProfile> { 
     data?: EssProfileData;
@@ -23,9 +23,10 @@ interface Props extends ModalFormProps<SaveEssProfile> {
         onLoadMenu: (tid:UploadType[]) => void;  
         onReload:()=>void; 
     };
+    onFinishSubmit?:(data:any)=> Promise<boolean | void> | void;
 }
 
-export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, ...rest }: Props) => {
+export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb,onFinishSubmit, ...rest }: Props) => {
     const requestActions = simpleRequestActions(); 
 
     const [form] = useForm<SaveEssProfile>();
@@ -39,6 +40,13 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
     const [isLoading,setLoading] = useState(false);  
     const [createFileOther, selectedFileOther] = useState<any>();  
     const [isOther, setIsOtherVisible] = useState(true);
+
+    const [searchName, setSearchName] = useState('');
+     const [name, setName] = useState('');
+     const inputRef = useRef<InputRef>(null);
+     const [items, setItems] = useState<EssLookupData[]>([]); 
+     const [selectedReligionName, setSelectedReligionName] = useState<EssLookupData>();
+    
 
     useEffect(() => {
         initData();
@@ -67,6 +75,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
             //
             cb.onLoadMenu(files as UploadType[]);
         }
+        setItems([])
          
     };  
     
@@ -132,6 +141,7 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                 bmForm.id = (!!data!!?data!!.id:0);
                 bmForm.empId = empId;
                 bmForm.status=true;
+                bmForm.religionName = selectedReligionName?.titleName||'';
                 await ProfileServicesEss.saveEssProfileAdmin(bmForm)(requestActions); 
                 // call back fun
                 cb.onReload(); 
@@ -169,13 +179,34 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                 setAttachFiles(remItems);
                 //  
                 await ProfileServicesEss.removeEssPersonalAttachFiles(data)(requestActions); 
-        } catch (error: any) {
-            message.error(error.message || 'Failed to save.');
-        }
-        },
-    });
-        
+            } catch (error: any) {
+                message.error(error.message || 'Failed to save.');
+            }
+            },
+        });        
     }
+    const onNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setName(event.target.value);
+    };
+    const handleSearch = (value: string) => {
+        setSearchName(value);
+    };
+    const addItem = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
+        // e.preventDefault();
+        // setItems([...items, name || `New item ${index++}`]);
+        if(name && (name!='' || name!= undefined)){
+            const id = (-1*(items.length+1))||-1
+            var item = {id: id, titleName:name, description:name, type:3} as EssLookupData
+            setItems(v=> [...v,item]);
+            setName('');
+            setTimeout(() => {
+              inputRef.current?.focus();
+              form.setFieldValue('religionId',id)
+              setSelectedReligionName(item)
+            }, 0);
+        }
+    };
+    
     return <div>
         <ModalForm  {...rest} form={form} width={'60%'} title={<><ProfileOutlined /> Edit Personal Information</>}
             // onOpenChange={visible => {
@@ -195,7 +226,11 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                         resetText: <div><CloseSquareOutlined /> Cancel</div>,
                     }
                 }
-            } 
+            }
+            onFinish={(data) => {   
+                // console.log('please data111: ',data)                 
+                return Promise.resolve(onFinishSubmit?.({...data,religionName: selectedReligionName?.titleName}));
+            }}  
             > 
             <Spin spinning = {isLoading}> 
                 <ProCard bordered style={{backgroundColor:'#f5f5f5'}}> 
@@ -249,13 +284,45 @@ export default ({ data,profile,profile_draft,locations,files,isAdmin,empId,cb, .
                             />
                         </Col>                
                         <Col span={12} style={{padding:'3px'}}>     
-                            <ProFormSelect 
+                            {/* <ProFormSelect 
                                 label="Religion"
                                 name={'religionId'}
                                 options={profile.religion?.map((it) => {
                                     return { value: it.id, label: it.titleName };
                                 })}  
-                            />
+                            /> */}
+                            <Form.Item name="religionId"  label = "Religion"  rules={[{ required: true }]}>
+                                <Select 
+                                    style={{ width: '100%' }}
+                                    allowClear={true}
+                                    filterOption={false}
+                                    showSearch
+                                    onSearch={handleSearch}
+                                    onChange={(value:any)=> {
+                                        console.log('onchange===',[...profile.religion,...items].find(i=> (i.id==value)))
+                                        setSelectedReligionName([...profile.religion,...items].find(i=> (i.id==value)))
+                                        setSearchName('')
+                                    }}
+                                    dropdownRender={(menu) => (
+                                    <>
+                                        {menu}
+                                        <Divider style={{ margin: '8px 0' }} />
+                                        <Flex gap={2} >
+                                        <Input
+                                            placeholder="Religion"
+                                            ref={inputRef}
+                                            value={name}
+                                            onChange={onNameChange}
+                                            onKeyDown={(e) => e.stopPropagation()}
+                                        />
+                                        <Button type="text" size="middle" icon={<PlusOutlined />} onClick={addItem}></Button>
+                                        </Flex>
+                                    </>)}
+                                    options={[...items,...profile.religion]?.filter(i=> (searchName=='' || (i.titleName.toLowerCase().includes(searchName.toLowerCase()))))?.map((it) => {
+                                        return { value: it.id, label: it.titleName };
+                                    })} 
+                                />   
+                            </Form.Item> 
                         </Col>       
                     </Row>
                     

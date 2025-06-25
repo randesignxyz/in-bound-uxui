@@ -455,19 +455,22 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
               },
 
               request: async (k: { keyWords: string }) => {
+                console.log(k);
+
                 const data = await ProductItemsServiceAPI(mainRequestActions).pageProducts({
                   criteria: {
                     searchValue: k.keyWords,
                   },
                 });
                 // const disabledSelected = type === 'CREATE' ? dataSourceItems?.some((ot) => ot.itemId === p.id) : false;
-
                 return Promise.resolve(
-                  data.items?.filter(it=>it.isWebEnabled ==true)?.map((p) => ({
-                    value: p.id,
-                    label: p.name,
-                    // disabled: dataSourceItems?.some((ot) => ot.itemId === p.id),
-                  })),
+                  data.items
+                    ?.filter((it) => it.isWebEnabled === true)
+                    ?.map((p) => ({
+                      value: p.id,
+                      label: p.name,
+                      // disabled: dataSourceItems?.some((ot) => ot.itemId === p.id),
+                    })),
                 );
               },
             },
@@ -584,7 +587,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
               dataSource={amount}
               columns={[
                 {
-                  title: 'Grand Amount',
+                  title: 'Total Amount',
                   dataIndex: 'grandAmount',
                   valueType: 'money',
                   editable: false,
@@ -597,7 +600,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
                   valueType: 'percent',
                 },
                 {
-                  title: 'Total Amount',
+                  title: 'Grand Amount',
                   dataIndex: 'totalAmount',
                   valueType: 'money',
                   editable: false,

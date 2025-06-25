@@ -353,6 +353,7 @@ export interface SaleInvoiceLess {
   invoiceDate: moment.Moment;
   subAmount: number;
   amount: number;
+  discount: number;
   status: string;
   referenceNo?: string;
   createdDate: moment.Moment;
@@ -391,6 +392,8 @@ export interface SaleInvoiceItemLess {
   amount: number;
   stockCategoryId?: number;
   batchNo?: string;
+  discountAmount?: number;
+  discountPrice?: number;
 }
 
 export interface TopupLess {
@@ -1294,7 +1297,7 @@ export interface CustomerSaleInfo {
   customerPriceGroup?: LookupDataItem;
   vat?: { code: string; rate: number };
   salesperson?: LookupDataItem;
-  transportationMOQ?: {};
+  transportationMOQ?: any;
   isIndirectCustomer: boolean;
   distributors: LookupDataItem[];
 }
@@ -1434,12 +1437,12 @@ export type InitSuggestionParam =
   | {
       actionName: 'exchange-rate';
       responseKey: string;
-      payload: {};
+      payload: any;
     }
   | {
       actionName: 'exchange-rate-dsd';
       responseKey: string;
-      payload: {};
+      payload: any;
     };
 
 export type InitSaleInvoiceParam =
@@ -1453,12 +1456,12 @@ export type InitSaleInvoiceParam =
   | {
       actionName: 'list-stock-category';
       responseKey: 'types';
-      payload: {};
+      payload: any;
     }
   | {
       actionName: 'list-type-product-items';
       responseKey: 'typeProductItems';
-      payload: {};
+      payload: any;
     }
   // | {
   //     actionName: 'list-sale-invoices';
@@ -1468,29 +1471,29 @@ export type InitSaleInvoiceParam =
   | {
       actionName: 'list-sales-team-work';
       responseKey: string;
-      payload: {};
+      payload: any;
     };
 
 export type InitSoParamsType =
   | {
       actionName: 'list-payment-term';
       responseKey: 'paymentTermList';
-      payload: {};
+      payload: any;
     }
   | {
       actionName: 'list-shipping-method';
       responseKey: string;
-      payload: {};
+      payload: any;
     }
   | {
       actionName: 'list-shipping-method';
       responseKey: 'shippingMethodList';
-      payload: {};
+      payload: any;
     }
   | {
       actionName: 'list-store-location';
       responseKey: 'storeLocationList';
-      payload: {};
+      payload: any;
     }
   | {
       actionName: 'look-up-data';
@@ -1509,51 +1512,56 @@ export type InitSoParamsType =
   | {
       actionName: 'listCustomer';
       responseKey: string;
-      payload: {};
+      payload: any;
     }
   | {
       actionName: 'listSalesperson';
       responseKey: string;
-      payload: {};
+      payload: any;
+    }
+  | {
+      actionName: 'list-uom';
+      responseKey: 'uomList';
+      payload: any;
     }
   | {
       actionName: 'list-budget';
       responseKey: string;
-      payload: {};
+      payload: any;
     };
 
 export type initProductParamsType =
   | {
       actionName: 'list-uom';
       responseKey: 'uomList';
-      payload: {};
+      payload: any;
     }
   | {
       actionName: 'list-brand';
       responseKey: 'brandList';
-      payload: {};
+      payload: any;
     }
   | {
       actionName: 'list-category';
       responseKey: 'categoryList';
-      payload: {};
+      payload: any;
     }
   | {
       actionName: 'list-group';
       responseKey: 'groupList';
-      payload: {};
+      payload: any;
     };
 
 export type InitTradeOfferParamsType =
   | {
       actionName: 'list-item-category';
       responseKey: 'categories';
-      payload: {};
+      payload: any;
     }
   | {
       actionName: 'list-customer-group';
       responseKey: 'customerGroup';
-      payload: {};
+      payload: any;
     };
 
 export interface SoSummary {

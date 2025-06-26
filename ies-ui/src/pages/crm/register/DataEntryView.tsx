@@ -1,9 +1,10 @@
-import { EditableFormInstance, EditableProTable, FooterToolbar, ProCard, ProForm, ProFormGroup, ProFormRadio, ProFormSelect, ProFormText, ProTable } from "@ant-design/pro-components"
-import { Button, Checkbox, Flex, Form, message, Modal, Space, Spin } from "antd"
+import { EditableFormInstance, EditableProTable, FooterToolbar, ProCard, ProForm, ProFormGroup, ProFormRadio, ProFormSelect, ProFormText, ProFormTextArea, ProTable } from "@ant-design/pro-components"
+import { Button, Card, Checkbox, Flex, Form, message, Modal, Space, Spin } from "antd"
 import { AddresssView, DocRequirementCustomerParams, DoRequireCustomerList, PurchasingPerformanceItem, RegisterCustomer, RegisterCustomerDetailResponse } from "./data";
 import { useEffect, useRef, useState } from "react";
 import AddressListView from "./components/AddressListView";
 import { model } from "../customer/model";
+import { model as registerModel } from "./model";
 import { RegisterCustomerServiceAPI } from "./services";
 import { useInView } from "react-intersection-observer";
 import PurchasingPerformanceView from "./components/PurchasingPerformanceView";
@@ -27,7 +28,8 @@ export default({
   const service = RegisterCustomerServiceAPI()
   const [form] = Form.useForm<RegisterCustomerDetailResponse>();
     const { ref, inView } = useInView({});
-  const { state, ops, actions, modals } = model(0);
+  // const { state, ops, actions, modals } = model(0);
+  const { state1,actions1 } = registerModel();
 
   const [addressList, setAddressList] = useState<AddresssView[]>()
   const [shippingAddressList, setShippingAddressList] = useState<AddresssView[]>()
@@ -45,7 +47,10 @@ export default({
 
   const initData = async () =>{   
     // initAddress()
-    await ops.initData('Detail');
+    // await ops.initData('Detail');
+    const rs = await actions1.initData("Detail")
+    console.log('register initData:  ', state1.initData?.lookupDataList)
+  
     if (id && id > 0) {
       const data = await  service.detail(id)
       initFormData(data)
@@ -122,30 +127,32 @@ export default({
         checkList:it.checkList
       } as DocRequirementCustomerParams)),
       attachedFiles: uploadFileIds
-    } //as AddressParams    
+    } as RegisterCustomer   
     return dataPayload;
-  }
+  } 
 
   const onCancelHandler = () => { 
-    Modal.confirm({
-      title: 'Cancel Register Customer',
-      content: 'Are you sure?',
-      onOk: async () => {
-        try {
-          await service.cancelForm(id||0)
-          message.success('Cancel successfully.');
-          onCloseTab?.()
-        } catch (error: any) {
-          message.error(error.message || 'Failed to save requisition.');
-        }
-      },
-    });  
+    if(type=='CREATE') {
+      onCloseTab?.()
+    }else{
+      Modal.confirm({
+        title: 'Cancel Register Customer',
+        content: 'Are you sure?',
+        onOk: async () => {
+          try {
+            await service.cancelForm(id||0)
+            message.success('Cancel successfully.');
+            onCloseTab?.()
+          } catch (error: any) {
+            message.error(error.message || 'Failed to save requisition.');
+          }
+        },
+      });  
+    }
     
   };
   const onSaveDraftHandler = async () => {   
-    const dataPayload = await getPayload();
-    console.log('dataPayload:  ', dataPayload)
-    
+    const dataPayload = await getPayload();    
     await editablePPItemFormRef.current?.validateFields()
     console.log('tablePPItemFormRef:  ', ppItems)
     Modal.confirm({
@@ -272,7 +279,7 @@ export default({
                   onCancelHandler();
                 }}
               >
-                Cancel
+                {type=='CREATE'? 'Close':'Cancel'}
               </Button>
               <Button
                 onClick={onSaveDraftHandler}
@@ -325,53 +332,62 @@ export default({
               label="Purpose"
               name={'purpose'}
               placeholder={'Purpose'}
+              rules={[{ required: true }]}
               options={[{
                 label: 'New Account',
                 value: 'New Account',
-              },{
+              }/*,{
                 label: 'Add Shipping Address',
                 value: 'Add Shipping Address',
-              }]}
+              }*/]}
               width={470}
             />
           
             <ProFormSelect
               label="Price & Trade Offer"
-              name={'priceTradeOffer'}
+              name={'priceTradeOfferId'}
               placeholder={'Price & Trade Offer'}
-              options={[{
-                label: 'Wholsale',
-                value: 'Wholsale',
-              },{
-                label: 'Standard',
-                value: 'Standard',
-              },{
-                label: 'Special(Enclose Sales Terms)',
-                value: 'Special(Enclose Sales Terms)',
-              }]}
+              options={state1.initData?.lookupDataList?.filter((it) => it.type === 'SALE_PRICE_LIST' && it?.actived=='Y')?.map((it) => ({
+                label: it.name,
+                value: it.id,
+              }))}
+              // options={[{
+              //   label: 'Wholsale',
+              //   value: 'Wholsale',
+              // },{
+              //   label: 'Standard',
+              //   value: 'Standard',
+              // },{
+              //   label: 'Special(Enclose Sales Terms)',
+              //   value: 'Special(Enclose Sales Terms)',
+              // }]}
               width={470}
             />
             <ProFormSelect
               label="Payment Term"
-              name={'paymentTerm'}
+              name={'paymentTermId'}
               placeholder={'Payment Term'}
-              options={[{
-                label: 'Cashon-Delivery',
-                value: 'Cashon-Delivery',
-              },{
-                label: 'Pre-Payment',
-                value: 'Pre-Payment',
-              },{
-                label: 'Credit (enclose Credit Appliction form',
-                value: 'Credit (enclose Credit Appliction form',
-              }]}
+               options={state1.initData?.lookupDataList?.filter((it) => it.type === 'SALE_PAYMENT_TERM' && it?.actived=='Y')?.map((it) => ({
+                label: it.name,
+                value: it.id,
+              }))}
+              // options={[{
+              //   label: 'Cashon-Delivery',
+              //   value: 'Cashon-Delivery',
+              // },{
+              //   label: 'Pre-Payment',
+              //   value: 'Pre-Payment',
+              // },{
+              //   label: 'Credit (enclose Credit Appliction form)',
+              //   value: 'Credit (enclose Credit Appliction form)',
+              // }]}
               width={470}
             />
               <ProFormSelect
               label="Outlet Type"
               name={'outletTypeId'}
               placeholder={'Outlet Type'}
-              options={state.initData?.outletTypeList?.map((it) => ({
+              options={state1.initData?.outletTypeList?.map((it) => ({
                 label: it.name,
                 value: it.id,
               }))}
@@ -381,7 +397,7 @@ export default({
               label="Region"
               name={'regionId'}
               placeholder={'Region'}
-              options={state.initData?.regionList?.map((it) => ({
+              options={state1.initData?.regionList?.map((it) => ({
                 label: it.name,
                 value: it.id,
               }))}
@@ -391,7 +407,7 @@ export default({
               label="Division"
               name={'divisionId'}
               placeholder={'Division'}
-              options={state.initData?.lookupDataList?.filter((it) => it.type === 'CUSTOMER_DIVISION')?.map((it) => ({
+              options={state1.initData?.lookupDataList?.filter((it) => it.type === 'CUSTOMER_DIVISION' && it?.actived=='Y')?.map((it) => ({
                 label: it.name,
                 value: it.id,
               }))}
@@ -400,15 +416,25 @@ export default({
             <ProFormSelect
               label="Channel"
               name={'channelId'}
-              placeholder={'Channel'}
-              options={state.initData?.lookupDataList?.filter((it) => it.type === 'SALE_SUB_CHANNEL')?.map((it) => ({
+              placeholder={'Channel'} //SALE_SUB_CHANNEL
+              options={state1.initData?.lookupDataList?.filter((it) => it.type === 'SALE_MAIN_CHANNEL' && it?.actived=='Y')?.map((it) => ({
                 label: it.name,
                 value: it.id,
               }))}
               width={470}
-            />               
-            <ProFormText readonly name={'createdBy'} label="Sale Executive"  width={470}/>     
-          </ProFormGroup>     
+            />    
+            <ProFormSelect
+              label="Sub Channel"
+              name={'subChannelId'}
+              placeholder={'Channel'} //SALE_SUB_CHANNEL
+              options={state1.initData?.lookupDataList?.filter((it) => it.type === 'SALE_SUB_CHANNEL' && it?.actived=='Y')?.map((it) => ({
+                label: it.name,
+                value: it.id,
+              }))}
+              width={470}
+            /> 
+          </ProFormGroup>   
+          <ProFormText readonly name={'createdBy'} label="Sale Executive"  width={470}/>       
         </ProCard>
         <ProCard size="small"                  
           headerBordered
@@ -417,7 +443,7 @@ export default({
           <ProFormGroup >
             <ProFormText
               label="Business Name(Khmer)"
-              // rules={[{ required: true }]}
+              rules={[{ required: true }]}
               name={'buNameKh'}
               allowClear
               width={470}
@@ -463,14 +489,14 @@ export default({
             />
             <ProFormText
               label="Purchase Name(English)"
-              // rules={[{ required: true }]}
+              rules={[{ required: true }]}
               name={'purchaseName'}
               allowClear
               width={470}
             />
             <ProFormText
               label="Purchase Phone Number"
-              // rules={[{ required: true }]}
+              rules={[{ required: true }]}
               name={'purchasePhone'}
               allowClear
               width={470}
@@ -491,10 +517,10 @@ export default({
                       data={{
                         list: addressList || [],
                         init: {
-                          lookupDataList: state.initData?.lookupDataList,
-                          provinceList: state.initData?.provinceList,
+                          // lookupDataList: state1.initData?.lookupDataList,
+                          provinceList: state1.initData?.provinceList,
                         },
-                        locations: { ...state.data?.locations },
+                        locations: { ...state1.data?.locations },
                       }} actionHandlers={{
                         loadData: async function (): Promise<AddresssView[]> {
                           // throw new Error("Function not implemented.");
@@ -505,9 +531,9 @@ export default({
                         onAdd: (data, cb) => onSaveShippingAddressHandler(data,'B', true, cb),
                         onEdit:(data, cb) => onSaveShippingAddressHandler(data,'B', false, cb),
                         onRemove: onRemoveShippingAddressHandler,
-                        onCleaLocation: actions.clearLocations,               
-                        onLoadLocations: ops.loadLocations,
-                        onLoadMultiLocations: ops.loadMultiLocations,
+                        onCleaLocation: actions1.clearLocations,               
+                        onLoadLocations:  actions1.loadLocations,
+                        onLoadMultiLocations: actions1.loadMultiLocations,
                       }}
                   />
                   
@@ -523,10 +549,10 @@ export default({
                       data={{
                         list: shippingAddressList || [],
                         init: {
-                          lookupDataList: state.initData?.lookupDataList,
-                          provinceList: state.initData?.provinceList,
+                          // lookupDataList: state1.initData?.lookupDataList,
+                          provinceList: state1.initData?.provinceList,
                         },
-                        locations: { ...state.data?.locations },
+                        locations: { ...state1.data?.locations },
                       }} actionHandlers={{
                         loadData: async function (): Promise<AddresssView[]> {
                           // throw new Error("Function not implemented.");
@@ -537,9 +563,9 @@ export default({
                         onAdd: (data, cb) => onSaveShippingAddressHandler(data,'S', true, cb),
                         onEdit:(data, cb) => onSaveShippingAddressHandler(data,'S', false, cb),
                         onRemove: onRemoveShippingAddressHandler,
-                        onCleaLocation: actions.clearLocations,               
-                        onLoadLocations: ops.loadLocations,
-                        onLoadMultiLocations: ops.loadMultiLocations,
+                        onCleaLocation: actions1.clearLocations,               
+                        onLoadLocations: actions1.loadLocations,
+                        onLoadMultiLocations: actions1.loadMultiLocations,
                       }}
                   />
                 </ProCard>
@@ -552,14 +578,47 @@ export default({
           title='Purchasing Performance'
         >
           {ppItems && <PurchasingPerformanceView editableFormRef={editablePPItemFormRef} addedItems={ppItems} onSetAddedItems={setPPItems} readOnly={readOnly} />}
-        </ProCard>   
+        </ProCard> 
+        <Card>
+            <ProFormSelect
+              label="Frequency of Purchase"
+              name={'frequencyPurchase'}
+              placeholder={'Payment Term'}
+              options={[
+                {
+                  label: '1 time/month',
+                  value: '1 time/month',
+                },{
+                  label: '2 time/month',
+                  value: '2 time/month',
+                },{
+                  label: '1 time/week',
+                  value: '1 time/week',
+                },{
+                  label: '2 time/week',
+                  value: '2 time/week',
+                },{
+                  label: 'Daily',
+                  value: 'Daily',
+                },{
+                  label: 'Schedule',
+                  value: 'Schedule',
+                },{
+                  label: 'Other',
+                  value: 'Other',
+                }
+              ]}
+              width={470}
+            />
+            <ProFormTextArea rules={[{required:false}]} label="Remarks" name="remarkFrequencyPurchase" />
+        </Card>  
         <ProCard size="small"                  
           headerBordered
           title='Document Requirment'
         >
           <Space direction="vertical" style={{ width: '90%' }}>
             <DocmentRequire readOnly={readOnly} title="1. Persal Identification Documents (ONE OF THE FOLLOWING)" itemList={personalList} onSetItemList={setPersonaList}/>
-            <DocmentRequire readOnly={readOnly} title="2. Corporate Ducuments" itemList={coporateList} onSetItemList={setcoporateList}/>    
+            <DocmentRequire readOnly={readOnly} title="2. Corporate Documents" itemList={coporateList} onSetItemList={setcoporateList}/>    
             <RemarkCard/>   
           </Space>
         </ProCard>   

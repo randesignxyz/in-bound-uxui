@@ -15,7 +15,7 @@ export interface AddressListViewProps {
   data: {
     list: AddresssView[];
     init: {
-      lookupDataList?: LookupData[];
+      // lookupDataList?: LookupData[];
       provinceList?: Locations[];
     };
     locations: {
@@ -75,7 +75,7 @@ const AddressListView: React.FC<AddressListViewProps> = ({
         id: item.id,
         key: item.key || item.id?.toString(),
         address: item.address,
-        typeId: item.type?.id,
+        // typeId: item.type?.id,
         houseNo: item.houseNo,
         streetNo: item.streetNo,
         streetName: item.streetName,
@@ -109,7 +109,8 @@ const AddressListView: React.FC<AddressListViewProps> = ({
               !addressReadonly && (
                 <Button key="b1" onClick={() => onEdit(item)} type="link" icon={<EditOutlined />} />
               ),
-              !addressReadonly && item.type?.id !== DEFAULT_ADDRESS_TYPE_ID && (
+              !addressReadonly && //item.type?.id !== DEFAULT_ADDRESS_TYPE_ID && 
+              (
                 <Button
                   key="b2"
                   onClick={() => actionHandlers.onRemove?.(item)}
@@ -181,12 +182,12 @@ const AddressListView: React.FC<AddressListViewProps> = ({
         onCancel={() => setModal({ visible: false })}
         data={modal.data}
         initData={{
-          lookupDataList: data.init.lookupDataList?.filter(
-            (it) =>
-              it.type !== 'ADDRESS_TYPE' ||
-              !list?.some((i) => i.type?.id == 14033) ||
-              it.id !== 14033,
-          ),
+          // lookupDataList: data.init.lookupDataList?.filter(
+          //   (it) =>
+          //     it.type !== 'ADDRESS_TYPE' ||
+          //     !list?.some((i) => i.type?.id == 14033) ||
+          //     it.id !== 14033,
+          // ),
           provinceList: data.init.provinceList,
         }}
         locations={data.locations}

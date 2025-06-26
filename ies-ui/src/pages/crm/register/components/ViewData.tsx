@@ -1,6 +1,6 @@
 import { ProCard, ProTable } from "@ant-design/pro-components";
 import { AddresssView, PurchasingPerformanceItem, RegisterCustomerDetailResponse } from "../data";
-import { Col, Descriptions, Flex, List, Radio, Row, Space } from "antd";
+import { Card, Col, Descriptions, Flex, List, Radio, Row, Space } from "antd";
 import AddressListView from "./AddressListView";
 import { AimOutlined } from "@ant-design/icons";
 import PurchasingPerformanceView from "./PurchasingPerformanceView";
@@ -33,10 +33,10 @@ export default ({ data }: Props) => {
                     {data?.purpose}
                 </Descriptions.Item>
                 <Descriptions.Item label="Price & Trade Offer">
-                    {data?.priceTradeOffer}
+                    {data?.priceTradeOfferName}
                 </Descriptions.Item>
                 <Descriptions.Item label="Payment Term">
-                    {data?.paymentTerm}
+                    {data?.paymentTermName}
                 </Descriptions.Item>
                 <Descriptions.Item label="Outlet Type">
                     {data?.outletTypeName}
@@ -49,6 +49,9 @@ export default ({ data }: Props) => {
                 </Descriptions.Item>
                 <Descriptions.Item label="Channel">
                     {data?.channelName}
+                </Descriptions.Item>
+                <Descriptions.Item label="Sub Channel">
+                    {data?.subChannelName}
                 </Descriptions.Item>
                 <Descriptions.Item label="Sale Executive">
                     {data?.saleName}
@@ -269,7 +272,17 @@ export default ({ data }: Props) => {
           ]}
         />}
         </ProCard>  
-         <ProCard size="small"                  
+        <Card>
+            <Descriptions>
+                <Descriptions.Item label="Frequency of Purchase">
+                    {data?.frequencyPurchase}
+                </Descriptions.Item>
+                <Descriptions.Item label="Remarks">
+                    {data?.remarkFrequencyPurchase}
+                </Descriptions.Item>
+            </Descriptions>  
+        </Card>  
+        <ProCard size="small"                  
           headerBordered
           title='Document Requirment'
         >

@@ -12,7 +12,7 @@ export interface AddressEntryFormProps {
   defaultAddress?: boolean;
   isEdit?: boolean;
   initData?: {
-    lookupDataList?: LookupData[];
+    // lookupDataList?: LookupData[];
     provinceList?: Locations[];
   };
   locations?: {

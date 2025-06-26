@@ -47,6 +47,8 @@ export type LookupDataType =
   | 'ICT_FORM_WORKFLOW_ACCESS'
   | 'ICT_FORM_NETWORK_ACCESS'
   | 'SALESPERSON_POSITION'
+  | 'SALE_PRICE_LIST'
+  | 'SALE_PAYMENT_TERM'
 
 
 
@@ -55,6 +57,7 @@ export interface LookupData {
   code: string;
   name: string;
   type: LookupDataType;
+  actived?: string;
   sequence?: number;
 }
 

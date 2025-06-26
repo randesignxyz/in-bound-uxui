@@ -65,7 +65,7 @@ const DraggableTabNode = ({ className, ...props }: DraggableTabPaneProps) => {
 };
 
 export default <ListDataType extends Record<string, any> & { id: number, code?: string }, FilterType
-    extends Record<string, any> & { searchValue?: string; status?: string; subStatus?: string }, ValueType>({
+    extends Record<string, any> & { searchValue?: string; status?: string; subStatus?: string; subStatus2?: string }, ValueType>({
         tabRender,
         listView,
     }: Props<ListDataType, FilterType, ValueType>) => {
@@ -222,6 +222,10 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
                 }}
                 onSubStatusChanged={value => {
                     setFilterData(v => ({ ...v, subStatus: value }) as any)
+                    reloadList(true)
+                }}
+                onSubStatus2Changed={value => {
+                    setFilterData(v => ({ ...v, subStatus2: value }) as any)
                     reloadList(true)
                 }}
                 onOpenAdvanceSearch={listView.onOpenAdvanceSearch} />

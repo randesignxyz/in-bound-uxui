@@ -3,6 +3,8 @@ import { map } from 'lodash';
 import moment from 'moment';
 import { parse } from 'querystring';
 import React from 'react';
+// encrypt customer  or other 
+import crypto from 'crypto';
 
 /* eslint no-useless-escape:0 import/prefer-default-export:0 */
 const reg =
@@ -428,4 +430,15 @@ export function isReactNode(value: any): value is React.ReactNode {
     }
 
     return false;
+}
+
+
+const key = Buffer.from('0123456789abcdef0123456789abcdef', 'utf8'); // 32 bytes
+const iv = Buffer.from('abcdef9876543210', 'utf8');                  // 16 bytes
+
+export function encryptToBase64(text: string): string {
+    const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
+    let encrypted = cipher.update(text, 'utf8');
+    encrypted = Buffer.concat([encrypted, cipher.final()]);
+    return encrypted.toString('base64');  // ciphertext to send to Django
 }

@@ -239,7 +239,7 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit }) => {
             <Col md={8} xs={24} />
           </Row>
         </Card>
-        <Card title="Distributor Info" size="small">
+        <Card title="Source of Supply Info" size="small">
           <Row gutter={12} style={{ marginLeft: 20 }}>
             <Col md={8} xs={24}>
               <ProDescriptions
@@ -281,6 +281,37 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit }) => {
                   {
                     title: 'Ship Address',
                     dataIndex: 'addressCode',
+                  },
+                ]}
+              />
+            </Col>
+          </Row>
+          <Row gutter={12} style={{ marginLeft: 20, marginTop: 20 }}>
+            <Col md={8} xs={24}>
+              <ProDescriptions
+                dataSource={dataSource}
+                contentStyle={{ fontWeight: 500 }}
+                loading={requestActions.request?.loading}
+                column={1}
+                columns={[
+                  {
+                    title: 'Amount',
+                    // dataIndex: 'addressCode',
+                    render: (_, r) => {
+                      if (r.items !== undefined) {
+                        const amount = r.items
+                          .map((e) => e.unitCost * e.quantity)
+                          .reduce((a, it) => a + it, 0.0);
+                        return (
+                          <Typography.Text type="success">
+                            {' '}
+                            $ {numeral(amount).format('0,000.000')}
+                          </Typography.Text>
+                        );
+                      } else {
+                        return '-';
+                      }
+                    },
                   },
                 ]}
               />

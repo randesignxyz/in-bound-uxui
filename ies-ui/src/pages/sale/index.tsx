@@ -39,7 +39,6 @@ import { PageContainer } from '@ant-design/pro-components';
 import { MenuProps } from 'rc-menu';
 import { MPUPath } from './mpu';
 import Reports from './reports';
-import invoice from "@/assets/invoice_12266888.png"
 {
   /* <TeamOutlined /> */
 }
@@ -72,7 +71,6 @@ export const SalePaths = {
   user: '/sale/user',
   pricing: '/sale/pricing',
   purchaseOrder: '/sale/purchase-order',
-  invoices: "/sale/invoice"
 };
 
 export default () => {
@@ -352,11 +350,11 @@ export default () => {
         access.canAccessSettlementMenuItem ||
         access.canAccessARMenuItem ||
         access.canAccessViewMpu) && (
-          <>
-            <Divider />
-            <ListMenuComp items={stockMenuItems} />
-          </>
-        )}
+        <>
+          <Divider />
+          <ListMenuComp items={stockMenuItems} />
+        </>
+      )}
     </PageContainer>
   );
 };

@@ -52,7 +52,7 @@ const POMainPage: React.FC = () => {
     },
   });
   const { data, isFetching, refetch } = useQuery(
-    ['fetch-invoice-list', filter],
+    ['fetch-po-list', filter],
     () => services.page(filter),
     {
       refetchOnWindowFocus: false,

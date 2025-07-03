@@ -147,10 +147,19 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
             },
           },
           {
+            title: 'Discount',
+            align: 'right',
+            render: (_, r) => {
+              return `$ ${numeral(r.discountAmount).format('0,0.000')}`;
+            },
+          },
+          {
             title: 'Amount',
             align: 'right',
             render: (_, r) => {
-              return `$ ${numeral(r.quantity * r.unitPrice).format('0,0.000')}`;
+              return `$ ${numeral(r.quantity * r.unitPrice - (r.discountAmount ?? 0.0)).format(
+                '0,0.000',
+              )}`;
             },
           },
           // {

@@ -20,6 +20,7 @@ import detail from "../gratis/request/detail";
 import { TaskActionDataParam } from "@/services/process-workflow/params";
 import { LookupDataType } from "@/services/data";
 import { Locations } from "@/services/crm/data";
+import { InitData } from "./model";
 
 export type LocationType = 'PROVINCE' | 'DISTRICT' | 'COMMUNE' | 'VILLAGE' | 'REGION' | 'DIVISION';
 type LocationsParams = {
@@ -164,7 +165,7 @@ export const RegisterCustomerServiceAPI = (requestActions?: RequestActions) => {
       listRegisterItemBrand: () => singleRequest(RegisterCustomerParams.listRegisterItemBrand())(requestActions) as Promise<RegisterItemBrandList[]>,
       listDocRequirement: () => singleRequest(RegisterCustomerParams.listDocRequirement())(requestActions) as Promise<DoRequireCustomerList[]>,
       updateFinanceProcess: (params: TaskActionDataParam<RegisterCustomerWFPayload>) => singleRequest(RegisterCustomerParams.updateFinanceProcess(params))(requestActions),
-      initCustomerData: findMultiService<InitCustomerParamsType, {}>({type: 'CRM'}, requestActions),
+      initCustomerData: findMultiService<InitCustomerParamsType, InitData>({type: 'CRM'}, requestActions),
       findAllLocations: findAllService<LocationsParams, Locations>({type: 'CRM',name:'locations'}, requestActions),
       findLocationByParents: findAllService<{ ids: number[] }, Locations>({type: 'CRM',name:'get-location-by-parents'}, requestActions),
       postToSAP: (id: number) => singleRequest(RegisterCustomerParams.postToSAP(id))(requestActions),

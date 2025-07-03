@@ -49,6 +49,9 @@ export type LookupDataType =
   | 'SALESPERSON_POSITION'
   | 'SALE_PRICE_LIST'
   | 'SALE_PAYMENT_TERM'
+  | 'SALE_SAP_SERIES'
+  | 'SALE_PAYMENT_TERM_SAP'
+  | 'SALE_PRICE_LIST_SAP'
 
 
 

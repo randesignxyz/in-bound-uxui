@@ -40,6 +40,8 @@ export default({
   const[attachedFiles, setAttachedFiles]  = useState<{fileId: string, activity: string}[]>([]); 
   const [personalList, setPersonaList] = useState<DoRequireCustomerList[]>([])
   const [coporateList, setcoporateList] = useState<DoRequireCustomerList[]>([]) 
+  const [data, setData] = useState<RegisterCustomerDetailResponse>()
+
 
   useEffect(() => {   
     initData()
@@ -69,6 +71,7 @@ export default({
     }
   }
   const initFormData = (data: RegisterCustomerDetailResponse) =>{
+    setData(data)
     form.setFieldsValue(data);
   }    
     
@@ -153,8 +156,7 @@ export default({
   };
   const onSaveDraftHandler = async () => {   
     const dataPayload = await getPayload();    
-    await editablePPItemFormRef.current?.validateFields()
-    console.log('tablePPItemFormRef:  ', ppItems)
+    await editablePPItemFormRef.current?.validateFields()    
     Modal.confirm({
       title: 'Save Register Customer',
       content: 'Are you sure?',
@@ -172,7 +174,14 @@ export default({
 
   const onSubmitHandler = async () => {
     const dataPayload = await getPayload();
-    Modal.confirm({
+    if(addressList?.length==0) {
+       message.warning('Billing Address is required.');
+    }else if(shippingAddressList?.length==0) {
+      message.warning('Shipping Address is required.');
+    }else if(ppItems?.length==0) {
+      message.warning('Purchasing Performance is required.');
+    }else{
+      Modal.confirm({
       title: 'Submit Register Customer',
       content: 'Are you sure?',
       onOk: async () => {
@@ -185,6 +194,7 @@ export default({
         }
       },
     });
+    }    
   }   
 
   const onRemoveShippingAddressHandler = (data: AddresssView) => {
@@ -286,13 +296,13 @@ export default({
             >
               Save Draft
             </Button>      
-            <Button
+            {type=='EDIT' && <Button
                 onClick={() => {
                   onSubmitHandler();
                 }}
               >
                 Submit
-              </Button>  
+              </Button> }
         </FooterToolbar> : <></>
       }}  
     >
@@ -307,6 +317,7 @@ export default({
           <ProFormGroup >
             <ProFormText
               label="Customer's ID"
+              disabled
               // rules={[{ required: true }]}
               name={'customerCode'}
               allowClear
@@ -343,10 +354,11 @@ export default({
               width={470}
             />
           
-            <ProFormSelect
+            {type=='CREATE' &&<ProFormSelect
               label="Price & Trade Offer"
               name={'priceTradeOfferId'}
               placeholder={'Price & Trade Offer'}
+              rules={[{ required: true }]}
               options={state1.initData?.lookupDataList?.filter((it) => it.type === 'SALE_PRICE_LIST' && it?.actived=='Y')?.map((it) => ({
                 label: it.name,
                 value: it.id,
@@ -362,11 +374,33 @@ export default({
               //   value: 'Special(Enclose Sales Terms)',
               // }]}
               width={470}
-            />
-            <ProFormSelect
-              label="Payment Term"
+            />}
+            {type=='EDIT' &&<ProFormSelect
+              label={`Price & Trade Offer - ${data?.priceTradeOfferName}`}
+              name={'sapPriceTradeOfferId'}
+              placeholder={'Price & Trade Offer'}
+              rules={[{ required: true }]}
+              options={state1.initData?.lookupDataList?.filter((it) => it.type === 'SALE_PRICE_LIST_SAP' && it?.actived=='Y')?.map((it) => ({
+                label: it.name,
+                value: it.id,
+              }))}
+              // options={[{
+              //   label: 'Wholsale',
+              //   value: 'Wholsale',
+              // },{
+              //   label: 'Standard',
+              //   value: 'Standard',
+              // },{
+              //   label: 'Special(Enclose Sales Terms)',
+              //   value: 'Special(Enclose Sales Terms)',
+              // }]}
+              width={470}
+            />}
+             {type=='CREATE' && <ProFormSelect
+              label={`Payment Term `}
               name={'paymentTermId'}
               placeholder={'Payment Term'}
+              rules={[{ required: true }]}
                options={state1.initData?.lookupDataList?.filter((it) => it.type === 'SALE_PAYMENT_TERM' && it?.actived=='Y')?.map((it) => ({
                 label: it.name,
                 value: it.id,
@@ -382,7 +416,28 @@ export default({
               //   value: 'Credit (enclose Credit Appliction form)',
               // }]}
               width={470}
-            />
+            />}
+            {type=='EDIT' && <ProFormSelect
+              label={`Payment Term - ${data?.paymentTermName}`}
+              name={'sapPaymentTermId'}
+              placeholder={'Payment Term'}
+              rules={[{ required: true }]}
+               options={state1.initData?.lookupDataList?.filter((it) => it.type === 'SALE_PAYMENT_TERM_SAP' && it?.actived=='Y')?.map((it) => ({
+                label: it.name,
+                value: it.id,
+              }))}
+              // options={[{
+              //   label: 'Cashon-Delivery',
+              //   value: 'Cashon-Delivery',
+              // },{
+              //   label: 'Pre-Payment',
+              //   value: 'Pre-Payment',
+              // },{
+              //   label: 'Credit (enclose Credit Appliction form)',
+              //   value: 'Credit (enclose Credit Appliction form)',
+              // }]}
+              width={470}
+            />}
               <ProFormSelect
               label="Outlet Type"
               name={'outletTypeId'}

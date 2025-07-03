@@ -60,8 +60,10 @@ export interface RegisterCustomerDetailResponse{
   purpose: string;
   priceTradeOfferId?: number;
   priceTradeOfferName?: string;
+  sapPriceTradeOfferId?: number;
   paymentTermId?: number;
   paymentTermName?: string;
+  sapPaymentTermId?: number;
   outletTypeId?: number;
   outletTypeName?: string;
   divisionId?: number;
@@ -93,6 +95,7 @@ export interface RegisterCustomerDetailResponse{
   docPersonalList?: DocumentRequireList[];
   docCorporateList?: DocumentRequireList[];
   attachedFiles?: string[];
+  seriesId?: number;
 }
 
 
@@ -186,5 +189,5 @@ export interface DoRequireCustomerList {
 }
 export interface RegisterCustomerWFPayload{
   instId: string
-  customerCode?: string
+  seriesId?: number
 }

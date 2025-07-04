@@ -12,6 +12,8 @@ import trollyIcon from '@/assets/trolley.png';
 import settingIcon from '@/assets/settings.png';
 import qrCodeIcon from '@/assets/qr-code.png';
 import forkLift from '@/assets/fork-lift.png';
+import agreementIcon from '@/assets/agreement.png'
+import scheduleIcon from '@/assets/schedule.png';
 import { Divider, Menu } from 'antd';
 import {
   AreaChartOutlined,
@@ -44,7 +46,9 @@ export const DeliveryPaths = {
   history: '/delivery/history',
   locationTracking: '/delivery/tracking',
   loadingHistory: '/delivery/loading-history',
-  deliveryHistory: '/delivery/list-instances-delivery'
+  deliveryHistory: '/delivery/list-instances-delivery',
+  delAccsociate:'/delivery/associate/del',
+  saleAccsociate:'/delivery/associate/sale',
 };
 
 
@@ -229,6 +233,22 @@ export default () => {
       link: `${DeliveryPaths.review}`,
       icon: reviewIcon,
       visible: access.canAccesDeliveryReviewMenuItem
+    },
+    {
+      id: 'associateDel',
+      name: 'Associate',
+      description: 'Associate List',
+      link: `${DeliveryPaths.delAccsociate}/list`,
+      icon: agreementIcon,
+      visible: access.canAccesAssociateDelView
+    },
+    {
+      id: 'associateSale',
+      name: 'Visit Plan',
+      description: 'Visit Plan List',
+      link: `${DeliveryPaths.saleAccsociate}/list`,
+      icon: scheduleIcon,
+      visible: access.canAccesAssociateSale
     },
   ];
 

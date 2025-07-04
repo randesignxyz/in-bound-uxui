@@ -22,7 +22,6 @@ import salesperson from "@/assets/salesman.png";
 import RegisterCustomerIcon from '@/assets/register-customer.png';
 import customerShipping  from "@/assets/courier_14234908.png";
 
-
 export const CrmPaths = {
   contact: '/crm/contact',
   settlement: '/crm/gratis',

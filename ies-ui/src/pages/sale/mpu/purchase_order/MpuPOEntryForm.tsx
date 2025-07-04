@@ -307,7 +307,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
               <Form.Item
                 help={<span />}
                 name="distributorId"
-                label="Distributor"
+                label="Source Of Supply"
                 rules={[{ required: true }]}
                 labelCol={{ sm: 4, md: 6, lg: 6, xl: 4, xxl: 4 }}
               >
@@ -501,6 +501,38 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
                 ],
               },
             },
+
+            {
+              title: 'SOS Price (USD)',
+              dataIndex: 'unitCost',
+              valueType: 'digit',
+            },
+            {
+              title: 'SOS Price (KHR)',
+              initialValue: 0,
+              ellipsis: true,
+              readonly: true,
+              // align: 'right',
+              renderFormItem: (_, config) => {
+                const pricing = config.record?.unitCost ?? 0.0;
+                return `៛ ${numeral(pricing * 4000.0).format('0,000')}`;
+              },
+            },
+
+            // {
+            //   title: 'Unit Cost (USD)',
+            //   dataIndex: 'unitPricing',
+            //   valueType: 'digit',
+            //   initialValue: 0,
+            //   ellipsis: true,
+            //   formItemProps: {
+            //     rules: [
+            //       {
+            //         required: true,
+            //       },
+            //     ],
+            //   },
+            // },
 
             {
               title: 'Unit Price (USD)',

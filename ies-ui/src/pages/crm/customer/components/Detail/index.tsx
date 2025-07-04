@@ -1,7 +1,7 @@
 import { CrmPaths } from '@/pages/crm';
 import { AddressInfo, AddresssView, BasicData, SettlementPlan } from '@/services/crm/data';
 import { useState } from 'react';
-import { Card, message, Modal, Space, Spin, Tabs, Typography } from 'antd';
+import { Button, Card, message, Modal, Space, Spin, Tabs, Typography } from 'antd';
 import { useEffect } from 'react';
 import { model } from '../../model';
 import CustomerVisitListView from '../CustomerVisitListView';
@@ -10,7 +10,7 @@ import { history, useAccess } from "@umijs/max";
 import { ForcastingDetailView } from '../forcasting/ForcastingDetailView';
 import ProTable from '@ant-design/pro-table';
 import VisitScheduleChangeStatusModal from '../VisitScheduleChangeStatusModal';
-import { formatDate, formatMonth } from '@/pages/utils';
+import {  encryptToBase64, formatDate, formatMonth } from '@/pages/utils';
 import { ProcessFlowModalWrapper } from '@/pages/process-flow/components/ProcessFlowModalWrapper';
 import { CustomerContractForm } from '@/pages/crm/contract/process-flow';
 import AttachmentList from '@/components/Attachment/AttachmentList';
@@ -30,6 +30,7 @@ import ActionBar from '@/components/ActionBar';
 import { CustomerActionController } from '../..';
 import POSMDisplayList from '../POSMListDisplay';
 import SpaceReservedView from '@/pages/crm/contract/space-reserve/DetailView';
+import { LinkOutlined } from '@ant-design/icons';
 
 interface Props {
   id?: number;
@@ -405,7 +406,21 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
   </Spin>
 
 
-  return openInTab ? <ProCard title={<Space># <Typography.Text strong copyable >{state.data?.detail?.code}</Typography.Text></Space>}
+  return openInTab ? <ProCard title={<Space># <Typography.Text strong copyable >{state.data?.detail?.code}</Typography.Text>
+  
+    <Button icon={<LinkOutlined/>} type='link' onClick={()=>{ 
+      console.log(encryptToBase64('C001450'));
+      
+      const encrypted = encryptToBase64(state.data?.detail?.code || "n/a");
+      window.open(`http://10.0.13.247:3301/customer-view/${encrypted}`, '_blank');
+      navigator.clipboard?.writeText(`http://10.0.13.247:3301/customer-view/${encrypted}`)
+  
+      .then(() => {
+        window.open(`http://10.0.13.247:3301/customer-view/${encrypted}`, '_blank');
+      })
+      .catch((err) => {
+      }); }} />
+  </Space>}
     extra={<ActionBar actions={state.data?.detail && getMenuItems(state.data?.detail, 'Detail', () => {
       ops.detail(state.data?.detail?.id)
     }).filter(it => it.visible) || []} numOfActionOnBar={4} />

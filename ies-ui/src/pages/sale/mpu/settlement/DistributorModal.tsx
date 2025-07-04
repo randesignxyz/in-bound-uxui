@@ -6,7 +6,7 @@ import { simpleRequestActions } from '@/services/model';
 import { CustomerLookup } from '@/services/sale/data';
 import { AimOutlined } from '@ant-design/icons';
 import { ProForm, ProFormSelect, ProFormTextArea } from '@ant-design/pro-components';
-import { Form } from 'antd';
+import { Form, Spin } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { useEffect, useState } from 'react';
 import { PurchaseOrderDistributorDto } from './data';
@@ -101,8 +101,8 @@ export default (props: Props) => {
         props.purchaseOrder.id,
         getAddress(selectedAddress),
         parseInt(distributor[0]),
-        distributor[1],
         distributor[2],
+        distributor[1],
         undefined,
         selectedAddress,
       );
@@ -170,32 +170,33 @@ export default (props: Props) => {
               service={CrmService('search-basic-customer')}
             />
           </Form.Item>
-          <ProFormSelect
-            name={'addressId'}
-            label="Address"
-            labelCol={{ sm: 4, md: 6, lg: 6, xl: 4, xxl: 4 }}
-            allowClear={false}
-            key={'addressId'}
-            initialValue={props.purchaseOrder?.addressCode}
-            showSearch
-            rules={[{ required: true }]}
-            options={addressList?.map((item) => {
-              return {
-                value: item.customerAddressId,
-                label: item.address,
-              };
-            })}
-          />
-          <ProFormTextArea
-            labelCol={{ sm: 4, md: 6, lg: 6, xl: 4, xxl: 4 }}
-            readonly
-            //help={<AimOutlined />}
-            label={<AimOutlined />}
-            disabled={true}
-            name="address"
-          />
+          <Spin spinning={requestActions.request?.loading}>
+            <ProFormSelect
+              name={'addressId'}
+              label="Address"
+              labelCol={{ sm: 4, md: 6, lg: 6, xl: 4, xxl: 4 }}
+              allowClear={false}
+              key={'addressId'}
+              initialValue={props.purchaseOrder?.addressCode}
+              showSearch
+              rules={[{ required: true }]}
+              options={addressList?.map((item) => {
+                return {
+                  value: item.customerAddressId,
+                  label: item.address,
+                };
+              })}
+            />
+            <ProFormTextArea
+              labelCol={{ sm: 4, md: 6, lg: 6, xl: 4, xxl: 4 }}
+              readonly
+              //help={<AimOutlined />}
+              label={<AimOutlined />}
+              disabled={true}
+              name="address"
+            />
+          </Spin>
         </ProForm>
-        {/* </Spin> */}
       </FormModalComp>
     </>
   );

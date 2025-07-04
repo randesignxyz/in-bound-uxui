@@ -156,7 +156,6 @@ export default ({ onDetail, onAdd, onEdit }: Props) => {
               title: 'License Number',
               dataIndex: 'driverLicense',
             },
-           
             {
               key: 'phone',
               title: 'Phone',

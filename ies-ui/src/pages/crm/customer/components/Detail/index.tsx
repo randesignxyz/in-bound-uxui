@@ -1,7 +1,7 @@
 import { CrmPaths } from '@/pages/crm';
 import { AddressInfo, AddresssView, BasicData, SettlementPlan } from '@/services/crm/data';
 import { useState } from 'react';
-import { Card, message, Modal, Space, Spin, Tabs, Typography } from 'antd';
+import { Button, Card, message, Modal, Space, Spin, Tabs, Typography } from 'antd';
 import { useEffect } from 'react';
 import { model } from '../../model';
 import CustomerVisitListView from '../CustomerVisitListView';
@@ -10,7 +10,7 @@ import { history, useAccess } from "@umijs/max";
 import { ForcastingDetailView } from '../forcasting/ForcastingDetailView';
 import ProTable from '@ant-design/pro-table';
 import VisitScheduleChangeStatusModal from '../VisitScheduleChangeStatusModal';
-import { formatDate, formatMonth } from '@/pages/utils';
+import {  encryptToBase64, formatDate, formatMonth } from '@/pages/utils';
 import { ProcessFlowModalWrapper } from '@/pages/process-flow/components/ProcessFlowModalWrapper';
 import { CustomerContractForm } from '@/pages/crm/contract/process-flow';
 import AttachmentList from '@/components/Attachment/AttachmentList';
@@ -30,6 +30,7 @@ import ActionBar from '@/components/ActionBar';
 import { CustomerActionController } from '../..';
 import POSMDisplayList from '../POSMListDisplay';
 import SpaceReservedView from '@/pages/crm/contract/space-reserve/DetailView';
+import { LinkOutlined } from '@ant-design/icons';
 
 interface Props {
   id?: number;
@@ -143,54 +144,83 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
           <SaleInfoView data={state.data?.detail?.saleInfo} />
         </Tabs.TabPane>
         <Tabs.TabPane key={"posm"} tab="POSM">
-          <POSMDisplayList
+          {/* <POSMDisplayList
             customerId={state.data?.detail?.id || 0}
-          />
-         
+          /> */}
           {/* <PosmView addresList={addressList || []} requestActions={requestActions}
-            readOnly
+            // readOnly
             initAddressList={async () => { } }
             onDelete={async () => { } } 
-            listPosm={async()=>[]} 
-            onSave={function (itemId: number, qty: number, id?: number, remarks?: string): Promise<{ data: number; }> {
-              throw new Error('Function not implemented.');
-            } }            // initAddressList={async () => {
+              //   id: it.id,
+              //   itemId: it.item.id,
+              //   qty: it.qty,
+              //   remarks: it.remarks
+              // }))} 
+            // onSave={function (itemId: number, qty: number, id?: number, remarks?: string): Promise<{ data: number; }> {
+            //   throw new Error('Function not implemented.');
+            // } }            // initAddressList={async () => {
             //   if (addressList != null) {
             //     return;
             //   }
             //   const rs = await ops.listAddressDetailByCustomerId({ id: state.data?.detail?.id || 0 })
             //   setAddressList(rs)
             // }}
-            // listPosm={() => Promise.resolve(state.data?.detail?.posmItems?.map(it => ({
-            //   id: it.id,
-            //   itemId: it.item.id,
-            //   qty: it.qty,
-            //   remarks: it.remarks
-            // })) || [])}
-            // onSave={(itemId: number, qty: number, id?: number | undefined, remarks?: string | undefined) => {
-            //   if (!state.data?.detail?.id) {
-            //     throw Error("fetch to detect customer.")
-            //   }
-            //   return CustomerServices.saveCustomerPOSM({
-            //     id: id,
-            //     itemId: itemId,
-            //     qty: qty,
-            //     remarks: remarks,
-            //     customerId: state.data?.detail?.id || 0
-            //   })(requestActions)
-            // }}
+            listPosm={() => Promise.resolve(state.data?.detail?.posmItems?.map(it => ({...it,  })) || [])}
+
+            onSave={(data:any) => {
+              if (!state.data?.detail?.id) {
+                throw Error("fetch to detect customer.")
+              }
+              const entry = {
+                ...data,
+                customerId:id
+              } 
+              return CustomerServices.customerPOSMContract(entry)(requestActions)
+              
+              // return CustomerServices.saveCustomerPOSM({
+              //   id: id,
+              //   itemId: itemId,
+              //   qty: qty,
+              //   remarks: remarks,
+              //   customerId: state.data?.detail?.id || 0
+              // })(requestActions)
+            }}
             // onDelete={(id) => CustomerServices.deleteCustomerPosm(id)(requestActions)}
           /> */}
+          <PosmView requestActions={requestActions}
+            listPosm={() => {
+              const data =Promise.resolve(
+                state.data?.detail?.posmItems?.map(it => ({
+                  key:"",
+                id: it.id,
+                categoryId:0,
+                itemId: it.item.id,
+                qty: it.qty,
+                effectiveDate:it?.effectiveDate,
+                installedDate:it?.installedDate,
+                expiryDate:it?.expiryDate,
+                remarks: it.remarks
+              })) || [])
+              return data
+            }}
+            onSave={(data:any) => {
+              return CustomerServices.saveCustomerPOSM({
+                ...data,
+                id: data.id,
+                customerId: state.data?.detail?.id || 0
+              })(requestActions)
+            }}
+            onDelete={(id) => CustomerServices.deleteCustomerPosm(id)(requestActions)}
+          />
         </Tabs.TabPane>
         <Tabs.TabPane key="space" tab="Space Reserve">
-            {state.data?.detail?.contracts?.map(p=>{
-              return <SpaceReservedView contractCode={p.contractNo} address={state.data?.detail?.addressList as AddressInfo[]} contractId={p.id} source='CUSTOMER'/>
-            })}
-          </Tabs.TabPane>
+          {state.data?.detail?.contracts?.map(p => {
+            return <SpaceReservedView contractCode={p.contractNo} address={state.data?.detail?.addressList as AddressInfo[]} contractId={p.id} source='CUSTOMER' />
+          })}
+        </Tabs.TabPane>
         {state.data?.detail?.id && <Tabs.TabPane key="supplySource" tab="Supply Source">
           <SupplySource customerId={state.data?.detail?.id} />
         </Tabs.TabPane>}
-
         {state.data?.visitSchedule && (
           <Tabs.TabPane key="visit-schedule" tab="Visit Schedule">
             <CustomerVisitListView
@@ -205,7 +235,6 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
             />
           </Tabs.TabPane>
         )}
-
         <Tabs.TabPane key="address" tab="Address">
           <AddressListView
             addressReadonly={state.data?.detail?.source == 'SAP' || !access.saleAdmin}
@@ -377,7 +406,21 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
   </Spin>
 
 
-  return openInTab ? <ProCard title={<Space># <Typography.Text strong copyable >{state.data?.detail?.code}</Typography.Text></Space>}
+  return openInTab ? <ProCard title={<Space># <Typography.Text strong copyable >{state.data?.detail?.code}</Typography.Text>
+  
+    <Button icon={<LinkOutlined/>} type='link' onClick={()=>{ 
+      console.log(encryptToBase64('C001450'));
+      
+      const encrypted = encryptToBase64(state.data?.detail?.code || "n/a");
+      window.open(`http://api2.vital.com.kh/customer-view/${encrypted}`, '_blank');
+      navigator.clipboard?.writeText(`http://api2.vital.com.kh/customer-view/${encrypted}`)
+  
+      .then(() => {
+        window.open(`http://api2.vital.com.kh/customer-view/${encrypted}`, '_blank');
+      })
+      .catch((err) => {
+      }); }} />
+  </Space>}
     extra={<ActionBar actions={state.data?.detail && getMenuItems(state.data?.detail, 'Detail', () => {
       ops.detail(state.data?.detail?.id)
     }).filter(it => it.visible) || []} numOfActionOnBar={4} />

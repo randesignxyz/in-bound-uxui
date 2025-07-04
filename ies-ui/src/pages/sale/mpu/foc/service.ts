@@ -4,8 +4,8 @@ import { Page } from "@/services/shared/data";
 
 
 const FOCAction ={
-    page:(params:TableViewSearchParams<FOCSearchParam>):ServiceApiType<{searchValue?:string}> =>({
-        actionName:"page-foc",
+    page:(params:TableViewSearchParams<FreeOfChargeTrackingAdvanceSearch>):ServiceApiType<{searchValue?:string}> =>({
+        actionName:"page-free-of-charge-tracking",
         endpoint:"SALE",
         type:"PAGING_QUERY",
         payload:{
@@ -16,8 +16,14 @@ const FOCAction ={
             pageSize:params.pagination?.pageSize,
         }
     }),
-    closedFOC:(param:{id?:number}):ServiceApiType<{id?:number}> =>({
-        actionName:"closed-foc",
+    fetch:(param:{id?:number}):ServiceApiType<{}>=>({
+        actionName:"fetch-free-of-charge-tracking",
+        endpoint:"SALE",
+        type:"FETCH_QUERY",
+        payload:param
+    }),
+    updateStatus:(param:{id?:number, remark?:string}):ServiceApiType<{}> =>({
+        actionName:"update-status-free-of-charge-tracking",
         endpoint:"SALE",
         type:"EXEC",
         payload:param
@@ -28,7 +34,8 @@ const FOCAction ={
 export const FOCServiceAPI = (requestAction :RequestActions)=>{
 
     return {
-        page:(param:TableViewSearchParams<FOCSearchParam>) =>singleRequest(FOCAction.page(param))(requestAction) as Promise<Page<any>>,
-        closedFOC:(param:{id?:number}) =>singleRequest(FOCAction.closedFOC(param))(requestAction) as Promise<any>
+        page:(param:TableViewSearchParams<FreeOfChargeTrackingAdvanceSearch>) =>singleRequest(FOCAction.page(param))(requestAction) as Promise<Page<FreeOfChargeTrackingDTO>>,
+        fetch:(param:{id?:number}) =>singleRequest(FOCAction.fetch(param))(requestAction) as Promise<FreeOfChargeTrackingDTO>,
+        updateStatus:(param:{id?:number}) =>singleRequest(FOCAction.updateStatus(param))(requestAction) as Promise<any>
     }
 }

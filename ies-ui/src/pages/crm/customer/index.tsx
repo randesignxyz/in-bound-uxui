@@ -213,7 +213,6 @@ export default () => {
         <CrudWrapper baseURL={CrmPaths.customer} disablePageContainer >
 
             {(view, id, navigate) => {
-
                 switch (view) {
                     case 'list':
                         return <MainPage getMenuItems={getMenuItems} />

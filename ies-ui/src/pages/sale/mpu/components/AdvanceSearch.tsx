@@ -4,15 +4,16 @@ import { SalesTeamWorkLess } from '@/services/sale/data';
 import { SaleService } from '@/services/sale/services';
 import { DrawerForm, DrawerFormProps } from '@ant-design/pro-components';
 import ProForm, { ProFormDateRangePicker } from '@ant-design/pro-form';
-import { Form } from 'antd';
+import { Form, Segmented } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export interface AdvanceSearchProps extends DrawerFormProps {
   initData?: AdvanceSearchParam;
-  entity: string;
+  entity: 'Purchase Order' | 'Settlement' | 'Stock Count';
   onSearch: (params: AdvanceSearchParam) => void;
   onReset: () => void;
+  showingBar: boolean;
 }
 
 const AdvanceSearch: React.FC<AdvanceSearchProps> = ({
@@ -20,9 +21,11 @@ const AdvanceSearch: React.FC<AdvanceSearchProps> = ({
   onReset,
   onSearch,
   entity,
+  showingBar,
   ...props
 }) => {
   const [form] = useForm<AdvanceSearchParam>();
+  const [distributor, setDistributor] = useState<string | undefined>();
 
   useEffect(() => {
     if (!props.open) return;
@@ -48,6 +51,20 @@ const AdvanceSearch: React.FC<AdvanceSearchProps> = ({
           },
         }}
       >
+        {showingBar && entity === 'Purchase Order' && (
+          <Form.Item label="Source of Supply" name="distributorType">
+            <Segmented
+              value={distributor}
+              onChange={(e) => setDistributor(e)}
+              options={[
+                { label: 'All', value: undefined },
+                { label: 'Wareshoue OFL', value: 'warehouse' },
+                { label: 'Distributor', value: 'distributor' },
+              ]}
+            />
+          </Form.Item>
+        )}
+
         <Form.Item
           help={<span />}
           name="salespersonId"
@@ -56,6 +73,8 @@ const AdvanceSearch: React.FC<AdvanceSearchProps> = ({
         >
           <RemoteSelectBox<SalesTeamWorkLess, { searchValue: any }>
             width={'300px'}
+            // CH: need to change mobile
+            mode="multiple"
             transforms={{
               onCriteria: (value) => {
                 return { searchValue: value };

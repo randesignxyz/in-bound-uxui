@@ -31,7 +31,7 @@ import {
   Divider, Flex, Form, message,
   Modal, Row, Space, Spin
 } from 'antd';
-import { uniqueId } from 'lodash';
+import { StringIterator, uniqueId } from 'lodash';
 import moment, { Moment } from 'moment';
 import { useEffect, useRef, useState } from 'react';
 import { history, useAccess } from "@umijs/max";
@@ -85,6 +85,7 @@ export default ({
     setForceClearUpload((v) => v + 1);
     setIsService(false);
   };
+  const [firstSelectedBudgetGroupCode,setFirstSelectedBudgetGroupCode] = useState<string>('')
 
   const initData = async () => {
     const buList = [
@@ -185,6 +186,7 @@ export default ({
       fileIds: fileIds,
       items: addedItems.map((v, index) => ({ ...v, seqNo: index + 1 })),
       services: addedServices.map((v, index) => ({ ...v, seqNo: index + 1 })),
+      budgetGroupCode: firstSelectedBudgetGroupCode
     };
   };
 
@@ -319,6 +321,7 @@ export default ({
           <Button danger disabled={isService ? addedServices.length == 0 : addedItems.length == 0} icon={<ClearOutlined />} onClick={() => {
             setAddedItems([])
             setAddedServices([])
+            setFirstSelectedBudgetGroupCode('')
           }} />
         </Space>
       }
@@ -365,7 +368,35 @@ export default ({
                   amount: (it.qty || 0) * (it.unitPrice || 0),
                 })),
               );
+              const hasBudgetCode = recordList.some(item => item.budgetCode !== undefined)          
+              if (hasBudgetCode) {
+                const value = recordList.find(item => item.budgetCode !== undefined)?.budgetCode
+                const groupCode = budgetCodeList.find(item => item.code === value)?.groupCode   
+                if(groupCode=='TM'){
+                  setFirstSelectedBudgetGroupCode('TM')
+                }else{
+                  setFirstSelectedBudgetGroupCode('*')
+                }         
+              }else{
+                setFirstSelectedBudgetGroupCode('')
+              }
             },
+            // onSave: async (key, row) => {
+            //   const hasBudgetCode = recordList.some(item => item.budgetCode !== undefined);
+            //   const value = row.budgetCode;
+    
+            //   if (!hasBudgetCode) {
+            //     if (value === undefined) {
+            //       message.error('Please select a budget code');
+            //       setFirstSelectedBugetGroupCode('');
+            //     } else {
+            //       message.success('Budget code saved');
+            //       setFirstSelectedBugetGroupCode(value);
+            //     }
+            //   }
+    
+            //   console.log('After save - Saved Row:', row);
+            // },
           }}
           recordCreatorProps={{
             creatorButtonText: 'Add Item ',
@@ -426,11 +457,25 @@ export default ({
               title: 'Budget.Code',
               width: 150,
               dataIndex: 'budgetCode',
-              fieldProps: { showSearch: true },
+              fieldProps: { 
+                showSearch: true,
+                // onChange: (value:any) => {
+                //   console.log(addedItems, value); // Logs the new value
+                //   if(value===undefined && !addedItems.some(it => (it.budgetCode!==undefined))){
+                //     message.error('12')
+                //      setFirstSelectedBugetGroupCode('')
+                //   }
+                //   if(value!==undefined && !addedItems.some(it => (it.budgetCode!==undefined))){
+                //     message.error('1')
+                //     setFirstSelectedBugetGroupCode(value)
+                //   }
+                //   // Add custom logic here, e.g., update state or trigger an API call
+                // },
+              },
               formItemProps: { rules: [{ required: requiredBudgetCode }] },
               valueType: 'select',
               valueEnum: (_) =>
-                budgetCodeList.reduce((acc, cur) => ({ ...acc, [cur.code]: cur.code }), {}),
+                budgetCodeList.filter(it => (firstSelectedBudgetGroupCode=='' || (firstSelectedBudgetGroupCode=='*' && it.groupCode !='TM') || it.groupCode == firstSelectedBudgetGroupCode)).reduce((acc, cur) => ({ ...acc, [cur.code]: cur.code }), {}),
             },
             {
               title: 'Remarks',
@@ -623,6 +668,7 @@ export default ({
             };
 
             try {
+              console.log('PR data=',data)
               const rs = await services.request(data);
               message.success(
                 `Your request is submitted. Please track the request with form no ${rs.formNo} `,

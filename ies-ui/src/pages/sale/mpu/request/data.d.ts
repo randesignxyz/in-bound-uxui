@@ -75,6 +75,7 @@ interface DistributorCreate {
 }
 
 interface PurchaseRequestItemCreate {
+  id?: number;
   itemId: number;
   stockCategoryId: number;
   quantity: number;
@@ -83,6 +84,7 @@ interface PurchaseRequestItemCreate {
   uom: string;
   name?: string;
   stockCategoryName: string;
+  unitCost: number;
 }
 
 interface PurchaseRequestUpdateParam {

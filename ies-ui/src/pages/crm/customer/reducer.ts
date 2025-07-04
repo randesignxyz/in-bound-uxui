@@ -18,7 +18,7 @@ export interface InitData {
     regionList?: Locations[]
     provinceList?: Locations[];
     outletTypeList?: outletType[];
-    lookupDataList?: LookupData[];
+    lookupDataList?: LookupData[]; 
     shippingChannelList?: LookupData[];
     seList?: LookupDataItem[];
     itemList?: LookupDataItem[];

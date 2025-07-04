@@ -1,6 +1,7 @@
 import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { RequestActions, ServiceApiType, singleRequest } from '@/services/apiGateway';
 import { Page } from '@/services/shared/data';
+import { SortOrder } from 'antd/lib/table/interface';
 import moment from 'moment';
 import { IdRemarkParam, PurchaseOrderDTO, PurchaseOrderDtoCreate, PurchaseOrderItem } from './data';
 
@@ -21,14 +22,23 @@ const PurchaseOrderAction = {
     param: TableViewSearchParams<AdvanceSearchParam>,
   ): ServiceApiType<{
     searchValue?: string;
-    advanceSearch: { status?: string; salespersonId?: string; orderedDate?: moment.Moment[] };
+    sorter?: Record<string, SortOrder>;
+    advanceSearch: {
+      status?: string;
+      salespersonId?: string;
+      orderedDate?: moment.Moment[];
+      distributorType?: string;
+    };
   }> => ({
     actionName: 'page-purchase-order',
     endpoint: 'SALE',
     type: 'PAGING_QUERY',
     payload: {
-      ...param.criteria,
+      //...param.criteria,
+      searchValue: param.criteria?.searchValue,
+      sorter: param.criteria?.sort,
       advanceSearch: {
+        distributorType: param.criteria?.advanceSearch?.distributorType,
         status: param.criteria?.advanceSearch?.status,
         salespersonId: param.criteria?.advanceSearch?.salespersonId,
         orderedDate: param.criteria?.advanceSearch?.dates && [

@@ -189,7 +189,7 @@ const ContactDetailView: React.FC<{ id: number, onRefresh?: () => void, onEdit: 
   };
   const dataReport = (data: { id?: number, label?: string, status?: string, contractTypeCode?: string }, exportType: 'PDF' | 'EXCEL'): DownloadData<CriteriaExportReport> => {
 
-    var direct = data?.contractTypeCode == 'OTHER' ? 'Display' : data?.contractTypeCode == 'IN_DIRECT' ? 'Indirect' : 'Direct'
+    var direct = data?.contractTypeCode == 'OTHER' ? 'DisplayV1' : data?.contractTypeCode == 'IN_DIRECT' ? 'Indirect' : 'Direct'
     var issued = data?.status == 'ISSUED' ? 'Issued' : ''
     var reportName = replace('SettlementIncentive@@##Report', '@@', direct)
     reportName = replace(reportName, '##', issued)

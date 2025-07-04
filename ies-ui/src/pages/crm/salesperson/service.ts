@@ -1,7 +1,6 @@
 import { RequestActions, ServiceApiType, singleRequest } from "@/services/apiGateway";
 import { SalePerson } from "@/services/crm/data";
 
-
 const SalespersonAction ={
     list:(param:any):ServiceApiType<{}> =>({
         actionName:"salesperson-org-list",
@@ -62,9 +61,20 @@ const SalespersonAction ={
         endpoint:"CRM",
         type:"EXEC",
         payload:param
+    }),
+    fetchSaleOrg:(param:{ saleId:number; parentId?:string }):ServiceApiType<{}>=>({
+        actionName:"fetch-sale-org",
+        endpoint:"CRM",
+        type:"FETCH_QUERY",
+        payload:param
+    }),
+    deleteAuditor:(param:{id?:number}):ServiceApiType<{}> =>({
+        actionName:"delete-sale-org-audit",
+        endpoint:"CRM",
+        type:"EXEC",
+        payload:param
     })
 }
-
 
 export const SalespersonOrgAPI  = (requestAction:RequestActions) =>{
     return {
@@ -75,5 +85,7 @@ export const SalespersonOrgAPI  = (requestAction:RequestActions) =>{
         addSalespersonOrg:(param:AddSalesperonOrg)=>singleRequest(SalespersonAction.addSalespersonOrg(param))(requestAction),
         moveSalespersonOrg:(param:{id:number})=>singleRequest(SalespersonAction.moveSalespersonOrg(param))(requestAction),
         saveSaleOrgAuditor:(param:{ saleId:number; targetSaleId:number; remark?:string })=>singleRequest(SalespersonAction.saveSaleOrgAuditor(param))(requestAction),
+        fetchSaleOrg:(param:{ saleId:number; parentId?:string })=>singleRequest(SalespersonAction.fetchSaleOrg(param))(requestAction) as Promise<SaleOrgAuditor>,
+        deleteAuditor:(param:{id:number})=>singleRequest(SalespersonAction.deleteAuditor(param))(requestAction),
     }
 }

@@ -82,7 +82,8 @@ export const model = (id?: number) => {
               'DAY_OF_WEEK',
               'CUSTOMER_TYPE',
               'CONTACT_CHANNEL_TYPE',
-              'CUSTOMER_DIVISION'
+              'CUSTOMER_DIVISION',
+              'SALE_SUB_CHANNEL'
             ],
           },
         },
@@ -104,7 +105,8 @@ export const model = (id?: number) => {
               'CUSTOMER_TYPE',
               'WEEK_OF_MONTH',
               'DAY_OF_WEEK',
-              'CUSTOMER_DIVISION'
+              'CUSTOMER_DIVISION',
+              'SALE_SUB_CHANNEL'
             ],
           },
         },

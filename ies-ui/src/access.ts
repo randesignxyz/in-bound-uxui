@@ -97,6 +97,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           'ROLE_CRM_SALE_ADMIN',
           'ROLE_SALESPERSON',
           'ROLE_ADMIN',
+          'ROLE_CRM_REGISTER_CUSTOMER'
         ].some((it) => it === item),
       ) || false,
 
@@ -612,7 +613,10 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         ['ROLE_PRO_PR_SUPPORT', 'ROLE_PRO_ADMIN', 'ROLE_PRO_PR_ADMIN'].some((it) => it === item),
       ) || false,
-
+    canAccessPRReport:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_PRO_PR_REPORT', 'ROLE_PRO_PR_SUPPORT', 'ROLE_PRO_ADMIN', 'ROLE_PRO_PR_ADMIN'].some((it) => it === item),
+      ) || false,
     canPostPoReport:
       currentUser?.authorities.some((item) =>
         ['ROLE_PRO_PO_SUPPORT', 'ROLE_PRO_ADMIN', 'ROLE_PRO_PR_ADMIN'].some((it) => it === item),
@@ -634,7 +638,9 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           'ROLE_HR_APPRAISAL_REQUEST_MANAGEMENT',
           'ROLE_HR_APPRAISAL_REQUEST_SM_EXECTIVE',
           'ROLE_HR_PROBATION_EVALUATION_SUBMIT',
-          'ROLE_HR_PROBATION_EVALUATION_SUPPORT'
+          'ROLE_HR_PROBATION_EVALUATION_SUPPORT',
+          'ROLE_HR_PROBATION_EVALUATION_VIEW',
+          'ROLE_HR_PROBATION_EVALUATION_REQUESTER',
         ].some((it) => it === item),
       ) || false,
     canAccessHrEmployeeMenuItem:
@@ -648,6 +654,10 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canAccessHrESSViewOnly:
       currentUser?.authorities.some((item) =>
         ['ROLE_HR_ESS_VIEW_ONLY'].some((it) => it === item),
+      ) || false,
+    canAccessHrESSImportTraing:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_HR_ESS_IMPORT_TRAINING','ROLE_ADMIN'].some((it) => it === item),
       ) || false,
     canAccessHrESSApprovalProfile:
       currentUser?.authorities.some((item) =>
@@ -792,7 +802,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       ) || false,
 
     canAccessTabWarehouse:
-      currentUser?.authorities.some((item) => ['ROLE_WAREHOUSE'].some((it) => it === item)) ||
+      currentUser?.authorities.some((item) => ['ROLE_WAREHOUSE','ROLE_ADMIN'].some((it) => it === item)) ||
       false,
     canAccessTabCashier:
       currentUser?.authorities.some((item) => ['ROLE_CASHIER'].some((it) => it === item)) || false,
@@ -865,7 +875,10 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_ICT_WF_IT_REQUEST_REQUESTER'].some((it) => it === item),
       ) || false,
-
+    canAccessITRequestReport:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_ICT_WF_IT_REQUEST_REPORT'].some((it) => it === item),
+      ) || false,
     canAccessFMANewStaffMenuITem:
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_FMA_WF_NEW_STAFF_VIEW'].some((it) => it === item),
@@ -925,7 +938,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       ) || false,
     canAccessProbationEvaluation:
       currentUser?.authorities.some((item) =>
-        ['ROLE_ADMIN', 'ROLE_HR_PROBATION_EVALUATION_SUBMIT', 'ROLE_HR_PROBATION_EVALUATION_SUPPORT'].some(
+        ['ROLE_ADMIN','ROLE_HR_PROBATION_EVALUATION_REQUESTER', 'ROLE_HR_PROBATION_EVALUATION_SUBMIT', 'ROLE_HR_PROBATION_EVALUATION_SUPPORT','ROLE_HR_PROBATION_EVALUATION_VIEW'].some(
           (it) => it === item,
         ),
       ) || false,
@@ -1016,11 +1029,50 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_NCM_REQUEST_CRITERIA_EXPORT_REPORT'].some((it) => it === item),
       ) || false,
+    canAccessNCMStoctRequestSalAdmin:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_NCM_STOCK_REQUEST_SAL_ADMIN'].some((it) => it === item),
+      ) || false,
     canAccessGratisConfig:
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_CRM_GRATIS_CONFIG'].some(
           (it) => it === item,
         ),
       ) || false,
+    canAccessHRProbationEvaluationExportReport:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_HR_PROBATION_EVALUATION_EXPORT_REPORT'].some((it) => it === item),
+      ) || false,
+    canAccessCrmRegisterCustomerMenuItem:
+      currentUser?.authorities.some((item) =>
+        [         
+          'ROLE_CRM_REGISTER_CUSTOMER',  
+          'ROLE_ADMIN',
+        ].some((it) => it === item),
+      ) || false, 
+    /* LH: PURCHASE ORDER MMA  */
+    canAccessRSMRequestToMPU:
+      currentUser?.authorities.some((item) =>
+        [
+          'ROLE_SALE_ADMIN',
+          'ROLE_SALE_ADMIN',
+          'ROLE_MPU_LEADER',
+          'ROLE_ACTIVATION_LEADER',
+          'ROLE_CASHIER',
+          'ROLE_CRM_ADMIN',
+          'ROLE_CRM_SALE_ADMIN',
+          'ROLE_DEVELOPER',
+          'ROLE_MPU',
+          'ROLE_RETAILER_APP',
+          'ROLE_SALESPERSON',
+          'ROLE_VAN_SALE_LEADER',
+          'ROLE_VAN_SALES',
+          'ROLE_WHAREHOUSE',
+        ].some((it) => it === item),
+      ) || false,
+
+    canCreateEditMpuRequest: true,
+    /* LH : END */
+   
   };
 }

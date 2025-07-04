@@ -3,7 +3,6 @@ import { getUrlReporting } from '@/pages/ReportUrl';
 import { downloadGenericReport } from '@/services/apiGateway';
 import { simpleRequestActions } from '@/services/model';
 import { SalesTeamWorkLess } from '@/services/sale/data';
-import { SaleServiceAPI } from '@/services/sale/services';
 import { ProForm, ProFormDateRangePicker, ProFormSelect } from '@ant-design/pro-components';
 import { Card, Spin, message } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
@@ -22,7 +21,7 @@ interface Props extends FormModalProps {
 export default (props: Props) => {
   const requestActions = simpleRequestActions();
 
-  const saleServices = SaleServiceAPI(requestActions);
+  //const saleServices = SaleServiceAPI(requestActions);
   // const [salesperson, setSalesperson] = useState<SalesTeamWorkLess[]>([]);
 
   //   const [selectedReportType, setSelectedReportType] = useState('sales_invoice');

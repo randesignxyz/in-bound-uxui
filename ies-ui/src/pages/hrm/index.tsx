@@ -56,7 +56,7 @@ export default () => {
             id: 'appraisal-request',
             name: 'Performance Request',
             description: 'Annual Performance Appraisal Request List',
-            visible: access.canAccessProbationEvaluation,
+            visible: access.canAccessAppraisalReaquest,
             link: `${HrmPaths.appraisalRequest}/list`,
             icon: performanceReview,
             menu: {

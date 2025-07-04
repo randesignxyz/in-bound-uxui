@@ -1,25 +1,24 @@
 import PageWrapper from "@/components/PageWrapper"
 import { useQuery } from "@umijs/max";
-import { Button, Modal, Space, Tag, Typography } from "antd"
+import { Button, message, Tag } from "antd"
 import { useRef, useState } from "react";
 import { FOCServiceAPI } from "./service";
 import { simpleRequestActions } from "@/services/model";
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
-import { ActionType, ProTable } from "@ant-design/pro-components";
-import { RollbackOutlined, RotateRightOutlined } from "@ant-design/icons";
+import { ActionType, LightFilter, ProFormSegmented, ProTable } from "@ant-design/pro-components";
+import { RetweetOutlined, RotateRightOutlined } from "@ant-design/icons";
 import FOCDetail from "./Detail";
+import UpdateStatusModal from "./UpdateStatusModal";
 
-interface Props {
 
-}
-
-const FOCMainPage: React.FC<Props> = () => {
+const FOCMainPage: React.FC<{}> = () => {
     const requestActions = simpleRequestActions();
     const actionRef = useRef<ActionType>();
-    const [filter, setFilter] = useState<TableViewSearchParams<FOCSearchParam>>({
+    const [filter, setFilter] = useState<TableViewSearchParams<FreeOfChargeTrackingAdvanceSearch>>({
         criteria: { advanceSearch: { status: 'ALL' } }
-    })
-    const { data, isFetching, refetch } = useQuery(['fetch-po-list', filter], () => FOCServiceAPI(requestActions).page(filter), {
+    });
+    const [updateModalState, setUpdateModalState] = useState<{ visible?: { name: "MODAL", payloads?: FreeOfChargeTrackingDTO } }>();
+    const { data, isFetching, refetch } = useQuery(['free-of-charge-tracking', filter], () => FOCServiceAPI(requestActions).page(filter), {
         refetchOnWindowFocus: false,
         keepPreviousData: false
     });
@@ -29,7 +28,7 @@ const FOCMainPage: React.FC<Props> = () => {
                 search={false}
                 options={false}
                 ghost
-                dataSource={parent.foc}
+                dataSource={parent.items}
                 pagination={false}
                 columns={[
                     {
@@ -52,102 +51,137 @@ const FOCMainPage: React.FC<Props> = () => {
                         title: "Remaining",
                         dataIndex: "usingQty"
                     },
-                    
+
                 ]}
             />
         );
     };
     return (
-        <PageWrapper
-            tabRender={(item)=>[
-                {
-                    action:"view",
-                    tabLabel: [item?.assignedToCode, item?.assignedTo].filter(p => p).join("-"),
-                    tabKey:item?.id,
-                    panel:({ onCloseTab, onUpdateTab, key })=><FOCDetail
-                        id={item?.id}
-                    />
-                }
-            ]}
-            listView={{
-                type: "Table",
-                title: "Free of Charge List",
-                statuses: [
-                    { option: { label: "All", value: "ALL" } },
-                    { option: { label: "Pending", value: "Pending" } },
-                    { option: { label: "Completed", value: "Completed" } },
-                ],
-                onRefresh: refetch,
-                onFilter(params, page, sort) {
-                    setFilter(v => ({
-                        criteria: {
-                            searchValue: params?.searchValue,
-                            advanceSearch: {
-                                status: params?.status
+        <>
+            <PageWrapper
+                tabRender={(item) => [
+                    {
+                        action: "view",
+                        tabLabel: [item?.salespersonCode, item?.salespersonName].filter(p => p).join("-"),
+                        tabKey: item?.id,
+                        panel: ({ onCloseTab, onUpdateTab, key }) => <FOCDetail
+                            id={item?.id}
+                        />
+                    }
+                ]}
+                listView={{
+                    type: "Table",
+                    title: "Free of Charge List",
+                    statuses: [
+                        { option: { label: "All", value: "ALL" } },
+                        { option: { label: "Pending", value: "Pending" } },
+                        { option: { label: "Completed", value: "Completed" } },
+                    ],
+                    onExtraFilterRender: () => {
+
+                        return (
+                            <>
+                                <LightFilter
+                                    onFinish={(value) => {
+                                        setFilter((v) => ({
+                                            criteria: {
+                                                advanceSearch: {
+                                                    ...v.criteria?.advanceSearch,
+                                                    sourceSupply: value.sourceSupply
+                                                }
+                                            }
+                                        }));
+                                    }}
+                                >
+                                    <ProFormSegmented
+                                        name="sourceSupply"
+                                        initialValue={"ALL"}
+                                        fieldProps={{
+                                            options: [
+                                                { value: "ALL", label: "All" },
+                                                { value: "L911154", label: "Warehouse OFL" },
+                                                { value: "distributor", label: "Distributor" },
+                                            ]
+                                        }}
+                                    />
+
+
+                                </LightFilter>
+                            </>
+                        )
+                    },
+                    onRefresh: refetch,
+                    onFilter(params, page, sort) {
+                        setFilter(v => ({
+                            criteria: {
+                                searchValue: params?.searchValue,
+                                advanceSearch: {
+                                    status: params?.status
+                                },
+                                sort: sort
+                            },
+                            pagination: { ...page },
+                            sort: sort
+                        }))
+                    },
+                    props: {
+                        dataSource: data?.items,
+                        actionRef: actionRef,
+                        loading: isFetching,
+                        pagination: {
+                            total: data?.total
+                        },
+                        expandable: { expandedRowRender: expendableRender },
+                        columns: [
+                            {
+                                title: "Received By",
+                                sorter: "salespersonCode",
+                                actionProps: (r) => ({
+                                    type: 'view',
+                                    label: [r.salespersonCode, r.salespersonName].filter(p => p).join("-") || 'n/a',
+                                }),
+                            },
+                            {
+                                title: "Distributor",
+                                sorter: "distributorCode",
+                                render: (_, r) => [r.distributorCode, r.distributorName].filter(p => p).join("-")
+                            },
+                            {
+                                title: "Received Date",
+                                dataIndex: "receivedDate",
+                                valueType: "date",
+                                sorter: "receivedDate"
+                            },
+                            {
+                                title: "Status",
+                                render: (_, r) => <Tag bordered={false} color={r.status == "Completed" ? "success" : "processing"} >{r.status}</Tag>
+                            },
+                            {
+                                title: "Action",
+                                render: (_, r) => <Button size="small"
+                                    hidden={r?.status == "Completed" ? true : false}
+                                    onClick={() => setUpdateModalState({ visible: { name: "MODAL", payloads: r } })}
+                                    type="link"
+                                 icon={<RetweetOutlined />}
+                                >Settle</Button>
                             }
-                        },
-                        pagination: { ...page },
-                        sort: sort
-                    }))
-                },
-                props: {
-                    dataSource: data?.items,
-                    actionRef: actionRef,
-                    loading: isFetching,
-                    expandable: { expandedRowRender: expendableRender },
-                    columns: [
-                        {
-                            title: "Received By",
-                            actionProps: (r) => ({
-                                type: 'view',
-                                label: [r.assignedToCode, r.assignedTo].filter(p => p).join("-") || 'n/a',
-                            }),
-                        },
-                        {
-                            title: "Distributor",
-                            render: (_, r) => [r.distributorCode, r.distributorName].filter(p => p).join("-")
-                        },
-                        {
-                            title: "Received Date",
-                            dataIndex: "requestedDate",
-                            valueType: "date"
-                        },
-                        // {
-                        //     title: "Settlement Date",
-                        //     dataIndex: "poDate",
-                        //     valueType: "date"
-                        // },
-                        {
-                            title: "Item Count",
-                            render: (_, r) => r.foc?.length
-                        },
-                        {
-                            title: "Status",
-                            render: (_, r) => <Tag bordered={false} color={r.foc?.[0]?.status == "Completed" ? "success" : "processing"} >{r.foc?.[0]?.status}</Tag>
-                        },
-                        {
-                            title: "Action",
-                            render: (_, r) => <Button size="small"
-                                hidden={r.foc?.[0]?.status == "Completed" ? true : false}
-                                onClick={() => {
-                                    Modal.confirm({
-                                        title: `Return FOC borrowed From ${r.distributorCode}`,
-                                        content: <Space direction="vertical">
-                                            <Typography.Text>Make return stock to distrubutor for closed foc.</Typography.Text>
-                                            <Typography.Text type="warning">are you sure?</Typography.Text>
-                                        </Space>,
-                                        onOk: async () => {
-                                            FOCServiceAPI(requestActions).closedFOC({id:r.id});
-                                            actionRef.current?.reload?.();
-                                        }
-                                    })
-                                }}
-                                type="link" icon={<RotateRightOutlined />}>Close</Button>
-                        }
-                    ]
-                }
-            }}
-        />
+                        ]
+                    }
+                }}
+            />
+
+            <UpdateStatusModal
+                open={updateModalState?.visible?.name == "MODAL"}
+                data={updateModalState?.visible?.payloads}
+                onCancel={() => setUpdateModalState({ visible: undefined })}
+                onSave={async (data) => {
+                    await FOCServiceAPI(requestActions).updateStatus(data);
+                    actionRef.current?.reload?.();
+                    setUpdateModalState({ visible: undefined });
+                    message.success("Done!")
+                }}
+            />
+        </>
     )
 }
 

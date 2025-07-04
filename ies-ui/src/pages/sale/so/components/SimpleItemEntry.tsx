@@ -1,5 +1,6 @@
 import FormModalComp, { FormModalProps } from '@/components/FormModal';
-import { BudgetCodeLess, ProductItem, SoLineItemEntry } from '@/services/sale/data';
+import { LookupDataItem } from '@/services/data';
+import { BudgetCodeLess, ProductItem, SaveUoM, SoLineItemEntry } from '@/services/sale/data';
 import ProForm, {
   ProFormDigit,
   ProFormField,
@@ -7,12 +8,11 @@ import ProForm, {
   ProFormText,
   ProFormTextArea,
 } from '@ant-design/pro-form';
-import { uniqueId } from 'lodash';
-import { useForm } from 'antd/lib/form/Form';
-import { useEffect, useState } from 'react';
 import { Card, Spin } from 'antd';
+import { useForm } from 'antd/lib/form/Form';
+import { uniqueId } from 'lodash';
+import { useEffect, useState } from 'react';
 import { SoItemEntry } from '../reducer';
-import { LookupDataItem } from '@/services/data';
 
 const layout = {
   labelCol: { span: 6 },
@@ -27,6 +27,7 @@ interface Props extends FormModalProps {
     budgetList?: BudgetCodeLess[];
     defaultSaleType?: LookupDataItem;
     saleTypes?: LookupDataItem[];
+    uomList?: SaveUoM[];
   };
   actionHandlers: {
     onAddItem?: (soItem: SoItemEntry) => void;
@@ -35,7 +36,7 @@ interface Props extends FormModalProps {
 
 const SimpleItemEntry: React.FC<Props> = ({ data, loading, actionHandlers, ...props }) => {
   const [form] = useForm<SoLineItemEntry>();
-  const uomList = [{ id: 1, name: 'Case' }];
+  // const uomList = [{ id: 1, name: 'Case' }];
   const [saleType, setSaleType] = useState<string | undefined>(data.defaultSaleType?.code);
   const [budgetCodes, setBudgetCodes] = useState<LookupDataItem[]>([]);
 
@@ -136,7 +137,7 @@ const SimpleItemEntry: React.FC<Props> = ({ data, loading, actionHandlers, ...pr
   const onSubmitActionHandler = async () => {
     if (!data.productItem) throw Error('Not product item found.');
     const dataForm = await form.validateFields();
-    const uom = uomList.find((it) => it.id === dataForm.uomId);
+    const uom = data.uomList?.find((it) => it.id === dataForm.uomId);
 
     if (!uom) throw new Error('UoM not found.');
 
@@ -209,7 +210,7 @@ const SimpleItemEntry: React.FC<Props> = ({ data, loading, actionHandlers, ...pr
               label="UoM"
               rules={[{ required: true }]}
               allowClear={false}
-              options={[{ value: 1, label: 'Each' }]}
+              options={data.uomList?.map((e) => ({ value: e.id, label: e.code }))}
             />
             <ProFormField
               readonly

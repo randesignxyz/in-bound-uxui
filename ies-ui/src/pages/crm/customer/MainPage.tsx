@@ -41,6 +41,7 @@ export default ({ getMenuItems }: CustomerActionController) => {
         refetchOnWindowFocus: false
     });
     const { state, ops, modals } = model();
+
     const access = useAccess();
     return <Spin spinning={loading}>
         <PageWrapper<CustomerItemLess, FilterType, {}>
@@ -153,6 +154,7 @@ export default ({ getMenuItems }: CustomerActionController) => {
                         onClick:()=>{
                             try{
                                CustomerServices.syncExecStoreProcedureCustomer()(requestAction).then(()=>{
+                                actionRef.current?.reload?.();
                                 message.success("Success!")
                                }).catch((err)=>{
                                 message.error("Something went wrong!")

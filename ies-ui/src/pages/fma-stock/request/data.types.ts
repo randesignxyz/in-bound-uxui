@@ -73,6 +73,8 @@ export interface StockRequest {
   delivery?: boolean;
   items: StockRequestItem[];
   fileIds: string[];
+  requestorId: string;
+  requestorBuId: number;    
 }
   
 

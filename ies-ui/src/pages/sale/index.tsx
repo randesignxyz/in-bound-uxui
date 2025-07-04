@@ -1,11 +1,9 @@
 import reportIcon from '@/assets/clipboard.png';
 import userIcon from '@/assets/customer.png';
 import deliveryIcon from '@/assets/delivery.png';
-import plannerIcon from '@/assets/planner.png';
 import productIcon from '@/assets/product.png';
 import scheduleIcon from '@/assets/schedule.png';
 
-import pricingIcon from '@/assets/price-64.png';
 // import customerIcon from '@/assets/people.png';
 import settlementIcon from '@/assets/receive-cash.png';
 // import orderItemIcon from '@/assets/requisition.png';
@@ -15,12 +13,11 @@ import dailyReportIcon from '@/assets/dsd-report-icon.png';
 import agreementIcon from '@/assets/agreement.png';
 import purchaseOrderIcon from '@/assets/order-items.png';
 
+import salesInvoiceIcon from '@/assets/invoice.png';
 import saleIcon from '@/assets/shopping.png';
 import stockCountId from '@/assets/stock-count.png';
 import stockIcon from '@/assets/stock.png';
 import storeIcon from '@/assets/store.png';
-
-import FOC from '@/assets/free.png';
 
 import type { ListMenuItem } from '@/components/ListMenu';
 import ListMenuComp from '@/components/ListMenu';
@@ -100,19 +97,19 @@ export default () => {
   };
 
   const stockMenuItems: ListMenuItem[] = [
-    {
-      id: 'suggestion',
-      name: 'Task List',
-      description: 'All suggestions from Salesperson.',
-      link: `${SalePaths.suggestion}/list`,
-      icon: plannerIcon,
-      // visible: access.canAcessStockControlMenuItem || access.canAccessSettlementMenuItem,
-      visible: access.canAccessSaleTaskList,
-    },
+    // {
+    //   id: 'suggestion',
+    //   name: 'Task List',
+    //   description: 'All suggestions from Salesperson.',
+    //   link: `${SalePaths.suggestion}/list`,
+    //   icon: plannerIcon,
+    //   // visible: access.canAcessStockControlMenuItem || access.canAccessSettlementMenuItem,
+    //   visible: access.canAcessStockControlMenuItem,
+    // },
     {
       id: 'store',
       name: 'Store',
-      description: '',
+      description: 'Store for Salespersons',
       link: `${SalePaths.store}/list`,
       icon: storeIcon,
       // visible: access.canAccessAllMenuDSD || access.canAccessTabWarehouse,
@@ -129,7 +126,7 @@ export default () => {
     {
       id: 'sales-visit',
       name: 'Visit',
-      description: 'DSD Visit',
+      description: 'Visit without plan.',
       link: `${SalePaths.visit}/list`,
       icon: scheduleIcon,
       // visible: access.canAccessAllMenuDSD,
@@ -148,7 +145,7 @@ export default () => {
     {
       id: 'lead',
       name: 'Lead',
-      description: 'CnD Customers',
+      description: 'Outlet Information',
       link: `${SalePaths.lead}/list`,
       //overlay: leadReportMenu,
       icon: userIcon,
@@ -166,7 +163,7 @@ export default () => {
     {
       id: 'dsdReport',
       name: 'Reports',
-      description: 'All Reports in DSD.',
+      description: 'All Reports',
       icon: reportIcon,
       visible: access.canAccessSaleReport || access.canAccessSaleDailyReport,
       menu: {
@@ -181,15 +178,15 @@ export default () => {
             case 'dsd-reports':
               setReport('dsd-reports');
               break;
-            case 'visit-reports': 
+            case 'visit-reports':
               setReport('visit-report');
               break;
             case 'purchase-order-reports':
               setReport('purchase-order-reports');
               break;
             case 'performance-po-report':
-                setReport('performance-po-report');
-                break;
+              setReport('performance-po-report');
+              break;
             default:
               message.error('Something went wrong.');
           }
@@ -218,28 +215,29 @@ export default () => {
       //   setReport('dsd-reports');
       // },
     },
-    {
-      id: 'item-sales-line-price',
-      name: 'Pricing',
-      description: 'Setting Pricing for CnD',
-      icon: pricingIcon,
-      visible: access.canAccessAllMenuDSD,
-      link: `${SalePaths.pricing}/list`,
-    },
+    // {
+    //   id: 'item-sales-line-price',
+    //   name: 'Pricing',
+    //   description: 'Pricing for Sales Invoice',
+    //   icon: pricingIcon,
+    //   visible: access.canAccessAllMenuDSD,
+    //   link: `${SalePaths.pricing}/list`,
+    // },
     {
       id: 'mpu_po',
       name: 'Purchase Order',
       description: 'Make P.O for Stock Receive.',
       link: `${MPUPath.mpuPurchaseOrder}/list`,
       icon: purchaseOrderIcon,
-      visible: access.canAccessViewMpu || access.canAccessSaleDailyReport,
+      visible:
+        access.canAccessViewMpu || access.canAccessSaleDailyReport || access.canAccessTabWarehouse,
     },
     {
       id: 'stock-count',
       name: 'Stock Counts',
       description: 'Daily Stock Count Review',
       icon: stockCountId,
-      visible: access.canAccessAllMenuDSD || access.canAccessSaleDailyReport,
+      visible: access.canAcessStockControlMenuItem || access.canAccessSaleDailyReport,
       link: `${MPUPath.mpuCountStock}/list`,
     },
     {
@@ -253,14 +251,35 @@ export default () => {
         access.canAccessSettlementMenuItem,
       link: `${MPUPath.mpuSettlement}/list`,
     },
+
     {
-      id: 'free-of-charge',
-      name: 'Free Of Charge',
-      description: '',
-      icon: FOC,
-      visible: access.canAccessAllMenuDSD,
-      link: `${MPUPath.mpuFOC}/list`,
+      id: 'invoice',
+      name: 'Sales Invoice',
+      description: 'Daily Sales Invoice',
+      icon: salesInvoiceIcon,
+      visible:
+        access.canAccessAllMenuDSD ||
+        access.canAccessSaleDailyReport ||
+        access.canAccessSettlementMenuItem,
+      link: `${MPUPath.salesInvoice}/list`,
     },
+
+    // {
+    //   id: 'free-of-charge',
+    //   name: 'Free Of Charge',
+    //   description: '',
+    //   icon: FOC,
+    //   visible: access.canAcessStockControlMenuItem,
+    //   link: `${MPUPath.mpuFOC}/list`,
+    // },
+    // {
+    //   id: 'mpu_po',
+    //   name: 'Purchase Order',
+    //   description: 'Under warehouse review.',
+    //   link: `${MPUPath.warehousePOPortal}/list`,
+    //   icon: purchaseOrderIcon,
+    //   visible: access.canAccessTabWarehouse,
+    // },
   ];
 
   const items: ListMenuItem[] = [

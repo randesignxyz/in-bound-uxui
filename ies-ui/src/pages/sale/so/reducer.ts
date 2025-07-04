@@ -9,6 +9,7 @@ import {
   PackageOffer,
   ProductItem,
   ProductItemLess,
+  SaveUoM,
   So,
   SoDeliveryMethod,
   SoDetail,
@@ -85,6 +86,7 @@ export interface InitData {
   customers?: CustomerItemLess[];
   salespersons?: LookupDataItem[];
   listBudget?: BudgetCodeLess[];
+  uomList?: SaveUoM[];
 }
 
 export interface State extends StateType<ModalName> {
@@ -124,6 +126,7 @@ export type Action =
   | { type: 'setCustomerSaleInfo'; payload: CustomerSaleInfo }
   | { type: 'setTransportations'; payload: PackageOffer[] }
   | { type: 'setSoSummary'; payload: SoSummary }
+  // | { type: 'initUom'; payload: SaveUoM[] }
   | {
       type: 'setAttachments';
       payload: { id: number; imageId: string; status: string }[];
@@ -143,7 +146,14 @@ export const reducer = (state: State, action: Action): State => {
           // addressList: action.payload?.addressList,
         },
       };
-
+    // case 'initUom':
+    //   return {
+    //     ...state,
+    //     data: {
+    //       ...state.data,
+    //       ...action.payload,
+    //     },
+    //   };
     case 'saveSoItem': {
       return {
         ...state,

@@ -38,6 +38,7 @@ export interface SaveEssProfile {
 
   permanentAddress : string;  
   religionId    : number;  
+  religionName  : string; 
   stepId    : number;  
   currentAddress   : string;  
 
@@ -175,6 +176,8 @@ export interface SaveLanguage {
   empId:number;
   isDelete:number;
   languageId: number; 
+  languageName: string; 
+  typeId: number; 
   openId: number; 
   levelName: string; 
   description: string;  
@@ -259,6 +262,7 @@ export interface TrainingData {
   status      : Boolean;
   openId:number;
   otherFile   : AttachmentFile[];
+  dataSource  : string;
 }
 export interface ProfileTrainingData { 
   data            : TrainingData[];  
@@ -334,7 +338,8 @@ export interface EducationData {
   educationYear    : moment.Moment[]; 
   fromYear    : moment.Moment; 
   toYear      : moment.Moment; 
-  marjorSubject: string;  
+  marjorSubject: number; 
+  marjorSubjectName?: string;  
   type        : string; 
   gpa        :  number; 
   status      : boolean;
@@ -343,6 +348,9 @@ export interface EducationData {
   statusName  : string; 
   openId:number;
   countryEducationCenterName: string; 
+  educationCenter?: string;  
+  majorName?: string;
+
 }
 export interface ProfileEducationData { 
   data        : EducationData[];  
@@ -393,13 +401,13 @@ export interface FilesData {
   createdDate: moment.Moment; 
 } 
 export interface MarjorData {
-  id?: string;  
+  id?: number;  
   majorName:string;
   description: string;   
   status:number;
 } 
 export interface EssLookupData {
-  id?: string;  
+  id?: number;  
   titleName:string;
   description: string;   
   type:number;

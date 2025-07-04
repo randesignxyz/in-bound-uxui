@@ -1,6 +1,6 @@
 import { ProCard, ProTable } from "@ant-design/pro-components"
-import { Button, message, Modal, Space, Typography,Card , Flex} from 'antd'; 
-import { DeleteOutlined, EditOutlined, EyeOutlined, PlusCircleFilled, PlusOutlined } from "@ant-design/icons";
+import { Button, message, Modal, Space, Typography,Card , Flex, Tooltip} from 'antd'; 
+import Icon, { DeleteOutlined, EditOutlined, EyeOutlined, ImportOutlined, PlusCircleFilled, PlusOutlined } from "@ant-design/icons";
 import { useEffect,useState } from 'react';
 import { ProfileData} from '../data';
 import { TrainingData,  SaveTraining, FilesData } from "../data.ess";  
@@ -12,6 +12,7 @@ import { formatDate, formatDATEFUll, formatMonth, formatMonthFull, formatYear } 
 import TrainingModal from '../modal/TrainingModal';
 import CertificationModal from "../modal/CertificationModal";
 import { useAccess } from '@umijs/max';
+import importIcon from '@/assets/import.png'
 
 
 interface Props {
@@ -263,12 +264,20 @@ export default ({ profile ,step,is_admin,empId,cb}: Props) => {
                         }}
                         columns={[
                             {
-                                title: "Courses", dataIndex: "trainingCourse",width:250
+                                title: "", dataIndex: "dataSource",width:16,
+                                render: (dom, r) => {
+                                    return r.dataSource=='imported'? <Tooltip title='By Imported'><img src={importIcon} style={{ height: 16, width: 16 }}/></Tooltip> :''
+                                }
+                                
+                            },
+                            {
+                                title: "Courses", dataIndex: "trainingCourse",//,width:250
                             },{
-                                title: "Institution", dataIndex: "institution",width:250
+                                title: "Institution", dataIndex: "institution"//,width:250
                             },{
                                 title: "Date", 
                                 dataIndex: "year",
+                                width:200,
                                 render:(dom, r) => {
                                     return (formatDATEFUll(r.year) +" - "+ formatDATEFUll(r.toYear));
                                 }

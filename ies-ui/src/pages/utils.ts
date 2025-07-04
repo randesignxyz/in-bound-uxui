@@ -440,5 +440,6 @@ export function encryptToBase64(text: string): string {
     const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
     let encrypted = cipher.update(text, 'utf8');
     encrypted = Buffer.concat([encrypted, cipher.final()]);
-    return encrypted.toString('base64');  // ciphertext to send to Django
+    const base64 = encrypted.toString('base64');
+    return base64.replace(/\//g, '_')  // ciphertext to send to Django
 }

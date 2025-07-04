@@ -845,6 +845,22 @@ export default [
     access: 'canAccessDeliveryTruck',
     component: './delivery/location-tracking',
   },
+  // {
+  //   path: '/delivery/associate/del/:view/*',
+  //   name: 'associateDel',
+  //   icon: 'UnorderedListOutlined',
+  //   hideInMenu: 'true',
+  //   access: 'canAccesAssociateDelView',
+  //   component: './delivery/associate/del',
+  // },
+  // {
+  //   path: '/delivery/associate/sale/:view/*',
+  //   name: 'associateSale',
+  //   icon: 'UnorderedListOutlined',
+  //   hideInMenu: 'true',
+  //   access: 'canAccesAssociateSale',
+  //   component: './delivery/associate/sale',
+  // },
 
   /************************ Queque  ******************/
 

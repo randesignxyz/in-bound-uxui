@@ -53,7 +53,7 @@ export const RegisterCustomerParams = {
     ): ServiceApiType<{ searchValue?: string }> => ({
       type: 'PAGING_QUERY',
       endpoint: 'CRM',
-      actionName: 'list-register-customer',
+      actionName: 'list-rc-sa',
       payload: { ...params.criteria },
       pagination: {
         pageSize: params.pagination?.pageSize,
@@ -63,13 +63,13 @@ export const RegisterCustomerParams = {
     save: (params: RegisterCustomer): ServiceApiType<RegisterCustomer> => ({
         type: 'EXEC',
         endpoint: 'CRM',
-        actionName: 'save-register-customer',
+        actionName: 'save-rc-sa',
         payload: { ...params },
     }),
     submit:  (params: RegisterCustomer): ServiceApiType<RegisterCustomer> => ({
       type: 'EXEC',
       endpoint: 'CRM',
-      actionName: 'submit-register-customer',
+      actionName: 'submit-rc-sa',
       payload: { ...params },
     }),
     cancelForm:  (id: number): ServiceApiType<RegisterCustomer> => ({

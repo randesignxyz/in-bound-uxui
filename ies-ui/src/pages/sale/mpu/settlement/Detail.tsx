@@ -356,6 +356,7 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
         {dataSource?.purchaseOrder?.map((p) => {
           const totalItem = p.items?.reduce((p, c) => p + c.quantity, 0);
           const totalAmount = p.items?.reduce((p, c) => p + c.quantity * c.pricing, 0);
+          const sosAmount = p.items?.reduce((p, c) => p + c.unitCost * c.quantity, 0);
           return (
             <Card key={p.id} size="small" title={'Purchase Order'}>
               <Collapse
@@ -398,6 +399,20 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                             render: () => (
                               <Typography.Text type="success">
                                 {numeral(totalAmount).format('$ 0,000.000')}
+                              </Typography.Text>
+                            ),
+                          },
+                          {
+                            title: '',
+                          },
+                          {
+                            title: '',
+                          },
+                          {
+                            title: 'Source of Supply Cost',
+                            render: () => (
+                              <Typography.Text type="success">
+                                {numeral(sosAmount).format('$ 0,000.000')}
                               </Typography.Text>
                             ),
                           },
@@ -472,6 +487,12 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                           {
                             title: 'Quantity',
                             dataIndex: 'quantity',
+                            align: 'right',
+                          },
+                          {
+                            title: 'Unit Cost',
+                            // dataIndex: 'unitCost',
+                            render: (_, r) => numeral(r.unitCost).format('$ 0,000.000'),
                             align: 'right',
                           },
                           {

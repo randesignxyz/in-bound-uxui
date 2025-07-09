@@ -29,7 +29,7 @@ import {
   Typography,
   message,
 } from 'antd';
-import { max } from 'lodash';
+import { groupBy, map, max } from 'lodash';
 import moment from 'moment';
 import numeral from 'numeral';
 import { useEffect, useRef, useState } from 'react';
@@ -803,6 +803,138 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
             />
           </Card>
         )}
+        {dataSource &&
+          dataSource.purchaseOrder &&
+          dataSource.purchaseOrder.length > 0 &&
+          dataSource.salesInvoices &&
+          dataSource.salesInvoices.length > 0 && (
+            <Card size="small" title="Source of Supply Settlement">
+              <Collapse
+                ghost
+                key={'collapSourceOfSupply'}
+                items={[
+                  {
+                    key: 'ItemColSalesInvoice',
+                    label: (
+                      <ProDescriptions
+                        size="small"
+                        dataSource={{
+                          vitalTotalQuantity: dataSource.purchaseOrder.reduce(
+                            (a, e) =>
+                              a +
+                              e
+                                .items!.filter((e) => e.stockCategoryId === 131)
+                                .reduce((x, y) => x + y.quantity, 0),
+                            0,
+                          ),
+                          meechietTotalQuantity: dataSource.purchaseOrder.reduce(
+                            (a, e) =>
+                              a +
+                              e
+                                .items!.filter((e) => e.stockCategoryId === 132)
+                                .reduce((x, y) => x + y.quantity, 0),
+                            0,
+                          ),
+                          vitalSoldQantity: dataSource.salesInvoices.reduce(
+                            (a, e) =>
+                              a +
+                              e.items
+                                .filter((e) => e.stockCategoryId === 131)
+                                .reduce((x, y) => x + y.quantity, 0),
+                            0,
+                          ),
+                          meechietSoldQantity: dataSource.salesInvoices.reduce(
+                            (a, e) =>
+                              a +
+                              e.items
+                                .filter((e) => e.stockCategoryId === 132)
+                                .reduce((x, y) => x + y.quantity, 0),
+                            0,
+                          ),
+                          mapPricing: map(
+                            groupBy(
+                              dataSource.purchaseOrder!.flatMap((e) => e.items!),
+                              (e) => e.itemCode,
+                            ),
+                            (values, key) => ({
+                              key: key,
+                              value: values[0].unitCost,
+                            }),
+                          ),
+
+                          mapInvoices: map(
+                            groupBy(
+                              dataSource.salesInvoices!.flatMap((e) => e.items!),
+                              (e) => e.itemCode,
+                            ),
+                            (values, key) => ({
+                              key: key,
+                              value: values.reduce((a, e) => a + e.quantity, 0),
+                            }),
+                          ).reduce((a, e) => a.set(e.key, e.value), new Map()),
+                          // grandTotal: dataSource?.salesInvoices.reduce(
+                          //   (a, e) => a + e.subAmount,
+                          //   0.0,
+                          // ),
+                        }}
+                        // contentStyle={{ fontWeight: 500 }}
+                        column={{ xs: 1, sm: 2, md: 3, lg: 5, xl: 5, xxl: 5 }}
+                        // column={4}
+                        columns={[
+                          {
+                            title: 'Total Quantity (Vital)',
+                            dataIndex: 'vitalTotalQuantity',
+                            // span: 2,
+                          },
+                          {
+                            title: 'Total Quantity (Mee Chiet)',
+                            dataIndex: 'meechietTotalQuantity',
+                            // span: 2,
+                          },
+
+                          {
+                            title: 'Sold Quantity (Vital)',
+                            dataIndex: 'vitalSoldQantity',
+                            // render: (_, r) => (
+                            //   <Typography.Text type="danger">
+                            //     {numeral(r.discount).format('$ 0,000.000')}
+                            //   </Typography.Text>
+                            // ),
+                          },
+                          {
+                            title: 'Sold Quantity (Mee Chiet)',
+                            dataIndex: 'meechietSoldQantity',
+                            // render: (_, r) => (
+                            //   <Typography.Text type="danger">
+                            //     {numeral(r.discount).format('$ 0,000.000')}
+                            //   </Typography.Text>
+                            // ),
+                          },
+                          {
+                            title: 'Grand Amount',
+                            render: (_, r) => {
+                              const amount = r.mapPricing.reduce(
+                                (a, t) => a + t.value * (r.mapInvoices.get(t.key) ?? 0.0),
+                                0.0,
+                              );
+                              return (
+                                <Typography.Text type="success">
+                                  {numeral(amount).format('$ 0,000.000')}
+                                </Typography.Text>
+                              );
+                            },
+                            // render: (_, r) => {
+                            //   return;
+                            // },
+                          },
+                        ]}
+                      />
+                    ),
+                  },
+                ]}
+              />
+            </Card>
+          )}
         <Card size="small">
           <ProTable
             size="small"

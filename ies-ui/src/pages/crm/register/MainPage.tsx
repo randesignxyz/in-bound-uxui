@@ -1,7 +1,7 @@
 import PageWrapper from "@/components/PageWrapper"
-import { CopyFilled, ExportOutlined, EyeFilled, FileOutlined, PlusCircleOutlined } from "@ant-design/icons"
-import { Spin } from "antd"
-import { RegisterCuistomerInfoAdvanceSearchParams, RegisterCustomer, RegisterCustomerListItem } from "./data"
+import { FileOutlined, UploadOutlined } from "@ant-design/icons"
+import { Button, message, Modal, Spin } from "antd"
+import { RegisterCuistomerInfoAdvanceSearchParams, RegisterCustomerListItem } from "./data"
 import DataEntryView from "./DataEntryView"
 import { RegisterCustomerServiceAPI } from "./services"
 import { useQuery } from "@umijs/max"
@@ -14,16 +14,12 @@ import { RegisterCustomerRequestFormNames } from "./process-flow"
 
 export default()=>{
     const services = RegisterCustomerServiceAPI()
-     const [filter, setFilter] = useState<TableViewSearchParams<RegisterCuistomerInfoAdvanceSearchParams>>({
-            criteria: { advanceSearch: { status: 'ALL' } }
-        })
-       const { data, isLoading, refetch } = useQuery(['fetch-register-customer-list', filter], () => services.list(filter), {
-            refetchOnWindowFocus: false
-        })
-    
-    function onDetailhandler(item: RegisterCustomerListItem): void {
-        throw new Error("Function not implemented.")
-    }
+    const [filter, setFilter] = useState<TableViewSearchParams<RegisterCuistomerInfoAdvanceSearchParams>>({
+        criteria: { advanceSearch: { status: 'ALL' } }
+    })
+    const { data, isLoading, refetch } = useQuery(['fetch-register-customer-list', filter], () => services.list(filter), {
+        refetchOnWindowFocus: false
+    })
 
     return(<Spin spinning={isLoading}>
         <PageWrapper<RegisterCustomerListItem, RegisterCuistomerInfoAdvanceSearchParams, {}>
@@ -32,10 +28,10 @@ export default()=>{
                     action: "add",
                     tabIcon: <FileOutlined />,
                     tabLabel: 'New Register',
-                    panel: (props) =>   <DataEntryView type="CREATE"
+                    panel: (props) =>  <DataEntryView type="CREATE"
                                             onCloseTab={() => {
                                                 props?.onCloseTab?.()
-                                                // refetch()
+                                                refetch()
                                             }} 
                                             // openInTab onBack={() => { }} type="CREATE" 
                                             />,
@@ -60,7 +56,13 @@ export default()=>{
                     {
                         option: { label: 'Submitted', value: 'SUBMITTED', }, subOptions: [
                             { label: 'All', value: 'ALL', default: true },
-                            { label: 'Approved', value: 'APPROVED' },
+                            { label: 'Pending', value: 'PENDING' }, 
+                            { label: 'Approved', value: 'APPROVED', subOptions:[  
+                                    { label: 'All', value: 'ALL', default: true },
+                                    { label: 'Posted', value: 'POSTED' },
+                                    { label: 'Failed', value: 'FAILED' }
+                                ] 
+                            },
                             { label: 'Rejected', value: 'REJECTED' },
                         ]
                     },
@@ -77,8 +79,9 @@ export default()=>{
                             advanceSearch: {
                                 ...v.criteria?.advanceSearch,
                                 ...params,
-                                status: params?.status || 'ALL',
-                                processStatus: params?.subStatus
+                                status: params?.subStatus==='REJECTED'? 'CANCELED':params?.status || 'ALL',
+                                processStatus: params?.subStatus,
+                                postedStatus: params?.subStatus2
                             },
                             sort: sort,
                         },
@@ -138,11 +141,65 @@ export default()=>{
                             render: (_, r) => r.status && <Status size="small" text={r.status} />,
                         },
                         {
-                            title: 'Workflow Status',
-                            dataIndex: 'processStatus',
-                            width: 100,
-                            render: (_, r) => r.status && <Status size="small" text={r.processStatus||"NA"} />,
+                            title: 'Work Flow',
+                            children: [{
+                                 title: 'Status',
+                                dataIndex: 'processStatus',
+                                width: 100,
+                                render: (_, r) => r.status && <Status size="small" text={r.processStatus||"NA"} />,
+                            }]
                         },
+                        {
+                            title: 'SAP Information',
+                            hideInTable: !['SUBMITTED', 'ALL'].some((it) => it == filter.criteria?.advanceSearch?.status),
+                            children: [
+                                // {
+                                //     title: 'DocNum',
+                                //     width: 100,
+                                //     dataIndex: 'sapDocNo',
+                                //     // hideInTable: !['APPROVED', 'ALL'].some((it) => it == advanceSearchParams.status),
+                                // },
+                                {
+                                    title: 'Posted Date',
+                                    width: 100,
+                                    // hideInTable: !['APPROVED', 'ALL'].some((it) => it == advanceSearchParams.status),
+                                    render: (_, r) => formatDate(r.postedDate),
+                                },
+                                {
+                                    title: 'Status',
+                                    width: 100,
+
+                                    dataIndex: 'sapStatus',
+                                    hideInTable: !['SUBMITTED', 'ALL'].some((it) => it == filter.criteria?.advanceSearch?.status),
+                                    render: (_, r) => r.sapStatus && <Status size="small" text={r.sapStatus||"NA"} />,
+                                },
+                            ],
+                        },
+                        {
+                            width: 5,
+                            render: (_, r) => (<>
+                                {r.sapStatus == 'FAILED' && r.processStatus == 'APPROVED' && <Button title='Post to SAP' danger type="link" 
+                                    onClick={() => {
+                                        Modal.confirm({
+                                            title: 'Post to SAP',
+                                            content: 'Are you sure?',
+                                            onOk: async () => {
+                                                try {
+                                                    await services.postToSAP(r.id);
+                                                    refetch()
+                                                    message.success('Posted successfully.');
+                                                } catch (error: any) {
+                                                    message.error(error.message || 'Failed to post.');
+                                                } finally {
+
+                                                }
+                                            },
+                                        });
+                                    }} 
+                                    icon={<UploadOutlined />} 
+                                />}
+                            </>)
+                        }
                     ]
                 }
             }}

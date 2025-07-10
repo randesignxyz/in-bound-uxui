@@ -1,4 +1,4 @@
-import { RequestActions, ServiceApiType, singleRequest, findAllService } from "@/services/apiGateway";
+import { RequestActions, ServiceApiType, singleRequest, findAllService, findMultiService } from "@/services/apiGateway";
 import { AddressParams, AddresssView, DoRequireCustomerList, RegisterCuistomerInfoAdvanceSearchParams, RegisterCustomer, RegisterCustomerDetailResponse, RegisterCustomerListItem, RegisterCustomerWFPayload, RegisterItemBrandList, RegisterPPItemList, SaveRegisterCustomerAddressParams } from "./data";
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { Paging } from "@/services/API";
@@ -18,6 +18,33 @@ import { Paging } from "@/services/API";
 // } from '../apiGateway';
 import detail from "../gratis/request/detail";
 import { TaskActionDataParam } from "@/services/process-workflow/params";
+import { LookupDataType } from "@/services/data";
+import { Locations } from "@/services/crm/data";
+import { InitData } from "./model";
+
+export type LocationType = 'PROVINCE' | 'DISTRICT' | 'COMMUNE' | 'VILLAGE' | 'REGION' | 'DIVISION';
+type LocationsParams = {
+  type: LocationType;
+  parentId?: number;
+};
+export type InitCustomerParamsType ={
+    actionName: 'locations';
+    responseKey: string;
+    payload: LocationsParams;
+  }
+  | {
+    actionName: 'outletTypeList';
+    payload: {};
+  }
+  | {
+    actionName: 'sale';
+    responseKey: string;
+    payload: {};
+  }
+  | {
+    actionName: 'lookupDataList';
+    payload: { list: LookupDataType[] };
+  } | undefined;
 
 
 export const RegisterCustomerParams = {
@@ -26,7 +53,7 @@ export const RegisterCustomerParams = {
     ): ServiceApiType<{ searchValue?: string }> => ({
       type: 'PAGING_QUERY',
       endpoint: 'CRM',
-      actionName: 'list-register-customer',
+      actionName: 'list-rc-sa',
       payload: { ...params.criteria },
       pagination: {
         pageSize: params.pagination?.pageSize,
@@ -36,13 +63,13 @@ export const RegisterCustomerParams = {
     save: (params: RegisterCustomer): ServiceApiType<RegisterCustomer> => ({
         type: 'EXEC',
         endpoint: 'CRM',
-        actionName: 'save-register-customer',
+        actionName: 'save-rc-sa',
         payload: { ...params },
     }),
     submit:  (params: RegisterCustomer): ServiceApiType<RegisterCustomer> => ({
       type: 'EXEC',
       endpoint: 'CRM',
-      actionName: 'submit-register-customer',
+      actionName: 'submit-rc-sa',
       payload: { ...params },
     }),
     cancelForm:  (id: number): ServiceApiType<RegisterCustomer> => ({
@@ -114,6 +141,12 @@ export const RegisterCustomerParams = {
         actionName: 'update-register-customer-finance-process',
         payload: { ...params },
     }),
+    postToSAP: (id: number): ServiceApiType<RegisterCustomer> => ({
+        type: 'EXEC',
+        endpoint: 'CRM',
+        actionName: 'post-customer-to-sap',
+        payload: {id },
+    }),
 
 }
 export const RegisterCustomerServiceAPI = (requestActions?: RequestActions) => {
@@ -132,6 +165,10 @@ export const RegisterCustomerServiceAPI = (requestActions?: RequestActions) => {
       listRegisterItemBrand: () => singleRequest(RegisterCustomerParams.listRegisterItemBrand())(requestActions) as Promise<RegisterItemBrandList[]>,
       listDocRequirement: () => singleRequest(RegisterCustomerParams.listDocRequirement())(requestActions) as Promise<DoRequireCustomerList[]>,
       updateFinanceProcess: (params: TaskActionDataParam<RegisterCustomerWFPayload>) => singleRequest(RegisterCustomerParams.updateFinanceProcess(params))(requestActions),
+      initCustomerData: findMultiService<InitCustomerParamsType, InitData>({type: 'CRM'}, requestActions),
+      findAllLocations: findAllService<LocationsParams, Locations>({type: 'CRM',name:'locations'}, requestActions),
+      findLocationByParents: findAllService<{ ids: number[] }, Locations>({type: 'CRM',name:'get-location-by-parents'}, requestActions),
+      postToSAP: (id: number) => singleRequest(RegisterCustomerParams.postToSAP(id))(requestActions),
     }
     
 

@@ -1,3 +1,4 @@
+import { Moment } from "moment";
 import { SetRendererRect } from "react-doc-viewer/build/state/actions";
 
 export interface RegisterCustomer {
@@ -5,12 +6,14 @@ export interface RegisterCustomer {
   customerCode?: string;
   vatInv?: string;
   purpose?: string;
-  priceTradeOffer?: string;
-  paymentTerm?: string;
+  priceTradeOfferId?: string;
+  paymentTermId?: string;
   outletTypeId?: number;
   divisionId?: number;
   channelId?: number;
   ppItems?: PurchasingPerformanceItem[];
+  frequencyPurchase?: string;
+  remarkFrequencyPurchase?: string;
   billing?: AddressParams[];
   shipping?: AddressParams[];
   docPersonalList?: DocRequirementCustomerParams[];
@@ -25,8 +28,10 @@ export interface DocRequirementCustomerParams{
 export type RegisterCuistomerInfoAdvanceSearchParams = {
   status: 'ALL' | 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELED';
   subStatus?: string;
+  subStatus2?: string;
   searchValue?: string;
   processStatus?: string;
+  postedStatus?: string;
 };
 export interface RegisterCustomerListItem {
   id: number;
@@ -44,6 +49,8 @@ export interface RegisterCustomerListItem {
   status?: string;
   createdBy?: string;
   createdDate?: Moment;
+  postedDate?: Moment;
+  sapStatus?: string;
 }
 export interface RegisterCustomerDetailResponse{
   id: number;
@@ -51,8 +58,12 @@ export interface RegisterCustomerDetailResponse{
   formNo: string;
   vatInv: string;
   purpose: string;
-  priceTradeOffer: string;
-  paymentTerm: string;
+  priceTradeOfferId?: number;
+  priceTradeOfferName?: string;
+  sapPriceTradeOfferId?: number;
+  paymentTermId?: number;
+  paymentTermName?: string;
+  sapPaymentTermId?: number;
   outletTypeId?: number;
   outletTypeName?: string;
   divisionId?: number;
@@ -61,6 +72,8 @@ export interface RegisterCustomerDetailResponse{
   regionName?: string;
   channelId?: number
   channelName?: string
+  subChannelId?: number
+  subChannelName?: string
   saleId?: string;
   saleName?: string;
   buName: string;
@@ -75,11 +88,14 @@ export interface RegisterCustomerDetailResponse{
   createdBy: string;
   createdDate: Moment;
   ppItems?: PurchasingPerformanceItem[];
+  frequencyPurchase?: string;  
+  remarkFrequencyPurchase?: string;
   billing?: AddresssView[];
   shipping?: AddresssView[];
   docPersonalList?: DocumentRequireList[];
   docCorporateList?: DocumentRequireList[];
   attachedFiles?: string[];
+  seriesId?: number;
 }
 
 
@@ -163,7 +179,7 @@ export interface PurchasingPerformanceItem  {
 export interface DoRequireCustomerList {
   id: number,
   reCustomerId: number,
-  rDocRequireId: string,
+  reDocRequireId: number,
   docName: string,
   docType: string,
   docRequired: string,
@@ -173,5 +189,5 @@ export interface DoRequireCustomerList {
 }
 export interface RegisterCustomerWFPayload{
   instId: string
-  customerCode?: string
+  seriesId?: number
 }

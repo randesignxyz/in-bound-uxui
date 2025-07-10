@@ -47,8 +47,8 @@ export const DeliveryPaths = {
   locationTracking: '/delivery/tracking',
   loadingHistory: '/delivery/loading-history',
   deliveryHistory: '/delivery/list-instances-delivery',
-  delAccsociate:'/delivery/associate/del',
-  saleAccsociate:'/delivery/associate/sale',
+  delAllocate:'/delivery/allocate',
+  saleAllocate:'/delivery/allocate/sale',
 };
 
 
@@ -236,19 +236,19 @@ export default () => {
     },
     {
       id: 'associateDel',
-      name: 'Associate',
-      description: 'Associate List',
-      link: `${DeliveryPaths.delAccsociate}/list`,
+      name: 'Allocate',
+      description: 'Allocate List',
+      link: `${DeliveryPaths.delAllocate}/list`,
       icon: agreementIcon,
-      visible: access.canAccesAssociateDelView
+      visible: access.canAccesAllocateDelView
     },
     {
       id: 'associateSale',
-      name: 'Visit Plan',
-      description: 'Visit Plan List',
-      link: `${DeliveryPaths.saleAccsociate}/list`,
+      name: 'Allocate Sale',
+      description: 'Allocate Sale List',
+      link: `${DeliveryPaths.saleAllocate}/list`,
       icon: scheduleIcon,
-      visible: access.canAccesAssociateSale
+      visible: access.canAcceAllocateSale
     },
   ];
 

@@ -1,18 +1,20 @@
 import ActionFormWrapper from "@/pages/process-flow/components/forms/ActionFormWrapper";
 import { ActionDataFormProps } from "@/pages/process-flow/data";
-import { ActionType, ProCard, ProForm, ProFormText, ProFormTextArea } from "@ant-design/pro-components";
+import { ActionType, ProCard, ProForm, ProFormSelect, ProFormText, ProFormTextArea } from "@ant-design/pro-components";
 import { Card, message, Modal, UploadFile } from "antd";
 import { useForm } from 'antd/es/form/Form';
 import { useEffect, useRef, useState } from "react";
 import { simpleRequestActions } from "@/services/model";
 import { RegisterCustomerServiceAPI } from "../services";
+import { LookupData } from "@/services/data";
 
 export default (props: ActionDataFormProps) => {
     const requestActions = simpleRequestActions();
     const actionRef = useRef<ActionType>();
     const services = RegisterCustomerServiceAPI(requestActions)
+    const [ lookupDataList, setLookupDataList ] = useState<LookupData[]>([])
     const [form] = useForm<{
-        customerCode?: string;
+        seriesId?: number;
         comment?: string;
     }>();
     const [files, setFiles] = useState<UploadFile[]>([])
@@ -22,7 +24,17 @@ export default (props: ActionDataFormProps) => {
       },[])
     const loadData = async () => {
         const data = await services.detailByProcessFlow(props.procInstId||'');
-        form.setFieldsValue({customerCode: data.customerCode})
+        form.setFieldsValue({seriesId: data.seriesId})
+       await services.initCustomerData([{
+            actionName: 'lookupDataList',
+            payload: {
+                list: [
+                    'SALE_SAP_SERIES'
+                ],
+            },
+        }]).then((rs)=>{
+            setLookupDataList(rs.lookupDataList||[])
+        })
     }
     return (<ActionFormWrapper
         title={'Finance Approval'}
@@ -35,7 +47,7 @@ export default (props: ActionDataFormProps) => {
                     taskId: props.activityData?.taskId || '',
                     actionName: props.action,
                     comment: dataForm.comment,  
-                    payload: { instId: props.procInstId||'', customerCode: dataForm.customerCode} ,                     
+                    payload: { instId: props.procInstId||'', customerCode: dataForm.seriesId} ,                     
                     fileIds: files.map(it=> it.response)
                 }
                 Modal.confirm({
@@ -48,7 +60,7 @@ export default (props: ActionDataFormProps) => {
                                 props.actionHandlers?.onCancel?.(true)
                             })     
                         } catch (error: any) {
-                        message.error(error.message || 'Failed to submit.');
+                            message.error(error.message || 'Failed to submit.');
                         }
                     },
                 });                          
@@ -58,7 +70,7 @@ export default (props: ActionDataFormProps) => {
             onReset: ()=> {
                 loadData()
                 form.setFieldsValue({
-                    customerCode: undefined,
+                    seriesId: undefined,
                     comment: undefined
                 })
                 setFiles([])
@@ -69,12 +81,23 @@ export default (props: ActionDataFormProps) => {
     >
         <ProForm form={form}  submitter={false}>
             {props.action !='Rejected' && 
-                <ProCard title="Customer Information" 
-                    collapsible ={false}  
-                    size="small"
-                    bordered headerBordered 
-                >
-                    <ProFormText rules={[{required: true}]} label="Customer's ID" name="customerCode" />
+            <ProCard title="Customer Information" 
+                collapsible ={false}  
+                size="small"
+                bordered headerBordered 
+            >
+                {/* <ProFormText rules={[{required: true}]} label="Customer's ID" name="customerCode" /> */}
+                     
+                <ProFormSelect
+                    label="Customer's ID"
+                    name={'series'}
+                    // placeholder={'Customer's ID'}
+                    options={lookupDataList?.filter((it) => it.type === 'SALE_SAP_SERIES' && it?.actived=='Y')?.map((it) => ({
+                        label: it.name,
+                        value: it.id,
+                    }))}
+                    // width={470}
+                />
             </ProCard>}
             <Card style={{ marginTop: 10, marginBottom: 10 }}>
                 <ProFormTextArea rules={[{required: props.action =='Rejected'}]} label="Comment" name="comment" />

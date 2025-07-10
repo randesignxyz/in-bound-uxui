@@ -39,9 +39,9 @@ const AddressModalEntry: React.FC<Props> = ({
     if (!props.open) return;
 
     form.setFieldsValue({
-      typeId: initData?.lookupDataList?.some((it) => it.id == DEFAULT_ADDRESS_TYPE_ID)
-        ? DEFAULT_ADDRESS_TYPE_ID
-        : initData?.lookupDataList?.find((it) => true)?.id,
+      // typeId: initData?.lookupDataList?.some((it) => it.id == DEFAULT_ADDRESS_TYPE_ID)
+      //   ? DEFAULT_ADDRESS_TYPE_ID
+      //   : initData?.lookupDataList?.find((it) => true)?.id,
       ...{
         ...data, communeId: data?.communeId == 0 ? undefined : data?.communeId,
         villageId: data?.villageId == 0 ? undefined : data?.villageId
@@ -92,7 +92,7 @@ const AddressModalEntry: React.FC<Props> = ({
         const dataForm = await form.validateFields();
         const address: AddresssView = {
           address: dataForm.address,
-          type: initData?.lookupDataList?.find((it) => it.id == dataForm.typeId),
+          // type: initData?.lookupDataList?.find((it) => it.id == dataForm.typeId),
           province: initData?.provinceList
             ?.filter((it) => it.id == dataForm.provinceId)
             .map((it) => {

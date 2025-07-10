@@ -363,7 +363,15 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           (it) => it === item,
         ),
       ) || false,
+    canAccesAssociateDelView:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_DELIVERY_DEL_ACCOSICATE'].some((it) => it === item),
+      ) || false,
 
+    canAccesAssociateSale:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_DELIVERY_SALE_ACCOSICATE'].some((it) => it === item),
+      ) || false,
 
 
 

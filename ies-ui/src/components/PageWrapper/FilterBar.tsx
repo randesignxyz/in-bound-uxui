@@ -4,7 +4,8 @@ import { Button, ButtonProps, Flex, Input, Segmented } from "antd"
 import { SegmentedLabeledOption } from "antd/lib/segmented"
 import { useEffect, useState } from "react"
 import ActionBar from "../ActionBar"
-import { MenuItemType } from "antd/lib/menu/hooks/useItems"
+import { MenuItemType } from "antd/lib/menu/interface"
+// import { MenuItemType } from "antd/lib/menu/hooks/useItems"
 
 export default ({
     statuses,
@@ -16,11 +17,12 @@ export default ({
     onOpenAdvanceSearch,
     onRefresh, onSearch,
     onStatusChanged,
-    onSubStatusChanged
+    onSubStatusChanged,
+    onSubStatus2Changed
 }: {
     onStatusRender?: React.ReactNode,
     onAddTab?: () => void;
-    statuses: { option: SegmentedLabeledOption & { default?: true }, subOptions?: (SegmentedLabeledOption & { default?: true })[] }[],
+    statuses: { option: SegmentedLabeledOption & { default?: true }, subOptions?: (SegmentedLabeledOption & { default?: true } & { subOptions?: (SegmentedLabeledOption & { default?: true })[]})[] }[],
     advanceSearchButton?: React.ReactElement;
     actionButtons?: (React.ReactNode | (ButtonProps & {
         key?: React.Key;
@@ -31,13 +33,17 @@ export default ({
     onSearch?: (keywords?: string) => void;
     onStatusChanged?: (status: string | number) => void;
     onSubStatusChanged?: (status?: string | number) => void;
+    onSubStatus2Changed?: (status?: string | number) => void;
     onOpenAdvanceSearch?: () => void;
     onRefresh?: () => void;
 
 }) => {
     const [subStatuses, setSubStatuses] = useState<(SegmentedLabeledOption & { default?: true })[]>(statuses.find(it => it.option.default)?.subOptions || [])
+    const [subStatuses2, setSubStatuses2] = useState<(SegmentedLabeledOption & { default?: true })[]>([])
 
     const [subStatusValue, setSubStatusValue] = useState<string | number>()
+    const [subStatusValue2, setSubStatusValue2] = useState<string | number>()
+    
 
 
     useEffect(() => {
@@ -63,6 +69,10 @@ export default ({
                                 setSubStatusValue(sub.find(it => it.default)?.value)
                                 onSubStatusChanged?.(sub.find(it => it.default)?.value)
                                 setSubStatuses(v => sub)
+                                // subStatus2                               
+                                setSubStatuses2([])
+                                setSubStatusValue2(undefined)
+                                onSubStatus2Changed?.(undefined)
                             }} options={statuses.map(it =>
                                 it.option
                             )} /> : onStatusRender
@@ -75,9 +85,26 @@ export default ({
                         onChange={(value) => {
                             setSubStatusValue(value)
                             onSubStatusChanged?.(value)
+                            // subStatus2
+                            const subStatus2 = statuses.find(it=> it.subOptions)?.subOptions?.find(it => it.value == value)?.subOptions
+                            setSubStatuses2(subStatus2||[])
+                            console.log(value,subStatus2)
+                            setSubStatusValue2(subStatus2?.find(it => it.default)?.value)
+                            onSubStatus2Changed?.(subStatus2?.find(it => it.default)?.value)
                         }}
                         value={subStatusValue}
                         defaultValue={subStatuses.find(it => it.default)?.value || subStatuses.find(it => it)?.value}
+                    />
+                </Flex> : <></>}
+                {subStatuses2.length > 0 && !onStatusRender ? <Flex style={{ marginLeft: 20 }}>
+                    <Segmented
+                        options={subStatuses2}
+                        onChange={(value) => {
+                            setSubStatusValue2(value)
+                            onSubStatus2Changed?.(value)
+                        }}
+                        value={subStatusValue2}
+                        defaultValue={subStatuses2.find(it => it.default)?.value || subStatuses2.find(it => it)?.value}
                     />
                 </Flex> : <></>}
             </Flex>

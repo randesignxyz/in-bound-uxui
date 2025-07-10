@@ -36,7 +36,7 @@ export interface BastListViewProps<ListDataType extends Record<string, any> & { 
         panel: React.ReactNode
     };
 
-    statuses?: { option: SegmentedLabeledOption & { default?: true }, subOptions?: (SegmentedLabeledOption & { default?: true })[] }[]
+    statuses?: { option: SegmentedLabeledOption & { default?: true }, subOptions?: (SegmentedLabeledOption & { default?: true } & { subOptions?: (SegmentedLabeledOption & { default?: true })[]})[] }[]
     onStatusRender?: React.ReactNode,
     actionButtons?: (React.ReactNode | (ButtonProps & {
         key?: React.Key;

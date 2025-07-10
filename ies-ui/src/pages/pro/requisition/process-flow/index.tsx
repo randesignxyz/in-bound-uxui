@@ -23,6 +23,7 @@ export const AcquisitionFormNames = {
   md_dmd: 'requisition_md_dmd',
   srManagerApproval: 'requisition_sr_manager_approval',
   cdeMngPropose: 'requisition_cde_manager_propose',
+  fleetRepairMaintenancePropose: 'requisition_fleet_repair_maintenance_propose',
 };
 
 export const AcquisitionNvcFormNames = {
@@ -100,6 +101,7 @@ export const AcquisitionForm: DataForm[] = [
       AcquisitionFormNames.md_dmd,
       AcquisitionFormNames.srManagerApproval,
       AcquisitionFormNames.cdeMngPropose,
+      AcquisitionFormNames.fleetRepairMaintenancePropose,
       
       AcquisitionNvcFormNames.sub,
       AcquisitionNvcFormNames.hod,

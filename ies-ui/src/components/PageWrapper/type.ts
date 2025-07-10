@@ -93,7 +93,7 @@ export interface ListViewProps<ListDataType extends Record<string, any> & { id: 
                 actionButtons?: (ButtonProps & { position?: 'first' | 'last', visible?: true })[];
             },
             tabRender?: (item: ListDataType) => TabRenderProps //TODO: to be removed
-        })[];
+        });
         fullView?: {
             onOpen: (item: ListDataType) => void
         }

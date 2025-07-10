@@ -269,6 +269,7 @@ export interface LeadInfo extends LeadLess {
 }
 
 export interface LeadDetail {
+  isVerified: boolean | undefined;
   id: number;
   leadCode?: string;
   lastName?: string;

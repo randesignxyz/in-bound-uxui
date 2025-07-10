@@ -2,9 +2,9 @@ import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import PageWrapper from '@/components/PageWrapper';
 import { simpleRequestActions } from '@/services/model';
 import { LeadDetail, SalesTeamWorkLess } from '@/services/sale/data';
-import { ExportOutlined, PlusOutlined, SwapOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, EditOutlined, ExportOutlined, PlusOutlined, SwapOutlined } from '@ant-design/icons';
 import { useAccess, useQuery } from '@umijs/max';
-import { Button, message, Modal, Tag } from 'antd';
+import { Button, message, Modal, Space, Tag } from 'antd';
 import { useEffect, useState } from 'react';
 import DSDLeadReport from '../reports/DSDLeadReport';
 import { DSDReportAPI } from '../reports/service';
@@ -14,7 +14,7 @@ import LeadDetailView from './LeadDetailView';
 import LeadEntryFormView from './LeadEntryFormView';
 import { LeadServiceAPI } from './services';
 
-interface Props {}
+interface Props { }
 
 const LeadMainPage: React.FC<Props> = () => {
   const requestActions = simpleRequestActions();
@@ -73,11 +73,10 @@ const LeadMainPage: React.FC<Props> = () => {
             ),
           },
           {
-            tabLabel: `${
-              items?.internalName
+            tabLabel: `${items?.internalName
                 ? items?.internalName
                 : [items?.firstName, items?.lastName].join(' ')
-            }`,
+              }`,
             action: 'edit',
             panel: ({ onUpdateTab, key }) => (
               <LeadEntryFormView
@@ -93,11 +92,10 @@ const LeadMainPage: React.FC<Props> = () => {
             ),
           },
           {
-            tabLabel: `${
-              items?.internalName
+            tabLabel: `${items?.internalName
                 ? items?.internalName
                 : [items?.firstName, items?.lastName].join(' ')
-            }`,
+              }`,
             action: 'view',
             panel: ({ onUpdateTab, key }) => (
               <LeadDetailView
@@ -110,6 +108,11 @@ const LeadMainPage: React.FC<Props> = () => {
         listView={{
           type: 'Table',
           title: 'Lead List',
+          statuses: [
+            { option: { value: "ALL", label: "ALL", default: true } },
+            { option: { value: "Active", label: "Active" } },
+            { option: { value: "Inactive", label: "Inactive" } },
+          ],
           actionButtons: [
             {
               icon: <PlusOutlined />,
@@ -136,14 +139,24 @@ const LeadMainPage: React.FC<Props> = () => {
           ],
           onRefresh: refetch,
           onFilter: (param, page, sort) => {
-            setFilter((o) => ({
+            setFilter((p) => ({
               criteria: {
-                ...o,
-                searchValue: param?.searchValue,
-                sort: sort,
+                ...p.criteria,
+                ...param,
+                advanceSearch: {
+                  status: param?.status
+                }
               },
               pagination: page,
-            }));
+            }))
+            // setFilter((o) => ({
+            //   criteria: {
+            //     searchValue:o.criteria?.searchValue,
+            //     advanceSearch:o.criteria?.advanceSearch,
+            //     sort: sort,
+            //   },
+            //   pagination: page,
+            // }));
           },
           props: {
             dataSource: data?.items,
@@ -164,10 +177,9 @@ const LeadMainPage: React.FC<Props> = () => {
                 title: 'Shop Name',
                 dataIndex: 'internalName',
                 render: (_, r) =>
-                  `${
-                    r.internalName
-                      ? r.internalName
-                      : [r.firstName, r.lastName].filter((p) => p).join(' ')
+                  `${r.internalName
+                    ? r.internalName
+                    : [r.firstName, r.lastName].filter((p) => p).join(' ')
                   }`,
               },
               {
@@ -203,24 +215,61 @@ const LeadMainPage: React.FC<Props> = () => {
                   return r.province?.name;
                 },
               },
+              // {
+              //   title: 'District',
+              //   render: (_, r) => {
+              //     return r.district?.name;
+              //   },
+              // },
+              // {
+              //   title: 'Commune',
+              //   render: (_, r) => {
+              //     return r.commune?.name;
+              //   },
+              // },
+              // {
+              //   title: 'Village',
+              //   render: (_, r) => {
+              //     return r.village?.name;
+              //   },
+              // },
               {
-                title: 'District',
-                render: (_, r) => {
-                  return r.district?.name;
-                },
+                title: "Status",
+                dataIndex: "status"
               },
               {
-                title: 'Commune',
-                render: (_, r) => {
-                  return r.commune?.name;
-                },
-              },
-              {
-                title: 'Village',
-                render: (_, r) => {
-                  return r.village?.name;
-                },
-              },
+                title: "",
+                actionProps: (item) => ({
+                  label: <EditOutlined />,
+                  type: "edit",
+                  actionButtons: [
+                    {
+                      icon: <CheckCircleOutlined />,
+                      type: "link",
+                      disabled:item?.isVerified ,
+                      onClick: () => {
+                        Modal.confirm({
+                          title: "Confirmation Verification.",
+                          content: "do you want continue process?",
+                          onOk: async () => {
+                            await services.verified([item.id]);
+                            refetch();
+                          }
+                        })
+                      }
+                    }
+                  ]
+                })
+
+                // render:(_,r)=><Space>
+                //   { r.isVerified && <Button icon={<CheckCircleOutlined />}  />}
+
+                // </Space>
+              }
+              // {
+              //   title:"",
+              //   render:(_,r)=>
+              // }
             ],
           },
         }}

@@ -18,6 +18,7 @@ import ImportContract from "./import-contract"
 import AdvanceSearch from "./components/AdvanceSearch"
 import CustomerDetailView from "../customer/components/Detail"
 import ContactDetailView from "./components/Detail"
+import ContractReport from "./components/ContractReport"
 
 export default () => {
     const [modalVisible, setModalVisible] = useState<{ type: 'ADD', id?: number, cb?: undefined } | { type: 'EDIT', id?: number, cb?: () => void }>()
@@ -64,10 +65,10 @@ export default () => {
                 },
                 {
                     option: { label: 'Active', value: 'ACTIVE' },
-                }, 
+                },
                 {
                     option: { label: 'Expired', value: 'EXPIRED' },
-                }, 
+                },
                 {
                     option: { label: 'Terminated', value: 'TERMINATED' },
                 }],
@@ -107,6 +108,7 @@ export default () => {
                                 }
                             }} />
                     </Tooltip>,
+                    <ContractReport trigger={<Button icon={<ExportOutlined/>} type="link">Export</Button>} /> ,
                     access.canAddEditContract && <Button type="link"
                         onClick={() => setModalVisible({ type: 'ADD' })}
                         key={'add-contact'}
@@ -222,6 +224,8 @@ export default () => {
         />
         {importContractData && <ImportContract open data={importContractData} onCancel={() => setImportContractData(undefined)} />}
         {modalVisible?.type && <ContractModal onRefresh={modalVisible.cb} contractId={modalVisible.id} open={true} onOpenChange={visible => !visible && setModalVisible(undefined)} />}
+
+
     </>
     )
 }

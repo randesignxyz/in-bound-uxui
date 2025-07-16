@@ -1,7 +1,7 @@
 import FormModalComp, { FormModalProps } from "@/components/FormModal";
 import { simpleRequestActions } from "@/services/model";
-import { ActionType, ProForm, ProFormCheckbox, ProFormSelect, ProTable } from "@ant-design/pro-components";
-import { Card, Checkbox, Flex, Input, Table } from "antd";
+import { ActionType, ProForm, ProFormSelect, ProTable } from "@ant-design/pro-components";
+import { Card, Checkbox, Flex, Input } from "antd";
 import { LeadServiceAPI } from "./services";
 import { useEffect, useRef, useState } from "react";
 import { LeadDetail } from "@/services/sale/data";
@@ -54,7 +54,7 @@ const ChangeSalepersonForm: React.FC<Props> = ({ onSave, ...props }) => {
                                 label="Saleperson"
                                 noStyle
                                 placeholder={"Search by Saleperson"}
-                                width={"md"}
+                                width={"lg"}
                                 onChange={(e: string) => {
                                     setParam({ empNo: e,  });   
                                     actionRef.current?.reload();
@@ -82,7 +82,7 @@ const ChangeSalepersonForm: React.FC<Props> = ({ onSave, ...props }) => {
                                     actionRef.current?.reload?.();
                                 }}
                             />
-                            <Checkbox onClick={(e) => {
+                            <Checkbox onClick={(e:any) => {
                                 const checked = e.target?.checked;
                                 setSplit(checked);
                                 if (checked) {

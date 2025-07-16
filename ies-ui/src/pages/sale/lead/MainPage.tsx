@@ -2,9 +2,9 @@ import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import PageWrapper from '@/components/PageWrapper';
 import { simpleRequestActions } from '@/services/model';
 import { LeadDetail, SalesTeamWorkLess } from '@/services/sale/data';
-import { CheckCircleOutlined, EditOutlined, ExportOutlined, PlusOutlined, SwapOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, EditOutlined, ExportOutlined, FileDoneOutlined, SwapOutlined } from '@ant-design/icons';
 import { useAccess, useQuery } from '@umijs/max';
-import { Button, message, Modal, Space, Tag } from 'antd';
+import { Badge, Button, message, Modal, Tag } from 'antd';
 import { useEffect, useState } from 'react';
 import DSDLeadReport from '../reports/DSDLeadReport';
 import { DSDReportAPI } from '../reports/service';
@@ -13,6 +13,7 @@ import { LeadAdvanceSearchParams } from './data';
 import LeadDetailView from './LeadDetailView';
 import LeadEntryFormView from './LeadEntryFormView';
 import { LeadServiceAPI } from './services';
+import VerificationModalForm from './VerificationForm';
 
 interface Props { }
 
@@ -52,6 +53,9 @@ const LeadMainPage: React.FC<Props> = () => {
       payloads?: any;
     };
   }>();
+
+  const [verificationState, setVerificationState] = useState<{ visible?:{ name:"MODAL",payloads?:any } }>();
+
   return (
     <>
       <PageWrapper<LeadDetail, LeadAdvanceSearchParams, {}>
@@ -112,13 +116,14 @@ const LeadMainPage: React.FC<Props> = () => {
             { option: { value: "ALL", label: "ALL", default: true } },
             { option: { value: "Active", label: "Active" } },
             { option: { value: "Inactive", label: "Inactive" } },
+            { option: { value: "Verified", label: "Verified" } },
           ],
           actionButtons: [
-            {
-              icon: <PlusOutlined />,
-              type: 'link',
-              addNewTab: true,
-            },
+            // {
+            //   icon: <PlusOutlined />,
+            //   type: 'link',
+            //   addNewTab: true,
+            // },
             <Button
               key={'TransferLead'}
               disabled={!access.canAccessDSD}
@@ -127,6 +132,9 @@ const LeadMainPage: React.FC<Props> = () => {
               onClick={() => setChangeSalepersonState({ visible: { name: 'MODAL' } })}
             >
               Tranfer Lead
+            </Button>,
+            <Button  onClick={()=>setVerificationState({visible:{name:"MODAL"}})} icon={<FileDoneOutlined />} type='link'>
+              Verification
             </Button>,
             <Button
               key={'ExportLead'}
@@ -235,7 +243,13 @@ const LeadMainPage: React.FC<Props> = () => {
               // },
               {
                 title: "Status",
-                dataIndex: "status"
+                dataIndex: "status",
+                render:(_,r)=><Badge status={
+                  r.status=="Active"?"processing"
+                  :r.status =="Inactive"?"default"
+                  :"success"
+                } text={r.status}
+                />
               },
               {
                 title: "",
@@ -281,6 +295,20 @@ const LeadMainPage: React.FC<Props> = () => {
         salespersons={salesperson}
         title="Generate DSD Reports"
         width="700px"
+      />
+      
+      <VerificationModalForm
+        open={verificationState?.visible?.name=="MODAL"}
+        onSave={(data)=>{
+          Modal.confirm({
+            title:"Confirmation Verification",
+            content:"do you want to process?",
+            onOk:async() =>{
+              services.verified(data)
+            },
+          })
+        }}
+        onCancel={()=>setVerificationState({visible:undefined})}
       />
 
       <ChangeSalepersonForm

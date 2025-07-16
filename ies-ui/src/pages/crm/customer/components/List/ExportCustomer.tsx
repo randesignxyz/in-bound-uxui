@@ -1,7 +1,9 @@
 import FormModalComp, { FormModalProps } from "@/components/FormModal"
 import { Locations, outletType } from "@/services/crm/data";
+import { CrmServiceAPI } from "@/services/crm/services";
 import { LookupData, LookupDataItem } from "@/services/data";
 import ProForm, { ProFormCheckbox, ProFormDateRangePicker, ProFormSelect } from "@ant-design/pro-form"
+import { useQuery } from "@umijs/max";
 import { Card, Space } from "antd";
 import { useForm } from "antd/lib/form/Form";
 import { Moment } from "moment";
@@ -18,7 +20,7 @@ interface Props extends FormModalProps {
     seList: LookupDataItem[];
     provinceList: Locations[];
     regionList: Locations[];
-    
+
     onExport: (
         regionId?: number[],
         provinceId?: number[],
@@ -54,10 +56,33 @@ const ExportCustomer: React.FC<Props> = ({
         neverVisitDate?: Moment;
         hasNoPlan?: boolean;
     }>()
-    
-    const [formElements, setFormElements] = useState<{neverVisitDisable: boolean}>({
+
+    const [formElements, setFormElements] = useState<{ neverVisitDisable: boolean }>({
         neverVisitDisable: true
     })
+    const crmServices = CrmServiceAPI();
+    const { data, isFetching } = useQuery(['cust-advance-search-init-data'], () => crmServices.initCustomerData([
+        { actionName: 'locations', responseKey: 'provinceList', payload: { type: 'PROVINCE' } },
+        { actionName: 'locations', responseKey: 'regionList', payload: { type: 'DIVISION' } },
+        { actionName: 'outletTypeList', payload: {} },
+        { actionName: 'sale', responseKey: 'seList', payload: {} },
+        {
+            actionName: 'lookupDataList',
+            payload: {
+                list: [
+                    'CUSTOMER_STATUS',
+                    'CUSTOMER_TYPE',
+                    'CUSTOMER_DIVISION'
+                ],
+            },
+        },
+    ]) as Promise<{
+        regionList?: Locations[]
+        provinceList?: Locations[];
+        outletTypeList?: outletType[];
+        lookupDataList?: LookupData[];
+        seList?: LookupDataItem[];
+    }>, { refetchOnWindowFocus: false })
 
     return (
         <FormModalComp
@@ -65,47 +90,47 @@ const ExportCustomer: React.FC<Props> = ({
             onResetForm={() => form.resetFields()}
             onSubmit={async () => {
                 const dataForm = await form.validateFields()
-                await onExport(dataForm.regionId, 
-                    dataForm.provinceId, 
-                    dataForm.salespersonId, 
-                    dataForm.customerTypeId, 
-                    dataForm.outletTypeId, 
-                    dataForm.source, 
-                    dataForm.status, 
-                    dataForm.neverVisit, 
-                    dataForm.neverVisitDate, 
+                await onExport(dataForm.regionId,
+                    dataForm.provinceId,
+                    dataForm.salespersonId,
+                    dataForm.customerTypeId,
+                    dataForm.outletTypeId,
+                    dataForm.source,
+                    dataForm.status,
+                    dataForm.neverVisit,
+                    dataForm.neverVisitDate,
                     dataForm.hasNoPlan
-                    )
+                )
             }}
         >
             <Card>
-                <ProForm form={form} 
-                initialValues = {{
-                    status: ['Y']
-                }} {...layout} 
-                layout="horizontal"
-                onValuesChange={(changedValues) => {
-                    const {neverVisit} = changedValues
-                    if('neverVisit' in changedValues){
-                        setFormElements(v => ({...v, neverVisitDisable: !neverVisit}))
-                    }
-                    
-                }}
-                submitter={false}>
+                <ProForm form={form}
+                    initialValues={{
+                        status: ['Y']
+                    }} {...layout}
+                    layout="horizontal"
+                    onValuesChange={(changedValues) => {
+                        const { neverVisit } = changedValues
+                        if ('neverVisit' in changedValues) {
+                            setFormElements(v => ({ ...v, neverVisitDisable: !neverVisit }))
+                        }
+
+                    }}
+                    submitter={false}>
                     <ProFormSelect label="Customer Type" name="customerTypeId"
                         allowClear
                         mode="multiple"
-                        options={lookupDataList?.filter(it => it.type == 'CUSTOMER_TYPE').map(it => {
+                        options={data?.lookupDataList?.filter(it => it.type == 'CUSTOMER_TYPE').map(it => {
                             return { value: it.id, label: it.name }
                         })}
                     />
-            
+
                     <ProFormSelect
                         mode="multiple"
                         label="Region"
                         name="regionId"
                         allowClear
-                        options={regionList?.map(it => {
+                        options={data?.regionList?.map(it => {
                             return { value: it.id, label: it.name };
                         })}
                     />
@@ -114,7 +139,7 @@ const ExportCustomer: React.FC<Props> = ({
                         label="Province"
                         name="provinceId"
                         allowClear
-                        options={provinceList?.map(it => {
+                        options={data?.provinceList?.map(it => {
                             return { value: it.id, label: it.name };
                         })}
                     />
@@ -124,24 +149,24 @@ const ExportCustomer: React.FC<Props> = ({
                         name="salespersonId"
                         allowClear
                         showSearch
-                        options={seList?.map((it) => {
+                        options={data?.seList?.map((it) => {
                             return { value: it.id, label: [it.code, it.name].join('-') };
                         })}
                     />
                     <ProFormSelect
-                            mode="multiple"
-                            label="Status"
-                            name="status"
-                            width='md'
-                            allowClear
-                            options={[{ value: 'Y', label: "Active" }, { value: 'N', label: "Inactive" }]}
-                        />
-                    <ProForm.Item label = "Never Visit">
+                        mode="multiple"
+                        label="Status"
+                        name="status"
+                        width='md'
+                        allowClear
+                        options={[{ value: 'Y', label: "Active" }, { value: 'N', label: "Inactive" }]}
+                    />
+                    <ProForm.Item label="Never Visit">
                         <Space>
-                                <ProFormCheckbox
-                                    labelAlign="right"
-                                    name="neverVisit"
-                                />
+                            <ProFormCheckbox
+                                labelAlign="right"
+                                name="neverVisit"
+                            />
                             <ProFormDateRangePicker disabled={formElements.neverVisitDisable} label="" name="neverVisitDate" />
                         </Space>
                     </ProForm.Item>
@@ -151,7 +176,7 @@ const ExportCustomer: React.FC<Props> = ({
                                 labelAlign="right"
                                 name="hasNoPlan"
                             />
-                            </Space>
+                        </Space>
                     </ProForm.Item>
                 </ProForm>
             </Card>

@@ -1,7 +1,8 @@
 export type LeadAdvanceSearchParams = {
-  status: 'ALL' | 'ACTIVE' | 'INACTIVE';
-  searchValue?:string;
-  empNo?:string
+  status?: 'ALL' | 'ACTIVE' | 'INACTIVE';
+  // searchValue?:string;
+  empNo?:string;
+  isVerified?:Any;
 };
 
 

@@ -11,11 +11,13 @@ import type { LeadAdvanceSearchParams, UpdateCustomerOwnerEntry } from './data';
 const LeadActions = {
   list: (
     params: TableViewSearchParams<LeadAdvanceSearchParams>,
-  ): ServiceApiType<{ id?: string }> => ({
+  ): ServiceApiType<{ searchValue?: string }> => ({
     type: 'PAGING_QUERY',
     endpoint: 'SALE',
     actionName: 'page-lead',
-    payload: { id: params.criteria?.searchValue ? params.criteria?.searchValue : '' },
+    payload:{...params.criteria},
+    sort:params.criteria?.sort,
+    // payload: { id: params.criteria?.searchValue ? params.criteria?.searchValue : '' },
     pagination: {
       pageSize: params.pagination?.pageSize,
       page: params.pagination?.current,
@@ -68,6 +70,12 @@ const LeadActions = {
      endpoint:"SALE",
      type:"EXEC",
      payload:param
+  }),
+  verified:(param:number[]):ServiceApiType<{}>=>({
+     actionName:"lead-verified",
+     endpoint:"SALE",
+     type:"EXEC",
+     payload:param
   })
 };
 
@@ -81,5 +89,6 @@ export const LeadServiceAPI = (requestActions: RequestActions) => {
     outletTypes: () =>singleRequest<LookupData[]>(LeadActions.outletTypes({ id: -1 }))(requestActions) as Promise<LookupData[]>,
     saleperson :()=>singleRequest(LeadActions.saleperson())(requestActions) as Promise<SalesTeamWorkLess[]>,
     updateCustomerOwner:(param:UpdateCustomerOwnerEntry)=>singleRequest(LeadActions.updateCustomerOwner(param))(requestActions) as Promise<{data:string; message:string}>,
+    verified:(param:number[])=>singleRequest(LeadActions.verified(param))(requestActions) as Promise<{data:string; message:string}>,
   };
 };

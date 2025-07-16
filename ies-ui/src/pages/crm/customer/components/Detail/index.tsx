@@ -409,9 +409,7 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
   return openInTab ? <ProCard title={<Space># <Typography.Text strong copyable >{state.data?.detail?.code}</Typography.Text>
   
     <Button icon={<LinkOutlined/>} type='link' onClick={()=>{ 
-      
       const encrypted = encryptToBase64(state.data?.detail?.code || "n/a");
-      console.log(encrypted);
       
       // window.open(`http://api2.vital.com.kh/customer-view/${encrypted}`, '_blank');
       // navigator.clipboard?.writeText(`http://api2.vital.com.kh/customer-view/${encrypted}`)

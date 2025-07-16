@@ -43,6 +43,8 @@ export default ({ getMenuItems }: CustomerActionController) => {
     const { state, ops, modals } = model();
 
     const access = useAccess();
+
+    
     return <Spin spinning={loading}>
         <PageWrapper<CustomerItemLess, FilterType, {}>
             tabRender={item => [
@@ -203,7 +205,7 @@ export default ({ getMenuItems }: CustomerActionController) => {
             open={modals.isVisible('export-customer')}
             onCancel={() => modals.hideModal('export-customer')}
             confirmLoading={state.loading}
-            lookupDataList={[]}
+            lookupDataList={state.initData?.lookupDataList||[]}
             outletTypeList={state.initData?.outletTypeList || []}
             seList={state.initData?.seList || []}
             provinceList={state.initData?.provinceList || []}

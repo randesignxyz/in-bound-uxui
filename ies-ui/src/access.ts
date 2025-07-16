@@ -942,6 +942,12 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           (it) => it === item,
         ),
       ) || false,
+    canAccessDF360:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN','ROLE_HR_DF360_VIEW', 'ROLE_HR_DF360_SUBMIT', 'ROLE_HR_DF360_SUPPORT'].some(
+          (it) => it === item,
+        ),
+      ) || false,  
     canAccessWhmMenu:
       currentUser?.authorities.some((item) =>
         [

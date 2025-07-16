@@ -14,6 +14,7 @@ export const HrmPaths = {
     appraisalSubmit: '/hrm/appraisal-submit',
     appraisalRequest: '/hrm/appraisal-request',
     probationEvaluation: '/hrm/probation-evaluation',
+    df: '/hrm/df',
 }
 
 export default () => {
@@ -68,6 +69,13 @@ export default () => {
             description: 'Probation Evaluation Form',
             visible: access.canAccessProbationEvaluation,
             link: `${HrmPaths.probationEvaluation}/list`,
+            icon: requisitionIcon,
+        },{
+            id: 'df_360',
+            name: '360 Degree Feedback',
+            description: '360 Degree Feedback Form',
+            visible: access.canAccessDF360,
+            link: `${HrmPaths.df}/list`,
             icon: requisitionIcon,
         },
     ]

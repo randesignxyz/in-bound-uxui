@@ -27,7 +27,7 @@ export default({
 })=>{
   const service = RegisterCustomerServiceAPI()
   const [form] = Form.useForm<RegisterCustomerDetailResponse>();
-    const { ref, inView } = useInView({});
+  const { ref, inView } = useInView({});
   // const { state, ops, actions, modals } = model(0);
   const { state1,actions1 } = registerModel();
 

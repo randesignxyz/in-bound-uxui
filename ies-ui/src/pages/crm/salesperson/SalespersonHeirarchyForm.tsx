@@ -27,7 +27,6 @@ const SalespersonHeirarchyForm: React.FC<Props> = ({ onSave, onMove, type, data,
         props.open && loadData()
     }, [props.open]);
 
-
     return <ModalForm
         {...props}
         width={600}
@@ -50,7 +49,6 @@ const SalespersonHeirarchyForm: React.FC<Props> = ({ onSave, onMove, type, data,
                 }
                 onMove(entry)
             }
-
         }}
     >
         {
@@ -89,8 +87,6 @@ const SalespersonHeirarchyForm: React.FC<Props> = ({ onSave, onMove, type, data,
                         </Space>
                     </Flex>
                     </Card>
-                    
-
                     <br />
                     <ProFormText
                         name={"saleId"}
@@ -108,7 +104,6 @@ const SalespersonHeirarchyForm: React.FC<Props> = ({ onSave, onMove, type, data,
                             return data.map(o => ({ value: o.id, label: [o.code, o.name].filter(p => p).join(" ") }))
                         }}
                     />
-
                     <Typography.Text type="warning">
                         This action will move the salesperson to a new other salesperson.<br />
                         Please verify your selections. Click OK to confirm or Cancel to review again
@@ -116,7 +111,6 @@ const SalespersonHeirarchyForm: React.FC<Props> = ({ onSave, onMove, type, data,
                 </>
             )
         }
-
     </ModalForm>
 }
 

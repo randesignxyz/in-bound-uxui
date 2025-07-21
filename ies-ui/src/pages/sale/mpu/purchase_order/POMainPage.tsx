@@ -36,9 +36,7 @@ const POMainPage: React.FC = () => {
   }>({
     isVisibled: false,
   });
-
   const access = useAccess();
-
   const [remarkModal, setRemarkModal] = useState<{ isVisibled: boolean; data?: PurchaseOrderDTO }>({
     isVisibled: false,
   });
@@ -169,7 +167,6 @@ const POMainPage: React.FC = () => {
               pagination: { ...page },
             }));
           },
-
           props: {
             dataSource: data?.items,
             actionRef: actionRef,
@@ -203,7 +200,6 @@ const POMainPage: React.FC = () => {
                   multiple: 3,
                 },
               },
-
               {
                 title: 'Distributor Name',
                 dataIndex: 'distributorName',
@@ -212,7 +208,6 @@ const POMainPage: React.FC = () => {
                 title: 'Address',
                 dataIndex: 'addressCode',
               },
-
               {
                 title: 'Status',
                 dataIndex: 'status',

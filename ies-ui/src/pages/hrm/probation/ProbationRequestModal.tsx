@@ -17,6 +17,7 @@ import { EmployeeServices } from '../services';
 import ProbationSumbitter from '@/pages/process-flow/components/Submitter/ProbationSumbitter';
 import { EmployeeInfResult, ProbationAssessmentList, ProbationEvaluationRef, ProbationFormType } from './data.types';
 import { createService } from './services';
+import { set } from 'lodash';
 
 type DataFormType = {
     requestorId: string;
@@ -78,6 +79,7 @@ export default ({
       setProbationAssessor([])
       form.setFieldValue('refId',undefined)
       form.setFieldValue('preparationUserId',undefined)
+      form.setFieldValue('hodPreparationUserId',undefined)
     })();
   }, []);
 
@@ -107,6 +109,7 @@ export default ({
     form.setFieldValue('refId',undefined)
     form.setFieldValue('formTypeId',probationFormType?.find(r => r.code==data.jobLevelCode)?.id||'')
     form.setFieldValue('preparationUserId',undefined)
+    form.setFieldValue('hodPreparationUserId',undefined)
     formSubmittor.setFieldValue('requestorBuId',undefined)
     srv.fetchProbationEvaluationRefList(data.empId).then(rs=> {
       setProbationRef(rs)
@@ -115,6 +118,11 @@ export default ({
       setProbationAssessor(rs)
     })
   }
+  const [firstEvaluationUserId, setFirstEvaluationUserId] = useState('')
+  // const onSearchHandler = async (searchValue?: string) => {  
+  //   const it1 = await srv.fetchProbationEmpList(searchValue)
+  //   return it1.map((it_1:any) => ({ value: it_1.id, label: it_1.empName }));
+  // }
 
   return (
     <ModalForm
@@ -149,9 +157,7 @@ export default ({
         <ProbationSumbitter         
           form={formSubmittor}
           title={
-            <div> Employee Info
-              {/* Employee {checkingForm && <span style={{ color: 'red' }}>: {checkingForm}</span>} */}
-            </div>
+            <div> Employee Info</div>
           }
           onSetSubmitter={onChangeSubmitterHandler}
         />
@@ -159,13 +165,45 @@ export default ({
           <ProFormGroup size={'small'}>
             <ProFormSelect
               shouldUpdate
+              showSearch
               name={'preparationUserId'}
               rules={[{ required: true }]}
               width={'sm'}
               label="Preparation User"
               options={probationAssessor?.map((it) => ({ label: it.empName, value: it.userId }))}
+              fieldProps={{
+                dropdownMatchSelectWidth: 300,
+                async onChange(value: any) {                  
+                  form.setFieldValue('hodPreparationUserId',undefined)
+                  try{
+                    const rs = await srv.fetchHodPreparationUserId(value)
+                      setFirstEvaluationUserId(rs.hodEnpNo||'')
+                      form.resetFields(['hodPreparationUserId'])
+                      form.setFieldValue('hodPreparationUserId',rs.hodUserId)
+                  }catch(e){                    
+                    setFirstEvaluationUserId('')
+                    form.resetFields(['hodPreparationUserId'])
+                  }
+                },
+              }}
             />
-             <ProFormSelect
+            <ProFormSelect
+              shouldUpdate
+              showSearch
+              name={'hodPreparationUserId'}
+              rules={[{ required: true }]}
+              width={'sm'}
+              label="Evaluation User"
+              request={ async({ keyWords }) =>{
+                const it1 = await srv.fetchEvaluateEmpList(firstEvaluationUserId!==''?firstEvaluationUserId: keyWords)
+                setFirstEvaluationUserId('')
+                if(it1.length==0){
+                  form.setFieldValue('hodPreparationUserId',undefined)
+                }
+                return it1.map((it_1:any) => ({ value: it_1.userId, label: it_1.empName }));
+              }}
+            />
+            <ProFormSelect
               shouldUpdate
               name={'formTypeId'}
               rules={[{ required: true }]}

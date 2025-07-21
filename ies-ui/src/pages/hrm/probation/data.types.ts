@@ -328,6 +328,12 @@ export type AppraisalMapping = {
     appraiser1Id?: number
     appraiser2Id?: number
 }
+export type ProbationEvaluateEmpMapping = {
+    id: number
+    userId: string
+    empNo: string
+    empName: string
+}
 export type EmployeeInfResult = {
     empId: number
     empNo: string

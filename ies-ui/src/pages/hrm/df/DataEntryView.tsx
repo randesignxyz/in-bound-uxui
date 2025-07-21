@@ -11,6 +11,7 @@ import { AssessorFD, DF360Playload } from "./data";
 import AssessorList from "./components/AssessorList";
 import { useEffect, useRef, useState } from "react";
 import { uniqueId } from "lodash";
+import { Df360EmpServiceAPI } from "./services";
 
 type DataFormType = {
    requestorId: number;
@@ -28,6 +29,7 @@ export default({
   onCloseTab?: () => void;
    readOnly?: boolean | undefined,
 })=>{
+    const services = Df360EmpServiceAPI()
     const { ref, inView } = useInView({});
     const [formSubmittor] = useForm<DataFormType>();
     const editableManagerFormRef = useRef<EditableFormInstance>();
@@ -99,7 +101,7 @@ export default({
                 content: 'Are you sure?',
                 onOk: async () => {
                     try {
-                        // await service.cancelForm(id||0)
+                        await services.submitDf360Form(data)
                         message.success('Submitted successfully.');
                         // onCloseTab?.()
                     } catch (error: any) {

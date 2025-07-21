@@ -1,13 +1,26 @@
 import PageWrapper from "@/components/PageWrapper"
-import { DF360Form, DF360InfoAdvanceSearchParams } from "./data"
+import { DF360Emp, DF360InfoAdvanceSearchParams } from "./data"
 import { FileOutlined } from "@ant-design/icons"
 import DataEntryView from "./DataEntryView"
 import { formatDate } from "@/pages/utils"
 import Status from "@/components/Status"
+import { Df360EmpServiceAPI } from "./services"
+import { useState } from "react"
+import { TableViewSearchParams } from "@/components/DataCrud/TableView"
+import { useQuery } from "@umijs/max"
+import DataEntryFormView from "./DataEntryFormView"
 
 export default () => {
-    return(<PageWrapper<DF360Form, DF360InfoAdvanceSearchParams, {}>
-
+    const services = Df360EmpServiceAPI()
+    const [filter, setFilter] = useState<TableViewSearchParams<DF360InfoAdvanceSearchParams>>({
+            criteria: { advanceSearch: { status: 'ALL' } }
+        })
+        const { data, isLoading, refetch } = useQuery(['fetch-fd360-emp-list', filter], () => services.list(filter), {
+            refetchOnWindowFocus: false
+        })
+    
+    return(<PageWrapper<DF360Emp, DF360InfoAdvanceSearchParams, {}>
+    
         tabRender={item => [
             {
                 action: "add",
@@ -18,6 +31,17 @@ export default () => {
                                         props?.onCloseTab?.()
                                         // refetch()
                                     }} 
+                                    // openInTab onBack={() => { }} type="CREATE" 
+                                />,
+            },{                 
+                action: 'view',
+                value: item?.formNo ||item?.empNo || "n/a",
+                tabLabel: item?.formNo ||item?.empNo || 'Draft',
+                panel: (props) => <DataEntryFormView id={item?.id} type="EDIT"
+                                    // onCloseTab={() => {
+                                    //     props?.onCloseTab?.()
+                                    //     // refetch()
+                                    // }} 
                                     // openInTab onBack={() => { }} type="CREATE" 
                                 />,
             }
@@ -46,16 +70,16 @@ export default () => {
                 { option: { label: 'Submitted', value: 'SUBMITTED' },}                  
             
             ],
-            // onRefresh: refetch,
+            onRefresh: refetch,
             onFilter: (params, page, sort) => {
 
             },
             props: {
-                dataSource: [],
-                pagination: { total: 0 },
+                dataSource: data?.items,
+                pagination: { total: data?.total },
                 loading: false,
                 scroll: { x: 'max-content' },
-                bordered: true, 
+                bordered: true,
                 columns: [
                     {
                         title: 'Form No',dataIndex: 'formNo', sorter: 'formNo',
@@ -65,7 +89,7 @@ export default () => {
                         title: 'Employee No',
                         width: 130,
                         sorter: 'empCode',
-                        render: (_, r) => r.empCode,
+                        render: (_, r) => r.empNo,
                     }, {
                         title: 'Employee Name',
                         width: 130,

@@ -28,7 +28,6 @@ import { simpleRequestActions } from '@/services/model';
 import { CustomerServices } from '../../services';
 import ActionBar from '@/components/ActionBar';
 import { CustomerActionController } from '../..';
-import POSMDisplayList from '../POSMListDisplay';
 import SpaceReservedView from '@/pages/crm/contract/space-reserve/DetailView';
 import { LinkOutlined } from '@ant-design/icons';
 
@@ -411,11 +410,11 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
     <Button icon={<LinkOutlined/>} type='link' onClick={()=>{ 
       const encrypted = encryptToBase64(state.data?.detail?.code || "n/a");
       
-      window.open(`http://10.0.13.247:3301/customer-view/${encrypted}`, '_blank');
-      navigator.clipboard?.writeText(`http://10.0.13.247:3301/customer-view/${encrypted}`)
+      window.open(`http://api2.vital.com.kh/customer-view/${encrypted}`, '_blank');
+      navigator.clipboard?.writeText(`http://api2.vital.com.kh/customer-view/${encrypted}`)
   
       .then(() => {
-        window.open(`http://10.0.13.247:3301/customer-view/${encrypted}`, '_blank');
+        window.open(`http://api2.vital.com.kh/customer-view/${encrypted}`, '_blank');
       })
       .catch((err) => {
       }); 

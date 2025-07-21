@@ -1,7 +1,7 @@
 import ImportFileButton from "@/components/ImportFileButton"
 import PageWrapper from "@/components/PageWrapper"
 import { ImportDataItem, ImportDataResponse } from "@/services/shared/data"
-import { message } from "antd"
+import { Button, message } from "antd"
 import { useRef, useState } from "react"
 import UploadDataModal from "./UploadDataModal"
 import { useQuery } from "@umijs/max"
@@ -10,13 +10,18 @@ import { simpleRequestActions } from "@/services/model"
 import { TableViewSearchParams } from "@/components/DataCrud/TableView"
 import { ActionType } from "@ant-design/pro-components"
 import ShippingAddressDetail from "./Detail"
-import { SwapOutlined } from "@ant-design/icons"
+import { ExportOutlined, SwapOutlined } from "@ant-design/icons"
 import { model } from "../customer/model"
 import TransferSE from "./TransferSE"
+import { downloadGenericReport } from "@/services/apiGateway"
+import moment from "moment"
+import { getUrlReporting } from "@/pages/ReportUrl"
+import ExportCustomerShippingAddress from "./ExportForm"
 
 export default () => {
     const [importData, setImportData] = useState<ImportDataResponse>();
     const [loading, setLoading] = useState(false);
+    const requestActions = simpleRequestActions();
     const requestAction = simpleRequestActions()
     const [filter, setFilter] = useState<TableViewSearchParams<any>>({
         criteria: {}
@@ -28,7 +33,34 @@ export default () => {
         queryFn: () => ShippingAddressAPI(requestAction).page({ ...filter }),
         refetchOnWindowFocus: false
     });
+    const [exportState, setExportState] = useState<{
+        visible?: { name: "MODAL", payloads?: any }
+    }>();
 
+    const onDowloadReportHandler = async (params: any) => {
+
+        try {
+            const reportName = 'customer-shipping-address';
+            await downloadGenericReport(requestActions)({
+                fileName: `${reportName}-${moment().format()}.xls`,
+                type: 'EXCEL',
+                data: {
+                    reportName: reportName,
+                    reportPath: getUrlReporting('crm'),
+                    data: [
+                        { key: "regionIds", type: "string", value: params.regionId },
+                        { key: "provinceIds", type: "string", value: params.provinceId },
+                        { key: "customerTypeIds", type: "string", value: params.customerTypeId },
+                        { key: "salespersonIds", type: "string", value: params.salespersonId },
+                        { key: "status", type: "string", value: params.status },
+                    ],
+                },
+            }).then(() => { });
+            message.success('Export successfully.');
+        } catch (error: any) {
+            message.error(error.message || 'Failed to generate report.');
+        }
+    };
 
     return (
         <>
@@ -37,7 +69,7 @@ export default () => {
                     {
                         tabKey: item?.code,
                         tabLabel: item?.code,
-                        action:"view",
+                        action: "view",
                         panel: (_) => <ShippingAddressDetail openInTab id={item?.id} item={item} />
                     }
                 ]}
@@ -55,12 +87,14 @@ export default () => {
                                     message.info('Data uploaded.');
                                 }
                             }}
-                        />
+                        />,
+                        <Button icon={<ExportOutlined />}
+                            onClick={async () => setExportState({ visible: { name: "MODAL" } })} type="link">Export</Button>
                     ],
                     actions: [
                         { key: 'TRANSFER', label: 'Transfer SE', onClick: () => modals.showModal('transfer-customers'), icon: <SwapOutlined style={{ fontSize: '16px', color: '#08c' }} /> }
                     ],
-                    title:"Shipping Address",
+                    title: "Shipping Address",
                     type: "Table",
                     onFilter(params, page, sort) {
                         setFilter(v => ({
@@ -72,7 +106,6 @@ export default () => {
                         }))
                     },
                     onRefresh: refetch,
-
                     props: {
                         dataSource: data?.items,
                         loading: isFetching,
@@ -100,13 +133,12 @@ export default () => {
                             },
                             {
                                 title: "Salesperson Code",
-                                // dataIndex:"salesCode",
-                                width:130,
-                                render:(_,r)=>r.salesperson?.code
+                                width: 130,
+                                render: (_, r) => r.salesperson?.code
                             },
                             {
-                                title:"Salesperson Name",
-                                render:(_,r)=> r.salesperson?.name
+                                title: "Salesperson Name",
+                                render: (_, r) => r.salesperson?.name
                             }
                         ]
                     }
@@ -116,6 +148,24 @@ export default () => {
                 open={true}
                 onOpenChange={(visible) => !visible && modals.hideModal('transfer-customers')} />}
             <UploadDataModal title="Import indirect customer" onCancel={() => setImportData(undefined)} open={!!importData} data={importData} />
+            <ExportCustomerShippingAddress
+                title="Export Customer"
+                open={exportState?.visible?.name == "MODAL"}
+                onCancel={() => setExportState({ visible: undefined })}
+                confirmLoading={state.loading}
+                lookupDataList={state.initData?.lookupDataList || []}
+                outletTypeList={state.initData?.outletTypeList || []}
+                seList={state.initData?.seList || []}
+                provinceList={state.initData?.provinceList || []}
+                regionList={state.initData?.regionList || []}
+                onExport={async (data) => {
+                    try {
+                        await onDowloadReportHandler(data);
+                    } catch (error: any) {
+                        message.error(error.message || 'Failed to export.');
+                    }
+                }}
+            />
         </>
     )
 }

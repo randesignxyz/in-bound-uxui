@@ -54,6 +54,7 @@ import { ItemList } from '@/pages/fma-stock/item/data.types';
 import { TransferRequestListItem } from '@/pages/fma-stock/transfer/data.types';
 import { EmpWhsMappingList } from '@/pages/fma-stock/emp-whs/data.types';
 import { ProbationEvaluationEmpList } from '@/pages/hrm/probation/data.types';
+import { Allocate } from '@/pages/delivery/allocate/data';
 
 type DataList =
   | {
@@ -322,7 +323,11 @@ type DataList =
     type: 'fetch-gratis-configuration-paging';
     criteria?: any;
     data: Paging<GratisConfigurationList>;
-  };
+  }| {
+    type: 'alocate-list';
+    criteria?: any;
+    data: Paging<Allocate>;
+  } ;
 
 type MomainType =
   | 'sales-product-item'
@@ -376,7 +381,8 @@ type MomainType =
   | 'whh-inventory-transfer-request'
   | 'fma-emp-whs-mapping-list'
   | 'transfer-request-final-list'
-  | 'fetch-gratis-configuration-paging';
+  | 'fetch-gratis-configuration-paging'
+  | 'alocate-list';
 
 export default () => {
   const [cacheData, seCacheData] = useState<DataList>();

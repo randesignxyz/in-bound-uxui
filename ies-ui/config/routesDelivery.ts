@@ -181,7 +181,7 @@ export default [
     name: 'associateDel',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccesAssociateDelView',
+    access: 'canAccesAllocateDelView',
     component: './delivery/associate/del',
   },
   {
@@ -189,7 +189,7 @@ export default [
     name: 'associateSale',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccesAssociateSale',
+    access: 'canAcceAllocateSale',
     component: './delivery/associate/sale',
   },
 

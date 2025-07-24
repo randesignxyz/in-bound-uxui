@@ -71,17 +71,16 @@ export default({
           },
       }]).then((rs)=>{
           setLookupDataList(rs.lookupDataList||[])
-      })
-      service.listRcSapEmployeeSale().then(r=>{
-        setSale(r)
-      })
+      })    
     }else{
       service.listDocRequirement().then(r=>{
         setPersonaList(r.filter(it => it.docSource==='PERSONAL'))
         setcoporateList(r.filter(it => it.docSource==='CORPORATE'))
       })
     }
-
+    service.listRcSapEmployeeSale().then(r=>{
+      setSale(r)
+    })
   }
   const initFormData = (data: RegisterCustomerDetailResponse) =>{
     setData(data)
@@ -341,7 +340,7 @@ export default({
                 label="Customer's ID"
                 disabled= {(type=='CREATE')}
                 name={'seriesId'}
-                rules={[{ required: true }]}
+                rules={[{ required: (type=='EDIT') }]}
                 placeholder={"Customer's ID"}
                 options={lookupDataList?.filter((it) => it.type === 'SALE_SAP_SERIES' && it?.actived=='Y')?.map((it) => ({
                     label: it.name,
@@ -520,7 +519,7 @@ export default({
               width={470}
             /> 
           </ProFormGroup>   
-          <ProFormText readonly name={'createdBy'} label="Sale Executive"  width={470}/>  
+          {/* <ProFormText readonly name={'createdBy'} label="Sale Executive"  width={470}/>   */}
           <ProFormSelect
               label="Sale Executive"
               showSearch              
@@ -681,6 +680,7 @@ export default({
             <ProFormSelect
               label="Frequency of Purchase"
               name={'frequencyPurchase'}
+              rules={[{required:true}]}
               placeholder={'Payment Term'}
               options={[
                 {

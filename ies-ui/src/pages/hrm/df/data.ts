@@ -61,7 +61,15 @@ export interface DF360EmpDetailRs {
   lastModifiedDate: Moment;
   dueDate?: Moment;
   statementEvaluations:DfEmpEvaluationRs[];
+  assessor: DfEmpAssessorRs
 };
+export interface DfEmpAssessorRs{
+  id: number;
+  dfEmpId: number;
+  empId: number;
+  userId: string;
+  type: string;
+}
 export interface DfEmpEvaluationRs{ 
   id: number;
   key: string;
@@ -110,3 +118,36 @@ export interface DF360EmpListItem {
   processInstId: string;
   status: string;  
 };
+
+export interface DF360UpdatePlayload {
+  id: number;
+  dfEmpAssessorId: number;
+  statements?: DfStatementRs[];
+  comments?: DfCommentRs[];
+}
+export interface DfStatementRs{
+  id: number;
+  dfEmpAssessorId: number;
+  dfStatementId: number;
+  dfStatementGroupId: number;
+  rating1?: number;
+  rating2?: number;
+  rating3?: number;
+  rating4?: number;
+  rating5?: number;
+  seqNo: number;
+}
+export interface DfCommentRs{
+  id: number;
+  dfEmpAssessorId: number;
+  comment: string;
+  seqNo: number;
+  type: string;
+}
+
+export type DfComment = {
+    id: number
+    key:string
+    comment: string
+    seqNo?: number
+}

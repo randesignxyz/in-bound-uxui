@@ -1,20 +1,15 @@
-import RequestorComp from "@/pages/process-flow/components/Requestor";
-import Requestor from "@/pages/process-flow/components/Requestor";
-import DF360Sumbitter from "@/pages/process-flow/components/Submitter/DF360Sumbitter";
-import Sumbitter from "@/pages/process-flow/components/Submitter/Sumbitter";
-import { EditableFormInstance, EditableProTable, FooterToolbar, ProCard, ProForm } from "@ant-design/pro-components";
-import { Button, Descriptions, Flex, message, Modal, Space, Spin } from "antd";
+import { EditableFormInstance, FooterToolbar, ProCard, ProForm } from "@ant-design/pro-components";
+import { Button, Descriptions, message, Modal, Space, Spin } from "antd";
 import { useForm } from "antd/es/form/Form";
-import { Moment } from "moment";
 import { useInView } from "react-intersection-observer";
-import { AssessorFD, DF360EmpDetailRs, DF360Playload, DfEmpEvaluationRs } from "./data";
-import AssessorList from "./components/AssessorList";
+import { DF360EmpDetailRs,  DF360UpdatePlayload, DfComment, DfCommentRs, DfEmpEvaluationRs } from "./data";
 import { useEffect, useRef, useState } from "react";
 import { uniqueId } from "lodash";
 import { Df360EmpServiceAPI } from "./services";
 import { formatDate } from "@/pages/utils";
 import InstructionCard from "./components/InstructionCard";
 import StatementTable from "./components/StatementTable";
+import CommentTable from "./components/commentTable";
 
 
 type DataFormType = {
@@ -38,17 +33,10 @@ export default({
     const [formSubmittor] = useForm<DataFormType>();
     const [statement, setStatement] = useState<DfEmpEvaluationRs[]>([]);
     const editableFormRef = useRef<EditableFormInstance>();
-
-    // const editableManagerFormRef = useRef<EditableFormInstance>();
-    // const editablePeerFormRef = useRef<EditableFormInstance>();
-    // const editableSubordinateFormRef = useRef<EditableFormInstance>();
-    // const [managerItems, setManagerItems] = useState<AssessorFD[]>([])
-    // const [peerItem, setPeerItem] = useState<AssessorFD[]>([])
-    // const [subordinateItem, setSubordinateItem] = useState<AssessorFD[]>([])
-
-    // const [managers, setManagers]  = useState<AssessorFD[]>([])
-    // const [peers, setPeers] = useState<AssessorFD[]>([])
-    // const [subordinates, setSubordinates] = useState<AssessorFD[]>([])
+    const editableStrengthFormRef = useRef<EditableFormInstance>();
+    const editableImprovementFormRef = useRef<EditableFormInstance>();
+    const [dataStrength, setDataStrength] = useState<DfComment[]>([])
+    const [dataImprovement, setDataImprovement] = useState<DfComment[]>([])
     const [data, setDate] = useState<DF360EmpDetailRs>()
 
     const initData = [
@@ -85,35 +73,66 @@ export default({
         onCloseTab?.()
     }
     const onSubmitHandler = async () => {
-        const submitter = await formSubmittor.validateFields()     
+        const submitter = await formSubmittor.validateFields()  
+        const editable1 = await editableStrengthFormRef.current?.validateFields()
+        const editable2 = await editableImprovementFormRef.current?.validateFields() 
+        const improList: DfComment[] = Object.values(editable1)  
+        console.log('',dataImprovement)
+
         if(!submitter) return        
         const section1Valid = statement.filter(r =>(
             (r.rating1==0 && r.rating2==0 && r.rating3==0 && r.rating4==0 && r.rating5==0) || 
             (r.rating1==undefined && r.rating2==undefined && r.rating3==undefined && r.rating4==undefined && r.rating5==undefined)
         ))
-         console.log(statement, section1Valid)
-        // const validManagerItems = await editableManagerFormRef.current?.validateFields()
-        // const validPeerItem = await editablePeerFormRef.current?.validateFields()
-        // const validSubordinateItem = await editableSubordinateFormRef.current?.validateFields()
+        
         if(section1Valid.length>0) {
             message.error("EVALUATION: The rating of each statement is required.")
             await editableFormRef.current?.validateFields()
             return
-       }else{           
-            // const data = {
-            //     empId: submitter.requestorId,
-            //     buId: submitter.requestorBuId,
-            //     managers: managerItems?.map(it => it.empId),
-            //     peers: peerItem?.map(it => it.empId),
-            //     subordinates: subordinateItem?.map(it => it.empId)
-            // } as DF360Playload
-            console.log('data ', data);
+       }else{
+            const comments1:DfCommentRs[] =[]
+            comments1.push(...dataImprovement.map((i,index)=>({
+                id: i.id,
+                dfEmpAssessorId: data?.assessor.id,
+                comment: i.comment,
+                seqNo: index+1  ,
+                type: 'c1'
+            } as DfCommentRs)))
+            comments1.push(
+                ...dataImprovement.map((i,index)=>({
+                    id: i.id,
+                    dfEmpAssessorId: data?.assessor.id,
+                    comment: i.comment,
+                    seqNo: index+1,
+                    type: 'c2'
+                } as DfCommentRs))
+            )
+            // const statement = Object.values(editable)      
+            const payload = {
+                id: id,
+                dfEmpAssessorId: data?.assessor.id,
+                statements: statement.map(it=>({
+                    id: it.id,
+                    dfEmpAssessorId: it.dfEmpAssessorId,
+                    dfStatementId: it.dfStatementId,
+                    dfStatementGroupId: it.dfStatementGroupId,
+                    rating1: it.rating1,
+                    rating2: it.rating2,
+                    rating3: it.rating3,
+                    rating4: it.rating4,
+                    rating5: it.rating5,
+                    seqNo: it.seqNo                    
+                } as DF360UpdatePlayload)),
+                comments: comments1           
+            } as DF360UpdatePlayload
+            console.log('data ', payload);
+
             Modal.confirm({
                 title: 'Submit 360 Degree Feedback Form',
                 content: 'Are you sure?',
                 onOk: async () => {
                     try {
-                        // await services.submitDf360Form(data)
+                        await services.draftEvaluation(payload)
                         message.success('Submitted successfully.');
                         // onCloseTab?.()
                     } catch (error: any) {
@@ -176,6 +195,21 @@ export default({
                         onSetItems={setStatement}
                     />}
                 </ProCard>
+                <CommentTable title="4.	Please state three (3) good points or strengths of your colleague." 
+                    commTitle={'Strength'} 
+                    initDataItems={dataStrength} 
+                    onSetItems={setDataStrength}
+                    editableFormRef={editableStrengthFormRef}  
+                    editable
+                />
+                <CommentTable title="5.	Please state three (3) areas of improvement for your colleague." 
+                    commTitle={'Improvement'} 
+                    initDataItems={dataImprovement} 
+                    onSetItems={setDataImprovement} 
+                    editableFormRef={editableImprovementFormRef} 
+                    editable
+                />
+                
                 
                 {/* <ProCard size="small"                  
                     headerBordered

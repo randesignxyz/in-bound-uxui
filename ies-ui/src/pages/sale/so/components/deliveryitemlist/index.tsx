@@ -39,7 +39,15 @@ const DeliveryItemList: React.FC<Props> = ({ data, actionHandlers }) => {
           { title: 'Type', dataIndex: 'type' },
           { title: 'Qunatity', dataIndex: 'qty' },
           { title: 'UoM', dataIndex: 'uomName' },
-          { title: 'Remarks', dataIndex: 'remarks' },
+          {
+            title: 'Remarks',
+            dataIndex: 'remarks',
+            render: (text) => (
+              <div style={{ maxWidth: 300, whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                {text}
+              </div>
+            ),
+          },
           {
             render: (_, r) => (
               <Space size={0}>
@@ -89,23 +97,24 @@ const DeliveryItemList: React.FC<Props> = ({ data, actionHandlers }) => {
           it.itemList
             .map(
               (i, index) =>
-                ({
-                  deliveryDate: it.deliveryDate || data.defaultDelivery?.deliveryDate,
-                  shippingAddressId: it.shippingAddressId || data.defaultDelivery?.address?.id,
-                  shippingAddressCode:
-                    it.shippingAddressCode || data.defaultDelivery?.address?.address,
-                  itemId: i.itemId,
-                  itemCode: i.itemCode,
-                  description: i.itemDesc,
-                  uomId: i.uomId,
-                  uomName: i.uomName,
-                  type: i.type,
-                  key: i.key,
-                  qty: i.qty,
-                  main: index === 0,
-                  mainKey: it.key,
-                  default: index === 0 && it.default,
-                } as DeliverySoItemEntry),
+              ({
+                deliveryDate: it.deliveryDate || data.defaultDelivery?.deliveryDate,
+                shippingAddressId: it.shippingAddressId || data.defaultDelivery?.address?.id,
+                shippingAddressCode:
+                  it.shippingAddressCode || data.defaultDelivery?.address?.address,
+                itemId: i.itemId,
+                itemCode: i.itemCode,
+                description: i.itemDesc,
+                uomId: i.uomId,
+                uomName: i.uomName,
+                type: i.type,
+                key: i.key,
+                qty: i.qty,
+                main: index === 0,
+                mainKey: it.key,
+                default: index === 0 && it.default,
+                remarks: i.remarks
+              } as DeliverySoItemEntry),
             )
             .filter((it) => it.qty !== 0),
         )}

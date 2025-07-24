@@ -242,14 +242,14 @@ export default () => {
       icon: agreementIcon,
       visible: access.canAccesAllocateDelView
     },
-    {
-      id: 'associateSale',
-      name: 'Allocate Sale',
-      description: 'Allocate Sale List',
-      link: `${DeliveryPaths.saleAllocate}/list`,
-      icon: scheduleIcon,
-      visible: access.canAcceAllocateSale
-    },
+    // {
+    //   id: 'associateSale',
+    //   name: 'Allocate Sale',
+    //   description: 'Allocate Sale List',
+    //   link: `${DeliveryPaths.saleAllocate}/list`,
+    //   icon: scheduleIcon,
+    //   visible: access.canAcceAllocateSale
+    // },
   ];
 
 

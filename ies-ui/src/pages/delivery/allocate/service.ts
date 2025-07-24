@@ -1,5 +1,5 @@
 import { RequestActions, ServiceApiType, singleRequest } from "@/services/apiGateway";
-import { Allocate, allocateSearch, DNParams, SOList, UpdateRemarkParams } from "./data";
+import { Allocate, allocateSearch, DeliveryList, DNList, DNParams, SOList, UpdateRemarkParams } from "./data";
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { Paging } from "@/services/API";
 
@@ -39,7 +39,19 @@ const AllocateAction = {
         endpoint: 'DELIVERY',
         type: 'EXEC',
         payload: params,
-    })
+    }),
+    pageDN: (
+        params: TableViewSearchParams<allocateSearch>,
+    ): ServiceApiType<{ searchValue?: string }> => ({
+        type: 'PAGING_QUERY',
+        endpoint: 'DELIVERY',
+        actionName: 'page-allocate-dn',
+        payload: { ...params.criteria },
+        pagination: {
+            pageSize: params.pagination?.pageSize,
+            page: params.pagination?.current,
+        },
+    }),
 }
 
 export const AllocateServiceAPI = (requestAction: RequestActions) => {
@@ -59,7 +71,11 @@ export const AllocateServiceAPI = (requestAction: RequestActions) => {
         updateRemark: (params: UpdateRemarkParams) =>
             singleRequest<{ data: string; message: string }>(AllocateAction.updateRemark(params))(
                 requestAction
-            )
+            ),
+        pageDN: (params: TableViewSearchParams<allocateSearch>) =>
+            singleRequest<DNList>(AllocateAction.pageDN(params))(requestAction) as Promise<
+                Paging<DNList>
+            >,
 
     }
 }

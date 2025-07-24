@@ -368,13 +368,6 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
         ['ROLE_ADMIN', 'ROLE_DELIVERY_DEL_ACCOSICATE'].some((it) => it === item),
       ) || false,
 
-    canAcceAllocateSale:
-      currentUser?.authorities.some((item) =>
-        ['ROLE_ADMIN', 'ROLE_DELIVERY_SALE_ACCOSICATE'].some((it) => it === item),
-      ) || false,
-
-
-
     /**** Prod */
     canAccessProdMenu:
       currentUser?.authorities.some((item) =>

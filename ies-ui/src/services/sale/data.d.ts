@@ -49,6 +49,7 @@ export type SaleServiceName =
   | 'customer_transport_offer'
   | 'get-offer'
   | 'post-so'
+  | 'post-so-new'
   | 'cancel-so'
   | 'list-so-delivery'
   | 'list-transportation-offer'
@@ -919,6 +920,7 @@ export interface DeliveryItem {
   associatedTo?: {
     uom: LookupDataItem;
   };
+  remarks?:string
 }
 
 export interface SoDeliveryDetail {

@@ -9,9 +9,10 @@ import { simpleRequestActions } from '@/services/model';
 import { DeliveryDnParams, DeliveryItemList, DeliveryList, DNItemParams, DNParams, UpdateRemarkParams } from './data';
 import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
-import { EditOutlined } from '@ant-design/icons';
+import { EditOutlined, InboxOutlined } from '@ant-design/icons';
 import AddRemarkModal from './AddRemarkForm';
 import { uploadFileToFirebase } from './uploadImage';
+import { FaRegPenToSquare } from 'react-icons/fa6';
 
 dayjs.extend(customParseFormat)
 interface Props extends DrawerFormProps {
@@ -52,6 +53,9 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, ...res
             }, {} as Record<string, number>);
     }, [dn]);
 
+    useEffect(() => {
+        setDn([])
+    }, [rest.open])
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true)
@@ -135,10 +139,10 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, ...res
                                 color={
                                     status === 'Pending'
                                         ? 'orange'
-                                        : status === 'Partial'
-                                            ? 'blue'
-                                            : status === 'Delivered'
-                                                ? 'green'
+                                        : status === 'Posted'
+                                            ? 'green'
+                                            : status === 'Failed'
+                                                ? 'red'
                                                 : 'default'
                                 }
                                 bordered={false}
@@ -163,8 +167,11 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, ...res
                     <ProCard key={idx}>
                         <Card>
                             <Descriptions>
-                                <Descriptions.Item label="Delivery Plan Date: " style={{ fontWeight: 'bolder' }}>
+                                <Descriptions.Item label="Delivery Date " style={{ fontWeight: 'bolder' }}>
                                     {dayjs(group.deliveryDate).isValid() ? dayjs(group.deliveryDate).format('DD-MMM-YYYY') : '-'}
+                                </Descriptions.Item>
+                                 <Descriptions.Item label="Shipping Address " style={{ fontWeight: 'bolder' }}>
+                                    {group.shippingAddress?group.shippingAddress : '-'}
                                 </Descriptions.Item>
                             </Descriptions>
                             <ProTable
@@ -266,28 +273,36 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, ...res
                                     {
                                         width: 100,
                                         align: 'center',
-                                        render: (_, r) => (
-                                            <a
-                                                onClick={() => {
-                                                    const dnItem = r.dn?.[0];
-                                                    setModalOpen({
-                                                        visible: true,
-                                                        id: parseInt(r.allocateID),
-                                                        remark: dnItem?.remark,
-                                                        attachment: dnItem?.attachment,
-                                                    });
-                                                    console.log(dnItem);
-                                                }}
-                                            >
-                                                Add Remark
-                                            </a>
-                                        ),
-                                    },
+                                        render: (_, r) => {
+                                            if (status != 'Posted') return null;
+
+                                            return (
+                                                <a
+                                                    onClick={() => {
+                                                        const dnItem = r.dn?.[0];
+                                                        setModalOpen({
+                                                            visible: true,
+                                                            id: dnItem?.id,
+                                                            remark: dnItem?.remark,
+                                                            attachment: dnItem?.attachment,
+                                                        });
+                                                    }}
+                                                >
+                                                    <FaRegPenToSquare />
+                                                </a>
+                                            );
+                                        },
+                                    }
                                 ]}
                             />
                         </Card>
                     </ProCard>
-                )) : <></>}
+                )) : <Card style={{ textAlign: 'center', padding: '40px 0' }}>
+                    <InboxOutlined style={{ fontSize: 40, color: '#999' }} />
+                    <div style={{ marginTop: 12, fontSize: 16, color: '#666' }}>
+                        No Delivery Data Available
+                    </div>
+                </Card>}
             </Spin>
 
             <AddRemarkModal

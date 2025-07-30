@@ -44,5 +44,11 @@ jobs:
         shell: pwsh
         working-directory: ies-ui
 
+      # Build project  
+      - name: Build IES Aplication
+        run: npm run build
+        shell: pwsh
+        working-directory: ies-ui
+
 
 

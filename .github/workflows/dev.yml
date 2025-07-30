@@ -31,3 +31,18 @@ jobs:
         run: npm install --legacy-peer-deps
         shell: pwsh
         working-directory: ies-ui
+
+      # Install browser-image-compression
+      - name: Install browser-image-compression
+        run: npm install browser-image-compression --legacy-peer-deps
+        shell: pwsh
+        working-directory: ies-ui
+
+      # Install Firebase 
+      - name: Install Firebase
+        run: npm install firebase --legacy-peer-deps
+        shell: pwsh
+        working-directory: ies-ui
+
+
+

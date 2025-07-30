@@ -39,15 +39,7 @@ const DeliveryItemList: React.FC<Props> = ({ data, actionHandlers }) => {
           { title: 'Type', dataIndex: 'type' },
           { title: 'Qunatity', dataIndex: 'qty' },
           { title: 'UoM', dataIndex: 'uomName' },
-          {
-            title: 'Remarks',
-            dataIndex: 'remarks',
-            render: (text) => (
-              <div style={{ maxWidth: 300, whiteSpace: 'normal', wordBreak: 'break-word' }}>
-                {text}
-              </div>
-            ),
-          },
+          { title: 'Remarks', dataIndex: 'remarks' },
           {
             render: (_, r) => (
               <Space size={0}>

@@ -4,11 +4,11 @@ import { MultiRequest } from '@/services/apiGateway';
 import { Company, Driver, DriverListItem, SaveDriver, Truck } from '@/services/delivery/data';
 import { simpleRequestActions } from '@/services/model';
 import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table';
-import { Card, Checkbox, DatePicker, message, Modal, Progress, Radio, Space, Spin, Tag, Image, UploadFile, Descriptions } from 'antd';
+import { Card, Checkbox, DatePicker, message, Modal, Progress, Radio, Space, Spin, Tag, Image, UploadFile, Descriptions, Button } from 'antd';
 import { useRef, useState } from 'react';
 import { AllocateServiceAPI } from './service';
 import { Allocate, AllocateSOAdvanceParams, DeliveryList, DNItemParams, DNList, SOList, UpdateRemarkParams } from './data';
-import { useModel } from '@umijs/max';
+import { useAccess, useModel } from '@umijs/max';
 import { Paging } from '@/services/API';
 import { FaCarSide, FaRegPenToSquare, FaTruckMoving } from "react-icons/fa6";
 import DrawerForm from './DrawerForm';
@@ -16,14 +16,16 @@ import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 import AddRemarkModal from './AddRemarkForm';
 import { uploadFileToFirebase } from './uploadImage';
+import { PlayCircleOutlined, SyncOutlined } from '@ant-design/icons';
 
 dayjs.extend(customParseFormat)
 
 export default () => {
+  const access = useAccess();
   const requestActions = simpleRequestActions();
   const services = AllocateServiceAPI(requestActions);
   const actionRef = useRef<ActionType>();
-  const [drawerOpen, setDrawerOpen] = useState<{ visible: boolean; id: string, status?: string, po?: string, deliveres?: any[] }>({
+  const [drawerOpen, setDrawerOpen] = useState<{ visible: boolean; id: string, status?: string, po?: string, deliveres?: any[], so?: string }>({
     visible: false,
     id: '',
   });
@@ -162,19 +164,21 @@ export default () => {
             color = 'default';
             break;
         }
-
+        const percentage =
+          (entity?.totalDnQty ?? 0) > 0 && (entity?.totalItemQty ?? 0) > 0
+            ? ((entity?.totalDnQty ?? 0) / (entity?.totalItemQty ?? 1)) * 100
+            : 0;
         return (
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <div style={{ alignItems: 'flex-start', width: '35%' }}>
               <Tag color={color}>{status}</Tag>
             </div>
-            {/* <Progress
-              percent={entity.percentage || 0}
+            <Progress
+              percent={percentage || 0}
               size="small"
               strokeColor={{ from: '#108ee9', to: '#87d068' }}
-              // status={entity.dn_completion_percent === 100 ? 'success' : 'active'}
               style={{ width: '50%' }}
-              format={(percent) => `${Math.round(percent ?? 0)}%`} /> */}
+              format={(percent) => `${Math.round(percent ?? 0)}%`} />
           </div>
         )
       },
@@ -184,7 +188,7 @@ export default () => {
       width: 20,
       align: 'center',
       render: (_, r) =>
-      (<a onClick={() => setDrawerOpen({ visible: true, id: r.id, status: r.status, po: r.poNo, deliveres: r.deliveries })}>
+      (<a onClick={() => setDrawerOpen({ visible: true, id: r.id, status: r.status, po: r.poNo, deliveres: r.deliveries, so: r.soNo })}>
         <FaTruckMoving />
       </a>),
     },
@@ -243,18 +247,18 @@ export default () => {
                   dataIndex: 'itemName',
                   width: 200,
                 },
-                {
-                  title: 'Total Qty',
-                  dataIndex: 'qty',
-                  width: 90,
-                  render: (_, row) => {
-                    const allItems = row.__parent || [];
-                    const total = allItems
-                      .filter(i => i.itemCode === row.itemCode)
-                      .reduce((sum, i) => sum + Number(i.qty || 0), 0);
-                    return total.toLocaleString();
-                  },
-                },
+                // {
+                //   title: 'Total Qty',
+                //   dataIndex: 'qty',
+                //   width: 90,
+                //   render: (_, row) => {
+                //     const allItems = row.__parent || [];
+                //     const total = allItems
+                //       .filter(i => i.itemCode === row.itemCode)
+                //       .reduce((sum, i) => sum + Number(i.qty || 0), 0);
+                //     return total.toLocaleString();
+                //   },
+                // },
 
                 {
                   title: 'Plan',
@@ -303,29 +307,51 @@ export default () => {
                 {
                   title: 'Attachment',
                   dataIndex: 'attachment',
-                  render: (_, item) => {
-                    const attachments = item.attachment || [];
-
-                    if (!attachments || attachments.length === 0) {
-                      return '-';
-                    }
+                  width: 200,
+                  render: (_, record) => {
+                    const attachments = record.dn?.[0]?.attachment || [];
 
                     return (
-                      <Image.PreviewGroup>
-                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                          {attachments.map((att, idx) => (
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                        {attachments.map((att, index) => {
+                          const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(att.attachment);
+                          const decodedURL = decodeURIComponent(att.attachment)
+                          const fileNameMatch = decodedURL.match(/\/([^\/?]+)\?alt=media/)
+                          let fileName = fileNameMatch ? fileNameMatch[1] : `File ${index + 1}`;
+                          const dashIndex = fileName.indexOf('-');
+                          if (dashIndex !== -1) {
+                            fileName = fileName.substring(dashIndex + 1);
+                          }
+                          return isImage ? (
                             <Image
-                              key={idx}
+                              key={index}
                               width={50}
                               height={50}
-                              src={att.attachment || ''}
-                              alt={`attachment-${idx}`}
+                              src={att.attachment}
+                              alt={`attachment-${index}`}
                               style={{ objectFit: 'cover', borderRadius: 4 }}
                               preview={{ mask: <div>Click to preview</div> }}
                             />
-                          ))}
-                        </div>
-                      </Image.PreviewGroup>
+                          ) : (
+                            <a
+                              key={index}
+                              href={att.attachment}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                display: 'inline-block',
+                                padding: '4px 8px',
+                                border: '1px solid #ccc',
+                                borderRadius: 4,
+                                backgroundColor: '#f5f5f5',
+                                marginRight: 8,
+                              }}
+                            >
+                              {fileName}
+                            </a>
+                          );
+                        })}
+                      </div>
                     );
                   },
                 },
@@ -368,6 +394,22 @@ export default () => {
           displayOnly
           tableProps={{
             actionRef: actionRef,
+            toolbar: {
+              actions: [
+                <>
+                  {access.canAccesAddRemarkAllocate ?
+                    <Button
+                      type="link"
+                      onClick={async () => {
+                        await services.syncAllocate()
+                        actionRef.current?.reloadAndRest?.();
+                      }}
+                      icon={<SyncOutlined />}
+                    />
+                    : <></>}
+                </>
+              ],
+            },
           }}
           extraFilter={
             <Space size="large" style={{ flexDirection: 'row' }}>
@@ -403,15 +445,15 @@ export default () => {
               </Radio.Group>
               <DatePicker
                 style={{ width: 165 }}
-                onChange={(v => {
-                  const dateWithoutTime = v?.format("MMM DD YYYY")
-                  setAdvanceSearchParams((v) => ({
-                    ...v,
+                onChange={(v) => {
+                  const dateWithoutTime = v?.format("YYYY-MM-DD")
+                  setAdvanceSearchParams((prev) => ({
+                    ...prev,
                     ordered_date: dateWithoutTime,
                   }));
                   actionRef.current?.reloadAndRest?.();
-                })}
-                placeholder='Select Date'
+                }}
+                placeholder="Select Date"
               />
             </Space>
           }
@@ -443,6 +485,7 @@ export default () => {
         open={drawerOpen.visible}
         id={drawerOpen.id}
         status={drawerOpen.status}
+        so={drawerOpen.so}
         po={drawerOpen.po}
         deliveres={drawerOpen.deliveres}
         onVisibleChange={(v) => v === false && setDrawerOpen({ visible: false, id: '', status: '', po: '' })}

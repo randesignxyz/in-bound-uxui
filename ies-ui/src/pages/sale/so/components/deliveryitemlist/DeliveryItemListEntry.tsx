@@ -148,11 +148,6 @@ const DeliveryItemListEntry: React.FC<Props> = ({ data, actionHandlers, ...props
                       max={max < 0 ? 0 : max}
                       name="qty"
                     />
-                    <ProFormText
-                      label={listMeta.index === 0 && 'Remark'}
-                      width={200}
-                      name="remarks"
-                    />
                   </ProForm.Group>
                 );
               }}

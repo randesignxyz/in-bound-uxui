@@ -41,7 +41,9 @@ export interface SOList {
   postedBy?: string,
   postedDate?: string,
   docEntryNum: string,
-  deliveries: DeliveryList[]
+  deliveries: DeliveryList[],
+  totalItemQty ?:number,
+  totalDnQty ?:number,
 }
 
 export interface DeliveryList {
@@ -153,7 +155,8 @@ export type DNItemParams = {
   saleType: string,
   allocateID: string,
   lineNumber: string,
-  so_num: string
+  so_num: string,
+  isUnplan?:string
 };
 
 export type DNParams = {
@@ -165,6 +168,9 @@ export type DNParams = {
   shift?: string | null;
   shippingAddress?: string | null;
   soId?: number | string | null;
+  claimed_by?:string
+  claimed_date?:string
+  unplannedItems: DNItemParams[]
 }
 
 export type UpdateRemarkParams = {

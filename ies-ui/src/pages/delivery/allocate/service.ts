@@ -16,7 +16,7 @@ const AllocateAction = {
             page: params.pagination?.current,
         },
     }),
-        pageSO: (
+    pageSO: (
         params: TableViewSearchParams<allocateSearch>,
     ): ServiceApiType<{ searchValue?: string }> => ({
         type: 'PAGING_QUERY',
@@ -28,11 +28,11 @@ const AllocateAction = {
             page: params.pagination?.current,
         },
     }),
-    listDn: (so_allocate_id: string[]): ServiceApiType<{ so_allocate_id: string[] }> => ({
+    listDn: (so_allocate_id: string[], docNum?: string): ServiceApiType<{ so_allocate_id: string[], docNum?: string }> => ({
         type: 'LIST_QUERY',
         endpoint: 'DELIVERY',
         actionName: 'get-dn-by-so',
-        payload: { so_allocate_id },
+        payload: { so_allocate_id, docNum },
     }),
     updateRemark: (params: UpdateRemarkParams): ServiceApiType<UpdateRemarkParams> => ({
         actionName: 'update-remark',
@@ -52,6 +52,18 @@ const AllocateAction = {
             page: params.pagination?.current,
         },
     }),
+    syncAllocate: (): ServiceApiType<{}> => ({
+        type: 'EXEC',
+        endpoint: 'DELIVERY',
+        actionName: 'sync-allocate',
+        payload: {}
+    }),
+    claimDn: (sales_planid:number,claimed_by?:string): ServiceApiType<{sales_planid:number,claimed_by?:string}> => ({
+        type: 'EXEC',
+        endpoint: 'DELIVERY',
+        actionName: 'claim-dn',
+        payload: {sales_planid,claimed_by}
+    }),
 }
 
 export const AllocateServiceAPI = (requestAction: RequestActions) => {
@@ -64,8 +76,8 @@ export const AllocateServiceAPI = (requestAction: RequestActions) => {
             singleRequest<SOList>(AllocateAction.pageSO(params))(requestAction) as Promise<
                 Paging<SOList>
             >,
-        list_dn: (so_allocate_id: string[]) =>
-            singleRequest<DNParams>(AllocateAction.listDn(so_allocate_id))(
+        list_dn: (so_allocate_id: string[], docNum?: string) =>
+            singleRequest<DNParams>(AllocateAction.listDn(so_allocate_id, docNum))(
                 requestAction
             ),
         updateRemark: (params: UpdateRemarkParams) =>
@@ -76,6 +88,13 @@ export const AllocateServiceAPI = (requestAction: RequestActions) => {
             singleRequest<DNList>(AllocateAction.pageDN(params))(requestAction) as Promise<
                 Paging<DNList>
             >,
+        syncAllocate: () =>
+            singleRequest<{ data: string, message: string }>(AllocateAction.syncAllocate())(requestAction),
+
+        ClaimDn: (sales_planid:number,claimed_by?:string,) =>
+            singleRequest<{ data: string, message: string }>(AllocateAction.claimDn(sales_planid,claimed_by))(requestAction),
+
+
 
     }
 }

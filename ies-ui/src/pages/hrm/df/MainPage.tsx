@@ -1,6 +1,6 @@
 import PageWrapper from "@/components/PageWrapper"
-import { DF360Emp, DF360InfoAdvanceSearchParams } from "./data"
-import { FileOutlined } from "@ant-design/icons"
+import { DF360Emp, DF360EmpListItem, DF360InfoAdvanceSearchParams } from "./data"
+import { DashOutlined, FileOutlined } from "@ant-design/icons"
 import DataEntryView from "./DataEntryView"
 import { formatDate } from "@/pages/utils"
 import Status from "@/components/Status"
@@ -9,17 +9,28 @@ import { useState } from "react"
 import { TableViewSearchParams } from "@/components/DataCrud/TableView"
 import { useQuery } from "@umijs/max"
 import DataEntryFormView from "./DataEntryFormView"
+import { Dropdown, message, Space } from "antd"
 
 export default () => {
     const services = Df360EmpServiceAPI()
     const [filter, setFilter] = useState<TableViewSearchParams<DF360InfoAdvanceSearchParams>>({
             criteria: { advanceSearch: { status: 'ALL' } }
         })
-        const { data, isLoading, refetch } = useQuery(['fetch-fd360-emp-list', filter], () => services.list(filter), {
+    const { data, isLoading, refetch } = useQuery(['fetch-fd360-emp-list', filter], () => services.list(filter), {
             refetchOnWindowFocus: false
         })
+    const getMenuItems =( r: DF360EmpListItem )=>{
+        const menus = r.assessors.map(it=>({
+            key: it.userId,
+            label: it.userId,
+             onClick: async () => {
+                message.error(it.userId)
+             }
+        }))
+        return menus
+    }    
     
-    return(<PageWrapper<DF360Emp, DF360InfoAdvanceSearchParams, {}>
+    return(<PageWrapper<DF360EmpListItem, DF360InfoAdvanceSearchParams, {}>
     
         tabRender={item => [
             {
@@ -75,7 +86,7 @@ export default () => {
 
             },
             props: {
-                dataSource: data?.items,
+                dataSource: data?.items||[],
                 pagination: { total: data?.total },
                 loading: false,
                 scroll: { x: 'max-content' },
@@ -140,6 +151,19 @@ export default () => {
                         width: 100,
                         sorter: 'dueDate',
                         render: (_, r) =>  formatDate(r.dueDate),
+                    }, {
+                        render: (_, r) => <Dropdown  menu={{
+
+                            // items: getMenuItems(r, 'List', () => refetch).filter(it => it.visible)
+                            items: getMenuItems(r)
+
+                        }}>
+                            <a onClick={(e) => e.preventDefault()}>
+                                <Space>
+                                    dfdf <DashOutlined />
+                                </Space>
+                            </a>
+                        </Dropdown>
                     }
                 ]
             }

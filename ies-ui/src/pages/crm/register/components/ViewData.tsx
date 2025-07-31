@@ -32,11 +32,11 @@ export default ({ data }: Props) => {
                 <Descriptions.Item label="Purpose">
                     {data?.purpose}
                 </Descriptions.Item>
-                <Descriptions.Item label="Price & Trade Offer">
-                    {data?.priceTradeOfferName}
+                <Descriptions.Item label={'Price & Trade  - ' + data?.priceTradeOfferName}>
+                    {data?.sapPriceTradeOfferName}
                 </Descriptions.Item>
-                <Descriptions.Item label="Payment Term">
-                    {data?.paymentTermName}
+                <Descriptions.Item label={"Payment Term - "+ data?.paymentTermName}>
+                    {data?.sapPaymentTermName}
                 </Descriptions.Item>
                 <Descriptions.Item label="Outlet Type">
                     {data?.outletTypeName}

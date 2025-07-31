@@ -1,8 +1,8 @@
-import { EditableFormInstance, FooterToolbar, ProCard, ProForm } from "@ant-design/pro-components";
-import { Button, Descriptions, message, Modal, Space, Spin } from "antd";
+import { CheckCard, EditableFormInstance, FooterToolbar, ProCard, ProForm } from "@ant-design/pro-components";
+import { Avatar, Button, Card, Col, Descriptions, message, Modal, Row, Space, Spin } from "antd";
 import { useForm } from "antd/es/form/Form";
 import { useInView } from "react-intersection-observer";
-import { DF360EmpDetailRs,  DF360UpdatePlayload, DfComment, DfCommentRs, DfEmpEvaluationRs } from "./data";
+import { DF360EmpDetailRs,  DF360UpdatePlayload, DfComment, DfCommentRs, DfEmpAssessorRs, DfEmpEvaluationRs } from "./data";
 import { useEffect, useRef, useState } from "react";
 import { uniqueId } from "lodash";
 import { Df360EmpServiceAPI } from "./services";
@@ -10,6 +10,7 @@ import { formatDate } from "@/pages/utils";
 import InstructionCard from "./components/InstructionCard";
 import StatementTable from "./components/StatementTable";
 import CommentTable from "./components/commentTable";
+import { UserOutlined } from "@ant-design/icons";
 
 
 type DataFormType = {
@@ -28,56 +29,56 @@ export default({
   onCloseTab?: () => void;
    readOnly?: boolean | undefined,
 })=>{
-    const services = Df360EmpServiceAPI()
+    const services = Df360EmpServiceAPI();
+    const [loading,setLoading] = useState(true) 
     const { ref, inView } = useInView({});
     const [formSubmittor] = useForm<DataFormType>();
     const [statement, setStatement] = useState<DfEmpEvaluationRs[]>([]);
     const editableFormRef = useRef<EditableFormInstance>();
-    const editableStrengthFormRef = useRef<EditableFormInstance>();
-    const editableImprovementFormRef = useRef<EditableFormInstance>();
+    const editableStrengthFormRef1 = useRef<EditableFormInstance>();
+    const editableImprovementFormRef2 = useRef<EditableFormInstance>();
+    const editableFormRef3 = useRef<EditableFormInstance>();
+    const editableFormRef4 = useRef<EditableFormInstance>();
+    const editableFormRef5 = useRef<EditableFormInstance>();
     const [dataStrength, setDataStrength] = useState<DfComment[]>([])
     const [dataImprovement, setDataImprovement] = useState<DfComment[]>([])
     const [data, setDate] = useState<DF360EmpDetailRs>()
-
-    const initData = [
-        {
-            key: uniqueId().toString(),
-            empId: 1,
-            empNo: '002136',
-            empName: 'Hay sokhom(00213)' 
-        },
-        {
-            key: uniqueId().toString(),
-            empId: 2,
-            empNo: '002137',
-            empName: 'Nob Sreynan(00215)' 
-        }
-    ]
+    const [selectedAssessor, setSelectedAssessor] = useState<DfEmpAssessorRs>()
         
     useEffect(()=> {
-        // setManagers(initData)
-        // setPeers(initData.map(r=> ({...r,key: uniqueId().toString()})))
-        // setSubordinates(initData.map(r=> ({...r,key: uniqueId().toString()})))
-        services.detail(id||0).then(r=>{
-            setDate(r)
-            setStatement((r?.statementEvaluations||[]).map(it=>({...it,key: uniqueId().toString()})))
-        })
-    },[])
+        if(!id) return
+        if(loading){
+            services.detail(id||0).then(r=>{
+                setDate(r)
+                setSelectedAssessor(r.currentAssessor)
+                setLoading(false)
+            })
+        }
+    },[loading])
+    useEffect(()=>{
+        setStatement((selectedAssessor?.statementEvaluations||[]).map(it=>({...it,key: uniqueId().toString()})))
+        setDataStrength((selectedAssessor?.comments?.filter(it=>it.type=='c1')||[]).map(it=>({...it,key: uniqueId().toString()})))
+        setDataImprovement((selectedAssessor?.comments?.filter(it=>it.type=='c2')||[]).map(it=>({...it,key: uniqueId().toString()})))
+    },[selectedAssessor])
 
-    // const onChangeSubmitterHandler = async (data: any) => {      
-    //    setManagerItems([])
-    //    setPeerItem([])
-    //    setSubordinateItem([])
-    // }
+    const onChangeAssessor=(v: number) =>{
+        console.log(v);
+        if(v>0){
+            setSelectedAssessor(data?.assessors.find(it=>(it.id==v))) 
+        }
+        console.log('assessor: ',data?.assessors.find(it=>(it.id==v)));
+    }
     const onCloseHandler = () => { 
         onCloseTab?.()
     }
     const onSubmitHandler = async () => {
         const submitter = await formSubmittor.validateFields()  
-        const editable1 = await editableStrengthFormRef.current?.validateFields()
-        const editable2 = await editableImprovementFormRef.current?.validateFields() 
-        const improList: DfComment[] = Object.values(editable1)  
-        console.log('',dataImprovement)
+        const editable1 = await editableStrengthFormRef1.current?.validateFields()
+        const editable2 = await editableImprovementFormRef2.current?.validateFields() 
+        
+        const commList1: DfComment[] = Object.values(editable1)  
+        const commList2: DfComment[] = Object.values(editable2)  
+        console.log('editableImprovementFormRef',editable1)
 
         if(!submitter) return        
         const section1Valid = statement.filter(r =>(
@@ -91,26 +92,27 @@ export default({
             return
        }else{
             const comments1:DfCommentRs[] =[]
-            comments1.push(...dataImprovement.map((i,index)=>({
-                id: i.id,
-                dfEmpAssessorId: data?.assessor.id,
+            comments1.push(...commList1?.map((i,index)=>({
+                id: 0,
+                dfEmpAssessorId: selectedAssessor?.id,
                 comment: i.comment,
                 seqNo: index+1  ,
                 type: 'c1'
             } as DfCommentRs)))
-            comments1.push(
-                ...dataImprovement.map((i,index)=>({
-                    id: i.id,
-                    dfEmpAssessorId: data?.assessor.id,
+            comments1?.push(
+                ...commList2.map((i,index)=>({
+                    id: 0,
+                    dfEmpAssessorId: selectedAssessor?.id,
                     comment: i.comment,
                     seqNo: index+1,
                     type: 'c2'
                 } as DfCommentRs))
             )
+            console.log('comments1==================',comments1)
             // const statement = Object.values(editable)      
             const payload = {
                 id: id,
-                dfEmpAssessorId: data?.assessor.id,
+                dfEmpAssessorId: selectedAssessor?.id,
                 statements: statement.map(it=>({
                     id: it.id,
                     dfEmpAssessorId: it.dfEmpAssessorId,
@@ -143,7 +145,7 @@ export default({
         }
     }
 
-    return(<div ref={ref}><Spin spinning={false} >
+    return(<div ref={ref}><Spin spinning={loading} >
         <ProForm dir="vertical"
             submitter={{
                 render: () => 
@@ -153,25 +155,37 @@ export default({
                     >
                        Close
                     </Button>
-                    <Button
+                    {selectedAssessor?.status!='SUMITTED' && type=='EDIT' && <Button
                         onClick={onSubmitHandler}
                     >
                     Submit
-                    </Button>      
+                    </Button>}      
                     {/* {type=='EDIT' && <Button
                         // onClick={() => {onSubmitHandler();}}
                     >
                         Submit
                     </Button> } */}
                 </FooterToolbar> : <></>
-            }}  
+            }} 
         >
            <Space direction="vertical" style={{ width: '100%' }}>
-                {/* <DF360Sumbitter onlyCurrentUser={false}
-                    form={formSubmittor}
-                    title={<div>Employee</div>}
-                    onSetSubmitter={onChangeSubmitterHandler}
-                /> */}
+                <Card title="Assessor Infomation" size="small">
+                    <Row gutter={20}>
+                        <Col flex={1}>
+                            {data?.assessors &&<CheckCard.Group  onChange={v => onChangeAssessor(v?.valueOf() as number)}  defaultValue={selectedAssessor?.id} size='small'>
+                                {data?.assessors.map(r => (<CheckCard size='small' 
+                                avatar={
+                                    <Avatar
+                                        style={{ backgroundColor: '#c2af1f' }}
+                                        icon={<UserOutlined />}
+                                        size="small"
+                                    />
+                                }
+                                key={`assessor-${r.id}`}  title= {`${r.type} - ${r.empNo}`} description={`${r.empName}`}  value={r.id}/>)) }
+                            </CheckCard.Group>}
+                        </Col>
+                    </Row>                    
+                </Card>
                 <ProCard size="small" headerBordered title="Employee Infomation">
                     <Descriptions>
                         <Descriptions.Item label="Employee ID" style={{ fontWeight: 'bolder' }}>{data?.empNo}</Descriptions.Item>
@@ -187,7 +201,7 @@ export default({
                     headerBordered
                     title= "EVALUATION"
                 >
-                    {data?.statementEvaluations && <StatementTable 
+                    {selectedAssessor?.statementEvaluations && <StatementTable 
                         items={statement} 
                         editableFormRef={editableFormRef}
                         editable={true} 
@@ -195,40 +209,41 @@ export default({
                         onSetItems={setStatement}
                     />}
                 </ProCard>
-                <CommentTable title="4.	Please state three (3) good points or strengths of your colleague." 
+                {selectedAssessor?.type=='SELF' &&<CommentTable title="4. Please state three (3) good points or strengths of your colleague." 
                     commTitle={'Strength'} 
                     initDataItems={dataStrength} 
-                    onSetItems={setDataStrength}
-                    editableFormRef={editableStrengthFormRef}  
+                    // onSetItems={setDataStrength}
+                    editableFormRef={editableStrengthFormRef1}  
                     editable
-                />
-                <CommentTable title="5.	Please state three (3) areas of improvement for your colleague." 
+                />}
+                {selectedAssessor?.type=='SELF' && <CommentTable title="5. Please state three (3) areas of improvement for your colleague." 
                     commTitle={'Improvement'} 
                     initDataItems={dataImprovement} 
-                    onSetItems={setDataImprovement} 
-                    editableFormRef={editableImprovementFormRef} 
+                    // onSetItems={setDataImprovement} 
+                    editableFormRef={editableImprovementFormRef2} 
                     editable
-                />
-                
-                
-                {/* <ProCard size="small"                  
-                    headerBordered
-                    title= {<div>Assessors<span style={{color:'red'}}>*</span></div>}
-                >
-                    <Flex vertical>
-                        <Flex justify="flex-center" gap={25}>
-                            <Flex vertical style={{ width: '100%' }}>
-                                <AssessorList title="Manager" editableFormRef={editableManagerFormRef} initData={managers} items={managerItems} onSetItems={setManagerItems}/>
-                            </Flex>
-                            <Flex vertical style={{width:'100%'}}> 
-                                <AssessorList title="Peers" editableFormRef={editablePeerFormRef} initData={peers} items={peerItem} onSetItems={setPeerItem}/>
-                            </Flex>  
-                            <Flex vertical style={{width:'100%'}}>                               
-                                <AssessorList title="Subordinates" editableFormRef={editableSubordinateFormRef} initData={subordinates} items={subordinateItem} onSetItems={setSubordinateItem}/>
-                            </Flex>  
-                        </Flex> 
-                    </Flex>               
-                </ProCard> */}
+                />}
+                {selectedAssessor?.type=='Manager' && <CommentTable title="4. Please state three (3) key points that you would like the management to help achieve the company's goals or strategies." 
+                    commTitle={'Key Point'} 
+                    initDataItems={dataImprovement} 
+                    // onSetItems={setDataImprovement} 
+                    editableFormRef={editableFormRef3}
+                    editable
+                />}
+                {selectedAssessor?.type=='Manager' && <CommentTable title="5. Please state three (3) good points or strengths of your line manager" 
+                    commTitle={'Good Point'} 
+                    initDataItems={dataImprovement} 
+                    // onSetItems={setDataImprovement} 
+                    editableFormRef={editableFormRef4}
+                    editable
+                />}
+                {selectedAssessor?.type=='Manager' && <CommentTable title="6. Please state three (3) areas of improvement for your line manager." 
+                    commTitle={'Improvement'} 
+                    initDataItems={dataImprovement} 
+                    // onSetItems={setDataImprovement} 
+                    editableFormRef={editableFormRef5}
+                    editable
+                />}
            </Space>            
         </ProForm>
     </Spin></div>)

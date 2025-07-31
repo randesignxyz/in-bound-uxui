@@ -61,9 +61,11 @@ export interface RegisterCustomerDetailResponse{
   priceTradeOfferId?: number;
   priceTradeOfferName?: string;
   sapPriceTradeOfferId?: number;
+  sapPriceTradeOfferName?: string;
   paymentTermId?: number;
   paymentTermName?: string;
   sapPaymentTermId?: number;
+  sapPaymentTermName?: string;
   outletTypeId?: number;
   outletTypeName?: string;
   divisionId?: number;

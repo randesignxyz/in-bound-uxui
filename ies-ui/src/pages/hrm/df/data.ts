@@ -60,15 +60,22 @@ export interface DF360EmpDetailRs {
   lastModifiedBy: string;
   lastModifiedDate: Moment;
   dueDate?: Moment;
-  statementEvaluations:DfEmpEvaluationRs[];
-  assessor: DfEmpAssessorRs
+  // statementEvaluations:DfEmpEvaluationRs[];
+  // comments?: DfCommentRs[];
+  currentAssessor: DfEmpAssessorRs;
+  assessors: DfEmpAssessorRs[];
 };
 export interface DfEmpAssessorRs{
   id: number;
   dfEmpId: number;
   empId: number;
+  empNo: string;
+  empName: string;
   userId: string;
   type: string;
+  status: string;
+  statementEvaluations:DfEmpEvaluationRs[];
+  comments?: DfCommentRs[];
 }
 export interface DfEmpEvaluationRs{ 
   id: number;
@@ -116,7 +123,8 @@ export interface DF360EmpListItem {
   dueDate: Moment;
   formNo?: string;
   processInstId: string;
-  status: string;  
+  status: string;
+  assessors: DfEmpAssessorRs[];
 };
 
 export interface DF360UpdatePlayload {

@@ -57,7 +57,8 @@ const AddressListView: React.FC<AddressListViewProps> = ({
         modal.data?.districtId || -1,
         modal.data?.communeId || -1,
       ]);
-      form.setFieldsValue({ ...modal.data });
+      // modal.data?.address='Hello'
+      form.setFieldsValue({ ...modal.data,address:'Hello' });
     }
     return () => {
       form.resetFields();
@@ -103,7 +104,7 @@ const AddressListView: React.FC<AddressListViewProps> = ({
         dataSource={list}
         itemLayout="horizontal"
         rowKey="key"
-        renderItem={(item) => (
+        renderItem={(item,index) => (
           <List.Item
             extra={[
               !addressReadonly && (
@@ -124,7 +125,7 @@ const AddressListView: React.FC<AddressListViewProps> = ({
               title={
                 <Space>
                   {' '}
-                  <AimOutlined /> {item.address} {/*<Tag>{item.type?.name}</Tag>{' '}*/}
+                  <AimOutlined /> {index+'-'+item.address} {/*<Tag>{item.type?.name}</Tag>{' '}*/}
                 </Space>
               }
               description={

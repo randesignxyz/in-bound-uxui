@@ -24,8 +24,7 @@ jobs:
       # Checkout the repository code
       - name: Checkout code
         uses: actions/checkout@v4
-
-
+        
       # Install dependencies 
       - name: Install dependencies
         run: npm install --legacy-peer-deps
@@ -44,11 +43,26 @@ jobs:
         shell: pwsh
         working-directory: ies-ui
 
+
+      # Copy only the project folder to the DevOps directory
+      - name: Copy project folder
+        run: |
+          $source = "C:\Github-Action\ies-frontend\_work\ies-frontend-v4\ies-frontend-v4\ies-ui"
+          $destination = "C:\DevOps"
+          if (Test-Path $source) {
+            Copy-Item -Path "$source\*" -Destination $destination -Recurse -Force
+            Write-Output "Copied  folder from $source to $destination"
+          } else {
+            Write-Error "folder not found at $source"
+            exit 1
+          }
+        shell: pwsh
+
+
       # Build project  
       - name: Build IES Aplication
         run: npm run build
         shell: pwsh
-        working-directory: ies-ui
 
 
 

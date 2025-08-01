@@ -24,9 +24,32 @@ jobs:
       # Checkout the repository code
       - name: Checkout code
         uses: actions/checkout@v4
+
+      # Compare package.json files
+      - name: Compare package.json files
+        id: compare-package
+        run: |
+          $serverPackage = "C:\DevOps\ies-frontend\package.json"
+          $repoPackage = ".\ies-ui\package.json"
+          $shouldInstall = $true
+          if ((Test-Path -Path $serverPackage) -and (Test-Path -Path $repoPackage)) {
+            $serverHash = (Get-FileHash -Path $serverPackage -Algorithm SHA256).Hash
+            $repoHash = (Get-FileHash -Path $repoPackage -Algorithm SHA256).Hash
+            if ($serverHash -eq $repoHash) {
+              $shouldInstall = $false
+              Write-Output "package.json files are identical, skipping npm install"
+            } else {
+              Write-Output "package.json files differ, proceeding with npm install"
+            }
+          } else {
+            Write-Output "One or both package.json files missing, proceeding with npm install"
+          }
+          Write-Output "should-install=$shouldInstall" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+        shell: pwsh
         
       # Install dependencies 
       - name: Install dependencies
+        if: steps.compare-package.outputs.should-install == 'true'
         run: npm install --legacy-peer-deps
         shell: pwsh
         working-directory: ies-ui

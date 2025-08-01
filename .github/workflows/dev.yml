@@ -48,7 +48,7 @@ jobs:
       - name: Copy project folder
         run: |
           $source = "C:\Github-Action\ies-frontend\_work\ies-frontend-v4\ies-frontend-v4\ies-ui"
-          $destination = "C:\DevOps"
+          $destination = "C:\DevOps\ies-frontend"
           if (Test-Path $source) {
             Copy-Item -Path "$source\*" -Destination $destination -Recurse -Force
             Write-Output "Copied  folder from $source to $destination"

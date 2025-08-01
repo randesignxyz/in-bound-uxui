@@ -58,11 +58,11 @@ jobs:
           }
         shell: pwsh
 
-
       # Build project  
       - name: Build IES Aplication
         run: npm run build
         shell: pwsh
+        working-directory: C:\DevOps\ies-frontend
 
 
 

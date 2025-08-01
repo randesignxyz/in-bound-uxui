@@ -30,7 +30,7 @@ jobs:
         id: compare-package
         run: |
           $serverPackage = "C:\DevOps\ies-frontend\package.json"
-          $repoPackage = ".\ies-ui\package.json"
+          $repoPackage = "ies-ui\package.json"
           $shouldInstall = $true
           if ((Test-Path -Path $serverPackage) -and (Test-Path -Path $repoPackage)) {
             $serverHash = (Get-FileHash -Path $serverPackage -Algorithm SHA256).Hash

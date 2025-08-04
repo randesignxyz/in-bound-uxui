@@ -16,16 +16,17 @@ export const getRegisterCustomerRequestForms = (): DataForm[] => [
   },
   {
     formKey: [     
-      RegisterCustomerRequestFormNames.funManagerApproval
+      RegisterCustomerRequestFormNames.funManagerApproval,
+      RegisterCustomerRequestFormNames.financeManagerApproval
     ],
     dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,
     actionDataForm: (props: ActionDataFormProps) => <DefaultActionForm {...props} />,
   },
-   {
-    formKey: [  
-      RegisterCustomerRequestFormNames.financeManagerApproval
-    ],
-    dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,
-    actionDataForm: (props: ActionDataFormProps) => <FinanceApprovalForm {...props} />,
-  },
+  //  {
+  //   formKey: [  
+  //     RegisterCustomerRequestFormNames.financeManagerApproval
+  //   ],
+  //   dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,
+  //   actionDataForm: (props: ActionDataFormProps) => <FinanceApprovalForm {...props} />,
+  // },
 ];

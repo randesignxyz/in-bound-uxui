@@ -375,6 +375,14 @@ export default [
     access: 'canAccessProbationEvaluation',
     component: './hrm/probation',
   },
+  {
+    path: '/hrm/df/:view/*',
+    name: 'df_360',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessDF360',
+    component: './hrm/df',
+  },
   /**********HRM>>**************/
 
   /**********<<Sale**************/

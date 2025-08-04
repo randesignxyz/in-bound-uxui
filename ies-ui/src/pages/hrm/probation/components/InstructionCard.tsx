@@ -9,7 +9,7 @@ export default({}:Props)=>{
         bordered headerBordered 
     >                  
       <div >• Information in this form and process is Private and Confidential.</div>
-      <div >• Line Manager must set realistic performance expectations and communicate these expectations clearly to employee at the start of the probation..</div>
+      <div >• Line Manager must set realistic performance expectations and communicate these expectations clearly to employee at the start of the probation.</div>
       <div >• Probation evaluation is to be conducted at least 2 weeks before probation ends:</div>
         <div style={{paddingLeft:15}}> 1-	Regular employee if the probation performance is satisfied. </div>
         <div style={{paddingLeft:15}}> 2-	Terminated employee if the probation performance is unsatisfied.</div>

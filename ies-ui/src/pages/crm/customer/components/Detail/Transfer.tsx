@@ -2,7 +2,6 @@ import FormModalComp, { FormModalProps } from "@/components/FormModal";
 import { LookupDataItem } from "@/services/data";
 import { ProCard, ProFormText, ProFormTextArea } from "@ant-design/pro-components";
 import ProForm, { ProFormSelect } from "@ant-design/pro-form";
-import { Card } from "antd";
 import { useForm } from "antd/lib/form/Form";
 import { FC, useEffect } from "react";
 
@@ -14,8 +13,7 @@ interface Props extends FormModalProps {
 
 const Transfer: FC<Props> = ({  currentSe, seList, onTransfer, ...props }) => {
     const [form] = useForm<{ fromSe: string, salespersonId: number; remarks: string}>()
-    console.log(currentSe);
-    
+
     useEffect(() => {
         if(!props.open) return
         form.setFieldsValue({
@@ -54,7 +52,6 @@ const Transfer: FC<Props> = ({  currentSe, seList, onTransfer, ...props }) => {
                         rules={[{ required: true }]}
                     />
                 </ProForm>
-
             </ProCard>
 
         </FormModalComp>

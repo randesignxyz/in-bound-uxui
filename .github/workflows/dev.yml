@@ -1,0 +1,104 @@
+name: Build and Deploy IES-Frontend QAS (Blue-Green with IIS Auto Replace)
+
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+    branches:
+      - dev
+
+jobs:
+  build-and-deploy:
+    runs-on: self-hosted
+    defaults:
+      run:
+        working-directory: ./
+    env:
+      BLUE_DIR: C:\deployment\sfa-web-backend\blue
+      GREEN_DIR: C:\deployment\sfa-web-backend\green
+      ACTIVE_ENV_FILE: C:\deployment\sfa-web-backend\active_env.txt
+      NODE_OPTIONS: --max-old-space-size=4096
+
+    steps:
+      # Checkout the repository code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Compare package.json files
+      - name: Compare package.json files
+        id: compare-package
+        run: |
+          $serverPackage = "C:\DevOps\ies-frontend\package.json"
+          $repoPackage = "ies-ui\package.json"
+          $shouldInstall = $true
+          if ((Test-Path -Path $serverPackage) -and (Test-Path -Path $repoPackage)) {
+            $serverHash = (Get-FileHash -Path $serverPackage -Algorithm SHA256).Hash
+            $repoHash = (Get-FileHash -Path $repoPackage -Algorithm SHA256).Hash
+            if ($serverHash -eq $repoHash) {
+              $shouldInstall = $false
+              Write-Output "package.json files are identical, skipping npm install"
+            } else {
+              Write-Output "package.json files differ, proceeding with npm install"
+            }
+          } else {
+            Write-Output "One or both package.json files missing, proceeding with npm install"
+          }
+          Write-Output "should-install=$shouldInstall" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+        shell: pwsh
+        
+      # Install dependencies 
+      - name: Install dependencies
+        if: steps.compare-package.outputs.should-install == 'true'
+        run: npm install --legacy-peer-deps
+        shell: pwsh
+        working-directory: ies-ui
+
+      # # Install browser-image-compression
+      # - name: Install browser-image-compression
+      #   run: npm install browser-image-compression --legacy-peer-deps
+      #   shell: pwsh
+      #   working-directory: ies-ui
+
+      # # Install Firebase 
+      # - name: Install Firebase
+      #   run: npm install firebase --legacy-peer-deps
+      #   shell: pwsh
+      #   working-directory: ies-ui
+
+
+      # Copy only the project folder to the DevOps directory
+      - name: Copy project folder
+        run: |
+          $source = "C:\Github-Action\ies-frontend\_work\ies-frontend-v4\ies-frontend-v4\ies-ui"
+          $destination = "C:\DevOps\ies-frontend"
+          if (Test-Path $source) {
+            Copy-Item -Path "$source\*" -Destination $destination -Recurse -Force
+            Write-Output "Copied  folder from $source to $destination"
+          } else {
+            Write-Error "folder not found at $source"
+            exit 1
+          }
+        shell: pwsh
+
+      # Build project  
+      - name: Build IES Aplication
+        run: npm run build
+        shell: pwsh
+        working-directory: C:\DevOps\ies-frontend
+
+      # Copy only dist folder to the deployment directory
+      - name: Copy project folder
+        run: |
+          $source = "C:\DevOps\ies-frontend\dist"
+          $destination = "C:\deployment\ies-frontend\dist"
+          if (Test-Path $source) {
+            Copy-Item -Path "$source\*" -Destination $destination -Recurse -Force
+            Write-Output "Copied  folder from $source to $destination"
+          } else {
+            Write-Error "folder not found at $source"
+            exit 1
+          }
+        shell: pwsh
+
+

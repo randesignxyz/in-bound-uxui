@@ -1,6 +1,6 @@
 import { EditableFormInstance, EditableProTable, FooterToolbar, ProCard, ProForm, ProFormGroup, ProFormRadio, ProFormSelect, ProFormText, ProFormTextArea, ProTable } from "@ant-design/pro-components"
 import { Button, Card, Checkbox, Flex, Form, message, Modal, Space, Spin } from "antd"
-import { AddresssView, DocRequirementCustomerParams, DoRequireCustomerList, PurchasingPerformanceItem, RegisterCustomer, RegisterCustomerDetailResponse } from "./data";
+import { AddresssView, DocRequirementCustomerParams, DoRequireCustomerList, PurchasingPerformanceItem, RcSapEmpSale, RegisterCustomer, RegisterCustomerDetailResponse } from "./data";
 import { useEffect, useRef, useState } from "react";
 import AddressListView from "./components/AddressListView";
 import { model } from "../customer/model";
@@ -13,6 +13,7 @@ import FileUploader from "@/components/Attachment/FileUploader";
 import AttachedFileList from "@/components/Attachment/AttachedFileList";
 import DocmentRequire from "./components/DocmentRequire";
 import RemarkCard from "./components/RemarkCard";
+import { LookupData } from "@/services/data";
 
 export default({
   id,
@@ -27,7 +28,7 @@ export default({
 })=>{
   const service = RegisterCustomerServiceAPI()
   const [form] = Form.useForm<RegisterCustomerDetailResponse>();
-    const { ref, inView } = useInView({});
+  const { ref, inView } = useInView({});
   // const { state, ops, actions, modals } = model(0);
   const { state1,actions1 } = registerModel();
 
@@ -41,18 +42,16 @@ export default({
   const [personalList, setPersonaList] = useState<DoRequireCustomerList[]>([])
   const [coporateList, setcoporateList] = useState<DoRequireCustomerList[]>([]) 
   const [data, setData] = useState<RegisterCustomerDetailResponse>()
+  const [ lookupDataList, setLookupDataList ] = useState<LookupData[]>([])
+  const [sale, setSale] = useState<RcSapEmpSale[]>([])
 
 
   useEffect(() => {   
     initData()
   }, [id]);
 
-  const initData = async () =>{   
-    // initAddress()
-    // await ops.initData('Detail');
-    const rs = await actions1.initData("Detail")
-    console.log('register initData:  ', state1.initData?.lookupDataList)
-  
+  const initData = async () =>{ 
+    const rs = await actions1.initData("Detail")  
     if (id && id > 0) {
       const data = await  service.detail(id)
       initFormData(data)
@@ -63,12 +62,25 @@ export default({
       setcoporateList(data?.docCorporateList||[])
       // setUploadFileIds(data?.attachedFiles||[])
       setAttachedFiles(data?.attachedFiles?.map(it => ({ fileId: it, activity: 'Start' })) || [])
+      await service.initCustomerData([{
+          actionName: 'lookupDataList',
+          payload: {
+              list: [
+                  'SALE_SAP_SERIES'
+              ],
+          },
+      }]).then((rs)=>{
+          setLookupDataList(rs.lookupDataList||[])
+      })    
     }else{
       service.listDocRequirement().then(r=>{
         setPersonaList(r.filter(it => it.docSource==='PERSONAL'))
         setcoporateList(r.filter(it => it.docSource==='CORPORATE'))
       })
     }
+    service.listRcSapEmployeeSale().then(r=>{
+      setSale(r)
+    })
   }
   const initFormData = (data: RegisterCustomerDetailResponse) =>{
     setData(data)
@@ -155,7 +167,8 @@ export default({
     
   };
   const onSaveDraftHandler = async () => {   
-    const dataPayload = await getPayload();    
+    const dataPayload = await getPayload();  
+    console.log('register customer', dataPayload)  
     await editablePPItemFormRef.current?.validateFields()    
     Modal.confirm({
       title: 'Save Register Customer',
@@ -315,13 +328,25 @@ export default({
           // direction="row"
         >
           <ProFormGroup >
-            <ProFormText
+            {/* <ProFormText
               label="Customer's ID"
               disabled
               // rules={[{ required: true }]}
               name={'customerCode'}
               allowClear
               width={470}
+            /> */}
+            <ProFormSelect
+                label="Customer's ID"
+                disabled= {(type=='CREATE')}
+                name={'seriesId'}
+                rules={[{ required: (type=='EDIT') }]}
+                placeholder={"Customer's ID"}
+                options={lookupDataList?.filter((it) => it.type === 'SALE_SAP_SERIES' && it?.actived=='Y')?.map((it) => ({
+                    label: it.name,
+                    value: it.id,
+                }))}
+                width={470}
             />
             <ProFormRadio.Group
               name="vatInv"
@@ -441,6 +466,7 @@ export default({
               <ProFormSelect
               label="Outlet Type"
               name={'outletTypeId'}
+              rules={[{ required: true }]}
               placeholder={'Outlet Type'}
               options={state1.initData?.outletTypeList?.map((it) => ({
                 label: it.name,
@@ -452,6 +478,7 @@ export default({
               label="Region"
               name={'regionId'}
               placeholder={'Region'}
+              rules={[{ required: true }]}
               options={state1.initData?.regionList?.map((it) => ({
                 label: it.name,
                 value: it.id,
@@ -461,6 +488,7 @@ export default({
               <ProFormSelect
               label="Division"
               name={'divisionId'}
+              rules={[{ required: true }]}
               placeholder={'Division'}
               options={state1.initData?.lookupDataList?.filter((it) => it.type === 'CUSTOMER_DIVISION' && it?.actived=='Y')?.map((it) => ({
                 label: it.name,
@@ -471,6 +499,7 @@ export default({
             <ProFormSelect
               label="Channel"
               name={'channelId'}
+              rules={[{ required: true }]}
               placeholder={'Channel'} //SALE_SUB_CHANNEL
               options={state1.initData?.lookupDataList?.filter((it) => it.type === 'SALE_MAIN_CHANNEL' && it?.actived=='Y')?.map((it) => ({
                 label: it.name,
@@ -481,6 +510,7 @@ export default({
             <ProFormSelect
               label="Sub Channel"
               name={'subChannelId'}
+              rules={[{ required: true }]}
               placeholder={'Channel'} //SALE_SUB_CHANNEL
               options={state1.initData?.lookupDataList?.filter((it) => it.type === 'SALE_SUB_CHANNEL' && it?.actived=='Y')?.map((it) => ({
                 label: it.name,
@@ -489,7 +519,19 @@ export default({
               width={470}
             /> 
           </ProFormGroup>   
-          <ProFormText readonly name={'createdBy'} label="Sale Executive"  width={470}/>       
+          {/* <ProFormText readonly name={'createdBy'} label="Sale Executive"  width={470}/>   */}
+          <ProFormSelect
+              label="Sale Executive"
+              showSearch              
+              name={'saleId'}
+              rules={[{ required: true }]}
+              placeholder={"Customer's ID"}
+              options={sale?.filter((it) => it?.status=='ACTIVE')?.map((it) => ({
+                  label: it.empName,
+                  value: it.empId,
+              }))}
+              width={470}
+          />     
         </ProCard>
         <ProCard size="small"                  
           headerBordered
@@ -514,7 +556,7 @@ export default({
           <ProFormGroup >
             <ProFormText
               label="Owner Name(Khmer)"
-              // rules={[{ required: true }]}
+              rules={[{ required: true }]}
               name={'ownerNameKh'}
               allowClear
               width={470}
@@ -537,7 +579,7 @@ export default({
           <ProFormGroup >
             <ProFormText
               label="Purchase Name(Khmer)"
-              // rules={[{ required: true }]}
+              rules={[{ required: true }]}
               name={'purchaseNameKh'}
               allowClear
               width={470}
@@ -638,6 +680,7 @@ export default({
             <ProFormSelect
               label="Frequency of Purchase"
               name={'frequencyPurchase'}
+              rules={[{required:true}]}
               placeholder={'Payment Term'}
               options={[
                 {

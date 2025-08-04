@@ -191,3 +191,11 @@ export interface RegisterCustomerWFPayload{
   instId: string
   seriesId?: number
 }
+
+export interface RcSapEmpSale{
+  empId: number
+  empNo: string
+  empName: string
+  integratedSapOflSaleId: number
+  status: string
+}

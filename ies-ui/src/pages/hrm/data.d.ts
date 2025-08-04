@@ -60,6 +60,7 @@ export type ProbationEvaluationData = {
   attachedFiles?: string[];
   remarks?: string;
   preparationUserId?: number;
+  hoPreparationUserId?: number;
 }
 
 export type StaffRequisitionRequestCancel = {
@@ -151,4 +152,23 @@ export type RequestItem = {
   itemDescription: string
   optionGroup?: string
   selector?: string
+}
+
+export type EmployeeDataRs = {
+  id: number;
+  buId?: number;
+  buName?: string;
+  empNo: string;
+  firstName: string;
+  lastName: string;
+  internalName: string;
+  department: string;
+  subDepartment?: string;
+  hod: string;
+  hodEnpNo?: string;
+  jobTitle: string;
+  hodEmpId?: number;
+  hodUserId?: string;
+  jobTitle: string;
+  reportTo?: string;
 }

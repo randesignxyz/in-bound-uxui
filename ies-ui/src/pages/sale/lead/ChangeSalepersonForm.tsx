@@ -1,7 +1,7 @@
 import FormModalComp, { FormModalProps } from "@/components/FormModal";
 import { simpleRequestActions } from "@/services/model";
 import { ActionType, ProForm, ProFormSelect, ProTable } from "@ant-design/pro-components";
-import { Card, Flex, Input, Table } from "antd";
+import { Card, Checkbox, Flex, Input } from "antd";
 import { LeadServiceAPI } from "./services";
 import { useEffect, useRef, useState } from "react";
 import { LeadDetail } from "@/services/sale/data";
@@ -22,6 +22,9 @@ const ChangeSalepersonForm: React.FC<Props> = ({ onSave, ...props }) => {
     const [param, setParam] = useState<{
         empNo?: string
     }>();
+    const [searchValue, setSearchValue] = useState('');
+    const [split, setSplit] = useState(false);
+
     useEffect(() => {
         props.open && form.resetFields();
         props.open && setDataSource([]);
@@ -51,9 +54,9 @@ const ChangeSalepersonForm: React.FC<Props> = ({ onSave, ...props }) => {
                                 label="Saleperson"
                                 noStyle
                                 placeholder={"Search by Saleperson"}
-                                width={"md"}
+                                width={"lg"}
                                 onChange={(e: string) => {
-                                    setParam({ empNo: e });
+                                    setParam({ empNo: e,  });   
                                     actionRef.current?.reload();
                                 }}
                                 rules={[
@@ -68,13 +71,32 @@ const ChangeSalepersonForm: React.FC<Props> = ({ onSave, ...props }) => {
                                     }));
                                 }}
                             />
+
                             <Input.Search
                                 placeholder={"Please input lead code to filter"}
+                                onChange={(e) => setSearchValue(e.target.value)}
+                                value={searchValue}
+                                allowClear
                                 onSearch={(e) => {
-                                    setParam({ empNo: e });
+                                    setParam({ empNo: e,split });
                                     actionRef.current?.reload?.();
                                 }}
                             />
+                            <Checkbox onClick={(e:any) => {
+                                const checked = e.target?.checked;
+                                setSplit(checked);
+                                if (checked) {
+                                    // transform space-separated to comma-separated
+                                    const newValue = searchValue.trim().split(/\s+/).join(',');
+                                    setSearchValue(newValue);
+                                } else {
+                                    // Optionally: transform comma back to space (or keep as is)
+                                    const newValue = searchValue.trim().split(/,+/).join(' ');
+                                    setSearchValue(newValue);
+                                }
+                            }}>
+                                Split
+                            </Checkbox>
                         </Flex>
                     </Card>
                     <Card
@@ -88,7 +110,7 @@ const ChangeSalepersonForm: React.FC<Props> = ({ onSave, ...props }) => {
                             size="small"
                             options={false}
                             rowSelection={{
-                                selectedRowKeys: keySelected.filter((value, index, self) => self.indexOf(value) === index).filter(p=>p !=undefined) ,
+                                selectedRowKeys: keySelected.filter((value, index, self) => self.indexOf(value) === index).filter(p => p != undefined),
                                 onSelect(item, selected) {
                                     if (selected) {
                                         setKeySelected(v => ([...(v || []), item.id]))
@@ -96,20 +118,20 @@ const ChangeSalepersonForm: React.FC<Props> = ({ onSave, ...props }) => {
                                         setKeySelected(v => v?.filter(it => it != item.id))
                                     }
                                 },
-                                onSelectAll:(select, row, changeRow)=>{
-                                    if(select){
-                                        setKeySelected((v)=>[...v, ...row.map(o=>o?.id)])
+                                onSelectAll: (select, row, changeRow) => {
+                                    if (select) {
+                                        setKeySelected((v) => [...v, ...row.map(o => o?.id)])
                                     }
-                                    else{
-                                        const toRemove = changeRow.map(o=>o.id);
-                                        setKeySelected((v)=>{
-                                            const d = v.filter(t=> ! toRemove.includes(t));
+                                    else {
+                                        const toRemove = changeRow.map(o => o.id);
+                                        setKeySelected((v) => {
+                                            const d = v.filter(t => !toRemove.includes(t));
                                             return d
                                         })
                                     }
                                 },
-                                onChange(_, selectedRows, {type},) {
-                                    if(type ==="none" ){
+                                onChange(_, selectedRows, { type },) {
+                                    if (type === "none") {
                                         setKeySelected([])
                                     }
                                 },
@@ -133,6 +155,11 @@ const ChangeSalepersonForm: React.FC<Props> = ({ onSave, ...props }) => {
                                 });
                             }}
                             columns={[
+                                {
+                                    title: "Lead Name",
+                                    render: (_, r) => r.leadCode
+                                    // render: (_, r) => [r.firstName, r.lastName || r.internalName]
+                                },
                                 {
                                     title: "Lead Name",
                                     render: (_, r) => [r.firstName, r.lastName || r.internalName]

@@ -111,9 +111,9 @@ export default({
         hotspot: it.hotspot,
         direction: it.direction,
       }))||[],
-      shipping: shippingAddressList?.map(it=>({
+      shipping: shippingAddressList?.map((it,index)=>({
         id: it.id ||0,
-        address: it.address,
+        address: 'S'+(index+1).toString().padStart(2,'0')+(it.address?'-'+it.address:''),
         houseNo: it.houseNo,
         houseNoKh: it.houseNoKh,
         streetNo: it.streetNo,
@@ -248,11 +248,11 @@ export default({
               setShippingAddressList((prev)=>{
                 const list = prev || []
                 if(isNew){
-                  return [...list,{id:0,key: uniqueId().toString(),...data}]
+                  return [...list,{id:0,key: uniqueId().toString(),...data,type: addressType}]
                 }else{
                   return list.map(it=> {
                     if(it.key===data.key){
-                      return data
+                      return {...data,type: addressType}
                     }else{
                       return it
                     }                  
@@ -264,11 +264,11 @@ export default({
               setAddressList((prev)=>{
                 const list = prev || []
                 if(isNew){
-                  return [...list,{id:0,key: uniqueId().toString(),...data}]
+                  return [...list,{id:0,key: uniqueId().toString(),...data,type: addressType}]
                 }else{
                   return list.map(it=> {
                     if(it.key===data.key){
-                      return data
+                      return {...data,type: addressType}
                     }else{
                       return it
                     }                  

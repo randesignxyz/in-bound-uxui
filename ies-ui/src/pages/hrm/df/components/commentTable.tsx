@@ -74,7 +74,7 @@ export default({title, commTitle, initDataItems, editableFormRef, editable}: Pro
                         key={`del-${row.id}`}
                         size="small"
                         icon={<MinusCircleOutlined />}
-                    >{(config?.index||0)}</Button>)
+                    />)
                 ],
                 // onValuesChange: (_, recordList) => {   
                 //     if(initDataItems.length< recordList.length){

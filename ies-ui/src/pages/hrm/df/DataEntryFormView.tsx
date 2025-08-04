@@ -42,6 +42,9 @@ export default({
     const editableFormRef5 = useRef<EditableFormInstance>();
     const [dataStrength, setDataStrength] = useState<DfComment[]>([])
     const [dataImprovement, setDataImprovement] = useState<DfComment[]>([])
+    const [dataComment3, setDataComment3] = useState<DfComment[]>([])
+    const [dataComment4, setDataComment4] = useState<DfComment[]>([])
+    const [dataComment5, setDataComment5] = useState<DfComment[]>([])
     const [data, setDate] = useState<DF360EmpDetailRs>()
     const [selectedAssessor, setSelectedAssessor] = useState<DfEmpAssessorRs>()
         
@@ -59,6 +62,9 @@ export default({
         setStatement((selectedAssessor?.statementEvaluations||[]).map(it=>({...it,key: uniqueId().toString()})))
         setDataStrength((selectedAssessor?.comments?.filter(it=>it.type=='c1')||[]).map(it=>({...it,key: uniqueId().toString()})))
         setDataImprovement((selectedAssessor?.comments?.filter(it=>it.type=='c2')||[]).map(it=>({...it,key: uniqueId().toString()})))
+        setDataComment3((selectedAssessor?.comments?.filter(it=>it.type=='c3')||[]).map(it=>({...it,key: uniqueId().toString()})))
+        setDataComment4((selectedAssessor?.comments?.filter(it=>it.type=='c4')||[]).map(it=>({...it,key: uniqueId().toString()})))
+        setDataComment5((selectedAssessor?.comments?.filter(it=>it.type=='c5')||[]).map(it=>({...it,key: uniqueId().toString()})))
     },[selectedAssessor])
 
     const onChangeAssessor=(v: number) =>{
@@ -73,11 +79,17 @@ export default({
     }
     const onSubmitHandler = async () => {
         const submitter = await formSubmittor.validateFields()  
-        const editable1 = await editableStrengthFormRef1.current?.validateFields()
-        const editable2 = await editableImprovementFormRef2.current?.validateFields() 
+        const editable1 = await editableStrengthFormRef1?.current?.validateFields()
+        const editable2 = await editableImprovementFormRef2?.current?.validateFields() 
+        const editable3 = await editableFormRef3.current?.validateFields() 
+        const editable4 = await editableFormRef4.current?.validateFields() 
+        const editable5 = await editableFormRef5.current?.validateFields() 
         
-        const commList1: DfComment[] = Object.values(editable1)  
-        const commList2: DfComment[] = Object.values(editable2)  
+        const commList1: DfComment[] = editable1?Object.values(editable1):[] 
+        const commList2: DfComment[] = editable2?Object.values(editable2):[] 
+        const commList3: DfComment[] = editable3?Object.values(editable3):[]
+        const commList4: DfComment[] = editable4?Object.values(editable4):[]
+        const commList5: DfComment[] = editable5?Object.values(editable5):[]
         console.log('editableImprovementFormRef',editable1)
 
         if(!submitter) return        
@@ -90,16 +102,17 @@ export default({
             message.error("EVALUATION: The rating of each statement is required.")
             await editableFormRef.current?.validateFields()
             return
-       }else{
-            const comments1:DfCommentRs[] =[]
-            comments1.push(...commList1?.map((i,index)=>({
+        }else{
+            const comments:DfCommentRs[] =[]
+            
+            comments.push(...commList1?.map((i,index)=>({
                 id: 0,
                 dfEmpAssessorId: selectedAssessor?.id,
                 comment: i.comment,
                 seqNo: index+1  ,
                 type: 'c1'
             } as DfCommentRs)))
-            comments1?.push(
+            comments?.push(
                 ...commList2.map((i,index)=>({
                     id: 0,
                     dfEmpAssessorId: selectedAssessor?.id,
@@ -108,7 +121,35 @@ export default({
                     type: 'c2'
                 } as DfCommentRs))
             )
-            console.log('comments1==================',comments1)
+            
+            comments?.push(
+                ...commList3.map((i,index)=>({
+                    id: 0,
+                    dfEmpAssessorId: selectedAssessor?.id,
+                    comment: i.comment,
+                    seqNo: index+1,
+                    type: 'c3'
+                } as DfCommentRs))
+            )
+            comments?.push(
+                ...commList4.map((i,index)=>({
+                    id: 0,
+                    dfEmpAssessorId: selectedAssessor?.id,
+                    comment: i.comment,
+                    seqNo: index+1,
+                    type: 'c4'
+                } as DfCommentRs))
+            )
+            comments?.push(
+                ...commList5.map((i,index)=>({
+                    id: 0,
+                    dfEmpAssessorId: selectedAssessor?.id,
+                    comment: i.comment,
+                    seqNo: index+1,
+                    type: 'c5'
+                } as DfCommentRs))
+            )
+            console.log('comments1==================',comments)
             // const statement = Object.values(editable)      
             const payload = {
                 id: id,
@@ -125,7 +166,7 @@ export default({
                     rating5: it.rating5,
                     seqNo: it.seqNo                    
                 } as DF360UpdatePlayload)),
-                comments: comments1           
+                comments: comments          
             } as DF360UpdatePlayload
             console.log('data ', payload);
 
@@ -225,21 +266,21 @@ export default({
                 />}
                 {selectedAssessor?.type=='Manager' && <CommentTable title="4. Please state three (3) key points that you would like the management to help achieve the company's goals or strategies." 
                     commTitle={'Key Point'} 
-                    initDataItems={dataImprovement} 
+                    initDataItems={dataComment3} 
                     // onSetItems={setDataImprovement} 
                     editableFormRef={editableFormRef3}
                     editable
                 />}
                 {selectedAssessor?.type=='Manager' && <CommentTable title="5. Please state three (3) good points or strengths of your line manager" 
                     commTitle={'Good Point'} 
-                    initDataItems={dataImprovement} 
+                    initDataItems={dataComment4} 
                     // onSetItems={setDataImprovement} 
                     editableFormRef={editableFormRef4}
                     editable
                 />}
                 {selectedAssessor?.type=='Manager' && <CommentTable title="6. Please state three (3) areas of improvement for your line manager." 
                     commTitle={'Improvement'} 
-                    initDataItems={dataImprovement} 
+                    initDataItems={dataComment5} 
                     // onSetItems={setDataImprovement} 
                     editableFormRef={editableFormRef5}
                     editable

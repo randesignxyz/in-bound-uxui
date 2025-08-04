@@ -1,5 +1,5 @@
 import { LocationType } from '@/services/crm/services';
-import { AddressData, AddresssView, Locations } from '@/services/crm/data';
+import { AddressData,  Locations } from '@/services/crm/data';
 import { LookupData } from '@/services/data';
 import { AimOutlined, DeleteOutlined, EditOutlined, MinusCircleOutlined, MinusOutlined, PlusOutlined } from '@ant-design/icons';
 import { Button, Col, List, Row, Space, Tag } from 'antd';
@@ -7,6 +7,7 @@ import { useForm } from 'antd/lib/form/Form';
 import { useEffect, useState } from 'react';
 import AddressModalEntry from './AddressModalEntry';
 import styles from './style.less';
+import { AddresssView } from '../data';
 
 const DEFAULT_ADDRESS_TYPE_ID = 14033;
 
@@ -58,7 +59,7 @@ const AddressListView: React.FC<AddressListViewProps> = ({
         modal.data?.communeId || -1,
       ]);
       // modal.data?.address='Hello'
-      form.setFieldsValue({ ...modal.data,address:'Hello' });
+      form.setFieldsValue({ ...modal.data });
     }
     return () => {
       form.resetFields();
@@ -125,7 +126,7 @@ const AddressListView: React.FC<AddressListViewProps> = ({
               title={
                 <Space>
                   {' '}
-                  <AimOutlined /> {index+'-'+item.address} {/*<Tag>{item.type?.name}</Tag>{' '}*/}
+                  <AimOutlined />{(item?.type||'')+(index+1).toString().padStart(2,'0')+(item.address? '-'+item.address:'')} {/*<Tag>{item.type?.name}</Tag>{' '}*/}
                 </Space>
               }
               description={

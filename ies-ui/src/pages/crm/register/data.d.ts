@@ -105,7 +105,7 @@ export interface AddresssView {
   id?: number;
   key?: string;
   address: string;
-  // type?: LookupData;
+  type?: string;
   province?: LookupDataItem;
   district?: LookupDataItem;
   commune?: LookupDataItem;

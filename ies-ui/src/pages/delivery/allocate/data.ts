@@ -128,6 +128,7 @@ export type AllocateSOAdvanceParams = {
   searchValue?: string;
   status: string;
   ordered_date?: string;
+  dnStatus?:string
 };
 
 export type DNDetail = {

@@ -1,7 +1,7 @@
 import { formatDate, formatDateTime } from '@/pages/utils';
 import { EditableFormInstance, EditableProTable, ProCard, ProList, ProTable } from '@ant-design/pro-components';
 import { DrawerForm, DrawerFormProps } from '@ant-design/pro-form';
-import { Button, Card, Col, Descriptions, Divider, message, Modal, Progress, Row, Space, Spin, Tag, Typography, UploadFile, Image } from 'antd';
+import { Button, Card, Col, Descriptions, Divider, message, Modal, Progress, Row, Space, Spin, Tag, Typography, UploadFile, Image, Table } from 'antd';
 import moment from 'moment';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AllocateServiceAPI } from './service';
@@ -9,7 +9,7 @@ import { simpleRequestActions } from '@/services/model';
 import { DeliveryDnParams, DeliveryItemList, DeliveryList, DNItemParams, DNParams, UpdateRemarkParams } from './data';
 import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
-import { EditOutlined, InboxOutlined } from '@ant-design/icons';
+import { CheckOutlined, EditOutlined, InboxOutlined } from '@ant-design/icons';
 import AddRemarkModal from './AddRemarkForm';
 import { uploadFileToFirebase } from './uploadImage';
 import { FaRegPenToSquare } from 'react-icons/fa6';
@@ -29,10 +29,12 @@ interface Props extends DrawerFormProps {
     po?: string,
     deliveres?: DeliveryList[],
     reloadTrigger?: number,
-    so?: string
+    so?: string,
+    dn_qty?: number,
+    order_qty?: number
 }
 
-export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, ...rest }: Props) => {
+export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, dn_qty, order_qty, ...rest }: Props) => {
     const { Text } = Typography;
     const access = useAccess();
     const requestActions = simpleRequestActions();
@@ -168,7 +170,10 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, ..
             attachment: item.attachments ?? [], // fallback to empty array if not present
         }],
     });
-
+    const percentage =
+        (dn_qty ?? 0) > 0 && (order_qty ?? 0) > 0
+            ? ((dn_qty ?? 0) / (order_qty ?? 1)) * 100
+            : 0;
     return (
         <DrawerForm
             title="Delivery Note"
@@ -195,13 +200,13 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, ..
                                 {status}
                             </Tag>
 
-                            {/* <Progress
+                            <Progress
                                 percent={percentage || 0}
                                 size="small"
                                 strokeColor={{ from: '#108ee9', to: '#87d068' }}
                                 style={{ width: 100 }}
                                 format={(percent) => `${Math.round(percent ?? 0)}%`}
-                            /> */}
+                            />
                         </div>
                     </Space>
                 )
@@ -227,7 +232,7 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, ..
                                                 <span>
                                                     Claimed:{' '}
                                                     <strong>
-                                                        {group.claimed_by}
+                                                        {group.claimed_by},
                                                     </strong>
                                                     <span style={{ fontSize: 12 }}> {dayjs.utc(group.claimed_date).tz('Asia/Phnom_Penh').format('DD-MMM-YYYY hh:mm a')}</span>
 
@@ -255,6 +260,84 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, ..
                             <ProTable
                                 size="small"
                                 search={false}
+                                expandable={{
+                                    expandedRowRender: (record) => {
+                                        const dnList = record.dn || [];
+                                        const plannedQty = Number(record.qty) || 0;
+                                        return (
+                                            <Table
+                                                size="small"
+                                                rowKey={(r) => r.id}
+                                                columns={[
+                                                    {
+                                                        title: 'DN No',
+                                                        dataIndex: 'dn_num',
+                                                        key: 'dn_num',
+                                                    },
+                                                    {
+                                                        title: 'Delivered Qty',
+                                                        dataIndex: 'dn_qty',
+                                                        key: 'dn_qty',
+                                                        render: (_, dnRecord) => {
+                                                            const qty = parseFloat(dnRecord.dn_qty) || 0;
+                                                            const isMismatch = qty !== plannedQty;
+                                                            return (
+                                                                <span>
+                                                                    {qty.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                                                    {/* {!isMismatch ? (
+                                                                        <span style={{ color: 'green', marginLeft: 20, fontWeight: 'bold' }}><CheckOutlined /></span>
+                                                                    ) : (
+                                                                        <span style={{ color: 'red', marginLeft: 20, fontWeight: 'bold' }}>❗</span>
+                                                                    )} */}
+                                                                </span>
+                                                            );
+                                                        },
+                                                    },
+                                                    {
+                                                        title: 'DN Date',
+                                                        dataIndex: 'dn_date',
+                                                        key: 'dn_date',
+                                                        render: (_, record) => {
+                                                            const deliveryDate = dayjs.utc(group.deliveryDate).tz('Asia/Phnom_Penh').startOf('day');
+                                                            const rawDnDate = record.dn_date;
+                                                            const dnDate = rawDnDate ? dayjs.utc(rawDnDate).tz('Asia/Phnom_Penh').startOf('day') : null;
+
+                                                            const allDNs = group.deliveryItems.flatMap(item => item.dn || []);
+
+                                                            const sortedDnList = allDNs
+                                                                .filter(d => d.dn_num)
+                                                                .sort((a, b) => Number(a.dn_num) - Number(b.dn_num));
+
+                                                            const firstDn = sortedDnList[0];
+                                                            const isFirstDN = record.dn_num === firstDn?.dn_num;
+
+                                                            let tags: React.ReactNode[] = [];
+
+                                                            if (!isFirstDN) {
+                                                                tags.push(
+                                                                    <Tag key="check" color="orange" style={{ marginLeft: 8 }}>Unplanned</Tag>
+                                                                );
+                                                            }
+
+                                                            return (
+                                                                <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                                                                    {dnDate?.isValid() ? dnDate.format('DD-MMM-YYYY') : '-'}
+                                                                    {tags}
+                                                                </span>
+                                                            );
+                                                        }
+                                                    }
+
+
+                                                ]}
+                                                dataSource={dnList}
+                                                pagination={false}
+                                            />
+                                        );
+                                    },
+                                    rowExpandable: (record) => record.dn && record.dn.length > 0,
+                                }}
+
                                 rowKey="id"
                                 dataSource={[
                                     ...group.deliveryItems,
@@ -278,41 +361,78 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, ..
                                         dataIndex: 'itemName',
                                         width: 250,
                                     },
-                                    // {
-                                    //     title: 'Total Qty',
-                                    //     dataIndex: 'qty',
-                                    //     width: 90,
-                                    //     render: (_, record) => {
-                                    //         return (totalQtyByItemCode?.[record.itemCode] ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 });
-                                    //     },
-                                    // },
                                     {
                                         title: 'Plan',
                                         dataIndex: 'qty',
                                         width: 70,
                                     },
+                                    // {
+                                    //     title: 'Delivered',
+                                    //     width: 70,
+                                    //     render: (_, record) => {
+                                    //         const totalDelivered = Array.isArray(record.dn)
+                                    //             ? record.dn.reduce((sum, dn) => sum + (parseFloat(dn.dn_qty) || 0), 0)
+                                    //             : 0;
+
+                                    //         const planQty = Number(record.qty) || 0;
+
+                                    //         let color = 'black';
+                                    //         if (totalDelivered === planQty) {
+                                    //             color = 'green';
+                                    //         } else if (totalDelivered > planQty) {
+                                    //             color = 'red';
+                                    //         } else if (totalDelivered < planQty && totalDelivered > 0) {
+                                    //             color = 'orange';
+                                    //         }
+
+                                    //         return (
+                                    //             <div style={{ color }}>
+                                    //                 {totalDelivered.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                    //             </div>
+                                    //         );
+                                    //     },
+                                    // },
                                     {
                                         title: 'Delivered',
                                         width: 70,
                                         render: (_, record) => {
-                                            const firstDnQty = record.dn && record.dn.length > 0
-                                                ? Number(record.dn[0].dn_qty) || 0
-                                                : 0;
+                                            const deliveryDate = dayjs.utc(group.deliveryDate).tz('Asia/Phnom_Penh').startOf('day');
+                                            const dnList = Array.isArray(record.dn) ? record.dn : [];
 
-                                            const planQty = Number(record.qty) || 0;
+                                            // Flatten all DNs from group.deliveryItems to get the first DN num
+                                            const allDNs = group.deliveryItems.flatMap(item => item.dn || []);
+                                            const sortedDnList = allDNs
+                                                .filter(d => d.dn_num)
+                                                .sort((a, b) => Number(a.dn_num) - Number(b.dn_num));
+                                            const firstDnNum = sortedDnList[0]?.dn_num;
 
-                                            let color = 'black';
-                                            if (firstDnQty === planQty) {
-                                                color = 'green';
-                                            } else if (firstDnQty > planQty) {
-                                                color = 'red';
-                                            } else if (firstDnQty < planQty && firstDnQty > 0) {
+                                            let color = 'black'; // Default
+
+                                            if (dnList.length === 1) {
+                                                const dn = dnList[0];
+                                                const dnDate = dayjs.utc(dn.dn_date).tz('Asia/Phnom_Penh').startOf('day');
+                                                const isFirstDn = dn.dn_num === firstDnNum;
+                                                const isSameDate = dnDate.isSame(deliveryDate);
+
+                                                if (isFirstDn && isSameDate) {
+                                                    color = 'green';
+                                                } else {
+                                                    color = 'orange'
+                                                }
+                                            } else if (
+                                                dnList.length > 1 ||
+                                                dnList.some(dn => {
+                                                    const dnDate = dayjs.utc(dn.dn_date).tz('Asia/Phnom_Penh').startOf('day');
+                                                    return !dnDate.isSame(deliveryDate);
+                                                })
+                                            ) {
                                                 color = 'orange';
                                             }
+                                            const totalDelivered = dnList.reduce((sum, dn) => sum + (parseFloat(dn.dn_qty) || 0), 0);
 
                                             return (
                                                 <div style={{ color }}>
-                                                    {firstDnQty.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                                    {totalDelivered.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                                                 </div>
                                             );
                                         },
@@ -321,6 +441,9 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, ..
                                         title: 'Type',
                                         dataIndex: 'saleType',
                                         width: 70,
+                                        render: (_, r) => {
+                                            return (r.saleType ? r.saleType : 'STD')
+                                        }
                                     },
                                     {
                                         title: 'Remark',
@@ -408,41 +531,41 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, ..
                                         },
                                     },
 
-                                    {
-                                        title: 'DN Date',
-                                        width: 190,
-                                        render: (_, record) => {
-                                            const deliveryDate = dayjs(group.deliveryDate);
-                                            const rawDnDate = record.dn?.[0]?.dn_date;
-                                            const dnDate = rawDnDate ? dayjs(rawDnDate) : null;
+                                    // {
+                                    //     title: 'DN Date',
+                                    //     width: 190,
+                                    //     render: (_, record) => {
+                                    //         const deliveryDate = dayjs(group.deliveryDate);
+                                    //         const rawDnDate = record.dn?.[0]?.dn_date;
+                                    //         const dnDate = rawDnDate ? dayjs(rawDnDate) : null;
 
-                                            if (dnDate && dnDate.isValid()) {
-                                                let color = 'default'
-                                                let text = '-'
+                                    //         if (dnDate && dnDate.isValid()) {
+                                    //             let color = 'default'
+                                    //             let text = '-'
 
-                                                if (dnDate.isAfter(deliveryDate)) {
-                                                    color = 'red'
-                                                    text = 'Late'
-                                                } else if (dnDate.isBefore(deliveryDate)) {
-                                                    color = 'orange'
-                                                    text = 'Early'
-                                                } else {
-                                                    color = 'green'
-                                                    text = 'On Time'
-                                                }
+                                    //             if (dnDate.isAfter(deliveryDate)) {
+                                    //                 color = 'red'
+                                    //                 text = 'Late'
+                                    //             } else if (dnDate.isBefore(deliveryDate)) {
+                                    //                 color = 'orange'
+                                    //                 text = 'Early'
+                                    //             } else {
+                                    //                 color = 'green'
+                                    //                 text = 'On Time'
+                                    //             }
 
-                                                return (
-                                                    <span style={{ display: 'inline-flex', alignItems: 'center' }}>
-                                                        {dnDate.format('DD-MMM-YYYY')}
-                                                        <Tag color={color} style={{ marginLeft: 8 }}>{text}</Tag>
-                                                    </span>
-                                                );
-                                            }
+                                    //             return (
+                                    //                 <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                                    //                     {dnDate.format('DD-MMM-YYYY')}
+                                    //                     <Tag color={color} style={{ marginLeft: 8 }}>{text}</Tag>
+                                    //                 </span>
+                                    //             );
+                                    //         }
 
-                                            return <span>-</span>;
-                                        }
+                                    //         return <span>-</span>;
+                                    //     }
 
-                                    },
+                                    // },
                                     {
                                         width: 100,
                                         align: 'center',
@@ -466,17 +589,6 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, ..
                                             );
                                         },
                                     },
-                                    {
-                                        dataIndex: 'isUnplan',
-                                        width: 100,
-                                        align: 'center',
-                                        render: (_, record) => (
-                                            <Tag color={record.isUnplan === 'Unplanned' ? 'red' : undefined}>
-                                                {record.isUnplan}
-                                            </Tag>
-                                        ),
-                                    }
-
                                 ]}
                             />
                         </Card>

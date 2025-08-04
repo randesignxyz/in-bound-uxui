@@ -5,7 +5,7 @@ import { Company, Driver, DriverListItem, SaveDriver, Truck } from '@/services/d
 import { simpleRequestActions } from '@/services/model';
 import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table';
 import { Card, Checkbox, DatePicker, message, Modal, Progress, Radio, Space, Spin, Tag, Image, UploadFile, Descriptions, Button } from 'antd';
-import { useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AllocateServiceAPI } from './service';
 import { Allocate, AllocateSOAdvanceParams, DeliveryList, DNItemParams, DNList, SOList, UpdateRemarkParams } from './data';
 import { useAccess, useModel } from '@umijs/max';
@@ -25,25 +25,20 @@ export default () => {
   const requestActions = simpleRequestActions();
   const services = AllocateServiceAPI(requestActions);
   const actionRef = useRef<ActionType>();
-  const [drawerOpen, setDrawerOpen] = useState<{ visible: boolean; id: string, status?: string, po?: string, deliveres?: any[], so?: string }>({
+  const [data, setData] = useState<SOList[]>()
+  const [drawerOpen, setDrawerOpen] = useState<{ visible: boolean; id: string, status?: string, po?: string, deliveres?: any[], so?: string, dn_qty?: number, order_qty?: number }>({
     visible: false,
     id: '',
   });
   const [advanceSearchParams, setAdvanceSearchParams] = useState({
     filter: 'SO',
     status: 'posted',
+    dnStatus: 'completed'
   });
   const [modalOpen, setModalOpen] = useState<{ visible: boolean; id: number, remark?: string, attachment?: any }>({
     visible: false,
     id: 0,
   });
-  // const [state, setSate] = useState<{
-  //   visible?: { name: 'modal'; type: 'ADD' | 'Edit'; payload?: Driver };
-  //   initData?: {
-  //     companyList: Company[];
-  //     truckList: Truck[];
-  //   };
-  // }>({});
   const cacheList = useModel('dataList');
 
   const handleSaveRemark = async (data: UpdateRemarkParams & { file?: UploadFile[] }) => {
@@ -92,13 +87,50 @@ export default () => {
     });
   };
 
+  // const onRequestHandler = async (params: TableViewSearchParams<AllocateSOAdvanceParams>) => {
+  //   try {
+  //     return services.pageSO(params).then((it) => {
+  //       setData(it.items)
+  //       return cacheList.cacheDataList({
+  //         type: 'alocate-list',
+  //         criteria: params,
+  //         data: it,
+  //       });
+  //     }) as Promise<Paging<Allocate>>;
+  //   } catch (error: any) {
+  //     message.error(error.message);
+  //     return Promise.reject();
+  //   }
+  // };
+
   const onRequestHandler = async (params: TableViewSearchParams<AllocateSOAdvanceParams>) => {
     try {
       return services.pageSO(params).then((it) => {
+        // Client-side filter
+        const filteredItems = it.items?.filter((v) => {
+          const percentage =
+            (v?.totalDnQty ?? 0) > 0 && (v?.totalItemQty ?? 0) > 0
+              ? ((v?.totalDnQty ?? 0) / (v?.totalItemQty ?? 1)) * 100
+              : 0;
+          const statusFilter = params.criteria?.advanceSearch?.dnStatus;
+          if (statusFilter === 'completed') return percentage >= 100;
+          if (statusFilter === 'in-progress') return percentage < 100 && percentage > 0;
+          if (statusFilter === 'open') return percentage == 0;
+          return true;
+        }) ?? [];
+
+        const filteredResult = {
+          ...it,
+          items: filteredItems,
+          total: filteredItems.length, // fix pagination count if needed
+        };
+
+        setData(filteredItems);
+
         return cacheList.cacheDataList({
           type: 'alocate-list',
           criteria: params,
-          data: it,
+          data: filteredResult,
         });
       }) as Promise<Paging<Allocate>>;
     } catch (error: any) {
@@ -106,6 +138,7 @@ export default () => {
       return Promise.reject();
     }
   };
+
 
   const onRequestDNHandler = async (params: TableViewSearchParams<AllocateSOAdvanceParams>) => {
     try {
@@ -147,27 +180,28 @@ export default () => {
       width: 250,
       dataIndex: 'status',
       render: (_, entity) => {
-        const status = entity.status;
-        let color = 'default';
 
+        const percentage =
+          (entity?.totalDnQty ?? 0) > 0 && (entity?.totalItemQty ?? 0) > 0
+            ? ((entity?.totalDnQty ?? 0) / (entity?.totalItemQty ?? 1)) * 100
+            : 0;
+        let color = 'default';
+        const status = percentage >= 100 ? 'Completed' : percentage < 100 && percentage > 0 ? 'In Progress' : "Open"
         switch (status) {
-          case 'Pending':
+          case 'In Progress':
             color = 'orange';
             break;
-          case 'Posted':
+          case 'Completed':
             color = 'green';
             break;
-          case 'Failed':
-            color = 'red';
+          case 'Open':
+            color = 'blue';
             break;
           default:
             color = 'default';
             break;
         }
-        const percentage =
-          (entity?.totalDnQty ?? 0) > 0 && (entity?.totalItemQty ?? 0) > 0
-            ? ((entity?.totalDnQty ?? 0) / (entity?.totalItemQty ?? 1)) * 100
-            : 0;
+
         return (
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <div style={{ alignItems: 'flex-start', width: '35%' }}>
@@ -188,7 +222,7 @@ export default () => {
       width: 20,
       align: 'center',
       render: (_, r) =>
-      (<a onClick={() => setDrawerOpen({ visible: true, id: r.id, status: r.status, po: r.poNo, deliveres: r.deliveries, so: r.soNo })}>
+      (<a onClick={() => setDrawerOpen({ visible: true, id: r.id, status: r.status, po: r.poNo, deliveres: r.deliveries, so: r.soNo, dn_qty: r.totalDnQty, order_qty: r.totalItemQty })}>
         <FaTruckMoving />
       </a>),
     },
@@ -397,7 +431,7 @@ export default () => {
             toolbar: {
               actions: [
                 <>
-                  {access.canAccesAddRemarkAllocate ?
+                  {/* {access.canAccesAddRemarkAllocate ?
                     <Button
                       type="link"
                       onClick={async () => {
@@ -406,7 +440,7 @@ export default () => {
                       }}
                       icon={<SyncOutlined />}
                     />
-                    : <></>}
+                    : <></>} */}
                 </>
               ],
             },
@@ -443,6 +477,20 @@ export default () => {
                 <Radio.Button value="failed">Failed</Radio.Button>
                 <Radio.Button value="canceled">Canceled</Radio.Button>
               </Radio.Group>
+              <Radio.Group
+                value={advanceSearchParams.dnStatus}
+                onChange={(e) => {
+                  setAdvanceSearchParams((v) => ({
+                    ...v,
+                    dnStatus: e.target.value,
+                  }));
+                  actionRef.current?.reloadAndRest?.();
+                }}
+              >
+                <Radio.Button value="open">Open</Radio.Button>
+                <Radio.Button value="in-progress">In Progress</Radio.Button>
+                <Radio.Button value="completed">Completed</Radio.Button>
+              </Radio.Group>
               <DatePicker
                 style={{ width: 165 }}
                 onChange={(v) => {
@@ -467,7 +515,9 @@ export default () => {
                     advanceSearch: advanceSearchParams,
                     sort,
                   },
-                  pagination,
+                  pagination: {
+                    pageSize: 500
+                  },
                 })
                 : advanceSearchParams.filter == 'DN' ? onRequestDNHandler({
                   criteria: {
@@ -488,7 +538,9 @@ export default () => {
         so={drawerOpen.so}
         po={drawerOpen.po}
         deliveres={drawerOpen.deliveres}
-        onVisibleChange={(v) => v === false && setDrawerOpen({ visible: false, id: '', status: '', po: '' })}
+        dn_qty={drawerOpen.dn_qty}
+        order_qty={drawerOpen.order_qty}
+        onVisibleChange={(v) => v === false && (setDrawerOpen({ visible: false, id: '', status: '', po: '', dn_qty: 0, order_qty: 0 }), actionRef.current?.reloadAndRest?.())}
       />
       <AddRemarkModal
         open={modalOpen.visible}

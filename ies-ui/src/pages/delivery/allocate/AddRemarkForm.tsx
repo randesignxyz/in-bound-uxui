@@ -23,7 +23,7 @@ const AddRemarkModal: React.FC<Props> = ({ onSave, id, remark, attachment, ...pr
     const [previewOpen, setPreviewOpen] = useState(false);
     const [previewImage, setPreviewImage] = useState('');
 
-    console.log('id',id)
+    console.log('id', id)
     const compressImage = async (file: RcFile): Promise<File> => {
         const options = {
             maxSizeMB: 0.2,
@@ -85,6 +85,21 @@ const AddRemarkModal: React.FC<Props> = ({ onSave, id, remark, attachment, ...pr
         });
     };
 
+    function getCleanFileNameFromFirebaseUrl(url: string): string {
+        const decoded = decodeURIComponent(url)
+        const filenameWithParams = decoded.split('/').pop() || '';
+        const filename = filenameWithParams.split('?')[0]
+        return stripPrefixFromFileName(filename)
+    }
+
+    function stripPrefixFromFileName(filename: string): string {
+        const parts = filename.split('-');
+        if (parts.length > 1) {
+            return parts.slice(1).join('-')
+        }
+        return filename
+    }
+
     useEffect(() => {
         if (props.open) {
             if (attachment && attachment.length > 0) {
@@ -125,22 +140,27 @@ const AddRemarkModal: React.FC<Props> = ({ onSave, id, remark, attachment, ...pr
                         </Col>
                         <Col flex="Auto" />
                     </Row>
-                    <Upload
+                    {/* <Upload
                         listType="picture-card"
                         multiple
-                        accept="image/*"
+                        accept=".jpg,.jpeg,.png,.gif,.bmp,.webp,.pdf,.doc,.docx,.xls,.xlsx,.txt" // adjust as needed
                         beforeUpload={() => false}
                         fileList={file}
                         onRemove={handleRemove}
                         onPreview={handlePreview}
                         onChange={async (info) => {
-                            // Compress newly added files only (those with originFileObj and no compressed flag)
-                            const compressedFileMap = new Map<string, UploadFile>();
-
                             const newFileList = await Promise.all(
                                 info.fileList.map(async (file) => {
-                                    if (file.originFileObj && !(file as any).isCompressed) {
-                                        const compressedFile = await compressImage(file.originFileObj as RcFile);
+                                    const originFile = file.originFileObj;
+
+                                    // Skip compression if already compressed or no origin file
+                                    if (!originFile || (file as any).isCompressed) return file;
+
+                                    const isImage = originFile.type.startsWith('image/');
+
+                                    if (isImage) {
+                                        // Compress image
+                                        const compressedFile = await compressImage(originFile as RcFile);
                                         const rcFileWithPreview = toRcFileWithPreview(
                                             compressedFile,
                                             file.uid || `${Date.now()}-${Math.random()}`
@@ -150,7 +170,47 @@ const AddRemarkModal: React.FC<Props> = ({ onSave, id, remark, attachment, ...pr
                                             originFileObj: rcFileWithPreview,
                                             name: rcFileWithPreview.name,
                                             thumbUrl: rcFileWithPreview.thumbUrl,
-                                            isCompressed: true, // custom flag to prevent recompression
+                                            isCompressed: true,
+                                        };
+                                    }
+
+                                    // For non-images, just return original file
+                                    return file;
+                                })
+                            );
+
+                            setFile(newFileList);
+                        }}
+                    >
+                        <UploadOutlined /> Add image or file
+                    </Upload> */}
+                    <Upload
+                        multiple
+                        accept="*"
+                        beforeUpload={() => false}
+                        fileList={file.map((f) => ({
+                            ...f,
+                            name: f.url ? getCleanFileNameFromFirebaseUrl(f.url) : stripPrefixFromFileName(f.name),
+                        }))}
+                        listType="text" // This makes all uploads show as a list
+                        onRemove={handleRemove}
+                        onPreview={handlePreview}
+                        onChange={async (info) => {
+                            const newFileList = await Promise.all(
+                                info.fileList.map(async (file) => {
+                                    if (
+                                        file.originFileObj &&
+                                        file.type?.startsWith('image/') &&
+                                        !(file as any).isCompressed
+                                    ) {
+                                        const compressedFile = await compressImage(file.originFileObj as RcFile);
+                                        const rcFileWithPreview = toRcFileWithPreview(compressedFile, file.uid);
+                                        return {
+                                            ...file,
+                                            originFileObj: rcFileWithPreview,
+                                            name: rcFileWithPreview.name,
+                                            thumbUrl: undefined,
+                                            isCompressed: true,
                                         };
                                     }
                                     return file;
@@ -160,9 +220,9 @@ const AddRemarkModal: React.FC<Props> = ({ onSave, id, remark, attachment, ...pr
                             setFile(newFileList);
                         }}
                     >
-                        {/* <Button icon={<UploadOutlined />}>Add Files</Button> */}
-                        <UploadOutlined /> Add image
+                        <Button icon={<UploadOutlined />}>Upload Files / Images</Button>
                     </Upload>
+
 
                     {file && (
                         <Image
@@ -175,6 +235,7 @@ const AddRemarkModal: React.FC<Props> = ({ onSave, id, remark, attachment, ...pr
                             src={previewImage}
                         />
                     )}
+
                 </ProForm>
             </Card>
         </FormModalComp>

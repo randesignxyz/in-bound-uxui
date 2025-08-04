@@ -39,6 +39,7 @@ import { PageContainer } from '@ant-design/pro-components';
 import { MenuProps } from 'rc-menu';
 import { MPUPath } from './mpu';
 import Reports from './reports';
+import { DeliveryPaths } from '../delivery';
 {
   /* <TeamOutlined /> */
 }
@@ -263,6 +264,14 @@ export default () => {
         access.canAccessSettlementMenuItem,
       link: `${MPUPath.salesInvoice}/list`,
     },
+    {
+      id: 'allocationSale',
+      name: 'Sale Allocation Plan',
+      description: 'Sale Allocation Plan List',
+      link: `${DeliveryPaths.delAllocate}/list`,
+      icon: agreementIcon,
+      visible: access.canAccesAllocateSaleView
+    },
 
     // {
     //   id: 'free-of-charge',
@@ -350,11 +359,11 @@ export default () => {
         access.canAccessSettlementMenuItem ||
         access.canAccessARMenuItem ||
         access.canAccessViewMpu) && (
-        <>
-          <Divider />
-          <ListMenuComp items={stockMenuItems} />
-        </>
-      )}
+          <>
+            <Divider />
+            <ListMenuComp items={stockMenuItems} />
+          </>
+        )}
     </PageContainer>
   );
 };

@@ -235,21 +235,21 @@ export default () => {
       visible: access.canAccesDeliveryReviewMenuItem
     },
     {
-      id: 'associateDel',
-      name: 'Allocate',
-      description: 'Allocate List',
+      id: 'allocationDel',
+      name: 'Sale Allocation Plan',
+      description: 'Sale Allocation Plan List',
       link: `${DeliveryPaths.delAllocate}/list`,
       icon: agreementIcon,
       visible: access.canAccesAllocateDelView
     },
-    {
-      id: 'associateSale',
-      name: 'Allocate Sale',
-      description: 'Allocate Sale List',
-      link: `${DeliveryPaths.saleAllocate}/list`,
-      icon: scheduleIcon,
-      visible: access.canAcceAllocateSale
-    },
+    // {
+    //   id: 'associateSale',
+    //   name: 'Allocate Sale',
+    //   description: 'Allocate Sale List',
+    //   link: `${DeliveryPaths.saleAllocate}/list`,
+    //   icon: scheduleIcon,
+    //   visible: access.canAcceAllocateSale
+    // },
   ];
 
 

@@ -51,6 +51,7 @@ export interface DeliveryItemEntry {
   uomName?: string;
   type: string;
   qty: number;
+  remarks?: string;
 }
 
 export interface DeliverySoItemEntry {

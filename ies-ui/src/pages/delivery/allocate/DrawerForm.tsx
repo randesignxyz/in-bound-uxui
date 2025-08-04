@@ -1,7 +1,7 @@
 import { formatDate, formatDateTime } from '@/pages/utils';
 import { EditableFormInstance, EditableProTable, ProCard, ProList, ProTable } from '@ant-design/pro-components';
 import { DrawerForm, DrawerFormProps } from '@ant-design/pro-form';
-import { Button, Card, Col, Descriptions, Divider, message, Modal, Progress, Row, Space, Spin, Tag, Typography, UploadFile, Image } from 'antd';
+import { Button, Card, Col, Descriptions, Divider, message, Modal, Progress, Row, Space, Spin, Tag, Typography, UploadFile, Image, Table } from 'antd';
 import moment from 'moment';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AllocateServiceAPI } from './service';
@@ -9,11 +9,16 @@ import { simpleRequestActions } from '@/services/model';
 import { DeliveryDnParams, DeliveryItemList, DeliveryList, DNItemParams, DNParams, UpdateRemarkParams } from './data';
 import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
-import { EditOutlined } from '@ant-design/icons';
+import { CheckOutlined, EditOutlined, InboxOutlined } from '@ant-design/icons';
 import AddRemarkModal from './AddRemarkForm';
 import { uploadFileToFirebase } from './uploadImage';
+import { FaRegPenToSquare } from 'react-icons/fa6';
+import { useAccess } from '@umijs/max';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 
-dayjs.extend(customParseFormat)
+dayjs.extend(utc);
+dayjs.extend(timezone);
 interface Props extends DrawerFormProps {
     data?: any;
     reload?: (flag: boolean) => void;
@@ -23,11 +28,15 @@ interface Props extends DrawerFormProps {
     status?: string,
     po?: string,
     deliveres?: DeliveryList[],
-    reloadTrigger?: number
+    reloadTrigger?: number,
+    so?: string,
+    dn_qty?: number,
+    order_qty?: number
 }
 
-export default ({ data, id, status, po, deliveres, reload, reloadTrigger, ...rest }: Props) => {
+export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, dn_qty, order_qty, ...rest }: Props) => {
     const { Text } = Typography;
+    const access = useAccess();
     const requestActions = simpleRequestActions();
     const editableFormRef = useRef<EditableFormInstance>();
     const services = AllocateServiceAPI(requestActions);
@@ -40,23 +49,15 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, ...res
         id: 0,
     });
 
-    const totalQtyByItemCode = useMemo(() => {
-        const dnArray = Array.isArray(dn) ? dn : [dn];
-
-        return dnArray
-            .flatMap(delivery => delivery?.deliveryItems ?? [])
-            .reduce((acc, item) => {
-                if (!item.itemCode) return acc;
-                acc[item.itemCode] = (acc[item.itemCode] || 0) + (item.qty || 0);
-                return acc;
-            }, {} as Record<string, number>);
-    }, [dn]);
+    useEffect(() => {
+        setDn([])
+    }, [rest.open])
 
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true)
             try {
-                const da = await services.list_dn([id]);
+                const da = await services.list_dn([id], so);
                 if (Array.isArray(da) && da.length > 0) {
                     setDn(da);
                 } else if (da && 'planDeliveryDate' in da) {
@@ -119,10 +120,63 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, ...res
         });
     };
 
+    const handleClaim = async (id: number) => {
+        Modal.confirm({
+            title: 'Claim',
+            content: 'Are you sure?',
+            onOk: async () => {
 
+                await services.ClaimDn(id, access.currentUser?.login) as {
+                    data: string;
+                    message: string;
+                }
+                setRefetch(true)
+                reload?.(true);
+                message.success('Updated successfully');
+            },
+        });
+    }
+
+    const handleUnClaim = async (id: number) => {
+        Modal.confirm({
+            title: 'UnClaim',
+            content: 'Are you sure?',
+            onOk: async () => {
+
+                await services.ClaimDn(id, '') as {
+                    data: string;
+                    message: string;
+                }
+                setRefetch(true)
+                reload?.(true);
+                message.success('Updated successfully');
+            },
+        });
+    }
+
+    const mapUnplannedToDeliveryRow = (item: any) => ({
+        id: `unplanned-${item.unplanned.id}`, // use unplanned.id to uniquely identify
+        itemCode: item.unplanned.item_code,
+        itemName: item.unplanned.item_name,
+        qty: Number(item.unplanned.order_qty),
+        saleType: item.unplanned.type,
+        lineNumber: item.unplanned.line_number,
+        isUnplan: 'Unplanned',
+        dn: [{
+            id: item.unplanned.id,
+            dn_qty: item.unplanned.dn_qty,
+            dn_date: item.unplanned.dn_date,
+            remark: item.unplanned.remark,
+            attachment: item.attachments ?? [], // fallback to empty array if not present
+        }],
+    });
+    const percentage =
+        (dn_qty ?? 0) > 0 && (order_qty ?? 0) > 0
+            ? ((dn_qty ?? 0) / (order_qty ?? 1)) * 100
+            : 0;
     return (
         <DrawerForm
-            title="Delivery Note List"
+            title="Delivery Note"
             {...rest}
             width={1200}
             submitter={false}
@@ -130,15 +184,15 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, ...res
                 extra: (
                     <Space>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                            <Text strong>{po}</Text>
+                            <Text strong>PO# {po}</Text>
                             <Tag
                                 color={
                                     status === 'Pending'
                                         ? 'orange'
-                                        : status === 'Partial'
-                                            ? 'blue'
-                                            : status === 'Delivered'
-                                                ? 'green'
+                                        : status === 'Posted'
+                                            ? 'green'
+                                            : status === 'Failed'
+                                                ? 'red'
                                                 : 'default'
                                 }
                                 bordered={false}
@@ -146,13 +200,13 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, ...res
                                 {status}
                             </Tag>
 
-                            {/* <Progress
+                            <Progress
                                 percent={percentage || 0}
                                 size="small"
                                 strokeColor={{ from: '#108ee9', to: '#87d068' }}
                                 style={{ width: 100 }}
                                 format={(percent) => `${Math.round(percent ?? 0)}%`}
-                            /> */}
+                            />
                         </div>
                     </Space>
                 )
@@ -162,16 +216,133 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, ...res
                 {Array.isArray(dn) && dn.length > 0 ? dn.map((group, idx) => (
                     <ProCard key={idx}>
                         <Card>
-                            <Descriptions>
-                                <Descriptions.Item label="Delivery Plan Date: " style={{ fontWeight: 'bolder' }}>
+                            <Descriptions column={5}>
+                                <Descriptions.Item label="DO Date" style={{ fontWeight: 'bolder' }}>
                                     {dayjs(group.deliveryDate).isValid() ? dayjs(group.deliveryDate).format('DD-MMM-YYYY') : '-'}
                                 </Descriptions.Item>
+
+                                <Descriptions.Item label="Shipping Address" style={{ fontWeight: 'bolder' }} span={2}>
+                                    {group.shippingAddress ? group.shippingAddress : '-'}
+                                </Descriptions.Item>
+                                {/* {access.canAccesAddRemarkAllocate ? */}
+                                <Descriptions.Item span={4} style={{}}>
+                                    <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
+                                        {group.claimed_by ? (
+                                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                                <span>
+                                                    Claimed:{' '}
+                                                    <strong>
+                                                        {group.claimed_by},
+                                                    </strong>
+                                                    <span style={{ fontSize: 12 }}> {dayjs.utc(group.claimed_date).tz('Asia/Phnom_Penh').format('DD-MMM-YYYY hh:mm a')}</span>
+
+                                                </span>
+                                                {access.currentUser?.login == group.claimed_by && access.canAccesAddRemarkAllocate ?
+                                                    <Button type="default" danger
+                                                        onClick={() => handleUnClaim(group.id)}
+                                                    >
+                                                        Unclaim
+                                                    </Button>
+                                                    : <></>}
+
+                                            </div>
+                                        ) : access.canAccesAddRemarkAllocate ? (
+                                            <Button type="primary"
+                                                onClick={() => handleClaim(group.id)}
+                                            >
+                                                Claim
+                                            </Button>
+                                        ) : <></>}
+                                    </div>
+                                </Descriptions.Item>
+                                {/* : <></>} */}
                             </Descriptions>
                             <ProTable
                                 size="small"
                                 search={false}
+                                expandable={{
+                                    expandedRowRender: (record) => {
+                                        const dnList = record.dn || [];
+                                        const plannedQty = Number(record.qty) || 0;
+                                        return (
+                                            <Table
+                                                size="small"
+                                                rowKey={(r) => r.id}
+                                                columns={[
+                                                    {
+                                                        title: 'DN No',
+                                                        dataIndex: 'dn_num',
+                                                        key: 'dn_num',
+                                                    },
+                                                    {
+                                                        title: 'Delivered Qty',
+                                                        dataIndex: 'dn_qty',
+                                                        key: 'dn_qty',
+                                                        render: (_, dnRecord) => {
+                                                            const qty = parseFloat(dnRecord.dn_qty) || 0;
+                                                            const isMismatch = qty !== plannedQty;
+                                                            return (
+                                                                <span>
+                                                                    {qty.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                                                    {/* {!isMismatch ? (
+                                                                        <span style={{ color: 'green', marginLeft: 20, fontWeight: 'bold' }}><CheckOutlined /></span>
+                                                                    ) : (
+                                                                        <span style={{ color: 'red', marginLeft: 20, fontWeight: 'bold' }}>❗</span>
+                                                                    )} */}
+                                                                </span>
+                                                            );
+                                                        },
+                                                    },
+                                                    {
+                                                        title: 'DN Date',
+                                                        dataIndex: 'dn_date',
+                                                        key: 'dn_date',
+                                                        render: (_, record) => {
+                                                            const deliveryDate = dayjs.utc(group.deliveryDate).tz('Asia/Phnom_Penh').startOf('day');
+                                                            const rawDnDate = record.dn_date;
+                                                            const dnDate = rawDnDate ? dayjs.utc(rawDnDate).tz('Asia/Phnom_Penh').startOf('day') : null;
+
+                                                            const allDNs = group.deliveryItems.flatMap(item => item.dn || []);
+
+                                                            const sortedDnList = allDNs
+                                                                .filter(d => d.dn_num)
+                                                                .sort((a, b) => Number(a.dn_num) - Number(b.dn_num));
+
+                                                            const firstDn = sortedDnList[0];
+                                                            const isFirstDN = record.dn_num === firstDn?.dn_num;
+
+                                                            let tags: React.ReactNode[] = [];
+
+                                                            if (!isFirstDN) {
+                                                                tags.push(
+                                                                    <Tag key="check" color="orange" style={{ marginLeft: 8 }}>Unplanned</Tag>
+                                                                );
+                                                            }
+
+                                                            return (
+                                                                <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                                                                    {dnDate?.isValid() ? dnDate.format('DD-MMM-YYYY') : '-'}
+                                                                    {tags}
+                                                                </span>
+                                                            );
+                                                        }
+                                                    }
+
+
+                                                ]}
+                                                dataSource={dnList}
+                                                pagination={false}
+                                            />
+                                        );
+                                    },
+                                    rowExpandable: (record) => record.dn && record.dn.length > 0,
+                                }}
+
                                 rowKey="id"
-                                dataSource={group.deliveryItems}
+                                dataSource={[
+                                    ...group.deliveryItems,
+                                    ...(group.unplannedItems || []).map(mapUnplannedToDeliveryRow)
+                                ]}
                                 options={{
                                     density: false,
                                     fullScreen: false,
@@ -181,45 +352,87 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, ...res
                                 pagination={false}
                                 columns={[
                                     {
-                                        title: 'Item Name',
-                                        dataIndex: 'itemName',
-                                        width: 200,
+                                        title: 'Item Code',
+                                        dataIndex: 'itemCode',
+                                        width: 150,
                                     },
                                     {
-                                        title: 'Total Qty',
-                                        dataIndex: 'qty',
-                                        width: 90,
-                                        render: (_, record) => {
-                                            return (totalQtyByItemCode?.[record.itemCode] ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 });
-                                        },
+                                        title: 'Item Name',
+                                        dataIndex: 'itemName',
+                                        width: 250,
                                     },
                                     {
                                         title: 'Plan',
                                         dataIndex: 'qty',
                                         width: 70,
                                     },
+                                    // {
+                                    //     title: 'Delivered',
+                                    //     width: 70,
+                                    //     render: (_, record) => {
+                                    //         const totalDelivered = Array.isArray(record.dn)
+                                    //             ? record.dn.reduce((sum, dn) => sum + (parseFloat(dn.dn_qty) || 0), 0)
+                                    //             : 0;
+
+                                    //         const planQty = Number(record.qty) || 0;
+
+                                    //         let color = 'black';
+                                    //         if (totalDelivered === planQty) {
+                                    //             color = 'green';
+                                    //         } else if (totalDelivered > planQty) {
+                                    //             color = 'red';
+                                    //         } else if (totalDelivered < planQty && totalDelivered > 0) {
+                                    //             color = 'orange';
+                                    //         }
+
+                                    //         return (
+                                    //             <div style={{ color }}>
+                                    //                 {totalDelivered.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                    //             </div>
+                                    //         );
+                                    //     },
+                                    // },
                                     {
                                         title: 'Delivered',
                                         width: 70,
                                         render: (_, record) => {
-                                            const firstDnQty = record.dn && record.dn.length > 0
-                                                ? Number(record.dn[0].dn_qty) || 0
-                                                : 0;
+                                            const deliveryDate = dayjs.utc(group.deliveryDate).tz('Asia/Phnom_Penh').startOf('day');
+                                            const dnList = Array.isArray(record.dn) ? record.dn : [];
 
-                                            const planQty = Number(record.qty) || 0;
+                                            // Flatten all DNs from group.deliveryItems to get the first DN num
+                                            const allDNs = group.deliveryItems.flatMap(item => item.dn || []);
+                                            const sortedDnList = allDNs
+                                                .filter(d => d.dn_num)
+                                                .sort((a, b) => Number(a.dn_num) - Number(b.dn_num));
+                                            const firstDnNum = sortedDnList[0]?.dn_num;
 
-                                            let color = 'black';
-                                            if (firstDnQty === planQty) {
-                                                color = 'green';
-                                            } else if (firstDnQty > planQty) {
-                                                color = 'red';
-                                            } else if (firstDnQty < planQty && firstDnQty > 0) {
+                                            let color = 'black'; // Default
+
+                                            if (dnList.length === 1) {
+                                                const dn = dnList[0];
+                                                const dnDate = dayjs.utc(dn.dn_date).tz('Asia/Phnom_Penh').startOf('day');
+                                                const isFirstDn = dn.dn_num === firstDnNum;
+                                                const isSameDate = dnDate.isSame(deliveryDate);
+
+                                                if (isFirstDn && isSameDate) {
+                                                    color = 'green';
+                                                } else {
+                                                    color = 'orange'
+                                                }
+                                            } else if (
+                                                dnList.length > 1 ||
+                                                dnList.some(dn => {
+                                                    const dnDate = dayjs.utc(dn.dn_date).tz('Asia/Phnom_Penh').startOf('day');
+                                                    return !dnDate.isSame(deliveryDate);
+                                                })
+                                            ) {
                                                 color = 'orange';
                                             }
+                                            const totalDelivered = dnList.reduce((sum, dn) => sum + (parseFloat(dn.dn_qty) || 0), 0);
 
                                             return (
                                                 <div style={{ color }}>
-                                                    {firstDnQty.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                                    {totalDelivered.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                                                 </div>
                                             );
                                         },
@@ -228,66 +441,164 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, ...res
                                         title: 'Type',
                                         dataIndex: 'saleType',
                                         width: 70,
+                                        render: (_, r) => {
+                                            return (r.saleType ? r.saleType : 'STD')
+                                        }
                                     },
                                     {
                                         title: 'Remark',
                                         dataIndex: 'dn',
-                                        width: 300,
+                                        width: 250,
                                         render: (_dom, entity) => {
                                             const remark = entity.dn?.[0]?.remark ?? '';
                                             return (
                                                 <div style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
-                                                    {remark}
+                                                    {remark ? remark : '-'}
                                                 </div>
                                             );
                                         },
                                     },
+                                    // {
+                                    //     title: 'Attachment',
+                                    //     dataIndex: 'attachment',
+                                    //     render: (_, record) => (
+                                    //         <Image.PreviewGroup>
+                                    //             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                                    //                 {record.dn?.[0]?.attachment?.map((att, index) => (
+                                    //                     <Image
+                                    //                         key={index}
+                                    //                         width={50}
+                                    //                         height={50}
+                                    //                         src={att || ''}
+                                    //                         alt={`attachment-${index}`}
+                                    //                         style={{ objectFit: 'cover', borderRadius: 4 }}
+                                    //                         preview={{ mask: <div>Click to preview</div> }}
+                                    //                     />
+                                    //                 ))}
+                                    //             </div>
+                                    //         </Image.PreviewGroup>
+                                    //     ),
+                                    // },
                                     {
                                         title: 'Attachment',
                                         dataIndex: 'attachment',
-                                        render: (_, record) => (
-                                            <Image.PreviewGroup>
+                                        width: 250,
+                                        render: (_, record) => {
+                                            const attachments = record.dn?.[0]?.attachment || [];
+
+                                            return (
                                                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                                                    {record.dn?.[0]?.attachment?.map((att, index) => (
-                                                        <Image
-                                                            key={index}
-                                                            width={50}
-                                                            height={50}
-                                                            src={att || ''}
-                                                            alt={`attachment-${index}`}
-                                                            style={{ objectFit: 'cover', borderRadius: 4 }}
-                                                            preview={{ mask: <div>Click to preview</div> }}
-                                                        />
-                                                    ))}
+                                                    {attachments.map((att, index) => {
+                                                        const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(att);
+                                                        const decodedURL = decodeURIComponent(att)
+                                                        const fileNameMatch = decodedURL.match(/\/([^\/?]+)\?alt=media/)
+                                                        let fileName = fileNameMatch ? fileNameMatch[1] : `File ${index + 1}`;
+                                                        const dashIndex = fileName.indexOf('-');
+                                                        if (dashIndex !== -1) {
+                                                            fileName = fileName.substring(dashIndex + 1);
+                                                        }
+                                                        return isImage ? (
+                                                            <Image
+                                                                key={index}
+                                                                width={50}
+                                                                height={50}
+                                                                src={att}
+                                                                alt={`attachment-${index}`}
+                                                                style={{ objectFit: 'cover', borderRadius: 4 }}
+                                                                preview={{ mask: <div>Click to preview</div> }}
+                                                            />
+                                                        ) : (
+                                                            <a
+                                                                key={index}
+                                                                href={att}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                style={{
+                                                                    display: 'inline-block',
+                                                                    padding: '4px 8px',
+                                                                    border: '1px solid #ccc',
+                                                                    borderRadius: 4,
+                                                                    backgroundColor: '#f5f5f5',
+                                                                    marginRight: 8,
+                                                                }}
+                                                            >
+                                                                {fileName}
+                                                            </a>
+                                                        );
+                                                    })}
                                                 </div>
-                                            </Image.PreviewGroup>
-                                        ),
+                                            );
+                                        },
                                     },
+
+                                    // {
+                                    //     title: 'DN Date',
+                                    //     width: 190,
+                                    //     render: (_, record) => {
+                                    //         const deliveryDate = dayjs(group.deliveryDate);
+                                    //         const rawDnDate = record.dn?.[0]?.dn_date;
+                                    //         const dnDate = rawDnDate ? dayjs(rawDnDate) : null;
+
+                                    //         if (dnDate && dnDate.isValid()) {
+                                    //             let color = 'default'
+                                    //             let text = '-'
+
+                                    //             if (dnDate.isAfter(deliveryDate)) {
+                                    //                 color = 'red'
+                                    //                 text = 'Late'
+                                    //             } else if (dnDate.isBefore(deliveryDate)) {
+                                    //                 color = 'orange'
+                                    //                 text = 'Early'
+                                    //             } else {
+                                    //                 color = 'green'
+                                    //                 text = 'On Time'
+                                    //             }
+
+                                    //             return (
+                                    //                 <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                                    //                     {dnDate.format('DD-MMM-YYYY')}
+                                    //                     <Tag color={color} style={{ marginLeft: 8 }}>{text}</Tag>
+                                    //                 </span>
+                                    //             );
+                                    //         }
+
+                                    //         return <span>-</span>;
+                                    //     }
+
+                                    // },
                                     {
                                         width: 100,
                                         align: 'center',
-                                        render: (_, r) => (
-                                            <a
-                                                onClick={() => {
-                                                    const dnItem = r.dn?.[0];
-                                                    setModalOpen({
-                                                        visible: true,
-                                                        id: parseInt(r.allocateID),
-                                                        remark: dnItem?.remark,
-                                                        attachment: dnItem?.attachment,
-                                                    });
-                                                    console.log(dnItem);
-                                                }}
-                                            >
-                                                Add Remark
-                                            </a>
-                                        ),
+                                        render: (_, r) => {
+                                            if (status != 'Posted') return null;
+                                            if (!access.canAccesAddRemarkAllocate) return null
+                                            return (
+                                                <a
+                                                    onClick={() => {
+                                                        const dnItem = r.dn?.[0];
+                                                        setModalOpen({
+                                                            visible: true,
+                                                            id: dnItem?.id,
+                                                            remark: dnItem?.remark,
+                                                            attachment: dnItem?.attachment,
+                                                        });
+                                                    }}
+                                                >
+                                                    <FaRegPenToSquare />
+                                                </a>
+                                            );
+                                        },
                                     },
                                 ]}
                             />
                         </Card>
                     </ProCard>
-                )) : <></>}
+                )) : <Card style={{ textAlign: 'center', padding: '40px 0' }}>
+                    <InboxOutlined style={{ fontSize: 40, color: '#999' }} />
+                    <div style={{ marginTop: 12, fontSize: 16, color: '#666' }}>
+                        No Delivery Data Available
+                    </div>
+                </Card>}
             </Spin>
 
             <AddRemarkModal

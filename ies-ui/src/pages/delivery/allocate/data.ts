@@ -1,25 +1,25 @@
 export interface allocateSearch {
-    searchValue?: string;
-    date?: moment.Moment;
+  searchValue?: string;
+  date?: moment.Moment;
 }
 
 export interface Allocate {
-    id: string,
-    so_entry?: string,
-    so_num?: string,
-    so_date?: string,
-    customer_code?: string,
-    customer_name?: string,
-    total_amount?: string,
-    total_order_qty?: string,
-    so_status?: string,
-    last_sync?: string,
-    item_count?: number,
-    percentage?:number
+  id: string,
+  so_entry?: string,
+  so_num?: string,
+  so_date?: string,
+  customer_code?: string,
+  customer_name?: string,
+  total_amount?: string,
+  total_order_qty?: string,
+  so_status?: string,
+  last_sync?: string,
+  item_count?: number,
+  percentage?: number
 }
 
-export interface SOList{
-   id: string,
+export interface SOList {
+  id: string,
   soNo?: string,
   orderedDate: string,
   poNo?: string,
@@ -41,28 +41,81 @@ export interface SOList{
   postedBy?: string,
   postedDate?: string,
   docEntryNum: string,
-  deliveries: DeliveryList[]
+  deliveries: DeliveryList[],
+  totalItemQty ?:number,
+  totalDnQty ?:number,
 }
 
-export interface DeliveryList{
+export interface DeliveryList {
   id: string,
   soId: string,
   deliveryDate: string,
   shippingAddress?: string,
-  priority?:string,
-  remarks?:string,
-  shift?:string,
+  priority?: string,
+  remarks?: string,
+  shift?: string,
   deliveryItems: DeliveryItemList[]
 }
 
-export interface DeliveryItemList{
- id: string,
- deliveryId: string,
- itemName: string,
- itemCode: string,
- qty: number,
- saleType: string
- dn:DeliveryDnParams[]
+export interface DNList {
+  id: string,
+  soId: string,
+  deliveryDate: string,
+  shippingAddress?: string,
+  priority?: string,
+  remarks?: string,
+  shift?: string,
+  dn_plan: DNPlan[]
+  soNo?: string,
+  soStatus?: string
+  poNo?:string
+}
+
+interface DN {
+  createdBy?: string
+  createdDate?: string
+  dn_date?: string
+  dn_num?: string
+  dn_qty?: string
+  has_dn?: string
+  id?: string
+  item_code?: string
+  item_name?: string
+  lastModifiedBy?: string
+  lastModifiedDate?: string
+  line_number?: string
+  order_qty?: string
+  plan_delivery_date?: string
+  remark?: string
+  salesPlanID?: string
+  so_allocate_id?: string
+  so_entry?: string
+  so_num?: string
+  type?: string
+}
+
+interface DNPlan {
+  allocateItemIds?: string
+  deliveryId?: string
+  id?: string
+  itemCode?: string
+  itemName?: string
+  lineNumber?: string
+  qty?: string
+  saleType?: string
+  soNum?: string
+  dn: DNDetail[]
+  attachment?: Attachment[];
+}
+
+export interface DeliveryItemList {
+  id: string,
+  deliveryId: string,
+  itemName: string,
+  itemCode: string,
+  qty: number,
+  saleType: string
+  dn: DeliveryDnParams[]
 }
 
 export type AllocateAdvanceParams = {
@@ -75,6 +128,7 @@ export type AllocateSOAdvanceParams = {
   searchValue?: string;
   status: string;
   ordered_date?: string;
+  dnStatus?:string
 };
 
 export type DNDetail = {
@@ -93,19 +147,20 @@ export type DNDetail = {
 
 
 export type DNItemParams = {
-  deliveryId:number,
-  dn:DNDetail[],
-  id:number,
-  itemCode:string,
-  itemName:string,
-  qty:number,
-  saleType:string,
-  allocateID:string,
-  lineNumber:string,
-  so_num:string
+  deliveryId: number,
+  dn: DNDetail[],
+  id: number,
+  itemCode: string,
+  itemName: string,
+  qty: number,
+  saleType: string,
+  allocateID: string,
+  lineNumber: string,
+  so_num: string,
+  isUnplan?:string
 };
 
-export type DNParams={
+export type DNParams = {
   deliveryDate: string,
   deliveryItems: DNItemParams[]
   id: number;
@@ -114,29 +169,32 @@ export type DNParams={
   shift?: string | null;
   shippingAddress?: string | null;
   soId?: number | string | null;
+  claimed_by?:string
+  claimed_date?:string
+  unplannedItems: DNItemParams[]
 }
 
-export type UpdateRemarkParams={
-  id?:number,
-  remark?:string,
-  attachment?:Attachment[]
+export type UpdateRemarkParams = {
+  id?: number,
+  remark?: string,
+  attachment?: Attachment[]
 }
 
-type Attachment={
+type Attachment = {
   attachment?: string
 }
 
-export type DeliveryDnParams={
-  key:number,
+export type DeliveryDnParams = {
+  key: number,
   id: number,
   item_code: string,
   item_name: string,
   line_number: string,
-  dn_num?:string,
-  dn_qty?:string,
-  dn_date?:string,
-  type:string,
-  total_plan_qty:string,
-  attachment?:Attachment[],
-  remark:string
+  dn_num?: string,
+  dn_qty?: string,
+  dn_date?: string,
+  type: string,
+  total_plan_qty: string,
+  attachment?: Attachment[],
+  remark: string
 }

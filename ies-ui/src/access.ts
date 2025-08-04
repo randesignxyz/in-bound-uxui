@@ -365,15 +365,13 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       ) || false,
     canAccesAllocateDelView:
       currentUser?.authorities.some((item) =>
-        ['ROLE_ADMIN', 'ROLE_DELIVERY_DEL_ACCOSICATE'].some((it) => it === item),
+        ['ROLE_ADMIN', 'ROLE_DELIVERY_DEL_ALLOCATION'].some((it) => it === item),
       ) || false,
 
-    canAcceAllocateSale:
+    canAccesAddRemarkAllocate:
       currentUser?.authorities.some((item) =>
-        ['ROLE_ADMIN', 'ROLE_DELIVERY_SALE_ACCOSICATE'].some((it) => it === item),
+        ['ROLE_DELIVERY_ALLOCATION_REMARK'].some((it) => it === item),
       ) || false,
-
-
 
     /**** Prod */
     canAccessProdMenu:
@@ -657,7 +655,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       ) || false,
     canAccessHrESSImportTraing:
       currentUser?.authorities.some((item) =>
-        ['ROLE_HR_ESS_IMPORT_TRAINING','ROLE_ADMIN'].some((it) => it === item),
+        ['ROLE_HR_ESS_IMPORT_TRAINING', 'ROLE_ADMIN'].some((it) => it === item),
       ) || false,
     canAccessHrESSApprovalProfile:
       currentUser?.authorities.some((item) =>
@@ -802,7 +800,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       ) || false,
 
     canAccessTabWarehouse:
-      currentUser?.authorities.some((item) => ['ROLE_WAREHOUSE','ROLE_ADMIN'].some((it) => it === item)) ||
+      currentUser?.authorities.some((item) => ['ROLE_WAREHOUSE', 'ROLE_ADMIN'].some((it) => it === item)) ||
       false,
     canAccessTabCashier:
       currentUser?.authorities.some((item) => ['ROLE_CASHIER'].some((it) => it === item)) || false,
@@ -818,6 +816,10 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) => ['ROLE_DEVELOPER'].some((it) => it === item)) ||
       false,
 
+    canAccesAllocateSaleView:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_SALE_ALLOCATION_PLAN'].some((it) => it === item),
+      ) || false,
     /** MPU */
 
     canAccessViewMpu:
@@ -938,7 +940,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       ) || false,
     canAccessProbationEvaluation:
       currentUser?.authorities.some((item) =>
-        ['ROLE_ADMIN','ROLE_HR_PROBATION_EVALUATION_REQUESTER', 'ROLE_HR_PROBATION_EVALUATION_SUBMIT', 'ROLE_HR_PROBATION_EVALUATION_SUPPORT','ROLE_HR_PROBATION_EVALUATION_VIEW'].some(
+        ['ROLE_ADMIN', 'ROLE_HR_PROBATION_EVALUATION_REQUESTER', 'ROLE_HR_PROBATION_EVALUATION_SUBMIT', 'ROLE_HR_PROBATION_EVALUATION_SUPPORT', 'ROLE_HR_PROBATION_EVALUATION_VIEW'].some(
           (it) => it === item,
         ),
       ) || false,
@@ -1051,11 +1053,11 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       ) || false,
     canAccessCrmRegisterCustomerMenuItem:
       currentUser?.authorities.some((item) =>
-        [         
-          'ROLE_CRM_REGISTER_CUSTOMER',  
+        [
+          'ROLE_CRM_REGISTER_CUSTOMER',
           'ROLE_ADMIN',
         ].some((it) => it === item),
-      ) || false, 
+      ) || false,
     /* LH: PURCHASE ORDER MMA  */
     canAccessRSMRequestToMPU:
       currentUser?.authorities.some((item) =>
@@ -1079,6 +1081,6 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
 
     canCreateEditMpuRequest: true,
     /* LH : END */
-   
+
   };
 }

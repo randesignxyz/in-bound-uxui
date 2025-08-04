@@ -181,7 +181,7 @@ export type UpdateRemarkParams = {
 }
 
 type Attachment = {
-  attachment?: string
+  attachment: string
 }
 
 export type DeliveryDnParams = {

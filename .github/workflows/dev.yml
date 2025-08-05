@@ -109,7 +109,7 @@ jobs:
               Remove-Item -Path $destination -Recurse -Force
             }
             New-Item -ItemType Directory -Path $destination -Force
-            Copy-Item -Path "$source\*" -Destination $destination -Recurse -Force
+            Copy-Item -Path "$source\*" -Destination $destination -Recurse -Force -Exclude "web.config"
             Write-Output "Deployed new dist folder to $destination at $(Get-Date -Format 'HH:mm:ss dd/MM/yyyy')"
           } else {
             Write-Error "Dist folder not found at $source"

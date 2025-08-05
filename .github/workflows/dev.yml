@@ -146,5 +146,6 @@ jobs:
           } else {
             Write-Error "web.config not found at $webConfigPath"
             exit 1
+            
           }
         shell: pwsh

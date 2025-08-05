@@ -2,7 +2,7 @@ import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import PageWrapper from '@/components/PageWrapper';
 import { simpleRequestActions } from '@/services/model';
 import { LeadDetail, SalesTeamWorkLess } from '@/services/sale/data';
-import { CheckCircleOutlined, EditOutlined, ExportOutlined, FileDoneOutlined, SwapOutlined } from '@ant-design/icons';
+import { ExportOutlined, FileDoneOutlined, SwapOutlined } from '@ant-design/icons';
 import { useAccess, useQuery } from '@umijs/max';
 import { Badge, Button, message, Modal, Tag } from 'antd';
 import { useEffect, useState } from 'react';
@@ -13,7 +13,7 @@ import { LeadAdvanceSearchParams } from './data';
 import LeadDetailView from './LeadDetailView';
 import LeadEntryFormView from './LeadEntryFormView';
 import { LeadServiceAPI } from './services';
-import VerificationModalForm from './VerificationForm';
+// import VerificationModalForm from './VerificationForm';
 
 interface Props { }
 
@@ -54,7 +54,7 @@ const LeadMainPage: React.FC<Props> = () => {
     };
   }>();
 
-  const [verificationState, setVerificationState] = useState<{ visible?:{ name:"MODAL",payloads?:any } }>();
+  // const [verificationState, setVerificationState] = useState<{ visible?:{ name:"MODAL",payloads?:any } }>();
 
   return (
     <>
@@ -133,9 +133,9 @@ const LeadMainPage: React.FC<Props> = () => {
             >
               Tranfer Lead
             </Button>,
-            <Button  onClick={()=>setVerificationState({visible:{name:"MODAL"}})} icon={<FileDoneOutlined />} type='link'>
-              Verification
-            </Button>,
+            // <Button  onClick={()=>setVerificationState({visible:{name:"MODAL"}})} icon={<FileDoneOutlined />} type='link'>
+            //   Verification
+            // </Button>,
             <Button
               key={'ExportLead'}
               icon={<ExportOutlined />}
@@ -251,35 +251,35 @@ const LeadMainPage: React.FC<Props> = () => {
                 } text={r.status}
                 />
               },
-              {
-                title: "",
-                actionProps: (item) => ({
-                  label: <EditOutlined />,
-                  type: "edit",
-                  actionButtons: [
-                    {
-                      icon: <CheckCircleOutlined />,
-                      type: "link",
-                      disabled:item?.isVerified ,
-                      onClick: () => {
-                        Modal.confirm({
-                          title: "Confirmation Verification.",
-                          content: "do you want continue process?",
-                          onOk: async () => {
-                            await services.verified([item.id]);
-                            refetch();
-                          }
-                        })
-                      }
-                    }
-                  ]
-                })
+              // {
+              //   title: "",
+              //   actionProps: (item) => ({
+              //     label: <EditOutlined />,
+              //     type: "edit",
+              //     actionButtons: [
+              //       {
+              //         icon: <CheckCircleOutlined />,
+              //         type: "link",
+              //         disabled:item?.isVerified ,
+              //         onClick: () => {
+              //           Modal.confirm({
+              //             title: "Confirmation Verification.",
+              //             content: "do you want continue process?",
+              //             onOk: async () => {
+              //               await services.verified([item.id]);
+              //               refetch();
+              //             }
+              //           })
+              //         }
+              //       }
+              //     ]
+              //   })
 
-                // render:(_,r)=><Space>
-                //   { r.isVerified && <Button icon={<CheckCircleOutlined />}  />}
+              //   // render:(_,r)=><Space>
+              //   //   { r.isVerified && <Button icon={<CheckCircleOutlined />}  />}
 
-                // </Space>
-              }
+              //   // </Space>
+              // }
               // {
               //   title:"",
               //   render:(_,r)=>
@@ -296,7 +296,7 @@ const LeadMainPage: React.FC<Props> = () => {
         title="Generate DSD Reports"
         width="700px"
       />
-      
+{/*       
       <VerificationModalForm
         open={verificationState?.visible?.name=="MODAL"}
         onSave={(data)=>{
@@ -309,7 +309,7 @@ const LeadMainPage: React.FC<Props> = () => {
           })
         }}
         onCancel={()=>setVerificationState({visible:undefined})}
-      />
+      /> */}
 
       <ChangeSalepersonForm
         open={changeSalepersonState?.visible?.name === 'MODAL'}

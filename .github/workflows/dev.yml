@@ -102,7 +102,7 @@ jobs:
       # Deploy new version to target environment with dist folder
       - name: Deploy to ${{ steps.target-env.outputs.target-env }} environment
         run: |
-          $source = "C:\DevOps\dist"
+          $source = "C:\DevOps\ies-frontend\dist"
           $destination = if ("${{ steps.target-env.outputs.target-env }}" -eq "blue") { "$env:BLUE_DIR\dist" } else { "$env:GREEN_DIR\dist" }
           if (Test-Path $source) {
             if (Test-Path $destination) {
@@ -130,3 +130,21 @@ jobs:
           # Set-ItemProperty "IIS:\Sites\$siteName" -Name physicalPath -Value $newPath
         shell: powershell
 
+      
+      # Toggle port in web.config (4402 <-> 4401)
+      - name: Toggle port in web.config
+        run: |
+          $webConfigPath = "C:\deployment\ies-frontend\dist\web.config"
+          if (Test-Path $webConfigPath) {
+            $webConfigContent = Get-Content $webConfigPath -Raw
+            $currentPort = if ($webConfigContent -match 'http://10\.0\.12\.247:4402/') { "4402" } else { "4401" }
+            $newPort = if ($currentPort -eq "3302") { "4401" } else { "4402" }
+            $updatedContent = $webConfigContent -replace 'http://10\.0\.12\.247:4402/', "http://10.0.12.247:$newPort/" `
+                                                -replace 'http://10\.0\.12\.247:4401/', "http://10.0.12.247:$newPort/"
+            Set-Content -Path $webConfigPath -Value $updatedContent
+            Write-Output "Updated web.config port from $currentPort to $newPort at $(Get-Date -Format 'HH:mm:ss dd/MM/yyyy')"
+          } else {
+            Write-Error "web.config not found at $webConfigPath"
+            exit 1
+          }
+        shell: pwsh

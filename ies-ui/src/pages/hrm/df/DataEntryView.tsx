@@ -101,7 +101,7 @@ export default({
                 content: 'Are you sure?',
                 onOk: async () => {
                     try {
-                        await services.submitDf360Form(data)
+                        await services.createDf360Form(data)
                         message.success('Submitted successfully.');
                         // onCloseTab?.()
                     } catch (error: any) {

@@ -76,6 +76,7 @@ export interface DfEmpAssessorRs{
   status: string;
   statementEvaluations:DfEmpEvaluationRs[];
   comments?: DfCommentRs[];
+  currentAccess: boolean;
 }
 export interface DfEmpEvaluationRs{ 
   id: number;

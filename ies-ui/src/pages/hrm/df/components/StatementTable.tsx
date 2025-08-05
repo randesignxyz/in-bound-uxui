@@ -46,7 +46,7 @@ export default({
             fieldProps: { rows: 1, maxLength: 5000 },
         },
     ]
-    if(editableRating){
+    // if(editableRating){
         cols.push({
             title: 'Strongly Disagree',
              dataIndex: 'rating1',
@@ -181,7 +181,7 @@ export default({
                 
             },
         })
-    }
+    // }
     
 
     return(<>

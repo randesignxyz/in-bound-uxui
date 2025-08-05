@@ -60,11 +60,11 @@ export default({
     },[loading])
     useEffect(()=>{
         setStatement((selectedAssessor?.statementEvaluations||[]).map(it=>({...it,key: uniqueId().toString()})))
-        setDataStrength((selectedAssessor?.comments?.filter(it=>it.type=='c1')||[]).map(it=>({...it,key: uniqueId().toString()})))
-        setDataImprovement((selectedAssessor?.comments?.filter(it=>it.type=='c2')||[]).map(it=>({...it,key: uniqueId().toString()})))
-        setDataComment3((selectedAssessor?.comments?.filter(it=>it.type=='c3')||[]).map(it=>({...it,key: uniqueId().toString()})))
-        setDataComment4((selectedAssessor?.comments?.filter(it=>it.type=='c4')||[]).map(it=>({...it,key: uniqueId().toString()})))
-        setDataComment5((selectedAssessor?.comments?.filter(it=>it.type=='c5')||[]).map(it=>({...it,key: uniqueId().toString()})))
+        setDataStrength((selectedAssessor?.comments?.filter(it=>it.type=='C1')||[]).map(it=>({...it,key: uniqueId().toString()})))
+        setDataImprovement((selectedAssessor?.comments?.filter(it=>it.type=='C2')||[]).map(it=>({...it,key: uniqueId().toString()})))
+        setDataComment3((selectedAssessor?.comments?.filter(it=>it.type=='C3')||[]).map(it=>({...it,key: uniqueId().toString()})))
+        setDataComment4((selectedAssessor?.comments?.filter(it=>it.type=='C4')||[]).map(it=>({...it,key: uniqueId().toString()})))
+        setDataComment5((selectedAssessor?.comments?.filter(it=>it.type=='C5')||[]).map(it=>({...it,key: uniqueId().toString()})))
     },[selectedAssessor])
 
     const onChangeAssessor=(v: number) =>{
@@ -110,7 +110,7 @@ export default({
                 dfEmpAssessorId: selectedAssessor?.id,
                 comment: i.comment,
                 seqNo: index+1  ,
-                type: 'c1'
+                type: 'C1'
             } as DfCommentRs)))
             comments?.push(
                 ...commList2.map((i,index)=>({
@@ -118,7 +118,7 @@ export default({
                     dfEmpAssessorId: selectedAssessor?.id,
                     comment: i.comment,
                     seqNo: index+1,
-                    type: 'c2'
+                    type: 'C2'
                 } as DfCommentRs))
             )
             
@@ -128,7 +128,7 @@ export default({
                     dfEmpAssessorId: selectedAssessor?.id,
                     comment: i.comment,
                     seqNo: index+1,
-                    type: 'c3'
+                    type: 'C3'
                 } as DfCommentRs))
             )
             comments?.push(
@@ -137,7 +137,7 @@ export default({
                     dfEmpAssessorId: selectedAssessor?.id,
                     comment: i.comment,
                     seqNo: index+1,
-                    type: 'c4'
+                    type: 'C4'
                 } as DfCommentRs))
             )
             comments?.push(
@@ -146,7 +146,7 @@ export default({
                     dfEmpAssessorId: selectedAssessor?.id,
                     comment: i.comment,
                     seqNo: index+1,
-                    type: 'c5'
+                    type: 'C5'
                 } as DfCommentRs))
             )
             console.log('comments1==================',comments)
@@ -175,7 +175,7 @@ export default({
                 content: 'Are you sure?',
                 onOk: async () => {
                     try {
-                        await services.draftEvaluation(payload)
+                        await services.submitEvaluation(payload)
                         message.success('Submitted successfully.');
                         // onCloseTab?.()
                     } catch (error: any) {
@@ -196,7 +196,7 @@ export default({
                     >
                        Close
                     </Button>
-                    {selectedAssessor?.status!='SUMITTED' && type=='EDIT' && <Button
+                    {selectedAssessor?.currentAccess && selectedAssessor?.status!='SUBMITTED' && type=='EDIT' && <Button
                         onClick={onSubmitHandler}
                     >
                     Submit
@@ -210,7 +210,7 @@ export default({
             }} 
         >
            <Space direction="vertical" style={{ width: '100%' }}>
-                <Card title="Assessor Infomation" size="small">
+                {(data?.assessors.length||0)>1 && <Card title="Assessor Infomation" size="small">
                     <Row gutter={20}>
                         <Col flex={1}>
                             {data?.assessors &&<CheckCard.Group  onChange={v => onChangeAssessor(v?.valueOf() as number)}  defaultValue={selectedAssessor?.id} size='small'>
@@ -226,7 +226,7 @@ export default({
                             </CheckCard.Group>}
                         </Col>
                     </Row>                    
-                </Card>
+                </Card>}
                 <ProCard size="small" headerBordered title="Employee Infomation">
                     <Descriptions>
                         <Descriptions.Item label="Employee ID" style={{ fontWeight: 'bolder' }}>{data?.empNo}</Descriptions.Item>
@@ -246,7 +246,7 @@ export default({
                         items={statement} 
                         editableFormRef={editableFormRef}
                         editable={true} 
-                        editableRating={true}
+                        editableRating={selectedAssessor?.currentAccess && selectedAssessor?.status!='SUBMITTED'}
                         onSetItems={setStatement}
                     />}
                 </ProCard>
@@ -255,14 +255,14 @@ export default({
                     initDataItems={dataStrength} 
                     // onSetItems={setDataStrength}
                     editableFormRef={editableStrengthFormRef1}  
-                    editable
+                    editable={selectedAssessor?.currentAccess && selectedAssessor?.status!='SUBMITTED'}
                 />}
                 {selectedAssessor?.type=='SELF' && <CommentTable title="5. Please state three (3) areas of improvement for your colleague." 
                     commTitle={'Improvement'} 
                     initDataItems={dataImprovement} 
                     // onSetItems={setDataImprovement} 
                     editableFormRef={editableImprovementFormRef2} 
-                    editable
+                    editable={selectedAssessor?.currentAccess && selectedAssessor?.status!='SUBMITTED'}
                 />}
                 {selectedAssessor?.type=='Manager' && <CommentTable title="4. Please state three (3) key points that you would like the management to help achieve the company's goals or strategies." 
                     commTitle={'Key Point'} 
@@ -276,14 +276,14 @@ export default({
                     initDataItems={dataComment4} 
                     // onSetItems={setDataImprovement} 
                     editableFormRef={editableFormRef4}
-                    editable
+                    editable={selectedAssessor?.currentAccess && selectedAssessor?.status!='SUBMITTED'}
                 />}
                 {selectedAssessor?.type=='Manager' && <CommentTable title="6. Please state three (3) areas of improvement for your line manager." 
                     commTitle={'Improvement'} 
                     initDataItems={dataComment5} 
                     // onSetItems={setDataImprovement} 
                     editableFormRef={editableFormRef5}
-                    editable
+                    editable={selectedAssessor?.currentAccess && selectedAssessor?.status!='SUBMITTED'}
                 />}
            </Space>            
         </ProForm>

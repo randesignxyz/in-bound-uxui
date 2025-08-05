@@ -19,16 +19,16 @@ export default () => {
     const { data, isLoading, refetch } = useQuery(['fetch-fd360-emp-list', filter], () => services.list(filter), {
             refetchOnWindowFocus: false
         })
-    const getMenuItems =( r: DF360EmpListItem )=>{
-        const menus = r.assessors.map(it=>({
-            key: it.userId,
-            label: it.userId,
-             onClick: async () => {
-                message.error(it.userId)
-             }
-        }))
-        return menus
-    }    
+    // const getMenuItems =( r: DF360EmpListItem )=>{
+    //     const menus = r.assessors.map(it=>({
+    //         key: it.userId,
+    //         label: it.userId,
+    //          onClick: async () => {
+    //             message.error(it.userId)
+    //          }
+    //     }))
+    //     return menus
+    // }    
     
     return(<PageWrapper<DF360EmpListItem, DF360InfoAdvanceSearchParams, {}>
     
@@ -151,20 +151,21 @@ export default () => {
                         width: 100,
                         sorter: 'dueDate',
                         render: (_, r) =>  formatDate(r.dueDate),
-                    }, {
-                        render: (_, r) => <Dropdown  menu={{
+                    }, 
+                    // {
+                    //     render: (_, r) => <Dropdown  menu={{
 
-                            // items: getMenuItems(r, 'List', () => refetch).filter(it => it.visible)
-                            items: getMenuItems(r)
+                    //         // items: getMenuItems(r, 'List', () => refetch).filter(it => it.visible)
+                    //         items: getMenuItems(r)
 
-                        }}>
-                            <a onClick={(e) => e.preventDefault()}>
-                                <Space>
-                                    dfdf <DashOutlined />
-                                </Space>
-                            </a>
-                        </Dropdown>
-                    }
+                    //     }}>
+                    //         <a onClick={(e) => e.preventDefault()}>
+                    //             <Space>
+                    //                 dfdf <DashOutlined />
+                    //             </Space>
+                    //         </a>
+                    //     </Dropdown>
+                    // }
                 ]
             }
         }}

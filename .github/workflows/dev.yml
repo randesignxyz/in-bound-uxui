@@ -74,20 +74,6 @@ jobs:
         shell: pwsh
         working-directory: C:\DevOps\ies-frontend
 
-      # # Copy only dist folder to the deployment directory
-      # - name: Copy project folder
-      #   run: |
-      #     $source = "C:\DevOps\ies-frontend\dist"
-      #     $destination = "C:\deployment\ies-frontend\dist"
-      #     if (Test-Path $source) {
-      #       Copy-Item -Path "$source\*" -Destination $destination -Recurse -Force
-      #       Write-Output "Copied  folder from $source to $destination"
-      #     } else {
-      #       Write-Error "folder not found at $source"
-      #       exit 1
-      #     }
-      #   shell: pwsh
-
       # Determine target environment (Blue or Green)
       - name: Determine target environment
         id: target-env

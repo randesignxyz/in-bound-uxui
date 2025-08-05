@@ -93,9 +93,9 @@ export default({
       id: id||0,
       customerCode: dataForm.customerCode,
       ppItems:ppItems,
-      billing: addressList?.map(it=>({
+      billing: addressList?.map((it,index)=>({
         id: it.id ||0,
-        address: it.address,
+        address: 'B'+(index+1).toString().padStart(2,'0')+(it.address?'-'+it.address:''),
         houseNo: it.houseNo,
         houseNoKh: it.houseNoKh,
         streetNo: it.streetNo,

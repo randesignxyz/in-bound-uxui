@@ -129,3 +129,4 @@ jobs:
           # $newPath = if ($targetEnv -eq "blue") { "${{ env.BLUE_DIR }}\dist" } else { "${{ env.GREEN_DIR }}\dist" }
           # Set-ItemProperty "IIS:\Sites\$siteName" -Name physicalPath -Value $newPath
         shell: powershell
+

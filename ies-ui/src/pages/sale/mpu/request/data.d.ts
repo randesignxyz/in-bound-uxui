@@ -84,7 +84,7 @@ interface PurchaseRequestItemCreate {
   uom: string;
   name?: string;
   stockCategoryName: string;
-  unitCost: number;
+  unitCost: number = 0.0;
 }
 
 interface PurchaseRequestUpdateParam {

@@ -1,5 +1,5 @@
 import { RequestActions, ServiceApiType, singleRequest, findAllService, findMultiService } from "@/services/apiGateway";
-import { AddressParams, AddresssView, DoRequireCustomerList, RegisterCuistomerInfoAdvanceSearchParams, RegisterCustomer, RegisterCustomerDetailResponse, RegisterCustomerListItem, RegisterCustomerWFPayload, RegisterItemBrandList, RegisterPPItemList, SaveRegisterCustomerAddressParams } from "./data";
+import { AddressParams, AddresssView, DoRequireCustomerList, RcSapEmpSale, RegisterCuistomerInfoAdvanceSearchParams, RegisterCustomer, RegisterCustomerDetailResponse, RegisterCustomerListItem, RegisterCustomerWFPayload, RegisterItemBrandList, RegisterPPItemList, SaveRegisterCustomerAddressParams } from "./data";
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { Paging } from "@/services/API";
 // import {
@@ -147,6 +147,14 @@ export const RegisterCustomerParams = {
         actionName: 'post-customer-to-sap',
         payload: {id },
     }),
+    listRcSapEmployeeSale: (): ServiceApiType<{}> => {
+      return ({
+        type: 'LIST_QUERY',
+        endpoint: 'CRM',
+        actionName: 'list-rc-sap-emp-sale',
+        payload: {},
+      });
+    },
 
 }
 export const RegisterCustomerServiceAPI = (requestActions?: RequestActions) => {
@@ -169,6 +177,7 @@ export const RegisterCustomerServiceAPI = (requestActions?: RequestActions) => {
       findAllLocations: findAllService<LocationsParams, Locations>({type: 'CRM',name:'locations'}, requestActions),
       findLocationByParents: findAllService<{ ids: number[] }, Locations>({type: 'CRM',name:'get-location-by-parents'}, requestActions),
       postToSAP: (id: number) => singleRequest(RegisterCustomerParams.postToSAP(id))(requestActions),
+      listRcSapEmployeeSale: () => singleRequest(RegisterCustomerParams.listRcSapEmployeeSale())(requestActions) as Promise<RcSapEmpSale[]>,
     }
     
 

@@ -71,7 +71,7 @@ export default ({ title, form, onlyCurrentUser, onSetSubmitter }: {
               fetchUser(value)
             },
           }}
-          disabled = {onlyCurrentUser ||  !access.isAccessHRApprasilSupport}
+          // disabled = {onlyCurrentUser ||  !access.isAccessHRApprasilSupport}
           name={"requestorId"}
          
           allowClear

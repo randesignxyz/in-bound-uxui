@@ -391,6 +391,14 @@ export default [
     access: 'canAccessProbationEvaluation',
     component: './hrm/probation',
   },
+  {
+    path: '/hrm/df/:view/*',
+    name: 'df_360',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessDF360',
+    component: './hrm/df',
+  },
   /**********HRM>>**************/
 
   /**********<<Sale**************/
@@ -901,20 +909,20 @@ export default [
     access: 'canAccessDeliveryTruck',
     component: './delivery/location-tracking',
   },
-  // {
-  //   path: '/delivery/associate/del/:view/*',
-  //   name: 'associateDel',
-  //   icon: 'UnorderedListOutlined',
-  //   hideInMenu: 'true',
-  //   access: 'canAccesAssociateDelView',
-  //   component: './delivery/associate/del',
-  // },
+  {
+    path: '/delivery/allocate/:view/*',
+    name: 'allocateDel',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccesAllocateDelView',
+    component: './delivery/allocate',
+  },
   // {
   //   path: '/delivery/associate/sale/:view/*',
   //   name: 'associateSale',
   //   icon: 'UnorderedListOutlined',
   //   hideInMenu: 'true',
-  //   access: 'canAccesAssociateSale',
+  //   access: 'canAcceAllocateSale',
   //   component: './delivery/associate/sale',
   // },
 

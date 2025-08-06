@@ -1,9 +1,7 @@
 import { ProCard, ProTable } from "@ant-design/pro-components";
 import { AddresssView, PurchasingPerformanceItem, RegisterCustomerDetailResponse } from "../data";
 import { Card, Col, Descriptions, Flex, List, Radio, Row, Space } from "antd";
-import AddressListView from "./AddressListView";
 import { AimOutlined } from "@ant-design/icons";
-import PurchasingPerformanceView from "./PurchasingPerformanceView";
 import RemarkCard from "./RemarkCard";
 import DocmentRequire from "./DocmentRequire";
 
@@ -32,11 +30,11 @@ export default ({ data }: Props) => {
                 <Descriptions.Item label="Purpose">
                     {data?.purpose}
                 </Descriptions.Item>
-                <Descriptions.Item label="Price & Trade Offer">
-                    {data?.priceTradeOfferName}
+                <Descriptions.Item label={'Price & Trade  - ' + data?.priceTradeOfferName}>
+                    {data?.sapPriceTradeOfferName}
                 </Descriptions.Item>
-                <Descriptions.Item label="Payment Term">
-                    {data?.paymentTermName}
+                <Descriptions.Item label={"Payment Term - "+ data?.paymentTermName}>
+                    {data?.sapPaymentTermName}
                 </Descriptions.Item>
                 <Descriptions.Item label="Outlet Type">
                     {data?.outletTypeName}
@@ -106,7 +104,7 @@ export default ({ data }: Props) => {
                             dataSource={data?.billing}
                             itemLayout="horizontal"
                             rowKey="key"
-                            renderItem={(item) => (
+                            renderItem={(item,index) => (
                                 <List.Item
                                 // extra={[
                                 //   !addressReadonly && (
@@ -126,7 +124,7 @@ export default ({ data }: Props) => {
                                 title={
                                     <Space>
                                     {' '}
-                                    <AimOutlined /> {item.address} {/*<Tag>{item.type?.name}</Tag>{' '}*/}
+                                    <AimOutlined />{(item?.type||'')+(index+1).toString().padStart(2,'0')+(item.address? '-'+item.address:'')} {/*<Tag>{item.type?.name}</Tag>{' '}*/}
                                     </Space>
                                 }
                                 description={
@@ -180,7 +178,7 @@ export default ({ data }: Props) => {
                             dataSource={data?.shipping}
                             itemLayout="horizontal"
                             rowKey="key"
-                            renderItem={(item) => (
+                            renderItem={(item,index) => (
                                 <List.Item
                                 // extra={[
                                 //   !addressReadonly && (
@@ -200,7 +198,7 @@ export default ({ data }: Props) => {
                                 title={
                                     <Space>
                                     {' '}
-                                    <AimOutlined /> {item.address} {/*<Tag>{item.type?.name}</Tag>{' '}*/}
+                                    <AimOutlined />{(item?.type||'')+(index+1).toString().padStart(2,'0')+(item.address? '-'+item.address:'')}
                                     </Space>
                                 }
                                 description={

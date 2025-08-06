@@ -260,6 +260,10 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
     SaleService('post-so'),
     actions,
   ),
+  postSoToSAPNew: execService<{ soId: number; remarks?: string }, { data: any; message: string }>(
+    SaleService('post-so-new'),
+    actions,
+  ),
   cancelSo: execService<{ soId: number; remarks: string }, { data: string; message: string }>(
     SaleService('cancel-so'),
     actions,

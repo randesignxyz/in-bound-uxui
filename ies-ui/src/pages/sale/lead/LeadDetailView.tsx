@@ -2,11 +2,11 @@ import DescriptionDisplay from '@/components/Descriptions';
 import { simpleRequestActions } from '@/services/model';
 import type { LeadDetail } from '@/services/sale/data';
 import { ProDescriptions, ProForm } from '@ant-design/pro-components';
-import { Button, Card, Divider, Flex, Modal, Row, Space, Spin, Tag, Typography } from 'antd';
+import { Button, Card, Divider, Flex, Row, Space, Spin, Tag, Typography } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import React, { useEffect, useState } from 'react';
 import { LeadServiceAPI } from './services';
-import { CheckCircleOutlined, CheckCircleTwoTone, EditOutlined } from '@ant-design/icons';
+import { EditOutlined } from '@ant-design/icons';
 
 interface Props {
   onEdit: (data?: LeadDetail) => void;
@@ -23,9 +23,7 @@ const LeadDetailView: React.FC<Props> = ({ id, onEdit }) => {
   const services = LeadServiceAPI(requestActions);
   const [lead, setLead] = useState<LeadDetail>();
   const [form] = useForm<LeadDetail>();
-  const onDataLoad = async()=>{
-      setLead(await services.detailLead(id));
-  }
+
   useEffect(() => {
     (async () => {
       if (id) {
@@ -70,28 +68,17 @@ const LeadDetailView: React.FC<Props> = ({ id, onEdit }) => {
   return (
     // <Spin spinning={requestActions.request?.loading}>
     <Flex gap={12} vertical>
-      <Card size='small' title={"Saleperson"}
-        extra={[
+      <Card size='small' title={"Saleperson"} 
+         extra={[
           <Button type="link" onClick={() => onEdit?.(lead)} icon={<EditOutlined />}>
             Edit
-          </Button>,
-          !lead?.isVerified && lead && <Button type="link" onClick={() => {
-            Modal.confirm({
-              title: "Confirmation Verification.",
-              content: "do you want continue process?",
-              onOk: async () => {
-                await services.verified([lead?.id||0]);
-                onDataLoad?.();
-              }
-            })
-          }} icon={<CheckCircleOutlined />}>
-            Verification
           </Button>
         ]}
       >
         <ProDescriptions
           dataSource={lead?.salesperson}
           loading={requestActions.request?.loading}
+         
           contentStyle={{
             fontWeight: 500
           }}
@@ -111,7 +98,7 @@ const LeadDetailView: React.FC<Props> = ({ id, onEdit }) => {
           ]}
         />
       </Card>
-      <Card size='small' title={<Space>Customer Information {lead?.isVerified &&  <CheckCircleTwoTone twoToneColor="#52c41a" />}</Space>}>
+      <Card size='small' title={"Customer Information"}>
         <ProDescriptions
           loading={requestActions.request?.loading}
           contentStyle={{

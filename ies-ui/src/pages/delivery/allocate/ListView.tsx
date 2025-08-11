@@ -352,7 +352,7 @@ export default () => {
                       {access.currentUser?.login == record.claimed_by && access.canAccesAddRemarkAllocate ?
                         <Button type="default" danger
                           onClick={() => handleUnClaim(record.id)}
-                        >
+                        > 
                           Release
                         </Button>
                         : <></>}

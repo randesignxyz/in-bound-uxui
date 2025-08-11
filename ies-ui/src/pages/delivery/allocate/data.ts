@@ -74,6 +74,8 @@ export interface DNList {
   claimed_date?: string
   so_no?: string
   reserve_num?: string
+  customer_code?:string,
+  customer_name?:string
 }
 
 interface DN {

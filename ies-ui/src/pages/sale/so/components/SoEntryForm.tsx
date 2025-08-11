@@ -133,7 +133,7 @@ const EntryForm: React.FC<Props> = ({ type, id, openInTab, onBack }) => {
       totalAmount: totalAmount,
     });
     actions.listTransportationOffer(defaultDelivery?.deliveryMethod);
-    return () => {};
+    return () => { };
   }, [state.data?.soItems]);
 
   useEffect(() => {
@@ -186,6 +186,13 @@ const EntryForm: React.FC<Props> = ({ type, id, openInTab, onBack }) => {
         title: 'Save Sale Order',
         content: 'Are you sure?',
         onOk: async () => {
+          const deliveriesWithLineNum = state.data?.deliveryList?.map((delivery) => ({
+            ...delivery,
+            itemList: delivery.itemList.map((item, index) => ({
+              ...item,
+              line_num: index + 1,
+            })),
+          }));
           try {
             const so = await actions.saveSo({
               id: state.data?.soDetail?.id,
@@ -202,7 +209,7 @@ const EntryForm: React.FC<Props> = ({ type, id, openInTab, onBack }) => {
               vatAmount: sumData.vatAmount,
               totalAmount: sumData.totalAmount,
               items: state.data?.soItems,
-              deliveries: state.data?.deliveryList as Delivery[],
+              deliveries: deliveriesWithLineNum as Delivery[],
               budgetCode: dataFrom.budgetCode,
               distributorId: dataFrom.distributorId,
               attachments: state.data?.attachments,

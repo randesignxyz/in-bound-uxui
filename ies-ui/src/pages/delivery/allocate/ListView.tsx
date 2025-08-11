@@ -337,7 +337,6 @@ export default () => {
               <Descriptions.Item label="Shipping Address" style={{ fontWeight: 'bolder' }} span={2}>
                 {record.shippingAddress ? record.shippingAddress : '-'}
               </Descriptions.Item>
-
               <Descriptions.Item span={4}>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
                   {record.claimed_by ? (
@@ -354,7 +353,7 @@ export default () => {
                         <Button type="default" danger
                           onClick={() => handleUnClaim(record.id)}
                         >
-                          Unclaim
+                          Release
                         </Button>
                         : <></>}
 
@@ -378,6 +377,13 @@ export default () => {
               <Descriptions.Item label="A/R Reserve Invoice" style={{ fontWeight: 'bolder' }}>
                 {record.reserve_num || '-'}
               </Descriptions.Item>
+              <Descriptions.Item label="Customer Code" style={{ fontWeight: 'bolder' }}>
+                {record.customer_code || '-'}
+              </Descriptions.Item>
+              <Descriptions.Item label="Customer Name" style={{ fontWeight: 'bolder' }}>
+                {record.customer_name || '-'}
+              </Descriptions.Item>
+              
             </Descriptions>
             <ProTable
               size="small"

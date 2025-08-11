@@ -273,7 +273,7 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, dn
                                                     <Button type="default" danger
                                                         onClick={() => handleUnClaim(group.id)}
                                                     >
-                                                        Unclaim
+                                                        Release
                                                     </Button>
                                                     : <></>}
 

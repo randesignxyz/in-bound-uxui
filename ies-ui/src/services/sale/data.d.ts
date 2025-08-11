@@ -908,6 +908,7 @@ export interface Delivery {
   associatedTo: ?{
     shippingAddress: ?AddressInfo;
   };
+  line_num?:number
 }
 
 export interface DeliveryItem {

@@ -42,8 +42,9 @@ export interface SOList {
   postedDate?: string,
   docEntryNum: string,
   deliveries: DeliveryList[],
-  totalItemQty ?:number,
-  totalDnQty ?:number,
+  totalItemQty?: number,
+  totalDnQty?: number,
+  dn_status?: string
 }
 
 export interface DeliveryList {
@@ -58,17 +59,21 @@ export interface DeliveryList {
 }
 
 export interface DNList {
-  id: string,
+  id: number,
   soId: string,
   deliveryDate: string,
   shippingAddress?: string,
   priority?: string,
   remarks?: string,
   shift?: string,
-  dn_plan: DNPlan[]
+  deliveryItems: DNPlan[]
   soNo?: string,
   soStatus?: string
-  poNo?:string
+  poNo?: string
+  claimed_by?: string
+  claimed_date?: string
+  so_no?: string
+  reserve_num?: string
 }
 
 interface DN {
@@ -94,18 +99,33 @@ interface DN {
   type?: string
 }
 
+// interface DNPlan {
+//   allocateItemIds?: string
+//   deliveryId?: string
+//   id?: string
+//   itemCode?: string
+//   itemName?: string
+//   lineNumber?: string
+//   qty?: string
+//   saleType?: string
+//   soNum?: string
+//   dn: DNDetail[]
+//   attachment?: Attachment[];
+// }
+
 interface DNPlan {
-  allocateItemIds?: string
-  deliveryId?: string
-  id?: string
-  itemCode?: string
-  itemName?: string
-  lineNumber?: string
-  qty?: string
-  saleType?: string
-  soNum?: string
-  dn: DNDetail[]
+  allocateItemIds?: string;
+  deliveryId?: string;
+  id?: string;
+  itemCode?: string;
+  itemName?: string;
+  lineNumber?: string;
+  qty?: string;
+  saleType?: string;
+  soNum?: string;
+  dn: DNDetail[];
   attachment?: Attachment[];
+  so_status?: string
 }
 
 export interface DeliveryItemList {
@@ -128,7 +148,7 @@ export type AllocateSOAdvanceParams = {
   searchValue?: string;
   status: string;
   ordered_date?: string;
-  dnStatus?:string
+  dnStatus?: string
 };
 
 export type DNDetail = {
@@ -157,7 +177,7 @@ export type DNItemParams = {
   allocateID: string,
   lineNumber: string,
   so_num: string,
-  isUnplan?:string
+  isUnplan?: string
 };
 
 export type DNParams = {
@@ -169,8 +189,8 @@ export type DNParams = {
   shift?: string | null;
   shippingAddress?: string | null;
   soId?: number | string | null;
-  claimed_by?:string
-  claimed_date?:string
+  claimed_by?: string
+  claimed_date?: string
   unplannedItems: DNItemParams[]
 }
 
@@ -197,4 +217,13 @@ export type DeliveryDnParams = {
   total_plan_qty: string,
   attachment?: Attachment[],
   remark: string
+}
+
+export type SOAllocateActivities = {
+  id: number,
+  action: string,
+  action_by: string,
+  action_name: string,
+  action_date: string,
+  dnId: string
 }

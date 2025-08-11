@@ -1,5 +1,5 @@
 import { RequestActions, ServiceApiType, singleRequest } from "@/services/apiGateway";
-import { Allocate, allocateSearch, DeliveryList, DNList, DNParams, SOList, UpdateRemarkParams } from "./data";
+import { Allocate, allocateSearch, DeliveryList, DNList, DNParams, SOAllocateActivities, SOList, UpdateRemarkParams } from "./data";
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { Paging } from "@/services/API";
 
@@ -58,11 +58,23 @@ const AllocateAction = {
         actionName: 'sync-allocate',
         payload: {}
     }),
-    claimDn: (sales_planid:number,claimed_by?:string): ServiceApiType<{sales_planid:number,claimed_by?:string}> => ({
+    claimDn: (sales_planid: number, claimed_by?: string, action?: string, activities_name?: string): ServiceApiType<{ sales_planid: number, claimed_by?: string, action?: string, activities_name?: string }> => ({
         type: 'EXEC',
         endpoint: 'DELIVERY',
         actionName: 'claim-dn',
-        payload: {sales_planid,claimed_by}
+        payload: { sales_planid, claimed_by, action, activities_name }
+    }),
+    getActivities: (dnID: number): ServiceApiType<{ dnID: number }> => ({
+        type: 'LIST_QUERY',
+        endpoint: 'DELIVERY',
+        actionName: 'get-activities-by-dn',
+        payload: { dnID },
+    }),
+    listDnbyUser: (): ServiceApiType<{  }> => ({
+        type: 'LIST_QUERY',
+        endpoint: 'DELIVERY',
+        actionName: 'get-dn-by-user',
+        payload: {  },
     }),
 }
 
@@ -91,10 +103,17 @@ export const AllocateServiceAPI = (requestAction: RequestActions) => {
         syncAllocate: () =>
             singleRequest<{ data: string, message: string }>(AllocateAction.syncAllocate())(requestAction),
 
-        ClaimDn: (sales_planid:number,claimed_by?:string,) =>
-            singleRequest<{ data: string, message: string }>(AllocateAction.claimDn(sales_planid,claimed_by))(requestAction),
+        ClaimDn: (sales_planid: number, claimed_by?: string, action?: string, activities_name?: string) =>
+            singleRequest<{ data: string, message: string }>(AllocateAction.claimDn(sales_planid, claimed_by, action, activities_name))(requestAction),
 
-
+        getActivities: (dnID: number) =>
+            singleRequest<SOAllocateActivities>(AllocateAction.getActivities(dnID))(
+                requestAction
+            ),
+        list_dn_by_user: () =>
+            singleRequest<DNList>(AllocateAction.listDnbyUser())(
+                requestAction
+            ),
 
     }
 }

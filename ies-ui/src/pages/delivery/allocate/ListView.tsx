@@ -36,7 +36,10 @@ export default () => {
     status: 'posted',
     dnStatus: 'pending'
   });
-  const [modalOpen, setModalOpen] = useState<{ visible: boolean; id: number, remark?: string, attachment?: any }>({
+  const [dnSearch, setDnSearch] = useState({
+    status: 'ALL'
+  });
+  const [modalOpen, setModalOpen] = useState<{ visible: boolean; id: number, remark?: string, attachment?: any, sales_planid?: string }>({
     visible: false,
     id: 0,
   });
@@ -82,10 +85,11 @@ export default () => {
           ...data,
           attachment: fileUrls.length > 0 ? fileUrls.map(url => ({ attachment: url })) : [],
         };
-        await services.updateRemark(payload) as {
-          data: string;
-          message: string;
-        };
+        console.log('payload', payload)
+        // await services.updateRemark(payload) as {
+        //   data: string;
+        //   message: string;
+        // };
         setModalOpen({ visible: false, id: 0 });
         actionRef.current?.reloadAndRest?.();
         message.success('Updated successfully');
@@ -111,7 +115,7 @@ export default () => {
 
   const handleUnClaim = async (id: number) => {
     Modal.confirm({
-      title: 'UnClaim',
+      title: 'Release Claim',
       content: 'Are you sure?',
       onOk: async () => {
 
@@ -200,7 +204,7 @@ export default () => {
     params: TableViewSearchParams<AllocateSOAdvanceParams>
   ): Promise<Paging<DNList>> => {
     try {
-      const list = await services.list_dn_by_user();
+      const list = await services.list_dn_by_user(dnSearch.status);
 
       if (!Array.isArray(list)) {
         throw new Error('Unexpected response format');
@@ -326,7 +330,17 @@ export default () => {
       // dataIndex: 'soNo',
       render: (_, record) => {
         return (
-          <Card style={{ marginBottom: 16 }}>
+          <Card style={{
+            marginBottom: 16,
+            borderLeft: `3px solid ${record.status === 'open'
+                ? '#91caff'
+                : record.status === 'in-progress'
+                  ? '#ffd591'
+                  : record.status === 'complete'
+                    ? '#b7eb8f'
+                    : '#ccc'
+              }`
+          }}>
             <Descriptions column={5}>
               <Descriptions.Item label="DO Date" style={{ fontWeight: 'bolder' }}>
                 {dayjs(record.deliveryDate).isValid()
@@ -352,7 +366,7 @@ export default () => {
                       {access.currentUser?.login == record.claimed_by && access.canAccesAddRemarkAllocate ?
                         <Button type="default" danger
                           onClick={() => handleUnClaim(record.id)}
-                        > 
+                        >
                           Release
                         </Button>
                         : <></>}
@@ -383,7 +397,7 @@ export default () => {
               <Descriptions.Item label="Customer Name" style={{ fontWeight: 'bolder' }}>
                 {record.customer_name || '-'}
               </Descriptions.Item>
-              
+
             </Descriptions>
             <ProTable
               size="small"
@@ -492,18 +506,49 @@ export default () => {
                   title: 'Delivered',
                   width: 90,
                   render: (_, item) => {
-                    const dn = item.dn || [];
-                    const firstDnQty = dn?.[0]?.dn_qty ? Number(dn[0].dn_qty) : 0;
-                    const planQty = Number(item.qty) || 0;
-                    let color = 'black';
+                    const deliveryDate = dayjs.utc(record.deliveryDate).tz('Asia/Phnom_Penh').startOf('day');
+                    const dnList = Array.isArray(item.dn) ? item.dn : [];
 
-                    if (firstDnQty === planQty) color = 'green';
-                    else if (firstDnQty > planQty) color = 'red';
-                    else if (firstDnQty > 0) color = 'orange';
+                    const allDNs = record.deliveryItems.flatMap(item => item.dn || []);
+                    const sortedDnList = allDNs
+                      .filter(d => d.dn_num)
+                      .sort((a, b) => Number(a.dn_num) - Number(b.dn_num));
+                    const firstDnNum = sortedDnList[0]?.dn_num;
+
+                    const plannedQty = Number(item.qty) || 0;
+                    const totalDelivered = dnList.reduce((sum, dn) => sum + (parseFloat(dn.dn_qty) || 0), 0);
+
+                    let color = 'black'; // default
+
+                    if (dnList.length === 1) {
+                      const dn = dnList[0];
+                      const dnDate = dayjs.utc(dn.dn_date).tz('Asia/Phnom_Penh').startOf('day');
+                      const isFirstDn = dn.dn_num === firstDnNum;
+                      const isSameDate = dnDate.isSame(deliveryDate);
+
+                      if (isFirstDn && isSameDate && totalDelivered >= plannedQty) {
+                        color = 'green';
+                      } else if (totalDelivered == 0) {
+                        color = 'black';
+                      } else {
+                        color = 'orange';
+                      }
+                    } else if (totalDelivered == 0) {
+                      color = 'black';
+                    } else if (
+                      dnList.length > 1 ||
+                      dnList.some(dn => {
+                        const dnDate = dayjs.utc(dn.dn_date).tz('Asia/Phnom_Penh').startOf('day');
+                        return !dnDate.isSame(deliveryDate);
+                      }) ||
+                      totalDelivered < plannedQty
+                    ) {
+                      color = 'orange';
+                    }
 
                     return (
                       <div style={{ color }}>
-                        {firstDnQty.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                        {totalDelivered.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                       </div>
                     );
                   },
@@ -537,8 +582,8 @@ export default () => {
                     return (
                       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                         {attachments.map((att, index) => {
-                          const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(att.attachment);
-                          const decodedURL = decodeURIComponent(att.attachment)
+                          const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(att);
+                          const decodedURL = decodeURIComponent(att)
                           const fileNameMatch = decodedURL.match(/\/([^\/?]+)\?alt=media/)
                           let fileName = fileNameMatch ? fileNameMatch[1] : `File ${index + 1}`;
                           const dashIndex = fileName.indexOf('-');
@@ -550,7 +595,7 @@ export default () => {
                               key={index}
                               width={50}
                               height={50}
-                              src={att.attachment}
+                              src={att}
                               alt={`attachment-${index}`}
                               style={{ objectFit: 'cover', borderRadius: 4 }}
                               preview={{ mask: <div>Click to preview</div> }}
@@ -588,11 +633,13 @@ export default () => {
                       <a
                         onClick={() => {
                           const dnItem = r.dn?.[0];
+                          console.log('r', r)
                           setModalOpen({
                             visible: true,
                             id: dnItem?.id,
                             remark: dnItem?.remark,
                             attachment: dnItem?.attachment,
+                            sales_planid: r.deliveryId
                           });
                         }}
                       >
@@ -665,8 +712,8 @@ export default () => {
               }}
               extraFilter={
                 <Space size="large" style={{ flexDirection: 'row' }}>
-                  <Button onClick={() => setSearchModalOpen({ visible: true })}><FileSearchOutlined /></Button>
-                  <Radio.Group
+                  {/* <Button onClick={() => setSearchModalOpen({ visible: true })}><FileSearchOutlined /></Button> */}
+                  <><Radio.Group
                     value={advanceSearchParams.filter}
                     onChange={(e) => {
                       setAdvanceSearchParams((v) => ({
@@ -680,6 +727,24 @@ export default () => {
                     <Radio.Button value="DN">My Task</Radio.Button>
                     {/* <Radio.Button value="FG">FG</Radio.Button> */}
                   </Radio.Group>
+                    {advanceSearchParams.filter == 'DN' ?
+                      <Radio.Group
+                        value={dnSearch.status}
+                        onChange={(e) => {
+                          setDnSearch((v) => ({
+                            ...v,
+                            status: e.target.value,
+                          }));
+                          actionRef.current?.reloadAndRest?.();
+                        }}
+                      >
+                        <Radio.Button value="ALL">ALL</Radio.Button>
+                        <Radio.Button value="open">Open</Radio.Button>
+                        <Radio.Button value="in-progress">In Progress</Radio.Button>
+                        <Radio.Button value="complete">Completed</Radio.Button>
+                      </Radio.Group>
+                      : {}}
+                  </>
                 </Space>
               }
               columns={dnColums}
@@ -716,7 +781,7 @@ export default () => {
       />
       <AddRemarkModal
         open={modalOpen.visible}
-        onCancel={() => setModalOpen({ visible: false, id: 0, remark: '', attachment: [] })}
+        onCancel={() => setModalOpen({ visible: false, id: 0, remark: '', attachment: [], sales_planid: '' })}
         id={modalOpen.id}
         onSave={(e) => { handleSaveRemark(e) }}
         remark={modalOpen.remark}

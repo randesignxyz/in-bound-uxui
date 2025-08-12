@@ -70,11 +70,11 @@ const AllocateAction = {
         actionName: 'get-activities-by-dn',
         payload: { dnID },
     }),
-    listDnbyUser: (): ServiceApiType<{  }> => ({
+    listDnbyUser: (status?:string): ServiceApiType<{ status?:string }> => ({
         type: 'LIST_QUERY',
         endpoint: 'DELIVERY',
         actionName: 'get-dn-by-user',
-        payload: {  },
+        payload: {status },
     }),
 }
 
@@ -110,8 +110,8 @@ export const AllocateServiceAPI = (requestAction: RequestActions) => {
             singleRequest<SOAllocateActivities>(AllocateAction.getActivities(dnID))(
                 requestAction
             ),
-        list_dn_by_user: () =>
-            singleRequest<DNList>(AllocateAction.listDnbyUser())(
+        list_dn_by_user: (status?:string) =>
+            singleRequest<DNList>(AllocateAction.listDnbyUser(status))(
                 requestAction
             ),
 

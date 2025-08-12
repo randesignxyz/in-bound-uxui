@@ -44,7 +44,7 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, dn
     const [dn, setDn] = useState<DNParams | DNParams[] | undefined>()
     const [refetch, setRefetch] = useState(false)
     const [loading, setLoading] = useState(false);
-    const [modalOpen, setModalOpen] = useState<{ visible: boolean; id: number, remark?: string, attachment?: any }>({
+    const [modalOpen, setModalOpen] = useState<{ visible: boolean; id: number, remark?: string, attachment?: any, sales_planid?: number }>({
         visible: false,
         id: 0,
     })
@@ -140,7 +140,7 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, dn
 
     const handleUnClaim = async (id: number) => {
         Modal.confirm({
-            title: 'UnClaim',
+            title: 'Release Claim',
             content: 'Are you sure?',
             onOk: async () => {
 
@@ -480,7 +480,6 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, dn
                                                 </div>
                                             );
                                         }
-
                                     },
                                     {
                                         title: 'Type',
@@ -626,6 +625,7 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, dn
                                                             id: dnItem?.id,
                                                             remark: dnItem?.remark,
                                                             attachment: dnItem?.attachment,
+                                                            sales_planid: group.id
                                                         });
                                                     }}
                                                 >
@@ -651,8 +651,10 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, dn
                 onCancel={() => setModalOpen({ visible: false, id: 0, remark: '', attachment: [] })}
                 id={modalOpen.id}
                 onSave={(e) => { handleSaveRemark(e) }}
+                // onSave={(e) => { console.log(e) }}
                 remark={modalOpen.remark}
                 attachment={modalOpen.attachment}
+                sales_planid={modalOpen.sales_planid}
             />
         </DrawerForm>
     );

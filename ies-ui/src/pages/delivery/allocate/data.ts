@@ -75,7 +75,8 @@ export interface DNList {
   so_no?: string
   reserve_num?: string
   customer_code?:string,
-  customer_name?:string
+  customer_name?:string,
+  status?:string,
 }
 
 interface DN {
@@ -199,7 +200,10 @@ export type DNParams = {
 export type UpdateRemarkParams = {
   id?: number,
   remark?: string,
-  attachment?: Attachment[]
+  attachment?: Attachment[],
+  sales_planid: string,
+  activities_name?: string,
+  action?: string,
 }
 
 type Attachment = {

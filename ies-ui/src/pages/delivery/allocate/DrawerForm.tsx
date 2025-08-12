@@ -201,6 +201,10 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, dn
                 </div>
             ),
         })),
+        style: {
+            maxHeight: 300,
+            overflowY: 'auto',
+        },
     };
 
 

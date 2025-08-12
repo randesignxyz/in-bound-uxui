@@ -1,5 +1,5 @@
 import { RequestActions, ServiceApiType, singleRequest } from "@/services/apiGateway";
-import { Allocate, allocateSearch, DeliveryList, DNList, DNParams, SOAllocateActivities, SOList, UpdateRemarkParams } from "./data";
+import { Allocate, allocateSearch, DeliveryList, DNList, DNParams, DnQuickView, SOAllocateActivities, SOList, UpdateRemarkParams } from "./data";
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { Paging } from "@/services/API";
 
@@ -70,11 +70,17 @@ const AllocateAction = {
         actionName: 'get-activities-by-dn',
         payload: { dnID },
     }),
-    listDnbyUser: (status?:string): ServiceApiType<{ status?:string }> => ({
+    listDnbyUser: (status?: string): ServiceApiType<{ status?: string }> => ({
         type: 'LIST_QUERY',
         endpoint: 'DELIVERY',
         actionName: 'get-dn-by-user',
-        payload: {status },
+        payload: { status },
+    }),
+    fetchDnQuickView: (startDate?: string, endDate?: string): ServiceApiType<{ startDate?: string, endDate?: string }> => ({
+        type: 'FETCH_QUERY',
+        endpoint: 'DELIVERY',
+        actionName: 'get-dn-quick-view',
+        payload: { startDate, endDate },
     }),
 }
 
@@ -110,10 +116,13 @@ export const AllocateServiceAPI = (requestAction: RequestActions) => {
             singleRequest<SOAllocateActivities>(AllocateAction.getActivities(dnID))(
                 requestAction
             ),
-        list_dn_by_user: (status?:string) =>
+        list_dn_by_user: (status?: string) =>
             singleRequest<DNList>(AllocateAction.listDnbyUser(status))(
                 requestAction
             ),
-
+        fetch_dn_quick_view: (startDate?: string, endDate?: string) =>
+            singleRequest<DnQuickView>(AllocateAction.fetchDnQuickView(startDate,endDate))(
+                requestAction
+            ),
     }
 }

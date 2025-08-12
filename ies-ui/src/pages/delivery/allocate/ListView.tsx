@@ -4,10 +4,10 @@ import { MultiRequest } from '@/services/apiGateway';
 import { Company, Driver, DriverListItem, SaveDriver, Truck } from '@/services/delivery/data';
 import { simpleRequestActions } from '@/services/model';
 import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table';
-import { Card, Checkbox, DatePicker, message, Modal, Progress, Radio, Space, Spin, Tag, Image, UploadFile, Descriptions, Button, Table, Dropdown } from 'antd';
+import { Card, Checkbox, DatePicker, message, Modal, Progress, Radio, Space, Spin, Tag, Image, UploadFile, Descriptions, Button, Table, Dropdown, Row, Col } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AllocateServiceAPI } from './service';
-import { Allocate, AllocateSOAdvanceParams, DeliveryList, DNItemParams, DNList, DNParams, SOAllocateActivities, SOList, UpdateRemarkParams } from './data';
+import { Allocate, AllocateSOAdvanceParams, DeliveryList, DNItemParams, DNList, DNParams, DnQuickView, SOAllocateActivities, SOList, UpdateRemarkParams } from './data';
 import { useAccess, useModel } from '@umijs/max';
 import { Paging } from '@/services/API';
 import { FaCarSide, FaRegPenToSquare, FaTruckMoving } from "react-icons/fa6";
@@ -22,6 +22,7 @@ import AdvanceSearch from './advanceSearchDrawer';
 dayjs.extend(customParseFormat)
 
 export default () => {
+  const { RangePicker } = DatePicker
   const access = useAccess();
   const requestActions = simpleRequestActions();
   const services = AllocateServiceAPI(requestActions);
@@ -43,6 +44,11 @@ export default () => {
     visible: false,
     id: 0,
   });
+  const [quickViewSearch, setQuickViewSearch] = useState<{ startDate?: string; endDate?: string }>({
+    startDate: undefined,
+    endDate: undefined
+  });
+
   const [searchModalOpen, setSearchModalOpen] = useState<{ visible: boolean }>({
     visible: false
   });
@@ -155,7 +161,12 @@ export default () => {
         </div>
       ),
     })),
+    style: {
+      maxHeight: 300,
+      overflowY: 'auto',
+    },
   };
+
 
   const onRequestHandler = async (params: TableViewSearchParams<AllocateSOAdvanceParams>) => {
     try {
@@ -215,17 +226,7 @@ export default () => {
       const total = list.length;
 
       const pagedData = list.slice((page - 1) * pageSize, page * pageSize);
-      console.log(pagedData)
-      // const cached = cacheList.cacheDataList({
-      //   type: 'dn-list',
-      //   criteria: params,
-      //   data: pagedData,
-      //   total,
-      //   page,
-      //   pageSize,
-      // });
 
-      // console.log('onRequestDNHandler return:', cached);
       return {
         items: pagedData,
         total,
@@ -233,6 +234,25 @@ export default () => {
         pageSize
       };
 
+
+    } catch (error: any) {
+      message.error(error.message);
+      return Promise.reject(error);
+    }
+  };
+
+  const onRequestQuickView = async (
+    params: TableViewSearchParams<AllocateSOAdvanceParams>
+  ): Promise<Paging<DnQuickView>> => {
+    try {
+      const data = await services.fetch_dn_quick_view(quickViewSearch.startDate, quickViewSearch.endDate);
+      console.log(data)
+      return {
+        items: [data],
+        total: 1,
+        page: 1,
+        pageSize: 10,
+      };
 
     } catch (error: any) {
       message.error(error.message);
@@ -332,27 +352,56 @@ export default () => {
         return (
           <Card style={{
             marginBottom: 16,
-            borderLeft: `3px solid ${record.status === 'open'
-                ? '#91caff'
-                : record.status === 'in-progress'
-                  ? '#ffd591'
-                  : record.status === 'complete'
-                    ? '#b7eb8f'
-                    : '#ccc'
-              }`
           }}>
-            <Descriptions column={5}>
+            <Descriptions column={6}>
               <Descriptions.Item label="DO Date" style={{ fontWeight: 'bolder' }}>
                 {dayjs(record.deliveryDate).isValid()
                   ? dayjs(record.deliveryDate).format('DD-MMM-YYYY')
                   : '-'}
               </Descriptions.Item>
-
               <Descriptions.Item label="Shipping Address" style={{ fontWeight: 'bolder' }} span={2}>
                 {record.shippingAddress ? record.shippingAddress : '-'}
               </Descriptions.Item>
-              <Descriptions.Item span={4}>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
+              {/* <Descriptions.Item style={{}}>
+                {record.status ? (
+                  <Tag
+                    color={
+                      record.status === 'open'
+                        ? 'blue'
+                        : record.status === 'in-progress'
+                          ? 'orange'
+                          : record.status === 'complete'
+                            ? 'green'
+                            : 'default'
+                    }
+                    style={{ textTransform: 'capitalize' }}
+                  >
+                    {record.status.replace(/-/g, ' ')}
+                  </Tag>
+                ) : (
+                  '-'
+                )}
+              </Descriptions.Item> */}
+              <Descriptions.Item span={5}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', alignItems: 'center'  }}>
+                  {record.status ? (
+                    <Tag
+                      color={
+                        record.status === 'open'
+                          ? 'blue'
+                          : record.status === 'in-progress'
+                            ? 'orange'
+                            : record.status === 'complete'
+                              ? 'green'
+                              : 'default'
+                      }
+                      style={{ textTransform: 'capitalize' }}
+                    >
+                      {record.status.replace(/-/g, ' ')}
+                    </Tag>
+                  ) : (
+                    '-'
+                  )}
                   {record.claimed_by ? (
                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                       <span>
@@ -471,32 +520,19 @@ export default () => {
                 },
                 rowExpandable: (record) => record.dn && record.dn.length > 0,
               }}
-
-              // dataSource={(record.deliveryItems || []).map(item => ({
-              //   ...item,
-              //   __parent: record.deliveryItems,
-              // }))}
               options={false}
               pagination={false}
               columns={[
+                {
+                  title: 'Item Code',
+                  dataIndex: 'itemCode',
+                  width: 200,
+                },
                 {
                   title: 'Item Name',
                   dataIndex: 'itemName',
                   width: 200,
                 },
-                // {
-                //   title: 'Total Qty',
-                //   dataIndex: 'qty',
-                //   width: 90,
-                //   render: (_, row) => {
-                //     const allItems = row.__parent || [];
-                //     const total = allItems
-                //       .filter(i => i.itemCode === row.itemCode)
-                //       .reduce((sum, i) => sum + Number(i.qty || 0), 0);
-                //     return total.toLocaleString();
-                //   },
-                // },
-
                 {
                   title: 'Plan',
                   dataIndex: 'qty',
@@ -656,6 +692,73 @@ export default () => {
     },
   ];
 
+  const qvColums: ProColumns<DnQuickView>[] = [
+    {
+      // title: 'SO Number',
+      // dataIndex: 'soNo',
+      render: (_, record) => {
+        return (
+          // <Card style={{
+          //   marginBottom: 16,
+          // }}>
+          //   hi
+          // </Card>
+          <Row justify="center" gutter={4}>
+            <Col span={6}>
+              <Card
+                style={{ color: '#555555', backgroundColor: 'rgba(200, 200, 200, 0.15)', textAlign: 'center', fontSize: 16 }}
+                bodyStyle={{ paddingTop: 30, paddingBottom: 30, paddingLeft: 0, paddingRight: 0, }}
+              >
+                Total Delivery Note
+                <br />
+                <div style={{ fontSize: '16px', fontWeight: 'bold' }}>
+                  {record.total_count}
+                </div>
+              </Card>
+            </Col>
+            <Col span={6}>
+              <Card
+                style={{ color: 'rgba(36, 134, 200, 1)', backgroundColor: 'rgba(36, 134, 200, 0.1)', textAlign: 'center', fontSize: 16 }}
+                bodyStyle={{ paddingTop: 30, paddingBottom: 30, paddingLeft: 0, paddingRight: 0, }}
+              >
+                Open Delivery Note
+                <br />
+                <div style={{ fontSize: '16px', fontWeight: 'bold' }}>
+                  {record.open_count}
+                </div>
+              </Card>
+            </Col>
+            <Col span={6}>
+              <Card
+                style={{ color: 'rgba(244, 157, 12, 1)', backgroundColor: 'rgba(244, 157, 12, 0.1)', textAlign: 'center', fontSize: 16 }}
+                bodyStyle={{ paddingTop: 30, paddingBottom: 30, paddingLeft: 0, paddingRight: 0, }}
+              >
+                In Progress Delivery Note
+                <br />
+                <div style={{ fontSize: '16px', fontWeight: 'bold' }}>
+                  {record.in_progress_count}
+                </div>
+              </Card>
+            </Col>
+            <Col span={6}>
+              <Card
+                style={{ color: 'rgba(39, 173, 96, 1)', backgroundColor: 'rgba(39, 173, 96, 0.1)', textAlign: 'center', fontSize: 16 }}
+                bodyStyle={{ paddingTop: 30, paddingBottom: 30, paddingLeft: 0, paddingRight: 0, }}
+              >
+                Completed Delivery Note
+                <br />
+                <div style={{ fontSize: '16px', fontWeight: 'bold' }}>
+                  {record.complete_count}
+                </div>
+              </Card>
+            </Col>
+
+          </Row>
+        );
+      },
+    },
+  ];
+
 
   return (
     <>
@@ -681,6 +784,7 @@ export default () => {
                     actionRef.current?.reloadAndRest?.();
                   }}
                 >
+                  <Radio.Button value="OV">Over View</Radio.Button>
                   <Radio.Button value="SO">Sales Order</Radio.Button>
                   <Radio.Button value="DN">My Task</Radio.Button>
                   {/* <Radio.Button value="FG">FG</Radio.Button> */}
@@ -723,6 +827,7 @@ export default () => {
                       actionRef.current?.reloadAndRest?.();
                     }}
                   >
+                    <Radio.Button value="OV">Over View</Radio.Button>
                     <Radio.Button value="SO">Sales Order</Radio.Button>
                     <Radio.Button value="DN">My Task</Radio.Button>
                     {/* <Radio.Button value="FG">FG</Radio.Button> */}
@@ -763,7 +868,64 @@ export default () => {
               }}
 
             />
-            : []}
+            : advanceSearchParams.filter == 'OV' ?
+              <TableView<DNList, { searchValue?: string }>
+                displayOnly
+                tableProps={{
+                  actionRef: actionRef,
+                }}
+                extraFilter={
+                  <Space size="large" style={{ flexDirection: 'row' }}>
+                    {/* <Button onClick={() => setSearchModalOpen({ visible: true })}><FileSearchOutlined /></Button> */}
+                    <><Radio.Group
+                      value={advanceSearchParams.filter}
+                      onChange={(e) => {
+                        setAdvanceSearchParams((v) => ({
+                          ...v,
+                          filter: e.target.value,
+                        }));
+                        actionRef.current?.reloadAndRest?.();
+                      }}
+                    >
+                      <Radio.Button value="OV">Over View</Radio.Button>
+                      <Radio.Button value="SO">Sales Order</Radio.Button>
+                      <Radio.Button value="DN">My Task</Radio.Button>
+                      {/* <Radio.Button value="FG">FG</Radio.Button> */}
+                    </Radio.Group>
+                      {advanceSearchParams.filter == 'OV' ?
+                        <RangePicker onChange={(dates) => {
+                          if (dates) {
+                            setQuickViewSearch({
+                              startDate: dates[0]?.format('YYYY-MM-DD'),
+                              endDate: dates[1]?.format('YYYY-MM-DD'),
+                            })
+                            actionRef.current?.reloadAndRest?.();
+                          } else {
+                            setQuickViewSearch({ startDate: undefined, endDate: undefined })
+                            actionRef.current?.reloadAndRest?.();
+                          }
+                        }} />
+                        : {}}
+                    </>
+                  </Space>
+                }
+                columns={qvColums}
+                actionHandlers={{
+                  onRequest: (criteria, pagination, sort) =>
+                    onRequestQuickView({
+                      criteria: {
+                        ...criteria,
+                        advanceSearch: advanceSearchParams,
+                        sort,
+                      },
+                      pagination: {
+                        pageSize: 500
+                      },
+                    })
+                }}
+
+              />
+              : []}
 
 
 

@@ -233,3 +233,10 @@ export type SOAllocateActivities = {
   action_date: string,
   dnId: string
 }
+
+export type DnQuickView = {
+  open_count: number
+  complete_count: number
+  in_progress_count: number
+  total_count:number
+}

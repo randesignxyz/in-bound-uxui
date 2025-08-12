@@ -526,7 +526,7 @@ export default () => {
                 {
                   title: 'Item Code',
                   dataIndex: 'itemCode',
-                  width: 200,
+                  width: 100,
                 },
                 {
                   title: 'Item Name',

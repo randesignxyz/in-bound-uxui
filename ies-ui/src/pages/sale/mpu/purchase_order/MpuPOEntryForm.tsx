@@ -488,7 +488,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
               title: 'Quantity',
               dataIndex: 'quantity',
               valueType: 'digit',
-              initialValue: 1,
+              initialValue: 0,
               ellipsis: true,
               fieldProps: {
                 allowClear: true,

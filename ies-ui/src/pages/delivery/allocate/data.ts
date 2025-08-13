@@ -129,6 +129,7 @@ interface DNPlan {
   dn: DNDetail[];
   attachment?: Attachment[];
   so_status?: string
+  delItemName?:string
 }
 
 export interface DeliveryItemList {
@@ -180,7 +181,8 @@ export type DNItemParams = {
   allocateID: string,
   lineNumber: string,
   so_num: string,
-  isUnplan?: string
+  isUnplan?: string,
+  delItemName?:string
 };
 
 export type DNParams = {

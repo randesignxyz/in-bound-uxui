@@ -402,6 +402,11 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, dn
                                         title: 'Item Name',
                                         dataIndex: 'itemName',
                                         width: 250,
+                                        render: (_, record) => {
+                                            return record.itemName && record.itemName.trim() !== ''
+                                                ? record.itemName
+                                                : record.delItemName || '-';
+                                        },
                                     },
                                     {
                                         title: 'Plan',

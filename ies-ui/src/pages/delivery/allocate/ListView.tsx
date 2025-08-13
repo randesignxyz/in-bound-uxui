@@ -383,7 +383,7 @@ export default () => {
                 )}
               </Descriptions.Item> */}
               <Descriptions.Item span={5}>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', alignItems: 'center'  }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', alignItems: 'center' }}>
                   {record.status ? (
                     <Tag
                       color={
@@ -532,6 +532,11 @@ export default () => {
                   title: 'Item Name',
                   dataIndex: 'itemName',
                   width: 200,
+                  render: (_, record) => {
+                    return record.itemName && record.itemName.trim() !== ''
+                      ? record.itemName
+                      : record.delItemName || '-';
+                  },
                 },
                 {
                   title: 'Plan',

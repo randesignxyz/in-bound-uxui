@@ -22,7 +22,7 @@ const ShareCustomerAction ={
         payload:{...param.criteria},
         pagination:param.pagination
     }),
-    delete:(param:number[]):ServiceApiType<{}>=>({
+    delete:(param:any):ServiceApiType<{}>=>({
         actionName:"delete-share-customer-lead",
         endpoint:"CRM",
         type:"EXEC",
@@ -41,7 +41,7 @@ export const ShareCustomerAPI =(requestAction:RequestActions)=>{
         listCustomerLeadBySE:(param:{id:number})=>singleRequest(ShareCustomerAction.listCustomerLeadBySE(param))(requestAction) as Promise<any[]>,
         saveShare:(param:any)=>singleRequest(ShareCustomerAction.saveShare(param))(requestAction) ,
         page:(param:TableViewSearchParams<any>)=>singleRequest(ShareCustomerAction.page(param))(requestAction) as Promise<Page<any>>,
-        delete:(param:number[])=>singleRequest(ShareCustomerAction.delete(param))(requestAction),
+        delete:(param:any)=>singleRequest(ShareCustomerAction.delete(param))(requestAction),
         changeStatus:(param:any)=>singleRequest(ShareCustomerAction.changeStatus(param))(requestAction)
     }
 }

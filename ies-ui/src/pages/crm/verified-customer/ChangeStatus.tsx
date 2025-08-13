@@ -13,7 +13,7 @@ const ChangeStatusForm: React.FC<Props> = ({ status, onSave, ...props }) => {
 
     return (
         <Modal
-            title={"Confirmation"}
+            title={status=="Confirm"?"Confirmation":"Rejection"}
             {...props}
             width={400}
             onOk={async () => {

@@ -459,14 +459,14 @@ const Crm: React.FC = () => {
     {
       id: 'customer-sharing',
       name: 'Share Customer',
-      description: '',
+      description: 'Original owner of the shared customer record.',
       link: `${CrmPaths.shareCustomer}/list`,
       icon: customer_sharing,
       visible: access.saleAdmin
     },
-        {
+    {
       id: 'customer-verified',
-      name: 'Verified Customer Location',
+      name: 'Verified Location',
       description: "location has been checked and confirmed for accuracy",
       link: `${CrmPaths.verifiedCustomer}/list`,
       icon: customer_verified,

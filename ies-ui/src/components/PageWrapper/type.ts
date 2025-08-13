@@ -70,7 +70,7 @@ export interface TableViewProps<ListDataType extends Record<string, any> & { id:
             actionProps?: (item: ListDataType) => {
                 actionButtons?: (ButtonProps & { position?: 'first' | 'last', hiden?: true })[];
                 type: ActionType;
-                label: string;
+                label: string|any;
             };
             tabRender?: (item: ListDataType) => TabRenderProps;
         })[];

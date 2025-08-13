@@ -1,76 +1,53 @@
 import PageWrapper from "@/components/PageWrapper"
 import { useQuery } from "@umijs/max"
-import { CustomerServices } from "../customer/services"
-import FormShare from "./FormShare"
 import { CustomerWithAddressVerifiedAPI } from "./service"
 import { simpleRequestActions } from "@/services/model"
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { FetchPagingParams } from "@/components/DataCrud/TableView"
-import { Dropdown, MenuProps, message, Modal, Space, Typography } from "antd"
-import { CheckCircleTwoTone, CloseCircleOutlined, DeleteOutlined, EllipsisOutlined, WarningOutlined } from "@ant-design/icons"
+import { Button, message, Segmented, Space, Tooltip, Typography } from "antd"
+import { AppstoreOutlined, BarsOutlined, CheckCircleOutlined, CheckCircleTwoTone, CloseCircleOutlined, CloseCircleTwoTone, SyncOutlined } from "@ant-design/icons"
 import ChangeStatusForm from "./ChangeStatus"
 import VerifiedDetailView from "./Detail"
-import moment from "moment"
 import { ProTable } from "@ant-design/pro-components"
-
+import { ShippingAddressAPI } from "../shipping_address/services"
+import { CustomerServiceAPI } from "@/pages/sale/retailer/customer/services"
+import { CrmServices } from "../services"
 
 
 export default () => {
     const requestActions = simpleRequestActions();
-    const [filter, setFilter] = useState<FetchPagingParams<any>>();
+    const [filter, setFilter] = useState<FetchPagingParams<any>>({ criteria: { advanceSearch: { mode: "Address" } } });
     const [statusState, setStatusState] = useState<{
-        visible?: { name: "MODAL", paylod?: any, status: string }
+        visible?: { name: "MODAL", addressId?: number, status: string }
     }>();
+    const [lookupData, setLookupData] = useState<any[]>();
+
+    const onLookupData = async () => {
+        setLookupData(await CrmServices.listLookupData(["VERIFIED_ADDRESS_LAT_LONG"]).query(requestActions))
+    }
+    useEffect(() => {
+        onLookupData()
+    }, []);
+
     const { data, isFetching, refetch } = useQuery({
         queryKey: ['share', filter],
-        queryFn: () => CustomerWithAddressVerifiedAPI(requestActions).page({
-            criteria: filter?.criteria,
-            pagination: {
-                current: filter?.pagination?.current,
-                pageSize: filter?.pagination?.pageSize
-            }
-        }),
-        refetchOnWindowFocus: false,
-    });
-
-    const itemMenu = (item: any): MenuProps["items"] => [
-        {
-            key: "Revoked",
-            label: "Revoked",
-            itemIcon: <WarningOutlined />,
-            onClick: () => setStatusState({ visible: { name: "MODAL", paylod: item, status: "Revoked" } })
-        },
-        {
-            key: "Rejecte",
-            label: "Rejecte",
-            itemIcon: <CloseCircleOutlined />,
-            onClick: () => setStatusState({ visible: { name: "MODAL", paylod: item, status: "Rejected" } })
-        },
-        {
-            type: "divider"
-        },
-        {
-            key: "Delete",
-            label: "Delete",
-            danger: true,
-            itemIcon: <DeleteOutlined />,
-            onClick: () => {
-                Modal.confirm({
-                    title: "Delete Confirmation",
-                    content: (
-                        <>
-                            This action is permanent and cannot be undone.<br />
-                            Are you sure you want to proceed?
-                        </>
-                    ),
-                    onOk: async () => {
-                        // await ShareCustomerAPI(requestActions).delete([item.id]);
-                        // message.success("Success!")
+        queryFn: () => {
+            if (filter?.criteria.advanceSearch.mode == "Customer") {
+                return CustomerWithAddressVerifiedAPI(requestActions).page({
+                    criteria: filter?.criteria,
+                    pagination: {
+                        current: filter?.pagination?.current,
+                        pageSize: filter?.pagination?.pageSize
                     }
                 })
             }
+            else {
+                return ShippingAddressAPI(requestActions).page({ ...filter })
+            }
         },
-    ]
+        cacheTime: 0,
+        refetchOnWindowFocus: false,
+    });
 
     const addressExpaned = (item: any) => {
 
@@ -114,133 +91,243 @@ export default () => {
                 },
                 {
                     title: "Verified",
-                    render: (_, r) => <Typography.Text type={r?.isVerified === true ? "success" : "danger"}>{r?.isVerified === true ? "Yes" : "No"}</Typography.Text>
+                    render: (_, r) => <Typography.Text>{r?.verifiedStatus?.name}</Typography.Text>
+                },
+                {
+                    title: "",
+                    render: (_, r) => r.verifiedStatus?.id != 20004 && <div>
+                        <Tooltip title={"Confirm "}><Button type="link" icon={<CheckCircleOutlined />} onClick={() => setStatusState({ visible: { name: "MODAL", status: "Confirm", addressId: r.id, } })} /></Tooltip>
+                        <Tooltip title={"Rejecte "}><Button type="link" danger icon={<CloseCircleOutlined />} onClick={() => setStatusState({ visible: { name: "MODAL", status: "Reject", addressId: r.id, } })} /></Tooltip>
+                    </div>
                 }
             ]}
             // dataSource={item.addresses}
             pagination={false}
         />
     }
+
+    const columns = useMemo(() => {
+        if (filter.criteria?.advanceSearch?.mode === "Address") {
+            return [
+                {
+                    title: "Code",
+                    actionProps: (item) => ({
+                        label: item?.code,
+                        type: "view",
+                    })
+                },
+                {
+                    title: "Address Code",
+                    dataIndex: "addressCode"
+                },
+                {
+                    title: "Customer Code",
+                    dataIndex: "customerCode"
+                },
+                {
+                    title: "Salesperson Code",
+                    render: (_, r) => r.salesperson?.code
+                },
+                {
+                    title: "Salesperson Name",
+                    render: (_, r) => r.salesperson?.nmae
+                },
+                {
+                    title: "Verified",
+                    dataIndex: "verified",
+                    render: (_, r) => {
+                        return <Typography >{r.verifiedStatus?.name}</Typography>
+                    }
+                },
+                {
+                    title: "",
+                    render: (_, r) => r.verifiedStatus?.id == 19004 && <div>
+                        <Tooltip title={"Confirm "}><Button type="link" icon={<CheckCircleOutlined />} onClick={() => setStatusState({ visible: { name: "MODAL", status: "Confirm", addressId: r.addressId, } })} /></Tooltip>
+                        <Tooltip title={"Rejecte "}><Button type="link" danger icon={<CloseCircleOutlined />} onClick={() => setStatusState({ visible: { name: "MODAL", status: "Reject", addressId: r.addressId, } })} /></Tooltip>
+                    </div>
+                }
+            ];
+        }
+        return [
+            {
+                title: "Customer Code",
+                dataIndex: "code",
+                valueType: "date",
+                actionProps: (item) => ({
+                    label: item.code,
+                    type: "view",
+
+                })
+            },
+            {
+                title: "Customer Name",
+                render: (_, r) => <Space>
+                    <Typography>{r.name}</Typography>
+                    <Typography.Text type="secondary" >{r.internalName}</Typography.Text>
+                </Space>
+            },
+            {
+                title: "Salesperson",
+                render: (_, r) => [r.salesperson?.code, r.salesperson?.name].filter(Boolean).join("-")
+            },
+            {
+                title: "Address Verified",
+                dataIndex: "verified",
+                render: (_, r) => {
+                    const ori = r.address?.length;
+                    const valided = r.address?.filter(o => o.isVerified == true)?.length
+                    return <Typography style={{ color: valided == 0 ? "#d4380d" : "#52c41a" }}>{valided}/{ori}</Typography>
+                }
+            },
+
+        ];
+    }, [filter.criteria?.advanceSearch?.mode]);
     return (
         <>
-            <PageWrapper
-                tabRender={(item) => [
-                    // {
-                    //     tabLabel: "Share",
-                    //     action: "add",
-                    //     panel: ({ onCloseTab, key }) => <FormShare
-                    //         onBack={() => onCloseTab}
-                    //         onView={() => { }}
-                    //         type="new"
-                    //     />
-                    // },
-                    {
-                        tabLabel: item?.code||"N/A",
-                        tabKey:item?.id ||"N/A",
-                        action: "view",
-                        panel: ({ onCloseTab, key }) => <VerifiedDetailView
-                            onBack={onCloseTab}
-                            data={item}
-                        />
-                    }
-                ]}
-                listView={{
-                    type: "Table",
-                    onRefresh: refetch,
-                    onFilter: (filterParams, page, sort) => {
-                        setFilter(v => ({
-                            ...v,
-                            criteria: {
-                                ...v?.criteria,
-                                searchValue: filterParams?.searchValue,
-                                status: filterParams?.status == "ALL" ? undefined : filterParams?.status
-                            },
-                            pagination: { ...page, current: (page?.current || 1) - 1 },
-                            sort: sort
-                        }))
-                    },
-                    // statuses: [
-                    //     { option: { value: "All", label: "ALL" } },
-                    //     { option: { value: "Pending", label: "Pending" } },
-                    //     { option: { value: "Active", label: "Active" } },
-                    //     { option: { value: "Accept", label: "Accept" } },
-                    //     { option: { value: "Rejected", label: "Rejected" } },
-                    //     { option: { value: "Revoked", label: "Revoked" } },
-                    //     { option: { value: "Expired", label: "Expired" } },
-                    // ],
-                    props: {
-                        dataSource: data?.items,
-                        loading: isFetching,
-                        expandable: { expandedRowRender: addressExpaned },
-                        pagination: {
-                            total: data?.total,
+            {(lookupData && filter.criteria?.advanceSearch?.mode) &&
+                <PageWrapper
+                    tabRender={(item) => [
+                        {
+                            tabLabel: item?.code || "N/A",
+                            tabKey: item?.id || "N/A",
+                            action: "view",
+                            panel: ({ onCloseTab }) => <VerifiedDetailView mode={filter.criteria.advanceSearch.mode} onBack={onCloseTab} data={item} />,
                         },
-                        columns: [
+                    ]}
+                    listView={{
+                        type: "Table",
+                        onRefresh: refetch,
+                        actions: [
                             {
-                                title: "Customer Code",
-                                dataIndex: "code",
-                                valueType: "date",
-                                actionProps: (item) => ({
-                                    label: item.code,
-                                    type: "view",
-
-                                })
+                                icon: <SyncOutlined />,
+                                label: "Sync",
+                                key: "sync",
+                                onClick: async () => {
+                                    await CustomerWithAddressVerifiedAPI(requestActions).syncVerifiedLatlong();
+                                    refetch?.();
+                                    message.success("Success!");
+                                },
                             },
-                            {
-                                title: "Customer Name",
-                                render:(_,r)=><Space>
-                                    <Typography>{r.name}</Typography>
-                                    <Typography.Text type="secondary" >{r.internalName}</Typography.Text>
-                                </Space>
+                        ],
+                        // actionButtons: [
+                        //     <Segmented
+                        //         onChange={(vl) => {
+                        //             setFilter((s) => ({
+                        //                 ...s,
+                        //                 criteria: {
+                        //                     ...s?.criteria,
+                        //                     advanceSearch: { ...s?.criteria?.advanceSearch, mode: vl },
+                        //                 },
+                        //             }));
+                        //         }}
+                        //         options={[
+                        //             { value: "Customer", icon: <AppstoreOutlined />, label: "Customer" },
+                        //             { value: "Address", icon: <BarsOutlined />, label: "Address" },
+                        //         ]}
+                        //     />,
+                        // ],
+                        onFilter: (filterParams, page, sort) => {
+                            setFilter((v) => ({
+                                ...v,
+                                criteria: {
+                                    ...v?.criteria,
+                                    searchValue: filterParams?.searchValue,
+                                    status: undefined,
+                                    advanceSearch: {
+                                        ...v.criteria?.advanceSearch,
+                                        verified: filterParams?.status =="ALL"?undefined:filterParams?.status
+                                    }
+                                },
+                                pagination: { ...page, current: (page?.current || 1) - 1 },
+                                sort: sort,
+                            }));
+                        },
+                        statuses: [
+                            { option: { value: "ALL", label: "All" } },
+                            ...(lookupData?.map(p => ({
+                                option: { value: p.id, label: p.name }
+                            })) || [])
+                        ],
+                        props: {
+                            dataSource: data?.items,
+                            loading: isFetching,
+                            expandable:
+                                filter.criteria?.advanceSearch?.mode === "Customer"
+                                    ? { expandedRowRender: addressExpaned }
+                                    : undefined,
+                            pagination: {
+                                total: data?.total,
                             },
-                            {
-                                title: "Salesperson",
-                                render: (_, r) => [r.salesperson?.code, r.salesperson?.name].filter(Boolean).join("-")
-                            },
-                            {
-                                title: "Address Verified",
-                                dataIndex: "verified",
-                                render: (_, r) => {
-                                    const ori = r.address?.length;
-                                    const valided = r.address?.filter(o => o.isVerified == true)?.length
-                                    return <Typography style={{ color: valided == 0 ? "#d4380d" : "#52c41a" }}>{valided}/{ori}</Typography>
+                            // columns: columns,
+                            columns: [
+                                {
+                                    title: "Code",
+                                    actionProps: (item) => ({
+                                        label: item?.code,
+                                        type: "view",
+                                    })
+                                },
+                                {
+                                    title: "Address Code",
+                                    dataIndex: "addressCode"
+                                },
+                                {
+                                    title: "Customer Code",
+                                    dataIndex: "customerCode"
+                                },
+                                {
+                                    title: "Salesperson Code",
+                                    render: (_, r) => r.salesperson?.code
+                                },
+                                {
+                                    title: "Salesperson Name",
+                                    render: (_, r) => r.salesperson?.name
+                                },
+                                {
+                                    title: "Verified",
+                                    dataIndex: "verified",
+                                    render: (_, r) => {
+                                        return <Typography
+                                            style={{
+                                                color:
+                                                    r.verifiedStatus?.name === "Not Yet"
+                                                        ? "#faad14" // orange
+                                                        : r.verifiedStatus?.name === "Pending"
+                                                            ? "#1890ff" // blue
+                                                            : r.verifiedStatus?.name === "Rejected"
+                                                                ? "#ff4d4f" // red
+                                                                : r.verifiedStatus?.name === "Confirmed"
+                                                                    ? "#52c41a" // green
+                                                                    : undefined
+                                            }}
+                                        >{r.verifiedStatus?.name}</Typography>
+                                    }
+                                },
+                                {
+                                    title: "",
+                                    render: (_, r) => r.verifiedStatus?.id == 20002 && <div>
+                                        <Tooltip title={"Confirm "}><Button type="link" icon={<CheckCircleOutlined />} onClick={() => setStatusState({ visible: { name: "MODAL", status: "Confirm", addressId: r.addressId, } })} /></Tooltip>
+                                        <Tooltip title={"Rejecte "}><Button type="link" danger icon={<CloseCircleOutlined />} onClick={() => setStatusState({ visible: { name: "MODAL", status: "Reject", addressId: r.addressId, } })} /></Tooltip>
+                                    </div>
                                 }
-                            },
-                            {
-                                title: "",
-                                render: (_, r) => {
-                                    return <Dropdown
-
-                                        menu={{
-                                            items: itemMenu(r),
-                                            style: {
-                                                width: 200
-                                            }
-                                        }}
-                                    >
-                                        <a onClick={(e) => e.preventDefault()}>
-                                            <EllipsisOutlined />
-                                        </a>
-                                    </Dropdown>
-                                }
-                            }
-                        ]
-                    }
-                }}
-            />
+                            ]
+                        },
+                    }}
+                />
+            }
 
 
             <ChangeStatusForm
                 open={statusState?.visible?.name == "MODAL"}
                 status={statusState?.visible?.status}
                 onSave={async (data) => {
-                    // await ShareCustomerAPI(requestActions).changeStatus({
-                    //     ...data,
-                    //     ids: [statusState?.visible?.paylod.id]
-                    // });
-                    // message.success("Success!")
-                    // setStatusState({ visible: undefined });
-                    // refetch();
+                    await CustomerWithAddressVerifiedAPI(requestActions).changeStatus({
+                        ...data,
+                        id: statusState?.visible?.addressId
+                    });
+                    message.success("Success!")
+                    setStatusState({ visible: undefined });
+                    refetch();
                 }}
                 onCancel={() => setStatusState({ visible: undefined })}
             />

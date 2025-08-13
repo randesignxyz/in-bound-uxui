@@ -57,6 +57,10 @@ const FormShare: React.FC<Props> = ({ type, onBack, onView }) => {
     }
     const onSaveActionHandler = async () => {
         const dataForm = await form.validateFields();
+        if ((selected?.length||0) <=0){
+            message.warning("No customer selected. Please choose one to share.");
+            return 
+        }
         const entry ={
             ...dataForm,
             shareCustomerMap:selected
@@ -67,9 +71,12 @@ const FormShare: React.FC<Props> = ({ type, onBack, onView }) => {
             content:"are you sure?",
             onOk:async()=>{
                 await ShareCustomerAPI(requestActions).saveShare(entry);
-                message.success("Success!")
+                message.success("Success!");
+                
             }
-        })
+        });
+
+         onBack();
 
     }
     return (
@@ -78,6 +85,7 @@ const FormShare: React.FC<Props> = ({ type, onBack, onView }) => {
                 form={form} {...rest} title="Transfer Salesperson" onValuesChange={(changedValues) => {
                     const { searchSalespersonId, customers } = changedValues
                     if ('searchSalespersonId' in changedValues) {
+                        setSelected([])
                         loadCustomer(searchSalespersonId)
                     }
                 }}
@@ -101,7 +109,6 @@ const FormShare: React.FC<Props> = ({ type, onBack, onView }) => {
                                     <Button
                                         onClick={() => {
                                             form.resetFields();
-                                            onView?.(lead?.id)
                                         }}
                                     >
                                         Cancel
@@ -123,17 +130,17 @@ const FormShare: React.FC<Props> = ({ type, onBack, onView }) => {
                                             onSaveActionHandler();
                                         }}
                                     >
-                                        Save & Add New
+                                        Save 
                                     </Button>
                                 )}
-                                <Button
+                                {/* <Button
                                     type="primary"
                                     onClick={() => {
                                         onSaveActionHandler();
                                     }}
                                 >
                                     {type === 'new' ? 'Save & View' : 'Update'}
-                                </Button>
+                                </Button> */}
                             </FooterToolbar>
                         );
                     },
@@ -164,7 +171,7 @@ const FormShare: React.FC<Props> = ({ type, onBack, onView }) => {
                             <ProFormSelect showSearch name={"searchSalespersonId"} width={"lg"} label="Salesperson"
                                 options={saleList?.map(it => ({ label: [it.code, it.name].join(' '), value: it.id }))}
                             />
-                            <ProFormSelect
+                            {/* <ProFormSelect
                                 name={"entryType"}
                                 label={"Type of Customer"}
                                 width={"lg"}
@@ -189,7 +196,7 @@ const FormShare: React.FC<Props> = ({ type, onBack, onView }) => {
                                         label: "Lead Customer"
                                     },
                                 ]}
-                            />
+                            /> */}
                         </Flex>
                         < ProFormDependency name={['searchSalespersonId']} >
                             {({ searchSalespersonId }) => {
@@ -248,6 +255,12 @@ const FormShare: React.FC<Props> = ({ type, onBack, onView }) => {
                             label={"Share To (SE Receiver)"}
                             rules={[{ required: true }]}
                             showSearch
+                            onChange={(e)=>{
+                                if (e == form.getFieldValue("searchSalespersonId")){
+                                    form.resetFields(["recipientId"])
+                                    message.warning("This customer is already assigned to the selected salesperson.");
+                                }
+                            }}
                             debounceTime={500}
                             request={async ({ keyWords }) => {
                                 const data = await SalespersonOrgAPI(requestActions).salespersonList();

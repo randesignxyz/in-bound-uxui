@@ -299,7 +299,7 @@ export default({
                     editable={selectedAssessor?.currentAccess && selectedAssessor?.status!='SUBMITTED'}
                 />}
                 {selectedAssessor && ['Self','Manager'].some(r=>r==selectedAssessor?.type) &&<>
-                    <ProCard collapsible defaultCollapsed={true} size="small" headerBordered title="SECTION 1: SUMMARY REPORT">
+                    <ProCard collapsible defaultCollapsed={true} size="small" headerBordered title={getLable('DF_TITLE_SECTION1')||''}>
                         <ProTable<DfEmpEvaluationSummaryReport>
                             size="small"
                             search={false}
@@ -312,16 +312,16 @@ export default({
                                 setting: false,
                             }}
                             columns={[
-                                { title: 'Statement', dataIndex: 'title' },
-                                { title: 'Self', dataIndex: 'avgSelf', render: (text, record) => record.avgSelf==0?'-': formatterQty1.format(record.avgSelf) },
-                                { title: 'Manager', dataIndex: 'avgManager', render: (text, record) => record.avgManager==0?'-': formatterQty1.format(record.avgManager), hidden: ['Self'].some(r=>r==selectedAssessor?.type)},
-                                { title: 'Peer', dataIndex: 'avgPeer', render: (text, record) => record.avgPeer==0?'-': formatterQty1.format(record.avgPeer) , hidden:['Self'].some(r=>r==selectedAssessor?.type)},
-                                { title: 'Subordinate', dataIndex: 'avgSubordinate', render: (text, record) => record.avgSubordinate==0?'-': formatterQty1.format(record.avgSubordinate), hidden:['Self'].some(r=>r==selectedAssessor?.type) },
-                                { title: 'Overall', dataIndex: 'overall', render: (text, record) => record.overall==0?'-': formatterQty1.format(record.overall) },
+                                { title: getLable('DF_TBL_STATEMENT')||'',dataIndex: lang=='KH'?'title1':'title'},
+                                { title: getLable('DF_TBL_SELF')||'', dataIndex: 'avgSelf', render: (text, record) => record.avgSelf==0?'-': formatterQty1.format(record.avgSelf)},
+                                { title: getLable('DF_TBL_MANAGER')||'', dataIndex: 'avgManager', render: (text, record) => record.avgManager==0?'-': formatterQty1.format(record.avgManager), hidden: ['Self'].some(r=>r==selectedAssessor?.type)},
+                                { title: getLable('DF_TBL_PEER')||'', dataIndex: 'avgPeer', render: (text, record) => record.avgPeer==0?'-': formatterQty1.format(record.avgPeer), hidden: ['Self'].some(r=>r==selectedAssessor?.type) },
+                                { title: getLable('DF_TBL_SUBORDINATE')||'', dataIndex: 'avgSubordinate', render: (text, record) => record.avgSubordinate==0?'-': formatterQty1.format(record.avgSubordinate), hidden: ['Self'].some(r=>r==selectedAssessor?.type) },
+                                { title: getLable('DF_TBL_OVERALL')||'', dataIndex: 'overall', render: (text, record) => record.overall==0?'-': formatterQty1.format(record.overall) },
                             ]}
                         />
                     </ProCard>
-                    <ProCard collapsible defaultCollapsed={true} size="small" headerBordered title="SECTION 2: DETAIL REPORT(Highest to Lowest)">
+                    <ProCard collapsible defaultCollapsed={true} size="small" headerBordered title={getLable('DF_TITLE_SECTION2')||''}>
                         <ProTable<DfEmpEvaluationDetailReport>
                             size="small"
                             search={false}
@@ -334,25 +334,25 @@ export default({
                                 setting: false,
                             }}
                             columns={[
-                                { title: 'Statement', dataIndex: 'description' },
-                                { title: 'Self', dataIndex: 'avgSelf', render: (text, record) => record.avgSelf==0?'-': formatterQty1.format(record.avgSelf)},
-                                { title: 'Manager', dataIndex: 'avgManager', render: (text, record) => record.avgManager==0?'-': formatterQty1.format(record.avgManager), hidden: ['Self'].some(r=>r==selectedAssessor?.type)},
-                                { title: 'Peer', dataIndex: 'avgPeer', render: (text, record) => record.avgPeer==0?'-': formatterQty1.format(record.avgPeer), hidden: ['Self'].some(r=>r==selectedAssessor?.type) },
-                                { title: 'Subordinate', dataIndex: 'avgSubordinate', render: (text, record) => record.avgSubordinate==0?'-': formatterQty1.format(record.avgSubordinate), hidden: ['Self'].some(r=>r==selectedAssessor?.type) },
-                                { title: 'Overall', dataIndex: 'overall', render: (text, record) => record.overall==0?'-': formatterQty1.format(record.overall) },
+                                { title: getLable('DF_TBL_STATEMENT')||'',dataIndex: lang=='KH'?'description1':'description'},
+                                { title: getLable('DF_TBL_SELF')||'', dataIndex: 'avgSelf', render: (text, record) => record.avgSelf==0?'-': formatterQty1.format(record.avgSelf)},
+                                { title: getLable('DF_TBL_MANAGER')||'', dataIndex: 'avgManager', render: (text, record) => record.avgManager==0?'-': formatterQty1.format(record.avgManager), hidden: ['Self'].some(r=>r==selectedAssessor?.type)},
+                                { title: getLable('DF_TBL_PEER')||'', dataIndex: 'avgPeer', render: (text, record) => record.avgPeer==0?'-': formatterQty1.format(record.avgPeer), hidden: ['Self'].some(r=>r==selectedAssessor?.type) },
+                                { title: getLable('DF_TBL_SUBORDINATE')||'', dataIndex: 'avgSubordinate', render: (text, record) => record.avgSubordinate==0?'-': formatterQty1.format(record.avgSubordinate), hidden: ['Self'].some(r=>r==selectedAssessor?.type) },
+                                { title: getLable('DF_TBL_OVERALL')||'', dataIndex: 'overall', render: (text, record) => record.overall==0?'-': formatterQty1.format(record.overall) },
                             ]}
                         />
                     </ProCard>
-                    <ProCard collapsible defaultCollapsed={true} size="small" headerBordered title="SECTION 3: COMMENT">  
+                    <ProCard collapsible defaultCollapsed={true} size="small" headerBordered title={getLable('DF_TITLE_SECTION3')||''}>  
                          <CommentTable title="" 
-                            commTitle={'Strength'} 
+                            commTitle={getLable('DF_TBL_STRENGTH')||''} 
                             initDataItems={(selectedAssessor?.summary?.comments||[]).filter(it=> ['C1','C4'].some(r=>r==it.type)).map(it=>({...it,comment: it.comment+'-'+it.dfEmpAssessorId+' - '+ it.type,key: uniqueId().toString()}))} 
                             // onSetItems={setDataImprovement} 
                             // editableFormRef={editableImprovementFormRef2} 
                             editable={false}
                         />                     
                         <CommentTable title="" 
-                            commTitle={'Improvement'} 
+                            commTitle={getLable('DF_TBL_IMPROVEMENT')||''} 
                             initDataItems={(selectedAssessor?.summary?.comments||[]).filter(it=> ['C2','C5'].some(r=>r==it.type)).map(it=>({...it,comment: it.comment+'-'+it.dfEmpAssessorId+' - '+ it.type,key: uniqueId().toString()}))} 
                             // onSetItems={setDataImprovement} 
                             // editableFormRef={editableImprovementFormRef2} 

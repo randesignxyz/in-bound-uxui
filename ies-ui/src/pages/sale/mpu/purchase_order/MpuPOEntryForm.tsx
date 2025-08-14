@@ -5,7 +5,7 @@ import { CrmService, CrmServiceAPI } from '@/services/crm/services';
 import { simpleRequestActions } from '@/services/model';
 import { CustomerLookup, ProductItem, SalesTeamWorkLess } from '@/services/sale/data';
 import { SaleService } from '@/services/sale/services';
-import { AimOutlined, DeleteOutlined } from '@ant-design/icons';
+import { AimOutlined, DeleteOutlined, DownOutlined } from '@ant-design/icons';
 import {
   ActionType,
   EditableFormInstance,
@@ -17,7 +17,7 @@ import {
   ProFormSelect,
   ProFormTextArea,
 } from '@ant-design/pro-components';
-import { Button, Card, Col, Flex, Form, Modal, Row, message } from 'antd';
+import { Button, Card, Col, Dropdown, Flex, Form, Menu, Modal, Row, Select, Space, message } from 'antd';
 import { useForm } from 'antd/es/form/Form';
 import { uniqueId } from 'lodash';
 import moment from 'moment';
@@ -58,10 +58,10 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
     const result =
       dataSourceItems && dataSourceItems.length > 0
         ? dataSourceItems
-            .map((o) => ({
-              totalAmoun: o.pricing * o.quantity || 0,
-            }))
-            .reduce((p, c) => ({ totalAmoun: p.totalAmoun + c.totalAmoun || 0 }))
+          .map((o) => ({
+            totalAmoun: o.pricing * o.quantity || 0,
+          }))
+          .reduce((p, c) => ({ totalAmoun: p.totalAmoun + c.totalAmoun || 0 }))
         : undefined;
 
     setAmount({
@@ -97,9 +97,9 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
     setDataSourceItems(
       purchaseOrder.items
         ? purchaseOrder.items.map((e) => {
-            e.key = e.itemCode!;
-            return e;
-          })
+          e.key = e.itemCode!;
+          return e;
+        })
         : [],
     );
   };
@@ -133,20 +133,20 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
   const getAddress = (address?: AddressInfo) => {
     return address
       ? [
-          { name: 'Street', value: address?.streetNo },
-          { name: 'House#', value: address?.houseNo },
-          { name: 'Village', value: address?.village },
-          { name: 'Commune', value: address?.commune },
-          { name: 'District', value: address?.district },
-          { name: 'Province', value: address?.province },
-          { name: 'Latitude', value: address?.latitude },
-          { name: 'Longitude', value: address?.longitude },
-          { name: 'Direction', value: address?.direction },
-          { name: 'Hotspot', value: address?.hotspot },
-        ]
-          .filter((it) => it.value)
-          .map((it) => `${it.name} ${it.value}`)
-          .join(', ')
+        { name: 'Street', value: address?.streetNo },
+        { name: 'House#', value: address?.houseNo },
+        { name: 'Village', value: address?.village },
+        { name: 'Commune', value: address?.commune },
+        { name: 'District', value: address?.district },
+        { name: 'Province', value: address?.province },
+        { name: 'Latitude', value: address?.latitude },
+        { name: 'Longitude', value: address?.longitude },
+        { name: 'Direction', value: address?.direction },
+        { name: 'Hotspot', value: address?.hotspot },
+      ]
+        .filter((it) => it.value)
+        .map((it) => `${it.name} ${it.value}`)
+        .join(', ')
       : '';
   };
 
@@ -410,6 +410,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
             record: (index) => ({ key: uniqueId().toString() + index } as any),
             creatorButtonText: ' New Item',
           }}
+
           // controlled
           editable={{
             type: 'multiple',
@@ -429,7 +430,58 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
           }}
           columns={[
             {
-              title: 'Product Name',
+              // title: 'Product Name',
+              title: (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>Product Name</span>
+                  <Dropdown
+                    overlay={
+                      <Menu
+                        onClick={({ key }) => {
+                          const filteredItems = productItems?.filter(
+                            (item) => String(item.itemCategoryId) === key
+                          );
+
+                          const existingIds = new Set(dataSourceItems?.map((i) => i.itemId));
+
+                          const newRows =
+                            filteredItems
+                              ?.filter((item) => !existingIds.has(item.id))
+                              .map((item) => ({
+                                key: uniqueId(),
+                                itemId: item.id,
+                                quantity: 0,
+                                pricing: item.price ?? 0,
+                              })) || [];
+
+                          setDataSourceItems((prev) => [...prev, ...newRows]);
+                        }}
+                        items={[
+                          { label: 'Vital', key: '1' },
+                          { label: 'Mee Chiet', key: '2' },
+                        ]}
+                      />
+                    }
+                    trigger={['click']}
+                  >
+                    <a
+                      onClick={(e) => e.preventDefault()}
+                      style={{
+                        // backgroundColor: '#f0f0f0',
+                        padding: '4px 8px',
+                        borderRadius: 4,
+                        color: 'black',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <DownOutlined />
+                    </a>
+                  </Dropdown>
+                </div>
+              ),
+
+
               dataIndex: 'itemId',
               width: 350,
               fieldProps: (_, config) => {
@@ -455,7 +507,6 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
               },
 
               request: async (k: { keyWords: string }) => {
-                console.log(k);
 
                 const data = await ProductItemsServiceAPI(mainRequestActions).pageProducts({
                   criteria: {

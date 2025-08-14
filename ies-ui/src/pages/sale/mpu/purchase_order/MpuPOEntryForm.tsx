@@ -596,8 +596,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
                 rules: [{ required: true }],
               },
               renderFormItem: (_, config) => {
-                const row = config.record;
-                console.log('row', row)
+                const row = config.record
                 return (
                   <InputNumber
                     key={row?.key}

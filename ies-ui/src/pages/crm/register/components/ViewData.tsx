@@ -62,12 +62,12 @@ export default ({ data }: Props) => {
                 <Descriptions.Item label="Business Name(Khmer)">
                     {data?.buNameKh}
                 </Descriptions.Item>
-                <Descriptions.Item label="Business Name(English)">
+                <Descriptions.Item span={2} label="Business Name(English)">
                     {data?.buName}
                 </Descriptions.Item>
-                 <Descriptions.Item label="Purchase Phone Number">
+                 {/* <Descriptions.Item label="Purchase Phone Number">
                     {data?.purchasePhone}
-                </Descriptions.Item>
+                </Descriptions.Item> */}
                 <Descriptions.Item label="Owner Name(Khmer)">
                     {data?.ownerNameKh}
                 </Descriptions.Item>
@@ -83,7 +83,7 @@ export default ({ data }: Props) => {
                 <Descriptions.Item label="Purchase Name(English)">
                     {data?.purchaseName}
                 </Descriptions.Item>
-                <Descriptions.Item label="Purchase Phone">
+                <Descriptions.Item label="Purchase Phone Number">
                     {data?.purchasePhone}
                 </Descriptions.Item>
             </Descriptions>

@@ -77,7 +77,46 @@ export interface DfEmpAssessorRs{
   statementEvaluations:DfEmpEvaluationRs[];
   comments?: DfCommentRs[];
   currentAccess: boolean;
+  summary?: DfEmpSummaryRs;
 }
+export interface DfEmpSummaryRs{
+  statementEvaluations?: DfEmpEvaluationDetailReport[];
+  sumEvaluations?: DfEmpEvaluationSummaryReport[];
+  comments?: DfCommentRs[];
+}
+export interface DfEmpEvaluationSummaryReport{
+  id: number;
+  dfEmpId: number;
+  title: string
+  title1: string
+  self: number;
+  manger: number;
+  peer: number;
+  subordinate: number;
+  avgSelf: number;
+  avgManager: number;
+  avgPeer: number;
+  avgSubordinate: number;
+  overall: number;
+}
+export interface DfEmpEvaluationDetailReport{
+  id: number;
+  dfEmpId: number;
+  title: string
+  title1: string
+  description: string
+  description1: string
+  self: number;
+  manger: number;
+  peer: number;
+  subordinate: number;
+  avgSelf: number;
+  avgManager: number;
+  avgPeer: number;
+  avgSubordinate: number;
+  overall: number;
+}
+
 export interface DfEmpEvaluationRs{ 
   id: number;
   key: string;
@@ -159,4 +198,53 @@ export type DfComment = {
     key:string
     comment: string
     seqNo?: number
+}
+
+
+export type AppraisalMapping = {
+    id: number
+    empNo: string
+    empName: string
+    appraiser1Id?: number
+    appraiser2Id?: number
+}
+
+export type EmployeeInfResult = {
+    empId: number
+    empNo: string
+    empName: string
+    internalName?: string
+    empFirstName: string
+    empLastName: string
+    buId: number
+    buName?: string
+    departmentId: number
+    departmentName: String
+    subDepartmentId?: number
+    subDepartmentName?: string
+    jobId: number
+    jobTitle: string
+    reportToId?: number
+    reportTo?: string
+    hodId?: number
+    hodName?: string
+    jobLevelId?: number
+    jobLevelName?: string
+    jobLevelCode?: string
+}
+export interface DfAssessorList{
+  id: number;
+  empNo: string;
+  empName: string;
+  internalName: string;
+  firstName: string;
+  lastName: string;
+  jobLevelCode: string;
+  
+}
+export interface DfInstrunctionItemList{
+  id: number;
+  description: string;
+ description1: string;
+  
 }

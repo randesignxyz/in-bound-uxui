@@ -7,7 +7,7 @@ import { Button, Flex, message, Modal, Space, Spin } from "antd";
 import { useForm } from "antd/es/form/Form";
 import { Moment } from "moment";
 import { useInView } from "react-intersection-observer";
-import { AssessorFD, DF360Playload } from "./data";
+import { AssessorFD, DF360Playload, DfAssessorList } from "./data";
 import AssessorList from "./components/AssessorList";
 import { useEffect, useRef, useState } from "react";
 import { uniqueId } from "lodash";
@@ -42,40 +42,23 @@ export default({
     const [managers, setManagers]  = useState<AssessorFD[]>([])
     const [peers, setPeers] = useState<AssessorFD[]>([])
     const [subordinates, setSubordinates] = useState<AssessorFD[]>([])
-
-    const initData = [
-        {
-            key: uniqueId().toString(),
-            empId: 1,
-            empNo: '002136',
-            empName: 'Hay sokhom(00213)' 
-        },
-        {
-            key: uniqueId().toString(),
-            empId: 2,
-            empNo: '002137',
-            empName: 'Nob Sreynan(00215)' 
-        }
-    ]
-        
-    useEffect(()=> {
-        // setManagers(initData.map(r=> {return {...r,key: uniqueId().toString()}}))  
-        setManagers(initData)
-        setPeers(initData.map(r=> ({...r,key: uniqueId().toString()})))
-        setSubordinates(initData.map(r=> ({...r,key: uniqueId().toString()})))
-    },[])
-
-    const onChangeSubmitterHandler = async (data: any) => {      
-       setManagerItems([])
-       setPeerItem([])
-       setSubordinateItem([])
+    const onChangeSubmitterHandler = async (data: any) => {   
+        console.log('onChange=======',data)   
+        services.fetchAssessorList(data.empId,'manager').then(r=>{
+            setManagers(r.map(r=> ({empId: r.id,empNo: r.empNo,empName: r.empName,key: uniqueId().toString()} as AssessorFD)))
+            setManagerItems([])
+        })
+        services.fetchAssessorList(data.empId,'peer').then(r=>{
+            setPeers(r.map(r=> ({empId: r.id,empNo: r.empNo,empName: r.empName,key: uniqueId().toString()} as AssessorFD)))
+            setPeerItem([])
+        })
+        services.fetchAssessorList(data.empId,'Subordinate').then(r=>{
+            setSubordinates(r.map(r=> ({empId: r.id,empNo: r.empNo,empName: r.empName,key: uniqueId().toString()} as AssessorFD)))
+            setSubordinateItem([])
+        })
+       
     }
     const onCloseHandler = () => { 
-        // if(type=='CREATE') {
-        //     onCloseTab?.()
-        // }else{
-
-        // }
         onCloseTab?.()
     }
     const onSubmitHandler = async () => {
@@ -103,7 +86,7 @@ export default({
                     try {
                         await services.createDf360Form(data)
                         message.success('Submitted successfully.');
-                        // onCloseTab?.()
+                        onCloseTab?.()
                     } catch (error: any) {
                         message.error(error.message || 'Failed to submit 360 degree feedback form.');
                     }

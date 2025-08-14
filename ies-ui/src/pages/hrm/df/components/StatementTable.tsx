@@ -8,13 +8,17 @@ export default({
     onSetItems,
     editableFormRef,
     editable,
-    editableRating
+    editableRating,
+    lang,
+    getLableName
 }:{
     items: DfEmpEvaluationRs[];
     onSetItems?: (v: DfEmpEvaluationRs[]) => void;
     editableFormRef?: React.MutableRefObject<EditableFormInstance | undefined>|undefined
     editable: boolean|false;
-    editableRating: boolean|false
+    editableRating: boolean|false,
+    lang: string,
+    getLableName:(key:string)=>any
 })=>{
     // const editableFormRef = useRef<EditableFormInstance>();
 
@@ -36,19 +40,20 @@ export default({
       )
     }
     const cols: ProColumns<DfEmpEvaluationRs>[] = [
-        { title: 'No', width: 20, editable: false, render: (_, __, index) => index + 1 },
-        { title: 'Statement',  
+        { title:  getLableName('DF_TITLE_NO'), width: 20, editable: false, render: (_, __, index) => index + 1 },
+        { title: getLableName('DF_TITLE_STATEMENT'),  
         // editable: false,
-            dataIndex: 'description1',
+            dataIndex: lang=='KH'?'description1':'description',
             valueType: 'textarea',
             editable:(_,r) => false, 
             formItemProps: {rules: [{ required: true}] },
             fieldProps: { rows: 1, maxLength: 5000 },
+            // render: (r: any) => (lang=='KH'?r.description1 :r.description)
         },
     ]
     // if(editableRating){
         cols.push({
-            title: 'Strongly Disagree',
+            title: getLableName('DF_TITLE_STRONGLY_DISAGREE'),
              dataIndex: 'rating1',
             width: 102,
             align:'center',
@@ -74,7 +79,7 @@ export default({
             },
         })
         cols.push({
-            title: 'Disagree',
+            title: getLableName('DF_TITLE_DISAGREE'),
             dataIndex: 'rating2',
             width: 102,
             align:'center',
@@ -101,7 +106,7 @@ export default({
             },
         })
         cols.push({
-            title: 'Neutral',
+            title: getLableName('DF_TITLE_NEUTURAL'),
             dataIndex: 'rating3',
             width: 102,
             align:'center',
@@ -128,7 +133,7 @@ export default({
             },
         })
         cols.push({
-            title: 'Agree',
+            title: getLableName('DF_TITLE_AGREE'),
             dataIndex: 'rating4',
             width: 102,
             align:'center',
@@ -155,7 +160,7 @@ export default({
             },
         })
         cols.push({
-            title: 'Strongly Agree',
+            title: getLableName('DF_TITLE_STRONGLY_AGREE'),
             dataIndex: 'rating5',
             width: 102,
             align:'center',

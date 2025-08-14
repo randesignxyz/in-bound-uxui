@@ -1,16 +1,19 @@
-import { CheckCard, EditableFormInstance, FooterToolbar, ProCard, ProForm } from "@ant-design/pro-components";
+import { CheckCard, EditableFormInstance, FooterToolbar, ProCard, ProForm, ProTable } from "@ant-design/pro-components";
 import { Avatar, Button, Card, Col, Descriptions, message, Modal, Row, Space, Spin } from "antd";
 import { useForm } from "antd/es/form/Form";
 import { useInView } from "react-intersection-observer";
-import { DF360EmpDetailRs,  DF360UpdatePlayload, DfComment, DfCommentRs, DfEmpAssessorRs, DfEmpEvaluationRs } from "./data";
+import { DF360EmpDetailRs,  DF360UpdatePlayload, DfComment, DfCommentRs, DfEmpAssessorRs, DfEmpEvaluationDetailReport, DfEmpEvaluationRs, DfEmpEvaluationSummaryReport, DfInstrunctionItemList } from "./data";
 import { useEffect, useRef, useState } from "react";
 import { uniqueId } from "lodash";
 import { Df360EmpServiceAPI } from "./services";
-import { formatDate } from "@/pages/utils";
+import { formatDate, formatterQty1 } from "@/pages/utils";
 import InstructionCard from "./components/InstructionCard";
 import StatementTable from "./components/StatementTable";
 import CommentTable from "./components/commentTable";
 import { UserOutlined } from "@ant-design/icons";
+import { AppraisalDataLookup } from "../appraisal-submit/data.types";
+import { createService } from "../appraisal-submit/services";
+import { simpleRequestActions } from "@/services/model";
 
 
 type DataFormType = {
@@ -29,7 +32,11 @@ export default({
   onCloseTab?: () => void;
    readOnly?: boolean | undefined,
 })=>{
+    const [lang, setLang] = useState<string>('ENG');
+    const [dataLookup, setDataLookup] = useState<AppraisalDataLookup[]>();
+    const requestActions = simpleRequestActions();
     const services = Df360EmpServiceAPI();
+    const hrAppraisal = createService({ request: requestActions })
     const [loading,setLoading] = useState(true) 
     const { ref, inView } = useInView({});
     const [formSubmittor] = useForm<DataFormType>();
@@ -58,30 +65,38 @@ export default({
             })
         }
     },[loading])
+    useEffect(() => {
+        hrAppraisal.fetchAppraisalDataLookupList().then((rs) => {setDataLookup(rs);});       
+    }, []);
     useEffect(()=>{
-        setStatement((selectedAssessor?.statementEvaluations||[]).map(it=>({...it,key: uniqueId().toString()})))
-        setDataStrength((selectedAssessor?.comments?.filter(it=>it.type=='C1')||[]).map(it=>({...it,key: uniqueId().toString()})))
-        setDataImprovement((selectedAssessor?.comments?.filter(it=>it.type=='C2')||[]).map(it=>({...it,key: uniqueId().toString()})))
-        setDataComment3((selectedAssessor?.comments?.filter(it=>it.type=='C3')||[]).map(it=>({...it,key: uniqueId().toString()})))
-        setDataComment4((selectedAssessor?.comments?.filter(it=>it.type=='C4')||[]).map(it=>({...it,key: uniqueId().toString()})))
-        setDataComment5((selectedAssessor?.comments?.filter(it=>it.type=='C5')||[]).map(it=>({...it,key: uniqueId().toString()})))
+        if(selectedAssessor){
+            setStatement((selectedAssessor?.statementEvaluations||[]).map(it=>({...it,key: uniqueId().toString()})))
+            setDataStrength((selectedAssessor?.comments?.filter(it=>it.type=='C1')||[]).map(it=>({...it,key: uniqueId().toString()})))
+            setDataImprovement((selectedAssessor?.comments?.filter(it=>it.type=='C2')||[]).map(it=>({...it,key: uniqueId().toString()})))
+            setDataComment3((selectedAssessor?.comments?.filter(it=>it.type=='C3')||[]).map(it=>({...it,key: uniqueId().toString()})))
+            setDataComment4((selectedAssessor?.comments?.filter(it=>it.type=='C4')||[]).map(it=>({...it,key: uniqueId().toString()})))
+            setDataComment5((selectedAssessor?.comments?.filter(it=>it.type=='C5')||[]).map(it=>({...it,key: uniqueId().toString()})))
+        }      
     },[selectedAssessor])
 
+    const getLable = (key: string) => {
+        var label = dataLookup?.find((it) => it.code === key);
+        return lang == 'KH' ? label?.value1 : label?.value;
+    };
+
     const onChangeAssessor=(v: number) =>{
-        console.log(v);
         if(v>0){
             setSelectedAssessor(data?.assessors.find(it=>(it.id==v))) 
         }
-        console.log('assessor: ',data?.assessors.find(it=>(it.id==v)));
     }
     const onCloseHandler = () => { 
         onCloseTab?.()
     }
     const onSubmitHandler = async () => {
-        const submitter = await formSubmittor.validateFields()  
+        const submitter = await formSubmittor.validateFields()
         const editable1 = await editableStrengthFormRef1?.current?.validateFields()
-        const editable2 = await editableImprovementFormRef2?.current?.validateFields() 
-        const editable3 = await editableFormRef3.current?.validateFields() 
+        const editable2 = await editableImprovementFormRef2?.current?.validateFields()
+        const editable3 = await editableFormRef3.current?.validateFields()
         const editable4 = await editableFormRef4.current?.validateFields() 
         const editable5 = await editableFormRef5.current?.validateFields() 
         
@@ -90,7 +105,6 @@ export default({
         const commList3: DfComment[] = editable3?Object.values(editable3):[]
         const commList4: DfComment[] = editable4?Object.values(editable4):[]
         const commList5: DfComment[] = editable5?Object.values(editable5):[]
-        console.log('editableImprovementFormRef',editable1)
 
         if(!submitter) return        
         const section1Valid = statement.filter(r =>(
@@ -148,9 +162,7 @@ export default({
                     seqNo: index+1,
                     type: 'C5'
                 } as DfCommentRs))
-            )
-            console.log('comments1==================',comments)
-            // const statement = Object.values(editable)      
+            )     
             const payload = {
                 id: id,
                 dfEmpAssessorId: selectedAssessor?.id,
@@ -177,6 +189,7 @@ export default({
                     try {
                         await services.submitEvaluation(payload)
                         message.success('Submitted successfully.');
+                        setLoading(true)
                         // onCloseTab?.()
                     } catch (error: any) {
                         message.error(error.message || 'Failed to submit 360 degree feedback form.');
@@ -210,10 +223,10 @@ export default({
             }} 
         >
            <Space direction="vertical" style={{ width: '100%' }}>
-                {(data?.assessors.length||0)>1 && <Card title="Assessor Infomation" size="small">
+                {(data?.assessors?.length||0)>1 && <Card title="Assessor Infomation" size="small">
                     <Row gutter={20}>
                         <Col flex={1}>
-                            {data?.assessors &&<CheckCard.Group  onChange={v => onChangeAssessor(v?.valueOf() as number)}  defaultValue={selectedAssessor?.id} size='small'>
+                            {data?.assessors &&<CheckCard.Group  onChange={v => onChangeAssessor(v?.valueOf() as number)}  value={selectedAssessor?.id} size='small'>
                                 {data?.assessors.map(r => (<CheckCard size='small' 
                                 avatar={
                                     <Avatar
@@ -237,12 +250,12 @@ export default({
                         <Descriptions.Item label="Business Unit" style={{ fontWeight: 'bolder' }}>{data?.buName}</Descriptions.Item>
                     </Descriptions>
                 </ProCard>
-                <InstructionCard/>
+                <InstructionCard lang={lang} onChangeLanglauge={()=>{setLang(lang=='ENG'?'KH':'ENG')}} getLableName={getLable}/>
                 <ProCard size="small"                  
                     headerBordered
-                    title= "EVALUATION"
+                    title= {getLable( ['Self','Peer','Manager'].some(r=>r==selectedAssessor?.type)?'DF_TITLE_EVALUATION':'DF_TITLE_MANAGER_EVALUATION')}
                 >
-                    {selectedAssessor?.statementEvaluations && <StatementTable 
+                    {selectedAssessor?.statementEvaluations && <StatementTable lang={lang} getLableName={getLable}
                         items={statement} 
                         editableFormRef={editableFormRef}
                         editable={true} 
@@ -250,41 +263,103 @@ export default({
                         onSetItems={setStatement}
                     />}
                 </ProCard>
-                {selectedAssessor?.type=='SELF' &&<CommentTable title="4. Please state three (3) good points or strengths of your colleague." 
-                    commTitle={'Strength'} 
+                {selectedAssessor && ['Self','Peer','Manager'].some(r=>r==selectedAssessor?.type) &&<CommentTable title={getLable('DF_TITLE_STRENGTH')||''} 
+                    commTitle={getLable('DF_TBL_STRENGTH')||''} 
                     initDataItems={dataStrength} 
                     // onSetItems={setDataStrength}
                     editableFormRef={editableStrengthFormRef1}  
                     editable={selectedAssessor?.currentAccess && selectedAssessor?.status!='SUBMITTED'}
                 />}
-                {selectedAssessor?.type=='SELF' && <CommentTable title="5. Please state three (3) areas of improvement for your colleague." 
-                    commTitle={'Improvement'} 
+                {selectedAssessor && ['Self','Peer','Manager'].some(r=>r==selectedAssessor?.type) && <CommentTable title={getLable('DF_TITLE_IMPROVEMENT')||''}
+                    commTitle={getLable('DF_TBL_IMPROVEMENT')||''} 
                     initDataItems={dataImprovement} 
                     // onSetItems={setDataImprovement} 
                     editableFormRef={editableImprovementFormRef2} 
                     editable={selectedAssessor?.currentAccess && selectedAssessor?.status!='SUBMITTED'}
                 />}
-                {selectedAssessor?.type=='Manager' && <CommentTable title="4. Please state three (3) key points that you would like the management to help achieve the company's goals or strategies." 
-                    commTitle={'Key Point'} 
+                {selectedAssessor && ['Subordinate'].some(r=>r==selectedAssessor?.type) && <CommentTable title={getLable('DF_TITLE_MANAGER_KEY_POINT')||''} 
+                    commTitle={getLable('DF_TBL_MANAGER_KEY_POINT')||''} 
                     initDataItems={dataComment3} 
                     // onSetItems={setDataImprovement} 
                     editableFormRef={editableFormRef3}
-                    editable
+                    editable={selectedAssessor?.currentAccess && selectedAssessor?.status!='SUBMITTED'}
                 />}
-                {selectedAssessor?.type=='Manager' && <CommentTable title="5. Please state three (3) good points or strengths of your line manager" 
-                    commTitle={'Good Point'} 
+                {selectedAssessor && ['Subordinate'].some(r=>r==selectedAssessor?.type) && <CommentTable title={getLable('DF_TITLE_MANAGER_GOOD_POINT')||''}
+                    commTitle={getLable('DF_TBL_MANAGER_GOOD_POINT')||''}
                     initDataItems={dataComment4} 
                     // onSetItems={setDataImprovement} 
                     editableFormRef={editableFormRef4}
                     editable={selectedAssessor?.currentAccess && selectedAssessor?.status!='SUBMITTED'}
                 />}
-                {selectedAssessor?.type=='Manager' && <CommentTable title="6. Please state three (3) areas of improvement for your line manager." 
-                    commTitle={'Improvement'} 
+                {selectedAssessor && ['Subordinate'].some(r=>r==selectedAssessor?.type) && <CommentTable title={getLable('DF_TITLE_MANAGER_IMPROVEMENT')||''} 
+                    commTitle={getLable('DF_TBL_MANAGER_IMPROVEMENT')||''} 
                     initDataItems={dataComment5} 
                     // onSetItems={setDataImprovement} 
                     editableFormRef={editableFormRef5}
                     editable={selectedAssessor?.currentAccess && selectedAssessor?.status!='SUBMITTED'}
                 />}
+                {selectedAssessor && ['Self','Manager'].some(r=>r==selectedAssessor?.type) &&<>
+                    <ProCard collapsible defaultCollapsed={true} size="small" headerBordered title="SECTION 1: SUMMARY REPORT">
+                        <ProTable<DfEmpEvaluationSummaryReport>
+                            size="small"
+                            search={false}
+                            rowKey="id"
+                            dataSource={selectedAssessor.summary?.sumEvaluations||[]}
+                            options={{
+                                density: false,
+                                fullScreen: false,
+                                reload: false,
+                                setting: false,
+                            }}
+                            columns={[
+                                { title: 'Statement', dataIndex: 'title' },
+                                { title: 'Self', dataIndex: 'avgSelf', render: (text, record) => record.avgSelf==0?'-': formatterQty1.format(record.avgSelf) },
+                                { title: 'Manager', dataIndex: 'avgManager', render: (text, record) => record.avgManager==0?'-': formatterQty1.format(record.avgManager), hidden: ['Self'].some(r=>r==selectedAssessor?.type)},
+                                { title: 'Peer', dataIndex: 'avgPeer', render: (text, record) => record.avgPeer==0?'-': formatterQty1.format(record.avgPeer) , hidden:['Self'].some(r=>r==selectedAssessor?.type)},
+                                { title: 'Subordinate', dataIndex: 'avgSubordinate', render: (text, record) => record.avgSubordinate==0?'-': formatterQty1.format(record.avgSubordinate), hidden:['Self'].some(r=>r==selectedAssessor?.type) },
+                                { title: 'Overall', dataIndex: 'overall', render: (text, record) => record.overall==0?'-': formatterQty1.format(record.overall) },
+                            ]}
+                        />
+                    </ProCard>
+                    <ProCard collapsible defaultCollapsed={true} size="small" headerBordered title="SECTION 2: DETAIL REPORT(Highest to Lowest)">
+                        <ProTable<DfEmpEvaluationDetailReport>
+                            size="small"
+                            search={false}
+                            rowKey="id"
+                            dataSource={selectedAssessor.summary?.statementEvaluations||[]}
+                            options={{
+                                density: false,
+                                fullScreen: false,
+                                reload: false,
+                                setting: false,
+                            }}
+                            columns={[
+                                { title: 'Statement', dataIndex: 'description' },
+                                { title: 'Self', dataIndex: 'avgSelf', render: (text, record) => record.avgSelf==0?'-': formatterQty1.format(record.avgSelf)},
+                                { title: 'Manager', dataIndex: 'avgManager', render: (text, record) => record.avgManager==0?'-': formatterQty1.format(record.avgManager), hidden: ['Self'].some(r=>r==selectedAssessor?.type)},
+                                { title: 'Peer', dataIndex: 'avgPeer', render: (text, record) => record.avgPeer==0?'-': formatterQty1.format(record.avgPeer), hidden: ['Self'].some(r=>r==selectedAssessor?.type) },
+                                { title: 'Subordinate', dataIndex: 'avgSubordinate', render: (text, record) => record.avgSubordinate==0?'-': formatterQty1.format(record.avgSubordinate), hidden: ['Self'].some(r=>r==selectedAssessor?.type) },
+                                { title: 'Overall', dataIndex: 'overall', render: (text, record) => record.overall==0?'-': formatterQty1.format(record.overall) },
+                            ]}
+                        />
+                    </ProCard>
+                    <ProCard collapsible defaultCollapsed={true} size="small" headerBordered title="SECTION 3: COMMENT">  
+                         <CommentTable title="" 
+                            commTitle={'Strength'} 
+                            initDataItems={(selectedAssessor?.summary?.comments||[]).filter(it=> ['C1','C4'].some(r=>r==it.type)).map(it=>({...it,comment: it.comment+'-'+it.dfEmpAssessorId+' - '+ it.type,key: uniqueId().toString()}))} 
+                            // onSetItems={setDataImprovement} 
+                            // editableFormRef={editableImprovementFormRef2} 
+                            editable={false}
+                        />                     
+                        <CommentTable title="" 
+                            commTitle={'Improvement'} 
+                            initDataItems={(selectedAssessor?.summary?.comments||[]).filter(it=> ['C2','C5'].some(r=>r==it.type)).map(it=>({...it,comment: it.comment+'-'+it.dfEmpAssessorId+' - '+ it.type,key: uniqueId().toString()}))} 
+                            // onSetItems={setDataImprovement} 
+                            // editableFormRef={editableImprovementFormRef2} 
+                            editable={false}
+                        />
+                    </ProCard>
+                </>}
            </Space>            
         </ProForm>
     </Spin></div>)

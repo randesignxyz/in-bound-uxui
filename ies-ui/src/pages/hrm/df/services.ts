@@ -1,6 +1,6 @@
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { RequestActions, ServiceApiType, singleRequest } from "@/services/apiGateway";
-import { DF360EmpDetailRs, DF360EmpListItem, DF360InfoAdvanceSearchParams, DF360Playload, DF360UpdatePlayload } from "./data";
+import { AppraisalMapping, DF360EmpDetailRs, DF360EmpListItem, DF360InfoAdvanceSearchParams, DF360Playload, DF360UpdatePlayload, DfAssessorList, DfInstrunctionItemList, EmployeeInfResult } from "./data";
 import { Paging } from "@/services/API";
 
 export const Df360Params = {
@@ -40,6 +40,30 @@ export const Df360Params = {
         actionName: 'fetch_fd360_emp_detail',
         payload: { id },
     }),
+    fetchProbationEmployeeInfo: (id: number): ServiceApiType<{ id: number }> => ({
+        type: 'FETCH_QUERY',
+        endpoint: 'HR',
+        actionName: 'fetch-probation-employee-info',
+        payload: { id },
+    }),
+    fetchProbationEmpList: (searchValue?: string): ServiceApiType<{ searchValue?: string }> => ({
+        type: 'LIST_QUERY',
+        endpoint: 'HR',
+        actionName: 'fetch-probation-evaluation-emp-list',
+        payload: { searchValue },
+    }),
+    fetchAssessorList: (empId: number, type: string): ServiceApiType<{ empId: number, type: string }> => ({
+        type: 'LIST_QUERY',
+        endpoint: 'HR',
+        actionName: 'fetch_fd360_assessor_list',
+        payload: { empId, type },
+    }),
+    fetchDfInstructionList: (): ServiceApiType<{}> => ({
+        type: 'LIST_QUERY',
+        endpoint: 'HR',
+        actionName: 'fetch_fd360_instruction_list',
+        payload: { },
+    }),
 
 }
 export const Df360EmpServiceAPI = (requestActions?: RequestActions) => {
@@ -50,5 +74,9 @@ export const Df360EmpServiceAPI = (requestActions?: RequestActions) => {
         draftEvaluation:  (params: DF360UpdatePlayload) => singleRequest(Df360Params.draftEvaluation(params))(requestActions),
         submitEvaluation:  (params: DF360UpdatePlayload) => singleRequest(Df360Params.submitEvaluation(params))(requestActions),
         detail: (id: number) => singleRequest(Df360Params.detail(id))(requestActions) as Promise<DF360EmpDetailRs>,
+        fetchProbationEmployeeInfo: (id: number) => singleRequest(Df360Params.fetchProbationEmployeeInfo(id))(requestActions) as Promise<EmployeeInfResult>,
+        fetchProbationEmpList: (searchValue?: string) => singleRequest(Df360Params.fetchProbationEmpList(searchValue))(requestActions) as Promise<AppraisalMapping[]>,
+        fetchAssessorList: (empId: number, type: string) => singleRequest(Df360Params.fetchAssessorList(empId, type))(requestActions) as Promise<DfAssessorList[]>,
+        fetchDfInstructionList: () => singleRequest(Df360Params.fetchDfInstructionList())(requestActions) as Promise<DfInstrunctionItemList[]>,
     }
 }

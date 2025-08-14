@@ -17,7 +17,7 @@ import {
   ProFormSelect,
   ProFormTextArea,
 } from '@ant-design/pro-components';
-import { Button, Card, Col, Dropdown, Flex, Form, Menu, Modal, Row, Select, Space, message } from 'antd';
+import { Button, Card, Col, Dropdown, Flex, Form, InputNumber, Menu, Modal, Row, Select, Space, message } from 'antd';
 import { useForm } from 'antd/es/form/Form';
 import { uniqueId } from 'lodash';
 import moment from 'moment';
@@ -440,7 +440,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
                         onClick={({ key }) => {
                           const filteredItems = productItems?.filter(
                             (item) => String(item.itemCategoryId) === key
-                          );
+                          )
 
                           const existingIds = new Set(dataSourceItems?.map((i) => i.itemId));
 
@@ -484,21 +484,37 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
 
               dataIndex: 'itemId',
               width: 350,
-              fieldProps: (_, config) => {
-                return {
-                  onChange: (e: number) => {
-                    if (dataSourceItems?.filter((o) => o.itemId === e).length) {
-                      message.error('This Item was ready added!');
-                    }
-                  },
-                  showSearch: true,
-                  debounceTime: 500,
-                  allowClear: true,
+              fieldProps: (_, config) => ({
+                showSearch: true,
+                allowClear: true,
+                debounceTime: 500,
+                options: productItems
+                  ?.filter((it) => it.isWebEnabled)
+                  .map((p) => ({ value: p.id, label: p.name })),
+                onChange: (itemId: number) => {
+                  const product = productItems?.find((p) => p.id === itemId);
+                  const form = editableFormRef.current;
 
-                  param: config.entity.stockCategoryId,
-                  ...config,
-                };
-              },
+                  if (form) {
+                    const rowKey = Array.isArray(config.rowKey) ? config.rowKey[0] : config.rowKey;
+
+                    form.setFieldsValue({
+                      [rowKey]: {
+                        ...config,
+                        itemId,
+                        pricing: product?.price ?? 0
+                      }
+                    });
+                  }
+
+                  if (dataSourceItems?.some((o) => o.itemId === itemId)) {
+                    message.error('This Item was already added!');
+                  }
+                }
+
+
+              }),
+
               valueType: 'select',
               formItemProps: () => {
                 return {
@@ -570,20 +586,31 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
             //   },
             // },
 
+
             {
               title: 'Unit Price (USD)',
               dataIndex: 'pricing',
               valueType: 'digit',
               initialValue: 0,
-              ellipsis: true,
               formItemProps: {
-                rules: [
-                  {
-                    required: true,
-                  },
-                ],
+                rules: [{ required: true }],
               },
+              renderFormItem: (_, config) => {
+                const row = config.record;
+                console.log('row', row)
+                return (
+                  <InputNumber
+                    key={row?.key}
+                    value={row?.pricing ?? 0}
+                    onChange={(value) => {
+                      config.onChange?.(value)
+                    }}
+                    style={{ width: '100%' }}
+                  />
+                );
+              }
             },
+
             {
               title: 'Unit Price (KHR)',
               initialValue: 0,

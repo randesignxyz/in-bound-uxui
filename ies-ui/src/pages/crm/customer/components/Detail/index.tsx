@@ -410,7 +410,7 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
     <Button icon={<LinkOutlined/>} type='link' onClick={()=>{ 
       const encrypted = encryptToBase64(state.data?.detail?.code || "n/a");
       
-      window.open(`http://api2.vital.com.kh/customer-view/${encrypted}`, '_blank');
+      // window.open(`http://api2.vital.com.kh/customer-view/${encrypted}`, '_blank');
       navigator.clipboard?.writeText(`http://api2.vital.com.kh/customer-view/${encrypted}`)
   
       .then(() => {

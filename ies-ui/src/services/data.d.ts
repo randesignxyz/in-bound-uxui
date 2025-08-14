@@ -52,6 +52,7 @@ export type LookupDataType =
   | 'SALE_SAP_SERIES'
   | 'SALE_PAYMENT_TERM_SAP'
   | 'SALE_PRICE_LIST_SAP'
+  | 'VERIFIED_ADDRESS_LAT_LONG'
 
 
 

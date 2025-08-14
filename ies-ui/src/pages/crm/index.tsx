@@ -20,7 +20,9 @@ import ContractReport from './contract/components/ContractReport';
 import TermReport from './term/components/TermReport';
 import salesperson from "@/assets/salesman.png";
 import RegisterCustomerIcon from '@/assets/register-customer.png';
-import customerShipping  from "@/assets/courier_14234908.png";
+import customerShipping from "@/assets/courier_14234908.png";
+import customer_sharing from '@/assets/share-outlet.png';
+import customer_verified from '@/assets/customer_location_verified.png';
 
 export const CrmPaths = {
   contact: '/crm/contact',
@@ -39,6 +41,8 @@ export const CrmPaths = {
   salesperson: '/crm/salesperson',
   registerCustomer: '/crm/register-customer',
   shippingAddress: '/crm/shipping-address',
+  shareCustomer: '/crm/shared',
+  verifiedCustomer: '/crm/verified-customer',
 };
 
 const Crm: React.FC = () => {
@@ -418,8 +422,8 @@ const Crm: React.FC = () => {
       //link: `${CrmPaths.settlement}/list`,
       link: `${CrmPaths.salesperson}/list`,
       icon: salesperson,
-      visible:access.saleAdmin
-    },{
+      visible: access.saleAdmin
+    }, {
       id: 'registerCustomer',
       name: 'Register Customer',
       description: 'Register Customer List',
@@ -443,15 +447,31 @@ const Crm: React.FC = () => {
       // }
       // overlay: customerMenu,
     },
-     {
+    {
       id: 'customer-shipping-address',
       name: 'Shipping Address',
       description: '',
       //link: `${CrmPaths.settlement}/list`,
       link: `${CrmPaths.shippingAddress}/list`,
       icon: customerShipping,
-      visible:access.saleAdmin
-    }
+      visible: access.saleAdmin
+    },
+    {
+      id: 'customer-sharing',
+      name: 'Share Customer',
+      description: 'Original owner of the shared customer record.',
+      link: `${CrmPaths.shareCustomer}/list`,
+      icon: customer_sharing,
+      visible: access.saleAdmin
+    },
+    {
+      id: 'customer-verified',
+      name: 'Verified Location',
+      description: "location has been checked and confirmed for accuracy",
+      link: `${CrmPaths.verifiedCustomer}/list`,
+      icon: customer_verified,
+      visible: access.saleAdmin
+    },
 
   ];
 

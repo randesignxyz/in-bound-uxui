@@ -20,7 +20,8 @@ const ChangeSalepersonForm: React.FC<Props> = ({ onSave, ...props }) => {
     const [keySelected, setKeySelected] = useState<number[]>([]);
     const actionRef = useRef<ActionType>();
     const [param, setParam] = useState<{
-        empNo?: string
+        empNo?: string,
+        pageSize?: number;
     }>();
     const [searchValue, setSearchValue] = useState('');
     const [split, setSplit] = useState(false);
@@ -48,15 +49,14 @@ const ChangeSalepersonForm: React.FC<Props> = ({ onSave, ...props }) => {
             <ProForm submitter={false} form={form}>
                 <Flex vertical gap={12}>
                     <Card size="small">
-                        <Flex justify="space-between" gap={23}>
+                        <Flex justify="space-between" gap={23} vertical>
                             <ProFormSelect
                                 showSearch
                                 label="Saleperson"
                                 noStyle
                                 placeholder={"Search by Saleperson"}
-                                width={"lg"}
                                 onChange={(e: string) => {
-                                    setParam({ empNo: e,  });   
+                                    setParam({ empNo: e });
                                     actionRef.current?.reload();
                                 }}
                                 rules={[
@@ -71,32 +71,34 @@ const ChangeSalepersonForm: React.FC<Props> = ({ onSave, ...props }) => {
                                     }));
                                 }}
                             />
+                            <Flex justify="space-between" align="baseline" gap={12}>
+                                <Input.Search
+                                    placeholder={"Please input lead code to filter"}
+                                    onChange={(e) => setSearchValue(e.target.value)}
+                                    value={searchValue}
+                                    allowClear
+                                    onSearch={(e) => {
+                                        setParam({ empNo: e, split });
+                                        actionRef.current?.reload?.();
+                                    }}
+                                />
+                                <Checkbox onClick={(e: any) => {
+                                    const checked = e.target?.checked;
+                                    setSplit(checked);
+                                    if (checked) {
+                                        // transform space-separated to comma-separated
+                                        const newValue = searchValue.trim().split(/\s+/).join(',');
+                                        setSearchValue(newValue);
+                                    } else {
+                                        // Optionally: transform comma back to space (or keep as is)
+                                        const newValue = searchValue.trim().split(/,+/).join(' ');
+                                        setSearchValue(newValue);
+                                    }
+                                }}>
+                                    Split
+                                </Checkbox>
+                            </Flex>
 
-                            <Input.Search
-                                placeholder={"Please input lead code to filter"}
-                                onChange={(e) => setSearchValue(e.target.value)}
-                                value={searchValue}
-                                allowClear
-                                onSearch={(e) => {
-                                    setParam({ empNo: e,split });
-                                    actionRef.current?.reload?.();
-                                }}
-                            />
-                            <Checkbox onClick={(e:any) => {
-                                const checked = e.target?.checked;
-                                setSplit(checked);
-                                if (checked) {
-                                    // transform space-separated to comma-separated
-                                    const newValue = searchValue.trim().split(/\s+/).join(',');
-                                    setSearchValue(newValue);
-                                } else {
-                                    // Optionally: transform comma back to space (or keep as is)
-                                    const newValue = searchValue.trim().split(/,+/).join(' ');
-                                    setSearchValue(newValue);
-                                }
-                            }}>
-                                Split
-                            </Checkbox>
                         </Flex>
                     </Card>
                     <Card
@@ -110,6 +112,7 @@ const ChangeSalepersonForm: React.FC<Props> = ({ onSave, ...props }) => {
                             size="small"
                             options={false}
                             rowSelection={{
+                                selections: ["SELECT_ALL", "SELECT_INVERT", "SELECT_NONE"],
                                 selectedRowKeys: keySelected.filter((value, index, self) => self.indexOf(value) === index).filter(p => p != undefined),
                                 onSelect(item, selected) {
                                     if (selected) {
@@ -131,6 +134,9 @@ const ChangeSalepersonForm: React.FC<Props> = ({ onSave, ...props }) => {
                                     }
                                 },
                                 onChange(_, selectedRows, { type },) {
+                                    if (type == "all") {
+                                        setKeySelected(selectedRows.map(it => it.id))
+                                    }
                                     if (type === "none") {
                                         setKeySelected([])
                                     }
@@ -145,7 +151,7 @@ const ChangeSalepersonForm: React.FC<Props> = ({ onSave, ...props }) => {
                                     },
                                     pagination: {
                                         current: current,
-                                        pageSize: pageSize
+                                        pageSize: param?.empNo ? 5000 : pageSize
                                     }
                                 });
                                 return Promise.resolve({

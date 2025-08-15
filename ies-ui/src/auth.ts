@@ -26,7 +26,7 @@ const keycloakUri = () => {
   } else if (
     window.location.hostname.includes(qa_host_name) ||
     window.location.hostname.includes(qa1_host_name) ||
-    window.location.hostname.includes(q2_host_name) 
+    window.location.hostname.includes(qa2_host_name) 
   ) {
     return kc_qa;
   } else {

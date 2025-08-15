@@ -25,54 +25,54 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-#       # Compare package.json files
-#       - name: Compare package.json files
-#         id: compare-package
-#         run: |
-#           $serverPackage = "C:\DevOps\ies-frontend\package.json"
-#           $repoPackage = "ies-ui\package.json"
-#           $shouldInstall = $true
-#           if ((Test-Path -Path $serverPackage) -and (Test-Path -Path $repoPackage)) {
-#             $serverHash = (Get-FileHash -Path $serverPackage -Algorithm SHA256).Hash
-#             $repoHash = (Get-FileHash -Path $repoPackage -Algorithm SHA256).Hash
-#             if ($serverHash -eq $repoHash) {
-#               $shouldInstall = $false
-#               Write-Output "package.json files are identical, skipping npm install"
-#             } else {
-#               Write-Output "package.json files differ, proceeding with npm install"
-#             }
-#           } else {
-#             Write-Output "One or both package.json files missing, proceeding with npm install"
-#           }
-#           Write-Output "should-install=$shouldInstall" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-#         shell: pwsh
+      # Compare package.json files
+      - name: Compare package.json files
+        id: compare-package
+        run: |
+          $serverPackage = "C:\DevOps\ies-frontend\package.json"
+          $repoPackage = "ies-ui\package.json"
+          $shouldInstall = $true
+          if ((Test-Path -Path $serverPackage) -and (Test-Path -Path $repoPackage)) {
+            $serverHash = (Get-FileHash -Path $serverPackage -Algorithm SHA256).Hash
+            $repoHash = (Get-FileHash -Path $repoPackage -Algorithm SHA256).Hash
+            if ($serverHash -eq $repoHash) {
+              $shouldInstall = $false
+              Write-Output "package.json files are identical, skipping npm install"
+            } else {
+              Write-Output "package.json files differ, proceeding with npm install"
+            }
+          } else {
+            Write-Output "One or both package.json files missing, proceeding with npm install"
+          }
+          Write-Output "should-install=$shouldInstall" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+        shell: pwsh
         
-#       # Install dependencies 
-#       - name: Install dependencies
-#         if: steps.compare-package.outputs.should-install == 'true'
-#         run: npm install --legacy-peer-deps
-#         shell: pwsh
-#         working-directory: ies-ui
+      # Install dependencies 
+      - name: Install dependencies
+        if: steps.compare-package.outputs.should-install == 'true'
+        run: npm install --legacy-peer-deps
+        shell: pwsh
+        working-directory: ies-ui
 
-#       # Copy only the project folder to the DevOps directory
-#       - name: Copy project folder
-#         run: |
-#           $source = "C:\Github-Action\ies-frontend\_work\ies-frontend-v4\ies-frontend-v4\ies-ui"
-#           $destination = "C:\DevOps\ies-frontend"
-#           if (Test-Path $source) {
-#             Copy-Item -Path "$source\*" -Destination $destination -Recurse -Force
-#             Write-Output "Copied  folder from $source to $destination"
-#           } else {
-#             Write-Error "folder not found at $source"
-#             exit 1
-#           }
-#         shell: pwsh
+      # Copy only the project folder to the DevOps directory
+      - name: Copy project folder
+        run: |
+          $source = "C:\Github-Action\ies-frontend\_work\ies-frontend-v4\ies-frontend-v4\ies-ui"
+          $destination = "C:\DevOps\ies-frontend"
+          if (Test-Path $source) {
+            Copy-Item -Path "$source\*" -Destination $destination -Recurse -Force
+            Write-Output "Copied  folder from $source to $destination"
+          } else {
+            Write-Error "folder not found at $source"
+            exit 1
+          }
+        shell: pwsh
 
-#       # Build project  
-#       - name: Build IES Aplication
-#         run: npm run build
-#         shell: pwsh
-#         working-directory: C:\DevOps\ies-frontend
+      # Build project  
+      - name: Build IES Aplication
+        run: npm run build
+        shell: pwsh
+        working-directory: C:\DevOps\ies-frontend
 
 #       # Determine target environment (Blue or Green)
 #       - name: Determine target environment

@@ -117,23 +117,23 @@ jobs:
         shell: powershell
 
       
-#       # Toggle port in web.config (4402 <-> 4401)
-#       - name: Toggle port in web.config
-#         run: |
-#           $webConfigPath = "C:\deployment\ies-frontend\dist\web.config"
-#           if (Test-Path $webConfigPath) {
-#             $webConfigContent = Get-Content $webConfigPath -Raw
-#             $currentPort = if ($webConfigContent -match 'http://10\.0\.12\.247:4402/') { "4402" } else { "4401" }
-#             $newPort = if ($currentPort -eq "4402") { "4401" } else { "4402" }
-#             $updatedContent = $webConfigContent -replace 'http://10\.0\.12\.247:4402/', "http://10.0.12.247:$newPort/" `
-#                                                 -replace 'http://10\.0\.12\.247:4401/', "http://10.0.12.247:$newPort/"
-#             Set-Content -Path $webConfigPath -Value $updatedContent
-#             Write-Output "Updated web.config port from $currentPort to $newPort at $(Get-Date -Format 'HH:mm:ss dd/MM/yyyy')"
-#           } else {
-#             Write-Error "web.config not found at $webConfigPath"
-#             exit 1
+      # Toggle port in web.config (4402 <-> 4401)
+      - name: Toggle port in web.config
+        run: |
+          $webConfigPath = "C:\deployment\ies-frontend\dist\web.config"
+          if (Test-Path $webConfigPath) {
+            $webConfigContent = Get-Content $webConfigPath -Raw
+            $currentPort = if ($webConfigContent -match 'http://10\.0\.12\.229:4402/') { "4402" } else { "4401" }
+            $newPort = if ($currentPort -eq "4402") { "4401" } else { "4402" }
+            $updatedContent = $webConfigContent -replace 'http://10\.0\.12\.229:4402/', "http://10.0.12.229:$newPort/" `
+                                                -replace 'http://10\.0\.12\.229:4401/', "http://10.0.12.229:$newPort/"
+            Set-Content -Path $webConfigPath -Value $updatedContent
+            Write-Output "Updated web.config port from $currentPort to $newPort at $(Get-Date -Format 'HH:mm:ss dd/MM/yyyy')"
+          } else {
+            Write-Error "web.config not found at $webConfigPath"
+            exit 1
             
-#           }
-#         shell: pwsh
+          }
+        shell: pwsh
 
 

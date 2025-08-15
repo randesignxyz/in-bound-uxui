@@ -74,47 +74,47 @@ jobs:
         shell: cmd
         working-directory: C:\DevOps\ies-frontend
 
-#       # Determine target environment (Blue or Green)
-#       - name: Determine target environment
-#         id: target-env
-#         run: |
-#           $activeEnv = if (Test-Path $env:ACTIVE_ENV_FILE) { Get-Content $env:ACTIVE_ENV_FILE } else { "blue" }
-#           $targetEnv = if ($activeEnv -eq "blue") { "green" } else { "blue" }
-#           Write-Output "Current active environment: $activeEnv (v1) at $(Get-Date -Format 'HH:mm:ss dd/MM/yyyy')"
-#           Write-Output "Target environment for new version: $targetEnv at $(Get-Date -Format 'HH:mm:ss dd/MM/yyyy')"
-#           Write-Output "target-env=$targetEnv" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-#         shell: pwsh
+      # Determine target environment (Blue or Green)
+      - name: Determine target environment
+        id: target-env
+        run: |
+          $activeEnv = if (Test-Path $env:ACTIVE_ENV_FILE) { Get-Content $env:ACTIVE_ENV_FILE } else { "blue" }
+          $targetEnv = if ($activeEnv -eq "blue") { "green" } else { "blue" }
+          Write-Output "Current active environment: $activeEnv (v1) at $(Get-Date -Format 'HH:mm:ss dd/MM/yyyy')"
+          Write-Output "Target environment for new version: $targetEnv at $(Get-Date -Format 'HH:mm:ss dd/MM/yyyy')"
+          Write-Output "target-env=$targetEnv" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+        shell: pwsh
 
-#       # Deploy new version to target environment with dist folder
-#       - name: Deploy to ${{ steps.target-env.outputs.target-env }} environment
-#         run: |
-#           $source = "C:\DevOps\ies-frontend\dist"
-#           $destination = if ("${{ steps.target-env.outputs.target-env }}" -eq "blue") { "$env:BLUE_DIR\dist" } else { "$env:GREEN_DIR\dist" }
-#           if (Test-Path $source) {
-#             if (Test-Path $destination) {
-#               Remove-Item -Path $destination -Recurse -Force -Exclude "web.config"
-#             }
-#             New-Item -ItemType Directory -Path $destination -Force
-#             Copy-Item -Path "$source\*" -Destination $destination -Recurse -Force 
-#             Write-Output "Deployed new dist folder to $destination at $(Get-Date -Format 'HH:mm:ss dd/MM/yyyy')"
-#           } else {
-#             Write-Error "Dist folder not found at $source"
-#             exit 1
-#           }
-#         shell: pwsh
+      # Deploy new version to target environment with dist folder
+      - name: Deploy to ${{ steps.target-env.outputs.target-env }} environment
+        run: |
+          $source = "C:\DevOps\ies-frontend\dist"
+          $destination = if ("${{ steps.target-env.outputs.target-env }}" -eq "blue") { "$env:BLUE_DIR\dist" } else { "$env:GREEN_DIR\dist" }
+          if (Test-Path $source) {
+            if (Test-Path $destination) {
+              Remove-Item -Path $destination -Recurse -Force -Exclude "web.config"
+            }
+            New-Item -ItemType Directory -Path $destination -Force
+            Copy-Item -Path "$source\*" -Destination $destination -Recurse -Force 
+            Write-Output "Deployed new dist folder to $destination at $(Get-Date -Format 'HH:mm:ss dd/MM/yyyy')"
+          } else {
+            Write-Error "Dist folder not found at $source"
+            exit 1
+          }
+        shell: pwsh
 
-#       # Switch IIS to serve the new environment's dist folder
-#       - name: Switch IIS to ${{ steps.target-env.outputs.target-env }}
-#         if: success()
-#         run: |
-#           $targetEnv = "${{ steps.target-env.outputs.target-env }}"
-#           Set-Content -Path ${{ env.ACTIVE_ENV_FILE }} -Value $targetEnv
-#           Write-Output "Switched active environment to $targetEnv at $(Get-Date -Format 'HH:mm:ss dd/MM/yyyy')"
-#           # Import-Module WebAdministration
-#           # $siteName = "IES_QA"
-#           # $newPath = if ($targetEnv -eq "blue") { "${{ env.BLUE_DIR }}\dist" } else { "${{ env.GREEN_DIR }}\dist" }
-#           # Set-ItemProperty "IIS:\Sites\$siteName" -Name physicalPath -Value $newPath
-#         shell: powershell
+      # Switch IIS to serve the new environment's dist folder
+      - name: Switch IIS to ${{ steps.target-env.outputs.target-env }}
+        if: success()
+        run: |
+          $targetEnv = "${{ steps.target-env.outputs.target-env }}"
+          Set-Content -Path ${{ env.ACTIVE_ENV_FILE }} -Value $targetEnv
+          Write-Output "Switched active environment to $targetEnv at $(Get-Date -Format 'HH:mm:ss dd/MM/yyyy')"
+          # Import-Module WebAdministration
+          # $siteName = "IES_DEV"
+          # $newPath = if ($targetEnv -eq "blue") { "${{ env.BLUE_DIR }}\dist" } else { "${{ env.GREEN_DIR }}\dist" }
+          # Set-ItemProperty "IIS:\Sites\$siteName" -Name physicalPath -Value $newPath
+        shell: powershell
 
       
 #       # Toggle port in web.config (4402 <-> 4401)

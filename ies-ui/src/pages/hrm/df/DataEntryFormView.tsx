@@ -346,14 +346,14 @@ export default({
                     <ProCard collapsible defaultCollapsed={true} size="small" headerBordered title={getLable('DF_TITLE_SECTION3')||''}>  
                          <CommentTable title="" 
                             commTitle={getLable('DF_TBL_STRENGTH')||''} 
-                            initDataItems={(selectedAssessor?.summary?.comments||[]).filter(it=> ['C1','C4'].some(r=>r==it.type)).map(it=>({...it,comment: it.comment+'-'+it.dfEmpAssessorId+' - '+ it.type,key: uniqueId().toString()}))} 
+                            initDataItems={(selectedAssessor?.summary?.comments||[]).filter(it=> ['C1','C4'].some(r=>r==it.type)).map(it=>({...it,comment: it.comment,key: uniqueId().toString()}))} 
                             // onSetItems={setDataImprovement} 
                             // editableFormRef={editableImprovementFormRef2} 
                             editable={false}
                         />                     
                         <CommentTable title="" 
                             commTitle={getLable('DF_TBL_IMPROVEMENT')||''} 
-                            initDataItems={(selectedAssessor?.summary?.comments||[]).filter(it=> ['C2','C5'].some(r=>r==it.type)).map(it=>({...it,comment: it.comment+'-'+it.dfEmpAssessorId+' - '+ it.type,key: uniqueId().toString()}))} 
+                            initDataItems={(selectedAssessor?.summary?.comments||[]).filter(it=> ['C2','C5'].some(r=>r==it.type)).map(it=>({...it,comment: it.comment,key: uniqueId().toString()}))} 
                             // onSetItems={setDataImprovement} 
                             // editableFormRef={editableImprovementFormRef2} 
                             editable={false}

@@ -71,7 +71,7 @@ jobs:
       # Build project  
       - name: Build IES Aplication
         run: npm run build
-        shell: pwsh
+        shell: cmd
         working-directory: C:\DevOps\ies-frontend
 
 #       # Determine target environment (Blue or Green)

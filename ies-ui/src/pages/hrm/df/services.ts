@@ -1,6 +1,6 @@
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { RequestActions, ServiceApiType, singleRequest } from "@/services/apiGateway";
-import { AppraisalMapping, DF360EmpDetailRs, DF360EmpListItem, DF360InfoAdvanceSearchParams, DF360Playload, DF360UpdatePlayload, DfAssessorList, DfInstrunctionItemList, EmployeeInfResult } from "./data";
+import { AppraisalMapping, DF360EmpDetailRs, DF360EmpListItem, DF360InfoAdvanceSearchParams, DF360Playload, DF360UpdatePlayload, DfAssessorList, DfEmpExisting, DfEmpExistingRespone, DfInstrunctionItemList, EmployeeInfResult } from "./data";
 import { Paging } from "@/services/API";
 
 export const Df360Params = {
@@ -64,6 +64,12 @@ export const Df360Params = {
         actionName: 'fetch_fd360_instruction_list',
         payload: { },
     }),
+    fetchDfEmpExisting: (id: number): ServiceApiType<{ id: number }> => ({
+        type: 'FETCH_QUERY',
+        endpoint: 'HR',
+        actionName: 'fetch_fd360_emp_existing',
+        payload: { id },
+    }),
 
 }
 export const Df360EmpServiceAPI = (requestActions?: RequestActions) => {
@@ -78,5 +84,6 @@ export const Df360EmpServiceAPI = (requestActions?: RequestActions) => {
         fetchProbationEmpList: (searchValue?: string) => singleRequest(Df360Params.fetchProbationEmpList(searchValue))(requestActions) as Promise<AppraisalMapping[]>,
         fetchAssessorList: (empId: number, type: string) => singleRequest(Df360Params.fetchAssessorList(empId, type))(requestActions) as Promise<DfAssessorList[]>,
         fetchDfInstructionList: () => singleRequest(Df360Params.fetchDfInstructionList())(requestActions) as Promise<DfInstrunctionItemList[]>,
+        fetchDfEmpExisting: (id: number) => singleRequest(Df360Params.fetchDfEmpExisting(id))(requestActions) as Promise<DfEmpExistingRespone>,
     }
 }

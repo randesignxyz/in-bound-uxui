@@ -13,6 +13,8 @@ import { useEffect, useRef, useState } from "react";
 import { uniqueId } from "lodash";
 import { Df360EmpServiceAPI } from "./services";
 import Pro from "@/pages/pro";
+import { format } from "path";
+import { formatDate } from "@/pages/utils";
 
 type DataFormType = {
    requestorId: number;
@@ -120,6 +122,7 @@ export default({
                     </Button>
                     <Button
                         onClick={onSubmitHandler}
+                        disabled={dfEmpExisting?true:false}
                     >
                     Submit
                     </Button>      
@@ -137,7 +140,7 @@ export default({
                     title={<div>Employee</div>}
                     onSetSubmitter={onChangeSubmitterHandler}
                 />
-                <ProCard size="small"                  
+                {dfEmpExisting && <ProCard size="small"                  
                     headerBordered
                     bordered
                     colStyle={{borderColor:'red'}}
@@ -145,8 +148,8 @@ export default({
                       bodyStyle={{border: '1px solid red'}}
                     // title= {<div>Requestor<span style={{color:'red'}}>*</span></div>}
                 >
-                    <span style={{color:'red'}}>The employee's already launched by Reach (6231555) on 2025-08-14.</span>
-                </ProCard>
+                    <span style={{color:'red'}}>The employee's already launched by {dfEmpExisting.createdBy} on {formatDate(dfEmpExisting.createdDate)}.</span>
+                </ProCard>}
                 <ProCard size="small"                  
                     headerBordered      
                                 

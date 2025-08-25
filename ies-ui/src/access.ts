@@ -365,7 +365,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       ) || false,
     canAccesAllocateDelView:
       currentUser?.authorities.some((item) =>
-        ['ROLE_ADMIN', 'ROLE_DELIVERY_DEL_ALLOCATION'].some((it) => it === item),
+        ['ROLE_ADMIN', 'ROLE_DELIVERY_DEL_ALLOCATION','ROLE_DELIVERY_ALLOCATION_REMARK'].some((it) => it === item),
       ) || false,
 
     canAccesAddRemarkAllocate:

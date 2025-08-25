@@ -40,6 +40,7 @@ export interface DeliveryEntry {
   remarks?: string;
   default?: boolean;
   itemList: DeliveryItemEntry[];
+  line_num?:number
 }
 
 export interface DeliveryItemEntry {

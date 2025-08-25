@@ -1,15 +1,15 @@
 import { formatDate, formatDateTime } from '@/pages/utils';
 import { EditableFormInstance, EditableProTable, ProCard, ProList, ProTable } from '@ant-design/pro-components';
 import { DrawerForm, DrawerFormProps } from '@ant-design/pro-form';
-import { Button, Card, Col, Descriptions, Divider, message, Modal, Progress, Row, Space, Spin, Tag, Typography, UploadFile, Image, Table } from 'antd';
+import { Button, Card, Col, Descriptions, Divider, message, Modal, Progress, Row, Space, Spin, Tag, Typography, UploadFile, Image, Table, Dropdown } from 'antd';
 import moment from 'moment';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AllocateServiceAPI } from './service';
 import { simpleRequestActions } from '@/services/model';
-import { DeliveryDnParams, DeliveryItemList, DeliveryList, DNItemParams, DNParams, UpdateRemarkParams } from './data';
+import { DeliveryDnParams, DeliveryItemList, DeliveryList, DNItemParams, DNParams, SOAllocateActivities, UpdateRemarkParams } from './data';
 import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
-import { CheckOutlined, EditOutlined, InboxOutlined } from '@ant-design/icons';
+import { CheckOutlined, EditOutlined, HistoryOutlined, InboxOutlined } from '@ant-design/icons';
 import AddRemarkModal from './AddRemarkForm';
 import { uploadFileToFirebase } from './uploadImage';
 import { FaRegPenToSquare } from 'react-icons/fa6';
@@ -44,10 +44,11 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, dn
     const [dn, setDn] = useState<DNParams | DNParams[] | undefined>()
     const [refetch, setRefetch] = useState(false)
     const [loading, setLoading] = useState(false);
-    const [modalOpen, setModalOpen] = useState<{ visible: boolean; id: number, remark?: string, attachment?: any }>({
+    const [modalOpen, setModalOpen] = useState<{ visible: boolean; id: number, remark?: string, attachment?: any, sales_planid?: number }>({
         visible: false,
         id: 0,
-    });
+    })
+    const [activities, setActivities] = useState<SOAllocateActivities[]>([]);
 
     useEffect(() => {
         setDn([])
@@ -126,7 +127,7 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, dn
             content: 'Are you sure?',
             onOk: async () => {
 
-                await services.ClaimDn(id, access.currentUser?.login) as {
+                await services.ClaimDn(id, access.currentUser?.login, 'Claim', 'Claim DN') as {
                     data: string;
                     message: string;
                 }
@@ -139,11 +140,11 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, dn
 
     const handleUnClaim = async (id: number) => {
         Modal.confirm({
-            title: 'UnClaim',
+            title: 'Release Claim',
             content: 'Are you sure?',
             onOk: async () => {
 
-                await services.ClaimDn(id, '') as {
+                await services.ClaimDn(id, '', 'Release Claim', 'Claim DN') as {
                     data: string;
                     message: string;
                 }
@@ -174,6 +175,39 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, dn
         (dn_qty ?? 0) > 0 && (order_qty ?? 0) > 0
             ? ((dn_qty ?? 0) / (order_qty ?? 1)) * 100
             : 0;
+
+    const getActivities = async (id: number) => {
+        try {
+            const da = await services.getActivities(id);
+            setActivities(da);
+            console.log(da);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+    const activityMenu = {
+        items: activities.map((activity, index) => ({
+            key: index,
+            label: (
+                <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                    <div>
+                        <strong>{activity.action}</strong> by {activity.action_by}
+                    </div>
+                    <div style={{ marginTop: 4, fontSize: 12, color: '#888' }}>
+                        {dayjs(activity.action_date)
+                            .tz('Asia/Phnom_Penh')
+                            .format('DD-MMM-YYYY hh:mm A')}
+                    </div>
+                </div>
+            ),
+        })),
+        style: {
+            maxHeight: 300,
+            overflowY: 'auto',
+        },
+    };
+
+
     return (
         <DrawerForm
             title="Delivery Note"
@@ -218,14 +252,16 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, dn
                         <Card>
                             <Descriptions column={5}>
                                 <Descriptions.Item label="DO Date" style={{ fontWeight: 'bolder' }}>
-                                    {dayjs(group.deliveryDate).isValid() ? dayjs(group.deliveryDate).format('DD-MMM-YYYY') : '-'}
+                                    {dayjs(group.deliveryDate).isValid()
+                                        ? dayjs(group.deliveryDate).format('DD-MMM-YYYY')
+                                        : '-'}
                                 </Descriptions.Item>
 
                                 <Descriptions.Item label="Shipping Address" style={{ fontWeight: 'bolder' }} span={2}>
                                     {group.shippingAddress ? group.shippingAddress : '-'}
                                 </Descriptions.Item>
-                                {/* {access.canAccesAddRemarkAllocate ? */}
-                                <Descriptions.Item span={4} style={{}}>
+
+                                <Descriptions.Item span={4}>
                                     <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
                                         {group.claimed_by ? (
                                             <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -241,7 +277,7 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, dn
                                                     <Button type="default" danger
                                                         onClick={() => handleUnClaim(group.id)}
                                                     >
-                                                        Unclaim
+                                                        Release
                                                     </Button>
                                                     : <></>}
 
@@ -253,10 +289,16 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, dn
                                                 Claim
                                             </Button>
                                         ) : <></>}
+
+                                        <Dropdown overlayStyle={{ width: 400 }} menu={activityMenu} trigger={['click']} >
+                                            <Button onClick={() => getActivities(group.id)} style={{ marginLeft: 10 }}><HistoryOutlined /></Button>
+                                        </Dropdown>
                                     </div>
                                 </Descriptions.Item>
-                                {/* : <></>} */}
                             </Descriptions>
+
+
+
                             <ProTable
                                 size="small"
                                 search={false}
@@ -360,6 +402,11 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, dn
                                         title: 'Item Name',
                                         dataIndex: 'itemName',
                                         width: 250,
+                                        render: (_, record) => {
+                                            return record.itemName && record.itemName.trim() !== ''
+                                                ? record.itemName
+                                                : record.delItemName || '-';
+                                        },
                                     },
                                     {
                                         title: 'Plan',
@@ -399,14 +446,16 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, dn
                                             const deliveryDate = dayjs.utc(group.deliveryDate).tz('Asia/Phnom_Penh').startOf('day');
                                             const dnList = Array.isArray(record.dn) ? record.dn : [];
 
-                                            // Flatten all DNs from group.deliveryItems to get the first DN num
                                             const allDNs = group.deliveryItems.flatMap(item => item.dn || []);
                                             const sortedDnList = allDNs
                                                 .filter(d => d.dn_num)
                                                 .sort((a, b) => Number(a.dn_num) - Number(b.dn_num));
                                             const firstDnNum = sortedDnList[0]?.dn_num;
 
-                                            let color = 'black'; // Default
+                                            const plannedQty = record.qty || 0;
+                                            const totalDelivered = dnList.reduce((sum, dn) => sum + (parseFloat(dn.dn_qty) || 0), 0);
+
+                                            let color = 'black'; // default
 
                                             if (dnList.length === 1) {
                                                 const dn = dnList[0];
@@ -414,28 +463,32 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, dn
                                                 const isFirstDn = dn.dn_num === firstDnNum;
                                                 const isSameDate = dnDate.isSame(deliveryDate);
 
-                                                if (isFirstDn && isSameDate) {
+                                                if (isFirstDn && isSameDate && totalDelivered >= plannedQty) {
                                                     color = 'green';
+                                                } else if (totalDelivered == 0) {
+                                                    color = 'black';
                                                 } else {
-                                                    color = 'orange'
+                                                    color = 'orange';
                                                 }
+                                            } else if (totalDelivered == 0) {
+                                                color = 'black';
                                             } else if (
                                                 dnList.length > 1 ||
                                                 dnList.some(dn => {
                                                     const dnDate = dayjs.utc(dn.dn_date).tz('Asia/Phnom_Penh').startOf('day');
                                                     return !dnDate.isSame(deliveryDate);
-                                                })
+                                                }) ||
+                                                totalDelivered < plannedQty
                                             ) {
                                                 color = 'orange';
                                             }
-                                            const totalDelivered = dnList.reduce((sum, dn) => sum + (parseFloat(dn.dn_qty) || 0), 0);
 
                                             return (
                                                 <div style={{ color }}>
                                                     {totalDelivered.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                                                 </div>
                                             );
-                                        },
+                                        }
                                     },
                                     {
                                         title: 'Type',
@@ -570,7 +623,7 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, dn
                                         width: 100,
                                         align: 'center',
                                         render: (_, r) => {
-                                            if (status != 'Posted') return null;
+                                            if (status == 'Pending' || status == 'Failed') return null;
                                             if (!access.canAccesAddRemarkAllocate) return null
                                             return (
                                                 <a
@@ -581,6 +634,7 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, dn
                                                             id: dnItem?.id,
                                                             remark: dnItem?.remark,
                                                             attachment: dnItem?.attachment,
+                                                            sales_planid: group.id
                                                         });
                                                     }}
                                                 >
@@ -606,8 +660,10 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, dn
                 onCancel={() => setModalOpen({ visible: false, id: 0, remark: '', attachment: [] })}
                 id={modalOpen.id}
                 onSave={(e) => { handleSaveRemark(e) }}
+                // onSave={(e) => { console.log(e) }}
                 remark={modalOpen.remark}
                 attachment={modalOpen.attachment}
+                sales_planid={modalOpen.sales_planid}
             />
         </DrawerForm>
     );

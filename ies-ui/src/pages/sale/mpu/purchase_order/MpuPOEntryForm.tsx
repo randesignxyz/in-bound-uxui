@@ -48,12 +48,23 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
   const [addressList, setAddressList] = useState<AddressInfo[]>();
   const [selectedAddress, setSelectedAddress] = useState<AddressInfo>();
   const [productItems, setProductItems] = useState<ProductItem[]>();
+  const [allItems, setAllItems] = useState<PurchaseOrderItem[]>([]);
+  const [includeZero, setIncludeZero] = useState(false);
 
   const [amount, setAmount] = useState<Amount>({
     discountAmount: 0,
     grantAmount: 0,
     totalAmount: 0,
   });
+
+  useEffect(() => {
+    if (includeZero) {
+      setDataSourceItems(allItems);
+    } else {
+      setDataSourceItems(allItems.filter(item => item.pricing > 0));
+    }
+  }, [includeZero, allItems]);
+
   const onTotalAmount = async () => {
     const result =
       dataSourceItems && dataSourceItems.length > 0
@@ -412,14 +423,15 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
           }}
           toolBarRender={() => [
             <>
-              <Switch checkedChildren="Exclude Price Zero" 
-              checked={dataSourceItems?.some((item) => item.pricing === 0)}
-              onChange={() => {
-                const filteredItems = dataSourceItems?.filter((item) => item.pricing && item.pricing > 0) || [];
-                  setDataSourceItems(filteredItems);
-                  message.success('Items with Unit Price 0 removed!');
-              }} 
-              unCheckedChildren="" />
+              <Switch checkedChildren="Exclude Price Zero"
+                checked={dataSourceItems?.some((item) => item.pricing === 0)}
+                // onChange={() => {
+                //   const filteredItems = dataSourceItems?.filter((item) => item.pricing && item.pricing > 0) || [];
+                //   setDataSourceItems(filteredItems);
+                //   message.success('Items with Unit Price 0 removed!');
+                // }}
+                onChange={(checked) => setIncludeZero(checked)}
+                unCheckedChildren="Include Price Zero" />
 
               {/* <Button
                 key="custom-action"
@@ -479,7 +491,8 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
                                 pricing: item.price ?? 0,
                               })) || [];
 
-                          setDataSourceItems((prev) => [...prev, ...newRows]);
+                          // setDataSourceItems((prev) => [...prev, ...newRows]);
+                          setAllItems((prev) => [...prev, ...newRows]);
                         }}
                         items={[
                           { label: 'Vital', key: '1' },

@@ -80,7 +80,7 @@ export default ({ trigger }: { trigger?: JSX.Element }) => {
     return <ModalForm
         trigger={trigger}
         form = {form}
-        title="Register Customer List"
+        title="Register Customer List1"
         onFinish={async () => {
             await onDowloadReportHandler()
         }}

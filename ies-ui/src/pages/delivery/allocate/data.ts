@@ -153,6 +153,7 @@ export type AllocateSOAdvanceParams = {
   status: string;
   ordered_date?: string;
   dnStatus?: string
+  delivery_date?:string
 };
 
 export type DNDetail = {
@@ -237,6 +238,7 @@ export type SOAllocateActivities = {
 }
 
 export type DnQuickView = {
+  id: number,
   open_count: number
   complete_count: number
   in_progress_count: number

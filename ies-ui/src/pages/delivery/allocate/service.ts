@@ -28,6 +28,12 @@ const AllocateAction = {
             page: params.pagination?.current,
         },
     }),
+    listDnDetail: (status?: string,delivery_date?:string,region?:string): ServiceApiType<{ status?: string,delivery_date?:string,region?:string }> => ({
+        type: 'LIST_QUERY',
+        endpoint: 'DELIVERY',
+        actionName: 'get-dn-detail',
+        payload: { status,delivery_date,region },
+    }),
     listDn: (so_allocate_id: string[], docNum?: string): ServiceApiType<{ so_allocate_id: string[], docNum?: string }> => ({
         type: 'LIST_QUERY',
         endpoint: 'DELIVERY',
@@ -122,6 +128,10 @@ export const AllocateServiceAPI = (requestAction: RequestActions) => {
             ),
         fetch_dn_quick_view: (startDate?: string, endDate?: string) =>
             singleRequest<DnQuickView>(AllocateAction.fetchDnQuickView(startDate,endDate))(
+                requestAction
+            ),
+        list_dn_detail: (status?: string,delivery_date?:string,region?:string) =>
+            singleRequest<DNList>(AllocateAction.listDnDetail(status,delivery_date,region))(
                 requestAction
             ),
     }

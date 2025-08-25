@@ -17,7 +17,7 @@ import {
   ProFormSelect,
   ProFormTextArea,
 } from '@ant-design/pro-components';
-import { Button, Card, Col, Dropdown, Flex, Form, InputNumber, Menu, Modal, Row, Select, Space, message } from 'antd';
+import { Button, Card, Col, Dropdown, Flex, Form, InputNumber, Menu, Modal, Row, Select, Space, Switch, message } from 'antd';
 import { useForm } from 'antd/es/form/Form';
 import { uniqueId } from 'lodash';
 import moment from 'moment';
@@ -410,6 +410,31 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
             record: (index) => ({ key: uniqueId().toString() + index } as any),
             creatorButtonText: ' New Item',
           }}
+          toolBarRender={() => [
+            <>
+              <Switch checkedChildren="Exclude Price Zero" 
+              checked={dataSourceItems?.some((item) => item.pricing === 0)}
+              onChange={() => {
+                const filteredItems = dataSourceItems?.filter((item) => item.pricing && item.pricing > 0) || [];
+                  setDataSourceItems(filteredItems);
+                  message.success('Items with Unit Price 0 removed!');
+              }} 
+              unCheckedChildren="" />
+
+              {/* <Button
+                key="custom-action"
+                type="primary"
+                onClick={() => {
+                  // Filter out items with pricing = 0
+                  const filteredItems = dataSourceItems?.filter((item) => item.pricing && item.pricing > 0) || [];
+                  setDataSourceItems(filteredItems);
+                  message.success('Items with Unit Price 0 removed!');
+                }}
+              >
+                Remove Unit Price 0 Item
+              </Button>, */}
+            </>
+          ]}
 
           // controlled
           editable={{

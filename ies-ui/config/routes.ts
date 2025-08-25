@@ -183,6 +183,22 @@ export default [
     component: './crm/shipping_address',
   },
 
+  {
+    path: '/crm/shared/:view',
+    name: 'Share',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessCrmMenuItem',
+    component: './crm/shared-customer',
+  },
+   {
+    path: '/crm/verified-customer/:view',
+    name: 'Verified Customer',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessCrmMenuItem',
+    component: './crm/verified-customer',
+  },
   /**********<<Pro**************/
   {
     path: '/pro',

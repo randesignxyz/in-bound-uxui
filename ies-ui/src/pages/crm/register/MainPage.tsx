@@ -114,7 +114,7 @@ export default()=>{
                             width: 100,
                             actionProps: (item) => ({ type: 'view', label: item.formNo || "n/a" })
                         }, {
-                            title: 'Customer No',
+                            title: 'Customer No', 
                             width: 130,
                             sorter: 'customerCode',
                             render: (_, r) => r.customerCode,
@@ -137,6 +137,7 @@ export default()=>{
                         }, {
                             title: 'Status',
                             dataIndex: 'status',
+                            sorter: 'status',
                             width: 100,
                             render: (_, r) => r.status && <Status size="small" text={r.status} />,
                         },

@@ -93,9 +93,9 @@ export default({
       id: id||0,
       customerCode: dataForm.customerCode,
       ppItems:ppItems,
-      billing: addressList?.map(it=>({
+      billing: addressList?.map((it,index)=>({
         id: it.id ||0,
-        address: it.address,
+        address: 'B'+(index+1).toString().padStart(2,'0')+(it.address?'-'+it.address:''),
         houseNo: it.houseNo,
         houseNoKh: it.houseNoKh,
         streetNo: it.streetNo,
@@ -111,9 +111,9 @@ export default({
         hotspot: it.hotspot,
         direction: it.direction,
       }))||[],
-      shipping: shippingAddressList?.map(it=>({
+      shipping: shippingAddressList?.map((it,index)=>({
         id: it.id ||0,
-        address: it.address,
+        address: 'S'+(index+1).toString().padStart(2,'0')+(it.address?'-'+it.address:''),
         houseNo: it.houseNo,
         houseNoKh: it.houseNoKh,
         streetNo: it.streetNo,
@@ -248,11 +248,11 @@ export default({
               setShippingAddressList((prev)=>{
                 const list = prev || []
                 if(isNew){
-                  return [...list,{id:0,key: uniqueId().toString(),...data}]
+                  return [...list,{id:0,key: uniqueId().toString(),...data,type: addressType}]
                 }else{
                   return list.map(it=> {
                     if(it.key===data.key){
-                      return data
+                      return {...data,type: addressType}
                     }else{
                       return it
                     }                  
@@ -264,11 +264,11 @@ export default({
               setAddressList((prev)=>{
                 const list = prev || []
                 if(isNew){
-                  return [...list,{id:0,key: uniqueId().toString(),...data}]
+                  return [...list,{id:0,key: uniqueId().toString(),...data,type: addressType}]
                 }else{
                   return list.map(it=> {
                     if(it.key===data.key){
-                      return data
+                      return {...data,type: addressType}
                     }else{
                       return it
                     }                  
@@ -570,7 +570,7 @@ export default({
             />
             <ProFormText
               label="Owner Phone Number"
-              rules={[{ required: true }]}
+              rules={[{ required: true,max:20 }]}
               name={'ownerPhone'}
               allowClear
               width={470}
@@ -593,7 +593,7 @@ export default({
             />
             <ProFormText
               label="Purchase Phone Number"
-              rules={[{ required: true }]}
+              rules={[{ required: true,max:20 }]}
               name={'purchasePhone'}
               allowClear
               width={470}

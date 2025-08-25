@@ -1,52 +1,63 @@
 import PageWrapper from "@/components/PageWrapper"
-import { DF360Emp, DF360InfoAdvanceSearchParams } from "./data"
-import { FileOutlined } from "@ant-design/icons"
+import { DF360Emp, DF360EmpListItem, DF360InfoAdvanceSearchParams } from "./data"
+import { DashOutlined, FileOutlined } from "@ant-design/icons"
 import DataEntryView from "./DataEntryView"
 import { formatDate } from "@/pages/utils"
 import Status from "@/components/Status"
 import { Df360EmpServiceAPI } from "./services"
 import { useState } from "react"
 import { TableViewSearchParams } from "@/components/DataCrud/TableView"
-import { useQuery } from "@umijs/max"
+import { useAccess, useQuery } from "@umijs/max"
 import DataEntryFormView from "./DataEntryFormView"
+import { Dropdown, message, Space } from "antd"
 
 export default () => {
+    const access = useAccess()
     const services = Df360EmpServiceAPI()
     const [filter, setFilter] = useState<TableViewSearchParams<DF360InfoAdvanceSearchParams>>({
             criteria: { advanceSearch: { status: 'ALL' } }
         })
-        const { data, isLoading, refetch } = useQuery(['fetch-fd360-emp-list', filter], () => services.list(filter), {
+    const { data, isLoading, refetch } = useQuery(['fetch-fd360-emp-list', filter], () => services.list(filter), {
             refetchOnWindowFocus: false
         })
+   
+    return(<PageWrapper<DF360EmpListItem, DF360InfoAdvanceSearchParams, {}>
     
-    return(<PageWrapper<DF360Emp, DF360InfoAdvanceSearchParams, {}>
-    
-        tabRender={item => [
-            {
+        tabRender={item => 
+            access.canAccessDF360NewForm?[{
                 action: "add",
                 tabIcon: <FileOutlined />,
                 tabLabel: 'New Form',
                 panel: (props) => <DataEntryView type="CREATE"
                                     onCloseTab={() => {
                                         props?.onCloseTab?.()
+                                        refetch()
+                                    }}
+                                    // openInTab onBack={() => { }} type="CREATE" 
+                                />,
+            },{               
+                action: 'view',
+                value: item?.formNo ||item?.empNo || "n/a",
+                tabLabel: item?.formNo || item?.empName +' ('+item?.empNo+')' || 'Draft',
+                panel: (props) => <DataEntryFormView id={item?.id} type="EDIT"
+                                    onCloseTab={() => {
+                                        props?.onCloseTab?.()
+                                        refetch()
+                                    }} 
+                                    // openInTab onBack={() => { }} type="CREATE" 
+                                />,
+            }]:[{               
+                action: 'view',
+                value: item?.formNo ||item?.empNo || "n/a",
+                tabLabel: item?.formNo || item?.empName +' ('+item?.empNo+')' || 'Draft',
+                panel: (props) => <DataEntryFormView id={item?.id} type="EDIT"
+                                    onCloseTab={() => {
+                                        props?.onCloseTab?.()
                                         // refetch()
                                     }} 
                                     // openInTab onBack={() => { }} type="CREATE" 
                                 />,
-            },{                 
-                action: 'view',
-                value: item?.formNo ||item?.empNo || "n/a",
-                tabLabel: item?.formNo ||item?.empNo || 'Draft',
-                panel: (props) => <DataEntryFormView id={item?.id} type="EDIT"
-                                    // onCloseTab={() => {
-                                    //     props?.onCloseTab?.()
-                                    //     // refetch()
-                                    // }} 
-                                    // openInTab onBack={() => { }} type="CREATE" 
-                                />,
-            }
-        
-        ]}
+            }]}
         listView={{
             type: 'Table',
             title: "360 Degree Feedback List",
@@ -75,8 +86,8 @@ export default () => {
 
             },
             props: {
-                dataSource: data?.items,
-                pagination: { total: data?.total },
+                dataSource: data?.items||[],
+                pagination: { total: data?.total},
                 loading: false,
                 scroll: { x: 'max-content' },
                 bordered: true,
@@ -92,17 +103,17 @@ export default () => {
                         render: (_, r) => r.empNo,
                     }, {
                         title: 'Employee Name',
-                        width: 130,
+                        width: 180,
                         sorter: 'empName',
                         render: (_, r) => r.empName,
                     }, {
                         title: 'Employee Name(KH)',
-                        width: 130,
+                        width: 180,
                         sorter: 'empNameKh',
                         render: (_, r) => r.empNameKh,
                     }, {
                         title: 'Position',
-                        width: 130,
+                        // width: 130,
                         sorter: 'jobTitle',
                         render: (_, r) => r.jobTitle,
                     }, {

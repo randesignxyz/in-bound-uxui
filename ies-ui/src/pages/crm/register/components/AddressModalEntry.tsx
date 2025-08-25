@@ -1,12 +1,13 @@
 import FormModalComp, { FormModalProps } from '@/components/FormModal';
 import { LocationType } from '@/services/crm/services';
-import { AddressData, AddresssView } from '@/services/crm/data';
+import { AddressData} from '@/services/crm/data';
 import ProForm from '@ant-design/pro-form';
 import { uniqueId } from 'lodash';
 import { useEffect } from 'react';
 import AddressEntryForm, { AddressEntryFormProps } from './AddressEntryForm';
 import { AddressDataForm } from './AddressListView';
 import { useForm } from 'antd/lib/form/Form';
+import { AddresssView } from '../data';
 
 const layout = {
   labelCol: { span: 3 },
@@ -128,9 +129,9 @@ const AddressModalEntry: React.FC<Props> = ({
           direction: dataForm.direction,
           latitude: dataForm.latitude,
           longitude: dataForm.longitude,
-          visitPlanOptionList: [dataForm.dayOfTheWeek, ...(dataForm.weekOfTheMonths || [])].filter(
-            (it) => it,
-          ) as number[],
+          // visitPlanOptionList: [dataForm.dayOfTheWeek, ...(dataForm.weekOfTheMonths || [])].filter(
+          //   (it) => it,
+          // ) as number[],
         };
 
         if (data) {

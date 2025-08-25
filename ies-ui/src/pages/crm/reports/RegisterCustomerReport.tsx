@@ -91,7 +91,7 @@ export default ({ trigger }: { trigger?: JSX.Element }) => {
             label="Date"
             name="dates"
         />
-        <ProFormSelect label="Customer Type" name="customerTypeIds"
+        <ProFormSelect label="Status" name="customerTypeIds"
             allowClear
             mode="multiple"
             options={data?.lookupDataList?.filter(it => it.type == 'CUSTOMER_TYPE').map(it => {

@@ -1,4 +1,3 @@
-import { CrmServiceAPI } from "@/services/crm/services"
 import { FooterToolbar, ProForm, ProFormDatePicker, ProFormDependency, ProFormSelect, ProFormTextArea, ProTable } from "@ant-design/pro-components"
 import { Button, Card, Flex, Input, message, Modal } from "antd"
 import { SalespersonOrgAPI } from "../salesperson/service"
@@ -8,15 +7,12 @@ import { useForm } from "antd/es/form/Form"
 import { rest } from "lodash"
 import { useState, useEffect } from "react"
 import { CustomerServices } from "../customer/services"
-import lead from "@/pages/sale/lead"
 import { ShareCustomerAPI } from "./service"
 
 interface Props {
     type: 'new' | 'edit';
-    // id?: number;
     onView: (id?: number) => void;
     onBack: () => void;
-    // title: string;
 }
 
 type FormDataType = {
@@ -24,11 +20,9 @@ type FormDataType = {
     customers: string;
     salespersonId: number;
 }
-const FormShare: React.FC<Props> = ({ type, onBack, onView }) => {
-
+const FormShare: React.FC<Props> = ({ type, onBack,  }) => {
     const requestActions = simpleRequestActions();
     const [form] = useForm<FormDataType>()
-
     const [saleList, setSaleList] = useState<SalePerson[]>()
     const [data, setData] = useState<CustomerItemLess[]>()
     const [customerSearch, setCustomerSearch] = useState<string>()
@@ -51,7 +45,6 @@ const FormShare: React.FC<Props> = ({ type, onBack, onView }) => {
             setData([])
             return
         }
-        // const rs = await CustomerServices.listCustomer(saleId).query(requestActions)
         const rs = await ShareCustomerAPI(requestActions).listCustomerLeadBySE({ id: saleId })
         setData(rs)
     }
@@ -65,19 +58,15 @@ const FormShare: React.FC<Props> = ({ type, onBack, onView }) => {
             ...dataForm,
             shareCustomerMap:selected
         }
-        
         Modal.confirm({
             title:"Share Confirmation",
             content:"are you sure?",
             onOk:async()=>{
                 await ShareCustomerAPI(requestActions).saveShare(entry);
                 message.success("Success!");
-                
             }
         });
-
-         onBack();
-
+         onBack?.();
     }
     return (
         <>
@@ -133,14 +122,6 @@ const FormShare: React.FC<Props> = ({ type, onBack, onView }) => {
                                         Save 
                                     </Button>
                                 )}
-                                {/* <Button
-                                    type="primary"
-                                    onClick={() => {
-                                        onSaveActionHandler();
-                                    }}
-                                >
-                                    {type === 'new' ? 'Save & View' : 'Update'}
-                                </Button> */}
                             </FooterToolbar>
                         );
                     },
@@ -156,13 +137,11 @@ const FormShare: React.FC<Props> = ({ type, onBack, onView }) => {
                         onOk: async () => {
                             try {
                                 await CustomerServices.transfers(formData.salespersonId, selected || [])(requestActions)
-                                // rest.onOpenChange?.(false)
                             } catch (error: any) {
                                 message.error(error.message || "Failed to transfer")
                             }
                         }
                     })
-
                 }}
             >
                 <Flex gap={12} vertical>
@@ -171,32 +150,6 @@ const FormShare: React.FC<Props> = ({ type, onBack, onView }) => {
                             <ProFormSelect showSearch name={"searchSalespersonId"} width={"lg"} label="Salesperson"
                                 options={saleList?.map(it => ({ label: [it.code, it.name].join(' '), value: it.id }))}
                             />
-                            {/* <ProFormSelect
-                                name={"entryType"}
-                                label={"Type of Customer"}
-                                width={"lg"}
-                                onChange={async (e) => {
-                                    // const rs = await CustomerServices.listCustomer(rs).query(requestActions)
-                                }}
-                                options={[
-                                    {
-                                        value: "Direct",
-                                        label: "Direct Customer"
-                                    },
-                                    {
-                                        value: "Indirect",
-                                        label: "Indirect Customer"
-                                    },
-                                    {
-                                        value: "Prospective",
-                                        label: "Prospective Customer"
-                                    },
-                                    {
-                                        value: "Lead",
-                                        label: "Lead Customer"
-                                    },
-                                ]}
-                            /> */}
                         </Flex>
                         < ProFormDependency name={['searchSalespersonId']} >
                             {({ searchSalespersonId }) => {
@@ -204,7 +157,6 @@ const FormShare: React.FC<Props> = ({ type, onBack, onView }) => {
                                     return <Input.Search onSearch={value => setCustomerSearch(value?.trim())} title="Search by Customers" placeholder="Please input customer code(s) to filter" />
                                 }
                             }}
-
                         </ProFormDependency>
                     </Card>
                     <Card size="small">
@@ -222,11 +174,6 @@ const FormShare: React.FC<Props> = ({ type, onBack, onView }) => {
                                             return safePrev.filter(it => it.id !== item.id);
                                         }
                                     });
-                                    // if (selected) {
-                                    //     setSelected(v => ([...(v || []), item.id]))
-                                    // } else {
-                                    //     setSelected(v => v?.filter(it => it != item.id))
-                                    // }
                                 },
                                 onChange(_, selectedRows, info) {
                                     if (info.type !== 'single') {
@@ -282,7 +229,6 @@ const FormShare: React.FC<Props> = ({ type, onBack, onView }) => {
                                 width={"md"}
                             />
                         </Flex>
-
                         <ProFormTextArea
                             name={"remarks"}
                             label="Remarks"

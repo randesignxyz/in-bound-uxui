@@ -3,8 +3,6 @@ import { Button, Card, Flex, message, Modal, Typography } from "antd"
 import { ShareCustomerAPI } from "./service";
 import { simpleRequestActions } from "@/services/model";
 import { DeleteOutlined } from "@ant-design/icons";
-import dayjs from 'dayjs';
-import duration from 'dayjs/plugin/duration';
 
 interface Props {
     data: any,
@@ -12,25 +10,11 @@ interface Props {
     isGroup: Boolean
 }
 
-function getRemainingWithDayJS(end: string): string {
-  const now = dayjs();
-  const endDate = dayjs(end);
-
-  const diffMs = endDate.diff(now);
-
-  if (diffMs <= 0) return 'Expired';
-
-  const dur = dayjs.duration(diffMs);
-  return `${dur.days()}d ${dur.hours()}h ${dur.minutes()}m ${dur.seconds()}s`;
-}
-
 const ShareDetailView: React.FC<Props> = ({ data, onBack, isGroup }) => {
-
     const requestActions = simpleRequestActions();
-    
     return (
         <>
-            <Flex vertical gap={24}>
+            <Flex vertical gap={12}>
                 <Card title={"Recipient"} size="small"
                     extra={
                         <>
@@ -58,7 +42,6 @@ const ShareDetailView: React.FC<Props> = ({ data, onBack, isGroup }) => {
                                                 message.success("Success!")
                                                 onBack()
                                             }
-
                                         }
                                     })
                                 }}
@@ -90,10 +73,6 @@ const ShareDetailView: React.FC<Props> = ({ data, onBack, isGroup }) => {
                                     }}
                                 >{r.status}</Typography.Text>
                             },
-                            // {
-                            //     title: "Expired",
-                            //     render: (_, r) => getRemainingWithDayJS(r.endedDate)
-                            // },
                         ]}
                     />
                 </Card>
@@ -111,14 +90,14 @@ const ShareDetailView: React.FC<Props> = ({ data, onBack, isGroup }) => {
                             },
                             {
                                 title: "Salesperson",
-                                render: (_, r) => [r.owner?.code,r.owner?.name].filter(p=>p).join(" - ")
+                                render: (_, r) => [r.owner?.code, r.owner?.name].filter(p => p).join(" - ")
                             },
                         ]}
                     />
                 </Card>}
-
                 {isGroup == true && <Card size="small" title={"Customer"}>
                     <ProTable
+                        pagination={false}
                         dataSource={data?.entries}
                         search={false}
                         size="small"
@@ -127,17 +106,17 @@ const ShareDetailView: React.FC<Props> = ({ data, onBack, isGroup }) => {
                             {
                                 title: "Customer Code",
                                 dataIndex: "code",
-                                render:(_,r)=>[r.customer?.code,r.customer?.name ].filter(p=>p).join(" - ")
+                                render: (_, r) => [r.customer?.code, r.customer?.name].filter(p => p).join(" - ")
                             },
                             {
                                 title: "Internal Name",
                                 dataIndex: "internalName",
-                                render:(_,r)=>r.customer?.internalName,
+                                render: (_, r) => r.customer?.internalName,
                             },
-                             {
-                                title: "SalePerson",
+                            {
+                                title: "Salesperson",
                                 dataIndex: "internalName",
-                                  render:(_,r)=>[r.salesperson?.code,r.salesperson?.name ].filter(p=>p).join(" - ")
+                                render: (_, r) => [r.salesperson?.code, r.salesperson?.name].filter(p => p).join(" - ")
                             },
                             {
                                 title: "Status",

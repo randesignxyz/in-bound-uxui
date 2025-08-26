@@ -124,7 +124,7 @@ jobs:
           if (Test-Path $webConfigPath) {
             $webConfigContent = Get-Content $webConfigPath -Raw
             $currentPort = if ($webConfigContent -match 'http://10\.0\.12\.247:4402/') { "4402" } else { "4401" }
-            $newPort = if ($currentPort -eq "4402") { "4401" } else { "4402" }
+            $newPort = if ($currentPort -eq "4402") { "4402" } else { "4401" }
             $updatedContent = $webConfigContent -replace 'http://10\.0\.12\.247:4402/', "http://10.0.12.247:$newPort/" `
                                                 -replace 'http://10\.0\.12\.247:4401/', "http://10.0.12.247:$newPort/"
             Set-Content -Path $webConfigPath -Value $updatedContent

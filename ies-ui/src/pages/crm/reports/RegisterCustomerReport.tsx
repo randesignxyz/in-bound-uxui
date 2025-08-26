@@ -131,11 +131,8 @@ export default ({ trigger }: { trigger?: JSX.Element }) => {
             label="Requested Date"
             name="requestedDate"
         />
-<<<<<<< HEAD
-        <ProFormSelect label="Status" name="customerTypeIds"
-=======
         <ProFormSelect label="Status" name="status"
->>>>>>> dev
+
             allowClear
             mode="multiple"
             options={statusOpts.map(it => {

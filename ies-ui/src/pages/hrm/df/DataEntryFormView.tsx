@@ -1,5 +1,5 @@
-import { CheckCard, EditableFormInstance, FooterToolbar, ProCard, ProForm, ProTable } from "@ant-design/pro-components";
-import { Avatar, Button, Card, Col, Descriptions, message, Modal, Row, Space, Spin } from "antd";
+import { CheckCard, EditableFormInstance, FooterToolbar, ProCard, ProForm, ProTable, useBreakpoint } from "@ant-design/pro-components";
+import { Avatar, Button, Card, Col, Descriptions, Grid, message, Modal, Radio, Row, Space, Spin } from "antd";
 import { useForm } from "antd/es/form/Form";
 import { useInView } from "react-intersection-observer";
 import { DF360EmpDetailRs,  DF360UpdatePlayload, DfComment, DfCommentRs, DfEmpAssessorRs, DfEmpEvaluationDetailReport, DfEmpEvaluationRs, DfEmpEvaluationSummaryReport, DfInstrunctionItemList } from "./data";
@@ -22,11 +22,15 @@ type DataFormType = {
 };
 
 export default({
+  items,
+  onSetItems,
   id,
   type,
   onCloseTab,
   readOnly
 }:{
+  items: DfEmpEvaluationRs[];
+  onSetItems?: (v: DfEmpEvaluationRs[]) => void;
   id?: number;
   type: 'VIEW' | 'EDIT';
   onCloseTab?: () => void;
@@ -187,7 +191,7 @@ export default({
                 content: 'Are you sure?',
                 onOk: async () => {
                     try {
-                        await services.submitEvaluation(payload)
+                        // await services.submitEvaluation(payload)
                         message.success('Submitted successfully.');
                         setLoading(true)
                         // onCloseTab?.()
@@ -198,6 +202,28 @@ export default({
             });
         }
     }
+    const screens = Grid.useBreakpoint();
+    const isMobile = !screens.md;
+
+     const setRatingScore=(key?: string, rating1?: number, rating2?: number, rating3?: number, rating4?: number, rating5?: number)=>{
+      onSetItems?.(
+        items.map(it=> {
+          if(it.key==key){
+            return {
+              ...it, 
+              rating1: rating1,
+              rating2: rating2,
+              rating3: rating3,
+              rating4: rating4,
+              rating5: rating5
+            }
+          }
+          return it
+        })
+      )
+    }
+    
+   
 
     return(<div ref={ref}><Spin spinning={loading} >
         <ProForm dir="vertical"
@@ -214,11 +240,11 @@ export default({
                     >
                     Submit
                     </Button>}      
-                    {/* {type=='EDIT' && <Button
-                        // onClick={() => {onSubmitHandler();}}
+                    {type=='EDIT' && <Button
+                        onClick={() => {onSubmitHandler();}}
                     >
                         Submit
-                    </Button> } */}
+                    </Button> }
                 </FooterToolbar> : <></>
             }} 
         >
@@ -251,18 +277,28 @@ export default({
                     </Descriptions>
                 </ProCard>
                 <InstructionCard lang={lang} onChangeLanglauge={()=>{setLang(lang=='ENG'?'KH':'ENG')}} getLableName={getLable}/>
-                <ProCard size="small"                  
-                    headerBordered
-                    title= {getLable( ['Self','Peer','Manager'].some(r=>r==selectedAssessor?.type)?'DF_TITLE_EVALUATION':'DF_TITLE_MANAGER_EVALUATION')}
-                >
-                    {selectedAssessor?.statementEvaluations && <StatementTable lang={lang} getLableName={getLable}
-                        items={statement} 
-                        editableFormRef={editableFormRef}
-                        editable={true} 
-                        editableRating={selectedAssessor?.currentAccess && selectedAssessor?.status!='SUBMITTED'}
-                        onSetItems={setStatement}
-                    />}
-                </ProCard>
+                
+
+                <ProCard 
+                            size="small" 
+                            headerBordered 
+                            title={getLable(['Self', 'Peer', 'Manager'].some(r => r === selectedAssessor?.type) ? 'DF_TITLE_EVALUATION' : 'DF_TITLE_MANAGER_EVALUATION')}
+                            >
+                            {selectedAssessor?.statementEvaluations && (
+                                <StatementTable 
+                                lang={lang} 
+                                getLableName={getLable}
+                                items={statement} 
+                                editableFormRef={editableFormRef}
+                                editable={true} 
+                                editableRating={selectedAssessor?.currentAccess && selectedAssessor?.status !== 'SUBMITTED'}
+                                onSetItems={setStatement}
+                                />
+                            )}
+                </ProCard>       
+                
+                
+
                 {selectedAssessor && ['Self','Peer','Manager'].some(r=>r==selectedAssessor?.type) &&<CommentTable title={getLable('DF_TITLE_STRENGTH')||''} 
                     commTitle={getLable('DF_TBL_STRENGTH')||''} 
                     initDataItems={dataStrength} 

@@ -10,7 +10,7 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: [self-hosted, Windows, x64]
+    runs-on: ies-frontend-qas
     defaults:
       run:
         working-directory: ./

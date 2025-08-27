@@ -10,7 +10,7 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: self-hosted
+    runs-on: [self-hosted, Windows, x64]
     defaults:
       run:
         working-directory: ./

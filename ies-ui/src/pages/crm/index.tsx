@@ -441,8 +441,8 @@ const Crm: React.FC = () => {
               key: 'register-customer-report',
               icon: <BarChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
               onClick: () => setReport('register-customer-report'),
-              disabled: !access.crmAdmin 
-            } 
+              // visible: access.canAccessCrmRegisterCustomerMenuItem,
+            }
           ]
 
         }]

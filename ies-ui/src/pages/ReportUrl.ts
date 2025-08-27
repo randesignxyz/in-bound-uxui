@@ -1,5 +1,5 @@
 export const getUrlReporting=(url: string) => {
-    const baseUrl:string = 'PRO'
+    const baseUrl:string = 'QA'
     switch (baseUrl) {
         case 'QA': return `/Reports/QA/${url}`
         case 'PRO': return `/Reports/${url}`

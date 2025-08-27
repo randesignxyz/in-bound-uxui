@@ -76,9 +76,8 @@ export default ({ trigger }: { trigger?: JSX.Element }) => {
                         data: [    
                             {key:'dateFrom', value: dataForm.requestedDate?.[0], type:'dateTime'},  
                             {key:'dateTo', value: dataForm.requestedDate?.[1], type:'dateTime'},                       
-                            ...(dataForm.status || []).map(it => ({ key: 'status', value: it })),                
-                            // ...(dataForm.formTypeId || []).map(it => ({ key: 'formTypeId', value: it })),
-                            // {key:'startWithRole', value: 'ROLE_HR_PROBATION_EVALUATION'}
+                            ...(dataForm.status || ['All']).map(it => ({ key: 'status', value: it })), 
+                            {key:'startWithRole', value: 'ROLE_CRM_RC'}
                         ]
                     }
                 }).then(()=>{

@@ -22,11 +22,15 @@ type DataFormType = {
 };
 
 export default({
+  items,
+  onSetItems,
   id,
   type,
   onCloseTab,
   readOnly
 }:{
+  items: DfEmpEvaluationRs[];
+  onSetItems?: (v: DfEmpEvaluationRs[]) => void;
   id?: number;
   type: 'VIEW' | 'EDIT';
   onCloseTab?: () => void;
@@ -190,7 +194,7 @@ export default({
                 content: 'Are you sure?',
                 onOk: async () => {
                     try {
-                        await services.submitEvaluation(payload)
+                        // await services.submitEvaluation(payload)
                         message.success('Submitted successfully.');
                         setLoading(true)
                         // onCloseTab?.()

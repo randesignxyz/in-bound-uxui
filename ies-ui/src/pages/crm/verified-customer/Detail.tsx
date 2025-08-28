@@ -13,7 +13,8 @@ interface Props {
 }
 const VerifiedDetailView: React.FC<Props> = ({ data, mode, onBack }) => {
 
-
+    console.log(data.attachmentFile);
+    
     return (
         <>
             {mode == "Address" && (
@@ -182,7 +183,7 @@ const VerifiedDetailView: React.FC<Props> = ({ data, mode, onBack }) => {
                     <Card size="small" title="Attachment Photos" bordered>
                         <Image.PreviewGroup>
                             <Space>
-                                {data?.attachment?.map((it1, index) => ({
+                                {data?.attachmentFile?.map((it1, index) => ({
                                     fileId: it1.fileId,
                                     fileName: `Photo (${index + 1})`,
                                 }))?.map(it => <ImagePreview
@@ -195,7 +196,13 @@ const VerifiedDetailView: React.FC<Props> = ({ data, mode, onBack }) => {
                         </Image.PreviewGroup>
                     </Card>
                     <Card size="small" title={"Activity"}>
-                        <ActivityLog objectName='ADDRESS_VERIFIED' objectId={data?.id} endpoint='CRM' />
+                        <ActivityLog objectName='ADDRESS_VERIFIED'  objectId={data?.id} endpoint='CRM'
+                            styles={{
+                                avatar:{
+                                    color:"red"
+                                }
+                            }}
+                        />
                     </Card>
 
                 </Flex>

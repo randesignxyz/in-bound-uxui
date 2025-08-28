@@ -194,10 +194,10 @@ export default({
                 content: 'Are you sure?',
                 onOk: async () => {
                     try {
-                        // await services.submitEvaluation(payload)
+                        await services.submitEvaluation(payload)
                         message.success('Submitted successfully.');
                         setLoading(true)
-                        // onCloseTab?.()
+                        onCloseTab?.()
                     } catch (error: any) {
                         message.error(error.message || 'Failed to submit 360 degree feedback form.');
                     }

@@ -209,32 +209,36 @@ export default({
                         title={<span style={{ fontSize: '14px',whiteSpace: 'normal', wordBreak: 'break-word', overflow: 'visible', textOverflow: 'clip'  }}>{`${index + 1}. ${lang=='KH'?item.description1:item.description || item.title || 'Unnamed Statement'}`}</span>}
                         style={{ width: 300 }}
                         >
-                        {ratingLabels.map(({ key, value }) => (
-                            <p key={`${item.key}-${key}`}>
-                            <Radio
-                                checked={item[key] === value}                                
-                                onChange={(e) => {
-                                    if(editableRating){
-                                        const newRating = ratingLabels.reduce((acc, r) => {
-                                            acc[r.key] = r.key === key && e.target.checked ? value : 0;
-                                            return acc;
-                                        }, {} as Record<string, number>);
+                        {ratingLabels.map(({ key, value }) => {
+                            const checked = key in item && typeof item[key as keyof DfEmpEvaluationRs] === "number"
+                                            ? item[key as keyof DfEmpEvaluationRs] === value : false;
+                            return (
+                                <p key={`${item.key}-${key}`}>
+                                <Radio
+                                    checked={checked}                                
+                                    onChange={(e) => {
+                                        if(editableRating){
+                                            const newRating = ratingLabels.reduce((acc, r) => {
+                                                acc[r.key] = r.key === key && e.target.checked ? value : 0;
+                                                return acc;
+                                            }, {} as Record<string, number>);
 
-                                        setRatingScore(
-                                            item.key,
-                                            newRating.rating1,
-                                            newRating.rating2,
-                                            newRating.rating3,
-                                            newRating.rating4,
-                                            newRating.rating5
-                                        );
-                                    }
-                                }}
-                            >
-                                {getLableName(ratingLabels.find(r => r.key === key)!.labelKey)}
-                            </Radio>
-                            </p>
-                        ))}
+                                            setRatingScore(
+                                                item.key,
+                                                newRating.rating1,
+                                                newRating.rating2,
+                                                newRating.rating3,
+                                                newRating.rating4,
+                                                newRating.rating5
+                                            );
+                                        }
+                                    }}
+                                >
+                                    {getLableName(ratingLabels.find(r => r.key === key)!.labelKey)}
+                                </Radio>
+                                </p>
+                            )
+                        })}
                         </Card>
                     ))}
                     </Space>

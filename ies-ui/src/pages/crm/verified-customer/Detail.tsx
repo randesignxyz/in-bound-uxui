@@ -13,8 +13,6 @@ interface Props {
 }
 const VerifiedDetailView: React.FC<Props> = ({ data, mode, onBack }) => {
 
-    console.log(data.attachmentFile);
-    
     return (
         <>
             {mode == "Address" && (
@@ -33,12 +31,12 @@ const VerifiedDetailView: React.FC<Props> = ({ data, mode, onBack }) => {
                                 },
                                 {
                                     title: "Name",
-                                    render: (_, r) => r.name
+                                    render: (_, r) => r.customer?.name,
                                 },
                                 {
-                                    title: "OwnerName",
-                                    dataIndex: "ownerName"
-                                    // render: (_, r) => r.ownerName
+                                    title: "Internal Name",
+                                    dataIndex: "ownerName",
+                                    render: (_, r) => r.customer?.internalName
                                 },
                                 {
                                     title: "Salesperson",
@@ -46,7 +44,8 @@ const VerifiedDetailView: React.FC<Props> = ({ data, mode, onBack }) => {
                                 },
                                 {
                                     title: "Source",
-                                    dataIndex: "source"
+                                    dataIndex: "source",
+                                    render: (_, r) => r.customer?.source
                                 },
                                 {
                                     title: "Status",
@@ -58,7 +57,7 @@ const VerifiedDetailView: React.FC<Props> = ({ data, mode, onBack }) => {
                     <Card size="small" title="Attachment Photos" bordered>
                         <Image.PreviewGroup>
                             <Space>
-                                {data?.attachment?.map((it1, index) => ({
+                                {data?.attachmentFile?.map((it1, index) => ({
                                     fileId: it1.fileId,
                                     fileName: `Photo (${index + 1})`,
                                 }))?.map(it => <ImagePreview

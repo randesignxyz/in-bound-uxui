@@ -22,11 +22,15 @@ type DataFormType = {
 };
 
 export default({
+  items,
+  onSetItems,
   id,
   type,
   onCloseTab,
   readOnly
 }:{
+  items: DfEmpEvaluationRs[];
+  onSetItems?: (v: DfEmpEvaluationRs[]) => void;
   id?: number;
   type: 'VIEW' | 'EDIT';
   onCloseTab?: () => void;
@@ -193,7 +197,7 @@ export default({
                         await services.submitEvaluation(payload)
                         message.success('Submitted successfully.');
                         setLoading(true)
-                        // onCloseTab?.()
+                        onCloseTab?.()
                     } catch (error: any) {
                         message.error(error.message || 'Failed to submit 360 degree feedback form.');
                     }

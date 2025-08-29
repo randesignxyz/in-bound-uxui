@@ -10,7 +10,6 @@ interface Props extends ModalProps {
 
 const ChangeStatusForm: React.FC<Props> = ({ status, onSave, ...props }) => {
     const [form] = useForm();
-
     return (
         <Modal
             title={"Confirmation"}
@@ -35,10 +34,7 @@ const ChangeStatusForm: React.FC<Props> = ({ status, onSave, ...props }) => {
                 />
             </ProForm>
         </Modal>
-
     )
-
 }
-
 
 export default ChangeStatusForm

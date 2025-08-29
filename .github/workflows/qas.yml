@@ -10,7 +10,7 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: ies-frontend-dev
+    runs-on: ies-frontend-qas
     defaults:
       run:
         working-directory: ./
@@ -46,7 +46,7 @@ jobs:
           }
           Write-Output "should-install=$shouldInstall" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
         shell: pwsh
-        
+
       # Install dependencies 
       - name: Install dependencies
         if: steps.compare-package.outputs.should-install == 'true'
@@ -71,7 +71,7 @@ jobs:
       # Build project  
       - name: Build IES Aplication
         run: npm run build
-        shell: cmd
+        shell: pwsh
         working-directory: C:\DevOps\ies-frontend
 
       # Determine target environment (Blue or Green)
@@ -111,22 +111,22 @@ jobs:
           Set-Content -Path ${{ env.ACTIVE_ENV_FILE }} -Value $targetEnv
           Write-Output "Switched active environment to $targetEnv at $(Get-Date -Format 'HH:mm:ss dd/MM/yyyy')"
           # Import-Module WebAdministration
-          # $siteName = "IES_DEV"
+          # $siteName = "IES_QA"
           # $newPath = if ($targetEnv -eq "blue") { "${{ env.BLUE_DIR }}\dist" } else { "${{ env.GREEN_DIR }}\dist" }
           # Set-ItemProperty "IIS:\Sites\$siteName" -Name physicalPath -Value $newPath
         shell: powershell
 
-      
+
       # Toggle port in web.config (4402 <-> 4401)
       - name: Toggle port in web.config
         run: |
           $webConfigPath = "C:\deployment\ies-frontend\dist\web.config"
           if (Test-Path $webConfigPath) {
             $webConfigContent = Get-Content $webConfigPath -Raw
-            $currentPort = if ($webConfigContent -match 'http://10\.0\.12\.229:4402/') { "4402" } else { "4401" }
+            $currentPort = if ($webConfigContent -match 'http://10\.0\.12\.247:4402/') { "4402" } else { "4401" }
             $newPort = if ($currentPort -eq "4402") { "4401" } else { "4402" }
-            $updatedContent = $webConfigContent -replace 'http://10\.0\.12\.229:4402/', "http://10.0.12.229:$newPort/" `
-                                                -replace 'http://10\.0\.12\.229:4401/', "http://10.0.12.229:$newPort/"
+            $updatedContent = $webConfigContent -replace 'http://10\.0\.12\.247:4402/', "http://10.0.12.247:$newPort/" `
+                                                -replace 'http://10\.0\.12\.247:4401/', "http://10.0.12.247:$newPort/"
             Set-Content -Path $webConfigPath -Value $updatedContent
             Write-Output "Updated web.config port from $currentPort to $newPort at $(Get-Date -Format 'HH:mm:ss dd/MM/yyyy')"
           } else {
@@ -135,4 +135,4 @@ jobs:
             
           }
         shell: pwsh
-        
+

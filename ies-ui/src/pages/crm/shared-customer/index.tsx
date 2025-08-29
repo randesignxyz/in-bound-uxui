@@ -5,13 +5,12 @@ import { ShareCustomerAPI } from "./service"
 import { simpleRequestActions } from "@/services/model"
 import { useState } from "react"
 import { FetchPagingParams } from "@/components/DataCrud/TableView"
-import { Button, MenuProps, message, Modal, Segmented, Typography } from "antd"
-import { AppstoreOutlined, BarsOutlined, CloseCircleOutlined, DeleteOutlined, WarningOutlined } from "@ant-design/icons"
+import { Button, message, Modal, Segmented, Typography } from "antd"
+import { AppstoreOutlined, BarsOutlined, DeleteOutlined } from "@ant-design/icons"
 import ChangeStatusForm from "./ChangeStatus"
 import ShareDetailView from "./Detail"
 import moment from "moment"
 import _ from "lodash"
-
 
 export default () => {
     const requestActions = simpleRequestActions();
@@ -31,13 +30,12 @@ export default () => {
         cacheTime: 0
     });
 
-
     return (
         <>
             <PageWrapper
                 tabRender={(item) => [
                     {
-                        tabLabel: "Share",
+                        tabLabel: "New",
                         action: "add",
                         panel: ({ onCloseTab, key }) => <FormShare
                             onBack={() => {
@@ -64,6 +62,7 @@ export default () => {
                 ]}
                 listView={{
                     type: "Table",
+                    title: "Share Customer List",
                     onRefresh: refetch,
                     onFilter: (filterParams, page, sort) => {
                         setFilter(v => ({
@@ -111,15 +110,13 @@ export default () => {
                         columns:
                             filter?.criteria?.advanceSearch?.mode == "Group" ? [
                                 {
-                                    title: "Shared By",
+                                    title: "Shared From",
                                     dataIndex: "createdDate",
                                     valueType: "date",
-                                    actionProps: ({entries}) => {
-                                            
+                                    actionProps: ({ entries }) => {
                                         return ({
                                             label: [entries?.[0]?.salesperson?.code, entries?.[0]?.salesperson?.name].filter(o => o).join(" "),
                                             type: "view",
-
                                         })
                                     }
                                 },
@@ -132,9 +129,23 @@ export default () => {
                                     render: (_, r) => r?.entries?.length,
                                 },
                                 {
-                                    title: "Date",
-                                    dataIndex: "createdDate",
+                                    title: "From Date",
+                                    dataIndex: "statedDate",
                                     valueType: "date"
+                                },
+                                {
+                                    title: "To Date",
+                                    dataIndex: "endedDate",
+                                    valueType: "date"
+                                },
+                                {
+                                    title: "Created By",
+                                    dataIndex: "createdBy",
+                                },
+                                {
+                                    title: "Created Date",
+                                    dataIndex: "createdDate",
+                                    valueType: "date",
                                 },
                                 {
                                     title: "Status",
@@ -151,7 +162,7 @@ export default () => {
                                     >{r.status}</Typography.Text>
                                 },
                                 {
-                                    title: "",
+                                    title: "Action",
                                     render: (_, r) => {
                                         return <Button
                                             icon={<DeleteOutlined />}
@@ -180,16 +191,14 @@ export default () => {
                             ] :
                                 [
                                     {
-                                        title: "Shared By",
+                                        title: "Shared From",
                                         dataIndex: "createdDate",
                                         valueType: "date",
                                         actionProps: (item) => ({
                                             label: [item.owner?.code, item.owner?.name].filter(o => o).join(" "),
                                             type: "view",
-
                                         })
                                     },
-
                                     {
                                         title: "Recipient",
                                         render: (_, r) => [r.salesperson?.code, r.salesperson?.name].filter(o => o).join(" ")
@@ -197,15 +206,27 @@ export default () => {
                                     {
                                         title: "Customer Code",
                                         dataIndex: "entityCode",
-
                                     },
                                     {
                                         title: "Customer Name",
                                         render: (_, r) => r?.customer?.name
                                     },
-
                                     {
-                                        title: "Date",
+                                        title: "From Date",
+                                        dataIndex: "statedDate",
+                                        valueType: "date"
+                                    },
+                                    {
+                                        title: "To Date",
+                                        dataIndex: "endedDate",
+                                        valueType: "date"
+                                    },
+                                    {
+                                        title: "Created By",
+                                        dataIndex: "createdBy",
+                                    },
+                                    {
+                                        title: "Created Date",
                                         dataIndex: "createdDate",
                                         valueType: "date",
                                     },
@@ -223,8 +244,9 @@ export default () => {
                                             }}
                                         >{r.status}</Typography.Text>
                                     },
+
                                     {
-                                        title: "",
+                                        title: "Action",
                                         render: (_, r) => {
                                             return <Button
                                                 icon={<DeleteOutlined />}
@@ -249,30 +271,11 @@ export default () => {
                                             />
                                         }
                                     }
-                                    // {
-                                    //     title: "",
-                                    //     render: (_, r) => {
-                                    //         return <Dropdown
 
-                                    //             menu={{
-                                    //                 items: itemMenu(r),
-                                    //                 style: {
-                                    //                     width: 200
-                                    //                 }
-                                    //             }}
-                                    //         >
-                                    //             <a onClick={(e) => e.preventDefault()}>
-                                    //                 <EllipsisOutlined />
-                                    //             </a>
-                                    //         </Dropdown>
-                                    //     }
-                                    // }
                                 ]
                     }
                 }}
             />
-
-
             <ChangeStatusForm
                 open={statusState?.visible?.name == "MODAL"}
                 status={statusState?.visible?.status}

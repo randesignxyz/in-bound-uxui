@@ -1,6 +1,7 @@
 import ExportCustomer from './ExportCustomer';
 import PosmReport from './PosmReport';
 import ProductivityReport from './ProductivityReport';
+import RegisterCustomerReport from './RegisterCustomerReport';
 import StockCountReport from './StockCountReport';
 import VisitScheduleReport from './VisitScheduleReport';
 
@@ -18,6 +19,7 @@ export type ReportName =
   | 'customer-detail'
   | 'agreement-compliance-report'
   | 'posm-monitoring-report'
+  | 'register-customer-report'
 
 const Reports: React.FC<Props> = ({ reportName, onClose }) => {
   return (
@@ -63,6 +65,7 @@ const Reports: React.FC<Props> = ({ reportName, onClose }) => {
         width="600px"
         reportType= 'customer-report'
       />
+      
     </div>
   );
 };

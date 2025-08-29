@@ -248,3 +248,17 @@ export interface DfInstrunctionItemList{
  description1: string;
   
 }
+export interface DfEmpExisting{
+  dfEmpId: number;
+  empId: number;
+  empName: string;
+  empNo: string;
+  createdBy?: string
+  createdDate: Moment
+  description?: string
+
+}
+export interface DfEmpExistingRespone {
+  message: string;
+  data?: DfEmpExisting
+}

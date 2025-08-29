@@ -1,2 +1,8 @@
 node_modules
 ies-ui.zip
+<<<<<<< HEAD
+
+/.github
+=======
+.github/
+>>>>>>> d6491c62d5bf006dc0f4538f045fa44d774ff393

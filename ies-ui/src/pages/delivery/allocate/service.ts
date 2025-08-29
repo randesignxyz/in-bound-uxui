@@ -1,5 +1,5 @@
 import { RequestActions, ServiceApiType, singleRequest } from "@/services/apiGateway";
-import { Allocate, allocateSearch, DeliveryList, DNList, DNParams, SOList, UpdateRemarkParams } from "./data";
+import { Allocate, allocateSearch, DeliveryList, DNList, DNParams, DnQuickView, SOAllocateActivities, SOList, UpdateRemarkParams } from "./data";
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { Paging } from "@/services/API";
 
@@ -27,6 +27,12 @@ const AllocateAction = {
             pageSize: params.pagination?.pageSize,
             page: params.pagination?.current,
         },
+    }),
+    listDnDetail: (status?: string,delivery_date?:string,region?:string): ServiceApiType<{ status?: string,delivery_date?:string,region?:string }> => ({
+        type: 'LIST_QUERY',
+        endpoint: 'DELIVERY',
+        actionName: 'get-dn-detail',
+        payload: { status,delivery_date,region },
     }),
     listDn: (so_allocate_id: string[], docNum?: string): ServiceApiType<{ so_allocate_id: string[], docNum?: string }> => ({
         type: 'LIST_QUERY',
@@ -58,11 +64,29 @@ const AllocateAction = {
         actionName: 'sync-allocate',
         payload: {}
     }),
-    claimDn: (sales_planid:number,claimed_by?:string): ServiceApiType<{sales_planid:number,claimed_by?:string}> => ({
+    claimDn: (sales_planid: number, claimed_by?: string, action?: string, activities_name?: string): ServiceApiType<{ sales_planid: number, claimed_by?: string, action?: string, activities_name?: string }> => ({
         type: 'EXEC',
         endpoint: 'DELIVERY',
         actionName: 'claim-dn',
-        payload: {sales_planid,claimed_by}
+        payload: { sales_planid, claimed_by, action, activities_name }
+    }),
+    getActivities: (dnID: number): ServiceApiType<{ dnID: number }> => ({
+        type: 'LIST_QUERY',
+        endpoint: 'DELIVERY',
+        actionName: 'get-activities-by-dn',
+        payload: { dnID },
+    }),
+    listDnbyUser: (status?: string): ServiceApiType<{ status?: string }> => ({
+        type: 'LIST_QUERY',
+        endpoint: 'DELIVERY',
+        actionName: 'get-dn-by-user',
+        payload: { status },
+    }),
+    fetchDnQuickView: (startDate?: string, endDate?: string): ServiceApiType<{ startDate?: string, endDate?: string }> => ({
+        type: 'FETCH_QUERY',
+        endpoint: 'DELIVERY',
+        actionName: 'get-dn-quick-view',
+        payload: { startDate, endDate },
     }),
 }
 
@@ -91,10 +115,24 @@ export const AllocateServiceAPI = (requestAction: RequestActions) => {
         syncAllocate: () =>
             singleRequest<{ data: string, message: string }>(AllocateAction.syncAllocate())(requestAction),
 
-        ClaimDn: (sales_planid:number,claimed_by?:string,) =>
-            singleRequest<{ data: string, message: string }>(AllocateAction.claimDn(sales_planid,claimed_by))(requestAction),
+        ClaimDn: (sales_planid: number, claimed_by?: string, action?: string, activities_name?: string) =>
+            singleRequest<{ data: string, message: string }>(AllocateAction.claimDn(sales_planid, claimed_by, action, activities_name))(requestAction),
 
-
-
+        getActivities: (dnID: number) =>
+            singleRequest<SOAllocateActivities>(AllocateAction.getActivities(dnID))(
+                requestAction
+            ),
+        list_dn_by_user: (status?: string) =>
+            singleRequest<DNList>(AllocateAction.listDnbyUser(status))(
+                requestAction
+            ),
+        fetch_dn_quick_view: (startDate?: string, endDate?: string) =>
+            singleRequest<DnQuickView>(AllocateAction.fetchDnQuickView(startDate,endDate))(
+                requestAction
+            ),
+        list_dn_detail: (status?: string,delivery_date?:string,region?:string) =>
+            singleRequest<DNList>(AllocateAction.listDnDetail(status,delivery_date,region))(
+                requestAction
+            ),
     }
 }

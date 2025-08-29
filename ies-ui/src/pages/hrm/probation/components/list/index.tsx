@@ -172,10 +172,10 @@ const ProbationList: React.FC<Props> = ({ onAdd, forceRefresh, onDetail }) => {
         {
             title: 'Status', width: '100px', render: (_: any, r: any) => <><Status text={r.status} /></>
         },{
-            title: 'Due Date', sorter: 'requestedDate', dataIndex: 'requestedDate',
+            title: 'Due Date', sorter: 'dueDate', dataIndex: 'dueDate',
             with: 210,
             render(_: any, r: any) {
-                return r.requestedDate && formatDate(r.requestedDate,'DD-MMM-YYYY')
+                return r.dueDate && formatDate(r.dueDate,'DD-MMM-YYYY')
             }
         },
     ]

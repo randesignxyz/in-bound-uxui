@@ -23,6 +23,7 @@ import RegisterCustomerIcon from '@/assets/register-customer.png';
 import customerShipping from "@/assets/courier_14234908.png";
 import customer_sharing from '@/assets/share-outlet.png';
 import customer_verified from '@/assets/customer_location_verified.png';
+import RegisterCustomerReport from './reports/RegisterCustomerReport';
 
 export const CrmPaths = {
   contact: '/crm/contact',
@@ -430,21 +431,22 @@ const Crm: React.FC = () => {
       link: `${CrmPaths.registerCustomer}/list`,
       icon: RegisterCustomerIcon,
       visible: access.canAccessCrmRegisterCustomerMenuItem,
-      // menu: {
-      //   items: [{
-      //     type: 'group',
-      //     label: "Reports",
-      //     children: [
-      //       {
-      //         onClick: () => { setReport('customer-detail') },
-      //         icon: <BarChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
-      //         label: 'Customer Detail',
-      //         key: "customer-detail-report"
-      //       }
-      //     ]
+      menu: {
+        items: [{
+          type: 'group',
+          label: "Reports",
+          children: [
+           {
+              label: <RegisterCustomerReport trigger={<a>Register Customer List</a>} />,
+              key: 'register-customer-report',
+              icon: <BarChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+              onClick: () => setReport('register-customer-report'),
+              // visible: access.canAccessCrmRegisterCustomerMenuItem,
+            }
+          ]
 
-      //   }]
-      // }
+        }]
+      }
       // overlay: customerMenu,
     },
     {

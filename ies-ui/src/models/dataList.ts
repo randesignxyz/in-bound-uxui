@@ -54,7 +54,7 @@ import { ItemList } from '@/pages/fma-stock/item/data.types';
 import { TransferRequestListItem } from '@/pages/fma-stock/transfer/data.types';
 import { EmpWhsMappingList } from '@/pages/fma-stock/emp-whs/data.types';
 import { ProbationEvaluationEmpList } from '@/pages/hrm/probation/data.types';
-import { Allocate } from '@/pages/delivery/allocate/data';
+import { Allocate, DeliveryList, DNList, DNParams } from '@/pages/delivery/allocate/data';
 
 type DataList =
   | {
@@ -327,6 +327,10 @@ type DataList =
     type: 'alocate-list';
     criteria?: any;
     data: Paging<Allocate>;
+  } | {
+    type: 'dn-list';
+    criteria?: any;
+    data: Paging<DNList>;
   } ;
 
 type MomainType =
@@ -382,7 +386,8 @@ type MomainType =
   | 'fma-emp-whs-mapping-list'
   | 'transfer-request-final-list'
   | 'fetch-gratis-configuration-paging'
-  | 'alocate-list';
+  | 'alocate-list'
+  | 'dn-list';
 
 export default () => {
   const [cacheData, seCacheData] = useState<DataList>();

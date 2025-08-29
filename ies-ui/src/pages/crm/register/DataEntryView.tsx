@@ -570,7 +570,7 @@ export default({
             />
             <ProFormText
               label="Owner Phone Number"
-              rules={[{ required: true }]}
+              rules={[{ required: true,max:20 }]}
               name={'ownerPhone'}
               allowClear
               width={470}
@@ -593,7 +593,7 @@ export default({
             />
             <ProFormText
               label="Purchase Phone Number"
-              rules={[{ required: true }]}
+              rules={[{ required: true,max:20 }]}
               name={'purchasePhone'}
               allowClear
               width={470}

@@ -1,0 +1,138 @@
+name: Build and Deploy IES-Frontend QAS (Blue-Green with IIS Auto Replace)
+
+on:
+  push:
+    branches:
+      - qas
+  pull_request:
+    branches:
+      - qas
+
+jobs:
+  build-and-deploy:
+    runs-on: ies-frontend-qas
+    defaults:
+      run:
+        working-directory: ./
+    env:
+      BLUE_DIR: C:\deployment\ies-frontend\blue
+      GREEN_DIR: C:\deployment\ies-frontend\green
+      ACTIVE_ENV_FILE: C:\deployment\ies-frontend\active_env.txt
+      NODE_OPTIONS: --max-old-space-size=4096
+
+    steps:
+      # Checkout the repository code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Compare package.json files
+      - name: Compare package.json files
+        id: compare-package
+        run: |
+          $serverPackage = "C:\DevOps\ies-frontend\package.json"
+          $repoPackage = "ies-ui\package.json"
+          $shouldInstall = $true
+          if ((Test-Path -Path $serverPackage) -and (Test-Path -Path $repoPackage)) {
+            $serverHash = (Get-FileHash -Path $serverPackage -Algorithm SHA256).Hash
+            $repoHash = (Get-FileHash -Path $repoPackage -Algorithm SHA256).Hash
+            if ($serverHash -eq $repoHash) {
+              $shouldInstall = $false
+              Write-Output "package.json files are identical, skipping npm install"
+            } else {
+              Write-Output "package.json files differ, proceeding with npm install"
+            }
+          } else {
+            Write-Output "One or both package.json files missing, proceeding with npm install"
+          }
+          Write-Output "should-install=$shouldInstall" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+        shell: pwsh
+
+      # Install dependencies 
+      - name: Install dependencies
+        if: steps.compare-package.outputs.should-install == 'true'
+        run: npm install --legacy-peer-deps
+        shell: pwsh
+        working-directory: ies-ui
+
+      # Copy only the project folder to the DevOps directory
+      - name: Copy project folder
+        run: |
+          $source = "C:\Github-Action\ies-frontend\_work\ies-frontend-v4\ies-frontend-v4\ies-ui"
+          $destination = "C:\DevOps\ies-frontend"
+          if (Test-Path $source) {
+            Copy-Item -Path "$source\*" -Destination $destination -Recurse -Force
+            Write-Output "Copied  folder from $source to $destination"
+          } else {
+            Write-Error "folder not found at $source"
+            exit 1
+          }
+        shell: pwsh
+
+      # Build project  
+      - name: Build IES Aplication
+        run: npm run build
+        shell: pwsh
+        working-directory: C:\DevOps\ies-frontend
+
+      # Determine target environment (Blue or Green)
+      - name: Determine target environment
+        id: target-env
+        run: |
+          $activeEnv = if (Test-Path $env:ACTIVE_ENV_FILE) { Get-Content $env:ACTIVE_ENV_FILE } else { "blue" }
+          $targetEnv = if ($activeEnv -eq "blue") { "green" } else { "blue" }
+          Write-Output "Current active environment: $activeEnv (v1) at $(Get-Date -Format 'HH:mm:ss dd/MM/yyyy')"
+          Write-Output "Target environment for new version: $targetEnv at $(Get-Date -Format 'HH:mm:ss dd/MM/yyyy')"
+          Write-Output "target-env=$targetEnv" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+        shell: pwsh
+
+      # Deploy new version to target environment with dist folder
+      - name: Deploy to ${{ steps.target-env.outputs.target-env }} environment
+        run: |
+          $source = "C:\DevOps\ies-frontend\dist"
+          $destination = if ("${{ steps.target-env.outputs.target-env }}" -eq "blue") { "$env:BLUE_DIR\dist" } else { "$env:GREEN_DIR\dist" }
+          if (Test-Path $source) {
+            if (Test-Path $destination) {
+              Remove-Item -Path $destination -Recurse -Force -Exclude "web.config"
+            }
+            New-Item -ItemType Directory -Path $destination -Force
+            Copy-Item -Path "$source\*" -Destination $destination -Recurse -Force 
+            Write-Output "Deployed new dist folder to $destination at $(Get-Date -Format 'HH:mm:ss dd/MM/yyyy')"
+          } else {
+            Write-Error "Dist folder not found at $source"
+            exit 1
+          }
+        shell: pwsh
+
+      # Switch IIS to serve the new environment's dist folder
+      - name: Switch IIS to ${{ steps.target-env.outputs.target-env }}
+        if: success()
+        run: |
+          $targetEnv = "${{ steps.target-env.outputs.target-env }}"
+          Set-Content -Path ${{ env.ACTIVE_ENV_FILE }} -Value $targetEnv
+          Write-Output "Switched active environment to $targetEnv at $(Get-Date -Format 'HH:mm:ss dd/MM/yyyy')"
+          # Import-Module WebAdministration
+          # $siteName = "IES_QA"
+          # $newPath = if ($targetEnv -eq "blue") { "${{ env.BLUE_DIR }}\dist" } else { "${{ env.GREEN_DIR }}\dist" }
+          # Set-ItemProperty "IIS:\Sites\$siteName" -Name physicalPath -Value $newPath
+        shell: powershell
+
+
+      # Toggle port in web.config (4402 <-> 4401)
+      - name: Toggle port in web.config
+        run: |
+          $webConfigPath = "C:\deployment\ies-frontend\dist\web.config"
+          if (Test-Path $webConfigPath) {
+            $webConfigContent = Get-Content $webConfigPath -Raw
+            $currentPort = if ($webConfigContent -match 'http://10\.0\.12\.247:4402/') { "4402" } else { "4401" }
+            $newPort = if ($currentPort -eq "4402") { "4401" } else { "4402" }
+            $updatedContent = $webConfigContent -replace 'http://10\.0\.12\.247:4402/', "http://10.0.12.247:$newPort/" `
+                                                -replace 'http://10\.0\.12\.247:4401/', "http://10.0.12.247:$newPort/"
+            Set-Content -Path $webConfigPath -Value $updatedContent
+            Write-Output "Updated web.config port from $currentPort to $newPort at $(Get-Date -Format 'HH:mm:ss dd/MM/yyyy')"
+          } else {
+            Write-Error "web.config not found at $webConfigPath"
+            exit 1
+            
+          }
+        shell: pwsh
+

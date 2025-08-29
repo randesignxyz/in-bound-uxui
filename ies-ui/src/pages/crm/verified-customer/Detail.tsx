@@ -27,7 +27,6 @@ const VerifiedDetailView: React.FC<Props> = ({ data, mode, onBack }) => {
                                 {
                                     title: "Code",
                                     render: (_, r) => r.code,
-
                                 },
                                 {
                                     title: "Name",

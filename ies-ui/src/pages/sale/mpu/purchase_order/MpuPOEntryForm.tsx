@@ -57,13 +57,13 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
     totalAmount: 0,
   });
 
-  useEffect(() => {
-    if (includeZero) {
-      setDataSourceItems(allItems);
-    } else {
-      setDataSourceItems(allItems.filter(item => item.pricing > 0));
-    }
-  }, [includeZero, allItems]);
+  // useEffect(() => {
+  //   if (includeZero) {
+  //     setDataSourceItems(allItems);
+  //   } else {
+  //     setDataSourceItems(allItems.filter(item => item.pricing > 0));
+  //   }
+  // }, [includeZero, allItems]);
 
   const onTotalAmount = async () => {
     const result =
@@ -492,7 +492,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
                               })) || [];
 
                           // setDataSourceItems((prev) => [...prev, ...newRows]);
-                          setAllItems((prev) => [...prev, ...newRows]);
+                          setDataSourceItems((prev) => [...prev, ...newRows]);
                         }}
                         items={[
                           { label: 'Vital', key: '1' },

@@ -5,14 +5,32 @@ import { AddresssView } from "../register/data";
 import ActivityLog from "@/components/ActivityLog";
 import ImagePreview from "@/components/ImagePreview";
 import { useQuery } from "@umijs/max";
+import OrderGoogleMap from "@/pages/sale/retailer/orders/components/OrderGoogleMap";
 
 interface Props {
     data: any,
     mode: string
     onBack: () => void
 }
-const VerifiedDetailView: React.FC<Props> = ({ data, mode, onBack }) => {
 
+function extractCoordinates(text: string | undefined | null): { lat: number; lng: number } | null {
+  if (!text) return null; // handle null or undefined input
+
+  const regex = /\(([-\d.]+),\s*([-\d.]+)\)/;
+  const match = text.match(regex);
+
+  if (match) {
+    return {
+      lat: parseFloat(match[1]),
+      lng: parseFloat(match[2])
+    };
+  }
+
+  return null; // return null if no coordinates found
+}
+
+const VerifiedDetailView: React.FC<Props> = ({ data, mode, onBack }) => {
+    const location = extractCoordinates(data?.logs?.remarks)
     return (
         <>
             {mode == "Address" && (
@@ -62,11 +80,27 @@ const VerifiedDetailView: React.FC<Props> = ({ data, mode, onBack }) => {
                                 }))?.map(it => <ImagePreview
                                     width={'200px'}
                                     key={it.fileId}
+                                    version={1}
                                     fileId={it.fileId}
                                     fileName={it.fileName}
                                 />)}
                             </Space>
                         </Image.PreviewGroup>
+                    </Card>
+                    <Card size={"small"} title="Map">
+                        <OrderGoogleMap
+                            googleMapApiKey="AIzaSyACftO4Dtfn7BQETFuT4YQZ_wOrO3hgszc"
+                            zoomNumber={12}
+                            center={{
+                                id: `${data.id}`,
+                                lat: parseFloat(location?.lat),
+                                lng: parseFloat(location?.lng),
+                                name: 'Check In Location',
+                                internalName: '',
+                                phone: '',
+                            }}
+                            positions={[]}
+                        />
                     </Card>
                     <Card size="small" title={"Activity"}>
                         <ActivityLog objectName='ADDRESS_VERIFIED' objectId={data?.addressId} endpoint='CRM' />
@@ -194,10 +228,10 @@ const VerifiedDetailView: React.FC<Props> = ({ data, mode, onBack }) => {
                         </Image.PreviewGroup>
                     </Card>
                     <Card size="small" title={"Activity"}>
-                        <ActivityLog objectName='ADDRESS_VERIFIED'  objectId={data?.id} endpoint='CRM'
+                        <ActivityLog objectName='ADDRESS_VERIFIED' objectId={data?.id} endpoint='CRM'
                             styles={{
-                                avatar:{
-                                    color:"red"
+                                avatar: {
+                                    color: "red"
                                 }
                             }}
                         />

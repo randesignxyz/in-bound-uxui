@@ -22,16 +22,16 @@ type DataFormType = {
 };
 
 export default({
-  items,
-  onSetItems,
+//   items,
+//   onSetItems,
   id,
   type,
   onCloseTab,
   readOnly
 }:{
-  items: DfEmpEvaluationRs[];
-  onSetItems?: (v: DfEmpEvaluationRs[]) => void;
-  id?: number;
+//   items: DfEmpEvaluationRs[];
+//   onSetItems?: (v: DfEmpEvaluationRs[]) => void;
+  id?: number | string;
   type: 'VIEW' | 'EDIT';
   onCloseTab?: () => void;
    readOnly?: boolean | undefined,
@@ -237,7 +237,7 @@ export default({
         </ProCard>
         <InstructionCard lang={lang} onChangeLanglauge={()=>{setLang(lang=='ENG'?'KH':'ENG')}} getLableName={getLable}/>
         <Tabs onChange={key => setActiveTab(key)} activeKey={activeTab}  style={{marginTop: isReport?0:-30}} >
-            <Tabs.TabPane icon={isReport?<UnorderedListOutlined/>:''} tab={isReport?"Detail":""} key="1">
+            <Tabs.TabPane icon={isReport?<UnorderedListOutlined/>:''} tab={isReport?(getLable('DF_TITLE_DETAIL')||''):""} key="1">
                 <ProForm dir="vertical"
                     submitter={{
                         render: () => 
@@ -309,7 +309,7 @@ export default({
                     />}
                 </ProForm>
             </Tabs.TabPane>
-            {isReport &&<Tabs.TabPane icon={<UnorderedListOutlined/>} tab="Report" key="2">
+            {isReport &&<Tabs.TabPane icon={<UnorderedListOutlined/>} tab={getLable('DF_TITLE_REPORT')||''} key="2">
                 <>
                     <ProCard collapsible defaultCollapsed={true} size="small" headerBordered title={getLable('DF_TITLE_SECTION1')||''}>
                         <ProTable<DfEmpEvaluationSummaryReport>

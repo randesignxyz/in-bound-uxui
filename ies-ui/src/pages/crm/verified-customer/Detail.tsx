@@ -80,7 +80,7 @@ const VerifiedDetailView: React.FC<Props> = ({ data, mode, onBack }) => {
                                 }))?.map(it => <ImagePreview
                                     width={'200px'}
                                     key={it.fileId}
-                                    version={1}
+                                    version={2}
                                     fileId={it.fileId}
                                     fileName={it.fileName}
                                 />)}

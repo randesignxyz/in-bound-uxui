@@ -399,6 +399,15 @@ export default [
     access: 'canAccessDF360',
     component: './hrm/df',
   },
+    {
+    path: '/externa/hrm/df/:view/*',
+    name: 'df_360',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    layout: false,
+    access: 'canAccessDF360',
+    component: './hrm/df',
+  },
   /**********HRM>>**************/
 
   /**********<<Sale**************/

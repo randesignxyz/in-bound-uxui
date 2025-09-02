@@ -1,6 +1,6 @@
 import PageWrapper from "@/components/PageWrapper"
 import { DF360Emp, DF360EmpListItem, DF360InfoAdvanceSearchParams } from "./data"
-import { DashOutlined, FileOutlined } from "@ant-design/icons"
+import { DashOutlined, ExportOutlined, FileOutlined } from "@ant-design/icons"
 import DataEntryView from "./DataEntryView"
 import { formatDate } from "@/pages/utils"
 import Status from "@/components/Status"
@@ -10,6 +10,8 @@ import { TableViewSearchParams } from "@/components/DataCrud/TableView"
 import { useAccess, useQuery } from "@umijs/max"
 import DataEntryFormView from "./DataEntryFormView"
 import { Dropdown, message, Space } from "antd"
+
+export const openPR = (dfId: number) => window.open(`/externa/hrm/df/detail/${dfId}`, '_blank')?.focus()
 
 export default () => {
     const access = useAccess()
@@ -91,6 +93,14 @@ export default () => {
                 loading: false,
                 scroll: { x: 'max-content' },
                 bordered: true,
+                actionButtonsColumnRender: (item) => ([
+                     {
+                            tooltip: 'View data in new browser tab', type: 'link',
+                            // disabled: item.processStatus == 'DRAFT',
+                             size: 'small', icon: <ExportOutlined />,
+                            onClick: () => openPR(item.id)
+                        },
+                ]),
                 columns: [
                     {
                         title: 'Form No',dataIndex: 'formNo', sorter: 'formNo',

@@ -6,6 +6,8 @@ import ActivityLog from "@/components/ActivityLog";
 import ImagePreview from "@/components/ImagePreview";
 import { useQuery } from "@umijs/max";
 import OrderGoogleMap from "@/pages/sale/retailer/orders/components/OrderGoogleMap";
+import { GoogleMap, Marker, MarkerClusterer } from "@react-google-maps/api";
+import MarkerComp from "../visit-schedule/components/tracking-location/MarkerComp";
 
 interface Props {
     data: any,
@@ -14,23 +16,23 @@ interface Props {
 }
 
 function extractCoordinates(text: string | undefined | null): { lat: number; lng: number } | null {
-  if (!text) return null; // handle null or undefined input
+    if (!text) return null; // handle null or undefined input
 
-  const regex = /\(([-\d.]+),\s*([-\d.]+)\)/;
-  const match = text.match(regex);
+    const regex = /\(([-\d.]+),\s*([-\d.]+)\)/;
+    const match = text.match(regex);
 
-  if (match) {
-    return {
-      lat: parseFloat(match[1]),
-      lng: parseFloat(match[2])
-    };
-  }
+    if (match) {
+        return {
+            lat: parseFloat(match[1]),
+            lng: parseFloat(match[2])
+        };
+    }
 
-  return null; // return null if no coordinates found
+    return null; // return null if no coordinates found
 }
 
 const VerifiedDetailView: React.FC<Props> = ({ data, mode, onBack }) => {
-    const location = extractCoordinates(data?.logs?.remarks)
+    const location = extractCoordinates(data?.logs?.remarks);
     return (
         <>
             {mode == "Address" && (
@@ -73,7 +75,7 @@ const VerifiedDetailView: React.FC<Props> = ({ data, mode, onBack }) => {
                     </Card>
                     <Card size="small" title="Attachment Photos" bordered>
                         <Image.PreviewGroup>
-                            <Space>
+                            <Space wrap={true}>
                                 {data?.attachmentFile?.map((it1, index) => ({
                                     fileId: it1.fileId,
                                     fileName: `Photo (${index + 1})`,
@@ -97,7 +99,7 @@ const VerifiedDetailView: React.FC<Props> = ({ data, mode, onBack }) => {
                                 lng: parseFloat(location?.lng),
                                 name: 'Check In Location',
                                 internalName: '',
-                                phone: '',
+                                phone: `Customer Code: ${data.customerCode}`,
                             }}
                             positions={[]}
                         />
@@ -106,7 +108,6 @@ const VerifiedDetailView: React.FC<Props> = ({ data, mode, onBack }) => {
                         <ActivityLog objectName='ADDRESS_VERIFIED' objectId={data?.addressId} endpoint='CRM' />
                     </Card>
                 </Flex>
-
             ) ||
                 <Flex vertical gap={12}>
 

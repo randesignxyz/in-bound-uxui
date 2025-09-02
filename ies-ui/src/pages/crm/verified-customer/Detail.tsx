@@ -73,7 +73,7 @@ const VerifiedDetailView: React.FC<Props> = ({ data, mode, onBack }) => {
                     </Card>
                     <Card size="small" title="Attachment Photos" bordered>
                         <Image.PreviewGroup>
-                            <Space>
+                            <Space wrap={true}>
                                 {data?.attachmentFile?.map((it1, index) => ({
                                     fileId: it1.fileId,
                                     fileName: `Photo (${index + 1})`,

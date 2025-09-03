@@ -1,6 +1,6 @@
-import { AimOutlined, CheckCircleTwoTone, FieldTimeOutlined } from "@ant-design/icons";
+import { AimOutlined, CheckCircleOutlined, CheckCircleTwoTone, CloseCircleOutlined, FieldTimeOutlined } from "@ant-design/icons";
 import { ProDescriptions, ProList } from "@ant-design/pro-components";
-import { Card, Col, Collapse, Flex, Image, List, Row, Space, Typography } from "antd"
+import { Button, Card, Col, Collapse, Flex, Image, List, message, Modal, Row, Space, Typography } from "antd"
 import { AddresssView } from "../register/data";
 import ActivityLog from "@/components/ActivityLog";
 import ImagePreview from "@/components/ImagePreview";
@@ -9,6 +9,8 @@ import { formatDateTime } from "@/pages/utils";
 import moment from "moment";
 import { simpleRequestActions } from "@/services/model";
 import { CustomerWithAddressVerifiedAPI } from "./service";
+import ChangeStatusForm from "./ChangeStatus";
+import { useState } from "react";
 
 interface Props {
     data: any,
@@ -35,11 +37,34 @@ function extractCoordinates(text: string | undefined | null): { lat: number; lng
 const VerifiedDetailView: React.FC<Props> = ({ data, mode, onBack }) => {
     const location = extractCoordinates(data?.logs?.remarks);
     const requestActions = simpleRequestActions();
+    const [statusState, setStatusState] = useState<{
+        visible?: { name: "MODAL", addressId?: number, status: string }
+    }>();
+    const [btnState, setBtnState] = useState<number>(20002);
+    // console.log([20001, 20002,20004].some(p=>data?.verifiedStatus?.id == 20002));
+
     return (
         <>
             {mode == "Address" && (
                 <Flex vertical gap={12}>
-                    <Card>
+                    <Card
+                        size="small"
+                        extra={[20001, 20002,20004].some(p=>data?.verifiedStatus?.id == 20002)?
+                            <Space>
+                                <Button icon={<CheckCircleOutlined />}
+                                    onClick={() => setStatusState({ visible: { name: "MODAL", status: "Confirm", addressId: data.addressId, } })}
+                                    type="link"
+                                    disabled={btnState != 20002}
+                                >Confirm</Button>
+                                <Button
+                                    onClick={() => setStatusState({ visible: { name: "MODAL", status: "Reject", addressId: data.addressId, } })}
+                                    icon={<CloseCircleOutlined />} type="link" danger
+                                    disabled={btnState != 20002}
+                                >Reject</Button>
+
+                            </Space> : ""
+                        }
+                    >
                         <ProDescriptions
                             dataSource={data}
                             contentStyle={{
@@ -47,12 +72,12 @@ const VerifiedDetailView: React.FC<Props> = ({ data, mode, onBack }) => {
                             }}
                             columns={[
                                 {
-                                    title: "Code",
-                                    render: (_, r) => r.code,
+                                    title: "Customer Code",
+                                    render: (_, r) => r.customerCode,
                                 },
                                 {
-                                    title: "Name",
-                                    render: (_, r) => r.customer?.name,
+                                    title: "Address ",
+                                    render: (_, r) => r.addressCode,
                                 },
                                 {
                                     title: "Internal Name",
@@ -68,12 +93,12 @@ const VerifiedDetailView: React.FC<Props> = ({ data, mode, onBack }) => {
                                     dataIndex: "source",
                                     render: (_, r) => r.customer?.source
                                 },
+                                // {
+                                //     title: "Status",
+                                //     render: (_, r) => <Typography.Text type={r.active == "N" ? "danger" : "success"}>{r.active == "N" ? "Inactive" : "Active"}</Typography.Text>
+                                // },
                                 {
                                     title: "Status",
-                                    render: (_, r) => <Typography.Text type={r.active == "N" ? "danger" : "success"}>{r.active == "N" ? "Inactive" : "Active"}</Typography.Text>
-                                },
-                                {
-                                    title: "Verified",
                                     dataIndex: "verified",
                                     render: (_, r) => {
                                         return <Typography
@@ -85,7 +110,7 @@ const VerifiedDetailView: React.FC<Props> = ({ data, mode, onBack }) => {
                                                             ? "#1890ff" // blue
                                                             : r.verifiedStatus?.id === 20003 //"Rejected"
                                                                 ? "#ff4d4f" // red
-                                                                : r.verifiedStatus?.id ===20004  //"Confirmed"
+                                                                : r.verifiedStatus?.id === 20004  //"Confirmed"
                                                                     ? "#52c41a" // green
                                                                     : undefined
                                             }}
@@ -103,8 +128,8 @@ const VerifiedDetailView: React.FC<Props> = ({ data, mode, onBack }) => {
                             fileId={data.customerVerifiedLatLong?.image}
                             fileName={""}
                             fallback=""
-                        />:"No Image"}
-                       
+                        /> : "No Image"}
+
                     </Card>
                     <Card size={"small"} title="Map">
                         {data?.customerVerifiedLatLong && <OrderGoogleMap
@@ -132,7 +157,7 @@ const VerifiedDetailView: React.FC<Props> = ({ data, mode, onBack }) => {
                             }}
                             metas={{
                                 avatar: {
-                                    render: (_, r) => <FieldTimeOutlined/>
+                                    render: (_, r) => <FieldTimeOutlined />
                                 },
                                 title: {
                                     dataIndex: 'activityType',
@@ -291,6 +316,20 @@ const VerifiedDetailView: React.FC<Props> = ({ data, mode, onBack }) => {
                 </Flex>
             }
 
+            <ChangeStatusForm
+                open={statusState?.visible?.name == "MODAL"}
+                status={statusState?.visible?.status}
+                onSave={async (data) => {
+                    await CustomerWithAddressVerifiedAPI(requestActions).changeStatus({
+                        ...data,
+                        id: statusState?.visible?.addressId
+                    });
+                    message.success("Success!")
+                    setStatusState({ visible: undefined });
+                    setBtnState(20001)
+                }}
+                onCancel={() => setStatusState({ visible: undefined })}
+            />
         </>
     )
 }

@@ -10,7 +10,6 @@ import ChangeStatusForm from "./ChangeStatus"
 import VerifiedDetailView from "./Detail"
 import { ProTable } from "@ant-design/pro-components"
 import { ShippingAddressAPI } from "../shipping_address/services"
-import { CustomerServiceAPI } from "@/pages/sale/retailer/customer/services"
 import { CrmServices } from "../services"
 import moment from "moment"
 
@@ -268,27 +267,28 @@ export default () => {
                             },
                             // columns: columns,
                             columns: [
+                                // {
+                                //     title: "Customer",
+                                //     dataIndex: "customerCode"
+                                // },
                                 {
-                                    title: "Code",
+                                    title: "Customer",
                                     actionProps: (item) => ({
-                                        label: item?.code,
+                                        label: item?.customerCode,
                                         type: "view",
                                     })
                                 },
                                 {
-                                    title: "Address Code",
+                                    title: "Address",
                                     dataIndex: "addressCode"
                                 },
+                                
+                                // {
+                                //     title: "Salesperson Code",
+                                //     render: (_, r) => r.salesperson?.code
+                                // },
                                 {
-                                    title: "Customer Code",
-                                    dataIndex: "customerCode"
-                                },
-                                {
-                                    title: "Salesperson Code",
-                                    render: (_, r) => r.salesperson?.code
-                                },
-                                {
-                                    title: "Salesperson Name",
+                                    title: "Salesperson",
                                     render: (_, r) => r.salesperson?.name
                                 },
                                 // {
@@ -296,12 +296,12 @@ export default () => {
                                 //     render:(_,r)=>r.customerVerifiedLatLong.createdBy
                                 // },
                                 {
-                                    title:"Created Date",
+                                    title:"Verified Date",
                                     render:(_,r)=>r?.customerVerifiedLatLong?moment(r?.customerVerifiedLatLong?.createdDate)?.format("YYYY-M-DD"):"",
                                     valueType:"date"
                                 },
                                 {
-                                    title: "Verified",
+                                    title: "Status",
                                     dataIndex: "verified",
                                     render: (_, r) => {
                                         return <Typography
@@ -321,7 +321,7 @@ export default () => {
                                     }
                                 },
                                 {
-                                    title: "",
+                                    title: "Action",
                                     render: (_, r) => r.verifiedStatus?.id == 20002 && <div>
                                         <Tooltip title={"Confirm "}><Button type="link" icon={<CheckCircleOutlined />} onClick={() => setStatusState({ visible: { name: "MODAL", status: "Confirm", addressId: r.addressId, } })} /></Tooltip>
                                         <Tooltip title={"Rejecte "}><Button type="link" danger icon={<CloseCircleOutlined />} onClick={() => setStatusState({ visible: { name: "MODAL", status: "Reject", addressId: r.addressId, } })} /></Tooltip>

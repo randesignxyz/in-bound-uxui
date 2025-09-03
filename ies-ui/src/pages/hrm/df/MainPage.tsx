@@ -128,22 +128,22 @@ export default () => {
                         render: (_, r) => r.jobTitle,
                     }, {
                         title: 'Job Level',
-                        width: 130,
+                        // width: 130,
                         sorter: 'jobLevel',
                         render: (_, r) => r.jobLevel,
                     }, {
                         title: 'Business Unit',
-                        width: 130,
+                        // width: 130,
                         sorter: 'buName',
                         render: (_, r) => r.buName,
                     }, {
                         title: 'Function',
-                        width: 130,
+                        // width: 130,
                         sorter: 'deptName',
                         render: (_, r) => r.deptName,
                     }, {
                         title: 'Modified By',
-                        width: 130,
+                        // width: 130,
                         sorter: 'lastModifiedBy',
                         render: (_, r) => r.lastModifiedBy,
                     }, {

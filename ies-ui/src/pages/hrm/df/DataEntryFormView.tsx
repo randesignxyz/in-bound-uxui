@@ -65,7 +65,7 @@ export default({
         if(loading){
             services.detail(id||0).then(r=>{
                 setDate(r)
-                setSelectedAssessor(r.currentAssessor)
+                setSelectedAssessor(r.currentAssessor? r.currentAssessor:r.assessors[0])
                 setLoading(false)
             })
         }
@@ -220,7 +220,7 @@ export default({
                                 size="small"
                             />
                         }
-                        key={`assessor-${r.id}`}  title= {`${r.type} - ${r.empNo}`} description={`${r.empName}`}  value={r.id}/>)) }
+                        key={`assessor-${r.id}`}  title= { r.empNo==''? `${r.type}`:`${r.type} - ${r.empNo}`} description={r.empName}  value={r.id}/>)) }
                     </CheckCard.Group>}
                 </Col>
             </Row>                    

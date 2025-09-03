@@ -1,13 +1,14 @@
-import { AimOutlined, CheckCircleTwoTone } from "@ant-design/icons";
-import { ProDescriptions } from "@ant-design/pro-components";
+import { AimOutlined, CheckCircleTwoTone, FieldTimeOutlined } from "@ant-design/icons";
+import { ProDescriptions, ProList } from "@ant-design/pro-components";
 import { Card, Col, Collapse, Flex, Image, List, Row, Space, Typography } from "antd"
 import { AddresssView } from "../register/data";
 import ActivityLog from "@/components/ActivityLog";
 import ImagePreview from "@/components/ImagePreview";
-import { useQuery } from "@umijs/max";
 import OrderGoogleMap from "@/pages/sale/retailer/orders/components/OrderGoogleMap";
-import { GoogleMap, Marker, MarkerClusterer } from "@react-google-maps/api";
-import MarkerComp from "../visit-schedule/components/tracking-location/MarkerComp";
+import { formatDateTime } from "@/pages/utils";
+import moment from "moment";
+import { simpleRequestActions } from "@/services/model";
+import { CustomerWithAddressVerifiedAPI } from "./service";
 
 interface Props {
     data: any,
@@ -33,6 +34,7 @@ function extractCoordinates(text: string | undefined | null): { lat: number; lng
 
 const VerifiedDetailView: React.FC<Props> = ({ data, mode, onBack }) => {
     const location = extractCoordinates(data?.logs?.remarks);
+    const requestActions = simpleRequestActions();
     return (
         <>
             {mode == "Address" && (
@@ -69,43 +71,91 @@ const VerifiedDetailView: React.FC<Props> = ({ data, mode, onBack }) => {
                                 {
                                     title: "Status",
                                     render: (_, r) => <Typography.Text type={r.active == "N" ? "danger" : "success"}>{r.active == "N" ? "Inactive" : "Active"}</Typography.Text>
-                                }
+                                },
+                                {
+                                    title: "Verified",
+                                    dataIndex: "verified",
+                                    render: (_, r) => {
+                                        return <Typography
+                                            style={{
+                                                color:
+                                                    r.verifiedStatus?.id === 20001 // Unverified
+                                                        ? "#868684ff" // orange
+                                                        : r.verifiedStatus?.id === 20002 //"Pending"
+                                                            ? "#1890ff" // blue
+                                                            : r.verifiedStatus?.id === 20003 //"Rejected"
+                                                                ? "#ff4d4f" // red
+                                                                : r.verifiedStatus?.id ===20004  //"Confirmed"
+                                                                    ? "#52c41a" // green
+                                                                    : undefined
+                                            }}
+                                        >{r.verifiedStatus?.name}</Typography>
+                                    }
+                                },
                             ]}
                         />
                     </Card>
                     <Card size="small" title="Attachment Photos" bordered>
-                        <Image.PreviewGroup>
-                            <Space wrap={true}>
-                                {data?.attachmentFile?.map((it1, index) => ({
-                                    fileId: it1.fileId,
-                                    fileName: `Photo (${index + 1})`,
-                                }))?.map(it => <ImagePreview
-                                    width={'200px'}
-                                    key={it.fileId}
-                                    version={2}
-                                    fileId={it.fileId}
-                                    fileName={it.fileName}
-                                />)}
-                            </Space>
-                        </Image.PreviewGroup>
+                        {data?.customerVerifiedLatLong ? <ImagePreview
+                            width={"200px"}
+                            key={data.customerVerifiedLatLong?.image}
+                            version={1}
+                            fileId={data.customerVerifiedLatLong?.image}
+                            fileName={""}
+                            fallback=""
+                        />:"No Image"}
+                       
                     </Card>
                     <Card size={"small"} title="Map">
-                        <OrderGoogleMap
+                        {data?.customerVerifiedLatLong && <OrderGoogleMap
                             googleMapApiKey="AIzaSyACftO4Dtfn7BQETFuT4YQZ_wOrO3hgszc"
                             zoomNumber={12}
                             center={{
                                 id: `${data.id}`,
-                                lat: parseFloat(location?.lat),
-                                lng: parseFloat(location?.lng),
+                                lat: parseFloat(data?.customerVerifiedLatLong?.latitude),
+                                lng: parseFloat(data?.customerVerifiedLatLong?.longitude),
                                 name: 'Check In Location',
                                 internalName: '',
                                 phone: `Customer Code: ${data.customerCode}`,
                             }}
                             positions={[]}
-                        />
+                        />}
                     </Card>
                     <Card size="small" title={"Activity"}>
-                        <ActivityLog objectName='ADDRESS_VERIFIED' objectId={data?.addressId} endpoint='CRM' />
+                        <ProList<any>
+                            request={async () => {
+                                const data1 = await CustomerWithAddressVerifiedAPI(requestActions).list({ id: data.addressId });
+                                return Promise.resolve({
+                                    data: data1,
+                                    success: true
+                                })
+                            }}
+                            metas={{
+                                avatar: {
+                                    render: (_, r) => <FieldTimeOutlined/>
+                                },
+                                title: {
+                                    dataIndex: 'activityType',
+                                    render: (_, r) => <Typography
+                                        style={{
+                                            color: r.status?.id === 20001 // Unverified
+                                                ? "#868684ff" // orange
+                                                : r?.status?.id === 20002 //"Pending"
+                                                    ? "#1890ff" // blue
+                                                    : r?.status?.id === 20003 //"Rejected"
+                                                        ? "#ff4d4f" // red
+                                                        : r?.status?.id === 20004  //"Confirmed"
+                                                            ? "#52c41a" // green
+                                                            : undefined
+                                        }}
+                                    >{r.status?.name}</Typography>
+                                },
+                                subTitle: { render: (_, r) => `by ${r.createdBy} ${moment(moment(r.createdDate)).fromNow()}` },
+                                description: { dataIndex: 'remark' },
+                                actions: { render: (_, r) => [formatDateTime(moment(r.createdDate))] }
+                            }}
+                        />
+                        {/* <ActivityLog objectName='ADDRESS_VERIFIED' objectId={data?.addressId} endpoint='CRM' /> */}
                     </Card>
                 </Flex>
             ) ||

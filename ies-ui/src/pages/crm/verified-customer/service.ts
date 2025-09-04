@@ -20,6 +20,13 @@ const CustomerWithAddressVerifiedAction = {
             pageSize: param.pagination?.pageSize
         }
     }),
+    list: (param: {id:number}): ServiceApiType<{}> => ({
+        actionName: "list-customer-address-verified",
+        endpoint: "CRM",
+        type: "LIST_QUERY",
+        payload:param,
+       
+    }),
     delete: (param: number[]): ServiceApiType<{}> => ({
         actionName: "delete-share-customer-lead",
         endpoint: "CRM",
@@ -41,6 +48,7 @@ export const CustomerWithAddressVerifiedAPI = (requestAction: RequestActions) =>
         page: (param: TableViewSearchParams<any>) => singleRequest(CustomerWithAddressVerifiedAction.page(param))(requestAction) as Promise<Page<any>>,
         delete: (param: number[]) => singleRequest(CustomerWithAddressVerifiedAction.delete(param))(requestAction),
         changeStatus: (param: any) => singleRequest(CustomerWithAddressVerifiedAction.changeStatus(param))(requestAction),
-        syncVerifiedLatlong: () => singleRequest(CustomerWithAddressVerifiedAction.syncVerifiedLatlong())(requestAction)
+        syncVerifiedLatlong: () => singleRequest(CustomerWithAddressVerifiedAction.syncVerifiedLatlong())(requestAction),
+        list: (param: {id:number}) => singleRequest(CustomerWithAddressVerifiedAction.list(param))(requestAction) as Promise<any[]>
     }
 }

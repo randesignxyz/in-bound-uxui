@@ -10,8 +10,8 @@ import ChangeStatusForm from "./ChangeStatus"
 import VerifiedDetailView from "./Detail"
 import { ProTable } from "@ant-design/pro-components"
 import { ShippingAddressAPI } from "../shipping_address/services"
-import { CustomerServiceAPI } from "@/pages/sale/retailer/customer/services"
 import { CrmServices } from "../services"
+import moment from "moment"
 
 
 export default () => {
@@ -32,6 +32,13 @@ export default () => {
     const { data, isFetching, refetch } = useQuery({
         queryKey: ['share', filter],
         queryFn: () => {
+            // return CustomerWithAddressVerifiedAPI(requestActions).page({
+            //     criteria: filter?.criteria,
+            //     pagination: {
+            //         current: filter?.pagination?.current,
+            //         pageSize: filter?.pagination?.pageSize
+            //     }
+            // })
             if (filter?.criteria.advanceSearch.mode == "Customer") {
                 return CustomerWithAddressVerifiedAPI(requestActions).page({
                     criteria: filter?.criteria,
@@ -235,7 +242,7 @@ export default () => {
                                     status: undefined,
                                     advanceSearch: {
                                         ...v.criteria?.advanceSearch,
-                                        verified: filterParams?.status =="ALL"?undefined:filterParams?.status
+                                        verified: filterParams?.status == "ALL" ? undefined : filterParams?.status
                                     }
                                 },
                                 pagination: { ...page, current: (page?.current || 1) - 1 },
@@ -260,43 +267,53 @@ export default () => {
                             },
                             // columns: columns,
                             columns: [
+                                // {
+                                //     title: "Customer",
+                                //     dataIndex: "customerCode"
+                                // },
                                 {
-                                    title: "Code",
+                                    title: "Customer",
                                     actionProps: (item) => ({
-                                        label: item?.code,
+                                        label: item?.customerCode,
                                         type: "view",
                                     })
                                 },
                                 {
-                                    title: "Address Code",
+                                    title: "Address",
                                     dataIndex: "addressCode"
                                 },
+                                
+                                // {
+                                //     title: "Salesperson Code",
+                                //     render: (_, r) => r.salesperson?.code
+                                // },
                                 {
-                                    title: "Customer Code",
-                                    dataIndex: "customerCode"
-                                },
-                                {
-                                    title: "Salesperson Code",
-                                    render: (_, r) => r.salesperson?.code
-                                },
-                                {
-                                    title: "Salesperson Name",
+                                    title: "Salesperson",
                                     render: (_, r) => r.salesperson?.name
                                 },
+                                // {
+                                //     title:"Created By",
+                                //     render:(_,r)=>r.customerVerifiedLatLong.createdBy
+                                // },
                                 {
-                                    title: "Verified",
+                                    title:"Verified Date",
+                                    render:(_,r)=>r?.customerVerifiedLatLong?moment(r?.customerVerifiedLatLong?.createdDate)?.format("YYYY-M-DD"):"",
+                                    valueType:"date"
+                                },
+                                {
+                                    title: "Status",
                                     dataIndex: "verified",
                                     render: (_, r) => {
                                         return <Typography
                                             style={{
                                                 color:
-                                                    r.verifiedStatus?.name === "Not Yet"
-                                                        ? "#faad14" // orange
-                                                        : r.verifiedStatus?.name === "Pending"
+                                                    r.verifiedStatus?.id === 20001 // Unverified
+                                                        ? "#868684ff" // orange
+                                                        : r.verifiedStatus?.id === 20002 //"Pending"
                                                             ? "#1890ff" // blue
-                                                            : r.verifiedStatus?.name === "Rejected"
+                                                            : r.verifiedStatus?.id === 20003 //"Rejected"
                                                                 ? "#ff4d4f" // red
-                                                                : r.verifiedStatus?.name === "Confirmed"
+                                                                : r.verifiedStatus?.id ===20004  //"Confirmed"
                                                                     ? "#52c41a" // green
                                                                     : undefined
                                             }}
@@ -304,7 +321,7 @@ export default () => {
                                     }
                                 },
                                 {
-                                    title: "",
+                                    title: "Action",
                                     render: (_, r) => r.verifiedStatus?.id == 20002 && <div>
                                         <Tooltip title={"Confirm "}><Button type="link" icon={<CheckCircleOutlined />} onClick={() => setStatusState({ visible: { name: "MODAL", status: "Confirm", addressId: r.addressId, } })} /></Tooltip>
                                         <Tooltip title={"Rejecte "}><Button type="link" danger icon={<CloseCircleOutlined />} onClick={() => setStatusState({ visible: { name: "MODAL", status: "Reject", addressId: r.addressId, } })} /></Tooltip>

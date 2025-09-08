@@ -209,9 +209,25 @@ export default({
 
     return(<div ref={ref}><Spin spinning={loading} ><Space direction="vertical" style={{ width: '100%' }}>
         {(data?.assessors?.length||0)>1 && <Card title="Assessor Infomation" size="small">
-            <Row gutter={20}>
-                <Col flex={1}>
-                    {data?.assessors &&<CheckCard.Group  onChange={v => onChangeAssessor(v?.valueOf() as number)}  value={selectedAssessor?.id} size='small'>
+            {/* <Row gutter={20}>
+                <Col flex={1}> */}
+                <div
+                    style={{
+                        display: 'flex',
+                        justifyContent: 'center', // center horizontally
+                        flexDirection: 'column',
+                        alignItems: 'center',     // center content inside column
+                    }}
+                >
+                    {data?.assessors &&<CheckCard.Group  
+                        onChange={v => onChangeAssessor(v?.valueOf() as number)}  value={selectedAssessor?.id} size='small'
+                         style={{
+                            display: 'inline-flex',  // makes cards wrap but centered
+                            flexWrap: 'wrap',
+                            gap: '12px',
+                            justifyContent: 'center',
+                        }}
+                    >
                         {data?.assessors.map(r => (<CheckCard size='small' 
                         avatar={
                             <Avatar
@@ -222,8 +238,9 @@ export default({
                         }
                         key={`assessor-${r.id}`}  title= { r.empNo==''? `${r.type}`:`${r.type} - ${r.empNo}`} description={r.empName}  value={r.id}/>)) }
                     </CheckCard.Group>}
-                </Col>
-            </Row>                    
+                </div>
+                {/* </Col>
+            </Row> */}
         </Card>}
         <ProCard size="small" headerBordered title="Employee Infomation">
             <Descriptions>

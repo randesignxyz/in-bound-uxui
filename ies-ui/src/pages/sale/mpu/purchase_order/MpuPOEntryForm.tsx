@@ -108,7 +108,8 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
     setDataSourceItems(
       purchaseOrder.items
         ? purchaseOrder.items.map((e) => {
-          e.key = e.itemCode!;
+          // e.key = e.itemCode!;
+           e.key = `${e.itemCode}-${e.status}`
           return e;
         })
         : [],
@@ -641,6 +642,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
                     value={row?.pricing ?? 0}
                     onChange={(value) => {
                       config.onChange?.(value)
+                      console.log('value',row)
                     }}
                     style={{ width: '100%' }}
                   />

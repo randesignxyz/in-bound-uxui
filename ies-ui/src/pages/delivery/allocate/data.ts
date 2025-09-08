@@ -74,14 +74,9 @@ export interface DNList {
   claimed_date?: string
   so_no?: string
   reserve_num?: string
-<<<<<<< Updated upstream
-  customer_code?:string,
-  customer_name?:string
-=======
   customer_code?: string,
   customer_name?: string,
   status?: string,
->>>>>>> Stashed changes
 }
 
 interface DN {
@@ -134,10 +129,7 @@ interface DNPlan {
   dn: DNDetail[];
   attachment?: Attachment[];
   so_status?: string
-<<<<<<< Updated upstream
-=======
   delItemName?: string
->>>>>>> Stashed changes
 }
 
 export interface DeliveryItemList {
@@ -161,10 +153,7 @@ export type AllocateSOAdvanceParams = {
   status: string;
   ordered_date?: string;
   dnStatus?: string
-<<<<<<< Updated upstream
-=======
   delivery_date?: string
->>>>>>> Stashed changes
 };
 
 export type DNDetail = {
@@ -193,12 +182,8 @@ export type DNItemParams = {
   allocateID: string,
   lineNumber: string,
   so_num: string,
-<<<<<<< Updated upstream
-  isUnplan?: string
-=======
   isUnplan?: string,
   delItemName?: string
->>>>>>> Stashed changes
 };
 
 export type DNParams = {

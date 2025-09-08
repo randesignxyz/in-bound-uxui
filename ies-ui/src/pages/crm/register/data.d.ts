@@ -61,9 +61,11 @@ export interface RegisterCustomerDetailResponse{
   priceTradeOfferId?: number;
   priceTradeOfferName?: string;
   sapPriceTradeOfferId?: number;
+  sapPriceTradeOfferName?: string;
   paymentTermId?: number;
   paymentTermName?: string;
   sapPaymentTermId?: number;
+  sapPaymentTermName?: string;
   outletTypeId?: number;
   outletTypeName?: string;
   divisionId?: number;
@@ -103,7 +105,7 @@ export interface AddresssView {
   id?: number;
   key?: string;
   address: string;
-  // type?: LookupData;
+  type?: string;
   province?: LookupDataItem;
   district?: LookupDataItem;
   commune?: LookupDataItem;

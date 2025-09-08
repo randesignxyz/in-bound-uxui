@@ -7,11 +7,14 @@ import { Button, Flex, message, Modal, Space, Spin } from "antd";
 import { useForm } from "antd/es/form/Form";
 import { Moment } from "moment";
 import { useInView } from "react-intersection-observer";
-import { AssessorFD, DF360Playload } from "./data";
+import { AssessorFD, DF360Playload, DfAssessorList, DfEmpExisting } from "./data";
 import AssessorList from "./components/AssessorList";
 import { useEffect, useRef, useState } from "react";
 import { uniqueId } from "lodash";
 import { Df360EmpServiceAPI } from "./services";
+import Pro from "@/pages/pro";
+import { format } from "path";
+import { formatDate } from "@/pages/utils";
 
 type DataFormType = {
    requestorId: number;
@@ -42,40 +45,35 @@ export default({
     const [managers, setManagers]  = useState<AssessorFD[]>([])
     const [peers, setPeers] = useState<AssessorFD[]>([])
     const [subordinates, setSubordinates] = useState<AssessorFD[]>([])
-
-    const initData = [
-        {
-            key: uniqueId().toString(),
-            empId: 1,
-            empNo: '002136',
-            empName: 'Hay sokhom(00213)' 
-        },
-        {
-            key: uniqueId().toString(),
-            empId: 2,
-            empNo: '002137',
-            empName: 'Nob Sreynan(00215)' 
+    const [dfEmpExisting, setDfEmpExisting] = useState<DfEmpExisting>()
+    const onChangeSubmitterHandler = async (data: any) => {   
+        console.log('onChange=======',data)   
+        try{
+            const dfEmpExisting = await services.fetchDfEmpExisting(data.empId)
+            if(dfEmpExisting?.message=='Yes'){
+                setDfEmpExisting(dfEmpExisting.data)
+            }else{
+                setDfEmpExisting(undefined)
+                services.fetchAssessorList(data.empId,'manager').then(r=>{
+                    setManagers(r.map(r=> ({empId: r.id,empNo: r.empNo,empName: r.empName,key: uniqueId().toString()} as AssessorFD)))
+                    setManagerItems([])
+                })
+                services.fetchAssessorList(data.empId,'peer').then(r=>{
+                    setPeers(r.map(r=> ({empId: r.id,empNo: r.empNo,empName: r.empName,key: uniqueId().toString()} as AssessorFD)))
+                    setPeerItem([])
+                })
+                services.fetchAssessorList(data.empId,'Subordinate').then(r=>{
+                    setSubordinates(r.map(r=> ({empId: r.id,empNo: r.empNo,empName: r.empName,key: uniqueId().toString()} as AssessorFD)))
+                    setSubordinateItem([])
+                })
+            }
+            
+            
+        }catch(ex: any){
+            message.warning('No data',ex.message)
         }
-    ]
-        
-    useEffect(()=> {
-        // setManagers(initData.map(r=> {return {...r,key: uniqueId().toString()}}))  
-        setManagers(initData)
-        setPeers(initData.map(r=> ({...r,key: uniqueId().toString()})))
-        setSubordinates(initData.map(r=> ({...r,key: uniqueId().toString()})))
-    },[])
-
-    const onChangeSubmitterHandler = async (data: any) => {      
-       setManagerItems([])
-       setPeerItem([])
-       setSubordinateItem([])
     }
     const onCloseHandler = () => { 
-        // if(type=='CREATE') {
-        //     onCloseTab?.()
-        // }else{
-
-        // }
         onCloseTab?.()
     }
     const onSubmitHandler = async () => {
@@ -101,9 +99,9 @@ export default({
                 content: 'Are you sure?',
                 onOk: async () => {
                     try {
-                        await services.submitDf360Form(data)
+                        await services.createDf360Form(data)
                         message.success('Submitted successfully.');
-                        // onCloseTab?.()
+                        onCloseTab?.()
                     } catch (error: any) {
                         message.error(error.message || 'Failed to submit 360 degree feedback form.');
                     }
@@ -124,6 +122,7 @@ export default({
                     </Button>
                     <Button
                         onClick={onSubmitHandler}
+                        disabled={dfEmpExisting?true:false}
                     >
                     Submit
                     </Button>      
@@ -141,8 +140,19 @@ export default({
                     title={<div>Employee</div>}
                     onSetSubmitter={onChangeSubmitterHandler}
                 />
-                <ProCard size="small"                  
+                {dfEmpExisting && <ProCard size="small"                  
                     headerBordered
+                    bordered
+                    colStyle={{borderColor:'red'}}
+                    //   style={{backgroundColor:'yellow'}}
+                      bodyStyle={{border: '1px solid red'}}
+                    // title= {<div>Requestor<span style={{color:'red'}}>*</span></div>}
+                >
+                    <span style={{color:'red'}}>The employee's already launched by {dfEmpExisting.createdBy} on {formatDate(dfEmpExisting.createdDate)}.</span>
+                </ProCard>}
+                <ProCard size="small"                  
+                    headerBordered      
+                                
                     title= {<div>Assessors<span style={{color:'red'}}>*</span></div>}
                 >
                     <Flex vertical>

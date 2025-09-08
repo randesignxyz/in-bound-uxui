@@ -13,10 +13,11 @@ interface Props extends FormModalProps {
     id?: number;
     onSave: (data: UpdateRemarkParams & { fileUrl?: string }) => void;
     remark?: string,
-    attachment?: []
+    attachment?: [],
+    sales_planid?:number
 }
 type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0];
-const AddRemarkModal: React.FC<Props> = ({ onSave, id, remark, attachment, ...props }) => {
+const AddRemarkModal: React.FC<Props> = ({ onSave, id, remark, attachment,sales_planid, ...props }) => {
     const [form] = useForm<UpdateRemarkParams>();
     const access = useAccess();
     const [file, setFile] = useState<UploadFile[]>([]);
@@ -124,6 +125,10 @@ const AddRemarkModal: React.FC<Props> = ({ onSave, id, remark, attachment, ...pr
                     ...dataForm,
                     id,
                     file,
+                    sales_planid,
+                    action:"Add Remark",
+                    activities_name:"Add Remark"
+                    
                 };
                 onSave?.(entity)
             }}

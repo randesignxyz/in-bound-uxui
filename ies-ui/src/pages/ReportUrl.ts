@@ -1,7 +1,7 @@
 export const getUrlReporting=(url: string) => {
-    const baseUrl:string = 'PRO'
+    const baseUrl:string = 'PRO'    
     switch (baseUrl) {
-        case 'QA': return `/Reports/QA/${url}`
+        case 'QA': return `/Reports/qa/${url}`
         case 'PRO': return `/Reports/${url}`
         default: throw Error(`${url} cannot be found`)
     }

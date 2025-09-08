@@ -91,6 +91,8 @@ export type ProbationEvaluationEmpList = {
     hodId?: number
     hodName?: string
     joinedDate?: Moment
+    endedDate?: Moment
+    dueDate?: Moment
     processInstId: string
     parentId?: number    
     formTypeCode: string

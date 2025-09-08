@@ -44,8 +44,8 @@ export default () => {
 
   const [dnSearch, setDnSearch] = useState({
     status: 'posted',
-    region: undefined,
-    delivery_date: undefined
+    region:undefined,
+    delivery_date:undefined
   });
   const [modalOpen, setModalOpen] = useState<{ visible: boolean; id: number, remark?: string, attachment?: any, sales_planid?: string }>({
     visible: false,
@@ -301,7 +301,7 @@ export default () => {
     params: TableViewSearchParams<AllocateSOAdvanceParams>
   ): Promise<Paging<DNList>> => {
     try {
-      const list = await services.list_dn_detail(dnSearch.status, dnSearch.delivery_date, dnSearch.region,);
+      const list = await services.list_dn_detail(dnSearch.status,dnSearch.delivery_date,dnSearch.region,);
 
       if (!Array.isArray(list)) {
         throw new Error('Unexpected response format');
@@ -853,6 +853,359 @@ skuColumns.forEach((col) => {
     },
   ];
 
+  const mtColums: ProColumns<DNList>[] = [
+    {
+      // title: 'SO Number',
+      // dataIndex: 'soNo',
+      render: (_, record) => {
+        return (
+          <Card style={{
+            marginBottom: 16,
+          }}>
+            <Descriptions column={6}>
+              <Descriptions.Item label="DO Date" style={{ fontWeight: 'bolder' }}>
+                {dayjs(record.deliveryDate).isValid()
+                  ? dayjs(record.deliveryDate).format('DD-MMM-YYYY')
+                  : '-'}
+              </Descriptions.Item>
+              <Descriptions.Item label="Shipping Address" style={{ fontWeight: 'bolder' }} span={2}>
+                {record.shippingAddress ? record.shippingAddress : '-'}
+              </Descriptions.Item>
+              {/* <Descriptions.Item style={{}}>
+                {record.status ? (
+                  <Tag
+                    color={
+                      record.status === 'open'
+                        ? 'blue'
+                        : record.status === 'in-progress'
+                          ? 'orange'
+                          : record.status === 'complete'
+                            ? 'green'
+                            : 'default'
+                    }
+                    style={{ textTransform: 'capitalize' }}
+                  >
+                    {record.status.replace(/-/g, ' ')}
+                  </Tag>
+                ) : (
+                  '-'
+                )}
+              </Descriptions.Item> */}
+              <Descriptions.Item span={5}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', alignItems: 'center' }}>
+                  {record.status ? (
+                    <Tag
+                      color={
+                        record.status === 'open'
+                          ? 'blue'
+                          : record.status === 'in-progress'
+                            ? 'orange'
+                            : record.status === 'complete'
+                              ? 'green'
+                              : 'default'
+                      }
+                      style={{ textTransform: 'capitalize' }}
+                    >
+                      {record.status.replace(/-/g, ' ')}
+                    </Tag>
+                  ) : (
+                    '-'
+                  )}
+                  {record.claimed_by ? (
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                      <span>
+                        Claimed:{' '}
+                        <strong>
+                          {record.claimed_by},
+                        </strong>
+                        <span style={{ fontSize: 12 }}> {dayjs.utc(record.claimed_date).tz('Asia/Phnom_Penh').format('DD-MMM-YYYY hh:mm a')}</span>
+
+                      </span>
+                      {access.currentUser?.login == record.claimed_by && access.canAccesAddRemarkAllocate ?
+                        <Button type="default" danger
+                          onClick={() => handleUnClaim(record.id)}
+                        >
+                          Release
+                        </Button>
+                        : <></>}
+
+                    </div>
+                  ) : access.canAccesAddRemarkAllocate ? (
+                    <Button type="primary"
+                      onClick={() => handleClaim(record.id)}
+                    >
+                      Claim
+                    </Button>
+                  ) : <></>}
+
+                  <Dropdown overlayStyle={{ width: 400 }} menu={activityMenu} trigger={['click']} >
+                    <Button onClick={() => getActivities(record.id)} style={{ marginLeft: 10 }}><HistoryOutlined /></Button>
+                  </Dropdown>
+                </div>
+              </Descriptions.Item>
+              <Descriptions.Item label="SO Num" style={{ fontWeight: 'bolder' }}>
+                {record.so_no || '-'}
+              </Descriptions.Item>
+              <Descriptions.Item label="A/R Reserve Invoice" style={{ fontWeight: 'bolder' }}>
+                {record.reserve_num || '-'}
+              </Descriptions.Item>
+              <Descriptions.Item label="Customer Code" style={{ fontWeight: 'bolder' }}>
+                {record.customer_code || '-'}
+              </Descriptions.Item>
+              <Descriptions.Item label="Customer Name" style={{ fontWeight: 'bolder' }}>
+                {record.customer_name || '-'}
+              </Descriptions.Item>
+
+            </Descriptions>
+            <ProTable
+              size="small"
+              search={false}
+              rowKey="id"
+              dataSource={record.deliveryItems}
+              expandable={{
+                expandedRowRender: (record) => {
+                  const dnList = record.dn || [];
+                  const plannedQty = Number(record.qty) || 0;
+                  return (
+                    <Table
+                      size="small"
+                      rowKey={(r) => r.id}
+                      columns={[
+                        {
+                          title: 'DN No',
+                          dataIndex: 'dn_num',
+                          key: 'dn_num',
+                        },
+                        {
+                          title: 'Delivered Qty',
+                          dataIndex: 'dn_qty',
+                          key: 'dn_qty',
+                          render: (_, dnRecord) => {
+                            const qty = parseFloat(dnRecord.dn_qty) || 0;
+                            const isMismatch = qty !== plannedQty;
+                            return (
+                              <span>
+                                {qty.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                              </span>
+                            );
+                          },
+                        },
+                        {
+                          title: 'DN Date',
+                          dataIndex: 'dn_date',
+                          key: 'dn_date',
+                          render: (_, re) => {
+                            const rawDnDate = re.dn_date;
+                            const dnDate = rawDnDate ? dayjs.utc(rawDnDate).tz('Asia/Phnom_Penh').startOf('day') : null;
+                            const sortedDnList = record.dn
+                              .filter(d => d.dn_num)
+                              .sort((a, b) => Number(a.dn_num) - Number(b.dn_num));
+                            const firstDn = sortedDnList[0];
+                            const isFirstDN = re.dn_num === firstDn?.dn_num;
+
+                            let tags: React.ReactNode[] = [];
+
+                            if (!isFirstDN) {
+                              tags.push(
+                                <Tag key="check" color="orange" style={{ marginLeft: 8 }}>Unplanned</Tag>
+                              );
+                            }
+
+                            return (
+                              <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                                {dnDate?.isValid() ? dnDate.format('DD-MMM-YYYY') : '-'}
+                                {tags}
+                              </span>
+                            );
+                          }
+                        }
+
+
+                      ]}
+                      dataSource={dnList}
+                      pagination={false}
+                    />
+                  );
+                },
+                rowExpandable: (record) => record.dn && record.dn.length > 0,
+              }}
+              options={false}
+              pagination={false}
+              columns={[
+                {
+                  title: 'Item Code',
+                  dataIndex: 'itemCode',
+                  width: 100,
+                },
+                {
+                  title: 'Item Name',
+                  dataIndex: 'itemName',
+                  width: 200,
+                  render: (_, record) => {
+                    return record.itemName && record.itemName.trim() !== ''
+                      ? record.itemName
+                      : record.delItemName || '-';
+                  },
+                },
+                {
+                  title: 'Plan',
+                  dataIndex: 'qty',
+                  width: 90,
+                },
+                {
+                  title: 'Delivered',
+                  width: 90,
+                  render: (_, item) => {
+                    const deliveryDate = dayjs.utc(record.deliveryDate).tz('Asia/Phnom_Penh').startOf('day');
+                    const dnList = Array.isArray(item.dn) ? item.dn : [];
+
+                    const allDNs = record.deliveryItems.flatMap(item => item.dn || []);
+                    const sortedDnList = allDNs
+                      .filter(d => d.dn_num)
+                      .sort((a, b) => Number(a.dn_num) - Number(b.dn_num));
+                    const firstDnNum = sortedDnList[0]?.dn_num;
+
+                    const plannedQty = Number(item.qty) || 0;
+                    const totalDelivered = dnList.reduce((sum, dn) => sum + (parseFloat(dn.dn_qty) || 0), 0);
+
+                    let color = 'black'; // default
+
+                    if (dnList.length === 1) {
+                      const dn = dnList[0];
+                      const dnDate = dayjs.utc(dn.dn_date).tz('Asia/Phnom_Penh').startOf('day');
+                      const isFirstDn = dn.dn_num === firstDnNum;
+                      const isSameDate = dnDate.isSame(deliveryDate);
+
+                      if (isFirstDn && isSameDate && totalDelivered >= plannedQty) {
+                        color = 'green';
+                      } else if (totalDelivered == 0) {
+                        color = 'black';
+                      } else {
+                        color = 'orange';
+                      }
+                    } else if (totalDelivered == 0) {
+                      color = 'black';
+                    } else if (
+                      dnList.length > 1 ||
+                      dnList.some(dn => {
+                        const dnDate = dayjs.utc(dn.dn_date).tz('Asia/Phnom_Penh').startOf('day');
+                        return !dnDate.isSame(deliveryDate);
+                      }) ||
+                      totalDelivered < plannedQty
+                    ) {
+                      color = 'orange';
+                    }
+
+                    return (
+                      <div style={{ color }}>
+                        {totalDelivered.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </div>
+                    );
+                  },
+                },
+                {
+                  title: 'Type',
+                  dataIndex: 'saleType',
+                  width: 90,
+                },
+                {
+                  title: 'Remark',
+                  dataIndex: 'dn',
+                  width: 300,
+                  render: (_, item) => {
+                    const dn = item.dn || [];
+                    const remark = dn?.[0]?.remark ?? '';
+                    return (
+                      <div style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                        {remark ? remark : '-'}
+                      </div>
+                    );
+                  },
+                },
+                {
+                  title: 'Attachment',
+                  dataIndex: 'attachment',
+                  width: 200,
+                  render: (_, record) => {
+                    const attachments = record.dn?.[0]?.attachment || [];
+
+                    return (
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                        {attachments.map((att, index) => {
+                          const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(att);
+                          const decodedURL = decodeURIComponent(att)
+                          const fileNameMatch = decodedURL.match(/\/([^\/?]+)\?alt=media/)
+                          let fileName = fileNameMatch ? fileNameMatch[1] : `File ${index + 1}`;
+                          const dashIndex = fileName.indexOf('-');
+                          if (dashIndex !== -1) {
+                            fileName = fileName.substring(dashIndex + 1);
+                          }
+                          return isImage ? (
+                            <Image
+                              key={index}
+                              width={50}
+                              height={50}
+                              src={att}
+                              alt={`attachment-${index}`}
+                              style={{ objectFit: 'cover', borderRadius: 4 }}
+                              preview={{ mask: <div>Click to preview</div> }}
+                            />
+                          ) : (
+                            <a
+                              key={index}
+                              href={att.attachment}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                display: 'inline-block',
+                                padding: '4px 8px',
+                                border: '1px solid #ccc',
+                                borderRadius: 4,
+                                backgroundColor: '#f5f5f5',
+                                marginRight: 8,
+                              }}
+                            >
+                              {fileName}
+                            </a>
+                          );
+                        })}
+                      </div>
+                    );
+                  },
+                },
+                {
+                  width: 100,
+                  align: 'center',
+                  render: (_, r) => {
+                    if (status == 'Pending' || status == 'Failed') return null;
+                    if (!access.canAccesAddRemarkAllocate) return null
+                    return (
+                      <a
+                        onClick={() => {
+                          const dnItem = r.dn?.[0];
+                          console.log('r', r)
+                          setModalOpen({
+                            visible: true,
+                            id: dnItem?.id,
+                            remark: dnItem?.remark,
+                            attachment: dnItem?.attachment,
+                            sales_planid: r.deliveryId
+                          });
+                        }}
+                      >
+                        <FaRegPenToSquare />
+                      </a>
+                    );
+                  },
+                },
+              ]}
+            />
+          </Card>
+        );
+      },
+    },
+  ];
+
   const qvColums: ProColumns<DnQuickView>[] = [
     {
       // title: 'SO Number',
@@ -946,8 +1299,8 @@ skuColumns.forEach((col) => {
                   }}
                 >
                   <Radio.Button value="OV">Over View</Radio.Button>
-                  <Radio.Button value="SO">Sales Order</Radio.Button>
                   <Radio.Button value="DN">Delivery Plan</Radio.Button>
+                  <Radio.Button value="SO">Sales Order</Radio.Button>
                   <Radio.Button value="MT">My Task</Radio.Button>
                   {/* <Radio.Button value="FG">FG</Radio.Button> */}
                 </Radio.Group>
@@ -990,8 +1343,8 @@ skuColumns.forEach((col) => {
                     }}
                   >
                     <Radio.Button value="OV">Over View</Radio.Button>
-                    <Radio.Button value="SO">Sales Order</Radio.Button>
                     <Radio.Button value="DN">Delivery Plan</Radio.Button>
+                    <Radio.Button value="SO">Sales Order</Radio.Button>
                     <Radio.Button value="MT">My Task</Radio.Button>
                     {/* <Radio.Button value="FG">FG</Radio.Button> */}
                   </Radio.Group>
@@ -1051,8 +1404,8 @@ skuColumns.forEach((col) => {
                       }}
                     >
                       <Radio.Button value="OV">Over View</Radio.Button>
-                      <Radio.Button value="SO">Sales Order</Radio.Button>
                       <Radio.Button value="DN">Delivery Plan</Radio.Button>
+                      <Radio.Button value="SO">Sales Order</Radio.Button>
                       <Radio.Button value="MT">My Task</Radio.Button>
                       {/* <Radio.Button value="FG">FG</Radio.Button> */}
                     </Radio.Group>
@@ -1109,8 +1462,8 @@ skuColumns.forEach((col) => {
                         }}
                       >
                         <Radio.Button value="OV">Over View</Radio.Button>
-                        <Radio.Button value="SO">Sales Order</Radio.Button>
                         <Radio.Button value="DN">Delivery Plan</Radio.Button>
+                        <Radio.Button value="SO">Sales Order</Radio.Button>
                         <Radio.Button value="MT">My Task</Radio.Button>
                         {/* <Radio.Button value="FG">FG</Radio.Button> */}
                       </Radio.Group>
@@ -1134,7 +1487,7 @@ skuColumns.forEach((col) => {
                       </>
                     </Space>
                   }
-                  columns={dnColumns}
+                  columns={dnColums}
                   actionHandlers={{
                     onRequest: (criteria, pagination, sort) =>
                       onRequestDNDeatilHandler({
@@ -1179,13 +1532,13 @@ skuColumns.forEach((col) => {
         onSearch={(d) => {
           {
             advanceSearchParams.filter == 'SO' ?
-              setAdvanceSearchParams((v) => ({ ...v, ...d }))
-              : advanceSearchParams.filter == 'DN' ?
-                (
-                  console.log(d, 'd'),
-                  setDnSearch((v) => ({ ...v, ...d }))
-                )
-                : {}
+            setAdvanceSearchParams((v) => ({ ...v, ...d }))
+            : advanceSearchParams.filter == 'DN' ?
+            (
+              console.log(d,'d'),
+              setDnSearch((v) => ({ ...v, ...d }))
+            )
+              : {}
           }
           actionRef.current?.reloadAndRest?.();
         }}

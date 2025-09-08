@@ -5,7 +5,7 @@ import { CrmService, CrmServiceAPI } from '@/services/crm/services';
 import { simpleRequestActions } from '@/services/model';
 import { CustomerLookup, ProductItem, SalesTeamWorkLess } from '@/services/sale/data';
 import { SaleService } from '@/services/sale/services';
-import { AimOutlined, DeleteOutlined } from '@ant-design/icons';
+import { AimOutlined, DeleteOutlined, DownOutlined } from '@ant-design/icons';
 import {
   ActionType,
   EditableFormInstance,
@@ -17,7 +17,7 @@ import {
   ProFormSelect,
   ProFormTextArea,
 } from '@ant-design/pro-components';
-import { Button, Card, Col, Flex, Form, InputNumber, Modal, Row, message } from 'antd';
+import { Button, Card, Col, Dropdown, Flex, Form, InputNumber, Menu, Modal, Row, Select, Space, Switch, message } from 'antd';
 import { useForm } from 'antd/es/form/Form';
 import { uniqueId } from 'lodash';
 import moment from 'moment';
@@ -48,20 +48,31 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
   const [addressList, setAddressList] = useState<AddressInfo[]>();
   const [selectedAddress, setSelectedAddress] = useState<AddressInfo>();
   const [productItems, setProductItems] = useState<ProductItem[]>();
+  const [allItems, setAllItems] = useState<PurchaseOrderItem[]>([]);
+  const [includeZero, setIncludeZero] = useState(false);
 
   const [amount, setAmount] = useState<Amount>({
     discountAmount: 0,
     grantAmount: 0,
     totalAmount: 0,
   });
+
+  // useEffect(() => {
+  //   if (includeZero) {
+  //     setDataSourceItems(allItems);
+  //   } else {
+  //     setDataSourceItems(allItems.filter(item => item.pricing > 0));
+  //   }
+  // }, [includeZero, allItems]);
+
   const onTotalAmount = async () => {
     const result =
       dataSourceItems && dataSourceItems.length > 0
         ? dataSourceItems
-            .map((o) => ({
-              totalAmoun: o.pricing * o.quantity || 0,
-            }))
-            .reduce((p, c) => ({ totalAmoun: p.totalAmoun + c.totalAmoun || 0 }))
+          .map((o) => ({
+            totalAmoun: o.pricing * o.quantity || 0,
+          }))
+          .reduce((p, c) => ({ totalAmoun: p.totalAmoun + c.totalAmoun || 0 }))
         : undefined;
 
     setAmount({
@@ -97,8 +108,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
     setDataSourceItems(
       purchaseOrder.items
         ? purchaseOrder.items.map((e) => {
-          // e.key = e.itemCode!;
-           e.key = `${e.itemCode}-${e.status}`
+          e.key = e.itemCode!;
           return e;
         })
         : [],
@@ -134,20 +144,20 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
   const getAddress = (address?: AddressInfo) => {
     return address
       ? [
-          { name: 'Street', value: address?.streetNo },
-          { name: 'House#', value: address?.houseNo },
-          { name: 'Village', value: address?.village },
-          { name: 'Commune', value: address?.commune },
-          { name: 'District', value: address?.district },
-          { name: 'Province', value: address?.province },
-          { name: 'Latitude', value: address?.latitude },
-          { name: 'Longitude', value: address?.longitude },
-          { name: 'Direction', value: address?.direction },
-          { name: 'Hotspot', value: address?.hotspot },
-        ]
-          .filter((it) => it.value)
-          .map((it) => `${it.name} ${it.value}`)
-          .join(', ')
+        { name: 'Street', value: address?.streetNo },
+        { name: 'House#', value: address?.houseNo },
+        { name: 'Village', value: address?.village },
+        { name: 'Commune', value: address?.commune },
+        { name: 'District', value: address?.district },
+        { name: 'Province', value: address?.province },
+        { name: 'Latitude', value: address?.latitude },
+        { name: 'Longitude', value: address?.longitude },
+        { name: 'Direction', value: address?.direction },
+        { name: 'Hotspot', value: address?.hotspot },
+      ]
+        .filter((it) => it.value)
+        .map((it) => `${it.name} ${it.value}`)
+        .join(', ')
       : '';
   };
 
@@ -411,6 +421,33 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
             record: (index) => ({ key: uniqueId().toString() + index } as any),
             creatorButtonText: ' New Item',
           }}
+          toolBarRender={() => [
+            <>
+              <Switch checkedChildren="Exclude Price Zero"
+                checked={dataSourceItems?.some((item) => item.pricing === 0)}
+                // onChange={() => {
+                //   const filteredItems = dataSourceItems?.filter((item) => item.pricing && item.pricing > 0) || [];
+                //   setDataSourceItems(filteredItems);
+                //   message.success('Items with Unit Price 0 removed!');
+                // }}
+                onChange={(checked) => setIncludeZero(checked)}
+                unCheckedChildren="Include Price Zero" />
+
+              {/* <Button
+                key="custom-action"
+                type="primary"
+                onClick={() => {
+                  // Filter out items with pricing = 0
+                  const filteredItems = dataSourceItems?.filter((item) => item.pricing && item.pricing > 0) || [];
+                  setDataSourceItems(filteredItems);
+                  message.success('Items with Unit Price 0 removed!');
+                }}
+              >
+                Remove Unit Price 0 Item
+              </Button>, */}
+            </>
+          ]}
+
           // controlled
           editable={{
             type: 'multiple',
@@ -430,24 +467,92 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
           }}
           columns={[
             {
-              title: 'Product Name',
+              // title: 'Product Name',
+              title: (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>Product Name</span>
+                  <Dropdown
+                    overlay={
+                      <Menu
+                        onClick={({ key }) => {
+                          const filteredItems = productItems?.filter(
+                            (item) => String(item.itemCategoryId) === key
+                          )
+
+                          const existingIds = new Set(dataSourceItems?.map((i) => i.itemId));
+
+                          const newRows =
+                            filteredItems
+                              ?.filter((item) => !existingIds.has(item.id))
+                              .map((item) => ({
+                                key: uniqueId(),
+                                itemId: item.id,
+                                quantity: 0,
+                                pricing: item.price ?? 0,
+                              })) || [];
+
+                          // setDataSourceItems((prev) => [...prev, ...newRows]);
+                          setDataSourceItems((prev) => [...prev, ...newRows]);
+                        }}
+                        items={[
+                          { label: 'Vital', key: '1' },
+                          { label: 'Mee Chiet', key: '2' },
+                        ]}
+                      />
+                    }
+                    trigger={['click']}
+                  >
+                    <a
+                      onClick={(e) => e.preventDefault()}
+                      style={{
+                        // backgroundColor: '#f0f0f0',
+                        padding: '4px 8px',
+                        borderRadius: 4,
+                        color: 'black',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <DownOutlined />
+                    </a>
+                  </Dropdown>
+                </div>
+              ),
+
+
               dataIndex: 'itemId',
               width: 350,
-              fieldProps: (_, config) => {
-                return {
-                  onChange: (e: number) => {
-                    if (dataSourceItems?.filter((o) => o.itemId === e).length) {
-                      message.error('This Item was ready added!');
-                    }
-                  },
-                  showSearch: true,
-                  debounceTime: 500,
-                  allowClear: true,
+              fieldProps: (_, config) => ({
+                showSearch: true,
+                allowClear: true,
+                debounceTime: 500,
+                options: productItems
+                  ?.filter((it) => it.isWebEnabled)
+                  .map((p) => ({ value: p.id, label: p.name })),
+                onChange: (itemId: number) => {
+                  const product = productItems?.find((p) => p.id === itemId);
+                  const form = editableFormRef.current;
 
-                  param: config.entity.stockCategoryId,
-                  ...config,
-                };
-              },
+                  if (form) {
+                    const rowKey = Array.isArray(config.rowKey) ? config.rowKey[0] : config.rowKey;
+
+                    form.setFieldsValue({
+                      [rowKey]: {
+                        ...config,
+                        itemId,
+                        pricing: product?.price ?? 0
+                      }
+                    });
+                  }
+
+                  if (dataSourceItems?.some((o) => o.itemId === itemId)) {
+                    message.error('This Item was already added!');
+                  }
+                }
+
+
+              }),
+
               valueType: 'select',
               formItemProps: () => {
                 return {
@@ -456,7 +561,6 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
               },
 
               request: async (k: { keyWords: string }) => {
-                console.log(k);
 
                 const data = await ProductItemsServiceAPI(mainRequestActions).pageProducts({
                   criteria: {
@@ -489,7 +593,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
               title: 'Quantity',
               dataIndex: 'quantity',
               valueType: 'digit',
-              initialValue: 1,
+              initialValue: 0,
               ellipsis: true,
               fieldProps: {
                 allowClear: true,
@@ -520,18 +624,14 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
             //   },
             // },
 
+
             {
               title: 'Unit Price (USD)',
               dataIndex: 'pricing',
               valueType: 'digit',
               initialValue: 0,
-              ellipsis: true,
               formItemProps: {
-                rules: [
-                  {
-                    required: true,
-                  },
-                ],
+                rules: [{ required: true }],
               },
               renderFormItem: (_, config) => {
                 const row = config.record
@@ -541,13 +641,13 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
                     value={row?.pricing ?? 0}
                     onChange={(value) => {
                       config.onChange?.(value)
-                      console.log('value',row)
                     }}
                     style={{ width: '100%' }}
                   />
                 );
               }
             },
+
             {
               title: 'Unit Price (KHR)',
               initialValue: 0,

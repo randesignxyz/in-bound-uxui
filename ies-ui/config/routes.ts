@@ -183,6 +183,22 @@ export default [
     component: './crm/shipping_address',
   },
 
+  {
+    path: '/crm/shared/:view',
+    name: 'Share',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessCrmMenuItem',
+    component: './crm/shared-customer',
+  },
+   {
+    path: '/crm/verified-customer/:view',
+    name: 'Verified Customer',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessCrmMenuItem',
+    component: './crm/verified-customer',
+  },
   /**********<<Pro**************/
   {
     path: '/pro',
@@ -380,6 +396,15 @@ export default [
     name: 'df_360',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
+    access: 'canAccessDF360',
+    component: './hrm/df',
+  },
+    {
+    path: '/externa/hrm/df/:view/*',
+    name: 'df_360',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    layout: false,
     access: 'canAccessDF360',
     component: './hrm/df',
   },

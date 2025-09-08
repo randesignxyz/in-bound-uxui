@@ -1,17 +1,31 @@
 import { ProCard } from "@ant-design/pro-components"
+import { Button } from "antd"
+import { Df360EmpServiceAPI } from "../services"
+import { useEffect, useState } from "react"
+import { DfInstrunctionItemList } from "../data"
 
-interface Props{}
-export default({}:Props)=>{
+interface Props{
+  lang?:string
+  onChangeLanglauge:()=>void
+  getLableName:(key:string)=>any
+}
+export default({lang,onChangeLanglauge,getLableName}:Props)=>{
 
-    return (<> <ProCard title="INSTRUCTION" 
+    const [instructionList, setInstructionList] = useState<DfInstrunctionItemList[]>();   
+    const services = Df360EmpServiceAPI();
+    useEffect(()=>{
+       services.fetchDfInstructionList().then(rs=>setInstructionList(rs))
+    },[])
+
+    return (<> <ProCard title={getLableName('TITLE_INSTRACTION')}
         collapsible  
         size="small"
         bordered headerBordered 
-    >                  
-      <div >• Information in this form and process is Private and Confidential.</div>
-      <div >• Employee must rate yourself on the provided questionnaires based on your performance over the past year.</div>
-      <div >• Be honest and fair in your assessment; this is an opportunity for self-reflection and growth.</div>
-    </ProCard>    
-    </>)
+        extra = {<Button shape="round" onClick={onChangeLanglauge}>{lang=='KH'?'English':'ភាសាខ្មែរ'}</Button>}
+    >  
+      {instructionList?.map(r=> 
+        (<div>{lang=='KH' ?r.description1: r.description}</div>)
+      )}
+    </ProCard></>)
 
 }

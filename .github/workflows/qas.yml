@@ -10,7 +10,7 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: self-hosted
+    runs-on: ies-frontend-qas
     defaults:
       run:
         working-directory: ./
@@ -46,7 +46,7 @@ jobs:
           }
           Write-Output "should-install=$shouldInstall" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
         shell: pwsh
-        
+
       # Install dependencies 
       - name: Install dependencies
         if: steps.compare-package.outputs.should-install == 'true'
@@ -116,7 +116,7 @@ jobs:
           # Set-ItemProperty "IIS:\Sites\$siteName" -Name physicalPath -Value $newPath
         shell: powershell
 
-      
+
       # Toggle port in web.config (4402 <-> 4401)
       - name: Toggle port in web.config
         run: |
@@ -135,3 +135,4 @@ jobs:
             
           }
         shell: pwsh
+

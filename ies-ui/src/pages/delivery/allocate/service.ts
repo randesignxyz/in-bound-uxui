@@ -1,5 +1,5 @@
 import { RequestActions, ServiceApiType, singleRequest } from "@/services/apiGateway";
-import { Allocate, allocateSearch, DeliveryList, DNList, DNParams, DnQuickView, SkuList, SOAllocateActivities, SOList, UpdateRemarkParams } from "./data";
+import { Allocate, allocateSearch, DeliveryList, DNList, DNParams, DnQuickView, SOAllocateActivities, SOList, UpdateRemarkParams } from "./data";
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { Paging } from "@/services/API";
 
@@ -28,11 +28,11 @@ const AllocateAction = {
             page: params.pagination?.current,
         },
     }),
-    listDnDetail: (status?: string, delivery_date?: string, region?: string): ServiceApiType<{ status?: string, delivery_date?: string, region?: string }> => ({
+    listDnDetail: (status?: string,delivery_date?:string,region?:string): ServiceApiType<{ status?: string,delivery_date?:string,region?:string }> => ({
         type: 'LIST_QUERY',
         endpoint: 'DELIVERY',
         actionName: 'get-dn-detail',
-        payload: { status, delivery_date, region },
+        payload: { status,delivery_date,region },
     }),
     listDn: (so_allocate_id: string[], docNum?: string): ServiceApiType<{ so_allocate_id: string[], docNum?: string }> => ({
         type: 'LIST_QUERY',
@@ -76,11 +76,17 @@ const AllocateAction = {
         actionName: 'get-activities-by-dn',
         payload: { dnID },
     }),
-    listDnbyUser: (): ServiceApiType<{  }> => ({
+    listDnbyUser: (status?: string): ServiceApiType<{ status?: string }> => ({
         type: 'LIST_QUERY',
         endpoint: 'DELIVERY',
         actionName: 'get-dn-by-user',
-        payload: {  },
+        payload: { status },
+    }),
+    fetchDnQuickView: (startDate?: string, endDate?: string): ServiceApiType<{ startDate?: string, endDate?: string }> => ({
+        type: 'FETCH_QUERY',
+        endpoint: 'DELIVERY',
+        actionName: 'get-dn-quick-view',
+        payload: { startDate, endDate },
     }),
     listSku: (): ServiceApiType<{}> => ({
         type: 'LIST_QUERY',
@@ -127,17 +133,12 @@ export const AllocateServiceAPI = (requestAction: RequestActions) => {
                 requestAction
             ),
         fetch_dn_quick_view: (startDate?: string, endDate?: string) =>
-            singleRequest<DnQuickView>(AllocateAction.fetchDnQuickView(startDate, endDate))(
+            singleRequest<DnQuickView>(AllocateAction.fetchDnQuickView(startDate,endDate))(
                 requestAction
             ),
-        list_dn_detail: (status?: string, delivery_date?: string, region?: string) =>
-            singleRequest<DNList>(AllocateAction.listDnDetail(status, delivery_date, region))(
+        list_dn_detail: (status?: string,delivery_date?:string,region?:string) =>
+            singleRequest<DNList>(AllocateAction.listDnDetail(status,delivery_date,region))(
                 requestAction
             ),
-        list_sku: () =>
-            singleRequest<SkuList>(AllocateAction.listSku())(
-                requestAction
-            ),
-
     }
 }

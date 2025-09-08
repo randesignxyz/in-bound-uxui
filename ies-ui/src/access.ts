@@ -365,7 +365,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       ) || false,
     canAccesAllocateDelView:
       currentUser?.authorities.some((item) =>
-        ['ROLE_ADMIN', 'ROLE_DELIVERY_DEL_ALLOCATION'].some((it) => it === item),
+        ['ROLE_ADMIN', 'ROLE_DELIVERY_DEL_ALLOCATION','ROLE_DELIVERY_ALLOCATION_REMARK'].some((it) => it === item),
       ) || false,
 
     canAccesAddRemarkAllocate:
@@ -946,10 +946,16 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       ) || false,
     canAccessDF360:
       currentUser?.authorities.some((item) =>
-        ['ROLE_ADMIN','ROLE_HR_DF360_VIEW', 'ROLE_HR_DF360_SUBMIT', 'ROLE_HR_DF360_SUPPORT'].some(
+        ['ROLE_ADMIN','ROLE_HR_DF360_VIEW', 'ROLE_HR_DF360_SUPPORT'].some(
           (it) => it === item,
         ),
       ) || false,  
+    canAccessDF360NewForm:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN','ROLE_HR_DF360_NEW_FORM', 'ROLE_HR_DF360_SUPPORT'].some(
+          (it) => it === item,
+        ),
+      ) || false,    
     canAccessWhmMenu:
       currentUser?.authorities.some((item) =>
         [

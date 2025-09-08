@@ -22,7 +22,11 @@ export type ActivityLog = {
     remarks?: string;
 }
 
-export default ({ objectName, objectId, endpoint, forceUpdate }: { objectName: string, objectId: number, endpoint: Endpoint; forceUpdate?: number }) => {
+type StyleActivity ={
+    avatar:React.CSSProperties
+}
+
+export default ({ objectName, objectId, endpoint, forceUpdate, styles }: { objectName: string, objectId: number, endpoint: Endpoint; forceUpdate?: number, styles?:StyleActivity }) => {
 
     const requestActions = simpleRequestActions()
 
@@ -48,7 +52,7 @@ export default ({ objectName, objectId, endpoint, forceUpdate }: { objectName: s
     return <Spin spinning={requestActions.request?.loading}> <ProList<ActivityLog>
         dataSource={data}
         metas={{
-            avatar: { render: () => <FieldTimeOutlined /> },
+            avatar: { render: () => <FieldTimeOutlined style={styles?.avatar} /> },
             title: { dataIndex: 'activityType' },
             subTitle: { render: (_, r) => `by ${r.login} ${moment(moment(r.activityDate)).fromNow()}` },
             description: { dataIndex: 'remarks' },

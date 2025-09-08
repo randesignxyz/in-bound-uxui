@@ -411,13 +411,13 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
       const encrypted = encryptToBase64(state.data?.detail?.code || "n/a");
       
       window.open(`http://api2.vital.com.kh/customer-view/${encrypted}`, '_blank');
-      navigator.clipboard?.writeText(`http://api2.vital.com.kh/customer-view/${encrypted}`)
+      // navigator.clipboard?.writeText(`http://api2.vital.com.kh/customer-view/${encrypted}`)
   
-      .then(() => {
-        window.open(`http://api2.vital.com.kh/customer-view/${encrypted}`, '_blank');
-      })
-      .catch((err) => {
-      }); 
+      // .then(() => {
+      //   window.open(`http://api2.vital.com.kh/customer-view/${encrypted}`, '_blank');
+      // })
+      // .catch((err) => {
+      // }); 
       }} />
   </Space>}
     extra={<ActionBar actions={state.data?.detail && getMenuItems(state.data?.detail, 'Detail', () => {

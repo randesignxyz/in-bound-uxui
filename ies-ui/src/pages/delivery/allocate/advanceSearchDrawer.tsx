@@ -23,9 +23,10 @@ dayjs.extend(timezone);
 interface Props extends DrawerFormProps {
     onReset: () => void;
     onSearch: (params: AllocateSOAdvanceParams) => void;
+    type?: string
 }
 
-export default ({ onReset, onSearch, ...rest }: Props) => {
+export default ({ onReset, onSearch, type, ...rest }: Props) => {
     const { Text } = Typography;
     const access = useAccess();
     const requestActions = simpleRequestActions();
@@ -38,7 +39,7 @@ export default ({ onReset, onSearch, ...rest }: Props) => {
 
 
     useEffect(() => {
-       
+
     }, [rest.open])
 
     const [form] = useForm<AllocateSOAdvanceParams>();
@@ -48,95 +49,190 @@ export default ({ onReset, onSearch, ...rest }: Props) => {
             title="Advance Search"
             {...rest}
             width={500}
-        submitter={false}
+            submitter={false}
         >
-            <ProForm
-                form={form}
-                onReset={() => onReset()}
-                submitter={{
-                    onSubmit: async () => {
-                        const data = await form.validateFields()
-                        const [startDate, endDate] = Array.isArray(data.ordered_date) ? data.ordered_date : []
+            {type == 'SO' ?
+                <ProForm
+                    form={form}
+                    onReset={() => onReset()}
+                    submitter={{
+                        onSubmit: async () => {
+                            const data = await form.validateFields()
+                            const [startDate, endDate] = Array.isArray(data.ordered_date) ? data.ordered_date : []
 
-                        const formatted = {
-                            ...data,
-                            startDate: startDate ? startDate.format("YYYY-MM-DD") : undefined,
-                            endDate: endDate ? endDate.format("YYYY-MM-DD") : undefined,
-                        };
-                        console.log(formatted)
-                        onSearch(formatted);
-                    },
-                }}
-            >
-                <ProFormSelect
-                    label="So Status"
-                    name="status"
-                    initialValue="posted"
-                    allowClear
-                    showSearch
-                    options={[
-                        {
-                            value: 'ALL',
-                            label: 'ALL',
+                            const formatted = {
+                                ...data,
+                                startDate: startDate ? startDate.format("YYYY-MM-DD") : undefined,
+                                endDate: endDate ? endDate.format("YYYY-MM-DD") : undefined,
+                            };
+                            console.log(formatted)
+                            onSearch(formatted);
                         },
-                        {
-                            value: 'pending',
-                            label: 'Pending',
-                        },
-                        {
-                            value: 'posted',
-                            label: 'Posted',
-                        },
-                        {
-                            value: 'failed',
-                            label: 'Failed',
-                        },
-                        {
-                            value: 'canceled',
-                            label: 'Canceled',
-                        }
-                    ]}
-                />
-                <ProFormDateRangePicker
-                    style={{ width: 165 }}
-                    name="ordered_date"
-                    placeholder="Select Date"
-                    label="Ordered Date Start - Ordered End"
-                />
-                <ProFormSelect
-                    label="DN Status"
-                    name="dnStatus"
-                    initialValue="pending"
-                    allowClear
-                    showSearch
-                    options={[
-                        {
-                            value: 'pending',
-                            label: 'Pending',
-                        },
-                        {
-                            value: 'open',
-                            label: 'Open',
-                        },
-                        {
-                            value: 'in-progress',
-                            label: 'In Progress',
-                        },
-                        {
-                            value: 'complete',
-                            label: 'Completed',
-                        },
-                        {
-                            value: 'close',
-                            label: 'Close',
-                        },
-                        {
-                            value: 'cancel',
-                            label: 'Cancel',
-                        }
-                    ]}
-                />
-            </ProForm>
+                    }}
+                >
+
+                    <ProFormSelect
+                        label="So Status"
+                        name="status"
+                        initialValue="posted"
+                        allowClear
+                        showSearch
+                        options={[
+                            {
+                                value: 'ALL',
+                                label: 'ALL',
+                            },
+                            {
+                                value: 'pending',
+                                label: 'Pending',
+                            },
+                            {
+                                value: 'posted',
+                                label: 'Posted',
+                            },
+                            {
+                                value: 'failed',
+                                label: 'Failed',
+                            },
+                            {
+                                value: 'canceled',
+                                label: 'Canceled',
+                            }
+                        ]}
+                    />
+                    <ProFormDateRangePicker
+                        style={{ width: 165 }}
+                        name="ordered_date"
+                        placeholder="Select Date"
+                        label="Ordered Date Start - Ordered End"
+                    />
+                    <ProFormSelect
+                        label="DN Status"
+                        name="dnStatus"
+                        initialValue="pending"
+                        allowClear
+                        showSearch
+                        options={[
+                            {
+                                value: 'pending',
+                                label: 'Pending',
+                            },
+                            {
+                                value: 'open',
+                                label: 'Open',
+                            },
+                            {
+                                value: 'in-progress',
+                                label: 'In Progress',
+                            },
+                            {
+                                value: 'complete',
+                                label: 'Completed',
+                            },
+                            {
+                                value: 'close',
+                                label: 'Close',
+                            },
+                            {
+                                value: 'cancel',
+                                label: 'Cancel',
+                            }
+                        ]}
+                    />
+                </ProForm>
+                : type == 'DN' ?
+                    <ProForm
+                        form={form}
+                        onReset={() => onReset()}
+                        submitter={{
+                            onSubmit: async () => {
+                                const data = await form.validateFields()
+                                const [startDate, endDate] = Array.isArray(data.ordered_date) ? data.ordered_date : []
+
+                                const formatted = {
+                                    ...data,
+                                    delivery_date: data.delivery_date
+                                        ? (data.delivery_date as unknown as dayjs.Dayjs).format("YYYY-MM-DD")
+                                        : undefined,
+                                };
+                                console.log(formatted)
+                                onSearch(formatted);
+                            },
+                        }}
+                    >
+
+                        <ProFormSelect
+                            label="So Status"
+                            name="status"
+                            initialValue="Posted"
+                            allowClear
+                            showSearch
+                            options={[
+                                {
+                                    value: 'ALL',
+                                    label: 'ALL',
+                                },
+                                {
+                                    value: 'Pending',
+                                    label: 'Pending',
+                                },
+                                {
+                                    value: 'Posted',
+                                    label: 'Posted',
+                                },
+                                {
+                                    value: 'Failed',
+                                    label: 'Failed',
+                                },
+                                {
+                                    value: 'Canceled',
+                                    label: 'Canceled',
+                                }
+                            ]}
+                        />
+                        <ProFormDatePicker
+                            style={{ width: 165 }}
+                            name="delivery_date"
+                            placeholder="Select Date"
+                            label="Delivery Date"
+                        />
+                        <ProFormSelect
+                            label="Region"
+                            name="region"
+                            allowClear
+                            showSearch
+                            options={[
+                                {
+                                    value: 'pending',
+                                    label: 'Pending',
+                                },
+                                {
+                                    value: 'open',
+                                    label: 'Open',
+                                },
+                                {
+                                    value: 'in-progress',
+                                    label: 'In Progress',
+                                },
+                                {
+                                    value: 'complete',
+                                    label: 'Completed',
+                                },
+                                {
+                                    value: 'close',
+                                    label: 'Close',
+                                },
+                                {
+                                    value: 'cancel',
+                                    label: 'Cancel',
+                                }
+                            ]}
+                        />
+                    </ProForm>
+                    :
+                    <></>
+            }
+
         </DrawerForm>
     );
 };

@@ -204,8 +204,8 @@ const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
       <SapPosting
         open={modals.isVisible('sap-posting')}
         onCancel={() => modals.hideModal('sap-posting')}
-        // onPosting={onSapPostingHandler}
-        onPosting={onSapPostingHandlerNew}
+        onPosting={onSapPostingHandler}
+        // onPosting={onSapPostingHandlerNew}
         items={ getOfferItems() ?? []}
         offerCodes={state.data?.offerCodes ?? []}
       />

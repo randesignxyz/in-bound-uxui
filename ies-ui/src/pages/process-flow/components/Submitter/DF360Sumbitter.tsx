@@ -7,8 +7,9 @@ import { AccountType } from '@/services/account/data';
 import { ProCard, ProForm, ProFormGroup, ProFormSelect, ProFormText } from '@ant-design/pro-components';
 import { simpleRequestActions } from '@/services/model';
 import { useAccess, useModel } from '@umijs/max';
-import { EmployeeInfResult } from '@/pages/hrm/appraisal-submit/data.types';
-import { createService } from '@/pages/hrm/probation/services';
+import { EmployeeInfResult } from '@/pages/hrm/df/data';
+// import { createService } from '@/pages/hrm/probation/services';
+import { Df360EmpServiceAPI } from '@/pages/hrm/df/services';
 
 export default ({ title, form, onlyCurrentUser, onSetSubmitter }: {
     form: FormInstance<{
@@ -24,11 +25,12 @@ export default ({ title, form, onlyCurrentUser, onSetSubmitter }: {
   const [requestor, setRequestor] = useState<EmployeeInfResult>()
   const currentUser =  useModel('@@initialState');
   const [firstInit, setFirstInit] = useState(false)
-  const srvHR = createService({ request: requestActions })
+  // const srvHR = createService({ request: requestActions })
+  const srv = Df360EmpServiceAPI(requestActions);
   // const [form1] = useForm<{requestorId: number;requestorBuId: number;}>()
 
   const fetchUser = async (userId?: number) => {
-    srvHR.fetchProbationEmployeeInfo(userId||0).then(it=> {
+    srv.fetchProbationEmployeeInfo(userId||0).then(it=> {
       onSetSubmitter?.(it)
       setRequestor(it)
       if(firstInit) {
@@ -42,7 +44,7 @@ export default ({ title, form, onlyCurrentUser, onSetSubmitter }: {
 
   const onSearchHandler = async (type: AccountType, searchValue?: string) => {  
     const login =  currentUser.initialState?.currentUser?.login
-    const it1 = await srvHR.fetchProbationEmpList( firstInit?login: searchValue)
+    const it1 = await srv.fetchProbationEmpList( firstInit?login: searchValue)
     // const it1 = await srvHR.fetchProbationEmpList(searchValue)
     if(firstInit && login) {
       let emp = (it1||[{id:0}]).at(0)       

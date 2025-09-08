@@ -17,6 +17,10 @@
   },
   "homepage": "https://github.com/phanny-ngoun-vital-com-kh/ies-frontend-v4#readme",
   "dependencies": {
-    "antd": "^5.22.2"
+    "antd": "^5.22.2",
+    "axios": "^1.10.0",
+    "node-url-shortener": "^2.0.3",
+    "browser-image-compression": "^2.0.2",
+    "firebase": "^11.10.0"   
   }
 }

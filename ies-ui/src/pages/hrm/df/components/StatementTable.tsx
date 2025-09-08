@@ -1,6 +1,6 @@
-import { EditableFormInstance, EditableProTable, ProColumns } from "@ant-design/pro-components"
+import { EditableFormInstance, EditableProTable, ProColumns, ProCard } from "@ant-design/pro-components"
 import { DfEmpEvaluationRs } from "../data"
-import { Radio } from "antd";
+import { Grid, Radio, Space ,Card} from "antd";
 import { useRef } from "react";
 
 export default({
@@ -8,13 +8,17 @@ export default({
     onSetItems,
     editableFormRef,
     editable,
-    editableRating
+    editableRating,
+    lang,
+    getLableName
 }:{
     items: DfEmpEvaluationRs[];
     onSetItems?: (v: DfEmpEvaluationRs[]) => void;
     editableFormRef?: React.MutableRefObject<EditableFormInstance | undefined>|undefined
     editable: boolean|false;
-    editableRating: boolean|false
+    editableRating: boolean|false,
+    lang: string,
+    getLableName:(key:string)=>any
 })=>{
     // const editableFormRef = useRef<EditableFormInstance>();
 
@@ -36,19 +40,20 @@ export default({
       )
     }
     const cols: ProColumns<DfEmpEvaluationRs>[] = [
-        { title: 'No', width: 20, editable: false, render: (_, __, index) => index + 1 },
-        { title: 'Statement',  
+        { title:  getLableName('DF_TITLE_NO'), width: 20, editable: false, render: (_, __, index) => index + 1 },
+        { title: getLableName('DF_TITLE_STATEMENT'),  
         // editable: false,
-            dataIndex: 'description1',
+            dataIndex: lang=='KH'?'description1':'description',
             valueType: 'textarea',
             editable:(_,r) => false, 
             formItemProps: {rules: [{ required: true}] },
             fieldProps: { rows: 1, maxLength: 5000 },
+            // render: (r: any) => (lang=='KH'?r.description1 :r.description)
         },
     ]
-    if(editableRating){
+    // if(editableRating){
         cols.push({
-            title: 'Strongly Disagree',
+            title: getLableName('DF_TITLE_STRONGLY_DISAGREE'),
              dataIndex: 'rating1',
             width: 102,
             align:'center',
@@ -74,7 +79,7 @@ export default({
             },
         })
         cols.push({
-            title: 'Disagree',
+            title: getLableName('DF_TITLE_DISAGREE'),
             dataIndex: 'rating2',
             width: 102,
             align:'center',
@@ -101,7 +106,7 @@ export default({
             },
         })
         cols.push({
-            title: 'Neutral',
+            title: getLableName('DF_TITLE_NEUTURAL'),
             dataIndex: 'rating3',
             width: 102,
             align:'center',
@@ -128,7 +133,7 @@ export default({
             },
         })
         cols.push({
-            title: 'Agree',
+            title: getLableName('DF_TITLE_AGREE'),
             dataIndex: 'rating4',
             width: 102,
             align:'center',
@@ -155,7 +160,7 @@ export default({
             },
         })
         cols.push({
-            title: 'Strongly Agree',
+            title: getLableName('DF_TITLE_STRONGLY_AGREE'),
             dataIndex: 'rating5',
             width: 102,
             align:'center',
@@ -181,29 +186,81 @@ export default({
                 
             },
         })
-    }
-    
+
+    const screens = Grid.useBreakpoint();
+    const isMobile = !screens.md;
+    const ratingLabels = [
+    { key: 'rating1', labelKey: 'DF_TITLE_STRONGLY_DISAGREE', value: 1 },
+    { key: 'rating2', labelKey: 'DF_TITLE_DISAGREE', value: 2 },
+    { key: 'rating3', labelKey: 'DF_TITLE_NEUTURAL', value: 3 },
+    { key: 'rating4', labelKey: 'DF_TITLE_AGREE', value: 4 },
+    { key: 'rating5', labelKey: 'DF_TITLE_STRONGLY_AGREE', value: 5 },
+    ];
+
+
 
     return(<>
-        <EditableProTable<DfEmpEvaluationRs>
-            bordered
-            pagination={false}
-            cardProps={false}
-            formRef={editableFormRef}
-            editableFormRef={editableFormRef}
-            rowKey="key"
-            editable={{
-                type: 'multiple',
-                editableKeys: items?.map((it) => it.key), 
-                onValuesChange: (record, recordList) => { 
+            {isMobile ? (
+                <ProCard size="small">
+                    <Space direction="vertical" size={10} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100%' }}>
+                    {items?.map((item, index) => (
+                        <Card
+                        key={item.key || index}
+                        title={<span style={{ fontSize: '14px',whiteSpace: 'normal', wordBreak: 'break-word', overflow: 'visible', textOverflow: 'clip'  }}>{`${index + 1}. ${lang=='KH'?item.description1:item.description || item.title || 'Unnamed Statement'}`}</span>}
+                        style={{ width: 300 }}
+                        >
+                        {ratingLabels.map(({ key, value }) => {
+                            const checked = key in item && typeof item[key as keyof DfEmpEvaluationRs] === "number"
+                                            ? item[key as keyof DfEmpEvaluationRs] === value : false;
+                            return (
+                                <p key={`${item.key}-${key}`}>
+                                <Radio
+                                    checked={checked}                                
+                                    onChange={(e) => {
+                                        if(editableRating){
+                                            const newRating = ratingLabels.reduce((acc, r) => {
+                                                acc[r.key] = r.key === key && e.target.checked ? value : 0;
+                                                return acc;
+                                            }, {} as Record<string, number>);
 
-                }
-            }}
-            
-            recordCreatorProps={false}
-            value={items}
-            columns={cols}
-        />
-
+                                            setRatingScore(
+                                                item.key,
+                                                newRating.rating1,
+                                                newRating.rating2,
+                                                newRating.rating3,
+                                                newRating.rating4,
+                                                newRating.rating5
+                                            );
+                                        }
+                                    }}
+                                >
+                                    {getLableName(ratingLabels.find(r => r.key === key)!.labelKey)}
+                                </Radio>
+                                </p>
+                            )
+                        })}
+                        </Card>
+                    ))}
+                    </Space>
+                </ProCard>
+            ) : (
+                <EditableProTable<DfEmpEvaluationRs>
+                    bordered
+                    pagination={false}
+                    cardProps={false}
+                    formRef={editableFormRef}
+                    editableFormRef={editableFormRef}
+                    rowKey="key"
+                    editable={{
+                        type: 'multiple',
+                        editableKeys: items?.map((it) => it.key), 
+                        onValuesChange: (record, recordList) => { }
+                        }}
+                            
+                        recordCreatorProps={false}
+                        value={items}
+                        columns={cols}
+                    /> 
+                )}
     </>)
 }

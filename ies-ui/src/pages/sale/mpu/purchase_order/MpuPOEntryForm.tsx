@@ -114,6 +114,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
         })
         : [],
     );
+    
   };
 
   useEffect(() => {

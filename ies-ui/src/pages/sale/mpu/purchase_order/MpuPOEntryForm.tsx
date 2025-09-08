@@ -17,7 +17,7 @@ import {
   ProFormSelect,
   ProFormTextArea,
 } from '@ant-design/pro-components';
-import { Button, Card, Col, Flex, Form, Modal, Row, message } from 'antd';
+import { Button, Card, Col, Flex, Form, InputNumber, Modal, Row, message } from 'antd';
 import { useForm } from 'antd/es/form/Form';
 import { uniqueId } from 'lodash';
 import moment from 'moment';
@@ -97,9 +97,10 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
     setDataSourceItems(
       purchaseOrder.items
         ? purchaseOrder.items.map((e) => {
-            e.key = e.itemCode!;
-            return e;
-          })
+          // e.key = e.itemCode!;
+           e.key = `${e.itemCode}-${e.status}`
+          return e;
+        })
         : [],
     );
   };
@@ -532,6 +533,20 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
                   },
                 ],
               },
+              renderFormItem: (_, config) => {
+                const row = config.record
+                return (
+                  <InputNumber
+                    key={row?.key}
+                    value={row?.pricing ?? 0}
+                    onChange={(value) => {
+                      config.onChange?.(value)
+                      console.log('value',row)
+                    }}
+                    style={{ width: '100%' }}
+                  />
+                );
+              }
             },
             {
               title: 'Unit Price (KHR)',

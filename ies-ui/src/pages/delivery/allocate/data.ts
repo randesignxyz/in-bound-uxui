@@ -74,8 +74,9 @@ export interface DNList {
   claimed_date?: string
   so_no?: string
   reserve_num?: string
-  customer_code?:string,
-  customer_name?:string
+  customer_code?: string,
+  customer_name?: string,
+  status?: string,
 }
 
 interface DN {
@@ -128,6 +129,7 @@ interface DNPlan {
   dn: DNDetail[];
   attachment?: Attachment[];
   so_status?: string
+  delItemName?: string
 }
 
 export interface DeliveryItemList {
@@ -151,6 +153,7 @@ export type AllocateSOAdvanceParams = {
   status: string;
   ordered_date?: string;
   dnStatus?: string
+  delivery_date?: string
 };
 
 export type DNDetail = {
@@ -179,7 +182,8 @@ export type DNItemParams = {
   allocateID: string,
   lineNumber: string,
   so_num: string,
-  isUnplan?: string
+  isUnplan?: string,
+  delItemName?: string
 };
 
 export type DNParams = {
@@ -228,4 +232,21 @@ export type SOAllocateActivities = {
   action_name: string,
   action_date: string,
   dnId: string
+}
+
+export type DnQuickView = {
+  id: number,
+  open_count: number
+  complete_count: number
+  in_progress_count: number
+  total_count: number
+}
+
+export type SkuList = {
+  id: number,
+  sku_code: string,
+  sku_name: string,
+  item_category: number,
+  sequence: number,
+  item_code: string,
 }

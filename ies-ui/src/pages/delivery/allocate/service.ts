@@ -1,5 +1,5 @@
 import { RequestActions, ServiceApiType, singleRequest } from "@/services/apiGateway";
-import { Allocate, allocateSearch, DeliveryList, DNList, DNParams, SOAllocateActivities, SOList, UpdateRemarkParams } from "./data";
+import { Allocate, allocateSearch, DeliveryList, DNList, DNParams, DnQuickView, SkuList, SOAllocateActivities, SOList, UpdateRemarkParams } from "./data";
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { Paging } from "@/services/API";
 
@@ -27,6 +27,12 @@ const AllocateAction = {
             pageSize: params.pagination?.pageSize,
             page: params.pagination?.current,
         },
+    }),
+    listDnDetail: (status?: string, delivery_date?: string, region?: string): ServiceApiType<{ status?: string, delivery_date?: string, region?: string }> => ({
+        type: 'LIST_QUERY',
+        endpoint: 'DELIVERY',
+        actionName: 'get-dn-detail',
+        payload: { status, delivery_date, region },
     }),
     listDn: (so_allocate_id: string[], docNum?: string): ServiceApiType<{ so_allocate_id: string[], docNum?: string }> => ({
         type: 'LIST_QUERY',
@@ -76,6 +82,12 @@ const AllocateAction = {
         actionName: 'get-dn-by-user',
         payload: {  },
     }),
+    listSku: (): ServiceApiType<{}> => ({
+        type: 'LIST_QUERY',
+        endpoint: 'DELIVERY',
+        actionName: 'get-list-sku',
+        payload: {},
+    }),
 }
 
 export const AllocateServiceAPI = (requestAction: RequestActions) => {
@@ -110,8 +122,20 @@ export const AllocateServiceAPI = (requestAction: RequestActions) => {
             singleRequest<SOAllocateActivities>(AllocateAction.getActivities(dnID))(
                 requestAction
             ),
-        list_dn_by_user: () =>
-            singleRequest<DNList>(AllocateAction.listDnbyUser())(
+        list_dn_by_user: (status?: string) =>
+            singleRequest<DNList>(AllocateAction.listDnbyUser(status))(
+                requestAction
+            ),
+        fetch_dn_quick_view: (startDate?: string, endDate?: string) =>
+            singleRequest<DnQuickView>(AllocateAction.fetchDnQuickView(startDate, endDate))(
+                requestAction
+            ),
+        list_dn_detail: (status?: string, delivery_date?: string, region?: string) =>
+            singleRequest<DNList>(AllocateAction.listDnDetail(status, delivery_date, region))(
+                requestAction
+            ),
+        list_sku: () =>
+            singleRequest<SkuList>(AllocateAction.listSku())(
                 requestAction
             ),
 

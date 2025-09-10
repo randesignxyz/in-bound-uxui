@@ -6,7 +6,7 @@ import moment from 'moment';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AllocateServiceAPI } from './service';
 import { simpleRequestActions } from '@/services/model';
-import { AllocateSOAdvanceParams, DeliveryDnParams, DeliveryItemList, DeliveryList, DNItemParams, DNParams, UpdateRemarkParams } from './data';
+import { AllocateSOAdvanceParams, DeliveryDnParams, DeliveryItemList, DeliveryList, DNItemParams, DNParams, LocationList, UpdateRemarkParams } from './data';
 import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 import { CheckOutlined, EditOutlined, InboxOutlined } from '@ant-design/icons';
@@ -17,6 +17,7 @@ import { useAccess } from '@umijs/max';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import { useForm } from 'antd/es/form/Form';
+import { Paging } from '@/services/API';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -37,7 +38,14 @@ export default ({ onReset, onSearch, type, ...rest }: Props) => {
     const [refetch, setRefetch] = useState(false)
     const [loading, setLoading] = useState(false);
 
-
+    const normalizeLocationList = (
+        res: LocationList | Paging<LocationList> | LocationList[]
+    ): LocationList[] => {
+        if (Array.isArray(res)) return res;
+        if ("data" in res && Array.isArray(res.data)) return res.data;
+        if (res && !("data" in res)) return [res as LocationList];
+        return [];
+    };
     useEffect(() => {
 
     }, [rest.open])
@@ -191,43 +199,54 @@ export default ({ onReset, onSearch, type, ...rest }: Props) => {
                             ]}
                         />
                         <ProFormDatePicker
-                            style={{ width: 165 }}
+                            width={'100%'} 
                             name="delivery_date"
                             placeholder="Select Date"
                             label="Delivery Date"
                         />
                         <ProFormSelect
-                            label="Region"
-                            name="region"
+                            label="Province"
+                            name="province_id"
                             allowClear
                             showSearch
-                            options={[
-                                {
-                                    value: 'pending',
-                                    label: 'Pending',
-                                },
-                                {
-                                    value: 'open',
-                                    label: 'Open',
-                                },
-                                {
-                                    value: 'in-progress',
-                                    label: 'In Progress',
-                                },
-                                {
-                                    value: 'complete',
-                                    label: 'Completed',
-                                },
-                                {
-                                    value: 'close',
-                                    label: 'Close',
-                                },
-                                {
-                                    value: 'cancel',
-                                    label: 'Cancel',
-                                }
-                            ]}
+                            request={async () => {
+                                const res = await AllocateServiceAPI(requestActions).list_Location(type = "PROVINCE");
+                                const data = normalizeLocationList(res);
+                                return data.map((obj) => ({ value: obj.id, label: obj.name }));
+                            }}
                         />
+                        <ProFormSelect
+                            label="District"
+                            name="district_id"
+                            allowClear
+                            showSearch
+                            dependencies={["province_id"]} // refresh when province changes
+                            request={async () => {
+                                const provinceId = form.getFieldValue("province_id"); // or form.province_id
+                                if (!provinceId) return [];
+
+                                const res = await AllocateServiceAPI(requestActions).list_Location(type = "DISTRICT", parent = provinceId);
+                                const data = normalizeLocationList(res);
+                                return data.map((obj) => ({ value: obj.id, label: obj.name }));
+                            }}
+                        />
+
+                        <ProFormSelect
+                            label="Commune"
+                            name="commune_id"
+                            allowClear
+                            showSearch
+                            dependencies={["district_id"]} // refresh when province changes
+                            request={async () => {
+                                const districtId = form.getFieldValue("district_id"); // or form.province_id
+                                if (!districtId) return [];
+
+                                const res = await AllocateServiceAPI(requestActions).list_Location(type = "COMMUNE", parent = districtId);
+                                const data = normalizeLocationList(res);
+                                return data.map((obj) => ({ value: obj.id, label: obj.name }));
+                            }}
+                        />
+
                     </ProForm>
                     :
                     <></>

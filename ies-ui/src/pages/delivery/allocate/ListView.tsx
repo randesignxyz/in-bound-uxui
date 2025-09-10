@@ -4,7 +4,7 @@ import { MultiRequest } from '@/services/apiGateway';
 import { Company, Driver, DriverListItem, SaveDriver, Truck } from '@/services/delivery/data';
 import { simpleRequestActions } from '@/services/model';
 import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table';
-import { Card, Checkbox, DatePicker, message, Modal, Progress, Radio, Space, Spin, Tag, Image, UploadFile, Descriptions, Button, Table, Dropdown, Row, Col } from 'antd';
+import { Card, Checkbox, DatePicker, message, Modal, Progress, Radio, Space, Spin, Tag, Image, UploadFile, Descriptions, Button, Table, Dropdown, Row, Col, Typography } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AllocateServiceAPI } from './service';
 import { Allocate, AllocateSOAdvanceParams, DeliveryList, DNItemParams, DNList, DNParams, DnQuickView, SkuList, SOAllocateActivities, SOList, UpdateRemarkParams } from './data';
@@ -16,8 +16,10 @@ import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 import AddRemarkModal from './AddRemarkForm';
 import { uploadFileToFirebase } from './uploadImage';
-import { FileSearchOutlined, HistoryOutlined, PlayCircleOutlined, SyncOutlined } from '@ant-design/icons';
+import { CopyOutlined, FileSearchOutlined, HistoryOutlined, PlayCircleOutlined, PlusCircleOutlined, SyncOutlined } from '@ant-design/icons';
 import AdvanceSearch from './advanceSearchDrawer';
+import { FloatingCard } from './displayCard';
+import SaleTypeDrawer from './SaleTypeDrawer';
 
 dayjs.extend(customParseFormat)
 
@@ -29,9 +31,18 @@ export default () => {
   const actionRef = useRef<ActionType>();
   const [data, setData] = useState<SOList[]>()
   const [skuList, setSkuList] = useState<SkuList[]>([])
+  const [dataListDn, setDataListDn] = useState<DNList[]>([])
+  const [selectedRows, setSelectedRows] = useState<DNList[]>([]);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [drawerTypeOpen, setDrawerTypeOpen] = useState<{ visible: boolean; data?: DNList }>({
+    visible: false,
+  });
   const [drawerOpen, setDrawerOpen] = useState<{ visible: boolean; id: string, status?: string, po?: string, deliveres?: any[], so?: string, dn_qty?: number, order_qty?: number }>({
     visible: false,
     id: '',
+  });
+  const [cardOpen, setCardOpen] = useState<{ visible: boolean }>({
+    visible: false
   });
   const [advanceSearchParams, setAdvanceSearchParams] = useState({
     filter: 'DN',
@@ -44,8 +55,10 @@ export default () => {
 
   const [dnSearch, setDnSearch] = useState({
     status: 'posted',
-    region: undefined,
-    delivery_date: undefined
+    province_id: undefined,
+    delivery_date: undefined,
+    district_id: undefined,
+    commune_id: undefined,
   });
   const [modalOpen, setModalOpen] = useState<{ visible: boolean; id: number, remark?: string, attachment?: any, sales_planid?: string }>({
     visible: false,
@@ -140,21 +153,51 @@ export default () => {
     });
   };
 
-  const handleClaim = async (id: number) => {
+  // const handleClaim = async (id: number) => {
+  //   Modal.confirm({
+  //     title: 'Claim',
+  //     content: 'Are you sure?',
+  //     onOk: async () => {
+
+  //       await services.ClaimDn(id, access.currentUser?.login, 'Claim', 'Claim DN') as {
+  //         data: string;
+  //         message: string;
+  //       }
+  //       actionRef.current?.reloadAndRest?.();
+  //       message.success('Updated successfully');
+  //     },
+  //   });
+  // }
+
+  const handleClaim = async (ids: number | number[]) => {
+    // Normalize ids to an array
+    const idArray = Array.isArray(ids) ? ids : [ids];
+
     Modal.confirm({
       title: 'Claim',
       content: 'Are you sure?',
       onOk: async () => {
+        try {
+          // Loop through each id
+          for (const id of idArray) {
+            await services.ClaimDn(id, access.currentUser?.login, 'Claim', 'Claim DN') as {
+              data: string;
+              message: string;
+            };
+          }
 
-        await services.ClaimDn(id, access.currentUser?.login, 'Claim', 'Claim DN') as {
-          data: string;
-          message: string;
+          // Reload table and show success message
+          actionRef.current?.reloadAndRest?.();
+          message.success('Updated successfully');
+          setSelectedRowKeys([])
+          setSelectedRows([])
+        } catch (error) {
+          message.error('Failed to update');
+          console.error(error);
         }
-        actionRef.current?.reloadAndRest?.();
-        message.success('Updated successfully');
       },
     });
-  }
+  };
 
   const handleUnClaim = async (id: number) => {
     Modal.confirm({
@@ -297,35 +340,106 @@ export default () => {
     }
   };
 
+  // const onRequestDNDeatilHandler = async (
+  //   params: TableViewSearchParams<AllocateSOAdvanceParams>
+  // ): Promise<Paging<DNList>> => {
+  //   try {
+  //     const list = await services.list_dn_detail(dnSearch.status, dnSearch.delivery_date, dnSearch.region,);
+
+  //     if (!Array.isArray(list)) {
+  //       throw new Error('Unexpected response format');
+  //     }
+
+  //     const page = params.pagination?.current ?? 1;
+  //     const pageSize = params.pagination?.pageSize ?? 20;
+  //     const total = list.length;
+
+  //     const pagedData = list.slice((page - 1) * pageSize, page * pageSize);
+  //     const dataList = {
+  //       items: pagedData,
+  //       total,
+  //       page,
+  //       pageSize
+  //     }
+  //     setDataListDn(dataList)
+  //     return dataList;
+
+  //   } catch (error: any) {
+  //     message.error(error.message);
+  //     return Promise.reject(error);
+  //   }
+  // }
+
   const onRequestDNDeatilHandler = async (
     params: TableViewSearchParams<AllocateSOAdvanceParams>
   ): Promise<Paging<DNList>> => {
     try {
-      const list = await services.list_dn_detail(dnSearch.status, dnSearch.delivery_date, dnSearch.region,);
+      const list = await services.list_dn_detail(
+        dnSearch.status,
+        dnSearch.delivery_date,
+        dnSearch.province_id,
+        dnSearch.district_id,
+        dnSearch.commune_id
+      );
 
       if (!Array.isArray(list)) {
         throw new Error('Unexpected response format');
       }
 
+      // --- Transform items to map sku_id → sku_code (+ handle category 2 UOM split) ---
+      const transformedList = list.map((delivery) => {
+        const skuValues: Record<string, number> = {};
+
+        const itemsToUse = delivery.mergeItems?.length ? delivery.mergeItems : delivery.deliveryItems;
+
+        itemsToUse.forEach((item) => {
+          const sku = skuList.find((s) => s.id.toString() === item.sku_id);
+          if (sku) {
+            if (sku.item_category === 2) {
+              // Category 2 → split into pack/bowl using UOM
+              const key = `${sku.sku_code}_${item.sku_uom.toLowerCase()}`;
+              skuValues[key] = (skuValues[key] || 0) + item.qty;
+            } else {
+              // Category 1 (and others) → normal mapping
+              skuValues[sku.sku_code] = (skuValues[sku.sku_code] || 0) + item.qty;
+            }
+          }
+        });
+
+        return {
+          ...delivery,
+          key: delivery.id,
+          ...skuValues,
+        };
+      });
+
+      // --- Pagination ---
       const page = params.pagination?.current ?? 1;
       const pageSize = params.pagination?.pageSize ?? 20;
-      const total = list.length;
+      const total = transformedList.length;
 
-      const pagedData = list.slice((page - 1) * pageSize, page * pageSize);
+      const pagedData = transformedList.slice((page - 1) * pageSize, page * pageSize);
 
-      return {
+      const dataList = {
         items: pagedData,
         total,
         page,
-        pageSize
+        pageSize,
       };
 
-
+      setDataListDn(dataList);
+      return dataList;
     } catch (error: any) {
       message.error(error.message);
       return Promise.reject(error);
     }
-  }
+  };
+
+
+
+
+
+
 
   const soColums: ProColumns<SOList>[] = [
     { title: 'PO No', dataIndex: 'poNo' },
@@ -410,20 +524,16 @@ export default () => {
       </a>),
     },
   ]
+
   const skuColumns: ProColumns<DNList>[] = skuList.map((sku) => {
     if (sku.item_category === 1) {
       return {
-
         title: sku.sku_name,
         dataIndex: sku.sku_code,
         key: sku.sku_code,
+        width: 120, // fix width
         render: (_, record) => (record as any)[sku.sku_code] || '-',
-        onCell: () => ({
-          style: {
-            backgroundColor: '#D0E7FF', // light blue for VT
-            textAlign: 'center',
-          },
-        }),
+        onCell: () => ({ style: { backgroundColor: 'rgba(3, 78, 162, 0.05)', textAlign: 'center' } }),
       };
     } else {
       return {
@@ -434,70 +544,156 @@ export default () => {
             title: 'Pack',
             dataIndex: `${sku.sku_code}_pack`,
             key: `${sku.sku_code}_pack`,
+            maxwidth: 60, // fix width for Pack
             render: (_, record) => (record as any)[`${sku.sku_code}_pack`] || '-',
-            onCell: () => ({
-              style: {
-                backgroundColor: '#FFE5B4', // light orange for MC
-                textAlign: 'center',
-              },
-            }),
+            onCell: () => ({ style: { backgroundColor: 'rgba(239, 109, 35, 0.05)', textAlign: 'center' } }),
           },
           {
             title: 'Bowl',
             dataIndex: `${sku.sku_code}_bowl`,
             key: `${sku.sku_code}_bowl`,
+            width: 60, // fix width for Bowl
             render: (_, record) => (record as any)[`${sku.sku_code}_bowl`] || '-',
-            onCell: () => ({
-              style: {
-                backgroundColor: '#FFE5B4', // light orange for MC
-                textAlign: 'center',
-              },
-            }),
+            onCell: () => ({ style: { backgroundColor: 'rgba(239, 109, 35, 0.05)', textAlign: 'center' } }),
           },
         ],
       };
     }
   });
 
-skuColumns.forEach((col) => {
-  console.log('skuColumns',col)
-  if (col.children) {
-    console.log(`Parent: ${col.title}`, col.children);
-  }
-});
-
-  // Then combine with static columns
+  // Static columns
   const staticColumns: ProColumns<DNList>[] = [
-    { title: 'DN No', dataIndex: 'dn_no', key: 'dn_no' },
-    { title: 'DN Date', dataIndex: 'dn_date', key: 'dn_date' },
-    { title: 'SO No', dataIndex: 'so_no', key: 'so_no' },
-    { title: 'Customer', dataIndex: 'customer', key: 'customer' },
+    {
+      title: '',
+      dataIndex: 'checkbox',
+      width: '2%',
+      render: (_: any, record: DNList) => (
+        <Space size={4}>
+          <Button type='link' onClick={() => setDrawerTypeOpen({ visible: true, data: record })}> <PlusCircleOutlined /></Button>
+
+          <Checkbox
+            checked={selectedRowKeys.includes(record.id)}
+            onChange={(e) => {
+              if (e.target.checked) {
+                setSelectedRowKeys(prev => [...prev, record.id]);
+                setSelectedRows(prev => [...prev, record]);
+                setCardOpen({ visible: true });
+              } else {
+                setSelectedRowKeys(prev => prev.filter(k => k !== record.id));
+                setSelectedRows(prev => prev.filter(r => r.id !== record.id));
+              }
+            }}
+          />
+        </Space>
+      ),
+    },
+
+    {
+      title: 'DN Date',
+      dataIndex: 'deliveryDate',
+      width: '6%', // fix width
+      render: (_, r) => (dayjs(r.deliveryDate).isValid() ? dayjs(r.deliveryDate).format('DD-MMM-YYYY') : '-')
+    },
+    {
+      title: 'SO No',
+      dataIndex: 'so_no',
+      key: 'so_no',
+      width: '10%',
+      render: (_,value) => (
+        <>
+          <Typography.Text strong copyable >{value.so_no}</Typography.Text>
+        </>
+      ),
+    },
+    { title: 'Customer', dataIndex: 'customer_name', width: '7%' },
     {
       title: 'SKU',
       key: 'sku',
       children: skuColumns,
     },
-    { title: 'SAL Remark', dataIndex: 'sale_remark', key: 'sale_remark' },
-    { title: 'Shipping Address', dataIndex: 'shipping_address', key: 'shipping_address' },
+    { title: 'SAL Remark', dataIndex: 'remarks', width: 150 },
+    { title: 'Shipping Address', dataIndex: 'shippingAddress', width: 200 },
   ];
 
+  // const expandedRowRender = (record: DNList) => {
+  //   const breakdown = record.deliveryItems?.reduce((acc: any, item: any) => {
+  //     const sku = skuList.find((s) => s.id.toString() === item.sku_id);
+  //     if (!sku) return acc;
 
+  //     const key =
+  //       sku.item_category === 2
+  //         ? `${sku.sku_code}_${item.sku_uom.toLowerCase()}`
+  //         : sku.sku_code;
 
-  // const staticColumns: ProColumns<DNList>[] = [
-  //   { title: 'DN No', dataIndex: 'dn_no' },
-  //   { title: 'DN Date', dataIndex: 'dn_date' },
-  //   { title: 'SO No', dataIndex: 'so_no' },
-  //   { title: 'Customer', dataIndex: 'customer' },
-  //   { title: 'SKU', dataIndex: 'sku', children: skuColumns },
-  //   { title: 'SAL Remark', dataIndex: 'sale_remark' },
-  //   { title: 'Shipping Address', dataIndex: 'shipping_address' },
-  //   // Add other static columns here
-  // ];
+  //     if (!acc[key]) acc[key] = {};
+  //     acc[key][item.saleType || "STD"] =
+  //       (acc[key][item.saleType || "STD"] || 0) + item.qty;
 
-  // Dynamic SKU columns
+  //     return acc;
+  //   }, {}) || {};
 
+  //   return (
+  //     <tr>
+  //       {/* empty tds for static columns before SKU */}
+  //       <td></td>
+  //       <td style={{ width: '6%' }}></td> {/* DN Date */}
+  //       <td style={{ width: '6%' }}></td> {/* SO No */}
+  //       <td style={{ width: '7%' }}></td> {/* Customer */}
 
-  // Combine static + dynamic columns
+  //       {/* SKU columns */}
+  //       {skuColumns.map((col: any) => {
+  //         if (col.children && col.children.length) {
+  //           return col.children.map((child: any) => {
+  //             const saleTypes = breakdown[child.key];
+  //             return (
+  //               <td
+  //                 key={child.key}
+  //                 style={{
+  //                   minWidth: child.width || 60,
+  //                   textAlign: "center",
+  //                   background: "#f8fbff",
+  //                 }}
+  //               >
+  //                 {saleTypes
+  //                   ? Object.entries(saleTypes).map(([type, qty]) => (
+  //                     <div key={type}>
+  //                       {type || "STD"}: {qty}
+  //                     </div>
+  //                   ))
+  //                   : "-"}
+  //               </td>
+  //             );
+  //           });
+  //         } else {
+  //           const saleTypes = breakdown[col.key];
+  //           return (
+  //             <td
+  //               key={col.key}
+  //               style={{
+  //                 minWidth: col.width || 100,
+  //                 textAlign: "center",
+  //                 background: "#f8fbff",
+  //               }}
+  //             >
+  //               {saleTypes
+  //                 ? Object.entries(saleTypes).map(([type, qty]) => (
+  //                   <div key={type}>
+  //                     {type || "STD"}: {qty}
+  //                   </div>
+  //                 ))
+  //                 : "-"}
+  //             </td>
+  //           );
+  //         }
+  //       })}
+
+  //       {/* optional: leave blank for columns after SKU */}
+  //       <td></td> {/* SAL Remark */}
+  //       <td></td> {/* Shipping Address */}
+  //     </tr>
+  //   );
+  // };
+
   const dnColumns: ProColumns<DNList>[] = [...staticColumns];
 
   const mtColums: ProColumns<DNList>[] = [
@@ -1094,11 +1290,26 @@ skuColumns.forEach((col) => {
                   displayOnly
                   tableProps={{
                     actionRef: actionRef,
+                    toolbar: {
+                      actions: [
+                        <>
+                          {access.canAccesAddRemarkAllocate ? (
+                            <Button type="primary"
+                              disabled={selectedRowKeys.length == 0}
+                              onClick={() => handleClaim(selectedRowKeys.map(k => Number(k)))}
+                            >Claim</Button>
+                          ) : <></>}
+
+                        </>
+                      ],
+                    },
                   }}
                   extraFilter={
                     <Space size="large" style={{ flexDirection: 'row' }}>
-                      <Button onClick={() => setSearchModalOpen({ visible: true })}><FileSearchOutlined /></Button>
-                      <><Radio.Group
+                      <Button onClick={() => setSearchModalOpen({ visible: true })}>
+                        <FileSearchOutlined />
+                      </Button>
+                      <Radio.Group
                         value={advanceSearchParams.filter}
                         onChange={(e) => {
                           setAdvanceSearchParams((v) => ({
@@ -1112,26 +1323,7 @@ skuColumns.forEach((col) => {
                         <Radio.Button value="SO">Sales Order</Radio.Button>
                         <Radio.Button value="DN">Delivery Plan</Radio.Button>
                         <Radio.Button value="MT">My Task</Radio.Button>
-                        {/* <Radio.Button value="FG">FG</Radio.Button> */}
                       </Radio.Group>
-                        {/* {advanceSearchParams.filter == 'MT' ?
-                      <Radio.Group
-                        value={dnSearch.status}
-                        onChange={(e) => {
-                          setDnSearch((v) => ({
-                            ...v,
-                            status: e.target.value,
-                          }));
-                          actionRef.current?.reloadAndRest?.();
-                        }}
-                      >
-                        <Radio.Button value="ALL">ALL</Radio.Button>
-                        <Radio.Button value="open">Open</Radio.Button>
-                        <Radio.Button value="in-progress">In Progress</Radio.Button>
-                        <Radio.Button value="complete">Completed</Radio.Button>
-                      </Radio.Group>
-                      : {}} */}
-                      </>
                     </Space>
                   }
                   columns={dnColumns}
@@ -1144,12 +1336,12 @@ skuColumns.forEach((col) => {
                           sort,
                         },
                         pagination: {
-                          pageSize: 500
+                          pageSize: 500,
                         },
-                      })
+                      }),
                   }}
-
-                /> : []}
+                />
+                : []}
 
 
 
@@ -1194,6 +1386,17 @@ skuColumns.forEach((col) => {
           setAdvanceSearchParams({ status: 'posted', filter: 'SO', dnStatus: 'open' });
           actionRef.current?.reloadAndRest?.();
         }}
+      />
+      {advanceSearchParams.filter == 'DN' ?
+        <FloatingCard
+          selectedRows={selectedRows}
+          cardOpen={cardOpen}
+        />
+        : <></>}
+      <SaleTypeDrawer
+        open={drawerTypeOpen.visible}
+        data={drawerTypeOpen.data}
+        onVisibleChange={(v) => v === false && (setDrawerTypeOpen({ visible: false, data: undefined }))}
       />
     </>
   );

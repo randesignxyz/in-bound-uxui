@@ -1,5 +1,5 @@
 import { RequestActions, ServiceApiType, singleRequest } from "@/services/apiGateway";
-import { Allocate, allocateSearch, DeliveryList, DNList, DNParams, DnQuickView, SkuList, SOAllocateActivities, SOList, UpdateRemarkParams } from "./data";
+import { Allocate, allocateSearch, DeliveryList, DNList, DNParams, DnQuickView, LocationList, SkuList, SOAllocateActivities, SOList, UpdateRemarkParams } from "./data";
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { Paging } from "@/services/API";
 
@@ -28,11 +28,11 @@ const AllocateAction = {
             page: params.pagination?.current,
         },
     }),
-    listDnDetail: (status?: string, delivery_date?: string, region?: string): ServiceApiType<{ status?: string, delivery_date?: string, region?: string }> => ({
+    listDnDetail: (status?: string, delivery_date?: string, province_id?: string, district_id?: string, commune_id?: string): ServiceApiType<{ status?: string, delivery_date?: string, region?: string, province_id?: string, district_id?: string, commune_id?: string }> => ({
         type: 'LIST_QUERY',
         endpoint: 'DELIVERY',
         actionName: 'get-dn-detail',
-        payload: { status, delivery_date, region },
+        payload: { status, delivery_date, province_id, district_id, commune_id },
     }),
     listDn: (so_allocate_id: string[], docNum?: string): ServiceApiType<{ so_allocate_id: string[], docNum?: string }> => ({
         type: 'LIST_QUERY',
@@ -76,11 +76,11 @@ const AllocateAction = {
         actionName: 'get-activities-by-dn',
         payload: { dnID },
     }),
-    listDnbyUser: (status?: string): ServiceApiType<{ status?: string }> => ({
+    listDnbyUser: (status?: string,startDate?: string, endDate?: string): ServiceApiType<{ status?: string,startDate?: string, endDate?: string }> => ({
         type: 'LIST_QUERY',
         endpoint: 'DELIVERY',
         actionName: 'get-dn-by-user',
-        payload: { status },
+        payload: { status, startDate,endDate },
     }),
     fetchDnQuickView: (startDate?: string, endDate?: string): ServiceApiType<{ startDate?: string, endDate?: string }> => ({
         type: 'FETCH_QUERY',
@@ -93,6 +93,12 @@ const AllocateAction = {
         endpoint: 'DELIVERY',
         actionName: 'get-list-sku',
         payload: {},
+    }),
+    listLocation: (type?: string, parent?: string): ServiceApiType<{ type?: string, parent?: string }> => ({
+        type: 'LIST_QUERY',
+        endpoint: 'DELIVERY',
+        actionName: 'get-list-location',
+        payload: { type, parent },
     }),
 }
 
@@ -128,20 +134,24 @@ export const AllocateServiceAPI = (requestAction: RequestActions) => {
             singleRequest<SOAllocateActivities>(AllocateAction.getActivities(dnID))(
                 requestAction
             ),
-        list_dn_by_user: (status?: string) =>
-            singleRequest<DNList>(AllocateAction.listDnbyUser(status))(
+        list_dn_by_user: (status?: string,startDate?: string, endDate?: string) =>
+            singleRequest<DNList>(AllocateAction.listDnbyUser(status,startDate,endDate))(
                 requestAction
             ),
         fetch_dn_quick_view: (startDate?: string, endDate?: string) =>
             singleRequest<DnQuickView>(AllocateAction.fetchDnQuickView(startDate, endDate))(
                 requestAction
             ),
-        list_dn_detail: (status?: string, delivery_date?: string, region?: string) =>
-            singleRequest<DNList>(AllocateAction.listDnDetail(status, delivery_date, region))(
+        list_dn_detail: (status?: string, delivery_date?: string, province_id?: string, district_id?: string, commune_id?: string) =>
+            singleRequest<DNList>(AllocateAction.listDnDetail(status, delivery_date, province_id, district_id, commune_id))(
                 requestAction
             ),
         list_sku: () =>
             singleRequest<SkuList>(AllocateAction.listSku())(
+                requestAction
+            ),
+        list_Location: (type?: string, parent?: string) =>
+            singleRequest<LocationList>(AllocateAction.listLocation(type, parent))(
                 requestAction
             ),
     }

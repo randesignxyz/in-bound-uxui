@@ -59,6 +59,7 @@ export interface DeliveryList {
 }
 
 export interface DNList {
+  key: any;
   id: number,
   soId: string,
   deliveryDate: string,
@@ -77,8 +78,27 @@ export interface DNList {
   customer_code?: string,
   customer_name?: string,
   status?: string,
+  mergeItems: mergeItems[]
 }
 
+interface mergeItems {
+  allocateID?: string
+  category?: string
+  delItemName?: string
+  deliveryId?: string
+  dn?: string
+  id?: string
+  itemCode?: string
+  itemName?: string
+  lineNumber?: string
+  qty?: string
+  saleType?: string
+  sku_id?: string
+  sku_name: string
+  sku_uom: string
+  so_num?: string
+  sequence?:string
+}
 interface DN {
   createdBy?: string
   createdDate?: string
@@ -117,6 +137,8 @@ interface DN {
 // }
 
 interface DNPlan {
+  sku_id: string;
+  sku_uom: string;
   allocateItemIds?: string;
   deliveryId?: string;
   id?: string;
@@ -249,4 +271,12 @@ export type SkuList = {
   item_category: number,
   sequence: number,
   item_code: string,
+}
+
+export type LocationList = {
+  id: number,
+  internal_name: string,
+  name: string,
+  parent: string,
+  type: string,
 }

@@ -57,6 +57,7 @@ export interface RegisterCustomerDetailResponse{
   customerCode?: string;
   formNo: string;
   vatInv: string;
+  vatText?: string;
   purpose: string;
   priceTradeOfferId?: number;
   priceTradeOfferName?: string;

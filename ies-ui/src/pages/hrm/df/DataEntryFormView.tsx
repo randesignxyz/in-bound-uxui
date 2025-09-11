@@ -10,10 +10,11 @@ import { formatDate, formatterQty1 } from "@/pages/utils";
 import InstructionCard from "./components/InstructionCard";
 import StatementTable from "./components/StatementTable";
 import CommentTable from "./components/commentTable";
-import { UnorderedListOutlined, UserOutlined } from "@ant-design/icons";
+import { FilePdfOutlined, UnorderedListOutlined, UserOutlined } from "@ant-design/icons";
 import { AppraisalDataLookup } from "../appraisal-submit/data.types";
 import { createService } from "../appraisal-submit/services";
 import { simpleRequestActions } from "@/services/model";
+import { history} from 'umi';
 
 
 type DataFormType = {
@@ -206,9 +207,13 @@ export default({
         }
     }
     const isReport = selectedAssessor && ['Self','Manager'].some(r=>r==selectedAssessor?.type)
+    const isExternal = () => history.location.pathname.includes("/externa/hrm/df/detail");
 
     return(<div ref={ref}><Spin spinning={loading} ><Space direction="vertical" style={{ width: '100%' }}>
-        {(data?.assessors?.length||0)>1 && <Card title="Assessor Infomation" size="small">
+        {(data?.assessors?.length||0)>1 && <Card title="Assessor Infomation" size="small" 
+            extra={isExternal() && <Button icon={<UnorderedListOutlined/>} type='link'  onClick={() => history.push(`/hrm/df/list`)}>360 Degree Feedback List</Button>}
+            
+        >
             {/* <Row gutter={20}>
                 <Col flex={1}> */}
                 <div
@@ -242,7 +247,9 @@ export default({
                 {/* </Col>
             </Row> */}
         </Card>}
-        <ProCard size="small" headerBordered title="Employee Infomation">
+        <ProCard size="small" headerBordered title="Employee Infomation"
+            // extra={<Button icon={<FilePdfOutlined/>}>Export</Button>}
+        >
             <Descriptions>
                 <Descriptions.Item label="Employee ID" style={{ fontWeight: 'bolder' }}>{data?.empNo}</Descriptions.Item>
                 <Descriptions.Item label="Employee Name" style={{ fontWeight: 'bolder' }}>{data?.empName}</Descriptions.Item>

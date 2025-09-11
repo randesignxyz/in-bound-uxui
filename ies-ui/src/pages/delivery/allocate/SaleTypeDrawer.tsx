@@ -1,12 +1,12 @@
 import { DrawerForm, DrawerFormProps } from '@ant-design/pro-form';
-import { Typography, Table } from 'antd';
+import { Typography, Table, Descriptions } from 'antd';
 import { useState } from 'react';
 import { simpleRequestActions } from '@/services/model';
 import { DNList } from './data';
 import { useAccess } from '@umijs/max';
 
 interface Props extends DrawerFormProps {
-    data?: DNList
+    dataList?: DNList
 }
 
 interface TableRow {
@@ -15,7 +15,7 @@ interface TableRow {
     [key: string]: any;
 }
 
-export default ({ data, ...rest }: Props) => {
+export default ({ dataList, ...rest }: Props) => {
     const prepareData = (delivery: any): { data: TableRow[], columns: any[] } => {
         const rows: Record<string, TableRow> = {};
         const saleTypes = new Set<string>();
@@ -109,6 +109,12 @@ export default ({ data, ...rest }: Props) => {
         const { data, columns } = prepareData(delivery);
 
         return (
+            <>
+            <Descriptions>
+                <Descriptions.Item label={"Sale Remark"}>
+                    { dataList?.remarks ? dataList?.remarks : '-'}
+                </Descriptions.Item>
+            </Descriptions>
             <Table
                 rowKey="sku"
                 columns={columns}
@@ -116,6 +122,7 @@ export default ({ data, ...rest }: Props) => {
                 pagination={false}
                 bordered
             />
+            </>
         );
     };
 
@@ -126,7 +133,7 @@ export default ({ data, ...rest }: Props) => {
             width={700}
             submitter={false}
         >
-            <DeliveryTable delivery={data} />
+            <DeliveryTable delivery={dataList} />
         </DrawerForm>
     );
 };

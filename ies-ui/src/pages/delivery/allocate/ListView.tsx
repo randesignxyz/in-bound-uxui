@@ -614,8 +614,24 @@ export default () => {
       key: 'sku',
       children: skuColumns,
     },
-    { title: 'SAL Remark', dataIndex: 'remarks', width: 150 },
-    { title: 'Shipping Address', dataIndex: 'shippingAddress', width: 200 },
+{
+  title: 'SAL Remark',
+  dataIndex: 'remarks',
+  width: 150,
+  render: (_,text) => (
+    <div
+      style={{
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        maxWidth: 150,
+      }}
+      title={text.remarks} // shows full text on hover
+    >
+      {text.remarks ? text.remarks :'-'}
+    </div>
+  ),
+},    { title: 'Shipping Address', dataIndex: 'shippingAddress', width: 200 },
   ];
 
   // const expandedRowRender = (record: DNList) => {
@@ -1405,7 +1421,7 @@ export default () => {
         : <></>}
       <SaleTypeDrawer
         open={drawerTypeOpen.visible}
-        data={drawerTypeOpen.data}
+        dataList={drawerTypeOpen.data}
         onVisibleChange={(v) => v === false && (setDrawerTypeOpen({ visible: false, data: undefined }))}
       />
     </>

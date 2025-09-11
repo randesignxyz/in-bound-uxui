@@ -50,15 +50,17 @@ export default () => {
     dnStatus: 'pending'
   });
   const [MTSearch, setMTSearch] = useState({
-    status: 'ALL'
+    status: 'ALL',
+    startDate: undefined,
+    endDate: undefined
   });
 
   const [dnSearch, setDnSearch] = useState({
     status: 'posted',
-    province_id: undefined,
-    delivery_date: undefined,
-    district_id: undefined,
-    commune_id: undefined,
+    province_id: '',
+    delivery_date: '',
+    district_id: '',
+    commune_id: '',
   });
   const [modalOpen, setModalOpen] = useState<{ visible: boolean; id: number, remark?: string, attachment?: any, sales_planid?: string }>({
     visible: false,
@@ -295,7 +297,7 @@ export default () => {
     params: TableViewSearchParams<AllocateSOAdvanceParams>
   ): Promise<Paging<DNList>> => {
     try {
-      const list = await services.list_dn_by_user(MTSearch.status);
+      const list = await services.list_dn_by_user(MTSearch.status,MTSearch.startDate,MTSearch.endDate);
 
       if (!Array.isArray(list)) {
         throw new Error('Unexpected response format');
@@ -568,8 +570,8 @@ export default () => {
       dataIndex: 'checkbox',
       width: '2%',
       render: (_: any, record: DNList) => (
-        <Space size={4}>
-          <Button type='link' onClick={() => setDrawerTypeOpen({ visible: true, data: record })}> <PlusCircleOutlined /></Button>
+        <>
+          {/* <Button type='link' onClick={() => setDrawerTypeOpen({ visible: true, data: record })}> <PlusCircleOutlined /></Button> */}
 
           <Checkbox
             checked={selectedRowKeys.includes(record.id)}
@@ -584,26 +586,27 @@ export default () => {
               }
             }}
           />
-        </Space>
+        </>
       ),
     },
 
-    {
-      title: 'DN Date',
-      dataIndex: 'deliveryDate',
-      width: '6%', // fix width
-      render: (_, r) => (dayjs(r.deliveryDate).isValid() ? dayjs(r.deliveryDate).format('DD-MMM-YYYY') : '-')
-    },
+
     {
       title: 'SO No',
       dataIndex: 'so_no',
       key: 'so_no',
       width: '10%',
-      render: (_,value) => (
-        <>
-          <Typography.Text strong copyable >{value.so_no}</Typography.Text>
-        </>
+      render: (_, value) => (
+        <a onClick={() => setDrawerTypeOpen({ visible: true, data: value })}>
+          <Typography.Link strong copyable >{value.so_no}</Typography.Link>
+        </a>
       ),
+    },
+    {
+      title: 'DN Date',
+      dataIndex: 'deliveryDate',
+      width: '6%', // fix width
+      render: (_, r) => (dayjs(r.deliveryDate).isValid() ? dayjs(r.deliveryDate).format('DD-MMM-YYYY') : '-')
     },
     { title: 'Customer', dataIndex: 'customer_name', width: '7%' },
     {
@@ -1174,7 +1177,7 @@ export default () => {
               }}
               extraFilter={
                 <Space size="large" style={{ flexDirection: 'row' }}>
-                  {/* <Button onClick={() => setSearchModalOpen({ visible: true })}><FileSearchOutlined /></Button> */}
+                  <Button onClick={() => setSearchModalOpen({ visible: true })}><FileSearchOutlined /></Button>
                   <><Radio.Group
                     value={advanceSearchParams.filter}
                     onChange={(e) => {
@@ -1191,9 +1194,9 @@ export default () => {
                     <Radio.Button value="MT">My Task</Radio.Button>
                     {/* <Radio.Button value="FG">FG</Radio.Button> */}
                   </Radio.Group>
-                    {advanceSearchParams.filter == 'MT' ?
+                    {/* {advanceSearchParams.filter == 'MT' ?
                       <Radio.Group
-                        value={dnSearch.status}
+                        value={MTSearch.status}
                         onChange={(e) => {
                           setMTSearch((v) => ({
                             ...v,
@@ -1207,7 +1210,7 @@ export default () => {
                         <Radio.Button value="in-progress">In Progress</Radio.Button>
                         <Radio.Button value="complete">Completed</Radio.Button>
                       </Radio.Group>
-                      : {}}
+                      : {}} */}
                   </>
                 </Space>
               }
@@ -1235,7 +1238,7 @@ export default () => {
                 }}
                 extraFilter={
                   <Space size="large" style={{ flexDirection: 'row' }}>
-                    {/* <Button onClick={() => setSearchModalOpen({ visible: true })}><FileSearchOutlined /></Button> */}
+                    <Button onClick={() => setSearchModalOpen({ visible: true })}><FileSearchOutlined /></Button>
                     <><Radio.Group
                       value={advanceSearchParams.filter}
                       onChange={(e) => {
@@ -1252,7 +1255,7 @@ export default () => {
                       <Radio.Button value="MT">My Task</Radio.Button>
                       {/* <Radio.Button value="FG">FG</Radio.Button> */}
                     </Radio.Group>
-                      {advanceSearchParams.filter == 'OV' ?
+                      {/* {advanceSearchParams.filter == 'OV' ?
                         <RangePicker onChange={(dates) => {
                           if (dates) {
                             setQuickViewSearch({
@@ -1265,7 +1268,7 @@ export default () => {
                             actionRef.current?.reloadAndRest?.();
                           }
                         }} />
-                        : {}}
+                        : {}} */}
                     </>
                   </Space>
                 }
@@ -1374,10 +1377,17 @@ export default () => {
               setAdvanceSearchParams((v) => ({ ...v, ...d }))
               : advanceSearchParams.filter == 'DN' ?
                 (
-                  console.log(d, 'd'),
                   setDnSearch((v) => ({ ...v, ...d }))
                 )
-                : {}
+                : advanceSearchParams.filter == 'OV' ?
+                  (
+                    setQuickViewSearch((v) => ({ ...v, ...d }))
+                  )
+                  : advanceSearchParams.filter == 'MT' ?
+                  (
+                    console.log('d',d),
+                    setMTSearch((v) => ({ ...v, ...d }))
+                  ): {}
           }
           actionRef.current?.reloadAndRest?.();
         }}

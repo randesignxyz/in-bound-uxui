@@ -33,22 +33,26 @@ export default ({ data, ...rest }: Props) => {
                     qty: 0,
                     category: item.category,
                     sku_id: item.sku_id,
+                    sequence: Number(item.sequence),
                 };
             }
 
             rows[key].qty += item.qty;
 
-            if (item.saleType) {
-                rows[key][item.saleType] = item.qty;
-                saleTypes.add(item.saleType);
-            }
+            const saleType = item.saleType && item.saleType.trim() !== ""
+                ? item.saleType
+                : "STD";
+
+            rows[key][saleType] = item.qty;
+            saleTypes.add(saleType);
         });
+
 
         const data = Object.values(rows).sort((a, b) => {
             if (a.category !== b.category) {
-                return a.category - b.category;
+                return Number(a.category) - Number(b.category);
             }
-            return a.sku_id - b.sku_id;
+            return Number(a.sequence) - Number(b.sequence);
         });
 
         const saleTypeArray = Array.from(saleTypes);

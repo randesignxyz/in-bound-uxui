@@ -199,7 +199,7 @@ export default ({ onReset, onSearch, type, ...rest }: Props) => {
                             ]}
                         />
                         <ProFormDatePicker
-                            width={'100%'} 
+                            width={'100%'}
                             name="delivery_date"
                             placeholder="Select Date"
                             label="Delivery Date"
@@ -249,7 +249,85 @@ export default ({ onReset, onSearch, type, ...rest }: Props) => {
 
                     </ProForm>
                     :
-                    <></>
+                    type == 'OV' ?
+                        <ProForm
+                            form={form}
+                            onReset={() => onReset()}
+                            submitter={{
+                                onSubmit: async () => {
+                                    const data = await form.validateFields()
+                                    const [startDate, endDate] = Array.isArray(data.ordered_date) ? data.ordered_date : []
+
+                                    const formatted = {
+                                        ...data,
+                                        startDate: startDate ? startDate.format("YYYY-MM-DD") : undefined,
+                                        endDate: endDate ? endDate.format("YYYY-MM-DD") : undefined,
+
+                                    };
+                                    console.log(formatted)
+                                    onSearch(formatted);
+                                },
+                            }}
+                        >
+                            <ProFormDateRangePicker
+                                style={{ width: 165 }}
+                                name="ordered_date"
+                                placeholder="Select Date"
+                                label="From Date - To Date"
+                            />
+                        </ProForm>
+                        :
+                        type == 'MT' ?
+                            <ProForm
+                                form={form}
+                                onReset={() => onReset()}
+                                submitter={{
+                                    onSubmit: async () => {
+                                        const data = await form.validateFields()
+                                        const [startDate, endDate] = Array.isArray(data.ordered_date) ? data.ordered_date : []
+
+                                        const formatted = {
+                                            ...data,
+                                            startDate: startDate ? startDate.format("YYYY-MM-DD") : undefined,
+                                            endDate: endDate ? endDate.format("YYYY-MM-DD") : undefined,
+
+                                        }
+                                        onSearch(formatted);
+                                    },
+                                }}
+                            >
+                                <ProFormSelect
+                                    label="DN Status"
+                                    name="status"
+                                    initialValue="ALL"
+                                    allowClear
+                                    showSearch
+                                    options={[
+                                        {
+                                            value: 'ALL',
+                                            label: 'ALL',
+                                        },
+                                        {
+                                            value: 'open',
+                                            label: 'Open',
+                                        },
+                                        {
+                                            value: 'in-progress',
+                                            label: 'In Progress',
+                                        },
+                                        {
+                                            value: 'complete',
+                                            label: 'Completed',
+                                        }
+                                    ]}
+                                />
+                                <ProFormDateRangePicker
+                                    style={{ width: 165 }}
+                                    name="ordered_date"
+                                    placeholder="Select Date"
+                                    label="From Date - To Date"
+                                />
+                            </ProForm> : <></>
             }
 
         </DrawerForm>

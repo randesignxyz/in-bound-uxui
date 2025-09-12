@@ -291,6 +291,7 @@ const QuickViewDetail: React.FC<Prop> = ({ settlement, soldExchangeRate, ...prop
             );
           }}
         />
+
         
       </Flex>
 

@@ -2,7 +2,7 @@ import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import PageWrapper from '@/components/PageWrapper';
 import { simpleRequestActions } from '@/services/model';
 import { LeadDetail, SalesTeamWorkLess } from '@/services/sale/data';
-import { CheckCircleOutlined, EditOutlined, ExportOutlined, FileDoneOutlined, SwapOutlined } from '@ant-design/icons';
+import { ExportOutlined, SwapOutlined } from '@ant-design/icons';
 import { useAccess, useQuery } from '@umijs/max';
 import { Badge, Button, message, Modal, Tag } from 'antd';
 import { useEffect, useState } from 'react';
@@ -13,9 +13,9 @@ import { LeadAdvanceSearchParams } from './data';
 import LeadDetailView from './LeadDetailView';
 import LeadEntryFormView from './LeadEntryFormView';
 import { LeadServiceAPI } from './services';
-import VerificationModalForm from './VerificationForm';
+// import VerificationModalForm from './VerificationForm';
 
-interface Props { }
+interface Props {}
 
 const LeadMainPage: React.FC<Props> = () => {
   const requestActions = simpleRequestActions();
@@ -54,7 +54,7 @@ const LeadMainPage: React.FC<Props> = () => {
     };
   }>();
 
-  const [verificationState, setVerificationState] = useState<{ visible?: { name: "MODAL", payloads?: any } }>();
+  // const [verificationState, setVerificationState] = useState<{ visible?:{ name:"MODAL",payloads?:any } }>();
 
   return (
     <>
@@ -77,10 +77,11 @@ const LeadMainPage: React.FC<Props> = () => {
             ),
           },
           {
-            tabLabel: `${items?.internalName
-              ? items?.internalName
-              : [items?.firstName, items?.lastName].join(' ')
-              }`,
+            tabLabel: `${
+              items?.internalName
+                ? items?.internalName
+                : [items?.firstName, items?.lastName].join(' ')
+            }`,
             action: 'edit',
             panel: ({ onUpdateTab, key }) => (
               <LeadEntryFormView
@@ -96,10 +97,11 @@ const LeadMainPage: React.FC<Props> = () => {
             ),
           },
           {
-            tabLabel: `${items?.internalName
-              ? items?.internalName
-              : [items?.firstName, items?.lastName].join(' ')
-              }`,
+            tabLabel: `${
+              items?.internalName
+                ? items?.internalName
+                : [items?.firstName, items?.lastName].join(' ')
+            }`,
             action: 'view',
             panel: ({ onUpdateTab, key }) => (
               <LeadDetailView
@@ -153,7 +155,7 @@ const LeadMainPage: React.FC<Props> = () => {
                 ...param,
                 advanceSearch: {
                   status: param?.status,
-                },   
+                },
               },
               pagination: page,
             }));
@@ -170,7 +172,7 @@ const LeadMainPage: React.FC<Props> = () => {
             dataSource: data?.items,
             loading: isFetching,
             pagination: {
-              total: data?.total,      
+              total: data?.total,
             },
             columns: [
               {
@@ -185,9 +187,10 @@ const LeadMainPage: React.FC<Props> = () => {
                 title: 'Shop Name',
                 dataIndex: 'internalName',
                 render: (_, r) =>
-                  `${r.internalName
-                    ? r.internalName
-                    : [r.firstName, r.lastName].filter((p) => p).join(' ')
+                  `${
+                    r.internalName
+                      ? r.internalName
+                      : [r.firstName, r.lastName].filter((p) => p).join(' ')
                   }`,
               },
               {
@@ -242,39 +245,54 @@ const LeadMainPage: React.FC<Props> = () => {
               //   },
               // },
               {
-                title: "Status",
-                dataIndex: "status",
-                render: (_, r) => <Badge status={
-                  r.status == "Active" ? "processing"
-                    : r.status == "Inactive" ? "default"
-                      : "success"
-                } text={r.status}
-                />
-              },
-              {
-                title: "",
-                actionProps: (item) => ({
-                  label: <EditOutlined />,
-                  type: "edit",
-                  actionButtons: [
-                    {
-                      icon: <CheckCircleOutlined />,
-                      type: "link",
-                      disabled: item?.isVerified,
-                      onClick: () => {
-                        Modal.confirm({
-                          title: "Confirmation Verification.",
-                          content: "do you want continue process?",
-                          onOk: async () => {
-                            // await services.verified([item.id]);
-                            refetch();
-                          }
-                        })
-                      }
+                title: 'Status',
+                dataIndex: 'status',
+                render: (_, r) => (
+                  <Badge
+                    status={
+                      r.status == 'Active'
+                        ? 'processing'
+                        : r.status == 'Inactive'
+                        ? 'default'
+                        : 'success'
                     }
-                  ]
-                })
-              }
+                    text={r.status}
+                  />
+                ),
+              },
+              // {
+              //   title: "",
+              //   actionProps: (item) => ({
+              //     label: <EditOutlined />,
+              //     type: "edit",
+              //     actionButtons: [
+              //       {
+              //         icon: <CheckCircleOutlined />,
+              //         type: "link",
+              //         disabled:item?.isVerified ,
+              //         onClick: () => {
+              //           Modal.confirm({
+              //             title: "Confirmation Verification.",
+              //             content: "do you want continue process?",
+              //             onOk: async () => {
+              //               await services.verified([item.id]);
+              //               refetch();
+              //             }
+              //           })
+              //         }
+              //       }
+              //     ]
+              //   })
+
+              //   // render:(_,r)=><Space>
+              //   //   { r.isVerified && <Button icon={<CheckCircleOutlined />}  />}
+
+              //   // </Space>
+              // }
+              // {
+              //   title:"",
+              //   render:(_,r)=>
+              // }
             ],
           },
         }}
@@ -287,20 +305,20 @@ const LeadMainPage: React.FC<Props> = () => {
         title="Generate DSD Reports"
         width="700px"
       />
-
+      {/*       
       <VerificationModalForm
-        open={verificationState?.visible?.name == "MODAL"}
-        onSave={(data) => {
+        open={verificationState?.visible?.name=="MODAL"}
+        onSave={(data)=>{
           Modal.confirm({
-            title: "Confirmation Verification",
-            content: "do you want to process?",
-            onOk: async () => {
+            title:"Confirmation Verification",
+            content:"do you want to process?",
+            onOk:async() =>{
               services.verified(data)
             },
           })
         }}
-        onCancel={() => setVerificationState({ visible: undefined })}
-      />
+        onCancel={()=>setVerificationState({visible:undefined})}
+      /> */}
 
       <ChangeSalepersonForm
         open={changeSalepersonState?.visible?.name === 'MODAL'}

@@ -122,15 +122,15 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
         rowKey={'id'}
         columns={[
           { title: '#', dataIndex: 'index', key: 'key' },
-          {
-            title: 'Batch No',
-            render: (_, r) => {
-              return r.batchNo === 'n/a' ? '-' : r.batchNo;
-            },
-          },
+          // {
+          //   title: 'Batch No',
+          //   render: (_, r) => {
+          //     return r.batchNo === 'n/a' ? '-' : r.batchNo;
+          //   },
+          // },
           { title: 'Code', dataIndex: 'itemCode' },
           { title: 'Description', dataIndex: 'itemName' },
-          { title: 'Quantity', dataIndex: 'quantity' },
+          { title: 'Quantity', dataIndex: 'quantity', align: 'right' },
           { title: 'UOM', dataIndex: 'uom' },
           {
             title: 'Type',
@@ -147,19 +147,29 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
             },
           },
           {
-            title: 'Discount',
-            align: 'right',
-            render: (_, r) => {
-              return `$ ${numeral(r.discountAmount).format('0,0.000')}`;
-            },
-          },
-          {
             title: 'Amount',
             align: 'right',
             render: (_, r) => {
-              return `$ ${numeral(r.quantity * r.unitPrice - (r.discountAmount ?? 0.0)).format(
-                '0,0.000',
-              )}`;
+              return `$ ${numeral(r.quantity * r.unitPrice).format('0,0.000')}`;
+            },
+          },
+          {
+            title: <Text type="danger">Discount</Text>,
+            align: 'right',
+            render: (_, r) => {
+              return <Text type="danger">$ {numeral(r.discountAmount).format('0,0.000')}</Text>;
+            },
+          },
+          {
+            title: <Text type="success">Grand Amount</Text>,
+            align: 'right',
+            render: (_, r) => {
+              return (
+                <Text type="success">
+                  ${' '}
+                  {numeral(r.quantity * r.unitPrice - (r.discountAmount ?? 0.0)).format('0,0.000')}
+                </Text>
+              );
             },
           },
           // {
@@ -734,14 +744,7 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                             return getCustomerName(r.customer);
                           },
                         },
-                        {
-                          title: 'Total Quantity',
-                          align: 'right',
-                          render: (_, r) => {
-                            const total = r.items.reduce((acc, it) => acc + it.quantity, 0);
-                            return `${total} CASE${total > 1 ? 'S' : ''}`;
-                          },
-                        },
+
                         {
                           title: 'Invoice Date',
                           //dataIndex: 'invoiceNo'
@@ -758,7 +761,38 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
                             return `$ ${numeral(r.amount).format('0,0.000')}`;
                           },
                         },
-
+                        {
+                          title: <Text type="danger">Discount</Text>,
+                          // dataIndex: 'amount',
+                          align: 'right',
+                          // valueType: 'money',
+                          render: (_, r) => {
+                            return (
+                              <Text type="danger">$ {numeral(r.discount).format('0,0.000')}</Text>
+                            );
+                          },
+                        },
+                        {
+                          title: <Text type="success">Grand Amount</Text>,
+                          // dataIndex: 'amount',
+                          align: 'right',
+                          // valueType: 'money',
+                          render: (_, r) => {
+                            return (
+                              <Text type="success">
+                                $ {numeral(r.amount - r.discount).format('0,0.000')}
+                              </Text>
+                            );
+                          },
+                        },
+                        {
+                          title: 'Total Quantity',
+                          align: 'right',
+                          render: (_, r) => {
+                            const total = r.items.reduce((acc, it) => acc + it.quantity, 0);
+                            return `${total} CASE${total > 1 ? 'S' : ''}`;
+                          },
+                        },
                         {
                           title: 'Status',
                           dataIndex: 'status',
@@ -1042,7 +1076,73 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
             }}
           />
         </Card>
-        <Card size="small" hidden={dataSource?.attachments?.length ? false : true}>
+        {dataSource && dataSource.salesInvoices && dataSource.salesInvoices.length > 0 && (
+          <Card size="small" title="Amount to Settlement">
+            <ProDescriptions
+              size="small"
+              dataSource={{
+                amountPromotion: dataSource.salesInvoices
+                  .filter((e) => e.items.some((it) => ['FOC', 'TDO'].includes(it.itemType ?? '')))
+                  .reduce(
+                    (a, e) => a + e.items.reduce((x, y) => x + y.quantity * y.unitPrice, 0),
+                    0,
+                  ),
+                amount: dataSource.salesInvoices
+                  .filter((e) => !e.items.some((it) => ['FOC', 'TDO'].includes(it.itemType ?? '')))
+                  .reduce(
+                    (a, e) =>
+                      a +
+                      e.items.reduce(
+                        (x, y) => x + (y.quantity * y.unitPrice - (y.discountAmount ?? 0.0)),
+                        0,
+                      ),
+                    0,
+                  ),
+                // totalAmount: dataSource.salesInvoices.reduce(
+                //   (a, e) => a + e.items.reduce((x, y) => x + y.quantity * y.unitPrice, 0),
+                //   0,
+                // ),
+                // grandTotal: dataSource?.salesInvoices.reduce(
+                //   (a, e) => a + e.subAmount,
+                //   0.0,
+                // ),
+              }}
+              // contentStyle={{ fontWeight: 500 }}
+              column={{ xs: 1, sm: 2, md: 3, lg: 3, xl: 3, xxl: 3 }}
+              // column={4}
+              columns={[
+                {
+                  title: 'Scheme Amount',
+                  // span: 2,
+                  render: (_, r) => `${numeral(r.amountPromotion).format('$ 0,000.000')}`,
+                },
+                {
+                  title: 'Amount',
+                  // dataIndex: 'amount',
+                  // span: 2,
+                  render: (_, r) => `${numeral(r.amount).format('$ 0,000.000')}`,
+                },
+
+                {
+                  title: 'Amount Settlement',
+                  // dataIndex: 'totalAmount',
+
+                  render: (_, r) => (
+                    <Text type="success">
+                      {numeral(r.amount + r.amountPromotion).format('$ 0,000.000')}
+                    </Text>
+                  ),
+                },
+              ]}
+            />
+          </Card>
+        )}
+
+        <Card
+          size="small"
+          title="Documents Reference"
+          hidden={dataSource?.attachments?.length ? false : true}
+        >
           <Flex wrap gap="small">
             {dataSource?.attachments?.map((p) => {
               return <ImagePreview key={p} fileId={p} width={150} version={1} />;

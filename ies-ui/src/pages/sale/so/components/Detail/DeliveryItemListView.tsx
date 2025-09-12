@@ -18,23 +18,22 @@ const DeliveryListItemView: React.FC<Props> = ({ indirectCustomer, deliveries })
     const items = deliveries?.flatMap((dlv) =>
       dlv.itemList.map(
         (it, index) =>
-        ({
-          key: uniqueId(),
-          id: it.id,
-          itemId: it.itemId,
-          itemCode: it.itemCode,
-          description: it.itemDesc,
-          uomId: it.uomId,
-          uomName: it.associatedTo?.uom.code,
-          qty: it.qty,
-          type: it.type,
-          main: index === 0,
-          shippedQty: it.shippedQty,
-          deliveryDate: dlv.deliveryDate,
-          shippingAddressId: dlv.shippingAddressId,
-          shippingAddressCode: dlv.shippingAddress,
-          remarks: it.remarks
-        } as DeliverySoItemEntry),
+          ({
+            key: uniqueId(),
+            id: it.id,
+            itemId: it.itemId,
+            itemCode: it.itemCode,
+            description: it.itemDesc,
+            uomId: it.uomId,
+            uomName: it.associatedTo?.uom.code,
+            qty: it.qty,
+            type: it.type,
+            main: index === 0,
+            shippedQty: it.shippedQty,
+            deliveryDate: dlv.deliveryDate,
+            shippingAddressId: dlv.shippingAddressId,
+            shippingAddressCode: dlv.shippingAddress,
+          } as DeliverySoItemEntry),
       ),
     );
 
@@ -56,15 +55,8 @@ const DeliveryListItemView: React.FC<Props> = ({ indirectCustomer, deliveries })
           { title: 'Qunatity', dataIndex: 'qty' },
           { title: 'Shipped Qty', dataIndex: 'shippedQty', hideInTable: !indirectCustomer },
           { title: 'UoM', dataIndex: 'uomName' },
-          {
-            title: 'Remarks',
-            dataIndex: 'remarks',
-            render: (text) => (
-              <div style={{ maxWidth: 300, whiteSpace: 'normal', wordBreak: 'break-word' }}>
-                {text}
-              </div>
-            ),
-          }]}
+          { title: 'Remarks', dataIndex: 'remarks' },
+        ]}
         pagination={false}
         bordered={false}
         style={{ margin: 0 }}

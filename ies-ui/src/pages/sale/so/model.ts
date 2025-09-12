@@ -361,7 +361,6 @@ export const Model = () => {
     uomName: it.uom,
     type: it.type || 'STD',
     qty: it.qty,
-    remarks:it.remarks
   });
 
   //   const setAttachments = (data: { id: number; imageId: string }[]) => {
@@ -460,9 +459,6 @@ export const Model = () => {
   const postSo = async (soId: number, remarks?: string) => {
     return await saleServices.postSoToSAP({ soId: soId, remarks: remarks });
   };
-  const postSoNew = async (soId: number, remarks?: string) => {
-    return await saleServices.postSoToSAPNew({ soId: soId, remarks: remarks });
-  };
 
   const cancelSo = async (soId: number, remarks: string) => {
     return await saleServices.cancelSo({ soId, remarks });
@@ -542,7 +538,6 @@ export const Model = () => {
       loadDependencyCustomer: doLoadingDependencyByCustomer,
       getOffer,
       postSo,
-      postSoNew,
       cancelSo,
       closeSo,
       listTransportationOffer,

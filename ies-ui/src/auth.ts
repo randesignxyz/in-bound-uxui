@@ -30,7 +30,7 @@ const keycloakUri = () => {
   ) {
     return kc_qa;
   } else {
-    return kc_production;
+    return kc_local;
   }
   return kc_production;
 };

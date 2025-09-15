@@ -145,12 +145,12 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
         rowKey={'id'}
         columns={[
           { title: '#', dataIndex: 'index', key: 'key' },
-          {
-            title: 'Batch No',
-            render: (_, r) => {
-              return r.batchNo === 'n/a' ? '-' : r.batchNo;
-            },
-          },
+          // {
+          //   title: 'Batch No',
+          //   render: (_, r) => {
+          //     return r.batchNo === 'n/a' ? '-' : r.batchNo;
+          //   },
+          // },
           { title: 'Code', dataIndex: 'itemCode' },
           { title: 'Description', dataIndex: 'itemName' },
           {
@@ -190,12 +190,25 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
             },
           },
           {
-            title: 'Amount',
+            title: <Text type="danger">Discount</Text>,
             align: 'right',
             render: (_, r) => {
-              return `$ ${numeral(r.quantity * (r.unitPrice - (r.discountPrice ?? 0.0))).format(
-                '0,0.000',
-              )}`;
+              return (
+                <Text type="danger">{numeral(r.discountPrice ?? 0.0).format('$ 0,0.000')}</Text>
+              );
+            },
+          },
+          {
+            title: <Text type="success">Amount</Text>,
+            align: 'right',
+            render: (_, r) => {
+              return (
+                <Text type="success">
+                  {numeral(r.quantity * (r.unitPrice - (r.discountAmount ?? 0.0))).format(
+                    '$ 0,0.000',
+                  )}
+                </Text>
+              );
             },
           },
           // {
@@ -317,29 +330,31 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
             },
           },
           {
-            title: 'Discount',
+            title: <Text type="danger">Discount</Text>,
             dataIndex: 'discountAmount',
             align: 'right',
             valueType: 'money',
             render: (_, r) => {
-              return `$ ${numeral(r.discount).format('0,0.000')}`;
+              return <Text type="danger">{numeral(r.discount).format('$ 0,0.000')}</Text>;
             },
           },
           {
-            title: 'Grand Amount',
+            title: <Text type="success">Grand Amount</Text>,
             // dataIndex: 'discountAmount',
             align: 'right',
             valueType: 'money',
             render: (_, r) => {
-              return `$ ${numeral(r.amount - r.discount).format('0,0.000')}`;
+              return (
+                <Text type="success">{numeral(r.amount - r.discount).format('$ 0,0.000')}</Text>
+              );
             },
           },
-          {
-            title: 'Salesperson',
-            render: (_, r) => {
-              return `${r.salesperson.salespersonCode} - ${r.salesperson.salespersonName}`;
-            },
-          },
+          // {
+          //   title: 'Salesperson',
+          //   render: (_, r) => {
+          //     return `${r.salesperson.salespersonCode} - ${r.salesperson.salespersonName}`;
+          //   },
+          // },
           {
             title: 'Remark',
             dataIndex: 'remark',

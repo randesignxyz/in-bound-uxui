@@ -122,15 +122,15 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
         rowKey={'id'}
         columns={[
           { title: '#', dataIndex: 'index', key: 'key' },
-          {
-            title: 'Batch No',
-            render: (_, r) => {
-              return r.batchNo === 'n/a' ? '-' : r.batchNo;
-            },
-          },
+          // {
+          //   title: 'Batch No',
+          //   render: (_, r) => {
+          //     return r.batchNo === 'n/a' ? '-' : r.batchNo;
+          //   },
+          // },
           { title: 'Code', dataIndex: 'itemCode' },
           { title: 'Description', dataIndex: 'itemName' },
-          { title: 'Quantity', dataIndex: 'quantity' },
+          { title: 'Quantity', dataIndex: 'quantity', align: 'right' },
           { title: 'UOM', dataIndex: 'uom' },
           {
             title: 'Type',
@@ -147,19 +147,29 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
             },
           },
           {
-            title: 'Discount',
-            align: 'right',
-            render: (_, r) => {
-              return `$ ${numeral(r.discountAmount).format('0,0.000')}`;
-            },
-          },
-          {
             title: 'Amount',
             align: 'right',
             render: (_, r) => {
-              return `$ ${numeral(r.quantity * r.unitPrice - (r.discountAmount ?? 0.0)).format(
-                '0,0.000',
-              )}`;
+              return `$ ${numeral(r.quantity * r.unitPrice).format('0,0.000')}`;
+            },
+          },
+          {
+            title: <Text type="danger">Discount</Text>,
+            align: 'right',
+            render: (_, r) => {
+              return <Text type="danger">$ {numeral(r.discountAmount).format('0,0.000')}</Text>;
+            },
+          },
+          {
+            title: <Text type="success">Grand Amount</Text>,
+            align: 'right',
+            render: (_, r) => {
+              return (
+                <Text type="success">
+                  ${' '}
+                  {numeral(r.quantity * r.unitPrice - (r.discountAmount ?? 0.0)).format('0,0.000')}
+                </Text>
+              );
             },
           },
           // {
@@ -518,291 +528,6 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
             </Card>
           );
         })}
-        {(dataSource?.purchaseOrder?.length ?? 0) > 0 && (
-          <Card size="small" title="Stock Count">
-            <Collapse
-              ghost
-              items={[
-                {
-                  key: '1a',
-                  label: (
-                    <ProDescriptions
-                      size="small"
-                      dataSource={dataSource?.stockCount}
-                      contentStyle={{ fontWeight: 500 }}
-                      // column={{ xs: 1, sm: 2, md: 3, lg: 5, xl: 5, xxl: 5 }}
-                      // column={2}
-                      columns={[
-                        {
-                          title: 'Counted Number',
-                          dataIndex: 'countedNo',
-                          // span: 2,
-                        },
-                        {
-                          title: 'Sold Quantity',
-
-                          render: (_, r) => {
-                            return (
-                              <Typography.Text type="warning">
-                                {r.items?.reduce((acc, it) => acc + it.soldQuantity, 0)}
-                              </Typography.Text>
-                            );
-                          },
-                        },
-                        {
-                          title: 'Return Quantity',
-                          render: (_, r) => {
-                            return (
-                              <Typography.Text type="warning">
-                                {r.items?.reduce((acc, it) => acc + it.actualQuantity, 0)}
-                              </Typography.Text>
-                            );
-                          },
-                        },
-                        {
-                          title: 'Count Date',
-                          render: (_, r) => {
-                            return displayDateTime(r.countedDate);
-                          },
-                        },
-                      ]}
-                    />
-                  ),
-                  children: (
-                    <ProTable
-                      dataSource={dataSource?.stockCount?.items}
-                      search={false}
-                      options={false}
-                      ghost
-                      pagination={false}
-                      size="small"
-                      columns={[
-                        {
-                          title: 'Item Name',
-                          render: (_, r) => [r.itemCode, r.itemName].filter((y) => y).join(' - '),
-                        },
-                        {
-                          title: 'Type',
-                          dataIndex: 'itemType',
-                        },
-                        {
-                          title: 'UOM',
-                          dataIndex: 'uom',
-                        },
-                        {
-                          title: 'Req. Qty',
-                          dataIndex: 'requestQuantity',
-                          align: 'right',
-                        },
-                        {
-                          title: 'Sold Qty',
-                          dataIndex: 'soldQuantity',
-                          align: 'right',
-                        },
-                        {
-                          title: 'System Qty',
-                          dataIndex: 'systemQuantity',
-                          align: 'right',
-                        },
-                        {
-                          title: 'Actual Qty',
-                          dataIndex: 'actualQuantity',
-                          align: 'right',
-                        },
-                      ]}
-                      summary={(items) => {
-                        const rqty = items.reduce((p, c) => p + c.requestQuantity, 0);
-                        const soldqty = items.reduce((p, c) => p + c.soldQuantity, 0);
-                        const sysqty = items.reduce((p, c) => p + c.systemQuantity, 0);
-                        const acqty = items.reduce((p, c) => p + c.actualQuantity, 0);
-                        return (
-                          <>
-                            <Table.Summary.Row>
-                              <Table.Summary.Cell index={0} colSpan={3} align="right">
-                                Total
-                              </Table.Summary.Cell>
-                              <Table.Summary.Cell index={1} align="right">
-                                <Typography.Text type="success">{rqty}</Typography.Text>
-                              </Table.Summary.Cell>
-                              <Table.Summary.Cell index={1} align="right">
-                                <Typography.Text type="success">{soldqty}</Typography.Text>
-                              </Table.Summary.Cell>
-                              <Table.Summary.Cell index={1} align="right">
-                                <Typography.Text type="success">{sysqty}</Typography.Text>
-                              </Table.Summary.Cell>
-                              <Table.Summary.Cell index={1} align="right">
-                                <Typography.Text type="success">{acqty}</Typography.Text>
-                              </Table.Summary.Cell>
-                            </Table.Summary.Row>
-                          </>
-                        );
-                      }}
-                    />
-                  ),
-                },
-              ]}
-            />
-          </Card>
-        )}
-        {dataSource && dataSource.salesInvoices && dataSource.salesInvoices.length > 0 && (
-          <Card size="small" title="Sales Invoice">
-            <Collapse
-              ghost
-              key={'collapSalesInvoice'}
-              items={[
-                {
-                  key: 'ItemColSalesInvoice',
-                  label: (
-                    <ProDescriptions
-                      size="small"
-                      dataSource={{
-                        invoiceDates: formatDate(
-                          dataSource?.salesInvoices[dataSource?.salesInvoices.length - 1]
-                            .invoiceDate,
-                        ),
-                        countInvoices: dataSource?.salesInvoices.length,
-                        amount: dataSource?.salesInvoices.reduce((a, e) => a + e.amount, 0.0),
-                        discount: dataSource?.salesInvoices.reduce((a, e) => a + e.discount, 0.0),
-                        grandTotal: dataSource?.salesInvoices.reduce(
-                          (a, e) => a + e.subAmount,
-                          0.0,
-                        ),
-                      }}
-                      // contentStyle={{ fontWeight: 500 }}
-                      column={{ xs: 1, sm: 2, md: 3, lg: 5, xl: 5, xxl: 5 }}
-                      // column={4}
-                      columns={[
-                        {
-                          title: 'Latest Invoice Date',
-                          dataIndex: 'invoiceDates',
-                          // span: 2,
-                        },
-
-                        {
-                          title: 'Invoice Counts',
-                          dataIndex: 'countInvoices',
-                          // span: 2,
-                        },
-                        {
-                          title: 'Total Amount',
-                          render: (_, r) => (
-                            <Typography.Text type="success">
-                              {numeral(r.amount).format('$ 0,000.000')}
-                            </Typography.Text>
-                          ),
-                        },
-                        {
-                          title: 'Discount',
-                          render: (_, r) => (
-                            <Typography.Text type="danger">
-                              {numeral(r.discount).format('$ 0,000.000')}
-                            </Typography.Text>
-                          ),
-                        },
-                        {
-                          title: 'Grand Amount',
-                          render: (_, r) => (
-                            <Typography.Text type="success">
-                              {numeral(r.grandTotal).format('$ 0,000.000')}
-                            </Typography.Text>
-                          ),
-                        },
-                      ]}
-                    />
-                  ),
-                  children: (
-                    <ProTable<SaleInvoiceLess, { stockControlId: number; searchValue?: string }>
-                      // title={() => <Text>Helo</Text>}
-                      key={'saleInvoice'}
-                      rowKey={'id'}
-                      expandable={{ expandedRowRender }}
-                      dataSource={dataSource.salesInvoices}
-                      columns={[
-                        {
-                          title: 'Invoice #',
-                          dataIndex: 'invoiceNo',
-                        },
-                        {
-                          title: 'Salesperson',
-                          render: (_, r) => {
-                            return `${r.salesperson.salespersonCode} - ${r.salesperson.salespersonName}`;
-                          },
-                        },
-                        {
-                          title: 'Customer',
-                          render: (_, r) => {
-                            return getCustomerName(r.customer);
-                          },
-                        },
-                        {
-                          title: 'Total Quantity',
-                          align: 'right',
-                          render: (_, r) => {
-                            const total = r.items.reduce((acc, it) => acc + it.quantity, 0);
-                            return `${total} CASE${total > 1 ? 'S' : ''}`;
-                          },
-                        },
-                        {
-                          title: 'Invoice Date',
-                          //dataIndex: 'invoiceNo'
-                          render: (_, r) => {
-                            return formatDate(r.invoiceDate);
-                          },
-                        },
-                        {
-                          title: 'Amount',
-                          // dataIndex: 'amount',
-                          align: 'right',
-                          // valueType: 'money',
-                          render: (_, r) => {
-                            return `$ ${numeral(r.amount).format('0,0.000')}`;
-                          },
-                        },
-
-                        {
-                          title: 'Status',
-                          dataIndex: 'status',
-                          render: (_, r) => {
-                            const color =
-                              r.status === 'Pending'
-                                ? 'magenta'
-                                : r.status === 'Paid'
-                                ? 'processing'
-                                : r.status === 'Own'
-                                ? 'success'
-                                : 'warning';
-                            return (
-                              <span>
-                                <Tag color={color}>{r.status}</Tag>
-                              </span>
-                            );
-                          },
-                        },
-                      ]}
-                      toolBarRender={false}
-                      options={{
-                        density: false,
-                        setting: false,
-                        reload: false,
-                        search: false,
-                        // search: true ?? (
-                        //   <Space size={[1, 'small']}>
-                        //     <Input.Search allowClear onSearch={onSearchHandler} />
-                        //   </Space>
-                        // ),
-                      }}
-                      size="small"
-                      search={false}
-                      pagination={{
-                        pageSize: 50,
-                      }}
-                    />
-                  ),
-                },
-              ]}
-            />
-          </Card>
-        )}
         {dataSource &&
           dataSource.purchaseOrder &&
           dataSource.purchaseOrder.length > 0 &&
@@ -936,6 +661,317 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
               /> */}
             </Card>
           )}
+        {(dataSource?.purchaseOrder?.length ?? 0) > 0 && (
+          <Card size="small" title="Stock Count">
+            <Collapse
+              ghost
+              items={[
+                {
+                  key: '1a',
+                  label: (
+                    <ProDescriptions
+                      size="small"
+                      dataSource={dataSource?.stockCount}
+                      contentStyle={{ fontWeight: 500 }}
+                      // column={{ xs: 1, sm: 2, md: 3, lg: 5, xl: 5, xxl: 5 }}
+                      // column={2}
+                      columns={[
+                        {
+                          title: 'Counted Number',
+                          dataIndex: 'countedNo',
+                          // span: 2,
+                        },
+                        {
+                          title: 'Sold Quantity',
+
+                          render: (_, r) => {
+                            return (
+                              <Typography.Text type="warning">
+                                {r.items?.reduce((acc, it) => acc + it.soldQuantity, 0)}
+                              </Typography.Text>
+                            );
+                          },
+                        },
+                        {
+                          title: 'Return Quantity',
+                          render: (_, r) => {
+                            return (
+                              <Typography.Text type="warning">
+                                {r.items?.reduce((acc, it) => acc + it.actualQuantity, 0)}
+                              </Typography.Text>
+                            );
+                          },
+                        },
+                        {
+                          title: 'Count Date',
+                          render: (_, r) => {
+                            return displayDateTime(r.countedDate);
+                          },
+                        },
+                      ]}
+                    />
+                  ),
+                  children: (
+                    <ProTable
+                      dataSource={dataSource?.stockCount?.items}
+                      search={false}
+                      options={false}
+                      ghost
+                      pagination={false}
+                      size="small"
+                      columns={[
+                        {
+                          title: 'Item Name',
+                          render: (_, r) => [r.itemCode, r.itemName].filter((y) => y).join(' - '),
+                        },
+                        {
+                          title: 'Type',
+                          dataIndex: 'itemType',
+                        },
+                        {
+                          title: 'UOM',
+                          dataIndex: 'uom',
+                        },
+                        {
+                          title: 'Req. Qty',
+                          dataIndex: 'requestQuantity',
+                          align: 'right',
+                        },
+                        {
+                          title: 'Sold Qty',
+                          dataIndex: 'soldQuantity',
+                          align: 'right',
+                        },
+                        {
+                          title: 'System Qty',
+                          dataIndex: 'systemQuantity',
+                          align: 'right',
+                        },
+                        {
+                          title: 'Actual Qty',
+                          dataIndex: 'actualQuantity',
+                          align: 'right',
+                        },
+                      ]}
+                      summary={(items) => {
+                        const rqty = items.reduce((p, c) => p + c.requestQuantity, 0);
+                        const soldqty = items.reduce((p, c) => p + c.soldQuantity, 0);
+                        const sysqty = items.reduce((p, c) => p + c.systemQuantity, 0);
+                        const acqty = items.reduce((p, c) => p + c.actualQuantity, 0);
+                        return (
+                          <>
+                            <Table.Summary.Row>
+                              <Table.Summary.Cell index={0} colSpan={3} align="right">
+                                Total
+                              </Table.Summary.Cell>
+                              <Table.Summary.Cell index={1} align="right">
+                                <Typography.Text type="success">{rqty}</Typography.Text>
+                              </Table.Summary.Cell>
+                              <Table.Summary.Cell index={1} align="right">
+                                <Typography.Text type="success">{soldqty}</Typography.Text>
+                              </Table.Summary.Cell>
+                              <Table.Summary.Cell index={1} align="right">
+                                <Typography.Text type="success">{sysqty}</Typography.Text>
+                              </Table.Summary.Cell>
+                              <Table.Summary.Cell index={1} align="right">
+                                <Typography.Text type="success">{acqty}</Typography.Text>
+                              </Table.Summary.Cell>
+                            </Table.Summary.Row>
+                          </>
+                        );
+                      }}
+                    />
+                  ),
+                },
+              ]}
+            />
+          </Card>
+        )}
+
+        {dataSource && dataSource.salesInvoices && dataSource.salesInvoices.length > 0 && (
+          <Card size="small" title="Sales Invoice">
+            <Collapse
+              ghost
+              key={'collapSalesInvoice'}
+              items={[
+                {
+                  key: 'ItemColSalesInvoice',
+                  label: (
+                    <ProDescriptions
+                      size="small"
+                      dataSource={{
+                        invoiceDates: formatDate(
+                          dataSource?.salesInvoices[dataSource?.salesInvoices.length - 1]
+                            .invoiceDate,
+                        ),
+                        countInvoices: dataSource?.salesInvoices.length,
+                        amount: dataSource?.salesInvoices.reduce((a, e) => a + e.amount, 0.0),
+                        discount: dataSource?.salesInvoices.reduce((a, e) => a + e.discount, 0.0),
+                        grandTotal: dataSource?.salesInvoices.reduce(
+                          (a, e) => a + e.subAmount,
+                          0.0,
+                        ),
+                      }}
+                      // contentStyle={{ fontWeight: 500 }}
+                      column={{ xs: 1, sm: 2, md: 3, lg: 5, xl: 5, xxl: 5 }}
+                      // column={4}
+                      columns={[
+                        {
+                          title: 'Latest Invoice Date',
+                          dataIndex: 'invoiceDates',
+                          // span: 2,
+                        },
+
+                        {
+                          title: 'Invoice Counts',
+                          dataIndex: 'countInvoices',
+                          // span: 2,
+                        },
+                        {
+                          title: 'Total Amount',
+                          render: (_, r) => (
+                            <Typography.Text type="success">
+                              {numeral(r.amount).format('$ 0,000.000')}
+                            </Typography.Text>
+                          ),
+                        },
+                        {
+                          title: 'Discount',
+                          render: (_, r) => (
+                            <Typography.Text type="danger">
+                              {numeral(r.discount).format('$ 0,000.000')}
+                            </Typography.Text>
+                          ),
+                        },
+                        {
+                          title: 'Grand Amount',
+                          render: (_, r) => (
+                            <Typography.Text type="success">
+                              {numeral(r.grandTotal).format('$ 0,000.000')}
+                            </Typography.Text>
+                          ),
+                        },
+                      ]}
+                    />
+                  ),
+                  children: (
+                    <ProTable<SaleInvoiceLess, { stockControlId: number; searchValue?: string }>
+                      // title={() => <Text>Helo</Text>}
+                      key={'saleInvoice'}
+                      rowKey={'id'}
+                      expandable={{ expandedRowRender }}
+                      dataSource={dataSource.salesInvoices}
+                      columns={[
+                        {
+                          title: 'Invoice #',
+                          dataIndex: 'invoiceNo',
+                        },
+                        {
+                          title: 'Salesperson',
+                          render: (_, r) => {
+                            return `${r.salesperson.salespersonCode} - ${r.salesperson.salespersonName}`;
+                          },
+                        },
+                        {
+                          title: 'Customer',
+                          render: (_, r) => {
+                            return getCustomerName(r.customer);
+                          },
+                        },
+
+                        {
+                          title: 'Invoice Date',
+                          //dataIndex: 'invoiceNo'
+                          render: (_, r) => {
+                            return formatDate(r.invoiceDate);
+                          },
+                        },
+                        {
+                          title: 'Amount',
+                          // dataIndex: 'amount',
+                          align: 'right',
+                          // valueType: 'money',
+                          render: (_, r) => {
+                            return `$ ${numeral(r.amount).format('0,0.000')}`;
+                          },
+                        },
+                        {
+                          title: <Text type="danger">Discount</Text>,
+                          // dataIndex: 'amount',
+                          align: 'right',
+                          // valueType: 'money',
+                          render: (_, r) => {
+                            return (
+                              <Text type="danger">$ {numeral(r.discount).format('0,0.000')}</Text>
+                            );
+                          },
+                        },
+                        {
+                          title: <Text type="success">Grand Amount</Text>,
+                          // dataIndex: 'amount',
+                          align: 'right',
+                          // valueType: 'money',
+                          render: (_, r) => {
+                            return (
+                              <Text type="success">
+                                $ {numeral(r.amount - r.discount).format('0,0.000')}
+                              </Text>
+                            );
+                          },
+                        },
+                        {
+                          title: 'Total Quantity',
+                          align: 'right',
+                          render: (_, r) => {
+                            const total = r.items.reduce((acc, it) => acc + it.quantity, 0);
+                            return `${total} CASE${total > 1 ? 'S' : ''}`;
+                          },
+                        },
+                        {
+                          title: 'Status',
+                          dataIndex: 'status',
+                          render: (_, r) => {
+                            const color =
+                              r.status === 'Pending'
+                                ? 'magenta'
+                                : r.status === 'Paid'
+                                ? 'processing'
+                                : r.status === 'Own'
+                                ? 'success'
+                                : 'warning';
+                            return (
+                              <span>
+                                <Tag color={color}>{r.status}</Tag>
+                              </span>
+                            );
+                          },
+                        },
+                      ]}
+                      toolBarRender={false}
+                      options={{
+                        density: false,
+                        setting: false,
+                        reload: false,
+                        search: false,
+                        // search: true ?? (
+                        //   <Space size={[1, 'small']}>
+                        //     <Input.Search allowClear onSearch={onSearchHandler} />
+                        //   </Space>
+                        // ),
+                      }}
+                      size="small"
+                      search={false}
+                      pagination={{
+                        pageSize: 50,
+                      }}
+                    />
+                  ),
+                },
+              ]}
+            />
+          </Card>
+        )}
+
         <Card size="small">
           <ProTable
             size="small"
@@ -1042,7 +1078,73 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
             }}
           />
         </Card>
-        <Card size="small" hidden={dataSource?.attachments?.length ? false : true}>
+        {dataSource && dataSource.salesInvoices && dataSource.salesInvoices.length > 0 && (
+          <Card size="small" title="Amount to Settlement">
+            <ProDescriptions
+              size="small"
+              dataSource={{
+                amountPromotion: dataSource.salesInvoices
+                  .filter((e) => e.items.some((it) => ['FOC', 'TDO'].includes(it.itemType ?? '')))
+                  .reduce(
+                    (a, e) => a + e.items.reduce((x, y) => x + y.quantity * y.unitPrice, 0),
+                    0,
+                  ),
+                amount: dataSource.salesInvoices
+                  .filter((e) => !e.items.some((it) => ['FOC', 'TDO'].includes(it.itemType ?? '')))
+                  .reduce(
+                    (a, e) =>
+                      a +
+                      e.items.reduce(
+                        (x, y) => x + (y.quantity * y.unitPrice - (y.discountAmount ?? 0.0)),
+                        0,
+                      ),
+                    0,
+                  ),
+                // totalAmount: dataSource.salesInvoices.reduce(
+                //   (a, e) => a + e.items.reduce((x, y) => x + y.quantity * y.unitPrice, 0),
+                //   0,
+                // ),
+                // grandTotal: dataSource?.salesInvoices.reduce(
+                //   (a, e) => a + e.subAmount,
+                //   0.0,
+                // ),
+              }}
+              // contentStyle={{ fontWeight: 500 }}
+              column={{ xs: 1, sm: 2, md: 3, lg: 3, xl: 3, xxl: 3 }}
+              // column={4}
+              columns={[
+                {
+                  title: 'Scheme Amount',
+                  // span: 2,
+                  render: (_, r) => `${numeral(r.amountPromotion).format('$ 0,000.000')}`,
+                },
+                {
+                  title: 'Amount',
+                  // dataIndex: 'amount',
+                  // span: 2,
+                  render: (_, r) => `${numeral(r.amount).format('$ 0,000.000')}`,
+                },
+
+                {
+                  title: 'Amount Settlement',
+                  // dataIndex: 'totalAmount',
+
+                  render: (_, r) => (
+                    <Text type="success">
+                      {numeral(r.amount + r.amountPromotion).format('$ 0,000.000')}
+                    </Text>
+                  ),
+                },
+              ]}
+            />
+          </Card>
+        )}
+
+        <Card
+          size="small"
+          title="Documents Reference"
+          hidden={dataSource?.attachments?.length ? false : true}
+        >
           <Flex wrap gap="small">
             {dataSource?.attachments?.map((p) => {
               return <ImagePreview key={p} fileId={p} width={150} version={1} />;

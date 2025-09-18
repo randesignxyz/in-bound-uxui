@@ -204,7 +204,7 @@ const SaleInvoiceTabItem: React.FC<Props> = ({ forceUpdate, data, actionHandlers
             render: (_, r) => {
               return (
                 <Text type="success">
-                  {numeral(r.quantity * (r.unitPrice - (r.discountAmount ?? 0.0))).format(
+                  {numeral(r.quantity * (r.unitPrice - (r.discountPrice ?? 0.0))).format(
                     '$ 0,0.000',
                   )}
                 </Text>

@@ -20,6 +20,7 @@ export default () => {
 
     useEffect(() => {
         const path = redirectList.find(it => it.access)?.path
+        console.log('+++++++++++++++++ login', path)
         if (path) history.push(path)
         setLoading(false)
     }, [])

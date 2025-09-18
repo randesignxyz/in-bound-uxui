@@ -97,7 +97,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
     setDataSourceItems(
       purchaseOrder.items
         ? purchaseOrder.items.map((e) => {
-            e.key = e.itemCode!;
+            e.key = e.itemCode! + e.status;
             return e;
           })
         : [],
@@ -119,7 +119,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
       loadData();
     }
     (async () => {
-      const data = await productService.listProducts();
+      const data = await productService.listProductsMME();
       setProductItems(data);
     })();
   }, [id]);
@@ -457,7 +457,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
               request: async (k: { keyWords: string }) => {
                 console.log(k);
 
-                const data = await ProductItemsServiceAPI(mainRequestActions).pageProducts({
+                const data = await ProductItemsServiceAPI(mainRequestActions).pageProductsMME({
                   criteria: {
                     searchValue: k.keyWords,
                   },

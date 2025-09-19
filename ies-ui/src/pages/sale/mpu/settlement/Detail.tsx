@@ -101,18 +101,32 @@ const SettlementMethodDetail: React.FC<Props> = ({ id }) => {
     });
   };
 
+  // const getCustomerName = (it?: LeadLess): string => {
+  //   const name =
+  //     it?.internalName !== null
+  //       ? it?.internalName
+  //       : it?.firstName !== null && it?.lastName !== null
+  //       ? `${it?.firstName} ${it?.lastName}`
+  //       : it?.firstName !== null
+  //       ? it?.firstName
+  //       : it?.lastName || '';
+  //   return `${name} - ( ${it?.phone} )`;
+  // };
+
   const getCustomerName = (it?: LeadLess): string => {
-    const name =
-      it?.internalName !== null
-        ? it?.internalName
-        : it?.firstName !== null && it?.lastName !== null
-        ? `${it?.firstName} ${it?.lastName}`
-        : it?.firstName !== null
-        ? it?.firstName
-        : it?.lastName || '';
+    const rawName =
+      it?.internalName
+        ? it.internalName
+        : it?.firstName && it?.lastName
+          ? `${it.firstName} ${it.lastName}`
+          : it?.firstName
+            ? it.firstName
+            : it?.lastName || '';
+
+    const name = rawName.replace(/[()]/g, '').trim();
+
     return `${name} - ( ${it?.phone} )`;
   };
-
   const expandedRowRender = (parent: SaleInvoiceLess) => {
     return parent.items.length > 0 ? (
       <ProTable

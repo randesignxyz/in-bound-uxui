@@ -107,8 +107,8 @@ export default (props: Props) => {
                 label="Source of Supply"
                 name="supplier"
                 width="md"
-                initialValue={'All'}
-                options={['All', 'Distributors', 'Warehouse']}
+                initialValue={'ALL'}
+                options={['ALL', 'Distributors', 'Warehouse']}
               />
               <ProFormSelect
                 mode="multiple"

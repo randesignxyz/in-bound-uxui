@@ -60,7 +60,7 @@ export default (props: Props) => {
           status: dataForm.status,
           reportType: selectedReportType,
           supplier: dataForm.supplier,
-        },
+        }, 
       });
       message.success('Report generated successfully.');
     } catch (error) {

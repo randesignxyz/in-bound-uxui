@@ -141,10 +141,10 @@ export default () => {
           attachment: fileUrls.length > 0 ? fileUrls.map(url => ({ attachment: url })) : [],
         };
         console.log('payload', payload)
-        // await services.updateRemark(payload) as {
-        //   data: string;
-        //   message: string;
-        // };
+        await services.updateRemark(payload) as {
+          data: string;
+          message: string;
+        };
         setModalOpen({ visible: false, id: 0 });
         actionRef.current?.reloadAndRest?.();
         message.success('Updated successfully');

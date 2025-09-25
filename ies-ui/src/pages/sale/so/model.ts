@@ -396,10 +396,10 @@ export const Model = () => {
     const list = data.key
       ? state.data?.deliveryList?.map((it) => (it.key === data.key ? data : it))
       : state.data?.deliveryList?.concat({
-          ...data,
-          key: uniqueId('delivery'),
-          itemList: data.itemList.map((it) => ({ ...it, key: uniqueId('delivery') })),
-        });
+        ...data,
+        key: uniqueId('delivery'),
+        itemList: data.itemList.map((it) => ({ ...it, key: uniqueId('delivery') })),
+      });
     const soItems = getSoItems(state.data?.transportation || [], delivery);
     dispatch({
       type: 'setDeliveryList',
@@ -460,6 +460,10 @@ export const Model = () => {
     return await saleServices.postSoToSAP({ soId: soId, remarks: remarks });
   };
 
+  const postSoNew = async (soId: number, remarks?: string) => {
+    return await saleServices.postSoToSAPNew({ soId: soId, remarks: remarks });
+  };
+
   const cancelSo = async (soId: number, remarks: string) => {
     return await saleServices.cancelSo({ soId, remarks });
   };
@@ -480,7 +484,7 @@ export const Model = () => {
     } catch (error) {
       message.error('Failed to load offer.');
     }
-  }; 
+  };
 
   const getSoItems = (rs: PackageOffer[], delivery: SoDeliveryMethod | undefined) => {
     const elements = state.data?.soItems;
@@ -488,28 +492,28 @@ export const Model = () => {
     return (
       (delivery && delivery?.id === 5
         ? state.data?.soItems?.concat(
-            rs.flatMap((it, index) => {
-              return it.offerList.map((ti) => {
-                return {
-                  id: 0,
-                  seq: (lastElement?.seq || 0) + (index + 1) * 1000,
-                  key: uniqueId('traItem'),
-                  itemId: ti.itemItem.id,
-                  itemCode: ti.itemItem.code || '',
-                  description: ti.itemItem.description || '',
-                  uomId: 1,
-                  uom: 'EACH',
-                  qty: ti.qty,
-                  price: ti.price,
-                  amount: 0,
-                  discountAmount: 0,
-                  totalAmount: 0,
-                  type: ti.offerType,
-                  categoryId: 0,
-                };
-              });
-            }) || [],
-          )
+          rs.flatMap((it, index) => {
+            return it.offerList.map((ti) => {
+              return {
+                id: 0,
+                seq: (lastElement?.seq || 0) + (index + 1) * 1000,
+                key: uniqueId('traItem'),
+                itemId: ti.itemItem.id,
+                itemCode: ti.itemItem.code || '',
+                description: ti.itemItem.description || '',
+                uomId: 1,
+                uom: 'EACH',
+                qty: ti.qty,
+                price: ti.price,
+                amount: 0,
+                discountAmount: 0,
+                totalAmount: 0,
+                type: ti.offerType,
+                categoryId: 0,
+              };
+            });
+          }) || [],
+        )
         : state.data?.soItems) || []
     );
   };
@@ -538,6 +542,7 @@ export const Model = () => {
       loadDependencyCustomer: doLoadingDependencyByCustomer,
       getOffer,
       postSo,
+      postSoNew,
       cancelSo,
       closeSo,
       listTransportationOffer,

@@ -294,7 +294,7 @@ export default () => {
     params: TableViewSearchParams<AllocateSOAdvanceParams>
   ): Promise<Paging<DNList>> => {
     try {
-      const list = await services.list_dn_by_user(MTSearch.status,MTSearch.startDate,MTSearch.endDate);
+      const list = await services.list_dn_by_user(MTSearch.status, MTSearch.startDate, MTSearch.endDate);
 
       if (!Array.isArray(list)) {
         throw new Error('Unexpected response format');
@@ -592,7 +592,7 @@ export default () => {
       title: 'SO No',
       dataIndex: 'so_no',
       key: 'so_no',
-      width: '10%',
+      width: '8%',
       render: (_, value) => (
         <a onClick={() => setDrawerTypeOpen({ visible: true, data: value })}>
           <Typography.Link strong copyable >{value.so_no}</Typography.Link>
@@ -602,8 +602,9 @@ export default () => {
     {
       title: 'DN Date',
       dataIndex: 'deliveryDate',
-      width: '6%', // fix width
-      render: (_, r) => (dayjs(r.deliveryDate).isValid() ? dayjs(r.deliveryDate).format('DD-MMM-YYYY') : '-')
+      width: '6%',
+      render: (_, r) =>
+        dayjs.utc(r.deliveryDate).format('DD-MMM-YYYY') // forces UTC, no timezone shift
     },
     { title: 'Customer', dataIndex: 'customer_name', width: '7%' },
     {
@@ -611,24 +612,24 @@ export default () => {
       key: 'sku',
       children: skuColumns,
     },
-{
-  title: 'SAL Remark',
-  dataIndex: 'remarks',
-  width: 150,
-  render: (_,text) => (
-    <div
-      style={{
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        maxWidth: 150,
-      }}
-      title={text.remarks} // shows full text on hover
-    >
-      {text.remarks ? text.remarks :'-'}
-    </div>
-  ),
-},    { title: 'Shipping Address', dataIndex: 'shippingAddress', width: 200 },
+    {
+      title: 'SAL Remark',
+      dataIndex: 'remarks',
+      width: 150,
+      render: (_, text) => (
+        <div
+          style={{
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            maxWidth: 150,
+          }}
+          title={text.remarks} // shows full text on hover
+        >
+          {text.remarks ? text.remarks : '-'}
+        </div>
+      ),
+    }, { title: 'Shipping Address', dataIndex: 'shippingAddress', width: 200 },
   ];
 
   // const expandedRowRender = (record: DNList) => {
@@ -1397,10 +1398,10 @@ export default () => {
                     setQuickViewSearch((v) => ({ ...v, ...d }))
                   )
                   : advanceSearchParams.filter == 'MT' ?
-                  (
-                    console.log('d',d),
-                    setMTSearch((v) => ({ ...v, ...d }))
-                  ): {}
+                    (
+                      console.log('d', d),
+                      setMTSearch((v) => ({ ...v, ...d }))
+                    ) : {}
           }
           actionRef.current?.reloadAndRest?.();
         }}

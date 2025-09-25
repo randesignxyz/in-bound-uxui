@@ -20,6 +20,7 @@ import { CopyOutlined, FileSearchOutlined, HistoryOutlined, PlayCircleOutlined, 
 import AdvanceSearch from './advanceSearchDrawer';
 import { FloatingCard } from './displayCard';
 import SaleTypeDrawer from './SaleTypeDrawer';
+import moment from 'moment';
 
 dayjs.extend(customParseFormat)
 
@@ -54,13 +55,9 @@ export default () => {
     startDate: undefined,
     endDate: undefined
   });
-
-  const [dnSearch, setDnSearch] = useState({
+  const [dnSearch, setDnSearch] = useState<{ status: string; delivery_date: string, province_id?: string, district_id?: any, commune_id?: string }>({
     status: 'posted',
-    province_id: '',
-    delivery_date: '',
-    district_id: '',
-    commune_id: '',
+    delivery_date: moment().format("YYYY-MM-DD"),
   });
   const [modalOpen, setModalOpen] = useState<{ visible: boolean; id: number, remark?: string, attachment?: any, sales_planid?: string }>({
     visible: false,

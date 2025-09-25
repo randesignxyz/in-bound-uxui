@@ -480,7 +480,7 @@ export const Model = () => {
     } catch (error) {
       message.error('Failed to load offer.');
     }
-  };
+  }; 
 
   const getSoItems = (rs: PackageOffer[], delivery: SoDeliveryMethod | undefined) => {
     const elements = state.data?.soItems;

@@ -465,7 +465,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
                 // const disabledSelected = type === 'CREATE' ? dataSourceItems?.some((ot) => ot.itemId === p.id) : false;
                 return Promise.resolve(
                   data.items
-                    ?.filter((it) => it.isWebEnabled === true)
+                    // ?.filter((it) => it.isWebEnabled === true)
                     ?.map((p) => ({
                       value: p.id,
                       label: p.name,

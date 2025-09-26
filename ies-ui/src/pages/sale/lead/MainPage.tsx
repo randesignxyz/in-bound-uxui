@@ -88,7 +88,7 @@ const LeadMainPage: React.FC<Props> = () => {
                 type="edit"
                 title="Edit Lead Entry"
                 id={items?.id}
-                onView={(r) => {
+                onView={() => {
                   onUpdateTab('view', items, undefined, key);
                   refetch();
                 }}
@@ -250,11 +250,13 @@ const LeadMainPage: React.FC<Props> = () => {
                 render: (_, r) => (
                   <Badge
                     status={
-                      r.status == 'Active'
-                        ? 'processing'
-                        : r.status == 'Inactive'
-                        ? 'default'
-                        : 'success'
+                      r.status === 'Active'
+                        ? 'success'
+                        : r.status === 'Inactive'
+                        ? 'error'
+                        : r.status === 'Pending'
+                        ? 'warning'
+                        : 'processing'
                     }
                     text={r.status}
                   />

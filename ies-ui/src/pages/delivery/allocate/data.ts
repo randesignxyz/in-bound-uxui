@@ -78,7 +78,8 @@ export interface DNList {
   customer_code?: string,
   customer_name?: string,
   status?: string,
-  mergeItems: mergeItems[]
+  mergeItems: mergeItems[],
+  phone?:string
 }
 
 interface mergeItems {

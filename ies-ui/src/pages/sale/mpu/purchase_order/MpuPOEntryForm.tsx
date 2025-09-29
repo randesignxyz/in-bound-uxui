@@ -216,7 +216,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
           addressCode: selectedAddress?.address,
           assignedToCode: assigner[0],
           assignedTo: assigner[1],
-          distributorId: distributor[0],
+          distributorId: distributor[0],  
           distributorCode: distributor[1],
           distributorName: distributor[2],
           items: dataSourceItems,

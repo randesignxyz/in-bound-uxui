@@ -1312,7 +1312,7 @@ export default () => {
                   </ProForm>
 
                 ],
-              },
+              }, 
             }}
             extraFilter={
               <Space size="large" style={{ flexDirection: 'row' }}>

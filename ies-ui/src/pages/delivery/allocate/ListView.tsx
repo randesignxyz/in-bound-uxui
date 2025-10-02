@@ -4,7 +4,7 @@ import { MultiRequest } from '@/services/apiGateway';
 import { Company, Driver, DriverListItem, SaveDriver, Truck } from '@/services/delivery/data';
 import { simpleRequestActions } from '@/services/model';
 import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table';
-import { Card, Checkbox, DatePicker, message, Modal, Progress, Radio, Space, Spin, Tag, Image, UploadFile, Descriptions, Button, Table, Dropdown, Row, Col, Typography, Select, Form } from 'antd';
+import { Card, Checkbox, DatePicker, message, Modal, Progress, Radio, Space, Spin, Tag, Image, UploadFile, Descriptions, Button, Table, Dropdown, Row, Col, Typography, Select, Form, Tooltip } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AllocateServiceAPI } from './service';
 import { Allocate, AllocateSOAdvanceParams, DeliveryList, DNItemParams, DNList, DNParams, DnQuickView, LocationList, SkuList, SOAllocateActivities, SOList, UpdateRemarkParams } from './data';
@@ -16,13 +16,14 @@ import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 import AddRemarkModal from './AddRemarkForm';
 import { uploadFileToFirebase } from './uploadImage';
-import { CopyOutlined, FileSearchOutlined, HistoryOutlined, PlayCircleOutlined, PlusCircleOutlined, SyncOutlined } from '@ant-design/icons';
+import { CloseCircleOutlined, CopyOutlined, FileSearchOutlined, HistoryOutlined, PlayCircleOutlined, PlusCircleOutlined, ReloadOutlined, SyncOutlined } from '@ant-design/icons';
 import AdvanceSearch from './advanceSearchDrawer';
 import { FloatingCard } from './displayCard';
 import SaleTypeDrawer from './SaleTypeDrawer';
 import moment from 'moment';
 import { ProForm, ProFormDatePicker, ProFormDateRangePicker, ProFormSelect } from '@ant-design/pro-components';
 import { useForm } from 'antd/es/form/Form';
+import ForceColseModal from './ForceCloseModal';
 
 dayjs.extend(customParseFormat)
 
@@ -62,6 +63,10 @@ export default () => {
     delivery_date: moment().format("YYYY-MM-DD"),
   });
   const [modalOpen, setModalOpen] = useState<{ visible: boolean; id: number, remark?: string, attachment?: any, sales_planid?: string }>({
+    visible: false,
+    id: 0,
+  });
+  const [forceCloseOpen, setForceCloseOpen] = useState<{ visible: boolean; id: number }>({
     visible: false,
     id: 0,
   });
@@ -199,6 +204,22 @@ export default () => {
     });
   };
 
+  const handleForceClose = async (data: UpdateRemarkParams) => {
+    Modal.confirm({
+      title: 'Force Close',
+      content: 'Are you sure?',
+      onOk: async () => {
+        await services.force_close(data) as {
+          data: string;
+          message: string;
+        };
+        setForceCloseOpen({ visible: false, id: 0 });
+        actionRef.current?.reloadAndRest?.();
+        message.success('Updated successfully');
+      },
+    });
+  };
+
   // const handleClaim = async (id: number) => {
   //   Modal.confirm({
   //     title: 'Claim',
@@ -264,8 +285,13 @@ export default () => {
   const getActivities = async (id: number) => {
     try {
       const da = await services.getActivities(id);
-      setActivities(da);
-      console.log(da);
+
+      // Deduplicate: keep only the first occurrence of each action + remark
+      const uniqueActivities = da.filter((activity, index, self) =>
+        index === self.findIndex(a => a.action === activity.action && a.remark === activity.remark)
+      );
+
+      setActivities(uniqueActivities);
     } catch (error) {
       console.error(error);
     }
@@ -372,7 +398,6 @@ export default () => {
   ): Promise<Paging<DnQuickView>> => {
     try {
       const data = await services.fetch_dn_quick_view(quickViewSearch.startDate, quickViewSearch.endDate);
-      console.log(data)
       return {
         items: [data],
         total: 1,
@@ -416,11 +441,28 @@ export default () => {
   //   }
   // }
 
+  const onSync = async () => {
+    try {
+      await services.syncAllocate();
+      actionRef.current?.reloadAndRest?.();
+    } catch (error: any) {
+      message.error(error.message);
+      return Promise.reject(error);
+    }
+  };
+
+  const normalizeUOM = (uom: string | undefined): 'pack' | 'bowl' | null => {
+    if (!uom) return null;
+    const lower = uom.toLowerCase();
+    if (lower === 'case' || lower === 'pack') return 'pack';
+    if (lower === 'bowl') return 'bowl';
+    return null; // skip unknown UOM
+  };
+
   const onRequestDNDeatilHandler = async (
     params: TableViewSearchParams<AllocateSOAdvanceParams>
   ): Promise<Paging<DNList>> => {
     try {
-      // 1️⃣ Fetch SKU list
       const skuResult = await services.list_sku();
 
       let skuArray: SkuList[] = [];
@@ -433,13 +475,11 @@ export default () => {
         skuArray = [skuResult];
       }
 
-      // Sort by category and sequence
       const sortedSku = skuArray.sort((a, b) => {
         if (a.item_category !== b.item_category) return a.item_category - b.item_category;
         return a.sequence - b.sequence;
       });
 
-      // 2️⃣ Fetch DN details
       const deliveryDate = asDate ? undefined : dnSearch.delivery_date;
 
       const list = await services.list_dn_detail(
@@ -451,12 +491,9 @@ export default () => {
       );
 
       if (!Array.isArray(list)) throw new Error('Unexpected response format');
-
-      // 3️⃣ Transform items to map sku_id → sku_code (+ handle category 2 split)
       const transformedList = list.map((delivery) => {
         const skuValues: Record<string, number> = {};
 
-        // initialize all SKU columns to 0 to avoid missing data
         sortedSku.forEach((sku) => {
           if (sku.item_category === 2) {
             skuValues[`${sku.sku_code}_pack`] = 0;
@@ -473,8 +510,10 @@ export default () => {
           if (!sku) return;
 
           if (sku.item_category === 2) {
-            const key = `${sku.sku_code}_${item.sku_uom.toLowerCase()}`;
-            if (key in skuValues) skuValues[key] += item.qty;
+            const uom = normalizeUOM(item.sku_uom);
+            if (!uom) return;
+            const key = `${sku.sku_code}_${uom}`;
+            skuValues[key] += item.qty;
           } else {
             skuValues[sku.sku_code] += item.qty;
           }
@@ -487,9 +526,8 @@ export default () => {
         };
       });
 
-      // 4️⃣ Pagination
       const page = params.pagination?.current ?? 1;
-      const pageSize = params.pagination?.pageSize ?? 20;
+      const pageSize = params.pagination?.pageSize ?? 10;
       const total = transformedList.length;
       const pagedData = transformedList.slice((page - 1) * pageSize, page * pageSize);
 
@@ -599,7 +637,6 @@ export default () => {
   ]
 
   const skuColumns: ProColumns<DNList>[] = skuList.map((sku) => {
-    console.log('skuListskuList', skuList)
     if (sku.item_category === 1) {
 
       return {
@@ -682,10 +719,29 @@ export default () => {
       render: (_, r) =>
         dayjs.utc(r.deliveryDate).format('DD-MMM-YYYY') // forces UTC, no timezone shift
     },
-    { title: 'Shipping Address', dataIndex: 'shippingAddress', width: 200 },
+    {
+      title: 'Shipping Address',
+      dataIndex: 'shippingAddress',
+      width: 200,
+      render: (_, value) => (
+        <a
+          onClick={() => {
+            if (value.latitude && value.longitude) {
+              const url = `https://www.google.com/maps?q=${value.latitude},${value.longitude}`;
+              window.open(url, '_blank'); // open in new tab
+            } else {
+              message.info(`No location found for: ${value.shippingAddress}`);
+            }
+          }}
+        >
+          {value.shippingAddress}
+        </a>
+      ),
+    },
     // { title: 'Customer', dataIndex: 'customer_name', width: '7%' },
     { title: 'District', dataIndex: 'district', width: 150 },
     { title: 'Commune', dataIndex: 'commune', width: 150 },
+    { title: 'Channel', dataIndex: 'channel', width: 150 },
     {
       title: 'SKU',
       key: 'sku',
@@ -807,8 +863,16 @@ export default () => {
                   ? dayjs(record.deliveryDate).format('DD-MMM-YYYY')
                   : '-'}
               </Descriptions.Item>
-              <Descriptions.Item label="Shipping Address" style={{ fontWeight: 'bolder' }} span={2}>
-                {record.shippingAddress ? record.shippingAddress : '-'}
+              <Descriptions.Item label="Shipping Address" span={2}
+              >
+                <a onClick={() => {
+                  if (record.latitude && record.longitude) {
+                    const url = `https://www.google.com/maps?q=${record.latitude},${record.longitude}`;
+                    window.open(url, '_blank'); // open in new tab
+                  } else {
+                    message.info(`No location found for: ${record.shippingAddress}`);
+                  }
+                }}>{record.shippingAddress ? record.shippingAddress : '-'}</a>
               </Descriptions.Item>
               <Descriptions.Item span={5}>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', alignItems: 'center' }}>
@@ -821,11 +885,13 @@ export default () => {
                             ? 'orange'
                             : record.status === 'complete'
                               ? 'green'
-                              : 'default'
+                              : record.status === 'force-close'
+                                ? 'red'
+                                : 'default'
                       }
                       style={{ textTransform: 'capitalize' }}
                     >
-                      {record.status.replace(/-/g, ' ')}
+                      {record.status === 'force-close' ? 'Close' : record.status.replace(/-/g, ' ')}
                     </Tag>
                   ) : (
                     '-'
@@ -860,6 +926,20 @@ export default () => {
                   <Dropdown overlayStyle={{ width: 400 }} menu={activityMenu} trigger={['click']} >
                     <Button onClick={() => getActivities(record.id)} style={{ marginLeft: 10 }}><HistoryOutlined /></Button>
                   </Dropdown>
+                  {
+                    record.status != 'force-close' && record.status != 'complete' && access.canAccesAddRemarkAllocate ?
+                      <Tooltip title="Force Close" >
+                        <Button onClick={() =>
+                          setForceCloseOpen({
+                            visible: true,
+                            id: record?.id,
+                          })
+                        }
+                          style={{ marginLeft: 10 }}><CloseCircleOutlined /></Button>
+                      </Tooltip>
+                      : <></>
+                  }
+
                 </div>
               </Descriptions.Item>
               <Descriptions.Item label="SO Num" style={{ fontWeight: 'bolder' }}>
@@ -951,7 +1031,12 @@ export default () => {
                     />
                   );
                 },
-                rowExpandable: (record) => record.dn && record.dn.length > 0,
+                rowExpandable: (record) =>
+                // record.dn &&
+                (
+                  // record?.dn?.length > 0 ||
+                  record?.dn?.some(dn => dn.dn_date || dn.dn_num || dn.dn_qty)
+                ),
               }}
               options={false}
               pagination={false}
@@ -1206,7 +1291,27 @@ export default () => {
             displayOnly
             tableProps={{
               actionRef: actionRef,
+              options: {
+                reload: false,
+                setting: false,
+                density: false,
+                fullScreen: false,
+              },
               toolbar: {
+                actions: [
+                  <ProForm submitter={false} layout="inline">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                      <Button
+                        type="text"
+                        size='large'
+                        onClick={() => onSync()}
+                      >
+                        <ReloadOutlined />
+                      </Button>
+                    </div>
+                  </ProForm>
+
+                ],
               },
             }}
             extraFilter={
@@ -1252,6 +1357,12 @@ export default () => {
               displayOnly
               tableProps={{
                 actionRef: actionRef,
+                options: {
+                  reload: false,
+                  setting: false,
+                  density: false,
+                  fullScreen: false,
+                },
                 toolbar: {
                   actions: [
                     <ProForm submitter={false} layout="inline">
@@ -1272,6 +1383,7 @@ export default () => {
                             { value: 'open', label: 'Open' },
                             { value: 'in-progress', label: 'In Progress' },
                             { value: 'complete', label: 'Completed' },
+                            { value: 'force-close', label: 'Close' },
                           ]}
                         />
                         <ProFormDateRangePicker
@@ -1290,6 +1402,13 @@ export default () => {
                             },
                           }}
                         />
+                        <Button
+                          type="text"
+                          onClick={() => onSync()}
+                          size='large'
+                        >
+                          <ReloadOutlined />
+                        </Button>
                       </div>
                     </ProForm>
 
@@ -1414,6 +1533,12 @@ export default () => {
                   displayOnly
                   tableProps={{
                     actionRef: actionRef,
+                    options: {
+                      reload: false,
+                      setting: false,
+                      density: false,
+                      fullScreen: false,
+                    },
                     toolbar: {
                       actions: [
                         <ProForm submitter={false} layout="inline">
@@ -1492,7 +1617,13 @@ export default () => {
                             </div>
                           )}
 
-
+                          <Button
+                            type="text"
+                            onClick={() => onSync()}
+                            size='large'
+                          >
+                            <ReloadOutlined />
+                          </Button>
                         </ProForm>
 
                       ],
@@ -1558,6 +1689,13 @@ export default () => {
         onSave={(e) => { handleSaveRemark(e) }}
         remark={modalOpen.remark}
         attachment={modalOpen.attachment}
+        sales_planid={modalOpen.sales_planid}
+      />
+      <ForceColseModal
+        open={forceCloseOpen.visible}
+        onCancel={() => setForceCloseOpen({ visible: false, id: 0 })}
+        id={forceCloseOpen.id}
+        onSave={(e) => { handleForceClose(e) }}
       />
       <AdvanceSearch
         type={advanceSearchParams.filter}

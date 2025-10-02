@@ -1,9 +1,8 @@
-import { EditableFormInstance, EditableProTable, FooterToolbar, ProCard, ProForm, ProFormGroup, ProFormRadio, ProFormSelect, ProFormText, ProFormTextArea, ProTable } from "@ant-design/pro-components"
-import { Button, Card, Checkbox, Flex, Form, message, Modal, Space, Spin } from "antd"
+import { EditableFormInstance, FooterToolbar, ProCard, ProForm, ProFormGroup, ProFormRadio, ProFormSelect, ProFormText, ProFormTextArea } from "@ant-design/pro-components"
+import { Button, Card, Flex, Form, message, Modal, Space, Spin } from "antd"
 import { AddresssView, DocRequirementCustomerParams, DoRequireCustomerList, PurchasingPerformanceItem, RcSapEmpSale, RegisterCustomer, RegisterCustomerDetailResponse } from "./data";
 import { useEffect, useRef, useState } from "react";
 import AddressListView from "./components/AddressListView";
-import { model } from "../customer/model";
 import { model as registerModel } from "./model";
 import { RegisterCustomerServiceAPI } from "./services";
 import { useInView } from "react-intersection-observer";
@@ -14,6 +13,9 @@ import AttachedFileList from "@/components/Attachment/AttachedFileList";
 import DocmentRequire from "./components/DocmentRequire";
 import RemarkCard from "./components/RemarkCard";
 import { LookupData } from "@/services/data";
+import { EditOutlined, FilterOutlined } from "@ant-design/icons";
+import PopconfirmMe from "@/pages/expense/delivery/components/PopconfirmMe";
+import { useForm } from "antd/es/form/Form";
 
 export default({
   id,
@@ -28,8 +30,9 @@ export default({
 })=>{
   const service = RegisterCustomerServiceAPI()
   const [form] = Form.useForm<RegisterCustomerDetailResponse>();
+  const [formPriceTradeOffer] = useForm<{priceTradeOfferId: number}>()
+  const [formPaymentTerm ] = useForm<{paymentTermId: number}>()
   const { ref, inView } = useInView({});
-  // const { state, ops, actions, modals } = model(0);
   const { state1,actions1 } = registerModel();
 
   const [addressList, setAddressList] = useState<AddresssView[]>()
@@ -51,7 +54,7 @@ export default({
   }, [id]);
 
   const initData = async () =>{ 
-    const rs = await actions1.initData("Detail")  
+    await actions1.initData("Detail")  
     if (id && id > 0) {
       const data = await  service.detail(id)
       initFormData(data)
@@ -60,7 +63,6 @@ export default({
       setShippingAddressList(data?.shipping?.map(it=>({...it,key: uniqueId().toString()})))
       setPersonaList(data?.docPersonalList||[])
       setcoporateList(data?.docCorporateList||[])
-      // setUploadFileIds(data?.attachedFiles||[])
       setAttachedFiles(data?.attachedFiles?.map(it => ({ fileId: it, activity: 'Start' })) || [])
       await service.initCustomerData([{
           actionName: 'lookupDataList',
@@ -85,11 +87,15 @@ export default({
   const initFormData = (data: RegisterCustomerDetailResponse) =>{
     setData(data)
     form.setFieldsValue(data);
+    formPriceTradeOffer.setFieldValue('priceTradeOfferId',data.priceTradeOfferId||0)
+    formPaymentTerm.setFieldValue('paymentTermId',data.paymentTermId||0)  
   }    
     
   const getPayload = async () => {
     const dataForm = await form.validateFields(); 
     const dataPayload = { ...dataForm,
+      priceTradeOfferId: data?.priceTradeOfferId,
+      paymentTermId: data?.paymentTermId,
       id: id||0,
       customerCode: dataForm.customerCode,
       ppItems:ppItems,
@@ -298,12 +304,17 @@ export default({
         render: () => 
            inView && !readOnly ?<FooterToolbar>
             <Button
+              onClick={() => { onCloseTab?.()}}
+            >
+              Close
+            </Button>
+            {(type =='EDIT') && <Button
                 onClick={() => {
                   onCancelHandler();
                 }}
               >
-                {type=='CREATE'? 'Close':'Cancel'}
-              </Button>
+                Cancel
+              </Button>}
               <Button
                 onClick={onSaveDraftHandler}
             >
@@ -323,19 +334,8 @@ export default({
         <ProCard size="small"                  
           headerBordered
           title='General Infomation'
-          // style={{ marginBlockStart: 8 }}
-          // gutter={8}
-          // direction="row"
         >
           <ProFormGroup >
-            {/* <ProFormText
-              label="Customer's ID"
-              disabled
-              // rules={[{ required: true }]}
-              name={'customerCode'}
-              allowClear
-              width={470}
-            /> */}
             <ProFormSelect
                 label="Customer's ID"
                 disabled= {(type=='CREATE')}
@@ -348,7 +348,8 @@ export default({
                 }))}
                 width={470}
             />
-            <ProFormRadio.Group
+            <Flex>              
+              <ProFormRadio.Group
               name="vatInv"
               label="VAT Invoice"
               options={[
@@ -362,6 +363,15 @@ export default({
                 }
               ]}
             />
+            <ProFormText
+                label=" "
+                rules={[{ required: false }]}
+                placeholder={"Please enter VAT description"}
+                name={'vatText'}
+                allowClear
+                width={350}
+              />
+          </Flex>            
           </ProFormGroup>
           <ProFormGroup>
             <ProFormSelect
@@ -372,10 +382,7 @@ export default({
               options={[{
                 label: 'New Account',
                 value: 'New Account',
-              }/*,{
-                label: 'Add Shipping Address',
-                value: 'Add Shipping Address',
-              }*/]}
+              }]}
               width={470}
             />
           
@@ -388,20 +395,38 @@ export default({
                 label: it.name,
                 value: it.id,
               }))}
-              // options={[{
-              //   label: 'Wholsale',
-              //   value: 'Wholsale',
-              // },{
-              //   label: 'Standard',
-              //   value: 'Standard',
-              // },{
-              //   label: 'Special(Enclose Sales Terms)',
-              //   value: 'Special(Enclose Sales Terms)',
-              // }]}
               width={470}
             />}
             {type=='EDIT' &&<ProFormSelect
-              label={`Price & Trade Offer - ${data?.priceTradeOfferName}`}
+              label={<div>
+                {`Price & Trade Offer - ${data?.priceTradeOfferName}`}  <PopconfirmMe title="Price & Trade Offer" 
+                  icon={<FilterOutlined />}
+                  placement="left"               
+                  description={
+                    <ProForm form={formPriceTradeOffer} submitter={false} style={{width:350}}> 
+                      <ProFormSelect
+                        name={'priceTradeOfferId'}
+                        placeholder={'Price & Trade Offer'}
+                        rules={[{ required: true }]}
+                        options={state1.initData?.lookupDataList?.filter((it) => it.type === 'SALE_PRICE_LIST' && it?.actived=='Y')?.map((it) => ({
+                          label: it.name,
+                          value: it.id,
+                        }))}
+                        width={350}
+                      />
+                    </ProForm>
+                  }
+                  onConfirm={async()=>{
+                    const formData = await formPriceTradeOffer.validateFields();    
+                    const priceTradeOfferName = state1.initData?.lookupDataList?.filter((it) => it.type === 'SALE_PRICE_LIST' && it?.actived=='Y').find(it=>it.id==formData.priceTradeOfferId)?.name
+                    setData((v:any) =>  {
+                      return{...v,priceTradeOfferId: formData.priceTradeOfferId||0,priceTradeOfferName: priceTradeOfferName||''}
+                    })
+                  }}
+                >
+                  <Button type="link" icon={<EditOutlined />}/>
+                </PopconfirmMe>
+                </div>}
               name={'sapPriceTradeOfferId'}
               placeholder={'Price & Trade Offer'}
               rules={[{ required: true }]}
@@ -409,16 +434,6 @@ export default({
                 label: it.name,
                 value: it.id,
               }))}
-              // options={[{
-              //   label: 'Wholsale',
-              //   value: 'Wholsale',
-              // },{
-              //   label: 'Standard',
-              //   value: 'Standard',
-              // },{
-              //   label: 'Special(Enclose Sales Terms)',
-              //   value: 'Special(Enclose Sales Terms)',
-              // }]}
               width={470}
             />}
              {type=='CREATE' && <ProFormSelect
@@ -430,20 +445,38 @@ export default({
                 label: it.name,
                 value: it.id,
               }))}
-              // options={[{
-              //   label: 'Cashon-Delivery',
-              //   value: 'Cashon-Delivery',
-              // },{
-              //   label: 'Pre-Payment',
-              //   value: 'Pre-Payment',
-              // },{
-              //   label: 'Credit (enclose Credit Appliction form)',
-              //   value: 'Credit (enclose Credit Appliction form)',
-              // }]}
               width={470}
             />}
             {type=='EDIT' && <ProFormSelect
-              label={`Payment Term - ${data?.paymentTermName}`}
+             label={<div>
+                {`Price & Trade Offer - ${data?.paymentTermName}`}  <PopconfirmMe title="Payment Term" 
+                  icon={<FilterOutlined />}
+                  placement="left"               
+                  description={
+                    <ProForm form={formPaymentTerm} submitter={false} style={{width:350}}> 
+                      <ProFormSelect
+                        name={'paymentTermId'}
+                        placeholder={'Payment Term'}
+                        rules={[{ required: true }]}
+                        options={state1.initData?.lookupDataList?.filter((it) => it.type === 'SALE_PAYMENT_TERM' && it?.actived=='Y')?.map((it) => ({
+                          label: it.name,
+                          value: it.id,
+                        }))}
+                        width={350}
+                      />
+                    </ProForm>
+                  }
+                  onConfirm={async()=>{
+                    const formData = await formPaymentTerm.validateFields();    
+                    const paymentTermName = state1.initData?.lookupDataList?.filter((it) => it.type === 'SALE_PAYMENT_TERM' && it?.actived=='Y').find(it=>it.id==formData.paymentTermId)?.name                   
+                    setData((v:any) =>  {
+                      return{...v,paymentTermId: formData.paymentTermId||0,paymentTermName: paymentTermName||''}
+                    })
+                  }}
+                >
+                  <Button type="link" icon={<EditOutlined />}/>
+                </PopconfirmMe>
+                </div>}
               name={'sapPaymentTermId'}
               placeholder={'Payment Term'}
               rules={[{ required: true }]}
@@ -451,16 +484,6 @@ export default({
                 label: it.name,
                 value: it.id,
               }))}
-              // options={[{
-              //   label: 'Cashon-Delivery',
-              //   value: 'Cashon-Delivery',
-              // },{
-              //   label: 'Pre-Payment',
-              //   value: 'Pre-Payment',
-              // },{
-              //   label: 'Credit (enclose Credit Appliction form)',
-              //   value: 'Credit (enclose Credit Appliction form)',
-              // }]}
               width={470}
             />}
               <ProFormSelect
@@ -519,7 +542,6 @@ export default({
               width={470}
             /> 
           </ProFormGroup>   
-          {/* <ProFormText readonly name={'createdBy'} label="Sale Executive"  width={470}/>   */}
           <ProFormSelect
               label="Sale Executive"
               showSearch              
@@ -607,22 +629,16 @@ export default({
                 <ProCard
                   title='Billing Address'
                   headerBordered
-                  // style={{ marginBlockStart: 8 }}
-                  // gutter={8}
                 >
                   <AddressListView  addressReadonly={readOnly||false}
                       data={{
                         list: addressList || [],
                         init: {
-                          // lookupDataList: state1.initData?.lookupDataList,
                           provinceList: state1.initData?.provinceList,
                         },
                         locations: { ...state1.data?.locations },
                       }} actionHandlers={{
                         loadData: async function (): Promise<AddresssView[]> {
-                          // throw new Error("Function not implemented.");
-                          // const rs = await ops.listAddressDetailByCustomerId({ id: state.data?.detail?.id || 0 })
-                          // setAddressList(rs)
                           return []
                         },
                         onAdd: (data, cb) => onSaveShippingAddressHandler(data,'B', true, cb),
@@ -646,15 +662,11 @@ export default({
                       data={{
                         list: shippingAddressList || [],
                         init: {
-                          // lookupDataList: state1.initData?.lookupDataList,
                           provinceList: state1.initData?.provinceList,
                         },
                         locations: { ...state1.data?.locations },
                       }} actionHandlers={{
                         loadData: async function (): Promise<AddresssView[]> {
-                          // throw new Error("Function not implemented.");
-                          // const rs = await ops.listAddressDetailByCustomerId({ id: state.data?.detail?.id || 0 })
-                          // setAddressList(rs)
                           return []
                         },
                         onAdd: (data, cb) => onSaveShippingAddressHandler(data,'S', true, cb),

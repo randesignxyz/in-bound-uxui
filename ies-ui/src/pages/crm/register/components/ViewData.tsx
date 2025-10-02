@@ -4,6 +4,7 @@ import { Card, Col, Descriptions, Flex, List, Radio, Row, Space } from "antd";
 import { AimOutlined } from "@ant-design/icons";
 import RemarkCard from "./RemarkCard";
 import DocmentRequire from "./DocmentRequire";
+import { TXTRenderer } from "react-doc-viewer";
 
 interface Props {
   data?: RegisterCustomerDetailResponse;
@@ -20,12 +21,15 @@ export default ({ data }: Props) => {
                     {data?.customerCode}
                 </Descriptions.Item>
                 <Descriptions.Item label="VAT Invoice" >
-                    <Radio.Group value={data?.vatInv} 
-                        options={[
-                            {label: 'Yes',value: 'Y',},
-                            {label: 'No',value: 'N',}
-                        ]}
-                    />
+                    <Flex>
+                        <Radio.Group value={data?.vatInv} 
+                            options={[
+                                {label: 'Yes',value: 'Y',},
+                                {label: 'No',value: 'N',}
+                            ]}
+                        />
+                        {data?.vatText}
+                    </Flex>
                 </Descriptions.Item>
                 <Descriptions.Item label="Purpose">
                     {data?.purpose}

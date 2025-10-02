@@ -35,6 +35,7 @@ export default (props: Props) => {
     salespersonCode?: string[];
     requestedDate?: moment.Moment[];
     status?: string[];
+    supplier?: string;
   }>();
 
   const onFormvalueChanged = (changedValues: any) => {
@@ -58,6 +59,7 @@ export default (props: Props) => {
           salespersonCode: dataForm.salespersonCode,
           status: dataForm.status,
           reportType: selectedReportType,
+          supplier: dataForm.supplier,
         },
       });
       message.success('Report generated successfully.');
@@ -99,6 +101,14 @@ export default (props: Props) => {
                 rules={[{ required: true }]}
                 label="Requested Date Start-End"
                 name="requestedDate"
+              />
+              <ProFormSelect
+                // mode="multiple"
+                label="Source of Supply"
+                name="supplier"
+                width="md"
+                initialValue={'All'}
+                options={['All', 'Distributors', 'Warehouse']}
               />
               <ProFormSelect
                 mode="multiple"

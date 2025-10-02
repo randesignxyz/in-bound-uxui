@@ -410,11 +410,6 @@ const MpuPoDetail: React.FC<Props> = ({ id, onEdit }) => {
                 dataIndex: 'quantity',
                 align: 'right',
               },
-              {
-                title: 'Receive Quantity',
-                dataIndex: 'actualQuantity',
-                align: 'right',
-              },
 
               {
                 title: 'Unit Price',

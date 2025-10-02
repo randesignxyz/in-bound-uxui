@@ -59,6 +59,7 @@ export interface DeliveryList {
 }
 
 export interface DNList {
+  key: any;
   id: number,
   soId: string,
   deliveryDate: string,
@@ -74,11 +75,30 @@ export interface DNList {
   claimed_date?: string
   so_no?: string
   reserve_num?: string
-  customer_code?:string,
-  customer_name?:string,
-  status?:string,
+  customer_code?: string,
+  customer_name?: string,
+  status?: string,
+  mergeItems: mergeItems[]
 }
 
+interface mergeItems {
+  allocateID?: string
+  category?: string
+  delItemName?: string
+  deliveryId?: string
+  dn?: string
+  id?: string
+  itemCode?: string
+  itemName?: string
+  lineNumber?: string
+  qty?: string
+  saleType?: string
+  sku_id?: string
+  sku_name: string
+  sku_uom: string
+  so_num?: string
+  sequence?:string
+}
 interface DN {
   createdBy?: string
   createdDate?: string
@@ -117,6 +137,8 @@ interface DN {
 // }
 
 interface DNPlan {
+  sku_id: string;
+  sku_uom: string;
   allocateItemIds?: string;
   deliveryId?: string;
   id?: string;
@@ -129,7 +151,7 @@ interface DNPlan {
   dn: DNDetail[];
   attachment?: Attachment[];
   so_status?: string
-  delItemName?:string
+  delItemName?: string
 }
 
 export interface DeliveryItemList {
@@ -153,7 +175,7 @@ export type AllocateSOAdvanceParams = {
   status: string;
   ordered_date?: string;
   dnStatus?: string
-  delivery_date?:string
+  delivery_date?: string
 };
 
 export type DNDetail = {
@@ -183,7 +205,7 @@ export type DNItemParams = {
   lineNumber: string,
   so_num: string,
   isUnplan?: string,
-  delItemName?:string
+  delItemName?: string
 };
 
 export type DNParams = {
@@ -203,10 +225,7 @@ export type DNParams = {
 export type UpdateRemarkParams = {
   id?: number,
   remark?: string,
-  attachment?: Attachment[],
-  sales_planid: string,
-  activities_name?: string,
-  action?: string,
+  attachment?: Attachment[]
 }
 
 type Attachment = {
@@ -242,5 +261,22 @@ export type DnQuickView = {
   open_count: number
   complete_count: number
   in_progress_count: number
-  total_count:number
+  total_count: number
+}
+
+export type SkuList = {
+  id: number,
+  sku_code: string,
+  sku_name: string,
+  item_category: number,
+  sequence: number,
+  item_code: string,
+}
+
+export type LocationList = {
+  id: number,
+  internal_name: string,
+  name: string,
+  parent: string,
+  type: string,
 }

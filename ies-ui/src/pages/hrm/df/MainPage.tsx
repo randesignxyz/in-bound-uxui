@@ -9,7 +9,7 @@ import { useState } from "react"
 import { TableViewSearchParams } from "@/components/DataCrud/TableView"
 import { useAccess, useQuery } from "@umijs/max"
 import DataEntryFormView from "./DataEntryFormView"
-import { Dropdown, message, Space } from "antd"
+import { Card, Grid} from "antd"
 
 export const openPR = (dfId: number) => window.open(`/externa/hrm/df/detail/${dfId}`, '_blank')?.focus()
 
@@ -22,8 +22,57 @@ export default () => {
     const { data, isLoading, refetch } = useQuery(['fetch-fd360-emp-list', filter], () => services.list(filter), {
             refetchOnWindowFocus: false
         })
+    const screens = Grid.useBreakpoint();
+    const isMobile = !screens.md;
+    const [selectedItem, setSelectedItem] = useState<DF360EmpListItem | null>(null);
    
-    return(<PageWrapper<DF360EmpListItem, DF360InfoAdvanceSearchParams, {}>
+    return (<div> {isMobile ? (
+            <div style={{ display: "flex", justifyContent: "center", flexDirection: "column", alignItems: "center" }}>
+                {selectedItem ? (
+                // 👉 Show form view in center when a card is clicked
+                <div style={{ width: "800px", maxWidth: "100%" }}>
+                    <DataEntryFormView
+                    id={selectedItem.id}
+                    type="EDIT"
+                    onCloseTab={() => setSelectedItem(null)} 
+                    />
+                </div>
+                ) : (
+                // 👉 Show list of cards
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "16px" }}>
+                    <h3 style={{ color: "#b69901" }}>360 Degree Feedback List</h3>
+                    {data?.items?.map((item) => (
+                    <Card key={item.id} style={{ width: 300 }}>
+                        <p>
+                        <strong>Form No:</strong>{" "}
+                        <span
+                            style={{ color: "#1677ff", cursor: "pointer" }}
+                            onClick={() => setSelectedItem(item)} 
+                        >
+                            {item.formNo || "n/a"}
+                        </span>
+                        </p>
+                        <p><strong>Employee No:</strong> {item.empNo}</p>
+                        <p><strong>Employee Name:</strong> {item.empName}</p>
+                        <p><strong>Employee Name (KH):</strong> {item.empNameKh}</p>
+                        <p><strong>Position:</strong> {item.jobTitle}</p>
+                        <p><strong>Job Level:</strong> {item.jobLevel}</p>
+                        <p><strong>Business Unit:</strong> {item.buName}</p>
+                        <p><strong>Function:</strong> {item.deptName}</p>
+                        <p><strong>Modified By:</strong> {item.lastModifiedBy}</p>
+                        <p><strong>Modified Date:</strong> {formatDate(item.lastModifiedDate)}</p>
+                        <p>
+                        <strong>Status:</strong>{" "}
+                        {item.status && <Status size="small" text={item.status || ""} />}
+                        </p>
+                        <p><strong>Due Date:</strong> {formatDate(item.dueDate)}</p>
+                    </Card>
+                    ))}
+                </div>
+                )}
+            </div>
+        
+        ):(<PageWrapper<DF360EmpListItem, DF360InfoAdvanceSearchParams, {}>
     
         tabRender={item => 
             access.canAccessDF360NewForm?[{
@@ -128,22 +177,22 @@ export default () => {
                         render: (_, r) => r.jobTitle,
                     }, {
                         title: 'Job Level',
-                        width: 130,
+                        // width: 130,
                         sorter: 'jobLevel',
                         render: (_, r) => r.jobLevel,
                     }, {
                         title: 'Business Unit',
-                        width: 130,
+                        // width: 130,
                         sorter: 'buName',
                         render: (_, r) => r.buName,
                     }, {
                         title: 'Function',
-                        width: 130,
+                        // width: 130,
                         sorter: 'deptName',
                         render: (_, r) => r.deptName,
                     }, {
                         title: 'Modified By',
-                        width: 130,
+                        // width: 130,
                         sorter: 'lastModifiedBy',
                         render: (_, r) => r.lastModifiedBy,
                     }, {
@@ -165,5 +214,6 @@ export default () => {
                 ]
             }
         }}
-    />)
+    />)}
+    </div>)
 }

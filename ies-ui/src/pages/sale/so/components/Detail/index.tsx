@@ -56,28 +56,6 @@ const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
     });
   };
 
-  const onSapPostingHandlerNew = (comment?: string) => {
-    if (!id) {
-      message.error('So not found.');
-      return;
-    }
-    Modal.confirm({
-      title: 'SAP SO Posting',
-      content: 'Are you sure?',
-      onOk: async () => {
-        try {
-          const rs = await actions.postSoNew(id, comment);
-          actions.fetchSo(id);
-          modals.hideModal('sap-posting');
-          message.success(`So has been posted sucessfully. SAP Doc No: ${rs.data}.`);
-        } catch (e) {
-          const error = e as { error: string; message: string };
-          message.error(error.message);
-        }
-      },
-    });
-  };
-
   const onCancelSoHandlers = (remarks: string) => {
     if (!id) {
       message.error('So not found.');
@@ -205,9 +183,8 @@ const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
         open={modals.isVisible('sap-posting')}
         onCancel={() => modals.hideModal('sap-posting')}
         onPosting={onSapPostingHandler}
-        // onPosting={onSapPostingHandlerNew}
-        items={ getOfferItems() ?? []}
-        offerCodes={state.data?.offerCodes ?? []}
+        items={getOfferItems() ?? []}
+        offerCodes={state.data?.offerCodes ?? []} //
       />
       <CancelSo
         open={modals.isVisible('cancel-so')}

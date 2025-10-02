@@ -17,10 +17,31 @@ const ProductItemActions = {
     },
   }),
 
+  pageProductsMME: (
+    params: TableViewSearchParams<null>,
+  ): ServiceApiType<{ searchValue?: string }> => ({
+    type: 'PAGING_QUERY',
+    endpoint: 'SALE',
+    actionName: 'list-product-item-mme',
+    payload: { ...params.criteria },
+    pagination: {
+      pageSize: 100, //params.pagination?.pageSize,
+      page: params.pagination?.current,
+    },
+  }),
+
   listProducts: (): ServiceApiType<any> => ({
     type: 'LIST_QUERY',
     endpoint: 'SALE',
     actionName: 'list-product-item-by-type',
+    payload: {},
+  }),
+
+  listProductsMME: (): ServiceApiType<any> => ({
+    type: 'LIST_QUERY',
+    endpoint: 'SALE',
+    // actionName: 'list-product-item-by-type',
+    actionName: 'list-product-item-by-mme',
     payload: {},
   }),
 
@@ -81,10 +102,20 @@ const ProductItemActions = {
 
 export const ProductItemsServiceAPI = (requestActions: RequestActions) => {
   return {
+    listProductsMME: () =>
+      singleRequest<ProductItem>(ProductItemActions.listProductsMME())(requestActions) as Promise<
+        ProductItem[]
+      >,
+
     listProducts: () =>
       singleRequest<ProductItem>(ProductItemActions.listProducts())(requestActions) as Promise<
         ProductItem[]
       >,
+
+    pageProductsMME: (params: TableViewSearchParams<null>) =>
+      singleRequest<ProductItem>(ProductItemActions.pageProductsMME(params))(
+        requestActions,
+      ) as Promise<Paging<ProductItem>>,
 
     pageProducts: (params: TableViewSearchParams<null>) =>
       singleRequest<ProductItem>(ProductItemActions.pageProducts(params))(

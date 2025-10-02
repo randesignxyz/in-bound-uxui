@@ -1,8 +1,8 @@
 import { DestSelector, DestSelectorType, Selector } from "@/services/account/data"
 import { AccountServiceAPIs } from "@/services/account/services"
 import { simpleRequestActions } from "@/services/model"
-import { EditableFormInstance, EditableProTable, ModalForm, ModalFormProps, ProFormSelect } from "@ant-design/pro-components"
-import { message } from "antd"
+import { EditableFormInstance, EditableProTable, ModalForm, ModalFormProps, ProFormCheckbox, ProFormSelect } from "@ant-design/pro-components"
+import { Checkbox, Flex, message } from "antd"
 import { uniqueId } from "lodash"
 import { useRef, useState } from "react"
 
@@ -12,6 +12,7 @@ export default ({ onSave, ...rest }: ModalFormProps<{ approver: string }> & {
 }) => {
 
     const editableFormRef = useRef<EditableFormInstance>();
+    const [hod,setHod] = useState<boolean>(false)
     
     const selectorList: DestSelectorType[] = [
         { dataType: 'String', name: 'function', },
@@ -54,33 +55,62 @@ export default ({ onSave, ...rest }: ModalFormProps<{ approver: string }> & {
     const loadUser = async (keyworks?: string) => {
         return (await AccountServiceAPIs.fetchListContributors(keyworks).query(requestActions)).map(it => ({ label: [it.code || '000000', it.name].join(' - '), value: it.id, }))
     }
-    return <ModalForm width={1000} {...rest} onFinish={async (dataForm) => {
+    return <ModalForm width={1000} {...rest} onFinish={async (dataForm) => {       
         if (data.filter(it => it.value).length == 0) {
             message.error("No selector set.")
             return
-        }
-         await editableFormRef.current?.validateFields()
-         try {
-            onSave(dataForm.approver, data.filter(it => it.value)) 
+        }   
+        await editableFormRef.current?.validateFields()     
+        const approver =hod?'@__HOD__@':dataForm.approver      
+        try {
+            onSave(approver, data.filter(it => it.value)) 
+            console.log(approver, data.filter(it => it.value))
             rest.onOpenChange?.(false)   
-         } catch (error: any) {
+        } catch (error: any) {
             message.error(error.message || 'Failed to save.')
-         }
+        }
         
     }}>
-
-        <ProFormSelect
+        <Flex gap={15}>
+            <ProFormSelect disabled={hod}
             showSearch allowClear name={'approver'}
-            rules={[{ required: true }]} width={"xl"}
+            rules={[{ required: !hod }]} width={"xl"}
             label="Approver" debounceTime={500}
             request={({ keyWords }) => loadUser(keyWords)} />
+            <ProFormCheckbox label=' ' name={'hod'}  
+                fieldProps={{onChange: (e) =>   {
+                    setHod(e.target.checked)
+                    if(e.target.checked){
+                        setData([{
+                            key: uniqueId().toString(),
+                            operand: 'Equals',
+                            dataType: 'String',
+                            selector: 'function',
+                            value: 'All'
+                        }])
+                    }else {
+                        setData(selectorList.map(it => ({
+                            key: uniqueId().toString(),
+                            operand: 'Equals',
+                            dataType: 'String',
+                            selector: it.name
+                        })))
+                    }
+                  
+                    console.log(e.target.checked);    
+                    
+                    
+                }}}
+            >Department Head</ProFormCheckbox>
+        </Flex>
+       
 
-        <EditableProTable<Selector>
+        <EditableProTable<Selector> 
             rowKey='key'
             editableFormRef={editableFormRef}
             value={data}
             onChange={ setData}
-            recordCreatorProps={{
+            recordCreatorProps={hod?false:{
                 newRecordType: 'dataSource', 
                 record: ({key: uniqueId().toString(), selector: "", dataType: 'String' , operand: 'Equals' }), 
                 creatorButtonText: 'Add',
@@ -91,12 +121,13 @@ export default ({ onSave, ...rest }: ModalFormProps<{ approver: string }> & {
                 { title: 'Selector', 
                     formItemProps: {rules: [{required: true}] } , 
                     editable:(_,r) => !selectorList.some(it => it.name == r.selector ) , 
-                    dataIndex: 'selector' 
+                    dataIndex: 'selector', 
+                    fieldProps: { disabled:hod } 
                 },
-                { title: "Data Type", width: 110 , dataIndex: 'dataType', valueType: 'select', fieldProps: { options: dataType } },
-                { title: "Operand", width: 200, dataIndex: 'operand', valueType: 'select', fieldProps: { options: operands } },
-                { title: 'Value', dataIndex: 'value' },
-                { title: 'Remarks', dataIndex: 'remarks' },
+                { title: "Data Type", width: 110 , dataIndex: 'dataType', valueType: 'select', fieldProps: { options: dataType , disabled:hod}},
+                { title: "Operand", width: 200, dataIndex: 'operand', valueType: 'select', fieldProps: { options: operands, disabled:hod } },
+                { title: 'Value', dataIndex: 'value', fieldProps: { disabled:hod } },
+                { title: 'Remarks', dataIndex: 'remarks', fieldProps: { disabled:hod } },
                 {
                     title: '',
                     valueType: 'option',
@@ -112,7 +143,7 @@ export default ({ onSave, ...rest }: ModalFormProps<{ approver: string }> & {
                 editableKeys: data?.map(it => it.key),
                 actionRender: (row, config, defaultDoms) => {
                     if(selectorList.some(it => it.name == row.selector)) return []
-                    return [defaultDoms.delete];
+                    return hod?[]:[defaultDoms.delete];
                   },
                 // onValuesChange(_, dataSource) {
                 //     setData(dataSource)

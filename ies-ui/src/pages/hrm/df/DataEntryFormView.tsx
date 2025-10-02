@@ -10,10 +10,11 @@ import { formatDate, formatterQty1 } from "@/pages/utils";
 import InstructionCard from "./components/InstructionCard";
 import StatementTable from "./components/StatementTable";
 import CommentTable from "./components/commentTable";
-import { UnorderedListOutlined, UserOutlined } from "@ant-design/icons";
+import { FilePdfOutlined, UnorderedListOutlined, UserOutlined } from "@ant-design/icons";
 import { AppraisalDataLookup } from "../appraisal-submit/data.types";
 import { createService } from "../appraisal-submit/services";
 import { simpleRequestActions } from "@/services/model";
+import { history} from 'umi';
 
 
 type DataFormType = {
@@ -65,7 +66,7 @@ export default({
         if(loading){
             services.detail(id||0).then(r=>{
                 setDate(r)
-                setSelectedAssessor(r.currentAssessor)
+                setSelectedAssessor(r.currentAssessor? r.currentAssessor:r.assessors[0])
                 setLoading(false)
             })
         }
@@ -206,12 +207,32 @@ export default({
         }
     }
     const isReport = selectedAssessor && ['Self','Manager'].some(r=>r==selectedAssessor?.type)
+    const isExternal = () => history.location.pathname.includes("/externa/hrm/df/detail");
 
     return(<div ref={ref}><Spin spinning={loading} ><Space direction="vertical" style={{ width: '100%' }}>
-        {(data?.assessors?.length||0)>1 && <Card title="Assessor Infomation" size="small">
-            <Row gutter={20}>
-                <Col flex={1}>
-                    {data?.assessors &&<CheckCard.Group  onChange={v => onChangeAssessor(v?.valueOf() as number)}  value={selectedAssessor?.id} size='small'>
+        {(data?.assessors?.length||0)>1 && <Card title="Assessor Infomation" size="small" 
+            extra={isExternal() && <Button icon={<UnorderedListOutlined/>} type='link'  onClick={() => history.push(`/hrm/df/list`)}>360 Degree Feedback List</Button>}
+            
+        >
+            {/* <Row gutter={20}>
+                <Col flex={1}> */}
+                <div
+                    style={{
+                        display: 'flex',
+                        justifyContent: 'center', // center horizontally
+                        flexDirection: 'column',
+                        alignItems: 'center',     // center content inside column
+                    }}
+                >
+                    {data?.assessors &&<CheckCard.Group  
+                        onChange={v => onChangeAssessor(v?.valueOf() as number)}  value={selectedAssessor?.id} size='small'
+                         style={{
+                            display: 'inline-flex',  // makes cards wrap but centered
+                            flexWrap: 'wrap',
+                            gap: '12px',
+                            justifyContent: 'center',
+                        }}
+                    >
                         {data?.assessors.map(r => (<CheckCard size='small' 
                         avatar={
                             <Avatar
@@ -220,12 +241,15 @@ export default({
                                 size="small"
                             />
                         }
-                        key={`assessor-${r.id}`}  title= {`${r.type} - ${r.empNo}`} description={`${r.empName}`}  value={r.id}/>)) }
+                        key={`assessor-${r.id}`}  title= { r.empNo==''? `${r.type}`:`${r.type} - ${r.empNo}`} description={r.empName}  value={r.id}/>)) }
                     </CheckCard.Group>}
-                </Col>
-            </Row>                    
+                </div>
+                {/* </Col>
+            </Row> */}
         </Card>}
-        <ProCard size="small" headerBordered title="Employee Infomation">
+        <ProCard size="small" headerBordered title="Employee Infomation"
+            // extra={<Button icon={<FilePdfOutlined/>}>Export</Button>}
+        >
             <Descriptions>
                 <Descriptions.Item label="Employee ID" style={{ fontWeight: 'bolder' }}>{data?.empNo}</Descriptions.Item>
                 <Descriptions.Item label="Employee Name" style={{ fontWeight: 'bolder' }}>{data?.empName}</Descriptions.Item>

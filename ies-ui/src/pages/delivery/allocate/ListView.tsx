@@ -37,6 +37,7 @@ export default () => {
   const [skuList, setSkuList] = useState<SkuList[]>([])
   const [dataListDn, setDataListDn] = useState<DNList[]>([])
   const [selectedRows, setSelectedRows] = useState<DNList[]>([]);
+  const [asDate, setAsDate] = useState(true);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [drawerTypeOpen, setDrawerTypeOpen] = useState<{ visible: boolean; data?: DNList }>({
     visible: false,
@@ -419,35 +420,63 @@ export default () => {
     params: TableViewSearchParams<AllocateSOAdvanceParams>
   ): Promise<Paging<DNList>> => {
     try {
+      // 1️⃣ Fetch SKU list
+      const skuResult = await services.list_sku();
+
+      let skuArray: SkuList[] = [];
+
+      if (Array.isArray(skuResult)) {
+        skuArray = skuResult;
+      } else if ('data' in skuResult && Array.isArray(skuResult.data)) {
+        skuArray = skuResult.data;
+      } else {
+        skuArray = [skuResult];
+      }
+
+      // Sort by category and sequence
+      const sortedSku = skuArray.sort((a, b) => {
+        if (a.item_category !== b.item_category) return a.item_category - b.item_category;
+        return a.sequence - b.sequence;
+      });
+
+      // 2️⃣ Fetch DN details
+      const deliveryDate = asDate ? undefined : dnSearch.delivery_date;
+
       const list = await services.list_dn_detail(
         dnSearch.status,
-        dnSearch.delivery_date,
+        deliveryDate,
         dnSearch.province_id,
         dnSearch.district_id,
         dnSearch.commune_id
       );
 
-      if (!Array.isArray(list)) {
-        throw new Error('Unexpected response format');
-      }
+      if (!Array.isArray(list)) throw new Error('Unexpected response format');
 
-      // --- Transform items to map sku_id → sku_code (+ handle category 2 UOM split) ---
+      // 3️⃣ Transform items to map sku_id → sku_code (+ handle category 2 split)
       const transformedList = list.map((delivery) => {
         const skuValues: Record<string, number> = {};
+
+        // initialize all SKU columns to 0 to avoid missing data
+        sortedSku.forEach((sku) => {
+          if (sku.item_category === 2) {
+            skuValues[`${sku.sku_code}_pack`] = 0;
+            skuValues[`${sku.sku_code}_bowl`] = 0;
+          } else {
+            skuValues[sku.sku_code] = 0;
+          }
+        });
 
         const itemsToUse = delivery.mergeItems?.length ? delivery.mergeItems : delivery.deliveryItems;
 
         itemsToUse.forEach((item) => {
-          const sku = skuList.find((s) => s.id.toString() === item.sku_id);
-          if (sku) {
-            if (sku.item_category === 2) {
-              // Category 2 → split into pack/bowl using UOM
-              const key = `${sku.sku_code}_${item.sku_uom.toLowerCase()}`;
-              skuValues[key] = (skuValues[key] || 0) + item.qty;
-            } else {
-              // Category 1 (and others) → normal mapping
-              skuValues[sku.sku_code] = (skuValues[sku.sku_code] || 0) + item.qty;
-            }
+          const sku = sortedSku.find((s) => s.id.toString() === item.sku_id);
+          if (!sku) return;
+
+          if (sku.item_category === 2) {
+            const key = `${sku.sku_code}_${item.sku_uom.toLowerCase()}`;
+            if (key in skuValues) skuValues[key] += item.qty;
+          } else {
+            skuValues[sku.sku_code] += item.qty;
           }
         });
 
@@ -458,11 +487,10 @@ export default () => {
         };
       });
 
-      // --- Pagination ---
+      // 4️⃣ Pagination
       const page = params.pagination?.current ?? 1;
       const pageSize = params.pagination?.pageSize ?? 20;
       const total = transformedList.length;
-
       const pagedData = transformedList.slice((page - 1) * pageSize, page * pageSize);
 
       const dataList = {
@@ -473,13 +501,13 @@ export default () => {
       };
 
       setDataListDn(dataList);
+      setSkuList(sortedSku); // update state for columns
       return dataList;
     } catch (error: any) {
       message.error(error.message);
       return Promise.reject(error);
     }
   };
-
 
 
 
@@ -571,7 +599,9 @@ export default () => {
   ]
 
   const skuColumns: ProColumns<DNList>[] = skuList.map((sku) => {
+    console.log('skuListskuList', skuList)
     if (sku.item_category === 1) {
+
       return {
         title: sku.sku_name,
         dataIndex: sku.sku_code,
@@ -1388,7 +1418,12 @@ export default () => {
                       actions: [
                         <ProForm submitter={false} layout="inline">
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-
+                            <Checkbox
+                              checked={asDate}
+                              onChange={e => { setAsDate(e.target.checked), actionRef.current?.reloadAndRest?.() }}
+                            >
+                              As Date
+                            </Checkbox>
                             <ProFormDatePicker
                               name="delivery_date"
                               placeholder="Delivery Date"

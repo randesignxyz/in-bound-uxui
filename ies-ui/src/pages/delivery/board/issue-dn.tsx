@@ -30,11 +30,12 @@ interface Props extends FormModalProps {
     cb?: () => void
 }
 
-export const shiftList = ['Morning', 'Daylignt', 'Evening'];
+export const shiftList = ['Morning', 'Daylignt', 'Evening', 'Night'];
 export const timeFrame = [
     { from: 4, to: 10, shift: 'Morning' },
     { from: 11, to: 15, shift: 'Daylignt' },
-    { from: 16, to: 24, shift: 'Evening' },
+    { from: 16, to: 21, shift: 'Evening' },
+    { from: 22, to: 3, shift: 'Night' },
 ]
 
 const IssueDNModal: React.FC<Props> = ({ cb, requestActions, itemDetail, ...props }) => {

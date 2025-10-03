@@ -58,9 +58,8 @@ export default () => {
   const [MTSearch, setMTSearch] = useState<{ status: string; startDate?: string, endDate?: string }>({
     status: 'open',
   });
-  const [dnSearch, setDnSearch] = useState<{ status: string; delivery_date: string, province_id?: string, district_id?: any, commune_id?: string }>({
+  const [dnSearch, setDnSearch] = useState<{ status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string }>({
     status: 'posted',
-    delivery_date: moment().format("YYYY-MM-DD"),
   });
   const [modalOpen, setModalOpen] = useState<{ visible: boolean; id: number, remark?: string, attachment?: any, sales_planid?: string }>({
     visible: false,
@@ -480,8 +479,8 @@ export default () => {
         return a.sequence - b.sequence;
       });
 
-      const deliveryDate = asDate ? undefined : dnSearch.delivery_date;
-
+      // const deliveryDate = asDate ? undefined : dnSearch.delivery_date;
+      const deliveryDate = asDate ? dnSearch.delivery_date : undefined;
       const list = await services.list_dn_detail(
         dnSearch.status,
         deliveryDate,
@@ -1312,7 +1311,7 @@ export default () => {
                   </ProForm>
 
                 ],
-              }, 
+              },
             }}
             extraFilter={
               <Space size="large" style={{ flexDirection: 'row' }}>

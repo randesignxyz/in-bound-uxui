@@ -14,7 +14,7 @@ interface Props extends FormModalProps {
     onSave: (data: UpdateRemarkParams & { fileUrl?: string }) => void;
     remark?: string,
     attachment?: [],
-    sales_planid?:number
+    sales_planid?:number | string
 }
 type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0];
 const AddRemarkModal: React.FC<Props> = ({ onSave, id, remark, attachment,sales_planid, ...props }) => {

@@ -176,22 +176,22 @@ export default [
     access: 'canAccessDeliveryTruck',
     component: './delivery/truck',
   },
-  {
-    path: '/delivery/associate/del/:view/*',
-    name: 'associateDel',
-    icon: 'UnorderedListOutlined',
-    hideInMenu: 'true',
-    access: 'canAccesAllocateDelView',
-    component: './delivery/associate/del',
-  },
-  {
-    path: '/delivery/associate/sale/:view/*',
-    name: 'associateSale',
-    icon: 'UnorderedListOutlined',
-    hideInMenu: 'true',
-    access: 'canAcceAllocateSale',
-    component: './delivery/associate/sale',
-  },
+  // {
+  //   path: '/delivery/associate/del/:view/*',
+  //   name: 'associateDel',
+  //   icon: 'UnorderedListOutlined',
+  //   hideInMenu: 'true',
+  //   access: 'canAccesAllocateDelView',
+  //   component: './delivery/associate/del',
+  // },
+  // {
+  //   path: '/delivery/associate/sale/:view/*',
+  //   name: 'associateSale',
+  //   icon: 'UnorderedListOutlined',
+  //   hideInMenu: 'true',
+  //   access: 'canAcceAllocateSale',
+  //   component: './delivery/associate/sale',
+  // },
 
 
   /************************ Queque  ******************/

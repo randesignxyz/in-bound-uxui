@@ -51,7 +51,7 @@ const IssueDNModal: React.FC<Props> = ({ cb, requestActions, itemDetail, ...prop
     const [form] = useForm<{
         docDate: Moment;
         driverId: number;
-        licensePlate: string;
+        licensePlate: string; 
         whsCode?: string;
         shift: string;
         remarks?: string;

@@ -1,4 +1,4 @@
-import { AimOutlined, CheckCircleOutlined, CheckCircleTwoTone, CloseCircleOutlined, FieldTimeOutlined } from "@ant-design/icons";
+import { AimOutlined, CheckCircleOutlined, CheckCircleTwoTone, CloseCircleOutlined, FieldTimeOutlined, SignatureOutlined } from "@ant-design/icons";
 import { ProDescriptions, ProList } from "@ant-design/pro-components";
 import { Button, Card, Col, Collapse, Flex, Image, List, message, Modal, Row, Space, Typography } from "antd"
 import { AddresssView } from "../register/data";
@@ -11,9 +11,15 @@ import { simpleRequestActions } from "@/services/model";
 import { CustomerWithAddressVerifiedAPI } from "./service";
 import ChangeStatusForm from "./ChangeStatus";
 import { useState } from "react";
+import RemarkFormModal from "@/pages/sale/retailer/components/RemarkFormModal";
+import Remarks from "@/components/remarks";
+import RemarkModal from "@/components/remark-modal";
+import { useQuery } from "@umijs/max";
+import { GoogleMap, InfoWindow, LoadScript, Marker } from "@react-google-maps/api";
+import DirectionsMap from "../components/DirectionsMap";
 
 interface Props {
-    data: any,
+    data1: any,
     mode: string
     onBack: () => void
 }
@@ -34,14 +40,20 @@ function extractCoordinates(text: string | undefined | null): { lat: number; lng
     return null; // return null if no coordinates found
 }
 
-const VerifiedDetailView: React.FC<Props> = ({ data, mode, onBack }) => {
-    const location = extractCoordinates(data?.logs?.remarks);
+const VerifiedDetailView: React.FC<Props> = ({ data1, mode, onBack }) => {
     const requestActions = simpleRequestActions();
     const [statusState, setStatusState] = useState<{
         visible?: { name: "MODAL", addressId?: number, status: string }
     }>();
     const [btnState, setBtnState] = useState<number>(20002);
-    // console.log([20001, 20002,20004].some(p=>data?.verifiedStatus?.id == 20002));
+    const [remarkState, setRemarkState] = useState<boolean>(false);
+    const [activeMarker, setActiveMarker] = useState<string>();
+    const { data, isFetching, refetch } = useQuery({
+        queryKey: ["detial", data1?.id],
+        queryFn: () => CustomerWithAddressVerifiedAPI(requestActions).detail({ id: data1?.id }),
+        refetchOnWindowFocus: false,
+        retry: 1
+    });
 
     return (
         <>
@@ -49,8 +61,13 @@ const VerifiedDetailView: React.FC<Props> = ({ data, mode, onBack }) => {
                 <Flex vertical gap={12}>
                     <Card
                         size="small"
-                        extra={[20001, 20002,20004].some(p=>data?.verifiedStatus?.id == 20002)?
+                        extra={[20001, 20002, 20004].some(p => data?.verifiedStatus?.id == 20002) ?
                             <Space>
+                                <Button icon={<SignatureOutlined />}
+                                    onClick={() => setRemarkState(true)}
+                                    type="link"
+                                    disabled={btnState != 20002}
+                                >Remark</Button>
                                 <Button icon={<CheckCircleOutlined />}
                                     onClick={() => setStatusState({ visible: { name: "MODAL", status: "Confirm", addressId: data.addressId, } })}
                                     type="link"
@@ -117,7 +134,12 @@ const VerifiedDetailView: React.FC<Props> = ({ data, mode, onBack }) => {
                                         >{r.verifiedStatus?.name}</Typography>
                                     }
                                 },
+                                {
+                                    title: "Remark",
+                                    render: (_, r) => data?.customerVerifiedLatLong?.comment
+                                }
                             ]}
+
                         />
                     </Card>
                     <Card size="small" title="Attachment Photos" bordered>
@@ -132,9 +154,83 @@ const VerifiedDetailView: React.FC<Props> = ({ data, mode, onBack }) => {
 
                     </Card>
                     <Card size={"small"} title="Map">
-                        {data?.customerVerifiedLatLong && <OrderGoogleMap
+                        {/* {data && <DirectionsMap data={{
+                            customerCode:data?.customerCode,
+                            customerVerifiedLatLong:{
+                                currentLat:data?.customerVerifiedLatLong?.currentLat,
+                                currentLong:data?.customerVerifiedLatLong?.currentLong,
+                                latitude:data?.customerVerifiedLatLong?.longitude,
+                                longitude:data?.customerVerifiedLatLong?.longitude
+                            }
+                        }} />} */}
+                        {/* <iframe
+                            width="100%"
+                            height="400"
+                            style={{ border: 0 }}
+                            loading="lazy"
+                            allowFullScreen
+                            src={`https://www.google.com/maps/embed/v1/directions?key=${"AIzaSyACftO4Dtfn7BQETFuT4YQZ_wOrO3hgszc"}&origin=${data?.customerVerifiedLatLong?.currentLat},${data?.customerVerifiedLatLong?.currentLong}&destination=${data?.customerVerifiedLatLong?.latitude},${data?.customerVerifiedLatLong?.longitude}&mode=driving`}
+                        /> */}
+                        {/* <LoadScript googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "AIzaSyACftO4Dtfn7BQETFuT4YQZ_wOrO3hgszc"}>
+                            <GoogleMap
+                                mapContainerStyle={{ width: '100%', height: '400px' }}
+                                center={{
+                                    lat: parseFloat(data?.customerVerifiedLatLong?.latitude),
+                                    lng: parseFloat(data?.customerVerifiedLatLong?.longitude),
+                                }}
+                                zoom={12}
+                                onClick={() => setActiveMarker(undefined)}
+                            >
+                                {[
+                                    {
+                                        id: "origin",
+                                        lat: parseFloat(data?.customerVerifiedLatLong?.currentLat),
+                                        lng: parseFloat(data?.customerVerifiedLatLong?.currentLong),
+                                        name: "Your Location",
+                                        phone: "",
+                                        // icon: userLocationIcon,
+                                    },
+                                    {
+                                        id: "destination",
+                                        lat: parseFloat(data?.customerVerifiedLatLong?.latitude),
+                                        lng: parseFloat(data?.customerVerifiedLatLong?.longitude),
+                                        name: "Customer Location",
+                                        phone: `Customer Code: ${data?.customerCode}`,
+                                        // icon: storeLocationIcon,
+                                    },
+                                ].map((it) => (
+                                    <Marker
+                                        key={it.id}
+                                        position={{ lat: it.lat, lng: it.lng }}
+                                        // icon={it.icon}
+                                        onClick={() => setActiveMarker(it.id)}
+                                    >
+                                        {activeMarker === it.id && (
+                                            <InfoWindow onCloseClick={() => setActiveMarker(undefined)}>
+                                                <>
+                                                    <Typography.Text strong>{it.name}</Typography.Text>
+                                                    <br />
+                                                    <Typography.Text>{it.phone}</Typography.Text>
+                                                    <br />
+                                                    <a
+                                                        href={`https://www.google.com/maps/dir/?api=1&origin=${data?.customerVerifiedLatLong?.currentLat},${data?.customerVerifiedLatLong?.currentLong}&destination=${data?.customerVerifiedLatLong?.latitude},${data?.customerVerifiedLatLong?.longitude}&travelmode=driving`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                    >
+                                                        📍 Get Directions
+                                                    </a>
+                                                </>
+                                            </InfoWindow>
+                                        )}
+                                    </Marker>
+                                ))}
+                            </GoogleMap>
+                        </LoadScript> */}
+                        {data && <OrderGoogleMap
                             googleMapApiKey="AIzaSyACftO4Dtfn7BQETFuT4YQZ_wOrO3hgszc"
                             zoomNumber={12}
+                            key={data?.addressCode + "-" + data?.customerVerifiedLatLong?.latitude + "-" + data?.customerVerifiedLatLong?.longitude}
+          
                             center={{
                                 id: `${data.id}`,
                                 lat: parseFloat(data?.customerVerifiedLatLong?.latitude),
@@ -143,9 +239,27 @@ const VerifiedDetailView: React.FC<Props> = ({ data, mode, onBack }) => {
                                 internalName: '',
                                 phone: `Customer Code: ${data.customerCode}`,
                             }}
-                            positions={[]}
+                            positions={[
+                                {
+                                    id: "origin",
+                                    lat: data?.customerVerifiedLatLong?.currentLat,
+                                    lng: data?.customerVerifiedLatLong?.currentLong,
+                                    name: "Your Location",
+                                    internalName: "",
+                                    phone: ""
+                                },
+                                {
+                                    id: "destination",
+                                    lat: parseFloat(data?.customerVerifiedLatLong?.latitude),
+                                    lng: parseFloat(data?.customerVerifiedLatLong?.longitude),
+                                    name: "Last Point",
+                                    internalName: "",
+                                    phone: ""
+                                },
+                            ]}
                         />}
                     </Card>
+
                     <Card size="small" title={"Activity"}>
                         <ProList<any>
                             request={async () => {
@@ -180,143 +294,25 @@ const VerifiedDetailView: React.FC<Props> = ({ data, mode, onBack }) => {
                                 actions: { render: (_, r) => [formatDateTime(moment(r.createdDate))] }
                             }}
                         />
-                        {/* <ActivityLog objectName='ADDRESS_VERIFIED' objectId={data?.addressId} endpoint='CRM' /> */}
                     </Card>
                 </Flex>
-            ) 
-            // ||
-            //     <Flex vertical gap={12}>
+            )
 
-            //         <Card title={"Customer"} size="small"
-            //         >
-            //             <ProDescriptions
-            //                 dataSource={data}
-            //                 contentStyle={{
-            //                     fontWeight: "500"
-            //                 }}
-            //                 columns={[
-            //                     {
-            //                         title: "Code",
-            //                         render: (_, r) => r.code,
-
-            //                     },
-            //                     {
-            //                         title: "Name",
-            //                         render: (_, r) => r.name
-            //                     },
-            //                     {
-            //                         title: "OwnerName",
-            //                         dataIndex: "ownerName"
-            //                         // render: (_, r) => r.ownerName
-            //                     },
-            //                     {
-            //                         title: "Salesperson",
-            //                         render: (_, r) => [r.salesperson?.code, r.salesperson?.name].filter(Boolean).join("-")
-            //                     },
-            //                     {
-            //                         title: "Source",
-            //                         dataIndex: "source"
-            //                     },
-            //                     {
-            //                         title: "Status",
-            //                         render: (_, r) => <Typography.Text type={r.active == "N" ? "danger" : "success"}>{r.active == "N" ? "Inactive" : "Active"}</Typography.Text>
-            //                     }
-            //                 ]}
-            //             />
-            //         </Card>
-            //         <Card size="small" >
-            //             <Collapse
-            //                 size="small"
-            //                 ghost
-            //                 defaultActiveKey={["1"]}
-            //                 items={[{
-            //                     key: '1', label: 'Address', children: <p>
-            //                         <List<AddresssView>
-            //                             size="small"
-            //                             locale={{ emptyText: 'No Address added' }}
-            //                             dataSource={data.address || []}
-            //                             itemLayout="horizontal"
-            //                             rowKey="key"
-            //                             renderItem={(item) => (
-            //                                 <List.Item
-            //                                 >
-            //                                     <List.Item.Meta
-            //                                         title={
-            //                                             <Space>
-            //                                                 {' '}
-            //                                                 <AimOutlined /> {item.address}
-            //                                                 {item.isVerified == true ? <CheckCircleTwoTone twoToneColor={"#52C41A"} /> : ""} {/*<Tag>{item.type?.name}</Tag>{' '}*/}
-            //                                             </Space>
-            //                                         }
-            //                                         description={
-            //                                             <div>
-            //                                                 <Row>
-            //                                                     <Col>
-            //                                                         {[
-            //                                                             { name: 'Street Name', value: item?.streetName },
-            //                                                             { name: 'Street No', value: item?.streetNo },
-            //                                                             { name: 'House', value: item?.houseNo },
-            //                                                             { name: 'Village', value: item?.village?.name },
-            //                                                             { name: 'Commune', value: item?.commune?.name },
-            //                                                             { name: 'District', value: item?.district?.name },
-            //                                                             { name: 'Province', value: item?.province?.name },
-            //                                                         ]
-            //                                                             .filter((it) => it.value)
-            //                                                             .map((it) => `${it.name} ${it.value}`)
-            //                                                             .join(', ')}
-            //                                                     </Col>
-            //                                                 </Row>
-            //                                                 <Row>
-            //                                                     <Col>
-            //                                                         {' '}
-            //                                                         Hotspot: {item.hotspot || 'N/A'}, Direction: {item.direction || 'N/A'}{' '}
-            //                                                     </Col>
-            //                                                 </Row>
-            //                                                 <Row>
-            //                                                     <Col>
-            //                                                         {' '}
-            //                                                         Latitute: {item.latitude || 'N/A'}, Longitude: {item.longitude || 'N/A'}
-            //                                                     </Col>
-            //                                                 </Row>
-            //                                             </div>
-            //                                         }
-            //                                     />
-            //                                     {/* {(item.visitPlanOptionList || []).length > 0 && <ListContent item={item} />} */}
-            //                                 </List.Item>
-            //                             )}
-            //                         />
-            //                     </p>
-            //                 }]}
-            //             />
-            //         </Card>
-            //         <Card size="small" title="Attachment Photos" bordered>
-            //             <Image.PreviewGroup>
-            //                 <Space>
-            //                     {data?.attachmentFile?.map((it1, index) => ({
-            //                         fileId: it1.fileId,
-            //                         fileName: `Photo (${index + 1})`,
-            //                     }))?.map(it => <ImagePreview
-            //                         width={'200px'}
-            //                         key={it.fileId}
-            //                         fileId={it.fileId}
-            //                         fileName={it.fileName}
-            //                     />)}
-            //                 </Space>
-            //             </Image.PreviewGroup>
-            //         </Card>
-            //         <Card size="small" title={"Activity"}>
-            //             <ActivityLog objectName='ADDRESS_VERIFIED' objectId={data?.id} endpoint='CRM'
-            //                 styles={{
-            //                     avatar: {
-            //                         color: "red"
-            //                     }
-            //                 }}
-            //             />
-            //         </Card>
-
-            //     </Flex>
             }
-
+            <Remarks
+                open={remarkState}
+                modalProps={{
+                    onCancel: () => setRemarkState(false)
+                }}
+                onSave={(it) => {
+                    CustomerWithAddressVerifiedAPI(requestActions).remark({
+                        remark: it,
+                        id: data?.customerVerifiedLatLong?.id
+                    });
+                    refetch?.();
+                    setRemarkState(false)
+                }}
+            />
             <ChangeStatusForm
                 open={statusState?.visible?.name == "MODAL"}
                 status={statusState?.visible?.status}

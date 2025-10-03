@@ -205,7 +205,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
           addressCode: selectedAddress?.address,
           assignedToCode: assigner[0],
           assignedTo: assigner[1],
-          distributorId: distributor[0],
+          distributorId: distributor[0],  
           distributorCode: distributor[1],
           distributorName: distributor[2],
           items: dataSourceItems,
@@ -465,7 +465,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
                 // const disabledSelected = type === 'CREATE' ? dataSourceItems?.some((ot) => ot.itemId === p.id) : false;
                 return Promise.resolve(
                   data.items
-                    ?.filter((it) => it.isWebEnabled === true)
+                    // ?.filter((it) => it.isWebEnabled === true)
                     ?.map((p) => ({
                       value: p.id,
                       label: p.name,

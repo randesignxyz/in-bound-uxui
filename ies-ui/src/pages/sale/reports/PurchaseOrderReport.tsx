@@ -60,7 +60,7 @@ export default (props: Props) => {
           status: dataForm.status,
           reportType: selectedReportType,
           supplier: dataForm.supplier,
-        }, 
+        },
       });
       message.success('Report generated successfully.');
     } catch (error) {
@@ -107,8 +107,8 @@ export default (props: Props) => {
                 label="Source of Supply"
                 name="supplier"
                 width="md"
-                initialValue={'ALL'}
-                options={['ALL', 'Distributors', 'Warehouse']}
+                initialValue={'All'}
+                options={['All', 'Distributors', 'Warehouse']}
               />
               <ProFormSelect
                 mode="multiple"

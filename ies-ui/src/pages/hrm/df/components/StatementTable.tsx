@@ -44,6 +44,10 @@ export default({
         { title: getLableName('DF_TITLE_STATEMENT'),  
         // editable: false,
             dataIndex: lang=='KH'?'description1':'description',
+            render: (text, record) => <div>
+                <div style={{fontSize: 14}}><b>{lang=='KH'?record.title1: record.title}</b></div>
+                {lang=='KH'?record.description1: record.description}
+                </div>,
             valueType: 'textarea',
             editable:(_,r) => false, 
             formItemProps: {rules: [{ required: true}] },
@@ -206,7 +210,10 @@ export default({
                     {items?.map((item, index) => (
                         <Card
                         key={item.key || index}
-                        title={<span style={{ fontSize: '14px',whiteSpace: 'normal', wordBreak: 'break-word', overflow: 'visible', textOverflow: 'clip'  }}>{`${index + 1}. ${lang=='KH'?item.description1:item.description || item.title || 'Unnamed Statement'}`}</span>}
+                        title={<span style={{ fontSize: '14px',whiteSpace: 'normal', wordBreak: 'break-word', overflow: 'visible', textOverflow: 'clip'  }}>
+                            <div style={{fontSize: 14}}><b>{lang=='KH'?item.title1: item.title}</b></div>
+                            {`${index + 1}. ${lang=='KH'?item.description1:item.description || item.title || 'Unnamed Statement'}`}
+                            </span>}
                         style={{ width: 300 }}
                         >
                         {ratingLabels.map(({ key, value }) => {

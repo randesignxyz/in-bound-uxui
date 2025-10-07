@@ -9,7 +9,7 @@ import { useState } from "react"
 import { TableViewSearchParams } from "@/components/DataCrud/TableView"
 import { useAccess, useQuery } from "@umijs/max"
 import DataEntryFormView from "./DataEntryFormView"
-import { Card, Grid} from "antd"
+import { Button, Card, Col, Descriptions, Flex, Grid, message, Radio, Row} from "antd"
 
 export const openPR = (dfId: number) => window.open(`/externa/hrm/df/detail/${dfId}`, '_blank')?.focus()
 
@@ -41,22 +41,43 @@ export default () => {
                 // 👉 Show list of cards
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "16px" }}>
                     <h3 style={{ color: "#b69901" }}>360 Degree Feedback List</h3>
+                    <Flex vertical gap="middle">
+                        <Radio.Group defaultValue="All" size="middle"
+                            onChange={(v) => {
+                                setFilter({
+                                    ...filter,
+                                    criteria: {
+                                        ...filter.criteria,
+                                        advanceSearch: {
+                                            status: v.target.value
+                                        }
+                                    }
+                                })
+                            }}
+                        >
+                            <Radio.Button value="All">All</Radio.Button>
+                            <Radio.Button value="PENDING">Pending</Radio.Button>
+                            <Radio.Button value="SUBMITTED">Submitted</Radio.Button>
+                        </Radio.Group>
+                    </Flex>
                     {data?.items?.map((item) => (
                     <Card key={item.id} style={{ width: 300 }}>
-                        <p>
-                        <strong>Form No:</strong>{" "}
-                        <span
-                            style={{ color: "#1677ff", cursor: "pointer" }}
-                            onClick={() => setSelectedItem(item)} 
-                        >
-                            {item.formNo || "n/a"}
-                        </span>
+                        <p>Form No:{" "}
+                            <span  style={{ color: "#1677ff", cursor: "pointer" }}
+                                onClick={() => setSelectedItem(item)} 
+                            >
+                                {item.formNo || "n/a"}
+                            </span>
+                            <span style={{ float: "right" }}>{item.status && <Status size="small" text={item.status || ""} />}</span>
                         </p>
-                        <p><strong>Employee No:</strong> {item.empNo}</p>
-                        <p><strong>Employee Name:</strong> {item.empName}</p>
-                        <p><strong>Employee Name (KH):</strong> {item.empNameKh}</p>
-                        <p><strong>Position:</strong> {item.jobTitle}</p>
-                        <p><strong>Job Level:</strong> {item.jobLevel}</p>
+                        <p><strong>{item.empName} {item.empNo}</strong></p>                       
+                        <p> {item.empNameKh}</p>
+                        <p>{item.jobTitle}</p>
+                       <Descriptions layout="vertical" size="small" column={2}>
+                            <Descriptions.Item label="Business Unit">{item.buName}</Descriptions.Item>
+                            <Descriptions.Item label="Function">{item.deptName}</Descriptions.Item>                            
+                       </Descriptions>
+                        {/* <p><strong>Job Level:</strong> {item.jobLevel}</p>
                         <p><strong>Business Unit:</strong> {item.buName}</p>
                         <p><strong>Function:</strong> {item.deptName}</p>
                         <p><strong>Modified By:</strong> {item.lastModifiedBy}</p>
@@ -64,8 +85,8 @@ export default () => {
                         <p>
                         <strong>Status:</strong>{" "}
                         {item.status && <Status size="small" text={item.status || ""} />}
-                        </p>
-                        <p><strong>Due Date:</strong> {formatDate(item.dueDate)}</p>
+                        </p> */}
+                        <p>Due Date: {formatDate(item.dueDate)}</p>
                     </Card>
                     ))}
                 </div>

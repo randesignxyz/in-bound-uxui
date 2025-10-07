@@ -12,7 +12,6 @@ import AssessorList from "./components/AssessorList";
 import { useEffect, useRef, useState } from "react";
 import { uniqueId } from "lodash";
 import { Df360EmpServiceAPI } from "./services";
-import Pro from "@/pages/pro";
 import { format } from "path";
 import { formatDate } from "@/pages/utils";
 

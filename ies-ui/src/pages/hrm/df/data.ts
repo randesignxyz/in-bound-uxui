@@ -99,7 +99,7 @@ export interface DfEmpEvaluationSummaryReport{
   avgSubordinate: number;
   overall: number;
 }
-export interface DfEmpEvaluationDetailReport{
+export interface DfEmpStatementDetailReport{
   id: number;
   dfEmpId: number;
   title: string
@@ -115,6 +115,20 @@ export interface DfEmpEvaluationDetailReport{
   avgPeer: number;
   avgSubordinate: number;
   overall: number;
+}
+export interface DfEmpStatementDetail{
+  id: number;
+  dfEmpId: number;
+  title: string
+  title1: string
+  description: string
+  description1: string
+  rating: number;
+  avgRating: number;
+}
+export interface DfEmpEvaluationDetailReport{
+  type: string;
+  statements: DfEmpStatementDetail[]
 }
 
 export interface DfEmpEvaluationRs{ 

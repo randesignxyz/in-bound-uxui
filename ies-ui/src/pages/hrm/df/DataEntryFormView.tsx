@@ -2,7 +2,7 @@ import { CheckCard, EditableFormInstance, FooterToolbar, ProCard, ProForm, ProTa
 import { Avatar, Button, Card, Col, Descriptions, message, Modal, Row, Space, Spin, Tabs } from "antd";
 import { useForm } from "antd/es/form/Form";
 import { useInView } from "react-intersection-observer";
-import { DF360EmpDetailRs,  DF360UpdatePlayload, DfComment, DfCommentRs, DfEmpAssessorRs, DfEmpEvaluationDetailReport, DfEmpEvaluationRs, DfEmpEvaluationSummaryReport, DfInstrunctionItemList } from "./data";
+import { DF360EmpDetailRs,  DF360UpdatePlayload, DfComment, DfCommentRs, DfEmpAssessorRs, DfEmpEvaluationDetailReport, DfEmpEvaluationRs, DfEmpEvaluationSummaryReport, DfEmpStatementDetail, DfInstrunctionItemList } from "./data";
 import { useEffect, useRef, useState } from "react";
 import { uniqueId } from "lodash";
 import { Df360EmpServiceAPI } from "./services";
@@ -15,6 +15,7 @@ import { AppraisalDataLookup } from "../appraisal-submit/data.types";
 import { createService } from "../appraisal-submit/services";
 import { simpleRequestActions } from "@/services/model";
 import { history} from 'umi';
+import StatementTableReport from "./components/StatementTableReport";
 
 
 type DataFormType = {
@@ -188,7 +189,6 @@ export default({
                 } as DF360UpdatePlayload)),
                 comments: comments          
             } as DF360UpdatePlayload
-            console.log('data ', payload);
 
             Modal.confirm({
                 title: 'Submit 360 Degree Feedback Form',
@@ -210,9 +210,8 @@ export default({
     const isExternal = () => history.location.pathname.includes("/externa/hrm/df/detail");
 
     return(<div ref={ref}><Spin spinning={loading} ><Space direction="vertical" style={{ width: '100%' }}>
-        {(data?.assessors?.length||0)>1 && <Card title="Assessor Infomation" size="small" 
+        {(data?.assessors?.length||0)>1 && <Card title="Assessor Infomation" size="small"
             extra={isExternal() && <Button icon={<UnorderedListOutlined/>} type='link'  onClick={() => history.push(`/hrm/df/list`)}>360 Degree Feedback List</Button>}
-            
         >
             {/* <Row gutter={20}>
                 <Col flex={1}> */}
@@ -347,7 +346,7 @@ export default({
                                 reload: false,
                                 setting: false,
                             }}
-                            columns={[
+                            columns={[                               
                                 { title: getLable('DF_TBL_STATEMENT')||'',dataIndex: lang=='KH'?'title1':'title'},
                                 { title: getLable('DF_TBL_SELF')||'', dataIndex: 'avgSelf', render: (text, record) => record.avgSelf==0?'-': formatterQty1.format(record.avgSelf)},
                                 { title: getLable('DF_TBL_MANAGER')||'', dataIndex: 'avgManager', render: (text, record) => record.avgManager==0?'-': formatterQty1.format(record.avgManager), hidden: ['Self'].some(r=>r==selectedAssessor?.type)},
@@ -357,27 +356,12 @@ export default({
                             ]}
                         />
                     </ProCard>
+                   
                     <ProCard collapsible defaultCollapsed={true} size="small" headerBordered title={getLable('DF_TITLE_SECTION2')||''}>
-                        <ProTable<DfEmpEvaluationDetailReport>
-                            size="small"
-                            search={false}
-                            rowKey="id"
-                            dataSource={selectedAssessor.summary?.statementEvaluations||[]}
-                            options={{
-                                density: false,
-                                fullScreen: false,
-                                reload: false,
-                                setting: false,
-                            }}
-                            columns={[
-                                { title: getLable('DF_TBL_STATEMENT')||'',dataIndex: lang=='KH'?'description1':'description'},
-                                { title: getLable('DF_TBL_SELF')||'', dataIndex: 'avgSelf', render: (text, record) => record.avgSelf==0?'-': formatterQty1.format(record.avgSelf)},
-                                { title: getLable('DF_TBL_MANAGER')||'', dataIndex: 'avgManager', render: (text, record) => record.avgManager==0?'-': formatterQty1.format(record.avgManager), hidden: ['Self'].some(r=>r==selectedAssessor?.type)},
-                                { title: getLable('DF_TBL_PEER')||'', dataIndex: 'avgPeer', render: (text, record) => record.avgPeer==0?'-': formatterQty1.format(record.avgPeer), hidden: ['Self'].some(r=>r==selectedAssessor?.type) },
-                                { title: getLable('DF_TBL_SUBORDINATE')||'', dataIndex: 'avgSubordinate', render: (text, record) => record.avgSubordinate==0?'-': formatterQty1.format(record.avgSubordinate), hidden: ['Self'].some(r=>r==selectedAssessor?.type) },
-                                { title: getLable('DF_TBL_OVERALL')||'', dataIndex: 'overall', render: (text, record) => record.overall==0?'-': formatterQty1.format(record.overall) },
-                            ]}
-                        />
+                        <StatementTableReport lang={lang} keyRating="DF_TBL_SELF" getLable={getLable} item={selectedAssessor.summary?.statementEvaluations?.find(it=>it.type=='Self')}/>
+                        <StatementTableReport lang={lang} keyRating="DF_TBL_MANAGER" getLable={getLable} item={selectedAssessor.summary?.statementEvaluations?.find(it=>it.type=='Manager')}/>
+                        <StatementTableReport lang={lang} keyRating="DF_TBL_PEER" getLable={getLable} item={selectedAssessor.summary?.statementEvaluations?.find(it=>it.type=='Peer')}/>
+                        <StatementTableReport lang={lang} keyRating="DF_TBL_SUBORDINATE" getLable={getLable} item={selectedAssessor.summary?.statementEvaluations?.find(it=>it.type=='Subordinate')}/>                        
                     </ProCard>
                     <ProCard collapsible defaultCollapsed={true} size="small" headerBordered title={getLable('DF_TITLE_SECTION3')||''}>  
                         <CommentTable title="" 

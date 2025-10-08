@@ -155,7 +155,17 @@ export default () => {
             ],
             onRefresh: refetch,
             onFilter: (params, page, sort) => {
-
+                setFilter(v=>({
+                    ...filter,
+                    criteria: {
+                        ...filter.criteria,
+                        advanceSearch: {
+                            status: params?.status || 'ALL'
+                        },
+                        sort: sort,
+                    },
+                    pagination: page,
+                }))
             },
             props: {
                 dataSource: data?.items||[],

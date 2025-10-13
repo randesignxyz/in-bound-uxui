@@ -29,7 +29,7 @@ export default () => {
 
     const getColorStatus = (status?: string) => {
     if (['ACTIVE','SUBMITTED'].some((it) => it === status)) {
-        return 'blue';
+        return '#1677ff';
     }
      if (['COMPLETED'].some((it) => it === status)) {
         return 'green';
@@ -79,9 +79,11 @@ export default () => {
                         </Radio.Group>
                     </Flex>
                     {data?.items?.map((item) => (
-                    <Badge.Ribbon 
-                        color={getColorStatus(item.status || "")}  
-                        text={toReadable(item.status || "")} >
+                    // <Badge 
+                    //     // status={getColorStatus(item.status || "")}  
+                    //     className="site-badge-count-109"
+                    //     style={{ backgroundColor: '#52c41a' }}
+                    //     text={toReadable(item.status || "")} >
                         <Card key={item.id} style={{ width: 300 }}>
                             <p>
                                 <span  style={{ color: "#1677ff", cursor: "pointer" }}
@@ -89,10 +91,10 @@ export default () => {
                                 >
                                     {item.empName || "n/a"}
                                 </span>
-                                {/* <span style={{ float: "right" }}>{item.status && 
-                                    <Status size="small" text={item.status || ""} />
-                                    // <Badge   text={toReadable(item.status || "")} />
-                                    }</span> */}
+                                <span style={{ float: "right" }}>{item.status && 
+                                    // <Status size="small" text={item.status || ""} />
+                                    <Badge  style={{height: 28, paddingTop: 4,paddingLeft:10,paddingRight:10, backgroundColor: getColorStatus(item.status || "") }} count={toReadable(item.status || "")} />
+                                }</span>
                             </p>
                             {/* <p><strong>{item.empName} {item.empNo}</strong></p>                        */}
                             <p> {item.empNameKh}</p>
@@ -112,7 +114,7 @@ export default () => {
                             </p> */}
                             <p>Due Date: {formatDate(item.dueDate)}</p>
                         </Card>
-                    </Badge.Ribbon>
+                    // </Badge>
                     ))}
                 </div>
                 )}

@@ -2,14 +2,15 @@ import PageWrapper from "@/components/PageWrapper"
 import { DF360Emp, DF360EmpListItem, DF360InfoAdvanceSearchParams } from "./data"
 import { DashOutlined, ExportOutlined, FileOutlined } from "@ant-design/icons"
 import DataEntryView from "./DataEntryView"
-import { formatDate } from "@/pages/utils"
+import { formatDate, getColorStatus, toReadable } from "@/pages/utils"
 import Status from "@/components/Status"
 import { Df360EmpServiceAPI } from "./services"
 import { useState } from "react"
 import { TableViewSearchParams } from "@/components/DataCrud/TableView"
 import { useAccess, useQuery } from "@umijs/max"
 import DataEntryFormView from "./DataEntryFormView"
-import { Button, Card, Col, Descriptions, Flex, Grid, message, Radio, Row} from "antd"
+import { Badge, Button, Card, Col, Descriptions, Flex, Grid, message, Radio, Row} from "antd"
+import editSettlmentModal from "@/pages/delivery/cash-collection/edit-settlment-modal"
 
 export const openPR = (dfId: number) => window.open(`/externa/hrm/df/detail/${dfId}`, '_blank')?.focus()
 
@@ -25,6 +26,23 @@ export default () => {
     const screens = Grid.useBreakpoint();
     const isMobile = !screens.md;
     const [selectedItem, setSelectedItem] = useState<DF360EmpListItem | null>(null);
+
+    const getColorStatus = (status?: string) => {
+    if (['ACTIVE','SUBMITTED'].some((it) => it === status)) {
+        return 'blue';
+    }
+     if (['COMPLETED'].some((it) => it === status)) {
+        return 'green';
+    }
+
+    if (['FAILED'].some((it) => it === status)) {
+        return 'red';
+    }
+
+    if (['PENDING'].some((it) => it === status)) {
+        return 'gray';
+    }
+};
    
     return (<div> {isMobile ? (
             <div style={{ display: "flex", justifyContent: "center", flexDirection: "column", alignItems: "center" }}>
@@ -61,33 +79,40 @@ export default () => {
                         </Radio.Group>
                     </Flex>
                     {data?.items?.map((item) => (
-                    <Card key={item.id} style={{ width: 300 }}>
-                        <p>Form No:{" "}
-                            <span  style={{ color: "#1677ff", cursor: "pointer" }}
-                                onClick={() => setSelectedItem(item)} 
-                            >
-                                {item.formNo || "n/a"}
-                            </span>
-                            <span style={{ float: "right" }}>{item.status && <Status size="small" text={item.status || ""} />}</span>
-                        </p>
-                        <p><strong>{item.empName} {item.empNo}</strong></p>                       
-                        <p> {item.empNameKh}</p>
-                        <p>{item.jobTitle}</p>
-                       <Descriptions layout="vertical" size="small" column={2}>
-                            <Descriptions.Item label="Business Unit">{item.buName}</Descriptions.Item>
-                            <Descriptions.Item label="Function">{item.deptName}</Descriptions.Item>                            
-                       </Descriptions>
-                        {/* <p><strong>Job Level:</strong> {item.jobLevel}</p>
-                        <p><strong>Business Unit:</strong> {item.buName}</p>
-                        <p><strong>Function:</strong> {item.deptName}</p>
-                        <p><strong>Modified By:</strong> {item.lastModifiedBy}</p>
-                        <p><strong>Modified Date:</strong> {formatDate(item.lastModifiedDate)}</p>
-                        <p>
-                        <strong>Status:</strong>{" "}
-                        {item.status && <Status size="small" text={item.status || ""} />}
-                        </p> */}
-                        <p>Due Date: {formatDate(item.dueDate)}</p>
-                    </Card>
+                    <Badge.Ribbon 
+                        color={getColorStatus(item.status || "")}  
+                        text={toReadable(item.status || "")} >
+                        <Card key={item.id} style={{ width: 300 }}>
+                            <p>
+                                <span  style={{ color: "#1677ff", cursor: "pointer" }}
+                                    onClick={() => setSelectedItem(item)} 
+                                >
+                                    {item.empName || "n/a"}
+                                </span>
+                                {/* <span style={{ float: "right" }}>{item.status && 
+                                    <Status size="small" text={item.status || ""} />
+                                    // <Badge   text={toReadable(item.status || "")} />
+                                    }</span> */}
+                            </p>
+                            {/* <p><strong>{item.empName} {item.empNo}</strong></p>                        */}
+                            <p> {item.empNameKh}</p>
+                            <p>{item.jobTitle}</p>
+                        <Descriptions layout="vertical" size="small" column={2}>
+                                <Descriptions.Item label="Business Unit">{item.buName}</Descriptions.Item>
+                                <Descriptions.Item label="Function">{item.deptName}</Descriptions.Item>                            
+                        </Descriptions>
+                            {/* <p><strong>Job Level:</strong> {item.jobLevel}</p>
+                            <p><strong>Business Unit:</strong> {item.buName}</p>
+                            <p><strong>Function:</strong> {item.deptName}</p>
+                            <p><strong>Modified By:</strong> {item.lastModifiedBy}</p>
+                            <p><strong>Modified Date:</strong> {formatDate(item.lastModifiedDate)}</p>
+                            <p>
+                            <strong>Status:</strong>{" "}
+                            {item.status && <Status size="small" text={item.status || ""} />}
+                            </p> */}
+                            <p>Due Date: {formatDate(item.dueDate)}</p>
+                        </Card>
+                    </Badge.Ribbon>
                     ))}
                 </div>
                 )}

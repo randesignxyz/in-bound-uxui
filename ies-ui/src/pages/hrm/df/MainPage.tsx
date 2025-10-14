@@ -84,7 +84,7 @@ export default () => {
                     //     className="site-badge-count-109"
                     //     style={{ backgroundColor: '#52c41a' }}
                     //     text={toReadable(item.status || "")} >
-                        <Card key={item.id} style={{ width: 300 }}>
+                        <Card key={item.id} style={{ width: '100%' }}>
                             <p>
                                 <span  style={{ color: "#1677ff", cursor: "pointer" }}
                                     onClick={() => setSelectedItem(item)} 

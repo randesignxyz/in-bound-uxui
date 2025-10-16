@@ -377,7 +377,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
         ['ROLE_DELIVERY_ALLOCATION_REMARK'].some((it) => it === item),
       ) || false,
 
-    /**** Prod */ 
+    /**** Prod */  
     canAccessProdMenu:
       currentUser?.authorities.some((item) =>
         [

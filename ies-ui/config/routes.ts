@@ -926,6 +926,14 @@ export default [
     access: 'canAccesAllocateDelView',
     component: './delivery/allocate',
   },
+  {
+    path: '/sale/allocate/:view/*',
+    name: 'allocateDel',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccesAllocateSaleView',
+    component: './sale/allocate',
+  },
   // {
   //   path: '/delivery/associate/sale/:view/*',
   //   name: 'associateSale',

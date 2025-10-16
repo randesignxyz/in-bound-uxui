@@ -148,6 +148,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           'ROLE_AR',
           'ROLE_SALE_INDIVIDUAL',
           'ROLE_DSD_REPORT',
+          'ROLE_DELIVERY_SALE_ALLOCATION'
         ].some((it) => it === item),
       ) || false,
 
@@ -367,7 +368,10 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_DELIVERY_DEL_ALLOCATION','ROLE_DELIVERY_ALLOCATION_REMARK'].some((it) => it === item),
       ) || false,
-
+    canAccesAllocateSaleView:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_DELIVERY_SALE_ALLOCATION','ROLE_SALE_ADMIN'].some((it) => it === item),
+      ) || false,
     canAccesAddRemarkAllocate:
       currentUser?.authorities.some((item) =>
         ['ROLE_DELIVERY_ALLOCATION_REMARK'].some((it) => it === item),
@@ -816,10 +820,6 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) => ['ROLE_DEVELOPER'].some((it) => it === item)) ||
       false,
 
-    canAccesAllocateSaleView:
-      currentUser?.authorities.some((item) =>
-        ['ROLE_ADMIN', 'ROLE_SALE_ALLOCATION_PLAN'].some((it) => it === item),
-      ) || false,
     /** MPU */
 
     canAccessViewMpu:

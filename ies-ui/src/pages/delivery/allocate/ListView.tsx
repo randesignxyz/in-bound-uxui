@@ -970,12 +970,17 @@ export default () => {
               dataSource={record.deliveryItems}
               expandable={{
                 expandedRowRender: (record) => {
-                  const dnList = record.dn || [];
+                  const dnList = (record.dn || []).filter(d =>
+                    d && (d.dn_num || d.dn_qty || d.dn_date)
+                  );
+
                   const plannedQty = Number(record.qty) || 0;
+                  const sortedDnList = dnList.filter(d => d.dn_num).sort((a, b) => Number(a.dn_num) - Number(b.dn_num));
+                  const firstDn = sortedDnList[0];
                   return (
                     <Table
                       size="small"
-                      rowKey={(r) => r.id}
+                      rowKey={(r, index) => r?.id ?? index}
                       columns={[
                         {
                           title: 'DN No',
@@ -1738,5 +1743,5 @@ export default () => {
         onVisibleChange={(v) => v === false && (setDrawerTypeOpen({ visible: false, data: undefined }))}
       />
     </>
-  ); 
+  );
 }; 

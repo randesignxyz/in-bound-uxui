@@ -1738,5 +1738,5 @@ export default () => {
         onVisibleChange={(v) => v === false && (setDrawerTypeOpen({ visible: false, data: undefined }))}
       />
     </>
-  );
+  ); 
 };

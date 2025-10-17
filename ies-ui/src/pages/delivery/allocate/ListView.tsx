@@ -463,7 +463,6 @@ export default () => {
   ): Promise<Paging<DNList>> => {
     try {
       const skuResult = await services.list_sku();
-
       let skuArray: SkuList[] = [];
 
       if (Array.isArray(skuResult)) {
@@ -480,7 +479,11 @@ export default () => {
       });
 
       // const deliveryDate = asDate ? undefined : dnSearch.delivery_date;
-      const deliveryDate = asDate ? dnSearch.delivery_date : undefined;
+      const today = moment().format('YYYY-MM-DD');
+      const deliveryDate = asDate
+        ? dnSearch.delivery_date || undefined
+        : today;
+
       const list = await services.list_dn_detail(
         dnSearch.status,
         deliveryDate,
@@ -1551,12 +1554,10 @@ export default () => {
                             <ProFormDatePicker
                               name="delivery_date"
                               placeholder="Delivery Date"
-                              onChange={(val: moment.Moment) => {
-                                if (val) {
-                                  const localDate = val.clone().utcOffset(7).format('YYYY-MM-DD') // local Cambodia time
-                                  setDnSearch((v) => ({ ...v, delivery_date: localDate }))
-                                  actionRef.current?.reloadAndRest?.()
-                                }
+                              onChange={(val: moment.Moment | null) => {
+                                const localDate = val ? val.clone().utcOffset(7).format('YYYY-MM-DD') : undefined;
+                                setDnSearch((v) => ({ ...v, delivery_date: localDate }));
+                                actionRef.current?.reloadAndRest?.();
                               }}
                               width={150}
                             />

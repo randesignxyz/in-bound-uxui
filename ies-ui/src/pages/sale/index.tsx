@@ -347,7 +347,7 @@ export default () => {
       link: `${SalePaths.product}/list`,
       icon: productIcon,
     }
-  ];
+  ]; 
 
   return (
     <PageContainer title={false}>

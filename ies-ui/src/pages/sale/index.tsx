@@ -265,7 +265,14 @@ export default () => {
         access.canAccessSettlementMenuItem,
       link: `${MPUPath.salesInvoice}/list`,
     },
-
+    {
+      id: 'allocationDel',
+      name: 'Sale Allocation Plan',
+      description: 'Sale Allocation Plan List',
+      link: `${SalePaths.delAllocate}/list`,
+      icon: agreementIcon,
+      visible: access.canAccesAllocateSaleView
+    },
 
     // {
     //   id: 'free-of-charge',
@@ -339,15 +346,7 @@ export default () => {
       visible: access.canAcessStockControlMenuItem,
       link: `${SalePaths.product}/list`,
       icon: productIcon,
-    },
-    {
-      id: 'allocationDel',
-      name: 'Sale Allocation Plan',
-      description: 'Sale Allocation Plan List',
-      link: `${SalePaths.delAllocate}/list`,
-      icon: agreementIcon,
-      visible: access.canAccesAllocateSaleView
-    },
+    }
   ];
 
   return (

@@ -97,6 +97,7 @@ export default () => {
 
   // Load provinces once
   useEffect(() => {
+    onSync()
     AllocateServiceAPI(requestActions)
       .list_Location("PROVINCE")
       .then((res) => setProvinceOptions(normalizeLocationList(res).map((obj) => ({ value: obj.id, label: obj.name }))));
@@ -719,7 +720,7 @@ export default () => {
       dataIndex: 'deliveryDate',
       width: '6%',
       render: (_, r) =>
-        dayjs.utc(r.deliveryDate).format('DD-MMM-YYYY') // forces UTC, no timezone shift
+        dayjs.utc(r.deliveryDate).add(7, 'hour').format('DD-MMM-YYYY')// forces UTC, no timezone shift
     },
     {
       title: 'Shipping Address',
@@ -1560,7 +1561,7 @@ export default () => {
                               name="delivery_date"
                               placeholder="Delivery Date"
                               onChange={(val: moment.Moment | null) => {
-                                const localDate = val ? val.clone().utcOffset(7).format('YYYY-MM-DD') : undefined;
+                                const localDate = val ? val.format('YYYY-MM-DD') : undefined; // local date
                                 setDnSearch((v) => ({ ...v, delivery_date: localDate }));
                                 actionRef.current?.reloadAndRest?.();
                               }}

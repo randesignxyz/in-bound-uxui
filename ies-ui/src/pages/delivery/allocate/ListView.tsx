@@ -94,7 +94,7 @@ export default () => {
   const [provinceOptions, setProvinceOptions] = useState<{ value: number; label: string }[]>([]);
   const [districtOptions, setDistrictOptions] = useState<{ value: number; label: string }[]>([]);
   const [communeOptions, setCommuneOptions] = useState<{ value: number; label: string }[]>([]);
-
+ 
   // Load provinces once
   useEffect(() => {
     onSync()

@@ -183,6 +183,9 @@ export default () => {
             case 'visit-reports':
               setReport('visit-report');
               break;
+            case 'sale-invoice-report-v1':
+              setReport('sale-invoice-report-v1');
+              break
             case 'purchase-order-reports':
               setReport('purchase-order-reports');
               break;
@@ -204,6 +207,7 @@ export default () => {
             [
               getItem('Export Leads', 'lead-reports', <TeamOutlined />),
               getItem('Sales Invoice Report', 'dsd-reports', <TagsOutlined />),
+              getItem('Sales Invoice Report V1', 'sale-invoice-report-v1', <TagsOutlined />),
               getItem('Visit Report', 'visit-reports', <ScheduleOutlined />),
               getItem('Purchase Order Report', 'purchase-order-reports', <ShoppingOutlined />),
               getItem('Performance P.O Report', 'performance-po-report', <FundOutlined />),

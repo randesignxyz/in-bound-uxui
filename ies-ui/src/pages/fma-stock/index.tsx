@@ -5,6 +5,7 @@ import { useAccess } from "@umijs/max";
 import { useEffect } from "react";
 import NCMReportModalForm from "./request/reports/NCMReportModalForm";
 import { ExportOutlined } from "@ant-design/icons";
+import NCMItemReportModalForm from "./request/reports/NCMItemReportModalForm";
 
 
 export const WHMPaths = {
@@ -43,7 +44,10 @@ export default () => {
                 id: 'whm_inventory_item',
                 name: 'Inventory Item',
                 description: 'Inventory Item Management',
-                link: `${WHMPaths.item}/list`
+                link: `${WHMPaths.item}/list`,
+                menu:access.isAccessNCMItemOnHandCriteriaExportReport?{
+                   items:[{label: <NCMItemReportModalForm trigger={<a>Export NCM Item Report</a>} />, key: 'exportNCMItemRequestReport', icon: <ExportOutlined style={{ fontSize: '16px', color: '#08c' }}/>}]
+                }: undefined
             });
         }
         if (access.canAccessWhmEmpMappingMenu) {

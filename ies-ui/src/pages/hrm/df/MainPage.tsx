@@ -2,14 +2,15 @@ import PageWrapper from "@/components/PageWrapper"
 import { DF360Emp, DF360EmpListItem, DF360InfoAdvanceSearchParams } from "./data"
 import { DashOutlined, ExportOutlined, FileOutlined } from "@ant-design/icons"
 import DataEntryView from "./DataEntryView"
-import { formatDate } from "@/pages/utils"
+import { formatDate, getColorStatus, toReadable } from "@/pages/utils"
 import Status from "@/components/Status"
 import { Df360EmpServiceAPI } from "./services"
 import { useState } from "react"
 import { TableViewSearchParams } from "@/components/DataCrud/TableView"
 import { useAccess, useQuery } from "@umijs/max"
 import DataEntryFormView from "./DataEntryFormView"
-import { Card, Grid} from "antd"
+import { Badge, Button, Card, Col, Descriptions, Flex, Grid, message, Radio, Row} from "antd"
+import editSettlmentModal from "@/pages/delivery/cash-collection/edit-settlment-modal"
 
 export const openPR = (dfId: number) => window.open(`/externa/hrm/df/detail/${dfId}`, '_blank')?.focus()
 
@@ -25,6 +26,23 @@ export default () => {
     const screens = Grid.useBreakpoint();
     const isMobile = !screens.md;
     const [selectedItem, setSelectedItem] = useState<DF360EmpListItem | null>(null);
+
+    const getColorStatus = (status?: string) => {
+    if (['ACTIVE','SUBMITTED'].some((it) => it === status)) {
+        return '#1677ff';
+    }
+     if (['COMPLETED'].some((it) => it === status)) {
+        return 'green';
+    }
+
+    if (['FAILED'].some((it) => it === status)) {
+        return 'red';
+    }
+
+    if (['PENDING'].some((it) => it === status)) {
+        return 'gray';
+    }
+};
    
     return (<div> {isMobile ? (
             <div style={{ display: "flex", justifyContent: "center", flexDirection: "column", alignItems: "center" }}>
@@ -41,32 +59,62 @@ export default () => {
                 // 👉 Show list of cards
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "16px" }}>
                     <h3 style={{ color: "#b69901" }}>360 Degree Feedback List</h3>
-                    {data?.items?.map((item) => (
-                    <Card key={item.id} style={{ width: 300 }}>
-                        <p>
-                        <strong>Form No:</strong>{" "}
-                        <span
-                            style={{ color: "#1677ff", cursor: "pointer" }}
-                            onClick={() => setSelectedItem(item)} 
+                    <Flex vertical gap="middle">
+                        <Radio.Group defaultValue="All" size="middle"
+                            onChange={(v) => {
+                                setFilter({
+                                    ...filter,
+                                    criteria: {
+                                        ...filter.criteria,
+                                        advanceSearch: {
+                                            status: v.target.value
+                                        }
+                                    }
+                                })
+                            }}
                         >
-                            {item.formNo || "n/a"}
-                        </span>
-                        </p>
-                        <p><strong>Employee No:</strong> {item.empNo}</p>
-                        <p><strong>Employee Name:</strong> {item.empName}</p>
-                        <p><strong>Employee Name (KH):</strong> {item.empNameKh}</p>
-                        <p><strong>Position:</strong> {item.jobTitle}</p>
-                        <p><strong>Job Level:</strong> {item.jobLevel}</p>
-                        <p><strong>Business Unit:</strong> {item.buName}</p>
-                        <p><strong>Function:</strong> {item.deptName}</p>
-                        <p><strong>Modified By:</strong> {item.lastModifiedBy}</p>
-                        <p><strong>Modified Date:</strong> {formatDate(item.lastModifiedDate)}</p>
-                        <p>
-                        <strong>Status:</strong>{" "}
-                        {item.status && <Status size="small" text={item.status || ""} />}
-                        </p>
-                        <p><strong>Due Date:</strong> {formatDate(item.dueDate)}</p>
-                    </Card>
+                            <Radio.Button value="All">All</Radio.Button>
+                            <Radio.Button value="PENDING">Pending</Radio.Button>
+                            <Radio.Button value="SUBMITTED">Submitted</Radio.Button>
+                        </Radio.Group>
+                    </Flex>
+                    {data?.items?.map((item) => (
+                    // <Badge 
+                    //     // status={getColorStatus(item.status || "")}  
+                    //     className="site-badge-count-109"
+                    //     style={{ backgroundColor: '#52c41a' }}
+                    //     text={toReadable(item.status || "")} >
+                        <Card key={item.id} style={{ width: '100%' }}>
+                            <p>
+                                <span  style={{ color: "#1677ff", cursor: "pointer" }}
+                                    onClick={() => setSelectedItem(item)} 
+                                >
+                                    {item.empName || "n/a"}
+                                </span>
+                                <span style={{ float: "right" }}>{item.status && 
+                                    // <Status size="small" text={item.status || ""} />
+                                    <Badge  style={{height: 28, paddingTop: 4,paddingLeft:10,paddingRight:10, backgroundColor: getColorStatus(item.status || "") }} count={toReadable(item.status || "")} />
+                                }</span>
+                            </p>
+                            {/* <p><strong>{item.empName} {item.empNo}</strong></p>                        */}
+                            <p> {item.empNameKh}</p>
+                            <p>{item.jobTitle}</p>
+                        <Descriptions layout="vertical" size="small" column={2}>
+                                <Descriptions.Item label="Business Unit">{item.buName}</Descriptions.Item>
+                                <Descriptions.Item label="Function">{item.deptName}</Descriptions.Item>                            
+                        </Descriptions>
+                            {/* <p><strong>Job Level:</strong> {item.jobLevel}</p>
+                            <p><strong>Business Unit:</strong> {item.buName}</p>
+                            <p><strong>Function:</strong> {item.deptName}</p>
+                            <p><strong>Modified By:</strong> {item.lastModifiedBy}</p>
+                            <p><strong>Modified Date:</strong> {formatDate(item.lastModifiedDate)}</p>
+                            <p>
+                            <strong>Status:</strong>{" "}
+                            {item.status && <Status size="small" text={item.status || ""} />}
+                            </p> */}
+                            <p>Due Date: {formatDate(item.dueDate)}</p>
+                        </Card>
+                    // </Badge>
                     ))}
                 </div>
                 )}
@@ -134,7 +182,17 @@ export default () => {
             ],
             onRefresh: refetch,
             onFilter: (params, page, sort) => {
-
+                setFilter(v=>({
+                    ...filter,
+                    criteria: {
+                        ...filter.criteria,
+                        advanceSearch: {
+                            status: params?.status || 'ALL'
+                        },
+                        sort: sort,
+                    },
+                    pagination: page,
+                }))
             },
             props: {
                 dataSource: data?.items||[],

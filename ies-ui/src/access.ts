@@ -148,6 +148,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           'ROLE_AR',
           'ROLE_SALE_INDIVIDUAL',
           'ROLE_DSD_REPORT',
+          'ROLE_DELIVERY_SALE_ALLOCATION'
         ].some((it) => it === item),
       ) || false,
 
@@ -367,13 +368,16 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_DELIVERY_DEL_ALLOCATION','ROLE_DELIVERY_ALLOCATION_REMARK'].some((it) => it === item),
       ) || false,
-
+    canAccesAllocateSaleView:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_DELIVERY_SALE_ALLOCATION','ROLE_SALE_ADMIN'].some((it) => it === item),
+      ) || false,
     canAccesAddRemarkAllocate:
       currentUser?.authorities.some((item) =>
-        ['ROLE_DELIVERY_ALLOCATION_REMARK'].some((it) => it === item),
-      ) || false,
+        ['ROLE_ADMIN','ROLE_DELIVERY_ALLOCATION_REMARK','ROLE_DELIVERY_DEL_ALLOCATION',].some((it) => it === item),
+      ) || false, 
 
-    /**** Prod */
+    /**** Prod */  
     canAccessProdMenu:
       currentUser?.authorities.some((item) =>
         [
@@ -639,6 +643,8 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           'ROLE_HR_PROBATION_EVALUATION_SUPPORT',
           'ROLE_HR_PROBATION_EVALUATION_VIEW',
           'ROLE_HR_PROBATION_EVALUATION_REQUESTER',
+          'ROLE_HR_DF360_VIEW',
+          'ROLE_HR_DF360_SUPPORT' 
         ].some((it) => it === item),
       ) || false,
     canAccessHrEmployeeMenuItem:
@@ -816,10 +822,6 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) => ['ROLE_DEVELOPER'].some((it) => it === item)) ||
       false,
 
-    canAccesAllocateSaleView:
-      currentUser?.authorities.some((item) =>
-        ['ROLE_ADMIN', 'ROLE_SALE_ALLOCATION_PLAN'].some((it) => it === item),
-      ) || false,
     /** MPU */
 
     canAccessViewMpu:
@@ -966,7 +968,8 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           'ROLE_NCM_INVENTORY_WH_EMP_MAPPING_ADMIN',
           'ROLE_NCM_STOCK_REQUEST',
           'ROLE_NCM_INVENTORY_TRANSFER_REQUEST',
-          'ROLE_NCM_INVENTORY_ADJUSTMENT_REQUEST'
+          'ROLE_NCM_INVENTORY_ADJUSTMENT_REQUEST',
+          'ROLE_NCM_ITEM_ONHAND_CRITERIA_REPORT'
         ].some((it) => it === item),
       ) || false,
     canAccessNcmIssueRequestMenu:
@@ -983,7 +986,8 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           // 'ROLE_NCM_INVENTORY_TRANSFER_SUPPORT',
           // 'ROLE_NCM_STOCK_REQUEST_SUPPORT',
           // 'ROLE_NCM_STOCK_REQUEST_ADMIN',
-          'ROLE_NCM_INVENTORY_ITEM_ADMIN'
+          'ROLE_NCM_INVENTORY_ITEM_ADMIN',
+          'ROLE_NCM_ITEM_ONHAND_CRITERIA_REPORT'
         ].some((it) => it === item),
       ) || false,
     canAccessWhmEmpMappingMenu:
@@ -1042,6 +1046,10 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     isAccessNCMRequestCriteriaExportReport:
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_NCM_REQUEST_CRITERIA_EXPORT_REPORT'].some((it) => it === item),
+      ) || false,
+    isAccessNCMItemOnHandCriteriaExportReport:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_NCM_ITEM_ONHAND_CRITERIA_REPORT'].some((it) => it === item),
       ) || false,
     canAccessNCMStoctRequestSalAdmin:
       currentUser?.authorities.some((item) =>

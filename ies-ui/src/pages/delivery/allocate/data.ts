@@ -80,6 +80,8 @@ export interface DNList {
   status?: string,
   mergeItems: mergeItems[],
   phone?:string
+  longitude?:string,
+  latitude?:string
 }
 
 interface mergeItems {

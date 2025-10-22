@@ -39,6 +39,7 @@ import { PageContainer } from '@ant-design/pro-components';
 import { MenuProps } from 'rc-menu';
 import { MPUPath } from './mpu';
 import Reports from './reports';
+import { DeliveryPaths } from '../delivery';
 {
   /* <TeamOutlined /> */
 }
@@ -71,6 +72,7 @@ export const SalePaths = {
   user: '/sale/user',
   pricing: '/sale/pricing',
   purchaseOrder: '/sale/purchase-order',
+  delAllocate: '/sale/allocate',
 };
 
 export default () => {
@@ -263,6 +265,14 @@ export default () => {
         access.canAccessSettlementMenuItem,
       link: `${MPUPath.salesInvoice}/list`,
     },
+    {
+      id: 'allocationDel',
+      name: 'Sale Allocation Plan',
+      description: 'Sale Allocation Plan List',
+      link: `${SalePaths.delAllocate}/list`,
+      icon: agreementIcon,
+      visible: access.canAccesAllocateSaleView
+    },
 
     // {
     //   id: 'free-of-charge',
@@ -336,8 +346,8 @@ export default () => {
       visible: access.canAcessStockControlMenuItem,
       link: `${SalePaths.product}/list`,
       icon: productIcon,
-    },
-  ];
+    }
+  ]; 
 
   return (
     <PageContainer title={false}>
@@ -350,11 +360,11 @@ export default () => {
         access.canAccessSettlementMenuItem ||
         access.canAccessARMenuItem ||
         access.canAccessViewMpu) && (
-        <>
-          <Divider />
-          <ListMenuComp items={stockMenuItems} />
-        </>
-      )}
+          <>
+            <Divider />
+            <ListMenuComp items={stockMenuItems} />
+          </>
+        )}
     </PageContainer>
   );
 };

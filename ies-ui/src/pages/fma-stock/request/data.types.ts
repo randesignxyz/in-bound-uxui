@@ -160,6 +160,15 @@ export interface WarehouseGroup {
   code: string;
   name: string;
 }
+export interface WarehouseGroup {
+  id: string;
+  code: string;
+  name: string;
+}
+export interface ExportItemRefNo {
+  refNo: string;
+}
+
 
   
 

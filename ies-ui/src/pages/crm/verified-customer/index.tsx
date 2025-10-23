@@ -12,7 +12,7 @@ import { ProTable } from "@ant-design/pro-components"
 import { ShippingAddressAPI } from "../shipping_address/services"
 import { CrmServices } from "../services"
 import moment from "moment"
-
+import numeral from "numeral";
 
 export default () => {
     const requestActions = simpleRequestActions();
@@ -113,82 +113,7 @@ export default () => {
         />
     }
 
-    const columns = useMemo(() => {
-        if (filter.criteria?.advanceSearch?.mode === "Address") {
-            return [
-                {
-                    title: "Code",
-                    actionProps: (item) => ({
-                        label: item?.code,
-                        type: "view",
-                    })
-                },
-                {
-                    title: "Address Code",
-                    dataIndex: "addressCode"
-                },
-                {
-                    title: "Customer Code",
-                    dataIndex: "customerCode"
-                },
-                {
-                    title: "Salesperson Code",
-                    render: (_, r) => r.salesperson?.code
-                },
-                {
-                    title: "Salesperson Name",
-                    render: (_, r) => r.salesperson?.nmae
-                },
-                {
-                    title: "Verified",
-                    dataIndex: "verified",
-                    render: (_, r) => {
-                        return <Typography >{r.verifiedStatus?.name}</Typography>
-                    }
-                },
-                {
-                    title: "",
-                    render: (_, r) => r.verifiedStatus?.id == 19004 && <div>
-                        <Tooltip title={"Confirm "}><Button type="link" icon={<CheckCircleOutlined />} onClick={() => setStatusState({ visible: { name: "MODAL", status: "Confirm", addressId: r.addressId, } })} /></Tooltip>
-                        <Tooltip title={"Rejecte "}><Button type="link" danger icon={<CloseCircleOutlined />} onClick={() => setStatusState({ visible: { name: "MODAL", status: "Reject", addressId: r.addressId, } })} /></Tooltip>
-                    </div>
-                }
-            ];
-        }
-        return [
-            {
-                title: "Customer Code",
-                dataIndex: "code",
-                valueType: "date",
-                actionProps: (item) => ({
-                    label: item.code,
-                    type: "view",
 
-                })
-            },
-            {
-                title: "Customer Name",
-                render: (_, r) => <Space>
-                    <Typography>{r.name}</Typography>
-                    <Typography.Text type="secondary" >{r.internalName}</Typography.Text>
-                </Space>
-            },
-            {
-                title: "Salesperson",
-                render: (_, r) => [r.salesperson?.code, r.salesperson?.name].filter(Boolean).join("-")
-            },
-            {
-                title: "Address Verified",
-                dataIndex: "verified",
-                render: (_, r) => {
-                    const ori = r.address?.length;
-                    const valided = r.address?.filter(o => o.isVerified == true)?.length
-                    return <Typography style={{ color: valided == 0 ? "#d4380d" : "#52c41a" }}>{valided}/{ori}</Typography>
-                }
-            },
-
-        ];
-    }, [filter.criteria?.advanceSearch?.mode]);
     return (
         <>
             {(lookupData && filter.criteria?.advanceSearch?.mode) &&
@@ -198,7 +123,7 @@ export default () => {
                             tabLabel: item?.code || "N/A",
                             tabKey: item?.id || "N/A",
                             action: "view",
-                            panel: ({ onCloseTab }) => <VerifiedDetailView mode={filter.criteria.advanceSearch.mode} onBack={onCloseTab} data={item} />,
+                            panel: ({ onCloseTab }) => <VerifiedDetailView mode={filter.criteria.advanceSearch.mode} onBack={onCloseTab} data1={item} />,
                         },
                     ]}
                     listView={{
@@ -282,7 +207,7 @@ export default () => {
                                     title: "Address",
                                     dataIndex: "addressCode"
                                 },
-                                
+
                                 // {
                                 //     title: "Salesperson Code",
                                 //     render: (_, r) => r.salesperson?.code
@@ -296,9 +221,32 @@ export default () => {
                                 //     render:(_,r)=>r.customerVerifiedLatLong.createdBy
                                 // },
                                 {
-                                    title:"Verified Date",
-                                    render:(_,r)=>r?.customerVerifiedLatLong?moment(r?.customerVerifiedLatLong?.createdDate)?.format("YYYY-M-DD"):"",
-                                    valueType:"date"
+                                    title: "Verified Date",
+                                    render: (_, r) => r?.customerVerifiedLatLong ? moment(r?.customerVerifiedLatLong?.createdDate)?.format("YYYY-M-DD") : "",
+                                    valueType: "date"
+                                },
+                                {
+                                    title: "Distance",
+                                    render: (_, r) => {
+                                        const origin = `${r?.customerVerifiedLatLong?.currentLat},${r?.customerVerifiedLatLong?.currentLong}` // example: your current location
+                                        const destLat = r?.customerVerifiedLatLong?.latitude;
+                                        const destLng = r?.customerVerifiedLatLong?.longitude;
+
+                                        // Only create link if lat/lng exist
+                                        if (!destLat || !destLng) return "No location";
+
+                                        const mapUrl = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destLat},${destLng}&travelmode=driving`;
+
+                                        return (
+                                            <a
+                                                href={mapUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >
+                                                {numeral(r?.customerVerifiedLatLong?.distance).format("000,000")} {r?.customerVerifiedLatLong?.distance?"Meters":""}
+                                            </a>
+                                        );
+                                    },
                                 },
                                 {
                                     title: "Status",
@@ -313,20 +261,20 @@ export default () => {
                                                             ? "#1890ff" // blue
                                                             : r.verifiedStatus?.id === 20003 //"Rejected"
                                                                 ? "#ff4d4f" // red
-                                                                : r.verifiedStatus?.id ===20004  //"Confirmed"
+                                                                : r.verifiedStatus?.id === 20004  //"Confirmed"
                                                                     ? "#52c41a" // green
                                                                     : undefined
                                             }}
                                         >{r.verifiedStatus?.name}</Typography>
                                     }
                                 },
-                                {
-                                    title: "Action",
-                                    render: (_, r) => r.verifiedStatus?.id == 20002 && <div>
-                                        <Tooltip title={"Confirm "}><Button type="link" icon={<CheckCircleOutlined />} onClick={() => setStatusState({ visible: { name: "MODAL", status: "Confirm", addressId: r.addressId, } })} /></Tooltip>
-                                        <Tooltip title={"Rejecte "}><Button type="link" danger icon={<CloseCircleOutlined />} onClick={() => setStatusState({ visible: { name: "MODAL", status: "Reject", addressId: r.addressId, } })} /></Tooltip>
-                                    </div>
-                                }
+                                // {
+                                //     title: "Action",
+                                //     render: (_, r) => r.verifiedStatus?.id == 20002 && <div>
+                                //         <Tooltip title={"Confirm "}><Button type="link" icon={<CheckCircleOutlined />} onClick={() => setStatusState({ visible: { name: "MODAL", status: "Confirm", addressId: r.addressId, } })} /></Tooltip>
+                                //         <Tooltip title={"Rejecte "}><Button type="link" danger icon={<CloseCircleOutlined />} onClick={() => setStatusState({ visible: { name: "MODAL", status: "Reject", addressId: r.addressId, } })} /></Tooltip>
+                                //     </div>
+                                // }
                             ]
                         },
                     }}

@@ -39,6 +39,7 @@ import { PageContainer } from '@ant-design/pro-components';
 import { MenuProps } from 'rc-menu';
 import { MPUPath } from './mpu';
 import Reports from './reports';
+import { DeliveryPaths } from '../delivery';
 {
   /* <TeamOutlined /> */
 }
@@ -71,6 +72,7 @@ export const SalePaths = {
   user: '/sale/user',
   pricing: '/sale/pricing',
   purchaseOrder: '/sale/purchase-order',
+  delAllocate: '/sale/allocate',
 };
 
 export default () => {
@@ -181,6 +183,9 @@ export default () => {
             case 'visit-reports':
               setReport('visit-report');
               break;
+            case 'sale-invoice-report-v1':
+              setReport('sale-invoice-report-v1');
+              break
             case 'purchase-order-reports':
               setReport('purchase-order-reports');
               break;
@@ -202,6 +207,7 @@ export default () => {
             [
               getItem('Export Leads', 'lead-reports', <TeamOutlined />),
               getItem('Sales Invoice Report', 'dsd-reports', <TagsOutlined />),
+              getItem('Sales Invoice Report V1', 'sale-invoice-report-v1', <TagsOutlined />),
               getItem('Visit Report', 'visit-reports', <ScheduleOutlined />),
               getItem('Purchase Order Report', 'purchase-order-reports', <ShoppingOutlined />),
               getItem('Performance P.O Report', 'performance-po-report', <FundOutlined />),
@@ -262,6 +268,14 @@ export default () => {
         access.canAccessSaleDailyReport ||
         access.canAccessSettlementMenuItem,
       link: `${MPUPath.salesInvoice}/list`,
+    },
+    {
+      id: 'allocationDel',
+      name: 'Sale Allocation Plan',
+      description: 'Sale Allocation Plan List',
+      link: `${SalePaths.delAllocate}/list`,
+      icon: agreementIcon,
+      visible: access.canAccesAllocateSaleView
     },
 
     // {
@@ -336,8 +350,8 @@ export default () => {
       visible: access.canAcessStockControlMenuItem,
       link: `${SalePaths.product}/list`,
       icon: productIcon,
-    },
-  ];
+    }
+  ]; 
 
   return (
     <PageContainer title={false}>
@@ -350,11 +364,11 @@ export default () => {
         access.canAccessSettlementMenuItem ||
         access.canAccessARMenuItem ||
         access.canAccessViewMpu) && (
-        <>
-          <Divider />
-          <ListMenuComp items={stockMenuItems} />
-        </>
-      )}
+          <>
+            <Divider />
+            <ListMenuComp items={stockMenuItems} />
+          </>
+        )}
     </PageContainer>
   );
 };

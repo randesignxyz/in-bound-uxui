@@ -20,12 +20,12 @@ const CustomerWithAddressVerifiedAction = {
             pageSize: param.pagination?.pageSize
         }
     }),
-    list: (param: {id:number}): ServiceApiType<{}> => ({
+    list: (param: { id: number }): ServiceApiType<{}> => ({
         actionName: "list-customer-address-verified",
         endpoint: "CRM",
         type: "LIST_QUERY",
-        payload:param,
-       
+        payload: param,
+
     }),
     delete: (param: number[]): ServiceApiType<{}> => ({
         actionName: "delete-share-customer-lead",
@@ -39,6 +39,18 @@ const CustomerWithAddressVerifiedAction = {
         type: "EXEC",
         payload: {}
     }),
+    remark: (param: any): ServiceApiType<{}> => ({
+        actionName: "save-remark-customer-verified",
+        endpoint: "CRM",
+        type: "EXEC",
+        payload: param
+    }),
+    detail: (param: any): ServiceApiType<{}> => ({
+        actionName: "detail-customer-verified",
+        endpoint: "CRM",
+        type: "FETCH_QUERY",
+        payload: param
+    })
 }
 
 export const CustomerWithAddressVerifiedAPI = (requestAction: RequestActions) => {
@@ -49,6 +61,8 @@ export const CustomerWithAddressVerifiedAPI = (requestAction: RequestActions) =>
         delete: (param: number[]) => singleRequest(CustomerWithAddressVerifiedAction.delete(param))(requestAction),
         changeStatus: (param: any) => singleRequest(CustomerWithAddressVerifiedAction.changeStatus(param))(requestAction),
         syncVerifiedLatlong: () => singleRequest(CustomerWithAddressVerifiedAction.syncVerifiedLatlong())(requestAction),
-        list: (param: {id:number}) => singleRequest(CustomerWithAddressVerifiedAction.list(param))(requestAction) as Promise<any[]>
+        list: (param: { id: number }) => singleRequest(CustomerWithAddressVerifiedAction.list(param))(requestAction) as Promise<any[]>,
+        remark: (param: any) => singleRequest(CustomerWithAddressVerifiedAction.remark(param))(requestAction),
+        detail: (param: any) => singleRequest(CustomerWithAddressVerifiedAction.detail(param))(requestAction) as Promise<any>
     }
 }

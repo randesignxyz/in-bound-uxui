@@ -100,6 +100,12 @@ const AllocateAction = {
         actionName: 'get-list-location',
         payload: { type, parent },
     }),
+    forceClose: (params: UpdateRemarkParams): ServiceApiType<UpdateRemarkParams> => ({
+        actionName: 'force-close',
+        endpoint: 'DELIVERY',
+        type: 'EXEC',
+        payload: params,
+    }),
 }
 
 export const AllocateServiceAPI = (requestAction: RequestActions) => {
@@ -152,6 +158,10 @@ export const AllocateServiceAPI = (requestAction: RequestActions) => {
             ),
         list_Location: (type?: string, parent?: string) =>
             singleRequest<LocationList>(AllocateAction.listLocation(type, parent))(
+                requestAction
+            ),
+        force_close: (params: UpdateRemarkParams) =>
+            singleRequest<{ data: string; message: string }>(AllocateAction.forceClose(params))(
                 requestAction
             ),
     }

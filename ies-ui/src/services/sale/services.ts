@@ -148,6 +148,7 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
     requestedDate?: moment.Moment[];
     status?: string[];
     reportType?: string;
+    supplier?:string
   }>(actions),
 
   donwloadDSDReport: downloadSaleReport<{

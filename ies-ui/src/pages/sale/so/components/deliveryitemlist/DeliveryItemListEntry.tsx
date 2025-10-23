@@ -8,7 +8,7 @@ import ProForm, {
   ProFormSelect,
   ProFormText,
 } from '@ant-design/pro-form';
-import { Card, message } from 'antd';
+import { Card, message, Switch } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { sumBy } from 'lodash';
 import { useEffect } from 'react';
@@ -84,6 +84,7 @@ const DeliveryItemListEntry: React.FC<Props> = ({ data, actionHandlers, ...props
               label="Delivery Date"
               name="deliveryDate"
             />
+            {/* <Switch defaultChecked  /> */}
             <ProFormSelect
               help={<span />}
               label="Shipping Address"

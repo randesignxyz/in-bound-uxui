@@ -82,6 +82,8 @@ export interface DNList {
   phone?:string
   longitude?:string,
   latitude?:string
+  commune?:string
+  district?:string
 }
 
 interface mergeItems {
@@ -282,4 +284,14 @@ export type LocationList = {
   name: string,
   parent: string,
   type: string,
+}
+
+export interface ListDnDetailParams {
+  status?: string;
+  delivery_date?: string;
+  province_id?: string;
+  district_id?: string;
+  commune_id?: string;
+  sortBy?: string[];
+  sortOrders?: string[];
 }

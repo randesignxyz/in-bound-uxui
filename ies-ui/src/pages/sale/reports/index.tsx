@@ -9,6 +9,7 @@ import SaleOrderReport from './SaleOrderReport';
 import PerformancePurchaseOrderReport from './PerformancePurchaseOrderReport';
 import VisitReports from './VisitReports';
 import { DSDReportAPI } from './service';
+import DSDSalesInvoiceReportV1 from './DSDSalesInvoiceReportV1';
 
 interface Props {
   reportName?: ReportName;
@@ -21,6 +22,7 @@ export type ReportName =
   | 'dsd-lead-report'
   | 'visit-report'
   | 'purchase-order-reports'
+  | 'sale-invoice-report-v1'
   | 'performance-po-report';
 
 const Reports: React.FC<Props> = ({ reportName, onClose }) => {
@@ -55,6 +57,13 @@ const Reports: React.FC<Props> = ({ reportName, onClose }) => {
         title="Generate DSD Reports"
         width="700px"
         open={reportName === 'dsd-reports'}
+        onCancel={onClose}
+      />
+      <DSDSalesInvoiceReportV1
+        salespersons={salesperson}
+        title="Generate a Report Merging IES and SFA"
+        width="700px"
+        open={reportName === 'sale-invoice-report-v1'}
         onCancel={onClose}
       />
       <DSDLeadReport

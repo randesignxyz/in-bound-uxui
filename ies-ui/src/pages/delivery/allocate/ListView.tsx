@@ -692,7 +692,12 @@ export default () => {
       width: '6%',
       render: (_, r) =>
         dayjs.utc(r.deliveryDate).add(7, 'hour').format('DD-MMM-YYYY'),// forces UTC, no timezone shift
-      sorter: (a, b) => dayjs.utc(a.deliveryDate).unix() - dayjs.utc(b.deliveryDate).unix(),
+      sorter: {
+        compare: (a, b) =>
+          (a.deliveryDate ? dayjs(a.deliveryDate).unix() : 0) -
+          (b.deliveryDate ? dayjs(b.deliveryDate).unix() : 0),
+        multiple: 4,
+      },
       defaultSortOrder: 'ascend',
     },
     {
@@ -729,7 +734,7 @@ export default () => {
     {
       title: 'Commune', dataIndex: 'commune', width: 150, sorter: {
         compare: (a, b) => (a.commune ?? '').localeCompare(b.commune ?? ''),
-        multiple: 2,
+        multiple: 3,
       },
     },
     { title: 'Channel', dataIndex: 'channel', width: 150 },

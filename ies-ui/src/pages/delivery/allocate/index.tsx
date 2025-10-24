@@ -4,7 +4,7 @@ import ListView from "./ListView"
 
 export default () => {
 
-    return <CrudWrapper onBack={() => history.back()} title="Sale Allocation Plan" baseURL={DeliveryPaths.delAllocate} >
+    return <CrudWrapper onBack={() => history.back()} title="Delivery Order Plan" baseURL={DeliveryPaths.delAllocate} >
         {(view) => {
             switch (view) {
                 case 'list':

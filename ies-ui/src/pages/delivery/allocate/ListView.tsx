@@ -698,7 +698,6 @@ export default () => {
           (b.deliveryDate ? dayjs(b.deliveryDate).unix() : 0),
         multiple: 4,
       },
-      defaultSortOrder: 'ascend',
     },
     {
       title: 'Shipping Address',

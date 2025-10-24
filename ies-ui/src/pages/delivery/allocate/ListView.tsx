@@ -691,7 +691,9 @@ export default () => {
       dataIndex: 'deliveryDate',
       width: '6%',
       render: (_, r) =>
-        dayjs.utc(r.deliveryDate).add(7, 'hour').format('DD-MMM-YYYY')// forces UTC, no timezone shift
+        dayjs.utc(r.deliveryDate).add(7, 'hour').format('DD-MMM-YYYY'),// forces UTC, no timezone shift
+      sorter: (a, b) => dayjs.utc(a.deliveryDate).unix() - dayjs.utc(b.deliveryDate).unix(),
+      defaultSortOrder: 'ascend',
     },
     {
       title: 'Shipping Address',

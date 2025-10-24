@@ -463,41 +463,35 @@ export default () => {
     params: TableViewSearchParams<AllocateSOAdvanceParams>
   ): Promise<Paging<DNList>> => {
     try {
-      const skuResult = await services.list_sku();
-      let skuArray: SkuList[] = [];
+      const today = moment().format('YYYY-MM-DD');
+      const deliveryDate = asDate ? dnSearch.delivery_date || undefined : today;
 
-      if (Array.isArray(skuResult)) {
-        skuArray = skuResult;
-      } else if ('data' in skuResult && Array.isArray(skuResult.data)) {
-        skuArray = skuResult.data;
-      } else {
-        skuArray = [skuResult];
+      // Map Ant Design sort info to backend format
+      const sortBy: string[] = [];
+      const sortOrders: string[] = [];
+      if (params?.criteria?.sort) {
+        Object.entries(params?.criteria?.sort).forEach(([key, value]) => {
+          sortBy.push(key);
+          sortOrders.push(value === 'ascend' ? 'asc' : 'desc');
+        });
       }
 
-      const sortedSku = skuArray.sort((a, b) => {
-        if (a.item_category !== b.item_category) return a.item_category - b.item_category;
-        return a.sequence - b.sequence;
+      const list = await services.list_dn_detail({
+        status: dnSearch.status,
+        delivery_date: deliveryDate,
+        province_id: dnSearch.province_id,
+        district_id: dnSearch.district_id,
+        commune_id: dnSearch.commune_id,
+        sortBy,
+        sortOrders,
       });
 
-      // const deliveryDate = asDate ? undefined : dnSearch.delivery_date;
-      const today = moment().format('YYYY-MM-DD');
-      const deliveryDate = asDate
-        ? dnSearch.delivery_date || undefined
-        : today;
-
-      const list = await services.list_dn_detail(
-        dnSearch.status,
-        deliveryDate,
-        dnSearch.province_id,
-        dnSearch.district_id,
-        dnSearch.commune_id
-      );
-
       if (!Array.isArray(list)) throw new Error('Unexpected response format');
+
+      // Transform list with SKU quantities
       const transformedList = list.map((delivery) => {
         const skuValues: Record<string, number> = {};
-
-        sortedSku.forEach((sku) => {
+        skuList.forEach((sku) => {
           if (sku.item_category === 2) {
             skuValues[`${sku.sku_code}_pack`] = 0;
             skuValues[`${sku.sku_code}_bowl`] = 0;
@@ -507,26 +501,14 @@ export default () => {
         });
 
         const itemsToUse = delivery.mergeItems?.length ? delivery.mergeItems : delivery.deliveryItems;
-
         itemsToUse.forEach((item) => {
-          const sku = sortedSku.find((s) => s.id.toString() === item.sku_id);
+          const sku = skuList.find((s) => s.id.toString() === item.sku_id);
           if (!sku) return;
-
-          if (sku.item_category === 2) {
-            const uom = normalizeUOM(item.sku_uom);
-            if (!uom) return;
-            const key = `${sku.sku_code}_${uom}`;
-            skuValues[key] += item.qty;
-          } else {
-            skuValues[sku.sku_code] += item.qty;
-          }
+          const key = sku.item_category === 2 ? `${sku.sku_code}_${normalizeUOM(item.sku_uom)}` : sku.sku_code;
+          skuValues[key] += item.qty;
         });
 
-        return {
-          ...delivery,
-          key: delivery.id,
-          ...skuValues,
-        };
+        return { ...delivery, key: delivery.id, ...skuValues };
       });
 
       const page = params.pagination?.current ?? 1;
@@ -534,25 +516,14 @@ export default () => {
       const total = transformedList.length;
       const pagedData = transformedList.slice((page - 1) * pageSize, page * pageSize);
 
-      const dataList = {
-        items: pagedData,
-        total,
-        page,
-        pageSize,
-      };
-
+      const dataList = { items: pagedData, total, page, pageSize };
       setDataListDn(dataList);
-      setSkuList(sortedSku); // update state for columns
       return dataList;
     } catch (error: any) {
       message.error(error.message);
       return Promise.reject(error);
     }
   };
-
-
-
-
 
 
   const soColums: ProColumns<SOList>[] = [
@@ -720,11 +691,18 @@ export default () => {
       dataIndex: 'deliveryDate',
       width: '6%',
       render: (_, r) =>
-        dayjs.utc(r.deliveryDate).add(7, 'hour').format('DD-MMM-YYYY')// forces UTC, no timezone shift
+        dayjs.utc(r.deliveryDate).add(7, 'hour').format('DD-MMM-YYYY'),// forces UTC, no timezone shift
+      sorter: (a, b) => dayjs.utc(a.deliveryDate).unix() - dayjs.utc(b.deliveryDate).unix(),
+      defaultSortOrder: 'ascend',
     },
     {
       title: 'Shipping Address',
       dataIndex: 'shippingAddress',
+      // sorter: true,
+      sorter: {
+        compare: (a, b) => (a.shippingAddress ?? '').localeCompare(b.shippingAddress ?? ''),
+        multiple: 1,
+      },
       width: 200,
       render: (_, value) => (
         <a
@@ -742,8 +720,18 @@ export default () => {
       ),
     },
     // { title: 'Customer', dataIndex: 'customer_name', width: '7%' },
-    { title: 'District', dataIndex: 'district', width: 150 },
-    { title: 'Commune', dataIndex: 'commune', width: 150 },
+    {
+      title: 'District', dataIndex: 'district', width: 150, sorter: {
+        compare: (a, b) => (a.district ?? '').localeCompare(b.district ?? ''),
+        multiple: 2,
+      },
+    },
+    {
+      title: 'Commune', dataIndex: 'commune', width: 150, sorter: {
+        compare: (a, b) => (a.commune ?? '').localeCompare(b.commune ?? ''),
+        multiple: 2,
+      },
+    },
     { title: 'Channel', dataIndex: 'channel', width: 150 },
     {
       title: 'SKU',
@@ -1745,4 +1733,4 @@ export default () => {
       />
     </>
   );
-}; 
+};

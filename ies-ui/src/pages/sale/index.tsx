@@ -271,8 +271,8 @@ export default () => {
     },
     {
       id: 'allocationDel',
-      name: 'Sale Allocation Plan',
-      description: 'Sale Allocation Plan List',
+      name: 'Delivery Order Plan',
+      description: 'Delivery Order Plan List',
       link: `${SalePaths.delAllocate}/list`,
       icon: agreementIcon,
       visible: access.canAccesAllocateSaleView

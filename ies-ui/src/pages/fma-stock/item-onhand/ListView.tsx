@@ -26,7 +26,7 @@ export default ({ onAdd, onEdit, forceRefresh }: Props) => {
     const services = createService(requestActions);
     const src = Srv(requestActions);
     const [itemGroups, setItemGroups] = useState<ItemGroupListItem[]>([]);
-    const [advanceSearchParams, setAdvanceSearchParams] = useState<ItemAdvanceSearchParams>({groupIds:[],status:'ALL',onHandFrom:0,onHandTo:0});
+    const [advanceSearchParams, setAdvanceSearchParams] = useState<ItemAdvanceSearchParams>({groupIds:[],status:'ALL'});
     const [refNo, setRefNo] = useState<string>('-1');
 
     useEffect(()=>{

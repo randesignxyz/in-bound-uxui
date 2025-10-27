@@ -17,31 +17,30 @@ type DataFormType = {
     onHand: number[]
 }
 
-export default ({ trigger }: { trigger?: JSX.Element}) => {
+export default ({ trigger,refNo }: { trigger?: JSX.Element, refNo: string}) => {
     const requestActions = simpleRequestActions();
     const services = createService(requestActions);
     const [warehouseGroupList, setWarehouseGroup] = useState<WarehouseGroup[]>([]);
     const [form] = useForm<DataFormType>()
     const [loading, setLoading] = useState(false)
-    const [refNo,setRefNo] = useState<string>("")
+    // const [refNo,setRefNo] = useState<string>("")
     const statusDs = [{label:'All', value:'ALL'},{label:'Active', value:'Y'},{label:'Inactive', value:'N'}]
     const [itemGroups, setItemGroups] = useState<ItemGroupListItem[]>([]);
 
     const initData = async () => {
         setLoading(true)
         services.listWarehouseGroup().then(whg => setWarehouseGroup(whg));    
-        services.fetchReportItemRefNo().then(r=>{
-            setRefNo(r.refNo)
-            console.log(r)
-             setLoading(false)
-        })  
+        // services.fetchReportItemRefNo().then(r=>{
+        //     // setRefNo(r.refNo)
+        //     console.log(r)
+        //      setLoading(false)
+        // })  
         const data = await services.listAllItemGroup();
         setItemGroups(data);
+         setLoading(false)
     };  
     useEffect(() => {
-        if(!refNo || refNo==''){
-            initData();
-        }      
+        initData();
     }, [refNo]);
     const reportList = [
         {name:'NCM Item Onhand Report', value: 'whm_ncm_item_onhand_report'},
@@ -63,7 +62,7 @@ export default ({ trigger }: { trigger?: JSX.Element}) => {
                          {key:'serial', value:refNo},     
                         {key:'onHandFrom', value: dataForm.onHand?.[0]},  
                         {key:'onHandTo', value: dataForm.onHand?.[1]}, 
-                        {key:'status', value: dataForm?.status||'All'},            
+                        {key:'status', value: 'All'},            
                         ...(dataForm.funGroupId || []).map(it => ({ key: 'funGroupId', value: it })),
                         // {key:'startWithRole', value: 'ROLE_NCM_ITEM'}
                     ]
@@ -120,9 +119,9 @@ export default ({ trigger }: { trigger?: JSX.Element}) => {
             
                 <Flex gap={2} vertical={true} style={{padding:0}}> 
                     <Flex gap={5} style={{width:'100%'}}>               
-                         <ProFormSelect mode="single" label="Status" name={'status'} width={120}  shouldUpdate allowClear
+                         {/* <ProFormSelect mode="single" label="Status" name={'status'} width={120}  shouldUpdate allowClear
                                 options={statusDs}
-                            /> 
+                            />  */}
                         <div style={{width:'100%'}}>
                            {warehouseGroupList&&
                             <ProFormSelect mode="multiple" 

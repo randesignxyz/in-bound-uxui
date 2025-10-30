@@ -59,7 +59,7 @@ export default ({ onAdd, onEdit, forceRefresh }: Props) => {
                 actionRef: actionRef
             }}              
             refKey={(key: string)=> setRefNo(key)}   
-            extraFilter={<Space style={{marginTop:'25px'}}>    
+            extraFilter={<Space style={{marginTop:'21px'}}>    
                  {/* <Radio.Group
                     value={advanceSearchParams.status}
                   onChange={(e) => {

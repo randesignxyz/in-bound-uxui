@@ -115,7 +115,7 @@ export default ({ addedItems, onAddItem, selectedGroupId, ...rest }: Props) => {
                             <Descriptions size="small">
                               <Descriptions.Item label="Group"> {r.itemGroup.itemGroupName} </Descriptions.Item>                             
                               <Descriptions.Item label="UoM"> {r.defaultUoM}</Descriptions.Item>
-                              <Descriptions.Item label=""> {''}</Descriptions.Item>
+                              <Descriptions.Item label="Stock on Hand"> {r.onHand}</Descriptions.Item>
                               <Descriptions.Item label=""> {''}</Descriptions.Item>
                             </Descriptions>
                           ),

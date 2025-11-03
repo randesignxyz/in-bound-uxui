@@ -11,6 +11,7 @@ export const createService = (request: SimpleRequestActions): CrudBaseServices<
     SaveItemData    
 > & {
     // fetchUoMList:()=> Promise<UoM[]>
+    syncItemOnHand:()=> Promise<any>
 } => {
     return {
         fetchPaging: async (params: FetchPagingParams<SearchItemParams &{keyword?:string}>) =>
@@ -46,6 +47,12 @@ export const createService = (request: SimpleRequestActions): CrudBaseServices<
                 payload: data
             })(request)
         ,
+        syncItemOnHand: async()=>
+             execDataService0<SaveItemData>({
+                actionName: 'sync-item-on-hand',
+                endpoint: 'FMA',
+                // payload: {}
+            })(request)
         // fetchUoMList: async () =>
         //     fetchDataListService<any, UoM>({
         //         actionName: 'fetch-uom',

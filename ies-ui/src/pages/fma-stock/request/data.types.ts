@@ -108,6 +108,7 @@ export interface ItemListItem {
   itemCode: string;
   itemName: string;
   buyUoM?: string;
+  onHand?: number;
   lastPurchasePrice?: number;
   lastPurchaseCurr?: string;
   itemGroup: {

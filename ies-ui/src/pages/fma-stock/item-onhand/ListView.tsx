@@ -81,11 +81,7 @@ export default ({ onAdd, onEdit, forceRefresh }: Props) => {
                 ]}
             }}              
             refKey={(key: string)=> setRefNo(key)}   
-<<<<<<< HEAD
-            extraFilter={<Space style={{marginTop:'21px'}}>    
-=======
             extraFilter={<Space align="baseline" style={{ right: '12px' }}>    
->>>>>>> skh-04
                  {/* <Radio.Group
                     value={advanceSearchParams.status}
                   onChange={(e) => {

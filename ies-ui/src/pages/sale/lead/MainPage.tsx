@@ -175,18 +175,19 @@ const LeadMainPage: React.FC<Props> = () => {
               total: data?.total,
             },
             columns: [
-              {
-                title: 'Pros Code',
-                render:(_,r)=>r.isVerified?r?.leadCode:'',
-                width: 100,
-              },
+             
               {
                 title: 'Code',
                 actionProps: (items) => ({
-                  label: `${items.leadCode ? String(items.leadCode).replace(/^P/i, ''): 'N/A'}`,
+                  label: `${items.leadCode ?items.leadCode: 'N/A'}`,
                   type: 'view',
                 }),
                 width: 100,
+              },
+               {
+                title: 'Prospect Code',
+                render:(_,r)=>r?.prospectCode,
+                width: 150,
               },
               {
                 title: 'Shop Name',

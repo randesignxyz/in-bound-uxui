@@ -83,7 +83,7 @@ export default (props: Props) => {
             data: [
               { key: 'startDate', value: dataForm.requestedDate?.[0], type: 'dateTime' },
               { key: 'endDate', value: dataForm.requestedDate?.[1], type: 'dateTime' },
-              {key: 'saleCode', value: dataForm.salespersonCode?.join(',')}
+              {key: 'saleCode', value: dataForm.salespersonCode?.join(','), type:"string"}
             ]
           }
         }).then(() => {

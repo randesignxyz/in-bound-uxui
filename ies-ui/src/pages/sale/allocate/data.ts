@@ -62,7 +62,7 @@ export interface DeliveryList {
 
 export interface DNList {
   key: any;
-  id: number,
+  id: number | string,
   soId: string,
   deliveryDate: string,
   shippingAddress?: string,
@@ -105,6 +105,7 @@ interface mergeItems {
   sku_uom: string
   so_num?: string
   sequence?: string
+  volume?:string
 }
 interface DN {
   createdBy?: string

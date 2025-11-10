@@ -42,8 +42,7 @@ export default ({type, itemId, onRefresh,...rest}: ModalFormProps<SaveItemData> 
         const formData = await form.validateFields(); 
         formData.status =  formData.isActiveY?'Y':'N' 
         formData.itemCode = formData?.itemCode??''
-        formData.id = itemId||0
-        console.log('payload', formData)          
+        formData.id = itemId||0     
         Modal.confirm({
             title: title,
             content: 'Are you sure to save.',

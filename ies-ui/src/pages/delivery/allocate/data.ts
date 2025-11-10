@@ -105,6 +105,7 @@ interface mergeItems {
   sku_uom: string
   so_num?: string
   sequence?: string
+  volume?:string
 }
 interface DN {
   createdBy?: string

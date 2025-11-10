@@ -10,7 +10,7 @@ import { TableViewSearchParams } from "@/components/DataCrud/TableView"
 import { useAccess, useQuery } from "@umijs/max"
 import DataEntryFormView from "./DataEntryFormView"
 import { Badge, Button, Card, Col, Descriptions, Flex, Grid, message, Radio, Row} from "antd"
-import editSettlmentModal from "@/pages/delivery/cash-collection/edit-settlment-modal"
+// import editSettlmentModal from "@/pages/delivery/cash-collection/edit-settlment-modal"
 
 export const openPR = (dfId: number) => window.open(`/externa/hrm/df/detail/${dfId}`, '_blank')?.focus()
 

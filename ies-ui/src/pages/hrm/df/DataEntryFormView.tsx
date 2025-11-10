@@ -1,12 +1,12 @@
 import { CheckCard, EditableFormInstance, FooterToolbar, ProCard, ProForm, ProTable } from "@ant-design/pro-components";
-import { Avatar, Button, Card, Col, Descriptions, message, Modal, Row, Space, Spin, Tabs } from "antd";
+import { Avatar, Button, Card, Col, Descriptions, message, Modal, Row, Space, Spin, Tabs, Tooltip } from "antd";
 import { useForm } from "antd/es/form/Form";
 import { useInView } from "react-intersection-observer";
 import { DF360EmpDetailRs,  DF360UpdatePlayload, DfComment, DfCommentRs, DfEmpAssessorRs, DfEmpEvaluationDetailReport, DfEmpEvaluationRs, DfEmpEvaluationSummaryReport, DfEmpStatementDetail, DfInstrunctionItemList } from "./data";
 import { useEffect, useRef, useState } from "react";
 import { uniqueId } from "lodash";
 import { Df360EmpServiceAPI } from "./services";
-import { formatDate, formatterQty1 } from "@/pages/utils";
+import { formatDate, formatterQty1, toReadable } from "@/pages/utils";
 import InstructionCard from "./components/InstructionCard";
 import StatementTable from "./components/StatementTable";
 import CommentTable from "./components/commentTable";
@@ -211,7 +211,7 @@ export default({
 
     return(<div ref={ref}><Spin spinning={loading} ><Space direction="vertical" style={{ width: '100%' }}>
         {(data?.assessors?.length||0)>1 && <Card title="Assessor Infomation" size="small"
-            extra={isExternal() && <Button icon={<UnorderedListOutlined/>} type='link'  onClick={() => history.push(`/hrm/df/list`)}>360 Degree Feedback List</Button>}
+            // extra={<Button icon={<UnorderedListOutlined/>} type='link'  onClick={() => history.push(`/hrm/df/list`)}>360 Degree Feedback List</Button>}
         >
             {/* <Row gutter={20}>
                 <Col flex={1}> */}
@@ -234,11 +234,14 @@ export default({
                     >
                         {data?.assessors.map(r => (<CheckCard size='small' 
                         avatar={
-                            <Avatar
-                                style={{ backgroundColor: '#c2af1f' }}
-                                icon={<UserOutlined />}
-                                size="small"
-                            />
+                            <Tooltip title={toReadable(r.status || "")} placement="top">
+                                <Avatar
+                                    style={{ backgroundColor: r.status=='PENDING'?'gray':'#1677ff' }}
+                                    icon={<UserOutlined />}
+                                    size="small"
+                                    
+                                />
+                            </Tooltip>
                         }
                         key={`assessor-${r.id}`}  title= { r.empNo==''? `${r.type}`:`${r.type} - ${r.empNo}`} description={r.empName}  value={r.id}/>)) }
                     </CheckCard.Group>}
@@ -248,6 +251,7 @@ export default({
         </Card>}
         <ProCard size="small" headerBordered title="Employee Infomation"
             // extra={<Button icon={<FilePdfOutlined/>}>Export</Button>}
+            extra={isExternal()&&< Button icon={<UnorderedListOutlined/>} type='link'  onClick={() => history.push(`/hrm/df/list`)}>360 Degree Feedback List</Button>}
         >
             <Descriptions>
                 <Descriptions.Item label="Employee ID" style={{ fontWeight: 'bolder' }}>{data?.empNo}</Descriptions.Item>
@@ -349,9 +353,9 @@ export default({
                             columns={[                               
                                 { title: getLable('DF_TBL_STATEMENT')||'',dataIndex: lang=='KH'?'title1':'title'},
                                 { title: getLable('DF_TBL_SELF')||'', dataIndex: 'avgSelf', render: (text, record) => record.avgSelf==0?'-': formatterQty1.format(record.avgSelf)},
-                                { title: getLable('DF_TBL_MANAGER')||'', dataIndex: 'avgManager', render: (text, record) => record.avgManager==0?'-': formatterQty1.format(record.avgManager), hidden: ['Self'].some(r=>r==selectedAssessor?.type)},
-                                { title: getLable('DF_TBL_PEER')||'', dataIndex: 'avgPeer', render: (text, record) => record.avgPeer==0?'-': formatterQty1.format(record.avgPeer), hidden: ['Self'].some(r=>r==selectedAssessor?.type) },
-                                { title: getLable('DF_TBL_SUBORDINATE')||'', dataIndex: 'avgSubordinate', render: (text, record) => record.avgSubordinate==0?'-': formatterQty1.format(record.avgSubordinate), hidden: ['Self'].some(r=>r==selectedAssessor?.type) },
+                                { title: getLable('DF_TBL_MANAGER')||'', dataIndex: 'avgManager', render: (text, record) => record.avgManager==0?'-': formatterQty1.format(record.avgManager), hidden: !['Self','Manager'].some(r=>r==selectedAssessor?.type)},
+                                { title: getLable('DF_TBL_PEER')||'', dataIndex: 'avgPeer', render: (text, record) => record.avgPeer==0?'-': formatterQty1.format(record.avgPeer), hidden: !['Self','Manager'].some(r=>r==selectedAssessor?.type) },
+                                { title: getLable('DF_TBL_SUBORDINATE')||'', dataIndex: 'avgSubordinate', render: (text, record) => record.avgSubordinate==0?'-': formatterQty1.format(record.avgSubordinate), hidden: !['Self','Manager'].some(r=>r==selectedAssessor?.type) },
                                 { title: getLable('DF_TBL_OVERALL')||'', dataIndex: 'overall', render: (text, record) => record.overall==0?'-': formatterQty1.format(record.overall) },
                             ]}
                         />

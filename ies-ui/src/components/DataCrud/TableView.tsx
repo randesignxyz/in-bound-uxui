@@ -130,7 +130,7 @@ const TableView = <T extends { id: any }, C extends { searchValue?: string }>(
   const innerActionRef = props.tableProps?.actionRef || useRef<ActionType>();
   const [searchValue, setSearchValue] = useState<string>();
   const [loaded, setLoaded] = useState<boolean>(false);
-  const [refNo, setRefNo] = useState<string>();
+  // const [refNo, setRefNo] = useState<string>();
 
 
   useEffect(() => {
@@ -157,12 +157,12 @@ const TableView = <T extends { id: any }, C extends { searchValue?: string }>(
       actionHandlers?.onSearchCriteria?.(searchValue) || ({ searchValue: searchValue } as C);
     const data =
       !loaded && cache
-        ? await actionHandlers?.onFirstLoad?.(searchParams, {...params,refNo: refNo})
-        : await actionHandlers?.onRequest?.(searchParams, {...params,refNo: refNo}, sort);
-    if(!refNo || refNo=='' || data?.refNo!==refNo){
-      setRefNo(data?.refNo);
-      refKey?.(data?.refNo||'-1')
-    }    
+        ? await actionHandlers?.onFirstLoad?.(searchParams, {...params})
+        : await actionHandlers?.onRequest?.(searchParams, {...params}, sort);
+    // if(!refNo || refNo=='' || data?.refNo!==refNo){
+    //   setRefNo(data?.refNo);
+    //   refKey?.(data?.refNo||'-1')
+    // }    
     setLoaded(true);
     return {
       success: !!data,

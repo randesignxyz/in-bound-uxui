@@ -134,13 +134,14 @@ export const GLOBAL_CONST = {
 
 export interface Paging<T> {
   items: T[],
-  page?: number,
+  refNo?: string;
   pageSize?: number,
   total?: number
 }
 
 export interface Pagination {
   page?: number,
+  refNo?:string,
   current?: number, // used in some component, it's the same to page. 
   pageSize?: number = 20
 }

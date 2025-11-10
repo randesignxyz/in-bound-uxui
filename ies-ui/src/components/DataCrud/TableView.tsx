@@ -14,6 +14,7 @@ export type FetchPagingParams<T> = {
   criteria?: T;
   sort?: Record<string, SortOrder>;
   pagination?: {
+    refNo?: string;
     pageSize?: number;
     current?: number;
   };
@@ -28,6 +29,7 @@ export interface TableViewSearchParams<T> {
     forceUodate?: number;
   };
   pagination?: {
+    refNo?: string;
     pageSize?: number;
     current?: number;
   };
@@ -44,6 +46,7 @@ export interface TableViewProps<T extends { id?: number }> {
 interface Props<T extends { id: number }, C> {
   columns: ProColumns<T>[];
   summary?: (data: readonly T[]) => React.ReactNode;
+  refKey?: (key: string)=> void;
   rowKey?: string;
   bordered?: boolean;
   // title?: string;
@@ -71,6 +74,7 @@ interface Props<T extends { id: number }, C> {
     onFirstLoad?: (
       criteria: C,
       pagination: {
+        refNo?: string;
         pageSize?: number;
         current?: number;
       },
@@ -78,6 +82,7 @@ interface Props<T extends { id: number }, C> {
     onRequest?: (
       criteria: C,
       pagination: {
+        refNo?: string;
         pageSize?: number;
         current?: number;
       },
@@ -107,6 +112,7 @@ const TableView = <T extends { id: any }, C extends { searchValue?: string }>(
   const {
     columns,
     summary,
+    refKey,
     // title,
     scrollX,
     addButtonLabel,
@@ -124,6 +130,8 @@ const TableView = <T extends { id: any }, C extends { searchValue?: string }>(
   const innerActionRef = props.tableProps?.actionRef || useRef<ActionType>();
   const [searchValue, setSearchValue] = useState<string>();
   const [loaded, setLoaded] = useState<boolean>(false);
+  // const [refNo, setRefNo] = useState<string>();
+
 
   useEffect(() => {
     if (forceUpdate) {
@@ -138,6 +146,7 @@ const TableView = <T extends { id: any }, C extends { searchValue?: string }>(
 
   const onRequestHandler = async (
     params: {
+      refNo?: string;
       pageSize?: number;
       current?: number;
       keyword?: string;
@@ -148,9 +157,12 @@ const TableView = <T extends { id: any }, C extends { searchValue?: string }>(
       actionHandlers?.onSearchCriteria?.(searchValue) || ({ searchValue: searchValue } as C);
     const data =
       !loaded && cache
-        ? await actionHandlers?.onFirstLoad?.(searchParams, params)
-        : await actionHandlers?.onRequest?.(searchParams, params, sort);
-
+        ? await actionHandlers?.onFirstLoad?.(searchParams, {...params})
+        : await actionHandlers?.onRequest?.(searchParams, {...params}, sort);
+    // if(!refNo || refNo=='' || data?.refNo!==refNo){
+    //   setRefNo(data?.refNo);
+    //   refKey?.(data?.refNo||'-1')
+    // }    
     setLoaded(true);
     return {
       success: !!data,

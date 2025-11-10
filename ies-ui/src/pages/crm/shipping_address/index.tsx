@@ -48,11 +48,11 @@ export default () => {
                     reportName: reportName,
                     reportPath: getUrlReporting('crm'),
                     data: [
-                        { key: "regionIds", type: "string", value: params.regionId },
-                        { key: "provinceIds", type: "string", value: params.provinceId },
-                        { key: "customerTypeIds", type: "string", value: params.customerTypeId },
-                        { key: "salespersonIds", type: "string", value: params.salespersonId },
-                        { key: "status", type: "string", value: params.status },
+                        { key: "regionIds", type: "string", value: params.regionId?.filter((p: any)=>p)?.join(",") },
+                        { key: "provinceIds", type: "string", value: params.provinceId?.filter((p: any)=>p)?.join(",") },
+                        { key: "customerTypeIds", type: "string", value: params.customerTypeId?.filter((p: any)=>p)?.join(",") },
+                        { key: "salespersonIds", type: "string", value: params.salespersonId?.filter((p: any)=>p)?.join(",") },
+                        { key: "status", type: "string", value: params.status?.filter((p: any)=>p)?.join(",") },
                     ],
                 },
             }).then(() => { });

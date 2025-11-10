@@ -1477,6 +1477,14 @@ export default [
     access: 'canAccessWhmItemMenu',
     component: './fma-stock/item',
   },
+   {
+    path: '/whm/inventory/item-onhand/:view/*',
+    name: 'whm_inventory_item_onhand',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessWhmItemOnHandMenu',
+    component: './fma-stock/item-onhand',
+  },
   {
     path: '/whm/transfer/request/:view/*',
     name: 'whm-transter-request',

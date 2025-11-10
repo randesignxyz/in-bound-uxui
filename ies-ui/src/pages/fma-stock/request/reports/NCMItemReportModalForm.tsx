@@ -1,13 +1,12 @@
-import board from "@/pages/delivery/board"
-import { ModalForm, ProFormCheckbox, ProFormDatePicker, ProFormDateRangePicker, ProFormDigitRange, ProFormSelect } from "@ant-design/pro-components"
+import { ModalForm, ProFormDigitRange, ProFormSelect } from "@ant-design/pro-components"
 import { useForm } from "antd/es/form/Form"
 import { ItemGroupListItem, WarehouseGroup } from "../data.types"
 import { useEffect, useState } from "react"
 import { simpleRequestActions } from "@/services/model"
 import { createService } from "../services"
-import { Button, Card, Dropdown, Flex, MenuProps, message, Space, Spin } from "antd"
-import moment, { Moment } from "moment";
-import { DownOutlined, FileExcelOutlined } from "@ant-design/icons"
+import { Button, Card, Flex,message, Space, Spin } from "antd"
+import moment from "moment";
+import { FileExcelOutlined } from "@ant-design/icons"
 import { downloadGenericReport } from "@/services/apiGateway"
 import {getUrlReporting} from "@/pages/ReportUrl"
 
@@ -17,53 +16,44 @@ type DataFormType = {
     onHand: number[]
 }
 
-export default ({ trigger }: { trigger?: JSX.Element}) => {
+export default ({ trigger,refNo }: { trigger?: JSX.Element, refNo: string}) => {
     const requestActions = simpleRequestActions();
     const services = createService(requestActions);
     const [warehouseGroupList, setWarehouseGroup] = useState<WarehouseGroup[]>([]);
     const [form] = useForm<DataFormType>()
     const [loading, setLoading] = useState(false)
-    const [refNo,setRefNo] = useState<string>("")
-    const statusDs = [{label:'All', value:'ALL'},{label:'Active', value:'Y'},{label:'Inactive', value:'N'}]
     const [itemGroups, setItemGroups] = useState<ItemGroupListItem[]>([]);
 
     const initData = async () => {
         setLoading(true)
-        services.listWarehouseGroup().then(whg => setWarehouseGroup(whg));    
-        services.fetchReportItemRefNo().then(r=>{
-            setRefNo(r.refNo)
-            console.log(r)
-             setLoading(false)
-        })  
+        services.listWarehouseGroup().then(whg => setWarehouseGroup(whg));
         const data = await services.listAllItemGroup();
         setItemGroups(data);
+         setLoading(false)
     };  
     useEffect(() => {
-        if(!refNo || refNo==''){
-            initData();
-        }      
+        initData();
     }, [refNo]);
     const reportList = [
-        {name:'NCM Item Onhand Report', value: 'whm_ncm_item_onhand_report'},
-        // {name:'NCM Request Detail', value: 'whm_ncm_request_detail_report'},
-        // {name:'NCM Request Summary By Item', value: 'whm_ncm_request_summary_by_item_report'}
+        {name:'NCM Item Onhand Report', value: 'whm_ncm_item_onhand_report'}
     ]
-    const handleMenuClick: MenuProps['onClick'] = async (e) => {
+    const handleExport= async (e:any) => {
         try {           
             const dataForm =  await form.validateFields()  
-            const reportName = (reportList.find(r=> r.value==e.key)?.name)
+            const reportName = (reportList.find(r=> r.value=='whm_ncm_item_onhand_report')?.name)
+              const reportKey = (reportList.find(r=> r.value=='whm_ncm_item_onhand_report')?.value)
             setLoading(true)
             await downloadGenericReport(requestActions)({
                 fileName: `${reportName}-${moment().format()}.xls`,
                 type: 'EXCEL',
                 data: {
-                    reportName: e.key,
+                    reportName: reportKey||'',
                     reportPath: getUrlReporting('whm'),
                     data: [ 
                          {key:'serial', value:refNo},     
                         {key:'onHandFrom', value: dataForm.onHand?.[0]},  
                         {key:'onHandTo', value: dataForm.onHand?.[1]}, 
-                        {key:'status', value: dataForm?.status||'All'},            
+                        {key:'status', value: 'All'},            
                         ...(dataForm.funGroupId || []).map(it => ({ key: 'funGroupId', value: it })),
                         // {key:'startWithRole', value: 'ROLE_NCM_ITEM'}
                     ]
@@ -76,37 +66,16 @@ export default ({ trigger }: { trigger?: JSX.Element}) => {
             setLoading(false)
         }            
     };
-    
-    const items=(): MenuProps['items']=>{
-        return reportList.map(e => {
-            const isRaw = e.value=='hr_ess_employee_info_report' ? true: false
-            return {
-                key: e.value,
-                label: e.name,
-                icon: <FileExcelOutlined style={{ fontSize: '16px', color: '#08c' }} />
-            }
-        })
-    } 
-    const menuProps = {
-        items: items(),
-        onClick: handleMenuClick,
-    };
 
     const bnts = [
         <Button onClick={()=>{form.resetFields()}}>Reset</Button>,
-        <Dropdown menu={menuProps} disabled={loading} >
-            <Button loading={loading} >
-                <Space>
-                    Export <DownOutlined />
-                </Space>
-            </Button>
-        </Dropdown>
+         <Button loading={loading} onClick={handleExport} icon={<FileExcelOutlined/>} ><Space>Export </Space></Button>
     ] 
     
     return (
      <ModalForm<DataFormType> 
         trigger={trigger}
-        title ={'NCM Inventory Item Report'}
+        title ={'NCM Item Stock On Hand Report'}
         form={form}        
         modalProps={{maskClosable: false}}
         submitter = {{
@@ -119,10 +88,7 @@ export default ({ trigger }: { trigger?: JSX.Element}) => {
             <Card bordered>
             
                 <Flex gap={2} vertical={true} style={{padding:0}}> 
-                    <Flex gap={5} style={{width:'100%'}}>               
-                         <ProFormSelect mode="single" label="Status" name={'status'} width={120}  shouldUpdate allowClear
-                                options={statusDs}
-                            /> 
+                    <Flex gap={5} style={{width:'100%'}}> 
                         <div style={{width:'100%'}}>
                            {warehouseGroupList&&
                             <ProFormSelect mode="multiple" 
@@ -131,16 +97,13 @@ export default ({ trigger }: { trigger?: JSX.Element}) => {
                             label="Function"
                             name={'funGroupId'}
                             />}    
-                            {/* <ProFormDateRangePicker label='Requested Date' name={'requestedDate'}  rules={[{ required: true }]}  width="md"/> */}
                         </div>
                     </Flex>
                     <ProFormDigitRange proFieldProps={{width:'100%'}}
-                        // options={itemGroups.map(i=>({label:i.itemGroupName, value: i.id}))}
                         rules={[{ required: false}]}
                         label="On Hand"
                         name={'onHand'}
                     />
-                    {/* <ProFormCheckbox name={'delivery'} >Delivery</ProFormCheckbox> */}
                 </Flex>
             </Card>
         </Spin>

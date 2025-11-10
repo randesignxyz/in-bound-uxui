@@ -6,11 +6,13 @@ import { useEffect } from "react";
 import NCMReportModalForm from "./request/reports/NCMReportModalForm";
 import { ExportOutlined } from "@ant-design/icons";
 import NCMItemReportModalForm from "./request/reports/NCMItemReportModalForm";
+import itemOnhand from "./item-onhand";
 
 
 export const WHMPaths = {
     request: '/whm/issue/request',
     item: '/whm/inventory/item',
+    itemOnhand: '/whm/inventory/item-onhand',
     transter:'/whm/transfer/request',
     empWhs: '/whm/inventory/empwhs',
     adjRequest:'/whm/adj/request',
@@ -45,9 +47,20 @@ export default () => {
                 name: 'Inventory Item',
                 description: 'Inventory Item Management',
                 link: `${WHMPaths.item}/list`,
-                menu:access.isAccessNCMItemOnHandCriteriaExportReport?{
-                   items:[{label: <NCMItemReportModalForm trigger={<a>Export NCM Item Report</a>} />, key: 'exportNCMItemRequestReport', icon: <ExportOutlined style={{ fontSize: '16px', color: '#08c' }}/>}]
-                }: undefined
+                // menu:access.isAccessNCMItemOnHandCriteriaExportReport?{
+                //    items:[{label: <NCMItemReportModalForm trigger={<a>Export NCM Item Report</a>} />, key: 'exportNCMItemRequestReport', icon: <ExportOutlined style={{ fontSize: '16px', color: '#08c' }}/>}]
+                // }: undefined
+            });
+        }
+        if (access.canAccessWhmItemOnHandMenu) {
+            items.push({
+                id: 'whm_inventory_item_onhand',
+                name: 'Item Stock On Hand',
+                description: 'Item Stock On Hand Management',
+                link: `${WHMPaths.itemOnhand}/list`,
+                // menu:access.isAccessNCMItemOnHandCriteriaExportReport?{
+                //    items:[{label: <NCMItemReportModalForm trigger={<a>Export NCM Item Report</a>} />, key: 'exportNCMItemRequestReport', icon: <ExportOutlined style={{ fontSize: '16px', color: '#08c' }}/>}]
+                // }: undefined
             });
         }
         if (access.canAccessWhmEmpMappingMenu) {

@@ -10,13 +10,7 @@ export const createService = (request: SimpleRequestActions) => {
             actionName: 'fma-stock-request',
             endpoint: 'FMA',
             payload: data
-        })(request) ,    
-        // request: (params: StartWorkFlowParam<StockRequest>) => 
-        //     execDataService<StockRequestResponse,StartWorkFlowParam<StockRequest>>({
-        //         actionName: 'fma-stock-request',
-        //         endpoint: 'FMA',
-        //         payload: params
-        //     })(request),
+        })(request) ,  
         fetchPaging: async (params: FetchPagingParams<SearchParams>) =>
             fetchDataPagingService<StockRequestListItem, FetchPagingParams<SearchParams>>({
                 actionName: 'fetch-paging-stock-request',
@@ -71,11 +65,6 @@ export const createService = (request: SimpleRequestActions) => {
                 actionName: 'fetch-warehouse-groups',
                 endpoint: 'FMA',
     
-            }).query(request),    
-        fetchReportItemRefNo: async() => fetchDataItemService<ExportItemRefNo>({
-            actionName: 'fetch-item-report-ref-no',
-            endpoint: 'FMA',
-            // payload: {id:instId}
-        }).query(request),    
+            }).query(request)
     }
 }

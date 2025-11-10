@@ -47,6 +47,7 @@ export default({
   const [data, setData] = useState<RegisterCustomerDetailResponse>()
   const [ lookupDataList, setLookupDataList ] = useState<LookupData[]>([])
   const [sale, setSale] = useState<RcSapEmpSale[]>([])
+  const [vatInv,setVatInv] = useState<string>('N')
 
 
   useEffect(() => {   
@@ -55,6 +56,8 @@ export default({
 
   const initData = async () =>{ 
     await actions1.initData("Detail")  
+    
+    
     if (id && id > 0) {
       const data = await  service.detail(id)
       initFormData(data)
@@ -350,28 +353,34 @@ export default({
             />
             <Flex>              
               <ProFormRadio.Group
-              name="vatInv"
-              label="VAT Invoice"
-              options={[
-                {
-                  label: 'Yes',
-                  value: 'Y',
-                },
-                {
-                  label: 'No',
-                  value: 'N',
-                }
-              ]}
-            />
-            <ProFormText
-                label=" "
-                rules={[{ required: false }]}
+                name="vatInv"
+                label="VAT Invoice"
+                options={[
+                  {
+                    label: 'Yes',
+                    value: 'Y',
+                  },
+                  {
+                    label: 'No',
+                    value: 'N',
+                  }
+                ]}
+                fieldProps={{
+                  onChange: (e:any)=>{
+                    setVatInv(e.target.value)    
+                  }
+                }}
+                
+              />
+              <ProFormText hidden={vatInv!='Y'}
+                label={ vatInv=='Y'?'VAT':' '}
+                rules={[{ required: vatInv=='Y' }]}
                 placeholder={"Please enter VAT description"}
                 name={'vatText'}
                 allowClear
                 width={350}
               />
-          </Flex>            
+            </Flex>            
           </ProFormGroup>
           <ProFormGroup>
             <ProFormSelect

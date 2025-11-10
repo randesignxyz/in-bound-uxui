@@ -85,6 +85,14 @@ const LeadActions = {
     type: 'EXEC',
     payload: param,
   }),
+  verified: (
+    param: RemarkParam,
+  ): ServiceApiType<{}> => ({
+    actionName: 'lead-verified',
+    endpoint: 'SALE',
+    type: 'EXEC',
+    payload: param,
+  }),
 };
 
 export const LeadServiceAPI = (requestActions: RequestActions) => {
@@ -116,5 +124,6 @@ export const LeadServiceAPI = (requestActions: RequestActions) => {
         data: string;
         message: string;
       }>,
+    verified: (param: RemarkParam) => singleRequest(LeadActions.verified(param))(requestActions) as Promise<{  data: string; message: string; }>,
   };
 };

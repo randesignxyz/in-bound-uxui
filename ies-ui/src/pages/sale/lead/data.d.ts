@@ -14,3 +14,10 @@ interface UpdateCustomerOwnerEntry {
   salePersonId: string;
   customerList?: number[];
 }
+
+
+interface RemarkParm{
+  id:number;
+  remark?:string;
+  attached?:string;
+}

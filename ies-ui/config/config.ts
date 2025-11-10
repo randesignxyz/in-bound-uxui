@@ -2,8 +2,8 @@
 import { defineConfig } from '@umijs/max';
 import defaultSettings from './defaultSettings';
 import proxy from './proxy';
-import routes from './routes';
-// import routes from './routesDelivery';
+// import routes from './routes';
+import routes from './routesDelivery';
 
 const { REACT_APP_ENV = 'dev' } = process.env;
 

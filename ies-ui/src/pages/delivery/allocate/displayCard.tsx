@@ -4,7 +4,7 @@ import { useState } from "react";
 import { DownOutlined, UpOutlined } from "@ant-design/icons";
 
 interface FloatingCardProps {
-    selectedRows: DNList[];
+    selectedRows?: DNList[];
     cardOpen: { visible: boolean };
 }
 
@@ -12,7 +12,7 @@ export const FloatingCard = ({
     selectedRows,
     cardOpen,
 }: FloatingCardProps) => {
-    if (!cardOpen.visible || selectedRows.length === 0) return null
+    if (!cardOpen.visible || selectedRows?.length === 0) return null
     const [collapsed, setCollapsed] = useState(false);
     return (
         <Card
@@ -48,7 +48,7 @@ export const FloatingCard = ({
             </div>
 
             {!collapsed && (() => {
-                const allItems = selectedRows.flatMap((row) => row.mergeItems);
+                const allItems = selectedRows?.flatMap((row) => row.mergeItems);
 
                 // group by sku_id + uom for category 2
                 const grouped: Record<
@@ -56,7 +56,7 @@ export const FloatingCard = ({
                     { sku_id: string; sku_name: string; qty: number; category: number; sequence: string }
                 > = {};
 
-                allItems.forEach((item) => {
+                allItems?.forEach((item) => {
                     const baseKey = item.sku_id ?? String(item.itemCode);
                     const baseName = item.sku_name ?? "Unknown SKU";
 
@@ -86,7 +86,7 @@ export const FloatingCard = ({
                 });
 
                 // calculate total volume
-                const totalVolume = allItems.reduce(
+                const totalVolume = allItems?.reduce(
                     (sum, item) => sum + Number(item.qty ?? 0),
                     0
                 );
@@ -143,7 +143,7 @@ export const FloatingCard = ({
                     <span style={{ flex: 1 }}>Total Volume</span>
                     <span style={{ marginLeft: 8, marginRight: 20 }}>
                         {selectedRows
-                            .flatMap((row) => row.mergeItems)
+                            ?.flatMap((row) => row.mergeItems)
                             .reduce((sum, item) => sum + Number(item.qty ?? 0), 0)}
                     </span>
                 </div>

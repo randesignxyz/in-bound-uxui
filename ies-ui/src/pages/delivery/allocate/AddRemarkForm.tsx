@@ -24,7 +24,6 @@ const AddRemarkModal: React.FC<Props> = ({ onSave, id, remark, attachment,sales_
     const [previewOpen, setPreviewOpen] = useState(false);
     const [previewImage, setPreviewImage] = useState('');
 
-    console.log('id', id)
     const compressImage = async (file: RcFile): Promise<File> => {
         const options = {
             maxSizeMB: 0.2,

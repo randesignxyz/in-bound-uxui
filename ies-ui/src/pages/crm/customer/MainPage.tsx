@@ -1,6 +1,6 @@
 import PageWrapper from "@/components/PageWrapper"
 import { CustomerAdvanceSearchParams, CustomerItemLess } from "@/services/crm/data"
-import { DashOutlined, DownloadOutlined, ExportOutlined, SwapOutlined, SyncOutlined } from "@ant-design/icons"
+import { DashOutlined, DownloadOutlined, ExportOutlined, EyeOutlined, SwapOutlined, SyncOutlined } from "@ant-design/icons"
 import { useAccess, useQuery } from "@umijs/max"
 import { CrmServiceAPI } from "@/services/crm/services";
 import { Dropdown, Modal, Space, Spin, Typography, message } from "antd";
@@ -21,6 +21,7 @@ import CustomerDetailView from "./components/Detail";
 import { CrmServices } from "../services";
 import { CustomerServices } from "./services";
 import { simpleRequestActions } from "@/services/model";
+import MapLocationDrawer from "./components/MapLocation";
 const crmServices = CrmServiceAPI();
 type FilterType = {
     searchValue?: string;
@@ -40,6 +41,8 @@ export default ({ getMenuItems }: CustomerActionController) => {
     }, { page: filter?.pagination?.current, pageSize: filter?.pagination?.pageSize }), {
         refetchOnWindowFocus: false
     });
+    const [quickState, setQuickState] = useState<{visible:any}>();
+
     const { state, ops, modals } = model();
 
     const access = useAccess();
@@ -91,7 +94,13 @@ export default ({ getMenuItems }: CustomerActionController) => {
                             actionProps: (item) => ({
                                 type: 'view',
                                 label: item.code || '',
-                                actionButtons: [{ type: 'link', size: 'small', icon: <ExportOutlined />, onClick: () => window.open(`/external/crm/customer/detail/${item.id}`, '_blank')?.focus() }]
+                                actionButtons: [
+                                    {
+                                        type:"link",icon:<EyeOutlined/>, onClick:()=>setQuickState({visible:{state:true, id:item.id}}), size:"small"
+                                    },
+                                    { type: 'link', size: 'small', icon: <ExportOutlined />, onClick: () => window.open(`/external/crm/customer/detail/${item.id}`, '_blank')?.focus() },
+                                    
+                                ]
                             }),
                         },
                         {
@@ -247,6 +256,11 @@ export default ({ getMenuItems }: CustomerActionController) => {
             onOpenChange={(visible) => !visible && modals.hideModal('transfer-customers')} />}
 
         <UploadData title="Import indirect customer" onCancel={() => setImportData(undefined)} open={!!importData} data={importData} />
-
+        
+        <MapLocationDrawer
+            open={quickState?.visible?.state}
+            onClose={()=>setQuickState({visible:undefined})}
+            cusId={quickState?.visible?.id}
+        />
     </Spin>
 }

@@ -59,7 +59,7 @@ export default ({ onAdd, onEdit, forceRefresh }: Props) => {
     const syncSAP = async ()=>{       
          Modal.confirm({
             title: 'Sync stock on hand from SAP',
-            content: 'Are you sure to sync.',
+            content: 'Are you sure to sync?',
             onOk: async () => {
                 try {
                     await services.syncItemOnHand()

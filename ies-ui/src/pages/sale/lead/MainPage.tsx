@@ -15,7 +15,7 @@ import LeadEntryFormView from './LeadEntryFormView';
 import { LeadServiceAPI } from './services';
 // import VerificationModalForm from './VerificationForm';
 
-interface Props {}
+interface Props { }
 
 const LeadMainPage: React.FC<Props> = () => {
   const requestActions = simpleRequestActions();
@@ -77,11 +77,10 @@ const LeadMainPage: React.FC<Props> = () => {
             ),
           },
           {
-            tabLabel: `${
-              items?.internalName
+            tabLabel: `${items?.internalName
                 ? items?.internalName
                 : [items?.firstName, items?.lastName].join(' ')
-            }`,
+              }`,
             action: 'edit',
             panel: ({ onUpdateTab, key }) => (
               <LeadEntryFormView
@@ -97,11 +96,10 @@ const LeadMainPage: React.FC<Props> = () => {
             ),
           },
           {
-            tabLabel: `${
-              items?.internalName
+            tabLabel: `${items?.internalName
                 ? items?.internalName
                 : [items?.firstName, items?.lastName].join(' ')
-            }`,
+              }`,
             action: 'view',
             panel: ({ onUpdateTab, key }) => (
               <LeadDetailView
@@ -175,28 +173,33 @@ const LeadMainPage: React.FC<Props> = () => {
               total: data?.total,
             },
             columns: [
-             
               {
-                title: 'Code',
+                title: 'ID',
                 actionProps: (items) => ({
-                  label: `${items.leadCode ?items.leadCode: 'N/A'}`,
+                  label: `${items.id}`,
                   type: 'view',
                 }),
-                width: 100,
+                width: 90,
               },
-               {
+              {
                 title: 'Prospect Code',
-                render:(_,r)=>r?.prospectCode,
+                actionProps: (items) => ({
+                  label: `${items?.prospectCode??""}`,
+                  type: 'view',
+                }),
+              },
+              {
+                title: 'Code',
+                render: (_, r) => `${r.leadCode ? r.leadCode : 'N/A'}`,
                 width: 150,
               },
               {
                 title: 'Shop Name',
                 dataIndex: 'internalName',
                 render: (_, r) =>
-                  `${
-                    r.internalName
-                      ? r.internalName
-                      : [r.firstName, r.lastName].filter((p) => p).join(' ')
+                  `${r.internalName
+                    ? r.internalName
+                    : [r.firstName, r.lastName].filter((p) => p).join(' ')
                   }`,
               },
               {
@@ -253,16 +256,17 @@ const LeadMainPage: React.FC<Props> = () => {
               {
                 title: 'Status',
                 dataIndex: 'status',
+                width:100,
                 render: (_, r) => (
                   <Badge
                     status={
                       r.status === 'Active'
                         ? 'success'
                         : r.status === 'Inactive'
-                        ? 'error'
-                        : r.status === 'Pending'
-                        ? 'warning'
-                        : 'processing'
+                          ? 'error'
+                          : r.status === 'Pending'
+                            ? 'warning'
+                            : 'processing'
                     }
                     text={r.status}
                   />

@@ -3,13 +3,13 @@ import BarComp from "@/pages/delivery/location-tracking/BarComp";
 import MarkerComp from "@/pages/delivery/location-tracking/MarkerComp";
 import { CustomerServiceAPI } from "@/pages/sale/retailer/customer/services";
 import { simpleRequestActions } from "@/services/model";
-import { DrawerForm, DrawerFormProps } from "@ant-design/pro-components";
-import { GoogleMap, Marker, MarkerClusterer, useJsApiLoader } from "@react-google-maps/api";
+import { DrawerForm, DrawerFormProps, ProDescriptions } from "@ant-design/pro-components";
+import { GoogleMap, InfoWindow, Marker, MarkerClusterer, useJsApiLoader } from "@react-google-maps/api";
 import { useQuery } from "@umijs/max";
 import React, { useEffect, useState } from "react";
 import { model } from "../model";
 import { Address } from "@/services/crm/data";
-import { Spin } from "antd";
+import { Card, Spin } from "antd";
 
 
 const containerStyle = {
@@ -39,10 +39,11 @@ const MapLocationDrawer: React.FC<Props> = ({ onClose, cusId, ...props }) => {
     // const [currentIcon, setCurrentIcon] = useState(defaultIcon);
     const { data, isFetching, refetch } = useQuery({
         queryKey: ["map-location", cusId],
-        queryFn: () => ops.listAddressDetailByCustomerId({ id: cusId }),
+        queryFn: () => ops.listAddresssByCustomerId({ id: cusId }),
         refetchOnWindowFocus: false,
-        enabled:props.open
+        enabled: props.open
     })
+    const [detailState, setDetailState] = useState<{ visible?: { state: boolean, payload: any } }>();
 
 
     useEffect(() => {
@@ -57,15 +58,53 @@ const MapLocationDrawer: React.FC<Props> = ({ onClose, cusId, ...props }) => {
         <DrawerForm
             {...props}
             title={"Map Location"}
+            resize={{
+                maxWidth: window.innerWidth * 0.8,
+                minWidth: 600,
+            }}
+            width={800}
             drawerProps={{
                 onClose: onClose,
                 styles: {
                     body: { padding: 0, margin: 0 }
                 },
-                loading:isFetching
-            }}  
+                loading: isFetching
+            }}
+            submitter={false}
 
         >
+            <ProDescriptions
+                column={2}
+                size="small"
+                dataSource={detailState?.visible?.payload}
+                columns={[
+                    {
+                        title: "Coded",
+                        dataIndex: "address"
+                    },
+                    {
+                        title: "Address KH",
+                        dataIndex: "addressKh"
+                    },
+                    {
+                        title: "Province",
+                        dataIndex: "province"
+                    },
+                    {
+                        title: "District",
+                        dataIndex: "district"
+                    },
+                    {
+                        title: "Commune",
+                        dataIndex: "commune"
+                    },
+                    {
+                        title: "Direction",
+                        dataIndex: "direction"
+                    },
+                ]}
+            />
+
 
             {!isFetching &&
                 <GoogleMap
@@ -74,8 +113,8 @@ const MapLocationDrawer: React.FC<Props> = ({ onClose, cusId, ...props }) => {
                     zoom={14}
                     onLoad={(map) => setMapInstance(map)}
                     options={{
-                        zoomControl:true,
-                        gestureHandling:"greedy",
+                        zoomControl: true,
+                        gestureHandling: "greedy",
                         styles: [
                             {
                                 featureType: 'poi.business',
@@ -134,17 +173,20 @@ const MapLocationDrawer: React.FC<Props> = ({ onClose, cusId, ...props }) => {
                                 const lng = Number(addr.longitude);
                                 if (isNaN(lat) || isNaN(lng)) return null;
 
-                                return (
+                                return (<>
                                     <Marker
                                         key={addr.id ?? i}
                                         position={{ lat, lng }}
                                         clusterer={clusterer}
+                                        onClick={() => setDetailState({ visible: { state: true, payload: addr } })}
                                         icon={{
                                             url: "/icons/location_11315234.png",
                                             scaledSize: new google.maps.Size(60, 60),
                                         }}
                                         title={addr.address ?? "Customer"}
                                     />
+
+                                </>
                                 );
                             })
                         }

@@ -234,8 +234,8 @@ const VerifiedDetailView: React.FC<Props> = ({ data1, mode, onBack }) => {
                                     <InfoWindow
                                         anchor={mapInstance?.getMarker?.("current") || undefined} // or use position
                                         position={{
-                                            lat: Number(data.customerVerifiedLatLong.currentLat),
-                                            lng: Number(data.customerVerifiedLatLong.currentLong),
+                                            lat: Number(data.customerVerifiedLatLong?.currentLat),
+                                            lng: Number(data.customerVerifiedLatLong?.currentLong),
                                         }}
                                         onCloseClick={() => setActiveMarker(undefined)}
                                     >

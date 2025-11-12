@@ -1,6 +1,6 @@
 import PageWrapper from "@/components/PageWrapper"
 import { CustomerAdvanceSearchParams, CustomerItemLess } from "@/services/crm/data"
-import { DashOutlined, DownloadOutlined, ExportOutlined, SwapOutlined, SyncOutlined } from "@ant-design/icons"
+import { DashOutlined, DownloadOutlined, EnvironmentOutlined, ExportOutlined, SwapOutlined, SyncOutlined } from "@ant-design/icons"
 import { useAccess, useQuery } from "@umijs/max"
 import { CrmServiceAPI } from "@/services/crm/services";
 import { Dropdown, Space, Spin, Typography, message } from "antd";
@@ -178,7 +178,7 @@ export default ({ getMenuItems }: CustomerActionController) => {
 
                     { key: 'TRANSFER', label: 'Transfer SE', onClick: () => modals.showModal('transfer-customers'), icon: <SwapOutlined style={{ fontSize: '16px', color: '#08c' }} /> },
                     {
-                        key: 'MAP', label: 'Map', icon: <DownloadOutlined />, onClick: () => {
+                        key: 'MAP', label: 'Map', icon: <EnvironmentOutlined />, onClick: () => {
                             setQuickState((r)=>({...r, visible:{state:true}}));
                         }
                     },

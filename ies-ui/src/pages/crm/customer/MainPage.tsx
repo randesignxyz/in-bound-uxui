@@ -1,12 +1,12 @@
 import PageWrapper from "@/components/PageWrapper"
 import { CustomerAdvanceSearchParams, CustomerItemLess } from "@/services/crm/data"
-import { DashOutlined, DownloadOutlined, ExportOutlined, EyeOutlined, SwapOutlined, SyncOutlined } from "@ant-design/icons"
+import { DashOutlined, DownloadOutlined, ExportOutlined, SwapOutlined, SyncOutlined } from "@ant-design/icons"
 import { useAccess, useQuery } from "@umijs/max"
 import { CrmServiceAPI } from "@/services/crm/services";
-import { Dropdown, Modal, Space, Spin, Typography, message } from "antd";
+import { Dropdown, Space, Spin, Typography, message } from "antd";
 import Status from "@/components/Status";
 import { toReadable } from "@/pages/utils";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FetchPagingParams } from "@/components/DataCrud/TableView";
 import { model } from "./model";
 import AdvanceSearch from "./components/List/AdvanceSearch";
@@ -18,7 +18,6 @@ import ImportFileButton from "@/components/ImportFileButton";
 import { ActionType } from "@ant-design/pro-components";
 import { CustomerActionController } from ".";
 import CustomerDetailView from "./components/Detail";
-import { CrmServices } from "../services";
 import { CustomerServices } from "./services";
 import { simpleRequestActions } from "@/services/model";
 import MapLocationDrawer from "./components/MapLocation";
@@ -32,7 +31,7 @@ export default ({ getMenuItems }: CustomerActionController) => {
     const [filter, setFilter] = useState<FetchPagingParams<FilterType>>()
     const [importData, setImportData] = useState<ImportDataResponse>()
     const [loading, setLoading] = useState(false);
-    const requestAction= simpleRequestActions();
+    const requestAction = simpleRequestActions();
     const actionRef = useRef<ActionType>();
     const { data, refetch, isFetching } = useQuery(['fetch-customer-list', filter], () => crmServices.findAllCustomer({
         searchValue: filter?.criteria?.searchValue,
@@ -41,13 +40,11 @@ export default ({ getMenuItems }: CustomerActionController) => {
     }, { page: filter?.pagination?.current, pageSize: filter?.pagination?.pageSize }), {
         refetchOnWindowFocus: false
     });
-    const [quickState, setQuickState] = useState<{visible:any}>();
+    const [quickState, setQuickState] = useState<{ visible?: {state:boolean, ids?: number[]} }>();
 
     const { state, ops, modals } = model();
 
     const access = useAccess();
-
-    
     return <Spin spinning={loading}>
         <PageWrapper<CustomerItemLess, FilterType, {}>
             tabRender={item => [
@@ -95,11 +92,11 @@ export default ({ getMenuItems }: CustomerActionController) => {
                                 type: 'view',
                                 label: item.code || '',
                                 actionButtons: [
-                                    {
-                                        type:"link",icon:<EyeOutlined/>, onClick:()=>setQuickState({visible:{state:true, id:item.id}}), size:"small"
-                                    },
+                                    // {
+                                    //     type: "link", icon: <EyeOutlined />, onClick: () => setQuickState({ visible: { state: true, id: item.id } }), size: "small"
+                                    // },
                                     { type: 'link', size: 'small', icon: <ExportOutlined />, onClick: () => window.open(`/external/crm/customer/detail/${item.id}`, '_blank')?.focus() },
-                                    
+
                                 ]
                             }),
                         },
@@ -149,33 +146,42 @@ export default ({ getMenuItems }: CustomerActionController) => {
                                 message.info('Data uploaded.');
                             }
                         }}
-                    />] : []
+                    />] : [
+
+                    ]
                 ,
                 actions: [
-                    
+
                     {
                         key: 'EXPORT', label: 'Export', icon: <DownloadOutlined />, onClick: () => {
                             modals.showModal('export-customer')
                         }
                     },
+
                     {
-                        key:"SYNC",
-                        label:"Sync",
-                        icon:<SyncOutlined/>,
-                        onClick:()=>{
-                            try{
-                               CustomerServices.syncExecStoreProcedureCustomer()(requestAction).then(()=>{
-                                actionRef.current?.reload?.();
-                                message.success("Success!")
-                               }).catch((err)=>{
-                                message.error("Something went wrong!")
-                               });
+                        key: "SYNC",
+                        label: "Sync",
+                        icon: <SyncOutlined />,
+                        onClick: () => {
+                            try {
+                                CustomerServices.syncExecStoreProcedureCustomer()(requestAction).then(() => {
+                                    actionRef.current?.reload?.();
+                                    message.success("Success!")
+                                }).catch((err) => {
+                                    message.error("Something went wrong!")
+                                });
                             }
-                            catch(e){
+                            catch (e) {
                             }
                         }
                     },
-                    { key: 'TRANSFER', label: 'Transfer SE', onClick: () => modals.showModal('transfer-customers'), icon: <SwapOutlined style={{ fontSize: '16px', color: '#08c' }} /> }
+
+                    { key: 'TRANSFER', label: 'Transfer SE', onClick: () => modals.showModal('transfer-customers'), icon: <SwapOutlined style={{ fontSize: '16px', color: '#08c' }} /> },
+                    {
+                        key: 'MAP', label: 'Map', icon: <DownloadOutlined />, onClick: () => {
+                            setQuickState((r)=>({...r, visible:{state:true}}));
+                        }
+                    },
                 ]
             }}
         />
@@ -214,7 +220,7 @@ export default ({ getMenuItems }: CustomerActionController) => {
             open={modals.isVisible('export-customer')}
             onCancel={() => modals.hideModal('export-customer')}
             confirmLoading={state.loading}
-            lookupDataList={state.initData?.lookupDataList||[]}
+            lookupDataList={state.initData?.lookupDataList || []}
             outletTypeList={state.initData?.outletTypeList || []}
             seList={state.initData?.seList || []}
             provinceList={state.initData?.provinceList || []}
@@ -256,11 +262,11 @@ export default ({ getMenuItems }: CustomerActionController) => {
             onOpenChange={(visible) => !visible && modals.hideModal('transfer-customers')} />}
 
         <UploadData title="Import indirect customer" onCancel={() => setImportData(undefined)} open={!!importData} data={importData} />
-        
+
         <MapLocationDrawer
             open={quickState?.visible?.state}
-            onClose={()=>setQuickState({visible:undefined})}
-            cusId={quickState?.visible?.id}
+            onClose={() => setQuickState({ visible: undefined })}
+            cusIds={data?.items.map(o=>o.id)}
         />
     </Spin>
 }

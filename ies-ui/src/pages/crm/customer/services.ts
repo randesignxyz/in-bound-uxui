@@ -1,5 +1,5 @@
 import { execDataService, execDataService0, fetchDataListService, fetchDataPagingService, singleRequest } from "@/services/apiGateway";
-import { CustomerItemLess, SalePerson } from "@/services/crm/data";
+import { Address, CustomerItemLess, SalePerson } from "@/services/crm/data";
 import { LookupDataItem } from "@/services/shared/data";
 import { SaveCustomerPosmParams } from "../contract/types";
 import { SavePosmItemCheckedParams, SaveSupplySourceParams, SupplySource } from "./types";
@@ -107,6 +107,12 @@ export const CustomerServices = {
     actionName:"customer-posm-contract",
     endpoint:"CRM",
     payload:data,
+  }),
+
+  addressByCustomerIds:(data:any)=>fetchDataListService<Address,{}>({
+    actionName: "list-address-by-customer-ids",
+    endpoint: "CRM",
+    payload: data,
   })
 
 }

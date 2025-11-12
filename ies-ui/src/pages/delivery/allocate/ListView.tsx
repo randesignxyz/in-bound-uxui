@@ -10,7 +10,7 @@ import { AllocateServiceAPI } from './service';
 import { Allocate, AllocateSOAdvanceParams, DeliveryList, DNItemParams, DNList, DNParams, DnQuickView, LocationList, SkuList, SOAllocateActivities, SOList, UpdateRemarkParams } from './data';
 import { useAccess, useModel } from '@umijs/max';
 import { Paging } from '@/services/API';
-import { FaCarSide, FaRegPenToSquare, FaTruckMoving } from "react-icons/fa6";
+import { FaCarSide, FaMapLocationDot, FaRegPenToSquare, FaTruckMoving } from "react-icons/fa6";
 import DrawerForm from './DrawerForm';
 import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
@@ -22,13 +22,19 @@ import { FloatingCard } from './displayCard';
 import SaleTypeDrawer from './SaleTypeDrawer';
 import moment from 'moment';
 import { ProForm, ProFormDatePicker, ProFormDateRangePicker, ProFormSelect } from '@ant-design/pro-components';
-import { useForm } from 'antd/es/form/Form';
 import ForceColseModal from './ForceCloseModal';
+import { TbMap2 } from "react-icons/tb";
+import { useLocation, useNavigate } from "react-router-dom";
 
 dayjs.extend(customParseFormat)
+interface DNListState {
+  selectedRows?: DNList[]
+}
 
 export default () => {
+  const navigate = useNavigate();
   const { RangePicker } = DatePicker
+  const { state } = useLocation() as { state: DNListState };
   const access = useAccess();
   const [form] = Form.useForm();
   const requestActions = simpleRequestActions();
@@ -37,6 +43,7 @@ export default () => {
   const [data, setData] = useState<SOList[]>()
   const [skuList, setSkuList] = useState<SkuList[]>([])
   const [dataListDn, setDataListDn] = useState<DNList[]>([])
+  const [selectedListDn, setSelectedListDn] = useState<DNList[]>([])
   const [selectedRows, setSelectedRows] = useState<DNList[]>([]);
   const [asDate, setAsDate] = useState(true);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
@@ -80,7 +87,6 @@ export default () => {
   const [activities, setActivities] = useState<SOAllocateActivities[]>([]);
 
   const cacheList = useModel('dataList');
-
   const normalizeLocationList = (
     res: LocationList | Paging<LocationList> | LocationList[]
   ): LocationList[] => {
@@ -94,6 +100,34 @@ export default () => {
   const [provinceOptions, setProvinceOptions] = useState<{ value: number; label: string }[]>([]);
   const [districtOptions, setDistrictOptions] = useState<{ value: number; label: string }[]>([]);
   const [communeOptions, setCommuneOptions] = useState<{ value: number; label: string }[]>([]);
+
+  useEffect(() => {
+    if (state?.selectedRows) {
+      setSelectedRowKeys(prev => {
+        const newKeys = state.selectedRows
+          ?.map(r => r.id)
+          .filter(id => !prev.includes(id));
+        return [...prev, ...newKeys];
+      });
+
+      setSelectedRows(prev => {
+        const newRows = state.selectedRows?.filter(
+          r => !prev.some(p => p.id === r.id)
+        );
+        return [...prev, ...newRows];
+      });
+
+      setSelectedListDn(prev => {
+        const newRows = state.selectedRows?.filter(
+          r => !prev.some(p => p.id === r.id)
+        );
+        return [...prev, ...newRows];
+      });
+
+      setDataListDn(prev => prev.filter(r => !state.selectedRows?.some(s => s.id === r.id)));
+      if (state.selectedRows.length > 0) setCardOpen({ visible: true });
+    }
+  }, [state?.selectedRows]);
 
   // Load provinces once
   useEffect(() => {
@@ -150,7 +184,6 @@ export default () => {
       });
 
       setSkuList(sortedSku);
-      console.log('Sorted SKU list by category and sequence:', sortedSku);
     };
 
     fetchSku();
@@ -517,7 +550,7 @@ export default () => {
       const pagedData = transformedList.slice((page - 1) * pageSize, page * pageSize);
 
       const dataList = { items: pagedData, total, page, pageSize };
-      setDataListDn(dataList);
+      setDataListDn(list);
       return dataList;
     } catch (error: any) {
       message.error(error.message);
@@ -664,9 +697,12 @@ export default () => {
                 setSelectedRowKeys(prev => [...prev, record.id]);
                 setSelectedRows(prev => [...prev, record]);
                 setCardOpen({ visible: true });
+                setSelectedListDn(prev => [...prev, record])
+                setDataListDn(prev => prev.filter(r => r.id !== record.id))
               } else {
                 setSelectedRowKeys(prev => prev.filter(k => k !== record.id));
                 setSelectedRows(prev => prev.filter(r => r.id !== record.id));
+                setSelectedListDn(prev => prev.filter(r => r.id !== record.id))
               }
             }}
           />
@@ -1614,6 +1650,12 @@ export default () => {
                               </Button>
                             </div>
                           )}
+                          <Button type="text" size={'large'}
+                            onClick={() => navigate("/delivery/location", { state: { list: dataListDn, selected: selectedListDn, selectedRows: selectedRows } })}
+                            icon={<TbMap2 />}
+                            style={{ fontSize: 22 }}
+                          >
+                          </Button>
 
                           <Button
                             type="text"

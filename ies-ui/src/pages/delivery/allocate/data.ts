@@ -1,3 +1,5 @@
+import { Moment } from "moment";
+
 export interface allocateSearch {
   searchValue?: string;
   date?: moment.Moment;
@@ -60,7 +62,7 @@ export interface DeliveryList {
 
 export interface DNList {
   key: any;
-  id: number,
+  id: number | string,
   soId: string,
   deliveryDate: string,
   shippingAddress?: string,
@@ -79,11 +81,11 @@ export interface DNList {
   customer_name?: string,
   status?: string,
   mergeItems: mergeItems[],
-  phone?:string
-  longitude?:string,
-  latitude?:string
-  commune?:string
-  district?:string
+  phone?: string
+  longitude: string,
+  latitude: string
+  commune?: string
+  district?: string
 }
 
 interface mergeItems {
@@ -102,7 +104,8 @@ interface mergeItems {
   sku_name: string
   sku_uom: string
   so_num?: string
-  sequence?:string
+  sequence?: string
+  volume?:string
 }
 interface DN {
   createdBy?: string
@@ -294,4 +297,28 @@ export interface ListDnDetailParams {
   commune_id?: string;
   sortBy?: string[];
   sortOrders?: string[];
+}
+
+export type Location = {
+  id: number
+  processInstanceId: number;
+  deliveryId: number;
+  deliveryItemId: number;
+  deliveryDate: Moment;
+  finishedDate: Moment;
+  shift: string;
+  cardCode: string;
+  cardName: string;
+  shipToCode: string;
+  checkInDate: Moment;
+  // checkInLat: number;
+  // checkInLng: number;
+  checkoutDate: Moment;
+  checkoutLat: number;
+  checkoutLng: number;
+  firstName: string;
+  lastName: string;
+  licensePlane: string;
+  latitude: string;
+  longitude: string;
 }

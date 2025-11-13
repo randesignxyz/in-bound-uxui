@@ -3,7 +3,7 @@ import { CustomerAdvanceSearchParams, CustomerItemLess } from "@/services/crm/da
 import { DashOutlined, DownloadOutlined, EnvironmentOutlined, ExportOutlined, SwapOutlined, SyncOutlined } from "@ant-design/icons"
 import { useAccess, useQuery } from "@umijs/max"
 import { CrmServiceAPI } from "@/services/crm/services";
-import { Dropdown, Space, Spin, Typography, message } from "antd";
+import { Button, Dropdown, Space, Spin, Typography, message } from "antd";
 import Status from "@/components/Status";
 import { toReadable } from "@/pages/utils";
 import { useEffect, useRef, useState } from "react";
@@ -33,17 +33,19 @@ export default ({ getMenuItems }: CustomerActionController) => {
     const [loading, setLoading] = useState(false);
     const requestAction = simpleRequestActions();
     const actionRef = useRef<ActionType>();
+    const [constenState, setContentState] = useState<string>("COLUMN");
+
     const { data, refetch, isFetching } = useQuery(['fetch-customer-list', filter], () => crmServices.findAllCustomer({
         searchValue: filter?.criteria?.searchValue,
         advanceSearch: { ...filter?.criteria },
         sort: filter?.sort,
     }, { page: filter?.pagination?.current, pageSize: filter?.pagination?.pageSize }), {
-        refetchOnWindowFocus: false
+        refetchOnWindowFocus: false,
+        enabled: constenState == "COLUMN" ? true : false
     });
-    const [quickState, setQuickState] = useState<{ visible?: {state:boolean, ids?: number[]} }>();
 
     const { state, ops, modals } = model();
-
+    
     const access = useAccess();
     return <Spin spinning={loading}>
         <PageWrapper<CustomerItemLess, FilterType, {}>
@@ -81,8 +83,23 @@ export default ({ getMenuItems }: CustomerActionController) => {
                     pagination: {
                         total: data?.total,
                     },
-                    actionRef: actionRef,
+                    // actionRef: actionRef,
                     loading: isFetching,
+                    tableRender: (_, dom) => {
+                        return (constenState === "COLUMN" && dom) || (<MapLocationDrawer
+                            onFilter={(val) => {
+                                setFilter((p => (
+                                    {
+                                        criteria: { ...p?.criteria, advanceSearch: { ...val } },
+                                        pagination:{
+                                            ...p?.pagination,
+                                            pageSize:val.rows
+                                        }
+                                    }
+                                )))
+                            }}
+                            onClose={() => setContentState("COLUMN")} filter={filter} />)
+                    },
                     columns: [
                         {
                             title: 'Customer #',
@@ -92,11 +109,7 @@ export default ({ getMenuItems }: CustomerActionController) => {
                                 type: 'view',
                                 label: item.code || '',
                                 actionButtons: [
-                                    // {
-                                    //     type: "link", icon: <EyeOutlined />, onClick: () => setQuickState({ visible: { state: true, id: item.id } }), size: "small"
-                                    // },
                                     { type: 'link', size: 'small', icon: <ExportOutlined />, onClick: () => window.open(`/external/crm/customer/detail/${item.id}`, '_blank')?.focus() },
-
                                 ]
                             }),
                         },
@@ -119,9 +132,7 @@ export default ({ getMenuItems }: CustomerActionController) => {
                         { title: 'Status', render: (_, r) => <Status text={toReadable(r.status)} value={r.status} /> },
                         {
                             render: (_, r) => <Dropdown menu={{
-
                                 items: getMenuItems(r, 'List', () => refetch).filter(it => it.visible)
-
                             }}>
                                 <a onClick={(e) => e.preventDefault()}>
                                     <Space>
@@ -134,21 +145,27 @@ export default ({ getMenuItems }: CustomerActionController) => {
                 },
                 actionNumShown: 2,
                 actionButtons: access.crmAdmin ?
-                    [<ImportFileButton<ImportDataItem>
-                        importedKey="INDIRECT_CUSTOMER"
-                        onDataResponse={data => {
-                            setImportData(data)
-                        }}
-                        key={'import-customer'}
-                        onHandleChange={(status) => {
-                            setLoading(status == 'uploading');
-                            if (status == 'done') {
-                                message.info('Data uploaded.');
-                            }
-                        }}
-                    />] : [
+                    [
+                        <Button
+                            icon={<EnvironmentOutlined />}
+                            type="link"
+                            onClick={() => setContentState("MAP")}
 
-                    ]
+                        >Maps</Button>,
+                        <ImportFileButton<ImportDataItem>
+                            importedKey="INDIRECT_CUSTOMER"
+                            onDataResponse={data => {
+                                setImportData(data)
+                            }}
+                            key={'import-customer'}
+                            onHandleChange={(status) => {
+                                setLoading(status == 'uploading');
+                                if (status == 'done') {
+                                    message.info('Data uploaded.');
+                                }
+                            }}
+                        />,
+                    ] : []
                 ,
                 actions: [
 
@@ -177,12 +194,8 @@ export default ({ getMenuItems }: CustomerActionController) => {
                     },
 
                     { key: 'TRANSFER', label: 'Transfer SE', onClick: () => modals.showModal('transfer-customers'), icon: <SwapOutlined style={{ fontSize: '16px', color: '#08c' }} /> },
-                    {
-                        key: 'MAP', label: 'Map', icon: <EnvironmentOutlined />, onClick: () => {
-                            setQuickState((r)=>({...r, visible:{state:true}}));
-                        }
-                    },
-                ]
+
+                ],
             }}
         />
 
@@ -208,7 +221,6 @@ export default ({ getMenuItems }: CustomerActionController) => {
                         salespersonId: undefined
                     }
                 }))
-
             }}
             onSearch={(data) => {
                 setFilter(v => ({ ...v, criteria: { ...v?.criteria, ...data } }))
@@ -263,10 +275,5 @@ export default ({ getMenuItems }: CustomerActionController) => {
 
         <UploadData title="Import indirect customer" onCancel={() => setImportData(undefined)} open={!!importData} data={importData} />
 
-        <MapLocationDrawer
-            open={quickState?.visible?.state}
-            onClose={() => setQuickState({ visible: undefined })}
-            cusIds={data?.items.map(o=>o.id)}
-        />
     </Spin>
 }

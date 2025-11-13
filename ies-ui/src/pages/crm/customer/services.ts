@@ -109,10 +109,14 @@ export const CustomerServices = {
     payload:data,
   }),
 
-  addressByCustomerIds:(data:any)=>fetchDataListService<Address,{}>({
+  addressByCustomerIds:(data:any)=>fetchDataPagingService<Address,{searchValue?:string}>({
     actionName: "list-address-by-customer-ids",
     endpoint: "CRM",
-    payload: data,
+    payload: data?.criteria,
+    pagination:{
+      pageSize:data.pagination?.pageSize??50,
+      page:data.pagination?.page
+    }
   })
 
 }

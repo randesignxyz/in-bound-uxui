@@ -3,14 +3,16 @@ import BarComp from "@/pages/delivery/location-tracking/BarComp";
 import MarkerComp from "@/pages/delivery/location-tracking/MarkerComp";
 import { CustomerServiceAPI } from "@/pages/sale/retailer/customer/services";
 import { simpleRequestActions } from "@/services/model";
-import { DrawerForm, DrawerFormProps, ProDescriptions } from "@ant-design/pro-components";
+import { DrawerForm, DrawerFormProps, ProDescriptions, ProForm, ProFormSelect } from "@ant-design/pro-components";
 import { GoogleMap, InfoWindow, Marker, MarkerClusterer, useJsApiLoader } from "@react-google-maps/api";
 import { useQuery } from "@umijs/max";
 import React, { useEffect, useRef, useState } from "react";
 import { model } from "../model";
 import { Address } from "@/services/crm/data";
-import { Card, Spin } from "antd";
+import { Button, Card, Space, Spin, Typography } from "antd";
 import { CustomerServices } from "../services";
+import { CloseOutlined } from "@ant-design/icons";
+import { CrmServices } from "../../services";
 
 
 const containerStyle = {
@@ -23,12 +25,13 @@ const center = {
     lng: 104.91810050044207
 };
 
-interface Props extends DrawerFormProps {
+interface Props {
     onClose: () => void;
-    cusIds?: number[];
+    filter?: any;
+    onFilter:(val:any)=>void
 }
 
-const MapLocationDrawer: React.FC<Props> = ({ onClose, cusIds, ...props }) => {
+const MapLocationDrawer: React.FC<Props> = ({ onClose, filter, onFilter, ...props }) => {
     const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
     const { isLoaded } = useJsApiLoader({
         googleMapsApiKey: "AIzaSyA0Ifgai8ryDULDIqNOZmX8L7XZlzu4_D8", // Replace with your key
@@ -38,41 +41,47 @@ const MapLocationDrawer: React.FC<Props> = ({ onClose, cusIds, ...props }) => {
     const [activeMarker, setActiveMarker] = useState<string | number | null>(null);
     const [selectedAddr, setSelectedAddr] = useState<any | null>(null);
     const requestAction = simpleRequestActions();
-    // const [currentIcon, setCurrentIcon] = useState(defaultIcon);
     const { data, isFetching, refetch } = useQuery({
-        queryKey: ["map-location", cusIds],
-        queryFn: () => CustomerServices.addressByCustomerIds(cusIds).query(requestAction),
+        queryKey: ["map-location", filter],
+        queryFn: () => CustomerServices.addressByCustomerIds({
+            ...filter,
+            criteria:{
+                ...filter?.criteria,
+                advanceSearch:{
+                    ...filter.criteria,
+                    ...filter?.criteria?.advanceSearch
+                }
+            },
+            pagination:{...filter?.pagination, pageSize:filter?.adnaveSeach?.rows}
+        }).query(requestAction),
         refetchOnWindowFocus: false,
-        // enabled: props.open
     })
     const [detailState, setDetailState] = useState<{ visible?: { state: boolean, payload: any } }>();
     const markerRefs = useRef<Map<string | number, google.maps.Marker>>(new Map());
-    console.log(data);
 
-
+    
     useEffect(() => {
-        CustomerServices.addressByCustomerIds(cusIds).query(requestAction)
-        data && props.open && data.map(it => mapInstance?.setCenter({
+        data && data.items?.map(it => mapInstance?.setCenter({
             lat: parseFloat(it.latitude ?? ""),
             lng: parseFloat(it.longitude ?? "")
         }))
         // Optional: handle open state
-    }, [props.open]);
+    }, []);
 
-    const handleMarkerClick = (addr: any, lat: number, lng: number) => {
-        const key = addr.id ?? lat + lng; // fallback key
-        setActiveMarker(key);
-        setSelectedAddr(addr);
-        setDetailState({ visible: { state: true, payload: addr } }); // your external state
+    // const handleMarkerClick = (addr: any, lat: number, lng: number) => {
+    //     const key = addr.id ?? lat + lng; // fallback key
+    //     setActiveMarker(key);
+    //     setSelectedAddr(addr);
+    //     setDetailState({ visible: { state: true, payload: addr } }); // your external state
 
-        // Smooth pan & zoom to marker
-        mapInstance?.panTo({ lat, lng });
-        if (mapInstance?.getZoom()! < 16) {
-            mapInstance?.setZoom(16);
-        }
+    //     // Smooth pan & zoom to marker
+    //     mapInstance?.panTo({ lat, lng });
+    //     if (mapInstance?.getZoom()! < 16) {
+    //         mapInstance?.setZoom(16);
+    //     }
 
-        // onOpen?.();
-    };
+    //     // onOpen?.();
+    // };
 
     const handleInfoClose = () => {
         setActiveMarker(null);
@@ -80,23 +89,54 @@ const MapLocationDrawer: React.FC<Props> = ({ onClose, cusIds, ...props }) => {
     };
 
     return (
-        <DrawerForm
-            {...props}
-            title={"Map Location"}
-            resize={{
-                maxWidth: window.innerWidth * 0.8,
-                minWidth: 600,
-            }}
-            width={800}
-            drawerProps={{
-                onClose: onClose,
-                styles: {
-                    body: { padding: 0, margin: 0 }
-                },
-                loading: isFetching
-            }}
-            submitter={false}
-
+        <Card
+            size="small"
+            title={
+                <ProForm submitter={false} 
+                    onValuesChange={(_,vals)=>{
+                        onFilter(vals)
+                    }}
+                >
+                    <Space>
+                        <ProFormSelect
+                            name={"province"}
+                            placeholder={"Provice"}
+                            showSearch
+                            fieldProps={{
+                                variant: "borderless"
+                            }}
+                            width={"sm"}
+                            debounceTime={500}
+                            request={async({keywords})=>{
+                                const data = await CrmServices.listLocations({type:"PROVINCE"}).query(requestAction)
+                                 return data.map(p=>({
+                                    label:p.name , value:p.id
+                                 }))
+                            }}
+                        />
+                        <ProFormSelect
+                            name={"rows"}
+                            placeholder={"Row Number"}
+                            showSearch
+                            fieldProps={{
+                                variant: "borderless"
+                            }}
+                            initialValue={50}
+                            options={Array.from({ length: 60 }, (_, i) => {
+                                const value = (i + 1) * 50; // 50, 100, 150, ...
+                                return { label: value.toString(), value };
+                            })}
+                        />
+                    </Space>
+                </ProForm>
+            }
+            extra={[
+                <Button
+                    icon={<CloseOutlined />}
+                    type="link"
+                    onClick={onClose}
+                />
+            ]}
         >
             <ProDescriptions
                 column={2}
@@ -104,7 +144,11 @@ const MapLocationDrawer: React.FC<Props> = ({ onClose, cusIds, ...props }) => {
                 dataSource={detailState?.visible?.payload}
                 columns={[
                     {
-                        title: "Coded",
+                        title: "Customer Code",
+                        dataIndex: "cardCode"
+                    },
+                    {
+                        title: "Code",
                         dataIndex: "address"
                     },
                     {
@@ -112,17 +156,21 @@ const MapLocationDrawer: React.FC<Props> = ({ onClose, cusIds, ...props }) => {
                         dataIndex: "addressKh"
                     },
                     {
-                        title: "Province",
-                        dataIndex: "province"
+                        title:"All Location",
+                        render:()=> <Typography.Text type="warning">{data?.total}</Typography.Text>
                     },
-                    {
-                        title: "District",
-                        dataIndex: "district"
-                    },
-                    {
-                        title: "Commune",
-                        dataIndex: "commune"
-                    },
+                    // {
+                    //     title: "Province",
+                    //     dataIndex: "province"
+                    // },
+                    // {
+                    //     title: "District",
+                    //     dataIndex: "district"
+                    // },
+                    // {
+                    //     title: "Commune",
+                    //     dataIndex: "commune"
+                    // },
                     {
                         title: "Direction",
                         dataIndex: "direction"
@@ -131,7 +179,7 @@ const MapLocationDrawer: React.FC<Props> = ({ onClose, cusIds, ...props }) => {
             />
 
 
-            {!isFetching &&
+            {!isFetching && isLoaded &&
                 <GoogleMap
                     mapContainerStyle={containerStyle}
                     center={center}
@@ -151,37 +199,9 @@ const MapLocationDrawer: React.FC<Props> = ({ onClose, cusIds, ...props }) => {
                     }}
 
                 >
-                    {/* <BarComp locationTracking={zoomTo} onOpen={onOpen} reload={reload} /> */}
 
-                    {/* <MarkerClusterer
-                        imageSizes={[50, 60, 70, 80]}
-                        averageCenter
-                        enableRetinaIcons
-                        gridSize={60}
-                    // minimumClusterSize={3}
-                    // styles={[
-                    //     {
-                    //         url: "/icons/location_11315234.png",
-                    //         height: 60,
-                    //         width: 60,
-                    //         textColor: "#ffffff",
-                    //         textSize: 14,
-                    //         fontWeight: "bold",
-                    //     },
-                    // ]}
-                    // onClick={(cluster) => {
-                    //     const markers = cluster.getMarkers();
-                    //     if (markers.length > 0 && mapInstance) {
-                    //         const bounds = new google.maps.LatLngBounds();
-                    //         markers.forEach((m) => bounds.extend(m.getPosition()!));
-                    //         mapInstance.fitBounds(bounds);
-                    //         if (mapInstance.getZoom()! > 17) mapInstance.setZoom(17);
-                    //     }
-                    // }}
-                    >
-                        {(clusterer) => ( */}
                     <>
-                        {data?.map((addr, i) => {
+                        {data?.items?.map((addr, i) => {
                             const lat = Number(addr.latitude);
                             const lng = Number(addr.longitude);
                             if (isNaN(lat) || isNaN(lng)) return null;
@@ -250,7 +270,7 @@ const MapLocationDrawer: React.FC<Props> = ({ onClose, cusIds, ...props }) => {
 
                 </GoogleMap>}
 
-        </DrawerForm>
+        </Card>
     )
 }
 

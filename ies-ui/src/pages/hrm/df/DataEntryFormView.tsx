@@ -60,7 +60,7 @@ export default({
     const [dataComment3, setDataComment3] = useState<DfComment[]>([])
     const [dataComment4, setDataComment4] = useState<DfComment[]>([])
     const [dataComment5, setDataComment5] = useState<DfComment[]>([])
-     const [dataSeftCommitment, setDataSeftCommitment] = useState<DfComment[]>([])
+    const [dataSeftCommitment, setDataSeftCommitment] = useState<DfComment[]>([])
     const [data, setDate] = useState<DF360EmpDetailRs>()
     const [selectedAssessor, setSelectedAssessor] = useState<DfEmpAssessorRs>()
         
@@ -450,7 +450,7 @@ export default({
                 </>
             </Tabs.TabPane>}
         </Tabs> 
-          </ProForm>       
+        </ProForm>       
      </Space> </Spin></div>)
 
 }

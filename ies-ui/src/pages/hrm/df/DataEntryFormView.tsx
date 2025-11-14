@@ -2,7 +2,7 @@ import { CheckCard, EditableFormInstance, FooterToolbar, ProCard, ProForm, ProTa
 import { Avatar, Button, Card, Col, Descriptions, message, Modal, Row, Space, Spin, Tabs, Tooltip } from "antd";
 import { useForm } from "antd/es/form/Form";
 import { useInView } from "react-intersection-observer";
-import { DF360EmpDetailRs,  DF360UpdatePlayload, DfComment, DfCommentRs, DfEmpAssessorRs, DfEmpEvaluationDetailReport, DfEmpEvaluationRs, DfEmpEvaluationSummaryReport, DfEmpStatementDetail, DfInstrunctionItemList } from "./data";
+import { DF360EmpDetailRs,  DF360SelfCommitmentPlayload,  DF360UpdatePlayload, DfComment, DfCommentRs, DfEmpAssessorRs, DfEmpEvaluationDetailReport, DfEmpEvaluationRs, DfEmpEvaluationSummaryReport, DfEmpStatementDetail, DfInstrunctionItemList } from "./data";
 import { useEffect, useRef, useState } from "react";
 import { uniqueId } from "lodash";
 import { Df360EmpServiceAPI } from "./services";
@@ -54,11 +54,13 @@ export default({
     const editableFormRef3 = useRef<EditableFormInstance>();
     const editableFormRef4 = useRef<EditableFormInstance>();
     const editableFormRef5 = useRef<EditableFormInstance>();
+    const editableFormRef6 = useRef<EditableFormInstance>();
     const [dataStrength, setDataStrength] = useState<DfComment[]>([])
     const [dataImprovement, setDataImprovement] = useState<DfComment[]>([])
     const [dataComment3, setDataComment3] = useState<DfComment[]>([])
     const [dataComment4, setDataComment4] = useState<DfComment[]>([])
     const [dataComment5, setDataComment5] = useState<DfComment[]>([])
+     const [dataSeftCommitment, setDataSeftCommitment] = useState<DfComment[]>([])
     const [data, setDate] = useState<DF360EmpDetailRs>()
     const [selectedAssessor, setSelectedAssessor] = useState<DfEmpAssessorRs>()
         
@@ -83,6 +85,7 @@ export default({
             setDataComment3((selectedAssessor?.comments?.filter(it=>it.type=='C3')||[]).map(it=>({...it,key: uniqueId().toString()})))
             setDataComment4((selectedAssessor?.comments?.filter(it=>it.type=='C4')||[]).map(it=>({...it,key: uniqueId().toString()})))
             setDataComment5((selectedAssessor?.comments?.filter(it=>it.type=='C5')||[]).map(it=>({...it,key: uniqueId().toString()})))
+            setDataSeftCommitment((selectedAssessor?.comments?.filter(it=>it.type=='C6')||[]).map(it=>({...it,key: uniqueId().toString()})))
         }      
     },[selectedAssessor])
 
@@ -102,20 +105,6 @@ export default({
     }
     const onSubmitHandler = async () => {
         if(activeTab!='1')setActiveTab('1')
-        const submitter = await formSubmittor.validateFields()
-        const editable1 = await editableStrengthFormRef1?.current?.validateFields()
-        const editable2 = await editableImprovementFormRef2?.current?.validateFields()
-        const editable3 = await editableFormRef3.current?.validateFields()
-        const editable4 = await editableFormRef4.current?.validateFields() 
-        const editable5 = await editableFormRef5.current?.validateFields() 
-        
-        const commList1: DfComment[] = editable1?Object.values(editable1):[] 
-        const commList2: DfComment[] = editable2?Object.values(editable2):[] 
-        const commList3: DfComment[] = editable3?Object.values(editable3):[]
-        const commList4: DfComment[] = editable4?Object.values(editable4):[]
-        const commList5: DfComment[] = editable5?Object.values(editable5):[]
-
-        if(!submitter) return        
         const section1Valid = statement.filter(r =>(
             (r.rating1==0 && r.rating2==0 && r.rating3==0 && r.rating4==0 && r.rating5==0) || 
             (r.rating1==undefined && r.rating2==undefined && r.rating3==undefined && r.rating4==undefined && r.rating5==undefined)
@@ -126,6 +115,20 @@ export default({
             await editableFormRef.current?.validateFields()
             return
         }else{
+            const submitter = await formSubmittor.validateFields()
+            const editable1 = await editableStrengthFormRef1?.current?.validateFields()
+            const editable2 = await editableImprovementFormRef2?.current?.validateFields()
+            const editable3 = await editableFormRef3.current?.validateFields()
+            const editable4 = await editableFormRef4.current?.validateFields() 
+            const editable5 = await editableFormRef5.current?.validateFields() 
+            
+            const commList1: DfComment[] = editable1?Object.values(editable1):[] 
+            const commList2: DfComment[] = editable2?Object.values(editable2):[] 
+            const commList3: DfComment[] = editable3?Object.values(editable3):[]
+            const commList4: DfComment[] = editable4?Object.values(editable4):[]
+            const commList5: DfComment[] = editable5?Object.values(editable5):[]
+        
+            if(!submitter) return       
             const comments:DfCommentRs[] =[]
             
             comments.push(...commList1?.map((i,index)=>({
@@ -206,7 +209,49 @@ export default({
             });
         }
     }
+    const onSelfCommitmentHandler = async () => {
+        if(activeTab!='2')setActiveTab('2')
+        const submitter = await formSubmittor.validateFields()
+        if(!submitter) return     
+        const editable6 = await editableFormRef6.current?.validateFields() 
+        const commList6: DfComment[] = editable6?Object.values(editable6):[]
+        if(commList6.length==0) {
+             message.error("Self commitment is required.")
+            return
+        }else{
+            const list = commList6.map((i,index)=>({
+                id: 0,
+                dfEmpAssessorId: selectedAssessor?.id,
+                comment: i.comment,
+                seqNo: index+1,
+                type: 'C6'
+            })) 
+            const payload = {
+                id: id,
+                dfEmpAssessorId: selectedAssessor?.id,
+                comments: list          
+            } as DF360SelfCommitmentPlayload       
+            console.log('commitment: ',payload)
+            Modal.confirm({
+                title: 'Submit Self Commitment',
+                content: 'Are you sure?',
+                onOk: async () => {
+                    try {
+                        await services.submitSelfCommitment(payload)
+                        message.success('Submitted successfully.');
+                        setLoading(true)
+                        onCloseTab?.()
+                    } catch (error: any) {
+                        message.error(error.message || 'Failed to submit self commitment.');
+                    }
+                },
+            });
+        }        
+
+    }
+
     const isReport = selectedAssessor && ['Self','Manager'].some(r=>r==selectedAssessor?.type)
+    const isCurrentSelfCommitted = (selectedAssessor?.currentAccess && ['Self'].some(r=>r==selectedAssessor?.type) && !data?.selfCommitted && data?.allSubmitted)? true: false
     const isExternal = () => history.location.pathname.includes("/externa/hrm/df/detail");
 
     return(<div ref={ref}><Spin spinning={loading} ><Space direction="vertical" style={{ width: '100%' }}>
@@ -234,12 +279,11 @@ export default({
                     >
                         {data?.assessors.map(r => (<CheckCard size='small' 
                         avatar={
-                            <Tooltip title={toReadable(r.status || "")} placement="top">
+                            <Tooltip title={(['Self'].some(s=>s==r.type) && !data?.selfCommitted && data?.allSubmitted)?'Pending self Commitment':toReadable(r.status || "")} placement="top">
                                 <Avatar
-                                    style={{ backgroundColor: r.status=='PENDING'?'gray':'#1677ff' }}
+                                    style={{ backgroundColor: r.status=='PENDING'?'gray': (['Self'].some(s=>s==r.type) && !data?.selfCommitted && data?.allSubmitted)?'gray': '#1677ff' }}
                                     icon={<UserOutlined />}
-                                    size="small"
-                                    
+                                    size="small"                                    
                                 />
                             </Tooltip>
                         }
@@ -263,9 +307,28 @@ export default({
             </Descriptions>
         </ProCard>
         <InstructionCard lang={lang} onChangeLanglauge={()=>{setLang(lang=='ENG'?'KH':'ENG')}} getLableName={getLable}/>
+        <ProForm dir="vertical"
+            submitter={{
+                render: () => 
+                inView && !readOnly ?<FooterToolbar>
+                    <Button
+                        onClick={() => {onCloseHandler();}}
+                    >
+                    Close
+                    </Button>
+                    {selectedAssessor?.currentAccess && selectedAssessor?.status!='SUBMITTED' && type=='EDIT' && <Button
+                        onClick={onSubmitHandler}
+                    >
+                    Submit
+                    </Button>}
+                    { isCurrentSelfCommitted && <Button onClick={onSelfCommitmentHandler}>Submit Commitment</Button> }
+                </FooterToolbar> : <></>
+            }} 
+        >
+              
         <Tabs onChange={key => setActiveTab(key)} activeKey={activeTab}  style={{marginTop: isReport?0:-30}} >
             <Tabs.TabPane icon={isReport?<UnorderedListOutlined/>:''} tab={isReport?(getLable('DF_TITLE_DETAIL')||''):""} key="1">
-                <ProForm dir="vertical"
+                {/* <ProForm dir="vertical"
                     submitter={{
                         render: () => 
                         inView && !readOnly ?<FooterToolbar>
@@ -284,9 +347,9 @@ export default({
                             >
                                 Submit
                             </Button> } */}
-                        </FooterToolbar> : <></>
-                    }} 
-                >
+                        {/* </FooterToolbar> : <></> */}
+                    {/* }}  */}
+                {/* >  */}
                     <ProCard size="small"                  
                         headerBordered
                         title= {getLable( ['Self','Peer','Manager'].some(r=>r==selectedAssessor?.type)?'DF_TITLE_EVALUATION':'DF_TITLE_MANAGER_EVALUATION')}
@@ -316,25 +379,22 @@ export default({
                     {selectedAssessor && ['Subordinate'].some(r=>r==selectedAssessor?.type) && <CommentTable title={getLable('DF_TITLE_MANAGER_KEY_POINT')||''} 
                         commTitle={getLable('DF_TBL_MANAGER_KEY_POINT')||''} 
                         initDataItems={dataComment3} 
-                        // onSetItems={setDataImprovement} 
                         editableFormRef={editableFormRef3}
                         editable={selectedAssessor?.currentAccess && selectedAssessor?.status!='SUBMITTED'}
                     />}
                     {selectedAssessor && ['Subordinate'].some(r=>r==selectedAssessor?.type) && <CommentTable title={getLable('DF_TITLE_MANAGER_GOOD_POINT')||''}
                         commTitle={getLable('DF_TBL_MANAGER_GOOD_POINT')||''}
                         initDataItems={dataComment4} 
-                        // onSetItems={setDataImprovement} 
                         editableFormRef={editableFormRef4}
                         editable={selectedAssessor?.currentAccess && selectedAssessor?.status!='SUBMITTED'}
                     />}
                     {selectedAssessor && ['Subordinate'].some(r=>r==selectedAssessor?.type) && <CommentTable title={getLable('DF_TITLE_MANAGER_IMPROVEMENT')||''} 
                         commTitle={getLable('DF_TBL_MANAGER_IMPROVEMENT')||''} 
                         initDataItems={dataComment5} 
-                        // onSetItems={setDataImprovement} 
                         editableFormRef={editableFormRef5}
                         editable={selectedAssessor?.currentAccess && selectedAssessor?.status!='SUBMITTED'}
                     />}
-                </ProForm>
+                {/* </ProForm> */}
             </Tabs.TabPane>
             {isReport &&<Tabs.TabPane icon={<UnorderedListOutlined/>} tab={getLable('DF_TITLE_REPORT')||''} key="2">
                 <>
@@ -372,22 +432,27 @@ export default({
                     <ProCard collapsible defaultCollapsed={true} size="small" headerBordered title={getLable('DF_TITLE_SECTION3')||''}>  
                         <CommentTable title="" 
                             commTitle={getLable('DF_TBL_STRENGTH')||''} 
-                            initDataItems={(selectedAssessor?.summary?.comments||[]).filter(it=> ['C1','C4'].some(r=>r==it.type)).map(it=>({...it,comment: it.comment,key: uniqueId().toString()}))} 
-                            // onSetItems={setDataImprovement} 
-                            // editableFormRef={editableImprovementFormRef2} 
+                            initDataItems={(selectedAssessor?.summary?.comments||[]).filter(it=> ['C1','C4'].some(r=>r==it.type)).map(it=>({...it,comment: it.comment,key: uniqueId().toString()}))}                            
                             editable={false}
                         />                     
                         <CommentTable title="" 
                             commTitle={getLable('DF_TBL_IMPROVEMENT')||''} 
-                            initDataItems={(selectedAssessor?.summary?.comments||[]).filter(it=> ['C2','C5'].some(r=>r==it.type)).map(it=>({...it,comment: it.comment,key: uniqueId().toString()}))} 
-                            // onSetItems={setDataImprovement} 
-                            // editableFormRef={editableImprovementFormRef2} 
+                            initDataItems={(selectedAssessor?.summary?.comments||[]).filter(it=> ['C2','C5'].some(r=>r==it.type)).map(it=>({...it,comment: it.comment,key: uniqueId().toString()}))}                           
                             editable={false}
+                        />
+                    </ProCard>
+                    <ProCard collapsible defaultCollapsed={!isCurrentSelfCommitted} size="small" headerBordered title={getLable('DF_TITLE_SECTION4')||''}>                        
+                        <CommentTable title="" 
+                            commTitle={getLable('DF_TBL_COMMITMENT')||''} 
+                            initDataItems={dataSeftCommitment.map(it=>({...it,comment: it.comment,key: uniqueId().toString()}))}                            
+                            editableFormRef={editableFormRef6} 
+                            editable={isCurrentSelfCommitted||false}
                         />
                     </ProCard>
                 </>
             </Tabs.TabPane>}
-        </Tabs>        
+        </Tabs> 
+          </ProForm>       
      </Space> </Spin></div>)
 
 }

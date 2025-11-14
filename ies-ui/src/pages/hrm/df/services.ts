@@ -34,6 +34,12 @@ export const Df360Params = {
         actionName: 'fd360_emp_submit',
         payload: { ...params },
     }),
+     submitSelfCommitment: (params: DF360UpdatePlayload): ServiceApiType<DF360UpdatePlayload> => ({
+        type: 'EXEC',
+        endpoint: 'HR',
+        actionName: 'fd360_emp_self_commitment_submit',
+        payload: { ...params },
+    }),
     detail: (id: number| string): ServiceApiType<{ id: number | string}> => ({
         type: 'FETCH_QUERY',
         endpoint: 'HR',
@@ -79,6 +85,7 @@ export const Df360EmpServiceAPI = (requestActions?: RequestActions) => {
         createDf360Form: (params: DF360Playload) => singleRequest(Df360Params.save(params))(requestActions),
         draftEvaluation:  (params: DF360UpdatePlayload) => singleRequest(Df360Params.draftEvaluation(params))(requestActions),
         submitEvaluation:  (params: DF360UpdatePlayload) => singleRequest(Df360Params.submitEvaluation(params))(requestActions),
+        submitSelfCommitment:  (params: DF360UpdatePlayload) => singleRequest(Df360Params.submitSelfCommitment(params))(requestActions),
         detail: (id: number| string) => singleRequest(Df360Params.detail(id))(requestActions) as Promise<DF360EmpDetailRs>,
         fetchProbationEmployeeInfo: (id: number) => singleRequest(Df360Params.fetchProbationEmployeeInfo(id))(requestActions) as Promise<EmployeeInfResult>,
         fetchProbationEmpList: (searchValue?: string) => singleRequest(Df360Params.fetchProbationEmpList(searchValue))(requestActions) as Promise<AppraisalMapping[]>,

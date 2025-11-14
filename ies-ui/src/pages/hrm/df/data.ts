@@ -64,6 +64,8 @@ export interface DF360EmpDetailRs {
   // comments?: DfCommentRs[];
   currentAssessor: DfEmpAssessorRs;
   assessors: DfEmpAssessorRs[];
+  allSubmitted: Boolean;
+  selfCommitted: Boolean;
 };
 export interface DfEmpAssessorRs{
   id: number;
@@ -185,6 +187,11 @@ export interface DF360UpdatePlayload {
   id: number;
   dfEmpAssessorId: number;
   statements?: DfStatementRs[];
+  comments?: DfCommentRs[];
+}
+export interface DF360SelfCommitmentPlayload {
+  id: number;
+  dfEmpAssessorId: number;
   comments?: DfCommentRs[];
 }
 export interface DfStatementRs{

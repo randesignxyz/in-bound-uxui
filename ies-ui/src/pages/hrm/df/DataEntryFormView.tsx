@@ -281,7 +281,7 @@ export default({
                         avatar={
                             <Tooltip title={(['Self'].some(s=>s==r.type) && !data?.selfCommitted && data?.allSubmitted)?'Pending self Commitment':toReadable(r.status || "")} placement="top">
                                 <Avatar
-                                    style={{ backgroundColor: r.status=='PENDING'?'gray': (['Self'].some(s=>s==r.type) && !data?.selfCommitted && data?.allSubmitted)?'gray': '#1677ff' }}
+                                    style={{ backgroundColor: r.status=='PENDING'?'gray': (['Self'].some(s=>s==r.type) && !data?.selfCommitted && data?.allSubmitted)?'#faad14': '#1677ff' }}
                                     icon={<UserOutlined />}
                                     size="small"                                    
                                 />

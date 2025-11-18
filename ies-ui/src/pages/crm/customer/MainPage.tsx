@@ -1,12 +1,12 @@
 import PageWrapper from "@/components/PageWrapper"
 import { CustomerAdvanceSearchParams, CustomerItemLess } from "@/services/crm/data"
-import { DashOutlined, DownloadOutlined, ExportOutlined, SwapOutlined, SyncOutlined } from "@ant-design/icons"
+import { DashOutlined, DownloadOutlined, EnvironmentOutlined, ExportOutlined, SwapOutlined, SyncOutlined } from "@ant-design/icons"
 import { useAccess, useQuery } from "@umijs/max"
 import { CrmServiceAPI } from "@/services/crm/services";
-import { Dropdown, Modal, Space, Spin, Typography, message } from "antd";
+import { Button, Dropdown, Space, Spin, Typography, message } from "antd";
 import Status from "@/components/Status";
 import { toReadable } from "@/pages/utils";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FetchPagingParams } from "@/components/DataCrud/TableView";
 import { model } from "./model";
 import AdvanceSearch from "./components/List/AdvanceSearch";
@@ -18,9 +18,9 @@ import ImportFileButton from "@/components/ImportFileButton";
 import { ActionType } from "@ant-design/pro-components";
 import { CustomerActionController } from ".";
 import CustomerDetailView from "./components/Detail";
-import { CrmServices } from "../services";
 import { CustomerServices } from "./services";
 import { simpleRequestActions } from "@/services/model";
+import MapLocationDrawer from "./components/MapLocation";
 const crmServices = CrmServiceAPI();
 type FilterType = {
     searchValue?: string;
@@ -31,20 +31,22 @@ export default ({ getMenuItems }: CustomerActionController) => {
     const [filter, setFilter] = useState<FetchPagingParams<FilterType>>()
     const [importData, setImportData] = useState<ImportDataResponse>()
     const [loading, setLoading] = useState(false);
-    const requestAction= simpleRequestActions();
+    const requestAction = simpleRequestActions();
     const actionRef = useRef<ActionType>();
+    const [constenState, setContentState] = useState<string>("COLUMN");
+
     const { data, refetch, isFetching } = useQuery(['fetch-customer-list', filter], () => crmServices.findAllCustomer({
         searchValue: filter?.criteria?.searchValue,
         advanceSearch: { ...filter?.criteria },
         sort: filter?.sort,
     }, { page: filter?.pagination?.current, pageSize: filter?.pagination?.pageSize }), {
-        refetchOnWindowFocus: false
+        refetchOnWindowFocus: false,
+        enabled: constenState == "COLUMN" ? true : false
     });
+
     const { state, ops, modals } = model();
-
-    const access = useAccess();
-
     
+    const access = useAccess();
     return <Spin spinning={loading}>
         <PageWrapper<CustomerItemLess, FilterType, {}>
             tabRender={item => [
@@ -81,8 +83,23 @@ export default ({ getMenuItems }: CustomerActionController) => {
                     pagination: {
                         total: data?.total,
                     },
-                    actionRef: actionRef,
+                    // actionRef: actionRef,
                     loading: isFetching,
+                    tableRender: (_, dom) => {
+                        return (constenState === "COLUMN" && dom) || (<MapLocationDrawer
+                            onFilter={(val) => {
+                                setFilter((p => (
+                                    {
+                                        criteria: { ...p?.criteria, advanceSearch: { ...val } },
+                                        pagination:{
+                                            ...p?.pagination,
+                                            pageSize:val.rows
+                                        }
+                                    }
+                                )))
+                            }}
+                            onClose={() => setContentState("COLUMN")} filter={filter} />)
+                    },
                     columns: [
                         {
                             title: 'Customer #',
@@ -91,7 +108,9 @@ export default ({ getMenuItems }: CustomerActionController) => {
                             actionProps: (item) => ({
                                 type: 'view',
                                 label: item.code || '',
-                                actionButtons: [{ type: 'link', size: 'small', icon: <ExportOutlined />, onClick: () => window.open(`/external/crm/customer/detail/${item.id}`, '_blank')?.focus() }]
+                                actionButtons: [
+                                    { type: 'link', size: 'small', icon: <ExportOutlined />, onClick: () => window.open(`/external/crm/customer/detail/${item.id}`, '_blank')?.focus() },
+                                ]
                             }),
                         },
                         {
@@ -113,9 +132,7 @@ export default ({ getMenuItems }: CustomerActionController) => {
                         { title: 'Status', render: (_, r) => <Status text={toReadable(r.status)} value={r.status} /> },
                         {
                             render: (_, r) => <Dropdown menu={{
-
                                 items: getMenuItems(r, 'List', () => refetch).filter(it => it.visible)
-
                             }}>
                                 <a onClick={(e) => e.preventDefault()}>
                                     <Space>
@@ -128,46 +145,57 @@ export default ({ getMenuItems }: CustomerActionController) => {
                 },
                 actionNumShown: 2,
                 actionButtons: access.crmAdmin ?
-                    [<ImportFileButton<ImportDataItem>
-                        importedKey="INDIRECT_CUSTOMER"
-                        onDataResponse={data => {
-                            setImportData(data)
-                        }}
-                        key={'import-customer'}
-                        onHandleChange={(status) => {
-                            setLoading(status == 'uploading');
-                            if (status == 'done') {
-                                message.info('Data uploaded.');
-                            }
-                        }}
-                    />] : []
+                    [
+                        <Button
+                            icon={<EnvironmentOutlined />}
+                            type="link"
+                            onClick={() => setContentState("MAP")}
+
+                        >Maps</Button>,
+                        <ImportFileButton<ImportDataItem>
+                            importedKey="INDIRECT_CUSTOMER"
+                            onDataResponse={data => {
+                                setImportData(data)
+                            }}
+                            key={'import-customer'}
+                            onHandleChange={(status) => {
+                                setLoading(status == 'uploading');
+                                if (status == 'done') {
+                                    message.info('Data uploaded.');
+                                }
+                            }}
+                        />,
+                    ] : []
                 ,
                 actions: [
-                    
+
                     {
                         key: 'EXPORT', label: 'Export', icon: <DownloadOutlined />, onClick: () => {
                             modals.showModal('export-customer')
                         }
                     },
+
                     {
-                        key:"SYNC",
-                        label:"Sync",
-                        icon:<SyncOutlined/>,
-                        onClick:()=>{
-                            try{
-                               CustomerServices.syncExecStoreProcedureCustomer()(requestAction).then(()=>{
-                                actionRef.current?.reload?.();
-                                message.success("Success!")
-                               }).catch((err)=>{
-                                message.error("Something went wrong!")
-                               });
+                        key: "SYNC",
+                        label: "Sync",
+                        icon: <SyncOutlined />,
+                        onClick: () => {
+                            try {
+                                CustomerServices.syncExecStoreProcedureCustomer()(requestAction).then(() => {
+                                    actionRef.current?.reload?.();
+                                    message.success("Success!")
+                                }).catch((err) => {
+                                    message.error("Something went wrong!")
+                                });
                             }
-                            catch(e){
+                            catch (e) {
                             }
                         }
                     },
-                    { key: 'TRANSFER', label: 'Transfer SE', onClick: () => modals.showModal('transfer-customers'), icon: <SwapOutlined style={{ fontSize: '16px', color: '#08c' }} /> }
-                ]
+
+                    { key: 'TRANSFER', label: 'Transfer SE', onClick: () => modals.showModal('transfer-customers'), icon: <SwapOutlined style={{ fontSize: '16px', color: '#08c' }} /> },
+
+                ],
             }}
         />
 
@@ -193,7 +221,6 @@ export default ({ getMenuItems }: CustomerActionController) => {
                         salespersonId: undefined
                     }
                 }))
-
             }}
             onSearch={(data) => {
                 setFilter(v => ({ ...v, criteria: { ...v?.criteria, ...data } }))
@@ -205,7 +232,7 @@ export default ({ getMenuItems }: CustomerActionController) => {
             open={modals.isVisible('export-customer')}
             onCancel={() => modals.hideModal('export-customer')}
             confirmLoading={state.loading}
-            lookupDataList={state.initData?.lookupDataList||[]}
+            lookupDataList={state.initData?.lookupDataList || []}
             outletTypeList={state.initData?.outletTypeList || []}
             seList={state.initData?.seList || []}
             provinceList={state.initData?.provinceList || []}

@@ -2,6 +2,8 @@ import { ModalForm, ModalFormProps, ProFormTextArea } from "@ant-design/pro-comp
 import { useForm } from "antd/es/form/Form";
 import React, { useEffect, useState } from "react";
 import FileUploader from "@/components/Attachment/FileUploader";
+import { AttachmentEntry } from "@/components/Attachment/AttachmentEntry";
+import AttachmentsEntity from "../so/components/AttachmentsEntity";
 
 
 interface Props extends ModalFormProps {
@@ -36,11 +38,12 @@ const RemarkModal: React.FC<Props> = ({ onSave, ...props }) => {
                     name="remark"
                     label={"Remark"}
                 />
-                <FileUploader
+               
+                {/* <FileUploader
                     onSetFiles={(d) => {
                         setFile(d?.map(p => p.response));
                     }}
-                />
+                /> */}
 
             </ModalForm>
         </>

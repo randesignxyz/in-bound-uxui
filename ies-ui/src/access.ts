@@ -997,6 +997,13 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           'ROLE_NCM_ITEM_ONHAND_CRITERIA_REPORT'
         ].some((it) => it === item),
       ) || false,
+    canAccessWhmItemOnHandSyncData:
+      currentUser?.authorities.some((item) =>
+        [
+          'ROLE_ADMIN',
+          'ROLE_NCM_ITEM_ONHAND_SYNC_DATA'
+        ].some((it) => it === item),
+      ) || false,
     canAccessWhmEmpMappingMenu:
       currentUser?.authorities.some((item) =>
         [

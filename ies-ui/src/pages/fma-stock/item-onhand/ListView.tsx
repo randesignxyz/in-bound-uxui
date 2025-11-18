@@ -1,12 +1,12 @@
 import TableView, { FetchPagingParams } from "@/components/DataCrud/TableView";
 import { ActionType, PageContainer, ProFormCheckbox, ProFormDigitRange  } from "@ant-design/pro-components";
-import { history, useModel } from 'umi';
+import { history, useAccess, useModel } from 'umi';
 import { ItemAdvanceSearchParams, ItemOnHandList, SearchItemParams } from "./data.types";
 import { simpleRequestActions } from "@/services/model";
 // import { createService } from "./services";
 import { createService as Srv } from "../request/services";
 import { Paging } from "@/services/API";
-import { Button, Radio, Space, Tooltip, message } from "antd";
+import { Button, Modal, Radio, Space, Tooltip, message } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { ItemGroupListItem } from "../request/data.types";
 import CheckableTag from "antd/es/tag/CheckableTag";
@@ -20,6 +20,7 @@ interface Props {
     forceRefresh?: number
 }
 export default ({ onAdd, onEdit, forceRefresh }: Props) => {
+    const access = useAccess();
     const cacheList = useModel('dataList');
     const actionRef = useRef<ActionType>();
     const requestActions = simpleRequestActions();
@@ -55,10 +56,19 @@ export default ({ onAdd, onEdit, forceRefresh }: Props) => {
             return Promise.reject();
         }
     }
-    const syncSAP = async ()=>{
-        await services.syncItemOnHand()
-        actionRef.current?.reload()
-        console.log('syncSAP')  
+    const syncSAP = async ()=>{       
+         Modal.confirm({
+            title: 'Sync stock on hand from SAP',
+            content: 'Are you sure to sync?',
+            onOk: async () => {
+                try {
+                    await services.syncItemOnHand()
+                    actionRef.current?.reload()
+                } catch (error) {
+                    message.error('Failed to sync.');
+                }
+            },
+        });
     }
 
     return<PageContainer onBack={history.back} title="NCM Item Stock On Hand List" loading={requestActions.request?.loading}>
@@ -69,7 +79,7 @@ export default ({ onAdd, onEdit, forceRefresh }: Props) => {
                 options: { reload: false, density: false, fullScreen: false, setting: false },
                 toolbar: {actions: [
                     <span><b>Last Sync:</b> {refNo}</span>,
-                    <Tooltip title="Sync Stock on Hand from SAP">
+                    access.canAccessWhmItemOnHandSyncData && <Tooltip title="Sync Stock on Hand from SAP">
                          <Button style={{marginTop:0}}
                             key={'bt'}
                             type="link"

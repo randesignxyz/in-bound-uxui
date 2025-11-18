@@ -270,6 +270,7 @@ export interface LeadInfo extends LeadLess {
 }
 
 export interface LeadDetail {
+  prospectCode: ReactNode | { children: ReactNode; props: any; };
   status: ReactNode;
   isVerified: boolean | undefined;
   id: number;

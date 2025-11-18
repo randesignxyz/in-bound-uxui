@@ -741,6 +741,7 @@ export interface SoItemLess {
   deliveryMethod: string;
   hasAttachment?: boolean;
   uploaded?: boolean;
+  deliveryDate?: moment.Moment;
 }
 
 export interface So {

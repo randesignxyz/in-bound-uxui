@@ -191,7 +191,7 @@ export default [
     access: 'canAccessCrmMenuItem',
     component: './crm/shared-customer',
   },
-   {
+  {
     path: '/crm/verified-customer/:view',
     name: 'Verified Customer',
     icon: 'UnorderedListOutlined',
@@ -399,7 +399,7 @@ export default [
     access: 'canAccessDF360',
     component: './hrm/df',
   },
-    {
+  {
     path: '/externa/hrm/df/:view/*',
     name: 'df_360',
     icon: 'UnorderedListOutlined',
@@ -934,6 +934,22 @@ export default [
     access: 'canAccesAllocateSaleView',
     component: './sale/allocate',
   },
+  {
+    path: '/delivery/location',
+    name: 'delivery-tracking',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccesAllocateDelView',
+    component: './delivery/allocate/location',
+  },
+   {
+    path: '/sale/location',
+    name: 'delivery-tracking',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccesAllocateDelView',
+    component: './sale/allocate/location',
+  },
   // {
   //   path: '/delivery/associate/sale/:view/*',
   //   name: 'associateSale',
@@ -1461,6 +1477,14 @@ export default [
     access: 'canAccessWhmItemMenu',
     component: './fma-stock/item',
   },
+   {
+    path: '/whm/inventory/item-onhand/:view/*',
+    name: 'whm_inventory_item_onhand',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessWhmItemOnHandMenu',
+    component: './fma-stock/item-onhand',
+  },
   {
     path: '/whm/transfer/request/:view/*',
     name: 'whm-transter-request',
@@ -1574,7 +1598,7 @@ export default [
 
   /* En request car */
   /*Start Register Customer */
-   {
+  {
     path: '/crm/register-customer/:view/*',
     name: 'view-register-customer',
     icon: 'UnorderedListOutlined',

@@ -55,6 +55,7 @@ import { TransferRequestListItem } from '@/pages/fma-stock/transfer/data.types';
 import { EmpWhsMappingList } from '@/pages/fma-stock/emp-whs/data.types';
 import { ProbationEvaluationEmpList } from '@/pages/hrm/probation/data.types';
 import { Allocate, DeliveryList, DNList, DNParams } from '@/pages/delivery/allocate/data';
+import { ItemOnHandList } from '@/pages/fma-stock/item-onhand/data.types';
 
 type DataList =
   | {
@@ -303,6 +304,14 @@ type DataList =
     criteria?: any;
     data?: Paging<ItemList>;
   } | {
+    type: 'fma-item-on-hand-list';
+    criteria?: any;
+    data?: Paging<ItemOnHandList>;
+  } | {
+    type: 'fetch-paginglist';
+    criteria?: any;
+    data?: Paging<ItemList>;
+  }  | {
     type: 'whh-inventory-transfer-request';
     criteria?: any;
     data?: Paging<TransferRequestListItem>;

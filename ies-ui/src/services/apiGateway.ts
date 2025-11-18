@@ -715,6 +715,28 @@ export const fetchDataPagingService = <OU = any, IN = any>(data: ServicePagingPa
     }
   },
 });
+export const fetchDataPagingRefNoService = <OU = any, IN = any>(data: ServicePagingParams<IN>) => ({
+  query: async (actions?: RequestActions) => {
+    console.log(data);
+    try {
+      actions?.start?.();
+      const srvUrl = getServiceUrl(data.endpoint);
+      const rs = request<Paging<OU>>(
+        `${srvUrl}/name/${data.actionName}/list-paging-ref-no/ref/${data.pagination?.refNo || '-1'}/page/${(data.pagination?.page || data.pagination?.current || 1) - 1
+        }/size/${data.pagination?.pageSize || 20}`,
+        {
+          method: 'POST',
+          data: data.payload || {},
+        },
+      );
+      actions?.end?.('SUCCESS');
+      return rs;
+    } catch (error) {
+      actions?.end?.('FAILED');
+      throw error;
+    }
+  },
+});
 
 export const execDataService =
   <OU = any, IN = any>(data: ServiceExecParams<IN>) =>

@@ -2,17 +2,20 @@ import FormModalComp, { FormModalProps } from '@/components/FormModal';
 import { AddressInfo } from '@/services/crm/data';
 import ProForm, {
   ProFormDatePicker,
+  ProFormDependency,
   ProFormDigit,
   ProFormGroup,
   ProFormList,
   ProFormSelect,
+  ProFormSwitch,
   ProFormText,
 } from '@ant-design/pro-form';
-import { Card, message } from 'antd';
+import { Card, message, Switch } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { sumBy } from 'lodash';
 import { useEffect } from 'react';
 import { DeliveryEntry } from '../../reducer';
+import moment from 'moment';
 
 interface Props extends FormModalProps {
   data?: {
@@ -73,16 +76,42 @@ const DeliveryItemListEntry: React.FC<Props> = ({ data, actionHandlers, ...props
       onSubmit={onSaveActionHandler}
       {...props}
     >
-      <ProForm submitter={false} form={form}>
-        <Card size="small">
+      <ProForm submitter={false} form={form} initialValues={{
+        isTBC: false,
+      }}>
+        <Card size="small" >
           <ProFormGroup title="Delivery">
-            <ProFormDatePicker
-              rules={[{ required: true }]}
-              allowClear={false}
-              width={200}
-              help={<span />}
-              label="Delivery Date"
-              name="deliveryDate"
+            <ProFormDependency name={["isTBC"]}>
+              {({ isTBC }) => (
+                <ProFormDatePicker
+                  rules={[{ required: true }]}
+                  allowClear={false}
+                  width={200}
+                  help={<span />}
+                  label="Delivery Date"
+                  name="deliveryDate"
+                  fieldProps={{
+                    disabled: isTBC,
+                  }}
+                />
+              )}
+            </ProFormDependency>
+            <ProFormSwitch
+              label="To Be Confirm"
+              name="isTBC"
+              fieldProps={{
+                onChange: (checked) => {
+                  if (checked) {
+                    form.setFieldsValue({
+                      deliveryDate: moment("2099-12-31"),
+                    });
+                  } else {
+                    form.setFieldsValue({
+                      deliveryDate: moment(),
+                    });
+                  }
+                },
+              }}
             />
             <ProFormSelect
               help={<span />}

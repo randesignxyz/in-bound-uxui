@@ -1,28 +1,33 @@
-import { AimOutlined, CheckCircleOutlined, CheckCircleTwoTone, CloseCircleOutlined, FieldTimeOutlined, SignatureOutlined } from "@ant-design/icons";
+import { CheckCircleOutlined, CloseCircleOutlined, FieldTimeOutlined, SignatureOutlined } from "@ant-design/icons";
 import { ProDescriptions, ProList } from "@ant-design/pro-components";
-import { Button, Card, Col, Collapse, Flex, Image, List, message, Modal, Row, Space, Typography } from "antd"
-import { AddresssView } from "../register/data";
-import ActivityLog from "@/components/ActivityLog";
+import { Button, Card, Flex, message, Popconfirm, Space, Tooltip, Typography } from "antd"
 import ImagePreview from "@/components/ImagePreview";
-import OrderGoogleMap from "@/pages/sale/retailer/orders/components/OrderGoogleMap";
 import { formatDateTime } from "@/pages/utils";
 import moment from "moment";
 import { simpleRequestActions } from "@/services/model";
 import { CustomerWithAddressVerifiedAPI } from "./service";
 import ChangeStatusForm from "./ChangeStatus";
-import { useState } from "react";
-import RemarkFormModal from "@/pages/sale/retailer/components/RemarkFormModal";
+import { useMemo, useState } from "react";
 import Remarks from "@/components/remarks";
-import RemarkModal from "@/components/remark-modal";
 import { useQuery } from "@umijs/max";
-import { GoogleMap, InfoWindow, LoadScript, Marker } from "@react-google-maps/api";
-import DirectionsMap from "../components/DirectionsMap";
+import { GoogleMap, InfoWindow, Marker, MarkerClusterer, Polyline, useJsApiLoader } from "@react-google-maps/api";
 
 interface Props {
     data1: any,
     mode: string
     onBack: () => void
 }
+
+const containerStyle = {
+    width: '100%',
+    height: '50vh'
+};
+
+const center = {
+    lat: 11.58181155360925,
+    lng: 104.91810050044207
+};
+
 
 function extractCoordinates(text: string | undefined | null): { lat: number; lng: number } | null {
     if (!text) return null; // handle null or undefined input
@@ -41,6 +46,11 @@ function extractCoordinates(text: string | undefined | null): { lat: number; lng
 }
 
 const VerifiedDetailView: React.FC<Props> = ({ data1, mode, onBack }) => {
+    const { isLoaded } = useJsApiLoader({
+        googleMapsApiKey: "AIzaSyA0Ifgai8ryDULDIqNOZmX8L7XZlzu4_D8", // Replace with your key
+        // libraries: ["places"], // Optional: include if you use Places
+    });
+    const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
     const requestActions = simpleRequestActions();
     const [statusState, setStatusState] = useState<{
         visible?: { name: "MODAL", addressId?: number, status: string }
@@ -54,6 +64,7 @@ const VerifiedDetailView: React.FC<Props> = ({ data1, mode, onBack }) => {
         refetchOnWindowFocus: false,
         retry: 1
     });
+    const [infoOpen, setInfoOpen] = useState(true);
 
     return (
         <>
@@ -153,111 +164,89 @@ const VerifiedDetailView: React.FC<Props> = ({ data1, mode, onBack }) => {
                         /> : "No Image"}
 
                     </Card>
-                    <Card size={"small"} title="Map">
-                        {/* {data && <DirectionsMap data={{
-                            customerCode:data?.customerCode,
-                            customerVerifiedLatLong:{
-                                currentLat:data?.customerVerifiedLatLong?.currentLat,
-                                currentLong:data?.customerVerifiedLatLong?.currentLong,
-                                latitude:data?.customerVerifiedLatLong?.longitude,
-                                longitude:data?.customerVerifiedLatLong?.longitude
-                            }
-                        }} />} */}
-                        {/* <iframe
-                            width="100%"
-                            height="400"
-                            style={{ border: 0 }}
-                            loading="lazy"
-                            allowFullScreen
-                            src={`https://www.google.com/maps/embed/v1/directions?key=${"AIzaSyACftO4Dtfn7BQETFuT4YQZ_wOrO3hgszc"}&origin=${data?.customerVerifiedLatLong?.currentLat},${data?.customerVerifiedLatLong?.currentLong}&destination=${data?.customerVerifiedLatLong?.latitude},${data?.customerVerifiedLatLong?.longitude}&mode=driving`}
-                        /> */}
-                        {/* <LoadScript googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "AIzaSyACftO4Dtfn7BQETFuT4YQZ_wOrO3hgszc"}>
+                    <Card size={"small"} title="Map" loading={isFetching}>
+
+                        {isLoaded && data?.customerVerifiedLatLong && (
                             <GoogleMap
-                                mapContainerStyle={{ width: '100%', height: '400px' }}
-                                center={{
-                                    lat: parseFloat(data?.customerVerifiedLatLong?.latitude),
-                                    lng: parseFloat(data?.customerVerifiedLatLong?.longitude),
+                                mapContainerStyle={containerStyle}
+                                center={center}
+                                zoom={14}
+                                onLoad={(map) => setMapInstance(map)}
+                                options={{
+                                    gestureHandling: "greedy",
+                                    zoomControl: true,
+                                    streetViewControl: false,
+                                    mapTypeControl: false,
+                                    styles: [
+                                        { featureType: "poi", stylers: [{ visibility: "off" }] },
+                                        { featureType: "transit", stylers: [{ visibility: "off" }] },
+                                    ],
                                 }}
-                                zoom={12}
-                                onClick={() => setActiveMarker(undefined)}
                             >
-                                {[
-                                    {
-                                        id: "origin",
-                                        lat: parseFloat(data?.customerVerifiedLatLong?.currentLat),
-                                        lng: parseFloat(data?.customerVerifiedLatLong?.currentLong),
-                                        name: "Your Location",
-                                        phone: "",
-                                        // icon: userLocationIcon,
-                                    },
-                                    {
-                                        id: "destination",
-                                        lat: parseFloat(data?.customerVerifiedLatLong?.latitude),
-                                        lng: parseFloat(data?.customerVerifiedLatLong?.longitude),
-                                        name: "Customer Location",
-                                        phone: `Customer Code: ${data?.customerCode}`,
-                                        // icon: storeLocationIcon,
-                                    },
-                                ].map((it) => (
-                                    <Marker
-                                        key={it.id}
-                                        position={{ lat: it.lat, lng: it.lng }}
-                                        // icon={it.icon}
-                                        onClick={() => setActiveMarker(it.id)}
+                                {/* Current Location Marker */}
+                                <Marker
+                                    position={{
+                                        lat: Number(data.customerVerifiedLatLong?.currentLat),
+                                        lng: Number(data.customerVerifiedLatLong?.currentLong),
+                                    }}
+                                    icon={{
+                                        url: "/icons/location_11315234.png",
+                                        scaledSize: isLoaded ? new window.google.maps.Size(60, 60) : undefined,
+                                    }}
+                                    title="Current location"
+                                    onClick={() => setActiveMarker("current")}
+                                />
+
+                                {/* Destination Marker */}
+                                <Marker
+                                    position={{
+                                        lat: Number(data.customerVerifiedLatLong?.latitude),
+                                        lng: Number(data.customerVerifiedLatLong?.longitude),
+                                    }}
+                                    icon={{
+                                        url: "/icons/location_11315234.png",
+                                        scaledSize: isLoaded ? new window.google.maps.Size(60, 60) : undefined,
+                                    }}
+                                    title={data?.address || "Destination"}
+                                     onClick={() => setActiveMarker("Destination")}
+                                />
+
+                                <Polyline
+                                    path={[
+                                        {
+                                            lat: Number(data.customerVerifiedLatLong?.currentLat),
+                                            lng: Number(data.customerVerifiedLatLong?.currentLong),
+                                        },
+                                        {
+                                            lat: Number(data.customerVerifiedLatLong?.latitude),
+                                            lng: Number(data.customerVerifiedLatLong?.longitude),
+                                        },
+                                    ]}
+                                    options={{
+                                        strokeColor: "#1890ff",
+                                        strokeOpacity: 0.8,
+                                        strokeWeight: 4,
+                                        geodesic: true,
+                                    }}
+                                />
+                                {/* InfoWindow attached to marker */}
+                                {activeMarker === "current" && isLoaded && (
+                                    <InfoWindow
+                                        anchor={mapInstance?.getMarker?.("current") || undefined} // or use position
+                                        position={{
+                                            lat: Number(data.customerVerifiedLatLong?.currentLat),
+                                            lng: Number(data.customerVerifiedLatLong?.currentLong),
+                                        }}
+                                        onCloseClick={() => setActiveMarker(undefined)}
                                     >
-                                        {activeMarker === it.id && (
-                                            <InfoWindow onCloseClick={() => setActiveMarker(undefined)}>
-                                                <>
-                                                    <Typography.Text strong>{it.name}</Typography.Text>
-                                                    <br />
-                                                    <Typography.Text>{it.phone}</Typography.Text>
-                                                    <br />
-                                                    <a
-                                                        href={`https://www.google.com/maps/dir/?api=1&origin=${data?.customerVerifiedLatLong?.currentLat},${data?.customerVerifiedLatLong?.currentLong}&destination=${data?.customerVerifiedLatLong?.latitude},${data?.customerVerifiedLatLong?.longitude}&travelmode=driving`}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                    >
-                                                        📍 Get Directions
-                                                    </a>
-                                                </>
-                                            </InfoWindow>
-                                        )}
-                                    </Marker>
-                                ))}
+                                        <div style={{ padding: "8px" }}>
+                                            <div style={{ fontWeight: "bold", fontSize: "16px" }}>Check In Location</div>
+                                            <div>Customer Code: <strong>{data.customerCode}</strong></div>
+                                        </div>
+                                    </InfoWindow>
+                                )}
                             </GoogleMap>
-                        </LoadScript> */}
-                        {data && <OrderGoogleMap
-                            googleMapApiKey="AIzaSyACftO4Dtfn7BQETFuT4YQZ_wOrO3hgszc"
-                            zoomNumber={12}
-                            key={data?.addressCode + "-" + data?.customerVerifiedLatLong?.latitude + "-" + data?.customerVerifiedLatLong?.longitude}
-          
-                            center={{
-                                id: `${data.id}`,
-                                lat: parseFloat(data?.customerVerifiedLatLong?.latitude),
-                                lng: parseFloat(data?.customerVerifiedLatLong?.longitude),
-                                name: 'Check In Location',
-                                internalName: '',
-                                phone: `Customer Code: ${data.customerCode}`,
-                            }}
-                            positions={[
-                                {
-                                    id: "origin",
-                                    lat: data?.customerVerifiedLatLong?.currentLat,
-                                    lng: data?.customerVerifiedLatLong?.currentLong,
-                                    name: "Your Location",
-                                    internalName: "",
-                                    phone: ""
-                                },
-                                {
-                                    id: "destination",
-                                    lat: parseFloat(data?.customerVerifiedLatLong?.latitude),
-                                    lng: parseFloat(data?.customerVerifiedLatLong?.longitude),
-                                    name: "Last Point",
-                                    internalName: "",
-                                    phone: ""
-                                },
-                            ]}
-                        />}
+                        )}
                     </Card>
 
                     <Card size="small" title={"Activity"}>

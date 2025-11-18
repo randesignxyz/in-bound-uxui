@@ -1,7 +1,7 @@
 import { FetchPagingParams } from "@/components/DataCrud/TableView";
 import { execDataService, fetchDataItemService, fetchDataListService, fetchDataPagingService } from "@/services/apiGateway";
 import { SimpleRequestActions } from "@/services/model";
-import { ItemDetail, ItemGroupListItem, ItemListItem,  SearchParams,  StockRequest, StockRequestDetailResponse, StockRequestListItem, StockRequestResponse, UoMItemList, WarehouseGroup } from "./data.types";
+import { ExportItemRefNo, ItemDetail, ItemGroupListItem, ItemListItem,  SearchParams,  StockRequest, StockRequestDetailResponse, StockRequestListItem, StockRequestResponse, UoMItemList, WarehouseGroup } from "./data.types";
 import { StartWorkFlowParam, TaskActionDataParam } from "@/services/process-workflow/params";
 
 export const createService = (request: SimpleRequestActions) => {
@@ -10,13 +10,7 @@ export const createService = (request: SimpleRequestActions) => {
             actionName: 'fma-stock-request',
             endpoint: 'FMA',
             payload: data
-        })(request) ,    
-        // request: (params: StartWorkFlowParam<StockRequest>) => 
-        //     execDataService<StockRequestResponse,StartWorkFlowParam<StockRequest>>({
-        //         actionName: 'fma-stock-request',
-        //         endpoint: 'FMA',
-        //         payload: params
-        //     })(request),
+        })(request) ,  
         fetchPaging: async (params: FetchPagingParams<SearchParams>) =>
             fetchDataPagingService<StockRequestListItem, FetchPagingParams<SearchParams>>({
                 actionName: 'fetch-paging-stock-request',
@@ -71,6 +65,6 @@ export const createService = (request: SimpleRequestActions) => {
                 actionName: 'fetch-warehouse-groups',
                 endpoint: 'FMA',
     
-            }).query(request),    
+            }).query(request)
     }
 }

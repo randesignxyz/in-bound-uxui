@@ -108,6 +108,7 @@ export interface ItemListItem {
   itemCode: string;
   itemName: string;
   buyUoM?: string;
+  onHand?: number;
   lastPurchasePrice?: number;
   lastPurchaseCurr?: string;
   itemGroup: {
@@ -160,6 +161,15 @@ export interface WarehouseGroup {
   code: string;
   name: string;
 }
+export interface WarehouseGroup {
+  id: string;
+  code: string;
+  name: string;
+}
+export interface ExportItemRefNo {
+  refNo: string;
+}
+
 
   
 

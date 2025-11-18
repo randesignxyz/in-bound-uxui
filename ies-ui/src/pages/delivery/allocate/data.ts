@@ -1,3 +1,5 @@
+import { Moment } from "moment";
+
 export interface allocateSearch {
   searchValue?: string;
   date?: moment.Moment;
@@ -79,9 +81,13 @@ export interface DNList {
   customer_name?: string,
   status?: string,
   mergeItems: mergeItems[],
-  phone?:string
-  longitude?:string,
-  latitude?:string
+  phone?: string
+  longitude: string,
+  latitude: string
+  commune?: string
+  district?: string
+  unplannedItems: DNPlan[]
+  DNList: DNPlan[]
 }
 
 interface mergeItems {
@@ -100,7 +106,8 @@ interface mergeItems {
   sku_name: string
   sku_uom: string
   so_num?: string
-  sequence?:string
+  sequence?: string
+  volume?: string
 }
 interface DN {
   createdBy?: string
@@ -193,6 +200,7 @@ export type DNDetail = {
   salesPlanID: string;
   type: string;
   attachment?: Attachment[];
+  isUnplanned?: string
 };
 
 
@@ -209,6 +217,10 @@ export type DNItemParams = {
   so_num: string,
   isUnplan?: string,
   delItemName?: string
+  unplannedItems: DNDetail[],
+  mergedItems: DNDetail[],
+  isUnplanned?: string
+  
 };
 
 export type DNParams = {
@@ -282,4 +294,40 @@ export type LocationList = {
   name: string,
   parent: string,
   type: string,
+}
+
+export interface ListDnDetailParams {
+  status?: string;
+  delivery_date?: string;
+  province_id?: string;
+  district_id?: string;
+  commune_id?: string;
+  sortBy?: string[];
+  sortOrders?: string[];
+  filterPass?: string
+  dnStatus?: string
+}
+
+export type Location = {
+  id: number
+  processInstanceId: number;
+  deliveryId: number;
+  deliveryItemId: number;
+  deliveryDate: Moment;
+  finishedDate: Moment;
+  shift: string;
+  cardCode: string;
+  cardName: string;
+  shipToCode: string;
+  checkInDate: Moment;
+  // checkInLat: number;
+  // checkInLng: number;
+  checkoutDate: Moment;
+  checkoutLat: number;
+  checkoutLng: number;
+  firstName: string;
+  lastName: string;
+  licensePlane: string;
+  latitude: string;
+  longitude: string;
 }

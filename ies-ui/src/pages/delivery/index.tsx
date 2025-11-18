@@ -49,6 +49,7 @@ export const DeliveryPaths = {
   deliveryHistory: '/delivery/list-instances-delivery',
   delAllocate:'/delivery/allocate',
   saleAllocate:'/delivery/allocate/sale',
+  DOPlocationTracking: '/delivery/location',
 };
 
 
@@ -236,8 +237,8 @@ export default () => {
     },
     {
       id: 'allocationDel',
-      name: 'Sale Allocation Plan',
-      description: 'Sale Allocation Plan List',
+      name: 'Delivery Order Plan',
+      description: 'Delivery Order Plan List',
       link: `${DeliveryPaths.delAllocate}/list`,
       icon: agreementIcon,
       visible: access.canAccesAllocateDelView

@@ -968,7 +968,8 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           'ROLE_NCM_INVENTORY_WH_EMP_MAPPING_ADMIN',
           'ROLE_NCM_STOCK_REQUEST',
           'ROLE_NCM_INVENTORY_TRANSFER_REQUEST',
-          'ROLE_NCM_INVENTORY_ADJUSTMENT_REQUEST'
+          'ROLE_NCM_INVENTORY_ADJUSTMENT_REQUEST',
+          'ROLE_NCM_ITEM_ONHAND_CRITERIA_REPORT'
         ].some((it) => it === item),
       ) || false,
     canAccessNcmIssueRequestMenu:
@@ -986,6 +987,21 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           // 'ROLE_NCM_STOCK_REQUEST_SUPPORT',
           // 'ROLE_NCM_STOCK_REQUEST_ADMIN',
           'ROLE_NCM_INVENTORY_ITEM_ADMIN'
+        ].some((it) => it === item),
+      ) || false,
+    canAccessWhmItemOnHandMenu:
+      currentUser?.authorities.some((item) =>
+        [
+          'ROLE_ADMIN',
+          'ROLE_NCM_INVENTORY_ITEM_ADMIN',
+          'ROLE_NCM_ITEM_ONHAND_CRITERIA_REPORT'
+        ].some((it) => it === item),
+      ) || false,
+    canAccessWhmItemOnHandSyncData:
+      currentUser?.authorities.some((item) =>
+        [
+          'ROLE_ADMIN',
+          'ROLE_NCM_ITEM_ONHAND_SYNC_DATA'
         ].some((it) => it === item),
       ) || false,
     canAccessWhmEmpMappingMenu:
@@ -1044,6 +1060,10 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     isAccessNCMRequestCriteriaExportReport:
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_NCM_REQUEST_CRITERIA_EXPORT_REPORT'].some((it) => it === item),
+      ) || false,
+    isAccessNCMItemOnHandCriteriaExportReport:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_ADMIN', 'ROLE_NCM_ITEM_ONHAND_CRITERIA_REPORT'].some((it) => it === item),
       ) || false,
     canAccessNCMStoctRequestSalAdmin:
       currentUser?.authorities.some((item) =>

@@ -97,7 +97,8 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           'ROLE_CRM_SALE_ADMIN',
           'ROLE_SALESPERSON',
           'ROLE_ADMIN',
-          'ROLE_CRM_REGISTER_CUSTOMER'
+          'ROLE_CRM_REGISTER_CUSTOMER',
+          'ROLE_CRM_VISIT_SCHEDULE'
         ].some((it) => it === item),
       ) || false,
 
@@ -171,6 +172,42 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         ['ROLE_CRM_ADMIN', 'ROLE_CRM_SALE_ADMIN', 'ROLE_ADMIN'].some((it) => it === item),
       ) || false,
+    canAccessVerifiedLocationMenu:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_CRM_ADMIN', 'ROLE_CRM_SALE_ADMIN', 'ROLE_ADMIN','ROLE_CRM_VERIFIED_LOCATION'].some((it) => it === item),
+      ) || false,
+    canAccessVerifiedLocationSync:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_CRM_ADMIN', 'ROLE_CRM_SALE_ADMIN', 'ROLE_ADMIN','ROLE_CRM_VERIFIED_LOCATION_SYNC'].some((it) => it === item),
+      ) || false, 
+    canAccessVisitScheduleCancelBtn:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_CRM_ADMIN', 'ROLE_ADMIN','ROLE_CRM_VISIT_SCHEDULE_CANEL_BTN'].some((it) => it === item),
+      ) || false,
+    canAccessVisitScheduleTrackingLocationBtn:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_CRM_ADMIN', 'ROLE_ADMIN','ROLE_CRM_VISIT_SCHEDULE_TRACKING_LCT_BTN'].some((it) => it === item),
+      ) || false, 
+    canAccessVisitScheduleGenerateBtn:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_CRM_ADMIN', 'ROLE_ADMIN','ROLE_CRM_VISIT_SCHEDULE_GENERATE_BTN'].some((it) => it === item),
+      ) || false,       
+    canAccessVisitScheduleRpt:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_CRM_ADMIN', 'ROLE_ADMIN','ROLE_CRM_VISIT_SCHEDULE_RPT'].some((it) => it === item),
+      ) || false, 
+    canAccessCrmPosmRpt:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_CRM_ADMIN', 'ROLE_ADMIN','ROLE_CRM_POSM_RPT'].some((it) => it === item),
+      ) || false,   
+    canAccessCrmStockCountRpt:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_CRM_ADMIN', 'ROLE_ADMIN','ROLE_CRM_STOCK_COUNT_RPT'].some((it) => it === item),
+      ) || false,  
+    canAccessCrmCallProductivityRpt:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_CRM_ADMIN', 'ROLE_ADMIN','ROLE_CRM_CALL_PRODUCTIVITY_RPT'].some((it) => it === item),
+      ) || false,       
     crmAdmin:
       currentUser?.authorities.some((item) =>
         ['ROLE_CRM_ADMIN', 'ROLE_ADMIN'].some((it) => it === item),
@@ -237,6 +274,30 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         ['ROLE_CRM_CONTRACT_VERIFY', 'ROLE_ADMIN'].some((it) => it === item),
       ) || false,
+    canAccessCustomerMenu:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_CRM_ADMIN', 'ROLE_ADMIN','ROLE_CRM_CUSTOMER'].some((it) => it === item),
+      ) || false,
+    canAccessVisitPlanMenu:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_CRM_ADMIN', 'ROLE_ADMIN','ROLE_CRM_VISIT_PLAN'].some((it) => it === item),
+      ) || false,
+    canAccessVisitScheduleMenu:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_CRM_ADMIN', 'ROLE_ADMIN','ROLE_CRM_VISIT_SCHEDULE'].some((it) => it === item),
+      ) || false,  
+    canAccessNotificationMenu:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_CRM_ADMIN', 'ROLE_ADMIN','ROLE_CRM_NOTIFICATION'].some((it) => it === item),
+      ) || false,  
+    canAccessGratisSettlementMenu:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_CRM_ADMIN', 'ROLE_ADMIN','ROLE_CRM_GRATIS'].some((it) => it === item),
+      ) || false,   
+    canAccessTermMenu:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_CRM_ADMIN', 'ROLE_ADMIN','ROLE_CRM_TERM'].some((it) => it === item),
+      ) || false,     
     /*****SO */
     canCreateEditSo:
       currentUser?.authorities.some((item) =>

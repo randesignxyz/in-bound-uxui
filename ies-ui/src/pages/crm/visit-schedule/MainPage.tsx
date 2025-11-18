@@ -4,7 +4,7 @@ import { VisitScheduleAdvanceSearchParams, VisitScheduleItem } from "@/services/
 import { useEffect, useRef, useState } from "react"
 import { FetchPagingParams } from "@/components/DataCrud/TableView"
 import { Model } from "./model"
-import { useQuery } from "@umijs/max"
+import { useAccess, useQuery } from "@umijs/max"
 import { ContractServices } from "../contract/services"
 import { MultiRequest, fetchDataListService } from "@/services/apiGateway"
 import { LookupData } from "@/services/data"
@@ -30,7 +30,7 @@ import CancelModalForm from "./components/CancelModalForm"
 
 type FilterType = VisitScheduleAdvanceSearchParams & { searchValue?: string; status?: string; }
 export default () => {
-
+    const access = useAccess()
     const { state, actions, modals } = Model();
     const crmServices = CrmServiceAPI()
     const [filter, setFilter] = useState<FetchPagingParams<VisitScheduleAdvanceSearchParams>>({
@@ -203,7 +203,7 @@ export default () => {
                     title: "Visit Schedule List",
                     actionButtons: [
                         <>
-                            <Tooltip key={'generate-visit-plan '} title="Cancel Visit Schedule">
+                           {access.canAccessVisitScheduleCancelBtn &&<Tooltip key={'generate-visit-plan '} title="Cancel Visit Schedule">
                                 <Button
                                     type="link"
                                     danger
@@ -211,17 +211,17 @@ export default () => {
                                     onClick={() => setCancelStatus({ visible: { name: "MODAL" } })}
                                     icon={<CloseSquareOutlined />}
                                 />
-                            </Tooltip>
-                            <Tooltip key={'generate-visit-plan '} title="Tracking Loaction"><Button
+                            </Tooltip>}
+                            {access.canAccessVisitScheduleTrackingLocationBtn &&<Tooltip key={'generate-visit-plan '} title="Tracking Loaction"><Button
                                 type="link"
                                 onClick={() => history.push(CrmPaths.locationTracking)}
                                 icon={<EnvironmentOutlined />}
-                            /></Tooltip>
-                            <Tooltip key={'generate-visit-plan '} title="Genderate visit schedule"><Button
+                            /></Tooltip>}
+                            {access.canAccessVisitScheduleGenerateBtn &&<Tooltip key={'generate-visit-plan '} title="Generate visit schedule"><Button
                                 type="link"
                                 onClick={() => modals.showModal('generate-schedule')}
                                 icon={<ScheduleOutlined />}
-                            /></Tooltip >
+                            /></Tooltip >}
                         </>
                     ],
                     onOpenAdvanceSearch: () => { modals.showModal('advanceSearch') },

@@ -404,6 +404,7 @@ export default({
                             search={false}
                             rowKey="id"
                             dataSource={selectedAssessor.summary?.sumEvaluations||[]}
+                            pagination={false}
                             options={{
                                 density: false,
                                 fullScreen: false,
@@ -416,7 +417,11 @@ export default({
                                 { title: getLable('DF_TBL_MANAGER')||'', dataIndex: 'avgManager', render: (text, record) => record.avgManager==0?'-': formatterQty1.format(record.avgManager), hidden: !['Self','Manager'].some(r=>r==selectedAssessor?.type)},
                                 { title: getLable('DF_TBL_PEER')||'', dataIndex: 'avgPeer', render: (text, record) => record.avgPeer==0?'-': formatterQty1.format(record.avgPeer), hidden: !['Self','Manager'].some(r=>r==selectedAssessor?.type) },
                                 { title: getLable('DF_TBL_SUBORDINATE')||'', dataIndex: 'avgSubordinate', render: (text, record) => record.avgSubordinate==0?'-': formatterQty1.format(record.avgSubordinate), hidden: !['Self','Manager'].some(r=>r==selectedAssessor?.type) },
-                                { title: getLable('DF_TBL_OVERALL')||'', dataIndex: 'overall', render: (text, record) => record.overall==0?'-': formatterQty1.format(record.overall) },
+                                { title: getLable('DF_TBL_OVERALL')||'', dataIndex: 'overall', 
+                                    render: (text, record) => <Tooltip title="Exclude self rating">
+                                        {record.overall==0?'-': formatterQty1.format(record.overall) }
+                                    </Tooltip>
+                                },
                             ]}
                         />
                     </ProCard>

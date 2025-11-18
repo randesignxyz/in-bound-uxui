@@ -267,6 +267,7 @@ const Crm: React.FC = () => {
       description: 'Customer List',
       link: `${CrmPaths.customer}/list`,
       icon: CustomerIcon,
+      visible: access.canAccessCustomerMenu,
       menu: {
         items: [{
           type: 'group',
@@ -290,12 +291,14 @@ const Crm: React.FC = () => {
       description: 'Plan to visit customer',
       link: `${CrmPaths.visitPlan}/list`,
       icon: planIcon,
+      visible: access.canAccessVisitPlanMenu,
     },
     {
       id: 'visitSchedule',
       name: 'Visit Schedule',
       description: 'Sechule to visit customer',
       link: `${CrmPaths.visitSchedule}/list`,
+      visible: access.canAccessVisitScheduleMenu,
       // isMenu: true,
       // overlay: visitScheduleMenu,
       menu: {
@@ -307,18 +310,21 @@ const Crm: React.FC = () => {
               label: 'Visit Schedule Report',
               key: 'visit-schedule-report',
               icon: <BarChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+              disabled: !access.canAccessVisitScheduleRpt,
               onClick: () => setReport('visit-schedule')
             },
             {
               label: 'POSM Report',
               key: 'posm-report',
               icon: <BarChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+              disabled: !access.canAccessCrmPosmRpt,
               onClick: () => setReport('posm-report')
             },
             {
               label: 'Stock Count Report',
               key: 'stock-count-report',
               icon: <BarChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+              disabled: !access.canAccessCrmStockCountRpt,
               onClick: () => setReport('stock-count-report')
             },
 
@@ -326,6 +332,7 @@ const Crm: React.FC = () => {
               label: 'Call Productivity Report',
               key: "productivity-report",
               icon: <BarChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
+              disabled: !access.canAccessCrmCallProductivityRpt,
               onClick: () => setReport('productivity-report')
             },
           ]
@@ -365,6 +372,7 @@ const Crm: React.FC = () => {
       description: 'Notification Management',
       link: `${CrmPaths.notification}/list`,
       icon: notificationIcon,
+      visible: access.canAccessNotificationMenu,
     },
     {
       id: 'gratis',
@@ -373,6 +381,7 @@ const Crm: React.FC = () => {
       //link: `${CrmPaths.settlement}/list`,
       link: `${CrmPaths.gratisSettlement}/list`,
       icon: scheduleIcon,
+      visible: access.canAccessGratisSettlementMenu,
       menu: {
         items: [
           {
@@ -394,7 +403,7 @@ const Crm: React.FC = () => {
       // overlay: GratistMenu
     },
     {
-      id: 'terms',
+      id: 'gratisConfig',
       name: 'Gratis Configuration',
       description: 'Gratis Configuration List',
       //link: `${CrmPaths.settlement}/list`,
@@ -412,6 +421,7 @@ const Crm: React.FC = () => {
       //link: `${CrmPaths.settlement}/list`,
       link: `${CrmPaths.terms}/list`,
       icon: agreementIcon,
+      visible: access.canAccessTermMenu,
       menu: {
         items: [{ label: <TermReport trigger={<a >Export</a>} />, key: 'exportTerm', icon: <ExportOutlined style={{ fontSize: '16px', color: '#08c' }} /> }]
       }
@@ -472,7 +482,7 @@ const Crm: React.FC = () => {
       description: "location has been checked and confirmed for accuracy",
       link: `${CrmPaths.verifiedCustomer}/list`,
       icon: customer_verified,
-      visible: access.saleAdmin
+      visible: access.canAccessVerifiedLocationMenu
     },
 
   ];

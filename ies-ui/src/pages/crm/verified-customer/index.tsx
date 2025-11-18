@@ -1,5 +1,5 @@
 import PageWrapper from "@/components/PageWrapper"
-import { useQuery } from "@umijs/max"
+import { useAccess, useQuery } from "@umijs/max"
 import { CustomerWithAddressVerifiedAPI } from "./service"
 import { simpleRequestActions } from "@/services/model"
 import { useEffect, useMemo, useState } from "react"
@@ -14,7 +14,9 @@ import { CrmServices } from "../services"
 import moment from "moment"
 import numeral from "numeral";
 
+
 export default () => {
+    const access = useAccess()
     const requestActions = simpleRequestActions();
     const [filter, setFilter] = useState<FetchPagingParams<any>>({ criteria: { advanceSearch: { mode: "Address" } } });
     const [statusState, setStatusState] = useState<{
@@ -129,8 +131,8 @@ export default () => {
                     listView={{
                         type: "Table",
                         onRefresh: refetch,
-                        actions: [
-                            {
+                        actions:  access.canAccessVerifiedLocationSync? [
+                           {
                                 icon: <SyncOutlined />,
                                 label: "Sync",
                                 key: "sync",
@@ -140,7 +142,7 @@ export default () => {
                                     message.success("Success!");
                                 },
                             },
-                        ],
+                        ]:undefined,
                         // actionButtons: [
                         //     <Segmented
                         //         onChange={(vl) => {

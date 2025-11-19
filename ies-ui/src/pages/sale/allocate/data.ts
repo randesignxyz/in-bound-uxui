@@ -62,7 +62,7 @@ export interface DeliveryList {
 
 export interface DNList {
   key: any;
-  id: number | string,
+  id: number,
   soId: string,
   deliveryDate: string,
   shippingAddress?: string,
@@ -86,6 +86,8 @@ export interface DNList {
   latitude: string
   commune?: string
   district?: string
+  unplannedItems: DNPlan[]
+  DNList: DNPlan[]
 }
 
 interface mergeItems {
@@ -105,7 +107,7 @@ interface mergeItems {
   sku_uom: string
   so_num?: string
   sequence?: string
-  volume?:string
+  volume?: string
 }
 interface DN {
   createdBy?: string
@@ -198,6 +200,7 @@ export type DNDetail = {
   salesPlanID: string;
   type: string;
   attachment?: Attachment[];
+  isUnplanned?: string
 };
 
 
@@ -214,6 +217,10 @@ export type DNItemParams = {
   so_num: string,
   isUnplan?: string,
   delItemName?: string
+  unplannedItems: DNDetail[],
+  mergedItems: DNDetail[],
+  isUnplanned?: string
+  
 };
 
 export type DNParams = {
@@ -297,6 +304,8 @@ export interface ListDnDetailParams {
   commune_id?: string;
   sortBy?: string[];
   sortOrders?: string[];
+  filterPass?: string
+  dnStatus?: string
 }
 
 export type Location = {

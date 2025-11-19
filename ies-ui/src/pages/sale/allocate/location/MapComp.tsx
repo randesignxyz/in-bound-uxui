@@ -19,9 +19,25 @@ export default function MapComp({ data, selected, onView }: MapCompProps) {
 
   if (!isLoaded) return null;
 
-  const combinedData = data.map((d) => ({
+  const combinedData = data
+  // deduplicate by lat/lng
+  .filter(
+    (dn, index, self) =>
+      index ===
+      self.findIndex(
+        d => d.latitude === dn.latitude && d.longitude === dn.longitude
+      )
+  )
+  .map(d => ({
     ...d,
-    isSelected: selected?.some((s) => s.id === d.id),
+    // selected if **any DN with same lat/lng** is in `selected`
+    isSelected: selected?.some(
+      s => s.latitude === d.latitude && s.longitude === d.longitude
+    ),
+    // optionally, store all DNs at this location
+    itemsAtLocation: data.filter(
+      x => x.latitude === d.latitude && x.longitude === d.longitude
+    ),
   }));
 
   return (
@@ -33,7 +49,7 @@ export default function MapComp({ data, selected, onView }: MapCompProps) {
     >
       {combinedData.map((item) => (
         <MarkerComp
-          key={item.id}
+          key={`${item.latitude}-${item.longitude}`}
           locationTracking={item}
           isSelected={item.isSelected}
           onView={onView}

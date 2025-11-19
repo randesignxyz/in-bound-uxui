@@ -54,25 +54,69 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, dn
         setDn([])
     }, [rest.open])
 
+    // useEffect(() => {
+    //     const fetchData = async () => {
+    //         setLoading(true)
+    //         try {
+    //             const da = await services.list_dn([id], so);
+    //             if (Array.isArray(da) && da.length > 0) {
+    //                 setDn(da);
+    //             } else if (da && 'planDeliveryDate' in da) {
+    //                 setDn(da);
+    //             }
+    //         } catch (error) {
+    //             console.error(error)
+    //         } finally {
+    //             setLoading(false)
+    //         }
+    //     };
+    //     fetchData();
+    //     setRefetch(false);
+    // }, [id, refetch === true]);
+
     useEffect(() => {
         const fetchData = async () => {
-            setLoading(true)
+            setLoading(true);
             try {
                 const da = await services.list_dn([id], so);
+
                 if (Array.isArray(da) && da.length > 0) {
-                    setDn(da);
-                } else if (da && 'planDeliveryDate' in da) {
-                    setDn(da);
+                    const processed = da.map(delivery => {
+                        const mergedItems: any[] = [];
+
+                        (delivery.deliveryItems || []).forEach(item => {
+                            mergedItems.push({
+                                ...item,
+                                isUnplanned: false,
+                                dn: item.dn || [],
+                            });
+                        });
+
+                        (delivery.unplannedItems || []).forEach(item => {
+                            mergedItems.push({
+                                ...item,
+                                isUnplanned: true,
+                            });
+                        });
+
+                        return {
+                            ...delivery,
+                            mergedItems,
+                        };
+                    });
+                    setDn(processed); // <-- Save all DN, not only first one
                 }
-            } catch (error) {
-                console.error(error)
+            } catch (err) {
+                console.error(err);
             } finally {
-                setLoading(false)
+                setLoading(false);
             }
         };
+
         fetchData();
         setRefetch(false);
     }, [id, refetch === true]);
+
 
     const handleSaveRemark = async (data: UpdateRemarkParams & { file?: UploadFile[] }) => {
         Modal.confirm({
@@ -155,22 +199,6 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, dn
         });
     }
 
-    const mapUnplannedToDeliveryRow = (item: any) => ({
-        id: `unplanned-${item.unplanned.id}`, // use unplanned.id to uniquely identify
-        itemCode: item.unplanned.item_code,
-        itemName: item.unplanned.item_name,
-        qty: Number(item.unplanned.order_qty),
-        saleType: item.unplanned.type,
-        lineNumber: item.unplanned.line_number,
-        isUnplan: 'Unplanned',
-        dn: [{
-            id: item.unplanned.id,
-            dn_qty: item.unplanned.dn_qty,
-            dn_date: item.unplanned.dn_date,
-            remark: item.unplanned.remark,
-            attachment: item.attachments ?? [], // fallback to empty array if not present
-        }],
-    });
     const percentage =
         (dn_qty ?? 0) > 0 && (order_qty ?? 0) > 0
             ? ((dn_qty ?? 0) / (order_qty ?? 1)) * 100
@@ -304,7 +332,7 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, dn
                                 search={false}
                                 expandable={{
                                     expandedRowRender: (record) => {
-                                        const dnList = record.dn || [];
+                                        const dnList = record.dn || [record];
                                         const plannedQty = Number(record.qty) || 0;
                                         return (
                                             <Table
@@ -377,14 +405,14 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, dn
                                             />
                                         );
                                     },
-                                    rowExpandable: (record) => record.dn && record.dn.length > 0,
+                                    rowExpandable: (record) => {
+                                        // expanded if dn exists or record itself has dn_num
+                                        return (Array.isArray(record.dn) && record.dn.length > 0) || record.dn_num;
+                                    },
                                 }}
 
                                 rowKey="id"
-                                dataSource={[
-                                    ...group.deliveryItems,
-                                    ...(group.unplannedItems || []).map(mapUnplannedToDeliveryRow)
-                                ]}
+                                dataSource={[...group.mergedItems]}
                                 options={{
                                     density: false,
                                     fullScreen: false,
@@ -397,6 +425,9 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, dn
                                         title: 'Item Code',
                                         dataIndex: 'itemCode',
                                         width: 150,
+                                        render: (_, r) => {
+                                            return r.itemCode || r.item_code || '-'
+                                        }
                                     },
                                     {
                                         title: 'Item Name',
@@ -405,46 +436,23 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, dn
                                         render: (_, record) => {
                                             return record.itemName && record.itemName.trim() !== ''
                                                 ? record.itemName
-                                                : record.delItemName || '-';
+                                                : record.item_name || '-';
                                         },
                                     },
                                     {
                                         title: 'Plan',
                                         dataIndex: 'qty',
                                         width: 70,
+                                        render: (_, r) => {
+                                            return r.qty || '0'
+                                        }
                                     },
-                                    // {
-                                    //     title: 'Delivered',
-                                    //     width: 70,
-                                    //     render: (_, record) => {
-                                    //         const totalDelivered = Array.isArray(record.dn)
-                                    //             ? record.dn.reduce((sum, dn) => sum + (parseFloat(dn.dn_qty) || 0), 0)
-                                    //             : 0;
-
-                                    //         const planQty = Number(record.qty) || 0;
-
-                                    //         let color = 'black';
-                                    //         if (totalDelivered === planQty) {
-                                    //             color = 'green';
-                                    //         } else if (totalDelivered > planQty) {
-                                    //             color = 'red';
-                                    //         } else if (totalDelivered < planQty && totalDelivered > 0) {
-                                    //             color = 'orange';
-                                    //         }
-
-                                    //         return (
-                                    //             <div style={{ color }}>
-                                    //                 {totalDelivered.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                                    //             </div>
-                                    //         );
-                                    //     },
-                                    // },
                                     {
                                         title: 'Delivered',
                                         width: 70,
                                         render: (_, record) => {
                                             const deliveryDate = dayjs.utc(group.deliveryDate).tz('Asia/Phnom_Penh').startOf('day');
-                                            const dnList = Array.isArray(record.dn) ? record.dn : [];
+                                            const dnList = Array.isArray(record.dn) ? record.dn : [record];
 
                                             const allDNs = group.deliveryItems.flatMap(item => item.dn || []);
                                             const sortedDnList = allDNs
@@ -511,27 +519,6 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, dn
                                             );
                                         },
                                     },
-                                    // {
-                                    //     title: 'Attachment',
-                                    //     dataIndex: 'attachment',
-                                    //     render: (_, record) => (
-                                    //         <Image.PreviewGroup>
-                                    //             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                                    //                 {record.dn?.[0]?.attachment?.map((att, index) => (
-                                    //                     <Image
-                                    //                         key={index}
-                                    //                         width={50}
-                                    //                         height={50}
-                                    //                         src={att || ''}
-                                    //                         alt={`attachment-${index}`}
-                                    //                         style={{ objectFit: 'cover', borderRadius: 4 }}
-                                    //                         preview={{ mask: <div>Click to preview</div> }}
-                                    //                     />
-                                    //                 ))}
-                                    //             </div>
-                                    //         </Image.PreviewGroup>
-                                    //     ),
-                                    // },
                                     {
                                         title: 'Attachment',
                                         dataIndex: 'attachment',
@@ -583,47 +570,12 @@ export default ({ data, id, status, po, deliveres, reload, reloadTrigger, so, dn
                                             );
                                         },
                                     },
-
-                                    // {
-                                    //     title: 'DN Date',
-                                    //     width: 190,
-                                    //     render: (_, record) => {
-                                    //         const deliveryDate = dayjs(group.deliveryDate);
-                                    //         const rawDnDate = record.dn?.[0]?.dn_date;
-                                    //         const dnDate = rawDnDate ? dayjs(rawDnDate) : null;
-
-                                    //         if (dnDate && dnDate.isValid()) {
-                                    //             let color = 'default'
-                                    //             let text = '-'
-
-                                    //             if (dnDate.isAfter(deliveryDate)) {
-                                    //                 color = 'red'
-                                    //                 text = 'Late'
-                                    //             } else if (dnDate.isBefore(deliveryDate)) {
-                                    //                 color = 'orange'
-                                    //                 text = 'Early'
-                                    //             } else {
-                                    //                 color = 'green'
-                                    //                 text = 'On Time'
-                                    //             }
-
-                                    //             return (
-                                    //                 <span style={{ display: 'inline-flex', alignItems: 'center' }}>
-                                    //                     {dnDate.format('DD-MMM-YYYY')}
-                                    //                     <Tag color={color} style={{ marginLeft: 8 }}>{text}</Tag>
-                                    //                 </span>
-                                    //             );
-                                    //         }
-
-                                    //         return <span>-</span>;
-                                    //     }
-
-                                    // },
                                     {
                                         width: 100,
                                         align: 'center',
                                         render: (_, r) => {
                                             if (status == 'Pending' || status == 'Failed') return null;
+                                            if (r.isUnplanned) return <Tag key="unplanned" color="orange" style={{ marginLeft: 8 }}>Unplanned</Tag>
                                             if (!access.canAccesAddRemarkAllocate) return null
                                             return (
                                                 <a

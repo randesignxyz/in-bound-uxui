@@ -10,7 +10,7 @@ import { FetchPagingParams } from "@/components/DataCrud/TableView"
 import { ActionType } from "@ant-design/pro-components"
 import { useAccess, useQuery } from "@umijs/max"
 import CustomerDetailView from "@/pages/crm/customer/components/Detail"
-import { formatDateTime } from "@/pages/utils"
+import { formatDate, formatDateTime } from "@/pages/utils"
 import Status from "@/components/Status"
 import StatusBar from "./components/List/StatusBar"
 import ViewWrapper from './ViewWrapper'
@@ -194,6 +194,14 @@ export default () => {
 
                         width: 150,
                         render: (_, data) => formatDateTime(data.orderedDate),
+                    },
+                    {
+                        title: 'First Delivery Date',
+                        align: 'right',
+                        sorter: 'deliveryDate',
+
+                        width: 150,
+                        render: (_, data) => formatDate(data.deliveryDate),
                     },
                     {
                         title: 'Amount',

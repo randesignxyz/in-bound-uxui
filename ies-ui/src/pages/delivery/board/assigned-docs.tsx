@@ -11,7 +11,7 @@ import {
 } from '@/services/delivery/data';
 import { DeliveryParams } from '@/services/delivery/delivery-params';
 import { DeliveryServiceAPI } from '@/services/delivery/services';
-import { CheckOutlined, CloseOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, CheckOutlined, CloseOutlined, EnvironmentOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons';
 import { ProCard, ProFormCheckbox, ProFormDatePicker, ProFormGroup, ProFormSelect, ProFormText } from '@ant-design/pro-components';
 import { ModalForm, ModalFormProps } from '@ant-design/pro-form';
 import ProTable from '@ant-design/pro-table';
@@ -22,6 +22,7 @@ import { Moment } from 'moment';
 import { useEffect, useState } from 'react';
 import { UiType, ViewController } from './view-controller';
 import { shiftList } from './issue-dn';
+import { GoogleMap, Marker, useLoadScript } from "@react-google-maps/api";
 
 export interface CollectedInvoice extends InvoiceItem {
   included: boolean;
@@ -75,9 +76,12 @@ const AssignedDocModal: React.FC<Props> = ({
     licensePlate: string;
     allowNoInvoiceCodCust?: boolean;
   }>()
+  const [openMap, setOpenMap] = useState(false)
 
   const reasigning = itemDetail?.delivery?.assignedDocDate !== null
-
+  const { isLoaded, loadError } = useLoadScript({
+    googleMapsApiKey: 'AIzaSyA0Ifgai8ryDULDIqNOZmX8L7XZlzu4_D8', // put your key here
+  });
 
   const onAssigningDocsHandler = async (
     driverId?: number,
@@ -274,6 +278,11 @@ const AssignedDocModal: React.FC<Props> = ({
     onAssigningDocsHandler(data?.driverId, data?.licensePlate, data?.docDate, data?.shift)
   }
 
+  const defaultCenter = {
+    lat: Number(assigningData?.deliveryNotes[0]?.latitude) || 11.562108,
+    lng: Number(assigningData?.deliveryNotes[0]?.longitude) || 104.888535,
+  };
+
   return (
     <ModalForm
       title="Assign Docs"
@@ -321,6 +330,7 @@ const AssignedDocModal: React.FC<Props> = ({
 
               {!truckChanging && <Space>
                 <Typography.Text type="warning">  {[itemDetail?.delivery?.driver?.firstName, itemDetail?.delivery?.driver?.lastName].join(" ")}/ {itemDetail?.delivery?.truck?.licensePlate}/{formatDate(itemDetail?.delivery.deliveryDate)}/{itemDetail?.delivery.shift} </Typography.Text>
+                <Button type='link' onClick={() => setOpenMap(true)} icon={<EnvironmentOutlined />} />
                 <Button type='link' onClick={onReloadHandler} icon={<ReloadOutlined />} />
               </Space>}
             </Col>
@@ -379,56 +389,20 @@ const AssignedDocModal: React.FC<Props> = ({
             Request Change
           </Button></Tooltip>} />}
         </Space>
-        <ProCard
-          size='small'
-          title="Loaded Items"
-          bordered
-          collapsible
-          defaultCollapsed
-          onCollapse={collapsed => {
-            setShowTotalLoadedAmount(collapsed)
-          }}
-          extra={showTotalLoadedAmount && <Typography.Text strong>Total: {assigningData?.loading?.items?.map((it) => it.loadedQty || 0).reduce((p, c) => p + c, 0)}</Typography.Text>}
-          style={{ marginBottom: 5, marginTop: 5 }} >
-          <ProTable<LoadingItemDetail>
-
-            search={false}
-            size={'small'}
-            options={{
-              density: false,
-              setting: false,
-              reload: false,
+        {!openMap && (<>
+          <ProCard
+            size='small'
+            title="Loaded Items"
+            bordered
+            collapsible
+            defaultCollapsed
+            onCollapse={collapsed => {
+              setShowTotalLoadedAmount(collapsed)
             }}
+            extra={showTotalLoadedAmount && <Typography.Text strong>Total: {assigningData?.loading?.items?.map((it) => it.loadedQty || 0).reduce((p, c) => p + c, 0)}</Typography.Text>}
+            style={{ marginBottom: 5, marginTop: 5 }} >
+            <ProTable<LoadingItemDetail>
 
-            pagination={false}
-            dataSource={assigningData?.loading?.items || []}
-            rowKey="id"
-            columns={[
-              { title: 'Item Code', dataIndex: 'itemCode' },
-              { title: 'Description', dataIndex: 'itemDescription' },
-              { title: 'UOM', dataIndex: 'uom' },
-              { title: 'Qty', dataIndex: 'qty', align: 'right' },
-              { title: 'Batch Num', dataIndex: 'batchNum' },
-              { title: 'Whs.Code', dataIndex: 'whsCode' },
-              { title: 'Loaded Qty', dataIndex: 'loadedQty', align: 'right' },
-            ]}
-            footer={(data) => (
-              <Row>
-                <Col flex={'Auto'} style={{ fontWeight: 'bold' }}>
-                  Total
-                </Col>
-                <Col flex={'100px'} style={{ textAlign: 'end', fontWeight: 'bold' }}>
-                  {' '}
-                  {data.map((it) => it.loadedQty || 0).reduce((p, c) => p + c, 0)}{' '}
-                </Col>
-              </Row>
-            )}
-          />
-        </ProCard>
-
-        {(assigningData?.deliveryNotes?.length || 0) > 0 &&
-          <ProCard title='Delivery Notes' size='small' bordered style={{ marginBottom: 5 }} >
-            <ProTable<DeliveryNoteDetail>
               search={false}
               size={'small'}
               options={{
@@ -436,18 +410,18 @@ const AssignedDocModal: React.FC<Props> = ({
                 setting: false,
                 reload: false,
               }}
+
               pagination={false}
-              dataSource={assigningData?.deliveryNotes}
-              expandable={{
-                expandedRowRender,
-              }}
-              rowKey="docEntry"
+              dataSource={assigningData?.loading?.items || []}
+              rowKey="id"
               columns={[
-                { title: 'DN Num', dataIndex: 'docNum', align: 'left' },
-                { title: 'Customer Code', dataIndex: 'cardCode', align: 'left' },
-                { title: 'Ship to Code', dataIndex: 'shipToCode' },
-                { title: 'Address', dataIndex: 'address' },
-                { title: 'Total Qty', dataIndex: 'qty', align: 'right' },
+                { title: 'Item Code', dataIndex: 'itemCode' },
+                { title: 'Description', dataIndex: 'itemDescription' },
+                { title: 'UOM', dataIndex: 'uom' },
+                { title: 'Qty', dataIndex: 'qty', align: 'right' },
+                { title: 'Batch Num', dataIndex: 'batchNum' },
+                { title: 'Whs.Code', dataIndex: 'whsCode' },
+                { title: 'Loaded Qty', dataIndex: 'loadedQty', align: 'right' },
               ]}
               footer={(data) => (
                 <Row>
@@ -455,82 +429,146 @@ const AssignedDocModal: React.FC<Props> = ({
                     Total
                   </Col>
                   <Col flex={'100px'} style={{ textAlign: 'end', fontWeight: 'bold' }}>
-                    {data.map((it) => it.qty).reduce((p, c) => p + c, 0)}
+                    {' '}
+                    {data.map((it) => it.loadedQty || 0).reduce((p, c) => p + c, 0)}{' '}
                   </Col>
-                </Row>
-              )}
-            />
-          </ProCard>}
-
-
-
-        {invoices.length > 0 && (
-          <ProCard size='small' bordered title='Invoices' style={{ marginBottom: 5 }}
-          // extra = {<Space><InvoiceFinder trigger={ <Button icon = {<PlusCircleFilled/>} type='link'>Add Invoice</Button>} /></Space>}
-          >
-            <ProTable<CollectedInvoice>
-              search={false}
-              rowKey="docEntry"
-              size={'small'}
-              options={{
-                density: false,
-                setting: false,
-                reload: false,
-              }}
-              pagination={false}
-              dataSource={invoices}
-              columns={[
-                { title: 'Inv Num', dataIndex: 'docNum', width: 100 },
-                { title: 'Doc Date', dataIndex: 'docDate', width: 100 },
-                { title: 'Customer Code', dataIndex: 'cardCode', align: 'left' },
-                { title: 'Payment Term', dataIndex: 'paymentTerm' },
-                { title: 'Collected', align: 'center', dataIndex: 'collected', render: (_, r) => r.collected && <Checkbox checked /> },
-                { title: 'Remarks', dataIndex: 'remarks' },
-                { title: 'Amount', dataIndex: 'amount', align: 'right', width: 100 },
-                {
-                  title: 'Included',
-                  width: 50,
-                  render: (_, r) => (
-                    <Switch
-                      onChange={(checked) => {
-                        if (!checked) {
-                          setCommentModal({ visible: true, item: r });
-                        } else {
-                          setInvoices((v) =>
-                            v.map((it) => {
-                              if (it.docEntry === r.docEntry) {
-                                return { ...it, included: checked, remarks: undefined };
-                              } else {
-                                return it;
-                              }
-                            }),
-                          );
-                        }
-                      }}
-                      checkedChildren={<CheckOutlined />}
-                      unCheckedChildren={<CloseOutlined />}
-                      checked={r.included}
-                    />
-                  ),
-                },
-              ]}
-              footer={(data) => (
-                <Row>
-                  <Col flex={'Auto'} style={{ fontWeight: 'bold' }}>
-                    Total
-                  </Col>
-                  <Col flex={'100px'} style={{ textAlign: 'end', fontWeight: 'bold' }}>
-                    {data.map((it) => it.amount).reduce((p, c) => p + c, 0)}
-                  </Col>
-                  <Col flex={'70px'} />
                 </Row>
               )}
             />
           </ProCard>
 
+          {(assigningData?.deliveryNotes?.length || 0) > 0 &&
+            <ProCard title='Delivery Notes' size='small' bordered style={{ marginBottom: 5 }} >
+              <ProTable<DeliveryNoteDetail>
+                search={false}
+                size={'small'}
+                options={{
+                  density: false,
+                  setting: false,
+                  reload: false,
+                }}
+                pagination={false}
+                dataSource={assigningData?.deliveryNotes}
+                expandable={{
+                  expandedRowRender,
+                }}
+                rowKey="docEntry"
+                columns={[
+                  { title: 'DN Num', dataIndex: 'docNum', align: 'left' },
+                  { title: 'Customer Code', dataIndex: 'cardCode', align: 'left' },
+                  { title: 'Ship to Code', dataIndex: 'shipToCode' },
+                  { title: 'Address', dataIndex: 'address' },
+                  { title: 'Total Qty', dataIndex: 'qty', align: 'right' },
+                ]}
+                footer={(data) => (
+                  <Row>
+                    <Col flex={'Auto'} style={{ fontWeight: 'bold' }}>
+                      Total
+                    </Col>
+                    <Col flex={'100px'} style={{ textAlign: 'end', fontWeight: 'bold' }}>
+                      {data.map((it) => it.qty).reduce((p, c) => p + c, 0)}
+                    </Col>
+                  </Row>
+                )}
+              />
+            </ProCard>}
 
 
-        )}
+
+          {invoices.length > 0 && (
+            <ProCard size='small' bordered title='Invoices' style={{ marginBottom: 5 }}
+            // extra = {<Space><InvoiceFinder trigger={ <Button icon = {<PlusCircleFilled/>} type='link'>Add Invoice</Button>} /></Space>}
+            >
+              <ProTable<CollectedInvoice>
+                search={false}
+                rowKey="docEntry"
+                size={'small'}
+                options={{
+                  density: false,
+                  setting: false,
+                  reload: false,
+                }}
+                pagination={false}
+                dataSource={invoices}
+                columns={[
+                  { title: 'Inv Num', dataIndex: 'docNum', width: 100 },
+                  { title: 'Doc Date', dataIndex: 'docDate', width: 100 },
+                  { title: 'Customer Code', dataIndex: 'cardCode', align: 'left' },
+                  { title: 'Payment Term', dataIndex: 'paymentTerm' },
+                  { title: 'Collected', align: 'center', dataIndex: 'collected', render: (_, r) => r.collected && <Checkbox checked /> },
+                  { title: 'Remarks', dataIndex: 'remarks' },
+                  { title: 'Amount', dataIndex: 'amount', align: 'right', width: 100 },
+                  {
+                    title: 'Included',
+                    width: 50,
+                    render: (_, r) => (
+                      <Switch
+                        onChange={(checked) => {
+                          if (!checked) {
+                            setCommentModal({ visible: true, item: r });
+                          } else {
+                            setInvoices((v) =>
+                              v.map((it) => {
+                                if (it.docEntry === r.docEntry) {
+                                  return { ...it, included: checked, remarks: undefined };
+                                } else {
+                                  return it;
+                                }
+                              }),
+                            );
+                          }
+                        }}
+                        checkedChildren={<CheckOutlined />}
+                        unCheckedChildren={<CloseOutlined />}
+                        checked={r.included}
+                      />
+                    ),
+                  },
+                ]}
+                footer={(data) => (
+                  <Row>
+                    <Col flex={'Auto'} style={{ fontWeight: 'bold' }}>
+                      Total
+                    </Col>
+                    <Col flex={'100px'} style={{ textAlign: 'end', fontWeight: 'bold' }}>
+                      {data.map((it) => it.amount).reduce((p, c) => p + c, 0)}
+                    </Col>
+                    <Col flex={'70px'} />
+                  </Row>
+                )}
+              />
+            </ProCard>
+
+
+
+          )}
+        </>)}
+        {openMap && (<>
+          <div style={{ marginBottom: 10, display: 'flex', alignItems: 'center' }}>
+            <Button
+              type="link"
+              icon={<ArrowLeftOutlined />}
+              onClick={() => setOpenMap(false)}
+            >
+              Back
+            </Button>
+          </div>
+          <GoogleMap
+            zoom={12}
+            center={defaultCenter}
+            mapContainerStyle={{ width: "100%", height: "550px" }}
+          >
+            {assigningData?.deliveryNotes.map((dn) => (
+              <Marker
+                key={dn.docEntry}
+                position={{ lat: Number(dn.latitude), lng: Number(dn.longitude) }}
+                title={`${dn.cardName} - ${dn.docNum}`}
+              />
+            ))}
+
+
+          </GoogleMap>
+        </>)}
         {(noInvoiceFormCODCustomerChecks()?.length || 0) > 0 && <ProFormCheckbox
           rules={[{ required: true }]}
           name={"allowNoInvoiceCodCust"}>

@@ -3,13 +3,14 @@ import { PosmReview } from "@/services/crm/data";
 import { LookupData } from "@/services/data";
 import { simpleRequestActions } from "@/services/model";
 import { EditableFormInstance, EditableProTable, ModalForm, ModalFormProps } from "@ant-design/pro-components";
-import { message, Modal } from "antd";
+import { Button, message, Modal } from "antd";
 import { useForm } from "antd/lib/form/Form";
 import _ from "lodash";
 import { useEffect, useRef, useState } from "react";
 import { POSMView } from "../contract/types";
 import { CustomerServices } from "../customer/services";
 import { CrmServices } from "../services";
+import React from "react";
 
 type PosmVerify = {
     id: number;
@@ -21,14 +22,16 @@ type PosmVerify = {
     checkedStatus?: number;
     checkedQuantity?: number;
     remarks?: string;
+    editable?: boolean;
 }
 
-export default ({ customerId, visitId, posmItems, posmReviewList, onRefresh, ...rest }: ModalFormProps & {
+export default ({ customerId, visitId, posmItems, posmReviewList, onRefresh,editable=true, ...rest }: ModalFormProps & {
     customerId: number;
     visitId: number,
     posmItems: POSMView[];
     posmReviewList: PosmReview[];
     onRefresh?: () => void
+    editable?: boolean
 }) => {
     const requestActions = simpleRequestActions()
     const [form] = useForm()
@@ -61,6 +64,11 @@ export default ({ customerId, visitId, posmItems, posmReviewList, onRefresh, ...
     return <ModalForm
         width={1200}
         form={form}
+        submitter={{
+            submitButtonProps: {
+                disabled: !editable,
+            },
+        }}
         onFinish={async () => {
             await editableFormRef.current?.validateFields()
             Modal.confirm({
@@ -128,13 +136,13 @@ export default ({ customerId, visitId, posmItems, posmReviewList, onRefresh, ...
             bordered
             value={data}
             recordCreatorProps={false}
-            editable={{
+            editable={editable?{
                 type: 'multiple',
                 editableKeys: data.map(it => it.id),
                 onValuesChange: (_, records) => {
                     setData(records)
                 }
-            }}
+            }:undefined}
         />
     </ModalForm>
 }

@@ -13,9 +13,10 @@ interface Props {
   lookupDataList: LookupData[];
   list: () => Promise<VisitPlanListItem[]>;
   onLoadAddressList: () => Promise<AddressInfo[]>;
+  editable?: boolean;
 }
 
-export default ({ lookupDataList, onLoadAddressList, list }: Props) => {
+export default ({ lookupDataList, onLoadAddressList, list, editable = true }: Props) => {
   const { state, actions, modals } = Model();
   const [dataList, setDataList] = useState<VisitPlanListItem[]>();
   const [loading, setLoading] = useState<boolean>(false);
@@ -145,12 +146,12 @@ export default ({ lookupDataList, onLoadAddressList, list }: Props) => {
             cardActionProps: 'extra',
             render: (_, r) => (
               <Space>
-                <Button
+                <Button disabled={!editable}
                   type="link"
                   onClick={() => onEditActionHandler(r)}
                   icon={<EditOutlined />}
                 />
-                <Button
+                <Button disabled={!editable}
                   type="link"
                   onClick={() => modals.showDeleteVisitPlanModal(r)}
                   icon={<DeleteOutlined />}
@@ -160,7 +161,7 @@ export default ({ lookupDataList, onLoadAddressList, list }: Props) => {
           },
         }}
       />
-      <Button
+      <Button disabled={!editable}
         size="small"
         style={{ width: '100%', marginBottom: 8 }}
         type="dashed"

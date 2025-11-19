@@ -9,9 +9,10 @@ interface Props extends Omit<ImageProps, 'src'> {
   fileId: string;
   fileName?: string;
   version?: number;
+  editable?: boolean;
 }
 
-const ImagePreview: React.FC<Props> = ({ version, fileId, fileName, ...rest }) => {
+const ImagePreview: React.FC<Props> = ({ version, fileId, fileName,editable=true, ...rest }) => {
   const [image, setImage] = useState<string>('error');
   const loadingImage = () => {
     if (version === 1) {
@@ -33,7 +34,7 @@ const ImagePreview: React.FC<Props> = ({ version, fileId, fileName, ...rest }) =
     <>
       {fileName && <Typography.Title level={5}>{fileName}</Typography.Title>}
       {image === 'error' && (
-        <Upload
+        <Upload disabled={!editable}
           headers={
             localStorage.getItem('accessToken')
               ? {
@@ -58,7 +59,7 @@ const ImagePreview: React.FC<Props> = ({ version, fileId, fileName, ...rest }) =
           }}
         >
           <div>
-            <PlusOutlined />
+            <PlusOutlined/>
             <div style={{ marginTop: 8 }}>Add Files</div>
           </div>
         </Upload>

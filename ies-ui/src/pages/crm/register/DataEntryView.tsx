@@ -578,7 +578,7 @@ export default({
             />
             <ProFormText
               label="Business Name(English)"
-              rules={[{ required: true }]}
+              rules={[{ required: true, max:46 }]}
               name={'buName'}
               allowClear
               width={470}

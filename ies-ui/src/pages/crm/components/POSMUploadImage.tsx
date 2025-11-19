@@ -7,7 +7,8 @@ import { getServiceUrl } from "@/services/ApiUrl";
 
 interface Props extends FormModalProps {
     service: 'FILE',
-    onSave: (data: string[]) => void
+    onSave: (data: string[]) => void,
+    editable?: boolean
 }
 type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0];
 const getBase64 = (file: FileType): Promise<string> =>
@@ -17,7 +18,7 @@ const getBase64 = (file: FileType): Promise<string> =>
         reader.onload = () => resolve(reader.result as string);
         reader.onerror = (error) => reject(error);
     });
-const POSMUploadImage: React.FC<Props> = ({ service, onSave, ...props }) => {
+const POSMUploadImage: React.FC<Props> = ({ service, onSave, editable = false, ...props }) => {
     const [previewOpen, setPreviewOpen] = useState(false);
     const [previewImage, setPreviewImage] = useState('');
     const [fileList, setFileList] = useState<UploadFile[]>([]);
@@ -32,7 +33,7 @@ const POSMUploadImage: React.FC<Props> = ({ service, onSave, ...props }) => {
     const handleChange: UploadProps['onChange'] = ({ fileList: newFileList }) =>
         setFileList(newFileList);
     const uploadButton = (
-        <button style={{ border: 0, background: 'none' }} type="button">
+        <button style={{ border: 0, background: 'none' }} type="button" disabled={!editable}>
             <PlusOutlined />
             <div style={{ marginTop: 8 }}>Upload</div>
         </button>

@@ -36,9 +36,10 @@ interface Props extends DrawerFormProps {
   detail?: VisitScheduleDetail;
   orderList?: SoItemLess[];
   onRefresh?: () => void;
+  editable?: boolean;
 }
 
-export default ({ detail, orderList, onRefresh, ...rest }: Props) => {
+export default ({ detail, orderList, onRefresh, editable=true, ...rest }: Props) => {
 
   const [showModal, setShowModal] = useState<{ type: 'CONTACT_VERIFY' | 'POSM_VERIFY'; cb?: () => void }>()
 
@@ -123,8 +124,9 @@ export default ({ detail, orderList, onRefresh, ...rest }: Props) => {
               defaultChecked={detail?.visit?.shopIsClosed}
             /></ProDescriptions.Item>
         </ProDescriptions>
-        {detail.visit?.checkInImage && (
+        {detail.visit?.checkInImage  && (
           <ImagePreview
+            editable = {editable}
             version={1}
             width={'100px'}
             key={detail?.visit?.checkInImage}
@@ -292,6 +294,7 @@ export default ({ detail, orderList, onRefresh, ...rest }: Props) => {
               fileId: it1.imageId,
               fileName: `Attachment (${index + 1})`,
             }))?.map(it => <ImagePreview
+              editable={editable}
               version={1}
               width={'100px'}
               key={it.fileId}
@@ -328,6 +331,7 @@ export default ({ detail, orderList, onRefresh, ...rest }: Props) => {
 
       {showModal?.type == 'POSM_VERIFY' && detail && <PosmVerify
         open={true}
+        editable={editable}
         posmItems={detail.posmItems}
         posmReviewList={detail.posmReviewList}
         onOpenChange={visible => !visible && setShowModal(undefined)}

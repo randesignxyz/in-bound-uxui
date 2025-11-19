@@ -415,6 +415,7 @@ export default () => {
                 modals.isVisible('quick-view') && (
                     <QuickView
                         title="Vsisit Schedule Detail"
+                        editable={access.canAccessVisitScheduleEdit}
                         open={modals.isVisible('quick-view')}
                         submitter={false}
                         detail={state.data?.detail}

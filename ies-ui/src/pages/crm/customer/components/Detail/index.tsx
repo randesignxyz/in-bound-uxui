@@ -45,6 +45,7 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
   const [addressList, setAddressList] = useState<AddresssView[]>()
   const access = useAccess();
   const requestActions = simpleRequestActions()
+  const editable = access.canAccessCustomerEdit?true:false
 
   useEffect(() => {
     init();
@@ -187,6 +188,7 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
             // onDelete={(id) => CustomerServices.deleteCustomerPosm(id)(requestActions)}
           /> */}
           <PosmView requestActions={requestActions}
+            readOnly={!editable}
             listPosm={() => {
               const data =Promise.resolve(
                 state.data?.detail?.posmItems?.map(it => ({
@@ -214,11 +216,11 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
         </Tabs.TabPane>
         <Tabs.TabPane key="space" tab="Space Reserve">
           {state.data?.detail?.contracts?.map(p => {
-            return <SpaceReservedView contractCode={p.contractNo} address={state.data?.detail?.addressList as AddressInfo[]} contractId={p.id} source='CUSTOMER' />
+            return <SpaceReservedView editable={editable} contractCode={p.contractNo} address={state.data?.detail?.addressList as AddressInfo[]} contractId={p.id} source='CUSTOMER' />
           })}
         </Tabs.TabPane>
         {state.data?.detail?.id && <Tabs.TabPane key="supplySource" tab="Supply Source">
-          <SupplySource customerId={state.data?.detail?.id} />
+          <SupplySource customerId={state.data?.detail?.id} editable={editable}/>
         </Tabs.TabPane>}
         {state.data?.visitSchedule && (
           <Tabs.TabPane key="visit-schedule" tab="Visit Schedule">
@@ -236,7 +238,7 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
         )}
         <Tabs.TabPane key="address" tab="Address">
           <AddressListView
-            addressReadonly={state.data?.detail?.source == 'SAP' || !access.saleAdmin}
+            addressReadonly={state.data?.detail?.source == 'SAP' || !access.saleAdmin || !access.canAccessCustomerEdit}
             data={{
               list: addressList || [],
               init: {
@@ -261,7 +263,7 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
         </Tabs.TabPane>
 
         <Tabs.TabPane key={'visitPlan'} tab="Visit Plan">
-          <VisitPlan
+          <VisitPlan editable={editable}
             lookupDataList={state.initData?.lookupDataList || []}
             list={() => ops.listVisitPlanByCustomerId({ id: id || 0 })}
             onLoadAddressList={() =>
@@ -272,7 +274,7 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
         </Tabs.TabPane>
 
         <Tabs.TabPane key={'Contacts'} tab="Contacts">
-          <ContactListView
+          <ContactListView editable={editable}
             customerId={id}
             reloadParent={() => ops.detail(id)}
             data={state.data?.detail?.contacts}
@@ -420,10 +422,11 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
       // }); 
       }} />
   </Space>}
-    extra={<ActionBar actions={state.data?.detail && getMenuItems(state.data?.detail, 'Detail', () => {
+    extra={access.canAccessCustomerEdit && <ActionBar actions={state.data?.detail && getMenuItems(state.data?.detail, 'Detail', () => {
       ops.detail(state.data?.detail?.id)
     }).filter(it => it.visible) || []} numOfActionOnBar={4} />
-    }>
+    }
+    >
     {content}
   </ProCard> : (
 
@@ -433,7 +436,7 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
       subTitle={state.data?.detail?.code}
       breadcrumbRender={openInTab ? false : undefined}
       // onBack={actionHandlers?.onBack}
-      extra={<ActionBar actions={state.data?.detail && getMenuItems(state.data?.detail, 'Detail', () => {
+      extra={access.canAccessCustomerEdit && <ActionBar actions={state.data?.detail && getMenuItems(state.data?.detail, 'Detail', () => {
         ops.detail(state.data?.detail?.id)
       }).filter(it => it.visible) || []} numOfActionOnBar={4} />
       }

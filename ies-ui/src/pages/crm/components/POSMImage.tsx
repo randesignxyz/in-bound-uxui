@@ -13,11 +13,12 @@ interface Props extends DrawerFormProps {
     pomsInfo?: ContractPOSMItem,
     imageId?: string[];
     version?: number;
-    source: "CUSTOMER" | "POSM",
-    onClose: () => void
+    source: "CUSTOMER" | "POSM";
+    onClose: () => void;
+    editable?: boolean;
 }
 
-const POSMImage: React.FC<Props> = ({ imageId, version, source, onClose, pomsInfo, ...props }) => {
+const POSMImage: React.FC<Props> = ({ imageId, version, source, onClose, pomsInfo, editable=true, ...props }) => {
     const requestActions = simpleRequestActions();
     const [fileList, setFileList] = useState<{ id: number, imageId: string }[]>();
     const loadData = async () => {
@@ -43,6 +44,7 @@ const POSMImage: React.FC<Props> = ({ imageId, version, source, onClose, pomsInf
                 onClose: () => onClose?.(),
                 extra: <>
                     {source == "POSM" && <ImageUploader
+                        editable={editable}
                         onSetFiles={async (e) => {
                             await CrmServiceAPI(requestActions).attachFiles({
                                 attachTo: "POSM",

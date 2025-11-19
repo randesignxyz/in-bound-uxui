@@ -8,7 +8,7 @@ import { SupplySource } from "../../types"
 import SupplySourceEntryModal from "./SupplySourceEntryModal"
 
 
-export default ( {customerId}: {customerId: number}) => {
+export default ( {customerId, editable=true}: {customerId: number, editable?: boolean}) => {
     const requestActions = simpleRequestActions();
     const [visisble, setVisible] = useState(false)
     const [dataList, setDataList] = useState<SupplySource[]>()
@@ -54,12 +54,12 @@ export default ( {customerId}: {customerId: number}) => {
             },
 
             actions: {
-                render: (_, r) => [<Button onClick={()=> onDeletedHandler(r.id)} size="small" danger icon = {<DeleteOutlined />} type = 'link'/>]
+                render: (_, r) => editable&&[<Button onClick={()=> onDeletedHandler(r.id)} size="small" danger icon = {<DeleteOutlined />} type = 'link'/>]
             }
             
 
         }} loading = {requestActions.request?.loading} />
-        <Button
+        <Button disabled={!editable}
             size="small"
             style={{ width: '100%', marginBottom: 8 }}
             type="dashed"

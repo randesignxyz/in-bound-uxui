@@ -119,7 +119,7 @@ export default () => {
     const onDowloadReportHandler = async (params: any) => {
     
             try {
-                const reportName = 'customer-verify';
+                const reportName = 'customer_verification_report';
                 await downloadGenericReport(requestActions)({
                     fileName: `${reportName}-${moment().format()}.xls`,
                     type: 'EXCEL',

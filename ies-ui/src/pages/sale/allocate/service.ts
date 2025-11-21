@@ -1,5 +1,5 @@
 import { RequestActions, ServiceApiType, singleRequest } from "@/services/apiGateway";
-import { Allocate, allocateSearch, DeliveryList, DNList, DNParams, DnQuickView, LocationList, SkuList, SOAllocateActivities, SOList, UpdateRemarkParams } from "./data";
+import { Allocate, allocateSearch, DeliveryList, DNList, DNParams, DnQuickView, LocationList, SkuList, SOAllocateActivities, SOList, UpdateRemarkParams,ListDnDetailParams } from "./data";
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { Paging } from "@/services/API";
 
@@ -28,11 +28,11 @@ const AllocateAction = {
             page: params.pagination?.current,
         },
     }),
-    listDnDetail: (status?: string, delivery_date?: string, province_id?: string, district_id?: string, commune_id?: string): ServiceApiType<{ status?: string, delivery_date?: string, region?: string, province_id?: string, district_id?: string, commune_id?: string }> => ({
+    listDnDetail: (params:ListDnDetailParams): ServiceApiType<ListDnDetailParams> => ({
         type: 'LIST_QUERY',
         endpoint: 'DELIVERY',
         actionName: 'get-dn-detail',
-        payload: { status, delivery_date, province_id, district_id, commune_id },
+        payload: params,
     }),
     listDn: (so_allocate_id: string[], docNum?: string): ServiceApiType<{ so_allocate_id: string[], docNum?: string }> => ({
         type: 'LIST_QUERY',
@@ -148,8 +148,8 @@ export const AllocateServiceAPI = (requestAction: RequestActions) => {
             singleRequest<DnQuickView>(AllocateAction.fetchDnQuickView(startDate, endDate))(
                 requestAction
             ),
-        list_dn_detail: (status?: string, delivery_date?: string, province_id?: string, district_id?: string, commune_id?: string) =>
-            singleRequest<DNList>(AllocateAction.listDnDetail(status, delivery_date, province_id, district_id, commune_id))(
+        list_dn_detail: (params:ListDnDetailParams) =>
+            singleRequest<DNList>(AllocateAction.listDnDetail(params))(
                 requestAction
             ),
         list_sku: () =>

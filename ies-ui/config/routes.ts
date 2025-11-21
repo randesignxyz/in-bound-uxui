@@ -191,7 +191,7 @@ export default [
     access: 'canAccessCrmMenuItem',
     component: './crm/shared-customer',
   },
-   {
+  {
     path: '/crm/verified-customer/:view',
     name: 'Verified Customer',
     icon: 'UnorderedListOutlined',
@@ -399,7 +399,7 @@ export default [
     access: 'canAccessDF360',
     component: './hrm/df',
   },
-    {
+  {
     path: '/externa/hrm/df/:view/*',
     name: 'df_360',
     icon: 'UnorderedListOutlined',
@@ -933,6 +933,22 @@ export default [
     hideInMenu: 'true',
     access: 'canAccesAllocateSaleView',
     component: './sale/allocate',
+  },
+  {
+    path: '/delivery/location',
+    name: 'delivery-tracking',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccesAllocateDelView',
+    component: './delivery/allocate/location',
+  },
+   {
+    path: '/sale/location',
+    name: 'delivery-tracking',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccesAllocateDelView',
+    component: './sale/allocate/location',
   },
   // {
   //   path: '/delivery/associate/sale/:view/*',
@@ -1582,7 +1598,7 @@ export default [
 
   /* En request car */
   /*Start Register Customer */
-   {
+  {
     path: '/crm/register-customer/:view/*',
     name: 'view-register-customer',
     icon: 'UnorderedListOutlined',

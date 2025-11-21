@@ -39,11 +39,11 @@ const RemarkModal: React.FC<Props> = ({ onSave, ...props }) => {
                     label={"Remark"}
                 />
                
-                <FileUploader
+                {/* <FileUploader
                     onSetFiles={(d) => {
                         setFile(d?.map(p => p.response));
                     }}
-                />
+                /> */}
 
             </ModalForm>
         </>

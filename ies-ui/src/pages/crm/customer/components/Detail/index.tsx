@@ -10,7 +10,7 @@ import { history, useAccess } from "@umijs/max";
 import { ForcastingDetailView } from '../forcasting/ForcastingDetailView';
 import ProTable from '@ant-design/pro-table';
 import VisitScheduleChangeStatusModal from '../VisitScheduleChangeStatusModal';
-import {  encryptToBase64, formatDate, formatMonth } from '@/pages/utils';
+import { encryptToBase64, formatDate, formatMonth } from '@/pages/utils';
 import { ProcessFlowModalWrapper } from '@/pages/process-flow/components/ProcessFlowModalWrapper';
 import { CustomerContractForm } from '@/pages/crm/contract/process-flow';
 import AttachmentList from '@/components/Attachment/AttachmentList';
@@ -30,6 +30,7 @@ import ActionBar from '@/components/ActionBar';
 import { CustomerActionController } from '../..';
 import SpaceReservedView from '@/pages/crm/contract/space-reserve/DetailView';
 import { LinkOutlined } from '@ant-design/icons';
+import MapLocationDrawer from '../MapLocation';
 
 interface Props {
   id?: number;
@@ -46,6 +47,7 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
   const access = useAccess();
   const requestActions = simpleRequestActions()
   const editable = access.canAccessCustomerEdit?true:false
+  const [quickState, setQuickState] = useState<{ visible: any }>();
 
   useEffect(() => {
     init();
@@ -190,21 +192,21 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
           <PosmView requestActions={requestActions}
             readOnly={!editable}
             listPosm={() => {
-              const data =Promise.resolve(
+              const data = Promise.resolve(
                 state.data?.detail?.posmItems?.map(it => ({
-                  key:"",
-                id: it.id,
-                categoryId:0,
-                itemId: it.item.id,
-                qty: it.qty,
-                effectiveDate:it?.effectiveDate,
-                installedDate:it?.installedDate,
-                expiryDate:it?.expiryDate,
-                remarks: it.remarks
-              })) || [])
+                  key: "",
+                  id: it.id,
+                  categoryId: 0,
+                  itemId: it.item.id,
+                  qty: it.qty,
+                  effectiveDate: it?.effectiveDate,
+                  installedDate: it?.installedDate,
+                  expiryDate: it?.expiryDate,
+                  remarks: it.remarks
+                })) || [])
               return data
             }}
-            onSave={(data:any) => {
+            onSave={(data: any) => {
               return CustomerServices.saveCustomerPOSM({
                 ...data,
                 id: data.id,
@@ -408,25 +410,24 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
 
 
   return openInTab ? <ProCard title={<Space># <Typography.Text strong copyable >{state.data?.detail?.code}</Typography.Text>
-  
-    <Button icon={<LinkOutlined/>} type='link' onClick={()=>{ 
+
+    <Button icon={<LinkOutlined />} type='link' onClick={() => {
       const encrypted = encryptToBase64(state.data?.detail?.code || "n/a");
-      
+
       window.open(`http://api2.vital.com.kh/customer-view/${encrypted}`, '_blank');
       // navigator.clipboard?.writeText(`http://api2.vital.com.kh/customer-view/${encrypted}`)
-  
+
       // .then(() => {
       //   window.open(`http://api2.vital.com.kh/customer-view/${encrypted}`, '_blank');
       // })
       // .catch((err) => {
       // }); 
-      }} />
+    }} />
   </Space>}
     extra={access.canAccessCustomerEdit && <ActionBar actions={state.data?.detail && getMenuItems(state.data?.detail, 'Detail', () => {
       ops.detail(state.data?.detail?.id)
     }).filter(it => it.visible) || []} numOfActionOnBar={4} />
-    }
-    >
+    }>
     {content}
   </ProCard> : (
 
@@ -443,6 +444,11 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
     >
       {content}
 
+      <MapLocationDrawer
+        open={quickState?.visible?.state}
+        onClose={() => setQuickState({ visible: undefined })}
+        cusId={quickState?.visible?.id}
+      />
     </PageContainer>
   );
 };

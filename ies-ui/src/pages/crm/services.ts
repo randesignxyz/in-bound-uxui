@@ -7,4 +7,9 @@ export const CrmServices = {
         endpoint: 'CRM',
         payload: {list: types}
     }),
+    listLocations: (param:{types?: string}) => fetchDataListService<Location, {type?:string}>({
+        actionName: 'locations',
+        endpoint: 'CRM',
+        payload:{...param}
+    }),
 }

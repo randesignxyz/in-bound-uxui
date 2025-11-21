@@ -2,7 +2,7 @@ import DescriptionDisplay from '@/components/Descriptions';
 import { simpleRequestActions } from '@/services/model';
 import type { LeadDetail } from '@/services/sale/data';
 import { ProDescriptions, ProForm, ProList } from '@ant-design/pro-components';
-import { Button, Card, Divider, Flex, message, Modal, Row, Space, Spin, Tag, Typography } from 'antd';
+import { Button, Card, Divider, Flex, message, Modal, Row, Space, Spin, Tabs, Tag, Typography } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import React, { useEffect, useState } from 'react';
 import { LeadServiceAPI } from './services';
@@ -10,11 +10,23 @@ import { CheckCircleOutlined, CheckSquareOutlined, EditOutlined, FileDoneOutline
 import RemarkModal from './RemarkModal';
 import ActivityLog from '@/components/ActivityLog';
 import ImagePreview from '@/components/ImagePreview';
+import { GoogleMap, Marker, Polyline, InfoWindow, useJsApiLoader } from '@react-google-maps/api';
 
 interface Props {
   onEdit: (data?: LeadDetail) => void;
   id?: number;
 }
+
+const containerStyle = {
+  width: '100%',
+  height: '50vh'
+};
+
+const center = {
+  lat: 11.58181155360925,
+  lng: 104.91810050044207
+};
+
 
 const layout = {
   labelCol: { span: 8 },
@@ -24,6 +36,7 @@ const layout = {
 const LeadDetailView: React.FC<Props> = ({ id, onEdit }) => {
   const requestActions = simpleRequestActions();
   const services = LeadServiceAPI(requestActions);
+  const [force, setForce] = useState("FIRST");
   const [lead, setLead] = useState<LeadDetail>();
   useEffect(() => {
     (async () => {
@@ -31,8 +44,13 @@ const LeadDetailView: React.FC<Props> = ({ id, onEdit }) => {
         setLead(await services.detailLead(id));
       }
     })();
-  }, []);
+  }, [force]);
 
+  const { isLoaded } = useJsApiLoader({
+    googleMapsApiKey: "AIzaSyA0Ifgai8ryDULDIqNOZmX8L7XZlzu4_D8", // Replace with your key
+    // libraries: ["places"], // Optional: include if you use Places
+  });
+  const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
   const [remarkState, setRemarkState] = useState<{
     visible?: { state: boolean, payload: any }
   }>()
@@ -197,39 +215,96 @@ const LeadDetailView: React.FC<Props> = ({ id, onEdit }) => {
             ]}
           />
         </Card>
-        <Card>
-          <ProList
-            dataSource={lead?.logs}
-            metas={{
-              title: {
-                dataIndex: "activityType"
-              },
-              subTitle: {
-                dataIndex: "login"
-              },
-              description: {
-                render: (_, r) => <Space >
-                  <Typography.Text type='secondary'>{r.remarks}</Typography.Text>
-                  <Space>
-                    {r.attached?.split(",")?.map(p => {
-                      return p ?
-                        <ImagePreview
-                          height={50}
-                          fileId={p}
-                        />
-                        : <></>
-                    })}
-                  </Space>
-                </Space>
-              },
-              actions: {
-                dataIndex: "activityDate",
-                valueType: "date"
-              }
-            }}
+        <Tabs
+          items={[
+            {
+              key: "1",
+              label: "Location",
+              children: <Card>
+                {isLoaded && lead && (
+                  <GoogleMap
+                    mapContainerStyle={containerStyle}
+                    center={center}
+                    zoom={10}
+                    onLoad={(map) => setMapInstance(map)}
+                    options={{
+                      gestureHandling: "greedy",
+                      zoomControl: true,
+                      streetViewControl: false,
+                      mapTypeControl: false,
+                      styles: [
+                        { featureType: "poi", stylers: [{ visibility: "off" }] },
+                        { featureType: "transit", stylers: [{ visibility: "off" }] },
+                      ],
+                    }}
+                  >
+                    <Marker
+                      position={{
+                        lat: Number(lead?.latitude),
+                        lng: Number(lead?.longitude),
+                      }}
+                      icon={{
+                        url: "/icons/location_11315234.png",
+                        scaledSize: isLoaded ? new window.google.maps.Size(60, 60) : undefined,
+                      }}
+                      title="Current location"
+                      onClick={() => {
+                        // Optional: zoom in on click
+                        const lat= Number(lead?.latitude)
+                        const lng= Number(lead?.longitude)
+                        mapInstance?.panTo({ lat, lng });
+                        if (mapInstance?.getZoom()! < 16) {
+                          mapInstance?.setZoom(16);
+                        }
+                      }}
+                    />
 
-          />
-        </Card>
+                  </GoogleMap>
+                )}
+              </Card>
+            },
+            {
+              key: "",
+              label: "Activity",
+              children: <Card>
+                <ProList
+                  dataSource={lead?.logs}
+                  metas={{
+                    title: {
+                      dataIndex: "activityType"
+                    },
+                    subTitle: {
+                      dataIndex: "login"
+                    },
+                    description: {
+                      render: (_, r) => <Space >
+                        <Typography.Text type='secondary'>{r.remarks}</Typography.Text>
+                        <Space>
+                          {r.attached?.split(",")?.map(p => {
+                            return p ?
+                              <ImagePreview
+                                height={50}
+                                fileId={p}
+                              />
+                              : <></>
+                          })}
+                        </Space>
+                      </Space>
+                    },
+                    actions: {
+                      dataIndex: "activityDate",
+                      valueType: "date"
+                    }
+                  }}
+
+                />
+              </Card>
+            }
+          ]}
+        >
+
+        </Tabs>
+
       </Flex>
 
       <RemarkModal
@@ -238,20 +313,14 @@ const LeadDetailView: React.FC<Props> = ({ id, onEdit }) => {
           onCancel: () => setRemarkState({ visible: undefined })
         }}
         onSave={async (data) => {
-          Modal.confirm({
-            title: "Confirmation", // ✅ Title shown at the top
-            content: "Are you sure you want to verify this lead?", // ✅ Content message
-            okText: "Yes, Verify",
-            cancelText: "Cancel",
-            onOk: async () => {
-              await services.verified({
-                ...data,
-                id: lead?.id
-              });
-              message.success("Success!");
-              setRemarkState({ visible: undefined });
-            },
+          await services.verified({
+            ...data,
+            id: lead?.id
           });
+          message.success("Success!");
+          setForce((Math.random() * 1000).toString())
+          setRemarkState({ visible: undefined });
+
         }}
       />
     </>

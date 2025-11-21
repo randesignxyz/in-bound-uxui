@@ -49,6 +49,7 @@ export const DeliveryPaths = {
   deliveryHistory: '/delivery/list-instances-delivery',
   delAllocate:'/delivery/allocate',
   saleAllocate:'/delivery/allocate/sale',
+  DOPlocationTracking: '/delivery/location',
 };
 
 

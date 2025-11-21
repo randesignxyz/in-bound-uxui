@@ -10,7 +10,7 @@ import { AllocateServiceAPI } from './service';
 import { Allocate, AllocateSOAdvanceParams, DeliveryList, DNItemParams, DNList, DNParams, DnQuickView, LocationList, SkuList, SOAllocateActivities, SOList, UpdateRemarkParams } from './data';
 import { useAccess, useModel } from '@umijs/max';
 import { Paging } from '@/services/API';
-import { FaCarSide, FaRegPenToSquare, FaTruckMoving } from "react-icons/fa6";
+import { FaCarSide, FaMapLocationDot, FaRegPenToSquare, FaTruckMoving } from "react-icons/fa6";
 import DrawerForm from './DrawerForm';
 import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
@@ -22,13 +22,19 @@ import { FloatingCard } from './displayCard';
 import SaleTypeDrawer from './SaleTypeDrawer';
 import moment from 'moment';
 import { ProForm, ProFormDatePicker, ProFormDateRangePicker, ProFormSelect } from '@ant-design/pro-components';
-import { useForm } from 'antd/es/form/Form';
 import ForceColseModal from './ForceCloseModal';
+import { TbMap2 } from "react-icons/tb";
+import { useLocation, useNavigate } from "react-router-dom";
 
 dayjs.extend(customParseFormat)
+interface DNListState {
+  selectedRows?: DNList[]
+}
 
 export default () => {
+  const navigate = useNavigate();
   const { RangePicker } = DatePicker
+  const { state } = useLocation() as { state: DNListState };
   const access = useAccess();
   const [form] = Form.useForm();
   const requestActions = simpleRequestActions();
@@ -37,6 +43,7 @@ export default () => {
   const [data, setData] = useState<SOList[]>()
   const [skuList, setSkuList] = useState<SkuList[]>([])
   const [dataListDn, setDataListDn] = useState<DNList[]>([])
+  const [selectedListDn, setSelectedListDn] = useState<DNList[]>([])
   const [selectedRows, setSelectedRows] = useState<DNList[]>([]);
   const [asDate, setAsDate] = useState(true);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
@@ -58,8 +65,9 @@ export default () => {
   const [MTSearch, setMTSearch] = useState<{ status: string; startDate?: string, endDate?: string }>({
     status: 'open',
   });
-  const [dnSearch, setDnSearch] = useState<{ status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string }>({
+  const [dnSearch, setDnSearch] = useState<{ status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string }>({
     status: 'posted',
+    dnStatus: 'open'
   });
   const [modalOpen, setModalOpen] = useState<{ visible: boolean; id: number, remark?: string, attachment?: any, sales_planid?: string }>({
     visible: false,
@@ -78,9 +86,11 @@ export default () => {
     visible: false
   });
   const [activities, setActivities] = useState<SOAllocateActivities[]>([]);
-
+  const [hisSearch, setHisSearch] = useState<{ status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string }>({
+    status: 'posted',
+    dnStatus: 'open'
+  });
   const cacheList = useModel('dataList');
-
   const normalizeLocationList = (
     res: LocationList | Paging<LocationList> | LocationList[]
   ): LocationList[] => {
@@ -94,6 +104,34 @@ export default () => {
   const [provinceOptions, setProvinceOptions] = useState<{ value: number; label: string }[]>([]);
   const [districtOptions, setDistrictOptions] = useState<{ value: number; label: string }[]>([]);
   const [communeOptions, setCommuneOptions] = useState<{ value: number; label: string }[]>([]);
+
+  useEffect(() => {
+    if (state?.selectedRows) {
+      setSelectedRowKeys(prev => {
+        const newKeys = state.selectedRows
+          ?.map(r => r.id)
+          .filter(id => !prev.includes(id));
+        return [...prev, ...newKeys];
+      });
+
+      setSelectedRows(prev => {
+        const newRows = state.selectedRows?.filter(
+          r => !prev.some(p => p.id === r.id)
+        );
+        return [...prev, ...newRows];
+      });
+
+      setSelectedListDn(prev => {
+        const newRows = state.selectedRows?.filter(
+          r => !prev.some(p => p.id === r.id)
+        );
+        return [...prev, ...newRows];
+      });
+
+      setDataListDn(prev => prev.filter(r => !state.selectedRows?.some(s => s.id === r.id)));
+      if (state.selectedRows.length > 0) setCardOpen({ visible: true });
+    }
+  }, [state?.selectedRows]);
 
   // Load provinces once
   useEffect(() => {
@@ -150,7 +188,6 @@ export default () => {
       });
 
       setSkuList(sortedSku);
-      console.log('Sorted SKU list by category and sequence:', sortedSku);
     };
 
     fetchSku();
@@ -363,22 +400,72 @@ export default () => {
     }
   };
 
+  // const onRequestDNHandler = async (
+  //   params: TableViewSearchParams<AllocateSOAdvanceParams>
+  // ): Promise<Paging<DNList>> => {
+  //   try {
+  //     const list = await services.list_dn_by_user(MTSearch.status, MTSearch.startDate, MTSearch.endDate);
+
+  //     if (!Array.isArray(list)) {
+  //       throw new Error('Unexpected response format');
+  //     }
+
+  //     const page = params.pagination?.current ?? 1;
+  //     const pageSize = params.pagination?.pageSize ?? 20;
+  //     const total = list.length;
+
+  //     const pagedData = list.slice((page - 1) * pageSize, page * pageSize);
+
+  //     return {
+  //       items: pagedData,
+  //       total,
+  //       page,
+  //       pageSize
+  //     };
+
+
+  //   } catch (error: any) {
+  //     message.error(error.message);
+  //     return Promise.reject(error);
+  //   }
+  // };
+
   const onRequestDNHandler = async (
     params: TableViewSearchParams<AllocateSOAdvanceParams>
   ): Promise<Paging<DNList>> => {
     try {
-      const list = await services.list_dn_by_user(MTSearch.status, MTSearch.startDate, MTSearch.endDate);
+      const list = await services.list_dn_by_user(
+        MTSearch.status,
+        MTSearch.startDate,
+        MTSearch.endDate
+      );
 
       if (!Array.isArray(list)) {
         throw new Error('Unexpected response format');
       }
 
+      // Merge deliveryItems and unplannedItems for each record
+      const mergedList = list.map(delivery => {
+        const deliveryItems = Array.isArray(delivery.deliveryItems) ? delivery.deliveryItems : [];
+        const unplannedItems = Array.isArray(delivery.unplannedItems) ? delivery.unplannedItems : [];
+
+        const mergedItems = [
+          ...deliveryItems.map(item => ({ ...item, isUnplanned: false })),
+          ...unplannedItems.map(item => ({ ...item, isUnplanned: true }))
+        ];
+
+        return {
+          ...delivery,
+          mergedItems
+        };
+      });
+
+      // Pagination
       const page = params.pagination?.current ?? 1;
       const pageSize = params.pagination?.pageSize ?? 20;
-      const total = list.length;
-
-      const pagedData = list.slice((page - 1) * pageSize, page * pageSize);
-
+      const total = mergedList.length;
+      const pagedData = mergedList.slice((page - 1) * pageSize, page * pageSize);
+      console.log('pagedDatapagedData', pagedData)
       return {
         items: pagedData,
         total,
@@ -386,12 +473,12 @@ export default () => {
         pageSize
       };
 
-
     } catch (error: any) {
       message.error(error.message);
       return Promise.reject(error);
     }
   };
+
 
   const onRequestQuickView = async (
     params: TableViewSearchParams<AllocateSOAdvanceParams>
@@ -463,41 +550,36 @@ export default () => {
     params: TableViewSearchParams<AllocateSOAdvanceParams>
   ): Promise<Paging<DNList>> => {
     try {
-      const skuResult = await services.list_sku();
-      let skuArray: SkuList[] = [];
+      const today = moment().format('YYYY-MM-DD');
+      const deliveryDate = asDate ? dnSearch.delivery_date || undefined : today;
 
-      if (Array.isArray(skuResult)) {
-        skuArray = skuResult;
-      } else if ('data' in skuResult && Array.isArray(skuResult.data)) {
-        skuArray = skuResult.data;
-      } else {
-        skuArray = [skuResult];
+      // Map Ant Design sort info to backend format
+      const sortBy: string[] = [];
+      const sortOrders: string[] = [];
+      if (params?.criteria?.sort) {
+        Object.entries(params?.criteria?.sort).forEach(([key, value]) => {
+          sortBy.push(key);
+          sortOrders.push(value === 'ascend' ? 'asc' : 'desc');
+        });
       }
 
-      const sortedSku = skuArray.sort((a, b) => {
-        if (a.item_category !== b.item_category) return a.item_category - b.item_category;
-        return a.sequence - b.sequence;
+      const list = await services.list_dn_detail({
+        status: dnSearch.status,
+        delivery_date: deliveryDate,
+        province_id: dnSearch.province_id,
+        district_id: dnSearch.district_id,
+        commune_id: dnSearch.commune_id,
+        sortBy,
+        sortOrders,
+        filterPass: "Unclaimed"
       });
 
-      // const deliveryDate = asDate ? undefined : dnSearch.delivery_date;
-      const today = moment().format('YYYY-MM-DD');
-      const deliveryDate = asDate
-        ? dnSearch.delivery_date || undefined
-        : today;
-
-      const list = await services.list_dn_detail(
-        dnSearch.status,
-        deliveryDate,
-        dnSearch.province_id,
-        dnSearch.district_id,
-        dnSearch.commune_id
-      );
-
       if (!Array.isArray(list)) throw new Error('Unexpected response format');
+
+      // Transform list with SKU quantities
       const transformedList = list.map((delivery) => {
         const skuValues: Record<string, number> = {};
-
-        sortedSku.forEach((sku) => {
+        skuList.forEach((sku) => {
           if (sku.item_category === 2) {
             skuValues[`${sku.sku_code}_pack`] = 0;
             skuValues[`${sku.sku_code}_bowl`] = 0;
@@ -507,26 +589,14 @@ export default () => {
         });
 
         const itemsToUse = delivery.mergeItems?.length ? delivery.mergeItems : delivery.deliveryItems;
-
         itemsToUse.forEach((item) => {
-          const sku = sortedSku.find((s) => s.id.toString() === item.sku_id);
+          const sku = skuList.find((s) => s.id.toString() === item.sku_id);
           if (!sku) return;
-
-          if (sku.item_category === 2) {
-            const uom = normalizeUOM(item.sku_uom);
-            if (!uom) return;
-            const key = `${sku.sku_code}_${uom}`;
-            skuValues[key] += item.qty;
-          } else {
-            skuValues[sku.sku_code] += item.qty;
-          }
+          const key = sku.item_category === 2 ? `${sku.sku_code}_${normalizeUOM(item.sku_uom)}` : sku.sku_code;
+          skuValues[key] += item.qty;
         });
 
-        return {
-          ...delivery,
-          key: delivery.id,
-          ...skuValues,
-        };
+        return { ...delivery, key: delivery.id, ...skuValues };
       });
 
       const page = params.pagination?.current ?? 1;
@@ -534,15 +604,8 @@ export default () => {
       const total = transformedList.length;
       const pagedData = transformedList.slice((page - 1) * pageSize, page * pageSize);
 
-      const dataList = {
-        items: pagedData,
-        total,
-        page,
-        pageSize,
-      };
-
-      setDataListDn(dataList);
-      setSkuList(sortedSku); // update state for columns
+      const dataList = { items: pagedData, total, page, pageSize };
+      setDataListDn(list);
       return dataList;
     } catch (error: any) {
       message.error(error.message);
@@ -550,9 +613,73 @@ export default () => {
     }
   };
 
+  const onHistoryRequestDNDeatilHandler = async (
+    params: TableViewSearchParams<AllocateSOAdvanceParams>
+  ): Promise<Paging<DNList>> => {
+    try {
+      const today = moment().format('YYYY-MM-DD');
+      const deliveryDate = asDate ? hisSearch.delivery_date || undefined : today;
 
+      // Map Ant Design sort info to backend format
+      const sortBy: string[] = [];
+      const sortOrders: string[] = [];
+      if (params?.criteria?.sort) {
+        Object.entries(params?.criteria?.sort).forEach(([key, value]) => {
+          sortBy.push(key);
+          sortOrders.push(value === 'ascend' ? 'asc' : 'desc');
+        });
+      }
 
+      const list = await services.list_dn_detail({
+        status: hisSearch.status,
+        delivery_date: deliveryDate,
+        province_id: hisSearch.province_id,
+        district_id: hisSearch.district_id,
+        commune_id: hisSearch.commune_id,
+        sortBy,
+        sortOrders,
+        filterPass: "Claimed",
+        dnStatus: hisSearch.dnStatus
+      });
 
+      if (!Array.isArray(list)) throw new Error('Unexpected response format');
+
+      // Transform list with SKU quantities
+      const transformedList = list.map((delivery) => {
+        const skuValues: Record<string, number> = {};
+        skuList.forEach((sku) => {
+          if (sku.item_category === 2) {
+            skuValues[`${sku.sku_code}_pack`] = 0;
+            skuValues[`${sku.sku_code}_bowl`] = 0;
+          } else {
+            skuValues[sku.sku_code] = 0;
+          }
+        });
+
+        const itemsToUse = delivery.mergeItems?.length ? delivery.mergeItems : delivery.deliveryItems;
+        itemsToUse.forEach((item) => {
+          const sku = skuList.find((s) => s.id.toString() === item.sku_id);
+          if (!sku) return;
+          const key = sku.item_category === 2 ? `${sku.sku_code}_${normalizeUOM(item.sku_uom)}` : sku.sku_code;
+          skuValues[key] += item.qty;
+        });
+
+        return { ...delivery, key: delivery.id, ...skuValues };
+      });
+
+      const page = params.pagination?.current ?? 1;
+      const pageSize = params.pagination?.pageSize ?? 10;
+      const total = transformedList.length;
+      const pagedData = transformedList.slice((page - 1) * pageSize, page * pageSize);
+
+      const dataList = { items: pagedData, total, page, pageSize };
+      setDataListDn(list);
+      return dataList;
+    } catch (error: any) {
+      message.error(error.message);
+      return Promise.reject(error);
+    }
+  };
 
 
   const soColums: ProColumns<SOList>[] = [
@@ -678,30 +805,33 @@ export default () => {
 
   // Static columns
   const staticColumns: ProColumns<DNList>[] = [
-    {
-      title: '',
-      dataIndex: 'checkbox',
-      width: '2%',
-      render: (_: any, record: DNList) => (
-        <>
-          {/* <Button type='link' onClick={() => setDrawerTypeOpen({ visible: true, data: record })}> <PlusCircleOutlined /></Button> */}
-
-          <Checkbox
-            checked={selectedRowKeys.includes(record.id)}
-            onChange={(e) => {
-              if (e.target.checked) {
-                setSelectedRowKeys(prev => [...prev, record.id]);
-                setSelectedRows(prev => [...prev, record]);
-                setCardOpen({ visible: true });
-              } else {
-                setSelectedRowKeys(prev => prev.filter(k => k !== record.id));
-                setSelectedRows(prev => prev.filter(r => r.id !== record.id));
-              }
-            }}
-          />
-        </>
-      ),
-    },
+    ...(advanceSearchParams.filter !== 'HIS'
+      ? [
+        {
+          title: '',
+          dataIndex: 'checkbox',
+          width: '2%',
+          render: (_: any, record: DNList) => (
+            <Checkbox
+              checked={selectedRowKeys.includes(record.id)}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setSelectedRowKeys(prev => [...prev, record.id]);
+                  setSelectedRows(prev => [...prev, record]);
+                  setCardOpen({ visible: true });
+                  setSelectedListDn(prev => [...prev, record]);
+                  setDataListDn(prev => prev.filter(r => r.id !== record.id));
+                } else {
+                  setSelectedRowKeys(prev => prev.filter(k => k !== record.id));
+                  setSelectedRows(prev => prev.filter(r => r.id !== record.id));
+                  setSelectedListDn(prev => prev.filter(r => r.id !== record.id));
+                }
+              }}
+            />
+          ),
+        },
+      ]
+      : []),
 
 
     {
@@ -720,11 +850,22 @@ export default () => {
       dataIndex: 'deliveryDate',
       width: '6%',
       render: (_, r) =>
-        dayjs.utc(r.deliveryDate).add(7, 'hour').format('DD-MMM-YYYY')// forces UTC, no timezone shift
+        dayjs.utc(r.deliveryDate).add(7, 'hour').format('DD-MMM-YYYY'),// forces UTC, no timezone shift
+      sorter: {
+        compare: (a, b) =>
+          (a.deliveryDate ? dayjs(a.deliveryDate).unix() : 0) -
+          (b.deliveryDate ? dayjs(b.deliveryDate).unix() : 0),
+        multiple: 4,
+      },
     },
     {
       title: 'Shipping Address',
       dataIndex: 'shippingAddress',
+      // sorter: true,
+      sorter: {
+        compare: (a, b) => (a.shippingAddress ?? '').localeCompare(b.shippingAddress ?? ''),
+        multiple: 1,
+      },
       width: 200,
       render: (_, value) => (
         <a
@@ -742,9 +883,25 @@ export default () => {
       ),
     },
     // { title: 'Customer', dataIndex: 'customer_name', width: '7%' },
-    { title: 'District', dataIndex: 'district', width: 150 },
-    { title: 'Commune', dataIndex: 'commune', width: 150 },
-    { title: 'Channel', dataIndex: 'channel', width: 150 },
+    ...(advanceSearchParams.filter !== 'HIS'
+      ? [
+        {
+          title: 'District', dataIndex: 'district', width: 150, sorter: {
+            compare: (a, b) => (a.district ?? '').localeCompare(b.district ?? ''),
+            multiple: 2,
+          },
+        },
+        {
+          title: 'Commune', dataIndex: 'commune', width: 150, sorter: {
+            compare: (a, b) => (a.commune ?? '').localeCompare(b.commune ?? ''),
+            multiple: 3,
+          },
+        },
+        { title: 'Channel', dataIndex: 'channel', width: 150 },
+      ]
+      : []),
+
+
     {
       title: 'SKU',
       key: 'sku',
@@ -767,7 +924,33 @@ export default () => {
           {text.remarks ? text.remarks : '-'}
         </div>
       ),
-    }
+    },
+    ...(advanceSearchParams.filter !== 'DN'
+      ? [
+        { title: 'Claimed By', dataIndex: 'claimed_by', width: 150 },
+        {
+          title: 'Status', dataIndex: 'status',
+          render: (_, r) => (
+            <Tag
+              color={
+                r.status === 'open'
+                  ? 'blue'
+                  : r.status === 'in-progress'
+                    ? 'orange'
+                    : r.status === 'complete'
+                      ? 'green'
+                      : r.status === 'force-close'
+                        ? 'red'
+                        : 'default'
+              }
+              style={{ textTransform: 'capitalize' }}
+            >
+              {r?.status === 'force-close' ? 'Close' : r?.status?.replace(/-/g, ' ')}
+            </Tag>
+          )
+        },
+      ]
+      : []),
   ];
 
   // const expandedRowRender = (record: DNList) => {
@@ -968,10 +1151,10 @@ export default () => {
               size="small"
               search={false}
               rowKey="id"
-              dataSource={record.deliveryItems}
+              dataSource={record.mergedItems}
               expandable={{
                 expandedRowRender: (record) => {
-                  const dnList = (record.dn || []).filter(d =>
+                  const dnList = (record.dn || [record]).filter(d =>
                     d && (d.dn_num || d.dn_qty || d.dn_date)
                   );
 
@@ -1006,31 +1189,32 @@ export default () => {
                           title: 'DN Date',
                           dataIndex: 'dn_date',
                           key: 'dn_date',
-                          render: (_, re) => {
-                            const rawDnDate = re.dn_date;
-                            const dnDate = rawDnDate ? dayjs.utc(rawDnDate).tz('Asia/Phnom_Penh').startOf('day') : null;
-                            const sortedDnList = record.dn
-                              .filter(d => d.dn_num)
+                          render: (_, item) => {
+                            const rawDnDate = item.dn_date;
+                            const dnDate = rawDnDate
+                              ? dayjs.utc(rawDnDate).tz('Asia/Phnom_Penh').startOf('day')
+                              : null;
+
+                            // Safely get the list of DNs for this item
+                            const dnList = item.dn || [];
+
+                            // Only consider DNs with a dn_num for sorting
+                            const sortedDnList = dnList
+                              .filter(d => d?.dn_num)
                               .sort((a, b) => Number(a.dn_num) - Number(b.dn_num));
+
                             const firstDn = sortedDnList[0];
-                            const isFirstDN = re.dn_num === firstDn?.dn_num;
-
-                            let tags: React.ReactNode[] = [];
-
-                            if (!isFirstDN) {
-                              tags.push(
-                                <Tag key="check" color="orange" style={{ marginLeft: 8 }}>Unplanned</Tag>
-                              );
-                            }
+                            const isFirstDN = item.dn_num === firstDn?.dn_num;
 
                             return (
                               <span style={{ display: 'inline-flex', alignItems: 'center' }}>
                                 {dnDate?.isValid() ? dnDate.format('DD-MMM-YYYY') : '-'}
-                                {tags}
+                                {!isFirstDN && <Tag color="orange" style={{ marginLeft: 8 }}>Unplanned</Tag>}
                               </span>
                             );
-                          }
+                          },
                         }
+
 
 
                       ]}
@@ -1039,12 +1223,10 @@ export default () => {
                     />
                   );
                 },
-                rowExpandable: (record) =>
-                // record.dn &&
-                (
-                  // record?.dn?.length > 0 ||
-                  record?.dn?.some(dn => dn.dn_date || dn.dn_num || dn.dn_qty)
-                ),
+                rowExpandable: (record) => {
+                  // expanded if dn exists or record itself has dn_num
+                  return (Array.isArray(record.dn) && record.dn.length > 0) || record.dn_num;
+                },
               }}
               options={false}
               pagination={false}
@@ -1052,29 +1234,35 @@ export default () => {
                 {
                   title: 'Item Code',
                   dataIndex: 'itemCode',
-                  width: 100,
+                  width: 150,
+                  render: (_, r) => {
+                    return r.itemCode || r.item_code || '-'
+                  }
                 },
                 {
                   title: 'Item Name',
                   dataIndex: 'itemName',
-                  width: 200,
+                  width: 250,
                   render: (_, record) => {
                     return record.itemName && record.itemName.trim() !== ''
                       ? record.itemName
-                      : record.delItemName || '-';
+                      : record.item_name || '-';
                   },
                 },
                 {
                   title: 'Plan',
                   dataIndex: 'qty',
-                  width: 90,
+                  width: 70,
+                  render: (_, r) => {
+                    return r.qty || '0'
+                  }
                 },
                 {
                   title: 'Delivered',
                   width: 90,
                   render: (_, item) => {
                     const deliveryDate = dayjs.utc(record.deliveryDate).tz('Asia/Phnom_Penh').startOf('day');
-                    const dnList = Array.isArray(item.dn) ? item.dn : [];
+                    const dnList = Array.isArray(item.dn) ? item.dn : [item];
 
                     const allDNs = record.deliveryItems.flatMap(item => item.dn || []);
                     const sortedDnList = allDNs
@@ -1123,15 +1311,17 @@ export default () => {
                 {
                   title: 'Type',
                   dataIndex: 'saleType',
-                  width: 90,
+                  width: 70,
+                  render: (_, r) => {
+                    return (r.saleType ? r.saleType : 'STD')
+                  }
                 },
                 {
                   title: 'Remark',
                   dataIndex: 'dn',
-                  width: 300,
-                  render: (_, item) => {
-                    const dn = item.dn || [];
-                    const remark = dn?.[0]?.remark ?? '';
+                  width: 250,
+                  render: (_dom, entity) => {
+                    const remark = entity.dn?.[0]?.remark ?? '';
                     return (
                       <div style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
                         {remark ? remark : '-'}
@@ -1195,12 +1385,12 @@ export default () => {
                   align: 'center',
                   render: (_, r) => {
                     if (status == 'Pending' || status == 'Failed') return null;
+                    if (r.isUnplanned) return <Tag key="unplanned" color="orange" style={{ marginLeft: 8 }}>Unplanned</Tag>
                     if (!access.canAccesAddRemarkAllocate) return null
                     return (
                       <a
                         onClick={() => {
                           const dnItem = r.dn?.[0];
-                          console.log('r', r)
                           setModalOpen({
                             visible: true,
                             id: dnItem?.id,
@@ -1338,6 +1528,7 @@ export default () => {
                   <Radio.Button value="OV">Over View</Radio.Button>
                   <Radio.Button value="SO">Sales Order</Radio.Button>
                   <Radio.Button value="DN">Delivery Plan</Radio.Button>
+                  <Radio.Button value="HIS">History</Radio.Button>
                   <Radio.Button value="MT">My Task</Radio.Button>
                   {/* <Radio.Button value="FG">FG</Radio.Button> */}
                 </Radio.Group>
@@ -1439,6 +1630,7 @@ export default () => {
                     <Radio.Button value="OV">Over View</Radio.Button>
                     <Radio.Button value="SO">Sales Order</Radio.Button>
                     <Radio.Button value="DN">Delivery Plan</Radio.Button>
+                    <Radio.Button value="HIS">History</Radio.Button>
                     <Radio.Button value="MT">My Task</Radio.Button>
                     {/* <Radio.Button value="FG">FG</Radio.Button> */}
                   </Radio.Group>
@@ -1468,7 +1660,7 @@ export default () => {
                   onRequestDNHandler({
                     criteria: {
                       ...criteria,
-                      advanceSearch: advanceSearchParams,
+                      advanceSearch: MTSearch,
                       sort,
                     },
                     pagination: {
@@ -1500,6 +1692,7 @@ export default () => {
                       <Radio.Button value="OV">Over View</Radio.Button>
                       <Radio.Button value="SO">Sales Order</Radio.Button>
                       <Radio.Button value="DN">Delivery Plan</Radio.Button>
+                      <Radio.Button value="HIS">History</Radio.Button>
                       <Radio.Button value="MT">My Task</Radio.Button>
                       {/* <Radio.Button value="FG">FG</Radio.Button> */}
                     </Radio.Group>
@@ -1622,6 +1815,12 @@ export default () => {
                               </Button>
                             </div>
                           )}
+                          <Button type="text" size={'large'}
+                            onClick={() => navigate("/delivery/location", { state: { list: dataListDn, selected: selectedListDn, selectedRows: selectedRows } })}
+                            icon={<TbMap2 />}
+                            style={{ fontSize: 22 }}
+                          >
+                          </Button>
 
                           <Button
                             type="text"
@@ -1653,6 +1852,7 @@ export default () => {
                         <Radio.Button value="OV">Over View</Radio.Button>
                         <Radio.Button value="SO">Sales Order</Radio.Button>
                         <Radio.Button value="DN">Delivery Plan</Radio.Button>
+                        <Radio.Button value="HIS">History</Radio.Button>
                         <Radio.Button value="MT">My Task</Radio.Button>
                       </Radio.Group>
                     </Space>
@@ -1672,7 +1872,151 @@ export default () => {
                       }),
                   }}
                 />
-                : []}
+                : advanceSearchParams.filter == 'HIS' ?
+                  <TableView<DNList, { searchValue?: string }>
+                    displayOnly
+                    tableProps={{
+                      actionRef: actionRef,
+                      options: {
+                        reload: false,
+                        setting: false,
+                        density: false,
+                        fullScreen: false,
+                      },
+                      toolbar: {
+                        actions: [
+                          <ProForm submitter={false} layout="inline">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                              <Checkbox
+                                checked={asDate}
+                                onChange={e => { setAsDate(e.target.checked), actionRef.current?.reloadAndRest?.() }}
+                              >
+                                As Date
+                              </Checkbox>
+                              <ProFormDatePicker
+                                name="delivery_date"
+                                placeholder="Delivery Date"
+                                onChange={(val: moment.Moment | null) => {
+                                  const localDate = val ? val.format('YYYY-MM-DD') : undefined; // local date
+                                  setHisSearch((v) => ({ ...v, delivery_date: localDate }));
+                                  actionRef.current?.reloadAndRest?.();
+                                }}
+                                width={150}
+                              />
+                              <ProFormSelect
+                                placeholder="Province"
+                                value={provinceId}
+                                onChange={(val: string) => {
+                                  setProvinceId(val)
+                                  setHisSearch((v) => ({ ...v, province_id: val }))
+                                  actionRef.current?.reloadAndRest?.();
+                                }}
+                                options={provinceOptions}
+                                width={200}
+                                allowClear
+                                showSearch
+                                mode="multiple"
+                              />
+
+                              <ProFormSelect
+                                placeholder="District"
+                                value={districtId}
+                                onChange={(val: string) => {
+                                  setDistrictId(val)
+                                  setHisSearch((v) => ({ ...v, district_id: val }))
+                                  actionRef.current?.reloadAndRest?.();
+                                }}
+                                options={districtOptions}
+                                width={200}
+                                allowClear
+                                showSearch
+                                mode="multiple"
+                              />
+
+                              <ProFormSelect
+                                placeholder="Commune"
+                                options={communeOptions}
+                                onChange={(val: string) => {
+                                  setHisSearch((v) => ({ ...v, commune_id: val }))
+                                  actionRef.current?.reloadAndRest?.();
+                                }}
+                                width={200}
+                                allowClear
+                                showSearch
+                                mode="multiple"
+                              />
+                            </div>
+                            {/* Button */}
+                            <ProFormSelect
+                              width={150}
+                              name="hisstatus"
+                              allowClear
+                              showSearch
+                              initialValue="open"
+                              onChange={(val: string) => {
+                                setHisSearch((v) => ({ ...v, dnStatus: val }))
+                                actionRef.current?.reloadAndRest?.();
+                              }}
+                              options={[
+                                { value: '', label: 'ALL' },
+                                { value: 'open', label: 'Open' },
+                                { value: 'in-progress', label: 'In Progress' },
+                                { value: 'complete', label: 'Completed' },
+                                { value: 'force-close', label: 'Close' },
+                              ]}
+                            />
+
+                            <Button
+                              type="text"
+                              onClick={() => onSync()}
+                              size='large'
+                            >
+                              <ReloadOutlined />
+                            </Button>
+                          </ProForm>
+
+                        ],
+                      },
+                    }}
+                    extraFilter={
+                      <Space size="large" style={{ flexDirection: 'row' }}>
+                        <Button onClick={() => setSearchModalOpen({ visible: true })}>
+                          <FileSearchOutlined />
+                        </Button>
+                        <Radio.Group
+                          value={advanceSearchParams.filter}
+                          onChange={(e) => {
+                            setAdvanceSearchParams((v) => ({
+                              ...v,
+                              filter: e.target.value,
+                            }));
+                            actionRef.current?.reloadAndRest?.();
+                          }}
+                        >
+                          <Radio.Button value="OV">Over View</Radio.Button>
+                          <Radio.Button value="SO">Sales Order</Radio.Button>
+                          <Radio.Button value="DN">Delivery Plan</Radio.Button>
+                          <Radio.Button value="HIS">History</Radio.Button>
+                          <Radio.Button value="MT">My Task</Radio.Button>
+                        </Radio.Group>
+                      </Space>
+                    }
+                    columns={dnColumns}
+                    actionHandlers={{
+                      onRequest: (criteria, pagination, sort) =>
+                        onHistoryRequestDNDeatilHandler({
+                          criteria: {
+                            ...criteria,
+                            advanceSearch: hisSearch,
+                            sort,
+                          },
+                          pagination: {
+                            pageSize: 500,
+                          },
+                        }),
+                    }}
+                  />
+                  : []}
 
 
 
@@ -1745,4 +2089,4 @@ export default () => {
       />
     </>
   );
-}; 
+};

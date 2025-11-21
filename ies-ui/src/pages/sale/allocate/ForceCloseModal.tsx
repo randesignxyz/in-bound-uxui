@@ -19,8 +19,6 @@ const ForceColseModal: React.FC<Props> = ({ onSave, id, remark, ...props }) => {
     const [form] = useForm<UpdateRemarkParams>();
     const access = useAccess();
     const [file, setFile] = useState<UploadFile[]>([]);
-
-    console.log('id', id)
    
      useEffect(() => {
         if (props.open) {

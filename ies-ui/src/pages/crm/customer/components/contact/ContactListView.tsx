@@ -11,9 +11,10 @@ interface Props {
     data?: ContactListItem[];
     onDetail?: (data: ContactListItem) => void;
     reloadParent?: () => void;
+    editable?: boolean;
 }
 
-const ContactListView: React.FC<Props> = ({ customerId, data, onDetail, reloadParent }) => {
+const ContactListView: React.FC<Props> = ({ customerId, data, onDetail, reloadParent, editable = true }) => {
     const { state, actions, modals } = Model()
 
     const onSearchActionHandler = (value?: string) => {
@@ -62,7 +63,7 @@ const ContactListView: React.FC<Props> = ({ customerId, data, onDetail, reloadPa
     return <Card bordered={false}>
 
         <ContactListComp data={data} onDetail={onDetail} onRemove={onRemoveActionHandler} />
-        <Button size='small' style={{ width: '100%', marginBottom: 8 }} type='dashed' onClick={() => modals.showModal('search')} icon={<PlusOutlined />} />
+        <Button disabled={!editable} size='small' style={{ width: '100%', marginBottom: 8 }} type='dashed' onClick={() => modals.showModal('search')} icon={<PlusOutlined />} />
         <ContactAssignedModal
             loading={state.loading}
             added={data?.map(it => it.id)}

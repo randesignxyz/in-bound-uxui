@@ -34,7 +34,7 @@ export const Df360Params = {
         actionName: 'fd360_emp_submit',
         payload: { ...params },
     }),
-     submitSelfCommitment: (params: DF360UpdatePlayload): ServiceApiType<DF360UpdatePlayload> => ({
+    submitSelfCommitment: (params: DF360UpdatePlayload): ServiceApiType<DF360UpdatePlayload> => ({
         type: 'EXEC',
         endpoint: 'HR',
         actionName: 'fd360_emp_self_commitment_submit',

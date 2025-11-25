@@ -12,7 +12,8 @@ const ImageUploader: React.FC<{
   service?: 'WORK_FLOW' | 'FILE';
   multiple?: boolean;
   required?: boolean;
-}> = ({ title, service = 'FILE', multiple, onSetFiles, required }) => {
+  editable?: boolean;
+}> = ({ title, service = 'FILE', multiple, onSetFiles, required, editable = true }) => {
   const [files, setFiles] = useState<UploadFile[]>([]);
   const token = localStorage.getItem('accessToken');
   const uploadUrl = () => {
@@ -57,7 +58,7 @@ const ImageUploader: React.FC<{
         }
       }}
     >
-      <Button type="link" icon={<UploadOutlined />}>
+      <Button type="link" icon={<UploadOutlined />} disabled={!editable}>
         Upload
       </Button>
     </Upload>

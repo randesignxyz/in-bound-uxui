@@ -13,18 +13,19 @@ import { ShippingAddressAPI } from "../shipping_address/services"
 import { CrmServices } from "../services"
 import moment from "moment"
 import numeral from "numeral";
+
 import ExportModal from "./ExportModal"
 import { downloadGenericReport } from "@/services/apiGateway"
 import { getUrlReporting } from "@/pages/ReportUrl"
 
 export default () => {
+    const access = useAccess()
     const requestActions = simpleRequestActions();
     const [filter, setFilter] = useState<FetchPagingParams<any>>({ criteria: { advanceSearch: { mode: "Address" } } });
     const [statusState, setStatusState] = useState<{
         visible?: { name: "MODAL", addressId?: number, status: string }
     }>();
     const [lookupData, setLookupData] = useState<any[]>();
-    const access = useAccess();
     const onLookupData = async () => {
         setLookupData(await CrmServices.listLookupData(["VERIFIED_ADDRESS_LAT_LONG"]).query(requestActions))
     }
@@ -174,6 +175,23 @@ export default () => {
                                 onClick:()=>setExportState(true)
                             },
                         ],
+                        // actionButtons: [
+                        //     <Segmented
+                        //         onChange={(vl) => {
+                        //             setFilter((s) => ({
+                        //                 ...s,
+                        //                 criteria: {
+                        //                     ...s?.criteria,
+                        //                     advanceSearch: { ...s?.criteria?.advanceSearch, mode: vl },
+                        //                 },
+                        //             }));
+                        //         }}
+                        //         options={[
+                        //             { value: "Customer", icon: <AppstoreOutlined />, label: "Customer" },
+                        //             { value: "Address", icon: <BarsOutlined />, label: "Address" },
+                        //         ]}
+                        //     />,
+                        // ],
                         onFilter: (filterParams, page, sort) => {
                             setFilter((v) => ({
                                 ...v,

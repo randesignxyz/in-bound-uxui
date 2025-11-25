@@ -11,9 +11,10 @@ interface Props {
     address?: AddressInfo[];
     source: "CONTRACT" | "CUSTOMER";
     contractCode?: string;
+    editable?: boolean;
 }
 
-const SpaceReservedView: React.FC<Props> = ({ address, contractCode, source, contractId }) => {
+const SpaceReservedView: React.FC<Props> = ({ address, contractCode, source, contractId, editable= true }) => {
     const requestActions = simpleRequestActions();
     const [keyUpdate, setKeyUpdate] = useState((Math.random() * 1000).toString());
     const [state, setState] = useState<{
@@ -49,7 +50,7 @@ const SpaceReservedView: React.FC<Props> = ({ address, contractCode, source, con
                     }
                 }}
                 extra={<>
-                    {source === "CONTRACT" && <Button size="small" type="link" onClick={() => setState({ visible: { name: "MODAL" } })} >New</Button>}
+                    {source === "CONTRACT" && <Button size="small" type="link" onClick={() => setState({ visible: { name: "MODAL" } })} disabled={!editable}>New</Button>}
                 </>}
             >
                 <List

@@ -22,9 +22,9 @@ export type PosmDataType = {
     qty: number
     remarks?: string;
     installedDate?: moment.Moment;
-    effectiveDate?: moment.Moment,
-    expiryDate?: moment.Moment
-    attachment?: string[]
+    effectiveDate?: moment.Moment;
+    expiryDate?: moment.Moment;
+    attachment?: string[];
 }
 
 export default ({ addresList, requestActions, readOnly, listPosm, onSave, onDelete }: {
@@ -34,7 +34,7 @@ export default ({ addresList, requestActions, readOnly, listPosm, onSave, onDele
     initAddressList: () => Promise<void>;
     listPosm: () => Promise<PosmDataType[]>
     onSave: (data: { itemId: number, qty: number, id?: number, remarks?: string, installedDate?: moment.Moment, effectiveDate?: moment.Moment, expiryDate?: moment.Moment }) => Promise<{ data: number }>
-    onDelete: (id: number) => Promise<void>
+    onDelete: (id: number) => Promise<void>   
 }) => {
 
     const [data, setData] = useState<readonly PosmDataType[]>([])
@@ -48,6 +48,7 @@ export default ({ addresList, requestActions, readOnly, listPosm, onSave, onDele
     const actionRef = useRef<ActionType>();
     const [attachmentState, setAttachmentState] = useState<{ visible?: { name: "MODAL", posmId?: number; } }>();
     const [viewImageState, setViewImageState] = useState<{ visible?: { name: "DRAWER", posmInfo?: ContractPOSMItem } }>();
+    const editable = readOnly ? false : true
 
     const loadData = async () => {
         const rs = await CrmServices.listLookupData(['POSM_CATEGORY']).query(requestActions)
@@ -263,7 +264,7 @@ export default ({ addresList, requestActions, readOnly, listPosm, onSave, onDele
                 }}
             />
         </Spin>
-        <POSMUploadImage
+        <POSMUploadImage editable={editable}
             onCancel={() => setAttachmentState({ visible: undefined })}
             open={attachmentState?.visible?.name === "MODAL"}
             service="FILE"
@@ -287,7 +288,7 @@ export default ({ addresList, requestActions, readOnly, listPosm, onSave, onDele
                 })
             }}
         />
-        <POSMImage
+        <POSMImage editable={editable}
             source="POSM"
             open={viewImageState?.visible?.name == "DRAWER"}
             onClose={() => setViewImageState({ visible: undefined })}

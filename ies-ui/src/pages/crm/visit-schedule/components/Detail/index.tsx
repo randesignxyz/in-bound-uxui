@@ -54,6 +54,7 @@ const VisitScheduleDetailView: React.FC<DetailProps> = ({ id, openInTab, onBack 
     cb?: () => void;
   }>();
   const access = useAccess();
+  const editable = access.canAccessVisitScheduleEdit;
 
   const customerColors = [
     'gold',
@@ -221,6 +222,7 @@ const VisitScheduleDetailView: React.FC<DetailProps> = ({ id, openInTab, onBack 
             />
             {images.length > 0 && state.data?.detail?.visit?.checkInImage && (
               <ImagePreview
+                editable={editable}
                 version={1}
                 width={'200px'}
                 key={state.data?.detail?.visit?.checkInImage}
@@ -400,6 +402,7 @@ const VisitScheduleDetailView: React.FC<DetailProps> = ({ id, openInTab, onBack 
                   return (
                     <List.Item>
                       <ImagePreview
+                        editable={editable}
                         version={1}
                         width={'200px'}
                         key={it.id}

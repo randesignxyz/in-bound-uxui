@@ -5,7 +5,7 @@ import { simpleRequestActions } from "@/services/model"
 import { useEffect, useMemo, useState } from "react"
 import { FetchPagingParams } from "@/components/DataCrud/TableView"
 import { Button, message, Segmented, Space, Tooltip, Typography } from "antd"
-import { AppstoreOutlined, BarsOutlined, CheckCircleOutlined, CheckCircleTwoTone, CloseCircleOutlined, CloseCircleTwoTone, SyncOutlined } from "@ant-design/icons"
+import { AppstoreOutlined, BarsOutlined, CheckCircleOutlined, CheckCircleTwoTone, CloseCircleOutlined, CloseCircleTwoTone, ExportOutlined, SyncOutlined } from "@ant-design/icons"
 import ChangeStatusForm from "./ChangeStatus"
 import VerifiedDetailView from "./Detail"
 import { ProTable } from "@ant-design/pro-components"
@@ -13,6 +13,9 @@ import { ShippingAddressAPI } from "../shipping_address/services"
 import { CrmServices } from "../services"
 import moment from "moment"
 import numeral from "numeral";
+import ExportModal from "./ExportModal"
+import { downloadGenericReport } from "@/services/apiGateway"
+import { getUrlReporting } from "@/pages/ReportUrl"
 
 export default () => {
     const requestActions = simpleRequestActions();
@@ -113,6 +116,31 @@ export default () => {
         />
     }
 
+    const onDowloadReportHandler = async (params: any) => {
+    
+            try {
+                const reportName = 'customer_verification_report';
+                await downloadGenericReport(requestActions)({
+                    fileName: `${reportName}-${moment().format()}.xls`,
+                    type: 'EXCEL',
+                    data: {
+                        reportName: reportName,
+                        reportPath: getUrlReporting('crm'),
+                        data: [
+                            { key: "startDate", type: "string", value: params.date?.[0] },
+                            { key: "endDate", type: "string", value: params.date?.[1] },
+                            { key: "saleCode", type: "string", value: params.sale?.filter((p: any)=>p)?.join(",") },
+                            { key: "status", type: "string", value: params.status?.filter((p: any)=>p)?.join(",") },
+                        ],
+                    },
+                }).then(() => { });
+                message.success('Export successfully.');
+            } catch (error: any) {
+                message.error(error.message || 'Failed to generate report.');
+            }
+        };
+
+    const [exportState, setExportState] = useState<boolean>(false);
 
     return (
         <>
@@ -130,6 +158,7 @@ export default () => {
                         type: "Table",
                         onRefresh: refetch,
                         actions: [
+                            
                             {
                                 icon: <SyncOutlined />,
                                 label: "Sync",
@@ -140,24 +169,13 @@ export default () => {
                                     message.success("Success!");
                                 },
                             },
+                            {
+                                icon: <ExportOutlined />,
+                                label: "Export",
+                                key: "export",
+                                onClick:()=>setExportState(true)
+                            },
                         ],
-                        // actionButtons: [
-                        //     <Segmented
-                        //         onChange={(vl) => {
-                        //             setFilter((s) => ({
-                        //                 ...s,
-                        //                 criteria: {
-                        //                     ...s?.criteria,
-                        //                     advanceSearch: { ...s?.criteria?.advanceSearch, mode: vl },
-                        //                 },
-                        //             }));
-                        //         }}
-                        //         options={[
-                        //             { value: "Customer", icon: <AppstoreOutlined />, label: "Customer" },
-                        //             { value: "Address", icon: <BarsOutlined />, label: "Address" },
-                        //         ]}
-                        //     />,
-                        // ],
                         onFilter: (filterParams, page, sort) => {
                             setFilter((v) => ({
                                 ...v,
@@ -281,6 +299,15 @@ export default () => {
                 />
             }
 
+            <ExportModal
+                open={exportState}
+                modalProps={{
+                    onCancel:()=>setExportState(false)
+                }}
+                onExport={(it)=>{
+                    onDowloadReportHandler(it)
+                }}
+            />
 
             <ChangeStatusForm
                 open={statusState?.visible?.name == "MODAL"}

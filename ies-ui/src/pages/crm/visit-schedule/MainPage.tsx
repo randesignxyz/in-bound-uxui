@@ -4,7 +4,7 @@ import { VisitScheduleAdvanceSearchParams, VisitScheduleItem } from "@/services/
 import { useEffect, useRef, useState } from "react"
 import { FetchPagingParams } from "@/components/DataCrud/TableView"
 import { Model } from "./model"
-import { useQuery } from "@umijs/max"
+import { useAccess, useQuery } from "@umijs/max"
 import { ContractServices } from "../contract/services"
 import { MultiRequest, fetchDataListService } from "@/services/apiGateway"
 import { LookupData } from "@/services/data"
@@ -30,7 +30,7 @@ import CancelModalForm from "./components/CancelModalForm"
 
 type FilterType = VisitScheduleAdvanceSearchParams & { searchValue?: string; status?: string; }
 export default () => {
-
+    const access = useAccess();
     const { state, actions, modals } = Model();
     const crmServices = CrmServiceAPI()
     const [filter, setFilter] = useState<FetchPagingParams<VisitScheduleAdvanceSearchParams>>({
@@ -201,7 +201,7 @@ export default () => {
                     ],
                     onRefresh: refetch,
                     title: "Visit Schedule List",
-                    actionButtons: [
+                    actionButtons:access.crmReadOnly?[]: [
                         <>
                             <Tooltip key={'generate-visit-plan '} title="Cancel Visit Schedule">
                                 <Button

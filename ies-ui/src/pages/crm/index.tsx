@@ -290,12 +290,14 @@ const Crm: React.FC = () => {
       description: 'Plan to visit customer',
       link: `${CrmPaths.visitPlan}/list`,
       icon: planIcon,
+      visible:access.crmVisitPlan
     },
     {
       id: 'visitSchedule',
       name: 'Visit Schedule',
       description: 'Sechule to visit customer',
       link: `${CrmPaths.visitSchedule}/list`,
+      visible:access.crmVisitSchedule,
       // isMenu: true,
       // overlay: visitScheduleMenu,
       menu: {
@@ -365,6 +367,7 @@ const Crm: React.FC = () => {
       description: 'Notification Management',
       link: `${CrmPaths.notification}/list`,
       icon: notificationIcon,
+      visible:access.crmNotification
     },
     {
       id: 'gratis',
@@ -412,6 +415,7 @@ const Crm: React.FC = () => {
       //link: `${CrmPaths.settlement}/list`,
       link: `${CrmPaths.terms}/list`,
       icon: agreementIcon,
+      visible:access.crmTerm,
       menu: {
         items: [{ label: <TermReport trigger={<a >Export</a>} />, key: 'exportTerm', icon: <ExportOutlined style={{ fontSize: '16px', color: '#08c' }} /> }]
       }
@@ -423,7 +427,7 @@ const Crm: React.FC = () => {
       //link: `${CrmPaths.settlement}/list`,
       link: `${CrmPaths.salesperson}/list`,
       icon: salesperson,
-      visible: access.saleAdmin
+      visible: access.crmSalsperson
     }, {
       id: 'registerCustomer',
       name: 'Register Customer',
@@ -436,7 +440,7 @@ const Crm: React.FC = () => {
           type: 'group',
           label: "Reports",
           children: [
-           {
+            {
               label: <RegisterCustomerReport trigger={<a>Register Customer List</a>} />,
               key: 'register-customer-report',
               icon: <BarChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
@@ -456,7 +460,7 @@ const Crm: React.FC = () => {
       //link: `${CrmPaths.settlement}/list`,
       link: `${CrmPaths.shippingAddress}/list`,
       icon: customerShipping,
-      visible: access.saleAdmin
+      visible: access.crmShippingAddress
     },
     {
       id: 'customer-sharing',
@@ -464,7 +468,7 @@ const Crm: React.FC = () => {
       description: 'Original owner of the shared customer record.',
       link: `${CrmPaths.shareCustomer}/list`,
       icon: customer_sharing,
-      visible: access.saleAdmin
+      visible: access.crmShareCustomer
     },
     {
       id: 'customer-verified',
@@ -472,7 +476,7 @@ const Crm: React.FC = () => {
       description: "location has been checked and confirmed for accuracy",
       link: `${CrmPaths.verifiedCustomer}/list`,
       icon: customer_verified,
-      visible: access.saleAdmin
+      visible: access.crmVerifyCustomer
     },
 
   ];

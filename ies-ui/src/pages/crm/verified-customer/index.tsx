@@ -1,5 +1,5 @@
 import PageWrapper from "@/components/PageWrapper"
-import { useQuery } from "@umijs/max"
+import { useAccess, useQuery } from "@umijs/max"
 import { CustomerWithAddressVerifiedAPI } from "./service"
 import { simpleRequestActions } from "@/services/model"
 import { useEffect, useMemo, useState } from "react"
@@ -24,7 +24,7 @@ export default () => {
         visible?: { name: "MODAL", addressId?: number, status: string }
     }>();
     const [lookupData, setLookupData] = useState<any[]>();
-
+    const access = useAccess();
     const onLookupData = async () => {
         setLookupData(await CrmServices.listLookupData(["VERIFIED_ADDRESS_LAT_LONG"]).query(requestActions))
     }
@@ -111,13 +111,12 @@ export default () => {
                     </div>
                 }
             ]}
-            // dataSource={item.addresses}
             pagination={false}
         />
     }
 
     const onDowloadReportHandler = async (params: any) => {
-    
+
             try {
                 const reportName = 'customer_verification_report';
                 await downloadGenericReport(requestActions)({
@@ -139,9 +138,8 @@ export default () => {
                 message.error(error.message || 'Failed to generate report.');
             }
         };
-
+        
     const [exportState, setExportState] = useState<boolean>(false);
-
     return (
         <>
             {(lookupData && filter.criteria?.advanceSearch?.mode) &&
@@ -157,9 +155,9 @@ export default () => {
                     listView={{
                         type: "Table",
                         onRefresh: refetch,
+                        title:"Verification List",
                         actions: [
-                            
-                            {
+                            !access.crmReadOnly?{
                                 icon: <SyncOutlined />,
                                 label: "Sync",
                                 key: "sync",
@@ -168,7 +166,7 @@ export default () => {
                                     refetch?.();
                                     message.success("Success!");
                                 },
-                            },
+                            }:{onClick:()=>{},key:""},
                             {
                                 icon: <ExportOutlined />,
                                 label: "Export",

@@ -4,7 +4,7 @@ import { ImportDataItem, ImportDataResponse } from "@/services/shared/data"
 import { Button, message } from "antd"
 import { useRef, useState } from "react"
 import UploadDataModal from "./UploadDataModal"
-import { useQuery } from "@umijs/max"
+import { useAccess, useQuery } from "@umijs/max"
 import { ShippingAddressAPI } from "./services"
 import { simpleRequestActions } from "@/services/model"
 import { TableViewSearchParams } from "@/components/DataCrud/TableView"
@@ -36,6 +36,7 @@ export default () => {
     const [exportState, setExportState] = useState<{
         visible?: { name: "MODAL", payloads?: any }
     }>();
+    const access  = useAccess();
 
     const onDowloadReportHandler = async (params: any) => {
 
@@ -74,8 +75,9 @@ export default () => {
                     }
                 ]}
                 listView={{
-                    actionButtons: [
+                    actionButtons: access.crmReadOnly?[]:[
                         <ImportFileButton<ImportDataItem>
+                            
                             importedKey="CUSTOMER_SHIPPING_ADDRESS"
                             onDataResponse={data => {
                                 setImportData(data)
@@ -91,7 +93,7 @@ export default () => {
                         <Button icon={<ExportOutlined />}
                             onClick={async () => setExportState({ visible: { name: "MODAL" } })} type="link">Export</Button>
                     ],
-                    actions: [
+                    actions: access.crmReadOnly?[]:[
                         { key: 'TRANSFER', label: 'Transfer SE', onClick: () => modals.showModal('transfer-customers'), icon: <SwapOutlined style={{ fontSize: '16px', color: '#08c' }} /> }
                     ],
                     title: "Shipping Address",

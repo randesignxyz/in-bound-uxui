@@ -6,7 +6,7 @@ import { TermServices } from "../../service";
 import { ActionType, LightFilter, ProColumns, ProForm, ProFormSelect } from "@ant-design/pro-components";
 import { CheckCircleOutlined, CheckOutlined, ExclamationCircleOutlined, SelectOutlined, TagsOutlined } from "@ant-design/icons";
 import { CrmPaths } from "@/pages/crm";
-import { history, useModel } from 'umi'
+import { history, useAccess, useModel } from 'umi'
 import { Term } from "../../types";
 import { TermAdvanceSearchParams } from "../../model";
 import { useEffect, useRef, useState } from "react";
@@ -27,7 +27,7 @@ type LightFilterProp = {
     tag?: string[]
 }
 export const TermListView: React.FC<Props> = ({onDetail,onAdd,forceRefresh,contractTypes}) => {
-
+    const access = useAccess();
     const cacheList = useModel('dataList')
     const actionRef = useRef<ActionType>();
     const [form] = useForm<{tag:string[]}>()
@@ -141,6 +141,7 @@ export const TermListView: React.FC<Props> = ({onDetail,onAdd,forceRefresh,contr
             tableProps={{
                 actionRef: actionRef,
             }}
+            displayOnly={access.crmReadOnly}
             extraFilter={
                 <Space>
                     <Radio.Group optionType="button"

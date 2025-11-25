@@ -3,6 +3,7 @@ import { Button, Card, Flex, message, Modal, Typography } from "antd"
 import { ShareCustomerAPI } from "./service";
 import { simpleRequestActions } from "@/services/model";
 import { DeleteOutlined } from "@ant-design/icons";
+import { useAccess } from "@umijs/max";
 
 interface Props {
     data: any,
@@ -12,6 +13,7 @@ interface Props {
 
 const ShareDetailView: React.FC<Props> = ({ data, onBack, isGroup }) => {
     const requestActions = simpleRequestActions();
+    const access  = useAccess();
     return (
         <>
             <Flex vertical gap={12}>
@@ -22,6 +24,7 @@ const ShareDetailView: React.FC<Props> = ({ data, onBack, isGroup }) => {
                                 icon={<DeleteOutlined />}
                                 danger
                                 type="link"
+                                hidden={access.crmReadOnly}
                                 onClick={() => {
                                     Modal.confirm({
                                         title: "Delete Confirmation",

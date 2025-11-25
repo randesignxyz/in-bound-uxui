@@ -422,11 +422,12 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
       // }); 
     }} />
   </Space>}
-    extra={<ActionBar actions={state.data?.detail && getMenuItems(state.data?.detail, 'Detail', () => {
+    extra={access.crmReadOnly?undefined:<ActionBar actions={state.data?.detail && getMenuItems(state.data?.detail, 'Detail', () => {
       ops.detail(state.data?.detail?.id)
     }).filter(it => it.visible) || []} numOfActionOnBar={4} />
     
-    }>
+    }
+    >
     {content}
   </ProCard> : (
 
@@ -441,7 +442,7 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
       }).filter(it => it.visible) || []} numOfActionOnBar={4} />
       }
     >
-      {content}
+      {/* {content} */}
 
       <MapLocationDrawer
         open={quickState?.visible?.state}

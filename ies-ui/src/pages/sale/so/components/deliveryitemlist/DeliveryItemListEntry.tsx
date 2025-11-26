@@ -96,7 +96,7 @@ const DeliveryItemListEntry: React.FC<Props> = ({ data, actionHandlers, ...props
                 />
               )}
             </ProFormDependency>
-            <ProFormSwitch
+            {/* <ProFormSwitch
               label="To Be Confirm"
               name="isTBC"
               fieldProps={{
@@ -112,7 +112,7 @@ const DeliveryItemListEntry: React.FC<Props> = ({ data, actionHandlers, ...props
                   }
                 },
               }}
-            />
+            /> */}
             <ProFormSelect
               help={<span />}
               label="Shipping Address"

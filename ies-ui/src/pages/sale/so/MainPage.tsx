@@ -3,7 +3,7 @@ import '@/pages/index.less'
 import { Badge, Spin, Typography } from "antd"
 import PageWrapper from "@/components/PageWrapper"
 import { SoAdvanceSearchParams, SoItemLess } from "@/services/sale/data"
-import { ExportOutlined, EyeOutlined, FileOutlined, PaperClipOutlined, PlusCircleOutlined } from "@ant-design/icons"
+import { ExportOutlined, EyeOutlined, FileOutlined, PaperClipOutlined, PlusCircleOutlined, SyncOutlined } from "@ant-design/icons"
 import { Model } from "./model"
 import { useEffect, useRef, useState } from "react"
 import { FetchPagingParams } from "@/components/DataCrud/TableView"
@@ -70,6 +70,14 @@ export default () => {
                 type: 'Table',
                 title: 'SO List',
                 actionButtons: [{
+                    icon: <SyncOutlined />,
+                    type: 'link',
+                    disabled: !access.canCreateEditSo,
+                    onClick: async() => {
+                        await actions.syncFromSFA()
+                        actionRef.current?.reload(true)
+                    }
+                }, {
                     icon: <PlusCircleOutlined />,
                     type: 'link',
                     addNewTab: true,
@@ -195,14 +203,14 @@ export default () => {
                         width: 150,
                         render: (_, data) => formatDateTime(data.orderedDate),
                     },
-                    {
-                        title: 'First Delivery Date',
-                        align: 'right',
-                        sorter: 'deliveryDate',
+                    // {
+                    //     title: 'First Delivery Date',
+                    //     align: 'right',
+                    //     sorter: 'deliveryDate',
 
-                        width: 150,
-                        render: (_, data) => formatDate(data.deliveryDate),
-                    },
+                    //     width: 150,
+                    //     render: (_, data) => formatDate(data.deliveryDate),
+                    // },
                     {
                         title: 'Amount',
                         align: 'right',

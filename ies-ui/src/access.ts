@@ -184,7 +184,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canAccessVerifiedLocationSync:
       currentUser?.authorities.some((item) =>
         ['ROLE_CRM_ADMIN', 'ROLE_CRM_SALE_ADMIN', 'ROLE_ADMIN','ROLE_CRM_VERIFIED_LOCATION_SYNC'].some((it) => it === item),
-      ) || false, 
+      ) || false,
     canAccessVisitScheduleCancelBtn:
       currentUser?.authorities.some((item) =>
         ['ROLE_CRM_ADMIN', 'ROLE_CRM_SALE_ADMIN', 'ROLE_SALE_ADMIN', 'ROLE_ADMIN','ROLE_CRM_VISIT_SCHEDULE_CANEL_BTN'].some((it) => it === item),
@@ -192,27 +192,27 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canAccessVisitScheduleTrackingLocationBtn:
       currentUser?.authorities.some((item) =>
         ['ROLE_CRM_ADMIN', 'ROLE_CRM_SALE_ADMIN', 'ROLE_SALE_ADMIN', 'ROLE_ADMIN','ROLE_CRM_VISIT_SCHEDULE_TRACKING_LCT_BTN'].some((it) => it === item),
-      ) || false, 
+      ) || false,
     canAccessVisitScheduleGenerateBtn:
       currentUser?.authorities.some((item) =>
         ['ROLE_CRM_ADMIN', 'ROLE_CRM_SALE_ADMIN', 'ROLE_SALE_ADMIN', 'ROLE_ADMIN','ROLE_CRM_VISIT_SCHEDULE_GENERATE_BTN'].some((it) => it === item),
-      ) || false,       
+      ) || false,
     canAccessVisitScheduleRpt:
       currentUser?.authorities.some((item) =>
         ['ROLE_CRM_ADMIN', 'ROLE_CRM_SALE_ADMIN', 'ROLE_SALE_ADMIN', 'ROLE_ADMIN','ROLE_CRM_VISIT_SCHEDULE_RPT'].some((it) => it === item),
-      ) || false, 
+      ) || false,
     canAccessCrmPosmRpt:
       currentUser?.authorities.some((item) =>
         ['ROLE_CRM_ADMIN', 'ROLE_CRM_SALE_ADMIN', 'ROLE_SALE_ADMIN', 'ROLE_ADMIN','ROLE_CRM_POSM_RPT'].some((it) => it === item),
-      ) || false,   
+      ) || false,
     canAccessCrmStockCountRpt:
       currentUser?.authorities.some((item) =>
         ['ROLE_CRM_ADMIN', 'ROLE_CRM_SALE_ADMIN', 'ROLE_SALE_ADMIN', 'ROLE_ADMIN','ROLE_CRM_STOCK_COUNT_RPT'].some((it) => it === item),
-      ) || false,  
+      ) || false,
     canAccessCrmCallProductivityRpt:
       currentUser?.authorities.some((item) =>
         ['ROLE_CRM_ADMIN', 'ROLE_CRM_SALE_ADMIN', 'ROLE_SALE_ADMIN', 'ROLE_ADMIN','ROLE_CRM_CALL_PRODUCTIVITY_RPT'].some((it) => it === item),
-      ) || false,       
+      ) || false,
     crmAdmin:
       currentUser?.authorities.some((item) =>
         ['ROLE_CRM_ADMIN', 'ROLE_ADMIN'].some((it) => it === item),
@@ -286,7 +286,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
      canAccessCustomerEdit:
       currentUser?.authorities.some((item) =>
         ['ROLE_CRM_ADMIN', 'ROLE_SALE_ADMIN', 'ROLE_ADMIN','ROLE_CRM_CUSTOMER_EDIT'].some((it) => it === item),
-      ) || false,  
+      ) || false,
     canAccessVisitPlanMenu:
       currentUser?.authorities.some((item) =>
         ['ROLE_CRM_ADMIN', 'ROLE_SALE_ADMIN', 'ROLE_ADMIN','ROLE_CRM_VISIT_PLAN'].some((it) => it === item),
@@ -294,23 +294,23 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canAccessVisitScheduleMenu:
       currentUser?.authorities.some((item) =>
         ['ROLE_CRM_ADMIN', 'ROLE_SALE_ADMIN', 'ROLE_ADMIN','ROLE_CRM_VISIT_SCHEDULE'].some((it) => it === item),
-      ) || false,  
+      ) || false,
     canAccessVisitScheduleEdit:
       currentUser?.authorities.some((item) =>
         ['ROLE_CRM_ADMIN', 'ROLE_SALE_ADMIN', 'ROLE_ADMIN','ROLE_CRM_VISIT_SCHEDULE_EDIT'].some((it) => it === item),
-      ) || false,    
+      ) || false,
     canAccessNotificationMenu:
       currentUser?.authorities.some((item) =>
         ['ROLE_CRM_ADMIN', 'ROLE_SALE_ADMIN', 'ROLE_ADMIN','ROLE_CRM_NOTIFICATION'].some((it) => it === item),
-      ) || false,  
+      ) || false,
     canAccessGratisSettlementMenu:
       currentUser?.authorities.some((item) =>
         ['ROLE_CRM_ADMIN', 'ROLE_SALE_ADMIN', 'ROLE_ADMIN','ROLE_CRM_GRATIS'].some((it) => it === item),
-      ) || false,   
+      ) || false,
     canAccessTermMenu:
       currentUser?.authorities.some((item) =>
         ['ROLE_CRM_ADMIN', 'ROLE_ADMIN','ROLE_CRM_TERM'].some((it) => it === item),
-      ) || false,     
+      ) || false,
     /*****SO */
     canCreateEditSo:
       currentUser?.authorities.some((item) =>
@@ -449,9 +449,9 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canAccesAddRemarkAllocate:
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN','ROLE_DELIVERY_ALLOCATION_REMARK','ROLE_DELIVERY_DEL_ALLOCATION',].some((it) => it === item),
-      ) || false, 
+      ) || false,
 
-    /**** Prod */  
+    /**** Prod */
     canAccessProdMenu:
       currentUser?.authorities.some((item) =>
         [
@@ -718,12 +718,16 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           'ROLE_HR_PROBATION_EVALUATION_VIEW',
           'ROLE_HR_PROBATION_EVALUATION_REQUESTER',
           'ROLE_HR_DF360_VIEW',
-          'ROLE_HR_DF360_SUPPORT' 
+          'ROLE_HR_DF360_SUPPORT'
         ].some((it) => it === item),
       ) || false,
     canAccessHrEmployeeMenuItem:
       currentUser?.authorities.some((item) =>
         ['ROLE_HR_ADMIN', 'ROLE_HR_EMPLOYEE_VIEW'].some((it) => it === item),
+      ) || false,
+    canAccessHrJOB:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_HR_ADMIN', 'ROLE_HR_JOB_VIEW'].some((it) => it === item),
       ) || false,
     canAccessHrViewEmployeeMenuItem:
       currentUser?.authorities.some((item) =>
@@ -827,7 +831,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canCreateEditStockControl: true,
 
     /** Start Stock Control */
-    // new by reach modified 
+    // new by reach modified
     canAccessSaleTaskList: currentUser?.authorities.some((items) =>
       ['ROLE_CASHIER', 'ROLE_WAREHOUSE', 'ROLE_DSD_ADMIN', 'ROLE_ADMIN', 'ROLE_MPU_ADMIN'].some((it) => it === items)
     ) || false,
@@ -975,7 +979,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
         ['ROLE_ADMIN', 'ROLE_ICT_WF_NEW_STAFF_REQUESTER'].some((it) => it === item),
       ) || false,
 
-    // Reach-2024-02-13 
+    // Reach-2024-02-13
     canAccessFleetMenu:
       currentUser?.authorities.some((item) =>
         ['ROLE_FLEET_ADMIN', 'ROLE_FLEET', 'ROLE_ADMIN'].some((it) => it === item),
@@ -1025,13 +1029,13 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
         ['ROLE_ADMIN','ROLE_HR_DF360_VIEW', 'ROLE_HR_DF360_SUPPORT'].some(
           (it) => it === item,
         ),
-      ) || false,  
+      ) || false,
     canAccessDF360NewForm:
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN','ROLE_HR_DF360_NEW_FORM', 'ROLE_HR_DF360_SUPPORT'].some(
           (it) => it === item,
         ),
-      ) || false,    
+      ) || false,
     canAccessWhmMenu:
       currentUser?.authorities.some((item) =>
         [

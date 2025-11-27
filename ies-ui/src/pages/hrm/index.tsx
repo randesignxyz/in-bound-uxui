@@ -15,7 +15,7 @@ export const HrmPaths = {
     appraisalRequest: '/hrm/appraisal-request',
     probationEvaluation: '/hrm/probation-evaluation',
     df: '/hrm/df',
-   jobdes: '/hrm/jobdes'
+   jobdes: '/hrm/job'
 }
 
 export default () => {
@@ -83,7 +83,7 @@ export default () => {
         id: 'job',
         name: 'Job',
         description: 'Job Description',
-        visible: access.canAccessHrEmployeeMenuItem,
+        visible: access.canAccessHrJOB,
         link: `${HrmPaths.jobdes}/list`,
         icon: jobsdes,
       }

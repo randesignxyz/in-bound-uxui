@@ -17,31 +17,23 @@ import { JobServiceAPI } from "./services";
 type FormMode = "CREATE" | "EDIT" | "VIEW";
 
 interface DataEntryFormViewProps {
-  id?: number;
+  id?: number | string | undefined ;
   type: FormMode;
   onCloseTab?: () => void;
 }
-
 const { Option } = Select;
 
-const DataEntryFormView: React.FC<DataEntryFormViewProps> = ({
-                                                               id,
-                                                               type,
-                                                               onCloseTab,
-                                                             }) => {
+const DataEntryFormView: React.FC<DataEntryFormViewProps> = ({ id, type, onCloseTab, }) => {
   const [form] = Form.useForm<ListJob>();
   const services = JobServiceAPI();
   const isView = type === "VIEW";
-
-  // Get current logged-in user
   const currentUser = localStorage.getItem("username") || "Unknown User";
-
   useEffect(() => {
     if ((type === "EDIT" || type === "VIEW") && id) {
       (async () => {
         try {
           const res = await services.detail(id);
-          const job = res?.data ?? res;
+          const job = res?.data?? res;
 
           form.setFieldsValue({
             jobTitle: job?.jobTitle || "",
@@ -60,7 +52,6 @@ const DataEntryFormView: React.FC<DataEntryFormViewProps> = ({
         }
       })();
     } else if (type === "CREATE") {
-      // Set default values when creating
       form.setFieldsValue({
         createdBy: currentUser,
         createdDate: moment(),
@@ -151,8 +142,6 @@ const DataEntryFormView: React.FC<DataEntryFormViewProps> = ({
               <DatePicker style={{ width: "100%" }} disabled />
             </Form.Item>
           </Col>
-
-          {/* Show createdBy and lastModifiedBy only for EDIT or VIEW */}
           {type !== "CREATE" && (
             <>
               <Col span={12}>
@@ -168,7 +157,6 @@ const DataEntryFormView: React.FC<DataEntryFormViewProps> = ({
               </Col>
             </>
           )}
-
           <Col span={24} style={{ textAlign: "right" }}>
             {!isView ? (
               <>

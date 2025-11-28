@@ -1,7 +1,7 @@
 
 import CrudWrapper from "@/components/DataCrud/CrudWrapper"
-import MainPage from "./MainPage"
-import { HrmPaths } from ".."
+import { JobListPage as MainPage } from './MainPage';
+import { HrmPaths } from '..';
 import DataEntryFormView from "./DataEntryFormView"
 import { Card } from "antd"
 

@@ -3,7 +3,6 @@ import { RequestActions, ServiceApiType, singleRequest } from "@/services/apiGat
 import { JobInfoAdvanceSearchParams, ListJob } from './data';
 import { Paging } from "@/services/API";
 
-
 export const JobOperator = {
   list: (
     params: TableViewSearchParams<JobInfoAdvanceSearchParams>,
@@ -38,7 +37,6 @@ export const JobOperator = {
     payload: { id },
   }),
 };
-
 export const JobServiceAPI = (requestActions?: RequestActions) => ({
   listAll: (params: TableViewSearchParams<JobInfoAdvanceSearchParams>) => singleRequest<ListJob>(JobOperator.list(params))(requestActions) as Promise<Paging<ListJob>>,
   createNewJob: (params: Partial<ListJob>) =>

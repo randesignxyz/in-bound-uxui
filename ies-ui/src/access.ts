@@ -718,7 +718,8 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           'ROLE_HR_PROBATION_EVALUATION_VIEW',
           'ROLE_HR_PROBATION_EVALUATION_REQUESTER',
           'ROLE_HR_DF360_VIEW',
-          'ROLE_HR_DF360_SUPPORT'
+          'ROLE_HR_DF360_SUPPORT',
+          'ROLE_HR_JOB_VIEW'
         ].some((it) => it === item),
       ) || false,
     canAccessHrEmployeeMenuItem:

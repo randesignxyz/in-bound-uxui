@@ -413,7 +413,6 @@ export default [
     name: 'Job',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    // layout: false,
     access: 'canAccessHrJOB',
     component: './hrm/job',
   },

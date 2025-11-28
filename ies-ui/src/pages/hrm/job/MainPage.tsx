@@ -1,3 +1,4 @@
+// JobListPage.tsx
 import React, { useState } from "react";
 import PageWrapper from "@/components/PageWrapper";
 import { JobInfoAdvanceSearchParams, ListJob } from "./data";
@@ -16,8 +17,9 @@ import DataEntryFormView from "./DataEntryFormView";
 import { Badge, Button, Card, Descriptions, Grid, Radio, Modal, Space } from "antd";
 import type { TableViewSearchParams } from "@/components/DataCrud/TableView";
 
-export const openPR = () =>
-  window.open(`/hrm/job/list`, "_blank")?.focus();
+
+export const openPR = (id: number) =>
+  window.open(`/externa/hrm/df/detail/${id}`, "_blank")?.focus();
 
 export default function JobListPage() {
   const access = useAccess();
@@ -87,6 +89,8 @@ export default function JobListPage() {
       },
       pagination: { ...prev.pagination, current: 1 },
     }));
+    // Because useQuery depends on `filter`, state change will refetch.
+    // Call refetch to force immediate update if you prefer:
     refetch();
   };
 
@@ -152,7 +156,7 @@ export default function JobListPage() {
       ) : (
         <PageWrapper<ListJob, JobInfoAdvanceSearchParams, unknown>
           tabRender={(item) =>
-            access.canAccessHrEmployeeMenuItem
+            access.canAccessHrJOB
               ? [
                 {
                   action: "add",
@@ -267,6 +271,7 @@ export default function JobListPage() {
           }}
         />
       )}
+
       {/* VIEW MODAL */}
       <Modal title={viewRecord ? `View: ${viewRecord.jobTitle}` : "View"} open={viewModalVisible} footer={null} width={900} onCancel={handleCloseViewModal} destroyOnClose>
         {viewRecord && <DataEntryFormView id={viewRecord.id} type="VIEW" onCloseTab={handleCloseViewModal} />}

@@ -1,4 +1,3 @@
-// JobListPage.tsx
 import React, { useState } from "react";
 import PageWrapper from "@/components/PageWrapper";
 import { JobInfoAdvanceSearchParams, ListJob } from "./data";
@@ -17,8 +16,8 @@ import DataEntryFormView from "./DataEntryFormView";
 import { Badge, Button, Card, Descriptions, Grid, Radio, Modal, Space } from "antd";
 import type { TableViewSearchParams } from "@/components/DataCrud/TableView";
 
-export const openPR = (id: number) =>
-  window.open(`/externa/hrm/df/detail/${id}`, "_blank")?.focus();
+export const openPR = () =>
+  window.open(`/hrm/job/list`, "_blank")?.focus();
 
 export default function JobListPage() {
   const access = useAccess();
@@ -216,17 +215,41 @@ export default function JobListPage() {
                 },
               ],
               columns: [
-                { align: "center", title: "#", width: 40, render: (_: any, __: any, index: number) => index + 1 },
-                { align: "center", title: "Job Title", width: 160, dataIndex: "jobTitle", sorter: true },
-                { align: "center", title: "Job Description", width: 200, dataIndex: "jobDescription", sorter: true },
+                {  title: "#", width: 40, render: (_: any, __: any, index: number) => index + 1 },
+                {  title: "Job Title", width: 160, dataIndex: "jobTitle", sorter: true },
+                {  title: "Job Description", width: 200, dataIndex: "jobDescription", sorter: true },
                 // { align: "center", title: "Description", width: 200, dataIndex: "description", sorter: true },
-                { align: "center", title: "Status", width: 100, dataIndex: "status", sorter: true },
-                { align: "center", title: "Created By", width: 130, dataIndex: "createdBy", sorter: true },
-                { align: "center", title: "Created Date", width: 130, dataIndex: "createdDate", sorter: true, render: (_: any, r: ListJob) => formatDate(r.createdDate) },
-                { align: "center", title: "Modified By", width: 130, dataIndex: "lastModifiedBy", sorter: true },
-                { align: "center", title: "Modified Date", width: 100, dataIndex: "lastModifiedDate", sorter: true, render: (_: any, r: ListJob) => formatDate(r.lastModifiedDate) },
+                {  title: "Status", width: 100, dataIndex: "status", sorter: true },
+                { title: "Created By", width: 130, dataIndex: "createdBy", sorter: true },
                 {
-                  align: "center",
+
+                  title: "Created Date",
+                  width: 130,
+                  dataIndex: "createdDate",
+                  sorter: true,
+                  valueType:"date"
+                  // render: (_: any, r: ListJob) =>
+                  //   r.createdDate ? r.createdDate?.format("DD-MM-YYYY") : "",
+                },
+                {
+
+                  title: "Modified By",
+                  width: 130,
+                  dataIndex: "lastModifiedBy",
+                  sorter: true,
+                },
+                {
+
+                  title: "Modified Date",
+                  width: 100,
+                  dataIndex: "lastModifiedDate",
+                  sorter: true,
+                  valueType:"date"
+                  // render: (_: any, r: ListJob) =>
+                  //   r.lastModifiedDate ? r.lastModifiedDate?.format("DD-MM-YYYY") : "",
+                },
+                {
+
                   title: "Action",
                   width: 100,
                   fixed: "right",

@@ -1,4 +1,3 @@
-// services.ts
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { RequestActions, ServiceApiType, singleRequest } from "@/services/apiGateway";
 import { JobInfoAdvanceSearchParams, ListJob } from './data';

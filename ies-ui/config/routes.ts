@@ -408,6 +408,15 @@ export default [
     access: 'canAccessDF360',
     component: './hrm/df',
   },
+  {
+    path: '/hrm/job/:view/*',
+    name: 'Job',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    // layout: false,
+    access: 'canAccessHrJOB',
+    component: './hrm/job',
+  },
   /**********HRM>>**************/
 
   /**********<<Sale**************/

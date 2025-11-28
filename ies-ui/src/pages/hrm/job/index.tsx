@@ -7,7 +7,7 @@ import { Card } from "antd"
 
 export default () => {
   return(
-    <CrudWrapper baseURL={HrmPaths.jobdes} >
+    <CrudWrapper disablePageContainer   baseURL={HrmPaths.job} >
       {(view, id, navigate) => {
         switch (view) {
           case 'list':

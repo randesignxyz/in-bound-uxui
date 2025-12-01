@@ -34,7 +34,6 @@ const DataEntryFormView: React.FC<DataEntryFormViewProps> = ({ id, type, onClose
         try {
           const res = await services.detail(id);
           const job = res?.data?? res;
-
           form.setFieldsValue({
             jobTitle: job?.jobTitle || "",
             jobNo: job?.jobNo || "",
@@ -91,7 +90,6 @@ const DataEntryFormView: React.FC<DataEntryFormViewProps> = ({ id, type, onClose
       },
     });
   };
-
   return (
     <Card
       title={

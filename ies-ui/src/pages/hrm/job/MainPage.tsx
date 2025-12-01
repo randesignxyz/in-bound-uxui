@@ -21,7 +21,6 @@ export function JobListPage() {
   const [filter, setFilter] = useState<TableViewSearchParams<JobInfoAdvanceSearchParams>>({
     criteria: { advanceSearch: { status: 'ALL' } }
   })
-
   const { data, isLoading, refetch } = useQuery(
     ["fetch-list-job", filter],
     () => services.listAll(filter),
@@ -51,7 +50,6 @@ export function JobListPage() {
       },
     });
   };
-
   const handleCloseEditModal = () => {
     setEditModalVisible(false);
     setEditRecord(null);

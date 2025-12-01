@@ -32,7 +32,7 @@ export function JobListPage() {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [viewRecord, setViewRecord] = useState<ListJob | null>(null);
   const [viewModalVisible, setViewModalVisible] = useState(false);
-  const handleDelete = (record: ListJob) => {
+  const handleDelete = async (record: ListJob) => {
     Modal.confirm({
       title: "Delete Confirmation",
       icon: <ExclamationCircleOutlined />,
@@ -42,7 +42,8 @@ export function JobListPage() {
       cancelText: "Cancel",
       onOk: async () => {
         try {
-          await services.deleteJob(record.id);
+          const res = await services.deleteJob(record.id);
+          Modal.info({ title: "Delete Status", content: res.message });
           refetch();
         } catch (err) {
           Modal.error({ title: "Delete failed", content: String(err) });
@@ -50,6 +51,7 @@ export function JobListPage() {
       },
     });
   };
+
   const handleCloseEditModal = () => {
     setEditModalVisible(false);
     setEditRecord(null);

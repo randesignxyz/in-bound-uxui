@@ -103,8 +103,6 @@ export default ({ processInstanceId, setAttachFiles, onSetStatus }: {
                         }}
                     />
                 </ProCard>
-
             </Space>
-
         </Spin>)
 }

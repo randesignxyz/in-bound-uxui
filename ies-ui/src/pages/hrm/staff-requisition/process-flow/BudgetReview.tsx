@@ -20,7 +20,7 @@ export default (props: ActionDataFormProps) => {
     const [data, setData] = useState<StaffRequisitionRequest>()
 
     useEffect(() => {
-        
+
         if (!props.visible) return
         (async () => {
             if (props.activityData?.procInstId) {
@@ -70,8 +70,8 @@ export default (props: ActionDataFormProps) => {
         }}
     >
         <ProForm form={form} submitter={false}>
-            {props.action == 'Approved' && <ProFormText rules={[{ required: true }]} label="Proposed Budget" name={'proposedBudget'} />}
-            <ProFormTextArea rules={[{ required: props.action == 'Rejected' }]} label="Remarks" name={"remarks"} />
+            {props.action === 'Approved' && <ProFormText rules={[{ required: true }]} label="Proposed Budget" name={'proposedBudget'} />}
+            <ProFormTextArea rules={[{ required: props.action === 'Rejected' }]} label="Remarks" name={"remarks"} />
         </ProForm>
     </ActionFormWrapper>
 }

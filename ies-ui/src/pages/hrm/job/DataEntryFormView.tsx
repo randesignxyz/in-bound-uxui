@@ -8,7 +8,7 @@ import {
   Card,
   Row,
   Col,
-  message,
+  message, Modal,
 } from "antd";
 import moment from "moment";
 import { ListJob } from "./data";
@@ -61,7 +61,7 @@ const DataEntryFormView: React.FC<DataEntryFormViewProps> = ({ id, type, onClose
     }
   }, [id, type]);
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = (values: any) => {
     const payload = {
       ...values,
       createdDate: values.createdDate?.format("YYYY-MM-DD"),
@@ -69,20 +69,27 @@ const DataEntryFormView: React.FC<DataEntryFormViewProps> = ({ id, type, onClose
       createdBy: values.createdBy || currentUser,
       lastModifiedBy: currentUser,
     };
-
-    try {
-      if (type === "CREATE") {
-        await services.createNewJob(payload);
-        message.success("Job created successfully");
-      } else if (type === "EDIT" && id) {
-        await services.updateJob({ id, ...payload });
-        message.success("Job updated successfully");
-      }
-
-      onCloseTab?.();
-    } catch (err: any) {
-      message.error("Operation failed: " + (err.message || err));
-    }
+    Modal.confirm({
+      title: type === "CREATE" ? "Confirm Create" : "Confirm Update",
+      content: type === "CREATE"
+        ? "Are you sure you want to create this job?"
+        : "Are you sure you want to update this job?",
+      okText: type === "CREATE" ? "Create" : "Update",
+      cancelText: "Cancel",
+      okType: type === "CREATE" ? "primary" : "default",
+      onOk: async () => {
+        try {
+          if (type === "CREATE") {
+            await services.createNewJob(payload);
+          } else if (type === "EDIT" && id) {
+            await services.updateJob({ id, ...payload });
+          }
+          onCloseTab?.();
+        } catch (err: any) {
+          Modal.error({ title: "Operation Failed", content: err.message || String(err) });
+        }
+      },
+    });
   };
 
   return (
@@ -161,7 +168,7 @@ const DataEntryFormView: React.FC<DataEntryFormViewProps> = ({ id, type, onClose
             {!isView ? (
               <>
                 <Button type="primary" htmlType="submit">
-                  {type === "CREATE" ? "Create" : "Save Changes"}
+                  {type === "CREATE" ? "Create" : "Update"}
                 </Button>
                 <Button style={{ marginLeft: 8 }} onClick={onCloseTab}>
                   Cancel

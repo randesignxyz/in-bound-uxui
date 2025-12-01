@@ -32,9 +32,9 @@ export default () => {
       icon: fleet,
     },{
       id: 'bookingcar',
-      name: 'Request Car',
-      description: 'Booking Car List',
-      link: `${FleetPaths.fleet}/carbooking`,
+      name: 'Request',
+      description: 'Booking  List',
+      link: `${FleetPaths.fleet}/booking`,
       icon: requestCar,
     },
     {

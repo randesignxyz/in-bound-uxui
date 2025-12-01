@@ -7,6 +7,7 @@ import SalespersonHeirarchyForm from "./SalespersonHeirarchyForm";
 import { SalespersonOrgAPI } from "./service";
 import AuditorForm from "./AuditorForm";
 import _ from "lodash";
+import { useAccess } from "@umijs/max";
 
 interface Props {
   data?: SalespersonOrg[];
@@ -166,6 +167,7 @@ const TitleRenderer = ({ item, itemsAction }: { item: SalesOrgDataNode; itemsAct
 };
 
 export default ({ data, onLoadData }: Props) => {
+  const access = useAccess();
   const requestAction = simpleRequestActions();
   const [salespersonState, setSalespersonState] = useState<{ visible?: { name: "MODAL"; type:"ADD"|"MOVE";payloads?: SalesOrgDataNode } }>();
   const [saleOrgInfo, setSaleOrgInfo] = useState<any>();
@@ -176,7 +178,7 @@ export default ({ data, onLoadData }: Props) => {
   const filteredKeys = useMemo(() => getAllKeys(filteredTree), [filteredTree]);
   const [expandedKeys, setExpandedKeys] = useState<number[]>(allKeys);
   const [auditorState, setAuditorState] = useState<{ visible?: { name: "MODAL", payload?: SalesOrgDataNode } }>();
-  const itemsAction = useCallback((item: SalesOrgDataNode): MenuProps["items"] => [
+  const itemsAction = useCallback((item: SalesOrgDataNode): MenuProps["items"] =>access.crmReadOnly?[]: [
     {
       key: "add",
       label: "Add",

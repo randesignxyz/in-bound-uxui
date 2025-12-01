@@ -28,6 +28,7 @@ type FilterType = {
 } & CustomerAdvanceSearchParams
 
 export default ({ getMenuItems }: CustomerActionController) => {
+
     const [filter, setFilter] = useState<FetchPagingParams<FilterType>>()
     const [importData, setImportData] = useState<ImportDataResponse>()
     const [loading, setLoading] = useState(false);
@@ -131,7 +132,7 @@ export default ({ getMenuItems }: CustomerActionController) => {
                         { title: 'Outlet Type', render: (_, r) => r.outletType },
                         { title: 'Status', render: (_, r) => <Status text={toReadable(r.status)} value={r.status} /> },
                         {
-                            render: (_, r) => <Dropdown menu={{
+                            render: (_, r) => <Dropdown disabled={access.crmReadOnly} menu={{
                                 items: getMenuItems(r, 'List', () => refetch).filter(it => it.visible)
                             }}>
                                 <a onClick={(e) => e.preventDefault()}>
@@ -167,7 +168,7 @@ export default ({ getMenuItems }: CustomerActionController) => {
                         />,
                     ] : []
                 ,
-                actions: [
+                actions:access.crmReadOnly?[]: [
 
                     {
                         key: 'EXPORT', label: 'Export', icon: <DownloadOutlined />, onClick: () => {

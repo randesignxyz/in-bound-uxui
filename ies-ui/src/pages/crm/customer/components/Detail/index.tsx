@@ -442,7 +442,7 @@ const CustomerDetailView: React.FC<Props & CustomerActionController> = ({ openIn
       }).filter(it => it.visible) || []} numOfActionOnBar={4} />
       }
     >
-      {content}
+      {/* {content} */}
 
       <MapLocationDrawer
         open={quickState?.visible?.state}

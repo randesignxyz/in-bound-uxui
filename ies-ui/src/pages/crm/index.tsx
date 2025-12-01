@@ -433,7 +433,7 @@ const Crm: React.FC = () => {
       //link: `${CrmPaths.settlement}/list`,
       link: `${CrmPaths.salesperson}/list`,
       icon: salesperson,
-      visible: access.saleAdmin
+      visible: access.crmSalsperson
     }, {
       id: 'registerCustomer',
       name: 'Register Customer',
@@ -446,7 +446,7 @@ const Crm: React.FC = () => {
           type: 'group',
           label: "Reports",
           children: [
-           {
+            {
               label: <RegisterCustomerReport trigger={<a>Register Customer List</a>} />,
               key: 'register-customer-report',
               icon: <BarChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
@@ -466,7 +466,7 @@ const Crm: React.FC = () => {
       //link: `${CrmPaths.settlement}/list`,
       link: `${CrmPaths.shippingAddress}/list`,
       icon: customerShipping,
-      visible: access.saleAdmin
+      visible: access.crmShippingAddress
     },
     {
       id: 'customer-sharing',
@@ -474,7 +474,7 @@ const Crm: React.FC = () => {
       description: 'Original owner of the shared customer record.',
       link: `${CrmPaths.shareCustomer}/list`,
       icon: customer_sharing,
-      visible: access.saleAdmin
+      visible: access.crmShareCustomer
     },
     {
       id: 'customer-verified',

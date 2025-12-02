@@ -105,7 +105,7 @@ export default () => {
     //   description: 'All suggestions from Salesperson.',
     //   link: `${SalePaths.suggestion}/list`,
     //   icon: plannerIcon,
-    //   // visible: access.canAcessStockControlMenuItem || access.canAccessSettlementMenuItem,
+    //   // visible: access.canAcessStockControlMenuItem || access.canAccessSettlementItem,
     //   visible: access.canAcessStockControlMenuItem,
     // },
     {
@@ -115,7 +115,7 @@ export default () => {
       link: `${SalePaths.store}/list`,
       icon: storeIcon,
       // visible: access.canAccessAllMenuDSD || access.canAccessTabWarehouse,
-      visible: access.canAcessStockControlMenuItem,
+      visible: access.canAccessSaleStoreItems || access.canAccessSaleStoreItem,
     },
     {
       id: 'stock',
@@ -123,7 +123,7 @@ export default () => {
       description: 'Daily Stock Control',
       link: `${SalePaths.stock}/list`,
       icon: stockIcon,
-      visible: access.canAcessStockControlMenuItem,
+      visible: access.canAcessStockControlItem || access.canAccessSaleStockCtrl,
     },
     {
       id: 'sales-visit',
@@ -132,7 +132,7 @@ export default () => {
       link: `${SalePaths.visit}/list`,
       icon: scheduleIcon,
       // visible: access.canAccessAllMenuDSD,
-      visible: access.canAccessSaleVisit,
+      visible: access.canAccessSaleVisit || access.canAccessSaleVisitItem,
     },
     {
       id: 'settlement',
@@ -141,8 +141,8 @@ export default () => {
       link: `${SalePaths.settlement}/list`,
       // icon: settlementIcon,
       icon: agreementIcon,
-      // visible: access.canAccessSettlementMenuItem,
-      visible: access.canAccessSaleCash,
+      // visible: access.canAccessSettlementItem,
+      visible: access.canAccessSaleCash || access.canAccessSaleCashCollectionItem,
     },
     {
       id: 'lead',
@@ -152,7 +152,7 @@ export default () => {
       //overlay: leadReportMenu,
       icon: userIcon,
       // visible: access.canAccessAllMenuDSD,
-      visible: access.canAccessSaleLead,
+      visible: access.canAccessSaleLead || access.canAccessSaleLeadItem,
     },
     {
       id: 'daily',
@@ -160,14 +160,14 @@ export default () => {
       description: 'Daily report',
       link: `${SalePaths.daily}/list`,
       icon: dailyReportIcon,
-      visible: access.canAccessSaleDailyReport,
+      visible: access.canAccessSaleDailyReport || access.canAccessSaleDailyReportItem,
     },
     {
       id: 'dsdReport',
       name: 'Reports',
       description: 'All Reports',
       icon: reportIcon,
-      visible: access.canAccessSaleReport || access.canAccessSaleDailyReport,
+      visible: access.canAccessSaleReport || access.canAccessSaleDailyReport || access.canAccessSaleReportLst,
       menu: {
         onClick: (info) => {
           switch (info.key) {
@@ -236,14 +236,14 @@ export default () => {
       link: `${MPUPath.mpuPurchaseOrder}/list`,
       icon: purchaseOrderIcon,
       visible:
-        access.canAccessViewMpu || access.canAccessSaleDailyReport || access.canAccessTabWarehouse,
+        access.canAccessViewMpu || access.canAccessSaleDailyReport || access.canAccessTabWarehouse || access.canAccessSalePurchaseOrder,
     },
     {
       id: 'stock-count',
       name: 'Stock Counts',
       description: 'Daily Stock Count Review',
       icon: stockCountId,
-      visible: access.canAcessStockControlMenuItem || access.canAccessSaleDailyReport,
+      visible: access.canAcessStockControlItem || access.canAccessSaleDailyReport || access.canAccessSaleStockCount,
       link: `${MPUPath.mpuCountStock}/list`,
     },
     {
@@ -254,7 +254,8 @@ export default () => {
       visible:
         access.canAccessAllMenuDSD ||
         access.canAccessSaleDailyReport ||
-        access.canAccessSettlementMenuItem,
+        access.canAccessSettlementItem||
+        access.canAccessSaleSettlement,
       link: `${MPUPath.mpuSettlement}/list`,
     },
 
@@ -266,7 +267,8 @@ export default () => {
       visible:
         access.canAccessAllMenuDSD ||
         access.canAccessSaleDailyReport ||
-        access.canAccessSettlementMenuItem,
+        access.canAccessSettlementItem ||
+        access.canAccessSaleInvoice,
       link: `${MPUPath.salesInvoice}/list`,
     },
     {
@@ -275,7 +277,7 @@ export default () => {
       description: 'Delivery Order Plan List',
       link: `${SalePaths.delAllocate}/list`,
       icon: agreementIcon,
-      visible: access.canAccesAllocateSaleView
+      visible: access.canAccesAllocateSaleView || access.canAccesSaleDeliveryOrderPlan
     },
 
     // {
@@ -283,7 +285,7 @@ export default () => {
     //   name: 'Free Of Charge',
     //   description: '',
     //   icon: FOC,
-    //   visible: access.canAcessStockControlMenuItem,
+    //   visible: access.canAcessStockControlItem,
     //   link: `${MPUPath.mpuFOC}/list`,
     // },
     // {
@@ -303,6 +305,7 @@ export default () => {
       description: 'Sale Order List',
       link: `${SalePaths.so}/list`,
       icon: saleIcon,
+      visible: access.canAccessSaleItems ||access.canAccessSaleSo,
       menu: {
         onClick: (info) => {
           switch (info.key) {
@@ -318,13 +321,13 @@ export default () => {
           return undefined;
         },
         items: [
-          getItem(
+          access.canCreateEditSo? getItem(
             'Actions',
             'action-menu',
             null,
             [getItem('New SO', 'newSaleOrder', <PlusCircleOutlined />)],
             'group',
-          ),
+          ):null,
           getItem(
             'Reports',
             'report-menu',
@@ -342,12 +345,13 @@ export default () => {
       description: 'Delivery SO related Preview',
       link: `${SalePaths.delivery}/list`,
       icon: deliveryIcon,
+      visible: access.canAccessSaleItems || access.canAccessSaleDelPrev,
     },
     {
       id: 'productItem',
       name: 'Product Preview',
       description: 'Products Preview',
-      visible: access.canAcessStockControlMenuItem,
+      visible: access.canAcessStockControlItem || access.canAccessSaleProdPrev,
       link: `${SalePaths.product}/list`,
       icon: productIcon,
     }
@@ -355,7 +359,7 @@ export default () => {
 
   return (
     <PageContainer title={false}>
-      {access.canAccessSaleMenuItems && <ListMenuComp items={items} />}
+      {(access.canAccessSaleItems || access.canAccessSaleSo || access.canAccessSaleDelPrev || access.canAccessSaleProdPrev) && <ListMenuComp items={items} />}
       {/* <ListMenuComp items={retailerMenuItems} /> */}
 
       <Reports reportName={report} onClose={() => setReport(undefined)} />
@@ -363,7 +367,14 @@ export default () => {
       {(access.canAcessStockControlMenuItem ||
         access.canAccessSettlementMenuItem ||
         access.canAccessARMenuItem ||
-        access.canAccessViewMpu) && (
+        access.canAccessViewMpuMenu ||
+
+        access.canAccessSaleStoreMenuItem||
+        access.canAccessSaleLeadMenu ||
+        access.canAccessSaleReportLst ||
+        access.canAccessSaleInvoice ||
+        access.canAccesSaleDeliveryOrderPlan
+      ) && (
           <>
             <Divider />
             <ListMenuComp items={stockMenuItems} />

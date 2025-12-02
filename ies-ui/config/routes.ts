@@ -486,7 +486,7 @@ export default [
     name: 'team-work',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessAllMenuDSD',
+    access: 'canAccessAllMenuDSDMenu',
     component: './sale/team-work',
   },
   {
@@ -494,8 +494,8 @@ export default [
     name: 'store',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    // access: 'canAccessAllMenuDSD',
-    access: 'canAccessSaleStore',
+    // access: 'canAccessAllMenuDSDMenu',
+    access: 'canAccessSaleStoreMenuItem',
     component: './sale/store',
   },
   {
@@ -504,7 +504,7 @@ export default [
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
     layout: false,
-    access: 'canAccessSaleStore',
+    access: 'canAccessSaleStoreMenuItem',
     component: './sale/store',
   },
   {
@@ -512,7 +512,7 @@ export default [
     name: 'transaction',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessAllMenuDSD',
+    access: 'canAccessAllMenuDSDMenu',
     component: './sale/transaction',
   },
   {
@@ -536,7 +536,7 @@ export default [
     name: 'sales_invoice',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessAllMenuDSD',
+    access: 'canAccessAllMenuDSDMenu',
     component: './sale/invoice',
   },
   {
@@ -544,8 +544,8 @@ export default [
     name: 'lead',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    // access: 'canAccessAllMenuDSD',
-    access: 'canAccessSaleLead',
+    // access: 'canAccessAllMenuDSDMenu',
+    access: 'canAccessSaleLeadMenu',
     component: './sale/lead',
   },
   {
@@ -561,8 +561,8 @@ export default [
     name: 'sales-visit',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    // access: 'canAccessAllMenuDSD',
-    access: 'canAccessSaleVisit',
+    // access: 'canAccessAllMenuDSDMenu',
+    access: 'canAccessSaleVisitMenu',
     component: './sale/visit',
   },
   {
@@ -570,7 +570,7 @@ export default [
     name: 'item-sales-line-price',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessAllMenuDSD',
+    access: 'canAccessAllMenuDSDMenu',
     component: './sale/pricing',
   },
   {
@@ -578,7 +578,7 @@ export default [
     name: 'item-sales-line-price',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    // access: 'canAccessAllMenuDSD',
+    // access: 'canAccessAllMenuDSDMenu',
     component: './sale/mpu/settlement',
   },
 
@@ -588,7 +588,7 @@ export default [
   //   path: '/sale/mpu',
   //   name: 'mpu',
   //   icon: 'UnorderedListOutlined',
-  //   access: 'canAccessViewMpu',
+  //   access: 'canAccessViewMpuMenu',
   //   component: './sale/mpu',
   // },
 
@@ -606,7 +606,7 @@ export default [
     name: 'sale_rsm_request',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessViewMpu',
+    access: 'canAccessViewMpuMenu',
     component: './sale/mpu/request',
   },
   {
@@ -614,7 +614,7 @@ export default [
     name: 'sale_mpu_stock',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessViewMpu',
+    access: 'canAccessViewMpuMenu',
     component: './sale/mpu/stock',
   },
   {
@@ -622,7 +622,7 @@ export default [
     name: 'sale_mpu_purchase_order',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessViewMpu',
+    access: 'canAccessViewMpuMenu',
     component: './sale/mpu/purchase_order',
   },
   {
@@ -638,7 +638,7 @@ export default [
     name: 'sale-mma-foc',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    // access: 'canAccessViewMpu',
+    // access: 'canAccessViewMpuMenu',
     component: './sale/mpu/foc',
   },
   {
@@ -931,7 +931,7 @@ export default [
     name: 'allocateDel',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccesAllocateSaleView',
+    access: 'canAccesAllocateSaleViewMenu',
     component: './sale/allocate',
   },
   {

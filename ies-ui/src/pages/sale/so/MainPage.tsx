@@ -53,9 +53,20 @@ export default () => {
     return <Spin spinning={false}>
         <PageWrapper<SoItemLess, FilterType, {}>
             onNewRender={(key) => access.canCreateEditSo && <ViewWrapper openInTab addNew tabKey={key} />}
-            tabRender={item => [
-                { action: 'add', tabIcon: <FileOutlined />, panel: ({ key }) => <ViewWrapper addNew openInTab tabKey={key.toString()} />, tabLabel: 'New SO' },
+            tabRender={item =>   access.canCreateEditSo?[
+                {   action: 'add', tabIcon: <FileOutlined />, panel: ({ key }) => <ViewWrapper addNew openInTab tabKey={key.toString()} />, tabLabel: 'New SO' },
                 {
+                    action: 'view', value: item?.poNo,
+                    panel: () => <ViewWrapper openInTab id={item?.id} />,
+                    tabLabel: item?.poNo
+                },
+                {
+                    action: 'action1', value: `${item?.customerCode} - ${item?.customerName}`,
+                    panel: () => <CustomerDetailView id={item?.customerId} openInTab getMenuItems={() => []} />,
+                    tabLabel: <Badge dot><Typography.Text>{item?.customerCode}</Typography.Text>  </Badge>,
+                }
+            ]:[
+                 {
                     action: 'view', value: item?.poNo,
                     panel: () => <ViewWrapper openInTab id={item?.id} />,
                     tabLabel: item?.poNo

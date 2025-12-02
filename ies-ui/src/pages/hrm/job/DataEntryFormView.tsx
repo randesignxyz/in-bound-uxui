@@ -122,7 +122,7 @@ const DataEntryFormView: React.FC<DataEntryFormViewProps> = ({ id, type, onClose
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item label="Job Description" name="jobDescription" rules={[{ required: true, message: "Please enter Job Description" }]}>
+            <Form.Item label="Job Description" name="jobDescription"}]}>
               <Input.TextArea
                 disabled={isView}
                 placeholder="Enter Job Description"

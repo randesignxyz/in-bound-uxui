@@ -346,7 +346,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     /*****SO */
     canCreateEditSo:
       currentUser?.authorities.some((item) =>
-        ['ROLE_CRM_SALE_ADMIN', 'ROLE_SALE_ADMIN', 'ROLE_ADMIN','ROLE_SALE_NEW'].some((it) => it === item),
+        ['ROLE_CRM_SALE_ADMIN', 'ROLE_SALE_ADMIN', 'ROLE_ADMIN','ROLE_SALE_NEW_SO'].some((it) => it === item),
       ) || false,
 
     /*****Delivery */

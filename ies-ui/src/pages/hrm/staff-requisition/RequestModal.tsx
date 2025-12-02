@@ -116,7 +116,7 @@ export default ({
       }}
       onFinish={async () => {
         const formData = await form.validateFields();
-        if (uploadFileIds.length == 0) {
+        if (uploadFileIds.length === 0) {
           message.error('Please upload job description as support document.');
           return;
         }
@@ -258,7 +258,6 @@ export default ({
               ?.filter((it) => it.type == 'EMPLOYEE_CONTRACT_TYPE')
               .map((it) => ({ label: it.name, value: it.id }))}
           />
-
           <ProFormDependency name={['contractTypeId']} ignoreFormListField>
             {({ contractTypeId }) => {
               if (contractTypeId == '2032') {
@@ -273,7 +272,6 @@ export default ({
             }}
           </ProFormDependency>
         </ProCard>
-
         <ProCard size="small" bordered title="Type of Requisition">
           <ProFormRadio.Group
             rules={[{ required: true }]}
@@ -376,7 +374,6 @@ export default ({
           />
           <ProFormTextArea name={'suggestedSourcing'} label="Suggested Sourcing" />
         </ProCard>
-
         <FileUploader
           required
           showTitle

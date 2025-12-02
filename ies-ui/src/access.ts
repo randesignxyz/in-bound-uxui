@@ -88,7 +88,8 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canAccessQuotationMenuItem:
       currentUser?.authorities.some((item) => item === 'ROLE_ADMIN') || false,
     canAccessPOIMenutem: currentUser?.authorities.some((item) => item === 'ROLE_ADMIN') || false,
-
+    
+    // ========================== CRM START ==========================
     canAccessCrmMenuItem:
       currentUser?.authorities.some((item) =>
         [
@@ -252,7 +253,21 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     crmUser:
       currentUser?.authorities.some((item) => ['ROLE_CRM_SALE_USER'].some((it) => it === item)) ||
       false,
+    
+    
+    crmVerifyCustomer:currentUser?.authorities.some((item)=>["ROLE_CRM","ROLE_CRM_VERIFY_CUSTOMER","ROLE_CRM_ADMIN"].some(it=>it==item)),
+    crmShareCustomer:currentUser?.authorities.some((item)=>["ROLE_CRM","ROLE_CRM_SHARE_CUSTOMER","ROLE_CRM_ADMIN"].some(it=>it==item)),
+    crmShippingAddress:currentUser?.authorities.some((item)=>["ROLE_CRM","ROLE_CRM_SHIP_ADDRESS","ROLE_CRM_ADMIN"].some(it=>it==item)),
+    crmSalsperson:currentUser?.authorities.some((item)=>["ROLE_CRM","ROLE_CRM_SALESPERSON","ROLE_CRM_ADMIN"].some(it=>it==item)),
+    crmTerm:currentUser?.authorities.some((item)=>["ROLE_CRM","ROLE_CRM_TERM","ROLE_CRM_ADMIN"].some(it=>it==item)),
+    crmContact:currentUser?.authorities.some((item)=>["ROLE_CRM","ROLE_CRM_CONTACT","ROLE_CRM_ADMIN"].some(it=>it==item)),
+    crmVisitPlan:currentUser?.authorities.some((item)=>["ROLE_CRM","ROLE_CRM_VITSIT_PLAN","ROLE_CRM_ADMIN"].some(it=>it==item)),
+    crmVisitSchedule:currentUser?.authorities.some((item)=>["ROLE_CRM","ROLE_CRM_VISIT_SCHEDULE","ROLE_CRM_ADMIN"].some(it=>it==item)),
+    crmNotification:currentUser?.authorities.some((item)=>["ROLE_CRM","ROLE_CRM_NOTIFICATION","ROLE_CRM_ADMIN"].some(it=>it==item)),
 
+    crmReadOnly:currentUser?.authorities.some((item)=>["ROLE_CRM","ROLE_CRM_READ"].some(it=>it==item)),
+    
+    // ========================== CRM END ==========================
     /***Customer */
 
     canAccessContact:
@@ -348,6 +363,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         ['ROLE_CRM_SALE_ADMIN', 'ROLE_SALE_ADMIN', 'ROLE_ADMIN','ROLE_SALE_NEW'].some((it) => it === item),
       ) || false,
+      
 
     /*****Delivery */
 
@@ -768,7 +784,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       ) || false,
     canAccessHrJOB:
       currentUser?.authorities.some((item) =>
-        ['ROLE_HR_ADMIN', 'ROLE_HR_JOB_VIEW'].some((it) => it === item),
+        ['ROLE_HR_ADMIN','ROLE_ADMIN', 'ROLE_HR_JOB_VIEW'].some((it) => it === item),
       ) || false,
     canAccessHrViewEmployeeMenuItem:
       currentUser?.authorities.some((item) =>

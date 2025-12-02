@@ -176,5 +176,6 @@ export const EmployeeServices = {
     endpoint: 'HR',
     payload: { deptId, buId }
 
-  })
+  }),
+
 };

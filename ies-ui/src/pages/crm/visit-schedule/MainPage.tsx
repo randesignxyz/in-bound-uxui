@@ -201,7 +201,7 @@ export default () => {
                     ],
                     onRefresh: refetch,
                     title: "Visit Schedule List",
-                    actionButtons: [
+                    actionButtons:access.crmReadOnly?[]: [
                         <>
                            {access.canAccessVisitScheduleCancelBtn &&<Tooltip key={'generate-visit-plan '} title="Cancel Visit Schedule">
                                 <Button

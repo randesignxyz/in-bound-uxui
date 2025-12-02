@@ -408,6 +408,14 @@ export default [
     access: 'canAccessDF360',
     component: './hrm/df',
   },
+  {
+    path: '/hrm/job/:view/*',
+    name: 'Job',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessHrJOB',
+    component: './hrm/job',
+  },
   /**********HRM>>**************/
 
   /**********<<Sale**************/
@@ -1299,6 +1307,23 @@ export default [
     access: 'canAccessFleetMenu',
     component: './fleet/accessory/',
   },
+
+      // ----- booking -----
+  {
+    path: '/fleet/booking',
+    name: 'fleet_booking',
+    hideInMenu: 'true',
+    // access: 'canAccessFleetMenu',
+    component: './fleet/booking',
+  },
+    {
+    path: '/fleet/booking/request',
+    name: 'fleet_booking_request',
+    hideInMenu: 'true',
+    // access: 'canAccessFleetMenu',
+    component: './fleet/booking/request',
+  },
+      // ----- END -----
   //  ================= END FLEET =================
 
   // ================= DMS =======================

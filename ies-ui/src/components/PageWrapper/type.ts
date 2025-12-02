@@ -18,11 +18,11 @@ export type TabRenderProps = {
         onCloseTab: () => void;
         key: React.Key,
         currentTabKey?: string
-        onAddTab: (actionType: ActionType, props?: TabRenderProps, key?: React.Key) => void,
+        onAddTab: (actionType: ActionType, props?: TabRenderProps, key?: React.Key, hiden?:Boolean) => void,
         onUpdateTab: (actionType: ActionType, newItem?: any, props?: TabRenderProps, key?: React.Key) => void,
         onChangeTabLabel: (label: React.ReactElement) => void;
         // onActionTriggered?: (actionType: ActionType, props?: TabRenderProps, key?: React.Key) => void,
-    }) => React.ReactNode;
+    }) =>  React.ReactNode;
 }
 
 export interface BastListViewProps<ListDataType extends Record<string, any> & { id: number, code?: string }, FilterType

@@ -1,9 +1,7 @@
-// services.ts
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { RequestActions, ServiceApiType, singleRequest } from "@/services/apiGateway";
 import { JobInfoAdvanceSearchParams, ListJob } from './data';
 import { Paging } from "@/services/API";
-
 
 export const JobOperator = {
   list: (
@@ -39,7 +37,6 @@ export const JobOperator = {
     payload: { id },
   }),
 };
-
 export const JobServiceAPI = (requestActions?: RequestActions) => ({
   listAll: (params: TableViewSearchParams<JobInfoAdvanceSearchParams>) => singleRequest<ListJob>(JobOperator.list(params))(requestActions) as Promise<Paging<ListJob>>,
   createNewJob: (params: Partial<ListJob>) =>

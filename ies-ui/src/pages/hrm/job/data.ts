@@ -1,30 +1,20 @@
-
+import Moment from 'moment';
 
 export interface ListJob {
-  formNo: number;
+  jobNo: number;
   id: number;
-  jobNo: string;
   jobTitle: string;
   description: string | null;
   jobDescription: string | null;
   empSegmentId: number | null;
   status: string | null;
   createdBy: string | null;
-  createdDate: string | null;
+  createdDate: Moment.Moment | null;
   lastModifiedBy: string | null;
-  lastModifiedDate: string | null;
-  // optional helper fields for UI
-  empId?: number;
-  empNo?: string;
-  empName?: string;
-  key?: string;
+  lastModifiedDate: Moment.Moment | null;
 }
-
 export type JobInfoAdvanceSearchParams = {
-
-  // subStatus?: string;
   searchValue?: string;
-
 };
 
 

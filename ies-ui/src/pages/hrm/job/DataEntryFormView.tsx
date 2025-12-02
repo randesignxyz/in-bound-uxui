@@ -8,7 +8,7 @@ import {
   Card,
   Row,
   Col,
-  message,
+  message, Modal,
 } from "antd";
 import moment from "moment";
 import { ListJob } from "./data";
@@ -17,32 +17,23 @@ import { JobServiceAPI } from "./services";
 type FormMode = "CREATE" | "EDIT" | "VIEW";
 
 interface DataEntryFormViewProps {
-  id?: number;
+  id?: number | string | undefined ;
   type: FormMode;
   onCloseTab?: () => void;
 }
-
 const { Option } = Select;
 
-const DataEntryFormView: React.FC<DataEntryFormViewProps> = ({
-                                                               id,
-                                                               type,
-                                                               onCloseTab,
-                                                             }) => {
+const DataEntryFormView: React.FC<DataEntryFormViewProps> = ({ id, type, onCloseTab, }) => {
   const [form] = Form.useForm<ListJob>();
   const services = JobServiceAPI();
   const isView = type === "VIEW";
-
-  // Get current logged-in user
   const currentUser = localStorage.getItem("username") || "Unknown User";
-
   useEffect(() => {
     if ((type === "EDIT" || type === "VIEW") && id) {
       (async () => {
         try {
           const res = await services.detail(id);
-          const job = res?.data ?? res;
-
+          const job = res?.data?? res;
           form.setFieldsValue({
             jobTitle: job?.jobTitle || "",
             jobNo: job?.jobNo || "",
@@ -60,7 +51,6 @@ const DataEntryFormView: React.FC<DataEntryFormViewProps> = ({
         }
       })();
     } else if (type === "CREATE") {
-      // Set default values when creating
       form.setFieldsValue({
         createdBy: currentUser,
         createdDate: moment(),
@@ -70,7 +60,7 @@ const DataEntryFormView: React.FC<DataEntryFormViewProps> = ({
     }
   }, [id, type]);
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = (values: any) => {
     const payload = {
       ...values,
       createdDate: values.createdDate?.format("YYYY-MM-DD"),
@@ -78,22 +68,28 @@ const DataEntryFormView: React.FC<DataEntryFormViewProps> = ({
       createdBy: values.createdBy || currentUser,
       lastModifiedBy: currentUser,
     };
-
-    try {
-      if (type === "CREATE") {
-        await services.createNewJob(payload);
-        message.success("Job created successfully");
-      } else if (type === "EDIT" && id) {
-        await services.updateJob({ id, ...payload });
-        message.success("Job updated successfully");
-      }
-
-      onCloseTab?.();
-    } catch (err: any) {
-      message.error("Operation failed: " + (err.message || err));
-    }
+    Modal.confirm({
+      title: type === "CREATE" ? "Confirm Create" : "Confirm Update",
+      content: type === "CREATE"
+        ? "Are you sure you want to create this job?"
+        : "Are you sure you want to update this job?",
+      okText: type === "CREATE" ? "Create" : "Update",
+      cancelText: "Cancel",
+      okType: type === "CREATE" ? "primary" : "default",
+      onOk: async () => {
+        try {
+          if (type === "CREATE") {
+            await services.createNewJob(payload);
+          } else if (type === "EDIT" && id) {
+            await services.updateJob({ id, ...payload });
+          }
+          onCloseTab?.();
+        } catch (err: any) {
+          Modal.error({ title: "Operation Failed", content: err.message || String(err) });
+        }
+      },
+    });
   };
-
   return (
     <Card
       title={
@@ -151,8 +147,6 @@ const DataEntryFormView: React.FC<DataEntryFormViewProps> = ({
               <DatePicker style={{ width: "100%" }} disabled />
             </Form.Item>
           </Col>
-
-          {/* Show createdBy and lastModifiedBy only for EDIT or VIEW */}
           {type !== "CREATE" && (
             <>
               <Col span={12}>
@@ -168,12 +162,11 @@ const DataEntryFormView: React.FC<DataEntryFormViewProps> = ({
               </Col>
             </>
           )}
-
           <Col span={24} style={{ textAlign: "right" }}>
             {!isView ? (
               <>
                 <Button type="primary" htmlType="submit">
-                  {type === "CREATE" ? "Create" : "Save Changes"}
+                  {type === "CREATE" ? "Create" : "Update"}
                 </Button>
                 <Button style={{ marginLeft: 8 }} onClick={onCloseTab}>
                   Cancel

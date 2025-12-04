@@ -170,6 +170,12 @@ export default () => {
                                     message.success("Success!");
                                 },
                             },
+                            {
+                                icon: <ExportOutlined />,
+                                label: "Export",
+                                key: "export",
+                                onClick:()=>setExportState(true)
+                            },
                         ],
                         // actionButtons: [
                         //     <Segmented

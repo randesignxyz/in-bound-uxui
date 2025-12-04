@@ -56,6 +56,7 @@ declare namespace API {
     userId?: string;
     access?: 'user' | 'guest' | 'admin';
     authorities: []
+    groupAttributeMap?:Map<key,string>;
     unreadCount?: number;
     employeeInfo?: {
       id: number

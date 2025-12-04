@@ -73,7 +73,7 @@ const VerifiedDetailView: React.FC<Props> = ({ data1, mode, onBack }) => {
                     <Card
                         size="small"
                         extra={[20001, 20002, 20004].some(p => data?.verifiedStatus?.id == 20002) ?
-                            <Space hidden={access.crmReadOnly}>
+                            <Space hidden={access.can("CRM_VERIFICATION","BTN_ACTION")}>
                                 <Button icon={<SignatureOutlined />}
                                     onClick={() => setRemarkState(true)}
                                     type="link"

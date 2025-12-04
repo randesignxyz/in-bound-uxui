@@ -24,7 +24,7 @@ const ShareDetailView: React.FC<Props> = ({ data, onBack, isGroup }) => {
                                 icon={<DeleteOutlined />}
                                 danger
                                 type="link"
-                                hidden={access.crmReadOnly}
+                                hidden={ !access.can("CRM_SHARE","DELETE")}
                                 onClick={() => {
                                     Modal.confirm({
                                         title: "Delete Confirmation",

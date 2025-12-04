@@ -158,7 +158,7 @@ export default () => {
                         onRefresh: refetch,
                         title:"Verification List",
                         actions: [
-                            !access.crmReadOnly?{
+                            access.can("CRM_VERIFICATION","SYNC")?{
                                 icon: <SyncOutlined />,
                                 label: "Sync",
                                 key: "sync",
@@ -168,12 +168,12 @@ export default () => {
                                     message.success("Success!");
                                 },
                             }:{onClick:()=>{},key:""},
-                            {
+                            access.can("CRM_VERIFICATION","EXPORT")?{
                                 icon: <ExportOutlined />,
                                 label: "Export",
                                 key: "export",
                                 onClick:()=>setExportState(true)
-                            },
+                            }:{onClick:()=>{},key:""},
                         ],
                         // actionButtons: [
                         //     <Segmented

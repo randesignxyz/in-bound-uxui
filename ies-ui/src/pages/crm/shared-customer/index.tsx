@@ -35,7 +35,7 @@ export default () => {
         <>
             <PageWrapper
                 tabRender={(item) => [
-                    access.crmReadOnly ? {} :
+                    access.can("CRM_SHARE","CREATE") ?
                         {
                             tabLabel: "New",
                             action: "add",
@@ -48,7 +48,7 @@ export default () => {
                                 onView={() => { }}
                                 type="new"
                             />
-                        },
+                        }:{tabKey:"",tabLabel:""},
                     {
                         tabLabel: (item?.id != 0) ? item?.entityCode : moment(item?.createdDate).format("YYYY-M-D"),
                         action: "view",
@@ -63,7 +63,6 @@ export default () => {
                         />
                     }
                 ]}
-
                 listView={{
                     type: "Table",
                     title: "Share Customer List",
@@ -167,7 +166,7 @@ export default () => {
                                 },
                                 {
                                     title: "Action",
-                                    hidden: access.crmReadOnly,
+                                    hidden: !access.can("CRM_SHARE","DELETE"),
                                     render: (_, r) => {
                                         return <Button
                                             icon={<DeleteOutlined />}

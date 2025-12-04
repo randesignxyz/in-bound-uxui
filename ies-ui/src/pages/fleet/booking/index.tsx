@@ -14,7 +14,6 @@ export default () => {
       name: 'Booking Request',
       description: 'Booking Request',
       link: `${FleetPaths.request}`,
-    //   icon: fleet,
     },
     // {
     //   id: 'bookingcar',

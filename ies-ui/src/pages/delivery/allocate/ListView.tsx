@@ -6,8 +6,8 @@ import { simpleRequestActions } from '@/services/model';
 import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table';
 import { Card, Checkbox, DatePicker, message, Modal, Progress, Radio, Space, Spin, Tag, Image, UploadFile, Descriptions, Button, Table, Dropdown, Row, Col, Typography, Select, Form, Tooltip } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AllocateServiceAPI } from './service';
-import { Allocate, AllocateSOAdvanceParams, DeliveryList, DNItemParams, DNList, DNParams, DnQuickView, LocationList, SkuList, SOAllocateActivities, SOList, UpdateRemarkParams } from './data';
+import { AllocateServiceAPI } from '@/pages/delivery/allocate/service';
+import { Allocate, AllocateSOAdvanceParams, DeliveryList, DNItemParams, DNList, DNParams, DnQuickView, LocationList, SkuList, SOAllocateActivities, SOList, UpdateRemarkParams } from '@/pages/delivery/allocate/data';
 import { useAccess, useModel } from '@umijs/max';
 import { Paging } from '@/services/API';
 import { FaCarSide, FaMapLocationDot, FaRegPenToSquare, FaTruckMoving } from "react-icons/fa6";
@@ -65,7 +65,7 @@ export default () => {
   const [MTSearch, setMTSearch] = useState<{ status: string; startDate?: string, endDate?: string }>({
     status: 'open',
   });
-  const [dnSearch, setDnSearch] = useState<{ status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string }>({
+  const [dnSearch, setDnSearch] = useState<{ status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string, sap_delivery_date?: string }>({
     status: 'posted',
     dnStatus: 'open'
   });
@@ -551,8 +551,9 @@ export default () => {
   ): Promise<Paging<DNList>> => {
     try {
       const today = moment().format('YYYY-MM-DD');
-      const deliveryDate = asDate ? dnSearch.delivery_date || undefined : today;
-
+      const sapdeliveryDate = asDate
+        ? (dnSearch.sap_delivery_date ? dnSearch.sap_delivery_date : undefined) // ✅ use filter or ALL
+        : today;
       // Map Ant Design sort info to backend format
       const sortBy: string[] = [];
       const sortOrders: string[] = [];
@@ -565,10 +566,11 @@ export default () => {
 
       const list = await services.list_dn_detail({
         status: dnSearch.status,
-        delivery_date: deliveryDate,
+        delivery_date: dnSearch.delivery_date,
         province_id: dnSearch.province_id,
         district_id: dnSearch.district_id,
         commune_id: dnSearch.commune_id,
+        sap_delivery_date: sapdeliveryDate,
         sortBy,
         sortOrders,
         filterPass: "Unclaimed"
@@ -618,8 +620,9 @@ export default () => {
   ): Promise<Paging<DNList>> => {
     try {
       const today = moment().format('YYYY-MM-DD');
-      const deliveryDate = asDate ? hisSearch.delivery_date || undefined : today;
-
+      const sapdeliveryDate = asDate
+        ? (dnSearch.sap_delivery_date ? dnSearch.sap_delivery_date : undefined) // ✅ use filter or ALL
+        : today;
       // Map Ant Design sort info to backend format
       const sortBy: string[] = [];
       const sortOrders: string[] = [];
@@ -632,10 +635,11 @@ export default () => {
 
       const list = await services.list_dn_detail({
         status: hisSearch.status,
-        delivery_date: deliveryDate,
+        delivery_date: hisSearch.delivery_date,
         province_id: hisSearch.province_id,
         district_id: hisSearch.district_id,
         commune_id: hisSearch.commune_id,
+        sap_delivery_date: sapdeliveryDate,
         sortBy,
         sortOrders,
         filterPass: "Claimed",
@@ -855,6 +859,19 @@ export default () => {
         compare: (a, b) =>
           (a.deliveryDate ? dayjs(a.deliveryDate).unix() : 0) -
           (b.deliveryDate ? dayjs(b.deliveryDate).unix() : 0),
+        multiple: 4,
+      },
+    },
+    {
+      title: 'SAP Delivery Date',
+      dataIndex: 'sap_delivery_date',
+      width: '6%',
+      render: (_, r) =>
+        dayjs.utc(r.sap_delivery_date).add(7, 'hour').format('DD-MMM-YYYY'),// forces UTC, no timezone shift
+      sorter: {
+        compare: (a, b) =>
+          (a.sap_delivery_date ? dayjs(a.sap_delivery_date).unix() : 0) -
+          (b.sap_delivery_date ? dayjs(b.sap_delivery_date).unix() : 0),
         multiple: 4,
       },
     },
@@ -1752,13 +1769,25 @@ export default () => {
                             </Checkbox>
                             <ProFormDatePicker
                               name="delivery_date"
-                              placeholder="Delivery Date"
+                              placeholder="Request Delivery Date"
+                              disabled={!asDate}
                               onChange={(val: moment.Moment | null) => {
                                 const localDate = val ? val.format('YYYY-MM-DD') : undefined; // local date
                                 setDnSearch((v) => ({ ...v, delivery_date: localDate }));
                                 actionRef.current?.reloadAndRest?.();
                               }}
-                              width={150}
+                              width={200}
+                            />
+                            <ProFormDatePicker
+                              name="sap_delivery_date"
+                              placeholder="SAP Delivery Date"
+                              disabled={!asDate}
+                              onChange={(val: moment.Moment | null) => {
+                                const localDate = val ? val.format('YYYY-MM-DD') : undefined; // local date
+                                setDnSearch((v) => ({ ...v, sap_delivery_date: localDate }));
+                                actionRef.current?.reloadAndRest?.();
+                              }}
+                              width={200}
                             />
                             <ProFormSelect
                               placeholder="Province"
@@ -1896,12 +1925,24 @@ export default () => {
                               <ProFormDatePicker
                                 name="delivery_date"
                                 placeholder="Delivery Date"
+                                disabled={!asDate}
                                 onChange={(val: moment.Moment | null) => {
                                   const localDate = val ? val.format('YYYY-MM-DD') : undefined; // local date
                                   setHisSearch((v) => ({ ...v, delivery_date: localDate }));
                                   actionRef.current?.reloadAndRest?.();
                                 }}
-                                width={150}
+                                width={200}
+                              />
+                              <ProFormDatePicker
+                                name="sap_delivery_date"
+                                placeholder="SAP Delivery Date"
+                                disabled={!asDate}
+                                onChange={(val: moment.Moment | null) => {
+                                  const localDate = val ? val.format('YYYY-MM-DD') : undefined; // local date
+                                  setHisSearch((v) => ({ ...v, sap_delivery_date: localDate }));
+                                  actionRef.current?.reloadAndRest?.();
+                                }}
+                                width={200}
                               />
                               <ProFormSelect
                                 placeholder="Province"

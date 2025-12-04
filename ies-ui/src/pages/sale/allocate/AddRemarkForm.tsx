@@ -6,7 +6,7 @@ import { Button, Card, Col, GetProp, Row, Upload, message, Image } from 'antd';
 import { RcFile, UploadChangeParam, UploadFile, UploadProps } from 'antd/es/upload';
 import { useForm } from 'antd/lib/form/Form';
 import { useEffect, useState } from 'react';
-import { UpdateRemarkParams } from './data';
+import { UpdateRemarkParams } from '@/pages/delivery/allocate/data';
 import imageCompression from 'browser-image-compression';
 
 interface Props extends FormModalProps {

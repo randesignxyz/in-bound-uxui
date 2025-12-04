@@ -148,7 +148,7 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
     requestedDate?: moment.Moment[];
     status?: string[];
     reportType?: string;
-    supplier?:string
+    supplier?: string
   }>(actions),
 
   donwloadDSDReport: downloadSaleReport<{
@@ -264,6 +264,10 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
   postSoToSAPNew: execService<{ soId: number; remarks?: string }, { data: any; message: string }>(
     SaleService('post-so-new'),
     actions,
+  ),
+  syncFromSFA: execService<{}, { data: string, message: string }>(
+    SaleService('sync-so-from-sfa')
+    , actions
   ),
   cancelSo: execService<{ soId: number; remarks: string }, { data: string; message: string }>(
     SaleService('cancel-so'),

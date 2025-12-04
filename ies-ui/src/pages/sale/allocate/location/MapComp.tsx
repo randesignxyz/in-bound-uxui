@@ -1,5 +1,5 @@
 import { GoogleMap, useLoadScript, OverlayView } from "@react-google-maps/api";
-import { DNList, Location } from "../data";
+import { DNList, Location } from "@/pages/delivery/allocate/data";
 import MarkerComp from "./MarkerComp";
 import { useState } from "react";
 
@@ -20,25 +20,25 @@ export default function MapComp({ data, selected, onView }: MapCompProps) {
   if (!isLoaded) return null;
 
   const combinedData = data
-  // deduplicate by lat/lng
-  .filter(
-    (dn, index, self) =>
-      index ===
-      self.findIndex(
-        d => d.latitude === dn.latitude && d.longitude === dn.longitude
-      )
-  )
-  .map(d => ({
-    ...d,
-    // selected if **any DN with same lat/lng** is in `selected`
-    isSelected: selected?.some(
-      s => s.latitude === d.latitude && s.longitude === d.longitude
-    ),
-    // optionally, store all DNs at this location
-    itemsAtLocation: data.filter(
-      x => x.latitude === d.latitude && x.longitude === d.longitude
-    ),
-  }));
+    // deduplicate by lat/lng
+    .filter(
+      (dn, index, self) =>
+        index ===
+        self.findIndex(
+          d => d.latitude === dn.latitude && d.longitude === dn.longitude
+        )
+    )
+    .map(d => ({
+      ...d,
+      // selected if **any DN with same lat/lng** is in `selected`
+      isSelected: selected?.some(
+        s => s.latitude === d.latitude && s.longitude === d.longitude
+      ),
+      // optionally, store all DNs at this location
+      itemsAtLocation: data.filter(
+        x => x.latitude === d.latitude && x.longitude === d.longitude
+      ),
+    }));
 
   return (
     <GoogleMap

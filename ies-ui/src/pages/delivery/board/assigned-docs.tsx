@@ -77,8 +77,6 @@ const AssignedDocModal: React.FC<Props> = ({
     allowNoInvoiceCodCust?: boolean;
   }>()
   const [openMap, setOpenMap] = useState(false)
-
-  const reasigning = itemDetail?.delivery?.assignedDocDate !== null
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: 'AIzaSyA0Ifgai8ryDULDIqNOZmX8L7XZlzu4_D8', // put your key here
   });

@@ -1,7 +1,7 @@
 import { Card } from "antd";
-import { DNList } from "./data";
 import { useState } from "react";
 import { DownOutlined, UpOutlined } from "@ant-design/icons";
+import { DNList } from "@/pages/delivery/allocate/data";
 
 interface FloatingCardProps {
   selectedRows?: DNList[];

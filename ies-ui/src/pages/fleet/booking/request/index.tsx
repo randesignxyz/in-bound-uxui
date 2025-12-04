@@ -1,7 +1,7 @@
 import PageWrapper from "@/components/PageWrapper"
 import RequestForm from "./Form"
 import { simpleRequestActions } from "@/services/model"
-import { useQuery } from "@/.umi/plugin-reactQuery";
+import { useQuery } from "@umijs/max"
 import { BookingAPI } from "../service";
 
 

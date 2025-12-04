@@ -11,6 +11,9 @@ import { EmployeeServices } from "../services"
 import RequestModal from "./RequestModal"
 import Status from "@/components/Status"
 import { ExportOutlined } from "@ant-design/icons"
+import PageWrapper from '@/components/PageWrapper';
+
+
 
 const statusColor = (status: string) => {
   if (status == 'PENDING') {
@@ -60,10 +63,10 @@ export default () => {
 
   return (
     <PageContainer title="Staff Requisition">
+
       <TableView<StaffRequisitionRequest, { searchValue?: string; advanceSearch?: StaffRequisitionAdvanceSearchParams }>
         actionHandlers={{
           onAdd: () => access.canRequestHrStaffRequisition ? setModalVisible({ newRequsistion: true }) : message.warning("Request is not allowed, No permission."),
-
           onRequest: (criteria, pagination, sort) =>
             onRequestHandler({
               criteria: {
@@ -73,7 +76,6 @@ export default () => {
               },
               pagination,
             }),
-
         }}
         extraFilter={<Radio.Group onChange={(e) => {
           setAdvanceSearchParams(v => ({ ...v, status: e.target.value }))
@@ -127,11 +129,10 @@ export default () => {
           { title: 'status', render: (_, r) => <Status text={r.status} /> }
         ]}
       />
-
       {modalVisible?.newRequsistion && <RequestModal open={true}
-        onRefresh={() => actionRef.current?.reloadAndRest?.()}
-        onOpenChange={onCloseModalHandler}
-        width="1000px"
+                                                     onRefresh={() => actionRef.current?.reloadAndRest?.()}
+                                                     onOpenChange={onCloseModalHandler}
+                                                     width="1000px"
       />}
 
     </PageContainer>

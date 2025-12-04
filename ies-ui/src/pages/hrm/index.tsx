@@ -5,7 +5,7 @@ import { ExportOutlined } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
 import { useAccess } from '@umijs/max';
 import PerformanceReport from './appraisal-request/components/PerformanceReport';
-
+import jobImage from '../../assets/jobsdes.png';
 export const HrmPaths = {
     employee: '/hrm/employee',
     staffRequisition: '/hrm/staff-requisistion',
@@ -15,6 +15,7 @@ export const HrmPaths = {
     appraisalRequest: '/hrm/appraisal-request',
     probationEvaluation: '/hrm/probation-evaluation',
     df: '/hrm/df',
+   job: '/hrm/job'
 }
 
 export default () => {
@@ -77,7 +78,14 @@ export default () => {
             visible: access.canAccessDF360,
             link: `${HrmPaths.df}/list`,
             icon: requisitionIcon,
-        },
+        },{
+        id: 'job',
+        name: 'Job Description',
+        description: 'Job Description',
+        visible: access.canAccessHrJOB,
+        link: `${HrmPaths.job}/list`,
+        icon: jobImage,
+        }
     ]
 
     return (

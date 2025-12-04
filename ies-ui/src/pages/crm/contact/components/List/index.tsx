@@ -5,9 +5,10 @@ import { ContactData, ContactListItem } from "@/services/crm/contact";
 import { LookupData } from "@/services/data";
 import { MailOutlined, PhoneOutlined, UserOutlined } from "@ant-design/icons";
 import { useSetState } from "ahooks";
-import { Modal, Space, Spin, Typography } from "antd"
+import { message, Modal, Space, Spin, Typography } from "antd"
 import { useEffect } from "react";
 import ContactEntryModal from "../ContactEntryModal";
+import { useAccess } from "@umijs/max";
 
 export interface ListProps {
     loading?: boolean;
@@ -25,7 +26,7 @@ export interface ListProps {
 }
 
 const ContactListView: React.FC<ListProps> = ({ loading, searchable, actionHandlers, data }) => {
-
+    const access = useAccess();
     const [addModal, setAddModal] = useSetState<{ visible?: boolean }>({})
 
     useEffect(() => {
@@ -44,19 +45,21 @@ const ContactListView: React.FC<ListProps> = ({ loading, searchable, actionHandl
     return (
         <Spin spinning={loading}>
             <ListView<ContactListItem, string>
-
+                
                 rowKey='id'
                 dataSource={data.itemList?.items}
                 searchable={searchable}
                 avatar={() => <UserOutlined />}
+                
                 actionHandlers={{
                     onSearch: async v => await actionHandlers?.onSearch?.(v),
-                    onAdd: () => setAddModal({visible: true})
+                    
+                    onAdd: () => access.can("CRM_CONTACT","CREATE")?setAddModal({visible: true}):message.warning("Unauthorize")
 
                 }}
                 title={r => (
                     <Space>
-                        <Typography.Link onClick={() => actionHandlers?.onDetail?.(r)} strong >{[r.internalName, r.name].filter(it => it).join("/ ")}</Typography.Link>
+                        <Typography.Link onClick={() => access.can("CRM_CONTACT","DETAIL")? actionHandlers?.onDetail?.(r):message.warning("Unauthorize")} strong >{[r.internalName, r.name].filter(it => it).join("/ ")}</Typography.Link>
                         <Typography.Text style={{ fontSize: 12 }} type="secondary">{r.jobTitle}</Typography.Text>
                     </Space>
                 )}

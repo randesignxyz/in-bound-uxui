@@ -22,6 +22,7 @@ declare namespace API {
         access?: 'user' | 'guest' | 'admin';
         authorities: []
         unreadCount?: number;
+        groupAttributeMap?:any
         employeeInfo?: {
             id: number
             department: string

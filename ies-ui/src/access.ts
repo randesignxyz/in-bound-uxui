@@ -3,6 +3,45 @@
  * */
 export default function access(initialState: { currentUser?: API.CurrentUser } | undefined) {
   const { currentUser } = initialState ?? {};
+
+  // ============ REACH CUSOMER PERMISSION ===============
+  const groupMap = currentUser?.groupAttributeMap || {};
+  const roles = currentUser?.authorities || [];
+
+  // Define global admin roles
+  const SUPER_ROLES = [
+    "ROLE_ADMIN",
+    "ROLE_CRM_ADMIN",
+    "ROLE_SALE_ADMIN",
+    "ROLE_SFA_ADMIN",
+    "ROLE_DSD_ADMIN"
+  ];
+
+  // Check if user has ANY super role (auto allow all)
+  const isSuperAdmin = roles.some(r => SUPER_ROLES.includes(r));
+
+  // Module access check
+  const canAccess = (module: string) => {
+    if (isSuperAdmin) return true; // <-- bypass check
+    return Object.keys(groupMap).includes(module.toUpperCase());
+  };
+
+  // Action access check
+  const can = (module: string, action: string) => {
+    if (isSuperAdmin) return true; // <-- bypass check
+
+    const mod = module.toUpperCase();
+    const actionUpper = action.toUpperCase();
+
+    const permissions = groupMap[mod];
+    if (!permissions) return false;
+
+    const list = permissions.split(",").map((s: string) => s.trim().toUpperCase());
+    return list.includes(actionUpper);
+  };
+
+  // ============  END ===============
+
   return {
     isRequesterRole:
       currentUser?.authorities.some((item) =>
@@ -1200,5 +1239,30 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canCreateEditMpuRequest: true,
     /* LH : END */
 
+    // ============ REACH PHEUN  Custom 02-12-2025 ============
+    canAccessCRM : currentUser?.authorities?.some((it:string) =>  it.toUpperCase().startsWith("ROLE_CRM") || it =="ROLE_ADMIN" ),
+    canAccessCRMCustomer : canAccess("CRM_CUSTOMER"),
+    canAccessCRMContact : canAccess("CRM_CONTACT"),
+    canAccessCRMVisitPlan : canAccess("CRM_VISIT_PLAN"),
+    canAccessCRMVisitSchedule : canAccess("CRM_VISIT_SCHEDULE"),
+    canAccessCRMContract : canAccess("CRM_CONTRACT"),
+    canAccessCRMNotification : canAccess("CRM_NOTIFICATION"),
+    canAccessCRMTerm : canAccess("CRM_TERM"),
+    canAccessCRMShippingAddress : canAccess("CRM_SHIPPING_ADDRESS"),
+    canAccessCRMShare : canAccess("CRM_SHARE"),
+    canAccessCRMVerification : canAccess("CRM_VERIFICATION"),
+    canAccessCRMSalesperson : canAccess("CRM_SALESPERSON"),
+    canAccessCRMRegisterCustomer : canAccess("CRM_REGISTER_CUSTOMER"),
+    canAccessCRMGratisConfig : canAccess("CRM_GRATIS_CONFIG"),
+    canAccessCRMGratis : canAccess("CRM_GRATIS"),
+
+    canAccess,
+    can, 
+    // ============ END ===========
   };
+
+
+
 }
+
+

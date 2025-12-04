@@ -65,6 +65,7 @@ export interface DNList {
   id: number,
   soId: string,
   deliveryDate: string,
+  sap_delivery_date?:string
   shippingAddress?: string,
   priority?: string,
   remarks?: string,
@@ -302,6 +303,7 @@ export interface ListDnDetailParams {
   province_id?: string;
   district_id?: string;
   commune_id?: string;
+  sap_delivery_date?:string
   sortBy?: string[];
   sortOrders?: string[];
   filterPass?: string

@@ -16,7 +16,7 @@ import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 import AddRemarkModal from './AddRemarkForm';
 import { uploadFileToFirebase } from './uploadImage';
-import { CloseCircleOutlined, CopyOutlined, FileSearchOutlined, HistoryOutlined, PlayCircleOutlined, PlusCircleOutlined, ReloadOutlined, SyncOutlined } from '@ant-design/icons';
+import { CloseCircleOutlined, ColumnHeightOutlined, CopyOutlined, FileSearchOutlined, HistoryOutlined, PlayCircleOutlined, PlusCircleOutlined, ReloadOutlined, SyncOutlined } from '@ant-design/icons';
 import AdvanceSearch from './advanceSearchDrawer';
 import { FloatingCard } from './displayCard';
 import SaleTypeDrawer from './SaleTypeDrawer';
@@ -25,6 +25,7 @@ import { ProForm, ProFormDatePicker, ProFormDateRangePicker, ProFormSelect } fro
 import ForceColseModal from './ForceCloseModal';
 import { TbMap2 } from "react-icons/tb";
 import { useLocation, useNavigate } from "react-router-dom";
+import SortModal, { SortRule } from './SortModal';
 
 dayjs.extend(customParseFormat)
 interface DNListState {
@@ -45,6 +46,10 @@ export default () => {
   const [dataListDn, setDataListDn] = useState<DNList[]>([])
   const [selectedListDn, setSelectedListDn] = useState<DNList[]>([])
   const [selectedRows, setSelectedRows] = useState<DNList[]>([]);
+  const [sortModalOpen, setSortModalOpen] = useState(false);
+  const [sortConfig, setSortConfig] = useState<SortRule[]>([
+    { field: undefined, order: undefined }
+  ]);
   const [asDate, setAsDate] = useState(true);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [drawerTypeOpen, setDrawerTypeOpen] = useState<{ visible: boolean; data?: DNList }>({
@@ -479,7 +484,6 @@ export default () => {
     }
   };
 
-
   const onRequestQuickView = async (
     params: TableViewSearchParams<AllocateSOAdvanceParams>
   ): Promise<Paging<DnQuickView>> => {
@@ -546,6 +550,24 @@ export default () => {
     return null; // skip unknown UOM
   };
 
+  function applyMultiSort(data: any, config: any) {
+    return [...data].sort((a, b) => {
+      for (const rule of config) {
+        if (!rule.field || !rule.order) continue;
+
+        const field = rule.field;
+        const asc = rule.order === "asc" ? 1 : -1;
+
+        const aVal = a[field];
+        const bVal = b[field];
+
+        if (aVal < bVal) return -1 * asc;
+        if (aVal > bVal) return 1 * asc;
+      }
+      return 0;
+    });
+  }
+
   const onRequestDNDeatilHandler = async (
     params: TableViewSearchParams<AllocateSOAdvanceParams>
   ): Promise<Paging<DNList>> => {
@@ -600,11 +622,11 @@ export default () => {
 
         return { ...delivery, key: delivery.id, ...skuValues };
       });
-
+      const sortedList = applyMultiSort(transformedList, sortConfig);
       const page = params.pagination?.current ?? 1;
       const pageSize = params.pagination?.pageSize ?? 10;
-      const total = transformedList.length;
-      const pagedData = transformedList.slice((page - 1) * pageSize, page * pageSize);
+      const total = sortedList.length;
+      const pagedData = sortedList.slice((page - 1) * pageSize, page * pageSize);
 
       const dataList = { items: pagedData, total, page, pageSize };
       setDataListDn(list);
@@ -704,7 +726,7 @@ export default () => {
       dataIndex: 'totalItemQty',
     },
     {
-      title: 'Deliver Qty',
+      title: 'Delivered Qty',
       dataIndex: 'totalDnQty',
     },
     {
@@ -849,40 +871,40 @@ export default () => {
         </a>
       ),
     },
+    // {
+    //   title: 'Request Delivery Date',
+    //   dataIndex: 'deliveryDate',
+    //   width: '6%',
+    //   render: (_, r) =>
+    //     dayjs.utc(r.deliveryDate).add(7, 'hour').format('DD-MMM-YYYY'),// forces UTC, no timezone shift
+    //   sorter: {
+    //     compare: (a, b) =>
+    //       (a.deliveryDate ? dayjs(a.deliveryDate).unix() : 0) -
+    //       (b.deliveryDate ? dayjs(b.deliveryDate).unix() : 0),
+    //     multiple: 4,
+    //   },
+    // },
     {
-      title: 'Request Delivery Date',
-      dataIndex: 'deliveryDate',
-      width: '6%',
-      render: (_, r) =>
-        dayjs.utc(r.deliveryDate).add(7, 'hour').format('DD-MMM-YYYY'),// forces UTC, no timezone shift
-      sorter: {
-        compare: (a, b) =>
-          (a.deliveryDate ? dayjs(a.deliveryDate).unix() : 0) -
-          (b.deliveryDate ? dayjs(b.deliveryDate).unix() : 0),
-        multiple: 4,
-      },
-    },
-    {
-      title: 'SAP Delivery Date',
+      title: 'Delivery Date',
       dataIndex: 'sap_delivery_date',
       width: '6%',
       render: (_, r) =>
         dayjs.utc(r.sap_delivery_date).add(7, 'hour').format('DD-MMM-YYYY'),// forces UTC, no timezone shift
-      sorter: {
-        compare: (a, b) =>
-          (a.sap_delivery_date ? dayjs(a.sap_delivery_date).unix() : 0) -
-          (b.sap_delivery_date ? dayjs(b.sap_delivery_date).unix() : 0),
-        multiple: 4,
-      },
+      // sorter: {
+      //   compare: (a, b) =>
+      //     (a.sap_delivery_date ? dayjs(a.sap_delivery_date).unix() : 0) -
+      //     (b.sap_delivery_date ? dayjs(b.sap_delivery_date).unix() : 0),
+      //   multiple: 4,
+      // },
     },
     {
       title: 'Shipping Address',
       dataIndex: 'shippingAddress',
       // sorter: true,
-      sorter: {
-        compare: (a, b) => (a.shippingAddress ?? '').localeCompare(b.shippingAddress ?? ''),
-        multiple: 1,
-      },
+      // sorter: {
+      //   compare: (a, b) => (a.shippingAddress ?? '').localeCompare(b.shippingAddress ?? ''),
+      //   multiple: 1,
+      // },
       width: 200,
       render: (_, value) => (
         <a
@@ -903,16 +925,18 @@ export default () => {
     ...(advanceSearchParams.filter !== 'HIS'
       ? [
         {
-          title: 'District', dataIndex: 'district', width: 150, sorter: {
-            compare: (a, b) => (a.district ?? '').localeCompare(b.district ?? ''),
-            multiple: 2,
-          },
+          title: 'District', dataIndex: 'district', width: 150,
+          // sorter: {
+          //   compare: (a, b) => (a.district ?? '').localeCompare(b.district ?? ''),
+          //   multiple: 2,
+          // },
         },
         {
-          title: 'Commune', dataIndex: 'commune', width: 150, sorter: {
-            compare: (a, b) => (a.commune ?? '').localeCompare(b.commune ?? ''),
-            multiple: 3,
-          },
+          title: 'Commune', dataIndex: 'commune', width: 150,
+          //  sorter: {
+          //   compare: (a, b) => (a.commune ?? '').localeCompare(b.commune ?? ''),
+          //   multiple: 3,
+          // },
         },
         { title: 'Channel', dataIndex: 'channel', width: 150 },
       ]
@@ -1051,6 +1075,39 @@ export default () => {
 
   const dnColumns: ProColumns<DNList>[] = [...staticColumns];
 
+  function extractSortableColumns(columns: ProColumns<DNList>[]) {
+    const result: { title: string; dataIndex: string }[] = [];
+
+    const walk = (cols: ProColumns<DNList>[]) => {
+      cols.forEach(col => {
+        // Skip columns without dataIndex (group headers, render-only cols)
+        if (col.dataIndex && typeof col.title === "string") {
+          result.push({
+            title: col.title,
+            dataIndex: col.dataIndex as string
+          });
+        }
+
+        // Handle nested children
+        if (col.children) walk(col.children as ProColumns<DNList>[]);
+      });
+    };
+
+    walk(columns);
+    return result;
+  }
+
+  const allowedSortFields = [
+    "sap_delivery_date",
+    "shippingAddress",
+    "district",
+    "commune",
+    "channel"
+  ];
+  const sortableColumns = extractSortableColumns(dnColumns).filter(c =>
+    allowedSortFields.includes(c.dataIndex)
+  );
+  // const sortableColumns = extractSortableColumns(dnColumns);
   const mtColums: ProColumns<DNList>[] = [
     {
       // title: 'SO Number',
@@ -1542,8 +1599,8 @@ export default () => {
                     actionRef.current?.reloadAndRest?.();
                   }}
                 >
-                  <Radio.Button value="OV">Over View</Radio.Button>
-                  <Radio.Button value="SO">Sales Order</Radio.Button>
+                  {/* <Radio.Button value="OV">Over View</Radio.Button>
+                  <Radio.Button value="SO">Sales Order</Radio.Button> */}
                   <Radio.Button value="DN">Delivery Plan</Radio.Button>
                   <Radio.Button value="HIS">History</Radio.Button>
                   <Radio.Button value="MT">My Task</Radio.Button>
@@ -1644,8 +1701,8 @@ export default () => {
                       actionRef.current?.reloadAndRest?.();
                     }}
                   >
-                    <Radio.Button value="OV">Over View</Radio.Button>
-                    <Radio.Button value="SO">Sales Order</Radio.Button>
+                    {/* <Radio.Button value="OV">Over View</Radio.Button>
+                    <Radio.Button value="SO">Sales Order</Radio.Button> */}
                     <Radio.Button value="DN">Delivery Plan</Radio.Button>
                     <Radio.Button value="HIS">History</Radio.Button>
                     <Radio.Button value="MT">My Task</Radio.Button>
@@ -1706,8 +1763,8 @@ export default () => {
                         actionRef.current?.reloadAndRest?.();
                       }}
                     >
-                      <Radio.Button value="OV">Over View</Radio.Button>
-                      <Radio.Button value="SO">Sales Order</Radio.Button>
+                      {/* <Radio.Button value="OV">Over View</Radio.Button>
+                      <Radio.Button value="SO">Sales Order</Radio.Button> */}
                       <Radio.Button value="DN">Delivery Plan</Radio.Button>
                       <Radio.Button value="HIS">History</Radio.Button>
                       <Radio.Button value="MT">My Task</Radio.Button>
@@ -1765,9 +1822,9 @@ export default () => {
                               checked={asDate}
                               onChange={e => { setAsDate(e.target.checked), actionRef.current?.reloadAndRest?.() }}
                             >
-                              As Date
+                              As of Now
                             </Checkbox>
-                            <ProFormDatePicker
+                            {/* <ProFormDatePicker
                               name="delivery_date"
                               placeholder="Request Delivery Date"
                               disabled={!asDate}
@@ -1777,10 +1834,10 @@ export default () => {
                                 actionRef.current?.reloadAndRest?.();
                               }}
                               width={200}
-                            />
+                            /> */}
                             <ProFormDatePicker
                               name="sap_delivery_date"
-                              placeholder="SAP Delivery Date"
+                              placeholder="Delivery Date"
                               disabled={!asDate}
                               onChange={(val: moment.Moment | null) => {
                                 const localDate = val ? val.format('YYYY-MM-DD') : undefined; // local date
@@ -1850,7 +1907,9 @@ export default () => {
                             style={{ fontSize: 22 }}
                           >
                           </Button>
-
+                          <Button type="text" size='large' onClick={() => setSortModalOpen(true)}>
+                            <ColumnHeightOutlined />
+                          </Button>
                           <Button
                             type="text"
                             onClick={() => onSync()}
@@ -1878,8 +1937,8 @@ export default () => {
                           actionRef.current?.reloadAndRest?.();
                         }}
                       >
-                        <Radio.Button value="OV">Over View</Radio.Button>
-                        <Radio.Button value="SO">Sales Order</Radio.Button>
+                        {/* <Radio.Button value="OV">Over View</Radio.Button>
+                        <Radio.Button value="SO">Sales Order</Radio.Button> */}
                         <Radio.Button value="DN">Delivery Plan</Radio.Button>
                         <Radio.Button value="HIS">History</Radio.Button>
                         <Radio.Button value="MT">My Task</Radio.Button>
@@ -1920,9 +1979,9 @@ export default () => {
                                 checked={asDate}
                                 onChange={e => { setAsDate(e.target.checked), actionRef.current?.reloadAndRest?.() }}
                               >
-                                As Date
+                                As of Now
                               </Checkbox>
-                              <ProFormDatePicker
+                              {/* <ProFormDatePicker
                                 name="delivery_date"
                                 placeholder="Delivery Date"
                                 disabled={!asDate}
@@ -1932,10 +1991,10 @@ export default () => {
                                   actionRef.current?.reloadAndRest?.();
                                 }}
                                 width={200}
-                              />
+                              /> */}
                               <ProFormDatePicker
                                 name="sap_delivery_date"
-                                placeholder="SAP Delivery Date"
+                                placeholder="Delivery Date"
                                 disabled={!asDate}
                                 onChange={(val: moment.Moment | null) => {
                                   const localDate = val ? val.format('YYYY-MM-DD') : undefined; // local date
@@ -2034,8 +2093,8 @@ export default () => {
                             actionRef.current?.reloadAndRest?.();
                           }}
                         >
-                          <Radio.Button value="OV">Over View</Radio.Button>
-                          <Radio.Button value="SO">Sales Order</Radio.Button>
+                          {/* <Radio.Button value="OV">Over View</Radio.Button>
+                          <Radio.Button value="SO">Sales Order</Radio.Button> */}
                           <Radio.Button value="DN">Delivery Plan</Radio.Button>
                           <Radio.Button value="HIS">History</Radio.Button>
                           <Radio.Button value="MT">My Task</Radio.Button>
@@ -2127,6 +2186,17 @@ export default () => {
         open={drawerTypeOpen.visible}
         dataList={drawerTypeOpen.data}
         onVisibleChange={(v) => v === false && (setDrawerTypeOpen({ visible: false, data: undefined }))}
+      />
+      <SortModal
+        open={sortModalOpen}
+        onClose={() => setSortModalOpen(false)}
+        onApply={() => {
+          actionRef.current?.reloadAndRest?.();
+          setSortModalOpen(false);
+        }}
+        sortConfig={sortConfig}
+        setSortConfig={setSortConfig}
+        columns={sortableColumns}
       />
     </>
   );

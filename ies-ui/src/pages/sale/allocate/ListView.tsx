@@ -704,7 +704,7 @@ export default () => {
       dataIndex: 'totalItemQty',
     },
     {
-      title: 'Deliver Qty',
+      title: 'Delivered Qty',
       dataIndex: 'totalDnQty',
     },
     {
@@ -849,21 +849,21 @@ export default () => {
         </a>
       ),
     },
+    // {
+    //   title: 'Request Delivery Date',
+    //   dataIndex: 'deliveryDate',
+    //   width: '6%',
+    //   render: (_, r) =>
+    //     dayjs.utc(r.deliveryDate).add(7, 'hour').format('DD-MMM-YYYY'),// forces UTC, no timezone shift
+    //   sorter: {
+    //     compare: (a, b) =>
+    //       (a.deliveryDate ? dayjs(a.deliveryDate).unix() : 0) -
+    //       (b.deliveryDate ? dayjs(b.deliveryDate).unix() : 0),
+    //     multiple: 4,
+    //   },
+    // },
     {
-      title: 'Request Delivery Date',
-      dataIndex: 'deliveryDate',
-      width: '6%',
-      render: (_, r) =>
-        dayjs.utc(r.deliveryDate).add(7, 'hour').format('DD-MMM-YYYY'),// forces UTC, no timezone shift
-      sorter: {
-        compare: (a, b) =>
-          (a.deliveryDate ? dayjs(a.deliveryDate).unix() : 0) -
-          (b.deliveryDate ? dayjs(b.deliveryDate).unix() : 0),
-        multiple: 4,
-      },
-    },
-    {
-      title: 'SAP Delivery Date',
+      title: 'Delivery Date',
       dataIndex: 'sap_delivery_date',
       width: '6%',
       render: (_, r) =>
@@ -1542,8 +1542,8 @@ export default () => {
                     actionRef.current?.reloadAndRest?.();
                   }}
                 >
-                  <Radio.Button value="OV">Over View</Radio.Button>
-                  <Radio.Button value="SO">Sales Order</Radio.Button>
+                  {/* <Radio.Button value="OV">Over View</Radio.Button>
+                  <Radio.Button value="SO">Sales Order</Radio.Button> */}
                   <Radio.Button value="DN">Delivery Plan</Radio.Button>
                   <Radio.Button value="HIS">History</Radio.Button>
                   <Radio.Button value="MT">My Task</Radio.Button>
@@ -1644,8 +1644,8 @@ export default () => {
                       actionRef.current?.reloadAndRest?.();
                     }}
                   >
-                    <Radio.Button value="OV">Over View</Radio.Button>
-                    <Radio.Button value="SO">Sales Order</Radio.Button>
+                    {/* <Radio.Button value="OV">Over View</Radio.Button>
+                    <Radio.Button value="SO">Sales Order</Radio.Button> */}
                     <Radio.Button value="DN">Delivery Plan</Radio.Button>
                     <Radio.Button value="HIS">History</Radio.Button>
                     <Radio.Button value="MT">My Task</Radio.Button>
@@ -1706,8 +1706,8 @@ export default () => {
                         actionRef.current?.reloadAndRest?.();
                       }}
                     >
-                      <Radio.Button value="OV">Over View</Radio.Button>
-                      <Radio.Button value="SO">Sales Order</Radio.Button>
+                      {/* <Radio.Button value="OV">Over View</Radio.Button>
+                      <Radio.Button value="SO">Sales Order</Radio.Button> */}
                       <Radio.Button value="DN">Delivery Plan</Radio.Button>
                       <Radio.Button value="HIS">History</Radio.Button>
                       <Radio.Button value="MT">My Task</Radio.Button>
@@ -1765,9 +1765,9 @@ export default () => {
                               checked={asDate}
                               onChange={e => { setAsDate(e.target.checked), actionRef.current?.reloadAndRest?.() }}
                             >
-                              As Date
+                              As of Now
                             </Checkbox>
-                            <ProFormDatePicker
+                            {/* <ProFormDatePicker
                               name="delivery_date"
                               placeholder="Request Delivery Date"
                               disabled={!asDate}
@@ -1777,10 +1777,10 @@ export default () => {
                                 actionRef.current?.reloadAndRest?.();
                               }}
                               width={200}
-                            />
+                            /> */}
                             <ProFormDatePicker
                               name="sap_delivery_date"
-                              placeholder="SAP Delivery Date"
+                              placeholder="Delivery Date"
                               disabled={!asDate}
                               onChange={(val: moment.Moment | null) => {
                                 const localDate = val ? val.format('YYYY-MM-DD') : undefined; // local date
@@ -1878,8 +1878,8 @@ export default () => {
                           actionRef.current?.reloadAndRest?.();
                         }}
                       >
-                        <Radio.Button value="OV">Over View</Radio.Button>
-                        <Radio.Button value="SO">Sales Order</Radio.Button>
+                        {/* <Radio.Button value="OV">Over View</Radio.Button>
+                        <Radio.Button value="SO">Sales Order</Radio.Button> */}
                         <Radio.Button value="DN">Delivery Plan</Radio.Button>
                         <Radio.Button value="HIS">History</Radio.Button>
                         <Radio.Button value="MT">My Task</Radio.Button>
@@ -1920,9 +1920,9 @@ export default () => {
                                 checked={asDate}
                                 onChange={e => { setAsDate(e.target.checked), actionRef.current?.reloadAndRest?.() }}
                               >
-                                As Date
+                                As of Now
                               </Checkbox>
-                              <ProFormDatePicker
+                              {/* <ProFormDatePicker
                                 name="delivery_date"
                                 placeholder="Delivery Date"
                                 disabled={!asDate}
@@ -1932,10 +1932,10 @@ export default () => {
                                   actionRef.current?.reloadAndRest?.();
                                 }}
                                 width={200}
-                              />
+                              /> */}
                               <ProFormDatePicker
                                 name="sap_delivery_date"
-                                placeholder="SAP Delivery Date"
+                                placeholder="Delivery Date"
                                 disabled={!asDate}
                                 onChange={(val: moment.Moment | null) => {
                                   const localDate = val ? val.format('YYYY-MM-DD') : undefined; // local date
@@ -2034,8 +2034,8 @@ export default () => {
                             actionRef.current?.reloadAndRest?.();
                           }}
                         >
-                          <Radio.Button value="OV">Over View</Radio.Button>
-                          <Radio.Button value="SO">Sales Order</Radio.Button>
+                          {/* <Radio.Button value="OV">Over View</Radio.Button>
+                          <Radio.Button value="SO">Sales Order</Radio.Button> */}
                           <Radio.Button value="DN">Delivery Plan</Radio.Button>
                           <Radio.Button value="HIS">History</Radio.Button>
                           <Radio.Button value="MT">My Task</Radio.Button>

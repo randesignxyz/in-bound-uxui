@@ -21,6 +21,8 @@ interface DataEntryFormViewProps {
   type: FormMode;
   onCloseTab?: () => void;
 }
+const { Option } = Select;
+
 const DataEntryFormView: React.FC<DataEntryFormViewProps> = ({ id, type, onCloseTab, }) => {
   const [form] = Form.useForm<ListJob>();
   const services = JobServiceAPI();
@@ -57,6 +59,7 @@ const DataEntryFormView: React.FC<DataEntryFormViewProps> = ({ id, type, onClose
       });
     }
   }, [id, type]);
+
   const handleSubmit = (values: any) => {
     const payload = {
       ...values,
@@ -76,11 +79,9 @@ const DataEntryFormView: React.FC<DataEntryFormViewProps> = ({ id, type, onClose
       onOk: async () => {
         try {
           if (type === "CREATE") {
-            const res: any = await services.createNewJob(payload);
-            Modal.info({ title: "Create Status", content: res?.message || "Job created successfully" });
+            await services.createNewJob(payload);
           } else if (type === "EDIT" && id) {
-            const res: any = await services.updateJob({ id, ...payload });
-            Modal.info({ title: "Update Status", content: res?.message || "Job updated successfully" });
+            await services.updateJob({ id, ...payload });
           }
           onCloseTab?.();
         } catch (err: any) {
@@ -93,16 +94,14 @@ const DataEntryFormView: React.FC<DataEntryFormViewProps> = ({ id, type, onClose
     <Card
       title={
         type === "CREATE"
-          ? "Create New Position"
+          ? "Create Job"
           : type === "EDIT"
             ? "Edit Job"
             : "View Job"
       }
       bordered
     >
-      <Form form={form} layout="vertical" onFinish={handleSubmit} initialValues={{
-        status: "ACTIVE",   // default value here
-      }} >
+      <Form form={form} layout="vertical" onFinish={handleSubmit}>
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item
@@ -113,44 +112,28 @@ const DataEntryFormView: React.FC<DataEntryFormViewProps> = ({ id, type, onClose
               <Input disabled={isView} placeholder="Enter Job Title" />
             </Form.Item>
           </Col>
+
           <Col span={12}>
-            <Form.Item
-              label="Status"
-              name="status"
-              rules={[{ required: true, message: "Please select status" }]}
-            >
-              <Select disabled={isView}>
-                <Select.Option value="ACTIVE">ACTIVE</Select.Option>
-                <Select.Option value="INACTIVE">INACTIVE</Select.Option>
+            <Form.Item label="Status" name="status"  rules={[{ required: true, message: "Please select status" }]}>
+              <Select disabled={isView} defaultValue="ACTIVE">
+                <Option value="ACTIVE">ACTIVE</Option>
+                <Option value="INACTIVE">INACTIVE</Option>
               </Select>
             </Form.Item>
           </Col>
-          <Col span={24} >
-            <Form.Item label="Job Description" name="jobDescription"  >
+          <Col span={24}>
+            <Form.Item label="Job Description" name="jobDescription" >
               <Input.TextArea
                 disabled={isView}
                 placeholder="Enter Job Description"
               />
             </Form.Item>
           </Col>
-          <Col span={12}>
-            <Form.Item label="Created Date" name="createdDate">
-              <DatePicker style={{ width: "100%" }} disabled />
-            </Form.Item>
-          </Col>
 
-          <Col span={12}>
-            <Form.Item label="Last Modified Date" name="lastModifiedDate">
-              <DatePicker style={{ width: "100%" }} disabled />
-            </Form.Item>
-          </Col>
+          {/* Always show createdDate and lastModifiedDate */}
           {type !== "CREATE" && (
             <>
-              <Col span={12}>
-                <Form.Item label="Created By" name="createdBy">
-                  <Input disabled />
-                </Form.Item>
-              </Col>
+
 
               <Col span={12}>
                 <Form.Item label="Last Modified By" name="lastModifiedBy">

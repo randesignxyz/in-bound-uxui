@@ -128,7 +128,7 @@ export function JobListPage() {
               { align: "center", title: "#", width: 40, render: (_: any, __: any, index: number) => index + 1 },
               { title: "Job Title", width: 160, dataIndex: "jobTitle", sorter: true },
               { title: "Job Description", width: 200, dataIndex: "jobDescription", sorter: true },
-              { title: "Status", width: 100, dataIndex: "status", sorter: true },
+
               { title: "Created By", width: 130, dataIndex: "createdBy", sorter: true },
               {
                 title: "Created Date",
@@ -137,19 +137,8 @@ export function JobListPage() {
                 sorter: true,
                 valueType: "date"
               },
-              {
-                title: "LastModified By",
-                width: 130,
-                dataIndex: "lastModifiedBy",
-                sorter: true,
-              },
-              {
-                title: "LastModified Date",
-                width: 100,
-                dataIndex: "lastModifiedDate",
-                sorter: true,
-                valueType: "date"
-              },
+
+              { title: "Status", width: 100, dataIndex: "status", sorter: true },
               {
                 align: "center",
                 title: "Action",

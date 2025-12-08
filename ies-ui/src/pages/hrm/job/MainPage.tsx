@@ -94,7 +94,7 @@ export function JobListPage() {
         }
         listView={{
           type: "Table",
-          title: "Job Description List",
+          title: "Positions List",
           statuses: [
             { option: { label: "All", value: "ALL", default: true } },
             { option: { label: "ACTIVE", value: "ACTIVE" } },

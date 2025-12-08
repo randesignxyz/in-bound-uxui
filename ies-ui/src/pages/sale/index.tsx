@@ -373,7 +373,8 @@ export default () => {
         access.canAccessSaleLeadMenu ||
         access.canAccessSaleReportLst ||
         access.canAccessSaleInvoice ||
-        access.canAccesSaleDeliveryOrderPlan
+        access.canAccesSaleDeliveryOrderPlan ||
+        access.canAccesAllocateSaleView || access.canAccesSaleDeliveryOrderPlan
       ) && (
           <>
             <Divider />

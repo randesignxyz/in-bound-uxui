@@ -643,7 +643,7 @@ export default () => {
     try {
       const today = moment().format('YYYY-MM-DD');
       const sapdeliveryDate = asDate
-        ? (dnSearch.sap_delivery_date ? dnSearch.sap_delivery_date : undefined) // ✅ use filter or ALL
+        ? (dnSearch.sap_delivery_date ? dnSearch.sap_delivery_date : today) // ✅ use filter or ALL
         : today;
       // Map Ant Design sort info to backend format
       const sortBy: string[] = [];

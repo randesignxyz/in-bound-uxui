@@ -261,6 +261,18 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
           (it) => it === item,
         ),
       ) || false,
+    canAccessCrmContact:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_CRM_CONTACT',].some(
+          (it) => it === item,
+        ),
+      ) || false,
+    canAccessCrmContract:
+      currentUser?.authorities.some((item) =>
+        ['ROLE_CRM_CONTRACT',].some(
+          (it) => it === item,
+        ),
+      ) || false,  
 
     canCreateContract:
       currentUser?.authorities.some((item) =>

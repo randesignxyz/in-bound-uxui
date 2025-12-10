@@ -254,6 +254,40 @@ export default({
     const isCurrentSelfCommitted = (selectedAssessor?.currentAccess && ['Self'].some(r=>r==selectedAssessor?.type) && !data?.selfCommitted && data?.allSubmitted)? true: false
     const isExternal = () => history.location.pathname.includes("/externa/hrm/df/detail");
 
+    const getKeyPointTitle= ():string | undefined => {
+        if('Self'==selectedAssessor?.type)
+            return getLable('DF_TITLE_SELF_KEY_POINT')
+        else if('Manager'==selectedAssessor?.type)
+            return getLable('DF_TITLE_MANAGER_KEY_POINT')
+        else if('Peer'==selectedAssessor?.type)
+            return getLable('DF_TITLE_PEER_KEY_POINT')
+        else if('Subordinate'==selectedAssessor?.type)
+         return getLable('DF_TITLE_SUBORDINATE_KEY_POINT')
+       else return ''
+    }
+    const getStrengthTitle= ():string | undefined => {
+        if('Self'==selectedAssessor?.type)
+            return getLable('DF_TITLE_STRENGTH')
+        else if('Manager'==selectedAssessor?.type)
+            return getLable('DF_TITLE_STRENGTH_MANAGER')
+        else if('Peer'==selectedAssessor?.type)
+            return getLable('DF_TITLE_STRENGTH_PEER')
+        else if('Subordinate'==selectedAssessor?.type)
+         return getLable('DF_TITLE_STRENGTH_SUBORDINATE')
+       else return ''
+    }
+    const getImprovementTitle= ():string | undefined => {
+        if('Self'==selectedAssessor?.type)
+            return getLable('DF_TITLE_IMPROVEMENT')
+        else if('Manager'==selectedAssessor?.type)
+            return getLable('DF_TITLE_IMPROVEMENT_MANAGER')
+        else if('Peer'==selectedAssessor?.type)
+            return getLable('DF_TITLE_IMPROVEMENT_PEER')
+        else if('Subordinate'==selectedAssessor?.type)
+         return getLable('DF_TITLE_IMPROVEMENT_SUBORDINATE')
+       else return ''
+    }
+
     return(<div ref={ref}><Spin spinning={loading} ><Space direction="vertical" style={{ width: '100%' }}>
         {(data?.assessors?.length||0)>1 && <Card title="Assessor Infomation" size="small"
             // extra={<Button icon={<UnorderedListOutlined/>} type='link'  onClick={() => history.push(`/hrm/df/list`)}>360 Degree Feedback List</Button>}
@@ -362,34 +396,35 @@ export default({
                             onSetItems={setStatement}
                         />}
                     </ProCard>
-                    {selectedAssessor && ['Self','Peer','Manager'].some(r=>r==selectedAssessor?.type) &&<CommentTable title={getLable('DF_TITLE_STRENGTH')||''} 
+                     {selectedAssessor && ['Self','Manager','Peer','Subordinate'].some(r=>r==selectedAssessor?.type) && <CommentTable title={getKeyPointTitle()||''} 
+                        commTitle={getLable('DF_TBL_MANAGER_KEY_POINT')||''} 
+                        initDataItems={dataComment3} 
+                        editableFormRef={editableFormRef3}
+                        editable={selectedAssessor?.currentAccess && selectedAssessor?.status!='SUBMITTED'}
+                    />}
+                    {selectedAssessor && ['Self','Peer','Manager'].some(r=>r==selectedAssessor?.type) &&<CommentTable title={getStrengthTitle()||''} 
                         commTitle={getLable('DF_TBL_STRENGTH')||''} 
                         initDataItems={dataStrength} 
                         // onSetItems={setDataStrength}
                         editableFormRef={editableStrengthFormRef1}  
                         editable={selectedAssessor?.currentAccess && selectedAssessor?.status!='SUBMITTED'}
                     />}
-                    {selectedAssessor && ['Self','Peer','Manager'].some(r=>r==selectedAssessor?.type) && <CommentTable title={getLable('DF_TITLE_IMPROVEMENT')||''}
+                    {selectedAssessor && ['Self','Peer','Manager'].some(r=>r==selectedAssessor?.type) && <CommentTable title={getImprovementTitle()||''}
                         commTitle={getLable('DF_TBL_IMPROVEMENT')||''} 
                         initDataItems={dataImprovement} 
                         // onSetItems={setDataImprovement} 
                         editableFormRef={editableImprovementFormRef2} 
                         editable={selectedAssessor?.currentAccess && selectedAssessor?.status!='SUBMITTED'}
                     />}
-                    {selectedAssessor && ['Subordinate'].some(r=>r==selectedAssessor?.type) && <CommentTable title={getLable('DF_TITLE_MANAGER_KEY_POINT')||''} 
-                        commTitle={getLable('DF_TBL_MANAGER_KEY_POINT')||''} 
-                        initDataItems={dataComment3} 
-                        editableFormRef={editableFormRef3}
-                        editable={selectedAssessor?.currentAccess && selectedAssessor?.status!='SUBMITTED'}
-                    />}
-                    {selectedAssessor && ['Subordinate'].some(r=>r==selectedAssessor?.type) && <CommentTable title={getLable('DF_TITLE_MANAGER_GOOD_POINT')||''}
-                        commTitle={getLable('DF_TBL_MANAGER_GOOD_POINT')||''}
+                   
+                    {selectedAssessor && ['Subordinate'].some(r=>r==selectedAssessor?.type) && <CommentTable title={getStrengthTitle()||''}
+                        commTitle={getLable('DF_TBL_IMPROVEMENT')||''}
                         initDataItems={dataComment4} 
                         editableFormRef={editableFormRef4}
                         editable={selectedAssessor?.currentAccess && selectedAssessor?.status!='SUBMITTED'}
                     />}
-                    {selectedAssessor && ['Subordinate'].some(r=>r==selectedAssessor?.type) && <CommentTable title={getLable('DF_TITLE_MANAGER_IMPROVEMENT')||''} 
-                        commTitle={getLable('DF_TBL_MANAGER_IMPROVEMENT')||''} 
+                    {selectedAssessor && ['Subordinate'].some(r=>r==selectedAssessor?.type) && <CommentTable title={getImprovementTitle()||''} 
+                        commTitle={getLable('DF_TBL_IMPROVEMENT')||''} 
                         initDataItems={dataComment5} 
                         editableFormRef={editableFormRef5}
                         editable={selectedAssessor?.currentAccess && selectedAssessor?.status!='SUBMITTED'}
@@ -414,9 +449,9 @@ export default({
                             columns={[                               
                                 { title: getLable('DF_TBL_STATEMENT')||'',dataIndex: lang=='KH'?'title1':'title'},
                                 { title: getLable('DF_TBL_SELF')||'', dataIndex: 'avgSelf', render: (text, record) => record.avgSelf==0?'-': formatterQty1.format(record.avgSelf)},
-                                { title: getLable('DF_TBL_MANAGER')||'', dataIndex: 'avgManager', render: (text, record) => record.avgManager==0?'-': formatterQty1.format(record.avgManager), hidden: !['Self','Manager'].some(r=>r==selectedAssessor?.type)},
-                                { title: getLable('DF_TBL_PEER')||'', dataIndex: 'avgPeer', render: (text, record) => record.avgPeer==0?'-': formatterQty1.format(record.avgPeer), hidden: !['Self','Manager'].some(r=>r==selectedAssessor?.type) },
-                                { title: getLable('DF_TBL_SUBORDINATE')||'', dataIndex: 'avgSubordinate', render: (text, record) => record.avgSubordinate==0?'-': formatterQty1.format(record.avgSubordinate), hidden: !['Self','Manager'].some(r=>r==selectedAssessor?.type) },
+                                { title: getLable('DF_TBL_MANAGER')||'', dataIndex: 'avgManager', render: (text, record) => record.avgManager==0?'-': formatterQty1.format(record.avgManager), hidden: !['Manager'].some(r=>r==selectedAssessor?.type)},
+                                { title: getLable('DF_TBL_PEER')||'', dataIndex: 'avgPeer', render: (text, record) => record.avgPeer==0?'-': formatterQty1.format(record.avgPeer), hidden: !['Manager'].some(r=>r==selectedAssessor?.type) },
+                                { title: getLable('DF_TBL_SUBORDINATE')||'', dataIndex: 'avgSubordinate', render: (text, record) => record.avgSubordinate==0?'-': formatterQty1.format(record.avgSubordinate), hidden: !['Manager'].some(r=>r==selectedAssessor?.type) },
                                 { title: getLable('DF_TBL_OVERALL')||'', dataIndex: 'overall', 
                                     render: (text, record) => <Tooltip title="Exclude self rating">
                                         {record.overall==0?'-': formatterQty1.format(record.overall) }
@@ -428,9 +463,9 @@ export default({
                    
                     <ProCard collapsible defaultCollapsed={true} size="small" headerBordered title={getLable('DF_TITLE_SECTION2')||''}>
                         <StatementTableReport lang={lang} keyRating="DF_TBL_SELF" getLable={getLable} item={selectedAssessor.summary?.statementEvaluations?.find(it=>it.type=='Self')}/>
-                        <StatementTableReport lang={lang} keyRating="DF_TBL_MANAGER" getLable={getLable} item={selectedAssessor.summary?.statementEvaluations?.find(it=>it.type=='Manager')}/>
-                        <StatementTableReport lang={lang} keyRating="DF_TBL_PEER" getLable={getLable} item={selectedAssessor.summary?.statementEvaluations?.find(it=>it.type=='Peer')}/>
-                        <StatementTableReport lang={lang} keyRating="DF_TBL_SUBORDINATE" getLable={getLable} item={selectedAssessor.summary?.statementEvaluations?.find(it=>it.type=='Subordinate')}/>                        
+                        {['Manager'].some(r=>r==selectedAssessor?.type) && <StatementTableReport lang={lang} keyRating="DF_TBL_MANAGER" getLable={getLable} item={selectedAssessor.summary?.statementEvaluations?.find(it=>it.type=='Manager')}/>}
+                        {['Manager'].some(r=>r==selectedAssessor?.type) && <StatementTableReport lang={lang} keyRating="DF_TBL_PEER" getLable={getLable} item={selectedAssessor.summary?.statementEvaluations?.find(it=>it.type=='Peer')}/>}
+                        {['Manager'].some(r=>r==selectedAssessor?.type) && <StatementTableReport lang={lang} keyRating="DF_TBL_SUBORDINATE" getLable={getLable} item={selectedAssessor.summary?.statementEvaluations?.find(it=>it.type=='Subordinate')}/>}                       
                     </ProCard>
                     <ProCard collapsible defaultCollapsed={true} size="small" headerBordered title={getLable('DF_TITLE_SECTION3')||''}>  
                         <CommentTable title="" 

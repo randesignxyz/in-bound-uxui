@@ -506,6 +506,12 @@ export type ProbationEvaluationDetailRs = {
     empImprovement: ProbationEmpImprovement[]
     status: string
     processStatus?: string
+    empNo?: string
+    empName?: string
+    joinedDate?: Moment
+    jobTitle?: string
+    departmentName?: string
+    buName?: string
 }
 export type ProbationEmpImprovement = {
     id: number

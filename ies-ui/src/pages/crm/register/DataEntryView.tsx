@@ -92,6 +92,7 @@ export default({
     form.setFieldsValue(data);
     formPriceTradeOffer.setFieldValue('priceTradeOfferId',data.priceTradeOfferId||0)
     formPaymentTerm.setFieldValue('paymentTermId',data.paymentTermId||0)  
+    setVatInv(data.vatInv||'N')
   }    
     
   const getPayload = async () => {

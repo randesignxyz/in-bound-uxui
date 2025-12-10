@@ -8,7 +8,7 @@ import { DrawerForm } from '@ant-design/pro-components';
 import { ModalFormProps, ProFormCheckbox, ProFormRadio } from '@ant-design/pro-form';
 import ProList from '@ant-design/pro-list';
 import { ActionType } from '@ant-design/pro-table';
-import { Alert, Badge, Button, Col, Descriptions, Divider, Input, message, Row, Spin } from 'antd';
+import { Alert, Badge, Button, Col, Descriptions, Divider, Input, message, Row, Spin, Tag } from 'antd';
 import CheckableTag from 'antd/es/tag/CheckableTag';
 import { useEffect, useRef, useState } from 'react';
 
@@ -17,15 +17,17 @@ interface Props extends ModalFormProps {
   selector?: string;
   addedItems?: number[];
   onAddItem?: (data: ItemDetail) => void;
+  selectedGroupId: number
 }
 
-export default ({ selector, buId, addedItems, onAddItem, ...rest }: Props) => {
+export default ({ selector, buId, addedItems, onAddItem, selectedGroupId, ...rest }: Props) => {
   const requestActions = simpleRequestActions();
   const services = ItemServiceAPI(requestActions);
   const actionRef = useRef<ActionType>();
   const [searchValue, setSearchValue] = useState<string>();
   const [searchParams, setSearchParams] = useState<ItemAdvanceSearchParams>({ buId: buId });
   const [itemGroups, setItemGroups] = useState<ItemGroupListItem[]>([]);
+  const contructionGoodsId = 1380000
   const onRequestHandler = async (params: TableViewSearchParams<ItemAdvanceSearchParams>) => {
     try {
       const data = await services.list({
@@ -52,7 +54,8 @@ export default ({ selector, buId, addedItems, onAddItem, ...rest }: Props) => {
   }, [rest.open]);
   const initData = async () => {
     const data = await services.listAllItemGroupByBu(buId);
-    setSearchParams({ buId: buId })
+    const searchParams = selectedGroupId==-1 || selectedGroupId==-2?{ buId: buId}:{ buId: buId,groupIds:[selectedGroupId] }
+    setSearchParams(searchParams)
     setItemGroups(data);
     actionRef.current?.reloadAndRest?.();
   };
@@ -79,11 +82,12 @@ export default ({ selector, buId, addedItems, onAddItem, ...rest }: Props) => {
       <Spin spinning={requestActions.request?.loading}>
         <ProFormCheckbox.Group name={'itemGroup'}>
           {itemGroups.map((it) => (
+            selectedGroupId==-1 || (it.id==selectedGroupId && selectedGroupId==contructionGoodsId) || (it.id!=contructionGoodsId && selectedGroupId!=contructionGoodsId)?
             <CheckableTag
               key={it.id}
               onChange={(checked) => {
                 if (checked)
-                  setSearchParams((v) => ({ ...v, groupIds: [...(v.groupIds || []), it.id] }));
+                  setSearchParams((v) => ({ ...v, groupIds: [...(v.groupIds && v.groupIds.length>0? v.groupIds:  selectedGroupId==contructionGoodsId? [-1]: []), it.id] }));
                 else
                   setSearchParams((v) => ({
                     ...v,
@@ -95,7 +99,7 @@ export default ({ selector, buId, addedItems, onAddItem, ...rest }: Props) => {
               checked={searchParams.groupIds?.some((it1) => it1 == it.id) || false}
             >
               {it.itemGroupName}
-            </CheckableTag>
+            </CheckableTag>:<Tag style={{background:'#d9d9d9',margin:'2px'}}>{it.itemGroupName}</Tag>
           ))}
         </ProFormCheckbox.Group>
         <Row>
@@ -166,11 +170,14 @@ export default ({ selector, buId, addedItems, onAddItem, ...rest }: Props) => {
                   style={{ top: -10 }}
                   count={addedItems?.filter((it) => it == row.id).length}
                 >
-                  <Button disabled={(selector != undefined && (row.itemGroup.selector || "N/A") != selector)} onClick={async () => {
-                    const item = await services.detail(row.id);
-                    onAddItem?.(item);
-                  }}
-                    type='link' icon={<PlusCircleOutlined />} />
+                  <Button 
+                    disabled={(selector != undefined && (row.itemGroup.selector || "N/A") != selector) || !(selectedGroupId==-1 || (row.itemGroup.id==selectedGroupId && selectedGroupId==contructionGoodsId) || (row.itemGroup.id!=contructionGoodsId && selectedGroupId!=contructionGoodsId) ) } 
+                    onClick={async () => {
+                      const item = await services.detail(row.id);
+                      onAddItem?.(item);
+                    }}
+                    type='link' icon={<PlusCircleOutlined />} 
+                  />
 
                 </Badge>,
               ],

@@ -57,6 +57,11 @@ export const AcquisitionOmmFormNames = {
   dmbo: 'requisition_omm_dmbo',
   smFinance: 'requisition_omm_sm_fin',
   md_dmd: 'requisition_omm_md_dmd',
+  // constructionFunManager: 'requisition_omm_contruction_hod',
+  // constructionMbo1: 'requisition_omm_construction_mbo1',
+  // constructionMbo2: 'requisition_omm_construction_mbo2',
+  // constructionEd: 'requisition_omm_contruction_ed',
+
 };
 
 
@@ -132,6 +137,11 @@ export const AcquisitionForm: DataForm[] = [
       AcquisitionOmcFormNames.dmbo1,
       AcquisitionOmcFormNames.dmbo2,
       AcquisitionOmcFormNames.md_dmd,
+
+      // AcquisitionOmmFormNames.constructionFunManager,
+      // AcquisitionOmmFormNames.constructionMbo1,
+      // AcquisitionOmmFormNames.constructionMbo2,
+      // AcquisitionOmmFormNames.constructionEd,
     ],
     dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,
     actionDataForm: (props: ActionDataFormProps) => <DefaultActionForm {...props} />,

@@ -31,7 +31,7 @@ import {
   Divider, Flex, Form, message,
   Modal, Row, Space, Spin
 } from 'antd';
-import { StringIterator, uniqueId } from 'lodash';
+import { set, StringIterator, uniqueId } from 'lodash';
 import moment, { Moment } from 'moment';
 import { useEffect, useRef, useState } from 'react';
 import { history, useAccess } from "@umijs/max";
@@ -75,6 +75,7 @@ export default ({
   const [bu, setBu] = useState<BU[]>([])
   const [selectedBu, setSelectedBu] = useState(0)
   const [selector, setSelector] = useState<string>()
+   const [selectedGroupId, setSelectedGroupId] = useState<number>(-1);
   const { ref, inView } = useInView({});
   const isFleetRepair = history.location.pathname.includes(`fleet/requisition/create`)
   const clear = () => {
@@ -86,6 +87,8 @@ export default ({
     setIsService(false);
   };
   const [firstSelectedBudgetGroupCode,setFirstSelectedBudgetGroupCode] = useState<string>('')
+  const contructionGoodsId = 1380000
+  const wfSelectorOmmContructionGoods = 'omm:contruction'
 
   const initData = async () => {
     const buList = [
@@ -165,6 +168,8 @@ export default ({
     setAddedItems(dataForm.items);
     setAddedServices(dataForm.services);
     form.setFieldsValue(dataForm);
+    // setSelectedGroupId(data && data.wfSelector==wfSelectorOmmContructionGoods?contructionGoodsId: -2)
+    setSelectedGroupId(-1)
   };
 
   const getDataForm = async () => {
@@ -193,7 +198,8 @@ export default ({
   const getWfSelector=() :{buId: number, wfSelector?: string}=> {
     return {
       buId: isFleetRepair? 1:selectedBu,
-      wfSelector: isFleetRepair?'fleet:repair_maintenance':undefined
+      // wfSelector: isFleetRepair?'fleet:repair_maintenance': selectedGroupId==contructionGoodsId?wfSelectorOmmContructionGoods:undefined
+       wfSelector: isFleetRepair?'fleet:repair_maintenance': undefined
     } 
   }
 
@@ -322,6 +328,7 @@ export default ({
             setAddedItems([])
             setAddedServices([])
             setFirstSelectedBudgetGroupCode('')
+            setSelectedGroupId(-1)
           }} />
         </Space>
       }
@@ -345,6 +352,7 @@ export default ({
                   const newList = addedItems.filter((it) => it.key != row.key)
                   setAddedItems((v) => newList);
                   newList.length == 0 && setSelector(undefined)
+                  newList.length == 0 && setSelectedGroupId(-1)
                   form.setFieldsValue({
                     totalAmount: addedItems
                       .filter((it) => it.key != row.key)
@@ -616,11 +624,16 @@ export default ({
       <SearchItemList
         buId={selectedBu}
         selector={selector}
+        // selectedGroupId={selectedGroupId || -1}
+        selectedGroupId={-1}
         width={1000}
         open={searchVisible}
         onOpenChange={setSearcVisible}
         addedItems={addedItems?.map((it) => it.itemId)}
         onAddItem={(item) => {
+          if (selectedGroupId == -1) {
+            setSelectedGroupId(item.itemGroup.id)
+          }
           setSelector(item.itemGroup.selector || 'N/A')
           if (!itemUomList.some((it) => it.itemCode == item.itemCode)) {
             const newItems = item.uomList.map((it1) => ({ itemCode: item.itemCode, uom: it1, buId: item.buId ?? 1 }));

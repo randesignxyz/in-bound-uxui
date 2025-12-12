@@ -25,8 +25,8 @@ import { ProForm, ProFormDatePicker, ProFormDateRangePicker, ProFormSelect } fro
 import ForceColseModal from './ForceCloseModal';
 import { TbMap2 } from "react-icons/tb";
 import { useLocation, useNavigate } from "react-router-dom";
-import { render } from '@testing-library/react';
 import SortModal, { SortRule } from '@/pages/delivery/allocate/SortModal';
+import { render } from '@testing-library/react';
 
 dayjs.extend(customParseFormat)
 interface DNListState {
@@ -48,6 +48,7 @@ export default () => {
   const [selectedListDn, setSelectedListDn] = useState<DNList[]>([])
   const [selectedRows, setSelectedRows] = useState<DNList[]>([]);
   const [sortModalOpen, setSortModalOpen] = useState(false);
+  const [loading,isLoading] = useState(false)
   const [sortConfig, setSortConfig] = useState<SortRule[]>([
     { field: undefined, order: undefined }
   ]);
@@ -69,7 +70,7 @@ export default () => {
     dnStatus: 'pending'
   });
   const [MTSearch, setMTSearch] = useState<{ status: string; startDate?: string, endDate?: string }>({
-    status: 'pending',
+    status: 'ALL',
   });
   const [dnSearch, setDnSearch] = useState<{ status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string, sap_delivery_date: string | null, sap_from_date?: string, sap_to_date?: string }>({
     status: 'posted',
@@ -610,11 +611,14 @@ export default () => {
 
   const onSync = async () => {
     try {
+      isLoading(true)
       await services.syncAllocate();
       actionRef.current?.reloadAndRest?.();
     } catch (error: any) {
       message.error(error.message);
       return Promise.reject(error);
+    }finally{
+      isLoading(false)
     }
   };
 
@@ -1229,11 +1233,10 @@ export default () => {
             marginBottom: 16,
           }}>
             <Descriptions column={5}>
-              <Descriptions.Item span={4} label="Pack Number" style={{ fontWeight: 'bolder' }}>
+              <Descriptions.Item label="Pack Number" style={{ fontWeight: 'bolder' }}>
                 {record.claimed_line}
-              </Descriptions.Item>
-              {/* <Descriptions.Item  >
-                <Tag
+                {/* <Tag
+                
                   color={
                     record.claim_status === 'open'
                       ? 'blue'
@@ -1243,20 +1246,22 @@ export default () => {
                           ? 'green'
                           : 'default'
                   }
-                  style={{ textTransform: 'capitalize' }}
+                  style={{ textTransform: 'capitalize',marginLeft:20 }}
                 >
                   {record.claim_status}
-                </Tag>
-              </Descriptions.Item> */}
+                </Tag> */}
+              </Descriptions.Item>
             </Descriptions>
-            <Divider />
+            <Divider/>
             {record?.data?.map((item: any, index: number) => (
               <>
                 <Collapse
                   ghost
+                  defaultActiveKey={['collapMT']}
                   key={'collapMT'}
                   items={[
                     {
+                      key: 'collapMT',
                       label: (
                         <Descriptions column={5}>
                           <Descriptions.Item label="DO Date" style={{ fontWeight: 'bolder' }}>
@@ -2094,7 +2099,7 @@ export default () => {
 
   return (
     <>
-      <Spin spinning={requestActions.request?.loading}>
+      <Spin spinning={requestActions.request?.loading || loading}>
         {advanceSearchParams.filter == 'SO' ?
           <TableView<SOList, { searchValue?: string }>
             displayOnly
@@ -2183,7 +2188,7 @@ export default () => {
                           name="status"
                           allowClear
                           showSearch
-                          initialValue="pending"
+                          initialValue="ALL"
                           onChange={(val: string) => {
                             setMTSearch((v) => ({ ...v, status: val }))
                             actionRef.current?.reloadAndRest?.();

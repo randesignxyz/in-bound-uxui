@@ -418,7 +418,7 @@ export default({
                     />}
                    
                     {selectedAssessor && ['Subordinate'].some(r=>r==selectedAssessor?.type) && <CommentTable title={getStrengthTitle()||''}
-                        commTitle={getLable('DF_TBL_IMPROVEMENT')||''}
+                        commTitle={getLable('DF_TBL_STRENGTH')||''}
                         initDataItems={dataComment4} 
                         editableFormRef={editableFormRef4}
                         editable={selectedAssessor?.currentAccess && selectedAssessor?.status!='SUBMITTED'}
@@ -468,6 +468,11 @@ export default({
                         {['Manager'].some(r=>r==selectedAssessor?.type) && <StatementTableReport lang={lang} keyRating="DF_TBL_SUBORDINATE" getLable={getLable} item={selectedAssessor.summary?.statementEvaluations?.find(it=>it.type=='Subordinate')}/>}                       
                     </ProCard>
                     <ProCard collapsible defaultCollapsed={true} size="small" headerBordered title={getLable('DF_TITLE_SECTION3')||''}>  
+                         <CommentTable title="" 
+                            commTitle={getLable('DF_TBL_MANAGER_KEY_POINT')||''} 
+                            initDataItems={(selectedAssessor?.summary?.comments||[]).filter(it=> ['C3'].some(r=>r==it.type)).map(it=>({...it,comment: it.comment,key: uniqueId().toString()}))}                            
+                            editable={false}
+                        />                     
                         <CommentTable title="" 
                             commTitle={getLable('DF_TBL_STRENGTH')||''} 
                             initDataItems={(selectedAssessor?.summary?.comments||[]).filter(it=> ['C1','C4'].some(r=>r==it.type)).map(it=>({...it,comment: it.comment,key: uniqueId().toString()}))}                            

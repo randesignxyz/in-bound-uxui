@@ -64,7 +64,7 @@ const AllocateAction = {
         actionName: 'sync-allocate',
         payload: {}
     }),
-    claimDn: (sales_planid: number, claimed_by?: string, action?: string, activities_name?: string): ServiceApiType<{ sales_planid: number, claimed_by?: string, action?: string, activities_name?: string }> => ({
+    claimDn: (sales_planid: number[], claimed_by?: string, action?: string, activities_name?: string): ServiceApiType<{ sales_planid: number[], claimed_by?: string, action?: string, activities_name?: string }> => ({
         type: 'EXEC',
         endpoint: 'DELIVERY',
         actionName: 'claim-dn',
@@ -133,7 +133,7 @@ export const AllocateServiceAPI = (requestAction: RequestActions) => {
         syncAllocate: () =>
             singleRequest<{ data: string, message: string }>(AllocateAction.syncAllocate())(requestAction),
 
-        ClaimDn: (sales_planid: number, claimed_by?: string, action?: string, activities_name?: string) =>
+        ClaimDn: (sales_planid: number[], claimed_by?: string, action?: string, activities_name?: string) =>
             singleRequest<{ data: string, message: string }>(AllocateAction.claimDn(sales_planid, claimed_by, action, activities_name))(requestAction),
 
         getActivities: (dnID: number) =>

@@ -40,6 +40,8 @@ export interface DeliveryEntry {
   remarks?: string;
   default?: boolean;
   itemList: DeliveryItemEntry[];
+  status?:string
+  deliveryId?:number
 }
 
 export interface DeliveryItemEntry {
@@ -71,6 +73,8 @@ export interface DeliverySoItemEntry {
   main?: boolean;
   default?: boolean;
   mainKey?: string;
+  status?:string
+  so_status?:string
 }
 
 export interface InitData {

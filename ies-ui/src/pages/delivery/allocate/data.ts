@@ -61,6 +61,9 @@ export interface DeliveryList {
 }
 
 export interface DNList {
+  data: any;
+  claim_status: any;
+  claimed_line: any;
   key: any;
   id: number,
   soId: string,
@@ -303,11 +306,13 @@ export interface ListDnDetailParams {
   province_id?: string;
   district_id?: string;
   commune_id?: string;
-  sap_delivery_date?:string
+  sap_delivery_date?:string | null,
   sortBy?: string[];
   sortOrders?: string[];
   filterPass?: string
   dnStatus?: string
+  sap_from_date?:string
+  sap_to_date?:string
 }
 
 export type Location = {

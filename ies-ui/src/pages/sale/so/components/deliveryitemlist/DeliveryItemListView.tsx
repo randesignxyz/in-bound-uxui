@@ -5,7 +5,7 @@ import { Card } from 'antd';
 import { useEffect, useState } from 'react';
 import { DeliverySoItemEntry } from '../../reducer';
 import styles from './style.less';
-import { formatDate } from '@/pages/utils';
+import { formatDate, formatDateTime } from '@/pages/utils';
 
 interface Props {
   deliveries?: Delivery[];
@@ -45,7 +45,7 @@ const DeliveryListItemView: React.FC<Props> = ({ deliveries }) => {
         columns={[
           {
             title: 'Delivery Date',
-            render: (_, r) => (r.main && formatDate(r.deliveryDate)) || '-',
+            render: (_, r) => (r.main && formatDateTime(r.deliveryDate)) || '-',
           },
           { title: 'Shipping Address', render: (_, r) => (r.main && r.shippingAddressCode) || '-' },
           { title: 'Item Code', dataIndex: 'itemCode' },

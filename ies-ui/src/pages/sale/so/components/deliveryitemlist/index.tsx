@@ -1,4 +1,4 @@
-import { formatDate } from '@/pages/utils';
+import { formatDate, formatDateTime } from '@/pages/utils';
 import { AddressInfo } from '@/services/crm/data';
 import { DeleteOutlined, EditOutlined, SisternodeOutlined } from '@ant-design/icons';
 import ProTable from '@ant-design/pro-table';
@@ -25,13 +25,14 @@ const DeliveryItemList: React.FC<Props> = ({ data, actionHandlers }) => {
   const [visible, setVisible] = useState<{ visible: boolean; data?: DeliveryEntry }>({
     visible: false,
   });
+console.log('daaraaaaaaaaaaaaaaaaaa',data)
   return (
     <Card size="small" title="Delivery Info">
       <ProTable<DeliverySoItemEntry>
         columns={[
           {
             title: 'Delivery Date',
-            render: (_, r) => (r.main && formatDate(r.deliveryDate)) || '-',
+            render: (_, r) => (r.main && formatDateTime(r.deliveryDate)) || '-',
           },
           { title: 'Shipping Address', render: (_, r) => (r.main && r.shippingAddressCode) || '-' },
           { title: 'Item Code', dataIndex: 'itemCode' },
@@ -42,8 +43,54 @@ const DeliveryItemList: React.FC<Props> = ({ data, actionHandlers }) => {
           { title: 'Remarks', dataIndex: 'remarks' },
           {
             render: (_, r) => (
-              <Space size={0}>
-                {r.default && (
+              <>
+                <Space size={0}>
+                  {(!r?.status?.toLocaleLowerCase() || !r?.so_status?.toLocaleLowerCase() || r?.status.toLocaleLowerCase() === 'pending') && (
+                    <>
+                      {r.default && (
+                        <Button
+                          type="link"
+                          title="Split delivery"
+                          onClick={() => setVisible({ visible: true })}
+                          icon={<SisternodeOutlined />}
+                        />
+                      )}
+
+                      {r.main && !r.default && (
+                        <Button
+                          size="small"
+                          type="link"
+                          icon={<EditOutlined />}
+                          onClick={() => {
+                            console.log('r',r)
+                            console.log('data',data)
+                            setVisible({
+                              visible: true,
+                              data: data?.itemList?.find((it) => it.key === r.mainKey),
+                            });
+                          }}
+                        />
+                      )}
+
+                      {data?.defaultDelivery?.status != 'Posted' && (
+                        <>
+                          {r.main && !r.default && r.mainKey && (
+                            <Button
+                              size="small"
+                              type="link"
+                              icon={<DeleteOutlined />}
+                              onClick={() => {
+                                r.mainKey && actionHandlers?.delete?.(r.mainKey)
+                              }}
+                            />
+                            
+                          )}
+                        </>
+                      )}
+                    </>
+                  )}
+
+                  {/* {r.default && (
                   <Button
                     type="link"
                     title="Slipte delivery"
@@ -73,8 +120,9 @@ const DeliveryItemList: React.FC<Props> = ({ data, actionHandlers }) => {
                       r.mainKey && actionHandlers?.delete?.(r.mainKey);
                     }}
                   />
-                )}
-              </Space>
+                )} */}
+                </Space>
+              </>
             ),
           },
         ]}
@@ -89,23 +137,26 @@ const DeliveryItemList: React.FC<Props> = ({ data, actionHandlers }) => {
           it.itemList
             .map(
               (i, index) =>
-                ({
-                  deliveryDate: it.deliveryDate || data.defaultDelivery?.deliveryDate,
-                  shippingAddressId: it.shippingAddressId || data.defaultDelivery?.address?.id,
-                  shippingAddressCode:
-                    it.shippingAddressCode || data.defaultDelivery?.address?.address,
-                  itemId: i.itemId,
-                  itemCode: i.itemCode,
-                  description: i.itemDesc,
-                  uomId: i.uomId,
-                  uomName: i.uomName,
-                  type: i.type,
-                  key: i.key,
-                  qty: i.qty,
-                  main: index === 0,
-                  mainKey: it.key,
-                  default: index === 0 && it.default,
-                } as DeliverySoItemEntry),
+              ({
+                deliveryDate: it.deliveryDate || data.defaultDelivery?.deliveryDate,
+                shippingAddressId: it.shippingAddressId || data.defaultDelivery?.address?.id,
+                shippingAddressCode:
+                  it.shippingAddressCode || data.defaultDelivery?.address?.address,
+                itemId: i.itemId,
+                itemCode: i.itemCode,
+                description: i.itemDesc,
+                uomId: i.uomId,
+                uomName: i.uomName,
+                type: i.type,
+                key: i.key,
+                qty: i.qty,
+                main: index === 0,
+                mainKey: it.key,
+                default: index === 0 && it.default,
+                status: it.status,
+                so_status: data.defaultDelivery?.status
+
+              } as DeliverySoItemEntry),
             )
             .filter((it) => it.qty !== 0),
         )}
@@ -123,11 +174,13 @@ const DeliveryItemList: React.FC<Props> = ({ data, actionHandlers }) => {
           addressList: data?.addressList,
           default: data?.itemList?.find((it) => it.default),
           currentDelivery: visible.data,
+          so_status:data?.defaultDelivery?.status
         }}
         actionHandlers={{
           onSaveHandlers: (data) => {
             actionHandlers?.onSave?.(data);
             setVisible({ visible: false });
+            console.log('datadatadatadata',data)
           },
         }}
         open={visible.visible}

@@ -12,10 +12,15 @@ interface Props {
 }
 
 const OrderFormView: React.FC<Props> = ({ actionButtons, soDetail }) => {
+  const firstDelivery = soDetail?.deliveries?.reduce((earliest, curr) =>
+    new Date(curr.deliveryDate) < new Date(earliest.deliveryDate) ? curr : earliest
+  );
+
+  const firstDeliveryDate = firstDelivery ? formatDateTime(firstDelivery.deliveryDate) : null;
 
   const displayItems: (DescriptionDisplayDataItem | undefined)[] = [
     { label: 'So #', value: soDetail?.soNo },
-    { label: 'Orderd Date', value: formatDateTime(soDetail?.orderedDate) },
+    { label: 'PO Date', value: formatDateTime(soDetail?.orderedDate) },
     {
       label: 'Customer',
       onClick: () => {
@@ -40,9 +45,9 @@ const OrderFormView: React.FC<Props> = ({ actionButtons, soDetail }) => {
     { label: 'Payment Term', value: soDetail?.associatedTo?.paymentTerm?.code },
     { label: 'Status', value: soDetail?.status },
     { label: 'Created By', value: soDetail?.createdBy },
-    { label: 'Created Date', value: formatDateTime(soDetail?.createdDate) },
-    { label: 'SAP Posted By', value: soDetail?.postedBy },
-    { label: 'SAP Posted Date', value: formatDateTime(soDetail?.postedDate) },
+    { label: 'PO Created Date', value: formatDateTime(soDetail?.createdDate) },
+    { label: 'PO Posted By', value: soDetail?.postedBy },
+    { label: 'PO Posted Date', value: formatDateTime(soDetail?.postedDate) },
     { label: 'Last Modified By', value: soDetail?.lastModifiedBy },
     { label: 'Last Modifiedd Date', value: formatDateTime(soDetail?.lastModifiedDate) },
     { label: 'Remarks', value: soDetail?.remarks },
@@ -79,7 +84,7 @@ const OrderFormView: React.FC<Props> = ({ actionButtons, soDetail }) => {
         <DescriptionDisplay
           data={[
             { label: 'Delivery Method', value: soDetail?.associatedTo.deliveryMethod?.name },
-            { label: 'Delivery Date', value: formatDate(soDetail?.deliveryDate) },
+            { label: 'First Delivery Date', value: formatDateTime(firstDeliveryDate) },
             {
               label: 'Shipping Address Code',
               value: soDetail?.associatedTo.shippingAddress.address,

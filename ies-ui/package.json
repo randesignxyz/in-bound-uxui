@@ -48,7 +48,7 @@
   "dependencies": {
     "@ant-design/icons": "^5.3.7",
     "@ant-design/plots": "^2.1.12",
-    "@ant-design/pro-components": "^2.8.6",
+    "@ant-design/pro-components": "^2.4.4",
     "@ant-design/use-emotion-css": "^1.0.4",
     "@dagrejs/dagre": "^1.0.4",
     "@dnd-kit/core": "^6.1.0",

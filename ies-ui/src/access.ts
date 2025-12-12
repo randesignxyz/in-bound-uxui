@@ -127,7 +127,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canAccessQuotationMenuItem:
       currentUser?.authorities.some((item) => item === 'ROLE_ADMIN') || false,
     canAccessPOIMenutem: currentUser?.authorities.some((item) => item === 'ROLE_ADMIN') || false,
-    
+
     // ========================== CRM START ==========================
     canAccessCrmMenuItem:
       currentUser?.authorities.some((item) =>
@@ -210,7 +210,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canAccessSaleItems:
       currentUser?.authorities.some((item) =>
         ['ROLE_SALE_ADMIN', 'ROLE_SALESPERSON', 'ROLE_ADMIN'].some((it) => it === item),
-      ) || false,  
+      ) || false,
     canAccessSaleSo:
       currentUser?.authorities.some((item) =>
         ['ROLE_SALE_SO'].some((it) => it === item),
@@ -218,7 +218,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canAccessSaleNewSo:
       currentUser?.authorities.some((item) =>
         ['ROLE_SALE_NEW_SO'].some((it) => it === item),
-      ) || false,  
+      ) || false,
     canAccessSaleDelPrev:
       currentUser?.authorities.some((item) =>
         ['ROLE_SALE_DEL_PREV'].some((it) => it === item),
@@ -230,11 +230,11 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canAccessSaleStoreItem:
       currentUser?.authorities.some((item) =>
         ['ROLE_SALE_STORE'].some((it) => it === item),
-      ) || false, 
+      ) || false,
     canAccessSaleStockCtrl:
       currentUser?.authorities.some((item) =>
         ['ROLE_SALE_STOCK_CTRL'].some((it) => it === item),
-      ) || false,    
+      ) || false,
     canAccessCRMVisitScheduleMngt:
       currentUser?.authorities.some((item) =>
         [
@@ -292,8 +292,8 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     crmUser:
       currentUser?.authorities.some((item) => ['ROLE_CRM_SALE_USER'].some((it) => it === item)) ||
       false,
-    
-    
+
+
     crmVerifyCustomer:currentUser?.authorities.some((item)=>["ROLE_CRM","ROLE_CRM_VERIFY_CUSTOMER","ROLE_CRM_ADMIN"].some(it=>it==item)),
     crmShareCustomer:currentUser?.authorities.some((item)=>["ROLE_CRM","ROLE_CRM_SHARE_CUSTOMER","ROLE_CRM_ADMIN"].some(it=>it==item)),
     crmShippingAddress:currentUser?.authorities.some((item)=>["ROLE_CRM","ROLE_CRM_SHIP_ADDRESS","ROLE_CRM_ADMIN"].some(it=>it==item)),
@@ -305,7 +305,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     crmNotification:currentUser?.authorities.some((item)=>["ROLE_CRM","ROLE_CRM_NOTIFICATION","ROLE_CRM_ADMIN"].some(it=>it==item)),
 
     crmReadOnly:currentUser?.authorities.some((item)=>["ROLE_CRM","ROLE_CRM_READ"].some(it=>it==item)),
-    
+
     // ========================== CRM END ==========================
     /***Customer */
 
@@ -402,7 +402,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       currentUser?.authorities.some((item) =>
         ['ROLE_CRM_SALE_ADMIN', 'ROLE_SALE_ADMIN', 'ROLE_ADMIN','ROLE_SALE_NEW_SO'].some((it) => it === item),
       ) || false,
-      
+
 
     /*****Delivery */
 
@@ -536,7 +536,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canAccesAllocateSaleViewMenu:
       currentUser?.authorities.some((item) =>
         ['ROLE_ADMIN', 'ROLE_DELIVERY_SALE_ALLOCATION','ROLE_SALE_ADMIN','ROLE_SALE_DEL_ORD_PLAN'].some((it) => it === item),
-      ) || false,  
+      ) || false,
     canAccesSaleDeliveryOrderPlan:
       currentUser?.authorities.some((item) =>
         ['ROLE_SALE_DEL_ORD_PLAN'].some((it) => it === item),
@@ -819,7 +819,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
       ) || false,
     canAccessHrEmployeeMenuItem:
       currentUser?.authorities.some((item) =>
-        ['ROLE_HR_ADMIN', 'ROLE_HR_EMPLOYEE_VIEW'].some((it) => it === item),
+        ['ROLE_HR_ADMIN', 'ROLE_ADMIN','ROLE_HR_EMPLOYEE_VIEW'].some((it) => it === item),
       ) || false,
     canAccessHrJOB:
       currentUser?.authorities.some((item) =>
@@ -1012,15 +1012,15 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canAccessSettlementItem:
       currentUser?.authorities.some((item) =>
         ['ROLE_CASHIER', 'ROLE_DSD_ADMIN', 'ROLE_ADMIN', "ROLE_MPU_ADMIN"].some((it) => it === item),
-      ) || false, 
+      ) || false,
     canAccessSaleSettlement:
       currentUser?.authorities.some((item) =>
         ['ROLE_SALE_SETTL'].some((it) => it === item),
-      ) || false,   
+      ) || false,
     canAccessSaleInvoice:
       currentUser?.authorities.some((item) =>
         ['ROLE_SALE_INV'].some((it) => it === item),
-      ) || false,  
+      ) || false,
     canAccessARMenuItem:
       currentUser?.authorities.some((item) =>
         ['ROLE_AR', 'ROLE_DSD_ADMIN', 'ROLE_ADMIN', 'ROLE_SALE_INDIVIDUAL', "ROLE_DSD_REPORT", "ROLE_MPU_ADMIN",'ROLE_SALE_DAILY_RPT'].some((it) => it === item),
@@ -1028,14 +1028,14 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canAccessARItem:
       currentUser?.authorities.some((item) =>
         ['ROLE_AR', 'ROLE_DSD_ADMIN', 'ROLE_ADMIN', 'ROLE_SALE_INDIVIDUAL', "ROLE_DSD_REPORT", "ROLE_MPU_ADMIN"].some((it) => it === item),
-      ) || false,  
+      ) || false,
 
     canAccessTabWarehouse:
       currentUser?.authorities.some((item) => ['ROLE_WAREHOUSE', 'ROLE_ADMIN'].some((it) => it === item)) ||
       false,
     canAccessSalePurchaseOrder:
       currentUser?.authorities.some((item) => ['ROLE_SALE_PURCHASE'].some((it) => it === item)) ||
-      false,  
+      false,
     canAccessTabCashier:
       currentUser?.authorities.some((item) => ['ROLE_CASHIER'].some((it) => it === item)) || false,
 
@@ -1059,7 +1059,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
      canAccessViewMpu:
       currentUser?.authorities.some((item) =>
         ['ROLE_MPU_SUPPORT', 'ROLE_MPU_ADMIN', 'ROLE_ADMIN', "ROLE_DSD_ADMIN"].some((it) => it === item),
-      ) || false,  
+      ) || false,
 
     /** Ending Stock Control */
 
@@ -1360,7 +1360,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canAccessCRMGratis : canAccess("CRM_GRATIS"),
 
     canAccess,
-    can, 
+    can,
     // ============ END ===========
   };
 

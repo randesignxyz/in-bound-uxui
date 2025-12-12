@@ -7,7 +7,7 @@ import { simpleRequestActions } from '@/services/model';
 import {
   EditableFormInstance,
   EditableProTable,
-  ModalForm,
+  ProForm,
   ProCard,
   ProDescriptions,
   ProFormDatePicker,
@@ -222,7 +222,7 @@ export default ({ visisble, formKey, onClose, cb }: ActionCompProps & { formKey:
   }, [seqmentId]);
 
   return (
-    <ModalForm<DataFormType>
+    <ProForm<DataFormType>
       form={form}
       width={1000}
       title="Staff Proposal Request Form"
@@ -246,26 +246,6 @@ export default ({ visisble, formKey, onClose, cb }: ActionCompProps & { formKey:
       submitter={{
         searchConfig: {
           submitText: 'Submit',
-        },
-        render(props, defaultDoms) {
-          if (defaultDoms.length > 1) {
-            return [
-              defaultDoms[0],
-              <Button
-                key={'reset-bt'}
-                onClick={() => {
-                  const key = uniqueId('request-item');
-                  props.form?.resetFields();
-                  setForceClearUpload((v) => v + 1);
-                  setUploadFiles([]);
-                  form.setFieldsValue({});
-                }}
-              >
-                Reset
-              </Button>,
-              defaultDoms[1],
-            ];
-          } else return defaultDoms;
         },
       }}
     >
@@ -472,7 +452,6 @@ export default ({ visisble, formKey, onClose, cb }: ActionCompProps & { formKey:
                 ?.filter((it) => it.type == 'EMPLOYEE_CONTRACT_TYPE')
                 .map((it) => ({ label: it.name, value: it.id }))}
             />
-
             <ProFormDependency name={['contractTypeId']} ignoreFormListField>
               {({ contractTypeId }) => {
                 if (contractTypeId && contractTypeId != '2031') {
@@ -495,7 +474,6 @@ export default ({ visisble, formKey, onClose, cb }: ActionCompProps & { formKey:
               return <></>;
             }}
           </ProFormDependency>
-
           <EditableProTable<RequestedItem>
             recordCreatorProps={false}
             editableFormRef={editableFormRef}
@@ -623,6 +601,6 @@ export default ({ visisble, formKey, onClose, cb }: ActionCompProps & { formKey:
           }}
         </ProFormDependency>
       </Space>
-    </ModalForm>
+    </ProForm>
   );
 };

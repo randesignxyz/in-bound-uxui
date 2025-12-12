@@ -23,9 +23,11 @@ export interface EmployeeListItem {
 }
 
 export type EmployeeAdvanceSearchParams = {
+  searchValue?: string;
   status: 'ALL' | 'ACTIVE' | 'INACTIVE';
   department?: number;
 };
+
 
 export type BU = {
   id: number;

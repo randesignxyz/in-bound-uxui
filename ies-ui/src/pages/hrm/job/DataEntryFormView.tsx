@@ -129,24 +129,11 @@ const DataEntryFormView: React.FC<DataEntryFormViewProps> = ({ id, type, onClose
               />
             </Form.Item>
           </Col>
-
-          {/* Always show createdDate and lastModifiedDate */}
-          {type !== "CREATE" && (
-            <>
-
-
-              <Col span={12}>
-                <Form.Item label="Last Modified By" name="lastModifiedBy">
-                  <Input disabled />
-                </Form.Item>
-              </Col>
-            </>
-          )}
           <Col span={24} style={{ textAlign: "right" }}>
             {!isView ? (
               <>
                 <Button type="primary" htmlType="submit">
-                  {type === "CREATE" ? "Create" : "Update"}
+                  {type === "CREATE" ? "Submit" : "Update"}
                 </Button>
                 <Button style={{ marginLeft: 8 }} onClick={onCloseTab}>
                   Cancel

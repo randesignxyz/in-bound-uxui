@@ -94,14 +94,14 @@ export function JobListPage() {
         }
         listView={{
           type: "Table",
-          title: "Positions List",
+          title: "Position List",
           statuses: [
             { option: { label: "All", value: "ALL", default: true } },
             { option: { label: "ACTIVE", value: "ACTIVE" } },
             { option: { label: "INACTIVE", value: "INACTIVE" } },
           ],
           onRefresh: refetch,
-          onFilter: (params) => {
+          onFilter: (params, page, sort) => {
             setFilter((p) => ({
               criteria: {
                 ...p.criteria,
@@ -111,7 +111,9 @@ export function JobListPage() {
                   ...p.criteria?.advanceSearch,
                   status: params?.status
                 },
-              }
+                sort: sort || p.criteria?.sort || {},
+              },
+              pagination: page || p.pagination,
             }))
           },
           props: {
@@ -146,21 +148,20 @@ export function JobListPage() {
                 fixed: "right",
                 render: (_: any, record: ListJob) => (
                   <Space>
-                    <Button icon={<EyeOutlined />} size="small" onClick={() => {
+                    <Button icon={<EyeOutlined />} size="small" type="link" onClick={() => {
                       setViewRecord(record);
                       setViewModalVisible(true);
                     }} />
-                    <Button icon={<EditOutlined />} size="small" type="primary" onClick={() => {
+                    <Button icon={<EditOutlined />} size="small" type="link" onClick={() => {
                       setEditRecord(record);
                       setEditModalVisible(true);
                     }} />
-                    <Button icon={<DeleteOutlined />} danger size="small" onClick={() => handleDelete(record)} />
+                    <Button icon={<DeleteOutlined />} danger size="small" type="link" onClick={() => handleDelete(record)} />
                   </Space>
                 ),
               },
             ],
           },
-
         }}
       />
       <Modal title={viewRecord ? `View: ${viewRecord.jobTitle}` : "View"} open={viewModalVisible} footer={null}

@@ -28,7 +28,6 @@ export const createService = (request: SimpleRequestActions): CrudBaseServices<
                 }
             }).query(request)
         ,
-
         fetchList: async (params: SearchParams) =>
             fetchDataListService<StaffProposalListItem, SearchParams>({
                 actionName: 'fetch-list-it-request',
@@ -55,14 +54,11 @@ export const createService = (request: SimpleRequestActions): CrudBaseServices<
             endpoint: 'HR',
             payload: { id: instId }
         }).query(request),
-
-
         actionHR: async (data: TaskActionDataParam<{ id: number; items: RequestItem[] }>) => execDataService0<TaskActionDataParam<{ id: number; items: RequestItem[] }>>({
             actionName: 'action-hr-staff-proposal-request',
             endpoint: 'HR',
             payload: data
         })(request),
-
         cancelRequest: async (data: StaffProposalRequestCancel) => execDataService0<StaffProposalRequestCancel>({
             actionName: 'staff-proposal-request-cancel',
             endpoint: 'HR',

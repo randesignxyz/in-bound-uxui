@@ -8,6 +8,8 @@ import { DeliveryEntry, DeliverySoItemEntry } from '../../reducer';
 import { DeliveryInfo } from '../SoEntryForm';
 import DeliveryItemListEntry from './DeliveryItemListEntry';
 import styles from './style.less';
+import moment from 'moment';
+import PopconfirmMe from '@/pages/expense/delivery/components/PopconfirmMe';
 
 interface Props {
   data?: {
@@ -25,14 +27,19 @@ const DeliveryItemList: React.FC<Props> = ({ data, actionHandlers }) => {
   const [visible, setVisible] = useState<{ visible: boolean; data?: DeliveryEntry }>({
     visible: false,
   });
-console.log('daaraaaaaaaaaaaaaaaaaa',data)
   return (
     <Card size="small" title="Delivery Info">
       <ProTable<DeliverySoItemEntry>
         columns={[
           {
             title: 'Delivery Date',
-            render: (_, r) => (r.main && formatDateTime(r.deliveryDate)) || '-',
+            render: (_, r) =>
+              r.main && r.deliveryDate ? (
+                <span style={{ display: 'inline-flex', gap: 8 }}>
+                  <span>{moment(r.deliveryDate).format('YYYY-MM-DD')}</span>
+                  <span>{moment(r.deliveryDate).format('HH:mm:ss')}</span>
+                </span>
+              ) : '-',
           },
           { title: 'Shipping Address', render: (_, r) => (r.main && r.shippingAddressCode) || '-' },
           { title: 'Item Code', dataIndex: 'itemCode' },
@@ -45,50 +52,49 @@ console.log('daaraaaaaaaaaaaaaaaaaa',data)
             render: (_, r) => (
               <>
                 <Space size={0}>
-                  {(!r?.status?.toLocaleLowerCase() || !r?.so_status?.toLocaleLowerCase() || r?.status.toLocaleLowerCase() === 'pending') && (
-                    <>
-                      {r.default && (
-                        <Button
-                          type="link"
-                          title="Split delivery"
-                          onClick={() => setVisible({ visible: true })}
-                          icon={<SisternodeOutlined />}
-                        />
-                      )}
+                  {(!r?.status?.toLocaleLowerCase() ||
+                    !r?.so_status?.toLocaleLowerCase() ||
+                    r?.so_status.toLocaleLowerCase() != 'posted' ||
+                    (r?.so_status.toLocaleLowerCase() === 'posted' && moment(r.deliveryDate).format('YYYY-MM-DD') === '2099-12-31')
+                  )
+                    && (
+                      <>
+                        {r.default && (
+                          <Button
+                            type="link"
+                            title="Split delivery"
+                            onClick={() => setVisible({ visible: true })}
+                            icon={<SisternodeOutlined />}
+                          />
+                        )}
 
-                      {r.main && !r.default && (
-                        <Button
-                          size="small"
-                          type="link"
-                          icon={<EditOutlined />}
-                          onClick={() => {
-                            console.log('r',r)
-                            console.log('data',data)
-                            setVisible({
-                              visible: true,
-                              data: data?.itemList?.find((it) => it.key === r.mainKey),
-                            });
-                          }}
-                        />
-                      )}
+                        {r.main && !r.default && (
+                          <Button
+                            size="small"
+                            type="link"
+                            icon={<EditOutlined />}
+                            onClick={() => {
+                              console.log('r', r)
+                              console.log('data', data)
+                              setVisible({
+                                visible: true,
+                                data: data?.itemList?.find((it) => it.key === r.mainKey),
+                              });
+                            }}
+                          />
+                        )}
 
-                      {data?.defaultDelivery?.status != 'Posted' && (
-                        <>
-                          {r.main && !r.default && r.mainKey && (
-                            <Button
-                              size="small"
-                              type="link"
-                              icon={<DeleteOutlined />}
-                              onClick={() => {
-                                r.mainKey && actionHandlers?.delete?.(r.mainKey)
-                              }}
-                            />
-                            
-                          )}
-                        </>
-                      )}
-                    </>
-                  )}
+                        {data?.defaultDelivery?.status?.toLocaleLowerCase() != 'posted' && (
+                          <>
+                            {r.main && !r.default && r.mainKey && (
+                              <PopconfirmMe placement="leftBottom" title='Deleting Plan' description='Are you sure to delete?' onConfirm={() => { r.mainKey && actionHandlers?.delete?.(r.mainKey) }} >
+                                <Button danger icon={<DeleteOutlined />} type="link" size="small" /*onClick={_ => {onDelete(record)}}*/ />
+                              </PopconfirmMe>
+                            )}
+                          </>
+                        )}
+                      </>
+                    )}
 
                   {/* {r.default && (
                   <Button
@@ -127,12 +133,18 @@ console.log('daaraaaaaaaaaaaaaaaaaa',data)
           },
         ]}
         pagination={false}
-        rowClassName={(r) =>
-          (r.qty < 0 && styles.mainLineItemError) ||
-          (r.main && styles.mainLineItem) ||
-          (r.qty < 0 && !r.main && styles.subLineItemError) ||
-          (!r.main && styles.subLineItem)
-        }
+        rowClassName={(r) => {
+          const isTBC =
+            r.selectedDeliveryDate &&
+            moment(r.selectedDeliveryDate).format('YYYY-MM-DD') === '2099-12-31';
+
+          if (isTBC) return styles.tbcLineItem;
+
+          if (r.qty < 0 && r.main) return styles.mainLineItemError;
+          if (r.main) return styles.mainLineItem;
+          if (r.qty < 0 && !r.main) return styles.subLineItemError;
+          return styles.subLineItem;
+        }}
         dataSource={data?.itemList?.flatMap((it) =>
           it.itemList
             .map(
@@ -154,7 +166,8 @@ console.log('daaraaaaaaaaaaaaaaaaaa',data)
                 mainKey: it.key,
                 default: index === 0 && it.default,
                 status: it.status,
-                so_status: data.defaultDelivery?.status
+                so_status: data.defaultDelivery?.status,
+                selectedDeliveryDate: it.deliveryDate
 
               } as DeliverySoItemEntry),
             )
@@ -174,13 +187,12 @@ console.log('daaraaaaaaaaaaaaaaaaaa',data)
           addressList: data?.addressList,
           default: data?.itemList?.find((it) => it.default),
           currentDelivery: visible.data,
-          so_status:data?.defaultDelivery?.status
+          so_status: data?.defaultDelivery?.status
         }}
         actionHandlers={{
           onSaveHandlers: (data) => {
             actionHandlers?.onSave?.(data);
             setVisible({ visible: false });
-            console.log('datadatadatadata',data)
           },
         }}
         open={visible.visible}

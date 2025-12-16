@@ -46,8 +46,6 @@ const DeliveryItemListEntry: React.FC<Props> = ({ data, actionHandlers, ...props
       shippingAddressId: initData?.shippingAddressId,
       itemList: initData?.itemList,
     });
-    console.log('initData',initData)
-    console.log('data',data)
   };
 
   const onSaveActionHandler = async () => {
@@ -75,7 +73,7 @@ const DeliveryItemListEntry: React.FC<Props> = ({ data, actionHandlers, ...props
   return (
     <FormModalComp
       onResetForm={initFormData}
-      okText={data?.currentDelivery ? 'Edit' : 'Add'}
+      okText={data?.currentDelivery ? 'Update' : 'Add'}
       onSubmit={onSaveActionHandler}
       {...props}
     >
@@ -118,7 +116,7 @@ const DeliveryItemListEntry: React.FC<Props> = ({ data, actionHandlers, ...props
                 />
               )}
             </ProFormDependency>
-            {/* <ProFormSwitch
+            <ProFormSwitch
               label="To Be Confirm"
               name="isTBC"
               fieldProps={{
@@ -134,7 +132,7 @@ const DeliveryItemListEntry: React.FC<Props> = ({ data, actionHandlers, ...props
                   }
                 },
               }}
-            /> */}
+            />
             <ProFormSelect
               help={<span />}
               label="Shipping Address"

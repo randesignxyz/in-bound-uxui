@@ -53,6 +53,7 @@ export interface DeliveryItemEntry {
   uomName?: string;
   type: string;
   qty: number;
+  deliveryDate?: moment.Moment;
 }
 
 export interface DeliverySoItemEntry {
@@ -75,6 +76,7 @@ export interface DeliverySoItemEntry {
   mainKey?: string;
   status?:string
   so_status?:string
+  selectedDeliveryDate?:moment.Moment
 }
 
 export interface InitData {

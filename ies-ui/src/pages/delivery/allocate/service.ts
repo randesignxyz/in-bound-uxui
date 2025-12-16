@@ -1,5 +1,5 @@
 import { RequestActions, ServiceApiType, singleRequest } from "@/services/apiGateway";
-import { Allocate, allocateSearch, DeliveryList, DNList, DNParams, DnQuickView, LocationList, SkuList, SOAllocateActivities, SOList, UpdateRemarkParams,ListDnDetailParams } from "./data";
+import { Allocate, allocateSearch, DeliveryList, DNList, DNParams, DnQuickView, LocationList, SkuList, SOAllocateActivities, SOList, UpdateRemarkParams,ListDnDetailParams, SaleTypeList } from "./data";
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { Paging } from "@/services/API";
 
@@ -106,6 +106,12 @@ const AllocateAction = {
         type: 'EXEC',
         payload: params,
     }),
+    listSaletype: (): ServiceApiType<{}> => ({
+        type: 'LIST_QUERY',
+        endpoint: 'DELIVERY',
+        actionName: 'get-sale-type',
+        payload: {},
+    }),
 }
 
 export const AllocateServiceAPI = (requestAction: RequestActions) => {
@@ -162,6 +168,10 @@ export const AllocateServiceAPI = (requestAction: RequestActions) => {
             ),
         force_close: (params: UpdateRemarkParams) =>
             singleRequest<{ data: string; message: string }>(AllocateAction.forceClose(params))(
+                requestAction
+            ),
+        list_sale_type: () =>
+            singleRequest<SaleTypeList>(AllocateAction.listSaletype())(
                 requestAction
             ),
     }

@@ -289,12 +289,12 @@ export default () => {
     const idArray = Array.isArray(ids) ? ids : [ids];
     console.log('idArray', idArray)
     Modal.confirm({
-      title: 'Ship',
+      title: 'Pick',
       content: 'Are you sure?',
       onOk: async () => {
         try {
           // Loop through each id
-          await services.ClaimDn(idArray, access.currentUser?.login, 'Ship', 'Ship DN') as {
+          await services.ClaimDn(idArray, access.currentUser?.login, 'Pick', 'Pick DN') as {
             data: string;
             message: string;
           }
@@ -318,7 +318,7 @@ export default () => {
       content: 'Are you sure?',
       onOk: async () => {
 
-        await services.ClaimDn(id, '', 'Unship', 'Ship DN') as {
+        await services.ClaimDn(id, '', 'Unpick', 'Pick DN') as {
           data: string;
           message: string;
         }
@@ -1049,7 +1049,7 @@ export default () => {
               return sum + volume * qty;
             }, 0);
 
-            return `${total.toFixed(6)} m³`
+            return `${total.toFixed(2)} m³`
           }
         },
         {
@@ -1233,7 +1233,7 @@ export default () => {
             marginBottom: 16,
           }}>
             <Descriptions column={5}>
-              <Descriptions.Item label="Pack Number" style={{ fontWeight: 'bolder' }}>
+              <Descriptions.Item label="Pick Number" style={{ fontWeight: 'bolder' }}>
                 {record.claimed_line}
                 {/* <Tag
                 
@@ -1328,7 +1328,7 @@ export default () => {
                                 <Button type="primary"
                                   onClick={() => handleClaim(item.id)}
                                 >
-                                  Ship
+                                  Pick
                                 </Button>
                               ) : <></>}
 
@@ -2475,7 +2475,7 @@ export default () => {
                                 disabled={selectedRowKeys.length === 0}
                                 onClick={() => handleClaim(selectedRowKeys.map(k => Number(k)))}
                               >
-                                Ship
+                                Pick
                               </Button>
                             </div>
                           )}

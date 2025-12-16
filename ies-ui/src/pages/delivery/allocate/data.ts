@@ -292,6 +292,12 @@ export type SkuList = {
   item_code: string,
 }
 
+export type SaleTypeList = {
+  id:number
+  code:string
+  name:string
+}
+
 export type LocationList = {
   id: number,
   internal_name: string,

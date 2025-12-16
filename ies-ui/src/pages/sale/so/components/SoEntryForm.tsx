@@ -223,9 +223,8 @@ const EntryForm: React.FC<Props> = ({ type, id, openInTab, onBack }) => {
       message.error('Invalied Data');
     }
   };
-  console.log('te.data?', state.data)
+  
   const onEdit = async () => {
-
     try {
       Modal.confirm({
         title: 'Edit Sale Order',
@@ -341,7 +340,7 @@ const EntryForm: React.FC<Props> = ({ type, id, openInTab, onBack }) => {
                     }
                   }}
                 >
-                  {type === 'new' ? 'Save' : 'Edit'}
+                  {type === 'new' ? 'Save' : 'Update'}
                 </Button>
               </FooterToolbar>
             );

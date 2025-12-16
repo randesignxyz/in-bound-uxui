@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { DeliverySoItemEntry } from '../../reducer';
 import styles from './style.less';
 import { formatDate, formatDateTime } from '@/pages/utils';
+import moment from 'moment';
 
 interface Props {
   deliveries?: Delivery[];
@@ -17,25 +18,25 @@ const DeliveryListItemView: React.FC<Props> = ({ deliveries }) => {
     const items = deliveries?.flatMap((dlv) =>
       dlv.itemList.map(
         (it, index) =>
-          ({
-            key: uniqueId(),
+        ({
+          key: uniqueId(),
 
-            id: it.id,
-            itemId: it.itemId,
-            itemCode: it.itemCode,
-            description: it.itemDesc,
-            uomId: it.uomId,
-            uomName: it.associatedTo?.uom.code,
-            qty: it.qty,
-            type: it.type,
-            main: index === 0,
-            deliveryDate: dlv.deliveryDate,
-            shippingAddressId: dlv.shippingAddressId,
-            shippingAddressCode: dlv.associatedTo?.shippingAddress?.address,
-          } as DeliverySoItemEntry),
+          id: it.id,
+          itemId: it.itemId,
+          itemCode: it.itemCode,
+          description: it.itemDesc,
+          uomId: it.uomId,
+          uomName: it.associatedTo?.uom.code,
+          qty: it.qty,
+          type: it.type,
+          main: index === 0,
+          deliveryDate: dlv.deliveryDate,
+          shippingAddressId: dlv.shippingAddressId,
+          shippingAddressCode: dlv.associatedTo?.shippingAddress?.address,
+        } as DeliverySoItemEntry),
       ),
     );
-
+console.log(items,'itemListitemList')
     setItemList(items || []);
   }, []);
 
@@ -45,7 +46,13 @@ const DeliveryListItemView: React.FC<Props> = ({ deliveries }) => {
         columns={[
           {
             title: 'Delivery Date',
-            render: (_, r) => (r.main && formatDateTime(r.deliveryDate)) || '-',
+            render: (_, r) =>
+              r.main && r.deliveryDate ? (
+                <span style={{ display: 'inline-flex', gap: 8 }}>
+                  <span>{moment(r.deliveryDate).format('YYYY-MM-DD')}</span>
+                  <span>{moment(r.deliveryDate).format('HH:mm:ss')}</span>
+                </span>
+              ) : '-',
           },
           { title: 'Shipping Address', render: (_, r) => (r.main && r.shippingAddressCode) || '-' },
           { title: 'Item Code', dataIndex: 'itemCode' },

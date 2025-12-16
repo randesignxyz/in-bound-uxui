@@ -30,7 +30,7 @@ const OrderFormView: React.FC<Props> = ({ actionButtons, soDetail }) => {
         .filter((it) => it)
         .join('-'),
     },
-    { label: 'Ref #', value: soDetail?.refNo },
+    { label: 'Customer PO', value: soDetail?.refNo },
     soDetail?.invoiceNo ? { label: 'Invoice #', value: soDetail?.invoiceNo } : undefined,
     soDetail?.invoiceDate
       ? { label: 'Invoice #', value: formatDate(soDetail?.invoiceDate) }

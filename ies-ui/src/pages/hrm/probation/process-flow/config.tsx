@@ -7,6 +7,8 @@ import AssessmentPreparationForm from './AssessmentPreparationForm';
 import AssessmentSubmissionForm from './AssessmentSubmissionForm';
 import HrReviewForm from './HrReviewForm';
 import MboApprovalForm from './MboApprovalForm';
+import { UserTask } from '@/services/process-workflow/data';
+import MoreInfo from './MoreInfo';
 
 export const getProbationEvaluationRequestForms = (): DataForm[] => [
   {
@@ -15,6 +17,7 @@ export const getProbationEvaluationRequestForms = (): DataForm[] => [
     actionDataForm: (props: ActionDataFormProps) => (
       <DefaultStartForm {...props} notAllowToChangeRequestor />
     ),
+    quickView: (task: UserTask) => <MoreInfo {...task} />,
   },
   {
     formKey: [     

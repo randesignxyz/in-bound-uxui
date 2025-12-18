@@ -246,8 +246,9 @@ const Crm: React.FC = () => {
       description: 'Contact Management',
       link: `${CrmPaths.contact}/list`,
       icon: ContactIcon,
+      visible: access.canAccessContact || access.canAccessCrmContact,
       // visible: access.canAccessContact,
-      visible: access.canAccessCRMContact,
+      // visible: access.canAccessCRMContact,
       // isMenu: true,
       // overlay: contactMenu
     },
@@ -257,8 +258,7 @@ const Crm: React.FC = () => {
       description: 'Contract List',
       link: `${CrmPaths.contract}/list`,
       icon: ContactIcon,
-      // visible: access.canAccessContact,
-      visible:access.canAccess("CRM_CONTRACT"),
+      visible: access.canAccessContact,
       menu: {
         items: [{ label: <ContractReport trigger={<a >Export</a>} />, key: 'exportContract', icon: <ExportOutlined style={{ fontSize: '16px', color: '#08c' }} /> }]
       }

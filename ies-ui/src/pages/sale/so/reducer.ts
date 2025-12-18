@@ -42,6 +42,7 @@ export interface DeliveryEntry {
   itemList: DeliveryItemEntry[];
   status?:string
   deliveryId?:number
+  isTBC?:boolean
 }
 
 export interface DeliveryItemEntry {

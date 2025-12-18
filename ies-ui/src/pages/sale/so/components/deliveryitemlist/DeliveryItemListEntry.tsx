@@ -22,7 +22,7 @@ interface Props extends FormModalProps {
     addressList?: AddressInfo[];
     default?: DeliveryEntry;
     currentDelivery?: DeliveryEntry;
-    so_status?:string
+    so_status?: string
   };
   actionHandlers?: {
     onSaveHandlers?: (itemList: DeliveryEntry) => void;
@@ -39,10 +39,32 @@ const DeliveryItemListEntry: React.FC<Props> = ({ data, actionHandlers, ...props
     };
   }, [props.open]);
 
+  // const initFormData = () => {
+  //   const initData = data?.currentDelivery ? { ...data?.currentDelivery } : data?.default;
+  //   form.setFieldsValue({
+  //     deliveryDate: initData?.deliveryDate,
+  //     shippingAddressId: initData?.shippingAddressId,
+  //     itemList: initData?.itemList,
+  //   });
+  // };
+
   const initFormData = () => {
-    const initData = data?.currentDelivery ? { ...data?.currentDelivery } : data?.default;
+    const initData = data?.currentDelivery
+      ? { ...data?.currentDelivery }
+      : data?.default;
+
+    const isTBC =
+      initData?.deliveryDate &&
+      moment(initData.deliveryDate).isSame(
+        moment('2099-12-31'),
+        'day'
+      );
+
     form.setFieldsValue({
-      deliveryDate: initData?.deliveryDate,
+      deliveryDate: initData?.deliveryDate
+        ? moment(initData.deliveryDate)
+        : undefined,
+      isTBC: isTBC,
       shippingAddressId: initData?.shippingAddressId,
       itemList: initData?.itemList,
     });
@@ -62,7 +84,7 @@ const DeliveryItemListEntry: React.FC<Props> = ({ data, actionHandlers, ...props
           ?.address,
         deliveryDate: dataForm.deliveryDate,
         itemList: dataForm.itemList.filter((it) => it.qty > 0),
-        deliveryId:data?.currentDelivery?.id 
+        deliveryId: data?.currentDelivery?.id
       };
       actionHandlers?.onSaveHandlers?.(dlv);
     } catch (error) {
@@ -111,7 +133,6 @@ const DeliveryItemListEntry: React.FC<Props> = ({ data, actionHandlers, ...props
                   label="Delivery Date"
                   name="deliveryDate"
                   fieldProps={{ disabled: isTBC }}
-                  // THIS LINE SAVES IT
                   transform={(value: any) => ({ deliveryDate: value })}
                 />
               )}

@@ -36,9 +36,19 @@ const DeliveryListItemView: React.FC<Props> = ({ indirectCustomer, deliveries })
           shippingAddressCode: dlv.shippingAddress,
         } as DeliverySoItemEntry),
       ),
-    );
+    ) || [];
+    const sortedItems = [...items].sort((a, b) => {
+      if (!a.deliveryDate && !b.deliveryDate) return 0;
+      if (!a.deliveryDate) return 1;  // no date last
+      if (!b.deliveryDate) return -1;
 
-    setItemList(items || []);
+      return (
+        moment(a.deliveryDate).valueOf() -
+        moment(b.deliveryDate).valueOf()
+      );
+    });
+
+    setItemList(sortedItems);
   }, []);
   return (
     <Card size="small" title="Delivery Info">

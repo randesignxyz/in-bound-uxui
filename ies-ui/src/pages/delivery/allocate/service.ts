@@ -1,5 +1,5 @@
 import { RequestActions, ServiceApiType, singleRequest } from "@/services/apiGateway";
-import { Allocate, allocateSearch, DeliveryList, DNList, DNParams, DnQuickView, LocationList, SkuList, SOAllocateActivities, SOList, UpdateRemarkParams,ListDnDetailParams, SaleTypeList } from "./data";
+import { Allocate, allocateSearch, DeliveryList, DNList, DNParams, DnQuickView, LocationList, SkuList, SOAllocateActivities, SOList, UpdateRemarkParams,ListDnDetailParams, SaleTypeList, AreaList } from "./data";
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { Paging } from "@/services/API";
 
@@ -124,6 +124,12 @@ const AllocateAction = {
             page: params.pagination?.current,
         },
     }),
+    lisArea: (): ServiceApiType<{}> => ({
+        type: 'LIST_QUERY',
+        endpoint: 'DELIVERY',
+        actionName: 'list-area',
+        payload: {},
+    }),
 }
 
 export const AllocateServiceAPI = (requestAction: RequestActions) => {
@@ -190,5 +196,9 @@ export const AllocateServiceAPI = (requestAction: RequestActions) => {
             singleRequest<DNList>(AllocateAction.pageCustomer(params))(requestAction) as Promise<
                 Paging<DNList>
             >,
+        list_area: () =>
+            singleRequest<AreaList>(AllocateAction.lisArea())(
+                requestAction
+            ),
     }
 }

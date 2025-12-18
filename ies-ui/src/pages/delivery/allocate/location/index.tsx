@@ -99,16 +99,14 @@ export default () => {
         const idArray = Array.isArray(ids) ? ids : [ids];
 
         Modal.confirm({
-            title: 'Claim',
+            title: 'Pick',
             content: 'Are you sure?',
             onOk: async () => {
                 try {
                     // Loop through each id
-                    for (const id of idArray) {
-                        await services.ClaimDn(id, access.currentUser?.login, 'Claim', 'Claim DN') as {
-                            data: string;
-                            message: string;
-                        };
+                    await services.ClaimDn(idArray, access.currentUser?.login, 'Pick', 'Pick DN') as {
+                        data: string;
+                        message: string;
                     }
                     navigate("/delivery/allocate/list")
                     setSelect([])
@@ -151,7 +149,7 @@ export default () => {
                     console.log("Claimed items:", select);
                 }}
             >
-                Claim
+                Pick
             </Button>
         </div>
         <Flex>

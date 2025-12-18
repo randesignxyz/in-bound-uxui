@@ -72,7 +72,7 @@ export default () => {
   const [MTSearch, setMTSearch] = useState<{ status: string; startDate?: string, endDate?: string }>({
     status: 'ALL',
   });
-  const [dnSearch, setDnSearch] = useState<{ status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string, sap_delivery_date: string | null, sap_from_date?: string, sap_to_date?: string,customer?:string }>({
+  const [dnSearch, setDnSearch] = useState<{ status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string, sap_delivery_date: string | null, sap_from_date?: string, sap_to_date?: string, customer?: string, area?: string }>({
     status: 'posted',
     dnStatus: 'open',
     sap_delivery_date: 'as_of_now',
@@ -95,7 +95,7 @@ export default () => {
   });
   const [activities, setActivities] = useState<SOAllocateActivities[]>([]);
   const [hisSearch, setHisSearch] = useState<{
-    sap_delivery_date: string | null; status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string, sap_from_date?: string, sap_to_date?: string,customer?:string
+    sap_delivery_date: string | null; status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string, sap_from_date?: string, sap_to_date?: string, customer?: string, area?: string
   }>({
     status: 'posted',
     dnStatus: 'open',
@@ -115,6 +115,8 @@ export default () => {
   const [provinceOptions, setProvinceOptions] = useState<{ value: number; label: string }[]>([]);
   const [districtOptions, setDistrictOptions] = useState<{ value: number; label: string }[]>([]);
   const [communeOptions, setCommuneOptions] = useState<{ value: number; label: string }[]>([]);
+  const [areaOptions, setAreaOptions] = useState<any[]>([]);
+  const [areaReady, setAreaReady] = useState(false);
 
   useEffect(() => {
     if (state?.selectedRows) {
@@ -648,6 +650,47 @@ export default () => {
     });
   }
 
+  useEffect(() => {
+    const loadDefaultAreas = async () => {
+      const res = await services.list_area();
+      if (!Array.isArray(res)) return;
+
+      const options = res.map((a: any) => ({
+        value: Number(a.division_id),
+        label: a.division_name.replace(/^S&D\s*/i, '').trim(),
+        isDefault: a.isdefault === '1' || a.is_default === '1',
+      }));
+
+      setAreaOptions(options);
+
+      const defaultAreaIds = options
+        .filter(o => o.isDefault)
+        .map(o => o.value);
+
+      if (defaultAreaIds.length > 0) {
+        form.setFieldsValue({
+          area_dn: defaultAreaIds,
+          area_his: defaultAreaIds,
+        });
+
+        setDnSearch((v: any) => ({
+          ...v,
+          area: defaultAreaIds,
+        }));
+      }
+
+      setAreaReady(true);
+
+      setTimeout(() => {
+        actionRef.current?.reloadAndRest?.();
+      }, 0);
+    };
+
+    loadDefaultAreas();
+  }, []);
+
+
+
   const onRequestDNDeatilHandler = async (
     params: TableViewSearchParams<AllocateSOAdvanceParams>
   ): Promise<Paging<DNList>> => {
@@ -675,7 +718,8 @@ export default () => {
         filterPass: "Unclaimed",
         sap_from_date: dnSearch.sap_from_date,
         sap_to_date: dnSearch.sap_to_date,
-        customer:dnSearch.customer
+        customer: dnSearch.customer,
+        area: dnSearch.area
       });
 
       if (!Array.isArray(list)) throw new Error('Unexpected response format');
@@ -748,7 +792,8 @@ export default () => {
         dnStatus: hisSearch.dnStatus,
         sap_from_date: hisSearch.sap_from_date,
         sap_to_date: hisSearch.sap_to_date,
-        customer:hisSearch.customer
+        customer: hisSearch.customer,
+        area: hisSearch.area
       });
 
       if (!Array.isArray(list)) throw new Error('Unexpected response format');
@@ -1025,6 +1070,13 @@ export default () => {
     ...(advanceSearchParams.filter !== 'HIS'
       ? [
         {
+          title: 'Area',
+          dataIndex: 'division',
+          width: 150,
+          render: (value: string) =>
+            value?.replace(/^S&D\s*/i, ''),
+        },
+        {
           title: 'District', dataIndex: 'district', width: 150,
           // sorter: {
           //   compare: (a, b) => (a.district ?? '').localeCompare(b.district ?? ''),
@@ -1051,7 +1103,7 @@ export default () => {
               return sum + volume * qty;
             }, 0);
 
-            return `${total.toFixed(2)} m³`
+            return `${total.toFixed(4)} m³`
           }
         },
         {
@@ -2397,6 +2449,50 @@ export default () => {
                               width={150}
                               showSearch
                             />
+                            {/* <ProFormSelect
+                              width={200}
+                              name="area_dn"
+                              placeholder="Area"
+                              showSearch
+                              allowClear
+                              mode="multiple"
+                              request={async () => {
+                                const data = await services.list_area();
+                                return data.map((obj: any) => ({
+                                  value: obj.division_id,
+                                  label: obj.division_name,
+                                }));
+                              }}
+                              onChange={(val?: string) => {
+                                setDnSearch(v => ({
+                                  ...v,
+                                  area: val,
+                                }));
+                                actionRef.current?.reloadAndRest?.();
+                              }}
+                            /> */}
+                            {areaReady && (
+                              <ProFormSelect
+                                name="area_dn"
+                                key={JSON.stringify(dnSearch.area)}
+                                initialValue={dnSearch.area}
+                                mode="multiple"
+                                placeholder="Area"
+                                showSearch
+                                allowClear
+                                width={200}
+                                options={areaOptions}   // ✅ NOT request
+                                onChange={(val: number[]) => {
+                                  setDnSearch(v => ({
+                                    ...v,
+                                    area: val,
+                                  }));
+                                  actionRef.current?.reloadAndRest?.();
+                                }}
+                              />
+                            )}
+
+
                             <ProFormDateRangePicker
                               name="sap_delivery_range_dn"
                               placeholder={['From Date', 'To Date']}
@@ -2688,34 +2784,34 @@ export default () => {
                                 mode="multiple"
                               />
                               <ProFormSelect
-                              placeholder="Customer"
-                              name="customer_his"
-                              showSearch
-                              debounceTime={200}
-                              mode="multiple"
-                              allowClear
-                              width={300}
-                              request={async ({ keyWords }) => {
-                                const res = await services.pageCustomer({
-                                  criteria: {
-                                    searchValue: keyWords,
-                                  },
-                                  pagination: {
-                                    current: 1,
-                                    pageSize: 20,
-                                  },
-                                })
+                                placeholder="Customer"
+                                name="customer_his"
+                                showSearch
+                                debounceTime={200}
+                                mode="multiple"
+                                allowClear
+                                width={300}
+                                request={async ({ keyWords }) => {
+                                  const res = await services.pageCustomer({
+                                    criteria: {
+                                      searchValue: keyWords,
+                                    },
+                                    pagination: {
+                                      current: 1,
+                                      pageSize: 20,
+                                    },
+                                  })
 
-                                return res.items.map((c: any) => ({
-                                  value: c.code,
-                                  label: `${c.code} - ${c.name}`,
-                                }));
-                              }}
-                              onChange={(val: string) => {
-                                setHisSearch(v => ({ ...v, customer: val }));
-                                actionRef.current?.reloadAndRest?.();
-                              }}
-                            />
+                                  return res.items.map((c: any) => ({
+                                    value: c.code,
+                                    label: `${c.code} - ${c.name}`,
+                                  }));
+                                }}
+                                onChange={(val: string) => {
+                                  setHisSearch(v => ({ ...v, customer: val }));
+                                  actionRef.current?.reloadAndRest?.();
+                                }}
+                              />
                             </div>
                             {/* Button */}
                             <ProFormSelect

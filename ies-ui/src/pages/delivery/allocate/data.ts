@@ -68,7 +68,7 @@ export interface DNList {
   id: number,
   soId: string,
   deliveryDate: string,
-  sap_delivery_date?:string
+  sap_delivery_date?: string
   shippingAddress?: string,
   priority?: string,
   remarks?: string,
@@ -224,7 +224,7 @@ export type DNItemParams = {
   unplannedItems: DNDetail[],
   mergedItems: DNDetail[],
   isUnplanned?: string
-  
+
 };
 
 export type DNParams = {
@@ -293,9 +293,14 @@ export type SkuList = {
 }
 
 export type SaleTypeList = {
-  id:number
-  code:string
-  name:string
+  id: number
+  code: string
+  name: string
+}
+export type AreaList = {
+  division_id: string,
+  division_name: string,
+  is_default: string,
 }
 
 export type LocationList = {
@@ -312,14 +317,15 @@ export interface ListDnDetailParams {
   province_id?: string;
   district_id?: string;
   commune_id?: string;
-  sap_delivery_date?:string | null,
+  sap_delivery_date?: string | null,
   sortBy?: string[];
   sortOrders?: string[];
   filterPass?: string
   dnStatus?: string
-  sap_from_date?:string
-  sap_to_date?:string
-  customer?:string
+  sap_from_date?: string
+  sap_to_date?: string
+  customer?: string
+  area?:string
 }
 
 export type Location = {

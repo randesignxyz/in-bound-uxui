@@ -16,7 +16,7 @@ import dayjs from "dayjs";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FloatingCard } from "../displayCard";
 import { AllocateServiceAPI } from "@/pages/delivery/allocate/service";
-import { DNList,Location } from "@/pages/delivery/allocate/data";
+import { DNList , ListDnDetailParams,Location} from "@/pages/delivery/allocate/data";
 
 interface DNListState {
     list: DNList[];
@@ -98,16 +98,14 @@ export default () => {
         const idArray = Array.isArray(ids) ? ids : [ids];
 
         Modal.confirm({
-            title: 'Claim',
+            title: 'Pick',
             content: 'Are you sure?',
             onOk: async () => {
                 try {
                     // Loop through each id
-                    for (const id of idArray) {
-                        await services.ClaimDn(id, access.currentUser?.login, 'Claim', 'Claim DN') as {
-                            data: string;
-                            message: string;
-                        };
+                    await services.ClaimDn(idArray, access.currentUser?.login, 'Pick', 'Pick DN') as {
+                        data: string;
+                        message: string;
                     }
                     navigate("/delivery/allocate/list")
                     setSelect([])
@@ -150,7 +148,7 @@ export default () => {
                     console.log("Claimed items:", select);
                 }}
             >
-                Claim
+                Pick
             </Button>
         </div>
         <Flex>

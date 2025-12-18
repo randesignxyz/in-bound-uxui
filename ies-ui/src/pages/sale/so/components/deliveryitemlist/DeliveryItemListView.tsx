@@ -35,9 +35,18 @@ const DeliveryListItemView: React.FC<Props> = ({ deliveries }) => {
           shippingAddressCode: dlv.associatedTo?.shippingAddress?.address,
         } as DeliverySoItemEntry),
       ),
-    );
-console.log(items,'itemListitemList')
-    setItemList(items || []);
+    )|| [];
+    const sortedItems = [...items].sort((a, b) => {
+      if (!a.deliveryDate && !b.deliveryDate) return 0;
+      if (!a.deliveryDate) return 1;  // no date last
+      if (!b.deliveryDate) return -1;
+
+      return (
+        moment(a.deliveryDate).valueOf() -
+        moment(b.deliveryDate).valueOf()
+      );
+    });
+    setItemList(sortedItems);
   }, []);
 
   return (

@@ -55,7 +55,8 @@ const DeliveryItemList: React.FC<Props> = ({ data, actionHandlers }) => {
                   {(!r?.status?.toLocaleLowerCase() ||
                     !r?.so_status?.toLocaleLowerCase() ||
                     r?.so_status.toLocaleLowerCase() != 'posted' ||
-                    (r?.so_status.toLocaleLowerCase() === 'posted' && moment(r.deliveryDate).format('YYYY-MM-DD') === '2099-12-31')
+                    r?.status.toLocaleLowerCase() == 'pending'
+                    // ||(r?.so_status.toLocaleLowerCase() === 'posted' && moment(r.deliveryDate).format('YYYY-MM-DD') === '2099-12-31')
                   )
                     && (
                       <>
@@ -172,7 +173,18 @@ const DeliveryItemList: React.FC<Props> = ({ data, actionHandlers }) => {
               } as DeliverySoItemEntry),
             )
             .filter((it) => it.qty !== 0),
-        )}
+        )?.slice()
+          ?.sort((a, b) => {
+            if (!a.deliveryDate && !b.deliveryDate) return 0;
+            if (!a.deliveryDate) return 1;
+            if (!b.deliveryDate) return -1;
+
+            return (
+              moment(a.deliveryDate).valueOf() -
+              moment(b.deliveryDate).valueOf()
+            );
+          })
+        }
         options={{
           density: false,
           reload: false,

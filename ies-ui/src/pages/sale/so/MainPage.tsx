@@ -1,9 +1,9 @@
 
 import '@/pages/index.less'
-import { Badge, Spin, Typography } from "antd"
+import { Badge, Button, Space, Spin, Typography } from "antd"
 import PageWrapper from "@/components/PageWrapper"
 import { SoAdvanceSearchParams, SoItemLess } from "@/services/sale/data"
-import { ExportOutlined, EyeOutlined, FileOutlined, PaperClipOutlined, PlusCircleOutlined, SyncOutlined } from "@ant-design/icons"
+import { ExportOutlined, EyeOutlined, FileOutlined, FileSearchOutlined, PaperClipOutlined, PlusCircleOutlined, SyncOutlined } from "@ant-design/icons"
 import { Model } from "./model"
 import { useEffect, useRef, useState } from "react"
 import { FetchPagingParams } from "@/components/DataCrud/TableView"
@@ -28,6 +28,7 @@ export default () => {
         criteria: {
             status: 'Pending',
             customerType: 'Direct',
+            myTask:true,
         }
     })
 
@@ -45,6 +46,7 @@ export default () => {
         actions.initilizeData();
     }, []);
 
+    
     useEffect(() => {
         const pendingCount = filter.criteria?.customerType == 'ALL' ? (state.data?.soSummary?.pendingDirect || 0) + (state.data?.soSummary?.pendingIndirect || 0) :
             filter.criteria?.customerType == 'Direct' ? state.data?.soSummary?.pendingDirect : state.data?.soSummary?.pendingIndirect
@@ -80,6 +82,7 @@ export default () => {
             listView={{
                 type: 'Table',
                 title: 'SO List',
+                
                 actionButtons: [{
                     icon: <SyncOutlined />,
                     type: 'link',
@@ -98,14 +101,14 @@ export default () => {
                 onStatusRender: <StatusBar ref={statusBarRef} onCustomerTypeChanged={(value) => {
                     setFilter(v => ({
                         ...v,
-
                         criteria: {
                             ...v.criteria,
                             customerType: value
                         }
                     }))
                     actionRef.current?.reload(true)
-                }} onStatusChanged={(value) => {
+                }} 
+                onStatusChanged={(value) => {
                     setFilter(v => ({
                         ...v,
                         criteria: {
@@ -129,10 +132,30 @@ export default () => {
                         }
                     ))
                 },
+                advanceSearchButton:<Space>
+                    <Button icon={<FileSearchOutlined />} 
+                        onClick={()=>modals.showModal('advanceSearch')}
+                    />
+                    <Button
+                        style={{
+                            borderColor:(filter?.criteria?.myTask==true)?"#b09a16":""
+                        }}
+                        // type='default'
+                        onClick={()=>{
+                            setFilter((o)=>({
+                                ...o,
+                                criteria:{
+                                    ...o.criteria,
+                                    myTask:true
+                                }
+                            }))
+                        }}
+                    >My Task</Button>
+                </Space>,
+
                 props: {
                     dataSource: data?.items,
                     loading: isFetching,
-
                     actionRef: actionRef,
                     pagination: {
                         total: data?.total
@@ -263,11 +286,16 @@ export default () => {
             salespersons={state.data?.initData?.salespersons}
             lookDataList={state.data?.initData?.lookDataList}
             onSearch={(data) => {
+                // console.log(data);
+                // console.log( data.saleArea.length);
+                
+                
                 setFilter(v => ({
                     ...v,
                     criteria: {
                         ...v.criteria,
-                        ...data
+                        ...data,
+                        myTask: (data.saleArea?.length>0)?false:data?.myTask
                     }
                 }))
                 actionRef.current?.reload?.(true);

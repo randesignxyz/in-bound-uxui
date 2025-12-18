@@ -1,73 +1,36 @@
-import PageWrapper from "@/components/PageWrapper"
 import { useQuery } from "@umijs/max"
 import { SupporterServiceAPI } from "../services"
 import { simpleRequestActions } from "@/services/model"
-import { ProCard, ProColumns, ProTable } from "@ant-design/pro-components"
-import { useEffect, useState } from "react"
+import { ProColumns, ProTable } from "@ant-design/pro-components"
+import { useState } from "react"
+import { renderDiffOnly } from "./dynamic_render"
+import { Col, Row } from "antd"
+import moment from "moment"
 
-type TableListItem = {
-    createdAtRange?: number[];
-    createdAt: number;
-    code: string;
-};
 
-const DetailList: React.FC<any> = (props) => {
-    const { ip } = props;
-
+const DetailList: React.FC<{ data: any }> = ({ data }) => {
 
     const columns: ProColumns<any>[] = [
         {
-            title: 'Issued Date',
-            key: 'createdAt',
-            dataIndex: 'createdDate',
-            valueType: 'dateTime',
-        },
-        {
-            title: 'Old Date',
-            key: 'code',
-            width: 80,
-            dataIndex: 'oldValue',
-            valueType: 'code',
-        },
-        {
-            title: 'New Data',
-            key: 'option',
-            width: 80,
-            valueType: 'option',
-
-            render: () => [<a key="a">预警</a>],
+            title: "Changed Data",
+            render: (_, record) =>
+                renderDiffOnly(record.oldValue, record.newValue),
         },
     ];
 
-    // useEffect(() => {
-    //     const source = [];
-    //     for (let i = 0; i < 15; i += 1) {
-    //         source.push({
-    //             createdAt: Date.now() - Math.floor(Math.random() * 10000),
-    //             code: `const getData = async params => {
-    //       const data = await getData(params);
-    //       return { list: data.data, ...data };
-    //     };`,
-    //             key: i,
-    //         });
-    //     }
-
-    //     setTableListDataSource(source);
-    // }, [ip]);
-    console.log(ip);
 
     return (
         <ProTable
+            size="small"
+            headerTitle={moment(data?.createdDate).format("DD-MM-YYYY")}
             columns={columns}
-            dataSource={ip}
-            pagination={{
-                pageSize: 3,
-                showSizeChanger: false,
-            }}
+            dataSource={data ? [data] : []}
+            pagination={false}
             rowKey="id"
             toolBarRender={false}
             search={false}
         />
+
     );
 };
 
@@ -81,15 +44,27 @@ export default () => {
         retry: 2
     })
     const [ip, setIp] = useState<any>();
-    console.log(ip);
 
     return (
-        <ProCard>
-            <ProCard>
-                {/* <ProTable
+        <Row gutter={6} style={{ overflow:"hidden" }}>
+            <Col span={10}><ProTable
                     options={false}
                     dataSource={data?.items}
-                    onSe
+                    search={false}
+                    rowSelection={{
+                        type: "radio",
+                        selections: ["SELECT_INVERT"],
+                        selectedRowKeys: [ip?.id||data?.items[0]?.id]
+                    }}
+                    tableAlertRender={false}
+                    onRow={(record) => {
+                        return {
+                            onClick: () => {
+                                setIp(record)
+                            }
+                        }
+                    }}
+                    rowKey={"id"}
                     columns={[
                         {
                             title: "PO Code",
@@ -104,56 +79,12 @@ export default () => {
                             dataIndex: "createdBy"
                         },
                     ]}
-                /> */}
-                <PageWrapper
-
-                    listView={{
-                        type: "Table",
-                        onRefresh: refetch,
-                        props: {
-                            dataSource: data?.items,
-                            loading: isFetching,
-                            rowKey: "id",
-                            // rowSelection:{
-                                
-                            //     onChange:(selectedRowKeys, selectedRows, info)=> {
-                            //         console.log(info);
-                                    
-                            //         // setIp(info)
-                            //     },
-                            // },
-                            onRow: (record) => {
-                                console.log(record);
-
-                                return record
-                            },
-                            columns: [
-                                {
-                                    title:"id",
-                                    dataIndex:"id"
-                                },
-                                {
-                                    title: "PO Code",
-                                    render: (_, r) => r?.entry?.purchaseOrderCode
-                                },
-                                {
-                                    title: "Type",
-                                    dataIndex: "changeType"
-                                },
-                                {
-                                    title: "Issue By",
-                                    dataIndex: "createdBy"
-                                },
-                            ]
-                        }
-                    }}
                 />
-            </ProCard>
-            <ProCard title={ip}>
-                <DetailList ip={ip} />
-            </ProCard>
-        </ProCard>
-
-
+            </Col>
+            <Col span={14}>
+              <DetailList data={ip || data?.items?.[0]} />
+            </Col>
+        </Row>
+        
     )
 }

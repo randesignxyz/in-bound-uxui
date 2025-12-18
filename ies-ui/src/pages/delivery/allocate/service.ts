@@ -112,6 +112,18 @@ const AllocateAction = {
         actionName: 'get-sale-type',
         payload: {},
     }),
+    pageCustomer: (
+        params: TableViewSearchParams<allocateSearch>,
+    ): ServiceApiType<{ searchValue?: string }> => ({
+        type: 'PAGING_QUERY',
+        endpoint: 'DELIVERY',
+        actionName: 'page-customer',
+        payload: { ...params.criteria },
+        pagination: {
+            pageSize: params.pagination?.pageSize,
+            page: params.pagination?.current,
+        },
+    }),
 }
 
 export const AllocateServiceAPI = (requestAction: RequestActions) => {
@@ -174,5 +186,9 @@ export const AllocateServiceAPI = (requestAction: RequestActions) => {
             singleRequest<SaleTypeList>(AllocateAction.listSaletype())(
                 requestAction
             ),
+        pageCustomer: (params: TableViewSearchParams<allocateSearch>) =>
+            singleRequest<DNList>(AllocateAction.pageCustomer(params))(requestAction) as Promise<
+                Paging<DNList>
+            >,
     }
 }

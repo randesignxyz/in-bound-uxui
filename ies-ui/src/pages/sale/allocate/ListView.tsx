@@ -48,7 +48,7 @@ export default () => {
   const [selectedListDn, setSelectedListDn] = useState<DNList[]>([])
   const [selectedRows, setSelectedRows] = useState<DNList[]>([]);
   const [sortModalOpen, setSortModalOpen] = useState(false);
-  const [loading,isLoading] = useState(false)
+  const [loading, isLoading] = useState(false)
   const [sortConfig, setSortConfig] = useState<SortRule[]>([
     { field: undefined, order: undefined }
   ]);
@@ -72,7 +72,7 @@ export default () => {
   const [MTSearch, setMTSearch] = useState<{ status: string; startDate?: string, endDate?: string }>({
     status: 'ALL',
   });
-  const [dnSearch, setDnSearch] = useState<{ status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string, sap_delivery_date: string | null, sap_from_date?: string, sap_to_date?: string }>({
+  const [dnSearch, setDnSearch] = useState<{ status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string, sap_delivery_date: string | null, sap_from_date?: string, sap_to_date?: string,customer?:string }>({
     status: 'posted',
     dnStatus: 'open',
     sap_delivery_date: 'as_of_now',
@@ -95,7 +95,7 @@ export default () => {
   });
   const [activities, setActivities] = useState<SOAllocateActivities[]>([]);
   const [hisSearch, setHisSearch] = useState<{
-    sap_delivery_date: string | null; status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string, sap_from_date?: string, sap_to_date?: string
+    sap_delivery_date: string | null; status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string, sap_from_date?: string, sap_to_date?: string,customer?:string
   }>({
     status: 'posted',
     dnStatus: 'open',
@@ -617,7 +617,7 @@ export default () => {
     } catch (error: any) {
       message.error(error.message);
       return Promise.reject(error);
-    }finally{
+    } finally {
       isLoading(false)
     }
   };
@@ -675,6 +675,7 @@ export default () => {
         filterPass: "Unclaimed",
         sap_from_date: dnSearch.sap_from_date,
         sap_to_date: dnSearch.sap_to_date,
+        customer:dnSearch.customer
       });
 
       if (!Array.isArray(list)) throw new Error('Unexpected response format');
@@ -747,6 +748,7 @@ export default () => {
         dnStatus: hisSearch.dnStatus,
         sap_from_date: hisSearch.sap_from_date,
         sap_to_date: hisSearch.sap_to_date,
+        customer:hisSearch.customer
       });
 
       if (!Array.isArray(list)) throw new Error('Unexpected response format');
@@ -1252,7 +1254,7 @@ export default () => {
                 </Tag> */}
               </Descriptions.Item>
             </Descriptions>
-            <Divider/>
+            <Divider />
             {record?.data?.map((item: any, index: number) => (
               <>
                 <Collapse
@@ -2395,17 +2397,8 @@ export default () => {
                               width={150}
                               showSearch
                             />
-                            {/* <ProFormDatePicker
-                              placeholder="Delivery Date"
-                              onChange={(val: moment.Moment | null) => {
-                                const localDate = val ? val.format('YYYY-MM-DD') : undefined; // local date
-                                setDnSearch((v) => ({ ...v, sap_delivery_date: localDate }));
-                                actionRef.current?.reloadAndRest?.();
-                              }}
-                              width={200}
-                            /> */}
                             <ProFormDateRangePicker
-                              name="sap_delivery_range"
+                              name="sap_delivery_range_dn"
                               placeholder={['From Date', 'To Date']}
                               disabled={!asDate}
                               width={300}
@@ -2426,7 +2419,7 @@ export default () => {
                             />
                             <ProFormSelect
                               placeholder="Province"
-                              name="province_id"
+                              name="province_id_dn"
                               onChange={(val: string) => {
                                 setProvinceId(val)
                                 setDnSearch((v) => ({ ...v, province_id: val }))
@@ -2441,6 +2434,7 @@ export default () => {
 
                             <ProFormSelect
                               placeholder="District"
+                              name="district_id_dn"
                               value={districtId}
                               onChange={(val: string) => {
                                 setDistrictId(val)
@@ -2456,6 +2450,7 @@ export default () => {
 
                             <ProFormSelect
                               placeholder="Commune"
+                              name="commune_id_dn"
                               options={communeOptions}
                               onChange={(val: string) => {
                                 setDnSearch((v) => ({ ...v, commune_id: val }))
@@ -2466,6 +2461,36 @@ export default () => {
                               showSearch
                               mode="multiple"
                             />
+                            <ProFormSelect
+                              placeholder="Customer"
+                              name="customer_dn"
+                              showSearch
+                              debounceTime={200}
+                              mode="multiple"
+                              allowClear
+                              width={300}
+                              request={async ({ keyWords }) => {
+                                const res = await services.pageCustomer({
+                                  criteria: {
+                                    searchValue: keyWords,
+                                  },
+                                  pagination: {
+                                    current: 1,
+                                    pageSize: 20,
+                                  },
+                                })
+
+                                return res.items.map((c: any) => ({
+                                  value: c.code,
+                                  label: `${c.code} - ${c.name}`,
+                                }));
+                              }}
+                              onChange={(val: string[]) => {
+                                setDnSearch(v => ({ ...v, customer: val }));
+                                actionRef.current?.reloadAndRest?.();
+                              }}
+                            />
+
                           </div>
                           {/* Button */}
                           {access.canAccesAddRemarkAllocate && (
@@ -2598,7 +2623,7 @@ export default () => {
                                 width={200}
                               /> */}
                               <ProFormDateRangePicker
-                                name="sap_delivery_range"
+                                name="sap_delivery_range_his"
                                 placeholder={['From Date', 'To Date']}
                                 disabled={!asDate}
                                 width={300}
@@ -2619,6 +2644,7 @@ export default () => {
                               />
                               <ProFormSelect
                                 placeholder="Province"
+                                name="province_id_his"
                                 value={provinceId}
                                 onChange={(val: string) => {
                                   setProvinceId(val)
@@ -2634,6 +2660,7 @@ export default () => {
 
                               <ProFormSelect
                                 placeholder="District"
+                                name="district_id_his"
                                 value={districtId}
                                 onChange={(val: string) => {
                                   setDistrictId(val)
@@ -2649,6 +2676,7 @@ export default () => {
 
                               <ProFormSelect
                                 placeholder="Commune"
+                                name="commune_id_his"
                                 options={communeOptions}
                                 onChange={(val: string) => {
                                   setHisSearch((v) => ({ ...v, commune_id: val }))
@@ -2659,6 +2687,35 @@ export default () => {
                                 showSearch
                                 mode="multiple"
                               />
+                              <ProFormSelect
+                              placeholder="Customer"
+                              name="customer_his"
+                              showSearch
+                              debounceTime={200}
+                              mode="multiple"
+                              allowClear
+                              width={300}
+                              request={async ({ keyWords }) => {
+                                const res = await services.pageCustomer({
+                                  criteria: {
+                                    searchValue: keyWords,
+                                  },
+                                  pagination: {
+                                    current: 1,
+                                    pageSize: 20,
+                                  },
+                                })
+
+                                return res.items.map((c: any) => ({
+                                  value: c.code,
+                                  label: `${c.code} - ${c.name}`,
+                                }));
+                              }}
+                              onChange={(val: string) => {
+                                setHisSearch(v => ({ ...v, customer: val }));
+                                actionRef.current?.reloadAndRest?.();
+                              }}
+                            />
                             </div>
                             {/* Button */}
                             <ProFormSelect

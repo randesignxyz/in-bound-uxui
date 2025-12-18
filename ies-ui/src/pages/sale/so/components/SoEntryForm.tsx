@@ -185,7 +185,7 @@ const EntryForm: React.FC<Props> = ({ type, id, openInTab, onBack }) => {
         return;
       }
       Modal.confirm({
-        title: 'Save Sale Order',
+        title: 'Save Purchase Order',
         content: 'Are you sure?',
         onOk: async () => {
           try {
@@ -227,8 +227,8 @@ const EntryForm: React.FC<Props> = ({ type, id, openInTab, onBack }) => {
   const onEdit = async () => {
     try {
       Modal.confirm({
-        title: 'Edit Sale Order',
-        content: 'Edit date will post to SAP. Are you sure?',
+        title: 'Update Purchase Order',
+        content: 'Update date will post to SAP. Are you sure?',
         onOk: async () => {
           try {
             const list = state.data?.deliveryList
@@ -352,7 +352,7 @@ const EntryForm: React.FC<Props> = ({ type, id, openInTab, onBack }) => {
           <Tabs.TabPane
             tab={
               <Space size={0}>
-                <DollarCircleOutlined /> <span>Sale Order</span>
+                <DollarCircleOutlined /> <span>Purchase Order</span>
               </Space>
             }
             key="saleOrder"

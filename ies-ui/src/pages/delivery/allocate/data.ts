@@ -319,6 +319,7 @@ export interface ListDnDetailParams {
   dnStatus?: string
   sap_from_date?:string
   sap_to_date?:string
+  customer?:string
 }
 
 export type Location = {

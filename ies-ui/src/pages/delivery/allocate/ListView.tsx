@@ -314,7 +314,7 @@ export default () => {
 
   const handleUnClaim = async (id: number[]) => {
     Modal.confirm({
-      title: 'Unship',
+      title: 'Unpick',
       content: 'Are you sure?',
       onOk: async () => {
 
@@ -1321,7 +1321,7 @@ export default () => {
                                     <Button type="default" danger
                                       onClick={() => handleUnClaim([Number(item.id)])}
                                     >
-                                      Unship
+                                      Unpick
                                     </Button>
                                     : <></>}
 

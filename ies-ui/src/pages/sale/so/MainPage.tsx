@@ -7,7 +7,7 @@ import { ExportOutlined, EyeOutlined, FileOutlined, FileSearchOutlined, PaperCli
 import { Model } from "./model"
 import { useEffect, useRef, useState } from "react"
 import { FetchPagingParams } from "@/components/DataCrud/TableView"
-import { ActionType } from "@ant-design/pro-components"
+import { ActionType, CheckCard } from "@ant-design/pro-components"
 import { useAccess, useQuery } from "@umijs/max"
 import CustomerDetailView from "@/pages/crm/customer/components/Detail"
 import { formatDate, formatDateTime } from "@/pages/utils"
@@ -28,7 +28,7 @@ export default () => {
         criteria: {
             status: 'Pending',
             customerType: 'Direct',
-            myTask:true,
+            myTask: true,
         }
     })
 
@@ -46,17 +46,18 @@ export default () => {
         actions.initilizeData();
     }, []);
 
-    
+
     useEffect(() => {
         const pendingCount = filter.criteria?.customerType == 'ALL' ? (state.data?.soSummary?.pendingDirect || 0) + (state.data?.soSummary?.pendingIndirect || 0) :
             filter.criteria?.customerType == 'Direct' ? state.data?.soSummary?.pendingDirect : state.data?.soSummary?.pendingIndirect
         statusBarRef.current?.refresh(pendingCount, state.data?.soSummary?.failed)
     }, [state.data?.soSummary])
+    
     return <Spin spinning={false}>
         <PageWrapper<SoItemLess, FilterType, {}>
             onNewRender={(key) => access.canCreateEditSo && <ViewWrapper openInTab addNew tabKey={key} />}
-            tabRender={item =>   access.canCreateEditSo?[
-                {   action: 'add', tabIcon: <FileOutlined />, panel: ({ key }) => <ViewWrapper addNew openInTab tabKey={key.toString()} />, tabLabel: 'New SO' },
+            tabRender={item => access.canCreateEditSo ? [
+                { action: 'add', tabIcon: <FileOutlined />, panel: ({ key }) => <ViewWrapper addNew openInTab tabKey={key.toString()} />, tabLabel: 'New SO' },
                 {
                     action: 'view', value: item?.poNo,
                     panel: () => <ViewWrapper openInTab id={item?.id} />,
@@ -67,8 +68,8 @@ export default () => {
                     panel: () => <CustomerDetailView id={item?.customerId} openInTab getMenuItems={() => []} />,
                     tabLabel: <Badge dot><Typography.Text>{item?.customerCode}</Typography.Text>  </Badge>,
                 }
-            ]:[
-                 {
+            ] : [
+                {
                     action: 'view', value: item?.poNo,
                     panel: () => <ViewWrapper openInTab id={item?.id} />,
                     tabLabel: item?.poNo
@@ -82,12 +83,12 @@ export default () => {
             listView={{
                 type: 'Table',
                 title: 'SO List',
-                
+
                 actionButtons: [{
                     icon: <SyncOutlined />,
                     type: 'link',
                     disabled: !access.canCreateEditSo,
-                    onClick: async() => {
+                    onClick: async () => {
                         await actions.syncFromSFA()
                         actionRef.current?.reload(true)
                     }
@@ -107,17 +108,17 @@ export default () => {
                         }
                     }))
                     actionRef.current?.reload(true)
-                }} 
-                onStatusChanged={(value) => {
-                    setFilter(v => ({
-                        ...v,
-                        criteria: {
-                            ...v.criteria,
-                            status: value
-                        }
-                    }))
-                    actionRef.current?.reload(true)
-                }} />,
+                }}
+                    onStatusChanged={(value) => {
+                        setFilter(v => ({
+                            ...v,
+                            criteria: {
+                                ...v.criteria,
+                                status: value
+                            }
+                        }))
+                        actionRef.current?.reload(true)
+                    }} />,
                 onRefresh: refetch,
                 onFilter: (params, page, sort) => {
                     setFilter(v => (
@@ -132,25 +133,34 @@ export default () => {
                         }
                     ))
                 },
-                advanceSearchButton:<Space>
-                    <Button icon={<FileSearchOutlined />} 
-                        onClick={()=>modals.showModal('advanceSearch')}
+                advanceSearchButton: <Space align='center'>
+                    <Button icon={<FileSearchOutlined />}
+                        onClick={() => modals.showModal('advanceSearch')}
                     />
-                    <Button
-                        style={{
-                            borderColor:(filter?.criteria?.myTask==true)?"#b09a16":""
-                        }}
-                        // type='default'
-                        onClick={()=>{
-                            setFilter((o)=>({
-                                ...o,
-                                criteria:{
-                                    ...o.criteria,
-                                    myTask:true
-                                }
-                            }))
-                        }}
-                    >My Task</Button>
+                    <div className='my-checkcard-so'>
+                        <CheckCard.Group
+                            defaultValue={true}
+                            onChange={(e) => (
+                                setFilter((o) => ({
+                                    criteria: {
+                                        ...o.criteria,
+                                        myTask: e
+                                    }
+                                }))
+                            )}
+                        >
+                            <CheckCard
+                                title={"All"}
+                                size='small'
+                                value={false}
+                            />
+                            <CheckCard
+                                title={"My Tasks"}
+                                size='small'
+                                value={true}
+                            />
+                        </CheckCard.Group>
+                    </div>
                 </Space>,
 
                 props: {
@@ -288,14 +298,14 @@ export default () => {
             onSearch={(data) => {
                 // console.log(data);
                 // console.log( data.saleArea.length);
-                
-                
+
+
                 setFilter(v => ({
                     ...v,
                     criteria: {
                         ...v.criteria,
                         ...data,
-                        myTask: (data.saleArea?.length>0)?false:data?.myTask
+                        myTask: (data.saleArea?.length > 0) ? false : data?.myTask
                     }
                 }))
                 actionRef.current?.reload?.(true);

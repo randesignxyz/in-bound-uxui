@@ -128,7 +128,6 @@ const EmployeeList = ({ onAdd, onEdit }: Props) => {
           title: 'Employees List',
           advanceSearchButton: (
             <Button
-              type="link"
               onClick={() => setAdvanceSearch({ visible: true })}
               icon={
                 Object.values(advanceSearchParams).some(

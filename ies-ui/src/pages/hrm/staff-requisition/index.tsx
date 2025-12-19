@@ -88,7 +88,6 @@ export default function StaffRequisitionPage() {
           title: "Staff Requisition Requests",
           advanceSearchButton: (
             <Button
-              type="link"
               onClick={() => setAdvanceSearchVisible(true)}
               icon={
                 Object.values(advanceSearchParams || {}).some((v) => v !== undefined && v !== null && v !== "")

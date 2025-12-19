@@ -2446,7 +2446,7 @@ export default () => {
                                 { value: 'all', label: 'ALL' },
                                 { value: 'as_of_now', label: 'As Date' },
                                 { value: 'today', label: 'Today' },
-                                { value: 'unplan', label: 'Unclear Plan' },
+                                { value: 'unplan', label: 'TBC' },
                               ]}
                               width={150}
                               showSearch
@@ -2704,7 +2704,7 @@ export default () => {
                                   { value: 'all', label: 'ALL' },
                                   { value: 'as_of_now', label: 'As Date' },
                                   { value: 'today', label: 'Today' },
-                                  { value: 'unplan', label: 'Unclear Plan' },
+                                  { value: 'unplan', label: 'TBC' },
                                 ]}
                                 width={150}
                                 showSearch

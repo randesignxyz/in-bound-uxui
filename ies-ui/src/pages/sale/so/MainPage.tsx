@@ -1,13 +1,13 @@
 
 import '@/pages/index.less'
-import { Badge, Spin, Typography } from "antd"
+import { Badge, Button, Space, Spin, Typography } from "antd"
 import PageWrapper from "@/components/PageWrapper"
 import { SoAdvanceSearchParams, SoItemLess } from "@/services/sale/data"
-import { ExportOutlined, EyeOutlined, FileOutlined, PaperClipOutlined, PlusCircleOutlined, SyncOutlined } from "@ant-design/icons"
+import { ExportOutlined, EyeOutlined, FileOutlined, FileSearchOutlined, PaperClipOutlined, PlusCircleOutlined, SyncOutlined } from "@ant-design/icons"
 import { Model } from "./model"
 import { useEffect, useRef, useState } from "react"
 import { FetchPagingParams } from "@/components/DataCrud/TableView"
-import { ActionType } from "@ant-design/pro-components"
+import { ActionType, CheckCard } from "@ant-design/pro-components"
 import { useAccess, useQuery } from "@umijs/max"
 import CustomerDetailView from "@/pages/crm/customer/components/Detail"
 import { formatDate, formatDateTime } from "@/pages/utils"
@@ -28,6 +28,7 @@ export default () => {
         criteria: {
             status: 'Pending',
             customerType: 'Direct',
+            myTask: true,
         }
     })
 
@@ -45,11 +46,13 @@ export default () => {
         actions.initilizeData();
     }, []);
 
+
     useEffect(() => {
         const pendingCount = filter.criteria?.customerType == 'ALL' ? (state.data?.soSummary?.pendingDirect || 0) + (state.data?.soSummary?.pendingIndirect || 0) :
             filter.criteria?.customerType == 'Direct' ? state.data?.soSummary?.pendingDirect : state.data?.soSummary?.pendingIndirect
         statusBarRef.current?.refresh(pendingCount, state.data?.soSummary?.failed)
     }, [state.data?.soSummary])
+    
     return <Spin spinning={false}>
         <PageWrapper<SoItemLess, FilterType, {}>
             onNewRender={(key) => access.canCreateEditSo && <ViewWrapper openInTab addNew tabKey={key} />}
@@ -65,8 +68,8 @@ export default () => {
                     panel: () => <CustomerDetailView id={item?.customerId} openInTab getMenuItems={() => []} />,
                     tabLabel: <Badge dot><Typography.Text>{item?.customerCode}</Typography.Text>  </Badge>,
                 }
-            ]:[
-                 {
+            ] : [
+                {
                     action: 'view', value: item?.poNo,
                     panel: () => <ViewWrapper openInTab id={item?.id} />,
                     tabLabel: item?.poNo
@@ -84,7 +87,7 @@ export default () => {
                     icon: <SyncOutlined />,
                     type: 'link',
                     disabled: !access.canCreateEditSo,
-                    onClick: async() => {
+                    onClick: async () => {
                         await actions.syncFromSFA()
                         actionRef.current?.reload(true)
                     }
@@ -98,23 +101,23 @@ export default () => {
                 onStatusRender: <StatusBar ref={statusBarRef} onCustomerTypeChanged={(value) => {
                     setFilter(v => ({
                         ...v,
-
                         criteria: {
                             ...v.criteria,
                             customerType: value
                         }
                     }))
                     actionRef.current?.reload(true)
-                }} onStatusChanged={(value) => {
-                    setFilter(v => ({
-                        ...v,
-                        criteria: {
-                            ...v.criteria,
-                            status: value
-                        }
-                    }))
-                    actionRef.current?.reload(true)
-                }} />,
+                }}
+                    onStatusChanged={(value) => {
+                        setFilter(v => ({
+                            ...v,
+                            criteria: {
+                                ...v.criteria,
+                                status: value
+                            }
+                        }))
+                        actionRef.current?.reload(true)
+                    }} />,
                 onRefresh: refetch,
                 onFilter: (params, page, sort) => {
                     setFilter(v => (
@@ -129,10 +132,39 @@ export default () => {
                         }
                     ))
                 },
+                advanceSearchButton: <Space align='center'>
+                    <Button icon={<FileSearchOutlined />}
+                        onClick={() => modals.showModal('advanceSearch')}
+                    />
+                    <div className='my-checkcard-so'>
+                        <CheckCard.Group
+                            defaultValue={true}
+                            onChange={(e) => (
+                                setFilter((o) => ({
+                                    criteria: {
+                                        ...o.criteria,
+                                        myTask: e
+                                    }
+                                }))
+                            )}
+                        >
+                            <CheckCard
+                                title={"All"}
+                                size='small'
+                                value={false}
+                            />
+                            <CheckCard
+                                title={"My Tasks"}
+                                size='small'
+                                value={true}
+                            />
+                        </CheckCard.Group>
+                    </div>
+                </Space>,
+
                 props: {
                     dataSource: data?.items,
                     loading: isFetching,
-
                     actionRef: actionRef,
                     pagination: {
                         total: data?.total
@@ -263,11 +295,16 @@ export default () => {
             salespersons={state.data?.initData?.salespersons}
             lookDataList={state.data?.initData?.lookDataList}
             onSearch={(data) => {
+                // console.log(data);
+                // console.log( data.saleArea.length);
+
+
                 setFilter(v => ({
                     ...v,
                     criteria: {
                         ...v.criteria,
-                        ...data
+                        ...data,
+                        myTask: (data.saleArea?.length > 0) ? false : data?.myTask
                     }
                 }))
                 actionRef.current?.reload?.(true);

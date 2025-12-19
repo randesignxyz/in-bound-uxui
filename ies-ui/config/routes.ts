@@ -216,7 +216,7 @@ export default [
     component: './crm/verified-customer',
   },
   // =========== END ===========
-  
+
   /**********<<Pro**************/
   {
     path: '/pro',
@@ -673,6 +673,21 @@ export default [
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
     component: './sale/warehouse',
+  },
+
+  {
+    path: '/sale/supporter',
+    name: 'warehouse-po-portal',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    component: './sale/supporter',
+  },
+    {
+    path: '/sale/supporter/list',
+    name: 'warehouse-po-portal',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    component: './sale/supporter/po',
   },
   /******************* MPU *******************/
 

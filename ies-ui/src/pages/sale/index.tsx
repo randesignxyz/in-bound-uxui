@@ -40,6 +40,7 @@ import { MenuProps } from 'rc-menu';
 import { MPUPath } from './mpu';
 import Reports from './reports';
 import { DeliveryPaths } from '../delivery';
+import Supporter from './supporter';
 {
   /* <TeamOutlined /> */
 }
@@ -254,7 +255,7 @@ export default () => {
       visible:
         access.canAccessAllMenuDSD ||
         access.canAccessSaleDailyReport ||
-        access.canAccessSettlementItem||
+        access.canAccessSettlementItem ||
         access.canAccessSaleSettlement,
       link: `${MPUPath.mpuSettlement}/list`,
     },
@@ -305,7 +306,7 @@ export default () => {
       description: 'Purchase Order List',
       link: `${SalePaths.so}/list`,
       icon: saleIcon,
-      visible: access.canAccessSaleItems ||access.canAccessSaleSo,
+      visible: access.canAccessSaleItems || access.canAccessSaleSo,
       menu: {
         onClick: (info) => {
           switch (info.key) {
@@ -321,13 +322,13 @@ export default () => {
           return undefined;
         },
         items: [
-          access.canCreateEditSo? getItem(
+          access.canCreateEditSo ? getItem(
             'Actions',
             'action-menu',
             null,
             [getItem('New PO', 'newSaleOrder', <PlusCircleOutlined />)],
             'group',
-          ):null,
+          ) : null,
           getItem(
             'Reports',
             'report-menu',
@@ -355,7 +356,8 @@ export default () => {
       link: `${SalePaths.product}/list`,
       icon: productIcon,
     }
-  ]; 
+  ];
+  
 
   return (
     <PageContainer title={false}>
@@ -369,7 +371,7 @@ export default () => {
         access.canAccessARMenuItem ||
         access.canAccessViewMpuMenu ||
 
-        access.canAccessSaleStoreMenuItem||
+        access.canAccessSaleStoreMenuItem ||
         access.canAccessSaleLeadMenu ||
         access.canAccessSaleReportLst ||
         access.canAccessSaleInvoice ||
@@ -379,6 +381,8 @@ export default () => {
           <>
             <Divider />
             <ListMenuComp items={stockMenuItems} />
+            <Divider orientation='left' plain >Supporter</Divider>
+            <Supporter/>
           </>
         )}
     </PageContainer>

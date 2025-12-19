@@ -1,4 +1,4 @@
-import { Delivery, So, SoDeliveryMethod } from '@/services/sale/data';
+import { Delivery, EditSo, So, SoDeliveryMethod } from '@/services/sale/data';
 import { DollarCircleOutlined, EnvironmentOutlined, PaperClipOutlined } from '@ant-design/icons';
 
 import { AddressInfo } from '@/services/crm/data';
@@ -45,6 +45,7 @@ export interface DeliveryInfo {
   deliveryDate?: moment.Moment;
   deliveryMethod?: SoDeliveryMethod;
   address?: AddressInfo;
+  status?: string
 }
 
 const EntryForm: React.FC<Props> = ({ type, id, openInTab, onBack }) => {
@@ -96,6 +97,7 @@ const EntryForm: React.FC<Props> = ({ type, id, openInTab, onBack }) => {
       address: data?.initData?.addressList?.find(
         (it) => (it.id = soDetail.associatedTo.shippingAddress.id),
       ),
+      status: soDetail.status
     });
   }, [state.data?.soDetail]);
 
@@ -133,7 +135,7 @@ const EntryForm: React.FC<Props> = ({ type, id, openInTab, onBack }) => {
       totalAmount: totalAmount,
     });
     actions.listTransportationOffer(defaultDelivery?.deliveryMethod);
-    return () => {};
+    return () => { };
   }, [state.data?.soItems]);
 
   useEffect(() => {
@@ -183,7 +185,7 @@ const EntryForm: React.FC<Props> = ({ type, id, openInTab, onBack }) => {
         return;
       }
       Modal.confirm({
-        title: 'Save Sale Order',
+        title: 'Save Purchase Order',
         content: 'Are you sure?',
         onOk: async () => {
           try {
@@ -221,6 +223,40 @@ const EntryForm: React.FC<Props> = ({ type, id, openInTab, onBack }) => {
       message.error('Invalied Data');
     }
   };
+  
+  const onEdit = async () => {
+    try {
+      Modal.confirm({
+        title: 'Update Purchase Order',
+        content: 'Update date will post to SAP. Are you sure?',
+        onOk: async () => {
+          try {
+            const list = state.data?.deliveryList
+              ?.filter(r => r.deliveryId) // keep only rows with deliveryId
+              ?.map(r => ({
+                deliveryId: r.deliveryId,
+                shipDate: typeof r.deliveryDate === "string"
+                  ? r.deliveryDate
+                  : r.deliveryDate?.toISOString(),
+              }))
+            const payload = { data: list } as unknown as EditSo
+
+            await actions.editSo(payload);
+            onBack?.();
+          } catch (error: any) {
+            if (error.message.indexOf('Direct MC') !== -1) message.error(error.message);
+            else message.error('Failed to save.');
+          }
+        },
+      });
+
+    } catch (error) {
+      console.log("error", error);
+      message.error("Invalid data");
+    }
+  };
+
+
   const onFormvalueChanged = (changedValues: any, values: So) => {
     const { customerId, shippingAddressId, deliveryMethodId, deliveryDate } = changedValues;
 
@@ -297,10 +333,14 @@ const EntryForm: React.FC<Props> = ({ type, id, openInTab, onBack }) => {
                 <Button
                   type="primary"
                   onClick={() => {
-                    onSaveActionHandler(type === 'new');
+                    if (data?.soDetail?.status?.toLowerCase() === 'posted') {
+                      onEdit()
+                    } else {
+                      onSaveActionHandler(type === 'new')
+                    }
                   }}
                 >
-                  {type === 'new' ? 'Save' : 'Edit'}
+                  {type === 'new' ? 'Save' : 'Update'}
                 </Button>
               </FooterToolbar>
             );
@@ -312,7 +352,7 @@ const EntryForm: React.FC<Props> = ({ type, id, openInTab, onBack }) => {
           <Tabs.TabPane
             tab={
               <Space size={0}>
-                <DollarCircleOutlined /> <span>Sale Order</span>
+                <DollarCircleOutlined /> <span>Purchase Order</span>
               </Space>
             }
             key="saleOrder"

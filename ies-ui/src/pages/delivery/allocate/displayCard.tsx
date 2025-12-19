@@ -124,7 +124,7 @@ export const FloatingCard = ({
                 <span style={{ flex: 1 }}>{g.sku_name}</span>
                 <span style={{ width: 60, textAlign: "right",marginRight:35 }}>{g.qty}</span>
                 <span style={{ width: 80, textAlign: "right" }}>
-                  {g.totalVolume.toFixed(2)} m³
+                  {g.totalVolume.toFixed(4)} m³
                 </span>
               </div>
             ))}
@@ -144,7 +144,7 @@ export const FloatingCard = ({
               <span style={{ flex: 1 }}>Total</span>
               <span style={{ width: 60, textAlign: "right",marginRight:35 }}>{totalQty}</span>
               <span style={{ width: 80, textAlign: "right" }}>
-                {totalVolume?.toFixed(2)} m³
+                {totalVolume?.toFixed(4)} m³
               </span>
             </div>
           </>
@@ -177,7 +177,7 @@ export const FloatingCard = ({
                   sum + Number(item.qty ?? 0) * Number(item.volume ?? 0),
                 0
               )
-              .toFixed(2)}{" "}
+              .toFixed(4)}{" "}
             m³
           </span>
         </div>

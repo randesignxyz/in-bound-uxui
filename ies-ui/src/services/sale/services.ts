@@ -25,6 +25,7 @@ import type {
   CloseIndirectSoParams,
   CountStockDto,
   CustomerSaleInfo,
+  EditSo,
   ExchangeRate,
   InitSaleInvoiceParam,
   InitSoParamsType,
@@ -205,6 +206,9 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
   getPackageOffer: findAllService<OfferParams, PackageOffer>(SaleService('get-offer'), actions),
 
   saveSodata: execService<So, { id: number }>(SaleService('save-so'), actions),
+
+  editSodata: execService<EditSo, { id: number }>(SaleService('update_sap_sale_plan'), actions),
+
 
   initTDOData: findMultiService<InitTradeOfferParamsType, {}>(SaleService(), actions),
 

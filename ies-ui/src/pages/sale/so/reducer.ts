@@ -40,6 +40,9 @@ export interface DeliveryEntry {
   remarks?: string;
   default?: boolean;
   itemList: DeliveryItemEntry[];
+  status?:string
+  deliveryId?:number
+  isTBC?:boolean
 }
 
 export interface DeliveryItemEntry {
@@ -51,6 +54,7 @@ export interface DeliveryItemEntry {
   uomName?: string;
   type: string;
   qty: number;
+  deliveryDate?: moment.Moment;
 }
 
 export interface DeliverySoItemEntry {
@@ -71,6 +75,9 @@ export interface DeliverySoItemEntry {
   main?: boolean;
   default?: boolean;
   mainKey?: string;
+  status?:string
+  so_status?:string
+  selectedDeliveryDate?:moment.Moment
 }
 
 export interface InitData {

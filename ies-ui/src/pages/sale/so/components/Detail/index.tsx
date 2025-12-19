@@ -49,7 +49,7 @@ const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
           actions.fetchSo(id);
           modals.hideModal('sap-posting');
           message.success(`So has been posted sucessfully. SAP Doc No: ${rs.data}.`);
-        } catch (e) { 
+        } catch (e) {
           const error = e as { error: string; message: string };
           message.error(error.message);
         }
@@ -168,8 +168,12 @@ const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
           breadcrumb={undefined}
           title={!openInTab && 'PO#'}
           subTitle={!openInTab && state.data?.soDetail?.docEntryNum}
-          content={<OrderFormView soDetail={state.data?.soDetail} />}
-          extra={
+          content={
+            <OrderFormView
+              soDetail={state.data?.soDetail}
+              {...(access.canCreateEditSo ? { actionButtons: buttons } : {})}
+            />
+          } extra={
             access.canCreateEditSo &&
             !openInTab &&
             ['Pending', 'Failed'].some((it) => it === state.data?.soDetail?.status) &&

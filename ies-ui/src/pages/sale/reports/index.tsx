@@ -47,7 +47,7 @@ const Reports: React.FC<Props> = ({ reportName, onClose }) => {
         onCancel={onClose}
       />
       <SaleOrderReport
-        title="Sale Order Report"
+        title="Puchase Order Report"
         width="800px"
         open={reportName === 'sale-order-report'}
         onCancel={onClose}

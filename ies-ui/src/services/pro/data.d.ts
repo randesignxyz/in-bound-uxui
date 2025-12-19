@@ -33,6 +33,7 @@ export interface ItemListItem {
   lastPurchasePrice?: number;
   lastPurchaseCurr?: string;
   itemGroup: {
+    id: number;
     itemGroupName: string;
     selector?: string;
   };
@@ -60,7 +61,7 @@ export interface Requistion {
   items: RequisitionItem[];
   services: RequisitionService[];
   service: boolean;
-  fileIds: string[];
+  fileIds: string[];  
 }
 
 export interface RequisitionItem {
@@ -115,6 +116,7 @@ export interface RequisitionDetailResponse {
   lastModifiedDate?: Moment;
   lastModifiedBy?: string;
   fileIds?: string[];
+  wfSelector?: string;
 }
 
 

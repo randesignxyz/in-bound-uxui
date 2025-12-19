@@ -2,12 +2,12 @@ import React, { useRef, useState } from 'react';
 import PageWrapper from '@/components/PageWrapper';
 import { EmployeeAdvanceSearchParams, EmployeeListItem } from '../data';
 import { EmployeeServices } from '../services';
-import { useAccess } from '@umijs/max';
+import { useAccess, useQuery } from '@umijs/max';
 import DataEntryFormView from './DataEntry';
 import AdvanceEmployeeSearch from './AdvanceEmployeeSearch';
 import ImportFileButton from '@/components/ImportFileButton';
 import UploadData from '@/pages/hrm/employee/upload-data';
-import { Button, Flex, message, Modal, Space } from 'antd';
+import { Button, Flex, message, Modal } from 'antd';
 import { EditOutlined, ExportOutlined, FilterOutlined, SelectOutlined } from '@ant-design/icons';
 import { simpleRequestActions } from '@/services/model';
 import { ImportDataItem, ImportDataResponse } from '@/services/shared/data';
@@ -19,8 +19,8 @@ const Status = ({ text }: { text: string }) => (
 );
 
 interface Props {
-  onAdd?: () => void;
-  onEdit?: (item: EmployeeListItem) => void;
+  onAdd?: (id?: number) => void;
+  onEdit?: (id: number) => void;
 }
 
 const EmployeeList = ({ onAdd, onEdit }: Props) => {
@@ -31,15 +31,16 @@ const EmployeeList = ({ onAdd, onEdit }: Props) => {
   const [filter, setFilter] = useState<TableViewSearchParams<EmployeeAdvanceSearchParams>>({
     criteria: { advanceSearch: { status: 'ALL' } },
   });
-  const [advanceSearchVisible, setAdvanceSearchVisible] = useState(false);
+  // const [advanceSearch, setAdvanceSearch] = useState<{ visible: boolean }>();
   const [modalVisible, setModalVisible] = useState<{ type: 'ADD' | 'EDIT'; payload: EmployeeListItem }>();
-  const [importData, setImportData] = useState<ImportDataResponse>();
+  const [importData, setImportData] = useState<ImportDataResponse>()
   const [loading, setLoading] = useState(false);
-  const [advanceSearchParams, setAdvanceSearchParams] = useState<EmployeeAdvanceSearchParams>({});
-  const { data, isLoading, refetch } = services.list(filter, requestActions);
-
-  const hideModal = () => setModalVisible(undefined);
-
+  const [advanceSearchParams, setAdvanceSearchParams] = useState<EmployeeAdvanceSearchParams>({
+    status: "ACTIVE",
+  });
+  const { data, isLoading, refetch } = useQuery(["list-employee", filter], () => services.list(filter));
+  const [advanceSearch, setAdvanceSearch] = useState<{ visible: boolean }>();
+  const hideModal = (visble?: boolean) => !visble && setModalVisible(undefined);
   const saveEmployeeHandler = async (data: EmployeeListItem) => {
     Modal.confirm({
       title: 'Save employee profiles',
@@ -56,12 +57,12 @@ const EmployeeList = ({ onAdd, onEdit }: Props) => {
     });
   };
 
-  const handleAdvanceSearch = (values: EmployeeAdvanceSearchParams) => {
-    setFilter((prev) => ({
-      criteria: { ...prev.criteria, advanceSearch: values },
-    }));
-    setAdvanceSearchVisible(false);
-  };
+  // const handleAdvanceSearch = (values: EmployeeAdvanceSearchParams) => {
+  //   setFilter((prev) => ({
+  //     criteria: { ...prev.criteria, advanceSearch: values },
+  //   }));
+  //   setAdvanceSearchVisible(false);
+  // };
 
   const actionButtons = [
     access.canAdmin && (
@@ -88,18 +89,7 @@ const EmployeeList = ({ onAdd, onEdit }: Props) => {
   ].filter(Boolean);
 
   return (
-    <div style={{ position: 'relative' }}>
-      <AdvanceEmployeeSearch
-        open={advanceSearchVisible}
-        onSearch={handleAdvanceSearch}
-        onReset={() => {
-          setFilter({ criteria: { advanceSearch: { status: 'ALL' } } });
-          setAdvanceSearchParams({});
-        }}
-        onChange={setAdvanceSearchParams} // update icon dynamically
-        onClose={() => setAdvanceSearchVisible(false)}
-      />
-
+    <div>
       <PageWrapper<EmployeeListItem, EmployeeAdvanceSearchParams, unknown>
         tabRender={(item) =>
           access.canAdmin
@@ -136,19 +126,19 @@ const EmployeeList = ({ onAdd, onEdit }: Props) => {
         listView={{
           type: 'Table',
           title: 'Employees List',
-          advanceSearchButton: [
+          advanceSearchButton: (
             <Button
-              key="advance-search"
               type="link"
-              onClick={() => setAdvanceSearchVisible(true)}
+              onClick={() => setAdvanceSearch({ visible: true })}
               icon={
-                Object.values(advanceSearchParams).some((v) => v !== undefined && v !== null && v !== '')
+                Object.values(advanceSearchParams).some(
+                  (v) => v !== undefined && v !== null && v !== ''
+                )
                   ? <FilterOutlined style={{ color: 'red' }} />
                   : <SelectOutlined />
               }
-            >
-            </Button>,
-          ],
+            />
+          ),
           statuses: [
             { option: { label: 'All', value: 'ALL', default: true } },
             { option: { label: 'Active', value: 'ACTIVE' } },
@@ -224,16 +214,8 @@ const EmployeeList = ({ onAdd, onEdit }: Props) => {
         }}
       />
 
-      {access.canAccessHrESSImportTraing && importData && (
-        <UploadData
-          title="ESS Training List"
-          open={!!importData}
-          datasources={importData}
-          onCancel={() => setImportData(undefined)}
-          onFinish={() => actionRef.current?.reloadAndRest?.()}
-        />
-      )}
-
+      {access.canAccessHrESSImportTraing &&
+        <UploadData title="ESS Training List" onCancel={() => setImportData(undefined)} open={!!importData} datasources={importData} onFinish={()=> {actionRef.current?.reloadAndRest?.()}} />}
       {modalVisible && (
         <DataEntryFormView
           type={modalVisible.type === 'ADD' ? 'CREATE' : 'EDIT'}
@@ -242,8 +224,23 @@ const EmployeeList = ({ onAdd, onEdit }: Props) => {
           onSave={saveEmployeeHandler}
         />
       )}
+      <AdvanceEmployeeSearch
+        title="Advance Search"
+        closable
+        open={advanceSearch?.visible}
+        dataItem={modalVisible?.payload}
+        onClose={() => {
+          setAdvanceSearch({ visible: false });
+        }}
+        onReset={() => {
+          actionRef.current?.reloadAndRest?.();
+        }}
+        onSearch={(data) => {
+          setAdvanceSearchParams((v) => ({ ...v, ...data, status: v.status }));
+          actionRef.current?.reloadAndRest?.();
+        }}
+      />
     </div>
   );
 };
-
 export default EmployeeList;

@@ -2,24 +2,40 @@ import { LookupDataItem } from "@/services/data"
 import { Moment } from "moment"
 
 export type StaffProposalListItem = {
-    id: number
-    processInstId: string
-    formNo: string
-    requestedBy: string
-    requestedDate: Moment
-    status: string
-    empName: string
-    jobTitle: string
-    bu: string
-    department: string
-    reportTo: string
-}
+  id: number;
+  processInstId: string;
+  formNo: string;
+  requestedBy: string;
+  requestedDate: Moment;
+  status: string;
+  empName: string;
+  jobTitle: string;
+  bu: string;
+  department: string;
+  reportTo: string;
+};
+
+export type AdvanceSearchParams = {
+  buIds?: number[];
+  deptIds?: number[];
+  integratedStatus?: string;
+  status?: string;
+};
+
+
 
 
 export type SearchParams = {
-    keyword?: string,
-    status?: string,
-}
+  keyword?: string;
+  status?: string;
+  advanceSearch?: {
+    buIds?: number[];
+    deptIds?: number[];
+    integratedStatus?: string;
+    status?: string;
+  };
+};
+
 
 export type RequestedItem = {
     checked: boolean;

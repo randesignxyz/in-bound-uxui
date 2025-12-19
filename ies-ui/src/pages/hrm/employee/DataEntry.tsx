@@ -59,13 +59,11 @@ const EmployeeForm = ({ dataItem, onSubmit }: Props) => {
       });
     }
   };
-
   const handleSubmit = async (values: any) => {
     if (onSubmit) {
       await onSubmit(values);
     }
   };
-
   return (
     <Card title="Employee Form" bordered>
       <ProForm

@@ -8,6 +8,7 @@ import {
   ProFormGroup,
   ProFormSelect,
   ProFormTextArea,
+  ModalFormProps,
 } from '@ant-design/pro-components';
 import { message, Modal, Space } from 'antd';
 import { useForm } from 'antd/lib/form/Form';

@@ -1323,8 +1323,10 @@ export default () => {
                               ? dayjs(item.deliveryDate).format('DD-MMM-YYYY')
                               : '-'}
                           </Descriptions.Item>
-                          <Descriptions.Item label="DO No" style={{ fontWeight: 'bolder' }}>
-                            {item.id}
+                            <Descriptions.Item label="DO No" style={{ fontWeight: 'bolder' }}>
+                            <a>
+                              <Typography.Link strong copyable >{item.id || '-'}</Typography.Link>
+                            </a>
                           </Descriptions.Item>
                           <Descriptions.Item label="Shipping Address" span={1}
                           >

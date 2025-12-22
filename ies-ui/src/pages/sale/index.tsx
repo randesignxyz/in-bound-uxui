@@ -325,7 +325,7 @@ export default () => {
             'Actions',
             'action-menu',
             null,
-            [getItem('New SO', 'newSaleOrder', <PlusCircleOutlined />)],
+            [getItem('New Sale Order', 'newSaleOrder', <PlusCircleOutlined />)],
             'group',
           ):null,
           getItem(

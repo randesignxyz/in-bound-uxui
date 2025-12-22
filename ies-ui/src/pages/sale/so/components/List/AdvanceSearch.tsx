@@ -68,7 +68,7 @@ const AdvanceSarch: React.FC<AdvanceSearchProps> = ({
               return { value: it.code, label: it.name };
             })}
         />
-        <ProFormSelect
+        {/* <ProFormSelect
           name={"saleArea"}
           label={"Area"}
           mode='multiple'
@@ -76,7 +76,7 @@ const AdvanceSarch: React.FC<AdvanceSearchProps> = ({
               const data = await CrmServiceAPI(requestActions).listLookupData(["CUSTOMER_DIVISION"]);
               return data?.map(p=>({ value:p.id, label:p.name }));
           }}
-        />
+        /> */}
         <ProFormDateRangePicker label="Ordered Date Start - Ordered End" name="orderedDate" />
         <ProFormDateRangePicker label="Posted Start - Posted End" name="postedDate" />
         <ProFormCheckbox name="hasAttachment">Has Attachment</ProFormCheckbox>

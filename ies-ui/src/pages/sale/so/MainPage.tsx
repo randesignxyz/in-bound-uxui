@@ -1,13 +1,13 @@
 
 import '@/pages/index.less'
-import { Badge, Spin, Typography } from "antd"
+import { Badge, Button, Form, Select, Space, Spin, Typography } from "antd"
 import PageWrapper from "@/components/PageWrapper"
 import { SoAdvanceSearchParams, SoItemLess } from "@/services/sale/data"
-import { ExportOutlined, EyeOutlined, FileOutlined, PaperClipOutlined, PlusCircleOutlined, SyncOutlined } from "@ant-design/icons"
+import { ExportOutlined, EyeOutlined, FileOutlined, FileSearchOutlined, PaperClipOutlined, PlusCircleOutlined, SyncOutlined } from "@ant-design/icons"
 import { Model } from "./model"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { FetchPagingParams } from "@/components/DataCrud/TableView"
-import { ActionType } from "@ant-design/pro-components"
+import { ActionType, CheckCard, ProForm, ProFormSelect } from "@ant-design/pro-components"
 import { useAccess, useQuery } from "@umijs/max"
 import CustomerDetailView from "@/pages/crm/customer/components/Detail"
 import { formatDate, formatDateTime } from "@/pages/utils"
@@ -16,13 +16,18 @@ import StatusBar from "./components/List/StatusBar"
 import ViewWrapper from './ViewWrapper'
 import QuickView from './components/List/QickView'
 import AdvanceSearch from './components/List/AdvanceSearch'
+import { AllocateServiceAPI } from '@/pages/delivery/allocate/service'
+import { simpleRequestActions } from '@/services/model'
+import { CrmServiceAPI } from '@/services/crm/services'
 
 type FilterType = SoAdvanceSearchParams & {
     searchValue?: string; status?: string;
 }
 export default () => {
+    const requestActions = simpleRequestActions();
     const { state, actions, modals } = Model();
     const actionRef = useRef<ActionType>();
+    const [form] = Form.useForm();
     const access = useAccess();
     const [filter, setFilter] = useState<FetchPagingParams<SoAdvanceSearchParams>>({
         criteria: {
@@ -45,16 +50,19 @@ export default () => {
         actions.initilizeData();
     }, []);
 
+
     useEffect(() => {
         const pendingCount = filter.criteria?.customerType == 'ALL' ? (state.data?.soSummary?.pendingDirect || 0) + (state.data?.soSummary?.pendingIndirect || 0) :
             filter.criteria?.customerType == 'Direct' ? state.data?.soSummary?.pendingDirect : state.data?.soSummary?.pendingIndirect
         statusBarRef.current?.refresh(pendingCount, state.data?.soSummary?.failed)
     }, [state.data?.soSummary])
+
+
     return <Spin spinning={false}>
         <PageWrapper<SoItemLess, FilterType, {}>
             onNewRender={(key) => access.canCreateEditSo && <ViewWrapper openInTab addNew tabKey={key} />}
-            tabRender={item =>   access.canCreateEditSo?[
-                {   action: 'add', tabIcon: <FileOutlined />, panel: ({ key }) => <ViewWrapper addNew openInTab tabKey={key.toString()} />, tabLabel: 'New PO' },
+            tabRender={item => access.canCreateEditSo ? [
+                { action: 'add', tabIcon: <FileOutlined />, panel: ({ key }) => <ViewWrapper addNew openInTab tabKey={key.toString()} />, tabLabel: 'New PO' },
                 {
                     action: 'view', value: item?.poNo,
                     panel: () => <ViewWrapper openInTab id={item?.id} />,
@@ -65,8 +73,8 @@ export default () => {
                     panel: () => <CustomerDetailView id={item?.customerId} openInTab getMenuItems={() => []} />,
                     tabLabel: <Badge dot><Typography.Text>{item?.customerCode}</Typography.Text>  </Badge>,
                 }
-            ]:[
-                 {
+            ] : [
+                {
                     action: 'view', value: item?.poNo,
                     panel: () => <ViewWrapper openInTab id={item?.id} />,
                     tabLabel: item?.poNo
@@ -84,7 +92,7 @@ export default () => {
                     icon: <SyncOutlined />,
                     type: 'link',
                     disabled: !access.canCreateEditSo,
-                    onClick: async() => {
+                    onClick: async () => {
                         await actions.syncFromSFA()
                         actionRef.current?.reload(true)
                     }
@@ -98,23 +106,23 @@ export default () => {
                 onStatusRender: <StatusBar ref={statusBarRef} onCustomerTypeChanged={(value) => {
                     setFilter(v => ({
                         ...v,
-
                         criteria: {
                             ...v.criteria,
                             customerType: value
                         }
                     }))
                     actionRef.current?.reload(true)
-                }} onStatusChanged={(value) => {
-                    setFilter(v => ({
-                        ...v,
-                        criteria: {
-                            ...v.criteria,
-                            status: value
-                        }
-                    }))
-                    actionRef.current?.reload(true)
-                }} />,
+                }}
+                    onStatusChanged={(value) => {
+                        setFilter(v => ({
+                            ...v,
+                            criteria: {
+                                ...v.criteria,
+                                status: value
+                            }
+                        }))
+                        actionRef.current?.reload(true)
+                    }} />,
                 onRefresh: refetch,
                 onFilter: (params, page, sort) => {
                     setFilter(v => (
@@ -129,10 +137,104 @@ export default () => {
                         }
                     ))
                 },
+                advanceSearchButton: <Space align='center'>
+                    <Button style={{ marginTop: -6 }} icon={<FileSearchOutlined />}
+                        onClick={() => modals.showModal('advanceSearch')}
+                    />
+                    {/* <div className='my-checkcard-so'>
+                        <CheckCard.Group
+                            defaultValue={true}
+                            onChange={(e) => (
+                                setFilter((o) => ({
+                                    criteria: {
+                                        ...o.criteria,
+                                        myTask: e
+                                    }
+                                }))
+                            )}
+                        >
+                            <CheckCard
+                                title={"All"}
+                                size='small'
+                                value={false}
+                            />
+                            <CheckCard
+                                title={"My Tasks"}
+                                size='small'
+                                value={true}
+                            />
+                        </CheckCard.Group>
+                    </div> */}
+                    {/* <Select
+                        popupMatchSelectWidth={400}
+                        style={{ width: '250px' }}
+                        options={initData?.subContractTypeList?.map((it) => {
+                            return { value: it.id, label: [it.budgetCode, it.name].join('-') };
+                        })}
+                    /> */}
+                    <ProForm
+                        form={form}
+                        submitter={false}
+
+                    >
+
+                        <ProFormSelect
+                            name="saleArea"
+                            placeholder={"Area"}
+                            mode="multiple"
+                            width={250}
+                            request={async () => {
+                                const res = await AllocateServiceAPI(requestActions).list_area_so();
+                                if (!Array.isArray(res)) return [];
+
+                                const options = res.map((a: any) => ({
+                                    value: Number(a.division_id ?? a.di),
+                                    label: (a.division_name ?? a.name)
+                                        ?.replace(/^S&D\s*/i, '')
+                                        .trim(),
+                                    isDefault: a.isdefault === '1' || a.is_default === '1',
+                                }));
+
+                                const defaultAreaIds = options
+                                    .filter(o => o.isDefault)
+                                    .map(o => o.value);
+
+                                if (defaultAreaIds.length > 0) {
+                                    form.setFieldsValue({ saleArea: defaultAreaIds });
+
+                                    setFilter(v => ({
+                                        ...v,
+                                        criteria: {
+                                            ...v.criteria,
+                                            saleArea: defaultAreaIds,
+                                        },
+                                    }));
+                                }
+
+                                return options;
+                            }}
+                            fieldProps={{
+                                onChange: (val: number[]) => {
+                                    setFilter(v => ({
+                                        ...v,
+                                        criteria: {
+                                            ...v.criteria,
+                                            saleArea: val,
+                                        },
+                                    }));
+                                },
+                            }}
+                        />
+
+                    </ProForm>
+
+
+
+                </Space>,
+
                 props: {
                     dataSource: data?.items,
                     loading: isFetching,
-
                     actionRef: actionRef,
                     pagination: {
                         total: data?.total
@@ -263,11 +365,16 @@ export default () => {
             salespersons={state.data?.initData?.salespersons}
             lookDataList={state.data?.initData?.lookDataList}
             onSearch={(data) => {
+                // console.log(data);
+                // console.log( data.saleArea.length);
+
+
                 setFilter(v => ({
                     ...v,
                     criteria: {
                         ...v.criteria,
-                        ...data
+                        ...data,
+                        // myTask: (data.saleArea?.length > 0) ? false : data?.myTask
                     }
                 }))
                 actionRef.current?.reload?.(true);

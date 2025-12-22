@@ -173,7 +173,7 @@ export default ({ getMenuItems }: CustomerActionController) => {
                         />,
                     ] : []
                 ,
-                actions: access.crmReadOnly ? [] : [
+                actions: [
                     {
                         key: 'EXPORT',
                         label: 'Export',

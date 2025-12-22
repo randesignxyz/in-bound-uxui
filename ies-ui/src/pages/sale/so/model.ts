@@ -149,6 +149,13 @@ export const Model = () => {
     });
   };
 
+  const loadListArea = () => {
+  return saleServices.listArea().then((data) => {
+    dispatch({ type: 'setListArea', payload: data });
+    return data; // 🔑 REQUIRED
+  });
+};
+
   const doClearSoItem = () => {
     // if (state.data?.so?.items) {
     // }
@@ -558,6 +565,7 @@ export const Model = () => {
       listTransportationOffer,
       getSoItems,
       loadListItem,
+      loadListArea
     },
     isLoading: actions.isLoading,
     modals: {

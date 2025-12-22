@@ -70,7 +70,7 @@ export default () => {
     dnStatus: 'pending'
   });
   const [MTSearch, setMTSearch] = useState<{ status: string; startDate?: string, endDate?: string }>({
-    status: 'ALL',
+    status: 'pending',
   });
   const [dnSearch, setDnSearch] = useState<{ status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string, sap_delivery_date: string | null, sap_from_date?: string, sap_to_date?: string, customer?: string, area?: string }>({
     status: 'posted',
@@ -117,6 +117,12 @@ export default () => {
   const [communeOptions, setCommuneOptions] = useState<{ value: number; label: string }[]>([]);
   const [areaOptions, setAreaOptions] = useState<any[]>([]);
   const [areaReady, setAreaReady] = useState(false);
+  const [claimOpen, setClaimOpen] = useState(false);
+  const [useExisting, setUseExisting] = useState(false);
+  const [selectedClaimedLine, setSelectedClaimedLine] = useState<string | null>(null);
+  const [claimedLines, setClaimedLines] = useState<string[]>([]);
+  const [claimIds, setClaimIds] = useState<number[]>([]);
+  const [selectedArea, setSelectedArea] = useState<number[]>([]);
 
   useEffect(() => {
     if (state?.selectedRows) {
@@ -270,48 +276,39 @@ export default () => {
     });
   };
 
-  // const handleClaim = async (id: number) => {
+  // const handleClaim = async (ids: number | number[]) => {
+  //   // Normalize ids to an array
+  //   const idArray = Array.isArray(ids) ? ids : [ids];
+  //   const claimed_line = await services.list_claimed_line();
+  //   console.log('claimed_line', claimed_line)
   //   Modal.confirm({
-  //     title: 'Claim',
+  //     title: 'Pick',
   //     content: 'Are you sure?',
   //     onOk: async () => {
+  //       try {
+  //         await services.ClaimDn(idArray, access.currentUser?.login, 'Pick', 'Pick DN') as {
+  //           data: string;
+  //           message: string;
+  //         }
 
-  //       await services.ClaimDn(id, access.currentUser?.login, 'Claim', 'Claim DN') as {
-  //         data: string;
-  //         message: string;
+  //         // Reload table and show success message
+  //         actionRef.current?.reloadAndRest?.();
+  //         message.success('Updated successfully');
+  //         setSelectedRowKeys([])
+  //         setSelectedRows([])
+  //       } catch (error) {
+  //         message.error('Failed to update');
+  //         console.error(error);
   //       }
-  //       actionRef.current?.reloadAndRest?.();
-  //       message.success('Updated successfully');
   //     },
   //   });
-  // }
+  // };
 
   const handleClaim = async (ids: number | number[]) => {
-    // Normalize ids to an array
-    const idArray = Array.isArray(ids) ? ids : [ids];
-    console.log('idArray', idArray)
-    Modal.confirm({
-      title: 'Pick',
-      content: 'Are you sure?',
-      onOk: async () => {
-        try {
-          // Loop through each id
-          await services.ClaimDn(idArray, access.currentUser?.login, 'Pick', 'Pick DN') as {
-            data: string;
-            message: string;
-          }
-
-          // Reload table and show success message
-          actionRef.current?.reloadAndRest?.();
-          message.success('Updated successfully');
-          setSelectedRowKeys([])
-          setSelectedRows([])
-        } catch (error) {
-          message.error('Failed to update');
-          console.error(error);
-        }
-      },
-    });
+    const claimed_line = await services.list_claimed_line()
+    setClaimIds(Array.isArray(ids) ? ids : [ids]);
+    setClaimedLines(claimed_line);
+    setClaimOpen(true);
   };
 
   const handleUnClaim = async (id: number[]) => {
@@ -677,6 +674,7 @@ export default () => {
           ...v,
           area: defaultAreaIds,
         }));
+        setSelectedArea(defaultAreaIds)
       }
 
       setAreaReady(true);
@@ -1324,7 +1322,9 @@ export default () => {
                               : '-'}
                           </Descriptions.Item>
                           <Descriptions.Item label="DO No" style={{ fontWeight: 'bolder' }}>
-                            {item.id}
+                            <a>
+                              <Typography.Link strong copyable >{item.id || '-'}</Typography.Link>
+                            </a>
                           </Descriptions.Item>
                           <Descriptions.Item label="Shipping Address" span={1}
                           >
@@ -2242,7 +2242,7 @@ export default () => {
                           name="status"
                           allowClear
                           showSearch
-                          initialValue="ALL"
+                          initialValue="pending"
                           onChange={(val: string) => {
                             setMTSearch((v) => ({ ...v, status: val }))
                             actionRef.current?.reloadAndRest?.();
@@ -2444,7 +2444,7 @@ export default () => {
                                 { value: 'all', label: 'ALL' },
                                 { value: 'as_of_now', label: 'As Date' },
                                 { value: 'today', label: 'Today' },
-                                { value: 'unplan', label: 'Unclear Plan' },
+                                { value: 'unplan', label: 'TBC' },
                               ]}
                               width={150}
                               showSearch
@@ -2474,8 +2474,8 @@ export default () => {
                             {areaReady && (
                               <ProFormSelect
                                 name="area_dn"
-                                key={JSON.stringify(dnSearch.area)}
-                                initialValue={dnSearch.area}
+                                key={JSON.stringify(selectedArea)}
+                                initialValue={selectedArea}
                                 mode="multiple"
                                 placeholder="Area"
                                 showSearch
@@ -2487,6 +2487,7 @@ export default () => {
                                     ...v,
                                     area: val,
                                   }));
+                                  setSelectedArea(val)
                                   actionRef.current?.reloadAndRest?.();
                                 }}
                               />
@@ -2702,7 +2703,7 @@ export default () => {
                                   { value: 'all', label: 'ALL' },
                                   { value: 'as_of_now', label: 'As Date' },
                                   { value: 'today', label: 'Today' },
-                                  { value: 'unplan', label: 'Unclear Plan' },
+                                  { value: 'unplan', label: 'TBC' },
                                 ]}
                                 width={150}
                                 showSearch
@@ -2887,7 +2888,7 @@ export default () => {
 
 
 
-      </Spin>
+      </Spin> 
       <DrawerForm
         open={drawerOpen.visible}
         id={drawerOpen.id}
@@ -2965,6 +2966,49 @@ export default () => {
         setSortConfig={setSortConfig}
         columns={sortableColumns}
       />
+      <Modal
+        open={claimOpen}
+        title="Pick"
+        onCancel={() => {
+          setClaimIds([])
+          setClaimedLines([])
+          setClaimOpen(false)
+        }}
+        onOk={async () => {
+          await services.ClaimDn(
+            claimIds,
+            access.currentUser?.login,
+            'Pick',
+            'Pick DN',
+            useExisting ? selectedClaimedLine : null
+          );
+          actionRef.current?.reloadAndRest?.();
+          message.success('Updated successfully');
+          setClaimOpen(false);
+          setClaimIds([])
+          setClaimedLines([])
+          setSelectedRowKeys([])
+          setSelectedRows([])
+        }}
+      >
+        <Checkbox
+          checked={useExisting}
+          onChange={e => setUseExisting(e.target.checked)}
+        >
+          Use existing pick
+        </Checkbox>
+
+        {useExisting && (
+          <Select
+            style={{ width: '100%', marginTop: 12 }}
+            placeholder="Select pick"
+            options={claimedLines.map(c => ({ label: c.claimed_line, value: c.claimed_line }))}
+            value={selectedClaimedLine}
+            onChange={setSelectedClaimedLine}
+          />
+        )}
+      </Modal >
+
     </>
   );
 };

@@ -133,6 +133,7 @@ export type Action =
   | { type: 'setCustomerSaleInfo'; payload: CustomerSaleInfo }
   | { type: 'setTransportations'; payload: PackageOffer[] }
   | { type: 'setSoSummary'; payload: SoSummary }
+  | { type: 'setListArea'; payload: {} }
   // | { type: 'initUom'; payload: SaveUoM[] }
   | {
       type: 'setAttachments';
@@ -316,6 +317,13 @@ export const reducer = (state: State, action: Action): State => {
         data: {
           ...state.data,
           soSummary: action.payload,
+        },
+      };
+      case 'setListArea':
+      return {
+        ...state,
+        data: {
+          ...state.data,
         },
       };
     case 'setAttachments':

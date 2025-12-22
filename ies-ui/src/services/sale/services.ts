@@ -177,6 +177,10 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
     SaleService('list-so'),
     actions,
   ),
+  listArea: findAllService<{ searchValue?: string; sort?: Record<string, SortOrder> }, SoItemLess>(
+    SaleService('list-area'),
+    actions,
+  ),
   listSoDelivery: findPagingService<
     { searchValue?: string; sort?: Record<string, SortOrder> },
     SoDeliveryDetail

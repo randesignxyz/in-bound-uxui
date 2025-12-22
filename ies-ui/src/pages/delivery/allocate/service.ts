@@ -64,11 +64,11 @@ const AllocateAction = {
         actionName: 'sync-allocate',
         payload: {}
     }),
-    claimDn: (sales_planid: number[], claimed_by?: string, action?: string, activities_name?: string): ServiceApiType<{ sales_planid: number[], claimed_by?: string, action?: string, activities_name?: string }> => ({
+    claimDn: (sales_planid: number[], claimed_by?: string, action?: string, activities_name?: string,claimed_line?:string|null): ServiceApiType<{ sales_planid: number[], claimed_by?: string, action?: string, activities_name?: string,claimed_line?:string|null }> => ({
         type: 'EXEC',
         endpoint: 'DELIVERY',
         actionName: 'claim-dn',
-        payload: { sales_planid, claimed_by, action, activities_name }
+        payload: { sales_planid, claimed_by, action, activities_name,claimed_line }
     }),
     getActivities: (dnID: number): ServiceApiType<{ dnID: number }> => ({
         type: 'LIST_QUERY',
@@ -130,6 +130,18 @@ const AllocateAction = {
         actionName: 'list-area',
         payload: {},
     }),
+    lisAreaSo: (): ServiceApiType<{}> => ({
+        type: 'LIST_QUERY',
+        endpoint: 'SALE',
+        actionName: 'list-area',
+        payload: {},
+    }),
+    lisClaimedLine: (): ServiceApiType<{}> => ({
+        type: 'LIST_QUERY',
+        endpoint: 'DELIVERY',
+        actionName: 'list-claimed-line',
+        payload: {},
+    }),
 }
 
 export const AllocateServiceAPI = (requestAction: RequestActions) => {
@@ -157,8 +169,8 @@ export const AllocateServiceAPI = (requestAction: RequestActions) => {
         syncAllocate: () =>
             singleRequest<{ data: string, message: string }>(AllocateAction.syncAllocate())(requestAction),
 
-        ClaimDn: (sales_planid: number[], claimed_by?: string, action?: string, activities_name?: string) =>
-            singleRequest<{ data: string, message: string }>(AllocateAction.claimDn(sales_planid, claimed_by, action, activities_name))(requestAction),
+        ClaimDn: (sales_planid: number[], claimed_by?: string, action?: string, activities_name?: string,claimed_line?:string|null) =>
+            singleRequest<{ data: string, message: string }>(AllocateAction.claimDn(sales_planid, claimed_by, action, activities_name,claimed_line))(requestAction),
 
         getActivities: (dnID: number) =>
             singleRequest<SOAllocateActivities>(AllocateAction.getActivities(dnID))(
@@ -198,6 +210,14 @@ export const AllocateServiceAPI = (requestAction: RequestActions) => {
             >,
         list_area: () =>
             singleRequest<AreaList>(AllocateAction.lisArea())(
+                requestAction
+            ),
+        list_area_so: () =>
+            singleRequest<AreaList>(AllocateAction.lisAreaSo())(
+                requestAction
+            ),
+        list_claimed_line: () =>
+            singleRequest<AreaList>(AllocateAction.lisClaimedLine())(
                 requestAction
             ),
     }

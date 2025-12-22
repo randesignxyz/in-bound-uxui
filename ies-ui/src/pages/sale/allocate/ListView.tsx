@@ -70,9 +70,9 @@ export default () => {
     dnStatus: 'pending'
   });
   const [MTSearch, setMTSearch] = useState<{ status: string; startDate?: string, endDate?: string }>({
-    status: 'ALL',
+    status: 'pending',
   });
-  const [dnSearch, setDnSearch] = useState<{ status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string, sap_delivery_date: string | null, sap_from_date?: string, sap_to_date?: string,customer?:string }>({
+  const [dnSearch, setDnSearch] = useState<{ status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string, sap_delivery_date: string | null, sap_from_date?: string, sap_to_date?: string, customer?: string, area?: string }>({
     status: 'posted',
     dnStatus: 'open',
     sap_delivery_date: 'as_of_now',
@@ -95,7 +95,7 @@ export default () => {
   });
   const [activities, setActivities] = useState<SOAllocateActivities[]>([]);
   const [hisSearch, setHisSearch] = useState<{
-    sap_delivery_date: string | null; status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string, sap_from_date?: string, sap_to_date?: string,customer?:string
+    sap_delivery_date: string | null; status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string, sap_from_date?: string, sap_to_date?: string, customer?: string, area?: string
   }>({
     status: 'posted',
     dnStatus: 'open',
@@ -115,6 +115,14 @@ export default () => {
   const [provinceOptions, setProvinceOptions] = useState<{ value: number; label: string }[]>([]);
   const [districtOptions, setDistrictOptions] = useState<{ value: number; label: string }[]>([]);
   const [communeOptions, setCommuneOptions] = useState<{ value: number; label: string }[]>([]);
+  const [areaOptions, setAreaOptions] = useState<any[]>([]);
+  const [areaReady, setAreaReady] = useState(false);
+  const [claimOpen, setClaimOpen] = useState(false);
+  const [useExisting, setUseExisting] = useState(false);
+  const [selectedClaimedLine, setSelectedClaimedLine] = useState<string | null>(null);
+  const [claimedLines, setClaimedLines] = useState<string[]>([]);
+  const [claimIds, setClaimIds] = useState<number[]>([]);
+  const [selectedArea, setSelectedArea] = useState<number[]>([]);
 
   useEffect(() => {
     if (state?.selectedRows) {
@@ -268,48 +276,39 @@ export default () => {
     });
   };
 
-  // const handleClaim = async (id: number) => {
+  // const handleClaim = async (ids: number | number[]) => {
+  //   // Normalize ids to an array
+  //   const idArray = Array.isArray(ids) ? ids : [ids];
+  //   const claimed_line = await services.list_claimed_line();
+  //   console.log('claimed_line', claimed_line)
   //   Modal.confirm({
-  //     title: 'Claim',
+  //     title: 'Pick',
   //     content: 'Are you sure?',
   //     onOk: async () => {
+  //       try {
+  //         await services.ClaimDn(idArray, access.currentUser?.login, 'Pick', 'Pick DN') as {
+  //           data: string;
+  //           message: string;
+  //         }
 
-  //       await services.ClaimDn(id, access.currentUser?.login, 'Claim', 'Claim DN') as {
-  //         data: string;
-  //         message: string;
+  //         // Reload table and show success message
+  //         actionRef.current?.reloadAndRest?.();
+  //         message.success('Updated successfully');
+  //         setSelectedRowKeys([])
+  //         setSelectedRows([])
+  //       } catch (error) {
+  //         message.error('Failed to update');
+  //         console.error(error);
   //       }
-  //       actionRef.current?.reloadAndRest?.();
-  //       message.success('Updated successfully');
   //     },
   //   });
-  // }
+  // };
 
   const handleClaim = async (ids: number | number[]) => {
-    // Normalize ids to an array
-    const idArray = Array.isArray(ids) ? ids : [ids];
-    console.log('idArray', idArray)
-    Modal.confirm({
-      title: 'Pick',
-      content: 'Are you sure?',
-      onOk: async () => {
-        try {
-          // Loop through each id
-          await services.ClaimDn(idArray, access.currentUser?.login, 'Pick', 'Pick DN') as {
-            data: string;
-            message: string;
-          }
-
-          // Reload table and show success message
-          actionRef.current?.reloadAndRest?.();
-          message.success('Updated successfully');
-          setSelectedRowKeys([])
-          setSelectedRows([])
-        } catch (error) {
-          message.error('Failed to update');
-          console.error(error);
-        }
-      },
-    });
+    const claimed_line = await services.list_claimed_line()
+    setClaimIds(Array.isArray(ids) ? ids : [ids]);
+    setClaimedLines(claimed_line);
+    setClaimOpen(true);
   };
 
   const handleUnClaim = async (id: number[]) => {
@@ -648,6 +647,48 @@ export default () => {
     });
   }
 
+  useEffect(() => {
+    const loadDefaultAreas = async () => {
+      const res = await services.list_area();
+      if (!Array.isArray(res)) return;
+
+      const options = res.map((a: any) => ({
+        value: Number(a.division_id),
+        label: a.division_name.replace(/^S&D\s*/i, '').trim(),
+        isDefault: a.isdefault === '1' || a.is_default === '1',
+      }));
+
+      setAreaOptions(options);
+
+      const defaultAreaIds = options
+        .filter(o => o.isDefault)
+        .map(o => o.value);
+
+      if (defaultAreaIds.length > 0) {
+        form.setFieldsValue({
+          area_dn: defaultAreaIds,
+          area_his: defaultAreaIds,
+        });
+
+        setDnSearch((v: any) => ({
+          ...v,
+          area: defaultAreaIds,
+        }));
+        setSelectedArea(defaultAreaIds)
+      }
+
+      setAreaReady(true);
+
+      setTimeout(() => {
+        actionRef.current?.reloadAndRest?.();
+      }, 0);
+    };
+
+    loadDefaultAreas();
+  }, []);
+
+
+
   const onRequestDNDeatilHandler = async (
     params: TableViewSearchParams<AllocateSOAdvanceParams>
   ): Promise<Paging<DNList>> => {
@@ -675,7 +716,8 @@ export default () => {
         filterPass: "Unclaimed",
         sap_from_date: dnSearch.sap_from_date,
         sap_to_date: dnSearch.sap_to_date,
-        customer:dnSearch.customer
+        customer: dnSearch.customer,
+        area: dnSearch.area
       });
 
       if (!Array.isArray(list)) throw new Error('Unexpected response format');
@@ -748,7 +790,8 @@ export default () => {
         dnStatus: hisSearch.dnStatus,
         sap_from_date: hisSearch.sap_from_date,
         sap_to_date: hisSearch.sap_to_date,
-        customer:hisSearch.customer
+        customer: hisSearch.customer,
+        area: hisSearch.area
       });
 
       if (!Array.isArray(list)) throw new Error('Unexpected response format');
@@ -1025,6 +1068,13 @@ export default () => {
     ...(advanceSearchParams.filter !== 'HIS'
       ? [
         {
+          title: 'Area',
+          dataIndex: 'division',
+          width: 150,
+          render: (value: string) =>
+            value?.replace(/^S&D\s*/i, ''),
+        },
+        {
           title: 'District', dataIndex: 'district', width: 150,
           // sorter: {
           //   compare: (a, b) => (a.district ?? '').localeCompare(b.district ?? ''),
@@ -1051,7 +1101,7 @@ export default () => {
               return sum + volume * qty;
             }, 0);
 
-            return `${total.toFixed(2)} m³`
+            return `${total.toFixed(4)} m³`
           }
         },
         {
@@ -1272,7 +1322,9 @@ export default () => {
                               : '-'}
                           </Descriptions.Item>
                           <Descriptions.Item label="DO No" style={{ fontWeight: 'bolder' }}>
-                            {item.id}
+                            <a>
+                              <Typography.Link strong copyable >{item.id || '-'}</Typography.Link>
+                            </a>
                           </Descriptions.Item>
                           <Descriptions.Item label="Shipping Address" span={1}
                           >
@@ -2190,7 +2242,7 @@ export default () => {
                           name="status"
                           allowClear
                           showSearch
-                          initialValue="ALL"
+                          initialValue="pending"
                           onChange={(val: string) => {
                             setMTSearch((v) => ({ ...v, status: val }))
                             actionRef.current?.reloadAndRest?.();
@@ -2392,11 +2444,56 @@ export default () => {
                                 { value: 'all', label: 'ALL' },
                                 { value: 'as_of_now', label: 'As Date' },
                                 { value: 'today', label: 'Today' },
-                                { value: 'unplan', label: 'Unclear Plan' },
+                                { value: 'unplan', label: 'TBC' },
                               ]}
                               width={150}
                               showSearch
                             />
+                            {/* <ProFormSelect
+                              width={200}
+                              name="area_dn"
+                              placeholder="Area"
+                              showSearch
+                              allowClear
+                              mode="multiple"
+                              request={async () => {
+                                const data = await services.list_area();
+                                return data.map((obj: any) => ({
+                                  value: obj.division_id,
+                                  label: obj.division_name,
+                                }));
+                              }}
+                              onChange={(val?: string) => {
+                                setDnSearch(v => ({
+                                  ...v,
+                                  area: val,
+                                }));
+                                actionRef.current?.reloadAndRest?.();
+                              }}
+                            /> */}
+                            {areaReady && (
+                              <ProFormSelect
+                                name="area_dn"
+                                key={JSON.stringify(selectedArea)}
+                                initialValue={selectedArea}
+                                mode="multiple"
+                                placeholder="Area"
+                                showSearch
+                                allowClear
+                                width={200}
+                                options={areaOptions}   // ✅ NOT request
+                                onChange={(val: number[]) => {
+                                  setDnSearch(v => ({
+                                    ...v,
+                                    area: val,
+                                  }));
+                                  setSelectedArea(val)
+                                  actionRef.current?.reloadAndRest?.();
+                                }}
+                              />
+                            )}
+
+
                             <ProFormDateRangePicker
                               name="sap_delivery_range_dn"
                               placeholder={['From Date', 'To Date']}
@@ -2606,7 +2703,7 @@ export default () => {
                                   { value: 'all', label: 'ALL' },
                                   { value: 'as_of_now', label: 'As Date' },
                                   { value: 'today', label: 'Today' },
-                                  { value: 'unplan', label: 'Unclear Plan' },
+                                  { value: 'unplan', label: 'TBC' },
                                 ]}
                                 width={150}
                                 showSearch
@@ -2688,34 +2785,34 @@ export default () => {
                                 mode="multiple"
                               />
                               <ProFormSelect
-                              placeholder="Customer"
-                              name="customer_his"
-                              showSearch
-                              debounceTime={200}
-                              mode="multiple"
-                              allowClear
-                              width={300}
-                              request={async ({ keyWords }) => {
-                                const res = await services.pageCustomer({
-                                  criteria: {
-                                    searchValue: keyWords,
-                                  },
-                                  pagination: {
-                                    current: 1,
-                                    pageSize: 20,
-                                  },
-                                })
+                                placeholder="Customer"
+                                name="customer_his"
+                                showSearch
+                                debounceTime={200}
+                                mode="multiple"
+                                allowClear
+                                width={300}
+                                request={async ({ keyWords }) => {
+                                  const res = await services.pageCustomer({
+                                    criteria: {
+                                      searchValue: keyWords,
+                                    },
+                                    pagination: {
+                                      current: 1,
+                                      pageSize: 20,
+                                    },
+                                  })
 
-                                return res.items.map((c: any) => ({
-                                  value: c.code,
-                                  label: `${c.code} - ${c.name}`,
-                                }));
-                              }}
-                              onChange={(val: string) => {
-                                setHisSearch(v => ({ ...v, customer: val }));
-                                actionRef.current?.reloadAndRest?.();
-                              }}
-                            />
+                                  return res.items.map((c: any) => ({
+                                    value: c.code,
+                                    label: `${c.code} - ${c.name}`,
+                                  }));
+                                }}
+                                onChange={(val: string) => {
+                                  setHisSearch(v => ({ ...v, customer: val }));
+                                  actionRef.current?.reloadAndRest?.();
+                                }}
+                              />
                             </div>
                             {/* Button */}
                             <ProFormSelect
@@ -2791,7 +2888,7 @@ export default () => {
 
 
 
-      </Spin>
+      </Spin> 
       <DrawerForm
         open={drawerOpen.visible}
         id={drawerOpen.id}
@@ -2869,6 +2966,49 @@ export default () => {
         setSortConfig={setSortConfig}
         columns={sortableColumns}
       />
+      <Modal
+        open={claimOpen}
+        title="Pick"
+        onCancel={() => {
+          setClaimIds([])
+          setClaimedLines([])
+          setClaimOpen(false)
+        }}
+        onOk={async () => {
+          await services.ClaimDn(
+            claimIds,
+            access.currentUser?.login,
+            'Pick',
+            'Pick DN',
+            useExisting ? selectedClaimedLine : null
+          );
+          actionRef.current?.reloadAndRest?.();
+          message.success('Updated successfully');
+          setClaimOpen(false);
+          setClaimIds([])
+          setClaimedLines([])
+          setSelectedRowKeys([])
+          setSelectedRows([])
+        }}
+      >
+        <Checkbox
+          checked={useExisting}
+          onChange={e => setUseExisting(e.target.checked)}
+        >
+          Use existing pick
+        </Checkbox>
+
+        {useExisting && (
+          <Select
+            style={{ width: '100%', marginTop: 12 }}
+            placeholder="Select pick"
+            options={claimedLines.map(c => ({ label: c.claimed_line, value: c.claimed_line }))}
+            value={selectedClaimedLine}
+            onChange={setSelectedClaimedLine}
+          />
+        )}
+      </Modal >
+
     </>
   );
 };

@@ -111,7 +111,8 @@ export type SaleServiceName =
   | 'find-by-salesperson-code'
   | 'sync-posm'
   | 'list-rsm-request-mpu-item'
-  | 'sync-so-from-sfa';
+  | 'sync-so-from-sfa'
+  | 'list-area';
 
 /** Stock */
 // export interface StockControl {

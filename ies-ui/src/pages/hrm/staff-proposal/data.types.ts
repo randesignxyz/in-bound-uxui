@@ -16,10 +16,15 @@ export type StaffProposalListItem = {
 };
 
 export type AdvanceSearchParams = {
-  buIds?: number[];
-  deptIds?: number[];
+  status?: "ALL" | "DRAFT" | "PENDING" | "APPROVED" | "REJECTED" | "CANCELED";
   integratedStatus?: string;
-  status?: string;
+  keyword?: string;
+  advanceSearch?: {
+    buIds?: number[];
+    deptIds?: number[];
+    integratedStatus?: string;
+    status?: string;
+  };
 };
 
 

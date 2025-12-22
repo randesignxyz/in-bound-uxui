@@ -26,7 +26,7 @@ export default ({ instanceInfo, owner }: UserTask) => {
         })()
     }, [instanceInfo?.processInstanceId])
 
-    
+
     return (
         <Spin spinning = {requestActions.request?.loading || false}>
             <Descriptions column={1} size="small">

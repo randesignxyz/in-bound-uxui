@@ -59,7 +59,17 @@ export type StaffRequisitionAdvanceSearchParams = {
   };
 };
 
-
+export type ProbationAdvanceSearchParams = {
+  status?: "ALL" | "DRAFT" | "PENDING" | "APPROVED" | "REJECTED" | "CANCELED";
+  integratedStatus?: string;
+  keyword?: string;
+  advanceSearch?: {
+    buIds?: number[];
+    deptIds?: number[];
+    integratedStatus?: string;
+    status?: string;
+  };
+};
 
 export type ProbationEvaluationData = {
   requestorId: string;

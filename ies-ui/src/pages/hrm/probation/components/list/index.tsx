@@ -18,28 +18,23 @@ import {
 } from "@ant-design/icons";
 import { formatDate, formatDateTime } from "@/pages/utils";
 import { ProbationEvaluationRequestFormNames } from "../../process-flow";
-import { useQuery } from "@umijs/max";
-import { StaffRequisitionAdvanceSearchParams } from "@/pages/hrm/data";
-import AdvanceEmployeeSearch from "@/pages/hrm/employee/AdvanceEmployeeSearch";
+import { useQuery } from '@umijs/max';
+import {
+  ProbationAdvanceSearchParams,
+} from '@/pages/hrm/data';
 import { TableViewSearchParams } from '@/components/DataCrud/TableView';
-
-interface SearchParams {
-  status?: "ALL" | "PENDING" | "COMPLETED" | "REJECTED";
-  searchValue?: string;
-  advanceSearch?: StaffRequisitionAdvanceSearchParams;
-  pagination?: {
-    current?: number;
-    pageSize?: number;
-  };
-}
+import AdvanceSearchDrawer from './AdvanceEmployeeSearch';
+import { ActionType } from '@ant-design/pro-components';
 
 export default function ProbationListPage() {
   const requestActions = simpleRequestActions();
+  const [advanceSearchParams, setAdvanceSearchParams] = useState<ProbationAdvanceSearchParams>({});
   const srv = createService({ request: requestActions });
   const access = useAccess();
   const pageRef = useRef<any>(null);
   Grid.useBreakpoint();
-  const [filter, setFilter] = useState<TableViewSearchParams<SearchParams>>({
+  const actionRef = useRef<ActionType>();
+  const [filter, setFilter] = useState<TableViewSearchParams<ProbationAdvanceSearchParams>>({
     status: "ALL",
     pagination: { current: 1, pageSize: 20 },
     advanceSearch: {
@@ -97,12 +92,11 @@ export default function ProbationListPage() {
   };
   return (
     <>
-      <PageWrapper<ProbationEvaluationEmpList, SearchParams, unknown>
+      <PageWrapper<ProbationEvaluationEmpList, ProbationAdvanceSearchParams, undefined>
         ref={pageRef}
         title="Probation Evaluation"
         tabRender={(item) => {
           const tabs: any[] = [];
-
           if (access.canCreateHrProbationEvaluationRequest) {
             tabs.push({
               action: "add",
@@ -142,22 +136,16 @@ export default function ProbationListPage() {
         listView={{
           type: "Table",
           title: "Probation Evaluation List",
-
           advanceSearchButton: (
             <Button
               onClick={() => setAdvanceSearchVisible(true)}
               icon={
-                filter.criteria?.advanceSearch?.advanceSearch?.bu.length ||
-                filter.criteria?.advanceSearch?.advanceSearch?.department.length ||
-                filter.criteria?.advanceSearch?.status !== "ALL" ? (
-                  <FilterOutlined style={{ color: "red" }} />
-                ) : (
-                  <SelectOutlined />
-                )
+                Object.values(advanceSearchVisible || {}).some((v) => v !== undefined && v !== null && v !== "")
+                  ? <FilterOutlined style={{ color: "red" }} />
+                  : <SelectOutlined />
               }
             />
           ),
-
           statuses: [
             { option: { label: "All", value: "ALL", default: true } },
             {
@@ -179,8 +167,6 @@ export default function ProbationListPage() {
                 status: params?.status,
                 advanceSearch: {
                   ...p.criteria?.advanceSearch,
-                  buIds: params?.advanceSearch?.bu,
-                  deptIds: params?.advanceSearch?.department,
                   status: params?.status,
                 },
               },
@@ -252,30 +238,25 @@ export default function ProbationListPage() {
           },
         }}
       />
-      <AdvanceEmployeeSearch
-        title="Advance Search"
+      <AdvanceSearchDrawer
         open={advanceSearchVisible}
-        closable
         onClose={() => setAdvanceSearchVisible(false)}
-        onReset={() => {
-          setFilter((p) => ({
-            ...p,
-            advanceSearch: {
-              buIds: [],
-              deptIds: [],
-              integratedStatus: "ALL",
-              status: "ALL",
-            },
-          }));
-          refetch();
-        }}
         onSearch={(params) => {
-          setFilter((p) => ({
-            ...p,
-            advanceSearch: { ...p.criteria?.advanceSearch, ...params },
-          }));
+          setFilter((prev) =>
+            ({
+              criteria:{
+                ...prev.criteria,
+                advanceSearch: {
+                  ...prev.criteria?.advanceSearch,
+                  ...params,
+                }
+              }
+            }))
+          setAdvanceSearchParams(params);
           setAdvanceSearchVisible(false);
-          refetch();
+        }}
+        onReset={() => {
+          actionRef.current?.reloadAndRest?.();
         }}
       />
     </>

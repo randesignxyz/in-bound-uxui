@@ -24,6 +24,8 @@ import { Button, Flex } from "antd";
 import type { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import AdvanceEmployeeSearch from "@/pages/hrm/employee/AdvanceEmployeeSearch";
 import { ActionType } from "@ant-design/pro-components";
+import AdvanceSearchDrawer from '@/pages/hrm/staff-requisition/AdvanceEmployeeSearch';
+import { StaffRequisitionAdvanceSearchParams } from '@/pages/hrm/data';
 
 export default function StaffProposalPage() {
   const requestActions = simpleRequestActions();
@@ -33,7 +35,6 @@ export default function StaffProposalPage() {
   const [filter, setFilter] = useState<TableViewSearchParams<SearchParams>>({
     criteria: {
       keyword: undefined,
-      status: "ALL",
       advanceSearch: {
         buIds: [],
         deptIds: [],
@@ -45,27 +46,18 @@ export default function StaffProposalPage() {
   });
 
   const [advanceSearchVisible, setAdvanceSearchVisible] = useState(false);
-  const [advanceSearchParams, setAdvanceSearchParams] =
-    useState<AdvanceSearchParams>({
-      buIds: [],
-      deptIds: [],
-      integratedStatus: "ALL",
-      status: "ALL",
-    });
-
-
+  const [advanceSearchParams, setAdvanceSearchParams] = useState<AdvanceSearchParams>({});
   const { data, isLoading, refetch } = useQuery(
     ["fetch-paging-staff-proposal", filter],
     () => services.fetchPaging(filter),
     { refetchOnWindowFocus: false }
   );
-
   return (
     <>
       <PageWrapper<
           StaffProposalListItem,
           StaffProposalDetail,
-          SearchParams | SavePayLoad
+          { searchValue?: string; advanceSearch?: SearchParams | SavePayLoad }
         >
         tabRender={(item) =>
           access.canRequestHrStaffProposal
@@ -121,13 +113,9 @@ export default function StaffProposalPage() {
             <Button
               onClick={() => setAdvanceSearchVisible(true)}
               icon={
-                advanceSearchParams.buIds?.length ||
-                advanceSearchParams.deptIds?.length ||
-                advanceSearchParams.status !== "ALL" ? (
-                  <FilterOutlined style={{ color: "red" }} />
-                ) : (
-                  <SelectOutlined />
-                )
+                Object.values(advanceSearchParams || {}).some((v) => v !== undefined && v !== null && v !== "")
+                  ? <FilterOutlined style={{ color: "red" }} />
+                  : <SelectOutlined />
               }
             />
           ),
@@ -140,20 +128,16 @@ export default function StaffProposalPage() {
           ],
           onRefresh: refetch,
           onFilter: (params) => {
-            setFilter((p) => ({
-              ...p,
-              criteria: {
+            setFilter((p=>({
+              criteria:{
                 ...p.criteria,
-                keyword: params?.searchValue,
-                status: params?.status,
-                advanceSearch: {
+                searchValue: params?.searchValue,
+                advanceSearch:{
                   ...p.criteria?.advanceSearch,
-                  buIds: params?.bu,
-                  deptIds: params?.department,
-                  status: params?.status,
-                },
-              },
-            }));
+                  status:params?.status
+                }
+              }
+            })))
           },
           props: {
             actionRef,
@@ -163,11 +147,17 @@ export default function StaffProposalPage() {
               total: data?.total,
               current: filter.pagination?.current,
               pageSize: filter.pagination?.pageSize,
-              onChange: (current, pageSize) =>
-                setFilter((p) => ({
-                  ...p,
-                  pagination: { current, pageSize },
-                })),
+              onChange: (current, pageSize) =>{
+                setFilter((p)=>({
+                  criteria:{
+                    ...p.criteria
+                  },
+                  pagination:{
+                    current:current,
+                    pageSize:pageSize
+                  }
+                }))
+              }
             },
             scroll: { x: "max-content" },
             bordered: true,
@@ -225,42 +215,25 @@ export default function StaffProposalPage() {
           },
         }}
       />
-      <AdvanceEmployeeSearch
-        title="Advance Search"
+      <AdvanceSearchDrawer
         open={advanceSearchVisible}
-        closable
         onClose={() => setAdvanceSearchVisible(false)}
-        onReset={() => {
-          const reset = {
-            buIds: [],
-            deptIds: [],
-            integratedStatus: "ALL",
-            status: "ALL",
-          };
-          setAdvanceSearchParams(reset);
-          setFilter((p) => ({
-            ...p,
-            criteria: { ...p.criteria, advanceSearch: reset },
-          }));
-          actionRef.current?.reloadAndRest?.();
-        }}
         onSearch={(params) => {
-          setAdvanceSearchVisible(false);
-          actionRef.current?.reloadAndRest?.();
-            setFilter((p) => ({
-              ...p,
-              criteria: {
-                ...p.criteria,
-                keyword: params?.searchValue,
-                status: params?.status,
+          setFilter((prev) =>
+            ({
+              criteria:{
+                ...prev.criteria,
                 advanceSearch: {
-                  ...p.criteria?.advanceSearch,
-                  buIds: params?.buIds,
-                  deptIds: params?.department,
-                  status: params?.status,
-                },
-              },
-            }));
+                  ...prev.criteria?.advanceSearch,
+                  ...params,
+                }
+              }
+            }))
+          setAdvanceSearchParams(params);
+          setAdvanceSearchVisible(false);
+        }}
+        onReset={() => {
+          actionRef.current?.reloadAndRest?.();
         }}
       />
     </>

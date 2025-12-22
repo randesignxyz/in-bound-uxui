@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from 'react';
 import { PlusOutlined, ExportOutlined, FilterOutlined, SelectOutlined } from "@ant-design/icons";
 import { Button, Flex } from "antd";
-import { useAccess, useModel, history, useQuery } from "@umijs/max";
+import { useAccess, history, useQuery } from "@umijs/max";
 import PageWrapper from "@/components/PageWrapper";
 import Status from "@/components/Status";
 import { formatDate } from "@/pages/utils";
@@ -10,26 +10,33 @@ import { EmployeeServices } from "../services";
 import { simpleRequestActions } from "@/services/model";
 import RequestModal from "./RequestModal";
 import AdvanceSearchDrawer from "./AdvanceEmployeeSearch";
+import { TableViewSearchParams } from '@/components/DataCrud/TableView';
+import { ActionType } from '@ant-design/pro-components';
 
 export default function StaffRequisitionPage() {
   const access = useAccess();
   const requestActions = simpleRequestActions();
-
+  const actionRef = useRef<ActionType>();
   const [advanceSearchVisible, setAdvanceSearchVisible] = useState(false);
   const [advanceSearchParams, setAdvanceSearchParams] = useState<StaffRequisitionAdvanceSearchParams>({});
-  const [filter, setFilter] = useState<{
-    searchValue?: string;
-    advanceSearch?: StaffRequisitionAdvanceSearchParams;
-  }>({
-    advanceSearch: { status: "ALL", integratedStatus: "ALL" },
+  const [filter, setFilter] = useState<TableViewSearchParams<StaffRequisitionAdvanceSearchParams>>({
+    criteria: {
+      keyword: undefined,
+      advanceSearch: {
+        buIds: [],
+        deptIds: [],
+        integratedStatus: "ALL",
+        status: "ALL",
+      },
+    },
+    pagination: { current: 1, pageSize: 20 },
   });
-
+  console.log(filter)
   const { data, isLoading, refetch } = useQuery(
     ["fetch-staff-requisition", filter],
-    () => EmployeeServices.listStaffRequisition({ criteria: filter }).query(requestActions),
+    () => EmployeeServices.listStaffRequisition({ criteria: filter.criteria, pagination:filter.pagination}).query(requestActions),
     { refetchOnWindowFocus: false }
   );
-
   return (
     <>
       <PageWrapper<
@@ -105,19 +112,35 @@ export default function StaffRequisitionPage() {
           ],
           onRefresh: refetch,
           onFilter: (params) => {
-            setFilter((prev) => ({
-              ...prev,
-              searchValue: params?.searchValue,
-              advanceSearch: { ...prev.advanceSearch, status: params?.status },
-            }));
+            setFilter((p=>({
+              criteria:{
+                ...p.criteria,
+                searchValue: params?.searchValue,
+                advanceSearch:{
+                  ...p.criteria?.advanceSearch,
+                  status:params?.status
+                }
+              }
+            })))
           },
           props: {
             dataSource: data?.items || [],
             loading: isLoading,
             pagination: {
               total: data?.total,
-              current: filter.advanceSearch?.current,
-              pageSize: filter.advanceSearch?.pageSize,
+              current: filter.pagination?.current,
+              pageSize: filter.pagination?.pageSize,
+              onChange: (current, pageSize) =>{
+                setFilter((p)=>({
+                  criteria:{
+                    ...p.criteria
+                  },
+                  pagination:{
+                    current:current,
+                    pageSize:pageSize
+                  }
+                }))
+              }
             },
             scroll: { x: "max-content" },
             bordered: true,
@@ -160,14 +183,21 @@ export default function StaffRequisitionPage() {
         open={advanceSearchVisible}
         onClose={() => setAdvanceSearchVisible(false)}
         onSearch={(params) => {
-          setFilter((prev) => ({ ...prev, advanceSearch: { ...prev.advanceSearch, ...params } }));
+          setFilter((prev) =>
+            ({
+              criteria:{
+                ...prev.criteria,
+                advanceSearch: {
+                  ...prev.criteria?.advanceSearch,
+                  ...params,
+                }
+              }
+            }))
           setAdvanceSearchParams(params);
           setAdvanceSearchVisible(false);
         }}
         onReset={() => {
-          setFilter((prev) => ({ ...prev, advanceSearch: { status: "ALL", integratedStatus: "ALL" } }));
-          setAdvanceSearchParams({});
-          setAdvanceSearchVisible(false);
+          actionRef.current?.reloadAndRest?.();
         }}
       />
     </>

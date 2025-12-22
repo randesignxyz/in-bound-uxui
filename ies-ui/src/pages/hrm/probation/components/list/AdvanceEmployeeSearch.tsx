@@ -3,9 +3,9 @@ import { Drawer, DrawerProps } from "antd";
 import { useForm } from "antd/lib/form/Form";
 import { simpleRequestActions } from "@/services/model";
 import { MultiRequest } from "@/services/apiGateway";
-import { BU, Department, StaffRequisitionAdvanceSearchParams } from "../data";
+import { BU, Department, StaffRequisitionAdvanceSearchParams } from "../../../data";
 import { useEffect, useState } from "react";
-import { EmployeeServices } from "../services";
+import { EmployeeServices } from "../../../services";
 
 interface Props extends DrawerProps {
   dataItem?: StaffRequisitionAdvanceSearchParams;

@@ -76,7 +76,7 @@ const AdvanceEmployeeSearch: React.FC<Props> = ({
       >
         <ProFormSelect
           label="Company"
-          name="bu"
+          name="buIds"
           mode="multiple"
           allowClear
           placeholder="Select companies"
@@ -88,7 +88,7 @@ const AdvanceEmployeeSearch: React.FC<Props> = ({
 
         <ProFormSelect
           label="Function"
-          name="department"
+          name="departmentIds"
           mode="multiple"
           allowClear
           showSearch

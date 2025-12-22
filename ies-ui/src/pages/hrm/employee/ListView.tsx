@@ -13,6 +13,7 @@ import { simpleRequestActions } from '@/services/model';
 import { ImportDataItem, ImportDataResponse } from '@/services/shared/data';
 import type { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { ActionType } from '@ant-design/pro-components';
+import AdvanceSearchDrawer from '@/pages/hrm/probation/components/list/AdvanceEmployeeSearch';
 
 const Status = ({ text }: { text: string }) => (
   <span style={{ color: text === 'ACTIVE' ? 'green' : 'red' }}>{text}</span>
@@ -31,6 +32,7 @@ const EmployeeList = ({ onAdd, onEdit }: Props) => {
   const [filter, setFilter] = useState<TableViewSearchParams<EmployeeAdvanceSearchParams>>({
     criteria: { advanceSearch: { status: 'ALL' } },
   });
+  const [advanceSearchVisible, setAdvanceSearchVisible] = useState(false);
   // const [advanceSearch, setAdvanceSearch] = useState<{ visible: boolean }>();
   const [modalVisible, setModalVisible] = useState<{ type: 'ADD' | 'EDIT'; payload: EmployeeListItem }>();
   const [importData, setImportData] = useState<ImportDataResponse>()
@@ -223,20 +225,19 @@ const EmployeeList = ({ onAdd, onEdit }: Props) => {
           onSave={saveEmployeeHandler}
         />
       )}
-      <AdvanceEmployeeSearch
-        title="Advance Search"
-        closable
-        open={advanceSearch?.visible}
-        dataItem={modalVisible?.payload}
-        onClose={() => {
-          setAdvanceSearch({ visible: false });
+      <AdvanceSearchDrawer
+        open={advanceSearchVisible}
+        onClose={() => setAdvanceSearchVisible(false)}
+        onSearch={(params) => {
+          setFilter((prev) =>
+            ({ ...prev, advanceSearch: { ...prev.advanceSearch, ...params } }));
+          setAdvanceSearchParams(params);
+          setAdvanceSearchVisible(false);
         }}
         onReset={() => {
-          actionRef.current?.reloadAndRest?.();
-        }}
-        onSearch={(data) => {
-          setAdvanceSearchParams((v) => ({ ...v, ...data, status: v.status }));
-          actionRef.current?.reloadAndRest?.();
+          setFilter((prev) => ({ ...prev, advanceSearch: { status: "ALL", integratedStatus: "ALL", bu_id: [] , department_id: [] } }));
+          setAdvanceSearchParams({});
+          setAdvanceSearchVisible(false);
         }}
       />
     </div>

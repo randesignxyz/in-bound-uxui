@@ -1,6 +1,6 @@
 import { ProDescriptions, ProList } from "@ant-design/pro-components"
 import { GoogleMap, useGoogleMap, useLoadScript, } from "@react-google-maps/api"
-import { Button, DatePicker, Drawer, Flex, FloatButton, Input, message, Modal, Space, Spin } from "antd";
+import { Button, Checkbox, DatePicker, Drawer, Flex, FloatButton, Input, message, Modal, Select, Space, Spin } from "antd";
 import { useEffect, useRef, useState } from "react";
 import MapComp from "./MapComp";
 import { useAccess, useQuery } from "@umijs/max";
@@ -23,7 +23,7 @@ interface DNListState {
     list: DNList[];
     selected?: DNList[]
     selectedRows?: DNList[]
-    areaList?:AreaList[]
+    areaList?: AreaList[]
 }
 
 export default () => {
@@ -36,14 +36,20 @@ export default () => {
     const [drawerVisible, setDrawerVisible] = useState(false);
     const [drawerItems, setDrawerItems] = useState<DNList[]>([]);
     const access = useAccess();
+    const [useExisting, setUseExisting] = useState(false);
+    const [selectedClaimedLine, setSelectedClaimedLine] = useState<string | null>(null);
     const { isLoaded } = useLoadScript({
         googleMapsApiKey: 'AIzaSyA0Ifgai8ryDULDIqNOZmX8L7XZlzu4_D8'
     });
     const [cardOpen, setCardOpen] = useState<{ visible: boolean }>({
         visible: false
     });
-console.log(state)
+    console.log(state)
     const [zoomTo, setZoomto] = useState<Location>()
+    const [claimedLines, setClaimedLines] = useState<string[]>([]);
+    const [claimIds, setClaimIds] = useState<number[]>([]);
+    const [claimOpen, setClaimOpen] = useState(false);
+
 
     // const { data, isFetching, refetch } = useQuery(
     //     ['dn-detail', criteria], // include unique key name + criteria
@@ -96,28 +102,35 @@ console.log(state)
     };
 
 
-    const handleClaim = async (ids: number | number[]) => {
-        const idArray = Array.isArray(ids) ? ids : [ids];
+    // const handleClaim = async (ids: number | number[]) => {
+    //     const idArray = Array.isArray(ids) ? ids : [ids];
 
-        Modal.confirm({
-            title: 'Pick',
-            content: 'Are you sure?',
-            onOk: async () => {
-                try {
-                    // Loop through each id
-                    await services.ClaimDn(idArray, access.currentUser?.login, 'Pick', 'Pick DN') as {
-                        data: string;
-                        message: string;
-                    }
-                    navigate("/delivery/allocate/list")
-                    setSelect([])
-                    setCardOpen({ visible: false })
-                } catch (error) {
-                    message.error('Failed to update');
-                    console.error(error);
-                }
-            },
-        });
+    //     Modal.confirm({
+    //         title: 'Pick',
+    //         content: 'Are you sure?',
+    //         onOk: async () => {
+    //             try {
+    //                 // Loop through each id
+    //                 await services.ClaimDn(idArray, access.currentUser?.login, 'Pick', 'Pick DN') as {
+    //                     data: string;
+    //                     message: string;
+    //                 }
+    //                 navigate("/delivery/allocate/list")
+    //                 setSelect([])
+    //                 setCardOpen({ visible: false })
+    //             } catch (error) {
+    //                 message.error('Failed to update');
+    //                 console.error(error);
+    //             }
+    //         },
+    //     });
+    // };
+
+    const handleClaim = async (ids: number | number[]) => {
+        const claimed_line = await services.list_claimed_line()
+        setClaimIds(Array.isArray(ids) ? ids : [ids]);
+        setClaimedLines(claimed_line);
+        setClaimOpen(true);
     };
 
     useEffect(() => {
@@ -136,7 +149,7 @@ console.log(state)
                 type="text"
                 icon={<ArrowLeftOutlined />}
                 onClick={() =>
-                    navigate("/delivery/allocate/list", { state: { selectedRows: select ,areaList:state?.areaList} })
+                    navigate("/delivery/allocate/list", { state: { selectedRows: select, areaList: state?.areaList } })
                 }
             >
                 Back
@@ -220,8 +233,64 @@ console.log(state)
                         </ul>
                     </div>
                 ))}
-            </Drawer>
 
+            </Drawer>
+            <Modal
+                open={claimOpen}
+                title="Pick"
+                onCancel={() => {
+                    setClaimOpen(false);
+                    setClaimIds([])
+                    setClaimedLines([])
+                    setSelect([])
+                    setCardOpen({ visible: false })
+                }}
+                onOk={async () => {
+                    const sapLines = select.flatMap(dn =>
+                        (dn.deliveryItems ?? []).map(it => ({
+                            lineNum: Number(it.sap_line_num),                 // SAP line number
+                            shipDate: (dn.deliveryDate)
+                        }))
+                    );
+                    const soDocEntries = [...new Set(
+                        select.map(v => v.so_doc_entry)
+                    )];
+                    for (const soDocEntry of soDocEntries) {
+                        await services.ClaimDn(
+                            claimIds,
+                            access.currentUser?.login,
+                            'Pick',
+                            'Pick DN',
+                            useExisting ? selectedClaimedLine : null,
+                            soDocEntry,
+                            sapLines
+                        );
+                    }
+                    message.success('Updated successfully');
+                    setClaimOpen(false);
+                    setClaimIds([])
+                    setClaimedLines([])
+                    setSelect([])
+                    setCardOpen({ visible: false })
+                }}
+            >
+                <Checkbox
+                    checked={useExisting}
+                    onChange={e => setUseExisting(e.target.checked)}
+                >
+                    Use existing pick
+                </Checkbox>
+
+                {useExisting && (
+                    <Select
+                        style={{ width: '100%', marginTop: 12 }}
+                        placeholder="Select pick"
+                        options={claimedLines.map(c => ({ label: c.claimed_line, value: c.claimed_line }))}
+                        value={selectedClaimedLine}
+                        onChange={setSelectedClaimedLine}
+                    />
+                )}
+            </Modal >
         </Flex>
     </Spin >
 }

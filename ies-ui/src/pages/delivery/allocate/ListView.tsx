@@ -1122,7 +1122,7 @@ export default () => {
       dataIndex: 'deliveryDate',
       width: '6%',
       render: (_, r) =>
-        dayjs.utc(r.deliveryDate).add(7, 'hour').format('DD-MMM-YYYY hh-mm'),// forces UTC, no timezone shift
+        dayjs.utc(r.deliveryDate).add(7, 'hour').format('DD-MMM-YYYY hh:mm'),// forces UTC, no timezone shift
       // sorter: {
       //   compare: (a, b) =>
       //     (a.sap_delivery_date ? dayjs(a.sap_delivery_date).unix() : 0) -

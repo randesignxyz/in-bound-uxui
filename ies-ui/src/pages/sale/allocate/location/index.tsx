@@ -7,17 +7,18 @@ import { useAccess, useQuery } from "@umijs/max";
 import { fetchDataListService, singleRequest } from "@/services/apiGateway";
 import { Moment } from "moment";
 import { simpleRequestActions } from "@/services/model";
-import { AreaList, Location } from "../data";
+// import { AreaList, Location } from "../data";
 import { ArrowLeftOutlined, ReloadOutlined, } from "@ant-design/icons";
 import DeliveryList from "./DeliveryList";
 import DeliveryView from "./DeliveryView";
 import { InstanceDetail } from "@/services/delivery/instance.types";
 import { InstanceSrvParams } from "@/services/delivery/instance-service-params";
 import dayjs from "dayjs";
-import { DNList, ListDnDetailParams } from "../data";
+import { DNList, ListDnDetailParams } from "@/pages/delivery/allocate/data";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FloatingCard } from "../displayCard";
-import { AllocateServiceAPI } from "../service";
+import { AllocateServiceAPI } from "@/pages/delivery/allocate/service";
+import { AreaList, Location } from "@/pages/delivery/allocate/data";
 
 interface DNListState {
     list: DNList[];

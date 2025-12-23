@@ -10,7 +10,10 @@ export const JobOperator = {
     type: 'PAGING_QUERY',
     endpoint: 'HR',
     actionName: 'fetch-list-job',
-    payload: { ...params.criteria },
+    payload: { ...params.criteria,  },
+    pagination: {
+      pageSize: params.pagination?.pageSize,
+      page: params.pagination?.current}
   }),
   create: (params: Partial<ListJob>): ServiceApiType<Partial<ListJob>> => ({
     type: 'EXEC',

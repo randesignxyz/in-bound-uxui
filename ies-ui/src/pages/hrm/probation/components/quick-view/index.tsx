@@ -30,10 +30,9 @@ interface Props{
 }
 
 const ProbationEvaluationQuickView=({probationEmp, open, onOpenModalChange, refreshTable}:Props) =>{
-   
+
     const requestActions = simpleRequestActions()
     const srv = createService({ request: requestActions })
-   
     const [probaResourcesSupport,setProbaResourcesSupport] = useState<ProbationEvaluationResourcesSupport[]>([])
     const [probaRequest,setProbaRequest] = useState<ProbationEvaluationDetailRs>()
     const [probaResources,setProbaResources] = useState<ProbationEvaluationResources[]>([])
@@ -51,7 +50,7 @@ const ProbationEvaluationQuickView=({probationEmp, open, onOpenModalChange, refr
 
     const loadData = async () => {
         if (!probationEmp?.instanceId) return;
-        try {       
+        try {
           const data = await srv.detailByProcessFlow(probationEmp?.instanceId);
           setProbaRequest({ ...data });
           setAddedSection1(data.section1.map(v=> {
@@ -73,37 +72,34 @@ const ProbationEvaluationQuickView=({probationEmp, open, onOpenModalChange, refr
 
     const isRequestedStatus = probaRequest?.status=='REQUESTED'?true: false
     const isPrepareStatus = (probaRequest?.status=='PREPARED') || isRequestedStatus ?true: false
-    
-   
+
     return(<DrawerForm width={'80%'}
         loading={requestActions.request?.loading}
         open={open}
-        onOpenChange={onOpenModalChange}       
+        onOpenChange={onOpenModalChange}
         title={<Space>
-            <div>Probation Evaluation {probationEmp?.empNo}- {probationEmp?.empName}</div>          
+            <div>Probation Evaluation {probationEmp?.empNo}- {probationEmp?.empName}</div>
         </Space>}
-        
-        // submitter={submitter}
         submitter={false}
-        onFinish={ async (dataForm:any)=> {           
+        onFinish={ async (dataForm:any)=> {
             //  saveSubmitHandler()
            return false
         }}
     ><Space direction="vertical">
         {probationEmp&&<ProCard title= {`Employee Info - ${probaRequest?.probationEvaluation?.formTypeCode}`}
-                collapsible ={false}  
+                collapsible ={false}
                 size="small"
-                bordered headerBordered 
-            >                  
+                bordered headerBordered
+            >
             <Descriptions column={5}>
             <Descriptions.Item label='Employee Id'>{probationEmp.empNo} </Descriptions.Item>
             <Descriptions.Item label='Employee Name'>{probationEmp.empName} </Descriptions.Item>
             <Descriptions.Item label='Hired Date'>{probationEmp?.joinedDate&&formatDate(probationEmp?.joinedDate)}</Descriptions.Item>
-            
+
 
             <Descriptions.Item label='Decision by Line Manager' span={2}>
                 {confirmedStatusList.find(v=> v.status==probaRequest?.probationEvaluation?.confirmedStatus)?.desc} {probaRequest?.probationEvaluation?.confirmedStatus==='EXTENDED'? formatDate(probaRequest?.probationEvaluation?.extendedDate):''}
-            </Descriptions.Item>           
+            </Descriptions.Item>
             <Descriptions.Item label='Function'>{probationEmp.departmentName} </Descriptions.Item>
             <Descriptions.Item label='Company'>{probationEmp.buName}</Descriptions.Item>
             <Descriptions.Item label='Position'>{probationEmp.jobTitle}</Descriptions.Item>
@@ -117,13 +113,13 @@ const ProbationEvaluationQuickView=({probationEmp, open, onOpenModalChange, refr
         <InstructionCard/>
         {probaRequest && <RatingScaleCard probaRequest={probaRequest}/>}
         {probaRequest &&<ProCard title={isPrepareStatus?'PERFORMANCE':'EVALUATION' }
-            collapsible  
+            collapsible
             size="small"
-            bordered headerBordered 
-        >            
-            <Section1Table showRating={!isPrepareStatus} editable={false} editableRating={false}  addedItems={addedSection1} onSetAddedItems={setAddedSection1}  totalScore={probaRequest?.totalScore1}/>          
-            <Section2Card showRating={!isPrepareStatus}  editable={false} editableRating={false}  addedItems={addedSection2} onSetAddedItems={setAddedSection2}  totalScore={probaRequest?.totalScore2}/>            
-            {probaResources&&<Section3Card showRating={!isPrepareStatus} editable={false} editableRating={false}  addedItems={probaResources} onSetAddedItems={setProbaResources}  totalScore={probaRequest?.totalScore3}/>}           
+            bordered headerBordered
+        >
+            <Section1Table showRating={!isPrepareStatus} editable={false} editableRating={false}  addedItems={addedSection1} onSetAddedItems={setAddedSection1}  totalScore={probaRequest?.totalScore1}/>
+            <Section2Card showRating={!isPrepareStatus}  editable={false} editableRating={false}  addedItems={addedSection2} onSetAddedItems={setAddedSection2}  totalScore={probaRequest?.totalScore2}/>
+            {probaResources&&<Section3Card showRating={!isPrepareStatus} editable={false} editableRating={false}  addedItems={probaResources} onSetAddedItems={setProbaResources}  totalScore={probaRequest?.totalScore3}/>}
             <Section4Card showRating={!isPrepareStatus} editable={false} editableRating={false}  addedItems={probaResourcesSupport} onSetAddedItems={setProbaResourcesSupport} />
             {!isPrepareStatus &&<div>
                 <div style={{paddingTop:5}}>
@@ -134,7 +130,7 @@ const ProbationEvaluationQuickView=({probationEmp, open, onOpenModalChange, refr
             {!isPrepareStatus && probaRequest?.empAchievement&&<Space direction="vertical" style={{ width: '100%' }}>
                 {probaRequest?.empAchievement&&<EmpImprovmentTable editable={false} initDataItems={probaRequest?.empAchievement.map(it => ({...it,key: uniqueId().toString()}))} />}
                 {probaRequest?.empImprovement&&<EmpImprovmentTable1  editable={false} initDataItems={probaRequest?.empImprovement.map(it => ({...it,key: uniqueId().toString()}))} />}
-            </Space>}                   
+            </Space>}
         </ProCard>}
         {probaRequest && <SummaryCard probaRequest={probaRequest}/>}
     </Space>

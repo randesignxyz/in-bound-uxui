@@ -2,12 +2,13 @@ import FileUploader from '@/components/Attachment/FileUploader';
 import { MultiRequest } from '@/services/apiGateway';
 import { simpleRequestActions } from '@/services/model';
 import {
-  ModalForm,
-  ModalFormProps,
+  ProForm,
+  FormProps,
   ProCard,
   ProFormGroup,
   ProFormSelect,
   ProFormTextArea,
+  ModalFormProps,
 } from '@ant-design/pro-components';
 import { message, Modal, Space } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
@@ -71,7 +72,7 @@ export default ({
   };
 
   useEffect(() => {
-    (async () => {     
+    (async () => {
       srv.fetchProbationFormTypeList().then(rs => {
         setProbationFormType(rs)
       })
@@ -119,18 +120,18 @@ export default ({
     })
   }
   const [firstEvaluationUserId, setFirstEvaluationUserId] = useState('')
-  // const onSearchHandler = async (searchValue?: string) => {  
+  // const onSearchHandler = async (searchValue?: string) => {
   //   const it1 = await srv.fetchProbationEmpList(searchValue)
   //   return it1.map((it_1:any) => ({ value: it_1.id, label: it_1.empName }));
   // }
 
   return (
-    <ModalForm
+    <ProForm
       width={970}
       form={form}
       onFinish={async () => {
         const formData = await form.validateFields();
-        await formSubmittor.validateFields() 
+        await formSubmittor.validateFields()
         Modal.confirm({
           title: 'Probation Evaluation Request',
           content: 'Are you sure?',
@@ -154,14 +155,14 @@ export default ({
     >
       <Space direction="vertical" style={{ width: '100%' }}>
         {/* <Requestor form={form} /> */}
-        <ProbationSumbitter         
+        <ProbationSumbitter
           form={formSubmittor}
           title={
             <div> Employee Info</div>
           }
           onSetSubmitter={onChangeSubmitterHandler}
         />
-        <ProCard size="small" bordered>         
+        <ProCard size="small" bordered>
           <ProFormGroup size={'small'}>
             <ProFormSelect
               shouldUpdate
@@ -173,14 +174,14 @@ export default ({
               options={probationAssessor?.map((it) => ({ label: it.empName, value: it.userId }))}
               fieldProps={{
                 dropdownMatchSelectWidth: 300,
-                async onChange(value: any) {                  
+                async onChange(value: any) {
                   form.setFieldValue('hodPreparationUserId',undefined)
                   try{
                     const rs = await srv.fetchHodPreparationUserId(value)
                       setFirstEvaluationUserId(rs.hodEnpNo||'')
                       form.resetFields(['hodPreparationUserId'])
                       form.setFieldValue('hodPreparationUserId',rs.hodUserId)
-                  }catch(e){                    
+                  }catch(e){
                     setFirstEvaluationUserId('')
                     form.resetFields(['hodPreparationUserId'])
                   }
@@ -219,7 +220,7 @@ export default ({
               width={'sm'}
               label="Ref"
               options={probationRef?.map((it) => ({ label: it.formNo, value: it.id }))}
-            />           
+            />
           </ProFormGroup>
           <ProFormTextArea name='remarks' label={'Remarks'}/>
         </ProCard>
@@ -230,6 +231,6 @@ export default ({
           onSetFiles={(files) => setUploadFileIds(files.map((it) => it.response))}
         />
       </Space>
-    </ModalForm>
+    </ProForm>
   );
 };

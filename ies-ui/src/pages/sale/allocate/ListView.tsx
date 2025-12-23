@@ -43,6 +43,7 @@ export default () => {
   const requestActions = simpleRequestActions();
   const services = AllocateServiceAPI(requestActions);
   const actionRef = useRef<ActionType>();
+  const restoredFromNavRef = useRef(false);
   const [data, setData] = useState<SOList[]>()
   const [skuList, setSkuList] = useState<SkuList[]>([])
   const [dataListDn, setDataListDn] = useState<DNList[]>([])
@@ -73,7 +74,7 @@ export default () => {
   const [MTSearch, setMTSearch] = useState<{ status: string; startDate?: string, endDate?: string }>({
     status: 'pending',
   });
-  const [dnSearch, setDnSearch] = useState<{ status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string, sap_delivery_date: string | null, sap_from_date?: string, sap_to_date?: string, customer?: string, area?: string }>({
+  const [dnSearch, setDnSearch] = useState<{ status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string, sap_delivery_date: string | null, sap_from_date?: string, sap_to_date?: string, customer?: string, area?: [] }>({
     status: 'posted',
     dnStatus: 'open',
     sap_delivery_date: 'as_of_now',
@@ -318,16 +319,34 @@ export default () => {
     setClaimOpen(true);
   };
 
-  const handleUnClaim = async (id: number[]) => {
+  const handleUnClaim = async (id: number[], data: any) => {
+    console.log(data)
     Modal.confirm({
       title: 'Unpick',
       content: 'Are you sure?',
       onOk: async () => {
+        const sapLines = (data.deliveryItems ?? []).map((it: any) => ({
+          lineNum: Number(it.sap_line_num),
+          shipDate: data.deliveryDate,
+        }));
 
-        await services.ClaimDn(id, '', 'Unpick', 'Pick DN') as {
-          data: string;
-          message: string;
-        }
+        const soDocEntry = data.so_doc_entry
+
+        // await services.ClaimDn(id, '', 'Unpick', 'Pick DN') as {
+        //   data: string;
+        //   message: string;
+        // }
+        await services.ClaimDn(
+          id,
+          access.currentUser?.login ?? '',
+          'Unpick',
+          'Unpick DN',
+          null,
+          soDocEntry,
+          sapLines
+        );
+
+
         actionRef.current?.reloadAndRest?.();
         message.success('Updated successfully');
       },
@@ -618,7 +637,7 @@ export default () => {
   const onSync = async () => {
     try {
       isLoading(true)
-      await services.syncAllocate();
+      // await services.syncAllocate();
       actionRef.current?.reloadAndRest?.();
     } catch (error: any) {
       message.error(error.message);
@@ -654,6 +673,63 @@ export default () => {
     });
   }
 
+  // useEffect(() => {
+  //   const loadDefaultAreas = async () => {
+  //     const res = await services.list_area();
+  //     if (!Array.isArray(res)) return;
+
+  //     const options = res.map((a: any) => ({
+  //       value: Number(a.division_id),
+  //       label: a.division_name.replace(/^S&D\s*/i, '').trim(),
+  //       isDefault: a.isdefault === '1' || a.is_default === '1',
+  //     }));
+
+  //     setAreaOptions(options);
+
+  //     const defaultAreaIds = options
+  //       .filter(o => o.isDefault)
+  //       .map(o => o.value);
+
+  //     if (defaultAreaIds.length > 0) {
+  //       form.setFieldsValue({
+  //         area_dn: defaultAreaIds,
+  //         area_his: defaultAreaIds,
+  //       });
+
+  //       setDnSearch((v: any) => ({
+  //         ...v,
+  //         area: defaultAreaIds,
+  //       }));
+  //       setSelectedArea(defaultAreaIds)
+  //     }
+
+  //     setAreaReady(true);
+
+  //     setTimeout(() => {
+  //       actionRef.current?.reloadAndRest?.();
+  //     }, 0);
+  //   };
+
+  //   loadDefaultAreas();
+  // }, []);
+
+  useEffect(() => {
+    if (state?.areaList?.length) {
+      restoredFromNavRef.current = true;
+
+      setSelectedArea(state.areaList);
+      form.setFieldsValue({
+        area_dn: state.areaList,
+        area_his: state.areaList,
+      });
+
+      setDnSearch(v => ({
+        ...v,
+        area: state.areaList,
+      }));
+    }
+  }, [state?.areaList]);
+
   useEffect(() => {
     const loadDefaultAreas = async () => {
       const res = await services.list_area();
@@ -667,21 +743,29 @@ export default () => {
 
       setAreaOptions(options);
 
+      // 🔑 HARD STOP if restored from navigation
+      if (restoredFromNavRef.current) {
+        setAreaReady(true);
+        return;
+      }
+
+      // otherwise → apply default
       const defaultAreaIds = options
         .filter(o => o.isDefault)
         .map(o => o.value);
 
       if (defaultAreaIds.length > 0) {
+        setSelectedArea(defaultAreaIds);
+
         form.setFieldsValue({
           area_dn: defaultAreaIds,
           area_his: defaultAreaIds,
         });
 
-        setDnSearch((v: any) => ({
+        setDnSearch(v => ({
           ...v,
           area: defaultAreaIds,
         }));
-        setSelectedArea(defaultAreaIds)
       }
 
       setAreaReady(true);
@@ -693,6 +777,7 @@ export default () => {
 
     loadDefaultAreas();
   }, []);
+
 
 
 
@@ -1036,10 +1121,10 @@ export default () => {
     // },
     {
       title: 'Delivery Date',
-      dataIndex: 'sap_delivery_date',
+      dataIndex: 'deliveryDate',
       width: '6%',
       render: (_, r) =>
-        dayjs.utc(r.sap_delivery_date).add(7, 'hour').format('DD-MMM-YYYY'),// forces UTC, no timezone shift
+        dayjs.utc(r.deliveryDate).add(7, 'hour').format('DD-MMM-YYYY'),// forces UTC, no timezone shift
       // sorter: {
       //   compare: (a, b) =>
       //     (a.sap_delivery_date ? dayjs(a.sap_delivery_date).unix() : 0) -
@@ -1378,7 +1463,7 @@ export default () => {
                                   </span>
                                   {access.currentUser?.login == item.claimed_by && access.canAccesAddRemarkAllocate ?
                                     <Button type="default" danger
-                                      onClick={() => handleUnClaim([Number(item.id)])}
+                                      onClick={() => (handleUnClaim([Number(item.id)], item))}
                                     >
                                       Unpick
                                     </Button>
@@ -2481,13 +2566,13 @@ export default () => {
                             {areaReady && (
                               <ProFormSelect
                                 name="area_dn"
-                                initialValue={selectedArea}
                                 mode="multiple"
                                 placeholder="Area"
                                 showSearch
                                 allowClear
                                 width={200}
                                 options={areaOptions}
+                                initialValue={dnSearch.area}
                                 onChange={(val: number[]) => {
                                   setSelectedArea(val);
                                   setDnSearch(v => ({
@@ -2498,6 +2583,7 @@ export default () => {
                                 }}
                               />
                             )}
+
 
 
 
@@ -2602,14 +2688,14 @@ export default () => {
                               <Button
                                 type="primary"
                                 disabled={selectedRowKeys.length === 0}
-                                onClick={() => handleClaim(selectedRowKeys.map(k => Number(k)))}
+                                onClick={() => (handleClaim(selectedRowKeys.map(k => Number(k))), console.log(selectedListDn))}
                               >
                                 Pick
                               </Button>
                             </div>
                           )}
                           <Button type="text" size={'large'}
-                            onClick={() => navigate("/delivery/location", { state: { list: dataListDn, selected: selectedListDn, selectedRows: selectedRows,areaList:selectedArea } })}
+                            onClick={() => navigate("/delivery/location", { state: { list: dataListDn, selected: selectedListDn, selectedRows: selectedRows, areaList: selectedArea } })}
                             icon={<TbMap2 />}
                             style={{ fontSize: 22 }}
                           >
@@ -2977,18 +3063,35 @@ export default () => {
         open={claimOpen}
         title="Pick"
         onCancel={() => {
+          setClaimOpen(false);
           setClaimIds([])
           setClaimedLines([])
-          setClaimOpen(false)
+          setSelectedRowKeys([])
+          setSelectedRows([])
+          setSelectedListDn([])
         }}
         onOk={async () => {
-          await services.ClaimDn(
-            claimIds,
-            access.currentUser?.login,
-            'Pick',
-            'Pick DN',
-            useExisting ? selectedClaimedLine : null
+          const sapLines = selectedListDn.flatMap(dn =>
+            (dn.deliveryItems ?? []).map(it => ({
+              lineNum: Number(it.sap_line_num),                 // SAP line number
+              shipDate: (dn.deliveryDate)
+            }))
           );
+          const soDocEntries = [...new Set(
+            selectedListDn.map(v => v.so_doc_entry)
+          )];
+
+          for (const soDocEntry of soDocEntries) {
+            await services.ClaimDn(
+              claimIds,
+              access.currentUser?.login,
+              'Pick',
+              'Pick DN',
+              useExisting ? selectedClaimedLine : null,
+              soDocEntry, // ✅ SINGLE Long
+              sapLines
+            );
+          }
           actionRef.current?.reloadAndRest?.();
           message.success('Updated successfully');
           setClaimOpen(false);
@@ -2996,6 +3099,7 @@ export default () => {
           setClaimedLines([])
           setSelectedRowKeys([])
           setSelectedRows([])
+          setSelectedListDn([])
         }}
       >
         <Checkbox

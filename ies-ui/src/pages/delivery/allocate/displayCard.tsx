@@ -14,7 +14,7 @@ export const FloatingCard = ({
 }: FloatingCardProps) => {
   if (!cardOpen.visible || selectedRows?.length === 0) return null;
   const [collapsed, setCollapsed] = useState(false);
-  console.log('selectedRows',selectedRows)
+
   return (
     <Card
       size="small"

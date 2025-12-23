@@ -7,7 +7,7 @@ import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table';
 import { Card, Checkbox, DatePicker, message, Modal, Progress, Radio, Space, Spin, Tag, Image, UploadFile, Descriptions, Button, Table, Dropdown, Row, Col, Typography, Select, Form, Tooltip, Divider, Collapse } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AllocateServiceAPI } from '@/pages/delivery/allocate/service';
-import { Allocate, AllocateSOAdvanceParams, DeliveryList, DNItemParams, DNList, DNParams, DnQuickView, LocationList, SkuList, SOAllocateActivities, SOList, UpdateRemarkParams } from '@/pages/delivery/allocate/data';
+import { Allocate, AllocateSOAdvanceParams, AreaList, DeliveryList, DNItemParams, DNList, DNParams, DnQuickView, LocationList, SkuList, SOAllocateActivities, SOList, UpdateRemarkParams } from '@/pages/delivery/allocate/data';
 import { useAccess, useModel } from '@umijs/max';
 import { Paging } from '@/services/API';
 import { FaCarSide, FaMapLocationDot, FaRegPenToSquare, FaTruckMoving } from "react-icons/fa6";
@@ -31,6 +31,7 @@ import { render } from '@testing-library/react';
 dayjs.extend(customParseFormat)
 interface DNListState {
   selectedRows?: DNList[]
+  areaList?: AreaList[]
 }
 
 export default () => {
@@ -151,6 +152,12 @@ export default () => {
       if (state.selectedRows.length > 0) setCardOpen({ visible: true });
     }
   }, [state?.selectedRows]);
+
+  useEffect(() => {
+    if (state?.areaList) {
+      setSelectedArea(state?.areaList)
+    }
+  }, [state?.areaList]);
 
   // Load provinces once
   useEffect(() => {
@@ -2474,24 +2481,24 @@ export default () => {
                             {areaReady && (
                               <ProFormSelect
                                 name="area_dn"
-                                key={JSON.stringify(selectedArea)}
                                 initialValue={selectedArea}
                                 mode="multiple"
                                 placeholder="Area"
                                 showSearch
                                 allowClear
                                 width={200}
-                                options={areaOptions}   // ✅ NOT request
+                                options={areaOptions}
                                 onChange={(val: number[]) => {
+                                  setSelectedArea(val);
                                   setDnSearch(v => ({
                                     ...v,
                                     area: val,
                                   }));
-                                  setSelectedArea(val)
                                   actionRef.current?.reloadAndRest?.();
                                 }}
                               />
                             )}
+
 
 
                             <ProFormDateRangePicker
@@ -2602,7 +2609,7 @@ export default () => {
                             </div>
                           )}
                           <Button type="text" size={'large'}
-                            onClick={() => navigate("/delivery/location", { state: { list: dataListDn, selected: selectedListDn, selectedRows: selectedRows } })}
+                            onClick={() => navigate("/delivery/location", { state: { list: dataListDn, selected: selectedListDn, selectedRows: selectedRows,areaList:selectedArea } })}
                             icon={<TbMap2 />}
                             style={{ fontSize: 22 }}
                           >
@@ -2888,7 +2895,7 @@ export default () => {
 
 
 
-      </Spin> 
+      </Spin>
       <DrawerForm
         open={drawerOpen.visible}
         id={drawerOpen.id}

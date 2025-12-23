@@ -7,7 +7,7 @@ import { useAccess, useQuery } from "@umijs/max";
 import { fetchDataListService, singleRequest } from "@/services/apiGateway";
 import { Moment } from "moment";
 import { simpleRequestActions } from "@/services/model";
-import { Location } from "../data";
+import { AreaList, Location } from "../data";
 import { ArrowLeftOutlined, ReloadOutlined, } from "@ant-design/icons";
 import DeliveryList from "./DeliveryList";
 import DeliveryView from "./DeliveryView";
@@ -23,6 +23,7 @@ interface DNListState {
     list: DNList[];
     selected?: DNList[]
     selectedRows?: DNList[]
+    areaList?:AreaList[]
 }
 
 export default () => {
@@ -41,7 +42,7 @@ export default () => {
     const [cardOpen, setCardOpen] = useState<{ visible: boolean }>({
         visible: false
     });
-
+console.log(state)
     const [zoomTo, setZoomto] = useState<Location>()
 
     // const { data, isFetching, refetch } = useQuery(
@@ -135,7 +136,7 @@ export default () => {
                 type="text"
                 icon={<ArrowLeftOutlined />}
                 onClick={() =>
-                    navigate("/delivery/allocate/list", { state: { selectedRows: select } })
+                    navigate("/delivery/allocate/list", { state: { selectedRows: select ,areaList:state?.areaList} })
                 }
             >
                 Back

@@ -92,6 +92,7 @@ export interface DNList {
   district?: string
   unplannedItems: DNPlan[]
   DNList: DNPlan[]
+  so_doc_entry:string
 }
 
 interface mergeItems {
@@ -151,6 +152,7 @@ interface DN {
 // }
 
 interface DNPlan {
+  sap_line_num(sap_line_num: any): number;
   sku_id: string;
   sku_uom: string;
   allocateItemIds?: string;
@@ -166,6 +168,7 @@ interface DNPlan {
   attachment?: Attachment[];
   so_status?: string
   delItemName?: string
+  so_doc_entry?:string
 }
 
 export interface DeliveryItemList {
@@ -350,4 +353,9 @@ export type Location = {
   licensePlane: string;
   latitude: string;
   longitude: string;
+}
+
+export interface SapLine {
+  lineNum: number;
+  shipDate: string;
 }

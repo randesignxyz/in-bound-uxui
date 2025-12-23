@@ -7,7 +7,7 @@ import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table';
 import { Card, Checkbox, DatePicker, message, Modal, Progress, Radio, Space, Spin, Tag, Image, UploadFile, Descriptions, Button, Table, Dropdown, Row, Col, Typography, Select, Form, Tooltip, Divider, Collapse } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AllocateServiceAPI } from '@/pages/delivery/allocate/service';
-import { Allocate, AllocateSOAdvanceParams, DeliveryList, DNItemParams, DNList, DNParams, DnQuickView, LocationList, SkuList, SOAllocateActivities, SOList, UpdateRemarkParams } from '@/pages/delivery/allocate/data';
+import { Allocate, AllocateSOAdvanceParams, AreaList, DeliveryList, DNItemParams, DNList, DNParams, DnQuickView, LocationList, SkuList, SOAllocateActivities, SOList, UpdateRemarkParams } from '@/pages/delivery/allocate/data';
 import { useAccess, useModel } from '@umijs/max';
 import { Paging } from '@/services/API';
 import { FaCarSide, FaMapLocationDot, FaRegPenToSquare, FaTruckMoving } from "react-icons/fa6";
@@ -31,6 +31,7 @@ import { render } from '@testing-library/react';
 dayjs.extend(customParseFormat)
 interface DNListState {
   selectedRows?: DNList[]
+  areaList?: AreaList[]
 }
 
 export default () => {
@@ -42,6 +43,7 @@ export default () => {
   const requestActions = simpleRequestActions();
   const services = AllocateServiceAPI(requestActions);
   const actionRef = useRef<ActionType>();
+  const restoredFromNavRef = useRef(false);
   const [data, setData] = useState<SOList[]>()
   const [skuList, setSkuList] = useState<SkuList[]>([])
   const [dataListDn, setDataListDn] = useState<DNList[]>([])
@@ -72,7 +74,7 @@ export default () => {
   const [MTSearch, setMTSearch] = useState<{ status: string; startDate?: string, endDate?: string }>({
     status: 'pending',
   });
-  const [dnSearch, setDnSearch] = useState<{ status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string, sap_delivery_date: string | null, sap_from_date?: string, sap_to_date?: string, customer?: string, area?: string }>({
+  const [dnSearch, setDnSearch] = useState<{ status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string, sap_delivery_date: string | null, sap_from_date?: string, sap_to_date?: string, customer?: string, area?: [] }>({
     status: 'posted',
     dnStatus: 'open',
     sap_delivery_date: 'as_of_now',
@@ -151,6 +153,12 @@ export default () => {
       if (state.selectedRows.length > 0) setCardOpen({ visible: true });
     }
   }, [state?.selectedRows]);
+
+  useEffect(() => {
+    if (state?.areaList) {
+      setSelectedArea(state?.areaList)
+    }
+  }, [state?.areaList]);
 
   // Load provinces once
   useEffect(() => {
@@ -611,7 +619,7 @@ export default () => {
   const onSync = async () => {
     try {
       isLoading(true)
-      await services.syncAllocate();
+      // await services.syncAllocate();
       actionRef.current?.reloadAndRest?.();
     } catch (error: any) {
       message.error(error.message);
@@ -647,6 +655,63 @@ export default () => {
     });
   }
 
+  // useEffect(() => {
+  //   const loadDefaultAreas = async () => {
+  //     const res = await services.list_area();
+  //     if (!Array.isArray(res)) return;
+
+  //     const options = res.map((a: any) => ({
+  //       value: Number(a.division_id),
+  //       label: a.division_name.replace(/^S&D\s*/i, '').trim(),
+  //       isDefault: a.isdefault === '1' || a.is_default === '1',
+  //     }));
+
+  //     setAreaOptions(options);
+
+  //     const defaultAreaIds = options
+  //       .filter(o => o.isDefault)
+  //       .map(o => o.value);
+
+  //     if (defaultAreaIds.length > 0) {
+  //       form.setFieldsValue({
+  //         area_dn: defaultAreaIds,
+  //         area_his: defaultAreaIds,
+  //       });
+
+  //       setDnSearch((v: any) => ({
+  //         ...v,
+  //         area: defaultAreaIds,
+  //       }));
+  //       setSelectedArea(defaultAreaIds)
+  //     }
+
+  //     setAreaReady(true);
+
+  //     setTimeout(() => {
+  //       actionRef.current?.reloadAndRest?.();
+  //     }, 0);
+  //   };
+
+  //   loadDefaultAreas();
+  // }, []);
+
+  useEffect(() => {
+    if (state?.areaList?.length) {
+      restoredFromNavRef.current = true;
+
+      setSelectedArea(state.areaList);
+      form.setFieldsValue({
+        area_dn: state.areaList,
+        area_his: state.areaList,
+      });
+
+      setDnSearch(v => ({
+        ...v,
+        area: state.areaList,
+      }));
+    }
+  }, [state?.areaList]);
+
   useEffect(() => {
     const loadDefaultAreas = async () => {
       const res = await services.list_area();
@@ -660,21 +725,29 @@ export default () => {
 
       setAreaOptions(options);
 
+      // 🔑 HARD STOP if restored from navigation
+      if (restoredFromNavRef.current) {
+        setAreaReady(true);
+        return;
+      }
+
+      // otherwise → apply default
       const defaultAreaIds = options
         .filter(o => o.isDefault)
         .map(o => o.value);
 
       if (defaultAreaIds.length > 0) {
+        setSelectedArea(defaultAreaIds);
+
         form.setFieldsValue({
           area_dn: defaultAreaIds,
           area_his: defaultAreaIds,
         });
 
-        setDnSearch((v: any) => ({
+        setDnSearch(v => ({
           ...v,
           area: defaultAreaIds,
         }));
-        setSelectedArea(defaultAreaIds)
       }
 
       setAreaReady(true);
@@ -686,6 +759,7 @@ export default () => {
 
     loadDefaultAreas();
   }, []);
+
 
 
 
@@ -1029,10 +1103,10 @@ export default () => {
     // },
     {
       title: 'Delivery Date',
-      dataIndex: 'sap_delivery_date',
+      dataIndex: 'deliveryDate',
       width: '6%',
       render: (_, r) =>
-        dayjs.utc(r.sap_delivery_date).add(7, 'hour').format('DD-MMM-YYYY'),// forces UTC, no timezone shift
+        dayjs.utc(r.deliveryDate).add(7, 'hour').format('DD-MMM-YYYY'),// forces UTC, no timezone shift
       // sorter: {
       //   compare: (a, b) =>
       //     (a.sap_delivery_date ? dayjs(a.sap_delivery_date).unix() : 0) -
@@ -2474,24 +2548,25 @@ export default () => {
                             {areaReady && (
                               <ProFormSelect
                                 name="area_dn"
-                                key={JSON.stringify(selectedArea)}
-                                initialValue={selectedArea}
                                 mode="multiple"
                                 placeholder="Area"
                                 showSearch
                                 allowClear
                                 width={200}
-                                options={areaOptions}   // ✅ NOT request
+                                options={areaOptions}
+                                initialValue={dnSearch.area}
                                 onChange={(val: number[]) => {
+                                  setSelectedArea(val);
                                   setDnSearch(v => ({
                                     ...v,
                                     area: val,
                                   }));
-                                  setSelectedArea(val)
                                   actionRef.current?.reloadAndRest?.();
                                 }}
                               />
                             )}
+
+
 
 
                             <ProFormDateRangePicker
@@ -2595,14 +2670,14 @@ export default () => {
                               <Button
                                 type="primary"
                                 disabled={selectedRowKeys.length === 0}
-                                onClick={() => handleClaim(selectedRowKeys.map(k => Number(k)))}
+                                onClick={() => (handleClaim(selectedRowKeys.map(k => Number(k))), console.log(selectedListDn))}
                               >
                                 Pick
                               </Button>
                             </div>
                           )}
                           <Button type="text" size={'large'}
-                            onClick={() => navigate("/delivery/location", { state: { list: dataListDn, selected: selectedListDn, selectedRows: selectedRows } })}
+                            onClick={() => navigate("/delivery/location", { state: { list: dataListDn, selected: selectedListDn, selectedRows: selectedRows, areaList: selectedArea } })}
                             icon={<TbMap2 />}
                             style={{ fontSize: 22 }}
                           >
@@ -2888,7 +2963,7 @@ export default () => {
 
 
 
-      </Spin> 
+      </Spin>
       <DrawerForm
         open={drawerOpen.visible}
         id={drawerOpen.id}
@@ -2973,15 +3048,31 @@ export default () => {
           setClaimIds([])
           setClaimedLines([])
           setClaimOpen(false)
+          console.log('selectedListDn', selectedListDn)
         }}
         onOk={async () => {
-          await services.ClaimDn(
-            claimIds,
-            access.currentUser?.login,
-            'Pick',
-            'Pick DN',
-            useExisting ? selectedClaimedLine : null
+          const sapLines = selectedListDn.flatMap(dn =>
+            (dn.deliveryItems ?? []).map(it => ({
+              lineNum: Number(it.sap_line_num),                 // SAP line number
+              shipDate: (dn.deliveryDate)
+            }))
           );
+          console.log('selectedListDn.so_doc_entry', selectedListDn.flatMap(v => v.so_doc_entry).toString())
+          const soDocEntries = [...new Set(
+            selectedListDn.map(v => v.so_doc_entry)
+          )];
+
+          for (const soDocEntry of soDocEntries) {
+            await services.ClaimDn(
+              claimIds,
+              access.currentUser?.login,
+              'Pick',
+              'Pick DN',
+              useExisting ? selectedClaimedLine : null,
+              soDocEntry, // ✅ SINGLE Long
+              sapLines
+            );
+          }
           actionRef.current?.reloadAndRest?.();
           message.success('Updated successfully');
           setClaimOpen(false);

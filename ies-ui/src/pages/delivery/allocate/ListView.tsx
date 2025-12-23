@@ -1395,7 +1395,7 @@ export default () => {
                         <Descriptions column={5}>
                           <Descriptions.Item label="DO Date" style={{ fontWeight: 'bolder' }}>
                             {dayjs(item.deliveryDate).isValid()
-                              ? dayjs(item.deliveryDate).format('DD-MMM-YYYY')
+                              ? dayjs(item.deliveryDate).format('DD-MMM-YYYY hh:mm')
                               : '-'}
                           </Descriptions.Item>
                           <Descriptions.Item label="DO No" style={{ fontWeight: 'bolder' }}>

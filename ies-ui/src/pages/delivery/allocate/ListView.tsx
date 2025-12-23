@@ -320,34 +320,34 @@ export default () => {
   };
 
   const handleUnClaim = async (ids: number[], data: any) => {
-  Modal.confirm({
-    title: 'Unpick',
-    content: 'Are you sure?',
-    onOk: async () => {
+    Modal.confirm({
+      title: 'Unpick',
+      content: 'Are you sure?',
+      onOk: async () => {
 
-      // ✅ data is ONE DN object
-      const sapLines = (data.deliveryItems ?? []).map((it: any) => ({
-        lineNum: Number(it.sap_line_num),
-        shipDate: data.deliveryDate,
-      }));
+        // ✅ data is ONE DN object
+        const sapLines = (data.deliveryItems ?? []).map((it: any) => ({
+          lineNum: Number(it.sap_line_num),
+          shipDate: data.deliveryDate,
+        }));
 
-      const soDocEntry = data.so_doc_entry ?? data.soId;
+        const soDocEntry = data.so_doc_entry ?? data.soId;
 
-      await services.ClaimDn(
-        ids,
-        access.currentUser?.login ?? '',
-        'Unpick',
-        'Unpick DN',
-        null,
-        soDocEntry,
-        sapLines
-      );
+        await services.ClaimDn(
+          ids,
+          access.currentUser?.login ?? '',
+          'Unpick',
+          'Unpick DN',
+          null,
+          soDocEntry,
+          sapLines
+        );
 
-      actionRef.current?.reloadAndRest?.();
-      message.success('Updated successfully');
-    },
-  });
-};
+        actionRef.current?.reloadAndRest?.();
+        message.success('Updated successfully');
+      },
+    });
+  };
 
 
 
@@ -1376,22 +1376,9 @@ export default () => {
           }}>
             <Descriptions column={5}>
               <Descriptions.Item label="Pick Number" style={{ fontWeight: 'bolder' }}>
-                {record.claimed_line}
-                {/* <Tag
-                
-                  color={
-                    record.claim_status === 'open'
-                      ? 'blue'
-                      : record.claim_status === 'in-progress'
-                        ? 'orange'
-                        : record.claim_status === 'complete'
-                          ? 'green'
-                          : 'default'
-                  }
-                  style={{ textTransform: 'capitalize',marginLeft:20 }}
-                >
-                  {record.claim_status}
-                </Tag> */}
+                <a>
+                  <Typography.Link strong copyable >{record.claimed_line || '-'}</Typography.Link>
+                </a>
               </Descriptions.Item>
             </Descriptions>
             <Divider />

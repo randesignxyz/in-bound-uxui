@@ -319,25 +319,22 @@ export default () => {
     setClaimOpen(true);
   };
 
-  const handleUnClaim = async (id: number[], data: any) => {
-    console.log(data)
+  const handleUnClaim = async (ids: number[], data: any) => {
     Modal.confirm({
       title: 'Unpick',
       content: 'Are you sure?',
       onOk: async () => {
+
+        // ✅ data is ONE DN object
         const sapLines = (data.deliveryItems ?? []).map((it: any) => ({
           lineNum: Number(it.sap_line_num),
           shipDate: data.deliveryDate,
         }));
 
-        const soDocEntry = data.so_doc_entry
+        const soDocEntry = data.so_doc_entry ?? data.soId;
 
-        // await services.ClaimDn(id, '', 'Unpick', 'Pick DN') as {
-        //   data: string;
-        //   message: string;
-        // }
         await services.ClaimDn(
-          id,
+          ids,
           access.currentUser?.login ?? '',
           'Unpick',
           'Unpick DN',
@@ -346,12 +343,13 @@ export default () => {
           sapLines
         );
 
-
         actionRef.current?.reloadAndRest?.();
         message.success('Updated successfully');
       },
     });
-  }
+  };
+
+
 
   const getActivities = async (id: number) => {
     try {
@@ -1378,22 +1376,9 @@ export default () => {
           }}>
             <Descriptions column={5}>
               <Descriptions.Item label="Pick Number" style={{ fontWeight: 'bolder' }}>
-                {record.claimed_line}
-                {/* <Tag
-                
-                  color={
-                    record.claim_status === 'open'
-                      ? 'blue'
-                      : record.claim_status === 'in-progress'
-                        ? 'orange'
-                        : record.claim_status === 'complete'
-                          ? 'green'
-                          : 'default'
-                  }
-                  style={{ textTransform: 'capitalize',marginLeft:20 }}
-                >
-                  {record.claim_status}
-                </Tag> */}
+                <a>
+                  <Typography.Link strong copyable >{record.claimed_line || '-'}</Typography.Link>
+                </a>
               </Descriptions.Item>
             </Descriptions>
             <Divider />
@@ -3080,7 +3065,6 @@ export default () => {
           const soDocEntries = [...new Set(
             selectedListDn.map(v => v.so_doc_entry)
           )];
-
           for (const soDocEntry of soDocEntries) {
             await services.ClaimDn(
               claimIds,
@@ -3088,7 +3072,7 @@ export default () => {
               'Pick',
               'Pick DN',
               useExisting ? selectedClaimedLine : null,
-              soDocEntry, // ✅ SINGLE Long
+              soDocEntry,
               sapLines
             );
           }

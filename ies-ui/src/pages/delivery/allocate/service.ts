@@ -64,11 +64,11 @@ const AllocateAction = {
         actionName: 'sync-allocate',
         payload: {}
     }),
-    claimDn: (sales_planid: number[], claimed_by?: string, action?: string, activities_name?: string,claimed_line?:string|null,so_doc_entry?:string,del_item?:SapLine[]): ServiceApiType<{ sales_planid: number[], claimed_by?: string, action?: string, activities_name?: string,claimed_line?:string|null,so_doc_entry?:string,del_item?:SapLine[] }> => ({
+    claimDn: (sales_planid: number[], claimed_by?: string, action?: string, activities_name?: string,claimed_line?:string|null,so_doc_entries?:string,del_item?:SapLine[]): ServiceApiType<{ sales_planid: number[], claimed_by?: string, action?: string, activities_name?: string,claimed_line?:string|null,so_doc_entries?:string,del_item?:SapLine[] }> => ({
         type: 'EXEC',
         endpoint: 'DELIVERY',
         actionName: 'claim-dn',
-        payload: { sales_planid, claimed_by, action, activities_name,claimed_line,so_doc_entry,del_item }
+        payload: { sales_planid, claimed_by, action, activities_name,claimed_line,so_doc_entries,del_item }
     }),
     getActivities: (dnID: number): ServiceApiType<{ dnID: number }> => ({
         type: 'LIST_QUERY',
@@ -169,8 +169,8 @@ export const AllocateServiceAPI = (requestAction: RequestActions) => {
         syncAllocate: () =>
             singleRequest<{ data: string, message: string }>(AllocateAction.syncAllocate())(requestAction),
 
-        ClaimDn: (sales_planid: number[], claimed_by?: string, action?: string, activities_name?: string,claimed_line?:string|null,so_doc_entry?:string,del_item?:SapLine[]) =>
-            singleRequest<{ data: string, message: string }>(AllocateAction.claimDn(sales_planid, claimed_by, action, activities_name,claimed_line,so_doc_entry,del_item))(requestAction),
+        ClaimDn: (sales_planid: number[], claimed_by?: string, action?: string, activities_name?: string,claimed_line?:string|null,so_doc_entries?:string,del_item?:SapLine[]) =>
+            singleRequest<{ data: string, message: string }>(AllocateAction.claimDn(sales_planid, claimed_by, action, activities_name,claimed_line,so_doc_entries,del_item))(requestAction),
 
         getActivities: (dnID: number) =>
             singleRequest<SOAllocateActivities>(AllocateAction.getActivities(dnID))(

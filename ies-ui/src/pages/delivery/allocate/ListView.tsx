@@ -319,39 +319,37 @@ export default () => {
     setClaimOpen(true);
   };
 
-  const handleUnClaim = async (id: number[], data: any) => {
-    console.log(data)
-    Modal.confirm({
-      title: 'Unpick',
-      content: 'Are you sure?',
-      onOk: async () => {
-        const sapLines = (data.deliveryItems ?? []).map((it: any) => ({
-          lineNum: Number(it.sap_line_num),
-          shipDate: data.deliveryDate,
-        }));
+  const handleUnClaim = async (ids: number[], data: any) => {
+  Modal.confirm({
+    title: 'Unpick',
+    content: 'Are you sure?',
+    onOk: async () => {
 
-        const soDocEntry = data.so_doc_entry
+      // ✅ data is ONE DN object
+      const sapLines = (data.deliveryItems ?? []).map((it: any) => ({
+        lineNum: Number(it.sap_line_num),
+        shipDate: data.deliveryDate,
+      }));
 
-        // await services.ClaimDn(id, '', 'Unpick', 'Pick DN') as {
-        //   data: string;
-        //   message: string;
-        // }
-        await services.ClaimDn(
-          id,
-          access.currentUser?.login ?? '',
-          'Unpick',
-          'Unpick DN',
-          null,
-          soDocEntry,
-          sapLines
-        );
+      const soDocEntry = data.so_doc_entry ?? data.soId;
+
+      await services.ClaimDn(
+        ids,
+        access.currentUser?.login ?? '',
+        'Unpick',
+        'Unpick DN',
+        null,
+        soDocEntry,
+        sapLines
+      );
+
+      actionRef.current?.reloadAndRest?.();
+      message.success('Updated successfully');
+    },
+  });
+};
 
 
-        actionRef.current?.reloadAndRest?.();
-        message.success('Updated successfully');
-      },
-    });
-  }
 
   const getActivities = async (id: number) => {
     try {
@@ -3080,7 +3078,6 @@ export default () => {
           const soDocEntries = [...new Set(
             selectedListDn.map(v => v.so_doc_entry)
           )];
-
           for (const soDocEntry of soDocEntries) {
             await services.ClaimDn(
               claimIds,
@@ -3088,7 +3085,7 @@ export default () => {
               'Pick',
               'Pick DN',
               useExisting ? selectedClaimedLine : null,
-              soDocEntry, // ✅ SINGLE Long
+              soDocEntry,
               sapLines
             );
           }

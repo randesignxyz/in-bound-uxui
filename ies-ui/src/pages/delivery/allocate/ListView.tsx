@@ -319,16 +319,34 @@ export default () => {
     setClaimOpen(true);
   };
 
-  const handleUnClaim = async (id: number[]) => {
+  const handleUnClaim = async (id: number[], data: any) => {
+    console.log(data)
     Modal.confirm({
       title: 'Unpick',
       content: 'Are you sure?',
       onOk: async () => {
+        const sapLines = (data.deliveryItems ?? []).map((it: any) => ({
+          lineNum: Number(it.sap_line_num),
+          shipDate: data.deliveryDate,
+        }));
 
-        await services.ClaimDn(id, '', 'Unpick', 'Pick DN') as {
-          data: string;
-          message: string;
-        }
+        const soDocEntry = data.so_doc_entry
+
+        // await services.ClaimDn(id, '', 'Unpick', 'Pick DN') as {
+        //   data: string;
+        //   message: string;
+        // }
+        await services.ClaimDn(
+          id,
+          access.currentUser?.login ?? '',
+          'Unpick',
+          'Unpick DN',
+          null,
+          soDocEntry,
+          sapLines
+        );
+
+
         actionRef.current?.reloadAndRest?.();
         message.success('Updated successfully');
       },
@@ -1445,7 +1463,7 @@ export default () => {
                                   </span>
                                   {access.currentUser?.login == item.claimed_by && access.canAccesAddRemarkAllocate ?
                                     <Button type="default" danger
-                                      onClick={() => handleUnClaim([Number(item.id)])}
+                                      onClick={() => (handleUnClaim([Number(item.id)], item))}
                                     >
                                       Unpick
                                     </Button>
@@ -3045,10 +3063,12 @@ export default () => {
         open={claimOpen}
         title="Pick"
         onCancel={() => {
+          setClaimOpen(false);
           setClaimIds([])
           setClaimedLines([])
-          setClaimOpen(false)
-          console.log('selectedListDn', selectedListDn)
+          setSelectedRowKeys([])
+          setSelectedRows([])
+          setSelectedListDn([])
         }}
         onOk={async () => {
           const sapLines = selectedListDn.flatMap(dn =>
@@ -3057,7 +3077,6 @@ export default () => {
               shipDate: (dn.deliveryDate)
             }))
           );
-          console.log('selectedListDn.so_doc_entry', selectedListDn.flatMap(v => v.so_doc_entry).toString())
           const soDocEntries = [...new Set(
             selectedListDn.map(v => v.so_doc_entry)
           )];
@@ -3080,6 +3099,7 @@ export default () => {
           setClaimedLines([])
           setSelectedRowKeys([])
           setSelectedRows([])
+          setSelectedListDn([])
         }}
       >
         <Checkbox

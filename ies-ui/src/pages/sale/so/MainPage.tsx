@@ -8,7 +8,7 @@ import { Model } from "./model"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { FetchPagingParams } from "@/components/DataCrud/TableView"
 import { ActionType, CheckCard, ProForm, ProFormSelect } from "@ant-design/pro-components"
-import { useAccess, useQuery } from "@umijs/max"
+import { useAccess, useParams, useQuery } from "@umijs/max"
 import CustomerDetailView from "@/pages/crm/customer/components/Detail"
 import { formatDate, formatDateTime } from "@/pages/utils"
 import Status from "@/components/Status"
@@ -19,6 +19,7 @@ import AdvanceSearch from './components/List/AdvanceSearch'
 import { AllocateServiceAPI } from '@/pages/delivery/allocate/service'
 import { simpleRequestActions } from '@/services/model'
 import { CrmServiceAPI } from '@/services/crm/services'
+import { CrmServices } from '@/pages/crm/services'
 
 type FilterType = SoAdvanceSearchParams & {
     searchValue?: string; status?: string;
@@ -29,6 +30,8 @@ export default () => {
     const actionRef = useRef<ActionType>();
     const [form] = Form.useForm();
     const access = useAccess();
+    const param = useParams();
+
     const [filter, setFilter] = useState<FetchPagingParams<SoAdvanceSearchParams>>({
         criteria: {
             status: 'Pending',
@@ -177,22 +180,21 @@ export default () => {
                         submitter={false}
 
                     >
-
-                        <ProFormSelect
+                        {!param?.["*"] && <ProFormSelect
                             name="saleArea"
                             placeholder={"Area"}
                             mode="multiple"
                             width={250}
                             request={async () => {
-                                const res = await AllocateServiceAPI(requestActions).list_area_so();
+                                const res = await CrmServices.listSaleAreas().query(requestActions)
                                 if (!Array.isArray(res)) return [];
 
                                 const options = res.map((a: any) => ({
-                                    value: Number(a.division_id ?? a.di),
-                                    label: (a.division_name ?? a.name)
+                                    value: Number(a.divisionId ?? a.di),
+                                    label: (a.divisionName ?? a.name)
                                         ?.replace(/^S&D\s*/i, '')
                                         .trim(),
-                                    isDefault: a.isdefault === '1' || a.is_default === '1',
+                                    isDefault: a.defaultFlag === 1 || a.defaultFlag === 1,
                                 }));
 
                                 const defaultAreaIds = options
@@ -224,7 +226,7 @@ export default () => {
                                     }));
                                 },
                             }}
-                        />
+                        />}
 
                     </ProForm>
 

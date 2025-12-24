@@ -341,6 +341,46 @@ export default () => {
       // overlay: soMenu,
     },
     {
+      id: 'so',
+      name: 'All Sale Order List',
+      description: 'All Sale Order List',
+      link: `${SalePaths.so}/list/all`,
+      icon: saleIcon,
+      visible: access.canAccessSaleItems || access.canAccessSaleSo,
+      menu: {
+        onClick: (info) => {
+          switch (info.key) {
+            case 'newSaleOrder':
+              history.push(`${SalePaths.so}/create`);
+              break;
+            case 'sale-order-report':
+              setReport('sale-order-report');
+              break;
+            default:
+              message.error('Something went wrong.');
+          }
+          return undefined;
+        },
+        items: [
+          access.canCreateEditSo ? getItem(
+            'Actions',
+            'action-menu',
+            null,
+            [getItem('New PO', 'newSaleOrder', <PlusCircleOutlined />)],
+            'group',
+          ) : null,
+          getItem(
+            'Reports',
+            'report-menu',
+            null,
+            [getItem('Purchase Order Report', 'sale-order-report', <BarChartOutlined />)],
+            'group',
+          ),
+        ],
+      },
+      // overlay: soMenu,
+    },
+    {
       id: 'deliveryPlan',
       name: 'Delivery Preview',
       description: 'Delivery SO related Preview',

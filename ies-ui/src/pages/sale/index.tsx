@@ -342,8 +342,8 @@ export default () => {
     },
     {
       id: 'so',
-      name: 'Sale Order List',
-      description: 'All Sale Order List',
+      name: 'Purchase Order List',
+      description: 'All Purchase Order List',
       link: `${SalePaths.so}/list/all`,
       icon: saleIcon,
       visible: access.canAccessSaleItems || access.canAccessSaleSo,

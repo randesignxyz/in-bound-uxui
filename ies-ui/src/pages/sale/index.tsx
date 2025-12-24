@@ -357,7 +357,7 @@ export default () => {
       icon: productIcon,
     }
   ];
-  
+
 
   return (
     <PageContainer title={false}>
@@ -381,7 +381,7 @@ export default () => {
             <Divider />
             <ListMenuComp items={stockMenuItems} />
             <Divider orientation='left' plain >Supporter</Divider>
-            <Supporter/>
+            <Supporter />
           </>
         )}
     </PageContainer>

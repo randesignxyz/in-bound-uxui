@@ -372,50 +372,6 @@ export default () => {
     },
   };
 
-
-  const onRequestHandler = async (params: TableViewSearchParams<AllocateSOAdvanceParams>) => {
-    try {
-      return services.pageSO(params).then((it) => {
-        const statusFilter = params.criteria?.advanceSearch?.dnStatus;
-
-        let filteredItems = it.items ?? [];
-
-        if (statusFilter === 'pending') {
-          // Include both 'open' and 'in-progress', and sort 'in-progress' first
-          filteredItems = filteredItems
-            .filter((v) => v.dn_status === 'open' || v.dn_status === 'in-progress')
-            .sort((a, b) => {
-              if (a.dn_status === b.dn_status) return 0;
-              return a.dn_status === 'in-progress' ? -1 : 1;
-            });
-        } else if (statusFilter) {
-          // Filter by exact match if not 'pending'
-          filteredItems = filteredItems.filter((v) => v.dn_status === statusFilter);
-        }
-        const pageSize = params?.pagination?.pageSize ?? 20;
-        const current = params?.pagination?.current ?? 1;
-        const pagedItems = filteredItems.slice((current - 1) * pageSize, current * pageSize);
-
-        const filteredResult = {
-          ...it,
-          items: pagedItems,
-          total: filteredItems.length,
-        };
-
-        setData(pagedItems);
-
-        return cacheList.cacheDataList({
-          type: 'alocate-list',
-          criteria: params,
-          data: filteredResult,
-        });
-      }) as Promise<Paging<SOList>>;
-    } catch (error: any) {
-      message.error(error.message);
-      return Promise.reject();
-    }
-  };
-
   const onRequestDNHandler = async (
     params: TableViewSearchParams<AllocateSOAdvanceParams>
   ): Promise<any> => {
@@ -480,29 +436,10 @@ export default () => {
     }
   };
 
-
-  const onRequestQuickView = async (
-    params: TableViewSearchParams<AllocateSOAdvanceParams>
-  ): Promise<Paging<DnQuickView>> => {
-    try {
-      const data = await services.fetch_dn_quick_view(quickViewSearch.startDate, quickViewSearch.endDate);
-      return {
-        items: [data],
-        total: 1,
-        page: 1,
-        pageSize: 10,
-      };
-
-    } catch (error: any) {
-      message.error(error.message);
-      return Promise.reject(error);
-    }
-  };
-
   const onSync = async () => {
     try {
       isLoading(true)
-      // await services.syncAllocate();
+      await services.syncAllocate();
       actionRef.current?.reloadAndRest?.();
     } catch (error: any) {
       message.error(error.message);

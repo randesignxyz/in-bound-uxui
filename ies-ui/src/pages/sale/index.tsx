@@ -342,7 +342,7 @@ export default () => {
     },
     {
       id: 'so',
-      name: 'All Sale Order List',
+      name: 'Sale Order List',
       description: 'All Sale Order List',
       link: `${SalePaths.so}/list/all`,
       icon: saleIcon,

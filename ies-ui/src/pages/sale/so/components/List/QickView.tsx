@@ -36,7 +36,7 @@ const QuickView: React.FC<Props> = ({ soDetail, ...props }) => {
                             .filter((it) => it)
                             .join('-'),
                     },
-                    { label: 'Ref #', value: soDetail?.refNo },
+                    { label: 'Customer PO', value: soDetail?.refNo },
 
                     { label: 'Budget Code', value: soDetail?.budgetCode },
                     {

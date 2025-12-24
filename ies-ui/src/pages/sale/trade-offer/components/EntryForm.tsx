@@ -51,7 +51,7 @@ const EntryForm: React.FC<Props> = ({ type, id }) => {
         />
         <Form.Provider>
             <Tabs>
-                <Tabs.TabPane tab={<Space size={0}><DollarCircleOutlined /> <span>Sale Order</span></Space>} key='tradeOffer'>
+                <Tabs.TabPane tab={<Space size={0}><DollarCircleOutlined /> <span>Purchase Order</span></Space>} key='tradeOffer'>
                     {/* <ProForm
                         // labelAlign='left'
 

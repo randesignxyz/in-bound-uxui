@@ -1,4 +1,4 @@
-import { formatDate } from '@/pages/utils';
+import { formatDate, formatDateTime } from '@/pages/utils';
 import { AddressInfo } from '@/services/crm/data';
 import { DeleteOutlined, EditOutlined, SisternodeOutlined } from '@ant-design/icons';
 import ProTable from '@ant-design/pro-table';
@@ -8,6 +8,8 @@ import { DeliveryEntry, DeliverySoItemEntry } from '../../reducer';
 import { DeliveryInfo } from '../SoEntryForm';
 import DeliveryItemListEntry from './DeliveryItemListEntry';
 import styles from './style.less';
+import moment from 'moment';
+import PopconfirmMe from '@/pages/expense/delivery/components/PopconfirmMe';
 
 interface Props {
   data?: {
@@ -31,7 +33,13 @@ const DeliveryItemList: React.FC<Props> = ({ data, actionHandlers }) => {
         columns={[
           {
             title: 'Delivery Date',
-            render: (_, r) => (r.main && formatDate(r.deliveryDate)) || '-',
+            render: (_, r) =>
+              r.main && r.deliveryDate ? (
+                <span style={{ display: 'inline-flex', gap: 8 }}>
+                  <span>{moment(r.deliveryDate).format('YYYY-MM-DD')}</span>
+                  <span>{moment(r.deliveryDate).format('HH:mm:ss')}</span>
+                </span>
+              ) : '-',
           },
           { title: 'Shipping Address', render: (_, r) => (r.main && r.shippingAddressCode) || '-' },
           { title: 'Item Code', dataIndex: 'itemCode' },
@@ -42,8 +50,54 @@ const DeliveryItemList: React.FC<Props> = ({ data, actionHandlers }) => {
           { title: 'Remarks', dataIndex: 'remarks' },
           {
             render: (_, r) => (
-              <Space size={0}>
-                {r.default && (
+              <>
+                <Space size={0}>
+                  {(!r?.status?.toLocaleLowerCase() ||
+                    !r?.so_status?.toLocaleLowerCase() ||
+                    r?.so_status.toLocaleLowerCase() != 'posted' ||
+                    r?.status.toLocaleLowerCase() == 'pending'
+                    // ||(r?.so_status.toLocaleLowerCase() === 'posted' && moment(r.deliveryDate).format('YYYY-MM-DD') === '2099-12-31')
+                  )
+                    && (
+                      <>
+                        {r.default && (
+                          <Button
+                            type="link"
+                            title="Split delivery"
+                            onClick={() => setVisible({ visible: true })}
+                            icon={<SisternodeOutlined />}
+                          />
+                        )}
+
+                        {r.main && !r.default && (
+                          <Button
+                            size="small"
+                            type="link"
+                            icon={<EditOutlined />}
+                            onClick={() => {
+                              console.log('r', r)
+                              console.log('data', data)
+                              setVisible({
+                                visible: true,
+                                data: data?.itemList?.find((it) => it.key === r.mainKey),
+                              });
+                            }}
+                          />
+                        )}
+
+                        {data?.defaultDelivery?.status?.toLocaleLowerCase() != 'posted' && (
+                          <>
+                            {r.main && !r.default && r.mainKey && (
+                              <PopconfirmMe placement="leftBottom" title='Deleting Plan' description='Are you sure to delete?' onConfirm={() => { r.mainKey && actionHandlers?.delete?.(r.mainKey) }} >
+                                <Button danger icon={<DeleteOutlined />} type="link" size="small" /*onClick={_ => {onDelete(record)}}*/ />
+                              </PopconfirmMe>
+                            )}
+                          </>
+                        )}
+                      </>
+                    )}
+
+                  {/* {r.default && (
                   <Button
                     type="link"
                     title="Slipte delivery"
@@ -73,42 +127,64 @@ const DeliveryItemList: React.FC<Props> = ({ data, actionHandlers }) => {
                       r.mainKey && actionHandlers?.delete?.(r.mainKey);
                     }}
                   />
-                )}
-              </Space>
+                )} */}
+                </Space>
+              </>
             ),
           },
         ]}
         pagination={false}
-        rowClassName={(r) =>
-          (r.qty < 0 && styles.mainLineItemError) ||
-          (r.main && styles.mainLineItem) ||
-          (r.qty < 0 && !r.main && styles.subLineItemError) ||
-          (!r.main && styles.subLineItem)
-        }
+        rowClassName={(r) => {
+          const isTBC =
+            r.selectedDeliveryDate &&
+            moment(r.selectedDeliveryDate).format('YYYY-MM-DD') === '2099-12-31';
+
+          if (isTBC) return styles.tbcLineItem;
+
+          if (r.qty < 0 && r.main) return styles.mainLineItemError;
+          if (r.main) return styles.mainLineItem;
+          if (r.qty < 0 && !r.main) return styles.subLineItemError;
+          return styles.subLineItem;
+        }}
         dataSource={data?.itemList?.flatMap((it) =>
           it.itemList
             .map(
               (i, index) =>
-                ({
-                  deliveryDate: it.deliveryDate || data.defaultDelivery?.deliveryDate,
-                  shippingAddressId: it.shippingAddressId || data.defaultDelivery?.address?.id,
-                  shippingAddressCode:
-                    it.shippingAddressCode || data.defaultDelivery?.address?.address,
-                  itemId: i.itemId,
-                  itemCode: i.itemCode,
-                  description: i.itemDesc,
-                  uomId: i.uomId,
-                  uomName: i.uomName,
-                  type: i.type,
-                  key: i.key,
-                  qty: i.qty,
-                  main: index === 0,
-                  mainKey: it.key,
-                  default: index === 0 && it.default,
-                } as DeliverySoItemEntry),
+              ({
+                deliveryDate: it.deliveryDate || data.defaultDelivery?.deliveryDate,
+                shippingAddressId: it.shippingAddressId || data.defaultDelivery?.address?.id,
+                shippingAddressCode:
+                  it.shippingAddressCode || data.defaultDelivery?.address?.address,
+                itemId: i.itemId,
+                itemCode: i.itemCode,
+                description: i.itemDesc,
+                uomId: i.uomId,
+                uomName: i.uomName,
+                type: i.type,
+                key: i.key,
+                qty: i.qty,
+                main: index === 0,
+                mainKey: it.key,
+                default: index === 0 && it.default,
+                status: it.status,
+                so_status: data.defaultDelivery?.status,
+                selectedDeliveryDate: it.deliveryDate
+
+              } as DeliverySoItemEntry),
             )
             .filter((it) => it.qty !== 0),
-        )}
+        )?.slice()
+          ?.sort((a, b) => {
+            if (!a.deliveryDate && !b.deliveryDate) return 0;
+            if (!a.deliveryDate) return 1;
+            if (!b.deliveryDate) return -1;
+
+            return (
+              moment(a.deliveryDate).valueOf() -
+              moment(b.deliveryDate).valueOf()
+            );
+          })
+        }
         options={{
           density: false,
           reload: false,
@@ -123,6 +199,7 @@ const DeliveryItemList: React.FC<Props> = ({ data, actionHandlers }) => {
           addressList: data?.addressList,
           default: data?.itemList?.find((it) => it.default),
           currentDelivery: visible.data,
+          so_status: data?.defaultDelivery?.status
         }}
         actionHandlers={{
           onSaveHandlers: (data) => {

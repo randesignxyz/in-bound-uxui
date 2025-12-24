@@ -10,6 +10,7 @@ export type SaleServiceName =
   | 'find-so'
   | 'new-so'
   | 'save-so'
+  | 'update_sap_sale_plan'
   | 'list-payment-term'
   | 'add-payment-term'
   | 'save-payment-term'
@@ -109,7 +110,9 @@ export type SaleServiceName =
   | 'list-sale-teamwork-mpu'
   | 'find-by-salesperson-code'
   | 'sync-posm'
-  | 'list-rsm-request-mpu-item';
+  | 'list-rsm-request-mpu-item'
+  | 'sync-so-from-sfa'
+  | 'list-area';
 
 /** Stock */
 // export interface StockControl {
@@ -438,14 +441,14 @@ export interface StockControlDetail {
   description?: string;
   isActive: number;
   status:
-    | string
-    | 'pending'
-    | 'canceled'
-    | 'open'
-    | 'approved'
-    | 'closed'
-    | 'settled'
-    | 'count stock';
+  | string
+  | 'pending'
+  | 'canceled'
+  | 'open'
+  | 'approved'
+  | 'closed'
+  | 'settled'
+  | 'count stock';
   owner: SalesTeamWorkLess;
   approvedBy?: SalesTeamWorkLess;
   receivedBy?: SalesTeamWorkLess;
@@ -770,6 +773,10 @@ export interface So {
   attachments?: { id: number; imageId: string; status: string }[];
 }
 
+export interface EditSo {
+  deliveryId: number,
+  shipDate?:string
+}
 export interface SoDetail {
   id: number;
   soNo?: string;
@@ -910,7 +917,7 @@ export interface Delivery {
   associatedTo: ?{
     shippingAddress: ?AddressInfo;
   };
-  line_num?:number
+  line_num?: number
 }
 
 export interface DeliveryItem {
@@ -925,7 +932,7 @@ export interface DeliveryItem {
   associatedTo?: {
     uom: LookupDataItem;
   };
-  remarks?:string
+  remarks?: string
 }
 
 export interface SoDeliveryDetail {
@@ -1442,134 +1449,134 @@ export interface DeliveryAdvanceSearchParams {
 
 export type InitSuggestionParam =
   | {
-      actionName: 'exchange-rate';
-      responseKey: string;
-      payload: any;
-    }
+    actionName: 'exchange-rate';
+    responseKey: string;
+    payload: any;
+  }
   | {
-      actionName: 'exchange-rate-dsd';
-      responseKey: string;
-      payload: any;
-    };
+    actionName: 'exchange-rate-dsd';
+    responseKey: string;
+    payload: any;
+  };
 
 export type InitSaleInvoiceParam =
   | {
-      actionName: 'look-up-data';
-      responseKey: string;
-      payload: {
-        list: string[];
-      };
-    }
+    actionName: 'look-up-data';
+    responseKey: string;
+    payload: {
+      list: string[];
+    };
+  }
   | {
-      actionName: 'list-stock-category';
-      responseKey: 'types';
-      payload: any;
-    }
+    actionName: 'list-stock-category';
+    responseKey: 'types';
+    payload: any;
+  }
   | {
-      actionName: 'list-type-product-items';
-      responseKey: 'typeProductItems';
-      payload: any;
-    }
+    actionName: 'list-type-product-items';
+    responseKey: 'typeProductItems';
+    payload: any;
+  }
   // | {
   //     actionName: 'list-sale-invoices';
   //     responseKey: 'saleInvoiceList';
   //     payload: { id: number };
   //   }
   | {
-      actionName: 'list-sales-team-work';
-      responseKey: string;
-      payload: any;
-    };
+    actionName: 'list-sales-team-work';
+    responseKey: string;
+    payload: any;
+  };
 
 export type InitSoParamsType =
   | {
-      actionName: 'list-payment-term';
-      responseKey: 'paymentTermList';
-      payload: any;
-    }
+    actionName: 'list-payment-term';
+    responseKey: 'paymentTermList';
+    payload: any;
+  }
   | {
-      actionName: 'list-shipping-method';
-      responseKey: string;
-      payload: any;
-    }
+    actionName: 'list-shipping-method';
+    responseKey: string;
+    payload: any;
+  }
   | {
-      actionName: 'list-shipping-method';
-      responseKey: 'shippingMethodList';
-      payload: any;
-    }
+    actionName: 'list-shipping-method';
+    responseKey: 'shippingMethodList';
+    payload: any;
+  }
   | {
-      actionName: 'list-store-location';
-      responseKey: 'storeLocationList';
-      payload: any;
-    }
+    actionName: 'list-store-location';
+    responseKey: 'storeLocationList';
+    payload: any;
+  }
   | {
-      actionName: 'look-up-data';
-      responseKey: string;
-      payload: {
-        list: string[];
-      };
-    }
-  | {
-      actionName: 'list-product-item-by-type';
-      responseKey: 'itemList';
-      payload: {
-        id: number;
-      };
-    }
-  | {
-      actionName: 'listCustomer';
-      responseKey: string;
-      payload: any;
-    }
-  | {
-      actionName: 'listSalesperson';
-      responseKey: string;
-      payload: any;
-    }
-  | {
-      actionName: 'list-uom';
-      responseKey: 'uomList';
-      payload: any;
-    }
-  | {
-      actionName: 'list-budget';
-      responseKey: string;
-      payload: any;
+    actionName: 'look-up-data';
+    responseKey: string;
+    payload: {
+      list: string[];
     };
+  }
+  | {
+    actionName: 'list-product-item-by-type';
+    responseKey: 'itemList';
+    payload: {
+      id: number;
+    };
+  }
+  | {
+    actionName: 'listCustomer';
+    responseKey: string;
+    payload: any;
+  }
+  | {
+    actionName: 'listSalesperson';
+    responseKey: string;
+    payload: any;
+  }
+  | {
+    actionName: 'list-uom';
+    responseKey: 'uomList';
+    payload: any;
+  }
+  | {
+    actionName: 'list-budget';
+    responseKey: string;
+    payload: any;
+  };
 
 export type initProductParamsType =
   | {
-      actionName: 'list-uom';
-      responseKey: 'uomList';
-      payload: any;
-    }
+    actionName: 'list-uom';
+    responseKey: 'uomList';
+    payload: any;
+  }
   | {
-      actionName: 'list-brand';
-      responseKey: 'brandList';
-      payload: any;
-    }
+    actionName: 'list-brand';
+    responseKey: 'brandList';
+    payload: any;
+  }
   | {
-      actionName: 'list-category';
-      responseKey: 'categoryList';
-      payload: any;
-    }
+    actionName: 'list-category';
+    responseKey: 'categoryList';
+    payload: any;
+  }
   | {
-      actionName: 'list-group';
-      responseKey: 'groupList';
-      payload: any;
-    };
+    actionName: 'list-group';
+    responseKey: 'groupList';
+    payload: any;
+  };
 
 export type InitTradeOfferParamsType =
   | {
-      actionName: 'list-item-category';
-      responseKey: 'categories';
-      payload: any;
-    }
+    actionName: 'list-item-category';
+    responseKey: 'categories';
+    payload: any;
+  }
   | {
-      actionName: 'list-customer-group';
-      responseKey: 'customerGroup';
-      payload: any;
-    };
+    actionName: 'list-customer-group';
+    responseKey: 'customerGroup';
+    payload: any;
+  };
 
 export interface SoSummary {
   pendingMCDirect: number;

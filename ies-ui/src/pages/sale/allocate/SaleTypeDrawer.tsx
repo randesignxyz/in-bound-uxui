@@ -2,7 +2,7 @@ import { DrawerForm, DrawerFormProps } from '@ant-design/pro-form';
 import { Typography, Table, Descriptions } from 'antd';
 import { useState } from 'react';
 import { simpleRequestActions } from '@/services/model';
-import { DNList } from './data';
+import { DNList } from '@/pages/delivery/allocate/data';
 import { useAccess } from '@umijs/max';
 
 interface Props extends DrawerFormProps {
@@ -81,7 +81,7 @@ export default ({ dataList, ...rest }: Props) => {
                 render: (text: any) => text,
             },
             {
-                title: "QTY",
+                title: "Total Qty",
                 dataIndex: "qty",
                 key: "qty",
                 render: (value: any) => <strong>{value}</strong>,
@@ -128,7 +128,7 @@ export default ({ dataList, ...rest }: Props) => {
 
     return (
         <DrawerForm
-            title="Promotion Type"
+            title="PO Item"
             {...rest}
             width={700}
             submitter={false}

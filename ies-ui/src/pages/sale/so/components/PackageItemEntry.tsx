@@ -85,22 +85,55 @@ const PackageItemEntry: React.FC<Props> = ({ data, loading, actionHandlers, ...p
   }, [props.open]);
 
   //Loading offer
+  // useEffect(() => {
+  //   data.packageOffers &&
+  //     form.setFieldsValue({
+  //       offerLineItems: head(data.packageOffers)?.offerList.map((it) => ({
+  //         id: it.itemItem.id,
+  //         uomId: 1,
+  //         qty: it.qty,
+  //         price: 0,
+  //         amount: 0,
+  //         type: it.offerType,
+  //         main: false,
+  //         budgetCode: '',
+  //         discountPercent: 0,
+  //       })),
+  //     });
+  // }, [data.packageOffers]);
+
   useEffect(() => {
-    data.packageOffers &&
-      form.setFieldsValue({
-        offerLineItems: head(data.packageOffers)?.offerList.map((it) => ({
-          id: it.itemItem.id,
-          uomId: 1,
-          qty: it.qty,
-          price: 0,
-          amount: 0,
-          type: it.offerType,
-          main: false,
-          budgetCode: '',
-          discountPercent: 0,
-        })),
-      });
+    if (!data.packageOffers) return;
+
+    const newOffers =
+      head(data.packageOffers)?.offerList.map(it => ({
+        id: it.itemItem.id,
+        uomId: 1,
+        qty: it.qty,
+        price: 0,
+        amount: 0,
+        type: it.offerType,
+        main: false,
+        budgetCode: '',
+        discountPercent: 0,
+      })) || [];
+
+    const oldOffers = form.getFieldValue('offerLineItems') || [];
+
+    const merged = mergeOffers(oldOffers, newOffers);
+
+    form.setFieldsValue({
+      offerLineItems: merged,
+    });
   }, [data.packageOffers]);
+
+  const lineItems = Form.useWatch('lineItems', form);
+
+  useEffect(() => {
+    if (!lineItems) return;
+
+    onGetOffer();
+  }, [lineItems]);
 
   const onResetActionHandler = () => {
     if (!data.productItem) return;
@@ -147,15 +180,50 @@ const PackageItemEntry: React.FC<Props> = ({ data, loading, actionHandlers, ...p
   //     return data.budgetLess?.find(it => it.saleType === saleType?.id)?.budgets.map(it => ({label: it.name, value: it.code!})) || []
   // }
 
+  const mergeOffers = (
+    oldOffers: SoLineItemEntry[],
+    newOffers: SoLineItemEntry[]
+  ) => {
+    const map = new Map<string, SoLineItemEntry>();
+
+    // keep old first
+    oldOffers.forEach(o => {
+      const key = `${o.id}_${o.type}`;
+      map.set(key, o);
+    });
+
+    // override with backend response
+    newOffers.forEach(o => {
+      const key = `${o.id}_${o.type}`;
+      map.set(key, {
+        ...map.get(key),
+        ...o, // backend qty wins
+      });
+    });
+
+    return Array.from(map.values());
+  };
+
   const onGetOffer = async () => {
-    // if (!loadOffer) return
-    const dataForm = await form.validateFields();
-    data.productItem?.mixedProductItemList.filter(
-      (it) => dataForm.lineItems.find((ti) => ti.id === it.id) === undefined,
-    );
-    actionHandlers.onLoadOffer?.(dataForm.lineItems.filter((it) => it.id !== undefined));
+    const dataForm = form.getFieldsValue(true);
+
+    const lineItems = dataForm.lineItems?.filter(it => it.id);
+    if (!lineItems?.length) return;
+
+    actionHandlers.onLoadOffer?.(lineItems);
+
     setFocusIn(false);
   };
+
+  // const onGetOffer = async () => {
+  //   // if (!loadOffer) return
+  //   const dataForm = await form.validateFields();
+  //   data.productItem?.mixedProductItemList.filter(
+  //     (it) => dataForm.lineItems.find((ti) => ti.id === it.id) === undefined,
+  //   );
+  //   actionHandlers.onLoadOffer?.(dataForm.lineItems.filter((it) => it.id !== undefined));
+  //   setFocusIn(false);
+  // };
 
   const onSaveActionHandler = async () => {
     const dataForm = await form.validateFields();
@@ -206,7 +274,7 @@ const PackageItemEntry: React.FC<Props> = ({ data, loading, actionHandlers, ...p
     <FormModalComp
       {...props}
       disabled={focusIn}
-      okText={data.soLineItems ? 'Edit' : 'Add'}
+      okText={data.soLineItems ? 'Update' : 'Add'}
       onResetForm={() => {
         onResetActionHandler();
         onGetOffer();
@@ -217,10 +285,10 @@ const PackageItemEntry: React.FC<Props> = ({ data, loading, actionHandlers, ...p
         <ProForm
           submitter={false}
           form={form}
-          onBlurCapture={async () => {
-            await onGetOffer();
-            // setLoadOffer(false)
-          }}
+          // onBlurCapture={async () => {
+          //   await onGetOffer();
+          //   // setLoadOffer(false)
+          // }}
           onValuesChange={(changeValues, values) => {
             //console.log(changeValues);
 

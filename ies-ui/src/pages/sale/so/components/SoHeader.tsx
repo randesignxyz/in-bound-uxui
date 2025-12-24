@@ -116,7 +116,7 @@ const SoHeader: React.FC<Props> = ({ data }) => {
                 })}
               />
             )}
-            <ProFormText help={<span />} label="Ref #" name="refNo" />
+            <ProFormText help={<span />} label="Customer PO" name="refNo" />
             <ProFormTextArea help={<span />} label="Remark" name="remarks" />
           </Col>
           <Col flex="Auto" />

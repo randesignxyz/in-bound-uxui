@@ -302,8 +302,8 @@ export default () => {
   const items: ListMenuItem[] = [
     {
       id: 'so',
-      name: 'Sale Order',
-      description: 'Sale Order List',
+      name: 'Purchase Order',
+      description: 'Purchase Order List',
       link: `${SalePaths.so}/list`,
       icon: saleIcon,
       visible: access.canAccessSaleItems || access.canAccessSaleSo,
@@ -326,14 +326,14 @@ export default () => {
             'Actions',
             'action-menu',
             null,
-            [getItem('New SO', 'newSaleOrder', <PlusCircleOutlined />)],
+            [getItem('New PO', 'newSaleOrder', <PlusCircleOutlined />)],
             'group',
           ) : null,
           getItem(
             'Reports',
             'report-menu',
             null,
-            [getItem('Sale Order Report', 'sale-order-report', <BarChartOutlined />)],
+            [getItem('Purchase Order Report', 'sale-order-report', <BarChartOutlined />)],
             'group',
           ),
         ],
@@ -375,7 +375,8 @@ export default () => {
         access.canAccessSaleLeadMenu ||
         access.canAccessSaleReportLst ||
         access.canAccessSaleInvoice ||
-        access.canAccesSaleDeliveryOrderPlan
+        access.canAccesSaleDeliveryOrderPlan ||
+        access.canAccesAllocateSaleView || access.canAccesSaleDeliveryOrderPlan
       ) && (
           <>
             <Divider />

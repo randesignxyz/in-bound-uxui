@@ -80,7 +80,7 @@ export default () => {
             icon: requisitionIcon,
         },{
         id: 'job',
-        name: 'Job Description',
+        name: 'Position',
         description: 'Job Description',
         visible: access.canAccessHrJOB,
         link: `${HrmPaths.job}/list`,

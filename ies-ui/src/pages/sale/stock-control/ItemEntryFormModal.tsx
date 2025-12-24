@@ -105,7 +105,7 @@ const ItemEntryFormModal: React.FC<Props> = ({ data, actionHandlers, loading, ..
       width="500px"
       onResetForm={formStock.resetFields}
       onSubmit={onSubmitActionHandler}
-      okText={data.slectedItem ? 'Edit' : 'Add'}
+      okText={data.slectedItem ? 'Update' : 'Add'}
       title="Product Line Item"
     >
       <Card size="small">

@@ -23,9 +23,13 @@ export interface EmployeeListItem {
 }
 
 export type EmployeeAdvanceSearchParams = {
+  searchValue?: string;
   status: 'ALL' | 'ACTIVE' | 'INACTIVE';
   department?: number;
+  buIds?: number[];
+  deptIds?: number[];
 };
+
 
 export type BU = {
   id: number;
@@ -44,11 +48,28 @@ export type SubDepartment = {
 };
 
 export type StaffRequisitionAdvanceSearchParams = {
-  status: 'ALL' | 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELED';
+  status?: "ALL" | "DRAFT" | "PENDING" | "APPROVED" | "REJECTED" | "CANCELED";
   integratedStatus?: string;
-  deptIds?: number[];
+  keyword?: string;
+  advanceSearch?: {
+    buIds?: number[];
+    deptIds?: number[];
+    integratedStatus?: string;
+    status?: string;
+  };
 };
 
+export type ProbationAdvanceSearchParams = {
+  status?: "ALL" | "DRAFT" | "PENDING" | "APPROVED" | "REJECTED" | "CANCELED";
+  integratedStatus?: string;
+  keyword?: string;
+  advanceSearch?: {
+    buIds?: number[];
+    deptIds?: number[];
+    integratedStatus?: string;
+    status?: string;
+  };
+};
 
 export type ProbationEvaluationData = {
   requestorId: string;
@@ -134,16 +155,16 @@ export type JobTitle = {
 }
 
 export type EmployeeJobDetail = {
-  id: number
-  empNo: string
-  empName: string
-  localName: string
-  jobTitle: string
-  bu: string
-  function: string
-  subFunction: string
-  reportTo: string
-}
+  id: number;
+  empNo: string;
+  empName: string;
+  localName: string;
+  jobTitle: string;
+  bu: string;
+  function: string;
+  subFunction: string;
+  reportTo: string;
+};
 
 export type RequestItem = {
   id: number

@@ -9,7 +9,7 @@ export class AppraisalStyle {
 // export type AppraisalEmp = {
 //     id: number
 //     empId: number
-//     empNo: string    
+//     empNo: string
 //     empName: string
 //     internalName:string
 //     empEmail:string
@@ -60,16 +60,16 @@ export class AppraisalStyle {
 //     attachedFiles?:string[]
 //     appraisalEmpSubmissionList?: AppraisalEmpSubmission[]
 //     appraisalEmpImprovementRated1List?: AppraisalEmpImprovement[]
-//     appraisalEmpImprovementRated2List?: AppraisalEmpImprovement[] 
-//     appraisalEmpImprovementRated3List?: AppraisalEmpImprovement[]   
+//     appraisalEmpImprovementRated2List?: AppraisalEmpImprovement[]
+//     appraisalEmpImprovementRated3List?: AppraisalEmpImprovement[]
 //     appraisalRequestItem?:{
 //         personalAction?: string
-//         devAction?: number  
+//         devAction?: number
 //         remark?: string
 //     }
 // }
 export type ProbationEvaluationEmpList = {
-    id: number  
+    id: number
     formNo: string
     instanceId: string
     requestedDate?: Moment
@@ -94,7 +94,7 @@ export type ProbationEvaluationEmpList = {
     endedDate?: Moment
     dueDate?: Moment
     processInstId: string
-    parentId?: number    
+    parentId?: number
     formTypeCode: string
     workflowStatus: string
     status: string
@@ -173,7 +173,7 @@ export type AppraisalEmpSubmissionResult = {
     rating2: number
     rating3: number
     rating4: number
-    rating5: number    
+    rating5: number
     appraisalBehaviorId: number
     behaviorDescription: string
     behaviorDescription1?: string
@@ -192,8 +192,8 @@ export type AppraisalRating = {
     rating2?: number
     rating3?: number
     rating4?: number
-    rating5?: number 
-    weight: number 
+    rating5?: number
+    weight: number
 }
 export type AppraisalDimension = {
     id: number
@@ -256,11 +256,11 @@ export type AppraisalEmpStatusChecking = {
     rated5:boolean
 }
 export type UpdateAppraisalEmPayload = {
-    id: number    
+    id: number
     remark?:string
 }
 
-export type AppraisalRemark = {    
+export type AppraisalRemark = {
     rating2Comment?: string
     rating2Comment1?: string
     rating3Comment?: string
@@ -270,11 +270,11 @@ export type AppraisalRemark = {
     empStrength?: string
     empTrainingNeeded?: string
 }
-export type AppraisalAttachmentFile = {    
+export type AppraisalAttachmentFile = {
     id: number
     fileId: string
 }
-export type ProbationEmpStatusTotal = {    
+export type ProbationEmpStatusTotal = {
     pending?: number
 }
 
@@ -346,7 +346,7 @@ export type EmployeeInfResult = {
     buId: number
     buName?: string
     departmentId: number
-    departmentName: String
+    departmentName: string
     subDepartmentId?: number
     subDepartmentName?: string
     jobId: number
@@ -399,7 +399,7 @@ export type ProbationAssessmentList = {
     jobLevelCode: string
 }
 export type ProbationEvaluationRs = {
-    id: number  
+    id: number
     ref?:ProbationEvaluationRs
     formNo: string
     formTypeCode: string
@@ -412,7 +412,7 @@ export type ProbationEvaluationRs = {
     buId: number
     buName?: string
     departmentId: number
-    departmentName: String
+    departmentName: string
     subDepartmentId?: number
     subDepartmentName?: string
     jobId: number
@@ -432,7 +432,7 @@ export type ProbationEvaluationRs = {
 }
 
 export type ProbationEvaluation = {
-    id: number   
+    id: number
     key: string
     assessment?: string
     target?: string
@@ -448,7 +448,7 @@ export type ProbationEvaluation = {
 export type ProbationEvaluationResources = {
     id: number
     key:string
-    group: string   
+    group: string
     title?: string
     description?: string
     active?: boolean
@@ -465,7 +465,7 @@ export type ProbationEvaluationResources = {
 export type ProbationEvaluationResourcesSupport = {
     id: number
     key?:string
-    group: string   
+    group: string
     title?: string
     description?: string
     active?: boolean
@@ -477,7 +477,7 @@ export type ProbationEvaluationResourcesSupport = {
 }
 export type ProbationEvaluationRating = {
     id: number
-    title?:string   
+    title?:string
     description?: string
     description1?: string
     startedScore?: number
@@ -531,7 +531,6 @@ export type ProbationEvaluationPayload = {
     empImprovement: ProbationEmpImprovement[]
     confirmedStatus?: string
     extendedDate?: Moment
-
 }
 export type ProbationEvaluationHrRevievPayload = {
     instId: string

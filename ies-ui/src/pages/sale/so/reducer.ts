@@ -40,6 +40,9 @@ export interface DeliveryEntry {
   remarks?: string;
   default?: boolean;
   itemList: DeliveryItemEntry[];
+  status?:string
+  deliveryId?:number
+  isTBC?:boolean
 }
 
 export interface DeliveryItemEntry {
@@ -51,6 +54,7 @@ export interface DeliveryItemEntry {
   uomName?: string;
   type: string;
   qty: number;
+  deliveryDate?: moment.Moment;
 }
 
 export interface DeliverySoItemEntry {
@@ -71,6 +75,9 @@ export interface DeliverySoItemEntry {
   main?: boolean;
   default?: boolean;
   mainKey?: string;
+  status?:string
+  so_status?:string
+  selectedDeliveryDate?:moment.Moment
 }
 
 export interface InitData {
@@ -126,6 +133,7 @@ export type Action =
   | { type: 'setCustomerSaleInfo'; payload: CustomerSaleInfo }
   | { type: 'setTransportations'; payload: PackageOffer[] }
   | { type: 'setSoSummary'; payload: SoSummary }
+  | { type: 'setListArea'; payload: {} }
   // | { type: 'initUom'; payload: SaveUoM[] }
   | {
       type: 'setAttachments';
@@ -309,6 +317,13 @@ export const reducer = (state: State, action: Action): State => {
         data: {
           ...state.data,
           soSummary: action.payload,
+        },
+      };
+      case 'setListArea':
+      return {
+        ...state,
+        data: {
+          ...state.data,
         },
       };
     case 'setAttachments':

@@ -4,20 +4,15 @@ import ProForm, { DrawerForm, DrawerFormProps, ProFormDatePicker, ProFormDateRan
 import { Button, Card, Col, Descriptions, Divider, message, Modal, Progress, Row, Space, Spin, Tag, Typography, UploadFile, Image, Table, DatePicker } from 'antd';
 import moment from 'moment';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AllocateServiceAPI } from './service';
 import { simpleRequestActions } from '@/services/model';
-import { AllocateSOAdvanceParams, DeliveryDnParams, DeliveryItemList, DeliveryList, DNItemParams, DNParams, LocationList, UpdateRemarkParams } from './data';
+import { AllocateSOAdvanceParams, DNParams, LocationList } from '@/pages/delivery/allocate/data';
 import dayjs from 'dayjs'
-import customParseFormat from 'dayjs/plugin/customParseFormat'
-import { CheckOutlined, EditOutlined, InboxOutlined } from '@ant-design/icons';
-import AddRemarkModal from './AddRemarkForm';
-import { uploadFileToFirebase } from './uploadImage';
-import { FaRegPenToSquare } from 'react-icons/fa6';
 import { useAccess } from '@umijs/max';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import { useForm } from 'antd/es/form/Form';
 import { Paging } from '@/services/API';
+import { AllocateServiceAPI } from '@/pages/delivery/allocate/service';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);

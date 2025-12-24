@@ -1,9 +1,10 @@
 import { DrawerForm, DrawerFormProps } from '@ant-design/pro-form';
 import { Typography, Table, Descriptions } from 'antd';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { simpleRequestActions } from '@/services/model';
-import { DNList } from './data';
+import { DNList, SaleTypeList } from './data';
 import { useAccess } from '@umijs/max';
+import { AllocateServiceAPI } from './service';
 
 interface Props extends DrawerFormProps {
     dataList?: DNList
@@ -16,12 +17,25 @@ interface TableRow {
 }
 
 export default ({ dataList, ...rest }: Props) => {
+    const requestActions = simpleRequestActions();
+    const services = AllocateServiceAPI(requestActions)
+    const [saleType, setSaleType] = useState<SaleTypeList[]>([]);
+    
+    useEffect(() => {
+        const fetchSaleType = async () => {
+            const result = await services.list_sale_type();
+            setSaleType(result)
+        };
+
+        fetchSaleType();
+    }, [rest.open]);
+
     const prepareData = (delivery: any): { data: TableRow[], columns: any[] } => {
         const rows: Record<string, TableRow> = {};
-        const saleTypes = new Set<string>();
 
         delivery?.deliveryItems?.forEach((item: any) => {
             const key = `${item.category}_${item.sku_id}`;
+
             if (!rows[key]) {
                 const displaySKU =
                     item.category == 2 && item.sku_uom
@@ -39,14 +53,9 @@ export default ({ dataList, ...rest }: Props) => {
 
             rows[key].qty += item.qty;
 
-            const saleType = item.saleType && item.saleType.trim() !== ""
-                ? item.saleType
-                : "STD";
-
-            rows[key][saleType] = item.qty;
-            saleTypes.add(saleType);
+            const type = item.saleType?.trim() || 'STD';
+            rows[key][type] = (rows[key][type] || 0) + item.qty;
         });
-
 
         const data = Object.values(rows).sort((a, b) => {
             if (a.category !== b.category) {
@@ -55,7 +64,8 @@ export default ({ dataList, ...rest }: Props) => {
             return Number(a.sequence) - Number(b.sequence);
         });
 
-        const saleTypeArray = Array.from(saleTypes);
+        const saleTypeCodes = saleType?.map(st => st.code);
+
         const columns: any[] = [
             {
                 title: "SKU",
@@ -78,26 +88,25 @@ export default ({ dataList, ...rest }: Props) => {
                         fontWeight: 'bold',
                     },
                 }),
-                render: (text: any) => text,
             },
             {
-                title: "QTY",
+                title: "Total Qty",
                 dataIndex: "qty",
                 key: "qty",
-                render: (value: any) => <strong>{value}</strong>,
+                render: (v: any) => <strong>{v}</strong>,
             },
-            ...saleTypeArray.map((type) => ({
-                title: type,
-                dataIndex: type,
-                key: type,
-                render: (value: any) => <span>{value}</span>,
+            ...saleTypeCodes.map((code: any) => ({
+                title: code,
+                dataIndex: code,
+                key: code,
+                render: (v: any) => v ?? '-',
             })),
         ];
 
-        data.forEach((row) => {
-            saleTypeArray.forEach((type) => {
-                if (row[type] === undefined) {
-                    row[type] = "-";
+        data.forEach(row => {
+            saleTypeCodes.forEach((code: string | number) => {
+                if (row[code] === undefined) {
+                    row[code] = '-';
                 }
             });
         });
@@ -105,30 +114,31 @@ export default ({ dataList, ...rest }: Props) => {
         return { data, columns };
     };
 
+
     const DeliveryTable = ({ delivery }: { delivery: any }) => {
         const { data, columns } = prepareData(delivery);
 
         return (
             <>
-            <Descriptions>
-                <Descriptions.Item label={"Sale Remark"}>
-                    { dataList?.remarks ? dataList?.remarks : '-'}
-                </Descriptions.Item>
-            </Descriptions>
-            <Table
-                rowKey="sku"
-                columns={columns}
-                dataSource={data}
-                pagination={false}
-                bordered
-            />
+                <Descriptions>
+                    <Descriptions.Item label={"Sale Remark"}>
+                        {dataList?.remarks ? dataList?.remarks : '-'}
+                    </Descriptions.Item>
+                </Descriptions>
+                <Table
+                    rowKey="sku"
+                    columns={columns}
+                    dataSource={data}
+                    pagination={false}
+                    bordered
+                />
             </>
         );
     };
 
     return (
         <DrawerForm
-            title="Promotion Type"
+            title="PO Item"
             {...rest}
             width={700}
             submitter={false}

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Button, Card, Modal, Space, Spin, Switch, message } from 'antd';
+import { Button, Card, Checkbox, Flex, Modal, Space, Spin, Switch, message } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
 import { history } from 'umi';
 import { PageContainer } from '@ant-design/pro-components';
@@ -14,6 +14,7 @@ import TaskItemListView from './components/TaskItemListView';
 import { ProcessFlowModalMngt } from '../components/ProcessFlowModalWrapper';
 import ProcessFlowModel from '@/models/ProcessFlowModel';
 import { SortOrder } from 'antd/lib/table/interface';
+import { CheckboxChangeEvent } from 'antd/es/checkbox';
 
 const TaskList = () => {
     const model = ProcessFlowModel();
@@ -28,18 +29,50 @@ const TaskList = () => {
     });
 
     const [latest, setLatest] = useState(true);
+    const supTitle = (total: number) => {
+        return <sup
+            style={
+                {
+                    zIndex: 'auto',
+                    minWidth: '20px',
+                    height: '20px',
+                    padding: '0 6px',
+                    color: 'white',
+                    fontWeight: '400',
+                    fontSize: '12px',
+                    lineHeight: '20px',
+                    borderRadius: '10px',
+                    whiteSpace: 'nowrap',
+                    textAlign: 'center',
+                    backgroundColor: '#ff4d4f',
+                }
+            }>{total}
+        </sup>
+    }
+    const onMyRequestHandler = (e: CheckboxChangeEvent) => {
+        var value = e.target.checked
+        // setAdvanceSearchParams((v) => ({
+        //     ...v,
+        //     drafted: value
+        // }))
+        actionRef.current?.reloadAndRest?.();
+    }
 
     const extraContent = (
-        <DefaultFilterComp<FilterItem>
-            items={state.taskStatusFilterList || []}
-            isGlobal
-            selectedItem={state.taskStatusFilterList?.find(it => it.id === searchParams.status) || defaultTaskStatus}
-            onSearch={data => {
-                setSearchParams(prev => ({ ...prev, ...data, latest }));
-                actionRef.current?.reloadAndRest?.();
-            }}
-        />
+        <Space align="baseline" style={{ right: '12px' }}>
+            <DefaultFilterComp<FilterItem>
+                items={state.taskStatusFilterList || []}
+                isGlobal
+                selectedItem={state.taskStatusFilterList?.find(it => it.id === searchParams.status) || defaultTaskStatus}
+                onSearch={data => {
+                    setSearchParams(prev => ({ ...prev, ...data, latest }));
+                    actionRef.current?.reloadAndRest?.();
+                }}
+            />
+            {/* <Checkbox name="myRequest" onChange={onMyRequestHandler}>My Request{supTitle(10)}</Checkbox> */}
+        </Space>
     );
+     
 
     const handleGogoDataView = (item: UserTask, newTab?: boolean) => {
         const path = `/data-form/${item.taskDefKey}/${item.taskId}`;

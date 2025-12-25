@@ -13,7 +13,7 @@ interface Props {
 }
 
 export default({editableFormRef,initDataItems,editable}: Props) => {
-
+    
     const defaultEmpAchievments = [
         {id:0, key:'default-emp-ach-1', description:''},
         {id:0, key:'default-emp-ach-2', description:''},
@@ -30,7 +30,7 @@ export default({editableFormRef,initDataItems,editable}: Props) => {
     },[initDataItems])
     const addNewRow = (newItem: ProbationEmpImprovement)=>{
         const list= getDataItems()
-        list.push(newItem)
+        list.push(newItem)  
         setDataItems(list)
     }
     const getDataItems = (): ProbationEmpImprovement[] =>{
@@ -40,7 +40,7 @@ export default({editableFormRef,initDataItems,editable}: Props) => {
             const item = fieldsVaule[key]
             item.key = key
             list.push(item)
-        }
+        }      
         return list
     }
 
@@ -58,7 +58,7 @@ export default({editableFormRef,initDataItems,editable}: Props) => {
         editable={{
             type: 'multiple',
             editableKeys: dataItems?.map((it) => it.key),
-            actionRender: (row, config) => [
+            actionRender: (row, config) => [ 
                 (editable && (!defaultEmpAchievments.find(r => r.key== row.key) || ['default-emp-ach-2','default-emp-ach-3'].find(key => key== row.key))
                 && <Button
                     type="link"
@@ -72,10 +72,10 @@ export default({editableFormRef,initDataItems,editable}: Props) => {
                     icon={<MinusCircleOutlined />}
                 />)
             ],
-            // onValuesChange: (record, recordList) => {
+            // onValuesChange: (record, recordList) => {  
             //     // onSetAddedItems?.(
             //     //     recordList.map((it) => ({
-            //     //         ...it,
+            //     //         ...it,                   
             //     //     })),
             //     // );
             // }
@@ -88,7 +88,7 @@ export default({editableFormRef,initDataItems,editable}: Props) => {
             },
             newRecordType: 'dataSource',
             record: (index, datasource) => {
-                const key = uniqueId().toString() + index
+                const key = uniqueId().toString() + index                    
                 return({ key: key } as any)
             },
         }:false}
@@ -98,10 +98,10 @@ export default({editableFormRef,initDataItems,editable}: Props) => {
             title: <div><span style={{color:'red'}}>*</span>1.Achievement</div>,
             valueType: 'textarea',
             dataIndex: 'description',
-            editable:(_,r) => editable,
+            editable:(_,r) => editable, 
             formItemProps: {rules: [{ required: true, whitespace: true, message:'please enter'}] },
             fieldProps: { rows: 2, maxLength: 200 }
-
+        
         },
         {
             valueType: 'option',
@@ -110,9 +110,9 @@ export default({editableFormRef,initDataItems,editable}: Props) => {
             render: () => {
                 return null;
             },
-        },
+        },  
         ]}
     />)
-
+    
 
 }

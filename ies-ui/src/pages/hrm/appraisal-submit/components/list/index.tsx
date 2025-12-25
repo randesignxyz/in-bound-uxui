@@ -68,7 +68,6 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
     const [total, setTotal] = useState<AppraisalEmpStatusTotal>()
     const [forceChange, setForceChange] = useState<number>(0)
     const [period,setPeriod] = useState<AppraisalLookupData[]>()
-
     const [advanceSearchParams, setAdvanceSearchParams] = useState<AppraisalEmpAdvanceSearchParams>({status: 'ALL'})
     const [criteria, setCriteria] = useState<{ searchValue?: string; advanceSearch?: AppraisalEmpAdvanceSearchParams }>()
     const [modalVisible, setModalVisible] = useState< { type: 'ADD'; payload: AppraisalAdvanceParams } | { type: 'EDIT'; payload: AppraisalAdvanceParams } >();
@@ -395,10 +394,9 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
         setAdvanceEvaluationSearch({ visible: true })
     }
 
-    const filterIcon =
-      advanceSearchPerformEvaluationParams.company ||
-      advanceSearchPerformEvaluationParams.function ||
-      advanceSearchPerformEvaluationParams.appraiser ? (
+    const filterIcon = advanceSearchPerformEvaluationParams.company ||
+                                advanceSearchPerformEvaluationParams.function ||
+                                advanceSearchPerformEvaluationParams.appraiser ? (
         <FilterOutlined style={{ color: 'red' }} />
       ) : (
         <SelectOutlined />

@@ -38,6 +38,7 @@ export default ({ processInstanceId, setAttachFiles, onSetStatus }: {
         } catch (error: any) {
             message.error(error.message || 'Failed to fetch data.')
         }
+
     }
 
     return (
@@ -57,6 +58,7 @@ export default ({ processInstanceId, setAttachFiles, onSetStatus }: {
                         {data?.otherSegment && <ProDescriptions.Item span={2} label="Employee Segment">{data?.otherSegment}</ProDescriptions.Item>}
                         <ProDescriptions.Item label="Type of Contract">{data?.contractType.name}</ProDescriptions.Item>
                         {(data?.contractDates?.length || 0) > 0 && <ProDescriptions.Item label="Contract Period">{data?.contractDates?.map(it => formatDate(it))?.join(" to ")}</ProDescriptions.Item>}
+
                     </ProDescriptions>
                 </ProCard>
                 <ProCard title='Type of Requisition' size='small'>

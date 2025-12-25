@@ -9,7 +9,7 @@ import { EmployeeDataRs, ProbationEvaluationData } from "../data";
 
 
 export const createService = ({ request }: { request: SimpleRequestActions; }): CrudBaseServices<
-ProbationEvaluationEmpList,
+ProbationEvaluationEmpList,   
 ProbationEvaluationEmpList,
     SearchParams,
     AppraisalEmPayload
@@ -31,7 +31,7 @@ ProbationEvaluationEmpList,
     findCurrentAppraisalEmp:(id: number)=> Promise<CurrentAppraisalEmpSearch>
     removeAttachmentList:(id: string)=> Promise<{data: string}>
     addAppraisalAttachment: (appraisalEmpId:number,list: string[]) =>Promise<AppraisalAttachmentFile[]>
-
+    
     findProbationEmpStatusTotal:()=> Promise<ProbationEmpStatusTotal>,
 
     // findDraftedAppraisalEmpList:()=> Promise<ProbationEvaluationEmpList[]>,
@@ -65,13 +65,13 @@ ProbationEvaluationEmpList,
                     actionName: 'probation-evaluation-hr-review-assessment',
                     endpoint: 'HR',
                     payload: data
-                })(request),
+                })(request),  
         mboAssessment: async (data: TaskActionDataParam<ProbationEvaluationHrRevievPayload>) =>
             execDataService<{data: string}, TaskActionDataParam<ProbationEvaluationHrRevievPayload>>({
                 actionName: 'probation-evaluation-mbo-assessment',
                 endpoint: 'HR',
                 payload: data
-            })(request),
+            })(request),           
         updateAssessment: async (data: TaskActionDataParam<ProbationEvaluationPayload>) =>
                 execDataService<{data: string}, TaskActionDataParam<ProbationEvaluationPayload>>({
                     actionName: 'probation-evaluation-assessment-submission',
@@ -82,21 +82,21 @@ ProbationEvaluationEmpList,
             fetchDataListService<ProbationFormType>({
                 actionName: 'fetch-probation-form-type-list',
                 endpoint: 'HR'
-            }).query(request),
+            }).query(request), 
 
         fetchProbationAssessmentEmpList: async (empId: number) =>
             fetchDataListService<ProbationAssessmentList,{id: number}>({
                 actionName: 'fetch-probation-assessment-emp-list',
                 endpoint: 'HR',
                 payload: {id:empId},
-            }).query(request),
+            }).query(request),                 
         fetchProbationEvaluationRefList: async (empId: number) =>
                 fetchDataListService<ProbationEvaluationRef,{id: number}>({
                     actionName: 'fetch_probation_evaluation_ref_list',
                     endpoint: 'HR',
                     payload: {id:empId},
-                }).query(request),
-
+                }).query(request),            
+          
 
         fetchPaging: async (params: FetchPagingParams<SearchParams>) =>
             fetchDataPagingService<ProbationEvaluationEmpList, FetchPagingParams<SearchParams>>({
@@ -143,20 +143,20 @@ ProbationEvaluationEmpList,
                 endpoint: 'HR',
                 payload: {searchValue}
             }).query(request)
-        ,
+        ,   
         fetchEvaluateEmpList: async (searchValue?: string) =>
             fetchDataListService<ProbationEvaluateEmpMapping, {searchValue?:string}>({
                 actionName: 'fetch-probation-evaluate-emp-list',
                 endpoint: 'HR',
                 payload: {searchValue}
             }).query(request)
-        ,
+        ,    
         fetchAppraisalEmpDimensionList: async (id: number) =>
                 fetchDataListService<AppraisalEmpSubmissionResult, {id:number}>({
                     actionName: 'appraisal-emp-dimension-list',
                     endpoint: 'HR',
                     payload: {id}
-                }).query(request)
+                }).query(request)    
         ,
         fetchList: async (params: SearchParams) =>
             fetchDataListService<ProbationEvaluationEmpList, SearchParams>({
@@ -188,7 +188,7 @@ ProbationEvaluationEmpList,
                 actionName:'submit-all-appraisal-emp',
                 endpoint:'HR',
                 payload: {ids:ids}
-            })(request),
+            })(request),    
         // findByInstId: async(instId: number) => fetchDataItemService<AppraisalEmp, {id: number}>({
         //     actionName: "fetch-appraisal-emp-by-id",
         //     endpoint: 'HR',
@@ -229,12 +229,12 @@ ProbationEvaluationEmpList,
             fetchDataListService<ProbationEvaluationResources>({
                 actionName: 'fetch_probation_evaluation_resources',
                 endpoint: 'HR'
-            }).query(request),
+            }).query(request),  
         fetchProbationEvaluationResourcesSupportList: async () =>
                 fetchDataListService<ProbationEvaluationResourcesSupport>({
                     actionName: 'fetch_probation_evaluation_resources',
                     endpoint: 'HR'
-                }).query(request),
+                }).query(request),    
         detailByProcessFlow: async(instId: string) => fetchDataItemService<ProbationEvaluationDetailRs>({
             actionName: 'probation-evaluation-detail-by-process-flow',
             endpoint: 'HR',

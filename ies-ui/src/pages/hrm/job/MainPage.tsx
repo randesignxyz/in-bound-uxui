@@ -156,7 +156,6 @@ export function JobListPage() {
                       setEditRecord(record);
                       setEditModalVisible(true);
                     }} />
-                    <Button icon={<DeleteOutlined />} danger size="small" type="link" onClick={() => handleDelete(record)} />
                   </Space>
                 ),
               },

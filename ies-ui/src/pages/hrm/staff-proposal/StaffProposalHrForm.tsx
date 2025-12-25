@@ -37,9 +37,9 @@ export default (props: ActionDataFormProps) => {
                     setData(rs)
                     const items = await EmployeeServices.fetchRequestItemByCategories([1]).query(requestActions)
                     setRequestItems(items)
-                    const selector = rs.segment.id === 2004 ? "CASUAL_STAFF" : 'NORMAL_STAFF'
+                    const selector = rs.segment.id == 2004 ? "CASUAL_STAFF" : 'NORMAL_STAFF'
                     setBenefits(items.filter(it => it.selector?.includes(selector)).map(it => {
-                        const saveItem = rs.items.find(i => i.itemId === it.id)
+                        const saveItem = rs.items.find(i => i.itemId == it.id)
                         return {
                             itemId: it.id,
                             itemName: it.itemName,
@@ -63,7 +63,7 @@ export default (props: ActionDataFormProps) => {
 
     return <ActionFormWrapper
         {...props}
-        // uploadProps={props.activityData?.formKey == 'staff_proposal_hrbp'?{
+        // uploadProps={props.activityData?.formKey == 'staff_proposal_hrbp'?{ 
         //     required: true,
         //     message: "Please attach the required documents(CV, Interview feedback and reference docs)"
         // }: undefined  }
@@ -83,7 +83,7 @@ export default (props: ActionDataFormProps) => {
                 const groups = _.groupBy(benefits.filter(it => it.checked), 'optionGroup')
                 for (var key in groups) {
                     const options = groups[key]
-                    if (key.toLocaleLowerCase() !== 'null' && !!key && options.length > 1) {
+                    if (key.toLocaleLowerCase() != 'null' && !!key && options.length > 1) {
                         message.error(`Please select one of ${options.map(it => it.itemName).join(", ")}`)
                         return
                     }
@@ -134,11 +134,11 @@ export default (props: ActionDataFormProps) => {
                         showHeader={false}
                         value={benefits}
                         onValuesChange={(values => {
-                            const newData = values.map(it => ({ ...it, amount: it.amount || 0, checked: itemTaken.some(i => i === it.itemId) }))
+                            const newData = values.map(it => ({ ...it, amount: it.amount || 0, checked: itemTaken.some(i => i == it.itemId) }))
                             const groups = _.groupBy(newData.filter(it => it.checked), 'optionGroup')
                             for (var key in groups) {
                                 const options = groups[key]
-                                if (key.toLocaleLowerCase() !== 'null' && !!key && options.length > 1) {
+                                if (key.toLocaleLowerCase() != 'null' && !!key && options.length > 1) {
                                     message.error(`Please select one of ${options.map(it => it.itemName).join(", ")}`)
                                     break
                                 }
@@ -149,17 +149,17 @@ export default (props: ActionDataFormProps) => {
                         columns={[
                             {
                                 dataIndex: 'checked', width: 30, renderFormItem(_, config, form, ) {
-                                    return <Checkbox
+                                    return <Checkbox  
                                     disabled={!config.record?.selector?.toUpperCase()?.includes(props.formKey.toUpperCase())}
                                     defaultChecked={
-                                        itemTaken.some(it => it === config.record?.itemId) || false
+                                        itemTaken.some(it => it == config.record?.itemId) || false
                                     } key={`checked-${config.record?.itemId}`}
                                         onChange={e => {
-                                            if (e.target.checked && !itemTaken.some(it => it === config.record?.itemId)) {
+                                            if (e.target.checked && !itemTaken.some(it => it == config.record?.itemId)) {
                                                 setItemTaken(v => [...v, config.record?.itemId || 0])
                                             }
                                             if (!e.target.checked) {
-                                                setItemTaken(v => v.filter(it => it !== config.record?.itemId))
+                                                setItemTaken(v => v.filter(it => it != config.record?.itemId))
                                             }
 
                                             form.setFieldValue(config.record?.itemId || '', { ...config.record, checked: e.target.checked })
@@ -172,7 +172,7 @@ export default (props: ActionDataFormProps) => {
                                 dataIndex: 'amount', width: 140, valueType: 'money', formItemProps(form, config) {
                                     const item = form.getFieldValue(config.rowKey || '')
 
-                                    const checkOnly = requestItems.some(it => it.id === (item.itemId || config.entity.itemId) && it.selector?.includes("CHECK_ONLY"))
+                                    const checkOnly = requestItems.some(it => it.id == (item.itemId || config.entity.itemId) && it.selector?.includes("CHECK_ONLY"))
 
                                     return { ...config, hidden: (!item?.checked || checkOnly), rules: [{ required: item?.checked && !checkOnly, message: "Amount required" }] }
                                 }, fieldProps: { rows: 1, placeholder: 'Amount (USD)', style: { width: 120 } }

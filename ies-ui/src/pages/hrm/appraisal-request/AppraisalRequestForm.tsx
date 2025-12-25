@@ -1,7 +1,7 @@
 import FileUploader from "@/components/Attachment/FileUploader";
 import { ActionCompProps } from "@/components/core/comp";
-import { ProForm, ProCard,
-    ProFormDependency,
+import { ModalForm, ProCard,
+    ProFormDependency, 
     ProFormRadio, ProFormText, ProTable
 } from "@ant-design/pro-components";
 import { Alert, Button, Modal, Space, message } from "antd";
@@ -20,19 +20,19 @@ import { AppraisalEmp } from "../appraisal-submit/data.types";
 
 type DataFormType = {
     requestorId: string
-    requestorBuId: number
+    requestorBuId: number  
     title: string
     requestTypeId: number
 }
 
-export default ({ visisble, formKey, onClose, cb }: ActionCompProps & { formKey: string }) => {
+export default ({ visisble, formKey, onClose, cb }: ActionCompProps & { formKey: string }) => {   
     const [uploadFiles, setUploadFiles] = useState<string[]>([])
     const [form] = useForm<DataFormType>()
     const [forceClearUpload, setForceClearUpload] = useState(0)
     const requestActions = simpleRequestActions();
     const srv = createService(requestActions)
-    const [appraisalSelected, setAppraisalSelected] = useState<AppraisalEmp[]>([])
-    const [buSelected, setBuSelected] = useState<string>()
+    const [appraisalSelected, setAppraisalSelected] = useState<AppraisalEmp[]>([])    
+    const [buSelected, setBuSelected] = useState<string>() 
     const [appraisalSubmitListModal,setAppraisalSubmitListModal] = useState<{
         type: 'appraisal-submit-list',
         required: boolean,
@@ -42,13 +42,13 @@ export default ({ visisble, formKey, onClose, cb }: ActionCompProps & { formKey:
     const [requestSessions,setRequestSessions] = useState<AppraisalLookupData[]>()
 
     useEffect(()=>{
-        srv.fetchRequestTypeList().then(rs=>{
-            setRequestSessions(rs)
+        srv.fetchRequestTypeList().then(rs=>{  
+            setRequestSessions(rs)    
             var reqType = rs.at(0)
             setRequestType(reqType)
             form.setFieldsValue({ requestTypeId: reqType?.value})
         })
-
+       
     },[])
 
     const onBuSelectedHandler=(bu: string) => {
@@ -96,8 +96,9 @@ export default ({ visisble, formKey, onClose, cb }: ActionCompProps & { formKey:
         })
     }
 
-    return <ProForm<DataFormType>
+    return <ModalForm<DataFormType>
         form={form}
+        width={1000}
         modalProps ={{
             maskClosable:false
         }}
@@ -119,40 +120,40 @@ export default ({ visisble, formKey, onClose, cb }: ActionCompProps & { formKey:
             searchConfig: {
                 submitText: 'Submit',
             },
-            // render(props, defaultDoms) {
-            //
-            //     if (defaultDoms.length > 1) {
-            //         return [
-            //             defaultDoms[0],
-            //             <Button key={'reset-bt'} onClick={() => {
-            //                 const key = uniqueId('request-item')
-            //                 props.form?.resetFields()
-            //                 setForceClearUpload(v => v + 1)
-            //                 setUploadFiles([])
-            //                 setAppraisalSelected([])
-            //                 form.setFieldsValue({})
-            //             }}>Reset</Button>,
-            //             defaultDoms[1],
-            //         ]
-            //     }
-            //     else return defaultDoms
-            // },
+            render(props, defaultDoms) {
+
+                if (defaultDoms.length > 1) {
+                    return [
+                        defaultDoms[0],
+                        <Button key={'reset-bt'} onClick={() => {
+                            const key = uniqueId('request-item')
+                            props.form?.resetFields()
+                            setForceClearUpload(v => v + 1)
+                            setUploadFiles([])
+                            setAppraisalSelected([])
+                            form.setFieldsValue({})
+                        }}>Reset</Button>,
+                        defaultDoms[1],
+                    ]
+                }
+                else return defaultDoms
+            },
         }}
     >
         <Space direction="vertical" style={{ width: '100%' }}>
             <Requestor onlyCurrentUser={true}  form={form} title="Requestor" />
             <ProFormText label= {<b>Title</b>} name='title' rules={[{required:true,message:'Title is required, and must be up to 250 characters',whitespace:true, max:255}]}/>
-           {requestSessions&&<><ProFormRadio.Group disabled={(appraisalSelected?.length||0)>0} name={'requestTypeId'} label={<b>Request Type</b>} options={requestSessions} />
+           {requestSessions&&<><ProFormRadio.Group disabled={(appraisalSelected?.length||0)>0} name={'requestTypeId'} label={<b>Request Type</b>} options={requestSessions} />           
             <Alert type="info" message={requestType?.description} />
             </>}
-
+           
             <ProCard size="small"
                 title= {<>Appraisal List<span style={{color:'red'}}>*</span></>}
                 bordered
                 extra={<Button  icon={<PlusOutlined/>} onClick={addItemHandler}>Add</Button>}
             >
                 <ProTable<AppraisalEmp> size="small"
-                    search={false}
+                    search={false} 
                     cardProps={false}
                     pagination = {{
                         defaultPageSize: 100
@@ -162,18 +163,18 @@ export default ({ visisble, formKey, onClose, cb }: ActionCompProps & { formKey:
                         density: false,
                         reload: false,
                         setting: false,
-                    }}
+                    }} 
                     dataSource={
                         appraisalSelected?.sort((a,b)=> (a?.buName||'').localeCompare(b?.buName||'')?
                             (a?.buName||'').localeCompare(b?.buName||''):(a?.departmentName||'').localeCompare(b?.departmentName||'')?
                             (a?.departmentName||'').localeCompare(b?.departmentName||''):(a?.empName||'').localeCompare(b?.empName||'')
                         )
                     }
-                    columns={[
+                    columns={[                        
                         {title:'Employee Name', dataIndex: 'empName'},
-                        {title:'Employee Name(KH)', dataIndex: 'internalName'},
+                        {title:'Employee Name(KH)', dataIndex: 'internalName'},   
                         {title: 'Business Unit', dataIndex: 'buName'},
-                        {title: 'Function', dataIndex: 'departmentName'},
+                        {title: 'Function', dataIndex: 'departmentName'},                    
                         {title: 'Job Title', dataIndex: 'jobTitle'},
                         {title: 'Self- Rating', dataIndex: 'rating1'},
                         {title: "Manager's Rating", dataIndex: 'rating3',
@@ -190,7 +191,7 @@ export default ({ visisble, formKey, onClose, cb }: ActionCompProps & { formKey:
                         }
                     ]}
                 />
-            </ProCard>
+            </ProCard>            
              <FileUploader
                 title="Attachment"
                 addFileInfo
@@ -214,6 +215,7 @@ export default ({ visisble, formKey, onClose, cb }: ActionCompProps & { formKey:
             onOpenChange={visible => !visible && setAppraisalSubmitListModal(undefined)}
         />
         }
-    </ProForm>
+
+    </ModalForm>
 }
 

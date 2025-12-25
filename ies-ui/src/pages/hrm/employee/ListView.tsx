@@ -90,8 +90,8 @@ export default ({ onAdd, onEdit }: Props) => {
                                 }
                             }} />
                         </Tooltip> : '',
-                        access.canAccessHrESSImportTraing == true ?<ImportFileButton<ImportDataItem>
-                            label='Import Training'
+                        <ImportFileButton<ImportDataItem>
+                            label='Imort Training'
                             importedKey="ESS_IMPORT_TRAINING_LIST"
                             onDataResponse={data => {
                                 setImportData(data)
@@ -102,7 +102,7 @@ export default ({ onAdd, onEdit }: Props) => {
                                     message.info('Data uploaded.');
                                 }
                             }}
-                        />:''
+                        />
                     ],
                   },
             }} 
@@ -160,7 +160,7 @@ export default ({ onAdd, onEdit }: Props) => {
                 },
                 },
                 { title: 'Full Name (KH)', dataIndex: 'employeeLocalName' },
-                { title: 'Full Name (EN)', dataIndex: 'firstName', sorter: 'firstName', render(_, entity) { return ( entity.lastName+ " " +entity.firstName ) } },
+                { title: 'Full Name (EN)', dataIndex: 'firstName', sorter: 'firstName', render(_, entity) { return (entity.firstName + " " + entity.lastName) } },
                 // {title: 'Last Name', dataIndex: 'lastName', sorter: 'lastName'},
                 // {title: 'SAP ID', dataIndex:  'sapId', sorter: 'sapId'},
                 {title: 'Position', dataIndex: 'jobTitle', sorter: 'jobTitle'},
@@ -213,6 +213,6 @@ export default ({ onAdd, onEdit }: Props) => {
                 return saveEmployeeHandler({ ...data,employeeId:modalVisible?.payload.id||0});
             }}
         />
-        {access.canAccessHrESSImportTraing && <UploadData title="ESS Training List" onCancel={() => setImportData(undefined)} open={!!importData} datasources={importData} onFinish={()=> {actionRef.current?.reloadAndRest?.()}} />}
+        <UploadData title="ESS Training List" onCancel={() => setImportData(undefined)} open={!!importData} datasources={importData} onFinish={()=> {actionRef.current?.reloadAndRest?.()}} />
     </Spin>
 }

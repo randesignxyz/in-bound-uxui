@@ -13,7 +13,9 @@ export default (props: DataViewProps) => {
    const requestActions = simpleRequestActions();
    const [removeFile, setRemoveFile] = useState<string[]>([]);
    const access = useAccess()
+
    const [status, setStatus] = useState<string>()
+
    return (
       <ViewFormWrapper<{ id: number }>
          workflowProp={props}
@@ -57,6 +59,7 @@ export default (props: DataViewProps) => {
       >
          {(data) => {
             if (!data?.processInstance?.procInstId) return <Spin spinning={true} />
+
             return <StaffRequisitionRequestDetail
                onSetStatus={setStatus}
                setAttachFiles={files => setAttatchFiles(files.map(it => ({ fileId: it, activity: 'Start' })))}

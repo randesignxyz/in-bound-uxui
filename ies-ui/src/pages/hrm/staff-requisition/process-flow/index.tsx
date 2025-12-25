@@ -31,13 +31,11 @@ export const StaffRequisitionForms: DataForm[] = [
       StaffRequisitionFormNames.HRA_SR_MANAGER,
 
       StaffRequisitionOFLFormNames.processDefKey,
-      StaffRequisitionOFLFormNames.OFL_HRM_MANAGER,
-      StaffRequisitionOFLFormNames.OFL_SM_FUNCTION_APPROVAL,
-      StaffRequisitionOFLFormNames.OFL_SM_FUNCTION_REVIEW,
-      StaffRequisitionOFLFormNames.OFL_DMD_APPROVAL,
-      StaffRequisitionOFLFormNames.OFL_SM_FUNCTION_PROPOSE,
-      StaffRequisitionOFLFormNames.OFL_DMD_REVIEW,
-      StaffRequisitionOFLFormNames.OFL_ED_MD_APPROVAL
+      StaffRequisitionOFLFormNames.HRBP,
+      StaffRequisitionOFLFormNames.HRM_MANAGER,
+      StaffRequisitionOFLFormNames.SR_MANAGER_APPROVAL,
+      StaffRequisitionOFLFormNames.DMD,
+      StaffRequisitionOFLFormNames.HRA_SR_MANAGER
     ],
     dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,
     actionDataForm: (props: ActionDataFormProps) => <DefaultActionForm {...props} />,

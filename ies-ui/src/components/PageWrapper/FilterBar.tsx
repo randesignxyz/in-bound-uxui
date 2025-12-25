@@ -43,7 +43,7 @@ export default ({
 
     const [subStatusValue, setSubStatusValue] = useState<string | number>()
     const [subStatusValue2, setSubStatusValue2] = useState<string | number>()
-    
+
 
 
     useEffect(() => {
@@ -69,7 +69,7 @@ export default ({
                                 setSubStatusValue(sub.find(it => it.default)?.value)
                                 onSubStatusChanged?.(sub.find(it => it.default)?.value)
                                 setSubStatuses(v => sub)
-                                // subStatus2                               
+                                // subStatus2
                                 setSubStatuses2([])
                                 setSubStatusValue2(undefined)
                                 onSubStatus2Changed?.(undefined)

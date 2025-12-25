@@ -1,4 +1,5 @@
 ﻿import icons from "@/.umi/plugin-layout/icons";
+import { access } from "fs";
 
 /**
  *
@@ -49,19 +50,22 @@ export default [
     hideInMenu: 'true',
     component: './process-flow/form',
   },
+
+  // =========== CRM ===========
   {
     path: '/crm/contact/:view/*',
     name: 'contact',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessCrmMenuItem',
+    access: 'canAccessCRMContact',
     component: './crm/contact',
   },
   {
     path: '/crm',
     name: 'crm',
     icon: 'TeamOutlined',
-    access: 'canAccessCrmMenuItem',
+    // access: 'canAccessCrmMenuItem',
+    access: 'canAccessCRM',
     component: './crm',
   },
   {
@@ -69,7 +73,7 @@ export default [
     name: 'view-customer',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessCrmMenuItem',
+    access: 'canAccessCRMCustomer',
     component: './crm/customer',
   },
   // {
@@ -94,7 +98,8 @@ export default [
     name: 'visit-plan',
     icon: 'TeamOutlined',
     hideInMenu: 'true',
-    access: 'canAccessCrmMenuItem',
+    // access: 'canAccessCrmMenuItem',
+    access: 'canAccessCRMVisitPlan',
     component: './crm/visit-plan',
   },
   {
@@ -103,7 +108,8 @@ export default [
     icon: 'TeamOutlined',
     hideInMenu: 'true',
     layout: false,
-    access: 'canAccessCrmMenuItem',
+    // access: 'canAccessCrmMenuItem',
+    access: 'canAccessCRMVisitPlan',
     component: './crm/visit-plan',
   },
   {
@@ -111,7 +117,8 @@ export default [
     name: 'visit-schedule',
     icon: 'TeamOutlined',
     hideInMenu: 'true',
-    access: 'canAccessCrmMenuItem',
+    // access: 'canAccessCrmMenuItem',
+    access: 'canAccessCRMVisitSchedule',
     component: './crm/visit-schedule',
   },
   {
@@ -120,7 +127,8 @@ export default [
     icon: 'TeamOutlined',
     hideInMenu: 'true',
     layout: false,
-    access: 'canAccessCrmMenuItem',
+    // access: 'canAccessCrmMenuItem',
+    access: 'canAccessCRMVisitSchedule',
     component: './crm/visit-schedule',
   },
   {
@@ -128,7 +136,8 @@ export default [
     name: 'contract',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessCrmMenuItem',
+    // access: 'canAccessCrmMenuItem',
+    access: "canAccessCRMContract",
     component: './crm/contract',
   },
   {
@@ -137,7 +146,8 @@ export default [
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
     layout: false,
-    access: 'canAccessCrmMenuItem',
+    // access: 'canAccessCrmMenuItem',
+    access: "canAccessCRMContract",
     component: './crm/contract',
   },
   {
@@ -145,7 +155,8 @@ export default [
     name: 'notification',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessCrmMenuItem',
+    // access: 'canAccessCrmMenuItem',
+    access: 'canAccessCRMNotification',
     component: './crm/notification',
   },
   {
@@ -153,7 +164,8 @@ export default [
     name: 'term',
     icon: 'TeamOutlined',
     hideInMenu: 'true',
-    access: 'canAccessCrmMenuItem',
+    // access: 'canAccessCrmMenuItem',
+    access: 'canAccessCRMTerm',
     component: './crm/term',
   },
   {
@@ -162,7 +174,8 @@ export default [
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
     layout: false,
-    access: 'canAccessCrmMenuItem',
+    // access: 'canAccessCrmMenuItem',
+    access: 'canAccessCRMTerm',
     component: './crm/term',
   },
   {
@@ -179,7 +192,8 @@ export default [
     name: 'shipping-address',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessCrmMenuItem',
+    // access: 'canAccessCrmMenuItem',
+    access: 'canAccessCRMShippingAddress',
     component: './crm/shipping_address',
   },
 
@@ -188,7 +202,8 @@ export default [
     name: 'Share',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessCrmMenuItem',
+    // access: 'canAccessCrmMenuItem',
+    access: 'canAccessCRMShare',
     component: './crm/shared-customer',
   },
   {
@@ -196,9 +211,12 @@ export default [
     name: 'Verified Customer',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
-    access: 'canAccessCrmMenuItem',
+    // access: 'canAccessCrmMenuItem',
+    access: 'canAccessCRMVerification',
     component: './crm/verified-customer',
   },
+  // =========== END ===========
+
   /**********<<Pro**************/
   {
     path: '/pro',
@@ -407,6 +425,14 @@ export default [
     layout: false,
     access: 'canAccessDF360',
     component: './hrm/df',
+  },
+  {
+    path: '/hrm/job/:view/*',
+    name: 'Job',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    access: 'canAccessHrJOB',
+    component: './hrm/job',
   },
   /**********HRM>>**************/
 
@@ -647,6 +673,21 @@ export default [
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
     component: './sale/warehouse',
+  },
+
+  {
+    path: '/sale/supporter',
+    name: 'warehouse-po-portal',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    component: './sale/supporter',
+  },
+    {
+    path: '/sale/supporter/list',
+    name: 'warehouse-po-portal',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    component: './sale/supporter/po',
   },
   /******************* MPU *******************/
 
@@ -942,7 +983,7 @@ export default [
     access: 'canAccesAllocateDelView',
     component: './delivery/allocate/location',
   },
-   {
+  {
     path: '/sale/location',
     name: 'delivery-tracking',
     icon: 'UnorderedListOutlined',
@@ -1299,6 +1340,23 @@ export default [
     access: 'canAccessFleetMenu',
     component: './fleet/accessory/',
   },
+
+  // ----- booking -----
+  {
+    path: '/fleet/booking',
+    name: 'fleet_booking',
+    hideInMenu: 'true',
+    // access: 'canAccessFleetMenu',
+    component: './fleet/booking',
+  },
+  {
+    path: '/fleet/booking/request',
+    name: 'fleet_booking_request',
+    hideInMenu: 'true',
+    // access: 'canAccessFleetMenu',
+    component: './fleet/booking/request',
+  },
+  // ----- END -----
   //  ================= END FLEET =================
 
   // ================= DMS =======================
@@ -1477,7 +1535,7 @@ export default [
     access: 'canAccessWhmItemMenu',
     component: './fma-stock/item',
   },
-   {
+  {
     path: '/whm/inventory/item-onhand/:view/*',
     name: 'whm_inventory_item_onhand',
     icon: 'UnorderedListOutlined',

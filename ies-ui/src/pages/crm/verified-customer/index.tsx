@@ -26,7 +26,6 @@ export default () => {
         visible?: { name: "MODAL", addressId?: number, status: string }
     }>();
     const [lookupData, setLookupData] = useState<any[]>();
-
     const onLookupData = async () => {
         setLookupData(await CrmServices.listLookupData(["VERIFIED_ADDRESS_LAT_LONG"]).query(requestActions))
     }
@@ -113,13 +112,12 @@ export default () => {
                     </div>
                 }
             ]}
-            // dataSource={item.addresses}
             pagination={false}
         />
     }
 
     const onDowloadReportHandler = async (params: any) => {
-    
+
             try {
                 const reportName = 'customer_verification_report';
                 await downloadGenericReport(requestActions)({
@@ -141,9 +139,8 @@ export default () => {
                 message.error(error.message || 'Failed to generate report.');
             }
         };
-
+        
     const [exportState, setExportState] = useState<boolean>(false);
-
     return (
         <>
             {(lookupData && filter.criteria?.advanceSearch?.mode) &&
@@ -159,8 +156,9 @@ export default () => {
                     listView={{
                         type: "Table",
                         onRefresh: refetch,
+                        title:"Verification List",
                         actions: [
-                            {
+                            access.can("CRM_VERIFICATION","SYNC")?{
                                 icon: <SyncOutlined />,
                                 label: "Sync",
                                 key: "sync",
@@ -169,13 +167,13 @@ export default () => {
                                     refetch?.();
                                     message.success("Success!");
                                 },
-                            },
-                            {
+                            }:{onClick:()=>{},key:""},
+                            access.can("CRM_VERIFICATION","EXPORT")?{
                                 icon: <ExportOutlined />,
                                 label: "Export",
                                 key: "export",
                                 onClick:()=>setExportState(true)
-                            },
+                            }:{onClick:()=>{},key:""},
                         ],
                         // actionButtons: [
                         //     <Segmented

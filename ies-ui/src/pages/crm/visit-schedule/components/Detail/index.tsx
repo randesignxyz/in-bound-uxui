@@ -236,7 +236,7 @@ const VisitScheduleDetailView: React.FC<DetailProps> = ({ id, openInTab, onBack 
             <ContractDetail detail={state.data?.detail} />
           </Tabs.TabPane>
 
-          <Tabs.TabPane tab="Sale Orders" key="saleOrders">
+          <Tabs.TabPane tab="Purchase Order" key="saleOrders">
             <ProTable<SoItemLess>
               size="small"
               bordered

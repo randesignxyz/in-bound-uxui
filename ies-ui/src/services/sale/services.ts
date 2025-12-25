@@ -25,6 +25,7 @@ import type {
   CloseIndirectSoParams,
   CountStockDto,
   CustomerSaleInfo,
+  EditSo,
   ExchangeRate,
   InitSaleInvoiceParam,
   InitSoParamsType,
@@ -148,7 +149,7 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
     requestedDate?: moment.Moment[];
     status?: string[];
     reportType?: string;
-    supplier?:string
+    supplier?: string
   }>(actions),
 
   donwloadDSDReport: downloadSaleReport<{
@@ -174,6 +175,10 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
 
   listSo: findPagingService<{ searchValue?: string; sort?: Record<string, SortOrder> }, SoItemLess>(
     SaleService('list-so'),
+    actions,
+  ),
+  listArea: findAllService<{ searchValue?: string; sort?: Record<string, SortOrder> }, SoItemLess>(
+    SaleService('list-area'),
     actions,
   ),
   listSoDelivery: findPagingService<
@@ -205,6 +210,9 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
   getPackageOffer: findAllService<OfferParams, PackageOffer>(SaleService('get-offer'), actions),
 
   saveSodata: execService<So, { id: number }>(SaleService('save-so'), actions),
+
+  editSodata: execService<EditSo, { id: number }>(SaleService('update_sap_sale_plan'), actions),
+
 
   initTDOData: findMultiService<InitTradeOfferParamsType, {}>(SaleService(), actions),
 
@@ -264,6 +272,10 @@ export const SaleServiceAPI = (actions?: RequestActions) => ({
   postSoToSAPNew: execService<{ soId: number; remarks?: string }, { data: any; message: string }>(
     SaleService('post-so-new'),
     actions,
+  ),
+  syncFromSFA: execService<{}, { data: string, message: string }>(
+    SaleService('sync-so-from-sfa')
+    , actions
   ),
   cancelSo: execService<{ soId: number; remarks: string }, { data: string; message: string }>(
     SaleService('cancel-so'),

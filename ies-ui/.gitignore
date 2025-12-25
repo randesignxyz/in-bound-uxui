@@ -5,7 +5,9 @@
 # roadhog-api-doc ignore
 /src/utils/request-temp.js
 _roadhog-api-doc
-
+# Node
+node_modules/
+yarn-error.log*
 # production
 /dist
 
@@ -16,6 +18,7 @@ yarn-error.log
 
 /coverage
 .idea
+.idea/w1rkspace.xm
 yarn.lock
 package-lock.json
 *bak

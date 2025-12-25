@@ -1,5 +1,5 @@
 import { Marker, MarkerProps } from "@react-google-maps/api";
-import { DNList, Location } from "../data";
+import { DNList,Location } from "@/pages/delivery/allocate/data";
 import { useEffect, useState } from "react";
 import Omit from "omit.js";
 

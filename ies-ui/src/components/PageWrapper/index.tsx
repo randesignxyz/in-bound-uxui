@@ -237,7 +237,6 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
             type: 'editable-card',
             defaultActiveKey: 'list',
             activeKey: activeKey.key,
-
             renderTabBar: (tabBarProps, DefaultTabBar) => (
                 <DndContext sensors={[sensor]} onDragEnd={onDragEnd}>
                     <SortableContext items={tabList.map((i) => i.key as string)} strategy={horizontalListSortingStrategy}>
@@ -251,7 +250,7 @@ export default <ListDataType extends Record<string, any> & { id: number, code?: 
                     </SortableContext>
                 </DndContext>
             ),
-            hideAdd: !tabRender?.().find(it => it.action == 'add'),
+            hideAdd:  !tabRender?.().find(it => it.action == 'add'),
             onChange(activeKey) {
                 setActiveKey({ key: activeKey })
             },

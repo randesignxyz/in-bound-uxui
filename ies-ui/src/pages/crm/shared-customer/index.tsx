@@ -1,5 +1,5 @@
 import PageWrapper from "@/components/PageWrapper"
-import { useQuery } from "@umijs/max"
+import { useAccess, useQuery } from "@umijs/max"
 import FormShare from "./FormShare"
 import { ShareCustomerAPI } from "./service"
 import { simpleRequestActions } from "@/services/model"
@@ -17,6 +17,7 @@ export default () => {
     const [filter, setFilter] = useState<FetchPagingParams<any>>({
         criteria: { advanceSearch: { mode: "Group" } }
     });
+    const access = useAccess();
     const [statusState, setStatusState] = useState<{
         visible?: { name: "MODAL", paylod?: any, status: string }
     }>();
@@ -34,18 +35,20 @@ export default () => {
         <>
             <PageWrapper
                 tabRender={(item) => [
-                    {
-                        tabLabel: "New",
-                        action: "add",
-                        panel: ({ onCloseTab, key }) => <FormShare
-                            onBack={() => {
-                                onCloseTab()
-                                refetch()
-                            }}
-                            onView={() => { }}
-                            type="new"
-                        />
-                    },
+                    access.can("CRM_SHARE","CREATE") ?
+                        {
+                            tabLabel: "New",
+                            action: "add",
+                            hiden: true,
+                            panel: ({ onCloseTab, key }) => <FormShare
+                                onBack={() => {
+                                    onCloseTab()
+                                    refetch()
+                                }}
+                                onView={() => { }}
+                                type="new"
+                            />
+                        }:{tabKey:"",tabLabel:""},
                     {
                         tabLabel: (item?.id != 0) ? item?.entityCode : moment(item?.createdDate).format("YYYY-M-D"),
                         action: "view",
@@ -163,6 +166,7 @@ export default () => {
                                 },
                                 {
                                     title: "Action",
+                                    hidden: !access.can("CRM_SHARE","DELETE"),
                                     render: (_, r) => {
                                         return <Button
                                             icon={<DeleteOutlined />}
@@ -247,6 +251,7 @@ export default () => {
 
                                     {
                                         title: "Action",
+                                        hidden: access.crmReadOnly,
                                         render: (_, r) => {
                                             return <Button
                                                 icon={<DeleteOutlined />}

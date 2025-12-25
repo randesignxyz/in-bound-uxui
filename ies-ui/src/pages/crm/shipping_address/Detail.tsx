@@ -13,10 +13,6 @@ interface Props {
 
 const ShippingAddressDetail: React.FC<Props> = ({ openInTab, onBack, id, item }) => {
     const requestAction = simpleRequestActions()
-    // const {data, } = useQuery({
-    //     queryKey:["detail",],
-    //     queryFn:()=>ShippingAddressAPI(requestAction).detail({id:id||0})
-    // })
     return (
         <>
             <Card
@@ -24,6 +20,7 @@ const ShippingAddressDetail: React.FC<Props> = ({ openInTab, onBack, id, item })
                 size="small"
             >
                 <ProDescriptions
+                
                 dataSource={item}
                     columns={[
                         {

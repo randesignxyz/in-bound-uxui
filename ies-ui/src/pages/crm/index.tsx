@@ -247,6 +247,8 @@ const Crm: React.FC = () => {
       link: `${CrmPaths.contact}/list`,
       icon: ContactIcon,
       visible: access.canAccessContact || access.canAccessCrmContact,
+      // visible: access.canAccessContact,
+      // visible: access.canAccessCRMContact,
       // isMenu: true,
       // overlay: contactMenu
     },
@@ -256,7 +258,7 @@ const Crm: React.FC = () => {
       description: 'Contract List',
       link: `${CrmPaths.contract}/list`,
       icon: ContactIcon,
-      visible: access.canAccessContact || access.canAccessCrmContract,
+      visible: access.canAccessContact,
       menu: {
         items: [{ label: <ContractReport trigger={<a >Export</a>} />, key: 'exportContract', icon: <ExportOutlined style={{ fontSize: '16px', color: '#08c' }} /> }]
       }
@@ -267,7 +269,8 @@ const Crm: React.FC = () => {
       description: 'Customer List',
       link: `${CrmPaths.customer}/list`,
       icon: CustomerIcon,
-      visible: access.canAccessCustomerMenu,
+      // visible: access.canAccessCustomerMenu,
+        visible:access.canAccess("CRM_CUSTOMER"),
       menu: {
         items: [{
           type: 'group',
@@ -291,14 +294,16 @@ const Crm: React.FC = () => {
       description: 'Plan to visit customer',
       link: `${CrmPaths.visitPlan}/list`,
       icon: planIcon,
-      visible: access.canAccessVisitPlanMenu,
+      // visible: access.canAccessVisitPlanMenu,
+      visible:access.canAccess("CRM_VISIT_PLAN"),
     },
     {
       id: 'visitSchedule',
       name: 'Visit Schedule',
       description: 'Sechule to visit customer',
       link: `${CrmPaths.visitSchedule}/list`,
-      visible: access.canAccessVisitScheduleMenu,
+      // visible: access.canAccessVisitScheduleMenu,
+      visible: access.canAccessCRMVisitPlan,
       // isMenu: true,
       // overlay: visitScheduleMenu,
       menu: {
@@ -372,7 +377,8 @@ const Crm: React.FC = () => {
       description: 'Notification Management',
       link: `${CrmPaths.notification}/list`,
       icon: notificationIcon,
-      visible: access.canAccessNotificationMenu,
+      // visible: access.canAccessNotificationMenu,
+      visible: access.canAccessCRMNotification,
     },
     {
       id: 'gratis',
@@ -381,7 +387,8 @@ const Crm: React.FC = () => {
       //link: `${CrmPaths.settlement}/list`,
       link: `${CrmPaths.gratisSettlement}/list`,
       icon: scheduleIcon,
-      visible: access.canAccessGratisSettlementMenu,
+      // visible: access.canAccessGratisSettlementMenu,
+      visible: access.canAccessCRMGratis,
       menu: {
         items: [
           {
@@ -409,7 +416,8 @@ const Crm: React.FC = () => {
       //link: `${CrmPaths.settlement}/list`,
       link: `${CrmPaths.gratisConfig}/list`,
       icon: settingsIcon,
-      visible: access.canAccessGratisConfig,
+      // visible: access.canAccessGratisConfig,
+      visible: access.canAccessCRMGratisConfig,
       // menu: {
       //   items: [{ label: <TermReport trigger={<a >Export</a>} />, key: 'exportTerm', icon: <ExportOutlined style={{ fontSize: '16px', color: '#08c' }} /> }]
       // }
@@ -421,7 +429,8 @@ const Crm: React.FC = () => {
       //link: `${CrmPaths.settlement}/list`,
       link: `${CrmPaths.terms}/list`,
       icon: agreementIcon,
-      visible: access.canAccessTermMenu,
+      // visible: access.canAccessTermMenu,
+      visible: access.canAccessCRMTerm,
       menu: {
         items: [{ label: <TermReport trigger={<a >Export</a>} />, key: 'exportTerm', icon: <ExportOutlined style={{ fontSize: '16px', color: '#08c' }} /> }]
       }
@@ -433,20 +442,22 @@ const Crm: React.FC = () => {
       //link: `${CrmPaths.settlement}/list`,
       link: `${CrmPaths.salesperson}/list`,
       icon: salesperson,
-      visible: access.saleAdmin
+      // visible: access.crmSalsperson
+      visible: access.canAccessCRMSalesperson
     }, {
       id: 'registerCustomer',
       name: 'Register Customer',
       description: 'Register Customer List',
       link: `${CrmPaths.registerCustomer}/list`,
       icon: RegisterCustomerIcon,
-      visible: access.canAccessCrmRegisterCustomerMenuItem,
+      // visible: access.canAccessCrmRegisterCustomerMenuItem,
+      visible: access.canAccessCRMRegisterCustomer,
       menu: {
         items: [{
           type: 'group',
           label: "Reports",
           children: [
-           {
+            {
               label: <RegisterCustomerReport trigger={<a>Register Customer List</a>} />,
               key: 'register-customer-report',
               icon: <BarChartOutlined style={{ fontSize: '16px', color: '#08c' }} />,
@@ -466,7 +477,8 @@ const Crm: React.FC = () => {
       //link: `${CrmPaths.settlement}/list`,
       link: `${CrmPaths.shippingAddress}/list`,
       icon: customerShipping,
-      visible: access.saleAdmin
+      // visible: access.crmShippingAddress
+      visible: access.canAccessCRMShippingAddress
     },
     {
       id: 'customer-sharing',
@@ -474,7 +486,8 @@ const Crm: React.FC = () => {
       description: 'Original owner of the shared customer record.',
       link: `${CrmPaths.shareCustomer}/list`,
       icon: customer_sharing,
-      visible: access.saleAdmin
+      // visible: access.crmShareCustomer
+      visible: access.canAccessCRMShare
     },
     {
       id: 'customer-verified',
@@ -482,7 +495,8 @@ const Crm: React.FC = () => {
       description: "location has been checked and confirmed for accuracy",
       link: `${CrmPaths.verifiedCustomer}/list`,
       icon: customer_verified,
-      visible: access.canAccessVerifiedLocationMenu
+      // visible: access.canAccessVerifiedLocationMenu
+      visible: access.canAccessCRMVerification
     },
 
   ];

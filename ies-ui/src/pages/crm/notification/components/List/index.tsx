@@ -6,7 +6,7 @@ import { SendOutlined } from '@ant-design/icons';
 import { useSetState } from 'ahooks';
 import { Button, message, Modal, Tooltip } from 'antd';
 import { SortOrder } from 'antd/lib/table/interface';
-import { useModel } from 'umi';
+import { useAccess, useModel } from 'umi';
 import { Model } from '../../Model';
 import DetailQuickView from '../DetailQickView';
 import NotificationEntryModal from '../NotificationEntryModal';
@@ -22,7 +22,7 @@ export const NotificationListView: React.FC<TableViewProps<NotificationLess>> = 
   //const actionRef = useRef<ActionType>();
   const cacheList = useModel('dataList');
   const [force, setForce] = useSetState<{ update: number }>({ update: 0 });
-
+  const access = useAccess();
   const onRequestHandler = (
     criteria?: { searchValue?: string },
     pagination?: {
@@ -90,9 +90,8 @@ export const NotificationListView: React.FC<TableViewProps<NotificationLess>> = 
         displayOnly={false}
         forceUpdate={force.update}
         actionHandlers={{
-          onAdd: () => {
-            setAddModal({ visible: true });
-          },
+          
+          onAdd: () => access.can("CRM_NOTIFICATION","CREATE")? setAddModal({ visible: true }):message.warning("Unauthorize"),
           onFirstLoad: () => {
             return cacheList.fetchDataList('list-notification').then((v) => {
               if (v) return v.dataList;

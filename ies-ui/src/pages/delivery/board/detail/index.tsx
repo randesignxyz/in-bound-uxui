@@ -12,8 +12,8 @@ import {
 } from '@/services/delivery/data';
 import { DeliveryParams } from '@/services/delivery/delivery-params';
 import { InstanceDetail } from '@/services/delivery/instance.types';
-import { AimOutlined, CheckCircleFilled, CloseCircleFilled } from '@ant-design/icons';
-import { ProDescriptions } from '@ant-design/pro-components';
+import { AimOutlined, CheckCircleFilled, CloseCircleFilled, EnvironmentOutlined } from '@ant-design/icons';
+import { ModalForm, ProDescriptions } from '@ant-design/pro-components';
 import ProList from '@ant-design/pro-list';
 import ProTable from '@ant-design/pro-table';
 import {
@@ -37,6 +37,7 @@ import { CollectedInvoice } from '../assigned-docs';
 import ResolveShipping from '../resolve-shipping';
 import { ViewController } from '../view-controller';
 import FreighDetail from './FreighDetail';
+import { GoogleMap, Marker, useLoadScript } from '@react-google-maps/api';
 
 interface Props extends DrawerProps, ViewController {
   forceRefresh?: number;
@@ -44,6 +45,10 @@ interface Props extends DrawerProps, ViewController {
 
 export default ({ forceRefresh, requestActions, data: { itemDetail }, actions: { onRefreshDetailData }, view: { getActions, }, ...rest
 }: Props) => {
+  const [openMap, setOpenMap] = useState(false)
+  const { isLoaded, loadError } = useLoadScript({
+    googleMapsApiKey: 'AIzaSyA0Ifgai8ryDULDIqNOZmX8L7XZlzu4_D8', // put your key here
+  });
 
   const [modal, setModal] = useState<
     | {
@@ -169,6 +174,11 @@ export default ({ forceRefresh, requestActions, data: { itemDetail }, actions: {
     }
   }, [forceRefresh])
 
+  const defaultCenter = {
+    lat: Number(itemDetail?.deliveryInfo?.freights[0]?.shippingAddress.latitude) || 11.562108,
+    lng: Number(itemDetail?.deliveryInfo?.freights[0]?.shippingAddress.longitude) || 104.888535,
+  };
+
   return (
     <Drawer
       {...rest}
@@ -188,6 +198,13 @@ export default ({ forceRefresh, requestActions, data: { itemDetail }, actions: {
                 </Button>)
               )
             }
+            <Button
+              onClick={() => setOpenMap(true)}
+              icon={<EnvironmentOutlined />}
+              type="default"
+            >
+              Location
+            </Button>
           </Space>
         )
       }
@@ -379,6 +396,45 @@ export default ({ forceRefresh, requestActions, data: { itemDetail }, actions: {
           )
         }
       </Spin>
+      <ModalForm
+        title="Map"
+        open={openMap}
+        modalProps={{
+          onCancel: () => setOpenMap(false),
+          onOk: () => setOpenMap(false),
+        }}
+      >
+        <GoogleMap
+          zoom={12}
+          center={defaultCenter}
+          mapContainerStyle={{ width: "100%", height: "550px" }}
+        >
+          {itemDetail?.deliveryInfo?.freights.map((dn) => {
+            const markerIcon = dn.checkIn
+              ? "https://maps.google.com/mapfiles/ms/icons/red-dot.png"
+              : "https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi3.png"
+            const markerSize = dn.checkIn
+              ? new window.google.maps.Size(45, 43)
+              : new window.google.maps.Size(25, 43);
+            return (
+              <Marker
+                key={dn.id}
+                position={{
+                  lat: Number(dn.shippingAddress?.latitude),
+                  lng: Number(dn.shippingAddress?.longitude),
+                }}
+                title={`${dn.shippingAddress?.shipToCode}`}
+                icon={{
+                  url: markerIcon,
+                  scaledSize: markerSize,
+                }}
+              />
+            );
+          })}
+        </GoogleMap>
+
+
+      </ModalForm>
     </Drawer>
   );
 };

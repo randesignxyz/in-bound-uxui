@@ -21,6 +21,7 @@ import CustomerDetailView from "./components/Detail";
 import { CustomerServices } from "./services";
 import { simpleRequestActions } from "@/services/model";
 import MapLocationDrawer from "./components/MapLocation";
+
 const crmServices = CrmServiceAPI();
 type FilterType = {
     searchValue?: string;
@@ -28,6 +29,8 @@ type FilterType = {
 } & CustomerAdvanceSearchParams
 
 export default ({ getMenuItems }: CustomerActionController) => {
+
+    const access = useAccess();
     const [filter, setFilter] = useState<FetchPagingParams<FilterType>>()
     const [importData, setImportData] = useState<ImportDataResponse>()
     const [loading, setLoading] = useState(false);
@@ -44,9 +47,11 @@ export default ({ getMenuItems }: CustomerActionController) => {
         enabled: constenState == "COLUMN" ? true : false
     });
 
+
     const { state, ops, modals } = model();
-    
-    const access = useAccess();
+
+
+
     return <Spin spinning={loading}>
         <PageWrapper<CustomerItemLess, FilterType, {}>
             tabRender={item => [
@@ -91,9 +96,9 @@ export default ({ getMenuItems }: CustomerActionController) => {
                                 setFilter((p => (
                                     {
                                         criteria: { ...p?.criteria, advanceSearch: { ...val } },
-                                        pagination:{
+                                        pagination: {
                                             ...p?.pagination,
-                                            pageSize:val.rows
+                                            pageSize: val.rows
                                         }
                                     }
                                 )))
@@ -105,6 +110,7 @@ export default ({ getMenuItems }: CustomerActionController) => {
                             title: 'Customer #',
                             sorter: 'customerCode',
                             width: 120,
+                            dataIndex:"code",
                             actionProps: (item) => ({
                                 type: 'view',
                                 label: item.code || '',
@@ -131,7 +137,7 @@ export default ({ getMenuItems }: CustomerActionController) => {
                         { title: 'Outlet Type', render: (_, r) => r.outletType },
                         { title: 'Status', render: (_, r) => <Status text={toReadable(r.status)} value={r.status} /> },
                         {
-                            render: (_, r) => <Dropdown menu={{
+                            render: (_, r) => <Dropdown disabled={access.crmReadOnly} menu={{
                                 items: getMenuItems(r, 'List', () => refetch).filter(it => it.visible)
                             }}>
                                 <a onClick={(e) => e.preventDefault()}>
@@ -168,11 +174,14 @@ export default ({ getMenuItems }: CustomerActionController) => {
                     ] : []
                 ,
                 actions: [
-
                     {
-                        key: 'EXPORT', label: 'Export', icon: <DownloadOutlined />, onClick: () => {
-                            modals.showModal('export-customer')
-                        }
+                        key: 'EXPORT',
+                        label: 'Export',
+                        icon: <DownloadOutlined />,
+                        disabled: true,
+                        onClick: () => {
+                            access.can("CRM_CUSTOMER", "EXPORT") ? modals.showModal('export-customer') : message.warning("Unauthorize")
+                        },
                     },
 
                     {
@@ -180,20 +189,31 @@ export default ({ getMenuItems }: CustomerActionController) => {
                         label: "Sync",
                         icon: <SyncOutlined />,
                         onClick: () => {
-                            try {
-                                CustomerServices.syncExecStoreProcedureCustomer()(requestAction).then(() => {
-                                    actionRef.current?.reload?.();
-                                    message.success("Success!")
-                                }).catch((err) => {
-                                    message.error("Something went wrong!")
-                                });
+
+                            if (access.can("CRM_CUSTOMER", "SYNC")) {
+                                try {
+                                    CustomerServices.syncExecStoreProcedureCustomer()(requestAction).then(() => {
+                                        actionRef.current?.reload?.();
+                                        message.success("Success!")
+                                    }).catch((err) => {
+                                        message.error("Something went wrong!")
+                                    });
+                                }
+                                catch (e) {
+                                }
                             }
-                            catch (e) {
+                            else {
+                                message.warning("Unauthorize")
                             }
                         }
                     },
 
-                    { key: 'TRANSFER', label: 'Transfer SE', onClick: () => modals.showModal('transfer-customers'), icon: <SwapOutlined style={{ fontSize: '16px', color: '#08c' }} /> },
+                    { 
+                        key: 'TRANSFER', 
+                        label: 'Transfer SE', 
+                        onClick: () => access.can("CRM_CUSTOMER", "TRANSFER") ?modals.showModal('transfer-customers'): message.warning("Unauthorize"), 
+                        icon: <SwapOutlined style={{ fontSize: '16px', color: '#08c' }} /> 
+                    },
 
                 ],
             }}

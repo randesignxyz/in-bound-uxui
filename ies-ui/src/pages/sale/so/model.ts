@@ -3,6 +3,7 @@ import { commmonActions } from '@/services/model';
 import {
   CloseIndirectSoParams,
   CustomerSaleInfo,
+  EditSo,
   InitSoParamsType,
   OfferParams,
   PackageOffer,
@@ -148,6 +149,13 @@ export const Model = () => {
     });
   };
 
+  const loadListArea = () => {
+  return saleServices.listArea().then((data) => {
+    dispatch({ type: 'setListArea', payload: data });
+    return data; // 🔑 REQUIRED
+  });
+};
+
   const doClearSoItem = () => {
     // if (state.data?.so?.items) {
     // }
@@ -156,6 +164,10 @@ export const Model = () => {
 
   const doSaveSo = async (data: So) => {
     return await saleServices.saveSodata(data);
+  };
+
+  const doEditSo = async (data: EditSo) => {
+    return await saleServices.editSodata(data);
   };
 
   const doFetchSo = async (id: number) => {
@@ -463,6 +475,9 @@ export const Model = () => {
   const postSoNew = async (soId: number, remarks?: string) => {
     return await saleServices.postSoToSAPNew({ soId: soId, remarks: remarks });
   };
+   const syncFromSFA = async () => {
+    return await saleServices.syncFromSFA({});
+  };
 
   const cancelSo = async (soId: number, remarks: string) => {
     return await saleServices.cancelSo({ soId, remarks });
@@ -527,6 +542,7 @@ export const Model = () => {
       fetchSo: doFetchSo,
       fetchOfferCodes,
       saveSo: doSaveSo,
+      editSo: doEditSo,
       saveSoItem,
       saveSoItems,
       removeSoItem,
@@ -543,11 +559,13 @@ export const Model = () => {
       getOffer,
       postSo,
       postSoNew,
+      syncFromSFA,
       cancelSo,
       closeSo,
       listTransportationOffer,
       getSoItems,
       loadListItem,
+      loadListArea
     },
     isLoading: actions.isLoading,
     modals: {

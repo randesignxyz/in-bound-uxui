@@ -7,7 +7,7 @@ import { InstanceSrvParams } from '@/services/delivery/instance-service-params';
 import { InstanceDetail } from '@/services/delivery/instance.types';
 import { LoadingParams } from '@/services/delivery/loading-params';
 import { SimpleRequestActions } from '@/services/model';
-import { SearchOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, EnvironmentOutlined, SearchOutlined } from '@ant-design/icons';
 import { ProCard } from '@ant-design/pro-components';
 import ProForm, {
     ProFormDatePicker,
@@ -17,6 +17,7 @@ import ProForm, {
     ProFormTextArea,
 } from '@ant-design/pro-form';
 import ProTable from '@ant-design/pro-table';
+import { GoogleMap, Marker, useLoadScript } from '@react-google-maps/api';
 import { useAccess } from '@umijs/max';
 import { Alert, Button, Checkbox, Col, Divider, message, Modal, Row, Spin, Typography } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
@@ -39,7 +40,9 @@ export const timeFrame = [
 ]
 
 const IssueDNModal: React.FC<Props> = ({ cb, requestActions, itemDetail, ...props }) => {
-
+    const { isLoaded, loadError } = useLoadScript({
+        googleMapsApiKey: 'AIzaSyA0Ifgai8ryDULDIqNOZmX8L7XZlzu4_D8', // put your key here
+    });
     const access = useAccess()
     const [loadingItem, setLoadingItem] = useState<ResolvedDNResponse>();
     const [warehouses, setWarehouses] = useState<string[]>([])
@@ -47,11 +50,12 @@ const IssueDNModal: React.FC<Props> = ({ cb, requestActions, itemDetail, ...prop
     const [driverList, setDriverList] = useState<Driver[]>()
     const [trucks, setTrucks] = useState<Truck[]>()
     const [autoSearch, setAutoSearch] = useState(0)
+    const [openMap, setOpenMap] = useState(false)
 
     const [form] = useForm<{
         docDate: Moment;
         driverId: number;
-        licensePlate: string; 
+        licensePlate: string;
         whsCode?: string;
         shift: string;
         remarks?: string;
@@ -184,6 +188,12 @@ const IssueDNModal: React.FC<Props> = ({ cb, requestActions, itemDetail, ...prop
         }
     }, [trucks])
 
+    const defaultCenter = {
+        lat: Number(loadingItem?.deliveryNotes[0]?.latitude) || 11.562108,
+        lng: Number(loadingItem?.deliveryNotes[0]?.longitude) || 104.888535,
+    };
+
+
     return (
         <FormModalComp title="Issue DN"
             {...props}
@@ -207,10 +217,24 @@ const IssueDNModal: React.FC<Props> = ({ cb, requestActions, itemDetail, ...prop
                     submitter={false}
                 >
                     <ProCard boxShadow size="small" title="Searching">
-                        <ProFormGroup >
-                            <Checkbox disabled={!access.canAccessDeliveryMenuItem} defaultChecked={false} onChange={e => changeTruckHandler(e.target.checked)} >
-                                <Typography.Text strong type="warning">Change Truck</Typography.Text>
-                            </Checkbox>
+                        <ProFormGroup>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+
+                                <Checkbox
+                                    disabled={!access.canAccessDeliveryMenuItem}
+                                    defaultChecked={false}
+                                    onChange={e => changeTruckHandler(e.target.checked)}
+                                >
+                                    <Typography.Text strong type="warning">Change Truck</Typography.Text>
+                                </Checkbox>
+
+                                <Button
+                                    type="link"
+                                    icon={<EnvironmentOutlined />}
+                                    onClick={() => setOpenMap(true)}
+                                />
+
+                            </div>
                         </ProFormGroup>
                         <Divider dashed orientationMargin={0} />
                         {truckChanging && <ProFormGroup >
@@ -229,68 +253,97 @@ const IssueDNModal: React.FC<Props> = ({ cb, requestActions, itemDetail, ...prop
                                     value: it.licensePlate
                                 }))} />
                         </ProFormGroup>}
-                        <ProFormGroup >
-                            <ProFormDatePicker
-                                width={'sm'}
-                                label="Shipping Date"
-                                name={'docDate'}
-                                rules={[{ required: true }]}
-                            />
-                            <ProFormSelect
-                                allowClear={false}
-                                rules={[{ required: true }]}
-                                label="Shift"
-                                name={'shift'}
-                                width={'sm'}
-                                options={shiftList}
-                            />
-                            {truckChanging && <ProFormText label=".">
-                                <Button icon={<SearchOutlined />} onClick={async () => {
-                                    await search();
-                                }}>
-                                    Search
+                        {!openMap && (<>
+                            <ProFormGroup >
+                                <ProFormDatePicker
+                                    width={'sm'}
+                                    label="Shipping Date"
+                                    name={'docDate'}
+                                    rules={[{ required: true }]}
+                                />
+                                <ProFormSelect
+                                    allowClear={false}
+                                    rules={[{ required: true }]}
+                                    label="Shift"
+                                    name={'shift'}
+                                    width={'sm'}
+                                    options={shiftList}
+                                />
+                                {truckChanging && <ProFormText label=".">
+                                    <Button icon={<SearchOutlined />} onClick={async () => {
+                                        await search();
+                                    }}>
+                                        Search
+                                    </Button>
+                                </ProFormText>}
+                            </ProFormGroup>
+                            {/* {sameQty() && <Alert type='warning' showIcon message="Plicking items are the same." />} */}
+                            {(loadingItem?.deliveryNotes?.length || 0) === 0 && <Alert type='warning' showIcon closable message="No DN available. Please verify with SAP." />}
+                        </>)}
+                        {openMap && (<>
+                            <div style={{ marginBottom: 10, display: 'flex', alignItems: 'center' }}>
+                                <Button
+                                    type="link"
+                                    icon={<ArrowLeftOutlined />}
+                                    onClick={() => setOpenMap(false)}
+                                >
+                                    Back
                                 </Button>
-                            </ProFormText>}
-                        </ProFormGroup>
-                        {/* {sameQty() && <Alert type='warning' showIcon message="Plicking items are the same." />} */}
-                        {(loadingItem?.deliveryNotes?.length || 0) === 0 && <Alert type='warning' showIcon closable message="No DN available. Please verify with SAP." />}
+                            </div>
+                            <GoogleMap
+                                zoom={12}
+                                center={defaultCenter}
+                                mapContainerStyle={{ width: "100%", height: "550px" }}
+                            >
+                                {loadingItem?.deliveryNotes.map((dn) => (
+                                    <Marker
+                                        key={dn.docEntry}
+                                        position={{ lat: Number(dn.latitude), lng: Number(dn.longitude) }}
+                                        title={`${dn.cardName} - ${dn.docNum}`}
+                                    />
+                                ))}
+
+
+                            </GoogleMap>
+                        </>)}
+
                     </ProCard>
+                    {!openMap && (<>
+                        {warehouses.length > 1 && <ProCard bordered size='small' title='Warehouse'>
+                            <ProFormSelect
+                                name={'whsCode'}
+                                width={'md'}
+                                rules={[{ required: true }]}
+                                label="First loading Warehouse"
+                                options={warehouses} />
+                        </ProCard>}
 
-                    {warehouses.length > 1 && <ProCard bordered size='small' title='Warehouse'>
-                        <ProFormSelect
-                            name={'whsCode'}
-                            width={'md'}
-                            rules={[{ required: true }]}
-                            label="First loading Warehouse"
-                            options={warehouses} />
-                    </ProCard>}
-
-                    <ProCard bordered title="Delivery Note" size="small" style={{ marginTop: '5px' }}>
-                        <ProTable<DeliveryNoteDetail>
-                            columns={[
-                                { title: 'Del.Doc Num', dataIndex: 'docNum' },
-                                { title: 'Cust. Code', dataIndex: 'cardCode' },
-                                { title: 'Cust. Name', dataIndex: 'cardName' },
-                                { title: 'Shipped To', dataIndex: 'shipToCode' },
-                                { title: 'Quantity', dataIndex: 'qty', align: 'right', render: (_, r) => formatterQty.format(r.qty) },
-                            ]}
-                            size="small"
-                            expandable={{
-                                expandedRowRender,
-                            }}
-                            dataSource={loadingItem?.deliveryNotes}
-                            options={false}
-                            search={false}
-                            pagination={false}
-                            rowKey={'docNum'}
-                        />
-                    </ProCard>
+                        <ProCard bordered title="Delivery Note" size="small" style={{ marginTop: '5px' }}>
+                            <ProTable<DeliveryNoteDetail>
+                                columns={[
+                                    { title: 'Del.Doc Num', dataIndex: 'docNum' },
+                                    { title: 'Cust. Code', dataIndex: 'cardCode' },
+                                    { title: 'Cust. Name', dataIndex: 'cardName' },
+                                    { title: 'Shipped To', dataIndex: 'shipToCode' },
+                                    { title: 'Quantity', dataIndex: 'qty', align: 'right', render: (_, r) => formatterQty.format(r.qty) },
+                                ]}
+                                size="small"
+                                expandable={{
+                                    expandedRowRender,
+                                }}
+                                dataSource={loadingItem?.deliveryNotes}
+                                options={false}
+                                search={false}
+                                pagination={false}
+                                rowKey={'docNum'}
+                            />
+                        </ProCard>
 
 
-                    <ProCard bordered size="small" style={{ marginTop: '5px' }}>
-                        <ProFormTextArea label="Remarks" name={'remarks'} />
-                    </ProCard>
-
+                        <ProCard bordered size="small" style={{ marginTop: '5px' }}>
+                            <ProFormTextArea label="Remarks" name={'remarks'} />
+                        </ProCard>
+                    </>)}
                 </ProForm>
             </Spin>
         </FormModalComp>

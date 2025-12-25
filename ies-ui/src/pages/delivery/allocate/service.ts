@@ -1,5 +1,5 @@
 import { RequestActions, ServiceApiType, singleRequest } from "@/services/apiGateway";
-import { Allocate, allocateSearch, DeliveryList, DNList, DNParams, DnQuickView, LocationList, SkuList, SOAllocateActivities, SOList, UpdateRemarkParams,ListDnDetailParams } from "./data";
+import { Allocate, allocateSearch, DeliveryList, DNList, DNParams, DnQuickView, LocationList, SkuList, SOAllocateActivities, SOList, UpdateRemarkParams,ListDnDetailParams, SaleTypeList, AreaList, SapLine } from "./data";
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { Paging } from "@/services/API";
 
@@ -64,11 +64,11 @@ const AllocateAction = {
         actionName: 'sync-allocate',
         payload: {}
     }),
-    claimDn: (sales_planid: number, claimed_by?: string, action?: string, activities_name?: string): ServiceApiType<{ sales_planid: number, claimed_by?: string, action?: string, activities_name?: string }> => ({
+    claimDn: (sales_planid: number[], claimed_by?: string, action?: string, activities_name?: string,claimed_line?:string|null,so_doc_entries?:string,del_item?:SapLine[]): ServiceApiType<{ sales_planid: number[], claimed_by?: string, action?: string, activities_name?: string,claimed_line?:string|null,so_doc_entries?:string,del_item?:SapLine[] }> => ({
         type: 'EXEC',
         endpoint: 'DELIVERY',
         actionName: 'claim-dn',
-        payload: { sales_planid, claimed_by, action, activities_name }
+        payload: { sales_planid, claimed_by, action, activities_name,claimed_line,so_doc_entries,del_item }
     }),
     getActivities: (dnID: number): ServiceApiType<{ dnID: number }> => ({
         type: 'LIST_QUERY',
@@ -106,6 +106,42 @@ const AllocateAction = {
         type: 'EXEC',
         payload: params,
     }),
+    listSaletype: (): ServiceApiType<{}> => ({
+        type: 'LIST_QUERY',
+        endpoint: 'DELIVERY',
+        actionName: 'get-sale-type',
+        payload: {},
+    }),
+    pageCustomer: (
+        params: TableViewSearchParams<allocateSearch>,
+    ): ServiceApiType<{ searchValue?: string }> => ({
+        type: 'PAGING_QUERY',
+        endpoint: 'DELIVERY',
+        actionName: 'page-customer',
+        payload: { ...params.criteria },
+        pagination: {
+            pageSize: params.pagination?.pageSize,
+            page: params.pagination?.current,
+        },
+    }),
+    lisArea: (): ServiceApiType<{}> => ({
+        type: 'LIST_QUERY',
+        endpoint: 'DELIVERY',
+        actionName: 'list-area',
+        payload: {},
+    }),
+    lisAreaSo: (): ServiceApiType<{}> => ({
+        type: 'LIST_QUERY',
+        endpoint: 'SALE',
+        actionName: 'list-area',
+        payload: {},
+    }),
+    lisClaimedLine: (): ServiceApiType<{}> => ({
+        type: 'LIST_QUERY',
+        endpoint: 'DELIVERY',
+        actionName: 'list-claimed-line',
+        payload: {},
+    }),
 }
 
 export const AllocateServiceAPI = (requestAction: RequestActions) => {
@@ -133,8 +169,8 @@ export const AllocateServiceAPI = (requestAction: RequestActions) => {
         syncAllocate: () =>
             singleRequest<{ data: string, message: string }>(AllocateAction.syncAllocate())(requestAction),
 
-        ClaimDn: (sales_planid: number, claimed_by?: string, action?: string, activities_name?: string) =>
-            singleRequest<{ data: string, message: string }>(AllocateAction.claimDn(sales_planid, claimed_by, action, activities_name))(requestAction),
+        ClaimDn: (sales_planid: number[], claimed_by?: string, action?: string, activities_name?: string,claimed_line?:string|null,so_doc_entries?:string,del_item?:SapLine[]) =>
+            singleRequest<{ data: string, message: string }>(AllocateAction.claimDn(sales_planid, claimed_by, action, activities_name,claimed_line,so_doc_entries,del_item))(requestAction),
 
         getActivities: (dnID: number) =>
             singleRequest<SOAllocateActivities>(AllocateAction.getActivities(dnID))(
@@ -162,6 +198,26 @@ export const AllocateServiceAPI = (requestAction: RequestActions) => {
             ),
         force_close: (params: UpdateRemarkParams) =>
             singleRequest<{ data: string; message: string }>(AllocateAction.forceClose(params))(
+                requestAction
+            ),
+        list_sale_type: () =>
+            singleRequest<SaleTypeList>(AllocateAction.listSaletype())(
+                requestAction
+            ),
+        pageCustomer: (params: TableViewSearchParams<allocateSearch>) =>
+            singleRequest<DNList>(AllocateAction.pageCustomer(params))(requestAction) as Promise<
+                Paging<DNList>
+            >,
+        list_area: () =>
+            singleRequest<AreaList>(AllocateAction.lisArea())(
+                requestAction
+            ),
+        list_area_so: () =>
+            singleRequest<AreaList>(AllocateAction.lisAreaSo())(
+                requestAction
+            ),
+        list_claimed_line: () =>
+            singleRequest<AreaList>(AllocateAction.lisClaimedLine())(
                 requestAction
             ),
     }

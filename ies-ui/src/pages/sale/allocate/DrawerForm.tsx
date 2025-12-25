@@ -4,9 +4,8 @@ import { DrawerForm, DrawerFormProps } from '@ant-design/pro-form';
 import { Button, Card, Col, Descriptions, Divider, message, Modal, Progress, Row, Space, Spin, Tag, Typography, UploadFile, Image, Table, Dropdown } from 'antd';
 import moment from 'moment';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AllocateServiceAPI } from './service';
 import { simpleRequestActions } from '@/services/model';
-import { DeliveryDnParams, DeliveryItemList, DeliveryList, DNItemParams, DNParams, SOAllocateActivities, UpdateRemarkParams } from './data';
+import { DeliveryDnParams, DeliveryItemList, DeliveryList, DNItemParams, DNParams, SOAllocateActivities, UpdateRemarkParams } from '@/pages/delivery/allocate/data';
 import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 import { CheckOutlined, EditOutlined, HistoryOutlined, InboxOutlined } from '@ant-design/icons';
@@ -16,6 +15,7 @@ import { FaRegPenToSquare } from 'react-icons/fa6';
 import { useAccess } from '@umijs/max';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
+import { AllocateServiceAPI } from '@/pages/delivery/allocate/service';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);

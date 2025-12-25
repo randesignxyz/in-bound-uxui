@@ -1,7 +1,7 @@
 import { Card } from "antd";
-import { DNList } from "./data";
 import { useState } from "react";
 import { DownOutlined, UpOutlined } from "@ant-design/icons";
+import { DNList } from "@/pages/delivery/allocate/data";
 
 interface FloatingCardProps {
   selectedRows?: DNList[];
@@ -14,7 +14,7 @@ export const FloatingCard = ({
 }: FloatingCardProps) => {
   if (!cardOpen.visible || selectedRows?.length === 0) return null;
   const [collapsed, setCollapsed] = useState(false);
-
+  console.log('selectedRows',selectedRows)
   return (
     <Card
       size="small"
@@ -124,7 +124,7 @@ export const FloatingCard = ({
                 <span style={{ flex: 1 }}>{g.sku_name}</span>
                 <span style={{ width: 60, textAlign: "right",marginRight:35 }}>{g.qty}</span>
                 <span style={{ width: 80, textAlign: "right" }}>
-                  {g.totalVolume.toFixed(2)} m³
+                  {g.totalVolume.toFixed(6)} m³
                 </span>
               </div>
             ))}
@@ -144,7 +144,7 @@ export const FloatingCard = ({
               <span style={{ flex: 1 }}>Total</span>
               <span style={{ width: 60, textAlign: "right",marginRight:35 }}>{totalQty}</span>
               <span style={{ width: 80, textAlign: "right" }}>
-                {totalVolume?.toFixed(2)} m³
+                {totalVolume?.toFixed(6)} m³
               </span>
             </div>
           </>
@@ -177,7 +177,7 @@ export const FloatingCard = ({
                   sum + Number(item.qty ?? 0) * Number(item.volume ?? 0),
                 0
               )
-              .toFixed(2)}{" "}
+              .toFixed(6)}{" "}
             m³
           </span>
         </div>

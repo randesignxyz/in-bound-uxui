@@ -4,10 +4,10 @@ import { MultiRequest } from '@/services/apiGateway';
 import { Company, Driver, DriverListItem, SaveDriver, Truck } from '@/services/delivery/data';
 import { simpleRequestActions } from '@/services/model';
 import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table';
-import { Card, Checkbox, DatePicker, message, Modal, Progress, Radio, Space, Spin, Tag, Image, UploadFile, Descriptions, Button, Table, Dropdown, Row, Col, Typography, Select, Form, Tooltip } from 'antd';
+import { Card, Checkbox, DatePicker, message, Modal, Progress, Radio, Space, Spin, Tag, Image, UploadFile, Descriptions, Button, Table, Dropdown, Row, Col, Typography, Select, Form, Tooltip, Divider, Collapse } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AllocateServiceAPI } from './service';
-import { Allocate, AllocateSOAdvanceParams, DeliveryList, DNItemParams, DNList, DNParams, DnQuickView, LocationList, SkuList, SOAllocateActivities, SOList, UpdateRemarkParams } from './data';
+import { AllocateServiceAPI } from '@/pages/delivery/allocate/service';
+import { Allocate, AllocateSOAdvanceParams, AreaList, DeliveryList, DNItemParams, DNList, DNParams, DnQuickView, LocationList, SkuList, SOAllocateActivities, SOList, UpdateRemarkParams } from '@/pages/delivery/allocate/data';
 import { useAccess, useModel } from '@umijs/max';
 import { Paging } from '@/services/API';
 import { FaCarSide, FaMapLocationDot, FaRegPenToSquare, FaTruckMoving } from "react-icons/fa6";
@@ -16,7 +16,7 @@ import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 import AddRemarkModal from './AddRemarkForm';
 import { uploadFileToFirebase } from './uploadImage';
-import { CloseCircleOutlined, CopyOutlined, FileSearchOutlined, HistoryOutlined, PlayCircleOutlined, PlusCircleOutlined, ReloadOutlined, SyncOutlined } from '@ant-design/icons';
+import { CloseCircleOutlined, ColumnHeightOutlined, CopyOutlined, ExportOutlined, FileSearchOutlined, HistoryOutlined, PlayCircleOutlined, PlusCircleOutlined, ReloadOutlined, SyncOutlined } from '@ant-design/icons';
 import AdvanceSearch from './advanceSearchDrawer';
 import { FloatingCard } from './displayCard';
 import SaleTypeDrawer from './SaleTypeDrawer';
@@ -25,10 +25,13 @@ import { ProForm, ProFormDatePicker, ProFormDateRangePicker, ProFormSelect } fro
 import ForceColseModal from './ForceCloseModal';
 import { TbMap2 } from "react-icons/tb";
 import { useLocation, useNavigate } from "react-router-dom";
+import SortModal, { SortRule } from '@/pages/delivery/allocate/SortModal';
+import { render } from '@testing-library/react';
 
 dayjs.extend(customParseFormat)
 interface DNListState {
   selectedRows?: DNList[]
+  areaList?: AreaList[]
 }
 
 export default () => {
@@ -40,11 +43,17 @@ export default () => {
   const requestActions = simpleRequestActions();
   const services = AllocateServiceAPI(requestActions);
   const actionRef = useRef<ActionType>();
+  const restoredFromNavRef = useRef(false);
   const [data, setData] = useState<SOList[]>()
   const [skuList, setSkuList] = useState<SkuList[]>([])
   const [dataListDn, setDataListDn] = useState<DNList[]>([])
   const [selectedListDn, setSelectedListDn] = useState<DNList[]>([])
   const [selectedRows, setSelectedRows] = useState<DNList[]>([]);
+  const [sortModalOpen, setSortModalOpen] = useState(false);
+  const [loading, isLoading] = useState(false)
+  const [sortConfig, setSortConfig] = useState<SortRule[]>([
+    { field: undefined, order: undefined }
+  ]);
   const [asDate, setAsDate] = useState(true);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [drawerTypeOpen, setDrawerTypeOpen] = useState<{ visible: boolean; data?: DNList }>({
@@ -63,11 +72,12 @@ export default () => {
     dnStatus: 'pending'
   });
   const [MTSearch, setMTSearch] = useState<{ status: string; startDate?: string, endDate?: string }>({
-    status: 'open',
+    status: 'pending',
   });
-  const [dnSearch, setDnSearch] = useState<{ status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string }>({
+  const [dnSearch, setDnSearch] = useState<{ status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string, sap_delivery_date: string | null, sap_from_date?: string, sap_to_date?: string, customer?: string, area?: [] }>({
     status: 'posted',
-    dnStatus: 'open'
+    dnStatus: 'open',
+    sap_delivery_date: 'as_of_now',
   });
   const [modalOpen, setModalOpen] = useState<{ visible: boolean; id: number, remark?: string, attachment?: any, sales_planid?: string }>({
     visible: false,
@@ -86,9 +96,12 @@ export default () => {
     visible: false
   });
   const [activities, setActivities] = useState<SOAllocateActivities[]>([]);
-  const [hisSearch, setHisSearch] = useState<{ status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string }>({
+  const [hisSearch, setHisSearch] = useState<{
+    sap_delivery_date: string | null; status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string, sap_from_date?: string, sap_to_date?: string, customer?: string, area?: string
+  }>({
     status: 'posted',
-    dnStatus: 'open'
+    dnStatus: 'open',
+    sap_delivery_date: 'as_of_now',
   });
   const cacheList = useModel('dataList');
   const normalizeLocationList = (
@@ -104,6 +117,14 @@ export default () => {
   const [provinceOptions, setProvinceOptions] = useState<{ value: number; label: string }[]>([]);
   const [districtOptions, setDistrictOptions] = useState<{ value: number; label: string }[]>([]);
   const [communeOptions, setCommuneOptions] = useState<{ value: number; label: string }[]>([]);
+  const [areaOptions, setAreaOptions] = useState<any[]>([]);
+  const [areaReady, setAreaReady] = useState(false);
+  const [claimOpen, setClaimOpen] = useState(false);
+  const [useExisting, setUseExisting] = useState(false);
+  const [selectedClaimedLine, setSelectedClaimedLine] = useState<string | null>(null);
+  const [claimedLines, setClaimedLines] = useState<string[]>([]);
+  const [claimIds, setClaimIds] = useState<number[]>([]);
+  const [selectedArea, setSelectedArea] = useState<number[]>([]);
 
   useEffect(() => {
     if (state?.selectedRows) {
@@ -132,6 +153,12 @@ export default () => {
       if (state.selectedRows.length > 0) setCardOpen({ visible: true });
     }
   }, [state?.selectedRows]);
+
+  useEffect(() => {
+    if (state?.areaList) {
+      setSelectedArea(state?.areaList)
+    }
+  }, [state?.areaList]);
 
   // Load provinces once
   useEffect(() => {
@@ -257,67 +284,72 @@ export default () => {
     });
   };
 
-  // const handleClaim = async (id: number) => {
+  // const handleClaim = async (ids: number | number[]) => {
+  //   // Normalize ids to an array
+  //   const idArray = Array.isArray(ids) ? ids : [ids];
+  //   const claimed_line = await services.list_claimed_line();
+  //   console.log('claimed_line', claimed_line)
   //   Modal.confirm({
-  //     title: 'Claim',
+  //     title: 'Pick',
   //     content: 'Are you sure?',
   //     onOk: async () => {
+  //       try {
+  //         await services.ClaimDn(idArray, access.currentUser?.login, 'Pick', 'Pick DN') as {
+  //           data: string;
+  //           message: string;
+  //         }
 
-  //       await services.ClaimDn(id, access.currentUser?.login, 'Claim', 'Claim DN') as {
-  //         data: string;
-  //         message: string;
+  //         // Reload table and show success message
+  //         actionRef.current?.reloadAndRest?.();
+  //         message.success('Updated successfully');
+  //         setSelectedRowKeys([])
+  //         setSelectedRows([])
+  //       } catch (error) {
+  //         message.error('Failed to update');
+  //         console.error(error);
   //       }
-  //       actionRef.current?.reloadAndRest?.();
-  //       message.success('Updated successfully');
   //     },
   //   });
-  // }
+  // };
 
   const handleClaim = async (ids: number | number[]) => {
-    // Normalize ids to an array
-    const idArray = Array.isArray(ids) ? ids : [ids];
-
-    Modal.confirm({
-      title: 'Claim',
-      content: 'Are you sure?',
-      onOk: async () => {
-        try {
-          // Loop through each id
-          for (const id of idArray) {
-            await services.ClaimDn(id, access.currentUser?.login, 'Claim', 'Claim DN') as {
-              data: string;
-              message: string;
-            };
-          }
-
-          // Reload table and show success message
-          actionRef.current?.reloadAndRest?.();
-          message.success('Updated successfully');
-          setSelectedRowKeys([])
-          setSelectedRows([])
-        } catch (error) {
-          message.error('Failed to update');
-          console.error(error);
-        }
-      },
-    });
+    const claimed_line = await services.list_claimed_line()
+    setClaimIds(Array.isArray(ids) ? ids : [ids]);
+    setClaimedLines(claimed_line);
+    setClaimOpen(true);
   };
 
-  const handleUnClaim = async (id: number) => {
+  const handleUnClaim = async (ids: number[], data: any) => {
     Modal.confirm({
-      title: 'Release Claim',
+      title: 'Unpick',
       content: 'Are you sure?',
       onOk: async () => {
 
-        await services.ClaimDn(id, '', 'Release Claim', 'Claim DN') as {
-          data: string;
-          message: string;
-        }
+        // ✅ data is ONE DN object
+        const sapLines = (data.deliveryItems ?? []).map((it: any) => ({
+          lineNum: Number(it.sap_line_num),
+          shipDate: data.deliveryDate,
+        }));
+
+        const soDocEntry = data.so_doc_entry ?? data.soId;
+
+        await services.ClaimDn(
+          ids,
+          access.currentUser?.login ?? '',
+          'Unpick',
+          'Unpick DN',
+          null,
+          soDocEntry,
+          sapLines
+        );
+
         actionRef.current?.reloadAndRest?.();
         message.success('Updated successfully');
       },
     });
-  }
+  };
+
+
 
   const getActivities = async (id: number) => {
     try {
@@ -430,9 +462,58 @@ export default () => {
   //   }
   // };
 
+  // const onRequestDNHandler = async (
+  //   params: TableViewSearchParams<AllocateSOAdvanceParams>
+  // ): Promise<Paging<DNList>> => {
+  //   try {
+  //     const list = await services.list_dn_by_user(
+  //       MTSearch.status,
+  //       MTSearch.startDate,
+  //       MTSearch.endDate
+  //     );
+
+  //     if (!Array.isArray(list)) {
+  //       throw new Error('Unexpected response format');
+  //     }
+  //     console.log('list',list)
+  //     // Merge deliveryItems and unplannedItems for each record
+  //     const mergedList = list.map(delivery => {
+  //       const deliveryItems = Array.isArray(delivery.deliveryItems) ? delivery.deliveryItems : [];
+  //       const unplannedItems = Array.isArray(delivery.unplannedItems) ? delivery.unplannedItems : [];
+
+  //       const mergedItems = [
+  //         ...deliveryItems.map(item => ({ ...item, isUnplanned: false })),
+  //         ...unplannedItems.map(item => ({ ...item, isUnplanned: true }))
+  //       ];
+
+  //       return {
+  //         ...delivery,
+  //         mergedItems
+  //       };
+  //     });
+
+  //     // Pagination
+  //     const page = params.pagination?.current ?? 1;
+  //     const pageSize = params.pagination?.pageSize ?? 20;
+  //     const total = mergedList.length;
+  //     const pagedData = mergedList.slice((page - 1) * pageSize, page * pageSize);
+  //     console.log('pagedDatapagedData', pagedData)
+  //     return {
+  //       items: pagedData,
+  //       total,
+  //       page,
+  //       pageSize
+  //     };
+
+  //   } catch (error: any) {
+  //     message.error(error.message);
+  //     return Promise.reject(error);
+  //   }
+  // };
+
   const onRequestDNHandler = async (
     params: TableViewSearchParams<AllocateSOAdvanceParams>
-  ): Promise<Paging<DNList>> => {
+  ): Promise<any> => {
     try {
       const list = await services.list_dn_by_user(
         MTSearch.status,
@@ -441,33 +522,56 @@ export default () => {
       );
 
       if (!Array.isArray(list)) {
-        throw new Error('Unexpected response format');
+        throw new Error("Unexpected response format");
       }
 
-      // Merge deliveryItems and unplannedItems for each record
-      const mergedList = list.map(delivery => {
-        const deliveryItems = Array.isArray(delivery.deliveryItems) ? delivery.deliveryItems : [];
-        const unplannedItems = Array.isArray(delivery.unplannedItems) ? delivery.unplannedItems : [];
+      console.log("list", list);
 
-        const mergedItems = [
-          ...deliveryItems.map(item => ({ ...item, isUnplanned: false })),
-          ...unplannedItems.map(item => ({ ...item, isUnplanned: true }))
-        ];
+      // list format:
+      // [
+      //   { claimed_line, claimed_date, claim_status, data: [delivery1, delivery2...] }
+      // ]
+
+      // STEP 1 — merge items **inside each group**
+      const groupedResult = list.map(group => {
+        const processedData = group.data.map((delivery: { deliveryItems: any; unplannedItems: any; }) => {
+          const deliveryItems = Array.isArray(delivery.deliveryItems)
+            ? delivery.deliveryItems
+            : [];
+          const unplannedItems = Array.isArray(delivery.unplannedItems)
+            ? delivery.unplannedItems
+            : [];
+
+          const mergedItems = [
+            ...deliveryItems.map((item: any) => ({ ...item, isUnplanned: false })),
+            ...unplannedItems.map((item: any) => ({ ...item, isUnplanned: true }))
+          ];
+
+          return {
+            ...delivery,
+            mergedItems
+          };
+        });
 
         return {
-          ...delivery,
-          mergedItems
+          claimed_line: group.claimed_line,
+          claimed_date: group.claimed_date,
+          claim_status: group.claim_status,
+          data: processedData
         };
       });
 
-      // Pagination
+      // STEP 2 — pagination applies to groups, not individual deliveries
       const page = params.pagination?.current ?? 1;
       const pageSize = params.pagination?.pageSize ?? 20;
-      const total = mergedList.length;
-      const pagedData = mergedList.slice((page - 1) * pageSize, page * pageSize);
-      console.log('pagedDatapagedData', pagedData)
+      const total = groupedResult.length;
+      const pagedGroups = groupedResult.slice(
+        (page - 1) * pageSize,
+        page * pageSize
+      );
+      console.log('pagedGroups', pagedGroups)
       return {
-        items: pagedData,
+        items: pagedGroups,
         total,
         page,
         pageSize
@@ -530,11 +634,14 @@ export default () => {
 
   const onSync = async () => {
     try {
-      await services.syncAllocate();
+      isLoading(true)
+      // await services.syncAllocate();
       actionRef.current?.reloadAndRest?.();
     } catch (error: any) {
       message.error(error.message);
       return Promise.reject(error);
+    } finally {
+      isLoading(false)
     }
   };
 
@@ -546,12 +653,136 @@ export default () => {
     return null; // skip unknown UOM
   };
 
+  function applyMultiSort(data: any, config: any) {
+    return [...data].sort((a, b) => {
+      for (const rule of config) {
+        if (!rule.field || !rule.order) continue;
+
+        const field = rule.field;
+        const asc = rule.order === "asc" ? 1 : -1;
+
+        const aVal = a[field];
+        const bVal = b[field];
+
+        if (aVal < bVal) return -1 * asc;
+        if (aVal > bVal) return 1 * asc;
+      }
+      return 0;
+    });
+  }
+
+  // useEffect(() => {
+  //   const loadDefaultAreas = async () => {
+  //     const res = await services.list_area();
+  //     if (!Array.isArray(res)) return;
+
+  //     const options = res.map((a: any) => ({
+  //       value: Number(a.division_id),
+  //       label: a.division_name.replace(/^S&D\s*/i, '').trim(),
+  //       isDefault: a.isdefault === '1' || a.is_default === '1',
+  //     }));
+
+  //     setAreaOptions(options);
+
+  //     const defaultAreaIds = options
+  //       .filter(o => o.isDefault)
+  //       .map(o => o.value);
+
+  //     if (defaultAreaIds.length > 0) {
+  //       form.setFieldsValue({
+  //         area_dn: defaultAreaIds,
+  //         area_his: defaultAreaIds,
+  //       });
+
+  //       setDnSearch((v: any) => ({
+  //         ...v,
+  //         area: defaultAreaIds,
+  //       }));
+  //       setSelectedArea(defaultAreaIds)
+  //     }
+
+  //     setAreaReady(true);
+
+  //     setTimeout(() => {
+  //       actionRef.current?.reloadAndRest?.();
+  //     }, 0);
+  //   };
+
+  //   loadDefaultAreas();
+  // }, []);
+
+  useEffect(() => {
+    if (state?.areaList?.length) {
+      restoredFromNavRef.current = true;
+
+      setSelectedArea(state.areaList);
+      form.setFieldsValue({
+        area_dn: state.areaList,
+        area_his: state.areaList,
+      });
+
+      setDnSearch(v => ({
+        ...v,
+        area: state.areaList,
+      }));
+    }
+  }, [state?.areaList]);
+
+  useEffect(() => {
+    const loadDefaultAreas = async () => {
+      const res = await services.list_area();
+      if (!Array.isArray(res)) return;
+
+      const options = res.map((a: any) => ({
+        value: Number(a.division_id),
+        label: a.division_name.replace(/^S&D\s*/i, '').trim(),
+        isDefault: a.isdefault === '1' || a.is_default === '1',
+      }));
+
+      setAreaOptions(options);
+
+      // 🔑 HARD STOP if restored from navigation
+      if (restoredFromNavRef.current) {
+        setAreaReady(true);
+        return;
+      }
+
+      // otherwise → apply default
+      const defaultAreaIds = options
+        .filter(o => o.isDefault)
+        .map(o => o.value);
+
+      if (defaultAreaIds.length > 0) {
+        setSelectedArea(defaultAreaIds);
+
+        form.setFieldsValue({
+          area_dn: defaultAreaIds,
+          area_his: defaultAreaIds,
+        });
+
+        setDnSearch(v => ({
+          ...v,
+          area: defaultAreaIds,
+        }));
+      }
+
+      setAreaReady(true);
+
+      setTimeout(() => {
+        actionRef.current?.reloadAndRest?.();
+      }, 0);
+    };
+
+    loadDefaultAreas();
+  }, []);
+
+
+
+
   const onRequestDNDeatilHandler = async (
     params: TableViewSearchParams<AllocateSOAdvanceParams>
   ): Promise<Paging<DNList>> => {
     try {
-      const today = moment().format('YYYY-MM-DD');
-      const deliveryDate = asDate ? dnSearch.delivery_date || undefined : today;
 
       // Map Ant Design sort info to backend format
       const sortBy: string[] = [];
@@ -565,13 +796,18 @@ export default () => {
 
       const list = await services.list_dn_detail({
         status: dnSearch.status,
-        delivery_date: deliveryDate,
+        delivery_date: dnSearch.delivery_date,
         province_id: dnSearch.province_id,
         district_id: dnSearch.district_id,
         commune_id: dnSearch.commune_id,
+        sap_delivery_date: (dnSearch.sap_from_date && dnSearch.sap_to_date) ? null : dnSearch.sap_delivery_date,
         sortBy,
         sortOrders,
-        filterPass: "Unclaimed"
+        filterPass: "Unclaimed",
+        sap_from_date: dnSearch.sap_from_date,
+        sap_to_date: dnSearch.sap_to_date,
+        customer: dnSearch.customer,
+        area: dnSearch.area
       });
 
       if (!Array.isArray(list)) throw new Error('Unexpected response format');
@@ -598,11 +834,11 @@ export default () => {
 
         return { ...delivery, key: delivery.id, ...skuValues };
       });
-
+      const sortedList = applyMultiSort(transformedList, sortConfig);
       const page = params.pagination?.current ?? 1;
       const pageSize = params.pagination?.pageSize ?? 10;
-      const total = transformedList.length;
-      const pagedData = transformedList.slice((page - 1) * pageSize, page * pageSize);
+      const total = sortedList.length;
+      const pagedData = sortedList.slice((page - 1) * pageSize, page * pageSize);
 
       const dataList = { items: pagedData, total, page, pageSize };
       setDataListDn(list);
@@ -618,8 +854,9 @@ export default () => {
   ): Promise<Paging<DNList>> => {
     try {
       const today = moment().format('YYYY-MM-DD');
-      const deliveryDate = asDate ? hisSearch.delivery_date || undefined : today;
-
+      const sapdeliveryDate = asDate
+        ? (dnSearch.sap_delivery_date ? dnSearch.sap_delivery_date : today) // ✅ use filter or ALL
+        : today;
       // Map Ant Design sort info to backend format
       const sortBy: string[] = [];
       const sortOrders: string[] = [];
@@ -632,14 +869,19 @@ export default () => {
 
       const list = await services.list_dn_detail({
         status: hisSearch.status,
-        delivery_date: deliveryDate,
+        delivery_date: hisSearch.delivery_date,
         province_id: hisSearch.province_id,
         district_id: hisSearch.district_id,
         commune_id: hisSearch.commune_id,
+        sap_delivery_date: (hisSearch.sap_from_date && hisSearch.sap_to_date) ? null : hisSearch.sap_delivery_date,
         sortBy,
         sortOrders,
         filterPass: "Claimed",
-        dnStatus: hisSearch.dnStatus
+        dnStatus: hisSearch.dnStatus,
+        sap_from_date: hisSearch.sap_from_date,
+        sap_to_date: hisSearch.sap_to_date,
+        customer: hisSearch.customer,
+        area: hisSearch.area
       });
 
       if (!Array.isArray(list)) throw new Error('Unexpected response format');
@@ -700,7 +942,7 @@ export default () => {
       dataIndex: 'totalItemQty',
     },
     {
-      title: 'Deliver Qty',
+      title: 'Delivered Qty',
       dataIndex: 'totalDnQty',
     },
     {
@@ -838,34 +1080,64 @@ export default () => {
       title: 'SO No',
       dataIndex: 'so_no',
       key: 'so_no',
-      width: '6%',
+      width: '7%',
       render: (_, value) => (
-        <a onClick={() => setDrawerTypeOpen({ visible: true, data: value })}>
-          <Typography.Link strong copyable >{value.so_no}</Typography.Link>
-        </a>
+        <>
+          <a onClick={() => setDrawerTypeOpen({ visible: true, data: value })}>
+            <Typography.Link strong copyable >{value.so_no}</Typography.Link>
+          </a>
+          <a style={{ marginLeft: 5 }} onClick={() => window.open(`/external/sale/so/detail/${value.soId}`, '_blank')?.focus()}>
+            <Typography.Link >< ExportOutlined /></Typography.Link>
+          </a>
+        </>
       ),
     },
     {
-      title: 'Request Delivery Date',
+      title: 'DO No',
+      dataIndex: 'id',
+      width: 220,
+      render: (_, value) => (
+        <>
+          <a onClick={() => setDrawerTypeOpen({ visible: true, data: value })}>
+            <Typography.Link strong copyable >{value.id}</Typography.Link>
+          </a>
+        </>
+      ),
+    },
+    // {
+    //   title: 'Request Delivery Date',
+    //   dataIndex: 'deliveryDate',
+    //   width: '6%',
+    //   render: (_, r) =>
+    //     dayjs.utc(r.deliveryDate).add(7, 'hour').format('DD-MMM-YYYY'),// forces UTC, no timezone shift
+    //   sorter: {
+    //     compare: (a, b) =>
+    //       (a.deliveryDate ? dayjs(a.deliveryDate).unix() : 0) -
+    //       (b.deliveryDate ? dayjs(b.deliveryDate).unix() : 0),
+    //     multiple: 4,
+    //   },
+    // },
+    {
+      title: 'Delivery Date',
       dataIndex: 'deliveryDate',
       width: '6%',
       render: (_, r) =>
-        dayjs.utc(r.deliveryDate).add(7, 'hour').format('DD-MMM-YYYY'),// forces UTC, no timezone shift
-      sorter: {
-        compare: (a, b) =>
-          (a.deliveryDate ? dayjs(a.deliveryDate).unix() : 0) -
-          (b.deliveryDate ? dayjs(b.deliveryDate).unix() : 0),
-        multiple: 4,
-      },
+        dayjs.utc(r.deliveryDate).add(7, 'hour').format('DD-MMM-YYYY hh:mm'),// forces UTC, no timezone shift
+      // sorter: {
+      //   compare: (a, b) =>
+      //     (a.sap_delivery_date ? dayjs(a.sap_delivery_date).unix() : 0) -
+      //     (b.sap_delivery_date ? dayjs(b.sap_delivery_date).unix() : 0),
+      //   multiple: 4,
+      // },
     },
     {
       title: 'Shipping Address',
       dataIndex: 'shippingAddress',
       // sorter: true,
-      sorter: {
-        compare: (a, b) => (a.shippingAddress ?? '').localeCompare(b.shippingAddress ?? ''),
-        multiple: 1,
-      },
+      // sorter: {
+      //   compare: (a, b) => (a.shippingAddress ?? '').localeCompare(b.shippingAddress ?? ''),
+      //   multiple: 1,
+      // },
       width: 200,
       render: (_, value) => (
         <a
@@ -886,18 +1158,46 @@ export default () => {
     ...(advanceSearchParams.filter !== 'HIS'
       ? [
         {
-          title: 'District', dataIndex: 'district', width: 150, sorter: {
-            compare: (a, b) => (a.district ?? '').localeCompare(b.district ?? ''),
-            multiple: 2,
-          },
+          title: 'Area',
+          dataIndex: 'division',
+          width: 150,
+          render: (value: string) =>
+            value?.replace(/^S&D\s*/i, ''),
         },
         {
-          title: 'Commune', dataIndex: 'commune', width: 150, sorter: {
-            compare: (a, b) => (a.commune ?? '').localeCompare(b.commune ?? ''),
-            multiple: 3,
-          },
+          title: 'District', dataIndex: 'district', width: 150,
+          // sorter: {
+          //   compare: (a, b) => (a.district ?? '').localeCompare(b.district ?? ''),
+          //   multiple: 2,
+          // },
+        },
+        {
+          title: 'Commune', dataIndex: 'commune', width: 150,
+          //  sorter: {
+          //   compare: (a, b) => (a.commune ?? '').localeCompare(b.commune ?? ''),
+          //   multiple: 3,
+          // },
         },
         { title: 'Channel', dataIndex: 'channel', width: 150 },
+        {
+          title: 'Volume', width: 180,
+          render: (_: any, r: { mergeItems: any[]; }) => {
+            if (!r.mergeItems) return 0;
+
+            const total = r.mergeItems.reduce((sum, item) => {
+              const volume = Number(item.volume) || 0;
+              const qty = Number(item.qty) || 0;
+
+              return sum + volume * qty;
+            }, 0);
+
+            return `${total.toFixed(4)} m³`
+          }
+        },
+        {
+          title: 'Truck Type', width: 150,
+          dataIndex: 'truck_capacity',
+        },
       ]
       : []),
 
@@ -907,24 +1207,24 @@ export default () => {
       key: 'sku',
       children: skuColumns,
     },
-    {
-      title: 'SAL Remark',
-      dataIndex: 'remarks',
-      width: 150,
-      render: (_, text) => (
-        <div
-          style={{
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            maxWidth: 150,
-          }}
-          title={text.remarks} // shows full text on hover
-        >
-          {text.remarks ? text.remarks : '-'}
-        </div>
-      ),
-    },
+    // {
+    //   title: 'SAL Remark',
+    //   dataIndex: 'remarks',
+    //   width: 150,
+    //   render: (_, text) => (
+    //     <div
+    //       style={{
+    //         whiteSpace: 'nowrap',
+    //         overflow: 'hidden',
+    //         textOverflow: 'ellipsis',
+    //         maxWidth: 150,
+    //       }}
+    //       title={text.remarks} // shows full text on hover
+    //     >
+    //       {text.remarks ? text.remarks : '-'}
+    //     </div>
+    //   ),
+    // },
     ...(advanceSearchParams.filter !== 'DN'
       ? [
         { title: 'Claimed By', dataIndex: 'claimed_by', width: 150 },
@@ -1034,384 +1334,831 @@ export default () => {
 
   const dnColumns: ProColumns<DNList>[] = [...staticColumns];
 
-  const mtColums: ProColumns<DNList>[] = [
+  function extractSortableColumns(columns: ProColumns<DNList>[]) {
+    const result: { title: string; dataIndex: string }[] = [];
+
+    const walk = (cols: ProColumns<DNList>[]) => {
+      cols.forEach(col => {
+        // Skip columns without dataIndex (group headers, render-only cols)
+        if (col.dataIndex && typeof col.title === "string") {
+          result.push({
+            title: col.title,
+            dataIndex: col.dataIndex as string
+          });
+        }
+
+        // Handle nested children
+        if (col.children) walk(col.children as ProColumns<DNList>[]);
+      });
+    };
+
+    walk(columns);
+    return result;
+  }
+
+  const allowedSortFields = [
+    "sap_delivery_date",
+    "shippingAddress",
+    "district",
+    "commune",
+    "channel"
+  ];
+  const sortableColumns = extractSortableColumns(dnColumns).filter(c =>
+    allowedSortFields.includes(c.dataIndex)
+  );
+
+  const mtColumns: ProColumns<any>[] = [
     {
-      // title: 'SO Number',
-      // dataIndex: 'soNo',
       render: (_, record) => {
         return (
           <Card style={{
             marginBottom: 16,
           }}>
             <Descriptions column={5}>
-              <Descriptions.Item label="DO Date" style={{ fontWeight: 'bolder' }}>
-                {dayjs(record.deliveryDate).isValid()
-                  ? dayjs(record.deliveryDate).format('DD-MMM-YYYY')
-                  : '-'}
-              </Descriptions.Item>
-              <Descriptions.Item label="Shipping Address" span={2}
-              >
-                <a onClick={() => {
-                  if (record.latitude && record.longitude) {
-                    const url = `https://www.google.com/maps?q=${record.latitude},${record.longitude}`;
-                    window.open(url, '_blank'); // open in new tab
-                  } else {
-                    message.info(`No location found for: ${record.shippingAddress}`);
-                  }
-                }}>{record.shippingAddress ? record.shippingAddress : '-'}</a>
-              </Descriptions.Item>
-              <Descriptions.Item span={5}>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', alignItems: 'center' }}>
-                  {record.status ? (
-                    <Tag
-                      color={
-                        record.status === 'open'
-                          ? 'blue'
-                          : record.status === 'in-progress'
-                            ? 'orange'
-                            : record.status === 'complete'
-                              ? 'green'
-                              : record.status === 'force-close'
-                                ? 'red'
-                                : 'default'
-                      }
-                      style={{ textTransform: 'capitalize' }}
-                    >
-                      {record.status === 'force-close' ? 'Close' : record.status.replace(/-/g, ' ')}
-                    </Tag>
-                  ) : (
-                    '-'
-                  )}
-                  {record.claimed_by ? (
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                      <span>
-                        Claimed:{' '}
-                        <strong>
-                          {record.claimed_by},
-                        </strong>
-                        <span style={{ fontSize: 12 }}> {dayjs.utc(record.claimed_date).tz('Asia/Phnom_Penh').format('DD-MMM-YYYY hh:mm a')}</span>
-
-                      </span>
-                      {access.currentUser?.login == record.claimed_by && access.canAccesAddRemarkAllocate ?
-                        <Button type="default" danger
-                          onClick={() => handleUnClaim(record.id)}
-                        >
-                          Release
-                        </Button>
-                        : <></>}
-
-                    </div>
-                  ) : access.canAccesAddRemarkAllocate ? (
-                    <Button type="primary"
-                      onClick={() => handleClaim(record.id)}
-                    >
-                      Claim
-                    </Button>
-                  ) : <></>}
-
-                  <Dropdown overlayStyle={{ width: 400 }} menu={activityMenu} trigger={['click']} >
-                    <Button onClick={() => getActivities(record.id)} style={{ marginLeft: 10 }}><HistoryOutlined /></Button>
-                  </Dropdown>
-                  {
-                    record.status != 'force-close' && record.status != 'complete' && access.canAccesAddRemarkAllocate ?
-                      <Tooltip title="Force Close" >
-                        <Button onClick={() =>
-                          setForceCloseOpen({
-                            visible: true,
-                            id: record?.id,
-                          })
-                        }
-                          style={{ marginLeft: 10 }}><CloseCircleOutlined /></Button>
-                      </Tooltip>
-                      : <></>
-                  }
-
-                </div>
-              </Descriptions.Item>
-              <Descriptions.Item label="SO Num" style={{ fontWeight: 'bolder' }}>
-                {record.so_no || '-'}
-              </Descriptions.Item>
-              <Descriptions.Item label="A/R Reserve Invoice" style={{ fontWeight: 'bolder' }}>
-                {record.reserve_num || '-'}
-              </Descriptions.Item>
-              <Descriptions.Item label="Customer Code" style={{ fontWeight: 'bolder' }}>
+              <Descriptions.Item label="Pick Number" style={{ fontWeight: 'bolder' }}>
                 <a>
-                  <Typography.Link strong copyable >{record.customer_code || '-'}</Typography.Link>
+                  <Typography.Link strong copyable >{record.claimed_line || '-'}</Typography.Link>
                 </a>
               </Descriptions.Item>
-              <Descriptions.Item label="Customer Name" style={{ fontWeight: 'bolder' }}>
-                {record.customer_name || '-'}
-              </Descriptions.Item>
-              <Descriptions.Item label="Phone" style={{}}>
-                {record.phone || '-'}
-              </Descriptions.Item>
-
             </Descriptions>
-            <ProTable
-              size="small"
-              search={false}
-              rowKey="id"
-              dataSource={record.mergedItems}
-              expandable={{
-                expandedRowRender: (record) => {
-                  const dnList = (record.dn || [record]).filter(d =>
-                    d && (d.dn_num || d.dn_qty || d.dn_date)
-                  );
-
-                  const plannedQty = Number(record.qty) || 0;
-                  const sortedDnList = dnList.filter(d => d.dn_num).sort((a, b) => Number(a.dn_num) - Number(b.dn_num));
-                  const firstDn = sortedDnList[0];
-                  return (
-                    <Table
-                      size="small"
-                      rowKey={(r, index) => r?.id ?? index}
-                      columns={[
-                        {
-                          title: 'DN No',
-                          dataIndex: 'dn_num',
-                          key: 'dn_num',
-                        },
-                        {
-                          title: 'Delivered Qty',
-                          dataIndex: 'dn_qty',
-                          key: 'dn_qty',
-                          render: (_, dnRecord) => {
-                            const qty = parseFloat(dnRecord.dn_qty) || 0;
-                            const isMismatch = qty !== plannedQty;
-                            return (
-                              <span>
-                                {qty.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                              </span>
-                            );
-                          },
-                        },
-                        {
-                          title: 'DN Date',
-                          dataIndex: 'dn_date',
-                          key: 'dn_date',
-                          render: (_, item) => {
-                            const rawDnDate = item.dn_date;
-                            const dnDate = rawDnDate
-                              ? dayjs.utc(rawDnDate).tz('Asia/Phnom_Penh').startOf('day')
-                              : null;
-
-                            // Safely get the list of DNs for this item
-                            const dnList = item.dn || [];
-
-                            // Only consider DNs with a dn_num for sorting
-                            const sortedDnList = dnList
-                              .filter(d => d?.dn_num)
-                              .sort((a, b) => Number(a.dn_num) - Number(b.dn_num));
-
-                            const firstDn = sortedDnList[0];
-                            const isFirstDN = item.dn_num === firstDn?.dn_num;
-
-                            return (
-                              <span style={{ display: 'inline-flex', alignItems: 'center' }}>
-                                {dnDate?.isValid() ? dnDate.format('DD-MMM-YYYY') : '-'}
-                                {!isFirstDN && <Tag color="orange" style={{ marginLeft: 8 }}>Unplanned</Tag>}
-                              </span>
-                            );
-                          },
-                        }
-
-
-
-                      ]}
-                      dataSource={dnList}
-                      pagination={false}
-                    />
-                  );
-                },
-                rowExpandable: (record) => {
-                  // expanded if dn exists or record itself has dn_num
-                  return (Array.isArray(record.dn) && record.dn.length > 0) || record.dn_num;
-                },
-              }}
-              options={false}
-              pagination={false}
-              columns={[
-                {
-                  title: 'Item Code',
-                  dataIndex: 'itemCode',
-                  width: 150,
-                  render: (_, r) => {
-                    return r.itemCode || r.item_code || '-'
-                  }
-                },
-                {
-                  title: 'Item Name',
-                  dataIndex: 'itemName',
-                  width: 250,
-                  render: (_, record) => {
-                    return record.itemName && record.itemName.trim() !== ''
-                      ? record.itemName
-                      : record.item_name || '-';
-                  },
-                },
-                {
-                  title: 'Plan',
-                  dataIndex: 'qty',
-                  width: 70,
-                  render: (_, r) => {
-                    return r.qty || '0'
-                  }
-                },
-                {
-                  title: 'Delivered',
-                  width: 90,
-                  render: (_, item) => {
-                    const deliveryDate = dayjs.utc(record.deliveryDate).tz('Asia/Phnom_Penh').startOf('day');
-                    const dnList = Array.isArray(item.dn) ? item.dn : [item];
-
-                    const allDNs = record.deliveryItems.flatMap(item => item.dn || []);
-                    const sortedDnList = allDNs
-                      .filter(d => d.dn_num)
-                      .sort((a, b) => Number(a.dn_num) - Number(b.dn_num));
-                    const firstDnNum = sortedDnList[0]?.dn_num;
-
-                    const plannedQty = Number(item.qty) || 0;
-                    const totalDelivered = dnList.reduce((sum, dn) => sum + (parseFloat(dn.dn_qty) || 0), 0);
-
-                    let color = 'black'; // default
-
-                    if (dnList.length === 1) {
-                      const dn = dnList[0];
-                      const dnDate = dayjs.utc(dn.dn_date).tz('Asia/Phnom_Penh').startOf('day');
-                      const isFirstDn = dn.dn_num === firstDnNum;
-                      const isSameDate = dnDate.isSame(deliveryDate);
-
-                      if (isFirstDn && isSameDate && totalDelivered >= plannedQty) {
-                        color = 'green';
-                      } else if (totalDelivered == 0) {
-                        color = 'black';
-                      } else {
-                        color = 'orange';
-                      }
-                    } else if (totalDelivered == 0) {
-                      color = 'black';
-                    } else if (
-                      dnList.length > 1 ||
-                      dnList.some(dn => {
-                        const dnDate = dayjs.utc(dn.dn_date).tz('Asia/Phnom_Penh').startOf('day');
-                        return !dnDate.isSame(deliveryDate);
-                      }) ||
-                      totalDelivered < plannedQty
-                    ) {
-                      color = 'orange';
-                    }
-
-                    return (
-                      <div style={{ color }}>
-                        {totalDelivered.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                      </div>
-                    );
-                  },
-                },
-                {
-                  title: 'Type',
-                  dataIndex: 'saleType',
-                  width: 70,
-                  render: (_, r) => {
-                    return (r.saleType ? r.saleType : 'STD')
-                  }
-                },
-                {
-                  title: 'Remark',
-                  dataIndex: 'dn',
-                  width: 250,
-                  render: (_dom, entity) => {
-                    const remark = entity.dn?.[0]?.remark ?? '';
-                    return (
-                      <div style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
-                        {remark ? remark : '-'}
-                      </div>
-                    );
-                  },
-                },
-                {
-                  title: 'Attachment',
-                  dataIndex: 'attachment',
-                  width: 200,
-                  render: (_, record) => {
-                    const attachments = record.dn?.[0]?.attachment || [];
-
-                    return (
-                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                        {attachments.map((att, index) => {
-                          const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(att);
-                          const decodedURL = decodeURIComponent(att)
-                          const fileNameMatch = decodedURL.match(/\/([^\/?]+)\?alt=media/)
-                          let fileName = fileNameMatch ? fileNameMatch[1] : `File ${index + 1}`;
-                          const dashIndex = fileName.indexOf('-');
-                          if (dashIndex !== -1) {
-                            fileName = fileName.substring(dashIndex + 1);
-                          }
-                          return isImage ? (
-                            <Image
-                              key={index}
-                              width={50}
-                              height={50}
-                              src={att}
-                              alt={`attachment-${index}`}
-                              style={{ objectFit: 'cover', borderRadius: 4 }}
-                              preview={{ mask: <div>Click to preview</div> }}
-                            />
-                          ) : (
-                            <a
-                              key={index}
-                              href={att.attachment}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{
-                                display: 'inline-block',
-                                padding: '4px 8px',
-                                border: '1px solid #ccc',
-                                borderRadius: 4,
-                                backgroundColor: '#f5f5f5',
-                                marginRight: 8,
-                              }}
-                            >
-                              {fileName}
+            <Divider />
+            {record?.data?.map((item: any, index: number) => (
+              <>
+                <Collapse
+                  ghost
+                  defaultActiveKey={['collapMT']}
+                  key={'collapMT'}
+                  items={[
+                    {
+                      key: 'collapMT',
+                      label: (
+                        <Descriptions column={5}>
+                          <Descriptions.Item label="DO Date" style={{ fontWeight: 'bolder' }}>
+                            {dayjs(item.deliveryDate).isValid()
+                              ? dayjs(item.deliveryDate).format('DD-MMM-YYYY hh:mm')
+                              : '-'}
+                          </Descriptions.Item>
+                          <Descriptions.Item label="DO No" style={{ fontWeight: 'bolder' }}>
+                            <a>
+                              <Typography.Link strong copyable >{item.id || '-'}</Typography.Link>
                             </a>
-                          );
-                        })}
-                      </div>
-                    );
-                  },
-                },
-                {
-                  width: 100,
-                  align: 'center',
-                  render: (_, r) => {
-                    if (status == 'Pending' || status == 'Failed') return null;
-                    if (r.isUnplanned) return <Tag key="unplanned" color="orange" style={{ marginLeft: 8 }}>Unplanned</Tag>
-                    if (!access.canAccesAddRemarkAllocate) return null
-                    return (
-                      <a
-                        onClick={() => {
-                          const dnItem = r.dn?.[0];
-                          setModalOpen({
-                            visible: true,
-                            id: dnItem?.id,
-                            remark: dnItem?.remark,
-                            attachment: dnItem?.attachment,
-                            sales_planid: r.deliveryId
-                          });
-                        }}
-                      >
-                        <FaRegPenToSquare />
-                      </a>
-                    );
-                  },
-                },
-              ]}
-            />
-          </Card>
-        );
+                          </Descriptions.Item>
+                          <Descriptions.Item label="Shipping Address" span={1}
+                          >
+                            <a onClick={() => {
+                              if (item.latitude && item.longitude) {
+                                const url = `https://www.google.com/maps?q=${item.latitude},${item.longitude}`;
+                                window.open(url, '_blank'); // open in new tab
+                              } else {
+                                message.info(`No location found for: ${item.shippingAddress}`);
+                              }
+                            }}>{item.shippingAddress ? item.shippingAddress : '-'}</a>
+                          </Descriptions.Item>
+                          <Descriptions.Item span={5}>
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', alignItems: 'center' }}>
+                              {item.status ? (
+                                <Tag
+                                  color={
+                                    item.status === 'open'
+                                      ? 'blue'
+                                      : item.status === 'in-progress'
+                                        ? 'orange'
+                                        : item.status === 'complete'
+                                          ? 'green'
+                                          : item.status === 'force-close'
+                                            ? 'red'
+                                            : 'default'
+                                  }
+                                  style={{ textTransform: 'capitalize' }}
+                                >
+                                  {item.status === 'force-close' ? 'Close' : item.status.replace(/-/g, ' ')}
+                                </Tag>
+                              ) : (
+                                '-'
+                              )}
+                              {item.claimed_by ? (
+                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                  <span>
+                                    Claimed:{' '}
+                                    <strong>
+                                      {item.claimed_by},
+                                    </strong>
+                                    <span style={{ fontSize: 12 }}> {dayjs.utc(item.claimed_date).tz('Asia/Phnom_Penh').format('DD-MMM-YYYY hh:mm a')}</span>
+
+                                  </span>
+                                  {access.currentUser?.login == item.claimed_by && access.canAccesAddRemarkAllocate ?
+                                    <Button type="default" danger
+                                      onClick={() => (handleUnClaim([Number(item.id)], item))}
+                                    >
+                                      Unpick
+                                    </Button>
+                                    : <></>}
+
+                                </div>
+                              ) : access.canAccesAddRemarkAllocate ? (
+                                <Button type="primary"
+                                  onClick={() => handleClaim(item.id)}
+                                >
+                                  Pick
+                                </Button>
+                              ) : <></>}
+
+                              <Dropdown overlayStyle={{ width: 400 }} menu={activityMenu} trigger={['click']} >
+                                <Button onClick={() => getActivities(item.id)} style={{ marginLeft: 10 }}><HistoryOutlined /></Button>
+                              </Dropdown>
+                              {
+                                item.status != 'force-close' && item.status != 'complete' && access.canAccesAddRemarkAllocate ?
+                                  <Tooltip title="Force Close" >
+                                    <Button onClick={() =>
+                                      setForceCloseOpen({
+                                        visible: true,
+                                        id: item?.id,
+                                      })
+                                    }
+                                      style={{ marginLeft: 10 }}><CloseCircleOutlined /></Button>
+                                  </Tooltip>
+                                  : <></>
+                              }
+
+                            </div>
+                          </Descriptions.Item>
+                          <Descriptions.Item label="SO Num" style={{ fontWeight: 'bolder' }}>
+                            {item.so_no || '-'}
+                          </Descriptions.Item>
+                          <Descriptions.Item label="A/R Reserve Invoice" style={{ fontWeight: 'bolder' }}>
+                            {item.reserve_num || '-'}
+                          </Descriptions.Item>
+                          <Descriptions.Item label="Customer Code" style={{ fontWeight: 'bolder' }}>
+                            <a>
+                              <Typography.Link strong copyable >{item.customer_code || '-'}</Typography.Link>
+                            </a>
+                          </Descriptions.Item>
+                          <Descriptions.Item label="Customer Name" style={{ fontWeight: 'bolder' }}>
+                            {item.customer_name || '-'}
+                          </Descriptions.Item>
+                          <Descriptions.Item label="Phone" style={{}}>
+                            {item.phone || '-'}
+                          </Descriptions.Item>
+
+                        </Descriptions>
+
+                      ),
+                      children: (
+                        <ProTable
+                          size="small"
+                          search={false}
+                          rowKey="id"
+                          dataSource={item.mergedItems}
+                          expandable={{
+                            expandedRowRender: (item) => {
+                              const dnList = (item.dn || [item]).filter(d =>
+                                d && (d.dn_num || d.dn_qty || d.dn_date)
+                              );
+
+                              const plannedQty = Number(item.qty) || 0;
+                              const sortedDnList = dnList.filter(d => d.dn_num).sort((a, b) => Number(a.dn_num) - Number(b.dn_num));
+                              const firstDn = sortedDnList[0];
+                              return (
+                                <Table
+                                  size="small"
+                                  rowKey={(r, index) => r?.id ?? index}
+                                  columns={[
+                                    {
+                                      title: 'DN No',
+                                      dataIndex: 'dn_num',
+                                      key: 'dn_num',
+                                    },
+                                    {
+                                      title: 'Delivered Qty',
+                                      dataIndex: 'dn_qty',
+                                      key: 'dn_qty',
+                                      render: (_, dnRecord) => {
+                                        const qty = parseFloat(dnRecord.dn_qty) || 0;
+                                        const isMismatch = qty !== plannedQty;
+                                        return (
+                                          <span>
+                                            {qty.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                          </span>
+                                        );
+                                      },
+                                    },
+                                    {
+                                      title: 'DN Date',
+                                      dataIndex: 'dn_date',
+                                      key: 'dn_date',
+                                      render: (_, item) => {
+                                        const rawDnDate = item.dn_date;
+                                        const dnDate = rawDnDate
+                                          ? dayjs.utc(rawDnDate).tz('Asia/Phnom_Penh').startOf('day')
+                                          : null;
+
+                                        // Safely get the list of DNs for this item
+                                        const dnList = item.dn || [];
+
+                                        // Only consider DNs with a dn_num for sorting
+                                        const sortedDnList = dnList
+                                          .filter(d => d?.dn_num)
+                                          .sort((a, b) => Number(a.dn_num) - Number(b.dn_num));
+
+                                        const firstDn = sortedDnList[0];
+                                        const isFirstDN = item.dn_num === firstDn?.dn_num;
+
+                                        return (
+                                          <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                                            {dnDate?.isValid() ? dnDate.format('DD-MMM-YYYY') : '-'}
+                                            {!isFirstDN && <Tag color="orange" style={{ marginLeft: 8 }}>Unplanned</Tag>}
+                                          </span>
+                                        );
+                                      },
+                                    }
+
+
+
+                                  ]}
+                                  dataSource={dnList}
+                                  pagination={false}
+                                />
+                              );
+                            },
+                            rowExpandable: (item) => {
+                              // expanded if dn exists or record itself has dn_num
+                              return (Array.isArray(item.dn) && item.dn.length > 0) || item.dn_num;
+                            },
+                          }}
+                          options={false}
+                          pagination={false}
+                          columns={[
+                            {
+                              title: 'Item Code',
+                              dataIndex: 'itemCode',
+                              width: 150,
+                              render: (_, r) => {
+                                return r.itemCode || r.item_code || '-'
+                              }
+                            },
+                            {
+                              title: 'Item Name',
+                              dataIndex: 'itemName',
+                              width: 250,
+                              render: (_, record) => {
+                                return record.itemName && record.itemName.trim() !== ''
+                                  ? record.itemName
+                                  : record.item_name || '-';
+                              },
+                            },
+                            {
+                              title: 'Plan',
+                              dataIndex: 'qty',
+                              width: 70,
+                              render: (_, r) => {
+                                return r.qty || '0'
+                              }
+                            },
+                            {
+                              title: 'Delivered',
+                              width: 90,
+                              render: (_, r) => {
+                                const deliveryDate = dayjs.utc(item.deliveryDate).tz('Asia/Phnom_Penh').startOf('day');
+                                const dnList = Array.isArray(r.dn) ? r.dn : [r];
+
+                                const allDNs = item.deliveryItems.flatMap(r => r.dn || []);
+                                const sortedDnList = allDNs
+                                  .filter(d => d.dn_num)
+                                  .sort((a, b) => Number(a.dn_num) - Number(b.dn_num));
+                                const firstDnNum = sortedDnList[0]?.dn_num;
+
+                                const plannedQty = Number(r.qty) || 0;
+                                const totalDelivered = dnList.reduce((sum, dn) => sum + (parseFloat(dn.dn_qty) || 0), 0);
+
+                                let color = 'black'; // default
+
+                                if (dnList.length === 1) {
+                                  const dn = dnList[0];
+                                  const dnDate = dayjs.utc(dn.dn_date).tz('Asia/Phnom_Penh').startOf('day');
+                                  const isFirstDn = dn.dn_num === firstDnNum;
+                                  const isSameDate = dnDate.isSame(deliveryDate);
+
+                                  if (isFirstDn && isSameDate && totalDelivered >= plannedQty) {
+                                    color = 'green';
+                                  } else if (totalDelivered == 0) {
+                                    color = 'black';
+                                  } else {
+                                    color = 'orange';
+                                  }
+                                } else if (totalDelivered == 0) {
+                                  color = 'black';
+                                } else if (
+                                  dnList.length > 1 ||
+                                  dnList.some(dn => {
+                                    const dnDate = dayjs.utc(dn.dn_date).tz('Asia/Phnom_Penh').startOf('day');
+                                    return !dnDate.isSame(deliveryDate);
+                                  }) ||
+                                  totalDelivered < plannedQty
+                                ) {
+                                  color = 'orange';
+                                }
+
+                                return (
+                                  <div style={{ color }}>
+                                    {totalDelivered.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                  </div>
+                                );
+                              },
+                            },
+                            {
+                              title: 'Type',
+                              dataIndex: 'saleType',
+                              width: 70,
+                              render: (_, r) => {
+                                return (r.saleType ? r.saleType : 'STD')
+                              }
+                            },
+                            {
+                              title: 'Remark',
+                              dataIndex: 'dn',
+                              width: 250,
+                              render: (_dom, entity) => {
+                                const remark = entity.dn?.[0]?.remark ?? '';
+                                return (
+                                  <div style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                                    {remark ? remark : '-'}
+                                  </div>
+                                );
+                              },
+                            },
+                            {
+                              title: 'Attachment',
+                              dataIndex: 'attachment',
+                              width: 200,
+                              render: (_, record) => {
+                                const attachments = record.dn?.[0]?.attachment || [];
+
+                                return (
+                                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                                    {attachments.map((att, index) => {
+                                      const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(att);
+                                      const decodedURL = decodeURIComponent(att)
+                                      const fileNameMatch = decodedURL.match(/\/([^\/?]+)\?alt=media/)
+                                      let fileName = fileNameMatch ? fileNameMatch[1] : `File ${index + 1}`;
+                                      const dashIndex = fileName.indexOf('-');
+                                      if (dashIndex !== -1) {
+                                        fileName = fileName.substring(dashIndex + 1);
+                                      }
+                                      return isImage ? (
+                                        <Image
+                                          key={index}
+                                          width={50}
+                                          height={50}
+                                          src={att}
+                                          alt={`attachment-${index}`}
+                                          style={{ objectFit: 'cover', borderRadius: 4 }}
+                                          preview={{ mask: <div>Click to preview</div> }}
+                                        />
+                                      ) : (
+                                        <a
+                                          key={index}
+                                          href={att.attachment}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          style={{
+                                            display: 'inline-block',
+                                            padding: '4px 8px',
+                                            border: '1px solid #ccc',
+                                            borderRadius: 4,
+                                            backgroundColor: '#f5f5f5',
+                                            marginRight: 8,
+                                          }}
+                                        >
+                                          {fileName}
+                                        </a>
+                                      );
+                                    })}
+                                  </div>
+                                );
+                              },
+                            },
+                            {
+                              width: 100,
+                              align: 'center',
+                              render: (_, r) => {
+                                if (status == 'Pending' || status == 'Failed') return null;
+                                if (r.isUnplanned) return <Tag key="unplanned" color="orange" style={{ marginLeft: 8 }}>Unplanned</Tag>
+                                if (!access.canAccesAddRemarkAllocate) return null
+                                return (
+                                  <a
+                                    onClick={() => {
+                                      const dnItem = r.dn?.[0];
+                                      setModalOpen({
+                                        visible: true,
+                                        id: dnItem?.id,
+                                        remark: dnItem?.remark,
+                                        attachment: dnItem?.attachment,
+                                        sales_planid: r.deliveryId
+                                      });
+                                    }}
+                                  >
+                                    <FaRegPenToSquare />
+                                  </a>
+                                );
+                              },
+                            },
+                          ]}
+                        />
+                      ),
+                    },
+                  ]}
+                />
+                <Divider />
+              </>
+            ))}
+          </Card>)
       },
     },
-  ];
+  ]
+  // const mtColums: ProColumns<DNList>[] = [
+  //   {
+  //     // title: 'SO Number',
+  //     // dataIndex: 'soNo',
+  //     render: (_, record) => {
+  //       return (
+  //         <Card style={{
+  //           marginBottom: 16,
+  //         }}>
+  //           <Descriptions column={5}>
+  //             <Descriptions.Item label="DO Date" style={{ fontWeight: 'bolder' }}>
+  //               {dayjs(record.deliveryDate).isValid()
+  //                 ? dayjs(record.deliveryDate).format('DD-MMM-YYYY')
+  //                 : '-'}
+  //             </Descriptions.Item>
+  //             <Descriptions.Item label="DO No" style={{ fontWeight: 'bolder' }}>
+  //               {record.id}
+  //             </Descriptions.Item>
+  //             <Descriptions.Item label="Shipping Address" span={1}
+  //             >
+  //               <a onClick={() => {
+  //                 if (record.latitude && record.longitude) {
+  //                   const url = `https://www.google.com/maps?q=${record.latitude},${record.longitude}`;
+  //                   window.open(url, '_blank'); // open in new tab
+  //                 } else {
+  //                   message.info(`No location found for: ${record.shippingAddress}`);
+  //                 }
+  //               }}>{record.shippingAddress ? record.shippingAddress : '-'}</a>
+  //             </Descriptions.Item>
+  //             <Descriptions.Item span={5}>
+  //               <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', alignItems: 'center' }}>
+  //                 {record.status ? (
+  //                   <Tag
+  //                     color={
+  //                       record.status === 'open'
+  //                         ? 'blue'
+  //                         : record.status === 'in-progress'
+  //                           ? 'orange'
+  //                           : record.status === 'complete'
+  //                             ? 'green'
+  //                             : record.status === 'force-close'
+  //                               ? 'red'
+  //                               : 'default'
+  //                     }
+  //                     style={{ textTransform: 'capitalize' }}
+  //                   >
+  //                     {record.status === 'force-close' ? 'Close' : record.status.replace(/-/g, ' ')}
+  //                   </Tag>
+  //                 ) : (
+  //                   '-'
+  //                 )}
+  //                 {record.claimed_by ? (
+  //                   <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+  //                     <span>
+  //                       Claimed:{' '}
+  //                       <strong>
+  //                         {record.claimed_by},
+  //                       </strong>
+  //                       <span style={{ fontSize: 12 }}> {dayjs.utc(record.claimed_date).tz('Asia/Phnom_Penh').format('DD-MMM-YYYY hh:mm a')}</span>
+
+  //                     </span>
+  //                     {access.currentUser?.login == record.claimed_by && access.canAccesAddRemarkAllocate ?
+  //                       <Button type="default" danger
+  //                         onClick={() => handleUnClaim([Number(record.id)])}
+  //                       >
+  //                         Unship
+  //                       </Button>
+  //                       : <></>}
+
+  //                   </div>
+  //                 ) : access.canAccesAddRemarkAllocate ? (
+  //                   <Button type="primary"
+  //                     onClick={() => handleClaim(record.id)}
+  //                   >
+  //                     Ship
+  //                   </Button>
+  //                 ) : <></>}
+
+  //                 <Dropdown overlayStyle={{ width: 400 }} menu={activityMenu} trigger={['click']} >
+  //                   <Button onClick={() => getActivities(record.id)} style={{ marginLeft: 10 }}><HistoryOutlined /></Button>
+  //                 </Dropdown>
+  //                 {
+  //                   record.status != 'force-close' && record.status != 'complete' && access.canAccesAddRemarkAllocate ?
+  //                     <Tooltip title="Force Close" >
+  //                       <Button onClick={() =>
+  //                         setForceCloseOpen({
+  //                           visible: true,
+  //                           id: record?.id,
+  //                         })
+  //                       }
+  //                         style={{ marginLeft: 10 }}><CloseCircleOutlined /></Button>
+  //                     </Tooltip>
+  //                     : <></>
+  //                 }
+
+  //               </div>
+  //             </Descriptions.Item>
+  //             <Descriptions.Item label="SO Num" style={{ fontWeight: 'bolder' }}>
+  //               {record.so_no || '-'}
+  //             </Descriptions.Item>
+  //             <Descriptions.Item label="A/R Reserve Invoice" style={{ fontWeight: 'bolder' }}>
+  //               {record.reserve_num || '-'}
+  //             </Descriptions.Item>
+  //             <Descriptions.Item label="Customer Code" style={{ fontWeight: 'bolder' }}>
+  //               <a>
+  //                 <Typography.Link strong copyable >{record.customer_code || '-'}</Typography.Link>
+  //               </a>
+  //             </Descriptions.Item>
+  //             <Descriptions.Item label="Customer Name" style={{ fontWeight: 'bolder' }}>
+  //               {record.customer_name || '-'}
+  //             </Descriptions.Item>
+  //             <Descriptions.Item label="Phone" style={{}}>
+  //               {record.phone || '-'}
+  //             </Descriptions.Item>
+
+  //           </Descriptions>
+  //           <ProTable
+  //             size="small"
+  //             search={false}
+  //             rowKey="id"
+  //             dataSource={record.mergedItems}
+  //             expandable={{
+  //               expandedRowRender: (record) => {
+  //                 const dnList = (record.dn || [record]).filter(d =>
+  //                   d && (d.dn_num || d.dn_qty || d.dn_date)
+  //                 );
+
+  //                 const plannedQty = Number(record.qty) || 0;
+  //                 const sortedDnList = dnList.filter(d => d.dn_num).sort((a, b) => Number(a.dn_num) - Number(b.dn_num));
+  //                 const firstDn = sortedDnList[0];
+  //                 return (
+  //                   <Table
+  //                     size="small"
+  //                     rowKey={(r, index) => r?.id ?? index}
+  //                     columns={[
+  //                       {
+  //                         title: 'DN No',
+  //                         dataIndex: 'dn_num',
+  //                         key: 'dn_num',
+  //                       },
+  //                       {
+  //                         title: 'Delivered Qty',
+  //                         dataIndex: 'dn_qty',
+  //                         key: 'dn_qty',
+  //                         render: (_, dnRecord) => {
+  //                           const qty = parseFloat(dnRecord.dn_qty) || 0;
+  //                           const isMismatch = qty !== plannedQty;
+  //                           return (
+  //                             <span>
+  //                               {qty.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+  //                             </span>
+  //                           );
+  //                         },
+  //                       },
+  //                       {
+  //                         title: 'DN Date',
+  //                         dataIndex: 'dn_date',
+  //                         key: 'dn_date',
+  //                         render: (_, item) => {
+  //                           const rawDnDate = item.dn_date;
+  //                           const dnDate = rawDnDate
+  //                             ? dayjs.utc(rawDnDate).tz('Asia/Phnom_Penh').startOf('day')
+  //                             : null;
+
+  //                           // Safely get the list of DNs for this item
+  //                           const dnList = item.dn || [];
+
+  //                           // Only consider DNs with a dn_num for sorting
+  //                           const sortedDnList = dnList
+  //                             .filter(d => d?.dn_num)
+  //                             .sort((a, b) => Number(a.dn_num) - Number(b.dn_num));
+
+  //                           const firstDn = sortedDnList[0];
+  //                           const isFirstDN = item.dn_num === firstDn?.dn_num;
+
+  //                           return (
+  //                             <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+  //                               {dnDate?.isValid() ? dnDate.format('DD-MMM-YYYY') : '-'}
+  //                               {!isFirstDN && <Tag color="orange" style={{ marginLeft: 8 }}>Unplanned</Tag>}
+  //                             </span>
+  //                           );
+  //                         },
+  //                       }
+
+
+
+  //                     ]}
+  //                     dataSource={dnList}
+  //                     pagination={false}
+  //                   />
+  //                 );
+  //               },
+  //               rowExpandable: (record) => {
+  //                 // expanded if dn exists or record itself has dn_num
+  //                 return (Array.isArray(record.dn) && record.dn.length > 0) || record.dn_num;
+  //               },
+  //             }}
+  //             options={false}
+  //             pagination={false}
+  //             columns={[
+  //               {
+  //                 title: 'Item Code',
+  //                 dataIndex: 'itemCode',
+  //                 width: 150,
+  //                 render: (_, r) => {
+  //                   return r.itemCode || r.item_code || '-'
+  //                 }
+  //               },
+  //               {
+  //                 title: 'Item Name',
+  //                 dataIndex: 'itemName',
+  //                 width: 250,
+  //                 render: (_, record) => {
+  //                   return record.itemName && record.itemName.trim() !== ''
+  //                     ? record.itemName
+  //                     : record.item_name || '-';
+  //                 },
+  //               },
+  //               {
+  //                 title: 'Plan',
+  //                 dataIndex: 'qty',
+  //                 width: 70,
+  //                 render: (_, r) => {
+  //                   return r.qty || '0'
+  //                 }
+  //               },
+  //               {
+  //                 title: 'Delivered',
+  //                 width: 90,
+  //                 render: (_, item) => {
+  //                   const deliveryDate = dayjs.utc(record.deliveryDate).tz('Asia/Phnom_Penh').startOf('day');
+  //                   const dnList = Array.isArray(item.dn) ? item.dn : [item];
+
+  //                   const allDNs = record.deliveryItems.flatMap(item => item.dn || []);
+  //                   const sortedDnList = allDNs
+  //                     .filter(d => d.dn_num)
+  //                     .sort((a, b) => Number(a.dn_num) - Number(b.dn_num));
+  //                   const firstDnNum = sortedDnList[0]?.dn_num;
+
+  //                   const plannedQty = Number(item.qty) || 0;
+  //                   const totalDelivered = dnList.reduce((sum, dn) => sum + (parseFloat(dn.dn_qty) || 0), 0);
+
+  //                   let color = 'black'; // default
+
+  //                   if (dnList.length === 1) {
+  //                     const dn = dnList[0];
+  //                     const dnDate = dayjs.utc(dn.dn_date).tz('Asia/Phnom_Penh').startOf('day');
+  //                     const isFirstDn = dn.dn_num === firstDnNum;
+  //                     const isSameDate = dnDate.isSame(deliveryDate);
+
+  //                     if (isFirstDn && isSameDate && totalDelivered >= plannedQty) {
+  //                       color = 'green';
+  //                     } else if (totalDelivered == 0) {
+  //                       color = 'black';
+  //                     } else {
+  //                       color = 'orange';
+  //                     }
+  //                   } else if (totalDelivered == 0) {
+  //                     color = 'black';
+  //                   } else if (
+  //                     dnList.length > 1 ||
+  //                     dnList.some(dn => {
+  //                       const dnDate = dayjs.utc(dn.dn_date).tz('Asia/Phnom_Penh').startOf('day');
+  //                       return !dnDate.isSame(deliveryDate);
+  //                     }) ||
+  //                     totalDelivered < plannedQty
+  //                   ) {
+  //                     color = 'orange';
+  //                   }
+
+  //                   return (
+  //                     <div style={{ color }}>
+  //                       {totalDelivered.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+  //                     </div>
+  //                   );
+  //                 },
+  //               },
+  //               {
+  //                 title: 'Type',
+  //                 dataIndex: 'saleType',
+  //                 width: 70,
+  //                 render: (_, r) => {
+  //                   return (r.saleType ? r.saleType : 'STD')
+  //                 }
+  //               },
+  //               {
+  //                 title: 'Remark',
+  //                 dataIndex: 'dn',
+  //                 width: 250,
+  //                 render: (_dom, entity) => {
+  //                   const remark = entity.dn?.[0]?.remark ?? '';
+  //                   return (
+  //                     <div style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
+  //                       {remark ? remark : '-'}
+  //                     </div>
+  //                   );
+  //                 },
+  //               },
+  //               {
+  //                 title: 'Attachment',
+  //                 dataIndex: 'attachment',
+  //                 width: 200,
+  //                 render: (_, record) => {
+  //                   const attachments = record.dn?.[0]?.attachment || [];
+
+  //                   return (
+  //                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+  //                       {attachments.map((att, index) => {
+  //                         const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(att);
+  //                         const decodedURL = decodeURIComponent(att)
+  //                         const fileNameMatch = decodedURL.match(/\/([^\/?]+)\?alt=media/)
+  //                         let fileName = fileNameMatch ? fileNameMatch[1] : `File ${index + 1}`;
+  //                         const dashIndex = fileName.indexOf('-');
+  //                         if (dashIndex !== -1) {
+  //                           fileName = fileName.substring(dashIndex + 1);
+  //                         }
+  //                         return isImage ? (
+  //                           <Image
+  //                             key={index}
+  //                             width={50}
+  //                             height={50}
+  //                             src={att}
+  //                             alt={`attachment-${index}`}
+  //                             style={{ objectFit: 'cover', borderRadius: 4 }}
+  //                             preview={{ mask: <div>Click to preview</div> }}
+  //                           />
+  //                         ) : (
+  //                           <a
+  //                             key={index}
+  //                             href={att.attachment}
+  //                             target="_blank"
+  //                             rel="noopener noreferrer"
+  //                             style={{
+  //                               display: 'inline-block',
+  //                               padding: '4px 8px',
+  //                               border: '1px solid #ccc',
+  //                               borderRadius: 4,
+  //                               backgroundColor: '#f5f5f5',
+  //                               marginRight: 8,
+  //                             }}
+  //                           >
+  //                             {fileName}
+  //                           </a>
+  //                         );
+  //                       })}
+  //                     </div>
+  //                   );
+  //                 },
+  //               },
+  //               {
+  //                 width: 100,
+  //                 align: 'center',
+  //                 render: (_, r) => {
+  //                   if (status == 'Pending' || status == 'Failed') return null;
+  //                   if (r.isUnplanned) return <Tag key="unplanned" color="orange" style={{ marginLeft: 8 }}>Unplanned</Tag>
+  //                   if (!access.canAccesAddRemarkAllocate) return null
+  //                   return (
+  //                     <a
+  //                       onClick={() => {
+  //                         const dnItem = r.dn?.[0];
+  //                         setModalOpen({
+  //                           visible: true,
+  //                           id: dnItem?.id,
+  //                           remark: dnItem?.remark,
+  //                           attachment: dnItem?.attachment,
+  //                           sales_planid: r.deliveryId
+  //                         });
+  //                       }}
+  //                     >
+  //                       <FaRegPenToSquare />
+  //                     </a>
+  //                   );
+  //                 },
+  //               },
+  //             ]}
+  //           />
+  //         </Card>
+  //       );
+  //     },
+  //   },
+  // ];
+
+
+
 
   const qvColums: ProColumns<DnQuickView>[] = [
     {
@@ -1483,7 +2230,7 @@ export default () => {
 
   return (
     <>
-      <Spin spinning={requestActions.request?.loading}>
+      <Spin spinning={requestActions.request?.loading || loading}>
         {advanceSearchParams.filter == 'SO' ?
           <TableView<SOList, { searchValue?: string }>
             displayOnly
@@ -1514,7 +2261,7 @@ export default () => {
             }}
             extraFilter={
               <Space size="large" style={{ flexDirection: 'row' }}>
-                <Button onClick={() => setSearchModalOpen({ visible: true })}><FileSearchOutlined /></Button>
+                {/* <Button onClick={() => setSearchModalOpen({ visible: true })}><FileSearchOutlined /></Button> */}
                 <Radio.Group
                   value={advanceSearchParams.filter}
                   onChange={(e) => {
@@ -1525,8 +2272,8 @@ export default () => {
                     actionRef.current?.reloadAndRest?.();
                   }}
                 >
-                  <Radio.Button value="OV">Over View</Radio.Button>
-                  <Radio.Button value="SO">Sales Order</Radio.Button>
+                  {/* <Radio.Button value="OV">Over View</Radio.Button>
+                  <Radio.Button value="SO">Sales Order</Radio.Button> */}
                   <Radio.Button value="DN">Delivery Plan</Radio.Button>
                   <Radio.Button value="HIS">History</Radio.Button>
                   <Radio.Button value="MT">My Task</Radio.Button>
@@ -1572,13 +2319,14 @@ export default () => {
                           name="status"
                           allowClear
                           showSearch
-                          initialValue="open"
+                          initialValue="pending"
                           onChange={(val: string) => {
                             setMTSearch((v) => ({ ...v, status: val }))
                             actionRef.current?.reloadAndRest?.();
                           }}
                           options={[
                             { value: 'ALL', label: 'ALL' },
+                            { value: 'pending', label: 'Pending' },
                             { value: 'open', label: 'Open' },
                             { value: 'in-progress', label: 'In Progress' },
                             { value: 'complete', label: 'Completed' },
@@ -1616,24 +2364,25 @@ export default () => {
               }}
               extraFilter={
                 <Space size="large" style={{ flexDirection: 'row' }}>
-                  <Button onClick={() => setSearchModalOpen({ visible: true })}><FileSearchOutlined /></Button>
-                  <><Radio.Group
-                    value={advanceSearchParams.filter}
-                    onChange={(e) => {
-                      setAdvanceSearchParams((v) => ({
-                        ...v,
-                        filter: e.target.value,
-                      }));
-                      actionRef.current?.reloadAndRest?.();
-                    }}
-                  >
-                    <Radio.Button value="OV">Over View</Radio.Button>
-                    <Radio.Button value="SO">Sales Order</Radio.Button>
-                    <Radio.Button value="DN">Delivery Plan</Radio.Button>
-                    <Radio.Button value="HIS">History</Radio.Button>
-                    <Radio.Button value="MT">My Task</Radio.Button>
-                    {/* <Radio.Button value="FG">FG</Radio.Button> */}
-                  </Radio.Group>
+                  {/* <Button onClick={() => setSearchModalOpen({ visible: true })}><FileSearchOutlined /></Button> */}
+                  <>
+                    <Radio.Group
+                      value={advanceSearchParams.filter}
+                      onChange={(e) => {
+                        setAdvanceSearchParams((v) => ({
+                          ...v,
+                          filter: e.target.value,
+                        }));
+                        actionRef.current?.reloadAndRest?.();
+                      }}
+                    >
+                      {/* <Radio.Button value="OV">Over View</Radio.Button>
+                    <Radio.Button value="SO">Sales Order</Radio.Button> */}
+                      <Radio.Button value="DN">Delivery Plan</Radio.Button>
+                      <Radio.Button value="HIS">History</Radio.Button>
+                      <Radio.Button value="MT">My Task</Radio.Button>
+                      {/* <Radio.Button value="FG">FG</Radio.Button> */}
+                    </Radio.Group>
                     {/* {advanceSearchParams.filter == 'MT' ?
                       <Radio.Group
                         value={MTSearch.status}
@@ -1654,7 +2403,7 @@ export default () => {
                   </>
                 </Space>
               }
-              columns={mtColums}
+              columns={mtColumns}
               actionHandlers={{
                 onRequest: (criteria, pagination, sort) =>
                   onRequestDNHandler({
@@ -1678,7 +2427,7 @@ export default () => {
                 }}
                 extraFilter={
                   <Space size="large" style={{ flexDirection: 'row' }}>
-                    <Button onClick={() => setSearchModalOpen({ visible: true })}><FileSearchOutlined /></Button>
+                    {/* <Button onClick={() => setSearchModalOpen({ visible: true })}><FileSearchOutlined /></Button> */}
                     <><Radio.Group
                       value={advanceSearchParams.filter}
                       onChange={(e) => {
@@ -1689,8 +2438,8 @@ export default () => {
                         actionRef.current?.reloadAndRest?.();
                       }}
                     >
-                      <Radio.Button value="OV">Over View</Radio.Button>
-                      <Radio.Button value="SO">Sales Order</Radio.Button>
+                      {/* <Radio.Button value="OV">Over View</Radio.Button>
+                      <Radio.Button value="SO">Sales Order</Radio.Button> */}
                       <Radio.Button value="DN">Delivery Plan</Radio.Button>
                       <Radio.Button value="HIS">History</Radio.Button>
                       <Radio.Button value="MT">My Task</Radio.Button>
@@ -1744,25 +2493,108 @@ export default () => {
                       actions: [
                         <ProForm submitter={false} layout="inline">
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                            <Checkbox
+                            {/* <Checkbox
                               checked={asDate}
                               onChange={e => { setAsDate(e.target.checked), actionRef.current?.reloadAndRest?.() }}
                             >
-                              As Date
-                            </Checkbox>
-                            <ProFormDatePicker
+                              As of Now
+                            </Checkbox> */}
+                            {/* <ProFormDatePicker
                               name="delivery_date"
-                              placeholder="Delivery Date"
+                              placeholder="Request Delivery Date"
+                              disabled={!asDate}
                               onChange={(val: moment.Moment | null) => {
                                 const localDate = val ? val.format('YYYY-MM-DD') : undefined; // local date
                                 setDnSearch((v) => ({ ...v, delivery_date: localDate }));
                                 actionRef.current?.reloadAndRest?.();
                               }}
+                              width={200}
+                            /> */}
+                            <ProFormSelect
+                              name="sap_delivery_date"
+                              initialValue="as_of_now"
+                              onChange={(val: string) => {
+                                setDnSearch((v) => ({ ...v, sap_delivery_date: val }))
+                                actionRef.current?.reloadAndRest?.();
+                              }}
+                              options={[
+                                { value: 'all', label: 'ALL' },
+                                { value: 'as_of_now', label: 'As Date' },
+                                { value: 'today', label: 'Today' },
+                                { value: 'unplan', label: 'TBC' },
+                              ]}
                               width={150}
+                              showSearch
+                            />
+                            {/* <ProFormSelect
+                              width={200}
+                              name="area_dn"
+                              placeholder="Area"
+                              showSearch
+                              allowClear
+                              mode="multiple"
+                              request={async () => {
+                                const data = await services.list_area();
+                                return data.map((obj: any) => ({
+                                  value: obj.division_id,
+                                  label: obj.division_name,
+                                }));
+                              }}
+                              onChange={(val?: string) => {
+                                setDnSearch(v => ({
+                                  ...v,
+                                  area: val,
+                                }));
+                                actionRef.current?.reloadAndRest?.();
+                              }}
+                            /> */}
+                            {areaReady && (
+                              <ProFormSelect
+                                name="area_dn"
+                                mode="multiple"
+                                placeholder="Area"
+                                showSearch
+                                allowClear
+                                width={200}
+                                options={areaOptions}
+                                initialValue={dnSearch.area}
+                                onChange={(val: number[]) => {
+                                  setSelectedArea(val);
+                                  setDnSearch(v => ({
+                                    ...v,
+                                    area: val,
+                                  }));
+                                  actionRef.current?.reloadAndRest?.();
+                                }}
+                              />
+                            )}
+
+
+
+
+                            <ProFormDateRangePicker
+                              name="sap_delivery_range_dn"
+                              placeholder={['From Date', 'To Date']}
+                              disabled={!asDate}
+                              width={300}
+                              fieldProps={{
+                                onChange(val) {
+                                  const fromDate = val?.[0] ? val[0].format('YYYY-MM-DD') : undefined;
+                                  const toDate = val?.[1] ? val[1].format('YYYY-MM-DD') : undefined;
+
+                                  setDnSearch((v) => ({
+                                    ...v,
+                                    sap_from_date: fromDate,
+                                    sap_to_date: toDate,
+                                  }));
+
+                                  actionRef.current?.reloadAndRest?.();
+                                }
+                              }}
                             />
                             <ProFormSelect
                               placeholder="Province"
-                              value={provinceId}
+                              name="province_id_dn"
                               onChange={(val: string) => {
                                 setProvinceId(val)
                                 setDnSearch((v) => ({ ...v, province_id: val }))
@@ -1777,6 +2609,7 @@ export default () => {
 
                             <ProFormSelect
                               placeholder="District"
+                              name="district_id_dn"
                               value={districtId}
                               onChange={(val: string) => {
                                 setDistrictId(val)
@@ -1792,6 +2625,7 @@ export default () => {
 
                             <ProFormSelect
                               placeholder="Commune"
+                              name="commune_id_dn"
                               options={communeOptions}
                               onChange={(val: string) => {
                                 setDnSearch((v) => ({ ...v, commune_id: val }))
@@ -1802,6 +2636,36 @@ export default () => {
                               showSearch
                               mode="multiple"
                             />
+                            <ProFormSelect
+                              placeholder="Customer"
+                              name="customer_dn"
+                              showSearch
+                              debounceTime={200}
+                              mode="multiple"
+                              allowClear
+                              width={300}
+                              request={async ({ keyWords }) => {
+                                const res = await services.pageCustomer({
+                                  criteria: {
+                                    searchValue: keyWords,
+                                  },
+                                  pagination: {
+                                    current: 1,
+                                    pageSize: 20,
+                                  },
+                                })
+
+                                return res.items.map((c: any) => ({
+                                  value: c.code,
+                                  label: `${c.code} - ${c.name}`,
+                                }));
+                              }}
+                              onChange={(val: string[]) => {
+                                setDnSearch(v => ({ ...v, customer: val }));
+                                actionRef.current?.reloadAndRest?.();
+                              }}
+                            />
+
                           </div>
                           {/* Button */}
                           {access.canAccesAddRemarkAllocate && (
@@ -1809,19 +2673,21 @@ export default () => {
                               <Button
                                 type="primary"
                                 disabled={selectedRowKeys.length === 0}
-                                onClick={() => handleClaim(selectedRowKeys.map(k => Number(k)))}
+                                onClick={() => (handleClaim(selectedRowKeys.map(k => Number(k))), console.log(selectedListDn))}
                               >
-                                Claim
+                                Pick
                               </Button>
                             </div>
                           )}
                           <Button type="text" size={'large'}
-                            onClick={() => navigate("/delivery/location", { state: { list: dataListDn, selected: selectedListDn, selectedRows: selectedRows } })}
+                            onClick={() => navigate("/delivery/location", { state: { list: dataListDn, selected: selectedListDn, selectedRows: selectedRows, areaList: selectedArea } })}
                             icon={<TbMap2 />}
                             style={{ fontSize: 22 }}
                           >
                           </Button>
-
+                          <Button type="text" size='large' onClick={() => setSortModalOpen(true)}>
+                            <ColumnHeightOutlined />
+                          </Button>
                           <Button
                             type="text"
                             onClick={() => onSync()}
@@ -1836,9 +2702,9 @@ export default () => {
                   }}
                   extraFilter={
                     <Space size="large" style={{ flexDirection: 'row' }}>
-                      <Button onClick={() => setSearchModalOpen({ visible: true })}>
+                      {/* <Button onClick={() => setSearchModalOpen({ visible: true })}>
                         <FileSearchOutlined />
-                      </Button>
+                      </Button> */}
                       <Radio.Group
                         value={advanceSearchParams.filter}
                         onChange={(e) => {
@@ -1849,8 +2715,8 @@ export default () => {
                           actionRef.current?.reloadAndRest?.();
                         }}
                       >
-                        <Radio.Button value="OV">Over View</Radio.Button>
-                        <Radio.Button value="SO">Sales Order</Radio.Button>
+                        {/* <Radio.Button value="OV">Over View</Radio.Button>
+                        <Radio.Button value="SO">Sales Order</Radio.Button> */}
                         <Radio.Button value="DN">Delivery Plan</Radio.Button>
                         <Radio.Button value="HIS">History</Radio.Button>
                         <Radio.Button value="MT">My Task</Radio.Button>
@@ -1887,24 +2753,73 @@ export default () => {
                         actions: [
                           <ProForm submitter={false} layout="inline">
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                              <Checkbox
+                              {/* <Checkbox
                                 checked={asDate}
                                 onChange={e => { setAsDate(e.target.checked), actionRef.current?.reloadAndRest?.() }}
                               >
-                                As Date
-                              </Checkbox>
-                              <ProFormDatePicker
+                                As of Now
+                              </Checkbox> */}
+                              {/* <ProFormDatePicker
                                 name="delivery_date"
                                 placeholder="Delivery Date"
+                                disabled={!asDate}
                                 onChange={(val: moment.Moment | null) => {
                                   const localDate = val ? val.format('YYYY-MM-DD') : undefined; // local date
                                   setHisSearch((v) => ({ ...v, delivery_date: localDate }));
                                   actionRef.current?.reloadAndRest?.();
                                 }}
+                                width={200}
+                              /> */}
+                              <ProFormSelect
+                                name="sap_delivery_date"
+                                initialValue="as_of_now"
+                                onChange={(val: string) => {
+                                  setHisSearch((v) => ({ ...v, sap_delivery_date: val }))
+                                  actionRef.current?.reloadAndRest?.();
+                                }}
+                                options={[
+                                  { value: 'all', label: 'ALL' },
+                                  { value: 'as_of_now', label: 'As Date' },
+                                  { value: 'today', label: 'Today' },
+                                  { value: 'unplan', label: 'TBC' },
+                                ]}
                                 width={150}
+                                showSearch
+                              />
+                              {/* <ProFormDatePicker
+                                name="sap_delivery_date"
+                                placeholder="Delivery Date"
+                                disabled={!asDate}
+                                onChange={(val: moment.Moment | null) => {
+                                  const localDate = val ? val.format('YYYY-MM-DD') : undefined; // local date
+                                  setHisSearch((v) => ({ ...v, sap_delivery_date: localDate }));
+                                  actionRef.current?.reloadAndRest?.();
+                                }}
+                                width={200}
+                              /> */}
+                              <ProFormDateRangePicker
+                                name="sap_delivery_range_his"
+                                placeholder={['From Date', 'To Date']}
+                                disabled={!asDate}
+                                width={300}
+                                fieldProps={{
+                                  onChange(val) {
+                                    const fromDate = val?.[0] ? val[0].format('YYYY-MM-DD') : undefined;
+                                    const toDate = val?.[1] ? val[1].format('YYYY-MM-DD') : undefined;
+
+                                    setHisSearch((v) => ({
+                                      ...v,
+                                      sap_from_date: fromDate,
+                                      sap_to_date: toDate,
+                                    }));
+
+                                    actionRef.current?.reloadAndRest?.();
+                                  }
+                                }}
                               />
                               <ProFormSelect
                                 placeholder="Province"
+                                name="province_id_his"
                                 value={provinceId}
                                 onChange={(val: string) => {
                                   setProvinceId(val)
@@ -1920,6 +2835,7 @@ export default () => {
 
                               <ProFormSelect
                                 placeholder="District"
+                                name="district_id_his"
                                 value={districtId}
                                 onChange={(val: string) => {
                                   setDistrictId(val)
@@ -1935,6 +2851,7 @@ export default () => {
 
                               <ProFormSelect
                                 placeholder="Commune"
+                                name="commune_id_his"
                                 options={communeOptions}
                                 onChange={(val: string) => {
                                   setHisSearch((v) => ({ ...v, commune_id: val }))
@@ -1944,6 +2861,35 @@ export default () => {
                                 allowClear
                                 showSearch
                                 mode="multiple"
+                              />
+                              <ProFormSelect
+                                placeholder="Customer"
+                                name="customer_his"
+                                showSearch
+                                debounceTime={200}
+                                mode="multiple"
+                                allowClear
+                                width={300}
+                                request={async ({ keyWords }) => {
+                                  const res = await services.pageCustomer({
+                                    criteria: {
+                                      searchValue: keyWords,
+                                    },
+                                    pagination: {
+                                      current: 1,
+                                      pageSize: 20,
+                                    },
+                                  })
+
+                                  return res.items.map((c: any) => ({
+                                    value: c.code,
+                                    label: `${c.code} - ${c.name}`,
+                                  }));
+                                }}
+                                onChange={(val: string) => {
+                                  setHisSearch(v => ({ ...v, customer: val }));
+                                  actionRef.current?.reloadAndRest?.();
+                                }}
                               />
                             </div>
                             {/* Button */}
@@ -1980,9 +2926,9 @@ export default () => {
                     }}
                     extraFilter={
                       <Space size="large" style={{ flexDirection: 'row' }}>
-                        <Button onClick={() => setSearchModalOpen({ visible: true })}>
+                        {/* <Button onClick={() => setSearchModalOpen({ visible: true })}>
                           <FileSearchOutlined />
-                        </Button>
+                        </Button> */}
                         <Radio.Group
                           value={advanceSearchParams.filter}
                           onChange={(e) => {
@@ -1993,8 +2939,8 @@ export default () => {
                             actionRef.current?.reloadAndRest?.();
                           }}
                         >
-                          <Radio.Button value="OV">Over View</Radio.Button>
-                          <Radio.Button value="SO">Sales Order</Radio.Button>
+                          {/* <Radio.Button value="OV">Over View</Radio.Button>
+                          <Radio.Button value="SO">Sales Order</Radio.Button> */}
                           <Radio.Button value="DN">Delivery Plan</Radio.Button>
                           <Radio.Button value="HIS">History</Radio.Button>
                           <Radio.Button value="MT">My Task</Radio.Button>
@@ -2087,6 +3033,77 @@ export default () => {
         dataList={drawerTypeOpen.data}
         onVisibleChange={(v) => v === false && (setDrawerTypeOpen({ visible: false, data: undefined }))}
       />
+      <SortModal
+        open={sortModalOpen}
+        onClose={() => setSortModalOpen(false)}
+        onApply={() => {
+          actionRef.current?.reloadAndRest?.();
+          setSortModalOpen(false);
+        }}
+        sortConfig={sortConfig}
+        setSortConfig={setSortConfig}
+        columns={sortableColumns}
+      />
+      <Modal
+        open={claimOpen}
+        title="Pick"
+        onCancel={() => {
+          setClaimOpen(false);
+          setClaimIds([])
+          setClaimedLines([])
+          setSelectedRowKeys([])
+          setSelectedRows([])
+          setSelectedListDn([])
+        }}
+        onOk={async () => {
+          const sapLines = selectedListDn.flatMap(dn =>
+            (dn.deliveryItems ?? []).map(it => ({
+              lineNum: Number(it.sap_line_num),                 // SAP line number
+              shipDate: (dn.deliveryDate)
+            }))
+          );
+          const soDocEntries = [...new Set(
+            selectedListDn.map(v => v.so_doc_entry)
+          )];
+          for (const soDocEntry of soDocEntries) {
+            await services.ClaimDn(
+              claimIds,
+              access.currentUser?.login,
+              'Pick',
+              'Pick DN',
+              useExisting ? selectedClaimedLine : null,
+              soDocEntry,
+              sapLines
+            );
+          }
+          actionRef.current?.reloadAndRest?.();
+          message.success('Updated successfully');
+          setClaimOpen(false);
+          setClaimIds([])
+          setClaimedLines([])
+          setSelectedRowKeys([])
+          setSelectedRows([])
+          setSelectedListDn([])
+        }}
+      >
+        <Checkbox
+          checked={useExisting}
+          onChange={e => setUseExisting(e.target.checked)}
+        >
+          Use existing pick
+        </Checkbox>
+
+        {useExisting && (
+          <Select
+            style={{ width: '100%', marginTop: 12 }}
+            placeholder="Select pick"
+            options={claimedLines.map(c => ({ label: c.claimed_line, value: c.claimed_line }))}
+            value={selectedClaimedLine}
+            onChange={setSelectedClaimedLine}
+          />
+        )}
+      </Modal >
+
     </>
   );
 };

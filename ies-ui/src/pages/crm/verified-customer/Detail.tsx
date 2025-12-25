@@ -9,7 +9,7 @@ import { CustomerWithAddressVerifiedAPI } from "./service";
 import ChangeStatusForm from "./ChangeStatus";
 import { useMemo, useState } from "react";
 import Remarks from "@/components/remarks";
-import { useQuery } from "@umijs/max";
+import { useAccess, useQuery } from "@umijs/max";
 import { GoogleMap, InfoWindow, Marker, MarkerClusterer, Polyline, useJsApiLoader } from "@react-google-maps/api";
 
 interface Props {
@@ -64,7 +64,7 @@ const VerifiedDetailView: React.FC<Props> = ({ data1, mode, onBack }) => {
         refetchOnWindowFocus: false,
         retry: 1
     });
-    const [infoOpen, setInfoOpen] = useState(true);
+    const access = useAccess();
 
     return (
         <>
@@ -73,7 +73,7 @@ const VerifiedDetailView: React.FC<Props> = ({ data1, mode, onBack }) => {
                     <Card
                         size="small"
                         extra={[20001, 20002, 20004].some(p => data?.verifiedStatus?.id == 20002) ?
-                            <Space>
+                            <Space hidden={access.can("CRM_VERIFICATION","BTN_ACTION")}>
                                 <Button icon={<SignatureOutlined />}
                                     onClick={() => setRemarkState(true)}
                                     type="link"

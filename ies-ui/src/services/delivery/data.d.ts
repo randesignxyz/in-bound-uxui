@@ -619,6 +619,8 @@ export interface FreightDetail {
   shippingAddress: {
     shipToCode: string;
     address: string;
+    latitude:string
+    longitude:string
   };
   status: string;
   qty: number;

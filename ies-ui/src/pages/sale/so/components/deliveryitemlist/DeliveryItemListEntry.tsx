@@ -22,6 +22,7 @@ interface Props extends FormModalProps {
     addressList?: AddressInfo[];
     default?: DeliveryEntry;
     currentDelivery?: DeliveryEntry;
+    so_status?: string
   };
   actionHandlers?: {
     onSaveHandlers?: (itemList: DeliveryEntry) => void;
@@ -38,10 +39,32 @@ const DeliveryItemListEntry: React.FC<Props> = ({ data, actionHandlers, ...props
     };
   }, [props.open]);
 
+  // const initFormData = () => {
+  //   const initData = data?.currentDelivery ? { ...data?.currentDelivery } : data?.default;
+  //   form.setFieldsValue({
+  //     deliveryDate: initData?.deliveryDate,
+  //     shippingAddressId: initData?.shippingAddressId,
+  //     itemList: initData?.itemList,
+  //   });
+  // };
+
   const initFormData = () => {
-    const initData = data?.currentDelivery ? { ...data?.currentDelivery } : data?.default;
+    const initData = data?.currentDelivery
+      ? { ...data?.currentDelivery }
+      : data?.default;
+
+    const isTBC =
+      initData?.deliveryDate &&
+      moment(initData.deliveryDate).isSame(
+        moment('2099-12-31'),
+        'day'
+      );
+
     form.setFieldsValue({
-      deliveryDate: initData?.deliveryDate,
+      deliveryDate: initData?.deliveryDate
+        ? moment(initData.deliveryDate)
+        : undefined,
+      isTBC: isTBC,
       shippingAddressId: initData?.shippingAddressId,
       itemList: initData?.itemList,
     });
@@ -61,8 +84,8 @@ const DeliveryItemListEntry: React.FC<Props> = ({ data, actionHandlers, ...props
           ?.address,
         deliveryDate: dataForm.deliveryDate,
         itemList: dataForm.itemList.filter((it) => it.qty > 0),
+        deliveryId: data?.currentDelivery?.id
       };
-
       actionHandlers?.onSaveHandlers?.(dlv);
     } catch (error) {
       message.error('Invalid data');
@@ -72,7 +95,7 @@ const DeliveryItemListEntry: React.FC<Props> = ({ data, actionHandlers, ...props
   return (
     <FormModalComp
       onResetForm={initFormData}
-      okText={data?.currentDelivery ? 'Edit' : 'Add'}
+      okText={data?.currentDelivery ? 'Update' : 'Add'}
       onSubmit={onSaveActionHandler}
       {...props}
     >
@@ -81,13 +104,15 @@ const DeliveryItemListEntry: React.FC<Props> = ({ data, actionHandlers, ...props
       }}>
         <Card size="small" >
           <ProFormGroup title="Delivery">
-            <ProFormDependency name={["isTBC"]}>
+            {/* <ProFormDependency name={["isTBC"]}>
               {({ isTBC }) => (
                 <ProFormDatePicker
                   rules={[{ required: true }]}
                   allowClear={false}
                   width={200}
                   help={<span />}
+                  format="YYYY-MM-DD HH:mm" 
+                  showTime
                   label="Delivery Date"
                   name="deliveryDate"
                   fieldProps={{
@@ -95,8 +120,24 @@ const DeliveryItemListEntry: React.FC<Props> = ({ data, actionHandlers, ...props
                   }}
                 />
               )}
+            </ProFormDependency> */}
+            <ProFormDependency name={['isTBC']}>
+              {({ isTBC }) => (
+                <ProFormDatePicker
+                  rules={[{ required: true }]}
+                  allowClear={false}
+                  width={200}
+                  help={<span />}
+                  format="YYYY-MM-DD HH:mm"
+                  showTime
+                  label="Delivery Date"
+                  name="deliveryDate"
+                  fieldProps={{ disabled: isTBC }}
+                  transform={(value: any) => ({ deliveryDate: value })}
+                />
+              )}
             </ProFormDependency>
-            {/* <ProFormSwitch
+            <ProFormSwitch
               label="To Be Confirm"
               name="isTBC"
               fieldProps={{
@@ -112,7 +153,7 @@ const DeliveryItemListEntry: React.FC<Props> = ({ data, actionHandlers, ...props
                   }
                 },
               }}
-            /> */}
+            />
             <ProFormSelect
               help={<span />}
               label="Shipping Address"
@@ -139,6 +180,7 @@ const DeliveryItemListEntry: React.FC<Props> = ({ data, actionHandlers, ...props
               deleteIconProps={false}
               name="itemList"
               itemRender={(_, listMeta) => {
+                console.log(listMeta)
                 const maxQtyDefault =
                   data?.default?.itemList.find(
                     (it) =>
@@ -172,6 +214,7 @@ const DeliveryItemListEntry: React.FC<Props> = ({ data, actionHandlers, ...props
                     />
                     <ProFormDigit
                       label={listMeta.index === 0 && 'Quantity'}
+                      disabled={data?.so_status?.toLocaleLowerCase() == 'posted'}
                       width={100}
                       min={0}
                       max={max < 0 ? 0 : max}

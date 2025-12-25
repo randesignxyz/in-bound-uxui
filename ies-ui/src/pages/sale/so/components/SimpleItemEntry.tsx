@@ -170,7 +170,7 @@ const SimpleItemEntry: React.FC<Props> = ({ data, loading, actionHandlers, ...pr
       onResetForm={onResetActionHandler}
       onSubmit={onSubmitActionHandler}
       title="Product Line Item"
-      okText={data.soLineItem ? 'Edit' : 'Add'}
+      okText={data.soLineItem ? 'Update' : 'Add'}
     >
       <Spin spinning={loading}>
         <Card size="small">

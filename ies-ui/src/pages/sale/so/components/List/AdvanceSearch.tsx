@@ -1,4 +1,6 @@
+import { CrmServiceAPI } from '@/services/crm/services';
 import { LookupData, LookupDataItem } from '@/services/data';
+import { simpleRequestActions } from '@/services/model';
 import { SoAdvanceSearchParams } from '@/services/sale/data';
 import { DrawerForm, DrawerFormProps, ProFormDependency } from '@ant-design/pro-components';
 import ProForm, {
@@ -26,7 +28,7 @@ const AdvanceSarch: React.FC<AdvanceSearchProps> = ({
   ...props
 }) => {
   const [form] = useForm<SoAdvanceSearchParams>();
-
+  const  requestActions = simpleRequestActions();
   useEffect(() => {
     if (!props.open) return;
     form.setFieldsValue({ ...initData });
@@ -66,6 +68,15 @@ const AdvanceSarch: React.FC<AdvanceSearchProps> = ({
               return { value: it.code, label: it.name };
             })}
         />
+        {/* <ProFormSelect
+          name={"saleArea"}
+          label={"Area"}
+          mode='multiple'
+          request={async()=>{
+              const data = await CrmServiceAPI(requestActions).listLookupData(["CUSTOMER_DIVISION"]);
+              return data?.map(p=>({ value:p.id, label:p.name }));
+          }}
+        /> */}
         <ProFormDateRangePicker label="Ordered Date Start - Ordered End" name="orderedDate" />
         <ProFormDateRangePicker label="Posted Start - Posted End" name="postedDate" />
         <ProFormCheckbox name="hasAttachment">Has Attachment</ProFormCheckbox>

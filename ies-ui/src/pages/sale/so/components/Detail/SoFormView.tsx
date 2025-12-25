@@ -12,7 +12,7 @@ const SoFormView = ({ data }: { data?: SoDetail; }) => {
       <Tabs.TabPane
         tab={
           <Space size={0}>
-            <DollarCircleOutlined /> <span>Sale Order</span>
+            <DollarCircleOutlined /> <span>Purchase Order</span>
           </Space>
         }
         key="saleOrder"

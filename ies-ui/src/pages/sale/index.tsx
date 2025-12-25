@@ -40,6 +40,7 @@ import { MenuProps } from 'rc-menu';
 import { MPUPath } from './mpu';
 import Reports from './reports';
 import { DeliveryPaths } from '../delivery';
+import Supporter from './supporter';
 {
   /* <TeamOutlined /> */
 }
@@ -254,7 +255,7 @@ export default () => {
       visible:
         access.canAccessAllMenuDSD ||
         access.canAccessSaleDailyReport ||
-        access.canAccessSettlementItem||
+        access.canAccessSettlementItem ||
         access.canAccessSaleSettlement,
       link: `${MPUPath.mpuSettlement}/list`,
     },
@@ -301,11 +302,11 @@ export default () => {
   const items: ListMenuItem[] = [
     {
       id: 'so',
-      name: 'Sale Order',
-      description: 'Sale Order List',
+      name: 'Purchase Order',
+      description: 'Purchase Order List',
       link: `${SalePaths.so}/list`,
       icon: saleIcon,
-      visible: access.canAccessSaleItems ||access.canAccessSaleSo,
+      visible: access.canAccessSaleItems || access.canAccessSaleSo,
       menu: {
         onClick: (info) => {
           switch (info.key) {
@@ -321,18 +322,58 @@ export default () => {
           return undefined;
         },
         items: [
-          access.canCreateEditSo? getItem(
+          access.canCreateEditSo ? getItem(
             'Actions',
             'action-menu',
             null,
-            [getItem('New SO', 'newSaleOrder', <PlusCircleOutlined />)],
+            [getItem('New PO', 'newSaleOrder', <PlusCircleOutlined />)],
             'group',
-          ):null,
+          ) : null,
           getItem(
             'Reports',
             'report-menu',
             null,
-            [getItem('Sale Order Report', 'sale-order-report', <BarChartOutlined />)],
+            [getItem('Purchase Order Report', 'sale-order-report', <BarChartOutlined />)],
+            'group',
+          ),
+        ],
+      },
+      // overlay: soMenu,
+    },
+    {
+      id: 'so',
+      name: 'Purchase Order List',
+      description: 'All Purchase Order List',
+      link: `${SalePaths.so}/list/all`,
+      icon: saleIcon,
+      visible: access.canAccessSaleItems || access.canAccessSaleSo,
+      menu: {
+        onClick: (info) => {
+          switch (info.key) {
+            case 'newSaleOrder':
+              history.push(`${SalePaths.so}/create`);
+              break;
+            case 'sale-order-report':
+              setReport('sale-order-report');
+              break;
+            default:
+              message.error('Something went wrong.');
+          }
+          return undefined;
+        },
+        items: [
+          access.canCreateEditSo ? getItem(
+            'Actions',
+            'action-menu',
+            null,
+            [getItem('New PO', 'newSaleOrder', <PlusCircleOutlined />)],
+            'group',
+          ) : null,
+          getItem(
+            'Reports',
+            'report-menu',
+            null,
+            [getItem('Purchase Order Report', 'sale-order-report', <BarChartOutlined />)],
             'group',
           ),
         ],
@@ -355,7 +396,8 @@ export default () => {
       link: `${SalePaths.product}/list`,
       icon: productIcon,
     }
-  ]; 
+  ];
+
 
   return (
     <PageContainer title={false}>
@@ -369,7 +411,7 @@ export default () => {
         access.canAccessARMenuItem ||
         access.canAccessViewMpuMenu ||
 
-        access.canAccessSaleStoreMenuItem||
+        access.canAccessSaleStoreMenuItem ||
         access.canAccessSaleLeadMenu ||
         access.canAccessSaleReportLst ||
         access.canAccessSaleInvoice ||
@@ -379,6 +421,8 @@ export default () => {
           <>
             <Divider />
             <ListMenuComp items={stockMenuItems} />
+            <Divider orientation='left' plain >Supporter</Divider>
+            <Supporter />
           </>
         )}
     </PageContainer>

@@ -3,6 +3,7 @@ import { commmonActions } from '@/services/model';
 import {
   CloseIndirectSoParams,
   CustomerSaleInfo,
+  EditSo,
   InitSoParamsType,
   OfferParams,
   PackageOffer,
@@ -148,6 +149,13 @@ export const Model = () => {
     });
   };
 
+  const loadListArea = () => {
+  return saleServices.listArea().then((data) => {
+    dispatch({ type: 'setListArea', payload: data });
+    return data; // 🔑 REQUIRED
+  });
+};
+
   const doClearSoItem = () => {
     // if (state.data?.so?.items) {
     // }
@@ -156,6 +164,10 @@ export const Model = () => {
 
   const doSaveSo = async (data: So) => {
     return await saleServices.saveSodata(data);
+  };
+
+  const doEditSo = async (data: EditSo) => {
+    return await saleServices.editSodata(data);
   };
 
   const doFetchSo = async (id: number) => {
@@ -530,6 +542,7 @@ export const Model = () => {
       fetchSo: doFetchSo,
       fetchOfferCodes,
       saveSo: doSaveSo,
+      editSo: doEditSo,
       saveSoItem,
       saveSoItems,
       removeSoItem,
@@ -552,6 +565,7 @@ export const Model = () => {
       listTransportationOffer,
       getSoItems,
       loadListItem,
+      loadListArea
     },
     isLoading: actions.isLoading,
     modals: {

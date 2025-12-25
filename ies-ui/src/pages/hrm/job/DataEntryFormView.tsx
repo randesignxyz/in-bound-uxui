@@ -115,58 +115,25 @@ const DataEntryFormView: React.FC<DataEntryFormViewProps> = ({ id, type, onClose
 
           <Col span={12}>
             <Form.Item label="Status" name="status"  rules={[{ required: true, message: "Please select status" }]}>
-              <Select disabled={isView}>
+              <Select disabled={isView} defaultValue="ACTIVE">
                 <Option value="ACTIVE">ACTIVE</Option>
                 <Option value="INACTIVE">INACTIVE</Option>
               </Select>
             </Form.Item>
           </Col>
-          <Col span={12}>
-            <Form.Item label="Job Description" name="jobDescription" rules={[{ required: true, message: "Please enter Job Description" }]}>
+          <Col span={24}>
+            <Form.Item label="Job Description" name="jobDescription" >
               <Input.TextArea
                 disabled={isView}
                 placeholder="Enter Job Description"
               />
             </Form.Item>
           </Col>
-          <Col span={12}>
-            <Form.Item label="Description" name="description" >
-              <Input.TextArea disabled={isView} placeholder="Enter Description" />
-            </Form.Item>
-          </Col>
-
-          {/* Always show createdDate and lastModifiedDate */}
-          <Col span={12}>
-            <Form.Item label="Created Date" name="createdDate">
-              <DatePicker style={{ width: "100%" }} disabled />
-            </Form.Item>
-          </Col>
-
-          <Col span={12}>
-            <Form.Item label="Last Modified Date" name="lastModifiedDate">
-              <DatePicker style={{ width: "100%" }} disabled />
-            </Form.Item>
-          </Col>
-          {type !== "CREATE" && (
-            <>
-              <Col span={12}>
-                <Form.Item label="Created By" name="createdBy">
-                  <Input disabled />
-                </Form.Item>
-              </Col>
-
-              <Col span={12}>
-                <Form.Item label="Last Modified By" name="lastModifiedBy">
-                  <Input disabled />
-                </Form.Item>
-              </Col>
-            </>
-          )}
           <Col span={24} style={{ textAlign: "right" }}>
             {!isView ? (
               <>
                 <Button type="primary" htmlType="submit">
-                  {type === "CREATE" ? "Create" : "Update"}
+                  {type === "CREATE" ? "Submit" : "Update"}
                 </Button>
                 <Button style={{ marginLeft: 8 }} onClick={onCloseTab}>
                   Cancel

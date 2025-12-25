@@ -61,11 +61,14 @@ export interface DeliveryList {
 }
 
 export interface DNList {
+  data: any;
+  claim_status: any;
+  claimed_line: any;
   key: any;
   id: number,
   soId: string,
   deliveryDate: string,
-  sap_delivery_date?:string
+  sap_delivery_date?: string
   shippingAddress?: string,
   priority?: string,
   remarks?: string,
@@ -89,6 +92,7 @@ export interface DNList {
   district?: string
   unplannedItems: DNPlan[]
   DNList: DNPlan[]
+  so_doc_entry:string
 }
 
 interface mergeItems {
@@ -148,6 +152,7 @@ interface DN {
 // }
 
 interface DNPlan {
+  sap_line_num(sap_line_num: any): number;
   sku_id: string;
   sku_uom: string;
   allocateItemIds?: string;
@@ -163,6 +168,7 @@ interface DNPlan {
   attachment?: Attachment[];
   so_status?: string
   delItemName?: string
+  so_doc_entry?:string
 }
 
 export interface DeliveryItemList {
@@ -221,7 +227,7 @@ export type DNItemParams = {
   unplannedItems: DNDetail[],
   mergedItems: DNDetail[],
   isUnplanned?: string
-  
+
 };
 
 export type DNParams = {
@@ -289,6 +295,17 @@ export type SkuList = {
   item_code: string,
 }
 
+export type SaleTypeList = {
+  id: number
+  code: string
+  name: string
+}
+export type AreaList = {
+  division_id: string,
+  division_name: string,
+  is_default: string,
+}
+
 export type LocationList = {
   id: number,
   internal_name: string,
@@ -303,11 +320,15 @@ export interface ListDnDetailParams {
   province_id?: string;
   district_id?: string;
   commune_id?: string;
-  sap_delivery_date?:string
+  sap_delivery_date?: string | null,
   sortBy?: string[];
   sortOrders?: string[];
   filterPass?: string
   dnStatus?: string
+  sap_from_date?: string
+  sap_to_date?: string
+  customer?: string
+  area?:string
 }
 
 export type Location = {
@@ -332,4 +353,9 @@ export type Location = {
   licensePlane: string;
   latitude: string;
   longitude: string;
+}
+
+export interface SapLine {
+  lineNum: number;
+  shipDate: string;
 }

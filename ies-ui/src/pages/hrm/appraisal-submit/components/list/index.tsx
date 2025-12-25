@@ -77,8 +77,8 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
     const [isImportExportBtn,setIsImportExportBtn] = useState<boolean>(true)
     const [importData, setImportData] = useState<ImportDataResponse>()
     const access = useAccess()
-    
-    
+
+
     /** Performance Target View ------------------------------------------------------------------------------------------------------------------------------- */
     const [activeTab, setActiveTab] = useState<string>()
     const [searchTargetValue, setSearchTargetValue] = useState<string>();
@@ -91,7 +91,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
     const [perfEvaluationAccess,setPerfEvaluationAccess] = useState<PerformanceEvaluationAccessRs>()
     const [forceResetAdvPerformanceEvalution, setForceResetAdvPerformanceEvalution] = useState<number>(0)
     const [isSubmitAllBtn,setIsSubmitAllBtn] = useState<boolean>(true)
-   
+
 
     useEffect(() => {
         onLoadData()
@@ -111,7 +111,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
             setAccessCurrentPerfEvaluation(rs)
         })
         srv.fetchPerformanceEvaluationAccess(perfId).then(rs=>{
-           
+
             setPerfEvaluationAccess(rs)
         })
     }
@@ -205,7 +205,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
     }
 
 
-    const dowloandData = (reportName: string,fileName: string): DownloadData<{ searchValue?: string; advanceSearch?: AppraisalEmpAdvanceSearchParams }> => {       
+    const dowloandData = (reportName: string,fileName: string): DownloadData<{ searchValue?: string; advanceSearch?: AppraisalEmpAdvanceSearchParams }> => {
         var params = { ...criteria, searchValue: criteria?.searchValue, advanceSearch: criteria?.advanceSearch || advanceSearchParams }
         return {
             reportName: reportName,
@@ -256,7 +256,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
         },
         {
             title: 'Employee Name',
-            // width: 180, 
+            // width: 180,
             dataIndex: 'empName', sorter: 'empName'
         },
         {
@@ -345,7 +345,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
     }
 
     const onDataLoad=(perfId: number)=>{
-        const adSearch = {appraisalPeriodId:perfId, 
+        const adSearch = {appraisalPeriodId:perfId,
             appraiser: advanceSearchPerformEvaluationParams.appraiser,
             company: advanceSearchPerformEvaluationParams.company,
             function: advanceSearchPerformEvaluationParams.function
@@ -367,7 +367,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
         }).then(rs=> {
             setOveralPerfEmpDs(rs)
         })
-       
+
         actionTargetRef.current?.reloadAndRest?.();
     }
 
@@ -388,21 +388,24 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
             setPerfEvaluationAccess(rs)
             setForceResetAdvPerformanceEvalution(v=> v+1)
         })
-        // onDataLoad(value)        
+        // onDataLoad(value)
     }
 
     const onFilterEvaluationHandler = (v: any) => {
         setAdvanceEvaluationSearch({ visible: true })
     }
-    
-    const filterIcon = advanceSearchPerformEvaluationParams.company || advanceSearchPerformEvaluationParams.function || advanceSearchPerformEvaluationParams.appraiser ? (
+
+    const filterIcon =
+      advanceSearchPerformEvaluationParams.company ||
+      advanceSearchPerformEvaluationParams.function ||
+      advanceSearchPerformEvaluationParams.appraiser ? (
         <FilterOutlined style={{ color: 'red' }} />
       ) : (
         <SelectOutlined />
       )
     const extraContent = (<>
         <Flex gap={1} style={{marginTop: 0, padding:0}}>
-           <Col style={{padding:0, margin: 0}}>           
+           <Col style={{padding:0, margin: 0}}>
             <Row style={{padding:0,marginBottom:5,height: 35,width:245}}>
                 <ProFormSelect style={{width:'206px' }}   allowClear={false}
                         fieldProps={{defaultValue: period?.[0].value}}
@@ -416,7 +419,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                     <Input.Search allowClear  style={{ width: '240px' }} placeholder="Search" onSearch={ onSearch} />
             </Row>
            </Col>
-           
+
         </Flex>
     </>)
 
@@ -470,16 +473,16 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
             <Tabs.TabPane icon={<UnorderedListOutlined/>} tab="Performance Submission" key="1">
                 <Spin spinning={requestActions.request?.loading} >
                 <TableView<AppraisalEmp, { searchValue?: string; advanceSearch?: AppraisalEmpAdvanceSearchParams }>
-                    cache 
-                    scrollX    
-                    tableProps={{                        
+                    cache
+                    scrollX
+                    tableProps={{
                         actionRef: actionRef,
                         options: { reload: true, density: false, fullScreen: false, setting: false },
                         toolbar: {actions: [
                             period && <div style={{marginTop: 25}}>
                                 <ProFormSelect style={{width:'100%'}}   allowClear={false}
                                     fieldProps={{defaultValue: period?.[0].value}}
-                                    rules={[{required:false}]}  name={"appraisalPeriodId"} label = "Year" 
+                                    rules={[{required:false}]}  name={"appraisalPeriodId"} label = "Year"
                                     options={period?.map(it => ({label: it.label, value: it.value}))}
                                     onChange={onOnlyCurrentAppraisal}
                                 />
@@ -533,7 +536,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
 
                                 </LightFilter>}
                             {advanceSearchParams?.status === 'PENDING' && <Checkbox name="drafted" checked={advanceSearchParams?.drafted} onChange={onDraftedHandler}>Drafted{(total?.drafted || 0 > 0) && supTitle(total?.drafted || 0)}</Checkbox>}
-                           
+
                         </Space>
 
                     }
@@ -552,7 +555,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                                 }}
                             />
                             <Button type="link" icon={<DownloadOutlined/>} onClick={handleDownload}>Export</Button>
-                            </>}                            
+                            </>}
                             <Tooltip placement="bottom" title="Dowload Performance Review Detail"><Button type="link" icon={<FileExcelOutlined />} onClick={()=>dowloandExcelHandler('Detail')}>Detail</Button></Tooltip>
                             <Tooltip placement="bottom" title="Dowload Performance Review Summary"><Button type="link" icon={<FileExcelOutlined />} onClick={()=>dowloandExcelHandler('')}>Summary</Button></Tooltip>
                         </Flex>
@@ -579,16 +582,16 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                 <AdvanceApprasialSubmitSearch
                 title="Advance Search"
                 closable
-                open={advanceSearch?.visible} 
+                open={advanceSearch?.visible}
                 dataItem={modalVisible?.payload}
                 onClose={() => {
                     setAdvanceSearch({ visible: false });
                 }}
-                onReset={() => {  
+                onReset={() => {
                     setAdvanceSearchParams((v) => ({ ...v,bu:undefined,department:undefined  }));
                     actionRef.current?.reloadAndRest?.();
                 }}
-                onSearch={(data) => {  
+                onSearch={(data) => {
                     setAdvanceSearchParams((v) => ({ ...v, ...data, status: v.status }));
                     actionRef.current?.reloadAndRest?.();
                 }}
@@ -600,7 +603,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                     <ProCard
                         size="small"
                         style={{ backgroundColor: '#fafafa', width: 320 }}
-                        bodyStyle={{padding:0,margin:0}} 
+                        bodyStyle={{padding:0,margin:0}}
                         title={extraContent}
                         headerBordered
                         className={styles.listCard}
@@ -643,28 +646,28 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                                                 </a>
                                                 <div style={{fontSize:10,color:'rgba(0, 0, 0, 0.45)'}}><BankOutlined style={{fontSize:10}}/>{r.buName}  <TeamOutlined style={{fontSize:10}}/>{r.departmentName}</div>
                                             </Flex>
-                                            
+
                                         </Space>)
                                     }
                                 },
                                 description: {
-                                    render: (_, r) => ListContent({ data: r }) 
+                                    render: (_, r) => ListContent({ data: r })
                                 },
                             }}
                             request={onPerformanceTargetRequestHandler}
                         />
                     </ProCard>
-                    
-                
+
+
 
 
                     <Space direction="vertical" style={{padding:5,width:'100%'}}>
                             <Flex gap={5}>
-                                
-                                {overalPerfHeadCount && 
-                                                                      
+
+                                {overalPerfHeadCount &&
+
                                     <ProTable<OverallPerformanceHeadCountRs>
-                                    size="small"                                        
+                                    size="small"
                                         headerTitle = {<Flex gap={120} ><div style={{float:'left', width: 250}}>Total Function Head Count: {overalPerfTotalHeadCount}</div><div style={{float:'right',}}>{ (isSubmitAllBtn && accessCurrentPerfEvaluation.totalHeadCount>0) &&<Button type="primary" onClick={submitAllHandler}>Submit All</Button>}</div></Flex>}
                                         style={{width: 500}}
                                         pagination = {false}
@@ -679,7 +682,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                                             title: 'Target #Head Count',dataIndex:'targetHeadCount'
                                         },{
                                             title: 'Actual %',dataIndex:'actualPercent',
-                                            render:(_,r:any)=> formatterPercentage0.format(r.actualPercent/100) 
+                                            render:(_,r:any)=> formatterPercentage0.format(r.actualPercent/100)
                                         },{
                                             title: 'Actual #Head Count',dataIndex:'actualHeadCount'
                                         },{
@@ -689,11 +692,11 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                                         dataSource={overalPerfHeadCount}
                                     />
                                     }
-                                 
-                                
+
+
                                    <Card size="small" style={{width: 690}}>
-                                    <Line                                      
-                                        height={300}                                    
+                                    <Line
+                                        height={300}
                                         data={overalPerfHeadCount.flatMap( it => ([{
                                             score: it.rating,
                                             category: 'Target %',
@@ -728,13 +731,13 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                                         smooth={true}
                                     />
                                    </Card>
-                                 
-                                   </Flex>   
-                                   <Flex  gap={2} >                     
+
+                                   </Flex>
+                                   <Flex  gap={2} >
                             {overalPerfScore && overalPerfScore.sort((a,b)=> (a.rating-b.rating)).map(rs=>{
                                     return  overalPerfEmpDs && <Col>
-                                        <Card size="small" key={'card_'+rs.id} title={rs.rating+'-'+rs.description} bodyStyle={{padding:0,margin:0}}  style={{minWidth: 237, margin:0, padding:0}}>                                           
-                                            <ProList<AppraisalEmp>  style={{padding:0,margin:0}} 
+                                        <Card size="small" key={'card_'+rs.id} title={rs.rating+'-'+rs.description} bodyStyle={{padding:0,margin:0}}  style={{minWidth: 237, margin:0, padding:0}}>
+                                            <ProList<AppraisalEmp>  style={{padding:0,margin:0}}
                                                 rowKey={rs.id+''}
                                                 size="small"
                                                 metas={{
@@ -744,28 +747,28 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                                                     )}
                                                 }}
                                                 dataSource={overalPerfEmpDs.filter((f: AppraisalEmp) => ((f?.agreeRating||0)>= rs.startedScore && (f?.agreeRating||0)<= rs.endedScore))}
-                                                
+
                                             />
                                         </Card>
                                     </Col>
                                 })
-                            }                           
-                           
+                            }
+
                             </Flex>
                     </Space>
                     </Flex>
-                    {appraisalEmp && modals.isVisible('QuickViewPerformanceEvaluationForm') && <AppraisalFormQuickView 
-                        refreshTable={refeshPerformanceEvaluationTable} 
-                        appraisalEmp={appraisalEmp} 
-                        open={modals.isVisible('QuickViewPerformanceEvaluationForm')} 
-                        onOpenModalChange={(v: any) => !v && modals.hideModal('QuickViewPerformanceEvaluationForm')} 
+                    {appraisalEmp && modals.isVisible('QuickViewPerformanceEvaluationForm') && <AppraisalFormQuickView
+                        refreshTable={refeshPerformanceEvaluationTable}
+                        appraisalEmp={appraisalEmp}
+                        open={modals.isVisible('QuickViewPerformanceEvaluationForm')}
+                        onOpenModalChange={(v: any) => !v && modals.hideModal('QuickViewPerformanceEvaluationForm')}
                     />}
                     {perfEvaluationAccess && <AdvancePerformanceEvaluationSearch
                         title="Advance Search"
                         closable
                         forceReset = {forceResetAdvPerformanceEvalution}
                         dataDS={perfEvaluationAccess}
-                        open={advanceEvaluationSearch?.visible} 
+                        open={advanceEvaluationSearch?.visible}
                         onClose={() => {
                             setAdvanceEvaluationSearch({ visible: false });
                         }}
@@ -778,7 +781,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
                             }))
                             setRefreashEvaluationData(v=> v+1)
                         }}
-                        onSearch={(data) => { 
+                        onSearch={(data) => {
                             setAdvanceSearchPerformEvaluationParams((v) => ({
                                 ...v,
                                 appraiser: data.appraiser,
@@ -792,7 +795,7 @@ const AppraisalList: React.FC<Props> = ({ forceRefresh, onDetail }) => {
             }
         </Tabs>
          <UploadData title="Import Performance Review List" onCancel={() => setImportData(undefined)} open={!!importData} datasources={importData} onFinish={()=> {actionRef.current?.reloadAndRest?.()}} />
-        
+
         </>
 }
 

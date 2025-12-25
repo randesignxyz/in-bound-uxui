@@ -101,7 +101,7 @@ const DataEntryFormView: React.FC<DataEntryFormViewProps> = ({ id, type, onClose
       }
       bordered
     >
-      <Form form={form} layout="vertical" onFinish={handleSubmit}>
+      <Form form={form} layout="vertical" initialValues={{status: 'ACTIVE'}} onFinish={handleSubmit}>
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item
@@ -116,8 +116,8 @@ const DataEntryFormView: React.FC<DataEntryFormViewProps> = ({ id, type, onClose
           <Col span={12}>
             <Form.Item label="Status" name="status"  rules={[{ required: true, message: "Please select status" }]}>
               <Select disabled={isView} defaultValue="ACTIVE">
-                <Option value="ACTIVE">ACTIVE</Option>
-                <Option value="INACTIVE">INACTIVE</Option>
+                <Option value="ACTIVE">Active</Option>
+                <Option value="INACTIVE">Inactive</Option>
               </Select>
             </Form.Item>
           </Col>

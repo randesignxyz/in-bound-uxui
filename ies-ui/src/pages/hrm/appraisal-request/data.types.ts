@@ -2,7 +2,7 @@ import { LookupDataItem } from "@/services/data"
 import { Moment } from "moment"
 import { AppraisalEmp } from "../appraisal-submit/data.types"
 
-export type AppraisalRequestListItem = {   
+export type AppraisalRequestListItem = {
     id: number,
     processInstId: string,
     lastActionDate?: Moment,
@@ -14,7 +14,7 @@ export type AppraisalRequestListItem = {
     requestTypeLabel: string,
     requestTypeDesc:string,
     submittedBy: string,
-    status: string    
+    status: string
 }
 export type ApprovalAppraisalRequestItem= {
     id: number,
@@ -38,7 +38,7 @@ export type ApprovalAppraisalRequestItem= {
 
 export type SearchParams = {
     keyword?: string,
-    status?: string,
+    status?: "ALL" | "PENDING" | "COMPLETED" | "REJECTED",
     processInstId?: string
 }
 
@@ -153,12 +153,12 @@ export type AppraisalRequestItemPayload = {
     submissionList: EmpSubmissionParams[]
     actionStatus: string
     personalAction?: string
-    devAction?: number  
+    devAction?: number
     remark?: string
 }
 export type ReviewerMember = {
     id: number
-    appraisalRequestId:number   
+    appraisalRequestId:number
     empId: number
     empNo: string
     empName?:string
@@ -196,7 +196,7 @@ export type AppraisalRequestReportParams = {
     status?: string[],
     requestTypeId?: number[],
     appraisalPeriodId?: number[]
-}  
+}
 
 export type PerformanceEvaluationAccessRs = {
     // access: boolean;

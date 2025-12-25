@@ -121,7 +121,7 @@ export default () => {
             </div>
         
         ):(<PageWrapper<DF360EmpListItem, DF360InfoAdvanceSearchParams, {}>
-    
+        
         tabRender={item => 
             access.canAccessDF360NewForm?[{
                 action: "add",
@@ -189,8 +189,12 @@ export default () => {
                         advanceSearch: {
                             status: params?.status || 'ALL'
                         },
+                        searchValue: params?.searchValue || '',
                         sort: sort,
                     },
+                    // sort: {
+                    //     sort: sort,
+                    // },
                     pagination: page,
                 }))
             },
@@ -210,7 +214,8 @@ export default () => {
                 ]),
                 columns: [
                     {
-                        title: 'Form No',dataIndex: 'formNo', sorter: 'formNo',
+                        title: 'Form No',dataIndex: 'formNo', 
+                        //sorter: 'formNo',
                         width: 100,
                         actionProps: (item) => ({ type: 'view', label: item.formNo || "n/a" })
                     }, {

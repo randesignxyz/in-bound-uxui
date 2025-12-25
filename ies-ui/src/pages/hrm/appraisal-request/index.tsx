@@ -1,210 +1,100 @@
-import React, { useState } from "react";
-import PageWrapper from "@/components/PageWrapper";
-import { AppraisalRequestDetail, AppraisalRequestListItem, SearchParams, AppraisalRequestFormNames } from "./data.types";
-import { createService } from "./services";
-import { simpleRequestActions } from "@/services/model";
-import { useAccess, useQuery } from '@umijs/max';
+import BaseCrud from "@/components/base-crud"
+import { history } from "@umijs/max";
+import { SavePayLoad, SearchParams, AppraisalRequestDetail, AppraisalRequestFormNames, AppraisalRequestListItem } from "./data.types"
+import { createService } from "./services"
+import { simpleRequestActions } from "@/services/model"
+import { ExportOutlined, FileExcelOutlined, PlusOutlined } from "@ant-design/icons";
+import { formatDateTime } from "@/pages/utils";
+import { useAccess } from "@umijs/max";
 import Status from "@/components/Status";
 import AppraisalRequestForm from "./AppraisalRequestForm";
-import { Button, Modal, Space, Tooltip } from "antd";
-import { ExportOutlined, FileExcelOutlined } from "@ant-design/icons";
-import { formatDateTime } from "@/pages/utils";
+import { Button, Space, Tooltip } from "antd";
 import moment from "moment";
 import { downloadReport } from "@/services/apiGateway";
+import { useState } from "react";
 
-export default function AppraisalRequestPage() {
+export default () => {
+
   const requestActions = simpleRequestActions();
-  const services = createService(requestActions);
-  const access = useAccess();
-  const { data, isLoading, refetch } = useQuery(
-    ['fetch-appraisal-request', filter],
-    () => services.fetchPaging({ criteria: filter, pagination: { current: 1, pageSize: 20 } }),
-    { refetchOnWindowFocus: false }
-  );
+  const srv = createService(requestActions)
+  const access = useAccess()
+  const [downloading, setDownLoading] = useState<{ formNo: string, loading: boolean }>()
 
-  const [filter, setFilter] = useState<SearchParams>({ status: "ALL" });
-  const [viewRecord, setViewRecord] = useState<AppraisalRequestListItem | null>(null);
-  const [viewModalVisible, setViewModalVisible] = useState(false);
-  const [editRecord, setEditRecord] = useState<AppraisalRequestListItem | null>(null);
-  const [editModalVisible, setEditModalVisible] = useState(false);
-  const [downloading, setDownloading] = useState<{ formNo: string; loading: boolean } | null>(null);
-
-  const handleDownload = async (record: AppraisalRequestListItem) => {
-    setDownloading({ formNo: record.formNo, loading: true });
-    await downloadReport<{ processInstId: string; processDefKey: string }>(requestActions)({
-      reportName: "performance-review-request-process-by-inst-id",
-      fileName: `performance-review-request_${record.formNo}_${moment().format("YYYY-MM-DD")}`,
-      type: "EXCEL",
+  const downloadHandler = async (rs: AppraisalRequestListItem) => {
+    setDownLoading({ formNo: rs.formNo, loading: true })
+    await downloadReport<{ processInstId: string; processDefKey: string; }>(requestActions)({
+      reportName: 'performance-review-request-process-by-inst-id',
+      fileName: `${'performance-review-request-process-by-form-no'}_${rs.formNo}_${moment().toDate().toDateString()}`,
+      type: 'EXCEL',
       data: {
-        processInstId: record.processInstId,
-        processDefKey: "performance_review_request_process",
-      },
-    });
-    setDownloading({ formNo: record.formNo, loading: false });
-  };
-
-  const handleCloseViewModal = () => {
-    setViewModalVisible(false);
-    setViewRecord(null);
-  };
-
-  const handleCloseEditModal = () => {
-    setEditModalVisible(false);
-    setEditRecord(null);
-  };
-
-  return (
-    <div style={{ position: 'relative' }}>
-      <PageWrapper<AppraisalRequestListItem, SearchParams, unknown>
-        tabRender={(item) =>
-          access.canAccessNewAppraisalRequest
-            ? [
-                {
-                  action: 'add',
-                  tabLabel: 'New Request',
-                  panel: (props) => (
-                    <AppraisalRequestForm
-                      {...props}
-                      formKey={AppraisalRequestFormNames.processDefKey}
-                      onClose={() => props?.onCloseTab?.()}
-                    />
-                  ),
-                },
-                {
-                  action: 'view',
-                  value: item?.formNo,
-                  tabLabel: item?.formNo,
-                  panel: (props) => (
-                    <AppraisalRequestForm
-                      id={item?.processInstId}
-                      type="VIEW"
-                      formKey={AppraisalRequestFormNames.processDefKey}
-                      onCloseTab={() => props?.onCloseTab?.()}
-                    />
-                  ),
-                },
-              ]
-            : [
-                {
-                  action: 'view',
-                  value: item?.formNo,
-                  tabLabel: item?.formNo,
-                  panel: (props) => (
-                    <AppraisalRequestForm
-                      id={item?.processInstId}
-                      type="EDIT"
-                      formKey={AppraisalRequestFormNames.processDefKey}
-                      onCloseTab={() => props?.onCloseTab?.()}
-                    />
-                  ),
-                },
-              ]
-        }
-        listView={{
-          type: 'Table',
-          title: 'Annual Performance Appraisal Request List',
-          statuses: [
-            { option: { label: 'All', value: 'ALL', default: true } },
-            { option: { label: 'Pending', value: 'PENDING' } },
-            { option: { label: 'Completed', value: 'COMPLETED' } },
-            { option: { label: 'Rejected', value: 'REJECTED' } },
-          ],
-          onRefresh: () => {}, // implement refetch if using useQuery
-          onFilter: (params) => setFilter((p) => ({ ...p, ...params })),
-          props: {
-            dataSource: data?.items || [], // replace with data from API/useQuery
-            loading: isLoading, // replace with loading state from API/useQuery
-            scroll: { x: 'max-content' },
-            bordered: true,
-            columns: [
-              {
-                title: 'Form #',
-                width: 140,
-                sorter: 'formNo',
-                render: (_, record) => (
-                  <Space size={1}>
-                    <Button
-                      size="small"
-                      type="link"
-                      icon={<ExportOutlined />}
-                      onClick={() =>
-                        window
-                          .open(
-                            `/external/data-form/${AppraisalRequestFormNames.processDefKey}/${record.processInstId}`,
-                            '_blank',
-                          )
-                          ?.focus()
-                      }
-                    />
-                    <a onClick={() => setViewRecord(record) && setViewModalVisible(true)}>
-                      {record.formNo}
-                    </a>
-                  </Space>
-                ),
-              },
-              { title: 'Title', sorter: 'title', dataIndex: 'title' },
-              { title: 'Request Type', sorter: 'requestTypeLabel', dataIndex: 'requestTypeLabel' },
-              { title: 'Requested By', sorter: 'requestedBy', dataIndex: 'requestedBy' },
-              {
-                title: 'Requested Date',
-                sorter: 'requestedDate',
-                render: (_, r) => formatDateTime(r.requestedDate),
-              },
-              { title: 'Status', render: (_, r) => <Status text={r.status} /> },
-              {
-                title: 'Action',
-                render: (_, r) => (
-                  <Tooltip title="Download Excel">
-                    <Button
-                      type="link"
-                      size="small"
-                      loading={r.formNo === downloading?.formNo ? downloading.loading : false}
-                      onClick={() => handleDownload(r)}
-                      icon={<FileExcelOutlined />}
-                    />
-                  </Tooltip>
-                ),
-              },
-            ],
+        processInstId: rs.processInstId,
+        processDefKey: 'performance_review_request_process'
+      }
+    })
+    setDownLoading({ formNo: rs.formNo, loading: false })
+  }
+  return <BaseCrud<AppraisalRequestListItem, AppraisalRequestDetail, SearchParams, SavePayLoad >
+    services={srv}
+    listView={{
+      columns: () => [
+        {
+          title: 'Form #',
+          width: '140px',
+          sorter: 'formNo',
+          render(_, entity) {
+            return <Space size={1}>
+              <Button
+                size="small"
+                type="link"
+                icon={<ExportOutlined />}
+                onClick={async () => {
+                  window.open(`/external/data-form/${AppraisalRequestFormNames.processDefKey}/${entity.processInstId}`, '_blank')?.focus();
+                }}
+              />
+              <a onClick={() => { history.push(`/data-form/${AppraisalRequestFormNames.processDefKey}/${entity.processInstId}`) }}>{entity.formNo}</a>
+            </Space>
           },
-        }}
-      />
+        },
+        { title: 'Title', sorter: 'title', dataIndex: 'title' },
+        { title: 'Request Type', sorter: 'requestTypeLabel', dataIndex: 'requestTypeLabel' },
+        { title: 'Requested By', sorter: 'requestedBy', dataIndex: 'requestedBy' },
+        {
+          title: 'Requested Date', sorter: 'requestedDate', render(_, entity) {
+            return formatDateTime(entity.requestedDate)
+          },
+        },
 
-      <Modal
-        title={viewRecord ? `View: ${viewRecord.formNo}` : 'View'}
-        open={viewModalVisible}
-        footer={null}
-        width={900}
-        onCancel={handleCloseViewModal}
-        destroyOnClose
-      >
-        {viewRecord && (
-          <AppraisalRequestForm
-            id={viewRecord.processInstId}
-            type="VIEW"
-            formKey={AppraisalRequestFormNames.processDefKey}
-            onCloseTab={handleCloseViewModal}
-          />
-        )}
-      </Modal>
+        { title: 'Status', render: (_, r) => <Status text={r.status} /> },
+        {
+          title: 'Action',
+          render: (_, r) => <Tooltip title='Download Excel'>
+            <Button type="link" loading={r.formNo === downloading?.formNo ? downloading.loading : false} size="small" onClick={() => downloadHandler(r)} icon={<FileExcelOutlined />} />
+          </Tooltip>
 
-      <Modal
-        title={editRecord ? `Edit: ${editRecord.formNo}` : 'Edit'}
-        open={editModalVisible}
-        footer={null}
-        width={900}
-        onCancel={handleCloseEditModal}
-        destroyOnClose
-      >
-        {editRecord && (
-          <AppraisalRequestForm
-            id={editRecord.processInstId}
-            type="EDIT"
-            formKey={AppraisalRequestFormNames.processDefKey}
-            onCloseTab={handleCloseEditModal}
-          />
-        )}
-      </Modal>
-    </div>
-  );
+        },
+      ],
+      quickSearch: true,
+      addNewAction: access.canAccessNewAppraisalRequest ? {
+        label: 'New Request',
+        icon: <PlusOutlined />,
+        key: 'new-request',
+        onRenderComp(props) {
+          return <AppraisalRequestForm   {...props} formKey={AppraisalRequestFormNames.processDefKey} />
+        },
+      } : undefined,
+
+      statusProps: {
+        defaultValue: "ALL",
+        options: [
+          { label: "All", value: "ALL" },
+          { label: "Pending", value: "PENDING" },
+          { label: "Completed", value: "COMPLETED" },
+          { label: "Rejected", value: "REJECTED" },
+        ]
+      },
+      subStatusProps: undefined,
+      onBeforeSearch: undefined
+    }} title={"Annual Performance Appraisal Request List"}
+
+  />
 }

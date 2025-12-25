@@ -1,5 +1,5 @@
 import { RequestActions, ServiceApiType, singleRequest } from "@/services/apiGateway";
-import { Allocate, allocateSearch, DeliveryList, DNList, DNParams, DnQuickView, LocationList, SkuList, SOAllocateActivities, SOList, UpdateRemarkParams,ListDnDetailParams, SaleTypeList, AreaList, SapLine } from "./data";
+import { Allocate, allocateSearch, DeliveryList, DNList, DNParams, DnQuickView, LocationList, SkuList, SOAllocateActivities, SOList, UpdateRemarkParams, ListDnDetailParams, SaleTypeList, AreaList, SapLine } from "./data";
 import { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { Paging } from "@/services/API";
 
@@ -28,12 +28,25 @@ const AllocateAction = {
             page: params.pagination?.current,
         },
     }),
-    listDnDetail: (params:ListDnDetailParams): ServiceApiType<ListDnDetailParams> => ({
-        type: 'LIST_QUERY',
+    listDnDetail: (
+        params: TableViewSearchParams<ListDnDetailParams>,
+    ): ServiceApiType<{ searchValue?: string }> => ({
+        type: 'PAGING_QUERY',
         endpoint: 'DELIVERY',
-        actionName: 'get-dn-detail',
-        payload: params,
+        actionName: 'page-dn',
+        payload: { ...params.criteria },
+        pagination: {
+            pageSize: params.pagination?.pageSize,
+            page: params.pagination?.current,
+        },
     }),
+    // listDnDetail: (params:ListDnDetailParams): ServiceApiType<ListDnDetailParams> => ({
+    //     type: 'LIST_QUERY',
+    //     endpoint: 'DELIVERY',
+    //     actionName: 'page-dn',
+    //     payload: params,
+
+    // }),
     listDn: (so_allocate_id: string[], docNum?: string): ServiceApiType<{ so_allocate_id: string[], docNum?: string }> => ({
         type: 'LIST_QUERY',
         endpoint: 'DELIVERY',
@@ -64,11 +77,11 @@ const AllocateAction = {
         actionName: 'sync-allocate',
         payload: {}
     }),
-    claimDn: (sales_planid: number[], claimed_by?: string, action?: string, activities_name?: string,claimed_line?:string|null,so_doc_entries?:string,del_item?:SapLine[]): ServiceApiType<{ sales_planid: number[], claimed_by?: string, action?: string, activities_name?: string,claimed_line?:string|null,so_doc_entries?:string,del_item?:SapLine[] }> => ({
+    claimDn: (sales_planid: number[], claimed_by?: string, action?: string, activities_name?: string, claimed_line?: string | null, del_item?: SapLine[]): ServiceApiType<{ sales_planid: number[], claimed_by?: string, action?: string, activities_name?: string, claimed_line?: string | null, del_item?: SapLine[] }> => ({
         type: 'EXEC',
         endpoint: 'DELIVERY',
         actionName: 'claim-dn',
-        payload: { sales_planid, claimed_by, action, activities_name,claimed_line,so_doc_entries,del_item }
+        payload: { sales_planid, claimed_by, action, activities_name, claimed_line, del_item }
     }),
     getActivities: (dnID: number): ServiceApiType<{ dnID: number }> => ({
         type: 'LIST_QUERY',
@@ -76,11 +89,11 @@ const AllocateAction = {
         actionName: 'get-activities-by-dn',
         payload: { dnID },
     }),
-    listDnbyUser: (status?: string,startDate?: string, endDate?: string): ServiceApiType<{ status?: string,startDate?: string, endDate?: string }> => ({
+    listDnbyUser: (status?: string, startDate?: string, endDate?: string): ServiceApiType<{ status?: string, startDate?: string, endDate?: string }> => ({
         type: 'LIST_QUERY',
         endpoint: 'DELIVERY',
         actionName: 'get-dn-by-user',
-        payload: { status, startDate,endDate },
+        payload: { status, startDate, endDate },
     }),
     fetchDnQuickView: (startDate?: string, endDate?: string): ServiceApiType<{ startDate?: string, endDate?: string }> => ({
         type: 'FETCH_QUERY',
@@ -169,25 +182,29 @@ export const AllocateServiceAPI = (requestAction: RequestActions) => {
         syncAllocate: () =>
             singleRequest<{ data: string, message: string }>(AllocateAction.syncAllocate())(requestAction),
 
-        ClaimDn: (sales_planid: number[], claimed_by?: string, action?: string, activities_name?: string,claimed_line?:string|null,so_doc_entries?:string,del_item?:SapLine[]) =>
-            singleRequest<{ data: string, message: string }>(AllocateAction.claimDn(sales_planid, claimed_by, action, activities_name,claimed_line,so_doc_entries,del_item))(requestAction),
+        ClaimDn: (sales_planid: number[], claimed_by?: string, action?: string, activities_name?: string, claimed_line?: string | null, del_item?: SapLine[]) =>
+            singleRequest<{ data: string, message: string }>(AllocateAction.claimDn(sales_planid, claimed_by, action, activities_name, claimed_line, del_item))(requestAction),
 
         getActivities: (dnID: number) =>
             singleRequest<SOAllocateActivities>(AllocateAction.getActivities(dnID))(
                 requestAction
             ),
-        list_dn_by_user: (status?: string,startDate?: string, endDate?: string) =>
-            singleRequest<DNList>(AllocateAction.listDnbyUser(status,startDate,endDate))(
+        list_dn_by_user: (status?: string, startDate?: string, endDate?: string) =>
+            singleRequest<DNList>(AllocateAction.listDnbyUser(status, startDate, endDate))(
                 requestAction
             ),
         fetch_dn_quick_view: (startDate?: string, endDate?: string) =>
             singleRequest<DnQuickView>(AllocateAction.fetchDnQuickView(startDate, endDate))(
                 requestAction
             ),
-        list_dn_detail: (params:ListDnDetailParams) =>
-            singleRequest<DNList>(AllocateAction.listDnDetail(params))(
-                requestAction
-            ),
+        list_dn_detail: (params: TableViewSearchParams<ListDnDetailParams>) =>
+            singleRequest<DNList>(AllocateAction.listDnDetail(params))(requestAction) as Promise<
+                Paging<DNList>
+            >,
+        // list_dn_detail: (params:ListDnDetailParams) =>
+        //     singleRequest<DNList>(AllocateAction.listDnDetail(params))(
+        //         requestAction
+        //     ),
         list_sku: () =>
             singleRequest<SkuList>(AllocateAction.listSku())(
                 requestAction

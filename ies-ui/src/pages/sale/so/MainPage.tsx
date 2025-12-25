@@ -31,7 +31,7 @@ export default () => {
     const [form] = Form.useForm();
     const access = useAccess();
     const param = useParams();
-
+    const defaultSetRef = useRef(false)
     const [filter, setFilter] = useState<FetchPagingParams<SoAdvanceSearchParams>>({
         criteria: {
             status: 'Pending',
@@ -181,7 +181,7 @@ export default () => {
                         submitter={false}
 
                     >
-                        {!param?.["*"] && <ProFormSelect
+                        <ProFormSelect
                             name="saleArea"
                             placeholder={"Area"}
                             mode="multiple"
@@ -197,23 +197,25 @@ export default () => {
                                         .trim(),
                                     isDefault: a.defaultFlag === 1 || a.defaultFlag === 1,
                                 }));
+                                if (!param?.['*'] && !defaultSetRef.current) {
+                                    const defaultAreaIds = options
+                                        .filter(o => o.isDefault)
+                                        .map(o => o.value);
 
-                                const defaultAreaIds = options
-                                    .filter(o => o.isDefault)
-                                    .map(o => o.value);
+                                    if (defaultAreaIds.length > 0) {
+                                        defaultSetRef.current = true;
 
-                                if (defaultAreaIds.length > 0) {
-                                    form.setFieldsValue({ saleArea: defaultAreaIds });
+                                        form.setFieldsValue({ saleArea: defaultAreaIds });
 
-                                    setFilter(v => ({
-                                        ...v,
-                                        criteria: {
-                                            ...v.criteria,
-                                            saleArea: defaultAreaIds,
-                                        },
-                                    }));
+                                        setFilter(v => ({
+                                            ...v,
+                                            criteria: {
+                                                ...v.criteria,
+                                                saleArea: defaultAreaIds,
+                                            },
+                                        }));
+                                    }
                                 }
-
                                 return options;
                             }}
                             fieldProps={{
@@ -227,7 +229,7 @@ export default () => {
                                     }));
                                 },
                             }}
-                        />}
+                        />
 
                     </ProForm>
                 </Space>,

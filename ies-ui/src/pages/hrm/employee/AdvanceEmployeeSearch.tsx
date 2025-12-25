@@ -1,19 +1,21 @@
-
-import { simpleRequestActions } from '@/services/model';
-import ProForm, { ProFormSelect } from '@ant-design/pro-form';
-import { Drawer, DrawerProps,Flex } from 'antd';
-import { useForm } from 'antd/lib/form/Form';
-import { MultiRequest } from '@/services/apiGateway';
-
-import { BU, Department, EmployeeAdvanceSearchParams, EmployeeListItem, SubDepartment } from '../data';
-import { useEffect, useState } from 'react';
-import { EmployeeServices } from '../services';
+import ProForm, { ProFormSelect } from "@ant-design/pro-form";
+import { Drawer, DrawerProps } from "antd";
+import { useForm } from "antd/lib/form/Form";
+import { simpleRequestActions } from "@/services/model";
+import { MultiRequest } from "@/services/apiGateway";
+import { BU, Department } from "../data";
+import { useEffect, useState } from "react";
+import { EmployeeServices } from "../services";
 
 interface Props extends DrawerProps {
-  dataItem?: EmployeeListItem|undefined;
-  onSearch: (params: EmployeeAdvanceSearchParams) => void;
+  dataItem?: {
+    buId?: number[];
+    department?: number[];
+  };
+  onSearch: (params: { buId?: number[]; department?: number[] }) => void;
   onReset: () => void;
 }
+
 const AdvanceEmployeeSearch: React.FC<Props> = ({
                                                   dataItem,
                                                   onSearch,
@@ -21,52 +23,80 @@ const AdvanceEmployeeSearch: React.FC<Props> = ({
                                                   ...props
                                                 }) => {
   const requestActions = simpleRequestActions();
-  const [form] = useForm<EmployeeAdvanceSearchParams>();
+  const [form] = useForm();
+
   const [data, setData] = useState<{
     buList: BU[];
     departmentList: Department[];
-    subDepartmentList: SubDepartment[];
-  }>();
+  }>({
+    buList: [],
+    departmentList: [],
+  });
+
   useEffect(() => {
     initData();
-  }, [dataItem]);
+  }, []);
+
+  // Sync form with current applied filters when drawer opens
+  useEffect(() => {
+    form.setFieldsValue({
+      buId: dataItem?.buId || [],
+      departmentId: dataItem?.department || [],
+    });
+  }, [dataItem, form]);
+
   const initData = async () => {
     const rs = await MultiRequest<{
       buList: BU[];
       deptList: Department[];
-      subDeptList: SubDepartment[];
     }>([
       EmployeeServices.listBu.queryParams,
       EmployeeServices.listDepartment.queryParams,
-      EmployeeServices.listSubDepartment.queryParams,
     ])(requestActions);
 
     setData({
       buList: rs.buList,
       departmentList: rs.deptList,
-      subDepartmentList: rs.subDeptList,
     });
-  }
+  };
 
   return (
-    <Drawer {...props}>
+    <Drawer {...props} title="Advanced Search" width={400}>
       <ProForm
         form={form}
-        onReset={() => { onReset(); }}
+        onFinish={(values) => {
+          onSearch({
+            buId: values.buId,
+            department: values.department,
+          });
+        }}
+        onReset={() => {
+          form.resetFields();
+          onReset();
+        }}
         submitter={{
-          onSubmit: async () => {
-            const data = await form.validateFields();
-            onSearch(data);
-          },
+          searchConfig: { submitText: "Search", resetText: "Clear" },
+          resetButtonProps: { type: "primary" },
         }}
       >
-        <ProFormSelect label="Company" name={'bu'}  shouldUpdate allowClear
-                       options={data?.buList.map((it) => ({ label: it.name, value: it.id }))}
-        />
-        <ProFormSelect label="Function" name={'department'} showSearch  allowClear
-                       options={data?.departmentList?.map((it) => ({ label: it.name, value: it.id }))}
+        <ProFormSelect
+          label="Company"
+          name="buId"
+          mode="multiple"
+          allowClear
+          placeholder="Select companies"
+          options={data.buList.map(it => ({ label: it.name, value: it.id }))}
         />
 
+        <ProFormSelect
+          label="Function"
+          name="department"           // ← Now consistent!
+          mode="multiple"
+          allowClear
+          showSearch
+          placeholder="Select functions"
+          options={data.departmentList.map(it => ({ label: it.name, value: it.id }))}
+        />
       </ProForm>
     </Drawer>
   );

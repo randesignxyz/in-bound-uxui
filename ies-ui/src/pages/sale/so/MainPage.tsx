@@ -140,6 +140,7 @@ export default () => {
                         }
                     ))
                 },
+
                 advanceSearchButton: <Space align='center'>
                     <Button style={{ marginTop: -6 }} icon={<FileSearchOutlined />}
                         onClick={() => modals.showModal('advanceSearch')}
@@ -229,9 +230,6 @@ export default () => {
                         />}
 
                     </ProForm>
-
-
-
                 </Space>,
 
                 props: {
@@ -240,6 +238,16 @@ export default () => {
                     actionRef: actionRef,
                     pagination: {
                         total: data?.total
+                    },
+                    onChange: (pagination, filters, sorter, extra) => {
+                        const s = Array.isArray(sorter) ? sorter[0] : sorter;
+                        setFilter(v => ({
+                            criteria: {
+                                ...v.criteria,
+                            },
+                            pagination,
+                            sort: s?.field && s.order ? { [s.field as string]: s.order } : undefined
+                        }))
                     },
                     actionButtonsColumnRender: item => [
                         {
@@ -286,6 +294,7 @@ export default () => {
                     }, {
                         title: 'Customer',
                         sorter: 'customerCode',
+                        dataIndex: 'customerCode',
                         key: 'customerCode',
                         actionProps: item => ({ type: 'action1', label: item.customerCode, actionButtons: [{ type: 'link', size: 'small', icon: <ExportOutlined />, onClick: () => { window.open(`/external/crm/customer/detail/${item?.customerId}`, '_blank')?.focus() } }] }),
 
@@ -314,7 +323,7 @@ export default () => {
                         title: 'Order Date',
                         align: 'right',
                         sorter: 'orderDate',
-
+                        dataIndex: "orderedDate",
                         width: 150,
                         render: (_, data) => formatDateTime(data.orderedDate),
                     },

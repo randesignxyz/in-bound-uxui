@@ -74,7 +74,7 @@ export const WorkflowServiceAPI = (actions?: RequestActions) => ({
   findProcessDefList: findAllService<{ id: number }, ProcessInstanceDef>(WorkFlowService('list-process-def'), actions),
 
   findInstanceList: findPagingService<InstanceSearchParams, ProcessInstance>(WorkFlowService('listInstances'), actions),
-  findTaskList: findPagingService<{ filter: string, latest: boolean, searchValue?: string }, UserTask>(WorkFlowService('listTasks'), actions),
+  findTaskList: findPagingService<{ filter: string, latest: boolean, searchValue?: string, myRequest: boolean}, UserTask>(WorkFlowService('listTasks'), actions),
 
 
   findDiagram: findService<{ id: string }, DiagramData>(WorkFlowService('fetchDiagram'), actions),

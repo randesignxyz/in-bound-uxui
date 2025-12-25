@@ -236,6 +236,7 @@ export default () => {
             filter: params.criteria?.advanceSearch?.status || '',
             latest: params.criteria?.advanceSearch?.latest || false,
             searchValue: params.criteria?.searchValue,
+            myRequest: params.criteria?.advanceSearch?.myRequest || false
 
         }, { page: (params.pagination?.current || 1) - 1, pageSize: params.pagination?.pageSize })
     }

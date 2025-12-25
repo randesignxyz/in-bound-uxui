@@ -26,6 +26,7 @@ const TaskList = () => {
         isGlobal: true,
         status: defaultTaskStatus?.id || '',
         latest: true,
+        myRequest: false
     });
 
     const [latest, setLatest] = useState(true);
@@ -51,10 +52,10 @@ const TaskList = () => {
     }
     const onMyRequestHandler = (e: CheckboxChangeEvent) => {
         var value = e.target.checked
-        // setAdvanceSearchParams((v) => ({
-        //     ...v,
-        //     drafted: value
-        // }))
+        setSearchParams((v) => ({
+            ...v,
+            myRequest: value
+        }))
         actionRef.current?.reloadAndRest?.();
     }
 
@@ -69,7 +70,7 @@ const TaskList = () => {
                     actionRef.current?.reloadAndRest?.();
                 }}
             />
-            {/* <Checkbox name="myRequest" onChange={onMyRequestHandler}>My Request{supTitle(10)}</Checkbox> */}
+            <Checkbox name="myRequest" onChange={onMyRequestHandler}>My Request{supTitle(10)}</Checkbox>
         </Space>
     );
      

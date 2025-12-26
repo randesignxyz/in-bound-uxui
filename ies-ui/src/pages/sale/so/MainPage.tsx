@@ -18,7 +18,6 @@ import QuickView from './components/List/QickView'
 import AdvanceSearch from './components/List/AdvanceSearch'
 import { simpleRequestActions } from '@/services/model'
 import { CrmServices } from '@/pages/crm/services'
-import { log } from 'console'
 
 type FilterType = SoAdvanceSearchParams & {
     searchValue?: string; status?: string;
@@ -61,7 +60,7 @@ export default () => {
     useEffect(() => {
         const pendingCount = filter.criteria?.customerType == 'ALL' ? (state.data?.soSummary?.pendingDirect || 0) + (state.data?.soSummary?.pendingIndirect || 0) :
             filter.criteria?.customerType == 'Direct' ? state.data?.soSummary?.pendingDirect : state.data?.soSummary?.pendingIndirect
-        statusBarRef.current?.refresh(pendingCount, state.data?.soSummary?.failed)
+        statusBarRef.current?.refresh(pendingCount, state.data?.soSummary?.failed, state.data?.soSummary?.allPending)
     }, [state.data?.soSummary])
 
     const ALL_VALUE = 0;
@@ -141,13 +140,15 @@ export default () => {
                             ...v,
                             criteria: {
                                 ...v.criteria,
-                                status: value
+                                status: value == "AllPending" ? 'Pending' : value,
+                                saleArea: value == "AllPending" ? optionsRef.current.map(v => v.value) : v.criteria?.saleArea
                             }
                         }))
                         actionRef.current?.reload(true)
                     }} />,
                 onRefresh: refetch,
                 onFilter: (params, page, sort) => {
+
                     setFilter(v => (
                         {
                             ...v, keywords: params?.searchValue

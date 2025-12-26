@@ -23,11 +23,12 @@ const StatusBar = forwardRef(({ onStatusChanged, onCustomerTypeChanged }: { onSt
                 size="small"
                 offset={[-20, 0]}
                 count={statusCount?.pending}
+                overflowCount={10000}
             >
                 <Radio.Button value="Pending"> Pending</Radio.Button>
             </Badge>
             <Radio.Button value="Posted">Posted</Radio.Button>
-            <Badge size="small" offset={[-20, 0]} count={statusCount?.failed}>
+            <Badge size="small" offset={[-20, 0]} count={statusCount?.failed} overflowCount={10000}>
                 <Radio.Button style={{ borderRadius: 0 }} value="Failed">Failed</Radio.Button>
             </Badge>
             {/* <Radio.Button value="Closed">Closed</Radio.Button> */}
@@ -42,6 +43,9 @@ const StatusBar = forwardRef(({ onStatusChanged, onCustomerTypeChanged }: { onSt
             <Radio.Button value="Direct">Direct</Radio.Button>
             <Radio.Button value="Indirect">In Direct</Radio.Button>
         </Radio.Group>
+        <Badge size="small" offset={[-20, 0]} count={statusCount?.failed} overflowCount={10000}>
+            <Radio.Button style={{ borderRadius: 0 }} value="AllPending">All Pending</Radio.Button>
+        </Badge>
     </Space >
 })
 

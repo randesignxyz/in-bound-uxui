@@ -12,7 +12,8 @@ const StatusBar = forwardRef(({ onStatusChanged, onCustomerTypeChanged }: { onSt
         }
     }))
 
-    return <Space size="large" style={{marginTop:-10}}>
+
+    return <Space size="large" style={{ marginTop: -10 }}>
 
         <Radio.Group
             defaultValue={'Pending'}
@@ -27,7 +28,7 @@ const StatusBar = forwardRef(({ onStatusChanged, onCustomerTypeChanged }: { onSt
             </Badge>
             <Radio.Button value="Posted">Posted</Radio.Button>
             <Badge size="small" offset={[-20, 0]} count={statusCount?.failed}>
-                <Radio.Button style={{borderRadius:0}} value="Failed">Failed</Radio.Button>
+                <Radio.Button style={{ borderRadius: 0 }} value="Failed">Failed</Radio.Button>
             </Badge>
             {/* <Radio.Button value="Closed">Closed</Radio.Button> */}
             <Radio.Button value="Canceled">Canceled</Radio.Button>

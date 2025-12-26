@@ -1,13 +1,13 @@
 
 import '@/pages/index.less'
-import { Badge, Button, Form, Select, Space, Spin, Typography } from "antd"
+import { Badge, Button, Card, Flex, Form, Select, Space, Spin, Tag, Typography } from "antd"
 import PageWrapper from "@/components/PageWrapper"
 import { SoAdvanceSearchParams, SoItemLess } from "@/services/sale/data"
 import { ExportOutlined, EyeOutlined, FileOutlined, FileSearchOutlined, PaperClipOutlined, PlusCircleOutlined, SyncOutlined } from "@ant-design/icons"
 import { Model } from "./model"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { FetchPagingParams } from "@/components/DataCrud/TableView"
-import { ActionType, CheckCard, ProForm, ProFormSelect } from "@ant-design/pro-components"
+import { ActionType, CheckCard, LightFilter, ProForm, ProFormSelect } from "@ant-design/pro-components"
 import { useAccess, useParams, useQuery } from "@umijs/max"
 import CustomerDetailView from "@/pages/crm/customer/components/Detail"
 import { formatDate, formatDateTime } from "@/pages/utils"
@@ -20,6 +20,7 @@ import { AllocateServiceAPI } from '@/pages/delivery/allocate/service'
 import { simpleRequestActions } from '@/services/model'
 import { CrmServiceAPI } from '@/services/crm/services'
 import { CrmServices } from '@/pages/crm/services'
+import FormModal from '@/components/FormModal'
 
 type FilterType = SoAdvanceSearchParams & {
     searchValue?: string; status?: string;
@@ -36,16 +37,20 @@ export default () => {
         criteria: {
             status: 'Pending',
             customerType: 'Direct',
+            saleArea: [0],
         }
     })
 
     const { data, isFetching, refetch } = useQuery(['fetch-sale-pagin', filter], () => actions.loadListItem({
         advanceSearch: { ...filter.criteria },
-        searchValue: filter.keywords
+        searchValue: filter.keywords,
+        divisionId: filter.criteria?.saleArea
     }, filter.pagination, filter.sort), {
         refetchOnWindowFocus: false,
         refetchInterval: 15000
     })
+
+    console.log();
 
     const statusBarRef = useRef<{ refresh: (pending?: number, failed?: number) => void }>()
 
@@ -53,6 +58,7 @@ export default () => {
         actions.initilizeData();
     }, []);
 
+    const [saleArea, setSaleArea] = useState<any[]>([]);
 
     useEffect(() => {
         const pendingCount = filter.criteria?.customerType == 'ALL' ? (state.data?.soSummary?.pendingDirect || 0) + (state.data?.soSummary?.pendingIndirect || 0) :
@@ -91,6 +97,18 @@ export default () => {
             listView={{
                 type: 'Table',
                 title: 'PO List',
+                onExtraFilterRender: () => <>
+                    <Card size='small' style={{ marginTop: -10, marginBottom: 10 }} hidden={!saleArea?.length}>
+                        <Flex gap={1} align="center" wrap>
+                            {
+                                (saleArea?.length > 0) && saleArea?.filter(p => p.value != 0)?.map(p => {
+                                    return <Tag
+                                    >{p.label}</Tag>
+                                })
+                            }
+                        </Flex>
+                    </Card>
+                </>,
                 actionButtons: [{
                     icon: <SyncOutlined />,
                     type: 'link',
@@ -140,51 +158,22 @@ export default () => {
                         }
                     ))
                 },
+
                 advanceSearchButton: <Space align='center'>
                     <Button style={{ marginTop: -6 }} icon={<FileSearchOutlined />}
                         onClick={() => modals.showModal('advanceSearch')}
                     />
-                    {/* <div className='my-checkcard-so'>
-                        <CheckCard.Group
-                            defaultValue={true}
-                            onChange={(e) => (
-                                setFilter((o) => ({
-                                    criteria: {
-                                        ...o.criteria,
-                                        myTask: e
-                                    }
-                                }))
-                            )}
-                        >
-                            <CheckCard
-                                title={"All"}
-                                size='small'
-                                value={false}
-                            />
-                            <CheckCard
-                                title={"My Tasks"}
-                                size='small'
-                                value={true}
-                            />
-                        </CheckCard.Group>
-                    </div> */}
-                    {/* <Select
-                        popupMatchSelectWidth={400}
-                        style={{ width: '250px' }}
-                        options={initData?.subContractTypeList?.map((it) => {
-                            return { value: it.id, label: [it.budgetCode, it.name].join('-') };
-                        })}
-                    /> */}
+
                     <ProForm
                         form={form}
                         submitter={false}
-
                     >
                         <ProFormSelect
                             name="saleArea"
                             placeholder={"Area"}
                             mode="multiple"
-                            width={250}
+                            width={180}
+                            bordered={false}
                             request={async () => {
                                 const res = await CrmServices.listSaleAreas().query(requestActions)
                                 if (!Array.isArray(res)) return [];
@@ -203,9 +192,8 @@ export default () => {
 
                                     if (defaultAreaIds.length > 0) {
                                         defaultSetRef.current = true;
-
                                         form.setFieldsValue({ saleArea: defaultAreaIds });
-
+                                        setSaleArea(options.filter(p => p.isDefault).map(o => ({ label: o.label, value: o.value })))
                                         setFilter(v => ({
                                             ...v,
                                             criteria: {
@@ -215,15 +203,23 @@ export default () => {
                                         }));
                                     }
                                 }
-                                return options;
+                                return [
+                                    {
+                                        value: 0,
+                                        label: "All"
+                                    },
+                                    ...options
+                                ]
                             }}
                             fieldProps={{
-                                onChange: (val: number[]) => {
+                                maxTagCount: "responsive",
+                                onChange: (val: number[], op) => {
+                                    setSaleArea(op.map(p => ({ label: p.label, value: p.value })))
                                     setFilter(v => ({
                                         ...v,
                                         criteria: {
                                             ...v.criteria,
-                                            saleArea: val,
+                                            saleArea: val.length > 0 ? val : [0],
                                         },
                                     }));
                                 },
@@ -231,9 +227,6 @@ export default () => {
                         />
 
                     </ProForm>
-
-
-
                 </Space>,
 
                 props: {
@@ -242,6 +235,16 @@ export default () => {
                     actionRef: actionRef,
                     pagination: {
                         total: data?.total
+                    },
+                    onChange: (pagination, filters, sorter, extra) => {
+                        const s = Array.isArray(sorter) ? sorter[0] : sorter;
+                        setFilter(v => ({
+                            criteria: {
+                                ...v.criteria,
+                            },
+                            pagination,
+                            sort: s?.field && s.order ? { [s.field as string]: s.order } : undefined
+                        }))
                     },
                     actionButtonsColumnRender: item => [
                         {
@@ -260,9 +263,13 @@ export default () => {
                             }
                         }
                     ],
+
+                    rowKey: 'id',
+
                     columns: [{
                         title: 'PO #',
                         sorter: 'poNo',
+                        dataIndex: 'poNo',
                         width: 140,
                         key: 'poNo',
                         actionProps: (item) => ({
@@ -288,6 +295,7 @@ export default () => {
                     }, {
                         title: 'Customer',
                         sorter: 'customerCode',
+                        dataIndex: 'customerCode',
                         key: 'customerCode',
                         actionProps: item => ({ type: 'action1', label: item.customerCode, actionButtons: [{ type: 'link', size: 'small', icon: <ExportOutlined />, onClick: () => { window.open(`/external/crm/customer/detail/${item?.customerId}`, '_blank')?.focus() } }] }),
 
@@ -299,6 +307,7 @@ export default () => {
                         title: 'Salesperson',
                         render: (_, data) => data.salespersonName,
                         sorter: 'salespersonName',
+                        dataIndex: 'salespersonName',
                     },
                     {
                         title: 'Province',
@@ -316,7 +325,7 @@ export default () => {
                         title: 'Order Date',
                         align: 'right',
                         sorter: 'orderDate',
-
+                        dataIndex: "orderDate",
                         width: 150,
                         render: (_, data) => formatDateTime(data.orderedDate),
                     },

@@ -7,9 +7,9 @@ import { simpleRequestActions } from '@/services/model';
 import {
   EditableFormInstance,
   EditableProTable,
-  ModalForm,
   ProCard,
   ProDescriptions,
+  ProForm,
   ProFormDatePicker,
   ProFormDateRangePicker,
   ProFormDependency,
@@ -222,7 +222,7 @@ export default ({ visisble, formKey, onClose, cb }: ActionCompProps & { formKey:
   }, [seqmentId]);
 
   return (
-    <ModalForm<DataFormType>
+    <ProForm<DataFormType>
       form={form}
       width={1000}
       title="Staff Proposal Request Form"
@@ -623,6 +623,6 @@ export default ({ visisble, formKey, onClose, cb }: ActionCompProps & { formKey:
           }}
         </ProFormDependency>
       </Space>
-    </ModalForm>
+    </ProForm>
   );
 };

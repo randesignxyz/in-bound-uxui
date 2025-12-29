@@ -2,7 +2,7 @@ import FileUploader from '@/components/Attachment/FileUploader';
 import { MultiRequest } from '@/services/apiGateway';
 import { simpleRequestActions } from '@/services/model';
 import {
-  ModalForm,
+  ProForm,
   ModalFormProps,
   ProCard,
   ProFormGroup,
@@ -17,16 +17,15 @@ import { EmployeeServices } from '../services';
 import ProbationSumbitter from '@/pages/process-flow/components/Submitter/ProbationSumbitter';
 import { EmployeeInfResult, ProbationAssessmentList, ProbationEvaluationRef, ProbationFormType } from './data.types';
 import { createService } from './services';
-import { set } from 'lodash';
 
 type DataFormType = {
-    requestorId: string;
-    requestorBuId: number;
-  };
+  requestorId: string;
+  requestorBuId: number;
+};
 export default ({
-  refreshTable,
-  ...rest
-}: ModalFormProps<ProbationEvaluationData> & {
+                  refreshTable,
+                  ...rest
+                }: ModalFormProps<ProbationEvaluationData> & {
   refreshTable?: () => void;
 }) => {
   const [form] = useForm<ProbationEvaluationData>();
@@ -71,7 +70,7 @@ export default ({
   };
 
   useEffect(() => {
-    (async () => {     
+    (async () => {
       srv.fetchProbationFormTypeList().then(rs => {
         setProbationFormType(rs)
       })
@@ -107,7 +106,7 @@ export default ({
   const onChangeSubmitterHandler = async (data: EmployeeInfResult) => {
     setProbationEmp(data)
     form.setFieldValue('refId',undefined)
-    form.setFieldValue('formTypeId',probationFormType?.find(r => r.code==data.jobLevelCode)?.id||'')
+    form.setFieldValue('formTypeId',probationFormType?.find(r => r.code===data.jobLevelCode)?.id||'')
     form.setFieldValue('preparationUserId',undefined)
     form.setFieldValue('hodPreparationUserId',undefined)
     formSubmittor.setFieldValue('requestorBuId',undefined)
@@ -119,18 +118,18 @@ export default ({
     })
   }
   const [firstEvaluationUserId, setFirstEvaluationUserId] = useState('')
-  // const onSearchHandler = async (searchValue?: string) => {  
+  // const onSearchHandler = async (searchValue?: string) => {
   //   const it1 = await srv.fetchProbationEmpList(searchValue)
   //   return it1.map((it_1:any) => ({ value: it_1.id, label: it_1.empName }));
   // }
 
   return (
-    <ModalForm
+    <ProForm
       width={970}
       form={form}
       onFinish={async () => {
         const formData = await form.validateFields();
-        await formSubmittor.validateFields() 
+        await formSubmittor.validateFields()
         Modal.confirm({
           title: 'Probation Evaluation Request',
           content: 'Are you sure?',
@@ -154,14 +153,14 @@ export default ({
     >
       <Space direction="vertical" style={{ width: '100%' }}>
         {/* <Requestor form={form} /> */}
-        <ProbationSumbitter         
+        <ProbationSumbitter
           form={formSubmittor}
           title={
             <div> Employee Info</div>
           }
           onSetSubmitter={onChangeSubmitterHandler}
         />
-        <ProCard size="small" bordered>         
+        <ProCard size="small" bordered>
           <ProFormGroup size={'small'}>
             <ProFormSelect
               shouldUpdate
@@ -173,14 +172,14 @@ export default ({
               options={probationAssessor?.map((it) => ({ label: it.empName, value: it.userId }))}
               fieldProps={{
                 dropdownMatchSelectWidth: 300,
-                async onChange(value: any) {                  
+                async onChange(value: any) {
                   form.setFieldValue('hodPreparationUserId',undefined)
                   try{
                     const rs = await srv.fetchHodPreparationUserId(value)
-                      setFirstEvaluationUserId(rs.hodEnpNo||'')
-                      form.resetFields(['hodPreparationUserId'])
-                      form.setFieldValue('hodPreparationUserId',rs.hodUserId)
-                  }catch(e){                    
+                    setFirstEvaluationUserId(rs.hodEnpNo||'')
+                    form.resetFields(['hodPreparationUserId'])
+                    form.setFieldValue('hodPreparationUserId',rs.hodUserId)
+                  }catch(e){
                     setFirstEvaluationUserId('')
                     form.resetFields(['hodPreparationUserId'])
                   }
@@ -197,7 +196,7 @@ export default ({
               request={ async({ keyWords }) =>{
                 const it1 = await srv.fetchEvaluateEmpList(firstEvaluationUserId!==''?firstEvaluationUserId: keyWords)
                 setFirstEvaluationUserId('')
-                if(it1.length==0){
+                if(it1.length===0){
                   form.setFieldValue('hodPreparationUserId',undefined)
                 }
                 return it1.map((it_1:any) => ({ value: it_1.userId, label: it_1.empName }));
@@ -219,7 +218,7 @@ export default ({
               width={'sm'}
               label="Ref"
               options={probationRef?.map((it) => ({ label: it.formNo, value: it.id }))}
-            />           
+            />
           </ProFormGroup>
           <ProFormTextArea name='remarks' label={'Remarks'}/>
         </ProCard>
@@ -230,6 +229,6 @@ export default ({
           onSetFiles={(files) => setUploadFileIds(files.map((it) => it.response))}
         />
       </Space>
-    </ModalForm>
+    </ProForm>
   );
 };

@@ -7,6 +7,7 @@ import {
   ModalForm,
   ModalFormProps,
   ProCard,
+  ProForm,
   ProFormDatePicker,
   ProFormDateRangePicker,
   ProFormDependency,
@@ -23,9 +24,9 @@ import { useEffect, useState } from 'react';
 import { BU, Department, RequisitionData, SubDepartment } from '../data';
 import { EmployeeServices } from '../services';
 export default ({
-  onRefresh,
-  ...rest
-}: ModalFormProps<RequisitionData> & {
+                  onRefresh,
+                  ...rest
+                }: ModalFormProps<RequisitionData> & {
   onRefresh?: () => void;
 }) => {
   const [form] = useForm<RequisitionData>();
@@ -106,7 +107,7 @@ export default ({
   };
 
   return (
-    <ModalForm
+    <ProForm
       form={form}
       onValuesChange={(changedValues) => {
         const { jobId } = changedValues;
@@ -381,6 +382,6 @@ export default ({
           onSetFiles={(files) => setUploadFileIds(files.map((it) => it.response))}
         />
       </Space>
-    </ModalForm>
+    </ProForm>
   );
 };

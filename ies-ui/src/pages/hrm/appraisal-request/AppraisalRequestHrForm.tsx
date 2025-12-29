@@ -20,7 +20,7 @@ export default (props: ActionDataFormProps) => {
     const [data, setData] = useState<AppraisalRequestDetail>()
 
     useEffect(() => {
-        (async () => {           
+        (async () => {
                 if (props.activityData?.procInstId) {
                     try {
                         const rs = await services.findByInstId(props.activityData.procInstId)
@@ -30,7 +30,7 @@ export default (props: ActionDataFormProps) => {
                     }
                 }
         })()
-    },[props.visible, props.ProcessInstanceData])    
+    },[props.visible, props.ProcessInstanceData])
 
     return <ActionFormWrapper
         {...props}
@@ -50,8 +50,8 @@ export default (props: ActionDataFormProps) => {
                 }
                 if(validator.length>0){
                     Modal.warning({
-                        title: `Data's Require`,                       
-                        content: <div>{validator.map(it => { 
+                        title: `Data's Require`,
+                        content: <div>{validator.map(it => {
                             return <div><span style={{color:'orange'}}>{it}</span></div>
                         })}</div>
                     })

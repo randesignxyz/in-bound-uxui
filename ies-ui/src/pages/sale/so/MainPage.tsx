@@ -66,6 +66,7 @@ export default () => {
     const ALL_VALUE = 0;
 
     const optionsRef = useRef<{ value: number; label: string }[]>([]);
+    const prevHadAllRef = useRef(false);
 
 
     return <Spin spinning={false}>
@@ -99,7 +100,14 @@ export default () => {
                 type: 'Table',
                 title: 'PO List',
                 onExtraFilterRender: () => <>
-                    <Card size='small' style={{ marginTop: -10, marginBottom: 10 }} hidden={!saleArea?.length}>
+                    <Card size='small' style={{ marginTop: -10, marginBottom: 0, }}
+                        styles={{
+                            body: {
+                                // padding: 0,
+                                backgroundColor: "#f5f5f5"
+                            }
+                        }}
+                        hidden={!saleArea?.length}>
                         <Flex gap={1} align="center" wrap>
                             {
                                 (saleArea.length > 0) && saleArea?.filter(p => p.value != 0)?.map(p => {
@@ -201,49 +209,71 @@ export default () => {
                             fieldProps={{
                                 multiple: true,
                                 maxTagCount: 'responsive',
-                                onChange: (paths: number[][]) => {
-                                    if (!paths) return;
+                                onChange: (paths: number[][] = []) => {
+                                    const values = paths.map(p => p[0]);           // includes 0 or not
+                                    const realOptions = optionsRef.current;
+                                    const realValues = realOptions.map(o => o.value);
 
-                                    // extract real selected values
-                                    const selectedValues = paths.map(p => p[p.length - 1]);
+                                    const hasAllClicked = values.includes(ALL_VALUE);
 
-                                    const clickedSelectAll = selectedValues.includes(ALL_VALUE);
+                                    // current real selection (ignore ALL_VALUE)
+                                    const currentSelected = values.filter(v => v !== ALL_VALUE);
+                                    const isCurrentlyAllSelected =
+                                        currentSelected.length === realValues.length;
 
-                                    const allValues = optionsRef.current.map(o => o.value);
-                                    const allPaths = allValues.map(v => [v]);
+                                    //  CASE 1: Click Select All
+                                    if (hasAllClicked) {
+                                        //  if NOT all selected → SELECT ALL
+                                        if (!isCurrentlyAllSelected) {
+                                            const allPaths = realValues.map(v => [v]);
 
-                                    // 1️⃣ User clicks Select All
-                                    if (clickedSelectAll) {
-                                        setSaleArea(optionsRef.current);
+                                            form.setFieldsValue({ saleArea: allPaths });
+                                            setSaleArea(realOptions);
+                                            prevHadAllRef.current = true;
+
+                                            setFilter(v => ({
+                                                ...v,
+                                                criteria: { ...v.criteria, saleArea: realValues },
+                                            }));
+                                            return;
+                                        }
+
+                                        //  if ALL already selected → CLEAR ALL
+                                        form.setFieldsValue({ saleArea: [] });
+                                        setSaleArea([]);
+                                        prevHadAllRef.current = false;
+
                                         setFilter(v => ({
                                             ...v,
-                                            criteria: {
-                                                ...v.criteria,
-                                                saleArea: allPaths.map(p => p[p.length - 1]),
-                                            },
+                                            criteria: { ...v.criteria, saleArea: [] },
                                         }));
-                                        form.setFieldsValue({
-                                            saleArea: allPaths, // 🔥 store only real values
-                                        });
                                         return;
                                     }
 
-                                    // 2️⃣ Normal select / unselect
-                                    const selectedOptions = optionsRef.current.filter(o =>
-                                        selectedValues.includes(o.value)
+                                    //  CASE 2: Manual clear
+                                    if (paths.length === 0) {
+                                        setSaleArea([]);
+                                        prevHadAllRef.current = false;
+
+                                        setFilter(v => ({
+                                            ...v,
+                                            criteria: { ...v.criteria, saleArea: [] },
+                                        }));
+                                        return;
+                                    }
+
+                                    //  CASE 3: Normal select / deselect
+                                    const selectedOptions = realOptions.filter(o =>
+                                        currentSelected.includes(o.value)
                                     );
 
                                     setSaleArea(selectedOptions);
+                                    prevHadAllRef.current = currentSelected.length === realValues.length;
+
                                     setFilter(v => ({
                                         ...v,
-                                        criteria: {
-                                            ...v.criteria,
-                                            saleArea: selectedOptions.map(p => p.value),
-                                        },
+                                        criteria: { ...v.criteria, saleArea: currentSelected },
                                     }));
-                                    form.setFieldsValue({
-                                        saleArea: paths,
-                                    });
                                 }
                             }}
                         />

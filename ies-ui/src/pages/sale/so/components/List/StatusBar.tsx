@@ -3,11 +3,11 @@ import { forwardRef, useImperativeHandle, useState } from "react";
 
 
 const StatusBar = forwardRef(({ onStatusChanged, onCustomerTypeChanged }: { onStatusChanged: (value?: string) => void; onCustomerTypeChanged: (value?: string) => void }, ref) => {
-    const [statusCount, setStatusCount] = useState<{ pending?: number, failed?: number }>()
+    const [statusCount, setStatusCount] = useState<{ pending?: number, failed?: number, allPending?: number }>()
     useImperativeHandle(ref, () => ({
-        refresh: (pending?: number, failed?: number) => {
+        refresh: (pending?: number, failed?: number, allPending?: number) => {
             setStatusCount({
-                pending, failed
+                pending, failed, allPending
             })
         }
     }))
@@ -22,12 +22,22 @@ const StatusBar = forwardRef(({ onStatusChanged, onCustomerTypeChanged }: { onSt
             <Badge
                 size="small"
                 offset={[-20, 0]}
+                count={statusCount?.allPending}
+                overflowCount={10000}
+            >
+                <Radio.Button style={{ borderRadius: 0 }} value="AllPending">All Pending</Radio.Button>
+            </Badge>
+
+            <Badge
+                size="small"
+                offset={[-20, 0]}
                 count={statusCount?.pending}
+                overflowCount={10000}
             >
                 <Radio.Button value="Pending"> Pending</Radio.Button>
             </Badge>
             <Radio.Button value="Posted">Posted</Radio.Button>
-            <Badge size="small" offset={[-20, 0]} count={statusCount?.failed}>
+            <Badge size="small" offset={[-20, 0]} count={statusCount?.failed} overflowCount={10000}>
                 <Radio.Button style={{ borderRadius: 0 }} value="Failed">Failed</Radio.Button>
             </Badge>
             {/* <Radio.Button value="Closed">Closed</Radio.Button> */}
@@ -42,6 +52,7 @@ const StatusBar = forwardRef(({ onStatusChanged, onCustomerTypeChanged }: { onSt
             <Radio.Button value="Direct">Direct</Radio.Button>
             <Radio.Button value="Indirect">In Direct</Radio.Button>
         </Radio.Group>
+
     </Space >
 })
 

@@ -1,26 +1,25 @@
 
 import '@/pages/index.less'
-import { Badge, Button, Card, Flex, Form, Select, Space, Spin, Tag, Typography } from "antd"
+import { Badge, Button, Card, Flex, Form, Space, Spin, Tag, Typography } from "antd"
 import PageWrapper from "@/components/PageWrapper"
 import { SoAdvanceSearchParams, SoItemLess } from "@/services/sale/data"
 import { ExportOutlined, EyeOutlined, FileOutlined, FileSearchOutlined, PaperClipOutlined, PlusCircleOutlined, SyncOutlined } from "@ant-design/icons"
 import { Model } from "./model"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { FetchPagingParams } from "@/components/DataCrud/TableView"
-import { ActionType, CheckCard, LightFilter, ProForm, ProFormSelect } from "@ant-design/pro-components"
+import { ActionType, ProForm, ProFormCascader } from "@ant-design/pro-components"
 import { useAccess, useParams, useQuery } from "@umijs/max"
 import CustomerDetailView from "@/pages/crm/customer/components/Detail"
-import { formatDate, formatDateTime } from "@/pages/utils"
+import { formatDateTime } from "@/pages/utils"
 import Status from "@/components/Status"
 import StatusBar from "./components/List/StatusBar"
 import ViewWrapper from './ViewWrapper'
 import QuickView from './components/List/QickView'
 import AdvanceSearch from './components/List/AdvanceSearch'
-import { AllocateServiceAPI } from '@/pages/delivery/allocate/service'
 import { simpleRequestActions } from '@/services/model'
-import { CrmServiceAPI } from '@/services/crm/services'
 import { CrmServices } from '@/pages/crm/services'
-import FormModal from '@/components/FormModal'
+import ExcelFilterSelect from './components/ExcelFilterSelect'
+import ExcelSaleAreaFilter from './components/ExcelFilterSelect'
 
 type FilterType = SoAdvanceSearchParams & {
     searchValue?: string; status?: string;
@@ -44,15 +43,15 @@ export default () => {
     const { data, isFetching, refetch } = useQuery(['fetch-sale-pagin', filter], () => actions.loadListItem({
         advanceSearch: { ...filter.criteria },
         searchValue: filter.keywords,
-        divisionId: filter.criteria?.saleArea
+        divisionId: filter.criteria?.saleArea?.length ? filter.criteria?.saleArea : [0]
     }, filter.pagination, filter.sort), {
         refetchOnWindowFocus: false,
         refetchInterval: 15000
     })
 
-    console.log();
 
-    const statusBarRef = useRef<{ refresh: (pending?: number, failed?: number) => void }>()
+
+    const statusBarRef = useRef<{ refresh: (pending?: number, failed?: number, totalPending?: number) => void }>()
 
     useEffect(() => {
         actions.initilizeData();
@@ -61,10 +60,29 @@ export default () => {
     const [saleArea, setSaleArea] = useState<any[]>([]);
 
     useEffect(() => {
-        const pendingCount = filter.criteria?.customerType == 'ALL' ? (state.data?.soSummary?.pendingDirect || 0) + (state.data?.soSummary?.pendingIndirect || 0) :
-            filter.criteria?.customerType == 'Direct' ? state.data?.soSummary?.pendingDirect : state.data?.soSummary?.pendingIndirect
-        statusBarRef.current?.refresh(pendingCount, state.data?.soSummary?.failed)
+        const pendingCount = filter.criteria?.customerType == 'All' ? ((state.data?.soSummary?.pendingDirect ?? 0) + (state.data?.soSummary?.pendingIndirect ?? 0)) :
+            filter.criteria?.customerType == 'Direct' ? state.data?.soSummary?.pendingDirect :
+                state.data?.soSummary?.pendingIndirect
+
+        let totalPending = 0;
+
+        switch (filter.criteria?.customerType) {
+            case 'All':
+                totalPending = state.data?.soSummary?.allPending ?? 0;
+                break;
+
+            case 'Direct':
+                totalPending = (state.data?.soSummary?.allPending ?? 0) - (state.data?.soSummary?.pendingIndirect ?? 0);
+                break;
+
+            default:
+                totalPending = (state.data?.soSummary?.allPending ?? 0) - (state.data?.soSummary?.pendingDirect ?? 0);
+        }
+        statusBarRef.current?.refresh(pendingCount, state.data?.soSummary?.failed, totalPending)
     }, [state.data?.soSummary])
+
+    const optionsRef = useRef<{ value: number; label: string }[]>([]);
+    const [isSelectAll, setIsSelectAll] = useState(false);
 
 
     return <Spin spinning={false}>
@@ -98,10 +116,17 @@ export default () => {
                 type: 'Table',
                 title: 'PO List',
                 onExtraFilterRender: () => <>
-                    <Card size='small' style={{ marginTop: -10, marginBottom: 10 }} hidden={!saleArea?.length}>
+                    <Card size='small' style={{ marginTop: -10, marginBottom: 0, }}
+                        styles={{
+                            body: {
+                                // padding: 0,
+                                backgroundColor: "#f5f5f5"
+                            }
+                        }}
+                        hidden={!saleArea?.length}>
                         <Flex gap={1} align="center" wrap>
                             {
-                                (saleArea?.length > 0) && saleArea?.filter(p => p.value != 0)?.map(p => {
+                                (saleArea.length > 0) && saleArea?.filter(p => p.value != 0)?.map(p => {
                                     return <Tag
                                     >{p.label}</Tag>
                                 })
@@ -135,17 +160,20 @@ export default () => {
                     actionRef.current?.reload(true)
                 }}
                     onStatusChanged={(value) => {
+                        setIsSelectAll(value == "AllPending")
                         setFilter(v => ({
                             ...v,
                             criteria: {
                                 ...v.criteria,
-                                status: value
+                                status: value == "AllPending" ? 'Pending' : value,
+                                saleArea: value == "AllPending" ? optionsRef.current.map(v => v.value) : v.criteria?.saleArea
                             }
                         }))
                         actionRef.current?.reload(true)
                     }} />,
                 onRefresh: refetch,
                 onFilter: (params, page, sort) => {
+
                     setFilter(v => (
                         {
                             ...v, keywords: params?.searchValue
@@ -168,64 +196,124 @@ export default () => {
                         form={form}
                         submitter={false}
                     >
-                        <ProFormSelect
-                            name="saleArea"
-                            placeholder={"Area"}
-                            mode="multiple"
-                            width={180}
-                            bordered={false}
-                            request={async () => {
-                                const res = await CrmServices.listSaleAreas().query(requestActions)
-                                if (!Array.isArray(res)) return [];
 
-                                const options = res.map((a: any) => ({
-                                    value: Number(a.divisionId ?? a.di),
-                                    label: (a.divisionName ?? a.name)
-                                        ?.replace(/^S&D\s*/i, '')
-                                        .trim(),
-                                    isDefault: a.defaultFlag === 1 || a.defaultFlag === 1,
+                        <ExcelSaleAreaFilter
+                            form={form}
+                            requestActions={requestActions}
+                            isSelectAll={isSelectAll}
+                            onInit={(values, options) => {
+                                setSaleArea(options);
+                                setFilter(v => ({
+                                    ...v,
+                                    criteria: { ...v.criteria, saleArea: values },
                                 }));
-                                if (!param?.['*'] && !defaultSetRef.current) {
-                                    const defaultAreaIds = options
-                                        .filter(o => o.isDefault)
-                                        .map(o => o.value);
+                            }}
+                            onChange={(values, options) => {
+                                setSaleArea(options);
+                                setFilter(v => ({
+                                    ...v,
+                                    criteria: { ...v.criteria, saleArea: values },
+                                }));
+                            }}
+                        />
 
-                                    if (defaultAreaIds.length > 0) {
-                                        defaultSetRef.current = true;
-                                        form.setFieldsValue({ saleArea: defaultAreaIds });
-                                        setSaleArea(options.filter(p => p.isDefault).map(o => ({ label: o.label, value: o.value })))
-                                        setFilter(v => ({
-                                            ...v,
-                                            criteria: {
-                                                ...v.criteria,
-                                                saleArea: defaultAreaIds,
-                                            },
-                                        }));
-                                    }
-                                }
+                        {/* <ProFormCascader
+                            name="saleArea"
+                            width={180}
+                            request={async () => {
+                                const res = await CrmServices.listSaleAreas().query(requestActions) as unknown as { divisionId: number, divisionName: string, defaultFlag: number }[]
+                                const options = res.map(o => ({ value: o.divisionId, label: o.divisionName, default: o.defaultFlag }))
+                                optionsRef.current = options;
+                                form.setFieldsValue({
+                                    saleArea: options.filter(o => o.default == 1).map(o => [o.value])
+                                });
+                                setSaleArea(options.filter(o => o.default == 1));
+                                setFilter(v => ({
+                                    ...v,
+                                    criteria: {
+                                        ...v.criteria,
+                                        saleArea: options.filter(o => o.default == 1).map(o => o.value)
+                                    },
+                                }));
                                 return [
                                     {
                                         value: 0,
-                                        label: "All"
+                                        label: 'Select All'
                                     },
                                     ...options
                                 ]
                             }}
                             fieldProps={{
-                                maxTagCount: "responsive",
-                                onChange: (val: number[], op) => {
-                                    setSaleArea(op.map(p => ({ label: p.label, value: p.value })))
+                                multiple: true,
+                                maxTagCount: 'responsive',
+                                onChange: (paths: number[][] = []) => {
+                                    const values = paths.map(p => p[0]);           // includes 0 or not
+                                    const realOptions = optionsRef.current;
+                                    const realValues = realOptions.map(o => o.value);
+
+                                    const hasAllClicked = values.includes(ALL_VALUE);
+
+                                    // current real selection (ignore ALL_VALUE)
+                                    const currentSelected = values.filter(v => v !== ALL_VALUE);
+                                    const isCurrentlyAllSelected =
+                                        currentSelected.length === realValues.length;
+
+                                    //  CASE 1: Click Select All
+                                    if (hasAllClicked) {
+                                        //  if NOT all selected → SELECT ALL
+                                        if (!isCurrentlyAllSelected) {
+                                            const allPaths = realValues.map(v => [v]);
+
+                                            form.setFieldsValue({ saleArea: allPaths });
+                                            setSaleArea(realOptions);
+                                            prevHadAllRef.current = true;
+
+                                            setFilter(v => ({
+                                                ...v,
+                                                criteria: { ...v.criteria, saleArea: realValues },
+                                            }));
+                                            return;
+                                        }
+
+                                        //  if ALL already selected → CLEAR ALL
+                                        form.setFieldsValue({ saleArea: [] });
+                                        setSaleArea([]);
+                                        prevHadAllRef.current = false;
+
+                                        setFilter(v => ({
+                                            ...v,
+                                            criteria: { ...v.criteria, saleArea: [] },
+                                        }));
+                                        return;
+                                    }
+
+                                    //  CASE 2: Manual clear
+                                    if (paths.length === 0) {
+                                        setSaleArea([]);
+                                        prevHadAllRef.current = false;
+
+                                        setFilter(v => ({
+                                            ...v,
+                                            criteria: { ...v.criteria, saleArea: [] },
+                                        }));
+                                        return;
+                                    }
+
+                                    //  CASE 3: Normal select / deselect
+                                    const selectedOptions = realOptions.filter(o =>
+                                        currentSelected.includes(o.value)
+                                    );
+
+                                    setSaleArea(selectedOptions);
+                                    prevHadAllRef.current = currentSelected.length === realValues.length;
+
                                     setFilter(v => ({
                                         ...v,
-                                        criteria: {
-                                            ...v.criteria,
-                                            saleArea: val.length > 0 ? val : [0],
-                                        },
+                                        criteria: { ...v.criteria, saleArea: currentSelected },
                                     }));
-                                },
+                                }
                             }}
-                        />
-
+                        /> */}
                     </ProForm>
                 </Space>,
 

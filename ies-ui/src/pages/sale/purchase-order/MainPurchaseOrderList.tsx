@@ -22,7 +22,7 @@ import MpuCreateForm from './components/MpuCreateForm';
 import PurchaseOrderDetail from './components/PurchaseOrderDetail';
 import { MpuServiceApi } from './services';
 
-interface Props {}
+interface Props { }
 
 const MainPurchaseOrderList: React.FC<Props> = () => {
   //const access = useAccess();
@@ -241,8 +241,8 @@ const MainPurchaseOrderList: React.FC<Props> = () => {
                     r.status === 'open'
                       ? 'success'
                       : r.status === 'canceled' || r.status === 'closed'
-                      ? 'magenta'
-                      : 'warning';
+                        ? 'magenta'
+                        : 'warning';
                   return (
                     <span>
                       <Tag color={color}>{r.status}</Tag>

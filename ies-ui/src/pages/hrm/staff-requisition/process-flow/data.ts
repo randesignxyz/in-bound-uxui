@@ -17,12 +17,9 @@ export const StaffRequisitionFormNames = {
 export const StaffRequisitionOFLFormNames = {
   processDefKey: 'staff_requisition_request_process_ofl',
   start: 'staff_requisition_request_process_ofl',
-
-  OFL_HRM_MANAGER: 'staff_requisition_ofl_hrm_manager',
-  OFL_SM_FUNCTION_APPROVAL:'staff_requisition_ofl_sm_function_approval',
-  OFL_SM_FUNCTION_REVIEW: 'staff_requisition_ofl_sm_function_review',
-  OFL_DMD_APPROVAL:'staff_requisition_ofl_dmd_approval',
-  OFL_SM_FUNCTION_PROPOSE:'staff_requisition_ofl_sm_function_propose',
-  OFL_DMD_REVIEW:'staff_requisition_ofl_dmd_review',
-  OFL_ED_MD_APPROVAL:'staff_requisition_ofl_ed_md_approval'
+  HRBP: 'staff_requisition_ofl_hrbp',
+  HRM_MANAGER: 'staff_requisition_ofl_hrm_manager',
+  SR_MANAGER_APPROVAL: 'staff_requisition_ofl_sr_manager_approval',
+  DMD: 'staff_requisition_ofl_dmd',
+  HRA_SR_MANAGER: 'staff_requisition_ofl_hra_sr_manager'
 }

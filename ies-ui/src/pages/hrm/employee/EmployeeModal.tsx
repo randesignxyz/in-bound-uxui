@@ -7,242 +7,127 @@ import {
 import { useForm } from "antd/lib/form/Form";
 import { useEffect, useState } from "react";
 import { simpleRequestActions } from "@/services/model";
-import { EmployeeServices } from "../services";
-import { BU, Department, EmployeeListItem } from "../data";
-import { MultiRequest } from "@/services/apiGateway";
+import { ModalForm, ModalFormProps, ProFormCheckbox, ProFormSelect, ProFormText } from "@ant-design/pro-components"
+import { useForm } from "antd/lib/form/Form"
+import { BU, Department, SubDepartment, EmployeeListItem } from '../data';
 
-interface Props {
-  type: "CREATE" | "EDIT" | "VIEW";
-  id?: number;                 // required for EDIT / VIEW
-  onSuccess?: () => void;      // callback after save
+import { Space } from 'antd';
+import { EmployeeServices } from '../services';
+import { useEffect, useRef, useState } from 'react';
+import { MultiRequest } from '@/services/apiGateway';
+
+interface Props extends ModalFormProps<EmployeeListItem> {
+  dataItem?: EmployeeListItem | undefined;
 }
 
-const EmployeeForm = ({ type, id, onSuccess }: Props) => {
+export default ({ dataItem, ...rest }: Props) => {
+  // const [requistionDetail, setRequistionDetail] = useState<StaffRequisitionRequest>();
   const requestActions = simpleRequestActions();
-  const [form] = useForm<EmployeeListItem>();
-
-  const [loading, setLoading] = useState(false);
-  const [initLoading, setInitLoading] = useState(false);
   const [data, setData] = useState<{
     buList: BU[];
     departmentList: Department[];
-  }>({
-    buList: [],
-    departmentList: [],
-  });
+    subDepartmentList: SubDepartment[];
+  }>();
 
-  const isView = type === "VIEW";
-  const isEdit = type === "EDIT";
-  const isCreate = type === "CREATE";
+  const [form] = useForm<EmployeeListItem>();
 
-  /* ===================== LOAD LOOKUPS ===================== */
   useEffect(() => {
-    loadLookups();
-  }, []);
-
-  const loadLookups = async () => {
+    initData();
+  }, [dataItem]);
+  const initData = async () => {
     const rs = await MultiRequest<{
       buList: BU[];
       deptList: Department[];
+      subDeptList: SubDepartment[];
     }>([
       EmployeeServices.listBu.queryParams,
       EmployeeServices.listDepartment.queryParams,
+      EmployeeServices.listSubDepartment.queryParams,
     ])(requestActions);
 
     setData({
       buList: rs.buList,
       departmentList: rs.deptList,
+      subDepartmentList: rs.subDeptList,
     });
-  };
-
-  /* ===================== LOAD EMPLOYEE DETAIL ===================== */
-  useEffect(() => {
-    if ((isEdit || isView) && id) {
-      loadEmployee();
-    } else {
-      form.resetFields();
-    }
-  }, [id, type]);
-
-  const loadEmployee = async () => {
-    setInitLoading(true);
-    try {
-      const rs = await EmployeeServices.fetchEmployeeById(id!).query(
-        requestActions
-      );
-
+    //   
+    form.resetFields();
+    if (!!dataItem) {
       form.setFieldsValue({
-        emp_no: rs.employeeCode,
-        sap_id: rs.sapId,
-        local_name: rs.employeeLocalName,
-        first_name: rs.firstName,
-        last_name: rs.lastName,
-        job_title_id: rs.job_id,
-        department_id: rs.department_id,
-        bu_id: rs.bu_id,
-        status: rs.status,
+        emp_no: dataItem?.employeeCode,
+        sap_id: dataItem?.sapId,
+        local_name: dataItem?.employeeLocalName,
+        first_name: dataItem?.firstName,
+        last_name: dataItem?.lastName,
+        job_title_id: dataItem?.job_id,
+        department_id: dataItem?.department_id,
+        bu_id: dataItem?.bu_id,
+        status: dataItem?.status
       });
-    } finally {
-      setInitLoading(false);
     }
   };
+  //
+  return <ModalForm  {...rest} form={form} width={'30%'} title="Edit employee profiles"
+    onOpenChange={visible => {
+      // 
+      rest.onOpenChange?.(visible)
+    }}
 
-  /* ===================== SUBMIT ===================== */
-  const handleSubmit = async () => {
-    const values = await form.validateFields();
-    setLoading(true);
+    submitter={{
+      searchConfig: {
+        submitText: 'Submit',
+        resetText: 'Cancel',
+      },
+    }}
+  >
 
-    try {
-      const payload: EmployeeListItem = {
-        id,
-        employeeCode: values.emp_no,
-        sapId: values.sap_id,
-        employeeLocalName: values.local_name,
-        firstName: values.first_name,
-        lastName: values.last_name,
-        job_id: values.job_title_id,
-        department_id: values.department_id,
-        bu_id: values.bu_id,
-        status: values.status,
-      };
+    <Space direction='horizontal' style={{ width: '100%' }}>
+      <ProFormText label="Emp no" name={'emp_no'} />
+      <ProFormText label="Integrated ID" name={'sap_id'} />
+    </Space>
+    <ProFormText label="Local Name" name={'local_name'} />
+    <ProFormText label="First name" name={'first_name'} />
+    <ProFormText label="Last name" name={'last_name'} />
+    <ProFormSelect label="Job Title" name={'job_title_id'}
+      showSearch
+      allowClear
+      // convertValue={(value) => `${dataItem?.job_id}`}
+      request={async ({ keyWords }) => {
+        const its = (await EmployeeServices.listPageJobTitle(keyWords).query(requestActions)
+        ).items.map((it) => ({ label: it.name, value: it.id }));
+        if (dataItem &&
+          !its.some((it) => it.value == dataItem?.job_id)
+        ) {
+          return [
+            {
+              label: dataItem?.jobTitle,
+              value: dataItem?.job_id,
+            },
+            ...its,
+          ];
+        }
+        return its;
+      }}
+    />
+    <ProFormSelect label="Department" name={'department_id'} showSearch
+      options={data?.departmentList?.map((it) => ({ label: it.name, value: it.id }))}
+    />
+    <ProFormSelect label="BU" name={'bu_id'} shouldUpdate
+      options={data?.buList.map((it) => ({ label: it.name, value: it.id }))}
+    />
+    <ProFormSelect label="Status" name={'status'} shouldUpdate
+      request={async () => [
+        { label: 'Active', value: 'ACTIVE' },
+        { label: 'Inactive', value: 'INACTIVE' }
+      ]}
+    />
 
-      await EmployeeServices.EmployeeUpdate(payload).query(requestActions);
-      onSuccess?.();
+    await EmployeeServices.EmployeeUpdate(payload).query(requestActions);
+    onSuccess?.();
     } finally {
       setLoading(false);
     }
   };
 
-  /* ===================== RENDER ===================== */
-  return (
-    <Spin spinning={initLoading}>
-      <Card
-        title={
-          isCreate
-            ? "New Employee"
-            : isEdit
-              ? "Edit Employee"
-              : "View Employee"
-        }
-      >
-        <ProForm
-          form={form}
-          layout="vertical"
-          submitter={false}
-          disabled={isView}
-        >
-          <Row gutter={16}>
-            <Col span={12}>
-              <ProFormText
-                name="emp_no"
-                label="Employee No"
-                rules={[{ required: true }]}
-                disabled={isEdit}
-              />
-            </Col>
-
-            <Col span={12}>
-              <ProFormText
-                name="sap_id"
-                label="Integrated ID (SAP)"
-              />
-            </Col>
-
-            <Col span={12}>
-              <ProFormText
-                name="local_name"
-                label="Local Name (KH)"
-                rules={[{ required: true }]}
-              />
-            </Col>
-
-            <Col span={6}>
-              <ProFormText
-                name="first_name"
-                label="First Name (EN)"
-                rules={[{ required: true }]}
-              />
-            </Col>
-
-            <Col span={6}>
-              <ProFormText
-                name="last_name"
-                label="Last Name (EN)"
-                rules={[{ required: true }]}
-              />
-            </Col>
-
-            <Col span={12}>
-              <ProFormSelect
-                name="job_title_id"
-                label="Job Title"
-                showSearch
-                request={async ({ keyWords }) => {
-                  const res =
-                    await EmployeeServices.listPageJobTitle(keyWords).query(
-                      requestActions
-                    );
-                  return res.items.map((it) => ({
-                    label: it.name,
-                    value: it.id,
-                  }));
-                }}
-                rules={[{ required: true }]}
-              />
-            </Col>
-
-            <Col span={8}>
-              <ProFormSelect
-                name="department_id"
-                label="Department"
-                options={data.departmentList.map((d) => ({
-                  label: d.name,
-                  value: d.id,
-                }))}
-                rules={[{ required: true }]}
-              />
-            </Col>
-
-            <Col span={8}>
-              <ProFormSelect
-                name="bu_id"
-                label="Business Unit"
-                options={data.buList.map((b) => ({
-                  label: b.name,
-                  value: b.id,
-                }))}
-                rules={[{ required: true }]}
-              />
-            </Col>
-
-            <Col span={8}>
-              <ProFormSelect
-                name="status"
-                label="Status"
-                options={[
-                  { label: "Active", value: "ACTIVE" },
-                  { label: "Inactive", value: "INACTIVE" },
-                ]}
-                rules={[{ required: true }]}
-              />
-            </Col>
-          </Row>
-
-          {!isView && (
-            <Row justify="end" style={{ marginTop: 24 }}>
-              <Button
-                type="primary"
-                loading={loading}
-                onClick={handleSubmit}
-              >
-                {isCreate ? "Create" : "Save"}
-              </Button>
-            </Row>
-          )}
-        </ProForm>
-      </Card>
-    </Spin>
-  );
-};
-
-export default EmployeeForm;
+  </ModalForm>
+}

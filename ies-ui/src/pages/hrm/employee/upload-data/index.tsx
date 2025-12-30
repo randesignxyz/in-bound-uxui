@@ -8,6 +8,7 @@ import { uniqueId } from "lodash";
 import { useEffect, useState } from "react";
 const { Text } = Typography;
 
+
 export default ({ datasources,onFinish, ...rest }: ModalProps & { datasources?: DataResponse<ImportDataItem>,onFinish:()=>void }) => {
 
     const [dataValidation, setDataValidation] = useState(0)
@@ -17,6 +18,7 @@ export default ({ datasources,onFinish, ...rest }: ModalProps & { datasources?: 
     const [commited, setCommited] = useState(false)
     const [submited, setSubmited] = useState(false)
     const requestActions = simpleRequestActions()
+
     const init = (items?: ImportDataItem[], submited?: boolean) => {
         setSubmited(submited || false)
         const itemList = items || datasources?.items
@@ -45,7 +47,7 @@ export default ({ datasources,onFinish, ...rest }: ModalProps & { datasources?: 
             return field?.fieldValue
         }
     })
-    const displayFields = [ "Employee ID","Training Course","Venue/Institution","From Date","To Date","Duration (Hours)"]
+    const displayFields = [ "Employee ID","Training Course","Venue/Institution","From Date","To Date","Duration (Hours)"] 
 
     return <Modal width={1500} {...rest}
         okText="Submit"
@@ -101,10 +103,10 @@ export default ({ datasources,onFinish, ...rest }: ModalProps & { datasources?: 
                 ...displayFields.map(it => renderCol(it, it == "Agreement No" || it == "Agreement Type")),
                 {
                     title: 'Status',
-                    render: (_, r) => {
+                    render: (_, r) => { 
                         const failed = r.fieldInfoList.some(it => it.isFailed)
                         return <Text type={failed ? "danger" : 'success'} >{ commited?"Commited":failed ? "Error" : r.action}</Text>
-
+                        
                     }
                 },
                 { title: 'Message', render: (_, r) => r.fieldInfoList.filter(it => it.isFailed).map(it => `${it.fieldDisplay}: ${it.message}`).join(", ") },

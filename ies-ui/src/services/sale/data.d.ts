@@ -775,7 +775,7 @@ export interface So {
 
 export interface EditSo {
   deliveryId: number,
-  shipDate?:string
+  shipDate?: string
 }
 export interface SoDetail {
   id: number;
@@ -1407,6 +1407,7 @@ export interface SoAdvanceSearchParams {
   salespersonId?: number;
   customerType?: string;
   hasAttachment?: boolean;
+  saleArea?: number[];
 }
 
 export interface StockStoreAdvanceSearchParams {
@@ -1583,6 +1584,7 @@ export interface SoSummary {
   pendingDirect: number;
   pendingIndirect: number;
   failed: number;
+  allPending: number;
 }
 
 export interface SoUploadedLog {

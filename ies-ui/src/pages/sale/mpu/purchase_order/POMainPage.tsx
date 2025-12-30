@@ -25,6 +25,7 @@ import MpuPoDetail from './MpuPODetail';
 import MpuPoEntryForm from './MpuPOEntryForm';
 import { PurchaseOrderDTO } from './data';
 import { PurchaseOrderServiceAPI } from './services';
+import dayjs from 'dayjs';
 
 const POMainPage: React.FC = () => {
   const requestActions = simpleRequestActions();
@@ -86,7 +87,7 @@ const POMainPage: React.FC = () => {
           reportPath: getUrlReporting('sale/forms'),
           data: [{ key: 'purchaseId', value: id, type: 'string' }],
         },
-      }).then(() => {});
+      }).then(() => { });
     } catch (error: any) {
       message.error(error.message || 'Failed to generate report.');
     }
@@ -235,10 +236,10 @@ const POMainPage: React.FC = () => {
                         r.status === 'Pending'
                           ? 'processing'
                           : r.status === 'Paid'
-                          ? 'default'
-                          : r.status === 'Rejected'
-                          ? 'error'
-                          : 'success'
+                            ? 'default'
+                            : r.status === 'Rejected'
+                              ? 'error'
+                              : 'success'
                       }
                     >
                       {r.status}
@@ -278,7 +279,7 @@ const POMainPage: React.FC = () => {
                         icon={<DownloadOutlined />}
                         type="link"
                         onClick={async () => onDowloadReportHandler(r.id)}
-                        // onClick={()=>setPrintModalState({visible:{name:"Modal", payloads:r.id}})}
+                      // onClick={()=>setPrintModalState({visible:{name:"Modal", payloads:r.id}})}
                       />
                     </Tooltip>
                   ) : (

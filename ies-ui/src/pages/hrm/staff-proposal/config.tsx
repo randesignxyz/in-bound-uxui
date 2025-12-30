@@ -15,13 +15,15 @@ export const getStaffProposalRequestForms = (): DataForm[] => [
         quickView: (task: UserTask) => <MoreInfo {...task} />,
     },
     {
+
         formKey: [
             StaffProposalFormNames.staff_proposal_hrbp,
             StaffProposalFormNames.staff_proposal_hrbp_manager,
             StaffProposalFormNames.staff_proposal_hrm_manager,
 
-            StaffProposalOFLFormNames.staff_proposal_ofl_hrm_manager_propose,
-            StaffProposalOFLFormNames.staff_proposal_ofl_sm_function_propose
+           
+            StaffProposalOFLFormNames.staff_proposal_hrbp,
+            StaffProposalOFLFormNames.staff_proposal_hrm_manager
         ],
         dataViewForm: (props: DataViewProps) => <Detail {...props} />,
         actionDataForm: (props: ActionDataFormProps) => {
@@ -39,11 +41,11 @@ export const getStaffProposalRequestForms = (): DataForm[] => [
             StaffProposalFormNames.staff_proposal_mbo,
             StaffProposalFormNames.staff_proposal_dmd,
             StaffProposalFormNames.staff_proposal_hra_sr_manager,
-            StaffProposalOFLFormNames.staff_proposal_ofl_sm_function_approval,
-            StaffProposalOFLFormNames.staff_proposal_ofl_sm_function_review,
-            StaffProposalOFLFormNames.staff_proposal_ofl_dmd_approval,
-            StaffProposalOFLFormNames.staff_proposal_ofl_dmd_review,
-            StaffProposalOFLFormNames.staff_proposal_ofl_ed_md_approval
+
+            StaffProposalOFLFormNames.staff_proposal_sr_manager_approval,
+            StaffProposalOFLFormNames.staff_proposal_dmd,
+            StaffProposalOFLFormNames.staff_proposal_hra_sr_manager
+
         ],
         dataViewForm: (props: DataViewProps) => <Detail {...props} />,
         actionDataForm: (props: ActionDataFormProps) => <DefaultActionForm {...props} />,

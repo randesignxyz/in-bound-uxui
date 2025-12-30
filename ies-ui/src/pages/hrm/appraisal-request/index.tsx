@@ -1,100 +1,209 @@
-import BaseCrud from "@/components/base-crud"
-import { history } from "@umijs/max";
-import { SavePayLoad, SearchParams, AppraisalRequestDetail, AppraisalRequestFormNames, AppraisalRequestListItem } from "./data.types"
-import { createService } from "./services"
-import { simpleRequestActions } from "@/services/model"
-import { ExportOutlined, FileExcelOutlined, PlusOutlined } from "@ant-design/icons";
-import { formatDateTime } from "@/pages/utils";
-import { useAccess } from "@umijs/max";
-import Status from "@/components/Status";
-import AppraisalRequestForm from "./AppraisalRequestForm";
+import React, { useRef, useState } from "react";
+import { history, useAccess, useQuery } from "@umijs/max";
+import {
+  ExportOutlined,
+  FileExcelOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
 import { Button, Space, Tooltip } from "antd";
 import moment from "moment";
+
+import PageWrapper from "@/components/PageWrapper";
+import Status from "@/components/Status";
+import { formatDateTime } from "@/pages/utils";
+import { simpleRequestActions } from "@/services/model";
 import { downloadReport } from "@/services/apiGateway";
-import { useState } from "react";
+import Detail from "./detail";
 
-export default () => {
+import {
+  SavePayLoad,
+  SearchParams,
+  AppraisalRequestDetail,
+  AppraisalRequestFormNames,
+  AppraisalRequestListItem,
+} from "./data.types";
+import { createService } from "./services";
+import AppraisalRequestForm from "./AppraisalRequestForm";
+import { ActionType } from "@ant-design/pro-components";
+import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 
+export default function AppraisalRequestPage() {
+  const access = useAccess();
+  const actionRef = useRef<ActionType>();
   const requestActions = simpleRequestActions();
-  const srv = createService(requestActions)
-  const access = useAccess()
-  const [downloading, setDownLoading] = useState<{ formNo: string, loading: boolean }>()
+  const srv = createService(requestActions);
 
+  const [downloading, setDownloading] = useState<{
+    formNo: string;
+    loading: boolean;
+  }>();
+  const [filter, setFilter] = useState<TableViewSearchParams<SearchParams>>({});
+  const { data, isLoading, refetch } = useQuery(
+    ["fetch-appraisal-request", filter],
+    () => srv.fetchPaging(filter),
+    { refetchOnWindowFocus: false }
+  );
   const downloadHandler = async (rs: AppraisalRequestListItem) => {
-    setDownLoading({ formNo: rs.formNo, loading: true })
-    await downloadReport<{ processInstId: string; processDefKey: string; }>(requestActions)({
-      reportName: 'performance-review-request-process-by-inst-id',
-      fileName: `${'performance-review-request-process-by-form-no'}_${rs.formNo}_${moment().toDate().toDateString()}`,
-      type: 'EXCEL',
+    setDownloading({ formNo: rs.formNo, loading: true });
+
+    await downloadReport<{ processInstId: string; processDefKey: string }>(
+      requestActions
+    )({
+      reportName: "performance-review-request-process-by-inst-id",
+      fileName: `performance-review-request_${rs.formNo}_${moment().format(
+        "YYYYMMDD"
+      )}`,
+      type: "EXCEL",
       data: {
         processInstId: rs.processInstId,
-        processDefKey: 'performance_review_request_process'
-      }
-    })
-    setDownLoading({ formNo: rs.formNo, loading: false })
-  }
-  return <BaseCrud<AppraisalRequestListItem, AppraisalRequestDetail, SearchParams, SavePayLoad >
-    services={srv}
-    listView={{
-      columns: () => [
-        {
-          title: 'Form #',
-          width: '140px',
-          sorter: 'formNo',
-          render(_, entity) {
-            return <Space size={1}>
-              <Button
-                size="small"
-                type="link"
-                icon={<ExportOutlined />}
-                onClick={async () => {
-                  window.open(`/external/data-form/${AppraisalRequestFormNames.processDefKey}/${entity.processInstId}`, '_blank')?.focus();
-                }}
-              />
-              <a onClick={() => { history.push(`/data-form/${AppraisalRequestFormNames.processDefKey}/${entity.processInstId}`) }}>{entity.formNo}</a>
-            </Space>
-          },
-        },
-        { title: 'Title', sorter: 'title', dataIndex: 'title' },
-        { title: 'Request Type', sorter: 'requestTypeLabel', dataIndex: 'requestTypeLabel' },
-        { title: 'Requested By', sorter: 'requestedBy', dataIndex: 'requestedBy' },
-        {
-          title: 'Requested Date', sorter: 'requestedDate', render(_, entity) {
-            return formatDateTime(entity.requestedDate)
-          },
-        },
-
-        { title: 'Status', render: (_, r) => <Status text={r.status} /> },
-        {
-          title: 'Action',
-          render: (_, r) => <Tooltip title='Download Excel'>
-            <Button type="link" loading={r.formNo === downloading?.formNo ? downloading.loading : false} size="small" onClick={() => downloadHandler(r)} icon={<FileExcelOutlined />} />
-          </Tooltip>
-
-        },
-      ],
-      quickSearch: true,
-      addNewAction: access.canAccessNewAppraisalRequest ? {
-        label: 'New Request',
-        icon: <PlusOutlined />,
-        key: 'new-request',
-        onRenderComp(props) {
-          return <AppraisalRequestForm   {...props} formKey={AppraisalRequestFormNames.processDefKey} />
-        },
-      } : undefined,
-
-      statusProps: {
-        defaultValue: "ALL",
-        options: [
-          { label: "All", value: "ALL" },
-          { label: "Pending", value: "PENDING" },
-          { label: "Completed", value: "COMPLETED" },
-          { label: "Rejected", value: "REJECTED" },
-        ]
+        processDefKey: AppraisalRequestFormNames.processDefKey,
       },
-      subStatusProps: undefined,
-      onBeforeSearch: undefined
-    }} title={"Annual Performance Appraisal Request List"}
+    });
+    setDownloading({ formNo: rs.formNo, loading: false });
+  };
+  return (
+    <PageWrapper<
+        AppraisalRequestListItem | AppraisalRequestDetail ,
+        SearchParams,
+        SavePayLoad
+      >
+      actionRef={actionRef}
+      tabRender={(item) => [
+        ...(access.canAccessNewAppraisalRequest
+          ? [
+            {
+              action: "add",
+              tabIcon: <PlusOutlined />,
+              tabLabel: "New Request",
+              panel: (props) => (
+                <AppraisalRequestForm
+                  {...props}
+                  formKey={AppraisalRequestFormNames.processDefKey}
+                  onOpenChange={() => props?.onCloseTab?.()}
+                  onRefresh={refetch}
+                />
+              ),
+            },
+          ]
+          : []),
+        {
+          action: "view",
+          tabLabel: item?.formNo,
+          panel: (props) => (
+            <Detail
+              {...props}
+              id={item?.processInstId}
+              formKey={AppraisalRequestFormNames.processDefKey}
+              onOpenChange={() => props?.onCloseTab?.()}
+              onRefresh={refetch}
+            />
+          ),
+        },
+      ]}
+      listView={{
+        type: "Table",
+        title: "List Appraisal Request",
+        statuses: [
+          { option: { label: "All", value: "ALL", default: true } },
+          { option: { label: "Pending", value: "PENDING" } },
+          { option: { label: "Completed", value: "COMPLETED" } },
+          { option: { label: "Rejected", value: "REJECTED" } },
+        ],
+        onRefresh: refetch,
+        onFilter:(params) => {
+          setFilter((p) => ({
+            ...p,
+            criteria: {
+              ...p.criteria,
+              keyword: params?.searchValue,
+              status: params?.status,
+              advanceSearch: {
+                ...p.criteria?.advanceSearch,
+                status: params?.status,
+              },
+            },
+          }));
+        },
+        props: {
+          loading: isLoading,
+          dataSource: data?.items || [],
+          rowKey: "processInstId",
+          columns: [
+            {
+              title: "#",
+              width: 60,
+              render: (_, entity, index) => (
+                <Space size={4}>
+                  <span>{index + 1}</span>
+                  <Button
+                    size="small"
+                    type="link"
+                    icon={<ExportOutlined />}
+                    onClick={() =>
+                      window.open(
+                        `/external/data-form/${AppraisalRequestFormNames.processDefKey}/${entity.processInstId}`,
+                        "_blank"
+                      )?.focus()
+                    }
+                  />
+                </Space>
+              ),
+            },
+            {
+              title: "Form #",
+              width: 160,
+              sorter: true,
+              actionProps: (item) => ({
+                type: 'view',
+                label: item.formNo,
+              }),
+              render: (_, entity) => (
+                <Space size={4}>
+                  <a
+                    onClick={() =>
+                      actionRef.current?.open?.({
+                        action: "view",
+                        value: entity,
+                        tabLabel: entity.formNo,
+                        key: entity.processInstId,
+                      })
+                    }
+                  >
+                    {entity.formNo}
+                  </a>
+                </Space>
+              ),
+            },
+            { title: "Title", dataIndex: "title", sorter: true },
+            {
+              title: "Request Type",
+              dataIndex: "requestTypeLabel",
+              sorter: true,
+            },
+            {
+              title: "Requested By",
+              dataIndex: "requestedBy",
+              sorter: true,
+            },
+            {
+              title: 'Requested Date', sorter: 'requestedDate', render(_, entity) {
+                return formatDateTime(entity.requestedDate)
+              },
+            },
+            {
+              title: "Status",
+              render: (_, r) => <Status text={r.status} />,
+            },
+            {
+              title: 'Action',
+              render: (_, r) => <Tooltip title='Download Excel'>
+                <Button type="link" loading={r.formNo == downloading?.formNo ? downloading.loading : false} size="small" onClick={() => downloadHandler(r)} icon={<FileExcelOutlined />} />
+              </Tooltip>
 
-  />
+            },
+          ],
+        },
+      }}
+    />
+  );
 }

@@ -6,6 +6,7 @@ import { PageContainer } from '@ant-design/pro-components';
 import { useAccess } from '@umijs/max';
 import PerformanceReport from './appraisal-request/components/PerformanceReport';
 import jobImage from '../../assets/jobsdes.png';
+import Meeting from '../../assets/meeting.png'
 export const HrmPaths = {
     employee: '/hrm/employee',
     staffRequisition: '/hrm/staff-requisistion',
@@ -85,7 +86,7 @@ export default () => {
         visible: access.canAccessHrJOB,
         link: `${HrmPaths.job}/list`,
         icon: jobImage,
-        }
+        },
     ]
 
     return (

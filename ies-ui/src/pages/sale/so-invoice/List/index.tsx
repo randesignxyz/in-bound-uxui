@@ -225,10 +225,10 @@ const SoInvoiceListView: React.FC<TableViewProps<SaleInvoiceLess>> = ({ actionHa
                 r.status === 'Pending'
                   ? 'magenta'
                   : r.status === 'Paid'
-                  ? 'processing'
-                  : r.status === 'Own'
-                  ? 'success'
-                  : 'warning';
+                    ? 'processing'
+                    : r.status === 'Own'
+                      ? 'success'
+                      : 'warning';
               return (
                 <span>
                   <Tag color={color}>{r.status}</Tag>

@@ -18,6 +18,8 @@ import QuickView from './components/List/QickView'
 import AdvanceSearch from './components/List/AdvanceSearch'
 import { simpleRequestActions } from '@/services/model'
 import { CrmServices } from '@/pages/crm/services'
+import ExcelFilterSelect from './components/ExcelFilterSelect'
+import ExcelSaleAreaFilter from './components/ExcelFilterSelect'
 
 type FilterType = SoAdvanceSearchParams & {
     searchValue?: string; status?: string;
@@ -49,7 +51,7 @@ export default () => {
 
 
 
-    const statusBarRef = useRef<{ refresh: (pending?: number, failed?: number) => void }>()
+    const statusBarRef = useRef<{ refresh: (pending?: number, failed?: number, totalPending?: number) => void }>()
 
     useEffect(() => {
         actions.initilizeData();
@@ -58,15 +60,17 @@ export default () => {
     const [saleArea, setSaleArea] = useState<any[]>([]);
 
     useEffect(() => {
-        const pendingCount = filter.criteria?.customerType == 'ALL' ? (state.data?.soSummary?.pendingDirect || 0) + (state.data?.soSummary?.pendingIndirect || 0) :
-            filter.criteria?.customerType == 'Direct' ? state.data?.soSummary?.pendingDirect : state.data?.soSummary?.pendingIndirect
-        statusBarRef.current?.refresh(pendingCount, state.data?.soSummary?.failed, state.data?.soSummary?.allPending)
+        const pendingCount = filter.criteria?.customerType == 'All' ? ((state.data?.soSummary?.pendingDirect ?? 0) + (state.data?.soSummary?.pendingIndirect ?? 0)) :
+            filter.criteria?.customerType == 'Direct' ? state.data?.soSummary?.pendingDirect :
+                state.data?.soSummary?.pendingIndirect
+        const totalPending =
+            Number(state.data?.soSummary?.pendingDirect ?? 0) +
+            Number(state.data?.soSummary?.pendingIndirect ?? 0) +
+            Number(state.data?.soSummary?.pendingMCDirect ?? 0);
+        statusBarRef.current?.refresh(pendingCount, state.data?.soSummary?.failed, totalPending)
     }, [state.data?.soSummary])
 
-    const ALL_VALUE = 0;
-
     const optionsRef = useRef<{ value: number; label: string }[]>([]);
-    const prevHadAllRef = useRef(false);
 
 
     return <Spin spinning={false}>
@@ -180,7 +184,26 @@ export default () => {
                         submitter={false}
                     >
 
-                        <ProFormCascader
+                        <ExcelSaleAreaFilter
+                            form={form}
+                            requestActions={requestActions}
+                            onInit={(values, options) => {
+                                setSaleArea(options);
+                                setFilter(v => ({
+                                    ...v,
+                                    criteria: { ...v.criteria, saleArea: values },
+                                }));
+                            }}
+                            onChange={(values, options) => {
+                                setSaleArea(options);
+                                setFilter(v => ({
+                                    ...v,
+                                    criteria: { ...v.criteria, saleArea: values },
+                                }));
+                            }}
+                        />
+
+                        {/* <ProFormCascader
                             name="saleArea"
                             width={180}
                             request={async () => {
@@ -276,7 +299,7 @@ export default () => {
                                     }));
                                 }
                             }}
-                        />
+                        /> */}
                     </ProForm>
                 </Space>,
 

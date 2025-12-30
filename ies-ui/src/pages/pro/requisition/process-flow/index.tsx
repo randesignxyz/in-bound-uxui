@@ -6,6 +6,8 @@ import BudgetControlForm from './BudgetControlForm';
 import ProReviewForm from './ProReviewForm';
 import QuickView from './QuickView';
 import ViewForm from './ViewForm';
+import ProCommentForm from './ProActionForm';
+import ProActionForm from './ProActionForm';
 
 export const AcquisitionFormNames = {
   processDefKey: 'requisition_request_process',
@@ -144,7 +146,7 @@ export const AcquisitionForm: DataForm[] = [
       // AcquisitionOmmFormNames.constructionEd,
     ],
     dataViewForm: (props: DataViewProps) => <ViewForm {...props} />,
-    actionDataForm: (props: ActionDataFormProps) => <DefaultActionForm {...props} />,
+    actionDataForm: (props: ActionDataFormProps) => <ProActionForm {...props} />,
   },
   {
     formKey: [

@@ -295,6 +295,7 @@ export default ({
             hasFeedback={false}
             help={<span />}
             rules={[{ required: true, whitespace: true }]}
+            placeholder={'Please describe the objective, expected benefit, usage scope, urgency, and the risk if this request is not approved.'}
             label="Reason"
             name={'reason'}
           />

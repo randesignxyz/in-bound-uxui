@@ -90,7 +90,7 @@ export default (props: ActionDataFormProps) => {
             }))}
           />
 
-          <ProFormTextArea label="Comment" name="comment" />
+          <ProFormTextArea label="Comment" name="comment" placeholder={props.action =='Rejected'?'':'Please provide a clear justification for your decision. Include assessment of business need, impact, priority, and conditions for approval.'}/>
           <Text type="warning">Note: Requisition will be posted to SAP.</Text>
         </Card>
       </ProForm>

@@ -209,7 +209,7 @@ export default (props: ActionDataFormProps) => {
         </Card>
 
         <Card style={{ marginTop: 10, marginBottom: 10 }}>
-          <ProFormTextArea rules={[{ required: props.action == 'Rejected' }]} label="Comment" name="comment" />
+          <ProFormTextArea rules={[{ required: props.action == 'Rejected' }]} label="Comment" name="comment" placeholder={props.action =='Rejected'?'':'Please provide a clear justification for your decision. Include assessment of business need, impact, priority, and conditions for approval.'}/>
         </Card>
       </ProForm>
     </ActionFormWrapper>

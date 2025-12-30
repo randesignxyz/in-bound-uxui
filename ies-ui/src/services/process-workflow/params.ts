@@ -30,5 +30,6 @@ export type TaskListAdvanceSearchParams = {
     status: string;
     latest: boolean;
     searchValue?: string;
+    myRequest: boolean;
 
 };

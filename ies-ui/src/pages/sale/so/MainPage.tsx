@@ -1,25 +1,25 @@
 
 import '@/pages/index.less'
-import { Badge, Button, Form, Select, Space, Spin, Typography } from "antd"
+import { Badge, Button, Card, Flex, Form, Space, Spin, Tag, Typography } from "antd"
 import PageWrapper from "@/components/PageWrapper"
 import { SoAdvanceSearchParams, SoItemLess } from "@/services/sale/data"
 import { ExportOutlined, EyeOutlined, FileOutlined, FileSearchOutlined, PaperClipOutlined, PlusCircleOutlined, SyncOutlined } from "@ant-design/icons"
 import { Model } from "./model"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { FetchPagingParams } from "@/components/DataCrud/TableView"
-import { ActionType, CheckCard, ProForm, ProFormSelect } from "@ant-design/pro-components"
+import { ActionType, ProForm, ProFormCascader } from "@ant-design/pro-components"
 import { useAccess, useParams, useQuery } from "@umijs/max"
 import CustomerDetailView from "@/pages/crm/customer/components/Detail"
-import { formatDate, formatDateTime } from "@/pages/utils"
+import { formatDateTime } from "@/pages/utils"
 import Status from "@/components/Status"
 import StatusBar from "./components/List/StatusBar"
 import ViewWrapper from './ViewWrapper'
 import QuickView from './components/List/QickView'
 import AdvanceSearch from './components/List/AdvanceSearch'
-import { AllocateServiceAPI } from '@/pages/delivery/allocate/service'
 import { simpleRequestActions } from '@/services/model'
-import { CrmServiceAPI } from '@/services/crm/services'
 import { CrmServices } from '@/pages/crm/services'
+import ExcelFilterSelect from './components/ExcelFilterSelect'
+import ExcelSaleAreaFilter from './components/ExcelFilterSelect'
 
 type FilterType = SoAdvanceSearchParams & {
     searchValue?: string; status?: string;
@@ -36,29 +36,41 @@ export default () => {
         criteria: {
             status: 'Pending',
             customerType: 'Direct',
+            saleArea: [0],
         }
     })
 
     const { data, isFetching, refetch } = useQuery(['fetch-sale-pagin', filter], () => actions.loadListItem({
         advanceSearch: { ...filter.criteria },
-        searchValue: filter.keywords
+        searchValue: filter.keywords,
+        divisionId: filter.criteria?.saleArea?.length ? filter.criteria?.saleArea : [0]
     }, filter.pagination, filter.sort), {
         refetchOnWindowFocus: false,
         refetchInterval: 15000
     })
 
-    const statusBarRef = useRef<{ refresh: (pending?: number, failed?: number) => void }>()
+
+
+    const statusBarRef = useRef<{ refresh: (pending?: number, failed?: number, totalPending?: number) => void }>()
 
     useEffect(() => {
         actions.initilizeData();
     }, []);
 
+    const [saleArea, setSaleArea] = useState<any[]>([]);
 
     useEffect(() => {
-        const pendingCount = filter.criteria?.customerType == 'ALL' ? (state.data?.soSummary?.pendingDirect || 0) + (state.data?.soSummary?.pendingIndirect || 0) :
-            filter.criteria?.customerType == 'Direct' ? state.data?.soSummary?.pendingDirect : state.data?.soSummary?.pendingIndirect
-        statusBarRef.current?.refresh(pendingCount, state.data?.soSummary?.failed)
+        const pendingCount = filter.criteria?.customerType == 'All' ? ((state.data?.soSummary?.pendingDirect ?? 0) + (state.data?.soSummary?.pendingIndirect ?? 0)) :
+            filter.criteria?.customerType == 'Direct' ? state.data?.soSummary?.pendingDirect :
+                state.data?.soSummary?.pendingIndirect
+        const totalPending =
+            Number(state.data?.soSummary?.pendingDirect ?? 0) +
+            Number(state.data?.soSummary?.pendingIndirect ?? 0) +
+            Number(state.data?.soSummary?.pendingMCDirect ?? 0);
+        statusBarRef.current?.refresh(pendingCount, state.data?.soSummary?.failed, totalPending)
     }, [state.data?.soSummary])
+
+    const optionsRef = useRef<{ value: number; label: string }[]>([]);
 
 
     return <Spin spinning={false}>
@@ -91,6 +103,25 @@ export default () => {
             listView={{
                 type: 'Table',
                 title: 'PO List',
+                onExtraFilterRender: () => <>
+                    <Card size='small' style={{ marginTop: -10, marginBottom: 0, }}
+                        styles={{
+                            body: {
+                                // padding: 0,
+                                backgroundColor: "#f5f5f5"
+                            }
+                        }}
+                        hidden={!saleArea?.length}>
+                        <Flex gap={1} align="center" wrap>
+                            {
+                                (saleArea.length > 0) && saleArea?.filter(p => p.value != 0)?.map(p => {
+                                    return <Tag
+                                    >{p.label}</Tag>
+                                })
+                            }
+                        </Flex>
+                    </Card>
+                </>,
                 actionButtons: [{
                     icon: <SyncOutlined />,
                     type: 'link',
@@ -121,13 +152,15 @@ export default () => {
                             ...v,
                             criteria: {
                                 ...v.criteria,
-                                status: value
+                                status: value == "AllPending" ? 'Pending' : value,
+                                saleArea: value == "AllPending" ? optionsRef.current.map(v => v.value) : v.criteria?.saleArea
                             }
                         }))
                         actionRef.current?.reload(true)
                     }} />,
                 onRefresh: refetch,
                 onFilter: (params, page, sort) => {
+
                     setFilter(v => (
                         {
                             ...v, keywords: params?.searchValue
@@ -140,100 +173,134 @@ export default () => {
                         }
                     ))
                 },
+
                 advanceSearchButton: <Space align='center'>
                     <Button style={{ marginTop: -6 }} icon={<FileSearchOutlined />}
                         onClick={() => modals.showModal('advanceSearch')}
                     />
-                    {/* <div className='my-checkcard-so'>
-                        <CheckCard.Group
-                            defaultValue={true}
-                            onChange={(e) => (
-                                setFilter((o) => ({
-                                    criteria: {
-                                        ...o.criteria,
-                                        myTask: e
-                                    }
-                                }))
-                            )}
-                        >
-                            <CheckCard
-                                title={"All"}
-                                size='small'
-                                value={false}
-                            />
-                            <CheckCard
-                                title={"My Tasks"}
-                                size='small'
-                                value={true}
-                            />
-                        </CheckCard.Group>
-                    </div> */}
-                    {/* <Select
-                        popupMatchSelectWidth={400}
-                        style={{ width: '250px' }}
-                        options={initData?.subContractTypeList?.map((it) => {
-                            return { value: it.id, label: [it.budgetCode, it.name].join('-') };
-                        })}
-                    /> */}
+
                     <ProForm
                         form={form}
                         submitter={false}
-
                     >
-                        <ProFormSelect
-                            name="saleArea"
-                            placeholder={"Area"}
-                            mode="multiple"
-                            width={250}
-                            request={async () => {
-                                const res = await CrmServices.listSaleAreas().query(requestActions)
-                                if (!Array.isArray(res)) return [];
 
-                                const options = res.map((a: any) => ({
-                                    value: Number(a.divisionId ?? a.di),
-                                    label: (a.divisionName ?? a.name)
-                                        ?.replace(/^S&D\s*/i, '')
-                                        .trim(),
-                                    isDefault: a.defaultFlag === 1 || a.defaultFlag === 1,
+                        <ExcelSaleAreaFilter
+                            form={form}
+                            requestActions={requestActions}
+                            onInit={(values, options) => {
+                                setSaleArea(options);
+                                setFilter(v => ({
+                                    ...v,
+                                    criteria: { ...v.criteria, saleArea: values },
                                 }));
-                                if (!param?.['*'] && !defaultSetRef.current) {
-                                    const defaultAreaIds = options
-                                        .filter(o => o.isDefault)
-                                        .map(o => o.value);
-
-                                    if (defaultAreaIds.length > 0) {
-                                        defaultSetRef.current = true;
-
-                                        form.setFieldsValue({ saleArea: defaultAreaIds });
-
-                                        setFilter(v => ({
-                                            ...v,
-                                            criteria: {
-                                                ...v.criteria,
-                                                saleArea: defaultAreaIds,
-                                            },
-                                        }));
-                                    }
-                                }
-                                return options;
                             }}
-                            fieldProps={{
-                                onChange: (val: number[]) => {
-                                    setFilter(v => ({
-                                        ...v,
-                                        criteria: {
-                                            ...v.criteria,
-                                            saleArea: val,
-                                        },
-                                    }));
-                                },
+                            onChange={(values, options) => {
+                                setSaleArea(options);
+                                setFilter(v => ({
+                                    ...v,
+                                    criteria: { ...v.criteria, saleArea: values },
+                                }));
                             }}
                         />
 
+                        {/* <ProFormCascader
+                            name="saleArea"
+                            width={180}
+                            request={async () => {
+                                const res = await CrmServices.listSaleAreas().query(requestActions) as unknown as { divisionId: number, divisionName: string, defaultFlag: number }[]
+                                const options = res.map(o => ({ value: o.divisionId, label: o.divisionName, default: o.defaultFlag }))
+                                optionsRef.current = options;
+                                form.setFieldsValue({
+                                    saleArea: options.filter(o => o.default == 1).map(o => [o.value])
+                                });
+                                setSaleArea(options.filter(o => o.default == 1));
+                                setFilter(v => ({
+                                    ...v,
+                                    criteria: {
+                                        ...v.criteria,
+                                        saleArea: options.filter(o => o.default == 1).map(o => o.value)
+                                    },
+                                }));
+                                return [
+                                    {
+                                        value: 0,
+                                        label: 'Select All'
+                                    },
+                                    ...options
+                                ]
+                            }}
+                            fieldProps={{
+                                multiple: true,
+                                maxTagCount: 'responsive',
+                                onChange: (paths: number[][] = []) => {
+                                    const values = paths.map(p => p[0]);           // includes 0 or not
+                                    const realOptions = optionsRef.current;
+                                    const realValues = realOptions.map(o => o.value);
+
+                                    const hasAllClicked = values.includes(ALL_VALUE);
+
+                                    // current real selection (ignore ALL_VALUE)
+                                    const currentSelected = values.filter(v => v !== ALL_VALUE);
+                                    const isCurrentlyAllSelected =
+                                        currentSelected.length === realValues.length;
+
+                                    //  CASE 1: Click Select All
+                                    if (hasAllClicked) {
+                                        //  if NOT all selected → SELECT ALL
+                                        if (!isCurrentlyAllSelected) {
+                                            const allPaths = realValues.map(v => [v]);
+
+                                            form.setFieldsValue({ saleArea: allPaths });
+                                            setSaleArea(realOptions);
+                                            prevHadAllRef.current = true;
+
+                                            setFilter(v => ({
+                                                ...v,
+                                                criteria: { ...v.criteria, saleArea: realValues },
+                                            }));
+                                            return;
+                                        }
+
+                                        //  if ALL already selected → CLEAR ALL
+                                        form.setFieldsValue({ saleArea: [] });
+                                        setSaleArea([]);
+                                        prevHadAllRef.current = false;
+
+                                        setFilter(v => ({
+                                            ...v,
+                                            criteria: { ...v.criteria, saleArea: [] },
+                                        }));
+                                        return;
+                                    }
+
+                                    //  CASE 2: Manual clear
+                                    if (paths.length === 0) {
+                                        setSaleArea([]);
+                                        prevHadAllRef.current = false;
+
+                                        setFilter(v => ({
+                                            ...v,
+                                            criteria: { ...v.criteria, saleArea: [] },
+                                        }));
+                                        return;
+                                    }
+
+                                    //  CASE 3: Normal select / deselect
+                                    const selectedOptions = realOptions.filter(o =>
+                                        currentSelected.includes(o.value)
+                                    );
+
+                                    setSaleArea(selectedOptions);
+                                    prevHadAllRef.current = currentSelected.length === realValues.length;
+
+                                    setFilter(v => ({
+                                        ...v,
+                                        criteria: { ...v.criteria, saleArea: currentSelected },
+                                    }));
+                                }
+                            }}
+                        /> */}
                     </ProForm>
-
-
-
                 </Space>,
 
                 props: {
@@ -242,6 +309,16 @@ export default () => {
                     actionRef: actionRef,
                     pagination: {
                         total: data?.total
+                    },
+                    onChange: (pagination, filters, sorter, extra) => {
+                        const s = Array.isArray(sorter) ? sorter[0] : sorter;
+                        setFilter(v => ({
+                            criteria: {
+                                ...v.criteria,
+                            },
+                            pagination,
+                            sort: s?.field && s.order ? { [s.field as string]: s.order } : undefined
+                        }))
                     },
                     actionButtonsColumnRender: item => [
                         {
@@ -260,9 +337,13 @@ export default () => {
                             }
                         }
                     ],
+
+                    rowKey: 'id',
+
                     columns: [{
                         title: 'PO #',
                         sorter: 'poNo',
+                        dataIndex: 'poNo',
                         width: 140,
                         key: 'poNo',
                         actionProps: (item) => ({
@@ -288,6 +369,7 @@ export default () => {
                     }, {
                         title: 'Customer',
                         sorter: 'customerCode',
+                        dataIndex: 'customerCode',
                         key: 'customerCode',
                         actionProps: item => ({ type: 'action1', label: item.customerCode, actionButtons: [{ type: 'link', size: 'small', icon: <ExportOutlined />, onClick: () => { window.open(`/external/crm/customer/detail/${item?.customerId}`, '_blank')?.focus() } }] }),
 
@@ -299,6 +381,7 @@ export default () => {
                         title: 'Salesperson',
                         render: (_, data) => data.salespersonName,
                         sorter: 'salespersonName',
+                        dataIndex: 'salespersonName',
                     },
                     {
                         title: 'Province',
@@ -316,7 +399,7 @@ export default () => {
                         title: 'Order Date',
                         align: 'right',
                         sorter: 'orderDate',
-
+                        dataIndex: "orderDate",
                         width: 150,
                         render: (_, data) => formatDateTime(data.orderedDate),
                     },

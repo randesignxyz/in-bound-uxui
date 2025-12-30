@@ -1,6 +1,6 @@
 import { CrmServices } from '@/pages/crm/services';
 import { ProFormCascader } from '@ant-design/pro-components';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 const ALL_VALUE = 0;
 
@@ -15,8 +15,14 @@ interface ExcelSaleAreaFilterProps {
     width?: number;
     form: any;
     requestActions: any;
+
+    /** callbacks */
     onChange?: (values: number[], options: SaleAreaOption[]) => void;
     onInit?: (values: number[], options: SaleAreaOption[]) => void;
+
+    /** ✅ new reusable control */
+    isSelectAll?: boolean;
+    onSelectAllChange?: (v: boolean) => void;
 }
 
 const ExcelSaleAreaFilter: React.FC<ExcelSaleAreaFilterProps> = ({
@@ -26,17 +32,43 @@ const ExcelSaleAreaFilter: React.FC<ExcelSaleAreaFilterProps> = ({
     requestActions,
     onChange,
     onInit,
+    isSelectAll,
+    onSelectAllChange,
 }) => {
     const optionsRef = useRef<SaleAreaOption[]>([]);
+    const initializedRef = useRef(false);
+    console.log(isSelectAll);
+
+    /* ================================
+     * External Select All controller
+     * ================================ */
+    useEffect(() => {
+        if (!initializedRef.current) return;
+
+        const options = optionsRef.current;
+        const realValues = options.map(o => o.value);
+
+        if (isSelectAll === true) {
+            form.setFieldsValue({
+                [name]: realValues.map(v => [v]),
+            });
+            onChange?.(realValues, options);
+        }
+
+        if (isSelectAll === false) {
+            form.setFieldsValue({ [name]: [] });
+            onChange?.([], []);
+        }
+    }, [isSelectAll]);
 
     return (
         <ProFormCascader
             name={name}
             width={width}
             request={async () => {
-                const res = await CrmServices.listSaleAreas().query(
+                const res = (await CrmServices.listSaleAreas().query(
                     requestActions
-                ) as unknown as {
+                )) as unknown as {
                     divisionId: number;
                     divisionName: string;
                     defaultFlag: number;
@@ -50,15 +82,22 @@ const ExcelSaleAreaFilter: React.FC<ExcelSaleAreaFilterProps> = ({
 
                 optionsRef.current = options;
 
-                // ✅ default selected (Excel style)
+                /** default (Excel style) */
                 const defaultValues = options
                     .filter(o => o.default === 1)
                     .map(o => o.value);
 
-                const defaultPaths = defaultValues.map(v => [v]);
+                if (defaultValues.length) {
+                    form.setFieldsValue({
+                        [name]: defaultValues.map(v => [v]),
+                    });
+                    onInit?.(
+                        defaultValues,
+                        options.filter(o => o.default === 1),
+                    );
+                }
 
-                form.setFieldsValue({ [name]: defaultPaths });
-                onInit?.(defaultValues, options.filter(o => o.default === 1));
+                initializedRef.current = true;
 
                 return [
                     { value: ALL_VALUE, label: 'Select All' },
@@ -68,44 +107,52 @@ const ExcelSaleAreaFilter: React.FC<ExcelSaleAreaFilterProps> = ({
             fieldProps={{
                 multiple: true,
                 maxTagCount: 'responsive',
+
                 onChange: (paths: number[][] = []) => {
                     const values = paths.map(p => p[0]);
-                    const realOptions = optionsRef.current;
-                    const realValues = realOptions.map(o => o.value);
+                    const options = optionsRef.current;
+                    const realValues = options.map(o => o.value);
 
-                    const hasAllClicked = values.includes(ALL_VALUE);
+                    const hasAll = values.includes(ALL_VALUE);
                     const selectedValues = values.filter(v => v !== ALL_VALUE);
 
-                    // 1️⃣ Click Select All
-                    if (hasAllClicked) {
+                    /** 1️⃣ Select All clicked */
+                    if (hasAll) {
                         const isAllSelected =
                             selectedValues.length === realValues.length;
 
                         if (!isAllSelected) {
-                            // select all
-                            const allPaths = realValues.map(v => [v]);
-                            form.setFieldsValue({ [name]: allPaths });
-                            onChange?.(realValues, realOptions);
+                            form.setFieldsValue({
+                                [name]: realValues.map(v => [v]),
+                            });
+                            onChange?.(realValues, options);
+                            onSelectAllChange?.(true);
                         } else {
-                            // clear all
                             form.setFieldsValue({ [name]: [] });
                             onChange?.([], []);
+                            onSelectAllChange?.(false);
                         }
                         return;
                     }
 
-                    // 2️⃣ Manual clear
+                    /** 2️⃣ Manual clear */
                     if (paths.length === 0) {
                         onChange?.([], []);
+                        onSelectAllChange?.(false);
                         return;
                     }
 
-                    // 3️⃣ Normal select / deselect
-                    const selectedOptions = realOptions.filter(o =>
-                        selectedValues.includes(o.value)
+                    /** 3️⃣ Normal select */
+                    const selectedOptions = options.filter(o =>
+                        selectedValues.includes(o.value),
                     );
 
                     onChange?.(selectedValues, selectedOptions);
+
+                    /** sync Select All checkbox */
+                    onSelectAllChange?.(
+                        selectedValues.length === realValues.length,
+                    );
                 },
             }}
         />

@@ -1584,6 +1584,7 @@ export interface SoSummary {
   pendingDirect: number;
   pendingIndirect: number;
   failed: number;
+  allPending: number;
 }
 
 export interface SoUploadedLog {

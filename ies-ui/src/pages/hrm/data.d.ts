@@ -23,15 +23,8 @@ export interface EmployeeListItem {
 }
 
 export type EmployeeAdvanceSearchParams = {
-  status?: "ALL" | "ACTIVE" | "INACTIVE" ;
-  integratedStatus?: string;
-  keyword?: string;
-  advanceSearch?: {
-    buId?: number[];
-    department?: number[];
-    integratedStatus?: string;
-    status?: string;
-  };
+  status: 'ALL' | 'ACTIVE' | 'INACTIVE';
+  department?: number;
 };
 
 

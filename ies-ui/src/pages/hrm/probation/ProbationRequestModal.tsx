@@ -2,13 +2,12 @@ import FileUploader from '@/components/Attachment/FileUploader';
 import { MultiRequest } from '@/services/apiGateway';
 import { simpleRequestActions } from '@/services/model';
 import {
-  ProForm,
-  FormProps,
+  ModalForm,
+  ModalFormProps,
   ProCard,
   ProFormGroup,
   ProFormSelect,
   ProFormTextArea,
-  ModalFormProps,
 } from '@ant-design/pro-components';
 import { message, Modal, Space } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
@@ -18,7 +17,6 @@ import { EmployeeServices } from '../services';
 import ProbationSumbitter from '@/pages/process-flow/components/Submitter/ProbationSumbitter';
 import { EmployeeInfResult, ProbationAssessmentList, ProbationEvaluationRef, ProbationFormType } from './data.types';
 import { createService } from './services';
-import { set } from 'lodash';
 
 type DataFormType = {
     requestorId: string;
@@ -72,7 +70,7 @@ export default ({
   };
 
   useEffect(() => {
-    (async () => {
+    (async () => {     
       srv.fetchProbationFormTypeList().then(rs => {
         setProbationFormType(rs)
       })
@@ -80,7 +78,6 @@ export default ({
       setProbationAssessor([])
       form.setFieldValue('refId',undefined)
       form.setFieldValue('preparationUserId',undefined)
-      form.setFieldValue('hodPreparationUserId',undefined)
     })();
   }, []);
 
@@ -120,18 +117,14 @@ export default ({
     })
   }
   const [firstEvaluationUserId, setFirstEvaluationUserId] = useState('')
-  // const onSearchHandler = async (searchValue?: string) => {
-  //   const it1 = await srv.fetchProbationEmpList(searchValue)
-  //   return it1.map((it_1:any) => ({ value: it_1.id, label: it_1.empName }));
-  // }
 
   return (
-    <ProForm
+    <ModalForm
       width={970}
       form={form}
       onFinish={async () => {
         const formData = await form.validateFields();
-        await formSubmittor.validateFields()
+        await formSubmittor.validateFields() 
         Modal.confirm({
           title: 'Probation Evaluation Request',
           content: 'Are you sure?',
@@ -231,6 +224,6 @@ export default ({
           onSetFiles={(files) => setUploadFileIds(files.map((it) => it.response))}
         />
       </Space>
-    </ProForm>
+    </ModalForm>
   );
 };

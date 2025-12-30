@@ -49,6 +49,7 @@ export default () => {
   const [selectedRows, setSelectedRows] = useState<DNList[]>([]);
   const [sortModalOpen, setSortModalOpen] = useState(false);
   const [loading, isLoading] = useState(false)
+  const [claimLoading, setClaimLoading] = useState(false);
   const [sortConfig, setSortConfig] = useState<SortRule[]>([
     { field: 'shippingAddress', order: 'desc' }
   ]);
@@ -147,7 +148,7 @@ export default () => {
         return [...prev, ...newRows];
       });
 
-      setDataListDn(prev => prev.filter(r => !state.selectedRows?.some(s => s.id === r.id)));
+      setDataListDn(prev => prev.items.filter(r => !state.selectedRows?.some(s => s.id === r.id)));
       if (state.selectedRows.length > 0) setCardOpen({ visible: true });
     }
   }, [state?.selectedRows]);
@@ -250,6 +251,20 @@ export default () => {
     return items;
   };
 
+  const getClearTBA = (item: any): MenuProps['items'] => {
+
+    const items: MenuProps['items'] = [];
+
+    // Activate
+    items.push({
+      key: 'Clear TBA',
+      label: 'Clear TBA',
+      // icon: <CheckCircleOutlined />,
+      onClick: () => handleClearTBA([Number(item.id)], item),
+    });
+    return items;
+  };
+
   const handleSaveRemark = async (data: UpdateRemarkParams & { file?: UploadFile[] }) => {
     Modal.confirm({
       title: 'Add Remark',
@@ -345,11 +360,58 @@ export default () => {
         await services.ClaimDn(
           ids,
           access.currentUser?.login ?? '',
-          'Unpick',
+          `Unpick (${dnList.map(v => v.claimed_line)}) & TBA`,
           'TBA',
           null,
           del_item,
           'TBA'
+        );
+
+        actionRef.current?.reloadAndRest?.();
+        message.success('Updated successfully');
+      },
+    });
+  };
+
+  const handleClearTBA = async (ids: number[], selectedListDn: any[]) => {
+    Modal.confirm({
+      title: 'Clear TBA',
+      content: 'Are you sure?',
+      onOk: async () => {
+        const dnList = Array.isArray(selectedListDn)
+          ? selectedListDn
+          : [selectedListDn];
+
+        const rawLines = dnList.flatMap(dn =>
+          (dn.deliveryItems ?? []).map((it: any) => ({
+            soDocEntry: String(dn.so_doc_entry ?? dn.soId),
+            lineNum: Number(it.sap_line_num),
+            shipDate: dn.deliveryDate
+          }))
+        );
+
+        const uniqueMap = new Map<string, any>();
+        rawLines.forEach((l) => {
+          const key = `${l.soDocEntry}_${l.lineNum}`;
+          if (!uniqueMap.has(key)) uniqueMap.set(key, l);
+        });
+
+        const del_item = Array.from(uniqueMap.values());
+
+        del_item.sort((a, b) =>
+          a.soDocEntry === b.soDocEntry
+            ? a.lineNum - b.lineNum
+            : a.soDocEntry.localeCompare(b.soDocEntry)
+        );
+
+        await services.ClaimDn(
+          ids,
+          access.currentUser?.login ?? '',
+          'Clear TBA',
+          'TBA',
+          null,
+          del_item,
+          'open'
         );
 
         actionRef.current?.reloadAndRest?.();
@@ -394,11 +456,10 @@ export default () => {
             ? a.lineNum - b.lineNum
             : a.soDocEntry.localeCompare(b.soDocEntry)
         );
-
         await services.ClaimDn(
           ids,
           access.currentUser?.login ?? '',
-          'Unpick',
+          `Unpick ${dnList.claimed_line}`,
           'Unpick DN',
           null,
           del_item
@@ -416,10 +477,24 @@ export default () => {
     try {
       const da = await services.getActivities(id);
 
-      // Deduplicate: keep only the first occurrence of each action + remark
-      const uniqueActivities = da.filter((activity, index, self) =>
-        index === self.findIndex(a => a.action === activity.action && a.remark === activity.remark)
-      );
+      const uniqueMap = new Map<string, any>();
+
+      da.forEach(activity => {
+        // Normalize date: ignore seconds & milliseconds
+        const date = new Date(activity.action_date);
+        const dateKey =
+          `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ` +
+          `${date.getHours()}:${date.getMinutes()}`;
+
+        const key = `${activity.action}|${activity.remark}|${dateKey}`;
+
+        // Keep first occurrence only
+        if (!uniqueMap.has(key)) {
+          uniqueMap.set(key, activity);
+        }
+      });
+
+      const uniqueActivities = Array.from(uniqueMap.values());
 
       setActivities(uniqueActivities);
     } catch (error) {
@@ -633,7 +708,7 @@ export default () => {
         },
         pagination: {
           current: params.pagination?.current ?? 1,
-          pageSize: params.pagination?.pageSize ?? 10,
+          pageSize: params.pagination?.pageSize ?? 20,
         }
       });
 
@@ -678,7 +753,10 @@ export default () => {
           ...skuValues,
         };
       });
-
+      const dataList = {
+        items: transformedItems,
+      }
+      setDataListDn(dataList)
       return {
         items: transformedItems,
         total: res.total,
@@ -690,6 +768,7 @@ export default () => {
     }
   };
 
+  console.log('dataListDn', dataListDn)
   const onHistoryRequestDNDeatilHandler = async (
     params: TableViewSearchParams<AllocateSOAdvanceParams>
   ): Promise<Paging<DNList>> => {
@@ -820,24 +899,31 @@ export default () => {
           title: '',
           dataIndex: 'checkbox',
           width: '2%',
-          render: (_: any, record: DNList) => (
-            <Checkbox
-              checked={selectedRowKeys.includes(record.id)}
-              onChange={(e) => {
-                if (e.target.checked) {
-                  setSelectedRowKeys(prev => [...prev, record.id]);
-                  setSelectedRows(prev => [...prev, record]);
-                  setCardOpen({ visible: true });
-                  setSelectedListDn(prev => [...prev, record]);
-                  setDataListDn(prev => prev.filter(r => r.id !== record.id));
-                } else {
-                  setSelectedRowKeys(prev => prev.filter(k => k !== record.id));
-                  setSelectedRows(prev => prev.filter(r => r.id !== record.id));
-                  setSelectedListDn(prev => prev.filter(r => r.id !== record.id));
-                }
-              }}
-            />
-          ),
+          render: (_: any, record: DNList) => {
+            if (record.status === 'TBA') {
+              return null
+            }
+
+            return (
+              <Checkbox
+                checked={selectedRowKeys.includes(record.id)}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setSelectedRowKeys(prev => [...prev, record.id]);
+                    setSelectedRows(prev => [...prev, record]);
+                    setCardOpen({ visible: true });
+                    setSelectedListDn(prev => [...prev, record]);
+                    setDataListDn(prev => prev.items.filter(r => r.id !== record.id));
+                  } else {
+                    setSelectedRowKeys(prev => prev.filter(k => k !== record.id));
+                    setSelectedRows(prev => prev.filter(r => r.id !== record.id));
+                    setSelectedListDn(prev => prev.filter(r => r.id !== record.id));
+                  }
+                }}
+              />
+            );
+          },
+
         },
       ]
       : []),
@@ -847,7 +933,7 @@ export default () => {
       title: 'SO No',
       dataIndex: 'so_no',
       key: 'so_no',
-      width: '7%',
+      width: '8%',
       render: (_, value) => (
         <>
           <a onClick={() => setDrawerTypeOpen({ visible: true, data: value })}>
@@ -856,6 +942,20 @@ export default () => {
           <a style={{ marginLeft: 5 }} onClick={() => window.open(`/external/sale/so/detail/${value.soId}`, '_blank')?.focus()}>
             <Typography.Link >< ExportOutlined /></Typography.Link>
           </a>
+          {value.status == 'TBA' &&
+            <a style={{ marginLeft: 5 }} onClick={() => { console.log(value) }}>
+              <Typography.Link ><Dropdown
+                menu={{
+                  items: getClearTBA(value),
+                  style: { width: 200 },
+                }}
+              >
+                <a onClick={(e) => e.preventDefault()}>
+                  <MoreOutlined />
+                </a>
+              </Dropdown></Typography.Link>
+            </a>
+          }
         </>
       ),
     },
@@ -958,7 +1058,7 @@ export default () => {
               return sum + volume * qty;
             }, 0);
 
-            return `${total.toFixed(4)} m³`
+            return `${total.toFixed(2)} m³`
           }
         },
         {
@@ -2153,6 +2253,7 @@ export default () => {
       <Modal
         open={claimOpen}
         title="Pick"
+        confirmLoading={claimLoading}
         onCancel={() => {
           setClaimOpen(false);
           setClaimIds([])
@@ -2162,59 +2263,60 @@ export default () => {
           setSelectedListDn([])
         }}
         onOk={async () => {
+          if (selectedListDn.length === 0) {
+            message.warning('Please select at least one DN');
+            return;
+          }
 
-          const rawLines = selectedListDn.flatMap(dn =>
-            (dn.deliveryItems ?? []).map(it => ({
-              soDocEntry: String(dn.so_doc_entry),
-              lineNum: Number(it.sap_line_num),   // ✅ SAP line number
-              shipDate: dn.deliveryDate
-            }))
-          );
+          setClaimLoading(true);
 
-          const uniqueMap = new Map<string, any>();
+          try {
+            const rawLines = selectedListDn.flatMap(dn =>
+              (dn.deliveryItems ?? []).map(it => ({
+                soDocEntry: String(dn.so_doc_entry),
+                lineNum: Number(it.sap_line_num),
+                shipDate: dn.deliveryDate,
+              }))
+            );
 
-          rawLines.forEach(l => {
-            const key = `${l.soDocEntry}_${l.lineNum}`;
-            if (!uniqueMap.has(key)) {
-              uniqueMap.set(key, l);
-            }
-          });
+            const uniqueMap = new Map<string, any>();
+            rawLines.forEach(l => {
+              const key = `${l.soDocEntry}_${l.lineNum}`;
+              if (!uniqueMap.has(key)) uniqueMap.set(key, l);
+            });
 
-          const del_item = Array.from(uniqueMap.values());
+            const del_item = Array.from(uniqueMap.values()).sort((a, b) =>
+              a.soDocEntry === b.soDocEntry
+                ? a.lineNum - b.lineNum
+                : a.soDocEntry.localeCompare(b.soDocEntry)
+            );
 
-          del_item.sort((a, b) =>
-            a.soDocEntry === b.soDocEntry
-              ? a.lineNum - b.lineNum
-              : a.soDocEntry.localeCompare(b.soDocEntry)
-          );
+            await services.ClaimDn(
+              claimIds,
+              access.currentUser?.login,
+              'Pick',
+              'Pick DN',
+              useExisting ? selectedClaimedLine : null,
+              del_item
+            );
 
-          const claimData = {
-            sales_planid: claimIds,
-            claimed_by: access.currentUser?.login,
-            action: 'Pick',
-            activities_name: 'Pick DN',
-            claimed_line: useExisting ? selectedClaimedLine : null,
-            del_item
-          };
+            message.success('Updated successfully');
 
-          await services.ClaimDn(
-            claimData.sales_planid,
-            claimData.claimed_by,
-            claimData.action,
-            claimData.activities_name,
-            claimData.claimed_line,
-            claimData.del_item
-          );
+            actionRef.current?.reloadAndRest?.();
 
-          actionRef.current?.reloadAndRest?.();
-          message.success('Updated successfully');
+            setClaimOpen(false);
+            setClaimIds([]);
+            setClaimedLines([]);
+            setSelectedRowKeys([]);
+            setSelectedRows([]);
+            setSelectedListDn([]);
 
-          setClaimOpen(false);
-          setClaimIds([]);
-          setClaimedLines([]);
-          setSelectedRowKeys([]);
-          setSelectedRows([]);
-          setSelectedListDn([]);
+          } catch (err: any) {
+            console.error(err);
+            message.error(err?.message || 'Claim failed');
+          } finally {
+            setClaimLoading(false);
+          }
         }}
 
       >

@@ -6,8 +6,14 @@ import { useState } from "react";
 const containerStyle = { width: "100vw", height: "88vh" };
 const center = { lat: 11.58181155360925, lng: 104.91810050044207 };
 
+interface PagedResult<T> {
+  items: T[];
+  total: number;
+  pageSize: number;
+}
+
 interface MapCompProps {
-  data: DNList[];
+  data: PagedResult<DNList>;
   selected?: DNList[];
   zoomTo?: Location;
   onView: (item: DNList) => void;
@@ -18,8 +24,8 @@ export default function MapComp({ data, selected, onView }: MapCompProps) {
   const [hoveredMarker, setHoveredMarker] = useState<DNList | null>(null);
 
   if (!isLoaded) return null;
-
-  const combinedData = data
+console.log('data',data)
+  const combinedData = (data?.items ?? [])
   // deduplicate by lat/lng
   .filter(
     (dn, index, self) =>
@@ -35,7 +41,7 @@ export default function MapComp({ data, selected, onView }: MapCompProps) {
       s => s.latitude === d.latitude && s.longitude === d.longitude
     ),
     // optionally, store all DNs at this location
-    itemsAtLocation: data.filter(
+    itemsAtLocation: data.items.filter(
       x => x.latitude === d.latitude && x.longitude === d.longitude
     ),
   }));

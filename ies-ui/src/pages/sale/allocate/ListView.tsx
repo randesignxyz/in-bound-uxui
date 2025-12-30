@@ -75,7 +75,7 @@ export default () => {
   const [dnSearch, setDnSearch] = useState<{ status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string, sap_delivery_date: string | null, sap_from_date?: string, sap_to_date?: string, customer?: string, area?: [] }>({
     status: 'posted',
     dnStatus: 'open',
-    sap_delivery_date: 'as_of_now',
+    sap_delivery_date: 'unplan',
   });
   const [modalOpen, setModalOpen] = useState<{ visible: boolean; id: number, remark?: string, attachment?: any, sales_planid?: string }>({
     visible: false,
@@ -99,7 +99,7 @@ export default () => {
   }>({
     status: 'posted',
     dnStatus: 'open',
-    sap_delivery_date: 'as_of_now',
+    sap_delivery_date: 'unplan',
   });
   const cacheList = useModel('dataList');
   const normalizeLocationList = (
@@ -160,7 +160,7 @@ export default () => {
 
   // Load provinces once
   useEffect(() => {
-    onSync()
+    // onSync()
     AllocateServiceAPI(requestActions)
       .list_Location("PROVINCE")
       .then((res) => setProvinceOptions(normalizeLocationList(res).map((obj) => ({ value: obj.id, label: obj.name }))));
@@ -641,7 +641,6 @@ export default () => {
         throw new Error('Unexpected response format');
       }
 
-      // 3️⃣ Transform data ONLY (no paging / sorting here)
       const transformedItems = res.items.map((delivery) => {
         const skuValues: Record<string, number> = {};
 
@@ -680,7 +679,6 @@ export default () => {
         };
       });
 
-      // 4️⃣ Return FULL paging info
       return {
         items: transformedItems,
         total: res.total,
@@ -960,7 +958,7 @@ export default () => {
               return sum + volume * qty;
             }, 0);
 
-            return `${total.toFixed(4)} m³`
+            return `${total.toFixed(2)} m³`
           }
         },
         {
@@ -1604,7 +1602,7 @@ export default () => {
                       />
                       <Button
                         type="text"
-                        onClick={() => onSync()}
+                        onClick={() => actionRef.current?.reloadAndRest?.()}
                         size='large'
                       >
                         <ReloadOutlined />
@@ -1673,7 +1671,7 @@ export default () => {
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                         <ProFormSelect
                           name="sap_delivery_date"
-                          initialValue="as_of_now"
+                          initialValue="unplan"
                           onChange={(val: string) => {
                             setDnSearch((v) => ({ ...v, sap_delivery_date: val }))
                             actionRef.current?.reloadAndRest?.();
@@ -1824,9 +1822,12 @@ export default () => {
                       <Button type="text" size='large' onClick={() => setSortModalOpen(true)}>
                         <ColumnHeightOutlined />
                       </Button>
+                      <Button type="text" size='large' onClick={() => onSync()}>
+                        <SyncOutlined />
+                      </Button>
                       <Button
                         type="text"
-                        onClick={() => onSync()}
+                        onClick={() => actionRef.current?.reloadAndRest?.()}
                         size='large'
                       >
                         <ReloadOutlined />
@@ -1889,7 +1890,7 @@ export default () => {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                           <ProFormSelect
                             name="sap_delivery_date"
-                            initialValue="as_of_now"
+                            initialValue="unplan"
                             onChange={(val: string) => {
                               setHisSearch((v) => ({ ...v, sap_delivery_date: val }))
                               actionRef.current?.reloadAndRest?.();
@@ -2021,7 +2022,7 @@ export default () => {
 
                         <Button
                           type="text"
-                          onClick={() => onSync()}
+                          onClick={() => actionRef.current?.reloadAndRest?.()}
                           size='large'
                         >
                           <ReloadOutlined />

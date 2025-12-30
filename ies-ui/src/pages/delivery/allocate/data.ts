@@ -61,7 +61,7 @@ export interface DeliveryList {
 }
 
 export interface DNList {
-  data: any;
+  data: DNPlan[];
   claim_status: any;
   claimed_line: any;
   key: any;

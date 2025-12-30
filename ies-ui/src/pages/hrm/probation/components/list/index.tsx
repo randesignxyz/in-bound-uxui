@@ -127,7 +127,6 @@ export default function ProbationListPage() {
               ),
             });
           }
-
           if (item) {
             tabs.push({
               action: "view",

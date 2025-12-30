@@ -79,7 +79,7 @@ export default function StaffRequisitionPage() {
                     open
                     width="1000px"
                     onOpenChange={() => props?.onCloseTab?.()}
-                    onRefresh={refetch}
+                    onRefresh={() => actionRef.current?.reloadAndRest?.()}
                   />
                 ),
               },

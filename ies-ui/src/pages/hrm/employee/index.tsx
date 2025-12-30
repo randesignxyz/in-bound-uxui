@@ -1,13 +1,12 @@
 import React, { useRef, useState, useMemo } from 'react';
 import {
-  PlusOutlined,
   ExportOutlined,
   FilterOutlined,
   SelectOutlined,
   EditOutlined,
 } from '@ant-design/icons';
 import { Button, Flex, message, Modal, Space, Tooltip } from 'antd';
-import { useAccess, history, useQuery } from "@umijs/max";
+import { useAccess, useQuery } from "@umijs/max";
 import PageWrapper from "@/components/PageWrapper";
 import Status from "@/components/Status";
 import {
@@ -24,8 +23,6 @@ import ImportFileButton from '@/components/ImportFileButton';
 import { ImportDataItem, ImportDataResponse } from '@/services/shared/data';
 import EmployeeModal from './EmployeeModal';
 import UploadData from '@/pages/hrm/employee/upload-data';
-import Omit from 'omit.js';
-import AdvanceEmployeeSearch from './AdvanceEmployeeSearch';
 import Profile from "../../profile/index"
 export default function EmployeePage() {
   const access = useAccess();
@@ -42,9 +39,10 @@ export default function EmployeePage() {
           integratedStatus: "ALL",
           status: "ALL",
         },
+        pagination: { current: 1, pageSize: 20 },
       },
-      // pagination: { current: 1, pageSize: 20 },
     });
+  const [advanceSearchParams, setAdvanceSearchParams] = useState<EmployeeAdvanceSearchParams>({});
   const [modalVisible, setModalVisible] = useState< { type: 'ADD'; payload: EmployeeListItem } | { type: 'EDIT'; payload: EmployeeListItem } >();
   const hideModal = (visble?: boolean) => !visble && setModalVisible(undefined);
   const [importData, setImportData] = useState<ImportDataResponse>()
@@ -94,7 +92,6 @@ export default function EmployeePage() {
           { searchValue?: string; advanceSearch?: EmployeeAdvanceSearchParams },
           undefined
         >
-        hasCriteria={Object.values(Omit(AdvanceEmployeeSearch, ['status'])).some((v) => v)}
         tabRender={(item) =>
           access.canAdmin
             ? [
@@ -144,6 +141,7 @@ export default function EmployeePage() {
           onRefresh: refetch,
           onFilter: (params) => {
             setFilter((p) => ({
+              ...p,
               criteria: {
                 ...p.criteria,
                 searchValue: params?.searchValue,
@@ -157,14 +155,12 @@ export default function EmployeePage() {
           props: {
             toolbar: {
               actions: [access.canAdmin === true ? <Tooltip placement="top" title="Import">
-                <ImportFileButton<{ id: number }> importedKey="EMPLOYEE"
-                                                  onHandleChange={status => {
-                                                    setLoading(status === 'uploading')
-
-                                                    if (status === 'done') {
-                                                      message.info("upload completed.")
-                                                    }
-                                                  }} />
+                <ImportFileButton<{ id: number }> importedKey="EMPLOYEE" onHandleChange={status => {
+                  setLoading(status === 'uploading')
+                  if (status === 'done') {
+                    message.info("upload completed.")
+                  }
+                }} />
               </Tooltip> : '',
                 access.canAccessHrESSImportTraing === true ?<ImportFileButton<ImportDataItem>
                   label='Import Training'
@@ -256,40 +252,25 @@ export default function EmployeePage() {
           },
         }}
       />
-
       <AdvanceSearchDrawer
         open={advanceSearchVisible}
         onClose={() => setAdvanceSearchVisible(false)}
-        dataItem={filter.criteria?.advanceSearch}
         onSearch={(params) => {
-          setFilter((prev) => ({
-            ...prev,
-            criteria: {
-              ...prev.criteria,
-              advanceSearch: {
-                ...prev.criteria?.advanceSearch,
-                buId: params.advanceSearch?.buId || [],
-                department: params.advanceSearch?.department || [],
-              },
-            },
-            // pagination: { ...prev.pagination, current: 1 },
-          }));
+          setFilter((prev) =>
+            ({
+              criteria:{
+                ...prev.criteria,
+                advanceSearch: {
+                  ...prev.criteria?.advanceSearch,
+                  ...params,
+                }
+              }
+            }))
+          setAdvanceSearchParams(params);
           setAdvanceSearchVisible(false);
         }}
         onReset={() => {
-          setFilter((prev) => ({
-            ...prev,
-            criteria: {
-              ...prev.criteria,
-              advanceSearch: {
-                ...prev.criteria?.advanceSearch,
-                buId: [],
-                department: [],
-              },
-            },
-            // pagination: { ...prev.pagination, current: 1 },
-          }));
-          setAdvanceSearchVisible(false);
+          actionRef.current?.reloadAndRest?.();
         }}
       />
       <EmployeeModal

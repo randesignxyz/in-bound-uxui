@@ -28,6 +28,7 @@ import AdvanceSearchDrawer from './AdvanceEmployeeSearch';
 import { ActionType } from '@ant-design/pro-components';
 import ProbationEvaluationQuickView from '@/pages/hrm/probation/components/quick-view';
 import ProbationRequestModal from '../../ProbationRequestModal';
+import ViewForm from "../../process-flow/ViewForm"
 
 export default function ProbationListPage() {
   const requestActions = simpleRequestActions();
@@ -133,7 +134,7 @@ export default function ProbationListPage() {
               value: item.formNo,
               tabLabel: item.formNo,
               panel: (props: any) => (
-                <DataEntryFormView
+                <ViewForm
                   id={item.instanceId}
                   type="VIEW"
                   onCloseTab={() => {
@@ -232,6 +233,10 @@ export default function ProbationListPage() {
                 sorter: 'formNo',
                 flex: 1,
                 width: 180,
+                actionProps:(item)=>({
+                  type: "view",
+                  label: item.formNo
+                }),
                 render: (_: any, r: any) => {
                   return (<Space size={1}>
                     <Button
@@ -240,9 +245,16 @@ export default function ProbationListPage() {
                       icon={<EyeOutlined />}
                       onClick={() => quickViewHandler(r)}
                     />
-                    <a onClick={() => {history.push(`/data-form/${ProbationEvaluationRequestFormNames.processDefKey}/${r.instanceId}`)}}>
+                    <span  style={{ color: "#1677ff", cursor: "pointer" }}
+                    onClick={() =>{
+                      actionRef.current?.open?.({
+                        actionRef:"view",
+                        value: r.formNo || r.processInstaceId
+                      })
+                    }}
+                    >
                       {r.formNo}
-                    </a>
+                    </span>
                   </Space>)
                 },
               },

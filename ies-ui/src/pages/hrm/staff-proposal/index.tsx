@@ -22,10 +22,9 @@ import StaffProposalRequestForm from "./StaffProposalRequestForm";
 import Status from "@/components/Status";
 import { Button, Flex } from "antd";
 import type { TableViewSearchParams } from "@/components/DataCrud/TableView";
-import AdvanceEmployeeSearch from "@/pages/hrm/employee/AdvanceEmployeeSearch";
 import { ActionType } from "@ant-design/pro-components";
 import AdvanceSearchDrawer from '@/pages/hrm/staff-requisition/AdvanceEmployeeSearch';
-import { StaffRequisitionAdvanceSearchParams } from '@/pages/hrm/data';
+import DetailProposal from "./detail";
 
 export default function StaffProposalPage() {
   const requestActions = simpleRequestActions();
@@ -34,7 +33,6 @@ export default function StaffProposalPage() {
   const actionRef = useRef<ActionType>();
   const [filter, setFilter] = useState<TableViewSearchParams<SearchParams>>({
     criteria: {
-      keyword: undefined,
       advanceSearch: {
         buIds: [],
         deptIds: [],
@@ -42,7 +40,6 @@ export default function StaffProposalPage() {
         status: "ALL",
       },
     },
-    // pagination: { current: 1, pageSize: 20 },
   });
 
   const [advanceSearchVisible, setAdvanceSearchVisible] = useState(false);
@@ -68,14 +65,14 @@ export default function StaffProposalPage() {
                 tabIcon: <PlusOutlined />,
                 tabLabel: "New Form",
                 panel: (props) => (
-                  <StaffProposalRequestForm
-                    visisble
-                    formKey="NEW"
-                    onClose={() => {
-                      props?.onCloseTab?.();
-                      refetch();
-                    }}
-                  />
+                <StaffProposalRequestForm{...props}
+                                         visisble
+                                         formKey={StaffProposalFormNames.processDefKey}
+                                         onClose={() => {
+                                              props?.onCloseTab?.();
+                                               refetch()
+                                         }}
+                />
                 ),
               },
               {
@@ -83,7 +80,7 @@ export default function StaffProposalPage() {
                 value: item?.formNo || item?.processInstId,
                 tabLabel: item?.formNo || "Form",
                 panel: (props) => (
-                  <StaffProposalRequestForm
+                  <DetailProposal
                     id={item?.processInstId}
                     type="VIEW"
                     onCloseTab={() => props?.onCloseTab?.()}
@@ -129,9 +126,10 @@ export default function StaffProposalPage() {
           onRefresh: refetch,
           onFilter: (params) => {
             setFilter((p=>({
+              ...p,
               criteria:{
                 ...p.criteria,
-                searchValue: params?.searchValue,
+                keyword: params?.searchValue,
                 advanceSearch:{
                   ...p.criteria?.advanceSearch,
                   status:params?.status
@@ -196,18 +194,23 @@ export default function StaffProposalPage() {
               {
                 title: "Form #",
                 width: 160,
+                actionProps: (item) => ({
+                  type: 'view',
+                  label: item.formNo,
+                }),
                 render: (_, entity) => (
-                  <Flex gap={6}>
-                    <a
-                      onClick={() =>
-                        history.push(
-                          `/data-form/${StaffProposalFormNames.processDefKey}/${entity.processInstId}`
-                        )
-                      }
-                    >
-                      {entity.formNo}
-                    </a>
-                  </Flex>
+                  <span
+                    style={{ color: "#1677ff", cursor: "pointer" }}
+                    onClick={() => {
+                      actionRef.current?.open?.({
+                        action: "view",
+                        value: entity.formNo || entity.processInstId,
+                        tabLabel: entity.formNo,
+                      });
+                    }}
+                  >
+                     {entity.formNo}
+                  </span>
                 ),
               },
               { title: "Requested By", dataIndex: "requestedBy" },

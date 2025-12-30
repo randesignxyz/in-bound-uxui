@@ -113,7 +113,7 @@ export const EmployeeServices = {
       payload: { ...params.criteria },
       pagination: {
         pageSize: params.pagination?.pageSize,
-        page: params.pagination?.current,
+        current: params.pagination?.current,
       },
     }),
 

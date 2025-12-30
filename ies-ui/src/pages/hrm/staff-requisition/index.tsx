@@ -20,8 +20,7 @@ import RequestModal from "./RequestModal";
 import AdvanceSearchDrawer from "./AdvanceEmployeeSearch";
 import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { ActionType } from '@ant-design/pro-components';
-import ProcessFlow from './process-flow/index'
-
+import ViewForm from "./process-flow/ViewForm"
 export default function StaffRequisitionPage() {
   const access = useAccess();
   const requestActions = simpleRequestActions();
@@ -37,17 +36,14 @@ export default function StaffRequisitionPage() {
           integratedStatus: "ALL",
           status: "ALL",
         },
+         pagination: { current: 1, pageSize: 20 },
       },
-      pagination: { current: 1, pageSize: 20 },
     });
 
   const { data, isLoading, refetch } = useQuery(
     ["fetch-staff-requisition", filter],
     () =>
-      EmployeeServices.listStaffRequisition({
-        criteria: filter.criteria,
-        pagination: filter.pagination,
-      }).query(requestActions),
+      EmployeeServices.listStaffRequisition(filter).query(requestActions),
     { refetchOnWindowFocus: false }
   );
 
@@ -55,16 +51,14 @@ export default function StaffRequisitionPage() {
     const adv = filter.criteria?.advanceSearch;
     return (
       (adv?.advanceSearch?.buIds?.length ?? 0) > 0 ||
-      (adv?.advanceSearch?.departmentIds?.length ?? 0) > 0
+      (adv?.advanceSearch?.deptIds?.length ?? 0) > 0
     );
   };
-
   const advanceSearchIcon = useMemo(() => {
     return isAdvancedFiltered()
       ? <FilterOutlined style={{ color: "red" }} />
       : <SelectOutlined />;
   }, [filter.criteria?.advanceSearch]);
-
   return (
     <>
       <PageWrapper<
@@ -93,12 +87,13 @@ export default function StaffRequisitionPage() {
                 action: "view",
                 tabLabel: item?.formNo || `Form (${item?.instanceId})`,
                 panel: (props) => (
-                  <RequestModal
+                  <ViewForm
                     open
                     width="1000px"
                     id={item?.instanceId}
-                    type="VIEW"
+                    type="EDIT"
                     onOpenChange={() => props?.onCloseTab?.()}
+                    onRefresh={refetch}
                   />
                 ),
               },
@@ -112,20 +107,7 @@ export default function StaffRequisitionPage() {
                     open
                     width="1000px"
                     id={item?.instanceId}
-                    type="EDIT"
-                    onOpenChange={() => props?.onCloseTab?.()}
-                  />
-                ),
-              },
-              {
-                action: "view",
-                tabLabel: item?.formNo || `Form (${item?.instanceId})`,
-                panel: (props) => (
-                  <RequestModal
-                    open
-                    width="1000px"
-                    id={item?.instanceId}
-                    type="EDIT"
+                    type="VIEW"
                     onOpenChange={() => props?.onCloseTab?.()}
                   />
                 ),
@@ -151,15 +133,17 @@ export default function StaffRequisitionPage() {
           onRefresh: refetch,
           onFilter: (params) => {
             setFilter((p) => ({
+              ...p,
               criteria: {
                 ...p.criteria,
                 searchValue: params?.searchValue,
                 advanceSearch: {
                   ...p.criteria?.advanceSearch,
-                  status: params?.status || p.criteria?.advanceSearch?.status,
+                  status: params?.status
+                    || p.criteria?.advanceSearch?.status,
                 },
               },
-              pagination: { current: 1, pageSize: 20 },
+              // pagination: { current: 1, pageSize: 20 },
             }));
           },
           props: {
@@ -171,7 +155,7 @@ export default function StaffRequisitionPage() {
               pageSize: filter.pagination?.pageSize,
               onChange: (current, pageSize) =>
                 setFilter((p) => ({
-                  criteria: { ...p.criteria },
+                  ...p,
                   pagination: { current, pageSize },
                 })),
             },
@@ -201,14 +185,19 @@ export default function StaffRequisitionPage() {
               {
                 title: "Form #",
                 width: 160,
+                actionProps: (item) => ({
+                  type: 'view',
+                  label: item.formNo,
+                }),
                 render: (_, entity) => (
                   <span
                     style={{ color: '#1677ff', cursor: 'pointer' }}
                     onClick={() => {
                       actionRef.current?.open?.({
                         action: 'view',
-                        value: entity.instanceId, // make sure it matches tabRender
+                        value: entity, // ✅ pass full entity
                         tabLabel: entity.formNo,
+                        key: entity.instanceId, // optional unique key
                       });
                     }}
                   >
@@ -233,7 +222,7 @@ export default function StaffRequisitionPage() {
       <AdvanceSearchDrawer
         open={advanceSearchVisible}
         onClose={() => setAdvanceSearchVisible(false)}
-        dataItem={filter.criteria?.advanceSearch}
+        // dataItem={filter.criteria?.advanceSearch}
         onSearch={(params) => {
           setFilter((prev) => ({
             ...prev,

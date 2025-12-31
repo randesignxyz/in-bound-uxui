@@ -162,13 +162,12 @@ export default () => {
                                 ...params,
                                 advanceSearch: {
                                     ...filter.criteria?.advanceSearch,
-                                    status:params?.status
+                                    status: params?.status
                                 }
                             },
                             pagination: { ...page },
                             sort: sort,
                         }));
-                        console.log( params);
                     },
 
                     props: {
@@ -193,12 +192,14 @@ export default () => {
                             },
                             {
                                 title: 'Customer',
-                                render: (_, r) => getCustomerName(r.customer)
+                                dataIndex: 'customer',
+                                // render: (_, r) => getCustomerName(r.customer)
                             },
 
                             {
                                 title: 'Salesperson',
-                                render: (_, r) => `${r.salesperson?.salespersonCode} - ${r.salesperson?.salespersonName}`
+                                dataIndex: 'salesperson',
+                                // render: (_, r) => `${r.salesperson?.salespersonCode} - ${r.salesperson?.salespersonName}`
                             },
                             {
                                 title: 'Amount',

@@ -47,7 +47,7 @@ export const Model = () => {
         { actionName: 'sale', responseKey: 'salespersons', payload: {} },
       ];
 
-      loadSoSummary();
+      loadSoSummary([0]);
 
       const rs = await crmServices.initVisitScheduleData(params);
       const result = await saleServices.initSoData(initParams);
@@ -129,32 +129,32 @@ export const Model = () => {
   };
 
   const loadListItem = async (
-    criteria?: { advanceSearch?: any; searchValue?: string },
+    criteria?: { advanceSearch?: any; searchValue?: string, divisionId?: number[] },
     pagination?: {
       pageSize?: number;
       current?: number;
     },
     sort?: Record<string, SortOrder>,
   ) => {
-    loadSoSummary();
+    loadSoSummary(criteria?.divisionId);
     return await saleServices.listSo(
       { ...criteria, sort: sort },
       { pageSize: pagination?.pageSize || 20, page: (pagination?.current || 1) - 1 },
     );
   };
 
-  const loadSoSummary = () => {
-    saleServices.fetchSoSummary().then((data) => {
+  const loadSoSummary = (divisionId: number[] | undefined) => {
+    saleServices.fetchSoSummary(divisionId).then((data) => {
       dispatch({ type: 'setSoSummary', payload: data });
     });
   };
 
   const loadListArea = () => {
-  return saleServices.listArea().then((data) => {
-    dispatch({ type: 'setListArea', payload: data });
-    return data; // 🔑 REQUIRED
-  });
-};
+    return saleServices.listArea().then((data) => {
+      dispatch({ type: 'setListArea', payload: data });
+      return data; // 🔑 REQUIRED
+    });
+  };
 
   const doClearSoItem = () => {
     // if (state.data?.so?.items) {
@@ -475,7 +475,7 @@ export const Model = () => {
   const postSoNew = async (soId: number, remarks?: string) => {
     return await saleServices.postSoToSAPNew({ soId: soId, remarks: remarks });
   };
-   const syncFromSFA = async () => {
+  const syncFromSFA = async () => {
     return await saleServices.syncFromSFA({});
   };
 

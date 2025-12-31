@@ -25,7 +25,6 @@ import MpuPoDetail from './MpuPODetail';
 import MpuPoEntryForm from './MpuPOEntryForm';
 import { PurchaseOrderDTO } from './data';
 import { PurchaseOrderServiceAPI } from './services';
-import dayjs from 'dayjs';
 
 const POMainPage: React.FC = () => {
   const requestActions = simpleRequestActions();

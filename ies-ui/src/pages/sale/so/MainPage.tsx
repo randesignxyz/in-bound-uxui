@@ -17,8 +17,6 @@ import ViewWrapper from './ViewWrapper'
 import QuickView from './components/List/QickView'
 import AdvanceSearch from './components/List/AdvanceSearch'
 import { simpleRequestActions } from '@/services/model'
-import { CrmServices } from '@/pages/crm/services'
-import ExcelFilterSelect from './components/ExcelFilterSelect'
 import ExcelSaleAreaFilter from './components/ExcelFilterSelect'
 
 type FilterType = SoAdvanceSearchParams & {
@@ -216,104 +214,6 @@ export default () => {
                                 }));
                             }}
                         />
-
-                        {/* <ProFormCascader
-                            name="saleArea"
-                            width={180}
-                            request={async () => {
-                                const res = await CrmServices.listSaleAreas().query(requestActions) as unknown as { divisionId: number, divisionName: string, defaultFlag: number }[]
-                                const options = res.map(o => ({ value: o.divisionId, label: o.divisionName, default: o.defaultFlag }))
-                                optionsRef.current = options;
-                                form.setFieldsValue({
-                                    saleArea: options.filter(o => o.default == 1).map(o => [o.value])
-                                });
-                                setSaleArea(options.filter(o => o.default == 1));
-                                setFilter(v => ({
-                                    ...v,
-                                    criteria: {
-                                        ...v.criteria,
-                                        saleArea: options.filter(o => o.default == 1).map(o => o.value)
-                                    },
-                                }));
-                                return [
-                                    {
-                                        value: 0,
-                                        label: 'Select All'
-                                    },
-                                    ...options
-                                ]
-                            }}
-                            fieldProps={{
-                                multiple: true,
-                                maxTagCount: 'responsive',
-                                onChange: (paths: number[][] = []) => {
-                                    const values = paths.map(p => p[0]);           // includes 0 or not
-                                    const realOptions = optionsRef.current;
-                                    const realValues = realOptions.map(o => o.value);
-
-                                    const hasAllClicked = values.includes(ALL_VALUE);
-
-                                    // current real selection (ignore ALL_VALUE)
-                                    const currentSelected = values.filter(v => v !== ALL_VALUE);
-                                    const isCurrentlyAllSelected =
-                                        currentSelected.length === realValues.length;
-
-                                    //  CASE 1: Click Select All
-                                    if (hasAllClicked) {
-                                        //  if NOT all selected → SELECT ALL
-                                        if (!isCurrentlyAllSelected) {
-                                            const allPaths = realValues.map(v => [v]);
-
-                                            form.setFieldsValue({ saleArea: allPaths });
-                                            setSaleArea(realOptions);
-                                            prevHadAllRef.current = true;
-
-                                            setFilter(v => ({
-                                                ...v,
-                                                criteria: { ...v.criteria, saleArea: realValues },
-                                            }));
-                                            return;
-                                        }
-
-                                        //  if ALL already selected → CLEAR ALL
-                                        form.setFieldsValue({ saleArea: [] });
-                                        setSaleArea([]);
-                                        prevHadAllRef.current = false;
-
-                                        setFilter(v => ({
-                                            ...v,
-                                            criteria: { ...v.criteria, saleArea: [] },
-                                        }));
-                                        return;
-                                    }
-
-                                    //  CASE 2: Manual clear
-                                    if (paths.length === 0) {
-                                        setSaleArea([]);
-                                        prevHadAllRef.current = false;
-
-                                        setFilter(v => ({
-                                            ...v,
-                                            criteria: { ...v.criteria, saleArea: [] },
-                                        }));
-                                        return;
-                                    }
-
-                                    //  CASE 3: Normal select / deselect
-                                    const selectedOptions = realOptions.filter(o =>
-                                        currentSelected.includes(o.value)
-                                    );
-
-                                    setSaleArea(selectedOptions);
-                                    prevHadAllRef.current = currentSelected.length === realValues.length;
-
-                                    setFilter(v => ({
-                                        ...v,
-                                        criteria: { ...v.criteria, saleArea: currentSelected },
-                                    }));
-                                }
-                            }}
-                        /> */}
                     </ProForm>
                 </Space>,
 

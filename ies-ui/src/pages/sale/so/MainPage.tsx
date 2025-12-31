@@ -63,14 +63,26 @@ export default () => {
         const pendingCount = filter.criteria?.customerType == 'All' ? ((state.data?.soSummary?.pendingDirect ?? 0) + (state.data?.soSummary?.pendingIndirect ?? 0)) :
             filter.criteria?.customerType == 'Direct' ? state.data?.soSummary?.pendingDirect :
                 state.data?.soSummary?.pendingIndirect
-        const totalPending =
-            Number(state.data?.soSummary?.pendingDirect ?? 0) +
-            Number(state.data?.soSummary?.pendingIndirect ?? 0) +
-            Number(state.data?.soSummary?.pendingMCDirect ?? 0);
+
+        let totalPending = 0;
+
+        switch (filter.criteria?.customerType) {
+            case 'All':
+                totalPending = state.data?.soSummary?.allPending ?? 0;
+                break;
+
+            case 'Direct':
+                totalPending = (state.data?.soSummary?.allPending ?? 0) - (state.data?.soSummary?.pendingIndirect ?? 0);
+                break;
+
+            default:
+                totalPending = (state.data?.soSummary?.allPending ?? 0) - (state.data?.soSummary?.pendingDirect ?? 0);
+        }
         statusBarRef.current?.refresh(pendingCount, state.data?.soSummary?.failed, totalPending)
     }, [state.data?.soSummary])
 
     const optionsRef = useRef<{ value: number; label: string }[]>([]);
+    const [isSelectAll, setIsSelectAll] = useState(false);
 
 
     return <Spin spinning={false}>
@@ -148,6 +160,7 @@ export default () => {
                     actionRef.current?.reload(true)
                 }}
                     onStatusChanged={(value) => {
+                        setIsSelectAll(value == "AllPending")
                         setFilter(v => ({
                             ...v,
                             criteria: {
@@ -187,6 +200,7 @@ export default () => {
                         <ExcelSaleAreaFilter
                             form={form}
                             requestActions={requestActions}
+                            isSelectAll={isSelectAll}
                             onInit={(values, options) => {
                                 setSaleArea(options);
                                 setFilter(v => ({

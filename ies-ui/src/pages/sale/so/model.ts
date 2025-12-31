@@ -47,7 +47,7 @@ export const Model = () => {
         { actionName: 'sale', responseKey: 'salespersons', payload: {} },
       ];
 
-      loadSoSummary();
+      // loadSoSummary();
 
       const rs = await crmServices.initVisitScheduleData(params);
       const result = await saleServices.initSoData(initParams);

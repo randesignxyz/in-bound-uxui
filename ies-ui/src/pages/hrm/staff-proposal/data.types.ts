@@ -2,45 +2,24 @@ import { LookupDataItem } from "@/services/data"
 import { Moment } from "moment"
 
 export type StaffProposalListItem = {
-  id: number;
-  processInstId: string;
-  formNo: string;
-  requestedBy: string;
-  requestedDate: Moment;
-  status: string;
-  empName: string;
-  jobTitle: string;
-  bu: string;
-  department: string;
-  reportTo: string;
-};
-
-export type AdvanceSearchParams = {
-  status?: "ALL" | "DRAFT" | "PENDING" | "APPROVED" | "REJECTED" | "CANCELED";
-  integratedStatus?: string;
-  keyword?: string;
-  advanceSearch?: {
-    buIds?: number[];
-    deptIds?: number[];
-    integratedStatus?: string;
-    status?: string;
-  };
-};
-
-
+    id: number
+    processInstId: string
+    formNo: string
+    requestedBy: string
+    requestedDate: Moment
+    status: string
+    empName: string
+    jobTitle: string
+    bu: string
+    department: string
+    reportTo: string
+}
 
 
 export type SearchParams = {
-  keyword?: string;
-  status?: string;
-  advanceSearch?: {
-    buIds?: number[];
-    deptIds?: number[];
-    integratedStatus?: string;
-    status?: string;
-  };
-};
-
+    keyword?: string,
+    status?: string,
+}
 
 export type RequestedItem = {
     checked: boolean;
@@ -123,14 +102,11 @@ export const StaffProposalFormNames = {
 export const StaffProposalOFLFormNames = {
     processDefKey: 'staff_proposal_request_process_ofl',
     start: 'staff_proposal_request_process_ofl',
-    staff_proposal_ofl_hrm_manager_propose: 'staff_proposal_ofl_hrm_manager',
-    staff_proposal_ofl_sm_function_approval: 'staff_proposal_ofl_sm_function_approval',
-    staff_proposal_ofl_sm_function_review: 'staff_proposal_ofl_sm_function_review',
-    staff_proposal_ofl_dmd_approval: 'staff_proposal_ofl_dmd_approval',
-
-    staff_proposal_ofl_sm_function_propose: 'staff_proposal_ofl_sm_function_propose',
-    staff_proposal_ofl_dmd_review: 'staff_proposal_ofl_dmd_review',
-    staff_proposal_ofl_ed_md_approval: 'staff_proposal_ofl_ed_md_approval'
+    staff_proposal_hrbp: 'staff_proposal_ofl_hrbp',
+    staff_proposal_hrm_manager: 'staff_proposal_ofl_hrm_manager',
+    staff_proposal_sr_manager_approval: 'staff_proposal_ofl_sr_manager_approval',
+    staff_proposal_dmd: 'staff_proposal_ofl_dmd',
+    staff_proposal_hra_sr_manager: 'staff_proposal_ofl_hra_sr_manager',
 }
 export type RequestItem = {
     itemId: number

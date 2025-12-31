@@ -80,7 +80,7 @@ export const SaleService = (serviceName?: SaleServiceName): ServiceType => {
 };
 
 const ReqParams = {
-  fetchSoSummary: (data?: number[]): ServiceApiType<{}> => ({
+   fetchSoSummary: (data?: number[]): ServiceApiType<{}> => ({
     type: 'FETCH_QUERY',
     endpoint: 'SALE',
     actionName: 'fetch-so-summary',

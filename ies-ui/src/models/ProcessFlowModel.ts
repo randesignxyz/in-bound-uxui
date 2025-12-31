@@ -241,6 +241,15 @@ export default () => {
         }, { page: (params.pagination?.current || 1) - 1, pageSize: params.pagination?.pageSize })
     }
 
+    const myRequestCount = (params: TaskListAdvanceSearchParams) => {
+        return workflowServices.fetchMyRequestCount({
+            filter: params?.status || '',
+            latest: params?.latest || false,
+            searchValue: params?.searchValue,
+            myRequest: params?.myRequest || false
+        })
+    }
+
     const downloadForm = async (pInst: string, fileName?: string) => {
 
         const id = pInst || state.instanceData?.processInstance?.procInstId
@@ -382,6 +391,7 @@ export default () => {
             listMessageTemplate: listMessageTemplate,
             saveConfigEndEvent: saveConfigEndEvent,
             fetchConfigEndEvent: fetchConfigEndEvent,
+            fetchMyRequestCount: myRequestCount
         },
         modals: {
             isVisible: actions.isVisible,

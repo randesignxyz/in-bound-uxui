@@ -11,12 +11,12 @@ export default () => {
   };
 
   return (
-    <CrudWrapper baseURL={HrmPaths.probationEvaluation}>
-      {(view, id, navigate) => {
-        const content = (() => {
-          switch (view) {
-            case "list":
-              return (
+    // <CrudWrapper baseURL={HrmPaths.probationEvaluation}>
+    //   {(view, id, navigate) => {
+    //     const content = (() => {
+    //       switch (view) {
+    //         case "list":
+    //           return (
                 <ProbationList
                   onAdd={(id) => navigate?.goToCreate?.({ id })}
                   onDetail={(data) =>
@@ -24,15 +24,15 @@ export default () => {
                   }
                   forceRefresh={forceUpdate}
                 />
-              );
-
-            default:
-              throw new Error("Not compatible view");
-          }
-        })(); // ← This was missing! You opened `(()) =>` but never closed with })()`
-
-        return content; // ← Also missing return
-      }}
-    </CrudWrapper>
+  //             );
+  //
+  //           default:
+  //             throw new Error("Not compatible view");
+  //         }
+  //       })(); // ← This was missing! You opened `(()) =>` but never closed with })()`
+  //
+  //       return content; // ← Also missing return
+  //     }}
+  //   </CrudWrapper>
   );
 };

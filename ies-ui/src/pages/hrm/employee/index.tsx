@@ -200,18 +200,18 @@ export default function EmployeePage() {
                   return <Flex gap={3} align="center">
                     <span>{index + 1}</span>
                     <Button
-                    size="small"
-                    type="link"
-                    title="Open in new tab"
-                    icon={<ExportOutlined />}
-                    onClick={() => {
-                      window
-                        .open(
-                          `/profile/2/${entity.id}`,
-                        )
-                        ?.focus();
-                    }}
-                  />
+                      size="small"
+                      type="link"
+                      title="Open in new tab"
+                      icon={<ExportOutlined />}
+                      onClick={() => {
+                        window
+                          .open(
+                            `/profile/2/${entity.id}`,
+                          )
+                          ?.focus();
+                      }}
+                    />
                   </Flex>
                 },
               },

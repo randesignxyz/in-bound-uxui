@@ -97,12 +97,12 @@ export default function EmployeePage() {
             ? [
               {
                 action: 'view',
-                value: item?.id,
+                value: item?.employeeCode,
                 tabLabel: `${item?.employeeCode} - ${item?.firstName} ${item?.lastName}`,
                 panel: () => (
                   <Profile
                     type="VIEW"
-                    id={item?.id}
+                    id={item?.employeeCode}
                     onSuccess={refetch}
                   />
                 ),

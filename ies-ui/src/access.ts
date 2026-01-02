@@ -1371,6 +1371,7 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
     canAccessCRMGratisConfig: canAccess("CRM_GRATIS_CONFIG"),
     canAccessCRMGratis: canAccess("CRM_GRATIS"),
 
+    canAccessSALE: currentUser?.authorities?.some((it: string) => it.toUpperCase().startsWith("ROLE_SALE") || it == "ROLE_ADMIN"),
     canAccess,
     can,
     // ============ END ===========

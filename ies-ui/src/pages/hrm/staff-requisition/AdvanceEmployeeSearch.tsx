@@ -75,8 +75,8 @@ const AdvanceEmployeeSearch: React.FC<Props> = ({
           onReset();
         }}
         submitter={{
-          searchConfig: { submitText: "Search", resetText: "Clear" },
-          resetButtonProps: { type: "primary" },
+          searchConfig: { submitText: "Search", resetText: "Reset" },
+          resetButtonProps: { },
         }}
       >
         <ProFormSelect

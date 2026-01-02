@@ -7,6 +7,7 @@ import {
   ModalForm,
   ModalFormProps,
   ProCard,
+  ProForm,
   ProFormDatePicker,
   ProFormDateRangePicker,
   ProFormDependency,
@@ -23,9 +24,9 @@ import { useEffect, useState } from 'react';
 import { BU, Department, RequisitionData, SubDepartment } from '../data';
 import { EmployeeServices } from '../services';
 export default ({
-  onRefresh,
-  ...rest
-}: ModalFormProps<RequisitionData> & {
+                  onRefresh,
+                  ...rest
+                }: ModalFormProps<RequisitionData> & {
   onRefresh?: () => void;
 }) => {
   const [form] = useForm<RequisitionData>();
@@ -106,7 +107,7 @@ export default ({
   };
 
   return (
-    <ModalForm
+    <ProForm
       form={form}
       onValuesChange={(changedValues) => {
         const { jobId } = changedValues;
@@ -116,7 +117,7 @@ export default ({
       }}
       onFinish={async () => {
         const formData = await form.validateFields();
-        if (uploadFileIds.length == 0) {
+        if (uploadFileIds.length === 0) {
           message.error('Please upload job description as support document.');
           return;
         }
@@ -258,7 +259,6 @@ export default ({
               ?.filter((it) => it.type == 'EMPLOYEE_CONTRACT_TYPE')
               .map((it) => ({ label: it.name, value: it.id }))}
           />
-
           <ProFormDependency name={['contractTypeId']} ignoreFormListField>
             {({ contractTypeId }) => {
               if (contractTypeId == '2032') {
@@ -273,7 +273,6 @@ export default ({
             }}
           </ProFormDependency>
         </ProCard>
-
         <ProCard size="small" bordered title="Type of Requisition">
           <ProFormRadio.Group
             rules={[{ required: true }]}
@@ -376,7 +375,6 @@ export default ({
           />
           <ProFormTextArea name={'suggestedSourcing'} label="Suggested Sourcing" />
         </ProCard>
-
         <FileUploader
           required
           showTitle
@@ -384,6 +382,6 @@ export default ({
           onSetFiles={(files) => setUploadFileIds(files.map((it) => it.response))}
         />
       </Space>
-    </ModalForm>
+    </ProForm>
   );
 };

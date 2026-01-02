@@ -161,7 +161,8 @@ export interface IProcessWorkflowModel {
         saveDest: (data: SaveFirstLevelApproval) => Promise<void>;
         saveOriginator: (data: SaveWorkflowOriginator) => Promise<void>;
         saveContractTermTemp: (data: ContractTermData) => Promise<{ id: number; }>;
-        listMessageTemplate: () => Promise<MessageTemplate[]>
+        listMessageTemplate: () => Promise<MessageTemplate[]>,
+        fetchMyRequestCount: (params: TaskListAdvanceSearchParams) => Promise<{total: number}>;
 
     };
     modals: {

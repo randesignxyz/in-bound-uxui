@@ -2,7 +2,7 @@ import FileUploader from '@/components/Attachment/FileUploader';
 import { MultiRequest } from '@/services/apiGateway';
 import { simpleRequestActions } from '@/services/model';
 import {
-  ModalForm,
+  ProForm,
   ModalFormProps,
   ProCard,
   ProFormGroup,
@@ -19,13 +19,13 @@ import { EmployeeInfResult, ProbationAssessmentList, ProbationEvaluationRef, Pro
 import { createService } from './services';
 
 type DataFormType = {
-    requestorId: string;
-    requestorBuId: number;
-  };
+  requestorId: string;
+  requestorBuId: number;
+};
 export default ({
-  refreshTable,
-  ...rest
-}: ModalFormProps<ProbationEvaluationData> & {
+                  refreshTable,
+                  ...rest
+                }: ModalFormProps<ProbationEvaluationData> & {
   refreshTable?: () => void;
 }) => {
   const [form] = useForm<ProbationEvaluationData>();
@@ -70,7 +70,7 @@ export default ({
   };
 
   useEffect(() => {
-    (async () => {     
+    (async () => {
       srv.fetchProbationFormTypeList().then(rs => {
         setProbationFormType(rs)
       })
@@ -78,6 +78,7 @@ export default ({
       setProbationAssessor([])
       form.setFieldValue('refId',undefined)
       form.setFieldValue('preparationUserId',undefined)
+      form.setFieldValue('hodPreparationUserId',undefined)
     })();
   }, []);
 
@@ -105,7 +106,7 @@ export default ({
   const onChangeSubmitterHandler = async (data: EmployeeInfResult) => {
     setProbationEmp(data)
     form.setFieldValue('refId',undefined)
-    form.setFieldValue('formTypeId',probationFormType?.find(r => r.code==data.jobLevelCode)?.id||'')
+    form.setFieldValue('formTypeId',probationFormType?.find(r => r.code===data.jobLevelCode)?.id||'')
     form.setFieldValue('preparationUserId',undefined)
     form.setFieldValue('hodPreparationUserId',undefined)
     formSubmittor.setFieldValue('requestorBuId',undefined)
@@ -117,14 +118,18 @@ export default ({
     })
   }
   const [firstEvaluationUserId, setFirstEvaluationUserId] = useState('')
+  // const onSearchHandler = async (searchValue?: string) => {
+  //   const it1 = await srv.fetchProbationEmpList(searchValue)
+  //   return it1.map((it_1:any) => ({ value: it_1.id, label: it_1.empName }));
+  // }
 
   return (
-    <ModalForm
+    <ProForm
       width={970}
       form={form}
       onFinish={async () => {
         const formData = await form.validateFields();
-        await formSubmittor.validateFields() 
+        await formSubmittor.validateFields()
         Modal.confirm({
           title: 'Probation Evaluation Request',
           content: 'Are you sure?',
@@ -171,9 +176,9 @@ export default ({
                   form.setFieldValue('hodPreparationUserId',undefined)
                   try{
                     const rs = await srv.fetchHodPreparationUserId(value)
-                      setFirstEvaluationUserId(rs.hodEnpNo||'')
-                      form.resetFields(['hodPreparationUserId'])
-                      form.setFieldValue('hodPreparationUserId',rs.hodUserId)
+                    setFirstEvaluationUserId(rs.hodEnpNo||'')
+                    form.resetFields(['hodPreparationUserId'])
+                    form.setFieldValue('hodPreparationUserId',rs.hodUserId)
                   }catch(e){
                     setFirstEvaluationUserId('')
                     form.resetFields(['hodPreparationUserId'])
@@ -191,7 +196,7 @@ export default ({
               request={ async({ keyWords }) =>{
                 const it1 = await srv.fetchEvaluateEmpList(firstEvaluationUserId!==''?firstEvaluationUserId: keyWords)
                 setFirstEvaluationUserId('')
-                if(it1.length==0){
+                if(it1.length===0){
                   form.setFieldValue('hodPreparationUserId',undefined)
                 }
                 return it1.map((it_1:any) => ({ value: it_1.userId, label: it_1.empName }));
@@ -224,6 +229,6 @@ export default ({
           onSetFiles={(files) => setUploadFileIds(files.map((it) => it.response))}
         />
       </Space>
-    </ModalForm>
+    </ProForm>
   );
 };

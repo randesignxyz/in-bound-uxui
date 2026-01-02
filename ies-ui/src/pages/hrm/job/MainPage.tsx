@@ -31,25 +31,25 @@ export function JobListPage() {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [viewRecord, setViewRecord] = useState<ListJob | null>(null);
   const [viewModalVisible, setViewModalVisible] = useState(false);
-  const handleDelete = async (record: ListJob) => {
-    Modal.confirm({
-      title: "Delete Confirmation",
-      icon: <ExclamationCircleOutlined />,
-      content: "Are you sure you want to delete this job?",
-      okText: "Yes, Delete",
-      okType: "danger",
-      cancelText: "Cancel",
-      onOk: async () => {
-        try {
-          const res = await services.deleteJob(record.id);
-          Modal.info({ title: "Delete Status", content: res.message });
-          refetch();
-        } catch (err) {
-          Modal.error({ title: "Delete failed", content: String(err) });
-        }
-      },
-    });
-  };
+  // const handleDelete = async (record: ListJob) => {
+  //   Modal.confirm({
+  //     title: "Delete Confirmation",
+  //     icon: <ExclamationCircleOutlined />,
+  //     content: "Are you sure you want to delete this job?",
+  //     okText: "Yes, Delete",
+  //     okType: "danger",
+  //     cancelText: "Cancel",
+  //     onOk: async () => {
+  //       try {
+  //         const res = await services.deleteJob(record.id);
+  //         Modal.info({ title: "Delete Status", content: res.message });
+  //         refetch();
+  //       } catch (err) {
+  //         Modal.error({ title: "Delete failed", content: String(err) });
+  //       }
+  //     },
+  //   });
+  // };
   const handleCloseEditModal = () => {
     setEditModalVisible(false);
     setEditRecord(null);
@@ -97,8 +97,8 @@ export function JobListPage() {
           title: "Position List",
           statuses: [
             { option: { label: "All", value: "ALL", default: true } },
-            { option: { label: "ACTIVE", value: "ACTIVE" } },
-            { option: { label: "INACTIVE", value: "INACTIVE" } },
+            { option: { label: "Active", value: "ACTIVE" } },
+            { option: { label: "Inactive", value: "INACTIVE" } },
           ],
           onRefresh: refetch,
           onFilter: (params, page, sort) => {
@@ -156,7 +156,7 @@ export function JobListPage() {
                       setEditRecord(record);
                       setEditModalVisible(true);
                     }} />
-                    <Button icon={<DeleteOutlined />} danger size="small" type="link" onClick={() => handleDelete(record)} />
+                    {/*<Button icon={<DeleteOutlined />} danger size="small" type="link" onClick={() => handleDelete(record)} />*/}
                   </Space>
                 ),
               },

@@ -26,6 +26,7 @@ import { createService } from "./services";
 import AppraisalRequestForm from "./AppraisalRequestForm";
 import { ActionType } from "@ant-design/pro-components";
 import { TableViewSearchParams } from '@/components/DataCrud/TableView';
+import Form from '@/pages/process-flow/form';
 
 export default function AppraisalRequestPage() {
   const access = useAccess();
@@ -89,15 +90,13 @@ export default function AppraisalRequestPage() {
         {
           action: "view",
           tabLabel: item?.formNo,
-          panel: (props) => (
+          panel: (props) => item?.formNo || item?.processInstId ?
             <Detail
-              {...props}
-              id={item?.processInstId}
-              formKey={AppraisalRequestFormNames.processDefKey}
-              onOpenChange={() => props?.onCloseTab?.()}
-              onRefresh={refetch}
-            />
-          ),
+              onCloseTab={() => {
+                props?.onCloseTab?.()
+                refetch()
+              }} id={item.processInstId} type="EDIT" openInTab
+            />: <Form openInTab formKey={AppraisalRequestFormNames.processDefKey} id={item?.processInstId}/>
         },
       ]}
       listView={{

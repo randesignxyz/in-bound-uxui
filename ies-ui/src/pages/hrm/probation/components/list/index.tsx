@@ -29,6 +29,7 @@ import { ActionType } from '@ant-design/pro-components';
 import ProbationEvaluationQuickView from '@/pages/hrm/probation/components/quick-view';
 import ProbationRequestModal from '../../ProbationRequestModal';
 import ViewForm from "../../process-flow/ViewForm"
+import Form from '@/pages/process-flow/form';
 
 export default function ProbationListPage() {
   const requestActions = simpleRequestActions();
@@ -132,16 +133,14 @@ export default function ProbationListPage() {
               action: "view",
               value: item.formNo,
               tabLabel: item.formNo,
-              panel: (props: any) => (
+              panel: (props: any) => item?.formNo || item?.instanceId ?
                 <ViewForm
-                  id={item.instanceId}
                   type="VIEW"
                   onCloseTab={() => {
                     props?.onCloseTab?.();
                     refreshTotals();
-                  }}
-                />
-              ),
+                  }} id={item.instanceId} openInTab
+                /> : <Form openInTab formKey={ProbationEvaluationRequestFormNames.processDefKey} id={item.instanceId} />
             });
           }
 

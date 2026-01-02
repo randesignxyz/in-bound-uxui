@@ -16,25 +16,25 @@ interface Props extends ModalFormProps {
 }
 const typeOption = [
     {
-        value: "ROllBACK_DATE",
+        value: "PO_ROLLBACK",
         label: "Rollback Date",
         description: "Revert the purchase order to a previous transaction date."
     },
     {
-        value: "CHANGE_ITEM_QTY",
-        label: "Change Quantity",
-        description: "Adjust the item quantity in the purchase order."
+        value: "PO_CHANGE_ITEM",
+        label: "Change Item",
+        description: "Adjust the item in the purchase order."
     },
-    {
-        value: "CHANGE_ITEM_PRICE",
-        label: "Change Price",
-        description: "Update or correct the item pricing in the purchase order."
-    },
-    {
-        value: "REJECT_ITEM",
-        label: "Reject Item",
-        description: "Mark the item as rejected and exclude it from the purchase order."
-    }
+    // {
+    //     value: "CHANGE_ITEM_PRICE",
+    //     label: "Change Price",
+    //     description: "Update or correct the item pricing in the purchase order."
+    // },
+    // {
+    //     value: "REJECT_ITEM",
+    //     label: "Reject Item",
+    //     description: "Mark the item as rejected and exclude it from the purchase order."
+    // }
 ];
 
 

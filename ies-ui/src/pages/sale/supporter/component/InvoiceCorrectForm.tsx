@@ -5,18 +5,18 @@ import {
     ModalFormProps,
     ProFormMoney,
     ProFormSelect,
-    ProFormText,
     ProFormTextArea,
 } from "@ant-design/pro-components";
-import { Button, Divider, Form, Space, Table } from "antd";
+import { Divider, Form, Table } from "antd";
 import { useForm } from "antd/es/form/Form";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { InvoiceServiceAPI } from "../../invoice/service";
 import moment from "moment";
 import { SupporterServiceAPI } from "../services";
+
 interface Props extends ModalFormProps {
     open: boolean;
-    actionType?: string
+    actionType?: string;
 }
 
 const InvoiceCorrectForm = (props: Props) => {
@@ -26,16 +26,40 @@ const InvoiceCorrectForm = (props: Props) => {
     const [invoiceList, setInvoiceList] = useState<any[]>([]);
     const [editableKeys, setEditableKeys] = useState<React.Key[]>([]);
 
-    /* ✅ Watch items safely */
-    const items = Form.useWatch("items", form);
+    /* ---------------------------------- */
+    /* SAFE WATCH ITEMS                   */
+    /* ---------------------------------- */
+    const rawItems = Form.useWatch("items", form);
 
-    /* ✅ Compute total (NO setState, NO setFieldValue) */
-    const totalAmount = (items || [])?.reduce(
-        (sum: number, item: any) =>
-            sum + Number(item.quantity || 0) * Number(item.unitPrice || 0),
-        0
-    );
+    /**
+     * EditableProTable may return:
+     * - []
+     * - undefined
+     * - {}
+     * - { dataSource: [] }
+     */
+    const items: any[] = useMemo(() => {
+        if (Array.isArray(rawItems)) return rawItems;
+        if (rawItems?.dataSource && Array.isArray(rawItems.dataSource)) {
+            return rawItems.dataSource;
+        }
+        return [];
+    }, [rawItems]);
 
+    /* ---------------------------------- */
+    /* TOTAL AMOUNT (SAFE)                */
+    /* ---------------------------------- */
+    const totalAmount = useMemo(() => {
+        return items.reduce((sum, item) => {
+            const qty = Number(item?.quantity ?? 0);
+            const price = Number(item?.unitPrice ?? 0);
+            return sum + qty * price;
+        }, 0);
+    }, [items]);
+
+    /* ---------------------------------- */
+    /* RESET WHEN OPEN                    */
+    /* ---------------------------------- */
     useEffect(() => {
         if (props.open) {
             form.resetFields();
@@ -43,36 +67,55 @@ const InvoiceCorrectForm = (props: Props) => {
         }
     }, [props.open]);
 
+    /* ---------------------------------- */
+    /* INVOICE CHANGE                     */
+    /* ---------------------------------- */
     const onInvoiceChange = (invoiceId: number) => {
-        const invoice = invoiceList.find((o) => o.id === invoiceId);
-        const items = invoice?.items || [];
+        const invoice = invoiceList.find(o => o.id === invoiceId);
+        const invoiceItems = Array.isArray(invoice?.items) ? invoice.items : [];
 
-        form.setFieldValue("items", items);
-        setEditableKeys(items.map((i: any) => i.id));
+        form.setFieldValue("items", invoiceItems);
+        setEditableKeys(invoiceItems.map((i: any) => i.id));
     };
 
+    /* ---------------------------------- */
+    /* SUBMIT                             */
+    /* ---------------------------------- */
+    const onFinish = async () => {
+        const dataForm = await form.validateFields();
+
+        const payload = {
+            ...dataForm,
+            actionType: "INVOICE",
+            totalAmount,
+            items: items.map((p: any) => ({
+                id: p.id,
+                itemCode: p.itemCode,
+                itemId: p.itemId,
+                qty: p.quantity,
+                price: p.unitPrice,
+                status: p.status?.[0],
+            })),
+        };
+
+        await SupporterServiceAPI(requestActions).poTodo(payload);
+
+        props.modalProps?.onCancel?.();
+        return true;
+    };
+
+    /* ---------------------------------- */
+    /* RENDER                             */
+    /* ---------------------------------- */
     return (
         <ModalForm
             {...props}
             form={form}
             layout="horizontal"
             title="Invoice Correction"
-            onFinish={async () => {
-                const dataForm = await form.validateFields();
-                const entry = {
-                    ...dataForm,
-                    actionType: "INVOICE",
-                    totalAmount: totalAmount,
-                    items: dataForm.items?.map((p: any) => ({ id: p.id, itemCode: p.itemCode, itemId: p.itemId, qty: p.quantity, price: p.unitPrice, status: p.status?.[0], }))
-                }
-
-                await SupporterServiceAPI(requestActions).poTodo(entry);
-                if (props.modalProps?.onCancel) {
-                    props?.modalProps?.onCancel();
-                }
-                return true
-            }}
+            onFinish={onFinish}
         >
+            {/* ---------------- Invoice ---------------- */}
             <ProFormSelect
                 label="Invoice"
                 name="invoiceId"
@@ -86,7 +129,7 @@ const InvoiceCorrectForm = (props: Props) => {
 
                     setInvoiceList(data.items || []);
 
-                    return data.items.map((o: any) => ({
+                    return (data.items || []).map((o: any) => ({
                         label: [
                             o.invoiceNo,
                             o.salesperson,
@@ -99,6 +142,7 @@ const InvoiceCorrectForm = (props: Props) => {
                 }}
             />
 
+            {/* ---------------- Items ---------------- */}
             <EditableProTable
                 rowKey="id"
                 name="items"
@@ -114,18 +158,18 @@ const InvoiceCorrectForm = (props: Props) => {
                         title: "Product",
                         editable: false,
                         render: (_, r) =>
-                            `${r.itemCode || ""} - ${r.itemName || ""}`,
+                            `${r.itemCode ?? ""} - ${r.itemName ?? ""}`,
                     },
                     {
                         title: "Type",
                         editable: false,
-                        dataIndex: "itemType"
+                        dataIndex: "itemType",
                     },
                     {
                         title: "Quantity",
                         dataIndex: "quantity",
-                        width: 120,
                         valueType: "digit",
+                        width: 120,
                     },
                     {
                         title: "Price",
@@ -135,40 +179,44 @@ const InvoiceCorrectForm = (props: Props) => {
                     {
                         title: "Amount",
                         width: 120,
-                        editable: false,
                         align: "right",
+                        editable: false,
                         render: (_, r) =>
-                            (Number(r.quantity || 0) * Number(r.unitPrice || 0))?.toFixed(3),
+                            (
+                                Number(r.quantity ?? 0) * Number(r.unitPrice ?? 0)
+                            ).toFixed(3),
                     },
                 ]}
-                summary={(item) => {
-                    return <>
-                        <Table.Summary>
-                            <Table.Summary.Row>
-                                <Table.Summary.Cell index={0} colSpan={4} align="right">Total</Table.Summary.Cell>
-                                <Table.Summary.Cell index={4} align="right">{totalAmount.toFixed(3)}</Table.Summary.Cell>
-                            </Table.Summary.Row>
-                        </Table.Summary>
-                    </>
-                }}
+                summary={() => (
+                    <Table.Summary>
+                        <Table.Summary.Row>
+                            <Table.Summary.Cell index={0} colSpan={4} align="right">
+                                <strong>Total</strong>
+                            </Table.Summary.Cell>
+                            <Table.Summary.Cell index={4} align="right">
+                                <strong>{totalAmount.toFixed(3)}</strong>
+                            </Table.Summary.Cell>
+                        </Table.Summary.Row>
+                    </Table.Summary>
+                )}
             />
+
             <Divider />
+
+            {/* ---------------- Remark ---------------- */}
             <ProFormTextArea
                 name="remark"
                 label="Remarks"
                 rules={[{ required: true }]}
             />
 
-
-            {/* ✅ TOTAL (READ ONLY, LOOP-FREE) */}
+            {/* ---------------- Total (Hidden) ---------------- */}
             <ProFormMoney
                 label="Total Amount"
                 fieldProps={{ value: totalAmount.toFixed(3) }}
                 readonly
                 hidden
             />
-
-
         </ModalForm>
     );
 };

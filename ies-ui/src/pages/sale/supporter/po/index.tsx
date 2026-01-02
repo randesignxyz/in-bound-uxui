@@ -9,6 +9,7 @@ import moment from "moment"
 import InvoiceCorrectForm from "../component/InvoiceCorrectForm"
 import POAdjustForm from "../component/POAdjustForm"
 import { ReloadOutlined } from "@ant-design/icons"
+import { TableViewSearchParams } from "@/components/DataCrud/TableView"
 
 type ActionType =
     | "PO_ROLLBACK"
@@ -30,12 +31,10 @@ const DetailList: React.FC<{ data: any }> = ({ data }) => {
                 renderDiffOnly(record.oldValue, record.newValue),
         },
     ];
-
-
-
     return (
         <Space direction="vertical">
             <Descriptions>
+                <Descriptions.Item label="Created Date">{moment(data?.createdDate).format("DD-MM-YYYY")}</Descriptions.Item>
                 <Descriptions.Item label="Reason">{data?.remark}</Descriptions.Item>
             </Descriptions>
             <ProTable
@@ -56,7 +55,7 @@ const DetailList: React.FC<{ data: any }> = ({ data }) => {
 
 export default () => {
     const requestActions = simpleRequestActions();
-    const [filter, setFilter] = useState({})
+    const [filter, setFilter] = useState<TableViewSearchParams<any>>({})
     const { data, isFetching, refetch } = useQuery({
         queryKey: ["As", filter],
         queryFn: () => SupporterServiceAPI(requestActions).page(filter),
@@ -157,6 +156,20 @@ export default () => {
                         selectedRowKeys: [ip?.id || data?.items[0]?.id]
                     }}
                     tableAlertRender={false}
+                    pagination={{
+                        pageSize: data?.pageSize,
+                        total: data?.total,
+                        current: data?.page,
+                        onChange: (page, pageSize) => {
+                            setFilter({
+                                ...filter,
+                                pagination: {
+                                    current: page,
+                                    pageSize: pageSize
+                                },
+                            })
+                        }
+                    }}
                     onRow={(record) => {
                         return {
                             onClick: () => {

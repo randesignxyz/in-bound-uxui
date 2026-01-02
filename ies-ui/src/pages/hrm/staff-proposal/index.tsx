@@ -25,6 +25,7 @@ import type { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { ActionType } from "@ant-design/pro-components";
 import AdvanceSearchDrawer from '@/pages/hrm/staff-requisition/AdvanceEmployeeSearch';
 import DetailProposal from "./detail";
+import Form from '@/pages/process-flow/form';
 
 export default function StaffProposalPage() {
   const requestActions = simpleRequestActions();
@@ -79,14 +80,26 @@ export default function StaffProposalPage() {
                 action: "view",
                 value: item?.formNo || item?.processInstId,
                 tabLabel: item?.formNo || "Form",
-                panel: (props) => (
-                  <DetailProposal
-                    id={item?.processInstId}
-                    type="VIEW"
-                    onCloseTab={() => props?.onCloseTab?.()}
-                  />
-                ),
-              },
+                panel: (props) =>
+                  item?.formNo || item?.processInstId ? (
+                    <DetailProposal
+                      id={item.processInstId}
+                      type="EDIT"
+                      openInTab
+                      onCloseTab={() => {
+                        props?.onCloseTab?.();
+                        refetch();
+                      }}
+                    />
+                  ) : (
+                    <Form
+                      openInTab
+                      formKey={StaffProposalFormNames.processDefKey}
+                      id={item?.processInstId}
+                    />
+                  ),
+              }
+
             ]
             : [
               {

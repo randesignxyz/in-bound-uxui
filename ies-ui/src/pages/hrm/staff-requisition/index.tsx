@@ -89,7 +89,9 @@ export default function StaffRequisitionPage() {
                 action: "view",
                 tabLabel: item?.formNo || `Form (${item?.instanceId})`,
                 panel: (props) => item?.formNo || `Form (${item?.instanceId})` ?
-                  <ViewForm onCloseTab={()=>{
+                  <ViewForm
+                    onRefresh={refetch}
+                    onCloseTab={()=>{
                     props.onCloseTab?.()
                     refetch()
                   }} id={item?.instanceId} type="EDIT" openInTab/> :

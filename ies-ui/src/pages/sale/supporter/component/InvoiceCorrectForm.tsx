@@ -57,7 +57,6 @@ const InvoiceCorrectForm = (props: Props) => {
             form={form}
             layout="horizontal"
             title="Invoice Correction"
-
             onFinish={async () => {
                 const dataForm = await form.validateFields();
                 const entry = {

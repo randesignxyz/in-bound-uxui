@@ -115,7 +115,7 @@ export type RequisitionData = {
 
 export type StaffRequisitionRequest = {
   id: number;
-  instanceId: string;
+  instanceId: string | undefined;
   requester: string;
   requestedDate: Moment;
   formNo: string;

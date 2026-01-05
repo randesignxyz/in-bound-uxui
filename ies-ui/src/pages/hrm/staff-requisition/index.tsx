@@ -89,17 +89,18 @@ export default function StaffRequisitionPage() {
                 action: "view",
                 tabLabel: item?.formNo || `Form (${item?.instanceId})`,
                 panel: (props) => (
-                  <ViewForm
-                    open
-                    width="1000px"
-                    id={item?.id}
-                    type="EDIT"
-                    onOpenChange={() => props?.onCloseTab?.()}
-                    onRefresh={refetch}
-                  />
+                  // <ViewForm
+                  //   open
+                  //   width="1000px"
+                  //   id={item?.instanceId}   // ✅ CORRECT
+                  //   type="EDIT"
+                  //   onOpenChange={() => props?.onCloseTab?.()}
+                  //   onRefresh={refetch}
+                  // />
+                  <Form openInTab formKey="staff_requisition_request_process" id={item?.instanceId} />
                 ),
               }
-,
+
             ]
             : [
               {

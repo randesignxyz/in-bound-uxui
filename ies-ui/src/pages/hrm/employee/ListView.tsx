@@ -106,7 +106,7 @@ export default ({ onAdd, onEdit }: Props) => {
                 tabLabel: `${item?.employeeCode} - ${item?.firstName} ${item?.lastName}`,
                 panel: () => (
                   <Profile
-                    id={item?.id}
+                    id={item?.employeeCode}
                     onSuccess={refetch}
                   />
                 ),

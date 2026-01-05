@@ -31,17 +31,6 @@ const ChangeSalepersonForm: React.FC<Props> = ({ onSave, ...props }) => {
         props.open && setKeySelected([]);
     }, [props.open]);
 
-    // const actionRef = useRef<any>();
-
-    // selected ids
-    //   const [keySelected, setKeySelected] = useState<number[]>([]);
-
-    // global select all flag
-    const [selectAll, setSelectAll] = useState(false);
-    const [selectedIds, setSelectedIds] = useState<number[]>([]);
-    const [excludedIds, setExcludedIds] = useState<number[]>([]);
-
-
     return (
         <FormModalComp
             {...props}
@@ -116,12 +105,11 @@ const ChangeSalepersonForm: React.FC<Props> = ({ onSave, ...props }) => {
                             body: { padding: "10px 0" }
                         }}
                     >
-                        {/* <ProTable<LeadDetail>
+                        <ProTable<LeadDetail>
                             search={false}
                             size="small"
                             options={false}
                             rowSelection={{
-
                                 selectedRowKeys: keySelected.filter((value, index, self) => self.indexOf(value) === index).filter(p => p != undefined),
                                 onSelect(item, selected) {
                                     if (selected) {
@@ -150,7 +138,6 @@ const ChangeSalepersonForm: React.FC<Props> = ({ onSave, ...props }) => {
                             }}
                             rowKey={"id"}
                             actionRef={actionRef}
-                            
                             request={async ({ keyword, pageSize, current }) => {
                                 const data = await LeadServiceAPI(requestActions).listLead({
                                     criteria: {
@@ -188,112 +175,6 @@ const ChangeSalepersonForm: React.FC<Props> = ({ onSave, ...props }) => {
                                 {
                                     title: "Current Salperson",
                                     render: (_, r) => [r.salesperson?.salespersonCode, r.salesperson?.salespersonName].filter(p => p).join("  ")
-                                },
-                            ]}
-                        /> */}
-                        <ProTable<LeadDetail>
-                            rowKey="id"
-                            actionRef={actionRef}
-                            search={false}
-                            size="small"
-                            options={false}
-
-                            /* ===========================
-                               ROW SELECTION (FINAL)
-                            =========================== */
-                            rowSelection={{
-                                // what ProTable highlights
-                                selectedRowKeys: selectAll ? [] : selectedIds,
-
-                                onSelect(record, selected) {
-                                    const id = record.id;
-
-                                    if (selectAll) {
-                                        // unselect when selectAll = true
-                                        if (!selected) {
-                                            setExcludedIds(v =>
-                                                v.includes(id) ? v : [...v, id]
-                                            );
-                                        } else {
-                                            setExcludedIds(v => v.filter(x => x !== id));
-                                        }
-                                    } else {
-                                        // normal selection
-                                        if (selected) {
-                                            setSelectedIds(v =>
-                                                v.includes(id) ? v : [...v, id]
-                                            );
-                                        } else {
-                                            setSelectedIds(v => v.filter(x => x !== id));
-                                        }
-                                    }
-                                },
-
-                                onSelectAll(selected) {
-                                    if (selected) {
-                                        // LOGICAL SELECT ALL
-                                        setSelectAll(true);
-                                        setSelectedIds([]);
-                                        setExcludedIds([]);
-                                    } else {
-                                        // CLEAR ALL
-                                        setSelectAll(false);
-                                        setSelectedIds([]);
-                                        setExcludedIds([]);
-                                    }
-                                },
-                            }}
-
-                            /* ===========================
-                               DATA REQUEST
-                            =========================== */
-                            request={async ({ keyword, pageSize, current }) => {
-                                const data = await LeadServiceAPI(requestActions).listLead({
-                                    criteria: {
-                                        searchValue: keyword || param?.empNo,
-                                    },
-                                    pagination: {
-                                        current,
-                                        pageSize,
-                                    },
-                                });
-
-                                return {
-                                    data: data.items,
-                                    success: true,
-                                    total: data.total,
-                                };
-                            }}
-
-                            /* ===========================
-                               COLUMNS
-                            =========================== */
-                            columns={[
-                                {
-                                    title: "Lead Code",
-                                    render: (_, r) => r.leadCode,
-                                },
-                                {
-                                    title: "Lead Name",
-                                    render: (_, r) =>
-                                        [r.firstName, r.lastName || r.internalName]
-                                            .filter(Boolean)
-                                            .join(" "),
-                                },
-                                {
-                                    title: "Phone",
-                                    render: (_, r) => r.phone,
-                                },
-                                {
-                                    title: "Region",
-                                    render: (_, r) => r.region?.name,
-                                },
-                                {
-                                    title: "Current Salesperson",
-                                    render: (_, r) =>
-                                        [r.salesperson?.salespersonCode, r.salesperson?.salespersonName]
-                                            .filter(Boolean)
-                                            .join(" "),
                                 },
                             ]}
                         />

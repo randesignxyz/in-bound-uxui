@@ -80,24 +80,13 @@ export default function StaffProposalPage() {
                 action: "view",
                 value: item?.formNo || item?.processInstId,
                 tabLabel: item?.formNo || "Form",
-                panel: (props) =>
-                  item?.formNo || item?.processInstId ? (
-                    <DetailProposal
-                      id={item.processInstId}
-                      type="EDIT"
-                      openInTab
-                      onCloseTab={() => {
-                        props?.onCloseTab?.();
-                        refetch();
-                      }}
-                    />
-                  ) : (
-                    <Form
-                      openInTab
-                      formKey={StaffProposalFormNames.processDefKey}
-                      id={item?.processInstId}
-                    />
-                  ),
+                panel: (props) => (
+                  <DetailProposal
+                    id={item?.id}
+                    type="VIEW"
+                    onCloseTab={() => props?.onCloseTab?.()}
+                  />
+                ),
               }
 
             ]

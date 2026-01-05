@@ -90,14 +90,18 @@ export default function AppraisalRequestPage() {
         {
           action: "view",
           tabLabel: item?.formNo,
-          panel: (props) => item?.formNo || item?.processInstId ?
+          key: item?.processInstId,
+          panel: (props) => (
             <Detail
-              onCloseTab={() => {
-                props?.onCloseTab?.()
-                refetch()
-              }} id={item.processInstId} type="EDIT" openInTab
-            />: <Form openInTab formKey={AppraisalRequestFormNames.processDefKey} id={item?.processInstId}/>
-        },
+              {...props}
+              id={item?.processInstId}
+              formKey={AppraisalRequestFormNames.processDefKey}
+              onOpenChange={() => props?.onCloseTab?.()}
+              onRefresh={refetch}
+            />
+          ),
+        }
+
       ]}
       listView={{
         type: "Table",

@@ -50,7 +50,7 @@ export type StaffRequisitionAdvanceSearchParams = {
   keyword?: string;
   advanceSearch?: {
     buIds?: number[];
-    deptIds?: number[];
+    depIds?: number[];
     integratedStatus?: string;
     status?: string;
   };
@@ -62,7 +62,7 @@ export type ProbationAdvanceSearchParams = {
   keyword?: string;
   advanceSearch?: {
     buIds?: number[];
-    deptIds?: number[];
+    depIds?: number[];
     integratedStatus?: string;
     status?: string;
   };

@@ -641,6 +641,7 @@ export default () => {
         throw new Error('Unexpected response format');
       }
 
+      // 3️⃣ Transform data ONLY (no paging / sorting here)
       const transformedItems = res.items.map((delivery) => {
         const skuValues: Record<string, number> = {};
 
@@ -679,6 +680,7 @@ export default () => {
         };
       });
 
+      // 4️⃣ Return FULL paging info
       return {
         items: transformedItems,
         total: res.total,
@@ -1602,7 +1604,7 @@ export default () => {
                       />
                       <Button
                         type="text"
-                        onClick={() => actionRef.current?.reloadAndRest?.()}
+                        onClick={() => onSync()}
                         size='large'
                       >
                         <ReloadOutlined />
@@ -1671,7 +1673,7 @@ export default () => {
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                         <ProFormSelect
                           name="sap_delivery_date"
-                          initialValue="unplan"
+                          initialValue="as_of_now"
                           onChange={(val: string) => {
                             setDnSearch((v) => ({ ...v, sap_delivery_date: val }))
                             actionRef.current?.reloadAndRest?.();
@@ -1822,12 +1824,9 @@ export default () => {
                       <Button type="text" size='large' onClick={() => setSortModalOpen(true)}>
                         <ColumnHeightOutlined />
                       </Button>
-                      <Button type="text" size='large' onClick={() => onSync()}>
-                        <SyncOutlined />
-                      </Button>
                       <Button
                         type="text"
-                        onClick={() => actionRef.current?.reloadAndRest?.()}
+                        onClick={() => onSync()}
                         size='large'
                       >
                         <ReloadOutlined />
@@ -1890,7 +1889,7 @@ export default () => {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                           <ProFormSelect
                             name="sap_delivery_date"
-                            initialValue="unplan"
+                            initialValue="as_of_now"
                             onChange={(val: string) => {
                               setHisSearch((v) => ({ ...v, sap_delivery_date: val }))
                               actionRef.current?.reloadAndRest?.();
@@ -2022,7 +2021,7 @@ export default () => {
 
                         <Button
                           type="text"
-                          onClick={() => actionRef.current?.reloadAndRest?.()}
+                          onClick={() => onSync()}
                           size='large'
                         >
                           <ReloadOutlined />

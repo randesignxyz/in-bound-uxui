@@ -682,12 +682,19 @@ export default [
     hideInMenu: 'true',
     component: './sale/supporter',
   },
-    {
-    path: '/sale/supporter/list',
-    name: 'warehouse-po-portal',
+  {
+    path: '/sale/supporter/po/list',
+    name: 'PO Correction',
     icon: 'UnorderedListOutlined',
     hideInMenu: 'true',
     component: './sale/supporter/po',
+  },
+  {
+    path: '/sale/supporter/invoice/list',
+    name: 'Invoice Correction',
+    icon: 'UnorderedListOutlined',
+    hideInMenu: 'true',
+    component: './sale/supporter/invoice',
   },
   /******************* MPU *******************/
 

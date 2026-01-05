@@ -51,6 +51,7 @@ export type WorkflowServiceName = 'fetchInstanceData'
   | 'list-activity'
   | 'force-complete-tasks'
   | 'list-available-process-def'
+  | 'fetch-my-request-count'
 
 export const WorkFlowService = (serviceName?: WorkflowServiceName): ServiceType => {
   return {
@@ -76,7 +77,7 @@ export const WorkflowServiceAPI = (actions?: RequestActions) => ({
   findInstanceList: findPagingService<InstanceSearchParams, ProcessInstance>(WorkFlowService('listInstances'), actions),
   findTaskList: findPagingService<{ filter: string, latest: boolean, searchValue?: string, myRequest: boolean}, UserTask>(WorkFlowService('listTasks'), actions),
 
-
+  fetchMyRequestCount: findService<{ filter: string, latest: boolean, searchValue?: string, myRequest: boolean}, {total: number}>(WorkFlowService('fetch-my-request-count'), actions),
   findDiagram: findService<{ id: string }, DiagramData>(WorkFlowService('fetchDiagram'), actions),
   findProcessDef: findService<{ key: string }, ProcessInstanceDef>(WorkFlowService('fetchProcessDef'), actions),
   findUser: findService<{ id: string }, UserResult>(WorkFlowService('fetchUser'), actions),

@@ -15,12 +15,14 @@ import { ProcessFlowModalMngt } from '../components/ProcessFlowModalWrapper';
 import ProcessFlowModel from '@/models/ProcessFlowModel';
 import { SortOrder } from 'antd/lib/table/interface';
 import { CheckboxChangeEvent } from 'antd/es/checkbox';
+import { set } from 'lodash';
 
 const TaskList = () => {
     const model = ProcessFlowModel();
     const { state, actions } = model;
     const actionRef = useRef<ActionType>();
     const defaultTaskStatus = state.taskStatusFilterList?.[0];
+    const [total, setTotal] = useState(0)
 
     const [searchParams, setSearchParams] = useState<TaskListAdvanceSearchParams>({
         isGlobal: true,
@@ -70,7 +72,7 @@ const TaskList = () => {
                     actionRef.current?.reloadAndRest?.();
                 }}
             />
-            {/*<Checkbox name="myRequest" onChange={onMyRequestHandler}>My Request{supTitle(10)}</Checkbox>*/}
+           {(total>0) && <Checkbox name="myRequest" onChange={onMyRequestHandler}>My Request{supTitle(total)}</Checkbox>}
         </Space>
     );
 
@@ -82,6 +84,13 @@ const TaskList = () => {
 
     const onRequestHandler = async (params: TableViewSearchParams<TaskListAdvanceSearchParams>) => {
         try {
+            const criteria =  {
+                isGlobal: searchParams.isGlobal,
+                status: searchParams.status,
+                myRequest: searchParams.myRequest,
+                latest: searchParams.latest
+            } as TaskListAdvanceSearchParams
+            await actions.fetchMyRequestCount(criteria).then(rs=> setTotal(rs.total))
             return await actions.loadTaskList(params);
         } catch (error) {
             return Promise.reject();

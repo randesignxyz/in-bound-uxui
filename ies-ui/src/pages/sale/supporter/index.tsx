@@ -1,124 +1,165 @@
-// import {
-//   AppstoreAddOutlined,
-//   CloudSyncOutlined,
-//   DollarOutlined,
-//   NodeCollapseOutlined,
-//   SwapOutlined,
-//   UnorderedListOutlined,
-// } from '@ant-design/icons';
-// // import { Form } from 'antd';
-// import { useState } from 'react';
-// // import styles from './assets/style.module.css';
-// // import SolutionIssuesModal from './component/SolutionIssuesModal';
-// import { useRollbackPurchaseOrder } from './component/useRollbackPurchaseOrder';
-
 import ListMenuComp, { ListMenuItem } from "@/components/ListMenu";
-import { TeamOutlined, TagsOutlined, ScheduleOutlined, ShoppingOutlined, FundOutlined } from "@ant-design/icons";
+import { TeamOutlined } from "@ant-design/icons";
 import { MenuProps, message } from "antd";
-import { useState } from "react";
-import { ReportName } from "../reports";
+import { useState, useMemo } from "react";
 import POAdjustForm from "./component/POAdjustForm";
-import sale from "..";
+import InvoiceCorrectForm from "./component/InvoiceCorrectForm";
+import { useAccess } from "@umijs/max";
 
+/* ---------------------------------- */
+/* Types                              */
+/* ---------------------------------- */
+interface Props { }
 
-interface Props {
+type ActionType =
+  | "PO_ROLLBACK"
+  | "PO_CHANGE_ITEM"
+  | "INVOICE"
+  | undefined;
 
+interface ActionState {
+  open: boolean;
+  action?: ActionType;
 }
 
-const Supporter: React.FC<Props> = ({ }) => {
-  const [report, setReport] = useState<ReportName>();
+/* ---------------------------------- */
+/* Component                          */
+/* ---------------------------------- */
+const Supporter: React.FC<Props> = () => {
+  const access = useAccess();
 
-  const [actionModuleState, setActionModuleState] = useState<{
-    visible?: {
-      state?:boolean;
-      action: string
-    }
-  }>();
+  const [actionState, setActionState] = useState<ActionState>({
+    open: false,
+  });
 
+  /* ---------------------------------- */
+  /* Menu helper                        */
+  /* ---------------------------------- */
+  type MenuItem = Required<MenuProps>["items"][number];
 
-  type MenuItem = Required<MenuProps>['items'][number];
   const getItem = (
     label: React.ReactNode,
     key: React.Key,
-    icon?: React.ReactNode,
-    children?: MenuItem[],
-    type?: 'group',
-  ): MenuItem => {
-    return {
-      key,
-      icon,
-      children,
-      label,
-      type,
-    } as MenuItem;
+    icon?: React.ReactNode
+  ): MenuItem => ({
+    key,
+    icon,
+    label,
+  });
+
+  /* ---------------------------------- */
+  /* Menu click handler                 */
+  /* ---------------------------------- */
+  const onMenuClick: MenuProps["onClick"] = (info) => {
+    console.log(info);
+
+    switch (info.key) {
+      case "PO_ROLLBACK":
+      case "PO_CHANGE_ITEM":
+      case "INVOICE":
+        setActionState({
+          open: true,
+          action: info.key as ActionType,
+        });
+        break;
+
+      default:
+        message.error("Unsupported action.");
+    }
   };
 
-  const item = {
-    onClick: (info: { key: any; }) => {
-      switch (info.key) {
-        case 'ROllBACK_DATE':
-          setActionModuleState({ visible: {state:true, action: "ROllBACK_DATE" } })
-          break;
-        case 'CHANGE_ITEM_PRICE':
-          setActionModuleState({ visible: {state:true,  action: "CHANGE_ITEM_PRICE" } })
-          break;
-        case 'CHANGE_ITEM_QTY':
-          setActionModuleState({ visible: {state:true,  action: "CHANGE_ITEM_QTY" } })
-          break;
-        case 'REJECT_ITEM':
-          setActionModuleState({ visible: {state:true,  action: "REJECT_ITEM" } })
-          break;
-        default:
-          message.error('Something went wrong.');
-      }
-      return undefined;
-    },
-    items: [
-      getItem('Rollback Date', 'ROllBACK_DATE', <TeamOutlined />),
-      getItem('Change Item Price', 'CHANGE_ITEM_PRICE', <TeamOutlined />),
-      getItem('Change Item Qty', 'CHANGE_ITEM_QTY', <TeamOutlined />),
-      getItem('Reject Item', 'REJECT_ITEM', <TeamOutlined />),
-    ],
-  }
+  /* ---------------------------------- */
+  /* Action menus                       */
+  /* ---------------------------------- */
+  const actionMenuPO = useMemo<MenuProps>(() => {
+    const items: MenuItem[] = [
+      access.can("SALE_SUPPORTER", "PO_ROLLBACK") &&
+      getItem("PO Adjustment & Correction", "PO_ROLLBACK", <TeamOutlined />),
 
+      access.can("SALE_SUPPORTER", "PO_CHANGE_ITEM") &&
+      getItem("Change Item Price", "PO_CHANGE_ITEM", <TeamOutlined />),
+
+      access.can("SALE_SUPPORTER", "INVOICE") &&
+      getItem("Invoice", "INVOICE", <TeamOutlined />),
+    ].filter(Boolean) as MenuItem[];
+
+
+    return { items, onClick: onMenuClick };
+  }, [access]);
+
+  // const actionMenuInvoice = useMemo<MenuProps>(() => {
+  //   const items: MenuItem[] = [
+  //     access.can("SALE_SUPPORTER", "INVOICE_CORRECTION") &&
+  //     getItem("Invoice Correction", "INVOICE_CORRECTION", <TeamOutlined />),
+  //   ].filter(Boolean) as MenuItem[];
+
+  //   return { items, onClick: onMenuClick };
+  // }, [access]);
+
+  /* ---------------------------------- */
+  /* List menu cards                    */
+  /* ---------------------------------- */
   const SalePaths = {
-     po:"/sale/supporter/list"
-  }
-  const items: ListMenuItem[] = [
+    po: "/sale/supporter/po/list",
+    invoice: "/sale/supporter/invoice/list",
+  };
 
-    {
-      id: 'PO',
-      name: 'PO Correction',
-      description: 'Tools for adjusting, fixing, and updating PO data.',
-      menu: item,
-      link: `${SalePaths.po}`,
-      // icon: deliveryIcon,
-      // visible: access.canAccessSaleItems || access.canAccessSaleDelPrev,
-    },
-    {
-      id: 'productItem',
-      name: 'Product Preview',
-      description: 'Products Preview',
-      // visible: access.canAcessStockControlItem || access.canAccessSaleProdPrev,
-      // link: `${SalePaths.product}/list`,
-      // icon: productIcon,
-    }
-  ];
+  const listItems: ListMenuItem[] = useMemo(
+    () =>
+      [
+        access.can("SALE_SUPPORTER", "PO_SUPPORTER") && {
+          id: "PO",
+          name: "Adjustment & Correction",
+          description: "Tools for adjusting, fixing, and updating PO data.",
+          menu: actionMenuPO,
+          link: SalePaths.po,
+        },
 
+        // access.can("SALE_SUPPORTER", "INVOICE_CORRECTION") && {
+        //   id: "SaleInvoice",
+        //   name: "Invoice Correction",
+        //   description: "Update or correct sale invoice data.",
+        //   menu: actionMenuInvoice, // ✅ FIXED
+        //   link: SalePaths.invoice,
+        // },
+      ].filter(Boolean) as ListMenuItem[],
+    [access, actionMenuPO]
+  );
+
+  /* ---------------------------------- */
+  /* Render                             */
+  /* ---------------------------------- */
   return (
     <>
-      <ListMenuComp items={items} />
+      <ListMenuComp items={listItems} />
+
+      {/* PO Modal */}
       <POAdjustForm
-        open={actionModuleState?.visible?.state}
-        actionType={actionModuleState?.visible?.action!}
+        open={
+          actionState.open &&
+          actionState.action !== "INVOICE"
+        }
+        actionType={actionState.action}
         modalProps={{
-          onCancel: (e) => {
-            setActionModuleState({ visible: undefined })
-          },
+          width:
+            actionState.action === "PO_ROLLBACK" ? "80%" : "60%",
+          onCancel: () => setActionState({ open: false }),
+        }}
+      />
+
+      {/* Invoice Modal */}
+      <InvoiceCorrectForm
+        open={
+          actionState.open && actionState.action === "INVOICE"
+        }
+        actionType={actionState.action}
+        modalProps={{
+          width: "80%",
+          onCancel: () => setActionState({ open: false }),
         }}
       />
     </>
-  )
-}
+  );
+};
 
-export default Supporter
+export default Supporter;

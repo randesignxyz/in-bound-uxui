@@ -56,7 +56,7 @@ const ChangeSalepersonForm: React.FC<Props> = ({ onSave, ...props }) => {
                                 placeholder={"Search by Saleperson"}
                                 width={"lg"}
                                 onChange={(e: string) => {
-                                    setParam({ empNo: e,  });   
+                                    setParam({ empNo: e, });
                                     actionRef.current?.reload();
                                 }}
                                 rules={[
@@ -78,11 +78,11 @@ const ChangeSalepersonForm: React.FC<Props> = ({ onSave, ...props }) => {
                                 value={searchValue}
                                 allowClear
                                 onSearch={(e) => {
-                                    setParam({ empNo: e,split });
+                                    setParam({ empNo: e, split });
                                     actionRef.current?.reload?.();
                                 }}
                             />
-                            <Checkbox onClick={(e:any) => {
+                            <Checkbox onClick={(e: any) => {
                                 const checked = e.target?.checked;
                                 setSplit(checked);
                                 if (checked) {

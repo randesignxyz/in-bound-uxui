@@ -20,9 +20,7 @@ import RequestModal from "./RequestModal";
 import AdvanceSearchDrawer from "./AdvanceEmployeeSearch";
 import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { ActionType } from '@ant-design/pro-components';
-import DataEntryView from '@/pages/pro/requisition/DataEntryView';
 import Form from '@/pages/process-flow/form';
-import ViewForm from '@/pages/pro/po/process-flow/ViewForm';
 export default function StaffRequisitionPage() {
   const access = useAccess();
   const requestActions = simpleRequestActions();
@@ -89,14 +87,6 @@ export default function StaffRequisitionPage() {
                 action: "view",
                 tabLabel: item?.formNo || `Form (${item?.instanceId})`,
                 panel: (props) => (
-                  // <ViewForm
-                  //   open
-                  //   width="1000px"
-                  //   id={item?.instanceId}   // ✅ CORRECT
-                  //   type="EDIT"
-                  //   onOpenChange={() => props?.onCloseTab?.()}
-                  //   onRefresh={refetch}
-                  // />
                   <Form openInTab formKey="staff_requisition_request_process" id={item?.instanceId} />
                 ),
               }

@@ -81,11 +81,7 @@ export default function StaffProposalPage() {
                 value: item?.formNo || item?.processInstId,
                 tabLabel: item?.formNo || "Form",
                 panel: (props) => (
-                  <DetailProposal
-                    id={item?.id}
-                    type="VIEW"
-                    onCloseTab={() => props?.onCloseTab?.()}
-                  />
+                  <Form openInTab formKey="staff_proposal_request_process" id={item?.processInstId} />
                 ),
               }
 

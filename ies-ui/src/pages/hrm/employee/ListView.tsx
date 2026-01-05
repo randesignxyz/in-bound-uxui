@@ -106,11 +106,10 @@ export default ({ onAdd, onEdit }: Props) => {
                 tabLabel: `${item?.employeeCode} - ${item?.firstName} ${item?.lastName}`,
                 panel: () => (
                   <Profile
-                    id={item?.employeeCode}
+                    id={item?.id}
                     onSuccess={refetch}
                   />
                 ),
-
               },
             ]
             : [

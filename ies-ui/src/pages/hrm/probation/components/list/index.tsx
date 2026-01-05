@@ -135,17 +135,9 @@ export default function ProbationListPage() {
                 value: item?.formNo || "n/a",
                 tabLabel: item?.formNo || "Draft",
                 panel: (props: any) => (
-                  <ViewForm
-                    id={item.formNo}
-                    type="VIEW"
-                    onCloseTab={() => {
-                      props?.onCloseTab?.();
-                      refreshTotals();
-                    }}
-                  />
+                 <Form openInTab formKey="probation_evaluation_form_request_process" id={item?.instanceId}/>
                 ),
               }
-
             );
           }
           return tabs;
@@ -213,7 +205,12 @@ export default function ProbationListPage() {
                   <Space size={1} align="center">
                     {/* Row number */}
                     <span>{i + 1}</span>
-
+                    <Button
+                      type="link"
+                      size="small"
+                      icon={<EyeOutlined />}
+                      onClick={() => quickViewHandler(r)}
+                    />
                     <Button
                       size="small"
                       type="link"

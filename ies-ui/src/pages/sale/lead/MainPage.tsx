@@ -78,8 +78,8 @@ const LeadMainPage: React.FC<Props> = () => {
           },
           {
             tabLabel: `${items?.internalName
-                ? items?.internalName
-                : [items?.firstName, items?.lastName].join(' ')
+              ? items?.internalName
+              : [items?.firstName, items?.lastName].join(' ')
               }`,
             action: 'edit',
             panel: ({ onUpdateTab, key }) => (
@@ -97,8 +97,8 @@ const LeadMainPage: React.FC<Props> = () => {
           },
           {
             tabLabel: `${items?.internalName
-                ? items?.internalName
-                : [items?.firstName, items?.lastName].join(' ')
+              ? items?.internalName
+              : [items?.firstName, items?.lastName].join(' ')
               }`,
             action: 'view',
             panel: ({ onUpdateTab, key }) => (
@@ -145,6 +145,13 @@ const LeadMainPage: React.FC<Props> = () => {
               Export
             </Button>,
           ],
+          onOpenAdvanceSearch: () => setFilter((p) => ({
+            ...p,
+            advanceSearch: {
+              ...p.advanceSearch,
+              status: 'ALL'
+            }
+          })),
           onRefresh: refetch,
           onFilter: (param, page, sort) => {
             setFilter((p) => ({
@@ -184,7 +191,7 @@ const LeadMainPage: React.FC<Props> = () => {
               {
                 title: 'Prospect Code',
                 actionProps: (items) => ({
-                  label: `${items?.prospectCode??""}`,
+                  label: `${items?.prospectCode ?? ""}`,
                   type: 'view',
                 }),
               },
@@ -256,7 +263,7 @@ const LeadMainPage: React.FC<Props> = () => {
               {
                 title: 'Status',
                 dataIndex: 'status',
-                width:100,
+                width: 100,
                 render: (_, r) => (
                   <Badge
                     status={

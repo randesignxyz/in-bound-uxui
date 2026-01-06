@@ -109,12 +109,12 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
       purchaseOrder.items
         ? purchaseOrder.items.map((e) => {
           // e.key = e.itemCode!;
-           e.key = `${e.itemCode}-${e.status}`
+          e.key = `${e.itemCode}-${e.status}`
           return e;
         })
         : [],
     );
-    
+
   };
 
   useEffect(() => {
@@ -210,7 +210,6 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
       onOk: async () => {
         const assigner = dataForm.assignedTo.split(',');
         const distributor = dataForm.distributorId.split(',');
-        console.log(dataForm.latitude, dataForm.longitude);
         const entry: PurchaseOrderDtoCreate = {
           id: id,
           address: dataForm.address,
@@ -643,7 +642,7 @@ const MpuPoEntryForm: React.FC<Props> = ({ id, onBack, onView, type }) => {
                     value={row?.pricing ?? 0}
                     onChange={(value) => {
                       config.onChange?.(value)
-                      console.log('value',row)
+                      console.log('value', row)
                     }}
                     style={{ width: '100%' }}
                   />

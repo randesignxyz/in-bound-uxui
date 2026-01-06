@@ -137,7 +137,6 @@ const POAdjustForm: React.FC<Props> = ({ actionType, ...props }) => {
                         const data = await PurchaseOrderServiceAPI(requestActions).page({
                             criteria: {
                                 searchValue: keyWords,
-
                             }
                         });
 
@@ -261,14 +260,28 @@ const POAdjustForm: React.FC<Props> = ({ actionType, ...props }) => {
                                     width: 120
                                 },
                                 {
-                                    title: "Rejected",
+                                    title: "Status",
                                     dataIndex: "status",
                                     valueType: "select",
                                     valueEnum: {
                                         Loaded: { text: "Loaded" },
-                                        Rejected: { text: "Rejected" }
+                                        Rejected: { text: "Rejected" },
                                     },
-                                },
+                                    editable: (text, record) => {
+                                        return record.status !== "Rejected";
+                                    },
+
+                                }
+
+                                // {
+                                //     title: "Rejected",
+                                //     dataIndex: "status",
+                                //     valueType: "select",
+                                //     valueEnum: {
+                                //         Loaded: { text: "Loaded" },
+                                //         Rejected: { text: "Rejected" }
+                                //     },
+                                // },
 
                             ]}
                         />

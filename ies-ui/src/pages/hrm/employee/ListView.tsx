@@ -124,7 +124,6 @@ export default ({ onAdd, onEdit }: Props) => {
                     onSuccess={refetch}
                   />
                 ),
-
               },
             ]
         }

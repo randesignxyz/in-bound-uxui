@@ -28,12 +28,10 @@ import Message from './Message';
 import Activity from './tabitems/Activity';
 import { useAccess } from '@umijs/max';
 
-function Profile(props:any) {
+function Profile() {
   const params = useParams();
-  const {is_admin} = params;
+  const {is_admin,id} = params;
 
-  // console.log(id);
-  // console.log(id);
   const requestActions = simpleRequestActions();
   const [tabStatus, seTabStatus] = useState<AdvancedState>({
     operationKey: 'contact',
@@ -46,8 +44,8 @@ function Profile(props:any) {
   const [step,setStep] = useState(1);
   //
   const onTextChange = (val:string)=>{
-      // setRemarks({valueText:val});
-      _valueText = val;
+    // setRemarks({valueText:val});
+    _valueText = val;
   }
   // start modified on profiles
   const onStartModify = (step_id : number,sms:string)=>{
@@ -135,7 +133,7 @@ function Profile(props:any) {
   // init
   const initData = async () => {
     try {
-      const rs = await ProfileServices.fetchProfile(Number(props?.id)).query(requestActions);
+      const rs = await ProfileServices.fetchProfile(Number(id)).query(requestActions);
       //
       if(rs?.profile_draft==null){
         // var _step = (rs?.ess.id!!<=0)?rs?.ess.stag:1;
@@ -255,16 +253,16 @@ function Profile(props:any) {
   //
   const extra = (
     <div className={styles.moreInfo}>
-        <ImageProfileUploader imageId= {profile?.profileImageId} onSave={async (fileId)=> {
-          try {
-            profile && await ProfileServices.saveProfileImage({
-              employeeId: profile.id,
-              imageId: fileId
-            })(requestActions)
-          } catch (error:any) {
-            message.error(error.message || 'failed to upload image.')
-          }
-        }}/>
+      <ImageProfileUploader imageId= {profile?.profileImageId} onSave={async (fileId)=> {
+        try {
+          profile && await ProfileServices.saveProfileImage({
+            employeeId: profile.id,
+            imageId: fileId
+          })(requestActions)
+        } catch (error:any) {
+          message.error(error.message || 'failed to upload image.')
+        }
+      }}/>
     </div>
   );
 
@@ -297,20 +295,20 @@ function Profile(props:any) {
         checking open announcement expiry
       */}
       {profile?.ess.id!!<=0?'': profile?.ess.empClosed==2?'': profile?.ess.stag==8?'':
-            profile && <Message visible={(step==6&&Number(id)==0)?true:false}
-              message={_stag[step]}
-              description={_stag_message[step]}
-              opentitle = {profile?.ess.description!!}
-              type={[4,5].find((element) => element == step)?"error":"info"}
-              step={step}
-              data={profile?.profile_draft}
-              is_admin={[1,2].find((element) => element == Number(is_admin))?true:false}
-              cb={{
-                onStartModify: (stepId) => {
-                  onStartModify(stepId,'Start Modify Data');
-                },
-              }}
-            />
+        profile && <Message visible={(step==6&&Number(id)==0)?true:false}
+                            message={_stag[step]}
+                            description={_stag_message[step]}
+                            opentitle = {profile?.ess.description!!}
+                            type={[4,5].find((element) => element == step)?"error":"info"}
+                            step={step}
+                            data={profile?.profile_draft}
+                            is_admin={[1,2].find((element) => element == Number(is_admin))?true:false}
+                            cb={{
+                              onStartModify: (stepId) => {
+                                onStartModify(stepId,'Start Modify Data');
+                              },
+                            }}
+        />
       }
       {/*  */}
       {profile && step!=1 && <PageContainer
@@ -340,22 +338,22 @@ function Profile(props:any) {
 
 
       <PersonalViewDetailModal
-          open={!!modalViedEditVisible?.type}
-          // lookupList={lookupDataList}
-          onOpenChange={(visible) => hideModal(visible)}
-          data={modalViedEditVisible?.payload}
-          onFinishFailed={(error) => {
-            message.error(
-                <Space direction="vertical" align="start">
-                {error.errorFields.map((it) => (
-                    <div>{it.errors.join(', ')}</div>
-                ))}
-                </Space>,
-            );
-          }}
-          // onFinish={(data) => {
-          //     return saveEssProfileHandler({ ...data, id: modalVisible?.payload?.id, empId: profile.id,status:true,step:step });
-          // }}
+        open={!!modalViedEditVisible?.type}
+        // lookupList={lookupDataList}
+        onOpenChange={(visible) => hideModal(visible)}
+        data={modalViedEditVisible?.payload}
+        onFinishFailed={(error) => {
+          message.error(
+            <Space direction="vertical" align="start">
+              {error.errorFields.map((it) => (
+                <div>{it.errors.join(', ')}</div>
+              ))}
+            </Space>,
+          );
+        }}
+        // onFinish={(data) => {
+        //     return saveEssProfileHandler({ ...data, id: modalVisible?.payload?.id, empId: profile.id,status:true,step:step });
+        // }}
       />
     </Spin>
   );

@@ -64,8 +64,8 @@ export default ({ onAdd, onEdit }: Props) => {
   const isAdvancedFiltered = () => {
     const adv = filter.criteria?.advanceSearch;
     return (
-      (adv?.advanceSearch?.buId?.length ?? 0) > 0 ||
-      (adv?.advanceSearch?.department?.length ?? 0) > 0
+      (adv?.advanceSearch?.buIds?.length ?? 0) > 0 ||
+      (adv?.advanceSearch?.depIds?.length ?? 0) > 0
     );
   };
   const advanceSearchIcon = useMemo(() => {
@@ -231,7 +231,7 @@ export default ({ onAdd, onEdit }: Props) => {
                 render: (_, entity) => (
                   <Flex gap={5} align="center">
                     <span style={{ color: "#1677ff", cursor: "pointer" }}>
-                  {entity.employeeCode}
+                  {entity.id}
                   </span>
                   </Flex>
                 ),

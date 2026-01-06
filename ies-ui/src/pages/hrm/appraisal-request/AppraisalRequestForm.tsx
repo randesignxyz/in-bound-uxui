@@ -1,6 +1,7 @@
 import FileUploader from "@/components/Attachment/FileUploader";
 import { ActionCompProps } from "@/components/core/comp";
 import {
+  FooterToolbar,
   ModalForm,
   ProCard,
   ProForm,
@@ -121,30 +122,46 @@ export default ({ visisble, formKey, onClose, cb }: ActionCompProps & { formKey:
         }
       }
     }}
+    // submitter={{
+    //   searchConfig: {
+    //     submitText: 'Submit',
+    //   },
+    //   render(props, defaultDoms) {
+    //     if (defaultDoms.length > 1) {
+    //       return [
+    //         defaultDoms[0],
+    //         defaultDoms[1],
+    //       ]
+    //     }
+    //     else return defaultDoms
+    //   },
+    // }}
     submitter={{
-      searchConfig: {
-        submitText: 'Submit',
-      },
-      render(props, defaultDoms) {
-
-        if (defaultDoms.length > 1) {
-          return [
-            defaultDoms[0],
-            // <Button key={'reset-bt'} onClick={() => {
-            //   const key = uniqueId('request-item')
-            //   props.form?.resetFields()
-            //   setForceClearUpload(v => v + 1)
-            //   setUploadFiles([])
-            //   setAppraisalSelected([])
-            //   form.setFieldsValue({})
-            // }}>Reset</Button>,
-            defaultDoms[1],
-          ]
-        }
-        else return defaultDoms
-      },
+      render: () => (
+        <FooterToolbar>
+          <Button
+            onClick={() => {
+              form.resetFields();
+              setUploadFiles([]);
+              setAppraisalSelected([]);
+              setBuSelected(undefined);
+              setForceClearUpload(v => v + 1); // reset FileUploader
+            }}
+          >
+            Reset
+          </Button>
+          <Button
+            type="primary"
+            onClick={() => form.submit()}
+          >
+            Submit
+          </Button>
+        </FooterToolbar>
+      ),
     }}
+
   >
+
     <Space direction="vertical" style={{ width: '100%' }}>
       <Requestor onlyCurrentUser={true}  form={form} title="Requestor" />
       <ProFormText label= {<b>Title</b>} name='title' rules={[{required:true,message:'Title is required, and must be up to 250 characters',whitespace:true, max:255}]}/>

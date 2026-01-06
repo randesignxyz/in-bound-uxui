@@ -191,7 +191,7 @@ export default function StaffRequisitionPage() {
                         action: 'view',
                         value: entity, // ✅ pass full entity
                         tabLabel: entity.formNo,
-                        key: entity.instanceId, // optional unique key
+                        key: entity.id, // optional unique key
                       });
                     }}
                   >

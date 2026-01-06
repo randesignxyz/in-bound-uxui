@@ -248,7 +248,19 @@ export default function StaffProposalPage() {
           setAdvanceSearchVisible(false);
         }}
         onReset={() => {
-          actionRef.current?.reloadAndRest?.();
+          setFilter((prev) => ({
+            ...prev,
+            criteria: {
+              ...prev.criteria,
+              advanceSearch: {
+                ...prev.criteria?.advanceSearch,
+                buIds: [],
+                depIds: [],
+              },
+            },
+            pagination: { ...prev.pagination, current: 1 },
+          }));
+          setAdvanceSearchVisible(false);
         }}
       />
     </>

@@ -10,7 +10,7 @@ export default () => {
     setForceUpdate(v => v + 1)
   }
   return (
-    <CrudWrapper baseURL={HrmPaths.probationEvaluation}>
+    <CrudWrapper baseURL={HrmPaths.probationEvaluation} disablePageContainer={true}>
       {
         (view, id, navigate) => {
           switch (view) {

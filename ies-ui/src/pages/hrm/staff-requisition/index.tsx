@@ -66,7 +66,6 @@ export default function StaffRequisitionPage() {
           { searchValue?: string; advanceSearch?: StaffRequisitionAdvanceSearchParams },
           undefined
         >
-        actionRef={actionRef}  // important for open tab
         tabRender={(item) =>
           access.canRequestHrStaffRequisition
             ? [

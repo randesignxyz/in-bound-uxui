@@ -2,7 +2,6 @@ import React, { useRef, useState } from "react";
 import PageWrapper from "@/components/PageWrapper";
 import { history, useAccess, useQuery } from "@umijs/max";
 import {
-  AdvanceSearchParams,
   SavePayLoad,
   SearchParams,
   StaffProposalDetail,

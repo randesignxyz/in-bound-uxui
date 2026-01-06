@@ -3,16 +3,13 @@ import { Drawer, DrawerProps } from "antd";
 import { useForm } from "antd/lib/form/Form";
 import { simpleRequestActions } from "@/services/model";
 import { MultiRequest } from "@/services/apiGateway";
-import { BU, Department } from "../data";
+import { BU, Department, StaffRequisitionAdvanceSearchParams } from "../data";
 import { useEffect, useState } from "react";
 import { EmployeeServices } from "../services";
 
 interface Props extends DrawerProps {
-  dataItem?: {
-    buIds?: number[];
-    depIds?: number[];
-  };
-  onSearch: (params: { buIds?: number[]; depIds?: number[] }) => void;
+  dataItem?: StaffRequisitionAdvanceSearchParams;
+  onSearch: (params: StaffRequisitionAdvanceSearchParams) => void;
   onReset: () => void;
 }
 
@@ -23,7 +20,7 @@ const AdvanceEmployeeSearch: React.FC<Props> = ({
                                                   ...props
                                                 }) => {
   const requestActions = simpleRequestActions();
-  const [form] = useForm();
+  const [form] = useForm<StaffRequisitionAdvanceSearchParams>();
 
   const [data, setData] = useState<{
     buList: BU[];
@@ -37,12 +34,10 @@ const AdvanceEmployeeSearch: React.FC<Props> = ({
     initData();
   }, []);
 
-  // Sync form with current applied filters when drawer opens
   useEffect(() => {
-    form.setFieldsValue({
-      buIds: dataItem?.buIds || [],
-      depIds: dataItem?.depIds || [],
-    });
+    if (dataItem) {
+      form.setFieldsValue(dataItem);
+    }
   }, [dataItem, form]);
 
   const initData = async () => {
@@ -61,41 +56,47 @@ const AdvanceEmployeeSearch: React.FC<Props> = ({
   };
 
   return (
-    <Drawer {...props} title="Advanced Search" width={400}>
+    <Drawer {...props} title="Advanced Search">
       <ProForm
         form={form}
-        onFinish={(values) => {
-          onSearch({
-            buIds: values.buIds,
-            depIds: values.depIds,
-          });
-        }}
         onReset={() => {
           form.resetFields();
           onReset();
         }}
         submitter={{
-          searchConfig: { submitText: "Search", resetText: "Reset" },
-          resetButtonProps: { },
+          searchConfig: {
+            submitText: "Search",
+            resetText: "Reset",
+          },
+          onSubmit: async () => {
+            const values = await form.validateFields();
+            onSearch(values);
+          },
         }}
       >
         <ProFormSelect
           label="Company"
-          name="buIds"
+          name="bu"
           mode="multiple"
           allowClear
           placeholder="Select companies"
-          options={data.buList.map(it => ({ label: it.name, value: it.id }))}
+          options={data.buList.map((it) => ({
+            label: it.name,
+            value: it.id,
+          }))}
         />
 
         <ProFormSelect
           label="Function"
-          name="departmentIds"           // ← Now consistent!
+          name="department"
           mode="multiple"
           allowClear
           showSearch
           placeholder="Select functions"
-          options={data.departmentList.map(it => ({ label: it.name, value: it.id }))}
+          options={data.departmentList.map((it) => ({
+            label: it.name,
+            value: it.id,
+          }))}
         />
       </ProForm>
     </Drawer>

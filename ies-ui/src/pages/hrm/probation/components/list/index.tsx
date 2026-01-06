@@ -40,7 +40,6 @@ export default function ProbationListPage() {
     setForceChange(v => v + 1)
     actionRef?.current?.reload?.()
   }
-  const [advanceSearchParams, setAdvanceSearchParams] = useState<ProbationAdvanceSearchParams>({});
   const srv = createService({ request: requestActions });
   const access = useAccess();
   const { modals } = Model();
@@ -92,20 +91,6 @@ export default function ProbationListPage() {
         {count}
       </sup>
     );
-  const openTab = (record: ProbationEvaluationEmpList) => {
-    pageRef.current?.showTab?.({
-      action: "view",
-      value: record.formNo,
-      tabLabel: record.formNo,
-      panel: (props: any) => (
-        <DataEntryFormView
-          id={record.instanceId}
-          type="VIEW"
-          onCloseTab={props?.onCloseTab}
-        />
-      ),
-    });
-  };
   return (
     <>
       <PageWrapper<ProbationEvaluationEmpList, ProbationAdvanceSearchParams, undefined>

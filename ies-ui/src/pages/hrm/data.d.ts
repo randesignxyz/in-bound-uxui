@@ -50,7 +50,7 @@ export type StaffRequisitionAdvanceSearchParams = {
   keyword?: string;
   advanceSearch?: {
     buIds?: number[];
-    deptIds?: number[];
+    depIds?: number[];
     integratedStatus?: string;
     status?: string;
   };
@@ -62,7 +62,7 @@ export type ProbationAdvanceSearchParams = {
   keyword?: string;
   advanceSearch?: {
     buIds?: number[];
-    deptIds?: number[];
+    depIds?: number[];
     integratedStatus?: string;
     status?: string;
   };
@@ -115,7 +115,7 @@ export type RequisitionData = {
 
 export type StaffRequisitionRequest = {
   id: number;
-  instanceId: string;
+  instanceId: string | undefined;
   requester: string;
   requestedDate: Moment;
   formNo: string;

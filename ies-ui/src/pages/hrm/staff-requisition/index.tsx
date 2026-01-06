@@ -20,8 +20,6 @@ import RequestModal from "./RequestModal";
 import AdvanceSearchDrawer from "./AdvanceEmployeeSearch";
 import { TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { ActionType } from '@ant-design/pro-components';
-import ViewForm from "./process-flow/ViewForm"
-import DataEntryView from '@/pages/pro/requisition/DataEntryView';
 import Form from '@/pages/process-flow/form';
 export default function StaffRequisitionPage() {
   const access = useAccess();
@@ -34,7 +32,7 @@ export default function StaffRequisitionPage() {
         keyword: undefined,
         advanceSearch: {
           buIds: [],
-          departmentIds: [],
+          depIds: [],
           integratedStatus: "ALL",
           status: "ALL",
         },
@@ -53,7 +51,7 @@ export default function StaffRequisitionPage() {
     const adv = filter.criteria?.advanceSearch;
     return (
       (adv?.advanceSearch?.buIds?.length ?? 0) > 0 ||
-      (adv?.advanceSearch?.deptIds?.length ?? 0) > 0
+      (adv?.advanceSearch?.depIds?.length ?? 0) > 0
     );
   };
   const advanceSearchIcon = useMemo(() => {
@@ -88,15 +86,11 @@ export default function StaffRequisitionPage() {
               {
                 action: "view",
                 tabLabel: item?.formNo || `Form (${item?.instanceId})`,
-                panel: (props) => item?.formNo || `Form (${item?.instanceId})` ?
-                  <ViewForm
-                    onRefresh={refetch}
-                    onCloseTab={()=>{
-                    props.onCloseTab?.()
-                    refetch()
-                  }} id={item?.instanceId} type="EDIT" openInTab/> :
-                  <Form openInTab formKey="staff_requisition_request_process" id={item?.instanceId}/>
-              },
+                panel: (props) => (
+                  <Form openInTab formKey="staff_requisition_request_process" id={item?.instanceId} />
+                ),
+              }
+
             ]
             : [
               {
@@ -231,7 +225,7 @@ export default function StaffRequisitionPage() {
               advanceSearch: {
                 ...prev.criteria?.advanceSearch,
                 buIds: params.buIds || [],
-                departmentIds: params.departmentIds || [],
+                depIds: params.depIds || [],
               },
             },
             pagination: { ...prev.pagination, current: 1 },
@@ -246,7 +240,7 @@ export default function StaffRequisitionPage() {
               advanceSearch: {
                 ...prev.criteria?.advanceSearch,
                 buIds: [],
-                departmentIds: [],
+                depIds: [],
               },
             },
             pagination: { ...prev.pagination, current: 1 },

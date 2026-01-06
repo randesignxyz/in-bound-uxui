@@ -10,9 +10,9 @@ import { EmployeeServices } from "../services";
 interface Props extends DrawerProps {
   dataItem?: {
     buIds?: number[];
-    departmentIds?: number[];
+    depIds?: number[];
   };
-  onSearch: (params: { buIds?: number[]; departmentIds?: number[] }) => void;
+  onSearch: (params: { buIds?: number[]; depIds?: number[] }) => void;
   onReset: () => void;
 }
 
@@ -41,7 +41,7 @@ const AdvanceEmployeeSearch: React.FC<Props> = ({
   useEffect(() => {
     form.setFieldsValue({
       buIds: dataItem?.buIds || [],
-      departmentIds: dataItem?.departmentIds || [],
+      depIds: dataItem?.departmentIds || [],
     });
   }, [dataItem, form]);
 
@@ -67,7 +67,7 @@ const AdvanceEmployeeSearch: React.FC<Props> = ({
         onFinish={(values) => {
           onSearch({
             buIds: values.buIds,
-            departmentIds: values.departmentIds,
+            depIds: values.departmentIds,
           });
         }}
         onReset={() => {

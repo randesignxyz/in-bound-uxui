@@ -64,7 +64,7 @@ export default function AppraisalRequestPage() {
   };
   return (
     <PageWrapper<
-        AppraisalRequestListItem | AppraisalRequestDetail ,
+        AppraisalRequestListItem ,
         SearchParams,
         SavePayLoad
       >
@@ -90,14 +90,11 @@ export default function AppraisalRequestPage() {
         {
           action: "view",
           tabLabel: item?.formNo,
-          panel: (props) => item?.formNo || item?.processInstId ?
-            <Detail
-              onCloseTab={() => {
-                props?.onCloseTab?.()
-                refetch()
-              }} id={item.processInstId} type="EDIT" openInTab
-            />: <Form openInTab formKey={AppraisalRequestFormNames.processDefKey} id={item?.processInstId}/>
-        },
+          key: item?.processInstId,
+          panel: (props) => (
+          <Form openInTab formKey="performance_review_request_process" id={item?.processInstId}/>
+          ),
+        }
       ]}
       listView={{
         type: "Table",

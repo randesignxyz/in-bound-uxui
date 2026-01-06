@@ -55,7 +55,7 @@ export default function ProbationListPage() {
     pagination: { current: 1, pageSize: 20 },
     advanceSearch: {
       buIds: [],
-      deptIds: [],
+      depIds: [],
       integratedStatus: "ALL",
       status: "ALL",
     },
@@ -129,21 +129,17 @@ export default function ProbationListPage() {
             });
           }
           if (item) {
-            tabs.push({
-              action: "view",
-              value: item.formNo,
-              tabLabel: item.formNo,
-              panel: (props: any) => item?.formNo || item?.instanceId ?
-                <ViewForm
-                  type="VIEW"
-                  onCloseTab={() => {
-                    props?.onCloseTab?.();
-                    refreshTotals();
-                  }} id={item.instanceId} openInTab
-                /> : <Form openInTab formKey={ProbationEvaluationRequestFormNames.processDefKey} id={item.instanceId} />
-            });
+            tabs.push(
+              {
+                action: "view",
+                value: item?.formNo || "n/a",
+                tabLabel: item?.formNo || "Draft",
+                panel: (props: any) => (
+                 <Form openInTab formKey="probation_evaluation_form_request_process" id={item?.instanceId}/>
+                ),
+              }
+            );
           }
-
           return tabs;
         }}
         listView={{
@@ -209,7 +205,12 @@ export default function ProbationListPage() {
                   <Space size={1} align="center">
                     {/* Row number */}
                     <span>{i + 1}</span>
-
+                    <Button
+                      type="link"
+                      size="small"
+                      icon={<EyeOutlined />}
+                      onClick={() => quickViewHandler(r)}
+                    />
                     <Button
                       size="small"
                       type="link"
@@ -297,22 +298,36 @@ export default function ProbationListPage() {
       <AdvanceSearchDrawer
         open={advanceSearchVisible}
         onClose={() => setAdvanceSearchVisible(false)}
+        // dataItem={filter.criteria?.advanceSearch}
         onSearch={(params) => {
-          setFilter((prev) =>
-            ({
-              criteria:{
-                ...prev.criteria,
-                advanceSearch: {
-                  ...prev.criteria?.advanceSearch,
-                  ...params,
-                }
-              }
-            }))
-          setAdvanceSearchParams(params);
+          setFilter((prev) => ({
+            ...prev,
+            criteria: {
+              ...prev.criteria,
+              advanceSearch: {
+                ...prev.criteria?.advanceSearch,
+                buIds: params.buIds || [],
+                depIds: params.depIds || [],
+              },
+            },
+            pagination: { ...prev.pagination, current: 1 },
+          }));
           setAdvanceSearchVisible(false);
         }}
         onReset={() => {
-          actionRef.current?.reloadAndRest?.();
+          setFilter((prev) => ({
+            ...prev,
+            criteria: {
+              ...prev.criteria,
+              advanceSearch: {
+                ...prev.criteria?.advanceSearch,
+                buIds: [],
+                depIds: [],
+              },
+            },
+            pagination: { ...prev.pagination, current: 1 },
+          }));
+          setAdvanceSearchVisible(false);
         }}
       />
       <ProbationEvaluationQuickView

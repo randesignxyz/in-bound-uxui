@@ -47,6 +47,7 @@ export default ({ onAdd, onEdit }: Props) => {
         pagination: { current: 1, pageSize: 20 },
       },
     });
+
   const [advanceSearchParams, setAdvanceSearchParams] = useState<EmployeeAdvanceSearchParams>({});
   const [modalVisible, setModalVisible] = useState< { type: 'ADD'; payload: EmployeeListItem } | { type: 'EDIT'; payload: EmployeeListItem } >();
   const hideModal = (visble?: boolean) => !visble && setModalVisible(undefined);
@@ -273,7 +274,21 @@ export default ({ onAdd, onEdit }: Props) => {
           setAdvanceSearchVisible(false);
         }}
         onReset={() => {
-          actionRef.current?.reloadAndRest?.();
+          setFilter({
+            criteria: {
+              keyword: undefined,
+              advanceSearch: {
+                buId: [],
+                department: [],
+                integratedStatus: "ALL",
+                status: "ALL",
+              },
+              pagination: { current: 1, pageSize: 20 },
+            },
+          });
+          setAdvanceSearchParams({});
+          setAdvanceSearchVisible(false);
+          refetch();
         }}
       />
       <EmployeeModal

@@ -1,4 +1,4 @@
-import { useQuery } from "@umijs/max"
+import { useAccess, useQuery } from "@umijs/max"
 import { SupporterServiceAPI } from "../services"
 import { simpleRequestActions } from "@/services/model"
 import { PageContainer, ProColumns, ProTable } from "@ant-design/pro-components"
@@ -32,11 +32,14 @@ const DetailList: React.FC<{ data: any }> = ({ data }) => {
         },
     ];
     return (
-        <Space direction="vertical">
-            <Descriptions>
-                <Descriptions.Item label="Created Date">{moment(data?.createdDate).format("DD-MM-YYYY")}</Descriptions.Item>
-                <Descriptions.Item label="Reason">{data?.remark}</Descriptions.Item>
-            </Descriptions>
+        <Space direction="vertical" >
+            <Card size="small" >
+                <Descriptions>
+                    <Descriptions.Item label="Created Date">{moment(data?.createdDate).format("YYYY-MM-DD H:mm")}</Descriptions.Item>
+                    <Descriptions.Item label="Reason">{data?.remark}</Descriptions.Item>
+                </Descriptions>
+            </Card>
+
             <ProTable
                 size="small"
                 headerTitle={moment(data?.createdDate).format("DD-MM-YYYY")}
@@ -55,6 +58,7 @@ const DetailList: React.FC<{ data: any }> = ({ data }) => {
 
 export default () => {
     const requestActions = simpleRequestActions();
+    const access = useAccess()
     const [filter, setFilter] = useState<TableViewSearchParams<any>>({})
     const { data, isFetching, refetch } = useQuery({
         queryKey: ["As", filter],
@@ -66,7 +70,6 @@ export default () => {
     const [actionState, setActionState] = useState<ActionState>({
         open: false,
     });
-
     return (
         <PageContainer
             breadcrumbRender={false}
@@ -108,7 +111,7 @@ export default () => {
                             />
                         </Space>
                         <Space>
-                            <Button
+                            <Button hidden={!access.can("SALE_SUPPORTER", "PO_ROLLBACK")}
                                 type="link"
                                 onClick={() => {
                                     setActionState({
@@ -117,7 +120,7 @@ export default () => {
                                     })
                                 }}
                             >PO</Button>
-                            <Button
+                            <Button hidden={!access.can("SALE_SUPPORTER", "PO_CHANGE_ITEM")}
                                 type="link"
                                 onClick={() => {
                                     setActionState({
@@ -126,7 +129,7 @@ export default () => {
                                     })
                                 }}
                             >PO Items</Button>
-                            <Button
+                            <Button hidden={!access.can("SALE_SUPPORTER", "INVOICE_CORRECTION")}
                                 type="link"
                                 onClick={() => {
                                     setActionState({
@@ -159,15 +162,17 @@ export default () => {
                     pagination={{
                         pageSize: data?.pageSize,
                         total: data?.total,
-                        current: data?.page,
+                        current: (data?.page || 0) + 1,
                         onChange: (page, pageSize) => {
-                            setFilter({
-                                ...filter,
+                            setFilter((filter) => ({
+                                criteria: {
+                                    ...filter.criteria,
+                                },
                                 pagination: {
-                                    current: page,
+                                    page: page,
                                     pageSize: pageSize
                                 },
-                            })
+                            }))
                         }
                     }}
                     onRow={(record) => {
@@ -196,7 +201,18 @@ export default () => {
                 />
                 </Col>
                 <Col span={14}>
-                    <DetailList data={ip || data?.items?.[0]} />
+                    <Card
+                        size="small"
+                        bodyStyle={{
+                            maxHeight: '1027px',
+                            overflowY: 'auto',
+                            scrollbarWidth: "thin",
+                            margin: 0,
+                            backgroundColor: "transparent"
+                        }}
+                    >
+                        <DetailList data={ip || data?.items?.[0]} />
+                    </Card>
                 </Col>
             </Row>
 

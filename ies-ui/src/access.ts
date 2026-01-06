@@ -11,10 +11,10 @@ export default function access(initialState: { currentUser?: API.CurrentUser } |
   // Define global admin roles
   const SUPER_ROLES = [
     "ROLE_ADMIN",
-    "ROLE_CRM_ADMIN",
-    "ROLE_SALE_ADMIN",
-    "ROLE_SFA_ADMIN",
-    "ROLE_DSD_ADMIN"
+    // "ROLE_CRM_ADMIN",
+    // "ROLE_SALE_ADMIN",
+    // "ROLE_SFA_ADMIN",
+    // "ROLE_DSD_ADMIN"
   ];
 
   // Check if user has ANY super role (auto allow all)

@@ -169,6 +169,7 @@ const InvoiceCorrectForm = (props: Props) => {
                         title: "Quantity",
                         dataIndex: "quantity",
                         valueType: "digit",
+                        editable: false,
                         width: 120,
                     },
                     {

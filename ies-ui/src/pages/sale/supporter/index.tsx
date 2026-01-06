@@ -51,8 +51,6 @@ const Supporter: React.FC<Props> = () => {
   /* Menu click handler                 */
   /* ---------------------------------- */
   const onMenuClick: MenuProps["onClick"] = (info) => {
-    console.log(info);
-
     switch (info.key) {
       case "PO_ROLLBACK":
       case "PO_CHANGE_ITEM":
@@ -79,7 +77,7 @@ const Supporter: React.FC<Props> = () => {
       access.can("SALE_SUPPORTER", "PO_CHANGE_ITEM") &&
       getItem("Change Item Price", "PO_CHANGE_ITEM", <TeamOutlined />),
 
-      access.can("SALE_SUPPORTER", "INVOICE") &&
+      access.can("SALE_SUPPORTER", "INVOICE_CORRECTION") &&
       getItem("Invoice", "INVOICE", <TeamOutlined />),
     ].filter(Boolean) as MenuItem[];
 
@@ -107,7 +105,7 @@ const Supporter: React.FC<Props> = () => {
   const listItems: ListMenuItem[] = useMemo(
     () =>
       [
-        access.can("SALE_SUPPORTER", "PO_SUPPORTER") && {
+        access.canAccess("SALE_SUPPORTER") && {
           id: "PO",
           name: "Adjustment & Correction",
           description: "Tools for adjusting, fixing, and updating PO data.",

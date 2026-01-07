@@ -24,6 +24,7 @@ import { ImportDataItem, ImportDataResponse } from '@/services/shared/data';
 import EmployeeModal from './EmployeeModal';
 import UploadData from '@/pages/hrm/employee/upload-data';
 import Profile from "../../profile/index";
+import Form from '@/pages/process-flow/form';
 
 interface Props {
   onAdd?: (id?: number) => void;
@@ -47,7 +48,6 @@ export default ({ onAdd, onEdit }: Props) => {
         pagination: { current: 1, pageSize: 20 },
       },
     });
-
   const [advanceSearchParams, setAdvanceSearchParams] = useState<EmployeeAdvanceSearchParams>({});
   const [modalVisible, setModalVisible] = useState< { type: 'ADD'; payload: EmployeeListItem } | { type: 'EDIT'; payload: EmployeeListItem } >();
   const hideModal = (visble?: boolean) => !visble && setModalVisible(undefined);
@@ -65,8 +65,8 @@ export default ({ onAdd, onEdit }: Props) => {
   const isAdvancedFiltered = () => {
     const adv = filter.criteria?.advanceSearch;
     return (
-      (adv?.advanceSearch?.buIds?.length ?? 0) > 0 ||
-      (adv?.advanceSearch?.depIds?.length ?? 0) > 0
+      (adv?.advanceSearch?.buId?.length ?? 0) > 0 ||
+      (adv?.advanceSearch?.department?.length ?? 0) > 0
     );
   };
   const advanceSearchIcon = useMemo(() => {
@@ -108,7 +108,6 @@ export default ({ onAdd, onEdit }: Props) => {
                 panel: () => (
                   <Profile
                     id={item?.id}
-                    onSuccess={refetch}
                   />
                 ),
               },
@@ -125,6 +124,7 @@ export default ({ onAdd, onEdit }: Props) => {
                     onSuccess={refetch}
                   />
                 ),
+
               },
             ]
         }
@@ -229,6 +229,7 @@ export default ({ onAdd, onEdit }: Props) => {
                   label: item.employeeCode,
                 }),
                 render: (_, entity) => (
+
                   <Flex gap={5} align="center">
                     <span style={{ color: "#1677ff", cursor: "pointer" }}>
                   {entity.id}
@@ -274,21 +275,7 @@ export default ({ onAdd, onEdit }: Props) => {
           setAdvanceSearchVisible(false);
         }}
         onReset={() => {
-          setFilter({
-            criteria: {
-              keyword: undefined,
-              advanceSearch: {
-                buId: [],
-                department: [],
-                integratedStatus: "ALL",
-                status: "ALL",
-              },
-              pagination: { current: 1, pageSize: 20 },
-            },
-          });
-          setAdvanceSearchParams({});
-          setAdvanceSearchVisible(false);
-          refetch();
+          actionRef.current?.reloadAndRest?.();
         }}
       />
       <EmployeeModal

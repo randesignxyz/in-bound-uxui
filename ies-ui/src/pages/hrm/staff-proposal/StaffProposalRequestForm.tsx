@@ -7,9 +7,10 @@ import { simpleRequestActions } from '@/services/model';
 import {
   EditableFormInstance,
   EditableProTable,
-  ModalForm,
+  FooterToolbar,
   ProCard,
   ProDescriptions,
+  ProForm,
   ProFormDatePicker,
   ProFormDateRangePicker,
   ProFormDependency,
@@ -222,7 +223,7 @@ export default ({ visisble, formKey, onClose, cb }: ActionCompProps & { formKey:
   }, [seqmentId]);
 
   return (
-    <ModalForm<DataFormType>
+    <ProForm<DataFormType>
       form={form}
       width={1000}
       title="Staff Proposal Request Form"
@@ -244,34 +245,33 @@ export default ({ visisble, formKey, onClose, cb }: ActionCompProps & { formKey:
         }
       }}
       submitter={{
-        searchConfig: {
-          submitText: 'Submit',
-        },
-        render(props, defaultDoms) {
-          if (defaultDoms.length > 1) {
-            return [
-              defaultDoms[0],
-              <Button
-                key={'reset-bt'}
-                onClick={() => {
-                  const key = uniqueId('request-item');
-                  props.form?.resetFields();
-                  setForceClearUpload((v) => v + 1);
-                  setUploadFiles([]);
-                  form.setFieldsValue({});
-                }}
-              >
-                Reset
-              </Button>,
-              defaultDoms[1],
-            ];
-          } else return defaultDoms;
-        },
+        render: () => (
+          <FooterToolbar>
+            <Button
+              onClick={() => {
+                form.resetFields();
+                setUploadFiles([]);
+                setBenefits([]);
+                setItemTaken([]);
+                setRequistionDetail(undefined);
+                setForceClearUpload((v) => v + 1); // reset FileUploader
+              }}
+            >
+              Reset
+            </Button>
+            <Button
+              type="primary"
+              onClick={() => form.submit()}
+            >
+              Submit
+            </Button>
+          </FooterToolbar>
+        ),
       }}
+
     >
       <Space direction="vertical" style={{ width: '100%' }}>
         <Requestor form={form} title="1. Requestor" />
-
         <ProCard size="small" bordered>
           <ProFormGroup direction="vertical">
             <ProFormSelect
@@ -623,6 +623,6 @@ export default ({ visisble, formKey, onClose, cb }: ActionCompProps & { formKey:
           }}
         </ProFormDependency>
       </Space>
-    </ModalForm>
+    </ProForm>
   );
 };

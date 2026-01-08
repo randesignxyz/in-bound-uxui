@@ -6,6 +6,7 @@ import { LookUpDataDTO } from "../fleet/lookupData/data";
 export interface EmployeeListItem {
   id: number;
   employeeId: number;
+  empNo: number;
   employeeCode: string;
   employeeLocalName: string;
   firstName: string;
@@ -24,7 +25,14 @@ export interface EmployeeListItem {
 
 export type EmployeeAdvanceSearchParams = {
   status: 'ALL' | 'ACTIVE' | 'INACTIVE';
-  department?: number;
+  integratedStatus?: string;
+  keyword?: string;
+  advanceSearch?: {
+    buIds?: number[];
+    depIds?: number[];
+    integratedStatus?: string;
+    status?: string;
+  };
 };
 
 
@@ -50,7 +58,7 @@ export type StaffRequisitionAdvanceSearchParams = {
   keyword?: string;
   advanceSearch?: {
     buIds?: number[];
-    deptIds?: number[];
+    depIds?: number[];
     integratedStatus?: string;
     status?: string;
   };
@@ -62,7 +70,7 @@ export type ProbationAdvanceSearchParams = {
   keyword?: string;
   advanceSearch?: {
     buIds?: number[];
-    deptIds?: number[];
+    depIds?: number[];
     integratedStatus?: string;
     status?: string;
   };
@@ -115,7 +123,7 @@ export type RequisitionData = {
 
 export type StaffRequisitionRequest = {
   id: number;
-  instanceId: string;
+  instanceId: string | undefined;
   requester: string;
   requestedDate: Moment;
   formNo: string;

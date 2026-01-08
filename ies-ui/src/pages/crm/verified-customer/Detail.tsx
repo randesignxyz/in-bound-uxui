@@ -73,7 +73,7 @@ const VerifiedDetailView: React.FC<Props> = ({ data1, mode, onBack }) => {
                     <Card
                         size="small"
                         extra={[20001, 20002, 20004].some(p => data?.verifiedStatus?.id == 20002) ?
-                            <Space hidden={access.can("CRM_VERIFICATION","BTN_ACTION")}>
+                            <Space hidden={!access.can("CRM_VERIFICATION", "BTN_ACTION")}>
                                 <Button icon={<SignatureOutlined />}
                                     onClick={() => setRemarkState(true)}
                                     type="link"
@@ -89,7 +89,6 @@ const VerifiedDetailView: React.FC<Props> = ({ data1, mode, onBack }) => {
                                     icon={<CloseCircleOutlined />} type="link" danger
                                     disabled={btnState != 20002}
                                 >Reject</Button>
-
                             </Space> : ""
                         }
                     >
@@ -208,7 +207,7 @@ const VerifiedDetailView: React.FC<Props> = ({ data1, mode, onBack }) => {
                                         scaledSize: isLoaded ? new window.google.maps.Size(60, 60) : undefined,
                                     }}
                                     title={data?.address || "Destination"}
-                                     onClick={() => setActiveMarker("Destination")}
+                                    onClick={() => setActiveMarker("Destination")}
                                 />
 
                                 <Polyline

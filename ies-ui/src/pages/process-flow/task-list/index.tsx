@@ -75,7 +75,7 @@ const TaskList = () => {
            {(total>0) && <Checkbox name="myRequest" onChange={onMyRequestHandler}>My Request{supTitle(total)}</Checkbox>}
         </Space>
     );
-     
+
 
     const handleGogoDataView = (item: UserTask, newTab?: boolean) => {
         const path = `/data-form/${item.taskDefKey}/${item.taskId}`;

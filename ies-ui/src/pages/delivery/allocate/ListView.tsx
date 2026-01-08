@@ -1,10 +1,8 @@
+// @ts-nocheck
 import TableView, { colLink, TableViewSearchParams } from '@/components/DataCrud/TableView';
-import { formatDateTime } from '@/pages/utils';
-import { MultiRequest } from '@/services/apiGateway';
-import { Company, Driver, DriverListItem, SaveDriver, Truck } from '@/services/delivery/data';
 import { simpleRequestActions } from '@/services/model';
 import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table';
-import { Card, Checkbox, DatePicker, message, Modal, Progress, Radio, Space, Spin, Tag, Image, UploadFile, Descriptions, Button, Table, Dropdown, Row, Col, Typography, Select, Form, Tooltip, Divider, Collapse } from 'antd';
+import { Card, Checkbox, DatePicker, message, Modal, Progress, Radio, Space, Spin, Tag, Image, UploadFile, Descriptions, Button, Table, Dropdown, Row, Col, Typography, Select, Form, Tooltip, Divider, Collapse, MenuProps } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AllocateServiceAPI } from '@/pages/delivery/allocate/service';
 import { Allocate, AllocateSOAdvanceParams, AreaList, DeliveryList, DNItemParams, DNList, DNParams, DnQuickView, LocationList, SkuList, SOAllocateActivities, SOList, UpdateRemarkParams } from '@/pages/delivery/allocate/data';
@@ -16,7 +14,7 @@ import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 import AddRemarkModal from './AddRemarkForm';
 import { uploadFileToFirebase } from './uploadImage';
-import { CloseCircleOutlined, ColumnHeightOutlined, CopyOutlined, ExportOutlined, FileSearchOutlined, HistoryOutlined, PlayCircleOutlined, PlusCircleOutlined, ReloadOutlined, SyncOutlined } from '@ant-design/icons';
+import { CloseCircleOutlined, ColumnHeightOutlined, CopyOutlined, DashOutlined, ExportOutlined, FileSearchOutlined, HistoryOutlined, MoreOutlined, PlayCircleOutlined, PlusCircleOutlined, ReloadOutlined, SyncOutlined } from '@ant-design/icons';
 import AdvanceSearch from './advanceSearchDrawer';
 import { FloatingCard } from './displayCard';
 import SaleTypeDrawer from './SaleTypeDrawer';
@@ -51,8 +49,9 @@ export default () => {
   const [selectedRows, setSelectedRows] = useState<DNList[]>([]);
   const [sortModalOpen, setSortModalOpen] = useState(false);
   const [loading, isLoading] = useState(false)
+  const [claimLoading, setClaimLoading] = useState(false);
   const [sortConfig, setSortConfig] = useState<SortRule[]>([
-    { field: undefined, order: undefined }
+    { field: 'shippingAddress', order: 'desc' }
   ]);
   const [asDate, setAsDate] = useState(true);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
@@ -149,7 +148,7 @@ export default () => {
         return [...prev, ...newRows];
       });
 
-      setDataListDn(prev => prev.filter(r => !state.selectedRows?.some(s => s.id === r.id)));
+      setDataListDn(prev => prev.items.filter(r => !state.selectedRows?.some(s => s.id === r.id)));
       if (state.selectedRows.length > 0) setCardOpen({ visible: true });
     }
   }, [state?.selectedRows]);
@@ -162,7 +161,7 @@ export default () => {
 
   // Load provinces once
   useEffect(() => {
-    onSync()
+    // onSync()
     AllocateServiceAPI(requestActions)
       .list_Location("PROVINCE")
       .then((res) => setProvinceOptions(normalizeLocationList(res).map((obj) => ({ value: obj.id, label: obj.name }))));
@@ -220,6 +219,51 @@ export default () => {
     fetchSku();
   }, [advanceSearchParams.filter === 'DN']);
 
+  const getMenuItems = (item: any): MenuProps['items'] => {
+
+    const items: MenuProps['items'] = [];
+
+    // Activate
+    items.push({
+      key: 'TBA',
+      label: 'TBA',
+      // icon: <CheckCircleOutlined />,
+      onClick: () => handleTBA([Number(item.id)], item),
+    });
+
+    // Divider (correctly typed)
+    items.push({
+      type: 'divider',
+    });
+
+    if (item.status != 'force-close' && item.status != 'complete' && access.canAccesAddRemarkAllocate) {
+      items.push({
+        key: 'force_close',
+        label: 'Force Close',
+        icon: <CloseCircleOutlined />,
+        danger: true,
+        onClick: () => setForceCloseOpen({
+          visible: true,
+          id: item?.id,
+        }),
+      });
+    }
+    return items;
+  };
+
+  const getClearTBA = (item: any): MenuProps['items'] => {
+
+    const items: MenuProps['items'] = [];
+
+    // Activate
+    items.push({
+      key: 'Clear TBA',
+      label: 'Clear TBA',
+      // icon: <CheckCircleOutlined />,
+      onClick: () => handleClearTBA([Number(item.id)], item),
+    });
+    return items;
+  };
 
   const handleSaveRemark = async (data: UpdateRemarkParams & { file?: UploadFile[] }) => {
     Modal.confirm({
@@ -230,7 +274,6 @@ export default () => {
 
         if (data.file && data.file.length > 0) {
           try {
-            // Separate existing files (already uploaded) and new files (to upload)
             const existingFiles = data.file.filter(f => !f.originFileObj);
             const existingUrls = existingFiles
               .map(f => f.url)
@@ -243,7 +286,6 @@ export default () => {
               newFiles.map(f => uploadFileToFirebase(f.originFileObj as File))
             );
 
-            // Combine old URLs and newly uploaded URLs
             fileUrls = [...existingUrls, ...newFileUrls];
 
           } catch (err) {
@@ -284,33 +326,99 @@ export default () => {
     });
   };
 
-  // const handleClaim = async (ids: number | number[]) => {
-  //   // Normalize ids to an array
-  //   const idArray = Array.isArray(ids) ? ids : [ids];
-  //   const claimed_line = await services.list_claimed_line();
-  //   console.log('claimed_line', claimed_line)
-  //   Modal.confirm({
-  //     title: 'Pick',
-  //     content: 'Are you sure?',
-  //     onOk: async () => {
-  //       try {
-  //         await services.ClaimDn(idArray, access.currentUser?.login, 'Pick', 'Pick DN') as {
-  //           data: string;
-  //           message: string;
-  //         }
+  const handleTBA = async (ids: number[], selectedListDn: any[]) => {
+    Modal.confirm({
+      title: 'TBA',
+      content: 'Are you sure?',
+      onOk: async () => {
+        const dnList = Array.isArray(selectedListDn)
+          ? selectedListDn
+          : [selectedListDn];
 
-  //         // Reload table and show success message
-  //         actionRef.current?.reloadAndRest?.();
-  //         message.success('Updated successfully');
-  //         setSelectedRowKeys([])
-  //         setSelectedRows([])
-  //       } catch (error) {
-  //         message.error('Failed to update');
-  //         console.error(error);
-  //       }
-  //     },
-  //   });
-  // };
+        const rawLines = dnList.flatMap(dn =>
+          (dn.deliveryItems ?? []).map((it: any) => ({
+            soDocEntry: String(dn.so_doc_entry ?? dn.soId),
+            lineNum: Number(it.sap_line_num),
+            shipDate: dn.deliveryDate
+          }))
+        );
+
+        const uniqueMap = new Map<string, any>();
+        rawLines.forEach((l) => {
+          const key = `${l.soDocEntry}_${l.lineNum}`;
+          if (!uniqueMap.has(key)) uniqueMap.set(key, l);
+        });
+
+        const del_item = Array.from(uniqueMap.values());
+
+        del_item.sort((a, b) =>
+          a.soDocEntry === b.soDocEntry
+            ? a.lineNum - b.lineNum
+            : a.soDocEntry.localeCompare(b.soDocEntry)
+        );
+
+        await services.ClaimDn(
+          ids,
+          access.currentUser?.login ?? '',
+          `Unpick (${dnList.map(v => v.claimed_line)}) & TBA`,
+          'TBA',
+          null,
+          del_item,
+          'TBA'
+        );
+
+        actionRef.current?.reloadAndRest?.();
+        message.success('Updated successfully');
+      },
+    });
+  };
+
+  const handleClearTBA = async (ids: number[], selectedListDn: any[]) => {
+    Modal.confirm({
+      title: 'Clear TBA',
+      content: 'Are you sure?',
+      onOk: async () => {
+        const dnList = Array.isArray(selectedListDn)
+          ? selectedListDn
+          : [selectedListDn];
+
+        const rawLines = dnList.flatMap(dn =>
+          (dn.deliveryItems ?? []).map((it: any) => ({
+            soDocEntry: String(dn.so_doc_entry ?? dn.soId),
+            lineNum: Number(it.sap_line_num),
+            shipDate: dn.deliveryDate
+          }))
+        );
+
+        const uniqueMap = new Map<string, any>();
+        rawLines.forEach((l) => {
+          const key = `${l.soDocEntry}_${l.lineNum}`;
+          if (!uniqueMap.has(key)) uniqueMap.set(key, l);
+        });
+
+        const del_item = Array.from(uniqueMap.values());
+
+        del_item.sort((a, b) =>
+          a.soDocEntry === b.soDocEntry
+            ? a.lineNum - b.lineNum
+            : a.soDocEntry.localeCompare(b.soDocEntry)
+        );
+
+        await services.ClaimDn(
+          ids,
+          access.currentUser?.login ?? '',
+          'Clear TBA',
+          'TBA',
+          null,
+          del_item,
+          'open'
+        );
+
+        actionRef.current?.reloadAndRest?.();
+        message.success('Updated successfully');
+      },
+    });
+  };
 
   const handleClaim = async (ids: number | number[]) => {
     const claimed_line = await services.list_claimed_line()
@@ -319,28 +427,42 @@ export default () => {
     setClaimOpen(true);
   };
 
-  const handleUnClaim = async (ids: number[], data: any) => {
+  const handleUnClaim = async (ids: number[], selectedListDn: any[]) => {
     Modal.confirm({
       title: 'Unpick',
       content: 'Are you sure?',
       onOk: async () => {
+        const dnList = Array.isArray(selectedListDn)
+          ? selectedListDn
+          : [selectedListDn];
+        const rawLines = dnList.flatMap(dn =>
+          (dn.deliveryItems ?? []).map((it: any) => ({
+            soDocEntry: String(dn.so_doc_entry ?? dn.soId),
+            lineNum: Number(it.sap_line_num),
+            shipDate: dn.deliveryDate
+          }))
+        );
 
-        // ✅ data is ONE DN object
-        const sapLines = (data.deliveryItems ?? []).map((it: any) => ({
-          lineNum: Number(it.sap_line_num),
-          shipDate: data.deliveryDate,
-        }));
+        const uniqueMap = new Map<string, any>();
+        rawLines.forEach((l) => {
+          const key = `${l.soDocEntry}_${l.lineNum}`;
+          if (!uniqueMap.has(key)) uniqueMap.set(key, l);
+        });
 
-        const soDocEntry = data.so_doc_entry ?? data.soId;
+        const del_item = Array.from(uniqueMap.values());
 
+        del_item.sort((a, b) =>
+          a.soDocEntry === b.soDocEntry
+            ? a.lineNum - b.lineNum
+            : a.soDocEntry.localeCompare(b.soDocEntry)
+        );
         await services.ClaimDn(
           ids,
           access.currentUser?.login ?? '',
-          'Unpick',
+          `Unpick ${dnList.claimed_line}`,
           'Unpick DN',
           null,
-          soDocEntry,
-          sapLines
+          del_item
         );
 
         actionRef.current?.reloadAndRest?.();
@@ -355,10 +477,24 @@ export default () => {
     try {
       const da = await services.getActivities(id);
 
-      // Deduplicate: keep only the first occurrence of each action + remark
-      const uniqueActivities = da.filter((activity, index, self) =>
-        index === self.findIndex(a => a.action === activity.action && a.remark === activity.remark)
-      );
+      const uniqueMap = new Map<string, any>();
+
+      da.forEach(activity => {
+        // Normalize date: ignore seconds & milliseconds
+        const date = new Date(activity.action_date);
+        const dateKey =
+          `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ` +
+          `${date.getHours()}:${date.getMinutes()}`;
+
+        const key = `${activity.action}|${activity.remark}|${dateKey}`;
+
+        // Keep first occurrence only
+        if (!uniqueMap.has(key)) {
+          uniqueMap.set(key, activity);
+        }
+      });
+
+      const uniqueActivities = Array.from(uniqueMap.values());
 
       setActivities(uniqueActivities);
     } catch (error) {
@@ -388,129 +524,6 @@ export default () => {
     },
   };
 
-
-  const onRequestHandler = async (params: TableViewSearchParams<AllocateSOAdvanceParams>) => {
-    try {
-      return services.pageSO(params).then((it) => {
-        const statusFilter = params.criteria?.advanceSearch?.dnStatus;
-
-        let filteredItems = it.items ?? [];
-
-        if (statusFilter === 'pending') {
-          // Include both 'open' and 'in-progress', and sort 'in-progress' first
-          filteredItems = filteredItems
-            .filter((v) => v.dn_status === 'open' || v.dn_status === 'in-progress')
-            .sort((a, b) => {
-              if (a.dn_status === b.dn_status) return 0;
-              return a.dn_status === 'in-progress' ? -1 : 1;
-            });
-        } else if (statusFilter) {
-          // Filter by exact match if not 'pending'
-          filteredItems = filteredItems.filter((v) => v.dn_status === statusFilter);
-        }
-        const pageSize = params?.pagination?.pageSize ?? 20;
-        const current = params?.pagination?.current ?? 1;
-        const pagedItems = filteredItems.slice((current - 1) * pageSize, current * pageSize);
-
-        const filteredResult = {
-          ...it,
-          items: pagedItems,
-          total: filteredItems.length,
-        };
-
-        setData(pagedItems);
-
-        return cacheList.cacheDataList({
-          type: 'alocate-list',
-          criteria: params,
-          data: filteredResult,
-        });
-      }) as Promise<Paging<SOList>>;
-    } catch (error: any) {
-      message.error(error.message);
-      return Promise.reject();
-    }
-  };
-
-  // const onRequestDNHandler = async (
-  //   params: TableViewSearchParams<AllocateSOAdvanceParams>
-  // ): Promise<Paging<DNList>> => {
-  //   try {
-  //     const list = await services.list_dn_by_user(MTSearch.status, MTSearch.startDate, MTSearch.endDate);
-
-  //     if (!Array.isArray(list)) {
-  //       throw new Error('Unexpected response format');
-  //     }
-
-  //     const page = params.pagination?.current ?? 1;
-  //     const pageSize = params.pagination?.pageSize ?? 20;
-  //     const total = list.length;
-
-  //     const pagedData = list.slice((page - 1) * pageSize, page * pageSize);
-
-  //     return {
-  //       items: pagedData,
-  //       total,
-  //       page,
-  //       pageSize
-  //     };
-
-
-  //   } catch (error: any) {
-  //     message.error(error.message);
-  //     return Promise.reject(error);
-  //   }
-  // };
-
-  // const onRequestDNHandler = async (
-  //   params: TableViewSearchParams<AllocateSOAdvanceParams>
-  // ): Promise<Paging<DNList>> => {
-  //   try {
-  //     const list = await services.list_dn_by_user(
-  //       MTSearch.status,
-  //       MTSearch.startDate,
-  //       MTSearch.endDate
-  //     );
-
-  //     if (!Array.isArray(list)) {
-  //       throw new Error('Unexpected response format');
-  //     }
-  //     console.log('list',list)
-  //     // Merge deliveryItems and unplannedItems for each record
-  //     const mergedList = list.map(delivery => {
-  //       const deliveryItems = Array.isArray(delivery.deliveryItems) ? delivery.deliveryItems : [];
-  //       const unplannedItems = Array.isArray(delivery.unplannedItems) ? delivery.unplannedItems : [];
-
-  //       const mergedItems = [
-  //         ...deliveryItems.map(item => ({ ...item, isUnplanned: false })),
-  //         ...unplannedItems.map(item => ({ ...item, isUnplanned: true }))
-  //       ];
-
-  //       return {
-  //         ...delivery,
-  //         mergedItems
-  //       };
-  //     });
-
-  //     // Pagination
-  //     const page = params.pagination?.current ?? 1;
-  //     const pageSize = params.pagination?.pageSize ?? 20;
-  //     const total = mergedList.length;
-  //     const pagedData = mergedList.slice((page - 1) * pageSize, page * pageSize);
-  //     console.log('pagedDatapagedData', pagedData)
-  //     return {
-  //       items: pagedData,
-  //       total,
-  //       page,
-  //       pageSize
-  //     };
-
-  //   } catch (error: any) {
-  //     message.error(error.message);
-  //     return Promise.reject(error);
-  //   }
-  // };
-
   const onRequestDNHandler = async (
     params: TableViewSearchParams<AllocateSOAdvanceParams>
   ): Promise<any> => {
@@ -525,14 +538,6 @@ export default () => {
         throw new Error("Unexpected response format");
       }
 
-      console.log("list", list);
-
-      // list format:
-      // [
-      //   { claimed_line, claimed_date, claim_status, data: [delivery1, delivery2...] }
-      // ]
-
-      // STEP 1 — merge items **inside each group**
       const groupedResult = list.map(group => {
         const processedData = group.data.map((delivery: { deliveryItems: any; unplannedItems: any; }) => {
           const deliveryItems = Array.isArray(delivery.deliveryItems)
@@ -583,59 +588,10 @@ export default () => {
     }
   };
 
-
-  const onRequestQuickView = async (
-    params: TableViewSearchParams<AllocateSOAdvanceParams>
-  ): Promise<Paging<DnQuickView>> => {
-    try {
-      const data = await services.fetch_dn_quick_view(quickViewSearch.startDate, quickViewSearch.endDate);
-      return {
-        items: [data],
-        total: 1,
-        page: 1,
-        pageSize: 10,
-      };
-
-    } catch (error: any) {
-      message.error(error.message);
-      return Promise.reject(error);
-    }
-  };
-
-  // const onRequestDNDeatilHandler = async (
-  //   params: TableViewSearchParams<AllocateSOAdvanceParams>
-  // ): Promise<Paging<DNList>> => {
-  //   try {
-  //     const list = await services.list_dn_detail(dnSearch.status, dnSearch.delivery_date, dnSearch.region,);
-
-  //     if (!Array.isArray(list)) {
-  //       throw new Error('Unexpected response format');
-  //     }
-
-  //     const page = params.pagination?.current ?? 1;
-  //     const pageSize = params.pagination?.pageSize ?? 20;
-  //     const total = list.length;
-
-  //     const pagedData = list.slice((page - 1) * pageSize, page * pageSize);
-  //     const dataList = {
-  //       items: pagedData,
-  //       total,
-  //       page,
-  //       pageSize
-  //     }
-  //     setDataListDn(dataList)
-  //     return dataList;
-
-  //   } catch (error: any) {
-  //     message.error(error.message);
-  //     return Promise.reject(error);
-  //   }
-  // }
-
   const onSync = async () => {
     try {
       isLoading(true)
-      // await services.syncAllocate();
+      await services.syncAllocate();
       actionRef.current?.reloadAndRest?.();
     } catch (error: any) {
       message.error(error.message);
@@ -652,64 +608,6 @@ export default () => {
     if (lower === 'bowl') return 'bowl';
     return null; // skip unknown UOM
   };
-
-  function applyMultiSort(data: any, config: any) {
-    return [...data].sort((a, b) => {
-      for (const rule of config) {
-        if (!rule.field || !rule.order) continue;
-
-        const field = rule.field;
-        const asc = rule.order === "asc" ? 1 : -1;
-
-        const aVal = a[field];
-        const bVal = b[field];
-
-        if (aVal < bVal) return -1 * asc;
-        if (aVal > bVal) return 1 * asc;
-      }
-      return 0;
-    });
-  }
-
-  // useEffect(() => {
-  //   const loadDefaultAreas = async () => {
-  //     const res = await services.list_area();
-  //     if (!Array.isArray(res)) return;
-
-  //     const options = res.map((a: any) => ({
-  //       value: Number(a.division_id),
-  //       label: a.division_name.replace(/^S&D\s*/i, '').trim(),
-  //       isDefault: a.isdefault === '1' || a.is_default === '1',
-  //     }));
-
-  //     setAreaOptions(options);
-
-  //     const defaultAreaIds = options
-  //       .filter(o => o.isDefault)
-  //       .map(o => o.value);
-
-  //     if (defaultAreaIds.length > 0) {
-  //       form.setFieldsValue({
-  //         area_dn: defaultAreaIds,
-  //         area_his: defaultAreaIds,
-  //       });
-
-  //       setDnSearch((v: any) => ({
-  //         ...v,
-  //         area: defaultAreaIds,
-  //       }));
-  //       setSelectedArea(defaultAreaIds)
-  //     }
-
-  //     setAreaReady(true);
-
-  //     setTimeout(() => {
-  //       actionRef.current?.reloadAndRest?.();
-  //     }, 0);
-  //   };
-
-  //   loadDefaultAreas();
-  // }, []);
 
   useEffect(() => {
     if (state?.areaList?.length) {
@@ -776,45 +674,51 @@ export default () => {
     loadDefaultAreas();
   }, []);
 
+  const buildBackendSort = (sortConfig: SortRule[]) => {
+    const sortBy: string[] = [];
+    const sortOrders: string[] = [];
 
+    sortConfig.forEach((rule) => {
+      if (rule.field && rule.order) {
+        sortBy.push(rule.field);
+        sortOrders.push(rule.order);
+      }
+    });
 
+    return { sortBy, sortOrders };
+  };
 
   const onRequestDNDeatilHandler = async (
     params: TableViewSearchParams<AllocateSOAdvanceParams>
   ): Promise<Paging<DNList>> => {
     try {
+      const { sortBy, sortOrders } = buildBackendSort(sortConfig);
 
-      // Map Ant Design sort info to backend format
-      const sortBy: string[] = [];
-      const sortOrders: string[] = [];
-      if (params?.criteria?.sort) {
-        Object.entries(params?.criteria?.sort).forEach(([key, value]) => {
-          sortBy.push(key);
-          sortOrders.push(value === 'ascend' ? 'asc' : 'desc');
-        });
-      }
-
-      const list = await services.list_dn_detail({
-        status: dnSearch.status,
-        delivery_date: dnSearch.delivery_date,
-        province_id: dnSearch.province_id,
-        district_id: dnSearch.district_id,
-        commune_id: dnSearch.commune_id,
-        sap_delivery_date: (dnSearch.sap_from_date && dnSearch.sap_to_date) ? null : dnSearch.sap_delivery_date,
-        sortBy,
-        sortOrders,
-        filterPass: "Unclaimed",
-        sap_from_date: dnSearch.sap_from_date,
-        sap_to_date: dnSearch.sap_to_date,
-        customer: dnSearch.customer,
-        area: dnSearch.area
+      const res = await services.list_dn_detail({
+        criteria: {
+          ...dnSearch,
+          ...params.criteria,
+          sap_delivery_date:
+            dnSearch.sap_from_date && dnSearch.sap_to_date
+              ? null
+              : dnSearch.sap_delivery_date,
+          filterPass: 'Unclaimed',
+          sortBy,
+          sortOrders,
+        },
+        pagination: {
+          current: params.pagination?.current ?? 1,
+          pageSize: params.pagination?.pageSize ?? 20,
+        }
       });
 
-      if (!Array.isArray(list)) throw new Error('Unexpected response format');
+      if (!res || !Array.isArray(res.items)) {
+        throw new Error('Unexpected response format');
+      }
 
-      // Transform list with SKU quantities
-      const transformedList = list.map((delivery) => {
+      const transformedItems = res.items.map((delivery) => {
         const skuValues: Record<string, number> = {};
+
         skuList.forEach((sku) => {
           if (sku.item_category === 2) {
             skuValues[`${sku.sku_code}_pack`] = 0;
@@ -824,71 +728,86 @@ export default () => {
           }
         });
 
-        const itemsToUse = delivery.mergeItems?.length ? delivery.mergeItems : delivery.deliveryItems;
+        const itemsToUse =
+          delivery.mergeItems?.length > 0
+            ? delivery.mergeItems
+            : delivery.deliveryItems;
+
         itemsToUse.forEach((item) => {
-          const sku = skuList.find((s) => s.id.toString() === item.sku_id);
+          const sku = skuList.find(
+            (s) => s.id.toString() === item.sku_id
+          );
           if (!sku) return;
-          const key = sku.item_category === 2 ? `${sku.sku_code}_${normalizeUOM(item.sku_uom)}` : sku.sku_code;
+
+          const key =
+            sku.item_category === 2
+              ? `${sku.sku_code}_${normalizeUOM(item.sku_uom)}`
+              : sku.sku_code;
+
           skuValues[key] += item.qty;
         });
 
-        return { ...delivery, key: delivery.id, ...skuValues };
+        return {
+          ...delivery,
+          key: delivery.id,
+          ...skuValues,
+        };
       });
-      const sortedList = applyMultiSort(transformedList, sortConfig);
-      const page = params.pagination?.current ?? 1;
-      const pageSize = params.pagination?.pageSize ?? 10;
-      const total = sortedList.length;
-      const pagedData = sortedList.slice((page - 1) * pageSize, page * pageSize);
-
-      const dataList = { items: pagedData, total, page, pageSize };
-      setDataListDn(list);
-      return dataList;
+      const dataList = {
+        items: transformedItems,
+      }
+      setDataListDn(dataList)
+      return {
+        items: transformedItems,
+        total: res.total,
+        pageSize: res.pageSize,
+      };
     } catch (error: any) {
       message.error(error.message);
-      return Promise.reject(error);
+      throw error;
     }
   };
 
+  console.log('dataListDn', dataListDn)
   const onHistoryRequestDNDeatilHandler = async (
     params: TableViewSearchParams<AllocateSOAdvanceParams>
   ): Promise<Paging<DNList>> => {
     try {
-      const today = moment().format('YYYY-MM-DD');
-      const sapdeliveryDate = asDate
-        ? (dnSearch.sap_delivery_date ? dnSearch.sap_delivery_date : today) // ✅ use filter or ALL
-        : today;
-      // Map Ant Design sort info to backend format
       const sortBy: string[] = [];
       const sortOrders: string[] = [];
+
       if (params?.criteria?.sort) {
-        Object.entries(params?.criteria?.sort).forEach(([key, value]) => {
+        Object.entries(params.criteria.sort).forEach(([key, value]) => {
           sortBy.push(key);
           sortOrders.push(value === 'ascend' ? 'asc' : 'desc');
         });
       }
 
-      const list = await services.list_dn_detail({
-        status: hisSearch.status,
-        delivery_date: hisSearch.delivery_date,
-        province_id: hisSearch.province_id,
-        district_id: hisSearch.district_id,
-        commune_id: hisSearch.commune_id,
-        sap_delivery_date: (hisSearch.sap_from_date && hisSearch.sap_to_date) ? null : hisSearch.sap_delivery_date,
-        sortBy,
-        sortOrders,
-        filterPass: "Claimed",
-        dnStatus: hisSearch.dnStatus,
-        sap_from_date: hisSearch.sap_from_date,
-        sap_to_date: hisSearch.sap_to_date,
-        customer: hisSearch.customer,
-        area: hisSearch.area
+      const res = await services.list_dn_detail({
+        criteria: {
+          ...hisSearch,
+          ...params.criteria,
+          sap_delivery_date:
+            hisSearch.sap_from_date && hisSearch.sap_to_date
+              ? null
+              : hisSearch.sap_delivery_date,
+          filterPass: 'Claimed',
+        },
+        pagination: {
+          current: params.pagination?.current ?? 1,
+          pageSize: params.pagination?.pageSize ?? 10,
+        },
+        sort: params.sort,
       });
 
-      if (!Array.isArray(list)) throw new Error('Unexpected response format');
 
-      // Transform list with SKU quantities
-      const transformedList = list.map((delivery) => {
+      if (!res || !Array.isArray(res.items)) {
+        throw new Error('Unexpected response format');
+      }
+
+      const transformedItems = res.items.map((delivery) => {
         const skuValues: Record<string, number> = {};
+
         skuList.forEach((sku) => {
           if (sku.item_category === 2) {
             skuValues[`${sku.sku_code}_pack`] = 0;
@@ -898,115 +817,42 @@ export default () => {
           }
         });
 
-        const itemsToUse = delivery.mergeItems?.length ? delivery.mergeItems : delivery.deliveryItems;
+        const itemsToUse =
+          delivery.mergeItems?.length > 0
+            ? delivery.mergeItems
+            : delivery.deliveryItems;
+
         itemsToUse.forEach((item) => {
-          const sku = skuList.find((s) => s.id.toString() === item.sku_id);
+          const sku = skuList.find(
+            (s) => s.id.toString() === item.sku_id
+          );
           if (!sku) return;
-          const key = sku.item_category === 2 ? `${sku.sku_code}_${normalizeUOM(item.sku_uom)}` : sku.sku_code;
-          skuValues[key] += item.qty;
+
+          const key =
+            sku.item_category === 2
+              ? `${sku.sku_code}_${normalizeUOM(item.sku_uom)}`
+              : sku.sku_code;
+
+          skuValues[key] += item?.qty;
         });
 
-        return { ...delivery, key: delivery.id, ...skuValues };
+        return {
+          ...delivery,
+          key: delivery.id,
+          ...skuValues,
+        };
       });
 
-      const page = params.pagination?.current ?? 1;
-      const pageSize = params.pagination?.pageSize ?? 10;
-      const total = transformedList.length;
-      const pagedData = transformedList.slice((page - 1) * pageSize, page * pageSize);
-
-      const dataList = { items: pagedData, total, page, pageSize };
-      setDataListDn(list);
-      return dataList;
+      return {
+        items: transformedItems,
+        total: res.total,
+        pageSize: res.pageSize,
+      };
     } catch (error: any) {
       message.error(error.message);
       return Promise.reject(error);
     }
   };
-
-
-  const soColums: ProColumns<SOList>[] = [
-    { title: 'PO No', dataIndex: 'poNo' },
-    { title: 'SO No', dataIndex: 'soNo' },
-    { title: 'A/R Reserve Invoice', dataIndex: 'reserve_num' },
-    { title: 'Customer', dataIndex: 'customerName' },
-    {
-      title: 'Ordered Date',
-      dataIndex: 'orderedDate',
-      renderText: (value: string) => {
-        const date = dayjs(value)
-        return date.isValid() ? date.format('DD-MMM-YYYY') : '-'
-      }
-    },
-    {
-      title: 'Order Qty',
-      dataIndex: 'totalItemQty',
-    },
-    {
-      title: 'Delivered Qty',
-      dataIndex: 'totalDnQty',
-    },
-    {
-      title: 'DN Total',
-      dataIndex: 'dnCount',
-    },
-    {
-      title: 'Status',
-      width: 250,
-      dataIndex: 'dn_status',
-      render: (_, entity) => {
-
-        const percentage =
-          (entity?.totalDnQty ?? 0) > 0 && (entity?.totalItemQty ?? 0) > 0
-            ? ((entity?.totalDnQty ?? 0) / (entity?.totalItemQty ?? 1)) * 100
-            : 0;
-        let color = 'default';
-        const status = percentage >= 100 ? 'Completed' : percentage < 100 && percentage > 0 ? 'In Progress' : "Open"
-        switch (entity.dn_status) {
-          case 'in-progress':
-            color = 'orange';
-            break;
-          case 'complete':
-            color = 'green';
-            break;
-          case 'open':
-            color = 'blue';
-            break;
-          case 'cancel':
-            color = 'red';
-            break;
-          case 'close':
-            color = 'red';
-            break;
-          default:
-            color = 'default';
-            break;
-        }
-
-        return (
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <div style={{ alignItems: 'flex-start', width: '35%' }}>
-              <Tag color={color}> {entity?.dn_status?.charAt(0).toUpperCase() + entity?.dn_status?.slice(1)}</Tag>
-            </div>
-            <Progress
-              percent={percentage || 0}
-              size="small"
-              strokeColor={{ from: '#108ee9', to: '#87d068' }}
-              style={{ width: '50%' }}
-              format={(percent) => `${Math.round(percent ?? 0)}%`} />
-          </div>
-        )
-      },
-    },
-    {
-      title: 'Action', dataIndex: 'idCard',
-      width: 20,
-      align: 'center',
-      render: (_, r) =>
-      (<a onClick={() => setDrawerOpen({ visible: true, id: r.id, status: r.status, po: r.poNo, deliveres: r.deliveries, so: r.soNo, dn_qty: r.totalDnQty, order_qty: r.totalItemQty })}>
-        <FaTruckMoving />
-      </a>),
-    },
-  ]
 
   const skuColumns: ProColumns<DNList>[] = skuList.map((sku) => {
     if (sku.item_category === 1) {
@@ -1053,24 +899,31 @@ export default () => {
           title: '',
           dataIndex: 'checkbox',
           width: '2%',
-          render: (_: any, record: DNList) => (
-            <Checkbox
-              checked={selectedRowKeys.includes(record.id)}
-              onChange={(e) => {
-                if (e.target.checked) {
-                  setSelectedRowKeys(prev => [...prev, record.id]);
-                  setSelectedRows(prev => [...prev, record]);
-                  setCardOpen({ visible: true });
-                  setSelectedListDn(prev => [...prev, record]);
-                  setDataListDn(prev => prev.filter(r => r.id !== record.id));
-                } else {
-                  setSelectedRowKeys(prev => prev.filter(k => k !== record.id));
-                  setSelectedRows(prev => prev.filter(r => r.id !== record.id));
-                  setSelectedListDn(prev => prev.filter(r => r.id !== record.id));
-                }
-              }}
-            />
-          ),
+          render: (_: any, record: DNList) => {
+            if (record.status === 'TBA') {
+              return null
+            }
+
+            return (
+              <Checkbox
+                checked={selectedRowKeys.includes(record.id)}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setSelectedRowKeys(prev => [...prev, record.id]);
+                    setSelectedRows(prev => [...prev, record]);
+                    setCardOpen({ visible: true });
+                    setSelectedListDn(prev => [...prev, record]);
+                    setDataListDn(prev => prev.items.filter(r => r.id !== record.id));
+                  } else {
+                    setSelectedRowKeys(prev => prev.filter(k => k !== record.id));
+                    setSelectedRows(prev => prev.filter(r => r.id !== record.id));
+                    setSelectedListDn(prev => prev.filter(r => r.id !== record.id));
+                  }
+                }}
+              />
+            );
+          },
+
         },
       ]
       : []),
@@ -1080,7 +933,7 @@ export default () => {
       title: 'SO No',
       dataIndex: 'so_no',
       key: 'so_no',
-      width: '7%',
+      width: '8%',
       render: (_, value) => (
         <>
           <a onClick={() => setDrawerTypeOpen({ visible: true, data: value })}>
@@ -1089,6 +942,20 @@ export default () => {
           <a style={{ marginLeft: 5 }} onClick={() => window.open(`/external/sale/so/detail/${value.soId}`, '_blank')?.focus()}>
             <Typography.Link >< ExportOutlined /></Typography.Link>
           </a>
+          {value.status == 'TBA' &&
+            <a style={{ marginLeft: 5 }} onClick={() => { console.log(value) }}>
+              <Typography.Link ><Dropdown
+                menu={{
+                  items: getClearTBA(value),
+                  style: { width: 200 },
+                }}
+              >
+                <a onClick={(e) => e.preventDefault()}>
+                  <MoreOutlined />
+                </a>
+              </Dropdown></Typography.Link>
+            </a>
+          }
         </>
       ),
     },
@@ -1191,7 +1058,7 @@ export default () => {
               return sum + volume * qty;
             }, 0);
 
-            return `${total.toFixed(4)} m³`
+            return `${total.toFixed(2)} m³`
           }
         },
         {
@@ -1253,85 +1120,6 @@ export default () => {
       : []),
   ];
 
-  // const expandedRowRender = (record: DNList) => {
-  //   const breakdown = record.deliveryItems?.reduce((acc: any, item: any) => {
-  //     const sku = skuList.find((s) => s.id.toString() === item.sku_id);
-  //     if (!sku) return acc;
-
-  //     const key =
-  //       sku.item_category === 2
-  //         ? `${sku.sku_code}_${item.sku_uom.toLowerCase()}`
-  //         : sku.sku_code;
-
-  //     if (!acc[key]) acc[key] = {};
-  //     acc[key][item.saleType || "STD"] =
-  //       (acc[key][item.saleType || "STD"] || 0) + item.qty;
-
-  //     return acc;
-  //   }, {}) || {};
-
-  //   return (
-  //     <tr>
-  //       {/* empty tds for static columns before SKU */}
-  //       <td></td>
-  //       <td style={{ width: '6%' }}></td> {/* DN Date */}
-  //       <td style={{ width: '6%' }}></td> {/* SO No */}
-  //       <td style={{ width: '7%' }}></td> {/* Customer */}
-
-  //       {/* SKU columns */}
-  //       {skuColumns.map((col: any) => {
-  //         if (col.children && col.children.length) {
-  //           return col.children.map((child: any) => {
-  //             const saleTypes = breakdown[child.key];
-  //             return (
-  //               <td
-  //                 key={child.key}
-  //                 style={{
-  //                   minWidth: child.width || 60,
-  //                   textAlign: "center",
-  //                   background: "#f8fbff",
-  //                 }}
-  //               >
-  //                 {saleTypes
-  //                   ? Object.entries(saleTypes).map(([type, qty]) => (
-  //                     <div key={type}>
-  //                       {type || "STD"}: {qty}
-  //                     </div>
-  //                   ))
-  //                   : "-"}
-  //               </td>
-  //             );
-  //           });
-  //         } else {
-  //           const saleTypes = breakdown[col.key];
-  //           return (
-  //             <td
-  //               key={col.key}
-  //               style={{
-  //                 minWidth: col.width || 100,
-  //                 textAlign: "center",
-  //                 background: "#f8fbff",
-  //               }}
-  //             >
-  //               {saleTypes
-  //                 ? Object.entries(saleTypes).map(([type, qty]) => (
-  //                   <div key={type}>
-  //                     {type || "STD"}: {qty}
-  //                   </div>
-  //                 ))
-  //                 : "-"}
-  //             </td>
-  //           );
-  //         }
-  //       })}
-
-  //       {/* optional: leave blank for columns after SKU */}
-  //       <td></td> {/* SAL Remark */}
-  //       <td></td> {/* Shipping Address */}
-  //     </tr>
-  //   );
-  // };
-
   const dnColumns: ProColumns<DNList>[] = [...staticColumns];
 
   function extractSortableColumns(columns: ProColumns<DNList>[]) {
@@ -1361,7 +1149,8 @@ export default () => {
     "shippingAddress",
     "district",
     "commune",
-    "channel"
+    "channel",
+    "truck_capacity"
   ];
   const sortableColumns = extractSortableColumns(dnColumns).filter(c =>
     allowedSortFields.includes(c.dataIndex)
@@ -1466,7 +1255,7 @@ export default () => {
                               <Dropdown overlayStyle={{ width: 400 }} menu={activityMenu} trigger={['click']} >
                                 <Button onClick={() => getActivities(item.id)} style={{ marginLeft: 10 }}><HistoryOutlined /></Button>
                               </Dropdown>
-                              {
+                              {/* {
                                 item.status != 'force-close' && item.status != 'complete' && access.canAccesAddRemarkAllocate ?
                                   <Tooltip title="Force Close" >
                                     <Button onClick={() =>
@@ -1478,8 +1267,21 @@ export default () => {
                                       style={{ marginLeft: 10 }}><CloseCircleOutlined /></Button>
                                   </Tooltip>
                                   : <></>
+                              } */}
+                              {item.status != 'force-close' && item.status != 'complete' && access.canAccesAddRemarkAllocate &&
+                                <Space style={{ marginLeft: 10 }} size={'large'}>
+                                  <Dropdown
+                                    menu={{
+                                      items: getMenuItems(item),
+                                      style: { width: 200 },
+                                    }}
+                                  >
+                                    <a onClick={(e) => e.preventDefault()}>
+                                      <MoreOutlined />
+                                    </a>
+                                  </Dropdown>
+                                </Space>
                               }
-
                             </div>
                           </Descriptions.Item>
                           <Descriptions.Item label="SO Num" style={{ fontWeight: 'bolder' }}>
@@ -1775,390 +1577,6 @@ export default () => {
       },
     },
   ]
-  // const mtColums: ProColumns<DNList>[] = [
-  //   {
-  //     // title: 'SO Number',
-  //     // dataIndex: 'soNo',
-  //     render: (_, record) => {
-  //       return (
-  //         <Card style={{
-  //           marginBottom: 16,
-  //         }}>
-  //           <Descriptions column={5}>
-  //             <Descriptions.Item label="DO Date" style={{ fontWeight: 'bolder' }}>
-  //               {dayjs(record.deliveryDate).isValid()
-  //                 ? dayjs(record.deliveryDate).format('DD-MMM-YYYY')
-  //                 : '-'}
-  //             </Descriptions.Item>
-  //             <Descriptions.Item label="DO No" style={{ fontWeight: 'bolder' }}>
-  //               {record.id}
-  //             </Descriptions.Item>
-  //             <Descriptions.Item label="Shipping Address" span={1}
-  //             >
-  //               <a onClick={() => {
-  //                 if (record.latitude && record.longitude) {
-  //                   const url = `https://www.google.com/maps?q=${record.latitude},${record.longitude}`;
-  //                   window.open(url, '_blank'); // open in new tab
-  //                 } else {
-  //                   message.info(`No location found for: ${record.shippingAddress}`);
-  //                 }
-  //               }}>{record.shippingAddress ? record.shippingAddress : '-'}</a>
-  //             </Descriptions.Item>
-  //             <Descriptions.Item span={5}>
-  //               <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', alignItems: 'center' }}>
-  //                 {record.status ? (
-  //                   <Tag
-  //                     color={
-  //                       record.status === 'open'
-  //                         ? 'blue'
-  //                         : record.status === 'in-progress'
-  //                           ? 'orange'
-  //                           : record.status === 'complete'
-  //                             ? 'green'
-  //                             : record.status === 'force-close'
-  //                               ? 'red'
-  //                               : 'default'
-  //                     }
-  //                     style={{ textTransform: 'capitalize' }}
-  //                   >
-  //                     {record.status === 'force-close' ? 'Close' : record.status.replace(/-/g, ' ')}
-  //                   </Tag>
-  //                 ) : (
-  //                   '-'
-  //                 )}
-  //                 {record.claimed_by ? (
-  //                   <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-  //                     <span>
-  //                       Claimed:{' '}
-  //                       <strong>
-  //                         {record.claimed_by},
-  //                       </strong>
-  //                       <span style={{ fontSize: 12 }}> {dayjs.utc(record.claimed_date).tz('Asia/Phnom_Penh').format('DD-MMM-YYYY hh:mm a')}</span>
-
-  //                     </span>
-  //                     {access.currentUser?.login == record.claimed_by && access.canAccesAddRemarkAllocate ?
-  //                       <Button type="default" danger
-  //                         onClick={() => handleUnClaim([Number(record.id)])}
-  //                       >
-  //                         Unship
-  //                       </Button>
-  //                       : <></>}
-
-  //                   </div>
-  //                 ) : access.canAccesAddRemarkAllocate ? (
-  //                   <Button type="primary"
-  //                     onClick={() => handleClaim(record.id)}
-  //                   >
-  //                     Ship
-  //                   </Button>
-  //                 ) : <></>}
-
-  //                 <Dropdown overlayStyle={{ width: 400 }} menu={activityMenu} trigger={['click']} >
-  //                   <Button onClick={() => getActivities(record.id)} style={{ marginLeft: 10 }}><HistoryOutlined /></Button>
-  //                 </Dropdown>
-  //                 {
-  //                   record.status != 'force-close' && record.status != 'complete' && access.canAccesAddRemarkAllocate ?
-  //                     <Tooltip title="Force Close" >
-  //                       <Button onClick={() =>
-  //                         setForceCloseOpen({
-  //                           visible: true,
-  //                           id: record?.id,
-  //                         })
-  //                       }
-  //                         style={{ marginLeft: 10 }}><CloseCircleOutlined /></Button>
-  //                     </Tooltip>
-  //                     : <></>
-  //                 }
-
-  //               </div>
-  //             </Descriptions.Item>
-  //             <Descriptions.Item label="SO Num" style={{ fontWeight: 'bolder' }}>
-  //               {record.so_no || '-'}
-  //             </Descriptions.Item>
-  //             <Descriptions.Item label="A/R Reserve Invoice" style={{ fontWeight: 'bolder' }}>
-  //               {record.reserve_num || '-'}
-  //             </Descriptions.Item>
-  //             <Descriptions.Item label="Customer Code" style={{ fontWeight: 'bolder' }}>
-  //               <a>
-  //                 <Typography.Link strong copyable >{record.customer_code || '-'}</Typography.Link>
-  //               </a>
-  //             </Descriptions.Item>
-  //             <Descriptions.Item label="Customer Name" style={{ fontWeight: 'bolder' }}>
-  //               {record.customer_name || '-'}
-  //             </Descriptions.Item>
-  //             <Descriptions.Item label="Phone" style={{}}>
-  //               {record.phone || '-'}
-  //             </Descriptions.Item>
-
-  //           </Descriptions>
-  //           <ProTable
-  //             size="small"
-  //             search={false}
-  //             rowKey="id"
-  //             dataSource={record.mergedItems}
-  //             expandable={{
-  //               expandedRowRender: (record) => {
-  //                 const dnList = (record.dn || [record]).filter(d =>
-  //                   d && (d.dn_num || d.dn_qty || d.dn_date)
-  //                 );
-
-  //                 const plannedQty = Number(record.qty) || 0;
-  //                 const sortedDnList = dnList.filter(d => d.dn_num).sort((a, b) => Number(a.dn_num) - Number(b.dn_num));
-  //                 const firstDn = sortedDnList[0];
-  //                 return (
-  //                   <Table
-  //                     size="small"
-  //                     rowKey={(r, index) => r?.id ?? index}
-  //                     columns={[
-  //                       {
-  //                         title: 'DN No',
-  //                         dataIndex: 'dn_num',
-  //                         key: 'dn_num',
-  //                       },
-  //                       {
-  //                         title: 'Delivered Qty',
-  //                         dataIndex: 'dn_qty',
-  //                         key: 'dn_qty',
-  //                         render: (_, dnRecord) => {
-  //                           const qty = parseFloat(dnRecord.dn_qty) || 0;
-  //                           const isMismatch = qty !== plannedQty;
-  //                           return (
-  //                             <span>
-  //                               {qty.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-  //                             </span>
-  //                           );
-  //                         },
-  //                       },
-  //                       {
-  //                         title: 'DN Date',
-  //                         dataIndex: 'dn_date',
-  //                         key: 'dn_date',
-  //                         render: (_, item) => {
-  //                           const rawDnDate = item.dn_date;
-  //                           const dnDate = rawDnDate
-  //                             ? dayjs.utc(rawDnDate).tz('Asia/Phnom_Penh').startOf('day')
-  //                             : null;
-
-  //                           // Safely get the list of DNs for this item
-  //                           const dnList = item.dn || [];
-
-  //                           // Only consider DNs with a dn_num for sorting
-  //                           const sortedDnList = dnList
-  //                             .filter(d => d?.dn_num)
-  //                             .sort((a, b) => Number(a.dn_num) - Number(b.dn_num));
-
-  //                           const firstDn = sortedDnList[0];
-  //                           const isFirstDN = item.dn_num === firstDn?.dn_num;
-
-  //                           return (
-  //                             <span style={{ display: 'inline-flex', alignItems: 'center' }}>
-  //                               {dnDate?.isValid() ? dnDate.format('DD-MMM-YYYY') : '-'}
-  //                               {!isFirstDN && <Tag color="orange" style={{ marginLeft: 8 }}>Unplanned</Tag>}
-  //                             </span>
-  //                           );
-  //                         },
-  //                       }
-
-
-
-  //                     ]}
-  //                     dataSource={dnList}
-  //                     pagination={false}
-  //                   />
-  //                 );
-  //               },
-  //               rowExpandable: (record) => {
-  //                 // expanded if dn exists or record itself has dn_num
-  //                 return (Array.isArray(record.dn) && record.dn.length > 0) || record.dn_num;
-  //               },
-  //             }}
-  //             options={false}
-  //             pagination={false}
-  //             columns={[
-  //               {
-  //                 title: 'Item Code',
-  //                 dataIndex: 'itemCode',
-  //                 width: 150,
-  //                 render: (_, r) => {
-  //                   return r.itemCode || r.item_code || '-'
-  //                 }
-  //               },
-  //               {
-  //                 title: 'Item Name',
-  //                 dataIndex: 'itemName',
-  //                 width: 250,
-  //                 render: (_, record) => {
-  //                   return record.itemName && record.itemName.trim() !== ''
-  //                     ? record.itemName
-  //                     : record.item_name || '-';
-  //                 },
-  //               },
-  //               {
-  //                 title: 'Plan',
-  //                 dataIndex: 'qty',
-  //                 width: 70,
-  //                 render: (_, r) => {
-  //                   return r.qty || '0'
-  //                 }
-  //               },
-  //               {
-  //                 title: 'Delivered',
-  //                 width: 90,
-  //                 render: (_, item) => {
-  //                   const deliveryDate = dayjs.utc(record.deliveryDate).tz('Asia/Phnom_Penh').startOf('day');
-  //                   const dnList = Array.isArray(item.dn) ? item.dn : [item];
-
-  //                   const allDNs = record.deliveryItems.flatMap(item => item.dn || []);
-  //                   const sortedDnList = allDNs
-  //                     .filter(d => d.dn_num)
-  //                     .sort((a, b) => Number(a.dn_num) - Number(b.dn_num));
-  //                   const firstDnNum = sortedDnList[0]?.dn_num;
-
-  //                   const plannedQty = Number(item.qty) || 0;
-  //                   const totalDelivered = dnList.reduce((sum, dn) => sum + (parseFloat(dn.dn_qty) || 0), 0);
-
-  //                   let color = 'black'; // default
-
-  //                   if (dnList.length === 1) {
-  //                     const dn = dnList[0];
-  //                     const dnDate = dayjs.utc(dn.dn_date).tz('Asia/Phnom_Penh').startOf('day');
-  //                     const isFirstDn = dn.dn_num === firstDnNum;
-  //                     const isSameDate = dnDate.isSame(deliveryDate);
-
-  //                     if (isFirstDn && isSameDate && totalDelivered >= plannedQty) {
-  //                       color = 'green';
-  //                     } else if (totalDelivered == 0) {
-  //                       color = 'black';
-  //                     } else {
-  //                       color = 'orange';
-  //                     }
-  //                   } else if (totalDelivered == 0) {
-  //                     color = 'black';
-  //                   } else if (
-  //                     dnList.length > 1 ||
-  //                     dnList.some(dn => {
-  //                       const dnDate = dayjs.utc(dn.dn_date).tz('Asia/Phnom_Penh').startOf('day');
-  //                       return !dnDate.isSame(deliveryDate);
-  //                     }) ||
-  //                     totalDelivered < plannedQty
-  //                   ) {
-  //                     color = 'orange';
-  //                   }
-
-  //                   return (
-  //                     <div style={{ color }}>
-  //                       {totalDelivered.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-  //                     </div>
-  //                   );
-  //                 },
-  //               },
-  //               {
-  //                 title: 'Type',
-  //                 dataIndex: 'saleType',
-  //                 width: 70,
-  //                 render: (_, r) => {
-  //                   return (r.saleType ? r.saleType : 'STD')
-  //                 }
-  //               },
-  //               {
-  //                 title: 'Remark',
-  //                 dataIndex: 'dn',
-  //                 width: 250,
-  //                 render: (_dom, entity) => {
-  //                   const remark = entity.dn?.[0]?.remark ?? '';
-  //                   return (
-  //                     <div style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
-  //                       {remark ? remark : '-'}
-  //                     </div>
-  //                   );
-  //                 },
-  //               },
-  //               {
-  //                 title: 'Attachment',
-  //                 dataIndex: 'attachment',
-  //                 width: 200,
-  //                 render: (_, record) => {
-  //                   const attachments = record.dn?.[0]?.attachment || [];
-
-  //                   return (
-  //                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-  //                       {attachments.map((att, index) => {
-  //                         const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(att);
-  //                         const decodedURL = decodeURIComponent(att)
-  //                         const fileNameMatch = decodedURL.match(/\/([^\/?]+)\?alt=media/)
-  //                         let fileName = fileNameMatch ? fileNameMatch[1] : `File ${index + 1}`;
-  //                         const dashIndex = fileName.indexOf('-');
-  //                         if (dashIndex !== -1) {
-  //                           fileName = fileName.substring(dashIndex + 1);
-  //                         }
-  //                         return isImage ? (
-  //                           <Image
-  //                             key={index}
-  //                             width={50}
-  //                             height={50}
-  //                             src={att}
-  //                             alt={`attachment-${index}`}
-  //                             style={{ objectFit: 'cover', borderRadius: 4 }}
-  //                             preview={{ mask: <div>Click to preview</div> }}
-  //                           />
-  //                         ) : (
-  //                           <a
-  //                             key={index}
-  //                             href={att.attachment}
-  //                             target="_blank"
-  //                             rel="noopener noreferrer"
-  //                             style={{
-  //                               display: 'inline-block',
-  //                               padding: '4px 8px',
-  //                               border: '1px solid #ccc',
-  //                               borderRadius: 4,
-  //                               backgroundColor: '#f5f5f5',
-  //                               marginRight: 8,
-  //                             }}
-  //                           >
-  //                             {fileName}
-  //                           </a>
-  //                         );
-  //                       })}
-  //                     </div>
-  //                   );
-  //                 },
-  //               },
-  //               {
-  //                 width: 100,
-  //                 align: 'center',
-  //                 render: (_, r) => {
-  //                   if (status == 'Pending' || status == 'Failed') return null;
-  //                   if (r.isUnplanned) return <Tag key="unplanned" color="orange" style={{ marginLeft: 8 }}>Unplanned</Tag>
-  //                   if (!access.canAccesAddRemarkAllocate) return null
-  //                   return (
-  //                     <a
-  //                       onClick={() => {
-  //                         const dnItem = r.dn?.[0];
-  //                         setModalOpen({
-  //                           visible: true,
-  //                           id: dnItem?.id,
-  //                           remark: dnItem?.remark,
-  //                           attachment: dnItem?.attachment,
-  //                           sales_planid: r.deliveryId
-  //                         });
-  //                       }}
-  //                     >
-  //                       <FaRegPenToSquare />
-  //                     </a>
-  //                   );
-  //                 },
-  //               },
-  //             ]}
-  //           />
-  //         </Card>
-  //       );
-  //     },
-  //   },
-  // ];
-
-
-
 
   const qvColums: ProColumns<DnQuickView>[] = [
     {
@@ -2231,8 +1649,8 @@ export default () => {
   return (
     <>
       <Spin spinning={requestActions.request?.loading || loading}>
-        {advanceSearchParams.filter == 'SO' ?
-          <TableView<SOList, { searchValue?: string }>
+        {advanceSearchParams.filter == 'MT' ?
+          <TableView<DNList, { searchValue?: string }>
             displayOnly
             tableProps={{
               actionRef: actionRef,
@@ -2246,10 +1664,46 @@ export default () => {
                 actions: [
                   <ProForm submitter={false} layout="inline">
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+
+                      <ProFormSelect
+                        width={150}
+                        name="status"
+                        allowClear
+                        showSearch
+                        initialValue="pending"
+                        onChange={(val: string) => {
+                          setMTSearch((v) => ({ ...v, status: val }))
+                          actionRef.current?.reloadAndRest?.();
+                        }}
+                        options={[
+                          { value: 'ALL', label: 'ALL' },
+                          { value: 'pending', label: 'Pending' },
+                          { value: 'open', label: 'Open' },
+                          { value: 'in-progress', label: 'In Progress' },
+                          { value: 'complete', label: 'Completed' },
+                          { value: 'force-close', label: 'Close' },
+                        ]}
+                      />
+                      <ProFormDateRangePicker
+                        style={{ width: 165 }}
+                        name="ordered_date"
+                        placeholder={['From Date', 'To Date']}
+                        fieldProps={{
+                          onChange: (values) => {
+                            const [start, end] = values || [];
+                            setMTSearch((v) => ({
+                              ...v,
+                              startDate: start ? start.format("YYYY-MM-DD") : undefined,
+                              endDate: end ? end.format("YYYY-MM-DD") : undefined,
+                            }));
+                            actionRef.current?.reloadAndRest?.();
+                          },
+                        }}
+                      />
                       <Button
                         type="text"
+                        onClick={() => actionRef.current?.reloadAndRest?.()}
                         size='large'
-                        onClick={() => onSync()}
                       >
                         <ReloadOutlined />
                       </Button>
@@ -2262,43 +1716,45 @@ export default () => {
             extraFilter={
               <Space size="large" style={{ flexDirection: 'row' }}>
                 {/* <Button onClick={() => setSearchModalOpen({ visible: true })}><FileSearchOutlined /></Button> */}
-                <Radio.Group
-                  value={advanceSearchParams.filter}
-                  onChange={(e) => {
-                    setAdvanceSearchParams((v) => ({
-                      ...v,
-                      filter: e.target.value,
-                    }));
-                    actionRef.current?.reloadAndRest?.();
-                  }}
-                >
-                  {/* <Radio.Button value="OV">Over View</Radio.Button>
-                  <Radio.Button value="SO">Sales Order</Radio.Button> */}
-                  <Radio.Button value="DN">Delivery Plan</Radio.Button>
-                  <Radio.Button value="HIS">History</Radio.Button>
-                  <Radio.Button value="MT">My Task</Radio.Button>
-                  {/* <Radio.Button value="FG">FG</Radio.Button> */}
-                </Radio.Group>
+                <>
+                  <Radio.Group
+                    value={advanceSearchParams.filter}
+                    onChange={(e) => {
+                      setAdvanceSearchParams((v) => ({
+                        ...v,
+                        filter: e.target.value,
+                      }));
+                      actionRef.current?.reloadAndRest?.();
+                    }}
+                  >
+                    {/* <Radio.Button value="OV">Over View</Radio.Button>
+                    <Radio.Button value="SO">Sales Order</Radio.Button> */}
+                    <Radio.Button value="DN">Delivery Plan</Radio.Button>
+                    <Radio.Button value="HIS">History</Radio.Button>
+                    <Radio.Button value="MT">My Task</Radio.Button>
+                    {/* <Radio.Button value="FG">FG</Radio.Button> */}
+                  </Radio.Group>
+                </>
               </Space>
             }
-            columns={soColums}
+            columns={mtColumns}
             actionHandlers={{
               onRequest: (criteria, pagination, sort) =>
-                onRequestHandler({
+                onRequestDNHandler({
                   criteria: {
                     ...criteria,
-                    advanceSearch: advanceSearchParams,
+                    advanceSearch: MTSearch,
                     sort,
                   },
                   pagination: {
-                    pageSize: 500
+                    pageSize: 20
                   },
                 })
-
             }}
 
           />
-          : advanceSearchParams.filter == 'MT' ?
+
+          : advanceSearchParams.filter == 'DN' ?
             <TableView<DNList, { searchValue?: string }>
               displayOnly
               tableProps={{
@@ -2313,50 +1769,169 @@ export default () => {
                   actions: [
                     <ProForm submitter={false} layout="inline">
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-
                         <ProFormSelect
-                          width={150}
-                          name="status"
-                          allowClear
-                          showSearch
-                          initialValue="pending"
+                          name="sap_delivery_date"
+                          initialValue="as_of_now"
                           onChange={(val: string) => {
-                            setMTSearch((v) => ({ ...v, status: val }))
+                            setDnSearch((v) => ({ ...v, sap_delivery_date: val }))
                             actionRef.current?.reloadAndRest?.();
                           }}
                           options={[
-                            { value: 'ALL', label: 'ALL' },
-                            { value: 'pending', label: 'Pending' },
-                            { value: 'open', label: 'Open' },
-                            { value: 'in-progress', label: 'In Progress' },
-                            { value: 'complete', label: 'Completed' },
-                            { value: 'force-close', label: 'Close' },
+                            { value: 'all', label: 'ALL' },
+                            { value: 'as_of_now', label: 'As Date' },
+                            { value: 'today', label: 'Today' },
+                            { value: 'unplan', label: 'TBC' },
+                            { value: 'TBA', label: 'TBA' },
                           ]}
+                          width={100}
+                          showSearch
                         />
-                        <ProFormDateRangePicker
-                          style={{ width: 165 }}
-                          name="ordered_date"
-                          placeholder={['From Date', 'To Date']}
-                          fieldProps={{
-                            onChange: (values) => {
-                              const [start, end] = values || [];
-                              setMTSearch((v) => ({
+                        {areaReady && (
+                          <ProFormSelect
+                            name="area_dn"
+                            mode="multiple"
+                            placeholder="Area"
+                            showSearch
+                            allowClear
+                            width={200}
+                            options={areaOptions}
+                            initialValue={dnSearch.area}
+                            onChange={(val: number[]) => {
+                              setSelectedArea(val);
+                              setDnSearch(v => ({
                                 ...v,
-                                startDate: start ? start.format("YYYY-MM-DD") : undefined,
-                                endDate: end ? end.format("YYYY-MM-DD") : undefined,
+                                area: val,
                               }));
                               actionRef.current?.reloadAndRest?.();
-                            },
+                            }}
+                          />
+                        )}
+                        <ProFormDateRangePicker
+                          name="sap_delivery_range_dn"
+                          placeholder={['From Date', 'To Date']}
+                          disabled={!asDate}
+                          width={250}
+                          fieldProps={{
+                            onChange(val) {
+                              const fromDate = val?.[0] ? val[0].format('YYYY-MM-DD') : undefined;
+                              const toDate = val?.[1] ? val[1].format('YYYY-MM-DD') : undefined;
+
+                              setDnSearch((v) => ({
+                                ...v,
+                                sap_from_date: fromDate,
+                                sap_to_date: toDate,
+                              }));
+
+                              actionRef.current?.reloadAndRest?.();
+                            }
                           }}
                         />
-                        <Button
-                          type="text"
-                          onClick={() => onSync()}
-                          size='large'
-                        >
-                          <ReloadOutlined />
-                        </Button>
+                        <ProFormSelect
+                          placeholder="Province"
+                          name="province_id_dn"
+                          onChange={(val: string) => {
+                            setProvinceId(val)
+                            setDnSearch((v) => ({ ...v, province_id: val }))
+                            actionRef.current?.reloadAndRest?.();
+                          }}
+                          options={provinceOptions}
+                          width={200}
+                          allowClear
+                          showSearch
+                          mode="multiple"
+                        />
+
+                        <ProFormSelect
+                          placeholder="District"
+                          name="district_id_dn"
+                          value={districtId}
+                          onChange={(val: string) => {
+                            setDistrictId(val)
+                            setDnSearch((v) => ({ ...v, district_id: val }))
+                            actionRef.current?.reloadAndRest?.();
+                          }}
+                          options={districtOptions}
+                          width={200}
+                          allowClear
+                          showSearch
+                          mode="multiple"
+                        />
+
+                        <ProFormSelect
+                          placeholder="Commune"
+                          name="commune_id_dn"
+                          options={communeOptions}
+                          onChange={(val: string) => {
+                            setDnSearch((v) => ({ ...v, commune_id: val }))
+                            actionRef.current?.reloadAndRest?.();
+                          }}
+                          width={200}
+                          allowClear
+                          showSearch
+                          mode="multiple"
+                        />
+                        <ProFormSelect
+                          placeholder="Customer"
+                          name="customer_dn"
+                          showSearch
+                          debounceTime={200}
+                          mode="multiple"
+                          allowClear
+                          width={250}
+                          request={async ({ keyWords }) => {
+                            const res = await services.pageCustomer({
+                              criteria: {
+                                searchValue: keyWords,
+                              },
+                              pagination: {
+                                current: 1,
+                                pageSize: 20,
+                              },
+                            })
+
+                            return res.items.map((c: any) => ({
+                              value: c.code,
+                              label: `${c.code} - ${c.name}`,
+                            }));
+                          }}
+                          onChange={(val: string[]) => {
+                            setDnSearch(v => ({ ...v, customer: val }));
+                            actionRef.current?.reloadAndRest?.();
+                          }}
+                        />
+
                       </div>
+                      {/* Button */}
+                      {access.canAccesAddRemarkAllocate && (
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                          <Button
+                            type="primary"
+                            disabled={selectedRowKeys.length === 0}
+                            onClick={() => (handleClaim(selectedRowKeys.map(k => Number(k))), console.log(selectedListDn))}
+                          >
+                            Pick
+                          </Button>
+                        </div>
+                      )}
+                      <Button type="text" size={'large'}
+                        onClick={() => navigate("/delivery/location", { state: { list: dataListDn, selected: selectedListDn, selectedRows: selectedRows, areaList: selectedArea } })}
+                        icon={<TbMap2 />}
+                        style={{ fontSize: 22 }}
+                      >
+                      </Button>
+                      <Button type="text" size='large' onClick={() => setSortModalOpen(true)}>
+                        <ColumnHeightOutlined />
+                      </Button>
+                      <Button type="text" size='large' onClick={() => onSync()}>
+                        <SyncOutlined />
+                      </Button>
+                      <Button
+                        type="text"
+                        onClick={() => actionRef.current?.reloadAndRest?.()}
+                        size='large'
+                      >
+                        <ReloadOutlined />
+                      </Button>
                     </ProForm>
 
                   ],
@@ -2364,8 +1939,204 @@ export default () => {
               }}
               extraFilter={
                 <Space size="large" style={{ flexDirection: 'row' }}>
-                  {/* <Button onClick={() => setSearchModalOpen({ visible: true })}><FileSearchOutlined /></Button> */}
-                  <>
+                  {/* <Button onClick={() => setSearchModalOpen({ visible: true })}>
+                        <FileSearchOutlined />
+                      </Button> */}
+                  <Radio.Group
+                    value={advanceSearchParams.filter}
+                    onChange={(e) => {
+                      setAdvanceSearchParams((v) => ({
+                        ...v,
+                        filter: e.target.value,
+                      }));
+                      actionRef.current?.reloadAndRest?.();
+                    }}
+                  >
+                    {/* <Radio.Button value="OV">Over View</Radio.Button>
+                        <Radio.Button value="SO">Sales Order</Radio.Button> */}
+                    <Radio.Button value="DN">Delivery Plan</Radio.Button>
+                    <Radio.Button value="HIS">History</Radio.Button>
+                    <Radio.Button value="MT">My Task</Radio.Button>
+                  </Radio.Group>
+                </Space>
+              }
+              columns={dnColumns}
+              actionHandlers={{
+                onRequest: (criteria, pagination, sort) =>
+                  onRequestDNDeatilHandler({
+                    criteria: {
+                      ...criteria,
+                      ...dnSearch,
+                      sort
+                    },
+                    pagination,    // ✅ PASS pagination
+                  }),
+              }}
+            />
+            : advanceSearchParams.filter == 'HIS' ?
+              <TableView<DNList, { searchValue?: string }>
+                displayOnly
+                tableProps={{
+                  actionRef: actionRef,
+                  options: {
+                    reload: false,
+                    setting: false,
+                    density: false,
+                    fullScreen: false,
+                  },
+                  toolbar: {
+                    actions: [
+                      <ProForm submitter={false} layout="inline">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                          <ProFormSelect
+                            name="sap_delivery_date"
+                            initialValue="as_of_now"
+                            onChange={(val: string) => {
+                              setHisSearch((v) => ({ ...v, sap_delivery_date: val }))
+                              actionRef.current?.reloadAndRest?.();
+                            }}
+                            options={[
+                              { value: 'all', label: 'ALL' },
+                              { value: 'as_of_now', label: 'As Date' },
+                              { value: 'today', label: 'Today' },
+                              { value: 'unplan', label: 'TBC' },
+                              { value: 'TBA', label: 'TBA' },
+                            ]}
+                            width={150}
+                            showSearch
+                          />
+                          <ProFormDateRangePicker
+                            name="sap_delivery_range_his"
+                            placeholder={['From Date', 'To Date']}
+                            disabled={!asDate}
+                            width={300}
+                            fieldProps={{
+                              onChange(val) {
+                                const fromDate = val?.[0] ? val[0].format('YYYY-MM-DD') : undefined;
+                                const toDate = val?.[1] ? val[1].format('YYYY-MM-DD') : undefined;
+
+                                setHisSearch((v) => ({
+                                  ...v,
+                                  sap_from_date: fromDate,
+                                  sap_to_date: toDate,
+                                }));
+
+                                actionRef.current?.reloadAndRest?.();
+                              }
+                            }}
+                          />
+                          <ProFormSelect
+                            placeholder="Province"
+                            name="province_id_his"
+                            value={provinceId}
+                            onChange={(val: string) => {
+                              setProvinceId(val)
+                              setHisSearch((v) => ({ ...v, province_id: val }))
+                              actionRef.current?.reloadAndRest?.();
+                            }}
+                            options={provinceOptions}
+                            width={200}
+                            allowClear
+                            showSearch
+                            mode="multiple"
+                          />
+
+                          <ProFormSelect
+                            placeholder="District"
+                            name="district_id_his"
+                            value={districtId}
+                            onChange={(val: string) => {
+                              setDistrictId(val)
+                              setHisSearch((v) => ({ ...v, district_id: val }))
+                              actionRef.current?.reloadAndRest?.();
+                            }}
+                            options={districtOptions}
+                            width={200}
+                            allowClear
+                            showSearch
+                            mode="multiple"
+                          />
+
+                          <ProFormSelect
+                            placeholder="Commune"
+                            name="commune_id_his"
+                            options={communeOptions}
+                            onChange={(val: string) => {
+                              setHisSearch((v) => ({ ...v, commune_id: val }))
+                              actionRef.current?.reloadAndRest?.();
+                            }}
+                            width={200}
+                            allowClear
+                            showSearch
+                            mode="multiple"
+                          />
+                          <ProFormSelect
+                            placeholder="Customer"
+                            name="customer_his"
+                            showSearch
+                            debounceTime={200}
+                            mode="multiple"
+                            allowClear
+                            width={300}
+                            request={async ({ keyWords }) => {
+                              const res = await services.pageCustomer({
+                                criteria: {
+                                  searchValue: keyWords,
+                                },
+                                pagination: {
+                                  current: 1,
+                                  pageSize: 20,
+                                },
+                              })
+
+                              return res.items.map((c: any) => ({
+                                value: c.code,
+                                label: `${c.code} - ${c.name}`,
+                              }));
+                            }}
+                            onChange={(val: string) => {
+                              setHisSearch(v => ({ ...v, customer: val }));
+                              actionRef.current?.reloadAndRest?.();
+                            }}
+                          />
+                        </div>
+                        {/* Button */}
+                        <ProFormSelect
+                          width={150}
+                          name="hisstatus"
+                          allowClear
+                          showSearch
+                          initialValue="open"
+                          onChange={(val: string) => {
+                            setHisSearch((v) => ({ ...v, dnStatus: val }))
+                            actionRef.current?.reloadAndRest?.();
+                          }}
+                          options={[
+                            { value: '', label: 'ALL' },
+                            { value: 'open', label: 'Open' },
+                            { value: 'in-progress', label: 'In Progress' },
+                            { value: 'complete', label: 'Completed' },
+                            { value: 'force-close', label: 'Close' },
+                          ]}
+                        />
+
+                        <Button
+                          type="text"
+                          onClick={() => actionRef.current?.reloadAndRest?.()}
+                          size='large'
+                        >
+                          <ReloadOutlined />
+                        </Button>
+                      </ProForm>
+
+                    ],
+                  },
+                }}
+                extraFilter={
+                  <Space size="large" style={{ flexDirection: 'row' }}>
+                    {/* <Button onClick={() => setSearchModalOpen({ visible: true })}>
+                          <FileSearchOutlined />
+                        </Button> */}
                     <Radio.Group
                       value={advanceSearchParams.filter}
                       onChange={(e) => {
@@ -2377,592 +2148,27 @@ export default () => {
                       }}
                     >
                       {/* <Radio.Button value="OV">Over View</Radio.Button>
-                    <Radio.Button value="SO">Sales Order</Radio.Button> */}
+                          <Radio.Button value="SO">Sales Order</Radio.Button> */}
                       <Radio.Button value="DN">Delivery Plan</Radio.Button>
                       <Radio.Button value="HIS">History</Radio.Button>
                       <Radio.Button value="MT">My Task</Radio.Button>
-                      {/* <Radio.Button value="FG">FG</Radio.Button> */}
                     </Radio.Group>
-                    {/* {advanceSearchParams.filter == 'MT' ?
-                      <Radio.Group
-                        value={MTSearch.status}
-                        onChange={(e) => {
-                          setMTSearch((v) => ({
-                            ...v,
-                            status: e.target.value,
-                          }));
-                          actionRef.current?.reloadAndRest?.();
-                        }}
-                      >
-                        <Radio.Button value="ALL">ALL</Radio.Button>
-                        <Radio.Button value="open">Open</Radio.Button>
-                        <Radio.Button value="in-progress">In Progress</Radio.Button>
-                        <Radio.Button value="complete">Completed</Radio.Button>
-                      </Radio.Group>
-                      : {}} */}
-                  </>
-                </Space>
-              }
-              columns={mtColumns}
-              actionHandlers={{
-                onRequest: (criteria, pagination, sort) =>
-                  onRequestDNHandler({
-                    criteria: {
-                      ...criteria,
-                      advanceSearch: MTSearch,
-                      sort,
-                    },
-                    pagination: {
-                      pageSize: 500
-                    },
-                  })
-              }}
-
-            />
-            : advanceSearchParams.filter == 'OV' ?
-              <TableView<DnQuickView, { searchValue?: string }>
-                displayOnly
-                tableProps={{
-                  actionRef: actionRef,
-                }}
-                extraFilter={
-                  <Space size="large" style={{ flexDirection: 'row' }}>
-                    {/* <Button onClick={() => setSearchModalOpen({ visible: true })}><FileSearchOutlined /></Button> */}
-                    <><Radio.Group
-                      value={advanceSearchParams.filter}
-                      onChange={(e) => {
-                        setAdvanceSearchParams((v) => ({
-                          ...v,
-                          filter: e.target.value,
-                        }));
-                        actionRef.current?.reloadAndRest?.();
-                      }}
-                    >
-                      {/* <Radio.Button value="OV">Over View</Radio.Button>
-                      <Radio.Button value="SO">Sales Order</Radio.Button> */}
-                      <Radio.Button value="DN">Delivery Plan</Radio.Button>
-                      <Radio.Button value="HIS">History</Radio.Button>
-                      <Radio.Button value="MT">My Task</Radio.Button>
-                      {/* <Radio.Button value="FG">FG</Radio.Button> */}
-                    </Radio.Group>
-                      {/* {advanceSearchParams.filter == 'OV' ?
-                        <RangePicker onChange={(dates) => {
-                          if (dates) {
-                            setQuickViewSearch({
-                              startDate: dates[0]?.format('YYYY-MM-DD'),
-                              endDate: dates[1]?.format('YYYY-MM-DD'),
-                            })
-                            actionRef.current?.reloadAndRest?.();
-                          } else {
-                            setQuickViewSearch({ startDate: undefined, endDate: undefined })
-                            actionRef.current?.reloadAndRest?.();
-                          }
-                        }} />
-                        : {}} */}
-                    </>
                   </Space>
                 }
-                columns={qvColums}
+                columns={dnColumns}
                 actionHandlers={{
                   onRequest: (criteria, pagination, sort) =>
-                    onRequestQuickView({
+                    onHistoryRequestDNDeatilHandler({
                       criteria: {
                         ...criteria,
-                        advanceSearch: advanceSearchParams,
-                        sort,
+                        ...hisSearch,
+                        sort
                       },
-                      pagination: {
-                        pageSize: 500
-                      },
-                    })
+                      pagination,
+                    }),
                 }}
-
               />
-              : advanceSearchParams.filter == 'DN' ?
-                <TableView<DNList, { searchValue?: string }>
-                  displayOnly
-                  tableProps={{
-                    actionRef: actionRef,
-                    options: {
-                      reload: false,
-                      setting: false,
-                      density: false,
-                      fullScreen: false,
-                    },
-                    toolbar: {
-                      actions: [
-                        <ProForm submitter={false} layout="inline">
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                            {/* <Checkbox
-                              checked={asDate}
-                              onChange={e => { setAsDate(e.target.checked), actionRef.current?.reloadAndRest?.() }}
-                            >
-                              As of Now
-                            </Checkbox> */}
-                            {/* <ProFormDatePicker
-                              name="delivery_date"
-                              placeholder="Request Delivery Date"
-                              disabled={!asDate}
-                              onChange={(val: moment.Moment | null) => {
-                                const localDate = val ? val.format('YYYY-MM-DD') : undefined; // local date
-                                setDnSearch((v) => ({ ...v, delivery_date: localDate }));
-                                actionRef.current?.reloadAndRest?.();
-                              }}
-                              width={200}
-                            /> */}
-                            <ProFormSelect
-                              name="sap_delivery_date"
-                              initialValue="as_of_now"
-                              onChange={(val: string) => {
-                                setDnSearch((v) => ({ ...v, sap_delivery_date: val }))
-                                actionRef.current?.reloadAndRest?.();
-                              }}
-                              options={[
-                                { value: 'all', label: 'ALL' },
-                                { value: 'as_of_now', label: 'As Date' },
-                                { value: 'today', label: 'Today' },
-                                { value: 'unplan', label: 'TBC' },
-                              ]}
-                              width={150}
-                              showSearch
-                            />
-                            {/* <ProFormSelect
-                              width={200}
-                              name="area_dn"
-                              placeholder="Area"
-                              showSearch
-                              allowClear
-                              mode="multiple"
-                              request={async () => {
-                                const data = await services.list_area();
-                                return data.map((obj: any) => ({
-                                  value: obj.division_id,
-                                  label: obj.division_name,
-                                }));
-                              }}
-                              onChange={(val?: string) => {
-                                setDnSearch(v => ({
-                                  ...v,
-                                  area: val,
-                                }));
-                                actionRef.current?.reloadAndRest?.();
-                              }}
-                            /> */}
-                            {areaReady && (
-                              <ProFormSelect
-                                name="area_dn"
-                                mode="multiple"
-                                placeholder="Area"
-                                showSearch
-                                allowClear
-                                width={200}
-                                options={areaOptions}
-                                initialValue={dnSearch.area}
-                                onChange={(val: number[]) => {
-                                  setSelectedArea(val);
-                                  setDnSearch(v => ({
-                                    ...v,
-                                    area: val,
-                                  }));
-                                  actionRef.current?.reloadAndRest?.();
-                                }}
-                              />
-                            )}
-
-
-
-
-                            <ProFormDateRangePicker
-                              name="sap_delivery_range_dn"
-                              placeholder={['From Date', 'To Date']}
-                              disabled={!asDate}
-                              width={300}
-                              fieldProps={{
-                                onChange(val) {
-                                  const fromDate = val?.[0] ? val[0].format('YYYY-MM-DD') : undefined;
-                                  const toDate = val?.[1] ? val[1].format('YYYY-MM-DD') : undefined;
-
-                                  setDnSearch((v) => ({
-                                    ...v,
-                                    sap_from_date: fromDate,
-                                    sap_to_date: toDate,
-                                  }));
-
-                                  actionRef.current?.reloadAndRest?.();
-                                }
-                              }}
-                            />
-                            <ProFormSelect
-                              placeholder="Province"
-                              name="province_id_dn"
-                              onChange={(val: string) => {
-                                setProvinceId(val)
-                                setDnSearch((v) => ({ ...v, province_id: val }))
-                                actionRef.current?.reloadAndRest?.();
-                              }}
-                              options={provinceOptions}
-                              width={200}
-                              allowClear
-                              showSearch
-                              mode="multiple"
-                            />
-
-                            <ProFormSelect
-                              placeholder="District"
-                              name="district_id_dn"
-                              value={districtId}
-                              onChange={(val: string) => {
-                                setDistrictId(val)
-                                setDnSearch((v) => ({ ...v, district_id: val }))
-                                actionRef.current?.reloadAndRest?.();
-                              }}
-                              options={districtOptions}
-                              width={200}
-                              allowClear
-                              showSearch
-                              mode="multiple"
-                            />
-
-                            <ProFormSelect
-                              placeholder="Commune"
-                              name="commune_id_dn"
-                              options={communeOptions}
-                              onChange={(val: string) => {
-                                setDnSearch((v) => ({ ...v, commune_id: val }))
-                                actionRef.current?.reloadAndRest?.();
-                              }}
-                              width={200}
-                              allowClear
-                              showSearch
-                              mode="multiple"
-                            />
-                            <ProFormSelect
-                              placeholder="Customer"
-                              name="customer_dn"
-                              showSearch
-                              debounceTime={200}
-                              mode="multiple"
-                              allowClear
-                              width={300}
-                              request={async ({ keyWords }) => {
-                                const res = await services.pageCustomer({
-                                  criteria: {
-                                    searchValue: keyWords,
-                                  },
-                                  pagination: {
-                                    current: 1,
-                                    pageSize: 20,
-                                  },
-                                })
-
-                                return res.items.map((c: any) => ({
-                                  value: c.code,
-                                  label: `${c.code} - ${c.name}`,
-                                }));
-                              }}
-                              onChange={(val: string[]) => {
-                                setDnSearch(v => ({ ...v, customer: val }));
-                                actionRef.current?.reloadAndRest?.();
-                              }}
-                            />
-
-                          </div>
-                          {/* Button */}
-                          {access.canAccesAddRemarkAllocate && (
-                            <div style={{ display: 'flex', alignItems: 'center' }}>
-                              <Button
-                                type="primary"
-                                disabled={selectedRowKeys.length === 0}
-                                onClick={() => (handleClaim(selectedRowKeys.map(k => Number(k))), console.log(selectedListDn))}
-                              >
-                                Pick
-                              </Button>
-                            </div>
-                          )}
-                          <Button type="text" size={'large'}
-                            onClick={() => navigate("/delivery/location", { state: { list: dataListDn, selected: selectedListDn, selectedRows: selectedRows, areaList: selectedArea } })}
-                            icon={<TbMap2 />}
-                            style={{ fontSize: 22 }}
-                          >
-                          </Button>
-                          <Button type="text" size='large' onClick={() => setSortModalOpen(true)}>
-                            <ColumnHeightOutlined />
-                          </Button>
-                          <Button
-                            type="text"
-                            onClick={() => onSync()}
-                            size='large'
-                          >
-                            <ReloadOutlined />
-                          </Button>
-                        </ProForm>
-
-                      ],
-                    },
-                  }}
-                  extraFilter={
-                    <Space size="large" style={{ flexDirection: 'row' }}>
-                      {/* <Button onClick={() => setSearchModalOpen({ visible: true })}>
-                        <FileSearchOutlined />
-                      </Button> */}
-                      <Radio.Group
-                        value={advanceSearchParams.filter}
-                        onChange={(e) => {
-                          setAdvanceSearchParams((v) => ({
-                            ...v,
-                            filter: e.target.value,
-                          }));
-                          actionRef.current?.reloadAndRest?.();
-                        }}
-                      >
-                        {/* <Radio.Button value="OV">Over View</Radio.Button>
-                        <Radio.Button value="SO">Sales Order</Radio.Button> */}
-                        <Radio.Button value="DN">Delivery Plan</Radio.Button>
-                        <Radio.Button value="HIS">History</Radio.Button>
-                        <Radio.Button value="MT">My Task</Radio.Button>
-                      </Radio.Group>
-                    </Space>
-                  }
-                  columns={dnColumns}
-                  actionHandlers={{
-                    onRequest: (criteria, pagination, sort) =>
-                      onRequestDNDeatilHandler({
-                        criteria: {
-                          ...criteria,
-                          advanceSearch: dnSearch,
-                          sort,
-                        },
-                        pagination: {
-                          pageSize: 500,
-                        },
-                      }),
-                  }}
-                />
-                : advanceSearchParams.filter == 'HIS' ?
-                  <TableView<DNList, { searchValue?: string }>
-                    displayOnly
-                    tableProps={{
-                      actionRef: actionRef,
-                      options: {
-                        reload: false,
-                        setting: false,
-                        density: false,
-                        fullScreen: false,
-                      },
-                      toolbar: {
-                        actions: [
-                          <ProForm submitter={false} layout="inline">
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                              {/* <Checkbox
-                                checked={asDate}
-                                onChange={e => { setAsDate(e.target.checked), actionRef.current?.reloadAndRest?.() }}
-                              >
-                                As of Now
-                              </Checkbox> */}
-                              {/* <ProFormDatePicker
-                                name="delivery_date"
-                                placeholder="Delivery Date"
-                                disabled={!asDate}
-                                onChange={(val: moment.Moment | null) => {
-                                  const localDate = val ? val.format('YYYY-MM-DD') : undefined; // local date
-                                  setHisSearch((v) => ({ ...v, delivery_date: localDate }));
-                                  actionRef.current?.reloadAndRest?.();
-                                }}
-                                width={200}
-                              /> */}
-                              <ProFormSelect
-                                name="sap_delivery_date"
-                                initialValue="as_of_now"
-                                onChange={(val: string) => {
-                                  setHisSearch((v) => ({ ...v, sap_delivery_date: val }))
-                                  actionRef.current?.reloadAndRest?.();
-                                }}
-                                options={[
-                                  { value: 'all', label: 'ALL' },
-                                  { value: 'as_of_now', label: 'As Date' },
-                                  { value: 'today', label: 'Today' },
-                                  { value: 'unplan', label: 'TBC' },
-                                ]}
-                                width={150}
-                                showSearch
-                              />
-                              {/* <ProFormDatePicker
-                                name="sap_delivery_date"
-                                placeholder="Delivery Date"
-                                disabled={!asDate}
-                                onChange={(val: moment.Moment | null) => {
-                                  const localDate = val ? val.format('YYYY-MM-DD') : undefined; // local date
-                                  setHisSearch((v) => ({ ...v, sap_delivery_date: localDate }));
-                                  actionRef.current?.reloadAndRest?.();
-                                }}
-                                width={200}
-                              /> */}
-                              <ProFormDateRangePicker
-                                name="sap_delivery_range_his"
-                                placeholder={['From Date', 'To Date']}
-                                disabled={!asDate}
-                                width={300}
-                                fieldProps={{
-                                  onChange(val) {
-                                    const fromDate = val?.[0] ? val[0].format('YYYY-MM-DD') : undefined;
-                                    const toDate = val?.[1] ? val[1].format('YYYY-MM-DD') : undefined;
-
-                                    setHisSearch((v) => ({
-                                      ...v,
-                                      sap_from_date: fromDate,
-                                      sap_to_date: toDate,
-                                    }));
-
-                                    actionRef.current?.reloadAndRest?.();
-                                  }
-                                }}
-                              />
-                              <ProFormSelect
-                                placeholder="Province"
-                                name="province_id_his"
-                                value={provinceId}
-                                onChange={(val: string) => {
-                                  setProvinceId(val)
-                                  setHisSearch((v) => ({ ...v, province_id: val }))
-                                  actionRef.current?.reloadAndRest?.();
-                                }}
-                                options={provinceOptions}
-                                width={200}
-                                allowClear
-                                showSearch
-                                mode="multiple"
-                              />
-
-                              <ProFormSelect
-                                placeholder="District"
-                                name="district_id_his"
-                                value={districtId}
-                                onChange={(val: string) => {
-                                  setDistrictId(val)
-                                  setHisSearch((v) => ({ ...v, district_id: val }))
-                                  actionRef.current?.reloadAndRest?.();
-                                }}
-                                options={districtOptions}
-                                width={200}
-                                allowClear
-                                showSearch
-                                mode="multiple"
-                              />
-
-                              <ProFormSelect
-                                placeholder="Commune"
-                                name="commune_id_his"
-                                options={communeOptions}
-                                onChange={(val: string) => {
-                                  setHisSearch((v) => ({ ...v, commune_id: val }))
-                                  actionRef.current?.reloadAndRest?.();
-                                }}
-                                width={200}
-                                allowClear
-                                showSearch
-                                mode="multiple"
-                              />
-                              <ProFormSelect
-                                placeholder="Customer"
-                                name="customer_his"
-                                showSearch
-                                debounceTime={200}
-                                mode="multiple"
-                                allowClear
-                                width={300}
-                                request={async ({ keyWords }) => {
-                                  const res = await services.pageCustomer({
-                                    criteria: {
-                                      searchValue: keyWords,
-                                    },
-                                    pagination: {
-                                      current: 1,
-                                      pageSize: 20,
-                                    },
-                                  })
-
-                                  return res.items.map((c: any) => ({
-                                    value: c.code,
-                                    label: `${c.code} - ${c.name}`,
-                                  }));
-                                }}
-                                onChange={(val: string) => {
-                                  setHisSearch(v => ({ ...v, customer: val }));
-                                  actionRef.current?.reloadAndRest?.();
-                                }}
-                              />
-                            </div>
-                            {/* Button */}
-                            <ProFormSelect
-                              width={150}
-                              name="hisstatus"
-                              allowClear
-                              showSearch
-                              initialValue="open"
-                              onChange={(val: string) => {
-                                setHisSearch((v) => ({ ...v, dnStatus: val }))
-                                actionRef.current?.reloadAndRest?.();
-                              }}
-                              options={[
-                                { value: '', label: 'ALL' },
-                                { value: 'open', label: 'Open' },
-                                { value: 'in-progress', label: 'In Progress' },
-                                { value: 'complete', label: 'Completed' },
-                                { value: 'force-close', label: 'Close' },
-                              ]}
-                            />
-
-                            <Button
-                              type="text"
-                              onClick={() => onSync()}
-                              size='large'
-                            >
-                              <ReloadOutlined />
-                            </Button>
-                          </ProForm>
-
-                        ],
-                      },
-                    }}
-                    extraFilter={
-                      <Space size="large" style={{ flexDirection: 'row' }}>
-                        {/* <Button onClick={() => setSearchModalOpen({ visible: true })}>
-                          <FileSearchOutlined />
-                        </Button> */}
-                        <Radio.Group
-                          value={advanceSearchParams.filter}
-                          onChange={(e) => {
-                            setAdvanceSearchParams((v) => ({
-                              ...v,
-                              filter: e.target.value,
-                            }));
-                            actionRef.current?.reloadAndRest?.();
-                          }}
-                        >
-                          {/* <Radio.Button value="OV">Over View</Radio.Button>
-                          <Radio.Button value="SO">Sales Order</Radio.Button> */}
-                          <Radio.Button value="DN">Delivery Plan</Radio.Button>
-                          <Radio.Button value="HIS">History</Radio.Button>
-                          <Radio.Button value="MT">My Task</Radio.Button>
-                        </Radio.Group>
-                      </Space>
-                    }
-                    columns={dnColumns}
-                    actionHandlers={{
-                      onRequest: (criteria, pagination, sort) =>
-                        onHistoryRequestDNDeatilHandler({
-                          criteria: {
-                            ...criteria,
-                            advanceSearch: hisSearch,
-                            sort,
-                          },
-                          pagination: {
-                            pageSize: 500,
-                          },
-                        }),
-                    }}
-                  />
-                  : []}
+              : []}
 
 
 
@@ -3047,6 +2253,7 @@ export default () => {
       <Modal
         open={claimOpen}
         title="Pick"
+        confirmLoading={claimLoading}
         onCancel={() => {
           setClaimOpen(false);
           setClaimIds([])
@@ -3056,35 +2263,62 @@ export default () => {
           setSelectedListDn([])
         }}
         onOk={async () => {
-          const sapLines = selectedListDn.flatMap(dn =>
-            (dn.deliveryItems ?? []).map(it => ({
-              lineNum: Number(it.sap_line_num),                 // SAP line number
-              shipDate: (dn.deliveryDate)
-            }))
-          );
-          const soDocEntries = [...new Set(
-            selectedListDn.map(v => v.so_doc_entry)
-          )];
-          for (const soDocEntry of soDocEntries) {
+          if (selectedListDn.length === 0) {
+            message.warning('Please select at least one DN');
+            return;
+          }
+
+          setClaimLoading(true);
+
+          try {
+            const rawLines = selectedListDn.flatMap(dn =>
+              (dn.deliveryItems ?? []).map(it => ({
+                soDocEntry: String(dn.so_doc_entry),
+                lineNum: Number(it.sap_line_num),
+                shipDate: dn.deliveryDate,
+              }))
+            );
+
+            const uniqueMap = new Map<string, any>();
+            rawLines.forEach(l => {
+              const key = `${l.soDocEntry}_${l.lineNum}`;
+              if (!uniqueMap.has(key)) uniqueMap.set(key, l);
+            });
+
+            const del_item = Array.from(uniqueMap.values()).sort((a, b) =>
+              a.soDocEntry === b.soDocEntry
+                ? a.lineNum - b.lineNum
+                : a.soDocEntry.localeCompare(b.soDocEntry)
+            );
+
             await services.ClaimDn(
               claimIds,
               access.currentUser?.login,
               'Pick',
               'Pick DN',
               useExisting ? selectedClaimedLine : null,
-              soDocEntry,
-              sapLines
+              del_item
             );
+
+            message.success('Updated successfully');
+
+            actionRef.current?.reloadAndRest?.();
+
+            setClaimOpen(false);
+            setClaimIds([]);
+            setClaimedLines([]);
+            setSelectedRowKeys([]);
+            setSelectedRows([]);
+            setSelectedListDn([]);
+
+          } catch (err: any) {
+            console.error(err);
+            message.error(err?.message || 'Claim failed');
+          } finally {
+            setClaimLoading(false);
           }
-          actionRef.current?.reloadAndRest?.();
-          message.success('Updated successfully');
-          setClaimOpen(false);
-          setClaimIds([])
-          setClaimedLines([])
-          setSelectedRowKeys([])
-          setSelectedRows([])
-          setSelectedListDn([])
         }}
+
       >
         <Checkbox
           checked={useExisting}

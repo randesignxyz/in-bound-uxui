@@ -11,6 +11,7 @@ import RemarkModal from './RemarkModal';
 import ActivityLog from '@/components/ActivityLog';
 import ImagePreview from '@/components/ImagePreview';
 import { GoogleMap, Marker, Polyline, InfoWindow, useJsApiLoader } from '@react-google-maps/api';
+import { SupporterServiceAPI } from '../supporter/services';
 
 interface Props {
   onEdit: (data?: LeadDetail) => void;
@@ -250,8 +251,8 @@ const LeadDetailView: React.FC<Props> = ({ id, onEdit }) => {
                       title="Current location"
                       onClick={() => {
                         // Optional: zoom in on click
-                        const lat= Number(lead?.latitude)
-                        const lng= Number(lead?.longitude)
+                        const lat = Number(lead?.latitude)
+                        const lng = Number(lead?.longitude)
                         mapInstance?.panTo({ lat, lng });
                         if (mapInstance?.getZoom()! < 16) {
                           mapInstance?.setZoom(16);
@@ -269,6 +270,7 @@ const LeadDetailView: React.FC<Props> = ({ id, onEdit }) => {
               children: <Card>
                 <ProList
                   dataSource={lead?.logs}
+
                   metas={{
                     title: {
                       dataIndex: "activityType"

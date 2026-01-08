@@ -4,9 +4,11 @@ import { MultiRequest } from '@/services/apiGateway';
 import { LookupDataItem2 } from '@/services/data';
 import { simpleRequestActions } from '@/services/model';
 import {
+  FooterToolbar,
   ModalForm,
   ModalFormProps,
   ProCard,
+  ProForm,
   ProFormDatePicker,
   ProFormDateRangePicker,
   ProFormDependency,
@@ -16,16 +18,16 @@ import {
   ProFormText,
   ProFormTextArea,
 } from '@ant-design/pro-components';
-import { message, Modal, Space } from 'antd';
+import { Button, message, Modal, Space } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import moment, { Moment } from 'moment';
 import { useEffect, useState } from 'react';
 import { BU, Department, RequisitionData, SubDepartment } from '../data';
 import { EmployeeServices } from '../services';
 export default ({
-  onRefresh,
-  ...rest
-}: ModalFormProps<RequisitionData> & {
+                  onRefresh,
+                  ...rest
+                }: ModalFormProps<RequisitionData> & {
   onRefresh?: () => void;
 }) => {
   const [form] = useForm<RequisitionData>();
@@ -106,7 +108,7 @@ export default ({
   };
 
   return (
-    <ModalForm
+    <ProForm
       form={form}
       onValuesChange={(changedValues) => {
         const { jobId } = changedValues;
@@ -114,9 +116,30 @@ export default ({
           fetchJobTitleHandler(jobId);
         }
       }}
+      submitter={{
+        render: () => (
+          <FooterToolbar>
+            <Button
+              onClick={() => {
+                form.resetFields();
+                setUploadFileIds([]);
+              }}
+            >
+              Reset
+            </Button>
+
+            <Button
+              type="primary"
+              onClick={() => form.submit()}
+            >
+              Submit
+            </Button>
+          </FooterToolbar>
+        ),
+      }}
       onFinish={async () => {
         const formData = await form.validateFields();
-        if (uploadFileIds.length == 0) {
+        if (uploadFileIds.length === 0) {
           message.error('Please upload job description as support document.');
           return;
         }
@@ -141,6 +164,7 @@ export default ({
       title="Staff Requisition Form"
       {...rest}
     >
+
       <Space direction="vertical" style={{ width: '100%' }}>
         <Requestor form={form} />
         <ProCard size="small" bordered title="Details of Position Hired">
@@ -249,7 +273,6 @@ export default ({
               }
             }}
           </ProFormDependency>
-
           <ProFormRadio.Group
             rules={[{ required: true }]}
             name={'contractTypeId'}
@@ -258,7 +281,6 @@ export default ({
               ?.filter((it) => it.type == 'EMPLOYEE_CONTRACT_TYPE')
               .map((it) => ({ label: it.name, value: it.id }))}
           />
-
           <ProFormDependency name={['contractTypeId']} ignoreFormListField>
             {({ contractTypeId }) => {
               if (contractTypeId == '2032') {
@@ -273,7 +295,6 @@ export default ({
             }}
           </ProFormDependency>
         </ProCard>
-
         <ProCard size="small" bordered title="Type of Requisition">
           <ProFormRadio.Group
             rules={[{ required: true }]}
@@ -376,7 +397,6 @@ export default ({
           />
           <ProFormTextArea name={'suggestedSourcing'} label="Suggested Sourcing" />
         </ProCard>
-
         <FileUploader
           required
           showTitle
@@ -384,6 +404,6 @@ export default ({
           onSetFiles={(files) => setUploadFileIds(files.map((it) => it.response))}
         />
       </Space>
-    </ModalForm>
+    </ProForm>
   );
 };

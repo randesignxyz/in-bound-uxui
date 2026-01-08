@@ -36,7 +36,7 @@ export default function StaffRequisitionPage() {
           integratedStatus: "ALL",
           status: "ALL",
         },
-         pagination: { current: 1, pageSize: 20 },
+        pagination: { current: 1, pageSize: 20 },
       },
     });
 

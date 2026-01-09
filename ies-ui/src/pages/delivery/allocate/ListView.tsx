@@ -1188,7 +1188,7 @@ export default () => {
     "district",
     "commune",
     "channel",
-    "truck_capacity"
+    // "truck_capacity"
   ];
   const sortableColumns = extractSortableColumns(dnColumns).filter(c =>
     allowedSortFields.includes(c.dataIndex)

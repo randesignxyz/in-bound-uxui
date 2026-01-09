@@ -1510,7 +1510,7 @@ export default () => {
                               dataIndex: 'saleType',
                               width: 70,
                               render: (_, r) => {
-                                return (r.saleType ? r.saleType : 'STD')
+                                return (r.saleType ? r.saleType : r.type ? r.type : 'STD')
                               }
                             },
                             {

@@ -228,11 +228,11 @@ export default () => {
   }, [advanceSearchParams.filter === 'DN']);
 
   useEffect(() => {
-      if (claimOpen) {
-        setUseExisting(false);
-        setSelectedClaimedLine(null);
-      }
-    }, [claimOpen]);
+    if (claimOpen) {
+      setUseExisting(false);
+      setSelectedClaimedLine(null);
+    }
+  }, [claimOpen]);
 
   const getMenuItems = (item: any): MenuProps['items'] => {
 
@@ -1511,7 +1511,7 @@ export default () => {
                               dataIndex: 'saleType',
                               width: 70,
                               render: (_, r) => {
-                                return (r.saleType ? r.saleType : 'STD')
+                                return (r.saleType ? r.saleType : r.type ? r.type : 'STD')
                               }
                             },
                             {

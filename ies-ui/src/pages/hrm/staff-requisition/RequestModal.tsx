@@ -4,6 +4,7 @@ import { MultiRequest } from '@/services/apiGateway';
 import { LookupDataItem2 } from '@/services/data';
 import { simpleRequestActions } from '@/services/model';
 import {
+  FooterToolbar,
   ModalForm,
   ModalFormProps,
   ProCard,
@@ -17,7 +18,7 @@ import {
   ProFormText,
   ProFormTextArea,
 } from '@ant-design/pro-components';
-import { message, Modal, Space } from 'antd';
+import { Button, message, Modal, Space } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import moment, { Moment } from 'moment';
 import { useEffect, useState } from 'react';
@@ -115,6 +116,27 @@ export default ({
           fetchJobTitleHandler(jobId);
         }
       }}
+      submitter={{
+        render: () => (
+          <FooterToolbar>
+            <Button
+              onClick={() => {
+                form.resetFields();
+                setUploadFileIds([]);
+              }}
+            >
+              Reset
+            </Button>
+
+            <Button
+              type="primary"
+              onClick={() => form.submit()}
+            >
+              Submit
+            </Button>
+          </FooterToolbar>
+        ),
+      }}
       onFinish={async () => {
         const formData = await form.validateFields();
         if (uploadFileIds.length === 0) {
@@ -142,6 +164,7 @@ export default ({
       title="Staff Requisition Form"
       {...rest}
     >
+
       <Space direction="vertical" style={{ width: '100%' }}>
         <Requestor form={form} />
         <ProCard size="small" bordered title="Details of Position Hired">
@@ -250,7 +273,6 @@ export default ({
               }
             }}
           </ProFormDependency>
-
           <ProFormRadio.Group
             rules={[{ required: true }]}
             name={'contractTypeId'}

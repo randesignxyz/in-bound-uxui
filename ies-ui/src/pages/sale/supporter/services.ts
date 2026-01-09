@@ -19,7 +19,7 @@ export async function fetchChangePoItem(data: change_po_item) {
     accept: 'application/json',
     data,
   });
-}  
+}
 
 export async function fetchChangeDistributor(data: change_distributor) {
   return request(`${Endpoint}/dsd_change_distributor/exec`, {
@@ -27,7 +27,7 @@ export async function fetchChangeDistributor(data: change_distributor) {
     accept: 'application/json',
     data,
   });
-}  
+}
 
 export async function fetchWrongPricing(data: wrong_pricing) {
   return request(`${Endpoint}/sales_invoice_remove_discount_pricing/exec`, {
@@ -35,7 +35,7 @@ export async function fetchWrongPricing(data: wrong_pricing) {
     accept: 'application/json',
     data,
   });
-}  
+}
 
 export async function fetchCreateNewMME(data: create_new_mme) {
   return request(`${Endpoint}/create_new_se/exec`, {
@@ -43,7 +43,7 @@ export async function fetchCreateNewMME(data: create_new_mme) {
     accept: 'application/json',
     data,
   });
-}  
+}
 
 // export async function fetchRollBackPO(data: change_po_item) {
 //   return request(`${Endpoint}/purchase_order_change_new_item/exec`, {
@@ -52,28 +52,28 @@ export async function fetchCreateNewMME(data: create_new_mme) {
 //     data,
 //   });
 // }  
- 
- 
+
+
 const SupporterActions = {
-  poTodo: ( params: SupporterParam): ServiceApiType<SupporterParam> => ({
-      actionName:"supporter",
-      endpoint:"SALE",
-      type:"EXEC",
-      payload:params
+  poTodo: (params: SupporterParam): ServiceApiType<SupporterParam> => ({
+    actionName: "supporter",
+    endpoint: "SALE",
+    type: "EXEC",
+    payload: params
   }),
-  page: ( params: TableViewSearchParams<any>): ServiceApiType<{ searchValue:string }> => ({
-      actionName:"supporters",
-      endpoint:"SALE",
-      type:"PAGING_QUERY",
-      payload:params.criteria,
-      pagination:params.pagination
+  page: (params: TableViewSearchParams<any>): ServiceApiType<{ searchValue?: string }> => ({
+    actionName: "supporters",
+    endpoint: "SALE",
+    type: "PAGING_QUERY",
+    payload: { ...params.criteria },
+    pagination: params.pagination
   }),
 }
 
 
 export const SupporterServiceAPI = (requestActions: RequestActions) => {
   return {
-    poTodo: (params:SupporterParam) => singleRequest(SupporterActions.poTodo(params))(requestActions),
-    page: (params:TableViewSearchParams<any>) => singleRequest(SupporterActions.page(params))(requestActions) as Promise<Page<any>>,
-}
+    poTodo: (params: SupporterParam) => singleRequest(SupporterActions.poTodo(params))(requestActions),
+    page: (params: TableViewSearchParams<any>) => singleRequest(SupporterActions.page(params))(requestActions) as Promise<Page<any>>,
+  }
 }

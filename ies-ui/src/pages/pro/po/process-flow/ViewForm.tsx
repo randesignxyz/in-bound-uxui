@@ -9,53 +9,67 @@ import { PartitionOutlined, UploadOutlined } from '@ant-design/icons';
 import { createPoService } from '../services';
 
 export default (props: DataViewProps) => {
+  // === State definitions ===
   const [attatchFiles, setAttatchFiles] = useState<{ fileId: string; activity: string }[]>();
-  const [openFlow, setOpenFlow] = useState<number>()
-  const [poRequestDetail, setPoRequestDetail] = useState<PoRequestDetail>()
-  const [forceReload, setForceReload] = useState(0)
+  const [openFlow, setOpenFlow] = useState<number>();
+  const [poRequestDetail, setPoRequestDetail] = useState<PoRequestDetail>();
+  const [forceReload, setForceReload] = useState(0);
+  const [posting, setPosting] = useState(false); // optional loading state for SAP post
+
   const srv = createPoService();
+
+  // === Action Handlers ===
   const onPostHandler = () => {
-    if (!poRequestDetail) return
+    if (!poRequestDetail) return;
     Modal.confirm({
       title: 'Post purchase order to SAP',
       content: "Are you sure?",
       onOk: async () => {
         try {
-          await srv.postPo(poRequestDetail.id)
-          message.success("Successfully posted.")
-          setForceReload(v => v + 1)
+          setPosting(true);
+          await srv.postPo(poRequestDetail.id);
+          message.success("Successfully posted.");
+          setForceReload(v => v + 1);
         } catch (error: any) {
-          message.error(error.message || "Failed to post.")
+          message.error(error.message || "Failed to post.");
+        } finally {
+          setPosting(false);
         }
       }
-    })
-  }
+    });
+  };
 
+  // === Optional: moreActions callback ===
+  const moreActions = () => [
+    {
+      icon: <UploadOutlined />,
+      danger: true,
+      hidden: !poRequestDetail || poRequestDetail.workflowStatus != 'APPROVED' || (poRequestDetail?.integratedStatus || 'FAILED') != 'FAILED',
+      key: 'postToSAP',
+      name: "Post To SAP",
+      action: onPostHandler,
+    },
+    {
+      icon: <PartitionOutlined />,
+      key: 'view-flow',
+      name: "Flow",
+      action: () => setOpenFlow(poRequestDetail?.id),
+    },
+  ];
+
+  // === Return JSX ===
   return (
     <ViewFormWrapper<{ id: number }>
       workflowProp={props}
       attachedFiles={attatchFiles}
-
-      moreActions={() => [
-        {
-          icon: <UploadOutlined />,
-          danger: true,
-          hidden: !poRequestDetail || poRequestDetail?.workflowStatus != 'APPROVED' || (poRequestDetail?.integratedStatus || 'FAILED') != 'FAILED',
-          key: 'postToSAP',
-          name: "Post To SAP",
-          action: onPostHandler
-        },
-        {
-          icon: <PartitionOutlined />, key: 'view-flow', name: "Flow", action: () => {
-            setOpenFlow(poRequestDetail?.id)
-          }
-        }]}
+      moreActions={moreActions}
       actionHandlers={{
-        onRefresh: () => { },
+        onRefresh: () => setForceReload(v => v + 1),
       }}
     >
       {(data, _) => {
         if (!data?.processInstance?.procInstId) return <Spin spinning={true} />;
+
         return (
           <>
             <DataDetailView
@@ -73,7 +87,6 @@ export default (props: DataViewProps) => {
               fromId={openFlow || 0}
             />
           </>
-
         );
       }}
     </ViewFormWrapper>

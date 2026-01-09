@@ -26,6 +26,7 @@ import { createService } from "./services";
 import AppraisalRequestForm from "./AppraisalRequestForm";
 import { ActionType } from "@ant-design/pro-components";
 import { TableViewSearchParams } from '@/components/DataCrud/TableView';
+import Form from '@/pages/process-flow/form';
 
 export default function AppraisalRequestPage() {
   const access = useAccess();
@@ -63,7 +64,7 @@ export default function AppraisalRequestPage() {
   };
   return (
     <PageWrapper<
-        AppraisalRequestListItem | AppraisalRequestDetail ,
+        AppraisalRequestListItem ,
         SearchParams,
         SavePayLoad
       >
@@ -89,16 +90,11 @@ export default function AppraisalRequestPage() {
         {
           action: "view",
           tabLabel: item?.formNo,
+          key: item?.processInstId,
           panel: (props) => (
-            <Detail
-              {...props}
-              id={item?.processInstId}
-              formKey={AppraisalRequestFormNames.processDefKey}
-              onOpenChange={() => props?.onCloseTab?.()}
-              onRefresh={refetch}
-            />
+          <Form openInTab formKey="performance_review_request_process" id={item?.processInstId}/>
           ),
-        },
+        }
       ]}
       listView={{
         type: "Table",

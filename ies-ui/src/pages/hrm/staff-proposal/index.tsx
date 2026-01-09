@@ -2,7 +2,6 @@ import React, { useRef, useState } from "react";
 import PageWrapper from "@/components/PageWrapper";
 import { history, useAccess, useQuery } from "@umijs/max";
 import {
-  AdvanceSearchParams,
   SavePayLoad,
   SearchParams,
   StaffProposalDetail,
@@ -25,6 +24,7 @@ import type { TableViewSearchParams } from "@/components/DataCrud/TableView";
 import { ActionType } from "@ant-design/pro-components";
 import AdvanceSearchDrawer from '@/pages/hrm/staff-requisition/AdvanceEmployeeSearch';
 import DetailProposal from "./detail";
+import Form from '@/pages/process-flow/form';
 
 export default function StaffProposalPage() {
   const requestActions = simpleRequestActions();
@@ -80,13 +80,10 @@ export default function StaffProposalPage() {
                 value: item?.formNo || item?.processInstId,
                 tabLabel: item?.formNo || "Form",
                 panel: (props) => (
-                  <DetailProposal
-                    id={item?.processInstId}
-                    type="VIEW"
-                    onCloseTab={() => props?.onCloseTab?.()}
-                  />
+                  <Form openInTab formKey="staff_proposal_request_process" id={item?.processInstId} />
                 ),
-              },
+              }
+
             ]
             : [
               {
@@ -250,7 +247,19 @@ export default function StaffProposalPage() {
           setAdvanceSearchVisible(false);
         }}
         onReset={() => {
-          actionRef.current?.reloadAndRest?.();
+          setFilter((prev) => ({
+            ...prev,
+            criteria: {
+              ...prev.criteria,
+              advanceSearch: {
+                ...prev.criteria?.advanceSearch,
+                buIds: [],
+                depIds: [],
+              },
+            },
+            pagination: { ...prev.pagination, current: 1 },
+          }));
+          setAdvanceSearchVisible(false);
         }}
       />
     </>

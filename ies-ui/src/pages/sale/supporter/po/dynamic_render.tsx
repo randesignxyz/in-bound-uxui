@@ -1,3 +1,5 @@
+
+
 import React from "react";
 import { Collapse } from "antd";
 
@@ -27,40 +29,133 @@ export const isEqual = (a: any, b: any): boolean => {
 };
 
 /* ===========================
-   Safe value renderer
+   Label formatter
+   =========================== */
+const formatLabel = (key: string) =>
+  key
+    .replace(/_/g, " ")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+
+/* ===========================
+   Render object block (CARD)
+   =========================== */
+const renderObjectBlock = (obj: any, index?: number) => {
+  const header =
+    obj?.itemCode ||
+    obj?.itemName ||
+    (index !== undefined ? `Item ${index + 1}` : "Item");
+
+  return (
+    <div
+      style={{
+        border: "1px solid #e8e8e8",
+        borderRadius: 4,
+        padding: "6px 8px",
+        marginBottom: 6,            // 🔽 small spacing
+        background: "#fafafa",
+      }}
+    >
+      <div
+        style={{
+          fontWeight: 600,
+          fontSize: 12,
+          marginBottom: 4,          // 🔽 small spacing
+        }}
+      >
+        {header}
+      </div>
+
+      {Object.entries(obj).map(([key, value]) => (
+        <div
+          key={key}
+          style={{
+            display: "flex",
+            gap: 6,
+            marginBottom: 2,        // 🔽 compact rows
+            fontSize: 12,
+            lineHeight: 1.4,
+          }}
+        >
+          <div
+            style={{
+              minWidth: 130,
+              fontWeight: 500,
+              color: "#595959",
+            }}
+          >
+            {formatLabel(key)} :
+          </div>
+          <div>
+            {typeof value === "object"
+              ? renderValue(value)
+              : String(value)}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+/* ===========================
+   Value renderer (NO JSON)
    =========================== */
 const renderValue = (val: any) => {
-  if (val === null || val === undefined) return <i>null</i>;
+  if (val === null || val === undefined) {
+    return <span style={{ opacity: 0.6 }}>null</span>;
+  }
 
-  if (typeof val === "object") {
+  // Primitive
+  if (typeof val !== "object") {
+    return <span>{String(val)}</span>;
+  }
+
+  // Array → each item separated
+  if (Array.isArray(val)) {
     return (
-      <pre style={{ margin: 0 }}>
-        {JSON.stringify(val, null, 2)}
-      </pre>
+      <div>
+        {val.map((item, index) =>
+          typeof item === "object" ? (
+            <div key={index}>
+              {renderObjectBlock(item, index)}
+            </div>
+          ) : (
+            <div key={index}>{String(item)}</div>
+          )
+        )}
+      </div>
     );
   }
 
-  return <span>{String(val)}</span>;
+  // Object
+  return renderObjectBlock(val);
 };
 
 /* ===========================
    OLD | NEW view
    =========================== */
-const renderSideBySide = (oldVal: any, newVal: any) => (
-  <div
-    style={{
-      display: "grid",
-      gridTemplateColumns: "1fr 1fr",
-      gap: 16,
-    }}
-  >
-    <div style={{ color: "#cf1322" }}>{renderValue(oldVal)}</div>
-    <div style={{ color: "#389e0d" }}>{renderValue(newVal)}</div>
-  </div>
-);
+const renderSideBySide = (oldVal: any, newVal: any) => {
+
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr",
+        gap: 12,                     // 🔽 smaller gap
+      }}
+    >
+      <div style={{ color: "#cf1322" }}>
+        {renderValue(oldVal)}
+      </div>
+      <div style={{ color: "#389e0d" }}>
+        {renderValue(newVal)}
+      </div>
+    </div>
+  )
+};
 
 /* ===========================
-   Diff object (ONLY changed fields)
+   Diff object (ONLY changed)
    =========================== */
 const diffObject = (oldObj: any, newObj: any) => {
   const keys = Object.keys({
@@ -73,7 +168,10 @@ const diffObject = (oldObj: any, newObj: any) => {
       if (isEqual(oldObj?.[key], newObj?.[key])) return null;
 
       return (
-        <Panel header={key} key={key}>
+        <Panel
+          header={formatLabel(key)}
+          key={key}
+        >
           {renderSideBySide(oldObj?.[key], newObj?.[key])}
         </Panel>
       );
@@ -85,7 +183,8 @@ const diffObject = (oldObj: any, newObj: any) => {
   return (
     <Collapse
       bordered={false}
-      defaultActiveKey={panels.map((p: any) => p.key)} // 🔥 expand all by default
+      size="small"
+      defaultActiveKey={panels.map((p: any) => p.key)}
     >
       {panels}
     </Collapse>
@@ -93,7 +192,7 @@ const diffObject = (oldObj: any, newObj: any) => {
 };
 
 /* ===========================
-   Diff array by ID (PO / Stock)
+   Diff array by ID
    =========================== */
 const diffArrayById = (
   oldArr: any[] = [],
@@ -114,7 +213,11 @@ const diffArrayById = (
       return (
         <Panel
           key={newItem[idKey]}
-          header={newItem.itemCode || newItem.itemName}
+          header={
+            newItem.itemCode ||
+            newItem.itemName ||
+            `Item ${newItem[idKey]}`
+          }
         >
           {diff}
         </Panel>
@@ -127,7 +230,8 @@ const diffArrayById = (
   return (
     <Collapse
       bordered={false}
-      defaultActiveKey={panels.map((p: any) => p.key)} // 🔥 expand all items
+      size="small"
+      defaultActiveKey={panels.map((p: any) => p.key)}
     >
       {panels}
     </Collapse>
@@ -135,21 +239,21 @@ const diffArrayById = (
 };
 
 /* ===========================
-   MAIN FUNCTION (USE THIS)
+   MAIN EXPORT
    =========================== */
 export const renderDiffOnly = (oldVal: any, newVal: any) => {
   if (isEqual(oldVal, newVal)) return null;
 
-  // Array (PurchaseOrderItems / Stock)
   if (Array.isArray(oldVal) && Array.isArray(newVal)) {
     return diffArrayById(oldVal, newVal, "id");
   }
 
-  // Object
-  if (typeof oldVal === "object" && typeof newVal === "object") {
+  if (
+    typeof oldVal === "object" &&
+    typeof newVal === "object"
+  ) {
     return diffObject(oldVal, newVal);
   }
 
-  // Primitive
   return renderSideBySide(oldVal, newVal);
 };

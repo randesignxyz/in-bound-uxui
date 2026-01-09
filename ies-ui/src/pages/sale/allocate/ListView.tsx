@@ -2182,6 +2182,9 @@ export default () => {
                         >
                           <ReloadOutlined />
                         </Button>
+                        <Button type="text" size='large' onClick={() => onSync()} style={{ marginLeft: -20 }}>
+                          <SyncOutlined />
+                        </Button>
                       </ProForm>
 
                     ],

@@ -227,6 +227,13 @@ export default () => {
     fetchSku();
   }, [advanceSearchParams.filter === 'DN']);
 
+  useEffect(() => {
+    if (claimOpen) {
+      setUseExisting(false);
+      setSelectedClaimedLine(null);
+    }
+  }, [claimOpen]);
+
   const getMenuItems = (item: any): MenuProps['items'] => {
 
     const items: MenuProps['items'] = [];

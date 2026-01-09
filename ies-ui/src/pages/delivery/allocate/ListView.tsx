@@ -151,7 +151,12 @@ export default () => {
         return [...prev, ...newRows];
       });
 
-      setDataListDn(prev => prev.items.filter(r => !state.selectedRows?.some(s => s.id === r.id)));
+      setDataListDn(prev => ({
+        ...prev,
+        items: prev.items.filter(
+          r => !state.selectedRows?.some(s => s.id === r.id)
+        ),
+      }));
       if (state.selectedRows.length > 0) setCardOpen({ visible: true });
     }
   }, [state?.selectedRows]);

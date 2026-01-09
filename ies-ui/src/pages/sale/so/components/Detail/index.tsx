@@ -10,6 +10,8 @@ import CloseSo from './CloseSo';
 import OrderFormView from './OrderFormView';
 import SapPosting from './SapPosting';
 import SoFormView from './SoFormView';
+import { AllocateServiceAPI } from '@/pages/delivery/allocate/service';
+import { simpleRequestActions } from '@/services/model';
 
 interface Props {
   id?: number;
@@ -21,6 +23,7 @@ interface Props {
 }
 
 const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
+  const requestActions = simpleRequestActions();
   const { state, actions, modals } = Model();
   const access = useAccess();
   useEffect(() => {
@@ -46,6 +49,7 @@ const SoDetailView: React.FC<Props> = ({ id, openInTab, actionHandlers }) => {
         try {
           const rs = await actions.postSo(id, comment);
           // const rs = await actions.postSoNew(id, comment);
+          await AllocateServiceAPI(requestActions).syncAllocate();
           actions.fetchSo(id);
           modals.hideModal('sap-posting');
           message.success(`So has been posted sucessfully. SAP Doc No: ${rs.data}.`);

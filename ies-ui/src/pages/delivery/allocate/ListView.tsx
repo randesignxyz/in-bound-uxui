@@ -1,8 +1,8 @@
-// @ts-nocheck
+
 import TableView, { colLink, TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { simpleRequestActions } from '@/services/model';
 import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table';
-import { Card, Checkbox, DatePicker, message, Modal, Progress, Radio, Space, Spin, Tag, Image, UploadFile, Descriptions, Button, Table, Dropdown, Row, Col, Typography, Select, Form, Tooltip, Divider, Collapse, MenuProps } from 'antd';
+import { Card, Checkbox, DatePicker, message, Modal, Progress, Radio, Space, Spin, Tag, Image, UploadFile, Descriptions, Button, Table, Dropdown, Row, Col, Typography, Select, Form, Tooltip, Divider, Collapse, MenuProps, Flex } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AllocateServiceAPI } from '@/pages/delivery/allocate/service';
 import { Allocate, AllocateSOAdvanceParams, AreaList, DeliveryList, DNItemParams, DNList, DNParams, DnQuickView, LocationList, SkuList, SOAllocateActivities, SOList, UpdateRemarkParams } from '@/pages/delivery/allocate/data';
@@ -25,6 +25,7 @@ import { TbMap2 } from "react-icons/tb";
 import { useLocation, useNavigate } from "react-router-dom";
 import SortModal, { SortRule } from '@/pages/delivery/allocate/SortModal';
 import { render } from '@testing-library/react';
+import OfficerZoneFilter from '@/pages/delivery/allocate/FilterSelect'
 
 dayjs.extend(customParseFormat)
 interface DNListState {
@@ -50,6 +51,7 @@ export default () => {
   const [sortModalOpen, setSortModalOpen] = useState(false);
   const [loading, isLoading] = useState(false)
   const [claimLoading, setClaimLoading] = useState(false);
+  const [isSelectAll, setIsSelectAll] = useState(false);
   const [sortConfig, setSortConfig] = useState<SortRule[]>([
     { field: 'shippingAddress', order: 'desc' }
   ]);
@@ -73,7 +75,7 @@ export default () => {
   const [MTSearch, setMTSearch] = useState<{ status: string; startDate?: string, endDate?: string }>({
     status: 'pending',
   });
-  const [dnSearch, setDnSearch] = useState<{ status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string, sap_delivery_date: string | null, sap_from_date?: string, sap_to_date?: string, customer?: string, area?: [] }>({
+  const [dnSearch, setDnSearch] = useState<{ status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string, sap_delivery_date: string | null, sap_from_date?: string, sap_to_date?: string, customer?: string, zone?: [] }>({
     status: 'posted',
     dnStatus: 'open',
     sap_delivery_date: 'as_of_now',
@@ -96,7 +98,7 @@ export default () => {
   });
   const [activities, setActivities] = useState<SOAllocateActivities[]>([]);
   const [hisSearch, setHisSearch] = useState<{
-    sap_delivery_date: string | null; status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string, sap_from_date?: string, sap_to_date?: string, customer?: string, area?: string
+    sap_delivery_date: string | null; status: string; delivery_date?: string, province_id?: string, district_id?: any, commune_id?: string, dnStatus?: string, sap_from_date?: string, sap_to_date?: string, customer?: string, zone?: string
   }>({
     status: 'posted',
     dnStatus: 'open',
@@ -111,6 +113,7 @@ export default () => {
     if (res && !("data" in res)) return [res as LocationList];
     return [];
   };
+  const [officerArea, setOfficerArea] = useState<any[]>([]);
   const [provinceId, setProvinceId] = useState<string | undefined>(undefined);
   const [districtId, setDistrictId] = useState<string | undefined>(undefined);
   const [provinceOptions, setProvinceOptions] = useState<{ value: number; label: string }[]>([]);
@@ -574,7 +577,6 @@ export default () => {
         (page - 1) * pageSize,
         page * pageSize
       );
-      console.log('pagedGroups', pagedGroups)
       return {
         items: pagedGroups,
         total,
@@ -621,7 +623,7 @@ export default () => {
 
       setDnSearch(v => ({
         ...v,
-        area: state.areaList,
+        zone: state.areaList,
       }));
     }
   }, [state?.areaList]);
@@ -632,8 +634,8 @@ export default () => {
       if (!Array.isArray(res)) return;
 
       const options = res.map((a: any) => ({
-        value: Number(a.division_id),
-        label: a.division_name.replace(/^S&D\s*/i, '').trim(),
+        value: Number(a.zone_id),
+        label: a.zone_name.replace(/^S&D\s*/i, '').trim(),
         isDefault: a.isdefault === '1' || a.is_default === '1',
       }));
 
@@ -660,7 +662,7 @@ export default () => {
 
         setDnSearch(v => ({
           ...v,
-          area: defaultAreaIds,
+          zone: defaultAreaIds,
         }));
       }
 
@@ -720,7 +722,9 @@ export default () => {
         const skuValues: Record<string, number> = {};
 
         skuList.forEach((sku) => {
-          if (sku.item_category === 2) {
+          if (sku.item_category === 2 && sku.id == 9) {
+            skuValues[`${sku.sku_code}_pack`] = 0;
+          } else if (sku.item_category === 2) {
             skuValues[`${sku.sku_code}_pack`] = 0;
             skuValues[`${sku.sku_code}_bowl`] = 0;
           } else {
@@ -855,7 +859,7 @@ export default () => {
   };
 
   const skuColumns: ProColumns<DNList>[] = skuList.map((sku) => {
-    if (sku.item_category === 1) {
+    if (sku.item_category === 1 || sku.id == 9) {
 
       return {
         title: sku.sku_name,
@@ -863,7 +867,15 @@ export default () => {
         key: sku.sku_code,
         width: 120, // fix width
         render: (_, record) => (record as any)[sku.sku_code] || '-',
-        onCell: () => ({ style: { backgroundColor: 'rgba(3, 78, 162, 0.05)', textAlign: 'center' } }),
+        onCell: () => ({
+          style: {
+            backgroundColor:
+              sku.id == 9
+                ? 'rgba(239, 109, 35, 0.05)'
+                : 'rgba(3, 78, 162, 0.05)',
+            textAlign: 'center',
+          },
+        }),
       };
     } else {
       return {
@@ -1027,6 +1039,13 @@ export default () => {
         {
           title: 'Area',
           dataIndex: 'division',
+          width: 150,
+          render: (value: string) =>
+            value?.replace(/^S&D\s*/i, ''),
+        },
+        {
+          title: 'Zone',
+          dataIndex: 'zone_name',
           width: 150,
           render: (value: string) =>
             value?.replace(/^S&D\s*/i, ''),
@@ -1235,7 +1254,7 @@ export default () => {
                                     <span style={{ fontSize: 12 }}> {dayjs.utc(item.claimed_date).tz('Asia/Phnom_Penh').format('DD-MMM-YYYY hh:mm a')}</span>
 
                                   </span>
-                                  {access.currentUser?.login == item.claimed_by && access.canAccesAddRemarkAllocate ?
+                                  {item.status != 'complete' && (access.currentUser?.login == item.claimed_by && access.canAccesAddRemarkAllocate) ?
                                     <Button type="default" danger
                                       onClick={() => (handleUnClaim([Number(item.id)], item))}
                                     >
@@ -1767,8 +1786,11 @@ export default () => {
                 },
                 toolbar: {
                   actions: [
-                    <ProForm submitter={false} layout="inline">
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <>
+                      <ProForm submitter={false} layout="inline" form={form} style={{
+                        justifyContent: 'flex-end',
+                        width: '100%',
+                      }}>
                         <ProFormSelect
                           name="sap_delivery_date"
                           initialValue="as_of_now"
@@ -1780,32 +1802,33 @@ export default () => {
                             { value: 'all', label: 'ALL' },
                             { value: 'as_of_now', label: 'As Date' },
                             { value: 'today', label: 'Today' },
-                            { value: 'unplan', label: 'TBC' },
+                            { value: 'unplan', label: 'DO Pending' },
                             { value: 'TBA', label: 'TBA' },
                           ]}
-                          width={100}
+                          width={150}
                           showSearch
                         />
-                        {areaReady && (
-                          <ProFormSelect
-                            name="area_dn"
-                            mode="multiple"
-                            placeholder="Area"
-                            showSearch
-                            allowClear
-                            width={200}
-                            options={areaOptions}
-                            initialValue={dnSearch.area}
-                            onChange={(val: number[]) => {
-                              setSelectedArea(val);
-                              setDnSearch(v => ({
-                                ...v,
-                                area: val,
-                              }));
-                              actionRef.current?.reloadAndRest?.();
-                            }}
-                          />
-                        )}
+                        <OfficerZoneFilter
+                          form={form}
+                          name='zone'
+                          requestActions={requestActions}
+                          isSelectAll={isSelectAll}
+                          onInit={(values: any, options) => {
+                            setOfficerArea(options);
+                            setDnSearch(v => ({
+                              ...v,
+                              zone: values,
+                            }));
+                          }}
+                          onChange={(values: any, options) => {
+                            setOfficerArea(options);
+                            setDnSearch(v => ({
+                              ...v,
+                              zone: values,
+                            }));
+                            actionRef.current?.reloadAndRest?.();
+                          }}
+                        />
                         <ProFormDateRangePicker
                           name="sap_delivery_range_dn"
                           placeholder={['From Date', 'To Date']}
@@ -1900,39 +1923,55 @@ export default () => {
                           }}
                         />
 
-                      </div>
-                      {/* Button */}
-                      {access.canAccesAddRemarkAllocate && (
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                          <Button
-                            type="primary"
-                            disabled={selectedRowKeys.length === 0}
-                            onClick={() => (handleClaim(selectedRowKeys.map(k => Number(k))), console.log(selectedListDn))}
-                          >
-                            Pick
-                          </Button>
-                        </div>
-                      )}
-                      <Button type="text" size={'large'}
-                        onClick={() => navigate("/delivery/location", { state: { list: dataListDn, selected: selectedListDn, selectedRows: selectedRows, areaList: selectedArea } })}
-                        icon={<TbMap2 />}
-                        style={{ fontSize: 22 }}
-                      >
-                      </Button>
-                      <Button type="text" size='large' onClick={() => setSortModalOpen(true)}>
-                        <ColumnHeightOutlined />
-                      </Button>
-                      <Button type="text" size='large' onClick={() => onSync()}>
-                        <SyncOutlined />
-                      </Button>
-                      <Button
-                        type="text"
-                        onClick={() => actionRef.current?.reloadAndRest?.()}
-                        size='large'
-                      >
-                        <ReloadOutlined />
-                      </Button>
-                    </ProForm>
+                        {access.canAccesAddRemarkAllocate && (
+                          <div style={{ display: 'flex', alignItems: 'center' }}>
+                            <Button
+                              type="primary"
+                              disabled={selectedRowKeys.length === 0}
+                              onClick={() => (handleClaim(selectedRowKeys.map(k => Number(k))), console.log(selectedListDn))}
+                            >
+                              Pick
+                            </Button>
+                          </div>
+                        )}
+                        <Button type="text" size={'large'}
+                          onClick={() => navigate("/delivery/location", { state: { list: dataListDn, selected: selectedListDn, selectedRows: selectedRows, areaList: selectedArea } })}
+                          icon={<TbMap2 />}
+                          style={{ fontSize: 22 }}
+                        >
+                        </Button>
+                        <Button type="text" size='large' onClick={() => setSortModalOpen(true)} style={{ marginLeft: -20 }}>
+                          <ColumnHeightOutlined />
+                        </Button>
+                        <Button type="text" size='large' onClick={() => onSync()} style={{ marginLeft: -20 }}>
+                          <SyncOutlined />
+                        </Button>
+                        <Button
+                          type="text"
+                          onClick={() => actionRef.current?.reloadAndRest?.()}
+                          size='large'
+                          style={{ marginLeft: -20 }}
+                        >
+                          <ReloadOutlined />
+                        </Button>
+                        {officerArea?.length > 0 && (
+                          <div style={{ width: '100%', alignItems: 'flex-start', }}>   {/* 🔑 FORCE NEW ROW */}
+                            <Card
+                              size="small"
+                              style={{ border: 0, width: '100%', alignItems: 'flex-start', }}
+                              styles={{ body: { padding: 4 } }}
+                            >
+                              <Flex gap={4} align="center" wrap>
+                                {officerArea.map(p => (
+                                  <Tag key={p.value}>{p.label}</Tag>
+                                ))}
+                              </Flex>
+                            </Card>
+                          </div>
+                        )}
+                      </ProForm>
+
+                    </>
 
                   ],
                 },
@@ -1999,7 +2038,7 @@ export default () => {
                               { value: 'all', label: 'ALL' },
                               { value: 'as_of_now', label: 'As Date' },
                               { value: 'today', label: 'Today' },
-                              { value: 'unplan', label: 'TBC' },
+                              { value: 'unplan', label: 'DO Pending' },
                               { value: 'TBA', label: 'TBA' },
                             ]}
                             width={150}

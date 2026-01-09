@@ -902,7 +902,6 @@ export default () => {
       };
     }
   });
-
   // Static columns
   const staticColumns: ProColumns<DNList>[] = [
     ...(advanceSearchParams.filter !== 'HIS'
@@ -925,11 +924,19 @@ export default () => {
                     setSelectedRows(prev => [...prev, record]);
                     setCardOpen({ visible: true });
                     setSelectedListDn(prev => [...prev, record]);
-                    setDataListDn(prev => prev.items.filter(r => r.id !== record.id));
+                    // setDataListDn(prev => prev.items.filter(r => r.id !== record.id));
+                    setDataListDn(prev => ({
+                      ...prev,
+                      items: prev.items.filter(r => r.id !== record.id),
+                    }));
                   } else {
                     setSelectedRowKeys(prev => prev.filter(k => k !== record.id));
                     setSelectedRows(prev => prev.filter(r => r.id !== record.id));
                     setSelectedListDn(prev => prev.filter(r => r.id !== record.id));
+                    setDataListDn(prev => ({
+                      ...prev,
+                      items: [...prev.items, record],
+                    }));
                   }
                 }}
               />

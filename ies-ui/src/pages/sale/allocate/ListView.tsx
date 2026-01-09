@@ -153,7 +153,7 @@ export default () => {
 
       setDataListDn(prev => ({
         ...prev,
-        items: prev.items.filter(
+        items: prev?.items?.filter(
           r => !state.selectedRows?.some(s => s.id === r.id)
         ),
       }));
@@ -233,7 +233,7 @@ export default () => {
         setSelectedClaimedLine(null);
       }
     }, [claimOpen]);
-    
+
   const getMenuItems = (item: any): MenuProps['items'] => {
 
     const items: MenuProps['items'] = [];
@@ -940,7 +940,7 @@ export default () => {
                     // setDataListDn(prev => prev.items.filter(r => r.id !== record.id));
                     setDataListDn(prev => ({
                       ...prev,
-                      items: prev.items.filter(r => r.id !== record.id),
+                      items: prev?.items?.filter(r => r.id !== record.id),
                     }));
                   } else {
                     setSelectedRowKeys(prev => prev.filter(k => k !== record.id));

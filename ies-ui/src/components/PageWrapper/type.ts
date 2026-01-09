@@ -25,11 +25,11 @@ export type TabRenderProps = {
     }) =>  React.ReactNode;
 }
 
-export interface BastListViewProps<ListDataType extends Record<string, any> & { id: number, code?: string }, FilterType
+export interface BastListViewProps<ListDataType extends Record<string, any> & { id: number | string, code?: string }, FilterType
     extends { searchValue?: string; status?: string; }, ValueType> {
     title?: string;
     onExtraFilterRender?: (params?: FilterType) => React.ReactNode;
-    onColumnLinkRender?: (id: number, target: 'page-tab' | 'browser-tab', item?: ListDataType, key?: React.Key) => {
+    onColumnLinkRender?: (id: number | string, target: 'page-tab' | 'browser-tab', item?: ListDataType, key?: React.Key) => {
         value?: React.ReactNode,
         tabLabel: React.ReactNode,
         tabIcon?: React.ReactNode,
@@ -57,7 +57,7 @@ export interface BastListViewProps<ListDataType extends Record<string, any> & { 
     onRefresh?: () => void;
 }
 
-export interface TableViewProps<ListDataType extends Record<string, any> & { id: number, code?: string }, FilterType
+export interface TableViewProps<ListDataType extends Record<string, any> & { id: number | string, code?: string }, FilterType
     extends { searchValue?: string; status?: string; }, ValueType> extends BastListViewProps<ListDataType, FilterType, ValueType> {
     type: "Table"
     props: Omit<ProTableProps<ListDataType, ParamsType, ValueType>, 'columns'> & {
@@ -81,7 +81,7 @@ export interface TableViewProps<ListDataType extends Record<string, any> & { id:
     }
 }
 
-export interface ListViewProps<ListDataType extends Record<string, any> & { id: number, code?: string }, FilterType
+export interface ListViewProps<ListDataType extends Record<string, any> & { id: number | string, code?: string }, FilterType
     extends { searchValue?: string; status?: string; }, ValueType> extends BastListViewProps<ListDataType, FilterType, ValueType> {
     type: "Table"
     props: Omit<ProTableProps<ListDataType, ParamsType, ValueType>, 'columns'> & {
@@ -100,4 +100,4 @@ export interface ListViewProps<ListDataType extends Record<string, any> & { id: 
 
         primaryCol?: ProColumns<ListDataType, ValueType>
     }
-} 
+}

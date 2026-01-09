@@ -154,7 +154,6 @@ export default ({ data, actionRef, actionHandlers }: Props) => {
         } catch (error: any) {
           message.error(error.message || "Failed to assign.")
         }
-
       }
     })
   }
@@ -197,7 +196,6 @@ export default ({ data, actionRef, actionHandlers }: Props) => {
         },
       }}
     >
-
       <BackTop />
     </ProList>
     {assignModal && <ContributorFinder

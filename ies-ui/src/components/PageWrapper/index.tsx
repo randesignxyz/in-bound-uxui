@@ -33,7 +33,7 @@ import { ListViewProps, TabRenderProps, TableViewProps } from "./type";
 import TableView from "./TableView";
 import { uniqueId } from "lodash";
 
-interface Props<ListDataType extends Record<string, any> & { id: number, code?: string }, FilterType extends Record<string, any>, ValueType> {
+interface Props<ListDataType extends Record<string, any> & { id: number | string, code?: string }, FilterType extends Record<string, any>, ValueType> {
 
     onNewRender?: (key: string) => React.ReactNode;
     tabRender?: (item?: ListDataType) => TabRenderProps[];
@@ -64,11 +64,9 @@ const DraggableTabNode = ({ className, ...props }: DraggableTabPaneProps) => {
     });
 };
 
-export default <ListDataType extends Record<string, any> & { id: number, code?: string }, FilterType
-    extends Record<string, any> & { searchValue?: string; status?: string; subStatus?: string; subStatus2?: string }, ValueType>({
-        tabRender,
-        listView,
-    }: Props<ListDataType, FilterType, ValueType>) => {
+export default <ListDataType extends Record<string, any> & { id: string | number, code?: string },
+  FilterType extends Record<string, any> & { searchValue?: string; status?: string; subStatus?: string; subStatus2?: string },
+  ValueType>({ tabRender, listView }: Props<ListDataType, FilterType, ValueType>) => {
 
     const [forceReload, setForceReload] = useState(0)
     const actionRef = useRef<ActionType>()

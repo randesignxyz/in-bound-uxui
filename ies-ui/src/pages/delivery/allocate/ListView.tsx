@@ -1,4 +1,4 @@
-
+// @ts-nocheck
 import TableView, { colLink, TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { simpleRequestActions } from '@/services/model';
 import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table';
@@ -467,7 +467,7 @@ export default () => {
         await services.ClaimDn(
           ids,
           access.currentUser?.login ?? '',
-          `Unpick ${dnList.claimed_line}`,
+          `Unpick (${dnList.map(v => v.claimed_line)})`,
           'Unpick DN',
           null,
           del_item

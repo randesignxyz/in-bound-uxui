@@ -467,7 +467,7 @@ export default () => {
         await services.ClaimDn(
           ids,
           access.currentUser?.login ?? '',
-          `Unpick ${dnList.claimed_line}`,
+          `Unpick (${dnList.map(v => v.claimed_line)})`,
           'Unpick DN',
           null,
           del_item

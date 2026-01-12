@@ -1,7 +1,7 @@
 import { CustomerItemLess, SalePerson } from "@/services/crm/data";
 import { simpleRequestActions } from "@/services/model";
 import { ModalForm, ModalFormProps, ProCard, ProFormDependency, ProFormSelect, ProFormText, ProTable } from "@ant-design/pro-components"
-import { Input, message, Modal, Space } from "antd"
+import { Button, Checkbox, Flex, Input, message, Modal, Space } from "antd"
 import { useForm } from "antd/lib/form/Form";
 import { useEffect, useState } from "react";
 import { CustomerServices } from "../../services";
@@ -22,6 +22,8 @@ export default ({ ...rest }: ModalFormProps<FormDataType>) => {
     const [customerSearch, setCustomerSearch] = useState<string>()
     const [customerList, setCustomerList] = useState<CustomerItemLess[]>()
     const [selected, setSelected] = useState<number[]>()
+    const [split, setSplit] = useState(false);
+    const [searchValue, setSearchValue] = useState('');
 
     useEffect(() => {
         if (!rest.open) return
@@ -87,7 +89,33 @@ export default ({ ...rest }: ModalFormProps<FormDataType>) => {
                     {({ searchSalespersonId }) => {
 
                         if (searchSalespersonId) {
-                            return <Input.Search onSearch={value => setCustomerSearch(value?.trim())} title="Search by Customers" placeholder="Please input customer code(s) to filter" />
+                            return <Flex gap={16} align="baseline">
+                                <Input.Search
+                                    onChange={(e) => setSearchValue(e.target.value)}
+                                    value={searchValue}
+                                    onSearch={value => setCustomerSearch(value?.trim())}
+                                    title="Search by Customers"
+                                    placeholder="Please input customer code(s) to filter"
+                                    allowClear
+                                />
+                                <Checkbox
+                                    disabled={!searchValue}
+                                    onClick={(e: any) => {
+                                        const checked = e.target?.checked;
+                                        setSplit(checked);
+                                        if (checked) {
+                                            // transform space-separated to comma-separated
+                                            const newValue = searchValue.trim().split(/\s+/).join(',');
+                                            setSearchValue(newValue);
+                                        } else {
+                                            // Optionally: transform comma back to space (or keep as is)
+                                            const newValue = searchValue.trim().split(/,+/).join(' ');
+                                            setSearchValue(newValue);
+                                        }
+                                    }}>
+                                    Split
+                                </Checkbox>
+                            </Flex>
                         }
                     }}
 
@@ -101,11 +129,11 @@ export default ({ ...rest }: ModalFormProps<FormDataType>) => {
                         selections: ["SELECT_ALL", "SELECT_INVERT", "SELECT_NONE"],
                         selectedRowKeys: selected,
                         onSelect(item, selected) {
-                            if(selected) {
-                                setSelected(v => ([...(v||[]), item.id]))
-                            }else {
+                            if (selected) {
+                                setSelected(v => ([...(v || []), item.id]))
+                            } else {
                                 setSelected(v => v?.filter(it => it != item.id))
-                            } 
+                            }
                         },
                         onChange(_, selectedRows, info) {
                             if (info.type !== 'single') {
@@ -123,7 +151,7 @@ export default ({ ...rest }: ModalFormProps<FormDataType>) => {
                         { title: 'Customer Name (kh)', dataIndex: 'internalName' },
                         { title: 'Type', dataIndex: 'type' },
                         { title: "SE", dataIndex: 'sale' }
-                    ]} dataSource={customerList}  loading={requestActions.request?.loading} />
+                    ]} dataSource={customerList} loading={requestActions.request?.loading} />
             </ProCard>
             <ProCard size="small" boxShadow >
                 <ProFormSelect showSearch name={'salespersonId'} width={"md"} label="Transfer To Salesperson" rules={[{ required: true }]}

@@ -1,6 +1,6 @@
 import ListMenuComp, { ListMenuItem } from "@/components/ListMenu";
 import { TeamOutlined } from "@ant-design/icons";
-import { MenuProps, message } from "antd";
+import { Divider, MenuProps, message } from "antd";
 import { useState, useMemo } from "react";
 import POAdjustForm from "./component/POAdjustForm";
 import InvoiceCorrectForm from "./component/InvoiceCorrectForm";
@@ -129,6 +129,7 @@ const Supporter: React.FC<Props> = () => {
   /* ---------------------------------- */
   return (
     <>
+      {access.canAccess("SALE_SUPPORTER") && <Divider orientation='left' plain >Supporter</Divider>}
       <ListMenuComp items={listItems} />
 
       {/* PO Modal */}

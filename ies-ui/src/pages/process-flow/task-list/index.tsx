@@ -94,7 +94,6 @@ const TaskList = () => {
         task.instanceInfo.processInstanceId,
         task.taskId,
       ),
-
     onClaim: (item: UserTask) =>
       Modal.confirm({
         title: 'Claim Task',
@@ -159,6 +158,7 @@ const TaskList = () => {
         ]}
         listView={{
           title: 'Task List',
+          disableSearch: true,
           advanceSearchButton: (
             <Space align="center">
               {extraContent}
@@ -166,12 +166,12 @@ const TaskList = () => {
             </Space>
           ),
           render: (props) => (
-              <TaskItemListView
-                {...props}
-                data={state.taskList}
-                actionRef={actionRef}
-                actionHandlers={actionHandlers}
-              />
+            <TaskItemListView
+              {...props}
+              data={state.taskList}
+              actionRef={actionRef}
+              actionHandlers={actionHandlers}
+            />
           ),
         }}
       >

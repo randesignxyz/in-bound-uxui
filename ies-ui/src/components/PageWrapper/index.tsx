@@ -191,8 +191,18 @@ export default <ListDataType extends Record<string, any> & { id: string | number
         }
         actionRef.current?.reload(resetPageIndex);
     }
+  useEffect(() => {
+    if (listView.disableSearch) {
+      setFilterData(v => {
+        if (!v) return v;
+        const { searchValue, ...rest } = v;
+        return rest as FilterType;
+      });
+    }
+  }, [listView.disableSearch]);
 
-    useEffect(() => {
+
+  useEffect(() => {
         setTabList([{
             tab: listView.title || "List",
             key: 'list',
@@ -210,10 +220,15 @@ export default <ListDataType extends Record<string, any> & { id: string | number
                     const tabProps = tabRender?.().find(it => it.action == 'add')
                     tabProps && newTab(tabProps)
                 }}
-                onSearch={keyworkds => {
-                    setFilterData(v => ({ ...v, searchValue: keyworkds }) as any)
-                    reloadList(true)
-                }}
+                onSearch={
+                  listView.disableSearch
+                    ? undefined
+                    : (keywords) => {
+                      setFilterData(v => ({ ...v, searchValue: keywords }) as any);
+                      reloadList(true);
+                    }
+                }
+
                 onStatusChanged={status => {
                     setFilterData(v => ({ ...v, status: status }) as any)
                     reloadList(true)

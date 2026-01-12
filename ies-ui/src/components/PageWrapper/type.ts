@@ -28,6 +28,7 @@ export type TabRenderProps = {
 export interface BastListViewProps<ListDataType extends Record<string, any> & { id: number | string, code?: string }, FilterType
     extends { searchValue?: string; status?: string; }, ValueType> {
     title?: string;
+    disableSearch?: boolean;
     onExtraFilterRender?: (params?: FilterType) => React.ReactNode;
     onColumnLinkRender?: (id: number | string, target: 'page-tab' | 'browser-tab', item?: ListDataType, key?: React.Key) => {
         value?: React.ReactNode,
@@ -60,6 +61,7 @@ export interface BastListViewProps<ListDataType extends Record<string, any> & { 
 export interface TableViewProps<ListDataType extends Record<string, any> & { id: number | string, code?: string }, FilterType
     extends { searchValue?: string; status?: string; }, ValueType> extends BastListViewProps<ListDataType, FilterType, ValueType> {
     type: "Table"
+    disableSearch?: boolean;
     props: Omit<ProTableProps<ListDataType, ParamsType, ValueType>, 'columns'> & {
         actionButtonsColumnRender?: (item: ListDataType) => (ButtonProps & {
             actionType?: ActionType;

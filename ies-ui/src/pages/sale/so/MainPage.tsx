@@ -44,7 +44,7 @@ export default () => {
         divisionId: filter.criteria?.saleArea?.length ? filter.criteria?.saleArea : [0]
     }, filter.pagination, filter.sort), {
         refetchOnWindowFocus: false,
-        refetchInterval: 15000
+        refetchInterval: 60000
     })
 
 

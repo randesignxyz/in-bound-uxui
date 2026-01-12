@@ -73,10 +73,17 @@ const ExcelSaleAreaFilter: React.FC<ExcelSaleAreaFilterProps> = ({
                     divisionName: string;
                     defaultFlag: number;
                 }[];
+                const formatDivisionName = (name: string) => {
+                    const match = name.match(/^S&D Area\s*(\d+)$/);
+                    if (match) {
+                        return `A${match[1].padStart(2, '0')}`;
+                    }
+                    return name; // fallback for other names
+                };
 
                 const options: SaleAreaOption[] = res.map(o => ({
                     value: o.divisionId,
-                    label: o.divisionName,
+                    label: formatDivisionName(o.divisionName),
                     default: o.defaultFlag,
                 }));
 

@@ -2,7 +2,7 @@
 import TableView, { colLink, TableViewSearchParams } from '@/components/DataCrud/TableView';
 import { simpleRequestActions } from '@/services/model';
 import ProTable, { ActionType, ProColumns } from '@ant-design/pro-table';
-import { Card, Checkbox, DatePicker, message, Modal, Progress, Radio, Space, Spin, Tag, Image, UploadFile, Descriptions, Button, Table, Dropdown, Row, Col, Typography, Select, Form, Tooltip, Divider, Collapse, MenuProps, Flex } from 'antd';
+import { Card, Checkbox, DatePicker, message, Modal, Progress, Radio, Space, Spin, Tag, Image, UploadFile, Descriptions, Button, Table, Dropdown, Row, Col, Typography, Select, Form, Tooltip, Divider, Collapse, MenuProps, Flex, Badge } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AllocateServiceAPI } from '@/pages/delivery/allocate/service';
 import { Allocate, AllocateSOAdvanceParams, AreaList, DeliveryList, DNItemParams, DNList, DNParams, DnQuickView, LocationList, SkuList, SOAllocateActivities, SOList, UpdateRemarkParams } from '@/pages/delivery/allocate/data';
@@ -127,6 +127,7 @@ export default () => {
   const [claimedLines, setClaimedLines] = useState<string[]>([]);
   const [claimIds, setClaimIds] = useState<number[]>([]);
   const [selectedArea, setSelectedArea] = useState<number[]>([]);
+  const [countList, setCountList] = useState<any[]>([]);
 
   useEffect(() => {
     if (state?.selectedRows) {
@@ -679,7 +680,8 @@ export default () => {
       }
 
       setAreaReady(true);
-
+      const count = await services.list_count()
+      setCountList(count)
       setTimeout(() => {
         actionRef.current?.reloadAndRest?.();
       }, 0);
@@ -1831,7 +1833,7 @@ export default () => {
                           width={150}
                           showSearch
                         />
-                        <OfficerZoneFilter
+                        {/* <OfficerZoneFilter
                           form={form}
                           name='zone'
                           requestActions={requestActions}
@@ -1851,7 +1853,7 @@ export default () => {
                             }));
                             actionRef.current?.reloadAndRest?.();
                           }}
-                        />
+                        /> */}
                         <ProFormDateRangePicker
                           name="sap_delivery_range_dn"
                           placeholder={['From Date', 'To Date']}
@@ -1971,27 +1973,45 @@ export default () => {
                         </Button>
                         <Button
                           type="text"
-                          onClick={() => actionRef.current?.reloadAndRest?.()}
-                          size='large'
+                          size="large"
                           style={{ marginLeft: -20 }}
+                          onClick={async () => {
+                            actionRef.current?.reloadAndRest?.()
+                            const res = await services.list_count()
+                            setCountList(res);
+                          }}
                         >
                           <ReloadOutlined />
                         </Button>
-                        {officerArea?.length > 0 && (
-                          <div style={{ width: '100%', alignItems: 'flex-start', }}>   {/* 🔑 FORCE NEW ROW */}
-                            <Card
-                              size="small"
-                              style={{ border: 0, width: '100%', alignItems: 'flex-start', }}
-                              styles={{ body: { padding: 4 } }}
-                            >
-                              <Flex gap={4} align="center" wrap>
-                                {officerArea.map(p => (
-                                  <Tag key={p.value}>{p.label}</Tag>
-                                ))}
-                              </Flex>
-                            </Card>
-                          </div>
-                        )}
+
+                        <div style={{ width: '100%', alignItems: 'flex-start', }}>   {/* 🔑 FORCE NEW ROW */}
+                          <Card
+                            size="small"
+                            style={{ border: 0, width: '100%', alignItems: 'flex-start', }}
+                            styles={{ body: { padding: 4 } }}
+                          >
+                            <Flex gap={4} align="center" wrap>
+                              <Badge
+                                offset={[-10, 0]}
+                                size="small"
+                                count={Number(countList?.[0]?.unplan_count ?? 0)}
+                                showZero
+                              >
+                                <Tag>DO Pending</Tag>
+                              </Badge>
+
+                              <Badge
+                                offset={[-10, 0]}
+                                size="small"
+                                count={Number(countList?.[0]?.tba_count ?? 0)}
+                                showZero
+                              >
+                                <Tag>TBA</Tag>
+                              </Badge>
+                            </Flex>
+                          </Card>
+                        </div>
+
                       </ProForm>
 
                     </>

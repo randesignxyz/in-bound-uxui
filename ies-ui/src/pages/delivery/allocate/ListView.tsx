@@ -679,7 +679,6 @@ export default () => {
       }
 
       setAreaReady(true);
-
       setTimeout(() => {
         actionRef.current?.reloadAndRest?.();
       }, 0);
